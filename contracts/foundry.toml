@@ -1,0 +1,40 @@
+# Senryo contracts — Foundry config per context/02-monad/dev-quickstart.md (Monad template).
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc = "0.8.31"
+evm_version = "osaka"
+network = "monad"                # Monad gas model (limit charged), 128 KB code limit, MIP-8 page gas, precompiles
+optimizer = true
+optimizer_runs = 200
+# Defaults kept on purpose: bytecode_hash = "ipfs" + cbor_metadata = true give Sourcify exact matches (D-024 verify).
+use_literal_content = true
+remappings = [
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "forge-std/=lib/forge-std/src/",
+]
+
+[fuzz]
+runs = 1000
+
+[invariant]
+runs = 256
+depth = 128
+fail_on_revert = false
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = false
+int_types = "long"
+number_underscore = "thousands"
+
+[lint]
+severity = ["high", "medium", "low"]
+
+[rpc_endpoints]
+monad = "https://rpc.monad.xyz"
+monad_testnet = "https://testnet-rpc.monad.xyz"

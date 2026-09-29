@@ -1,0 +1,353 @@
+# Monad Documentation
+
+## Documentation
+
+### Introduction
+
+- [Introduction](https://docs.monad.xyz/index.md): Monad is a Layer-1 blockchain delivering high performance, true decentralization, and EVM compatibility.
+- [Why Blockchain?](https://docs.monad.xyz/introduction/why-blockchain.md): A simple mental model for the 'what' and 'why'.
+- [Why Monad: Decentralization + Performance](https://docs.monad.xyz/introduction/why-monad.md): Monad addresses today's performance bottlenecks through optimization while preserving decentralization.
+- [Monad for Users](https://docs.monad.xyz/introduction/monad-for-users.md): One-pager on Monad for users
+- [Monad for Developers](https://docs.monad.xyz/introduction/monad-for-developers.md): Technical one-pager on Monad for developers
+
+### Developer Essentials
+
+- [Developer Essentials](https://docs.monad.xyz/developer-essentials/index.md)
+- [Network Information - Testnet](https://docs.monad.xyz/developer-essentials/testnet.md)
+- [Deployment Summary for Developers](https://docs.monad.xyz/developer-essentials/summary.md): Deployment Summary for Developers
+- [Differences between Monad and Ethereum](https://docs.monad.xyz/developer-essentials/differences.md)
+- [Transactions](https://docs.monad.xyz/developer-essentials/transactions.md)
+- [Wallet Developer Integration Guide](https://docs.monad.xyz/developer-essentials/wallet-developers.md): Guidance and recipes for wallet teams improving Monad support
+- [Gas Pricing](https://docs.monad.xyz/developer-essentials/gas-pricing.md): An estimated USD cost for a typical Monad transaction, plus how gas fees are calculated.
+- [Opcode Pricing](https://docs.monad.xyz/developer-essentials/opcode-pricing.md)
+- [Precompiles](https://docs.monad.xyz/developer-essentials/precompiles.md): How to use Monad's precompiled contracts
+- [Reserve Balance](https://docs.monad.xyz/developer-essentials/reserve-balance.md)
+- [EIP-7702 on Monad](https://docs.monad.xyz/developer-essentials/eip-7702.md)
+- [Historical Data](https://docs.monad.xyz/developer-essentials/historical-data.md)
+- [Best Practices for Building High Performance Apps](https://docs.monad.xyz/developer-essentials/best-practices.md): Learn best practices for building high performance apps on Monad
+
+#### Network Information - Mainnet
+
+- [Network Information - Mainnet](https://docs.monad.xyz/developer-essentials/network-information/index.md)
+- [Tokens and Bridges](https://docs.monad.xyz/developer-essentials/network-information/tokens-and-bridges.md)
+
+#### Changelog
+
+- [Changelog](https://docs.monad.xyz/developer-essentials/changelog/index.md)
+- [Releases](https://docs.monad.xyz/developer-essentials/changelog/releases.md)
+
+### Tooling and Infrastructure
+
+- [Tooling and Infrastructure](https://docs.monad.xyz/tooling-and-infra/index.md)
+- [Agentic Payments](https://docs.monad.xyz/tooling-and-infra/agentic-payments.md)
+- [Analytics](https://docs.monad.xyz/tooling-and-infra/analytics.md)
+- [Monad Block Explorers: MonadVision and Monadscan](https://docs.monad.xyz/tooling-and-infra/block-explorers.md): Block explorers for Monad mainnet and testnet: MonadVision (BlockVision), Monadscan (Etherscan), JiffyScan, Tenderly, and Phalcon.
+- [Card Issuing](https://docs.monad.xyz/tooling-and-infra/card-issuing.md)
+- [Cross-Chain](https://docs.monad.xyz/tooling-and-infra/cross-chain.md)
+- [Custody](https://docs.monad.xyz/tooling-and-infra/custody.md)
+- [DEX Aggregators](https://docs.monad.xyz/tooling-and-infra/dex-aggregators.md)
+- [Earn/Yield Infrastructure](https://docs.monad.xyz/tooling-and-infra/earn-yield.md)
+- [Onramps](https://docs.monad.xyz/tooling-and-infra/onramps.md)
+- [Oracles](https://docs.monad.xyz/tooling-and-infra/oracles.md)
+- [Payment Orchestrators](https://docs.monad.xyz/tooling-and-infra/payment-orchestrators.md)
+- [Privacy](https://docs.monad.xyz/tooling-and-infra/privacy.md)
+- [RPC Providers](https://docs.monad.xyz/tooling-and-infra/rpc-providers.md)
+
+#### Indexers
+
+- [Indexers](https://docs.monad.xyz/tooling-and-infra/indexers/index.md)
+- [Common Data](https://docs.monad.xyz/tooling-and-infra/indexers/common-data.md)
+- [Indexing Frameworks](https://docs.monad.xyz/tooling-and-infra/indexers/indexing-frameworks.md)
+
+#### Toolkits
+
+- [Toolkits](https://docs.monad.xyz/tooling-and-infra/toolkits/index.md)
+- [Foundry](https://docs.monad.xyz/tooling-and-infra/toolkits/foundry.md): Use Foundry to build, test, deploy, and debug contracts with the Monad execution environment.
+- [Hardhat](https://docs.monad.xyz/tooling-and-infra/toolkits/hardhat.md): Start a Hardhat 3 project for Monad or add Monad to an existing project.
+- [Monad Solonet](https://docs.monad.xyz/tooling-and-infra/toolkits/monad-solonet.md)
+
+#### Wallets
+
+- [Wallets](https://docs.monad.xyz/tooling-and-infra/wallets/index.md)
+- [Software Wallets](https://docs.monad.xyz/tooling-and-infra/wallets/software-wallets.md)
+- [Hardware Wallets](https://docs.monad.xyz/tooling-and-infra/wallets/hardware-wallets.md)
+- [Institutional Wallets](https://docs.monad.xyz/tooling-and-infra/wallets/institutional-wallets.md)
+- [Multisig Wallets](https://docs.monad.xyz/tooling-and-infra/wallets/multisig-wallets.md)
+
+#### Wallet Infrastructure
+
+- [Wallet Infrastructure](https://docs.monad.xyz/tooling-and-infra/wallet-infra/index.md)
+- [Embedded Wallets](https://docs.monad.xyz/tooling-and-infra/wallet-infra/embedded-wallets.md)
+- [Account Abstraction Providers](https://docs.monad.xyz/tooling-and-infra/wallet-infra/account-abstraction.md)
+- [Smart Account Implementations](https://docs.monad.xyz/tooling-and-infra/wallet-infra/smart-accounts.md)
+
+### Reference
+
+#### JSON-RPC
+
+- [JSON-RPC Overview](https://docs.monad.xyz/reference/json-rpc/overview.md): JSON-RPC methods, differences from Ethereum, rate limits, and error codes
+- [JSON-RPC Playground](https://docs.monad.xyz/reference/json-rpc/playground.md): Interactive JSON-RPC request builder for all Monad RPC methods
+- [JSON-RPC API Reference](https://docs.monad.xyz/reference/json-rpc/api.md): Reference for Monad's JSON-RPC interface
+
+#### Execution Events
+
+- [Execution Events](https://docs.monad.xyz/execution-events/index.md)
+- [Release notes](https://docs.monad.xyz/execution-events/release-notes.md)
+- [Execution events overview](https://docs.monad.xyz/execution-events/overview.md)
+- [Event rings in detail](https://docs.monad.xyz/execution-events/event-ring.md)
+- [C API](https://docs.monad.xyz/execution-events/c-api.md)
+- [Rust API](https://docs.monad.xyz/execution-events/rust-api.md)
+- [Consensus events](https://docs.monad.xyz/execution-events/consensus-events.md)
+- [Advanced topics](https://docs.monad.xyz/execution-events/advanced.md)
+
+##### Getting Started
+
+- [Getting started](https://docs.monad.xyz/execution-events/getting-started/index.md)
+- [Building the C example program](https://docs.monad.xyz/execution-events/getting-started/c.md)
+- [Building the Rust example program](https://docs.monad.xyz/execution-events/getting-started/rust.md)
+- [Running the example program on snapshot data](https://docs.monad.xyz/execution-events/getting-started/snapshot.md)
+- [Setting up your Monad node](https://docs.monad.xyz/execution-events/getting-started/setup-node.md)
+- [Running the example program on live data, and next steps](https://docs.monad.xyz/execution-events/getting-started/final.md)
+
+#### Staking
+
+- [Staking Overview](https://docs.monad.xyz/reference/staking/overview.md): How to interact with Monad's staking system
+- [Staking API Reference](https://docs.monad.xyz/reference/staking/api.md): Reference for Monad's staking precompile
+
+#### Machine Payments Protocol
+
+- [MPP Overview](https://docs.monad.xyz/reference/mpp/overview.md): Send and accept payments on Monad using the Machine Payments Protocol
+- [MPP API Reference](https://docs.monad.xyz/reference/mpp/api.md): Reference for the @monad-crypto/mpp package
+
+### Guides
+
+- [Guides](https://docs.monad.xyz/guides/index.md)
+- [Build with NFTs](https://docs.monad.xyz/guides/build-with-nfts.md): How to build an NFT project on Monad: standards, a deploy quickstart, and the tooling for minting, marketplaces, indexing, wallets, and more.
+
+#### Add Monad to Wallet
+
+- [Add Monad to Wallet](https://docs.monad.xyz/guides/add-monad-to-wallet/index.md)
+- [Add Monad Mainnet to Wallet](https://docs.monad.xyz/guides/add-monad-to-wallet/mainnet.md)
+- [Add Monad Testnet to Wallet](https://docs.monad.xyz/guides/add-monad-to-wallet/testnet.md)
+
+#### Deploy a Contract
+
+- [Deploy a Contract](https://docs.monad.xyz/guides/deploy-smart-contract/index.md)
+- [Deploy a smart contract on Monad using Foundry](https://docs.monad.xyz/guides/deploy-smart-contract/foundry.md)
+- [Deploy a smart contract on Monad using Hardhat](https://docs.monad.xyz/guides/deploy-smart-contract/hardhat.md)
+- [Deploy a smart contract on Monad using Remix](https://docs.monad.xyz/guides/deploy-smart-contract/remix.md)
+
+#### Verify a Contract
+
+- [Verify a Contract](https://docs.monad.xyz/guides/verify-smart-contract/index.md)
+- [Verify a smart contract on Monad using Foundry](https://docs.monad.xyz/guides/verify-smart-contract/foundry.md)
+- [Verify a smart contract on Monad using Hardhat](https://docs.monad.xyz/guides/verify-smart-contract/hardhat.md)
+
+#### Use an Indexer
+
+- [Use an Indexer](https://docs.monad.xyz/guides/indexers/index.md)
+- [How to index token transfers with GhostGraph](https://docs.monad.xyz/guides/indexers/ghost.md)
+- [How to build a transfer notification bot with Envio HyperIndex](https://docs.monad.xyz/guides/indexers/tg-bot-using-envio.md)
+- [How to query token data with Envio HyperSync](https://docs.monad.xyz/guides/indexers/token-snapshot-hypersync.md)
+- [How to index every WMON transfer using QuickNode Streams](https://docs.monad.xyz/guides/indexers/quicknode-streams.md)
+
+#### Build with Uniswap v4 Hooks
+
+- [Build with Uniswap v4 Hooks](https://docs.monad.xyz/guides/uniswap-v4-hooks/index.md): Build, test, and deploy custom Uniswap v4 pool behavior on Monad with Foundry.
+- [Set up the hook project](https://docs.monad.xyz/guides/uniswap-v4-hooks/setup.md): On this page, you will install the pinned source, run local tests, and prepare a Monad Testnet account.
+- [Deploy the hook and test tokens](https://docs.monad.xyz/guides/uniswap-v4-hooks/deploy.md): On this page, you will deploy a Counter hook and two mock tokens on Monad Testnet.
+- [Exercise and verify the pool](https://docs.monad.xyz/guides/uniswap-v4-hooks/pool-lifecycle.md): On this page, you will initialize a testnet pool, mint an owned position, swap through Universal Router, remove liquidity, and revoke approvals.
+- [Customize and publish a hook](https://docs.monad.xyz/guides/uniswap-v4-hooks/customize-and-publish.md): On this page, you will customize Counter, find contract addresses, and prepare your hook for mainnet.
+
+#### Execution Events
+
+- [How to accelerate your app with Execution Events](https://docs.monad.xyz/guides/execution-events/index.md)
+- [Set up Execution Events](https://docs.monad.xyz/guides/execution-events/setup.md)
+- [How to Consume Execution Events in Rust](https://docs.monad.xyz/guides/execution-events/consume-rust.md)
+
+#### EVM Resources
+
+- [EVM Resources](https://docs.monad.xyz/guides/evm-resources/index.md)
+- [EVM Behavior](https://docs.monad.xyz/guides/evm-resources/evm-behavior.md)
+- [Solidity Resources](https://docs.monad.xyz/guides/evm-resources/solidity-resources.md)
+
+##### Other Languages
+
+- [Other Languages](https://docs.monad.xyz/guides/evm-resources/other-languages/index.md)
+- [Vyper](https://docs.monad.xyz/guides/evm-resources/other-languages/vyper.md)
+- [Yul](https://docs.monad.xyz/guides/evm-resources/other-languages/yul.md)
+
+#### More guides
+
+- [How to build a basic dApp with Scaffold-ETH](https://docs.monad.xyz/guides/scaffold-eth.md)
+- [Custom Stablecoins on Monad with Brale](https://docs.monad.xyz/guides/brale.md)
+- [How to connect a wallet to your app with Reown AppKit](https://docs.monad.xyz/guides/reown.md)
+- [How to build an MCP server that can interact with Monad Testnet](https://docs.monad.xyz/guides/monad-mcp.md)
+- [How to set up an x402-enabled endpoint with Monad support](https://docs.monad.xyz/guides/x402.md)
+- [How to register and build with ERC-8004 (Trustless Agents) on Monad](https://docs.monad.xyz/guides/erc-8004.md)
+- [How to build with ERC-6551 (Token-Bound Accounts) on Monad](https://docs.monad.xyz/guides/erc-6551.md): Give every NFT its own smart-contract wallet on Monad using the canonical Tokenbound ERC-6551 deployment.
+- [How to make your Monad contract clear-signable (ERC-7730)](https://docs.monad.xyz/guides/clear-signing.md)
+- [How to build a portfolio viewer using Moralis API](https://docs.monad.xyz/guides/moralis-api.md)
+- [How to add swaps to your app using Kuru Flow](https://docs.monad.xyz/guides/kuru-flow.md)
+- [How to build custom deep links in an Expo-based mobile app](https://docs.monad.xyz/guides/deeplinks-using-expo.md)
+
+##### Mera
+
+- [How to create passkey accounts with Mera](https://docs.monad.xyz/guides/mera.md): Create and recover Monad accounts from a passkey, with no seed phrase.
+- [How to use Mera with React Native](https://docs.monad.xyz/guides/mera/react-native.md): Create and reuse passkey-derived Monad accounts in a React Native app.
+
+#### Templates
+
+- [How to use the React Native Privy embedded wallet template](https://docs.monad.xyz/templates/react-native-privy-embedded-wallet.md)
+- [How to use the React Native sponsored transactions template](https://docs.monad.xyz/templates/react-native-privy-pimlico-sponsored-transactions.md)
+- [How to use the React Native Thirdweb embedded wallet template](https://docs.monad.xyz/templates/react-native-thirdweb-embedded-wallet.md)
+- [How to use the Next.js PWA Privy embedded wallet template](https://docs.monad.xyz/templates/next-serwist-privy-embedded-wallet.md)
+- [How to use the Next.js PWA sponsored transactions template](https://docs.monad.xyz/templates/next-serwist-privy-smart-wallet.md)
+- [How to use the Next.js Serwist 0x Privy embedded wallet template](https://docs.monad.xyz/templates/next-serwist-0x-privy-embedded-wallet.md)
+- [How to use the Next.js Serwist Thirdweb embedded wallet template](https://docs.monad.xyz/templates/next-serwist-thirdweb.md)
+
+##### Farcaster Mini Apps
+
+- [Farcaster Mini Apps](https://docs.monad.xyz/templates/farcaster-miniapp/index.md)
+- [How to build a Farcaster Mini App](https://docs.monad.xyz/templates/farcaster-miniapp/getting-started.md)
+- [How to send notifications to users of the Farcaster Mini App](https://docs.monad.xyz/templates/farcaster-miniapp/sending-notifications.md)
+- [How to publish a Farcaster Mini App](https://docs.monad.xyz/templates/farcaster-miniapp/publishing-miniapp.md)
+- [How to generate user specific images in the Farcaster Mini App](https://docs.monad.xyz/templates/farcaster-miniapp/generating-custom-og-images.md)
+- [How to add haptics to a Farcaster Mini App](https://docs.monad.xyz/templates/farcaster-miniapp/haptics.md)
+
+### Resources
+
+- [Frequently Asked Questions](https://docs.monad.xyz/faq.md)
+- [Official Monad Links: Website, Discord, X, and Telegram](https://docs.monad.xyz/official-links.md): Verified official Monad links: website, Discord, X, Telegram, and block explorers MonadVision and Monadscan. Check here before you click or connect a wallet.
+- [Security](https://docs.monad.xyz/security.md): Report security vulnerabilities in Monad through the Cantina bug bounty program.
+
+### For AI Agents
+
+- [Current Facts for AI Agents](https://docs.monad.xyz/ai/current-facts.md): Canonical Monad network facts and source-of-truth links for AI agents.
+- [Monad Developer Docs - AI Index](https://docs.monad.xyz/ai/developers.md): Focused links for AI agents helping developers build, deploy, verify, or integrate applications on Monad.
+- [Monad JSON-RPC Docs - AI Index](https://docs.monad.xyz/ai/rpc.md): Focused links for AI agents answering Monad JSON-RPC, provider, websocket, and RPC behavior questions.
+- [Monad Node Operations Docs - AI Index](https://docs.monad.xyz/ai/node-ops.md): Focused links for AI agents helping operators run, upgrade, recover, or monitor Monad nodes.
+- [Monad Architecture Docs - AI Index](https://docs.monad.xyz/ai/architecture.md): Focused links for AI agents explaining Monad consensus, execution, realtime data, and architecture concepts.
+
+## Learn
+
+### Monad Architecture
+
+- [Monad Architecture](https://docs.monad.xyz/monad-arch/index.md)
+- [Transaction Lifecycle in Monad](https://docs.monad.xyz/monad-arch/transaction-lifecycle.md)
+
+#### Concepts
+
+- [Concepts](https://docs.monad.xyz/monad-arch/concepts/index.md)
+- [Asynchronous I/O](https://docs.monad.xyz/monad-arch/concepts/asynchronous-io.md)
+- [Pipelining](https://docs.monad.xyz/monad-arch/concepts/pipelining.md)
+
+#### Consensus
+
+- [Consensus](https://docs.monad.xyz/monad-arch/consensus/index.md)
+- [MonadBFT](https://docs.monad.xyz/monad-arch/consensus/monad-bft.md): MonadBFT - Fast, Responsive, Fork-Resistant, Streamlined Consensus
+- [RaptorCast](https://docs.monad.xyz/monad-arch/consensus/raptorcast.md): Multicast message delivery protocol used for block propagation
+- [Asynchronous Execution](https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution.md): Pipelined consensus-execution staging
+- [Block States](https://docs.monad.xyz/monad-arch/consensus/block-states.md): Block lifecycle
+- [Local Mempool](https://docs.monad.xyz/monad-arch/consensus/local-mempool.md): Mempool local to each node
+- [Statesync](https://docs.monad.xyz/monad-arch/consensus/statesync.md): Mechanism for synchronizing MonadDb state
+- [Blocksync](https://docs.monad.xyz/monad-arch/consensus/blocksync.md): Mechanism for synchronizing missing blocks
+- [Forkpoint](https://docs.monad.xyz/monad-arch/consensus/forkpoint.md): How a node persists consensus state and resumes from it on startup
+- [Peer Discovery](https://docs.monad.xyz/monad-arch/consensus/peer-discovery.md)
+- [Message Authentication](https://docs.monad.xyz/monad-arch/consensus/authentication.md)
+- [Transport Protocol Usage](https://docs.monad.xyz/monad-arch/consensus/transport-protocols.md): Overview of transport protocol usage for node communication
+- [Staking](https://docs.monad.xyz/monad-arch/consensus/staking.md): How Monad's staking system works
+
+#### Execution
+
+- [Execution](https://docs.monad.xyz/monad-arch/execution/index.md)
+- [Parallel Execution](https://docs.monad.xyz/monad-arch/execution/parallel-execution.md)
+- [MonadDb](https://docs.monad.xyz/monad-arch/execution/monaddb.md): High-performance database for storing blockchain data.
+- [JIT Compilation](https://docs.monad.xyz/monad-arch/execution/native-compilation.md): High-performance execution of EVM bytecode by compiling to machine code.
+
+#### Real-Time Data
+
+- [Real-time Data](https://docs.monad.xyz/monad-arch/realtime-data/index.md)
+- [Real-Time Data Sources](https://docs.monad.xyz/monad-arch/realtime-data/data-sources.md)
+- [Speculative Real-Time Data](https://docs.monad.xyz/monad-arch/realtime-data/spec-realtime.md)
+
+## Node Operations
+
+### Getting Started
+
+- [Node Operations](https://docs.monad.xyz/node-ops/index.md)
+- [Hardware Requirements](https://docs.monad.xyz/node-ops/hardware-requirements.md)
+- [Full Node Installation](https://docs.monad.xyz/node-ops/full-node-installation.md)
+- [Validator Installation](https://docs.monad.xyz/node-ops/validator-installation.md)
+
+### Operations
+
+- [General Operations](https://docs.monad.xyz/node-ops/general-operations.md)
+- [Announcements](https://docs.monad.xyz/node-ops/announcements.md)
+
+#### Upgrade Instructions
+
+- [Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/index.md)
+- [MIP-8 Activation and Page Storage Migration](https://docs.monad.xyz/node-ops/upgrade-instructions/page-storage-mip-8-migration.md)
+- [v0.16.4 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.16.4.md)
+- [v0.16.3 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.16.3.md)
+- [v0.16.2 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.16.2.md)
+- [v0.16.1 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.16.1.md)
+- [v0.16.0 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.16.0.md)
+- [v0.15.2 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.15.2.md)
+- [v0.15.1 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.15.1.md)
+- [v0.15.0 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.15.0.md)
+- [v0.14.5 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.14.5.md)
+- [v0.14.4 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.14.4.md)
+- [v0.14.3 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.14.3.md)
+- [v0.14.2 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.14.2.md)
+- [v0.14.1 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.14.1.md)
+- [v0.14.0 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.14.0.md)
+- [v0.13.1 Upgrade Instructions](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.13.1.md)
+- [v0.13.0 (MONAD_NINE)](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.13.0.md)
+- [v0.12.7](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.12.7.md)
+- [Authenticated UDP Migration](https://docs.monad.xyz/node-ops/upgrade-instructions/auth-udp.md)
+- [Authenticated UDP Checking](https://docs.monad.xyz/node-ops/upgrade-instructions/authenticated-udp-checking.md)
+- [v0.12.6](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.12.6.md)
+- [v0.12.5 - `testnet` re-genesis](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.12.5-testnet-regenesis.md)
+- [v0.12.3](https://docs.monad.xyz/node-ops/upgrade-instructions/v0.12.3.md)
+
+#### Recovering a Node
+
+- [Recovering a Node](https://docs.monad.xyz/node-ops/node-recovery/index.md)
+- [Soft Reset Instructions](https://docs.monad.xyz/node-ops/node-recovery/soft-reset.md)
+- [Hard Reset Instructions](https://docs.monad.xyz/node-ops/node-recovery/hard-reset.md)
+- [Full Replay](https://docs.monad.xyz/node-ops/node-recovery/full-replay.md)
+- [Node Migration (Promoting a Full Node to Validator)](https://docs.monad.xyz/node-ops/node-recovery/node-migration.md)
+
+### Advanced
+
+- [How Full Nodes Receive Blocks](https://docs.monad.xyz/node-ops/full-node-block-delivery.md)
+- [Execution Events and WebSocket Setup](https://docs.monad.xyz/node-ops/events-and-websockets.md)
+
+#### Archive Data Setup
+
+- [Archive Data Setup](https://docs.monad.xyz/node-ops/archive-data/index.md)
+- [The Data Waterfall](https://docs.monad.xyz/node-ops/archive-data/data-waterfall.md)
+- [Running an Archive Server](https://docs.monad.xyz/node-ops/archive-data/running-an-archive-server.md)
+- [Configuring RPC to use archive data](https://docs.monad.xyz/node-ops/archive-data/configuring-rpc.md)
+- [Genesis Replay](https://docs.monad.xyz/node-ops/archive-data/genesis-replay.md): Re-execute historical blocks to reconstruct state
+
+### Validator Delegation Program
+
+- [Validator Delegation Program (VDP)](https://docs.monad.xyz/node-ops/validator-delegation-program/index.md)
+- [VDP Policy on MEV Systems](https://docs.monad.xyz/node-ops/validator-delegation-program/mev.md)
+
+### Solonet
+
+- [Solonet](https://docs.monad.xyz/node-ops/solonet.md): Run a complete Monad network locally in Docker for testing node operations and validator workflows.
+
+## OpenAPI Specs
+
+- [openapi](/api-reference/openapi.json)
+
+> The links below point to documentation indexes. Follow each `/_llms/` index recursively until you reach documentation pages.
+
+## Indexes
+
+- [Chinese (200 pages)](https://docs.monad.xyz/_llms/zh.md): Documentation for Chinese.

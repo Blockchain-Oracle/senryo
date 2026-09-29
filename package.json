@@ -1,0 +1,26 @@
+{
+  "name": "senryo",
+  "private": true,
+  "description": "Senryo 千両 — one risk-accounted balance for gold/silver perps, Perpl crypto perps and the Kinpaku card on Monad.",
+  "license": "MIT",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "invariants": "node scripts/invariants/run.mjs",
+    "env:check": "node scripts/env-check.mjs",
+    "contracts:check": "cd contracts && forge build && (test -z \"$(ls src)\" || forge fmt --check) && forge lint",
+    "gate": "pnpm typecheck && pnpm lint && pnpm invariants"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "turbo": "2.11.5",
+    "typescript": "catalog:"
+  }
+}

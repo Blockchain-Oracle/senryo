@@ -1,0 +1,127 @@
+<title>Metropolis Design Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a review desk. Direction switcher on top, a horizontal strip of real phone screenshots, notes beside. */
+:root{
+  --bg:#f3f2ee; --surface:#fbfaf7; --ink:#16181d; --muted:#5d6068; --line:#dcd9d1; --accent:#2f5d50;
+  --warn:#9a5b12; --warn-bg:#f6ecdc;
+  --f-display:"Fraunces", Georgia, serif; --f-body:"IBM Plex Sans", system-ui, sans-serif; --f-mono:"IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121417; --surface:#1a1d21; --ink:#ecebe6; --muted:#a2a5ac; --line:#2c3036; --accent:#8cc5b3; --warn:#e7b36a; --warn-bg:#2a2217; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121417; --surface:#1a1d21; --ink:#ecebe6; --muted:#a2a5ac; --line:#2c3036; --accent:#8cc5b3; --warn:#e7b36a; --warn-bg:#2a2217; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.55}
+.wrap{max-width:1180px; margin:0 auto; padding-inline:20px; padding-block:28px 64px}
+h1{font-family:var(--f-display); font-weight:700; font-size:clamp(28px,4.4vw,44px); line-height:1.08; margin:0 0 8px; text-wrap:balance}
+.lede{color:var(--muted); max-width:66ch; margin:0 0 24px}
+.bar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:18px}
+.tabs{display:flex; flex-wrap:wrap; gap:6px}
+.tab{font:500 14px var(--f-body); border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:8px 14px; border-radius:999px; cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+.tab:focus-visible,.mode button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.mode{display:flex; border:1px solid var(--line); border-radius:999px; overflow:hidden}
+.mode button{font:500 13px var(--f-mono); background:var(--surface); color:var(--muted); border:0; padding:8px 14px; cursor:pointer}
+.mode button[aria-pressed="true"]{background:var(--accent); color:var(--bg)}
+.dir{display:grid; grid-template-columns:minmax(0,1fr); gap:22px}
+@media (min-width:980px){.dir{grid-template-columns:320px minmax(0,1fr)}}
+.notes{display:flex; flex-direction:column; gap:14px}
+.eyebrow{font:500 12px var(--f-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.notes h2{font-family:var(--f-display); font-size:30px; margin:0; line-height:1.1}
+.notes p{margin:0}
+dl{margin:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px 14px; font-size:14px}
+dt{font:500 12px var(--f-mono); color:var(--muted); text-transform:uppercase; letter-spacing:.06em; padding-top:2px}
+dd{margin:0}
+.swatches{display:flex; gap:6px; flex-wrap:wrap}
+.sw{width:26px; height:26px; border-radius:6px; border:1px solid var(--line)}
+.fit{font-size:14px; border-left:3px solid var(--accent); padding-left:12px}
+.issue{font-size:14px; background:var(--warn-bg); color:var(--ink); border-radius:8px; padding:10px 12px}
+.issue b{color:var(--warn)}
+.strip{display:flex; gap:18px; overflow-x:auto; padding-bottom:10px; scroll-snap-type:x mandatory}
+figure{margin:0; flex:0 0 auto; width:236px; scroll-snap-align:start; display:flex; flex-direction:column; gap:8px}
+figure img{width:100%; border-radius:22px; border:1px solid var(--line); background:var(--surface); display:block}
+figcaption{font:500 12px var(--f-mono); color:var(--muted); letter-spacing:.04em; text-transform:uppercase}
+.compare{margin-top:44px; overflow-x:auto}
+.compare h3{font-family:var(--f-display); font-size:24px; margin:0 0 12px}
+table{border-collapse:collapse; width:100%; min-width:720px; font-size:14px}
+th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font:500 12px var(--f-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
+.foot{margin-top:28px; color:var(--muted); font-size:13px; max-width:80ch}
+@media (prefers-reduced-motion:reduce){.strip{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Metropolis · Track 01 · mobile trading app with a card</p>
+  <h1>Four design directions to choose from</h1>
+  <p class="lede">Same seven screens in each direction: home, markets, trade ticket, Face ID confirm, card, fund, and loading, empty and error states. Every screen is built from real 21st.dev components, re-coloured per direction and rendered at iPhone width. Pick one, or combine parts, before a designer refines it.</p>
+
+  <div class="bar">
+    <div class="tabs" role="tablist" aria-label="Design direction">
+      <button class="tab" role="tab" id="t-d1" data-d="d1" aria-selected="true">D1 · Pocket</button>
+      <button class="tab" role="tab" id="t-d2" data-d="d2" aria-selected="false">D2 · Desk</button>
+      <button class="tab" role="tab" id="t-d3" data-d="d3" aria-selected="false">D3 · Loud</button>
+      <button class="tab" role="tab" id="t-d4" data-d="d4" aria-selected="false">D4 · Bullion</button>
+    </div>
+    <div class="mode" aria-label="Screenshot theme">
+      <button id="m-light" data-m="light" aria-pressed="true">Light</button>
+      <button id="m-dark" data-m="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+
+  <section class="dir" aria-live="polite">
+    <div class="notes" id="notes"></div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <div class="compare">
+    <h3>Side by side</h3>
+    <table>
+      <thead><tr><th>Direction</th><th>Feels like</th><th>Best at</th><th>Weakest at</th><th>Default theme</th></tr></thead>
+      <tbody>
+        <tr><td><b>D1 Pocket</b></td><td>Revolut, Cash App</td><td>Instantly clear to anyone; the three money buckets read at a glance</td><td>Least distinctive; could look like many fintech apps</td><td>Light</td></tr>
+        <tr><td><b>D2 Desk</b></td><td>Hyperliquid, Bybit</td><td>Traders trust it; the execution trace shows the risk engine working</td><td>Dense for first-time users</td><td>Dark</td></tr>
+        <tr><td><b>D3 Loud</b></td><td>Robinhood meets Gumroad</td><td>Memorable and very marketable; hold-to-confirm prevents accidental trades</td><td>Playful tone can undercut trust with money</td><td>Light</td></tr>
+        <tr><td><b>D4 Bullion</b></td><td>A private bank for gold</td><td>Most premium; pairs naturally with a gold card and a name like Senryo or Kinpaku</td><td>Card screen needs fixing (see notes)</td><td>Light</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="foot">Source: design/DIRECTIONS.md and design/preview (routes /d1–/d4). About 700 of 1,367 21st.dev previews were reviewed, and 74 components were installed and rendered. The iOS and Android app will rebuild the chosen direction natively (Reanimated, Skia, native tabs); these screens set the look.</p>
+</div>
+
+<script>
+const SCREENS=[["home","Home"],["markets","Markets"],["trade","Trade ticket"],["confirm","Face ID confirm"],["card","Card"],["fund","Fund"],["states","Loading · empty · error"]];
+const DIRS={
+ d1:{name:"Pocket",kind:"Calm consumer",concept:"A friendly money app first, a trading app second. The one balance is the hero: total on top, three soft tiles for Free to trade, Free to spend and Locked, then a proportion bar. Face ID confirmation is a bottom sheet that restates what happens to the other buckets.",
+   type:"DM Sans throughout; Geist Mono only for addresses",motion:"Digits roll on every balance change; the sheet slides up; toasts from the top; no flashing prices",
+   sw:["#f9fbf7","#0f1729","#0db35a","#f8c630","#0a0f1d"],fit:"Best if the card and everyday spending lead the story.",issue:""},
+ d2:{name:"Desk",kind:"Pro terminal",concept:"For the active trader: dense, monospaced, everything on one scroll. Top tabs, equity chart first, positions as a table with liquidation and P&L. After Face ID, the order shows an execution trace: signed, risk check, sent to Perpl, filled.",
+   type:"Inter for labels; JetBrains Mono for every number",motion:"Fast and functional, 120–200 ms; chart path draw; nothing bounces",
+   sw:["#000000","#0c0c0d","#2fe92b","#fbfb0f","#ff4d4d"],fit:"Best if trading depth leads the story, which suits Track 01 judging.",issue:""},
+ d3:{name:"Loud",kind:"Bold expressive",concept:"Cream paper, thick black borders, hard offset shadows, red, electric blue and yellow. The balance split is three rings; positions are big gradient tiles. The ticket uses presets and hold-to-confirm before Face ID, and a fill ends in confetti.",
+   type:"Space Grotesk display; Space Mono for data and labels",motion:"Tactile: button press depth, ring sweep, hold-fill bar, confetti on fill",
+   sw:["#fff9e8","#000000","#ff3333","#0066ff","#ffff00"],fit:"Best for marketing and social reach.",issue:"The research found Robinhood dropped confetti in 2021 after criticism; a quieter fill moment may be safer."},
+ d4:{name:"Bullion",kind:"Premium editorial",concept:"A private bank for people who hold gold. Paper, ink and a thread of gold; serif headlines; ledger rows instead of cards. The ticket talks in ounces and exposure, and the card is a gold Reserve card whose top-up spells out the trade-off.",
+   type:"Instrument Serif display; Inter UI; Geist Mono figures",motion:"Slow and quiet: sliding digits, 240 ms fades, metal button press, Face ID ring pulse",
+   sw:["#f7f5f0","#fffdf8","#031a29","#b8892b","#1a7a47"],fit:"Best match for a Japanese gold name (Senryo 千両, Kinpaku 金箔) and a gold card.",issue:"<b>Needs fixing:</b> on the Card screen the content doesn't use the full width, and a merchant checkout block (Apple Pay / Google Pay buttons) was mixed into the card page by mistake."}
+};
+let cur="d1", mode="light";
+try{const s=localStorage.getItem("dirsel"); if(s&&DIRS[s]) cur=s;}catch(e){}
+const h=location.hash.replace("#",""); if(DIRS[h]) cur=h;
+function render(){
+  const d=DIRS[cur];
+  document.getElementById("notes").innerHTML=
+   `<p class="eyebrow">${cur.toUpperCase()} · ${d.kind}</p><h2>${d.name}</h2><p>${d.concept}</p>
+    <dl><dt>Palette</dt><dd><div class="swatches">${d.sw.map(c=>`<span class="sw" style="background:${c}" title="${c}"></span>`).join("")}</div></dd>
+    <dt>Type</dt><dd>${d.type}</dd><dt>Motion</dt><dd>${d.motion}</dd></dl>
+    <p class="fit">${d.fit}</p>${d.issue?`<p class="issue">${d.issue}</p>`:""}`;
+  document.getElementById("strip").innerHTML=SCREENS.map(([k,l])=>
+   `<figure><img loading="lazy" src="screens/${cur}-${k}-${mode}.png" alt="${d.name} direction, ${l} screen, ${mode} theme"><figcaption>${l}</figcaption></figure>`).join("");
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.d===cur));
+  document.querySelectorAll(".mode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===mode));
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{cur=t.dataset.d; try{localStorage.setItem("dirsel",cur)}catch(e){} render();}));
+document.querySelectorAll(".mode button").forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.m; render();}));
+render();
+</script>

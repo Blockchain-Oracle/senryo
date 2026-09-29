@@ -1,0 +1,47 @@
+# dependencies / build
+node_modules/
+.pnpm-store/
+dist/
+out/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/31337/
+
+# envio
+indexer/generated/
+indexer/.envio/
+
+# secrets — never committed (examples are allowed)
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.keystore
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# local research clones (pinned in docs/plan/references.md)
+references/
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
+*.log
+.firecrawl/
+
+# login-gated portal capture (kept local; may show personal account views) — D-048
+context/_portal/
