@@ -15,7 +15,7 @@
 - [x] Foundry scaffold `contracts/` (forge 1.8.3, solc 0.8.31, osaka, `network = "monad"`; forge-std + OpenZeppelin v5.7.0 as submodules; bytecode_hash ipfs for Sourcify)
 - [x] `.github/workflows/ci.yml` (fast gate + contracts)
 - [x] First commit (gate green) — `d80a701 chore(S0.1/plan): bootstrap plan system, tooling and invariants`
-- [ ] **[OK?]** OK-1: create GitHub repo `Blockchain-Oracle/senryo` **public** (rules §7.2), push, invite `metropolis@hackathon.monad.xyz`
+- [x] OK-1: GitHub repo `Blockchain-Oracle/senryo` created **public** + pushed (public = readable by the judges' account)
 - [ ] **(user)** register in the portal + form the team (closes 6 Oct 23:59 UTC; target 5 Oct)
 - [ ] Context7 library IDs recorded in `references.md` as each stage first uses a library (Biome: `/biomejs/website` ✓)
 
