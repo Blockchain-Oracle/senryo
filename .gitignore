@@ -45,3 +45,6 @@ references/
 
 # login-gated portal capture (kept local; may show personal account views) — D-048
 context/_portal/
+
+# agent worktrees
+.claude/worktrees/

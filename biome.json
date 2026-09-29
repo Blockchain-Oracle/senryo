@@ -16,7 +16,9 @@
       "!**/generated",
       "!**/abis",
       "!contracts",
-      "!indexer/generated"
+      "!indexer/generated",
+      "!.claude",
+      "!packages/tokens/src/tokens.css"
     ]
   },
   "formatter": {
@@ -73,7 +75,7 @@
       }
     },
     {
-      "includes": ["scripts/**"],
+      "includes": ["scripts/**", "**/scripts/**"],
       "linter": {
         "rules": {
           "suspicious": {

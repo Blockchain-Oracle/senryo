@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 const IGNORED_DIR_NAMES = new Set([
+  ".claude",
   "node_modules",
   ".next",
   "dist",

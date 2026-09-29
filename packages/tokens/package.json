@@ -1,0 +1,19 @@
+{
+  "name": "@senryo/tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "D2 Desk design tokens — single source for web CSS variables and the mobile theme.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/tokens.css"
+  },
+  "scripts": {
+    "emit": "node --experimental-strip-types scripts/emit-css.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/node": "catalog:"
+  }
+}
