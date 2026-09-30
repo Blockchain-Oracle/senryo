@@ -24,7 +24,7 @@ GitHub Actions `images.yml` matrix `api` (also runs card/keeper entrypoints), `w
 Total ≈ 2.9 GiB (keeper raised to 256m, D-124). Capacity decision in **S3**: after akashi's full deploy ≈ 1.15 GiB free → expect [OK?] a second small VPS (4–8 GB) added as a second Coolify server for the indexer compose + keeper. Never rely on swap for the card path.
 
 ## §5 Env
-`deploy/<app>.env.example` = names only; real values in gitignored `deploy/.env.<app>` or `~/.config/senryo/`; apply with `coolify app env sync <uuid> --file …` (creates/updates, never deletes); secrets runtime-only (Build off), Literal where they contain `$`; `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` non-secret only; runtime change → Restart, build change → new image. Never echo values.
+`deploy/<app>.env.example` = names only; real values only in `~/.config/senryo/deploy/<app>.env` (0600, outside the repo — invariant `no-secrets-in-tree` rejects env files anywhere in the tree, gitignored or not); apply with `coolify app env sync <uuid> --file …` (creates/updates, never deletes); secrets runtime-only (Build off), Literal where they contain `$`; `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` non-secret only; runtime change → Restart, build change → new image. Never echo values.
 
 ## §6 `.well-known` (rpId host)
 Files in `apps/web/public/.well-known/`; Dockerfile copies them explicitly (static pipelines can drop dot-folders); nginx `location =` blocks with `default_type application/json`, `absolute_redirect off`, no `$uri/` in `try_files`, `/healthz`. After every web deploy: curl both (200, application/json, no redirect), Apple CDN (`app-site-association.cdn-apple.com`), Google Digital Asset Links API. assetlinks lists EAS, Play App Signing and debug SHA-256s.
