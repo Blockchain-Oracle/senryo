@@ -11,7 +11,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
-    "migrate": "tsx src/migrate-cli.ts"
+    "migrate": "tsx src/migrate-cli.ts",
+    "bundle": "node scripts/bundle.mjs"
   },
   "dependencies": {
     "@senryo/api-client": "workspace:*",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "esbuild": "0.28.2",
     "tsx": "catalog:",
     "typescript": "catalog:"
   }
