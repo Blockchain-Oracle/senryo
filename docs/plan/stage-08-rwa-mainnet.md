@@ -52,6 +52,8 @@ reuses everything below `apps/`.
       `HoldToConfirm`, Face ID gate (D-037), execution trace on the lifecycle, receipt + share
 - [ ] S8.11 Positions (F11, F12, F14): list + detail (PnL with funding/borrow), close (hold), partial close, TP/SL via
       `TriggerOrders` (EIP-712 in session), liquidation-risk banner + post-mortem, reduce-only copy, `MIN_HOLD_BLOCKS`
+      — done: list, detail (price/funding/borrow, liq, gauge), 25/50/75 %/all close by hold with previewDecrease,
+      closed-session + anti-flash copy, live BottomAccessory mini-bar; left: TP/SL, liquidation banner + post-mortem
 - [ ] S8.12 Portfolio from the chain: buckets (Free to trade · Free to spend · Locked) at `finalized`, equity, activity
       from the indexer, BottomAccessory mini-bar; delete every `useSample()`/`PreviewBadge` on these screens
 - [ ] S8.13 LP (F24/F25): TVL, historical APR, utilisation, risks card, deposit, request redeem → countdown → claim;

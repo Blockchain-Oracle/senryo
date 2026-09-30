@@ -1,6 +1,7 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { ICONS } from "~/components/kit/icons";
 import { PositionsAccessory } from "~/components/shell/PositionsAccessory";
+import { usePositionsSummary } from "~/features/portfolio/usePositionsSummary";
 import { useTheme } from "~/theme";
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
  */
 export default function TabsLayout() {
   const { color } = useTheme();
+  const summary = usePositionsSummary();
   return (
     <NativeTabs
       backgroundColor={color.ground}
@@ -27,9 +29,11 @@ export default function TabsLayout() {
       labelStyle={{ default: { color: color.inkMuted }, selected: { color: color.ink } }}
       badgeBackgroundColor={color.primary}
     >
-      <NativeTabs.BottomAccessory>
-        <PositionsAccessory />
-      </NativeTabs.BottomAccessory>
+      {summary ? (
+        <NativeTabs.BottomAccessory>
+          <PositionsAccessory summary={summary} />
+        </NativeTabs.BottomAccessory>
+      ) : null}
       {TABS.map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name} disableTransparentOnScrollEdge>
           <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>

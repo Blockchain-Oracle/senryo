@@ -51,9 +51,9 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
     >
       <View style={styles.name}>
         <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{line.symbol}</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.caption, { color: color.inkMuted }]} numberOfLines={1}>
           Senryo · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text> ·{" "}
-          {line.maxLeverageX}x max
+          {line.maxLeverageX}×
         </Text>
       </View>
       <Sparkline values={line.spark} stroke={tint} />
