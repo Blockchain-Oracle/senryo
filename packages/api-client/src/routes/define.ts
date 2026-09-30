@@ -20,9 +20,10 @@ export interface RouteDef<
   /** Fastify-style path (`/v1/vault/:credentialId`). */
   path: string;
   auth: RouteAuth;
-  params?: Params;
-  query?: Query;
-  body?: Body;
+  /** `undefined` when the route takes none (keys are required so `R["body"]` stays exact in conditional types). */
+  params: Params;
+  query: Query;
+  body: Body;
   response: Response;
   /** Success status (default 200). */
   status?: number;

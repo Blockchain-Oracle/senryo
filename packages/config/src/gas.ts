@@ -24,15 +24,20 @@ export const GAS_LIMITS = {
   increase: 450_000n,
   decrease: 400_000n,
   close: 400_000n,
-  placeHold: 180_000n,
+  /**
+   * (S3, D-119) measured on a Monad-rules fork: `eth_estimateGas` 196.5k for a hold on an account with prior holds,
+   * > 180k (the spec's first guess) for an account's first hold — 180k ran out of gas. The card sends this as a fixed
+   * limit (no estimate on the hot path).
+   */
+  placeHold: 260_000n,
   /** (S3) same storage shape as placeHold. */
-  increaseHold: 180_000n,
-  captureHold: 200_000n,
-  releaseHold: 100_000n,
+  increaseHold: 260_000n,
+  captureHold: 280_000n,
+  releaseHold: 160_000n,
   /** (S3) anyone after expiry + grace. */
   releaseExpiredHold: 120_000n,
   /** (S3) refund repays card debt first, then credits the user. */
-  refund: 200_000n,
+  refund: 280_000n,
   liquidate: 300_000n,
   lpDeposit: 220_000n,
   claimFor: 120_000n,

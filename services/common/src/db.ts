@@ -1,6 +1,7 @@
 import postgres from "postgres";
 import * as m0001 from "../migrations/0001_card_ledger.ts";
 import * as m0002 from "../migrations/0002_api.ts";
+import * as m0003 from "../migrations/0003_cards.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -8,6 +9,8 @@ import type { Logger } from "./logger.ts";
  * numeric(78,0) (wei, 1e18 prices) arrives as a string and is converted with `BigInt()` at the edge.
  */
 export type Db = postgres.Sql<{ bigint: bigint }>;
+/** The scoped `sql` inside `db.begin(…)`. */
+export type Tx = postgres.TransactionSql<{ bigint: bigint }>;
 
 /** Pool sizes per service (256 MiB ledger, three small containers). */
 export const DB_POOL_MAX = 8;
@@ -26,7 +29,7 @@ export function createDb(url: string, applicationName: string, max: number = DB_
 }
 
 /** Ordered, append-only. Never edit an applied migration — add the next one. */
-export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [m0001, m0002];
+export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [m0001, m0002, m0003];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */
 const MIGRATION_LOCK_KEY = 0x53_45_4e_52_59_4f; // "SENRYO"

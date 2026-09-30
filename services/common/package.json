@@ -19,6 +19,7 @@
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
     "fastify": "5.12.5",
+    "jose": "6.2.12",
     "pino": "10.3.1",
     "postgres": "3.4.9",
     "zod": "catalog:"

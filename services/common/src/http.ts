@@ -112,6 +112,7 @@ export function sendRoute<R extends RouteDef>(reply: FastifyReply, route: R, val
 }
 
 const SHUTDOWN_SIGNALS = ["SIGTERM", "SIGINT"] as const;
+const SHUTDOWN_GRACE_MS = 5_000;
 
 /** Listen on HOST:PORT and close gracefully (Coolify sends SIGTERM on redeploy). */
 export type HttpServer = ReturnType<typeof createHttpServer>;
@@ -120,6 +121,8 @@ export async function listen(app: HttpServer, port: number, host: string, onClos
   for (const signal of SHUTDOWN_SIGNALS) {
     process.once(signal, () => {
       app.log.info({ signal }, "shutting down");
+      // Never hang a redeploy: exit even if a socket or pool refuses to close.
+      setTimeout(() => process.exit(0), SHUTDOWN_GRACE_MS).unref();
       void app
         .close()
         .then(() => onClose?.())
