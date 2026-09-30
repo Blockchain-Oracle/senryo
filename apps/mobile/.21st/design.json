@@ -12,7 +12,7 @@
   },
   "sources": {
     "tokens": ["packages/tokens/src/palette.ts", "packages/tokens/src/scale.ts", "packages/tokens/src/marks.ts"],
-    "components": ["apps/mobile/src/components (planned)"],
+    "components": ["apps/mobile/src/components"],
     "assets": ["brand/"],
     "instructions": ["CLAUDE.md", "docs/plan/specs/client.md"]
   },
@@ -287,7 +287,7 @@
         "url": "https://21st.dev/@yadwinder/components/vercel-tabs",
         "use": "top tabs (link mode)",
         "port": "NativeTabs + Liquid Glass (expo-router) — D2 top strip as solid header",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "balance-chart",
@@ -296,7 +296,7 @@
         "url": "https://21st.dev/@ssychui/components/balance-chart",
         "use": "equity chart + timeframe pill",
         "port": "victory-native CartesianChart + Line/Area + useChartPressState scrub",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "number-flow",
@@ -314,7 +314,7 @@
         "url": "https://21st.dev/@8starlabs/components/partition-bar",
         "use": "bucket proportion bar",
         "port": "Views + Reanimated widths",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "segmented-control",
@@ -323,7 +323,7 @@
         "url": "https://21st.dev/@ddoemonn/components/segmented-control",
         "use": "asset filter, long/short",
         "port": "Pressable row + Reanimated sliding indicator",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "market-watchlist",
@@ -332,7 +332,7 @@
         "url": "https://21st.dev/@ssychui/components/market-watchlist",
         "use": "watchlist + sparklines",
         "port": "FlashList 2 rows + static react-native-svg sparkline",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "market-heatmap",
@@ -350,7 +350,7 @@
         "url": "https://21st.dev/@ssychui/components/candle-chart",
         "use": "candles + volume (split scale/layers/crosshair/volume)",
         "port": "victory-native Candlestick + Bar volume (Skia)",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "slider",
@@ -395,7 +395,7 @@
         "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card",
         "use": "Kinpaku card flip",
         "port": "Reanimated rotateY flip; Kinpaku art from brand/kinpaku-card.svg",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "upstash-ratelimit",
@@ -404,7 +404,7 @@
         "url": "https://21st.dev/@elements-/components/upstash-ratelimit",
         "use": "FREE·SPEND meter",
         "port": "Views (FREE·SPEND meter)",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "multi-chain-swap",
@@ -440,7 +440,7 @@
         "url": "https://21st.dev/@theshanelevine/components/loading-state",
         "use": "terminal loader",
         "port": "Agari states kit loader",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "skeleton",
@@ -449,7 +449,7 @@
         "url": "https://21st.dev/@shadcn/components/skeleton",
         "use": "row skeletons",
         "port": "Reanimated shimmer (Agari states kit)",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "interactive-empty-state",
@@ -458,7 +458,7 @@
         "url": "https://21st.dev/@remcostoeten/components/interactive-empty-state",
         "use": "empty + outage",
         "port": "Agari states kit EmptyState",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "alert-toast",
@@ -476,7 +476,7 @@
         "url": "https://21st.dev/@shadcn/components/sonner",
         "use": "toaster (visibleToasts 1)",
         "port": "sonner-native (visibleToasts 1)",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       },
       {
         "name": "drawer",
@@ -485,7 +485,7 @@
         "url": "https://21st.dev/@shadcn/components/drawer",
         "use": "vaul sheets at phone widths",
         "port": "ported Agari BottomDrawer (spring damping 26 / stiffness 260)",
-        "status": "planned (S5)"
+        "status": "built (S5)"
       }
     ],
     "customPieces": [
@@ -513,6 +513,76 @@
         "port": "same as slider port (GH Pan + detents 1/2/5/10)",
         "status": "planned (S5)"
       }
+    ],
+    "built": [
+      {
+        "rn": "src/app/(tabs)/_layout.tsx",
+        "21st": "Vercel Tabs #1597",
+        "url": "https://21st.dev/@yadwinder/components/vercel-tabs",
+        "note": "native NativeTabs + Liquid Glass instead of top tabs (D-012)"
+      },
+      {
+        "rn": "src/components/charts/EquityChart.tsx",
+        "21st": "Balance Chart #30538",
+        "url": "https://21st.dev/@ssychui/components/balance-chart"
+      },
+      {
+        "rn": "src/components/charts/CandleChart.tsx",
+        "21st": "Candle Chart #22250",
+        "url": "https://21st.dev/@ssychui/components/candle-chart"
+      },
+      {
+        "rn": "src/features/portfolio/BucketRegister.tsx",
+        "21st": "Partition Bar #26545",
+        "url": "https://21st.dev/@8starlabs/components/partition-bar"
+      },
+      {
+        "rn": "src/components/kit/Segmented.tsx",
+        "21st": "Segmented Control #23552",
+        "url": "https://21st.dev/@ddoemonn/components/segmented-control"
+      },
+      {
+        "rn": "src/features/markets/MarketRow.tsx",
+        "21st": "Market Watchlist #20110",
+        "url": "https://21st.dev/@ssychui/components/market-watchlist"
+      },
+      {
+        "rn": "src/features/card/CardFace.tsx",
+        "21st": "Credit or Debit Card #5276",
+        "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card"
+      },
+      {
+        "rn": "src/app/(tabs)/card/index.tsx (spend meter)",
+        "21st": "Upstash Ratelimit #29280",
+        "url": "https://21st.dev/@elements-/components/upstash-ratelimit"
+      },
+      {
+        "rn": "src/components/kit/states.tsx (LoadingState)",
+        "21st": "Loading State #23591",
+        "url": "https://21st.dev/@theshanelevine/components/loading-state"
+      },
+      {
+        "rn": "src/components/kit/states.tsx (Skeleton)",
+        "21st": "Skeleton #1588",
+        "url": "https://21st.dev/@shadcn/components/skeleton"
+      },
+      {
+        "rn": "src/components/kit/states.tsx (EmptyState)",
+        "21st": "Interactive Empty State #22302",
+        "url": "https://21st.dev/@remcostoeten/components/interactive-empty-state"
+      },
+      {
+        "rn": "src/components/toast/ToastHost.tsx",
+        "21st": "Alert Toast #8863 + Sonner #886",
+        "url": "https://21st.dev/@shadcn/components/sonner",
+        "note": "sonner-native"
+      },
+      {
+        "rn": "src/components/sheet/Sheet.tsx",
+        "21st": "Drawer #1245",
+        "url": "https://21st.dev/@shadcn/components/drawer",
+        "note": "ported pre-existing BottomDrawer"
+      }
     ]
   },
   "decisions": [
@@ -520,6 +590,11 @@
       "date": "2026-09-29",
       "decision": "D2 Desk adopted; components from the D2 21st set, re-tokenized to @senryo/tokens",
       "ref": "D-004, D-060…"
+    },
+    {
+      "date": "2026-09-30",
+      "decision": "S5 ports recorded under components.built (RN file → 21st source)",
+      "ref": "D-070…D-077"
     }
   ],
   "rules": [

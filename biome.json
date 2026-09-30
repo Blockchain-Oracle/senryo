@@ -64,6 +64,8 @@
         "**/constants.ts",
         "packages/config/**",
         "packages/tokens/**",
+        "apps/mobile/src/theme/**",
+        "apps/mobile/src/lib/sample.ts",
         "scripts/invariants/**"
       ],
       "linter": {

@@ -162,7 +162,8 @@ export function designJsonPresent(rule, ctx) {
 export function addressDrift(rule, ctx) {
   const dir = join(ctx.root, "packages/contracts/src/addresses");
   const indexerConfig = join(ctx.root, "indexer/config.yaml");
-  if (!existsSync(dir) || !existsSync(indexerConfig)) return { findings: [], skipped: "no address book or indexer config yet (indexer lands in S4)" };
+  if (!existsSync(dir) || !existsSync(indexerConfig))
+    return { findings: [], skipped: "no address book or indexer config yet (indexer lands in S4)" };
   const config = readFileSync(indexerConfig, "utf8").toLowerCase();
   const findings = [];
   for (const { rel, abs } of walkFiles(ctx.root, "packages/contracts/src/addresses", [".json"])) {

@@ -10,4 +10,4 @@ Pending user OKs: OK-2 buy senryo.xyz (pre-approved only if ≈ $2)
 Env readiness (presence only): FIRECRAWL_API_KEY [x] · DEPLOYER_PK [ ] · SPONSOR_PK [ ] · OPERATOR_PK×2 [ ] · KEEPER_PK [ ] · AURORA_API_KEY [ ] · LITHIC_SANDBOX_KEY [ ] · ENVIO_API_TOKEN [ ] · EXPO_TOKEN [ ] · APPLE_TEAM_ID [ ]
 Networks: testnet addresses packages/contracts/src/addresses/10143.json (12 contracts, all Sourcify exact_match, start block 66856078) · mainnet — none · indexer config — none
 Coolify: not touched (read-only baseline 29 Sep: 4.0 GiB available, 8 GiB swap; see context/09-product/deployment-coolify.md)
-Next action: merge S5 when it reports; open wave B — S3 services (keeper mirror relay for MirrorXAU/XAG), S4 indexer (10143 from block 66856078), S6 auth on rpId senryo.xyz (DNS records [OK?]).
+Next action: wave B — S3 services (capacity decision on Coolify first), S4 indexer (10143 from block 66856078), S6 auth on rpId senryo.xyz (DNS [OK?]). User: `eas init` + `eas credentials` (Android SHA-256 for assetlinks) and dev builds on device.

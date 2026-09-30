@@ -7,6 +7,8 @@ packages:
 # Native/binary builds are opt-in; anything not listed is denied.
 allowBuilds:
   esbuild: true
+  # Copies Skia's prebuilt xcframeworks/.so from react-native-skia-{apple,android} into libs/ (read in S5; no network).
+  "@shopify/react-native-skia": true
 
 # One version per shared dependency across apps, packages and services (D-043 pnpm 11.24; D-046 TypeScript 6).
 catalog:
@@ -17,10 +19,23 @@ catalog:
   "@tanstack/react-query": ^5.90.0
   react: 19.2.8
   react-dom: 19.2.8
-  "@types/react": ^19
-  "@types/react-dom": ^19
+  "@types/react": ~19.2.4
+  "@types/react-dom": ~19.2.3
   next: 16.3.6
   tailwindcss: ^4.1.0
   "@tailwindcss/postcss": ^4.1.0
   motion: ^13.4.4
   tsx: ^4.20.0
+
+# Expo SDK 57 pins React to its renderer (React Native refuses any other React); web keeps 19.2.8 above (D-070).
+catalogs:
+  mobile:
+    react: 19.2.3
+    "@types/react": ~19.2.4
+
+minimumReleaseAgeExclude:
+  - '@expo/ui@57.0.21'
+  - expo-constants@57.0.20
+  - expo-modules-core@57.0.20
+  - expo-router@57.0.24
+  - expo@57.0.26
