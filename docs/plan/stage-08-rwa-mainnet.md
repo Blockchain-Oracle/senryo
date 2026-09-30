@@ -31,7 +31,7 @@ reuses everything below `apps/`.
 - [x] S8.5 Assurance (D-024): Slither + Aderyn + Wake on `contracts/`; `security-review` on `services/`; every finding fixed
       or documented in `docs/security/assurance.md`; invariants I1–I7 green after fixes — contracts part done
       (D-181…D-184); the services `security-review` stays with the lead
-- [ ] S8.6 Gas re-calibration (D-119): `forge snapshot --network monad` + fork/mainnet `eth_estimateGas` → `GAS_LIMITS`
+- [x] S8.6 Gas re-calibration (D-119): `forge snapshot --network monad` + fork/mainnet `eth_estimateGas` → `GAS_LIMITS`
 - [ ] S8.7 `packages/core` risk mirror (preview only; contract wins): execution price/spread, N, IM/MM, uPnL, liq price,
       FreeToTrade after the trade, caps (OI/skew/trade/min), session calendar display, `blockers.ts` in F10 order;
       differential check vs `SenryoCore.quote` on the fork
@@ -98,3 +98,15 @@ Assurance findings closed (fixed or documented) · mainnet deposit → XAU long 
   - **Clients.** A close or decrease can now revert `PerpModule.LossExceedsBalance(shortfall)` (D-181). The S8.7
     blockers need "close your profitable position first or add funds". The ABIs are re-exported.
   - The unused errors in `Errors.sol` are kept on purpose until the next full redeploy (see assurance.md).
+- **S8.6 (D-185).** `GAS_LIMITS` is re-calibrated from `eth_estimateGas`-equivalents on mainnet and testnet forks.
+  Flat values are the budget for ONE open position. The new `positionGasLimit(action, positions)` adds
+  `POSITION_GAS` per extra position: count the traded position, and for an opening increase count it after the open.
+  `liquidateGasLimit` is 350k + 180k × n. New keys: `swapCollateral`, `setCardEnvelope`, `placeTrigger`,
+  `lpRequestRedeem`, `lpClaimRedeem`.
+  - **Lead: wire callers to pass the position count** (apps + keeper + card). Most important is
+    `services/card/src/submit.ts`, which sends `placeHold` with `fixedGas: GAS_LIMITS.placeHold`. That limit is
+    charged in full, so use `positionGasLimit("placeHold", positions)`. Mainnet costs are ~1.5–2× testnet (every
+    risk pass reads the AUSD/USDC Chainlink feeds), so the practice numbers are not a guide to mainnet.
+  - To re-measure: `anvil --fork-url https://rpc.monad.xyz --network monad` (or the testnet RPC), then
+    `MONAD_FORK_URL=http://127.0.0.1:<port> forge test --match-path test/fork/GasProfileFork.t.sol --isolate -vv`
+    and read the `estimate <action>.p<n>` log lines.
