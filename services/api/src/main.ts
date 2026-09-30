@@ -9,7 +9,9 @@ import { GeoDb } from "./geo-db.ts";
 import { EnvioIndexerBridge, NullIndexerBridge } from "./indexer.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
+import { registerFollowRoutes } from "./routes/follow.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
+import { registerProfileRoutes } from "./routes/profile.ts";
 import { registerStarterRoutes } from "./routes/starter.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
 import { registerTopUpRoutes } from "./routes/topup.ts";
@@ -58,6 +60,8 @@ registerStarterRoutes(app, ctx);
 registerTopUpRoutes(app, ctx);
 registerStorageRoutes(app, ctx);
 registerEngagementRoutes(app, ctx);
+registerProfileRoutes(app, ctx);
+registerFollowRoutes(app, ctx);
 // Rows left non-terminal by a previous process (restart mid-claim) get their real stage; never re-sent (S8.16e).
 void reconcilePendingRelays(ctx).catch((err) => log.warn({ err: String(err) }, "relay reconcile failed"));
 const hub = new WsHub(ctx);
