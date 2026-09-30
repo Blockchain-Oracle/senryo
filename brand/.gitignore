@@ -1,0 +1,3 @@
+# OFL fonts are fetched by scripts/render.sh; not committed (size).
+.fonts/
+__pycache__/

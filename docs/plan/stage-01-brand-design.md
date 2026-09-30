@@ -6,7 +6,7 @@
 
 ## Steps
 - [x] `packages/tokens`: D2 palette dark + light (single TS source), type/space/radius/motion scales, generated `tokens.css` (shadcn/Tailwind 4 variable names; adds `--chart-up`, `--chart-candle-down`, `--surface`)
-- [ ] Brand: 千 square seal mark (SVG, inverse), wordmark, app icon 1024, splash, logo ≤ 3 MB PNG, Kinpaku card art → `brand/`
+- [x] Brand: 千 square seal mark (SVG, inverse), wordmark, app icon 1024, splash, logo ≤ 3 MB PNG, Kinpaku card art → `brand/`
 - [ ] `apps/web` shell: Next 16 static export, Tailwind 4 + shadcn `components.json`, fonts Inter + JetBrains Mono, tokens.css, D2 top bar + tabs
 - [ ] `21st add` the D2 set (per specs/client.md mapping), re-tokenize (no hex/px), split files > 400 lines, `framer-motion` → `motion/react`
 - [ ] `apps/web/.21st/design.json` + `apps/mobile/.21st/design.json` (colors, type, radius, motion, must/avoid, installed components, RN port sources)
