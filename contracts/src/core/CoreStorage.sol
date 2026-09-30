@@ -6,7 +6,6 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {IPriceSource} from "../oracle/interfaces/IPriceSource.sol";
-import {Constants as C} from "../libraries/Constants.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {
     Account,
@@ -178,9 +177,5 @@ abstract contract CoreStorage is AccessManaged, ReentrancyGuardTransient, EIP712
 
     function _positionBit(uint8 marketId) internal pure returns (uint32) {
         return uint32(1) << marketId;
-    }
-
-    function _maxMarkets() internal pure returns (uint256) {
-        return C.MAX_MARKETS;
     }
 }

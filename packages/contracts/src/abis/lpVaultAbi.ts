@@ -858,6 +858,19 @@ export const lpVaultAbi = [
   },
   {
     "type": "event",
+    "name": "TvlCapSet",
+    "inputs": [
+      {
+        "name": "cap",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Withdraw",
     "inputs": [
       {

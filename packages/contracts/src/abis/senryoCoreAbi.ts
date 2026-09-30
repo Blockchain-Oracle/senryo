@@ -2877,6 +2877,19 @@ export const senryoCoreAbi = [
   },
   {
     "type": "event",
+    "name": "InboxFactorySet",
+    "inputs": [
+      {
+        "name": "factory",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "InsuranceCovered",
     "inputs": [
       {
@@ -3143,6 +3156,19 @@ export const senryoCoreAbi = [
         "type": "bool",
         "indexed": false,
         "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SwapperSet",
+    "inputs": [
+      {
+        "name": "swapper",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -3543,6 +3569,17 @@ export const senryoCoreAbi = [
         "name": "marketId",
         "type": "uint8",
         "internalType": "uint8"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LossExceedsBalance",
+    "inputs": [
+      {
+        "name": "shortfall",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ]
   },

@@ -9,7 +9,7 @@ import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {SessionOracle} from "../src/oracle/SessionOracle.sol";
 import {AggregatorV3Interface} from "../src/oracle/interfaces/AggregatorV3Interface.sol";
 import {IPriceSource} from "../src/oracle/interfaces/IPriceSource.sol";
-import {CollateralSwapper, IPermit2, IUniversalRouter, PoolKey} from "../src/periphery/CollateralSwapper.sol";
+import {CollateralSwapper, IPermit2, IUniversalRouter} from "../src/periphery/CollateralSwapper.sol";
 import {InboxFactory} from "../src/periphery/InboxFactory.sol";
 import {IntentRouter} from "../src/periphery/IntentRouter.sol";
 import {StarterDrip} from "../src/periphery/StarterDrip.sol";
@@ -127,14 +127,13 @@ contract Deploy is DeployBase, Seeder {
         s.router = IntentRouter(
             _ensure("IntentRouter", abi.encodePacked(type(IntentRouter).creationCode, abi.encode(s.core)), true)
         );
-        // Uniswap v4 exists only on mainnet for our pair (D-093); the pool key is read onchain in S3.
+        // Uniswap v4 exists only on mainnet for our pair (D-093); the pool key was read onchain in S3 (D-122).
         if (mainnet) {
-            PoolKey memory key;
             s.swapper = _ensure(
                 "CollateralSwapper",
                 abi.encodePacked(
                     type(CollateralSwapper).creationCode,
-                    abi.encode(am, s.core, IUniversalRouter(S.UNIVERSAL_ROUTER), IPermit2(S.PERMIT2), key)
+                    abi.encode(am, s.core, IUniversalRouter(S.UNIVERSAL_ROUTER), IPermit2(S.PERMIT2), S.stablePoolKey())
                 ),
                 false
             );
@@ -144,6 +143,8 @@ contract Deploy is DeployBase, Seeder {
     function _wire(Stack memory s, address deployer, bool mainnet) internal {
         if (s.core.inboxFactory() != address(s.factory)) s.core.setInboxFactory(address(s.factory));
         if (!s.core.hasDepositSource(address(s.drip))) s.core.setDepositSource(address(s.drip), DepositSource.VOUCHER);
+        // Before RoleWiring moves `setSwapper` to the timelocked PARAM_ADMIN role (D-180): first run only.
+        if (s.swapper != address(0) && s.core.swapper() != s.swapper) s.core.setSwapper(s.swapper);
         RoleWiring.Targets memory t;
         t.core = address(s.core);
         t.oracle = address(s.oracle);

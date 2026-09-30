@@ -27,6 +27,9 @@ contract LpVault is ERC4626, AccessManaged {
         uint64 claimableAt;
     }
 
+    // Config events live here, not in `Events`, so the shared libraries keep their bytecode (S8.5).
+    event TvlCapSet(uint256 cap);
+
     ISenryoCore public immutable CORE;
     uint256 public tvlCap;
     uint256 public nextRequestId;
@@ -102,6 +105,7 @@ contract LpVault is ERC4626, AccessManaged {
     /// @notice PARAM_ADMIN (timelocked): raise or lower the TVL cap.
     function setTvlCap(uint256 cap) external restricted {
         tvlCap = cap;
+        emit TvlCapSet(cap);
     }
 
     // ---------------------------------------------------------------- ERC-4626 hooks

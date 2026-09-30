@@ -15,6 +15,7 @@ import {RoleWiring} from "../../script/RoleWiring.sol";
 contract SessionOracleTest is Fixture {
     uint8 internal constant GOLD = S.GOLD_MARKET;
     int256 internal constant P0 = S.XAU_MIRROR_SEED_ANSWER;
+    uint256 internal constant FEED_TO_WAD = 1e10;
 
     function setUp() public {
         _deploy(false, MONDAY + 12 * HOUR);
@@ -102,6 +103,26 @@ contract SessionOracleTest is Fixture {
         PriceView memory v = oracle.observe(GOLD);
         assertEq(uint8(v.status), uint8(MarketStatus.OPEN));
         assertEq(v.price18, uint256(jumped) * 1e10, "ratifies the feed's own answer");
+    }
+
+    /// @notice D-183: an answer whose 1e18 form does not fit the uint128 price slot is invalid data (STALE, reduce-only)
+    /// — never truncated into a wrong price, never an overflow revert in `peek`, never ratified by acceptFeedPrice.
+    function test_unrepresentableAnswerIsStaleNeverTruncated() public {
+        int256 tooBig = int256(uint256(type(uint128).max) / FEED_TO_WAD) + 1;
+        xau.push(tooBig);
+        PriceView memory v = oracle.observe(GOLD);
+        assertEq(uint8(v.status), uint8(MarketStatus.STALE));
+        assertEq(v.price18, uint256(P0) * FEED_TO_WAD, "last accepted price kept");
+        xau.push(type(int256).max);
+        assertEq(uint8(oracle.peek(GOLD).status), uint8(MarketStatus.STALE), "no overflow revert");
+
+        RoleWiring.grant(am, C.PARAM_ADMIN_ROLE, address(this));
+        bytes memory call = abi.encodeCall(SessionOracle.acceptFeedPrice, (GOLD));
+        am.schedule(address(oracle), call, 0);
+        vm.warp(vm.getBlockTimestamp() + C.PARAM_DELAY);
+        xau.push(tooBig);
+        vm.expectRevert(Errors.FeedAnswerInvalid.selector);
+        am.execute(address(oracle), call);
     }
 
     function test_closedDailyBreakAndClosedSpread() public {

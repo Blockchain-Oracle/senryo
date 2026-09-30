@@ -3,6 +3,7 @@ pragma solidity 0.8.31;
 
 import {AccessManaged} from "@openzeppelin/contracts/access/manager/AccessManaged.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Constants as C} from "../libraries/Constants.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {Events} from "../libraries/Events.sol";
@@ -13,11 +14,13 @@ import {IMarketCalendar} from "./interfaces/IMarketCalendar.sol";
 import {IPriceSource} from "./interfaces/IPriceSource.sol";
 
 /// @title SessionOracle — Chainlink push-feed adapter with clamp, circuit, 3-round confirm and session calendar.
-/// @notice Every read checks: answer > 0; updatedAt ≤ now (future guard → STALE); answeredInRound ≥ roundId;
+/// @notice Every read checks: 0 < answer and answer × 10^(18 − decimals) fits the uint128 price slot; updatedAt ≤ now (future guard → STALE); answeredInRound ≥ roundId;
 /// age ≤ heartbeat + FEED_GRACE; |Δ| vs the last accepted ≤ clampBps (reopenClampBps after CLOSED) else CIRCUIT.
 /// CIRCUIT exits only by CONFIRM_ROUNDS consecutive rounds within CONFIRM_BAND_BPS spanning ≥ CONFIRM_SECONDS,
 /// or by the timelocked `acceptFeedPrice` (which accepts the feed's own answer — never a price argument).
 contract SessionOracle is AccessManaged, IPriceSource {
+    using SafeCast for uint256;
+
     struct FeedConfig {
         AggregatorV3Interface feed;
         uint8 calendarId;
@@ -112,10 +115,12 @@ contract SessionOracle is AccessManaged, IPriceSource {
     function acceptFeedPrice(uint8 marketId) external restricted {
         FeedConfig memory cfg = _config(marketId);
         (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) = cfg.feed.latestRoundData();
-        if (answer <= 0 || updatedAt > block.timestamp || answeredInRound < roundId) revert Errors.FeedAnswerInvalid();
+        if (!_fits(answer, cfg.decimals) || updatedAt > block.timestamp || answeredInRound < roundId) {
+            revert Errors.FeedAnswerInvalid();
+        }
         FeedState storage st = states[marketId];
-        st.lastPrice18 = uint128(_normalize(answer, cfg.decimals));
-        st.lastUpdatedAt = uint64(updatedAt);
+        st.lastPrice18 = _normalize(answer, cfg.decimals).toUint128();
+        st.lastUpdatedAt = updatedAt.toUint64();
         st.lastRoundId = roundId;
         st.circuit = false;
         st.closedSeen = false;
@@ -187,8 +192,8 @@ contract SessionOracle is AccessManaged, IPriceSource {
 
     function _accept(Eval memory e, uint256 answer18, uint256 updatedAt) private pure {
         e.accepted = true;
-        e.next.lastPrice18 = uint128(answer18);
-        e.next.lastUpdatedAt = uint64(updatedAt);
+        e.next.lastPrice18 = answer18.toUint128();
+        e.next.lastUpdatedAt = updatedAt.toUint64();
         e.next.lastRoundId = e.roundId;
         e.next.circuit = false;
         e.next.closedSeen = false;
@@ -217,7 +222,7 @@ contract SessionOracle is AccessManaged, IPriceSource {
             if (count >= C.CONFIRM_ROUNDS && updatedAt - oldest >= C.CONFIRM_SECONDS) return true;
             --id;
             try cfg.feed.getRoundData(id) returns (uint80 rid, int256 a, uint256, uint256 at, uint80 air) {
-                if (a <= 0 || at == 0 || air < rid || at > oldest) break;
+                if (!_fits(a, cfg.decimals) || at == 0 || air < rid || at > oldest) break;
                 if (!_withinBand(_normalize(a, cfg.decimals), answer18, C.CONFIRM_BAND_BPS)) break;
                 oldest = at;
                 ++count;
@@ -236,8 +241,9 @@ contract SessionOracle is AccessManaged, IPriceSource {
         try cfg.feed.latestRoundData() returns (uint80 rid, int256 answer, uint256, uint256 at, uint80 air) {
             roundId = rid;
             updatedAt = at;
-            valid = answer > 0 && at != 0 && at <= block.timestamp && air >= rid;
-            if (answer > 0) answer18 = _normalize(answer, cfg.decimals);
+            bool fits = _fits(answer, cfg.decimals);
+            valid = fits && at != 0 && at <= block.timestamp && air >= rid;
+            if (fits) answer18 = _normalize(answer, cfg.decimals);
         } catch {
             valid = false;
         }
@@ -246,6 +252,13 @@ contract SessionOracle is AccessManaged, IPriceSource {
     function _withinBand(uint256 a, uint256 b, uint256 bandBps) private pure returns (bool) {
         uint256 diff = a > b ? a - b : b - a;
         return diff <= Math.mulDiv(b, bandBps, C.BPS);
+    }
+
+    /// @dev A positive answer whose 1e18 form fits the uint128 price slot. Anything else is invalid data (→ STALE,
+    /// reduce-only) — never truncated into a wrong price, and never an overflow revert inside the feed `try`.
+    function _fits(int256 answer, uint8 decimals) private pure returns (bool) {
+        // forge-lint: disable-next-line(unsafe-typecast)
+        return answer > 0 && uint256(answer) <= type(uint128).max / C.DECIMAL_BASE ** (C.PRICE_DECIMALS - decimals);
     }
 
     function _normalize(int256 answer, uint8 decimals) private pure returns (uint256) {

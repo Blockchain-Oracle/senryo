@@ -1,0 +1,604 @@
+Impossible to generate IR for AccountLedger.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for AccountLedger._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for AccountLedger._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for AdminModule.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for AdminModule._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for AdminModule._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CardModule.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CardModule._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CardModule._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CollateralConfig.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CollateralConfig._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CollateralConfig._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CoreStorage.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CoreStorage._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for CoreStorage._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for LiquidationModule.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for LiquidationModule._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for LiquidationModule._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for MarketAccounting.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for MarketAccounting._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for MarketAccounting._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for MarketRegistry.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for MarketRegistry._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for MarketRegistry._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for PerpModule.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for PerpModule._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for PerpModule._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for RiskModule.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for RiskModule._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for RiskModule._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for SenryoCore.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for SenryoCore._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for SenryoCore._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for TriggerOrders.constructor (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#78-87):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for TriggerOrders._EIP712Name (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#155-157):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for TriggerOrders._EIP712Version (lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol#165-167):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for IntentRouter._nonReentrantBefore (lib/openzeppelin-contracts/contracts/utils/ReentrancyGuardTransient.sol#61-67):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for IntentRouter._nonReentrantAfter (lib/openzeppelin-contracts/contracts/utils/ReentrancyGuardTransient.sol#69-71):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for IntentRouter._reentrancyGuardEntered (lib/openzeppelin-contracts/contracts/utils/ReentrancyGuardTransient.sol#77-79):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for StarterDrip._nonReentrantBefore (lib/openzeppelin-contracts/contracts/utils/ReentrancyGuardTransient.sol#61-67):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for StarterDrip._nonReentrantAfter (lib/openzeppelin-contracts/contracts/utils/ReentrancyGuardTransient.sol#69-71):
+ 'NoneType' object has no attribute 'parameters'
+Impossible to generate IR for StarterDrip._reentrancyGuardEntered (lib/openzeppelin-contracts/contracts/utils/ReentrancyGuardTransient.sol#77-79):
+ 'NoneType' object has no attribute 'parameters'
+
+Detector: arbitrary-send-erc20
+AccountLedger._pull(address,address,uint256) (src/core/AccountLedger.sol#111-116) uses arbitrary from in transferFrom: IERC20(token).safeTransferFrom(from,address(this),amount) (src/core/AccountLedger.sol#114)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Detector: arbitrary-send-eth
+StarterDrip.withdrawNative(address,uint256) (src/periphery/StarterDrip.sol#129-133) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = to.call{value: amount}() (src/periphery/StarterDrip.sol#130)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Detector: uninitialized-state
+CoreStorage._allowances (src/core/CoreStorage.sol#46) is never initialized. It is used in:
+	- CardModule.setSpendAllowance(address,uint128,uint64,bytes) (src/core/CardModule.sol#28-38)
+	- CardModule.revokeSpendAllowance() (src/core/CardModule.sol#41-48)
+	- CardModule.allowance(address) (src/core/CardModule.sol#181-183)
+	- CardModule._consumeAllowance(address,uint256) (src/core/CardModule.sol#187-198)
+	- RiskModule._allowanceLeft(address) (src/core/RiskModule.sol#162-167)
+MarketCalendar._holidays (src/oracle/MarketCalendar.sol#22) is never initialized. It is used in:
+	- MarketCalendar.addHoliday(uint8,uint64,uint64) (src/oracle/MarketCalendar.sol#41-49)
+	- MarketCalendar.removeHoliday(uint8,uint256) (src/oracle/MarketCalendar.sol#52-59)
+	- MarketCalendar.isOpen(uint8,uint256) (src/oracle/MarketCalendar.sol#64-75)
+	- MarketCalendar.holidays(uint8) (src/oracle/MarketCalendar.sol#86-88)
+	- MarketCalendar._prune(uint8) (src/oracle/MarketCalendar.sol#98-109)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+Detector: incorrect-equality
+LpVault.claimRedeem(uint256) (src/lp/LpVault.sol#94-103) uses a dangerous strict equality:
+	- r.shares == 0 (src/lp/LpVault.sol#96)
+SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) uses a dangerous strict equality:
+	- ! _fits(a,cfg.decimals) || at == 0 || air < rid || at > oldest (src/oracle/SessionOracle.sol#225)
+SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) uses a dangerous strict equality:
+	- e.roundId == st.lastRoundId && st.lastPrice18 != 0 (src/oracle/SessionOracle.sol#166)
+SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) uses a dangerous strict equality:
+	- e.next.lastUpdatedAt == 0 (src/oracle/SessionOracle.sol#188)
+DepositInbox._sweep(IERC20) (src/periphery/DepositInbox.sol#31-37) uses a dangerous strict equality:
+	- bal == 0 (src/periphery/DepositInbox.sol#33)
+MirrorAggregator.getRoundData(uint80) (src/testnet/MirrorAggregator.sol#46-50) uses a dangerous strict equality:
+	- r.updatedAt == 0 (src/testnet/MirrorAggregator.sol#48)
+MirrorAggregator.latestRoundData() (src/testnet/MirrorAggregator.sol#52-57) uses a dangerous strict equality:
+	- r.updatedAt == 0 (src/testnet/MirrorAggregator.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Detector: reentrancy-no-eth
+Reentrancy in PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237):
+	External calls:
+	- pv = ORACLE.observe(marketId) (src/core/PerpModule.sol#192)
+	State variables written after the call(s):
+	- delete _positions[user][marketId] (src/core/PerpModule.sol#217)
+	CoreStorage._positions (src/core/CoreStorage.sol#38) can be used in cross function reentrancies:
+	- RiskModule._risk(address) (src/core/RiskModule.sol#48-90)
+	- RiskModule.position(address,uint8) (src/core/RiskModule.sol#38-40)
+	- _positions[user][marketId] = p (src/core/PerpModule.sol#222)
+	CoreStorage._positions (src/core/CoreStorage.sol#38) can be used in cross function reentrancies:
+	- RiskModule._risk(address) (src/core/RiskModule.sol#48-90)
+	- RiskModule.position(address,uint8) (src/core/RiskModule.sol#38-40)
+Reentrancy in TriggerOrders.executeTrigger(bytes32) (src/core/TriggerOrders.sol#44-58):
+	External calls:
+	- pv = ORACLE.observe(o.marketId) (src/core/TriggerOrders.sol#51)
+	- _decrease(o.user,o.marketId,sizeDelta,o.acceptablePrice18,o.expiry,PositionKind.TRIGGER) (src/core/TriggerOrders.sol#56)
+		- pv = ORACLE.observe(marketId) (src/core/PerpModule.sol#192)
+	State variables written after the call(s):
+	- _decrease(o.user,o.marketId,sizeDelta,o.acceptablePrice18,o.expiry,PositionKind.TRIGGER) (src/core/TriggerOrders.sol#56)
+		- delete _positions[user][marketId] (src/core/PerpModule.sol#217)
+		- _positions[user][marketId] = p (src/core/PerpModule.sol#222)
+	CoreStorage._positions (src/core/CoreStorage.sol#38) can be used in cross function reentrancies:
+	- RiskModule._risk(address) (src/core/RiskModule.sol#48-90)
+	- RiskModule.position(address,uint8) (src/core/RiskModule.sol#38-40)
+Reentrancy in LiquidationModule.liquidate(address) (src/core/LiquidationModule.sol#22-62):
+	External calls:
+	- _prepareMarkets(a.positionBitmap) (src/core/LiquidationModule.sol#25)
+		- pv = ORACLE.observe(id) (src/core/LiquidationModule.sol#87)
+	State variables written after the call(s):
+	- (n,pen) = _closeForLiquidation(user,id) (src/core/LiquidationModule.sol#34)
+		- nonce = ++ _accounts[user].nonce (src/core/CoreStorage.sol#92)
+	CoreStorage._accounts (src/core/CoreStorage.sol#37) can be used in cross function reentrancies:
+	- CoreStorage._bump(address) (src/core/CoreStorage.sol#91-93)
+	- RiskModule._emitRisk(address) (src/core/RiskModule.sol#97-103)
+	- RiskModule._risk(address) (src/core/RiskModule.sol#48-90)
+	- RiskModule.account(address) (src/core/RiskModule.sol#34-36)
+	- LiquidationModule.isLiquidatable(address) (src/core/LiquidationModule.sol#75-80)
+	- Events.Liquidated(user,msg.sender,penaltyPaid,liqFee,shortfall,_bump(user)) (src/core/LiquidationModule.sol#56)
+		- nonce = ++ _accounts[user].nonce (src/core/CoreStorage.sol#92)
+	CoreStorage._accounts (src/core/CoreStorage.sol#37) can be used in cross function reentrancies:
+	- CoreStorage._bump(address) (src/core/CoreStorage.sol#91-93)
+	- RiskModule._emitRisk(address) (src/core/RiskModule.sol#97-103)
+	- RiskModule._risk(address) (src/core/RiskModule.sol#48-90)
+	- RiskModule.account(address) (src/core/RiskModule.sol#34-36)
+	- LiquidationModule.isLiquidatable(address) (src/core/LiquidationModule.sol#75-80)
+	- _bump(msg.sender) (src/core/LiquidationModule.sol#59)
+		- nonce = ++ _accounts[user].nonce (src/core/CoreStorage.sol#92)
+	CoreStorage._accounts (src/core/CoreStorage.sol#37) can be used in cross function reentrancies:
+	- CoreStorage._bump(address) (src/core/CoreStorage.sol#91-93)
+	- RiskModule._emitRisk(address) (src/core/RiskModule.sol#97-103)
+	- RiskModule._risk(address) (src/core/RiskModule.sol#48-90)
+	- RiskModule.account(address) (src/core/RiskModule.sol#34-36)
+	- LiquidationModule.isLiquidatable(address) (src/core/LiquidationModule.sol#75-80)
+Reentrancy in AccountLedger.swapCollateral(address,uint256,uint256) (src/core/AccountLedger.sol#44-58):
+	External calls:
+	- ICollateralSwapper(swapper).swap(tokenIn,tokenOut,amountIn,minOut) (src/core/AccountLedger.sol#51)
+	State variables written after the call(s):
+	- nonce = _bump(msg.sender) (src/core/AccountLedger.sol#55)
+		- nonce = ++ _accounts[user].nonce (src/core/CoreStorage.sol#92)
+	CoreStorage._accounts (src/core/CoreStorage.sol#37) can be used in cross function reentrancies:
+	- RiskModule._risk(address) (src/core/RiskModule.sol#48-90)
+	- RiskModule.account(address) (src/core/RiskModule.sol#34-36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Detector: uninitialized-local
+LiquidationModule.liquidate(address).penalty (src/core/LiquidationModule.sol#30) is a local variable never initialized
+LiquidationModule.liquidate(address).net (src/core/LiquidationModule.sol#29) is a local variable never initialized
+RiskModule._risk(address).fees (src/core/RiskModule.sol#53) is a local variable never initialized
+RiskModule._risk(address).upnl (src/core/RiskModule.sol#51) is a local variable never initialized
+RiskModule._risk(address).posFees (src/core/RiskModule.sol#52) is a local variable never initialized
+PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind).shortfall (src/core/PerpModule.sol#229) is a local variable never initialized
+LiquidationModule._closeForLiquidation(address,uint8).closed (src/core/LiquidationModule.sol#116) is a local variable never initialized
+RiskModule._risk(address).negUpnl (src/core/RiskModule.sol#50) is a local variable never initialized
+StarterDrip.claimFor(address,uint64,bytes).practice (src/periphery/StarterDrip.sol#76) is a local variable never initialized
+LiquidationModule._closeForLiquidation(address,uint8).f (src/core/LiquidationModule.sol#99) is a local variable never initialized
+PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind).f (src/core/PerpModule.sol#196) is a local variable never initialized
+LiquidationModule.liquidate(address).shortfall (src/core/LiquidationModule.sol#45) is a local variable never initialized
+PerpModule._increase(address,uint8,bool,uint256,uint256,uint64).f (src/core/PerpModule.sol#106) is a local variable never initialized
+MarketAccounting._accrue(uint8,bool).fRate (src/core/MarketAccounting.sol#59) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Detector: unused-return
+AccountLedger.swapCollateral(address,uint256,uint256) (src/core/AccountLedger.sol#44-58) ignores return value by ICollateralSwapper(swapper).swap(tokenIn,tokenOut,amountIn,minOut) (src/core/AccountLedger.sol#51)
+CollateralConfig._stablePrice(CollateralCfg) (src/core/CollateralConfig.sol#54-68) ignores return value by (rid,answer,at,air) = feed.latestRoundData() (src/core/CollateralConfig.sol#57-67)
+SessionOracle.acceptFeedPrice(uint8) (src/oracle/SessionOracle.sol#115-128) ignores return value by (roundId,answer,None,updatedAt,answeredInRound) = cfg.feed.latestRoundData() (src/oracle/SessionOracle.sol#117)
+SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) ignores return value by (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)
+SessionOracle._latest(SessionOracle.FeedConfig) (src/oracle/SessionOracle.sol#236-250) ignores return value by (rid,answer,at,air) = cfg.feed.latestRoundData() (src/oracle/SessionOracle.sol#241-249)
+IntentRouter._tryOpen(IntentRouter.OpenOrder,uint8,bytes32,bytes32) (src/periphery/IntentRouter.sol#77-94) ignores return value by (signer,err,None) = ECDSA.tryRecover(digest,v,r,s) (src/periphery/IntentRouter.sol#79)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Detector: missing-zero-check
+AdminModule.setInboxFactory(address).factory (src/core/AdminModule.sol#44) lacks a zero-check on :
+		- inboxFactory = factory (src/core/AdminModule.sol#45)
+AdminModule.setSwapper(address).swapper_ (src/core/AdminModule.sol#50) lacks a zero-check on :
+		- swapper = swapper_ (src/core/AdminModule.sol#51)
+DepositInbox.constructor(address,ISenryoCore,IERC20,IERC20).user (src/periphery/DepositInbox.sol#19) lacks a zero-check on :
+		- USER = user (src/periphery/DepositInbox.sol#20)
+StarterDrip.withdrawNative(address,uint256).to (src/periphery/StarterDrip.sol#129) lacks a zero-check on :
+		- (ok,None) = to.call{value: amount}() (src/periphery/StarterDrip.sol#130)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Detector: calls-loop
+LiquidationModule._prepareMarkets(uint32) (src/core/LiquidationModule.sol#84-93) has external calls inside a loop: pv = ORACLE.observe(id) (src/core/LiquidationModule.sol#87)
+	Calls stack containing the loop:
+		LiquidationModule.liquidate(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		LiquidationModule.liquidate(address)
+LiquidationModule._closeForLiquidation(address,uint8) (src/core/LiquidationModule.sol#96-118) has external calls inside a loop: pv = ORACLE.peek(marketId) (src/core/LiquidationModule.sol#98)
+	Calls stack containing the loop:
+		LiquidationModule.liquidate(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		LiquidationModule.coverCardDebt(address)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		LiquidationModule.isLiquidatable(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.setSpendAllowance(address,uint128,uint64,bytes)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.revokeSpendAllowance()
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.setCardEnvelope(uint128)
+		RiskModule._emitRiskChecked(address)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.repayCardDebt(uint256)
+		RiskModule._emitRiskChecked(address)
+		RiskModule._emitRisk(address)
+CardModule._requireHoldAllowed(address) (src/core/CardModule.sol#201-211) has external calls inside a loop: st = ORACLE.peek(id).status (src/core/CardModule.sol#206)
+	Calls stack containing the loop:
+		CardModule.placeHold(bytes32,bytes32,address,uint128)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.placeHold(bytes32,bytes32,address,uint128)
+		CardModule._finishHold(address,bool)
+		RiskModule._emitRisk(address)
+CardModule._requireHoldAllowed(address) (src/core/CardModule.sol#201-211) has external calls inside a loop: st = ORACLE.peek(id).status (src/core/CardModule.sol#206)
+	Calls stack containing the loop:
+		CardModule.increaseHold(bytes32,uint128)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.increaseHold(bytes32,uint128)
+		CardModule._finishHold(address,bool)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.captureHold(bytes32,uint128)
+		CardModule._release(bytes32,Hold,ReleaseReason)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.releaseHold(bytes32)
+		CardModule._release(bytes32,Hold,ReleaseReason)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.releaseExpiredHold(bytes32)
+		CardModule._release(bytes32,Hold,ReleaseReason)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		CardModule.refund(address,bytes32,uint128)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		TriggerOrders.executeTrigger(bytes32)
+		PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		PerpModule.increase(uint8,bool,uint256,uint256,uint64)
+		PerpModule._increase(address,uint8,bool,uint256,uint256,uint64)
+		RiskModule._emitRiskChecked(address)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		PerpModule.increaseFor(address,uint8,bool,uint256,uint256,uint64)
+		PerpModule._increase(address,uint8,bool,uint256,uint256,uint64)
+		RiskModule._emitRiskChecked(address)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		PerpModule.decrease(uint8,uint256,uint256,uint64)
+		PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		PerpModule.close(uint8,uint256,uint64)
+		PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		AccountLedger.deposit(address,uint256)
+		AccountLedger._deposit(address,address,uint256,address,DepositSource)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		AccountLedger.depositFor(address,uint256,address)
+		AccountLedger._deposit(address,address,uint256,address,DepositSource)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		AccountLedger.withdraw(address,uint256,address)
+		RiskModule._emitRiskChecked(address)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		AccountLedger.swapCollateral(address,uint256,uint256)
+		RiskModule._emitRiskChecked(address)
+		RiskModule._emitRisk(address)
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)
+	Calls stack containing the loop:
+		RiskModule.accountRisk(address)
+MarketAccounting.poolValue(bool) (src/core/MarketAccounting.sol#32-42) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/MarketAccounting.sol#35)
+SessionOracle._setFeed(SessionOracle.FeedInit) (src/oracle/SessionOracle.sol#273-287) has external calls inside a loop: actual = keccak256(bytes)(bytes(init.feed.description())) (src/oracle/SessionOracle.sol#275)
+	Calls stack containing the loop:
+		SessionOracle.constructor(address,IMarketCalendar,SessionOracle.FeedInit[])
+SessionOracle._setFeed(SessionOracle.FeedInit) (src/oracle/SessionOracle.sol#273-287) has external calls inside a loop: dec = init.feed.decimals() (src/oracle/SessionOracle.sol#277)
+	Calls stack containing the loop:
+		SessionOracle.constructor(address,IMarketCalendar,SessionOracle.FeedInit[])
+SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) has external calls inside a loop: (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)
+	Calls stack containing the loop:
+		SessionOracle.observe(uint8)
+		SessionOracle._evaluate(uint8)
+SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) has external calls inside a loop: (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)
+	Calls stack containing the loop:
+		SessionOracle.peek(uint8)
+		SessionOracle._evaluate(uint8)
+SessionOracle._latest(SessionOracle.FeedConfig) (src/oracle/SessionOracle.sol#236-250) has external calls inside a loop: (rid,answer,at,air) = cfg.feed.latestRoundData() (src/oracle/SessionOracle.sol#241-249)
+	Calls stack containing the loop:
+		SessionOracle.allOpen()
+		SessionOracle._evaluate(uint8)
+SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) has external calls inside a loop: open = calendar.isOpen(cfg.calendarId,block.timestamp) (src/oracle/SessionOracle.sol#155)
+	Calls stack containing the loop:
+		SessionOracle.allOpen()
+SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) has external calls inside a loop: reopening = open && ! calendar.isOpen(cfg.calendarId,block.timestamp - Constants.REOPEN_WINDOW) (src/oracle/SessionOracle.sol#156)
+	Calls stack containing the loop:
+		SessionOracle.allOpen()
+SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) has external calls inside a loop: (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)
+	Calls stack containing the loop:
+		SessionOracle.allOpen()
+		SessionOracle._evaluate(uint8)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Detector: reentrancy-benign
+Reentrancy in PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237):
+	External calls:
+	- pv = ORACLE.observe(marketId) (src/core/PerpModule.sol#192)
+	State variables written after the call(s):
+	- _accounts[user].positionBitmap &= ~ _positionBit(marketId) (src/core/PerpModule.sol#218)
+	- _emitFill(user,marketId,f,p) (src/core/PerpModule.sol#235)
+		- nonce = ++ _accounts[user].nonce (src/core/CoreStorage.sol#92)
+Reentrancy in PerpModule._increase(address,uint8,bool,uint256,uint256,uint64) (src/core/PerpModule.sol#88-139):
+	External calls:
+	- pv = ORACLE.observe(marketId) (src/core/PerpModule.sol#100)
+	State variables written after the call(s):
+	- _accounts[user].positionBitmap |= _positionBit(marketId) (src/core/PerpModule.sol#132)
+	- _emitFill(user,marketId,f,p) (src/core/PerpModule.sol#137)
+		- nonce = ++ _accounts[user].nonce (src/core/CoreStorage.sol#92)
+	- _positions[user][marketId] = p (src/core/PerpModule.sol#131)
+Reentrancy in LiquidationModule.liquidate(address) (src/core/LiquidationModule.sol#22-62):
+	External calls:
+	- _prepareMarkets(a.positionBitmap) (src/core/LiquidationModule.sol#25)
+		- pv = ORACLE.observe(id) (src/core/LiquidationModule.sol#87)
+	State variables written after the call(s):
+	- (n,pen) = _closeForLiquidation(user,id) (src/core/LiquidationModule.sol#34)
+		- delete _positions[user][marketId] (src/core/LiquidationModule.sol#115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Detector: reentrancy-events
+Reentrancy in PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237):
+	External calls:
+	- pv = ORACLE.observe(marketId) (src/core/PerpModule.sol#192)
+	Event emitted after the call(s):
+	- Events.AccountRiskUpdated(user,a.nonce,r.equityInit,r.im,r.mm,a.holds,a.cardDebt,a.envelope,r.freeToTrade,r.freeToSpend) (src/core/RiskModule.sol#100-102)
+		- _emitRisk(user) (src/core/PerpModule.sol#236)
+	- Events.MarketStateUpdated(marketId,s.longSize,s.shortSize,s.fundingIndex,s.borrowIndex,fRate,bRate) (src/core/MarketAccounting.sol#65)
+		- _accrue(marketId,pv.status == MarketStatus.OPEN) (src/core/PerpModule.sol#194)
+	- Events.PositionUpdated(user,marketId,f.kind,f.isLong,f.sizeDelta,f.execPrice,f.oraclePrice,f.fee,f.realizedPnl,f.funding,f.borrow,p.size,p.entry,nonce) (src/core/PerpModule.sol#269-284)
+		- _emitFill(user,marketId,f,p) (src/core/PerpModule.sol#235)
+Reentrancy in PerpModule._increase(address,uint8,bool,uint256,uint256,uint64) (src/core/PerpModule.sol#88-139):
+	External calls:
+	- pv = ORACLE.observe(marketId) (src/core/PerpModule.sol#100)
+	Event emitted after the call(s):
+	- Events.AccountRiskUpdated(user,a.nonce,r.equityInit,r.im,r.mm,a.holds,a.cardDebt,a.envelope,r.freeToTrade,r.freeToSpend) (src/core/RiskModule.sol#100-102)
+		- _emitRiskChecked(user) (src/core/PerpModule.sol#138)
+	- Events.MarketStateUpdated(marketId,s.longSize,s.shortSize,s.fundingIndex,s.borrowIndex,fRate,bRate) (src/core/MarketAccounting.sol#65)
+		- _accrue(marketId,true) (src/core/PerpModule.sol#102)
+	- Events.PositionUpdated(user,marketId,f.kind,f.isLong,f.sizeDelta,f.execPrice,f.oraclePrice,f.fee,f.realizedPnl,f.funding,f.borrow,p.size,p.entry,nonce) (src/core/PerpModule.sol#269-284)
+		- _emitFill(user,marketId,f,p) (src/core/PerpModule.sol#137)
+Reentrancy in LiquidationModule._prepareMarkets(uint32) (src/core/LiquidationModule.sol#84-93):
+	External calls:
+	- pv = ORACLE.observe(id) (src/core/LiquidationModule.sol#87)
+	Event emitted after the call(s):
+	- Events.MarketStateUpdated(marketId,s.longSize,s.shortSize,s.fundingIndex,s.borrowIndex,fRate,bRate) (src/core/MarketAccounting.sol#65)
+		- _accrue(id,true) (src/core/LiquidationModule.sol#89)
+Reentrancy in DepositInbox._sweep(IERC20) (src/periphery/DepositInbox.sol#31-37):
+	External calls:
+	- CORE.depositFor(address(token),bal,USER) (src/periphery/DepositInbox.sol#35)
+	Event emitted after the call(s):
+	- Events.Swept(USER,address(this),address(token),bal) (src/periphery/DepositInbox.sol#36)
+Reentrancy in IntentRouter._tryOpen(IntentRouter.OpenOrder,uint8,bytes32,bytes32) (src/periphery/IntentRouter.sol#77-94):
+	External calls:
+	- CORE.increaseFor(o.user,o.marketId,o.isLong,o.notionalUsd6,o.acceptablePrice18,o.deadline) (src/periphery/IntentRouter.sol#89-93)
+	Event emitted after the call(s):
+	- Events.OrderExecuted(o.user,digest,o.marketId,o.notionalUsd6) (src/periphery/IntentRouter.sol#90)
+	- Events.OrderSkipped(o.user,digest,reason) (src/periphery/IntentRouter.sol#92)
+Reentrancy in LpVault.claimRedeem(uint256) (src/lp/LpVault.sol#94-103):
+	External calls:
+	- _withdraw(address(this),r.receiver,address(this),assets,r.shares) (src/lp/LpVault.sol#101)
+		- CORE.drainPool(assets,to) (src/lp/LpVault.sol#122)
+	Event emitted after the call(s):
+	- Events.Redeemed(r.owner,r.receiver,requestId,r.shares,assets) (src/lp/LpVault.sol#102)
+Reentrancy in DepositInbox.sweep() (src/periphery/DepositInbox.sol#26-29):
+	External calls:
+	- _sweep(AUSD) (src/periphery/DepositInbox.sol#27)
+		- CORE.depositFor(address(token),bal,USER) (src/periphery/DepositInbox.sol#35)
+	- _sweep(USDC) (src/periphery/DepositInbox.sol#28)
+		- CORE.depositFor(address(token),bal,USER) (src/periphery/DepositInbox.sol#35)
+	Event emitted after the call(s):
+	- Events.Swept(USER,address(this),address(token),bal) (src/periphery/DepositInbox.sol#36)
+		- _sweep(USDC) (src/periphery/DepositInbox.sol#28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Detector: timestamp
+CardModule.increaseHold(bytes32,uint128) (src/core/CardModule.sol#92-108) uses timestamp for comparisons
+	Dangerous comparisons:
+	- h.expiry <= block.timestamp (src/core/CardModule.sol#94)
+CardModule.captureHold(bytes32,uint128) (src/core/CardModule.sol#112-139) uses timestamp for comparisons
+	Dangerous comparisons:
+	- h.expiry + Constants.HOLD_RELEASE_GRACE <= block.timestamp (src/core/CardModule.sol#114)
+CardModule.releaseExpiredHold(bytes32) (src/core/CardModule.sol#146-150) uses timestamp for comparisons
+	Dangerous comparisons:
+	- h.expiry + Constants.HOLD_RELEASE_GRACE > block.timestamp (src/core/CardModule.sol#148)
+CardModule._consumeAllowance(address,uint256) (src/core/CardModule.sol#187-198) uses timestamp for comparisons
+	Dangerous comparisons:
+	- al.expiry <= block.timestamp (src/core/CardModule.sol#189)
+CollateralConfig._stablePrice(CollateralCfg) (src/core/CollateralConfig.sol#54-68) uses timestamp for comparisons
+	Dangerous comparisons:
+	- answer <= 0 || at > block.timestamp || air < rid (src/core/CollateralConfig.sol#58)
+CoreStorage._requireNewRiskAllowed() (src/core/CoreStorage.sol#86-89) uses timestamp for comparisons
+	Dangerous comparisons:
+	- pausedUntil > block.timestamp (src/core/CoreStorage.sol#88)
+PerpModule._increase(address,uint8,bool,uint256,uint256,uint64) (src/core/PerpModule.sol#88-139) uses timestamp for comparisons
+	Dangerous comparisons:
+	- deadline < block.timestamp (src/core/PerpModule.sol#97)
+PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237) uses timestamp for comparisons
+	Dangerous comparisons:
+	- deadline < block.timestamp (src/core/PerpModule.sol#186)
+RiskModule._allowanceLeft(address) (src/core/RiskModule.sol#162-167) uses timestamp for comparisons
+	Dangerous comparisons:
+	- al.expiry <= block.timestamp (src/core/RiskModule.sol#164)
+TriggerOrders.placeTrigger(TriggerOrder,bytes) (src/core/TriggerOrders.sol#21-33) uses timestamp for comparisons
+	Dangerous comparisons:
+	- order.expiry <= block.timestamp (src/core/TriggerOrders.sol#25)
+TriggerOrders.executeTrigger(bytes32) (src/core/TriggerOrders.sol#44-58) uses timestamp for comparisons
+	Dangerous comparisons:
+	- o.expiry <= block.timestamp (src/core/TriggerOrders.sol#47)
+LpVault.claimRedeem(uint256) (src/lp/LpVault.sol#94-103) uses timestamp for comparisons
+	Dangerous comparisons:
+	- r.shares == 0 (src/lp/LpVault.sol#96)
+	- r.claimableAt > block.timestamp (src/lp/LpVault.sol#97)
+MarketCalendar._prune(uint8) (src/oracle/MarketCalendar.sol#98-109) uses timestamp for comparisons
+	Dangerous comparisons:
+	- list[i].end <= block.timestamp (src/oracle/MarketCalendar.sol#102)
+SessionOracle.observe(uint8) (src/oracle/SessionOracle.sol#78-88) uses timestamp for comparisons
+	Dangerous comparisons:
+	- e.next.lastStatus != st.lastStatus (src/oracle/SessionOracle.sol#83)
+SessionOracle.allOpen() (src/oracle/SessionOracle.sol#96-101) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _evaluate(marketIds[i]).view_.status != MarketStatus.OPEN (src/oracle/SessionOracle.sol#98)
+SessionOracle.acceptFeedPrice(uint8) (src/oracle/SessionOracle.sol#115-128) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! _fits(answer,cfg.decimals) || updatedAt > block.timestamp || answeredInRound < roundId (src/oracle/SessionOracle.sol#118)
+SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) uses timestamp for comparisons
+	Dangerous comparisons:
+	- reopening = open && ! calendar.isOpen(cfg.calendarId,block.timestamp - Constants.REOPEN_WINDOW) (src/oracle/SessionOracle.sol#156)
+	- st.haltedUntil > block.timestamp (src/oracle/SessionOracle.sol#159)
+	- ! valid || block.timestamp - updatedAt > uint256(cfg.heartbeat) + Constants.FEED_GRACE (src/oracle/SessionOracle.sol#161)
+	- e.roundId == st.lastRoundId && st.lastPrice18 != 0 (src/oracle/SessionOracle.sol#166)
+	- st.lastPrice18 == 0 || _withinClamp(cfg,st,answer18,reopening) (src/oracle/SessionOracle.sol#168)
+	- st.circuit && ! _confirmed(cfg,e.roundId,answer18,updatedAt) (src/oracle/SessionOracle.sol#169)
+	- e.next.lastUpdatedAt == 0 (src/oracle/SessionOracle.sol#188)
+SessionOracle._withinClamp(SessionOracle.FeedConfig,SessionOracle.FeedState,uint256,bool) (src/oracle/SessionOracle.sol#202-209) uses timestamp for comparisons
+	Dangerous comparisons:
+	- (st.closedSeen || reopening) (src/oracle/SessionOracle.sol#207)
+SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) uses timestamp for comparisons
+	Dangerous comparisons:
+	- count < Constants.CONFIRM_LOOKBACK_ROUNDS && id != 0 (src/oracle/SessionOracle.sol#221)
+	- count >= Constants.CONFIRM_ROUNDS && updatedAt - oldest >= Constants.CONFIRM_SECONDS (src/oracle/SessionOracle.sol#222)
+	- ! _fits(a,cfg.decimals) || at == 0 || air < rid || at > oldest (src/oracle/SessionOracle.sol#225)
+	- count >= Constants.CONFIRM_ROUNDS && updatedAt - oldest >= Constants.CONFIRM_SECONDS (src/oracle/SessionOracle.sol#233)
+SessionOracle._latest(SessionOracle.FeedConfig) (src/oracle/SessionOracle.sol#236-250) uses timestamp for comparisons
+	Dangerous comparisons:
+	- valid = fits && at != 0 && at <= block.timestamp && air >= rid (src/oracle/SessionOracle.sol#245)
+SessionOracle._withinBand(uint256,uint256,uint256) (src/oracle/SessionOracle.sol#252-255) uses timestamp for comparisons
+	Dangerous comparisons:
+	- diff <= Math.mulDiv(b,bandBps,Constants.BPS) (src/oracle/SessionOracle.sol#254)
+	- a > b (src/oracle/SessionOracle.sol#253)
+SessionOracle._fits(int256,uint8) (src/oracle/SessionOracle.sol#259-262) uses timestamp for comparisons
+	Dangerous comparisons:
+	- answer > 0 && uint256(answer) <= type()(uint128).max / Constants.DECIMAL_BASE ** (Constants.PRICE_DECIMALS - decimals) (src/oracle/SessionOracle.sol#261)
+StarterDrip.claimFor(address,uint64,bytes) (src/periphery/StarterDrip.sol#69-84) uses timestamp for comparisons
+	Dangerous comparisons:
+	- deadline < block.timestamp (src/periphery/StarterDrip.sol#70)
+StarterDrip.redeemVoucher(address,bytes,uint64,bytes) (src/periphery/StarterDrip.sol#86-102) uses timestamp for comparisons
+	Dangerous comparisons:
+	- deadline < block.timestamp (src/periphery/StarterDrip.sol#91)
+MirrorAggregator.getRoundData(uint80) (src/testnet/MirrorAggregator.sol#46-50) uses timestamp for comparisons
+	Dangerous comparisons:
+	- r.updatedAt == 0 (src/testnet/MirrorAggregator.sol#48)
+MirrorAggregator.latestRoundData() (src/testnet/MirrorAggregator.sol#52-57) uses timestamp for comparisons
+	Dangerous comparisons:
+	- r.updatedAt == 0 (src/testnet/MirrorAggregator.sol#55)
+MockStable.faucet() (src/testnet/MockStable.sol#33-38) uses timestamp for comparisons
+	Dangerous comparisons:
+	- readyAt > block.timestamp (src/testnet/MockStable.sol#35)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: costly-loop
+MarketRegistry._addMarket(MarketParams) (src/core/MarketRegistry.sol#74-81) has costly operations inside a loop:
+	- marketId = marketCount ++ (src/core/MarketRegistry.sol#77)
+	Calls stack containing the loop:
+		SenryoCore.constructor(address,address,address,IPriceSource,MarketParams[],CollateralCfg,CollateralCfg)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Detector: cyclomatic-complexity
+PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237) has a high cyclomatic complexity (16).
+RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has a high cyclomatic complexity (13).
+SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) has a high cyclomatic complexity (14).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Detector: low-level-calls
+Low level call in StarterDrip.withdrawNative(address,uint256) (src/periphery/StarterDrip.sol#129-133):
+	- (ok,None) = to.call{value: amount}() (src/periphery/StarterDrip.sol#130)
+Low level call in StarterDrip._sendNative(address,uint256) (src/periphery/StarterDrip.sol#147-159):
+	- (ok,None) = to.call{value: amount}() (src/periphery/StarterDrip.sol#157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: naming-convention
+Function CoreStorage.DOMAIN_SEPARATOR() (src/core/CoreStorage.sol#80-82) is not in mixedCase
+Variable CoreStorage.AUSD (src/core/CoreStorage.sol#33) is not in mixedCase
+Variable CoreStorage.USDC (src/core/CoreStorage.sol#34) is not in mixedCase
+Variable CoreStorage.ORACLE (src/core/CoreStorage.sol#35) is not in mixedCase
+Variable LpVault.CORE (src/lp/LpVault.sol#33) is not in mixedCase
+Variable CollateralSwapper.CORE (src/periphery/CollateralSwapper.sol#67) is not in mixedCase
+Variable CollateralSwapper.ROUTER (src/periphery/CollateralSwapper.sol#68) is not in mixedCase
+Variable CollateralSwapper.PERMIT2 (src/periphery/CollateralSwapper.sol#69) is not in mixedCase
+Variable DepositInbox.USER (src/periphery/DepositInbox.sol#14) is not in mixedCase
+Variable DepositInbox.CORE (src/periphery/DepositInbox.sol#15) is not in mixedCase
+Variable DepositInbox.AUSD (src/periphery/DepositInbox.sol#16) is not in mixedCase
+Variable DepositInbox.USDC (src/periphery/DepositInbox.sol#17) is not in mixedCase
+Variable InboxFactory.CORE (src/periphery/InboxFactory.sol#15) is not in mixedCase
+Variable InboxFactory.AUSD (src/periphery/InboxFactory.sol#16) is not in mixedCase
+Variable InboxFactory.USDC (src/periphery/InboxFactory.sol#17) is not in mixedCase
+Variable IntentRouter.CORE (src/periphery/IntentRouter.sol#33) is not in mixedCase
+Variable StarterDrip.CORE (src/periphery/StarterDrip.sol#46) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Detector: too-many-digits
+InboxFactory._initCode(address) (src/periphery/InboxFactory.sol#48-50) uses literals with too many digits:
+	- abi.encodePacked(type()(DepositInbox).creationCode,abi.encode(user,CORE,AUSD,USDC)) (src/periphery/InboxFactory.sol#49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Detector: cache-array-length
+Loop condition i < marketIds.length (src/oracle/SessionOracle.sol#97) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+. analyzed (71 contracts with 102 detectors), 137 result(s) found

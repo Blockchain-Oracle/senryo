@@ -178,8 +178,9 @@ export const UR = { V4_SWAP: 0x10, SWAP_EXACT_IN_SINGLE: 0x06, SETTLE_ALL: 0x0c,
 /**
  * `execute` inputs for an exact-in single-hop swap. Universal Router 2.1.2 pins v4-periphery 545a5d2, whose
  * `ExactInputSingleParams` has **six** fields — (poolKey, zeroForOne, amountIn, amountOutMinimum, minHopPriceX36,
- * hookData) — and the decoder requires ≥ 0x160 bytes (D-122). The 5-field layout in docs.uniswap.org and in
- * CollateralSwapper reverts on the deployed router (fork-verified); `minHopPriceX36 = 0` disables the per-hop floor.
+ * hookData) — and the decoder requires ≥ 0x160 bytes (D-122). The 5-field layout in docs.uniswap.org reverts on the
+ * deployed router (fork-verified); CollateralSwapper encodes the same six fields (D-180). `minHopPriceX36 = 0`
+ * disables the per-hop floor (for exact-in single it equals `amountOutMinimum`).
  */
 export function encodeExactInSingle(params: { key: PoolKey; zeroForOne: boolean; amountIn: bigint; minOut: bigint }): {
   commands: Hex;

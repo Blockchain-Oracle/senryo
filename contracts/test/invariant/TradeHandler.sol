@@ -43,7 +43,9 @@ abstract contract TradeHandler is HandlerBase {
         try core.withdraw(address(_token(tokenSeed)), amount, user) {
             ++calls["withdraw"];
             _checkI2(user);
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 
@@ -58,7 +60,9 @@ abstract contract TradeHandler is HandlerBase {
         try core.swapCollateral(address(_token(tokenSeed)), amount, amount) {
             ++calls["swap"];
             _checkI2(user);
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 
@@ -76,7 +80,9 @@ abstract contract TradeHandler is HandlerBase {
         try core.increase(m, isLong, notional, isLong ? type(uint256).max : 0, _now()) {
             ++calls["increase"];
             _checkI2(user);
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 
@@ -92,7 +98,9 @@ abstract contract TradeHandler is HandlerBase {
         vm.prank(user);
         try core.decrease(m, size, p.isLong ? 0 : type(uint256).max, _now()) {
             ++calls["decrease"];
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 
@@ -123,7 +131,9 @@ abstract contract TradeHandler is HandlerBase {
         uint256[] memory before = _snapshot();
         try core.executeTrigger(id) {
             ++calls["trigger"];
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 
@@ -143,7 +153,9 @@ abstract contract TradeHandler is HandlerBase {
         vm.prank(liquidator);
         try core.liquidate(user) {
             ++calls["liquidate"];
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, liquidator);
     }
 
@@ -167,7 +179,9 @@ abstract contract TradeHandler is HandlerBase {
         ausd.approve(address(vault), amount);
         try vault.deposit(amount, lp) {
             ++calls["lpDeposit"];
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         vm.stopPrank();
         _onlyChanged(before, address(0), address(0));
     }
@@ -190,7 +204,9 @@ abstract contract TradeHandler is HandlerBase {
         uint256[] memory before = _snapshot();
         try vault.claimRedeem(id) {
             ++calls["lpClaim"];
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, address(0), address(0));
     }
 

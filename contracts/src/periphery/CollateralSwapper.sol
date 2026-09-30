@@ -17,12 +17,15 @@ struct PoolKey {
     address hooks;
 }
 
-/// @dev IV4Router.ExactInputSingleParams as documented on docs.uniswap.org (quickstart + swapping guide).
+/// @dev IV4Router.ExactInputSingleParams of the v4-periphery that the deployed Universal Router 2.1.2 pins (545a5d2):
+/// six fields, with `minHopPriceX36` between `amountOutMinimum` and `hookData` (D-122). The five-field layout on
+/// docs.uniswap.org is shorter than the router's 0x160-byte decoder minimum and reverts inside `unlockCallback`.
 struct ExactInputSingleParams {
     PoolKey poolKey;
     bool zeroForOne;
     uint128 amountIn;
     uint128 amountOutMinimum;
+    uint256 minHopPriceX36;
     bytes hookData;
 }
 
@@ -36,8 +39,10 @@ interface IPermit2 {
 
 /// @title CollateralSwapper — AUSD ↔ USDC through the allowlisted Uniswap v4 Universal Router (D-021, D-039).
 /// @notice Called only by SenryoCore.swapCollateral, which debits the user, measures the output and risk-checks.
-/// Encoding per the Uniswap docs: command V4_SWAP with actions SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL; the input
-/// is approved through Permit2. The pool key is read onchain in S3 and set here (PARAM_ADMIN, timelocked).
+/// Command V4_SWAP with actions SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL; the input is approved through Permit2.
+/// The pool key (read onchain in S3, D-122) is a deploy constant; `setPoolKey` is PARAM_ADMIN (timelocked).
+/// The user's protection is `minOut`, enforced three times: the router's `amountOutMinimum`, TAKE_ALL's minimum and
+/// the core's measured balance delta.
 contract CollateralSwapper is AccessManaged, ICollateralSwapper {
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
@@ -49,6 +54,15 @@ contract CollateralSwapper is AccessManaged, ICollateralSwapper {
     uint256 internal constant ACTION_COUNT = 3;
     uint256 internal constant SETTLE_INDEX = 1;
     uint256 internal constant TAKE_INDEX = 2;
+    /// @dev `minHopPriceX36` disabled (D-180). For an exact-in single hop with a fixed `amountIn` the router's floor
+    /// `amountOut × 1e36 / amountIn ≥ minHopPriceX36` is the same bound as `amountOut ≥ amountOutMinimum`, so `minOut`
+    /// already expresses it; a contract-wide price floor would instead block a depeg exit the user chose to take.
+    uint256 internal constant NO_HOP_PRICE_FLOOR = 0;
+
+    // Config events live here, not in `Events`, so the shared libraries keep their bytecode (S8.5).
+    event PoolKeySet(
+        address indexed currency0, address indexed currency1, uint24 fee, int24 tickSpacing, address hooks
+    );
 
     address public immutable CORE;
     IUniversalRouter public immutable ROUTER;
@@ -69,6 +83,7 @@ contract CollateralSwapper is AccessManaged, ICollateralSwapper {
 
     function setPoolKey(PoolKey calldata key) external restricted {
         poolKey = key;
+        emit PoolKeySet(key.currency0, key.currency1, key.fee, key.tickSpacing, key.hooks);
     }
 
     /// @inheritdoc ICollateralSwapper
@@ -88,7 +103,8 @@ contract CollateralSwapper is AccessManaged, ICollateralSwapper {
         PERMIT2.approve(tokenIn, address(ROUTER), amountIn128, uint48(block.timestamp));
 
         bytes[] memory params = new bytes[](ACTION_COUNT);
-        params[0] = abi.encode(ExactInputSingleParams(key, zeroForOne, amountIn128, minOut128, bytes("")));
+        params[0] =
+            abi.encode(ExactInputSingleParams(key, zeroForOne, amountIn128, minOut128, NO_HOP_PRICE_FLOOR, bytes("")));
         params[SETTLE_INDEX] = abi.encode(tokenIn, amountIn);
         params[TAKE_INDEX] = abi.encode(tokenOut, minOut);
         bytes[] memory inputs = new bytes[](1);

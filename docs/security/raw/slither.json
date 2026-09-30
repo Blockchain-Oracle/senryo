@@ -1,0 +1,1538 @@
+[
+ {
+  "id": "S-000",
+  "check": "arbitrary-send-erc20",
+  "impact": "High",
+  "confidence": "High",
+  "description": "AccountLedger._pull(address,address,uint256) (src/core/AccountLedger.sol#111-116) uses arbitrary from in transferFrom: IERC20(token).safeTransferFrom(from,address(this),amount) (src/core/AccountLedger.sol#114)",
+  "locations": [
+   "src/core/AccountLedger.sol:111",
+   "src/core/AccountLedger.sol:114"
+  ]
+ },
+ {
+  "id": "S-001",
+  "check": "arbitrary-send-eth",
+  "impact": "High",
+  "confidence": "Medium",
+  "description": "StarterDrip.withdrawNative(address,uint256) (src/periphery/StarterDrip.sol#129-133) sends eth to arbitrary user",
+  "locations": [
+   "src/periphery/StarterDrip.sol:129",
+   "src/periphery/StarterDrip.sol:130"
+  ]
+ },
+ {
+  "id": "S-002",
+  "check": "uninitialized-state",
+  "impact": "High",
+  "confidence": "High",
+  "description": "CoreStorage._allowances (src/core/CoreStorage.sol#46) is never initialized. It is used in:",
+  "locations": [
+   "src/core/CardModule.sol:181",
+   "src/core/CardModule.sol:187",
+   "src/core/CardModule.sol:28",
+   "src/core/CardModule.sol:41",
+   "src/core/CoreStorage.sol:46",
+   "src/core/RiskModule.sol:162"
+  ]
+ },
+ {
+  "id": "S-003",
+  "check": "uninitialized-state",
+  "impact": "High",
+  "confidence": "High",
+  "description": "MarketCalendar._holidays (src/oracle/MarketCalendar.sol#22) is never initialized. It is used in:",
+  "locations": [
+   "src/oracle/MarketCalendar.sol:22",
+   "src/oracle/MarketCalendar.sol:41",
+   "src/oracle/MarketCalendar.sol:52",
+   "src/oracle/MarketCalendar.sol:64",
+   "src/oracle/MarketCalendar.sol:86",
+   "src/oracle/MarketCalendar.sol:98"
+  ]
+ },
+ {
+  "id": "S-004",
+  "check": "incorrect-equality",
+  "impact": "Medium",
+  "confidence": "High",
+  "description": "SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) uses a dangerous strict equality:",
+  "locations": [
+   "src/oracle/SessionOracle.sol:146",
+   "src/oracle/SessionOracle.sol:166"
+  ]
+ },
+ {
+  "id": "S-005",
+  "check": "incorrect-equality",
+  "impact": "Medium",
+  "confidence": "High",
+  "description": "SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) uses a dangerous strict equality:",
+  "locations": [
+   "src/oracle/SessionOracle.sol:146",
+   "src/oracle/SessionOracle.sol:188"
+  ]
+ },
+ {
+  "id": "S-006",
+  "check": "incorrect-equality",
+  "impact": "Medium",
+  "confidence": "High",
+  "description": "MirrorAggregator.latestRoundData() (src/testnet/MirrorAggregator.sol#52-57) uses a dangerous strict equality:",
+  "locations": [
+   "src/testnet/MirrorAggregator.sol:52",
+   "src/testnet/MirrorAggregator.sol:55"
+  ]
+ },
+ {
+  "id": "S-007",
+  "check": "incorrect-equality",
+  "impact": "Medium",
+  "confidence": "High",
+  "description": "MirrorAggregator.getRoundData(uint80) (src/testnet/MirrorAggregator.sol#46-50) uses a dangerous strict equality:",
+  "locations": [
+   "src/testnet/MirrorAggregator.sol:46",
+   "src/testnet/MirrorAggregator.sol:48"
+  ]
+ },
+ {
+  "id": "S-008",
+  "check": "incorrect-equality",
+  "impact": "Medium",
+  "confidence": "High",
+  "description": "DepositInbox._sweep(IERC20) (src/periphery/DepositInbox.sol#31-37) uses a dangerous strict equality:",
+  "locations": [
+   "src/periphery/DepositInbox.sol:31",
+   "src/periphery/DepositInbox.sol:33"
+  ]
+ },
+ {
+  "id": "S-009",
+  "check": "incorrect-equality",
+  "impact": "Medium",
+  "confidence": "High",
+  "description": "SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) uses a dangerous strict equality:",
+  "locations": [
+   "src/oracle/SessionOracle.sol:213",
+   "src/oracle/SessionOracle.sol:225"
+  ]
+ },
+ {
+  "id": "S-010",
+  "check": "incorrect-equality",
+  "impact": "Medium",
+  "confidence": "High",
+  "description": "LpVault.claimRedeem(uint256) (src/lp/LpVault.sol#94-103) uses a dangerous strict equality:",
+  "locations": [
+   "src/lp/LpVault.sol:94",
+   "src/lp/LpVault.sol:96"
+  ]
+ },
+ {
+  "id": "S-011",
+  "check": "reentrancy-no-eth",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "Reentrancy in LiquidationModule.liquidate(address) (src/core/LiquidationModule.sol#22-62):",
+  "locations": [
+   "src/core/CoreStorage.sol:92",
+   "src/core/LiquidationModule.sol:22",
+   "src/core/LiquidationModule.sol:25",
+   "src/core/LiquidationModule.sol:34",
+   "src/core/LiquidationModule.sol:56",
+   "src/core/LiquidationModule.sol:59",
+   "src/core/LiquidationModule.sol:87"
+  ]
+ },
+ {
+  "id": "S-012",
+  "check": "reentrancy-no-eth",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "Reentrancy in PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237):",
+  "locations": [
+   "src/core/PerpModule.sol:178",
+   "src/core/PerpModule.sol:192",
+   "src/core/PerpModule.sol:217",
+   "src/core/PerpModule.sol:222"
+  ]
+ },
+ {
+  "id": "S-013",
+  "check": "reentrancy-no-eth",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "Reentrancy in TriggerOrders.executeTrigger(bytes32) (src/core/TriggerOrders.sol#44-58):",
+  "locations": [
+   "src/core/PerpModule.sol:192",
+   "src/core/PerpModule.sol:217",
+   "src/core/PerpModule.sol:222",
+   "src/core/TriggerOrders.sol:44",
+   "src/core/TriggerOrders.sol:51",
+   "src/core/TriggerOrders.sol:56"
+  ]
+ },
+ {
+  "id": "S-014",
+  "check": "reentrancy-no-eth",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "Reentrancy in AccountLedger.swapCollateral(address,uint256,uint256) (src/core/AccountLedger.sol#44-58):",
+  "locations": [
+   "src/core/AccountLedger.sol:44",
+   "src/core/AccountLedger.sol:51",
+   "src/core/AccountLedger.sol:55",
+   "src/core/CoreStorage.sol:92"
+  ]
+ },
+ {
+  "id": "S-015",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind).shortfall (src/core/PerpModule.sol#229) is a local variable never initialized",
+  "locations": [
+   "src/core/PerpModule.sol:229"
+  ]
+ },
+ {
+  "id": "S-016",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address).negUpnl (src/core/RiskModule.sol#50) is a local variable never initialized",
+  "locations": [
+   "src/core/RiskModule.sol:50"
+  ]
+ },
+ {
+  "id": "S-017",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address).upnl (src/core/RiskModule.sol#51) is a local variable never initialized",
+  "locations": [
+   "src/core/RiskModule.sol:51"
+  ]
+ },
+ {
+  "id": "S-018",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "MarketAccounting._accrue(uint8,bool).fRate (src/core/MarketAccounting.sol#59) is a local variable never initialized",
+  "locations": [
+   "src/core/MarketAccounting.sol:59"
+  ]
+ },
+ {
+  "id": "S-019",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address).fees (src/core/RiskModule.sol#53) is a local variable never initialized",
+  "locations": [
+   "src/core/RiskModule.sol:53"
+  ]
+ },
+ {
+  "id": "S-020",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "LiquidationModule.liquidate(address).net (src/core/LiquidationModule.sol#29) is a local variable never initialized",
+  "locations": [
+   "src/core/LiquidationModule.sol:29"
+  ]
+ },
+ {
+  "id": "S-021",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "LiquidationModule._closeForLiquidation(address,uint8).f (src/core/LiquidationModule.sol#99) is a local variable never initialized",
+  "locations": [
+   "src/core/LiquidationModule.sol:99"
+  ]
+ },
+ {
+  "id": "S-022",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "PerpModule._increase(address,uint8,bool,uint256,uint256,uint64).f (src/core/PerpModule.sol#106) is a local variable never initialized",
+  "locations": [
+   "src/core/PerpModule.sol:106"
+  ]
+ },
+ {
+  "id": "S-023",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind).f (src/core/PerpModule.sol#196) is a local variable never initialized",
+  "locations": [
+   "src/core/PerpModule.sol:196"
+  ]
+ },
+ {
+  "id": "S-024",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "LiquidationModule.liquidate(address).shortfall (src/core/LiquidationModule.sol#45) is a local variable never initialized",
+  "locations": [
+   "src/core/LiquidationModule.sol:45"
+  ]
+ },
+ {
+  "id": "S-025",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "LiquidationModule._closeForLiquidation(address,uint8).closed (src/core/LiquidationModule.sol#116) is a local variable never initialized",
+  "locations": [
+   "src/core/LiquidationModule.sol:116"
+  ]
+ },
+ {
+  "id": "S-026",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "StarterDrip.claimFor(address,uint64,bytes).practice (src/periphery/StarterDrip.sol#76) is a local variable never initialized",
+  "locations": [
+   "src/periphery/StarterDrip.sol:76"
+  ]
+ },
+ {
+  "id": "S-027",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "LiquidationModule.liquidate(address).penalty (src/core/LiquidationModule.sol#30) is a local variable never initialized",
+  "locations": [
+   "src/core/LiquidationModule.sol:30"
+  ]
+ },
+ {
+  "id": "S-028",
+  "check": "uninitialized-local",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address).posFees (src/core/RiskModule.sol#52) is a local variable never initialized",
+  "locations": [
+   "src/core/RiskModule.sol:52"
+  ]
+ },
+ {
+  "id": "S-029",
+  "check": "unused-return",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) ignores return value by (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:213",
+   "src/oracle/SessionOracle.sol:224"
+  ]
+ },
+ {
+  "id": "S-030",
+  "check": "unused-return",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "SessionOracle.acceptFeedPrice(uint8) (src/oracle/SessionOracle.sol#115-128) ignores return value by (roundId,answer,None,updatedAt,answeredInRound) = cfg.feed.latestRoundData() (src/oracle/SessionOracle.sol#117)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:115",
+   "src/oracle/SessionOracle.sol:117"
+  ]
+ },
+ {
+  "id": "S-031",
+  "check": "unused-return",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "CollateralConfig._stablePrice(CollateralCfg) (src/core/CollateralConfig.sol#54-68) ignores return value by (rid,answer,at,air) = feed.latestRoundData() (src/core/CollateralConfig.sol#57-67)",
+  "locations": [
+   "src/core/CollateralConfig.sol:54",
+   "src/core/CollateralConfig.sol:57"
+  ]
+ },
+ {
+  "id": "S-032",
+  "check": "unused-return",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "AccountLedger.swapCollateral(address,uint256,uint256) (src/core/AccountLedger.sol#44-58) ignores return value by ICollateralSwapper(swapper).swap(tokenIn,tokenOut,amountIn,minOut) (src/core/AccountLedger.sol#51)",
+  "locations": [
+   "src/core/AccountLedger.sol:44",
+   "src/core/AccountLedger.sol:51"
+  ]
+ },
+ {
+  "id": "S-033",
+  "check": "unused-return",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "IntentRouter._tryOpen(IntentRouter.OpenOrder,uint8,bytes32,bytes32) (src/periphery/IntentRouter.sol#77-94) ignores return value by (signer,err,None) = ECDSA.tryRecover(digest,v,r,s) (src/periphery/IntentRouter.sol#79)",
+  "locations": [
+   "src/periphery/IntentRouter.sol:77",
+   "src/periphery/IntentRouter.sol:79"
+  ]
+ },
+ {
+  "id": "S-034",
+  "check": "unused-return",
+  "impact": "Medium",
+  "confidence": "Medium",
+  "description": "SessionOracle._latest(SessionOracle.FeedConfig) (src/oracle/SessionOracle.sol#236-250) ignores return value by (rid,answer,at,air) = cfg.feed.latestRoundData() (src/oracle/SessionOracle.sol#241-249)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:236",
+   "src/oracle/SessionOracle.sol:241"
+  ]
+ },
+ {
+  "id": "S-035",
+  "check": "missing-zero-check",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "AdminModule.setInboxFactory(address).factory (src/core/AdminModule.sol#44) lacks a zero-check on :",
+  "locations": [
+   "src/core/AdminModule.sol:44",
+   "src/core/AdminModule.sol:45"
+  ]
+ },
+ {
+  "id": "S-036",
+  "check": "missing-zero-check",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "DepositInbox.constructor(address,ISenryoCore,IERC20,IERC20).user (src/periphery/DepositInbox.sol#19) lacks a zero-check on :",
+  "locations": [
+   "src/periphery/DepositInbox.sol:19",
+   "src/periphery/DepositInbox.sol:20"
+  ]
+ },
+ {
+  "id": "S-037",
+  "check": "missing-zero-check",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "AdminModule.setSwapper(address).swapper_ (src/core/AdminModule.sol#50) lacks a zero-check on :",
+  "locations": [
+   "src/core/AdminModule.sol:50",
+   "src/core/AdminModule.sol:51"
+  ]
+ },
+ {
+  "id": "S-038",
+  "check": "missing-zero-check",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "StarterDrip.withdrawNative(address,uint256).to (src/periphery/StarterDrip.sol#129) lacks a zero-check on :",
+  "locations": [
+   "src/periphery/StarterDrip.sol:129",
+   "src/periphery/StarterDrip.sol:130"
+  ]
+ },
+ {
+  "id": "S-039",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-040",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-041",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CardModule._requireHoldAllowed(address) (src/core/CardModule.sol#201-211) has external calls inside a loop: st = ORACLE.peek(id).status (src/core/CardModule.sol#206)",
+  "locations": [
+   "src/core/CardModule.sol:201",
+   "src/core/CardModule.sol:206"
+  ]
+ },
+ {
+  "id": "S-042",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-043",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-044",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._latest(SessionOracle.FeedConfig) (src/oracle/SessionOracle.sol#236-250) has external calls inside a loop: (rid,answer,at,air) = cfg.feed.latestRoundData() (src/oracle/SessionOracle.sol#241-249)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:236",
+   "src/oracle/SessionOracle.sol:241"
+  ]
+ },
+ {
+  "id": "S-045",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) has external calls inside a loop: reopening = open && ! calendar.isOpen(cfg.calendarId,block.timestamp - Constants.REOPEN_WINDOW) (src/oracle/SessionOracle.sol#156)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:146",
+   "src/oracle/SessionOracle.sol:156"
+  ]
+ },
+ {
+  "id": "S-046",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "MarketAccounting.poolValue(bool) (src/core/MarketAccounting.sol#32-42) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/MarketAccounting.sol#35)",
+  "locations": [
+   "src/core/MarketAccounting.sol:32",
+   "src/core/MarketAccounting.sol:35"
+  ]
+ },
+ {
+  "id": "S-047",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CardModule._requireHoldAllowed(address) (src/core/CardModule.sol#201-211) has external calls inside a loop: st = ORACLE.peek(id).status (src/core/CardModule.sol#206)",
+  "locations": [
+   "src/core/CardModule.sol:201",
+   "src/core/CardModule.sol:206"
+  ]
+ },
+ {
+  "id": "S-048",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-049",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-050",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-051",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-052",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._setFeed(SessionOracle.FeedInit) (src/oracle/SessionOracle.sol#273-287) has external calls inside a loop: actual = keccak256(bytes)(bytes(init.feed.description())) (src/oracle/SessionOracle.sol#275)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:273",
+   "src/oracle/SessionOracle.sol:275"
+  ]
+ },
+ {
+  "id": "S-053",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-054",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-055",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-056",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-057",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-058",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-059",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-060",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) has external calls inside a loop: (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:213",
+   "src/oracle/SessionOracle.sol:224"
+  ]
+ },
+ {
+  "id": "S-061",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-062",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-063",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "LiquidationModule._closeForLiquidation(address,uint8) (src/core/LiquidationModule.sol#96-118) has external calls inside a loop: pv = ORACLE.peek(marketId) (src/core/LiquidationModule.sol#98)",
+  "locations": [
+   "src/core/LiquidationModule.sol:96",
+   "src/core/LiquidationModule.sol:98"
+  ]
+ },
+ {
+  "id": "S-064",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "LiquidationModule._prepareMarkets(uint32) (src/core/LiquidationModule.sol#84-93) has external calls inside a loop: pv = ORACLE.observe(id) (src/core/LiquidationModule.sol#87)",
+  "locations": [
+   "src/core/LiquidationModule.sol:84",
+   "src/core/LiquidationModule.sol:87"
+  ]
+ },
+ {
+  "id": "S-065",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-066",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-067",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-068",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-069",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-070",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._setFeed(SessionOracle.FeedInit) (src/oracle/SessionOracle.sol#273-287) has external calls inside a loop: dec = init.feed.decimals() (src/oracle/SessionOracle.sol#277)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:273",
+   "src/oracle/SessionOracle.sol:277"
+  ]
+ },
+ {
+  "id": "S-071",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) has external calls inside a loop: open = calendar.isOpen(cfg.calendarId,block.timestamp) (src/oracle/SessionOracle.sol#155)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:146",
+   "src/oracle/SessionOracle.sol:155"
+  ]
+ },
+ {
+  "id": "S-072",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) has external calls inside a loop: (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:213",
+   "src/oracle/SessionOracle.sol:224"
+  ]
+ },
+ {
+  "id": "S-073",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) has external calls inside a loop: (rid,a,at,air) = cfg.feed.getRoundData(id) (src/oracle/SessionOracle.sol#224-231)",
+  "locations": [
+   "src/oracle/SessionOracle.sol:213",
+   "src/oracle/SessionOracle.sol:224"
+  ]
+ },
+ {
+  "id": "S-074",
+  "check": "calls-loop",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has external calls inside a loop: pv = ORACLE.peek(id) (src/core/RiskModule.sol#59)",
+  "locations": [
+   "src/core/RiskModule.sol:48",
+   "src/core/RiskModule.sol:59"
+  ]
+ },
+ {
+  "id": "S-075",
+  "check": "reentrancy-benign",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in LiquidationModule.liquidate(address) (src/core/LiquidationModule.sol#22-62):",
+  "locations": [
+   "src/core/LiquidationModule.sol:115",
+   "src/core/LiquidationModule.sol:22",
+   "src/core/LiquidationModule.sol:25",
+   "src/core/LiquidationModule.sol:34",
+   "src/core/LiquidationModule.sol:87"
+  ]
+ },
+ {
+  "id": "S-076",
+  "check": "reentrancy-benign",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237):",
+  "locations": [
+   "src/core/CoreStorage.sol:92",
+   "src/core/PerpModule.sol:178",
+   "src/core/PerpModule.sol:192",
+   "src/core/PerpModule.sol:218",
+   "src/core/PerpModule.sol:235"
+  ]
+ },
+ {
+  "id": "S-077",
+  "check": "reentrancy-benign",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in PerpModule._increase(address,uint8,bool,uint256,uint256,uint64) (src/core/PerpModule.sol#88-139):",
+  "locations": [
+   "src/core/CoreStorage.sol:92",
+   "src/core/PerpModule.sol:100",
+   "src/core/PerpModule.sol:131",
+   "src/core/PerpModule.sol:132",
+   "src/core/PerpModule.sol:137",
+   "src/core/PerpModule.sol:88"
+  ]
+ },
+ {
+  "id": "S-078",
+  "check": "reentrancy-events",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in IntentRouter._tryOpen(IntentRouter.OpenOrder,uint8,bytes32,bytes32) (src/periphery/IntentRouter.sol#77-94):",
+  "locations": [
+   "src/periphery/IntentRouter.sol:77",
+   "src/periphery/IntentRouter.sol:89",
+   "src/periphery/IntentRouter.sol:90",
+   "src/periphery/IntentRouter.sol:92"
+  ]
+ },
+ {
+  "id": "S-079",
+  "check": "reentrancy-events",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237):",
+  "locations": [
+   "src/core/MarketAccounting.sol:65",
+   "src/core/PerpModule.sol:178",
+   "src/core/PerpModule.sol:192",
+   "src/core/PerpModule.sol:194",
+   "src/core/PerpModule.sol:235",
+   "src/core/PerpModule.sol:236",
+   "src/core/PerpModule.sol:269",
+   "src/core/RiskModule.sol:100"
+  ]
+ },
+ {
+  "id": "S-080",
+  "check": "reentrancy-events",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in PerpModule._increase(address,uint8,bool,uint256,uint256,uint64) (src/core/PerpModule.sol#88-139):",
+  "locations": [
+   "src/core/MarketAccounting.sol:65",
+   "src/core/PerpModule.sol:100",
+   "src/core/PerpModule.sol:102",
+   "src/core/PerpModule.sol:137",
+   "src/core/PerpModule.sol:138",
+   "src/core/PerpModule.sol:269",
+   "src/core/PerpModule.sol:88",
+   "src/core/RiskModule.sol:100"
+  ]
+ },
+ {
+  "id": "S-081",
+  "check": "reentrancy-events",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in DepositInbox._sweep(IERC20) (src/periphery/DepositInbox.sol#31-37):",
+  "locations": [
+   "src/periphery/DepositInbox.sol:31",
+   "src/periphery/DepositInbox.sol:35",
+   "src/periphery/DepositInbox.sol:36"
+  ]
+ },
+ {
+  "id": "S-082",
+  "check": "reentrancy-events",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in LiquidationModule._prepareMarkets(uint32) (src/core/LiquidationModule.sol#84-93):",
+  "locations": [
+   "src/core/LiquidationModule.sol:84",
+   "src/core/LiquidationModule.sol:87",
+   "src/core/LiquidationModule.sol:89",
+   "src/core/MarketAccounting.sol:65"
+  ]
+ },
+ {
+  "id": "S-083",
+  "check": "reentrancy-events",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in LpVault.claimRedeem(uint256) (src/lp/LpVault.sol#94-103):",
+  "locations": [
+   "src/lp/LpVault.sol:101",
+   "src/lp/LpVault.sol:102",
+   "src/lp/LpVault.sol:122",
+   "src/lp/LpVault.sol:94"
+  ]
+ },
+ {
+  "id": "S-084",
+  "check": "reentrancy-events",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "Reentrancy in DepositInbox.sweep() (src/periphery/DepositInbox.sol#26-29):",
+  "locations": [
+   "src/periphery/DepositInbox.sol:26",
+   "src/periphery/DepositInbox.sol:27",
+   "src/periphery/DepositInbox.sol:28",
+   "src/periphery/DepositInbox.sol:35",
+   "src/periphery/DepositInbox.sol:36"
+  ]
+ },
+ {
+  "id": "S-085",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._withinBand(uint256,uint256,uint256) (src/oracle/SessionOracle.sol#252-255) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:252",
+   "src/oracle/SessionOracle.sol:253",
+   "src/oracle/SessionOracle.sol:254"
+  ]
+ },
+ {
+  "id": "S-086",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "RiskModule._allowanceLeft(address) (src/core/RiskModule.sol#162-167) uses timestamp for comparisons",
+  "locations": [
+   "src/core/RiskModule.sol:162",
+   "src/core/RiskModule.sol:164"
+  ]
+ },
+ {
+  "id": "S-087",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "LpVault.claimRedeem(uint256) (src/lp/LpVault.sol#94-103) uses timestamp for comparisons",
+  "locations": [
+   "src/lp/LpVault.sol:94",
+   "src/lp/LpVault.sol:96",
+   "src/lp/LpVault.sol:97"
+  ]
+ },
+ {
+  "id": "S-088",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CardModule.releaseExpiredHold(bytes32) (src/core/CardModule.sol#146-150) uses timestamp for comparisons",
+  "locations": [
+   "src/core/CardModule.sol:146",
+   "src/core/CardModule.sol:148"
+  ]
+ },
+ {
+  "id": "S-089",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CollateralConfig._stablePrice(CollateralCfg) (src/core/CollateralConfig.sol#54-68) uses timestamp for comparisons",
+  "locations": [
+   "src/core/CollateralConfig.sol:54",
+   "src/core/CollateralConfig.sol:58"
+  ]
+ },
+ {
+  "id": "S-090",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._fits(int256,uint8) (src/oracle/SessionOracle.sol#259-262) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:259",
+   "src/oracle/SessionOracle.sol:261"
+  ]
+ },
+ {
+  "id": "S-091",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "TriggerOrders.placeTrigger(TriggerOrder,bytes) (src/core/TriggerOrders.sol#21-33) uses timestamp for comparisons",
+  "locations": [
+   "src/core/TriggerOrders.sol:21",
+   "src/core/TriggerOrders.sol:25"
+  ]
+ },
+ {
+  "id": "S-092",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._latest(SessionOracle.FeedConfig) (src/oracle/SessionOracle.sol#236-250) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:236",
+   "src/oracle/SessionOracle.sol:245"
+  ]
+ },
+ {
+  "id": "S-093",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle.allOpen() (src/oracle/SessionOracle.sol#96-101) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:96",
+   "src/oracle/SessionOracle.sol:98"
+  ]
+ },
+ {
+  "id": "S-094",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CardModule.captureHold(bytes32,uint128) (src/core/CardModule.sol#112-139) uses timestamp for comparisons",
+  "locations": [
+   "src/core/CardModule.sol:112",
+   "src/core/CardModule.sol:114"
+  ]
+ },
+ {
+  "id": "S-095",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "StarterDrip.redeemVoucher(address,bytes,uint64,bytes) (src/periphery/StarterDrip.sol#86-102) uses timestamp for comparisons",
+  "locations": [
+   "src/periphery/StarterDrip.sol:86",
+   "src/periphery/StarterDrip.sol:91"
+  ]
+ },
+ {
+  "id": "S-096",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "MirrorAggregator.latestRoundData() (src/testnet/MirrorAggregator.sol#52-57) uses timestamp for comparisons",
+  "locations": [
+   "src/testnet/MirrorAggregator.sol:52",
+   "src/testnet/MirrorAggregator.sol:55"
+  ]
+ },
+ {
+  "id": "S-097",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "MarketCalendar._prune(uint8) (src/oracle/MarketCalendar.sol#98-109) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/MarketCalendar.sol:102",
+   "src/oracle/MarketCalendar.sol:98"
+  ]
+ },
+ {
+  "id": "S-098",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "MirrorAggregator.getRoundData(uint80) (src/testnet/MirrorAggregator.sol#46-50) uses timestamp for comparisons",
+  "locations": [
+   "src/testnet/MirrorAggregator.sol:46",
+   "src/testnet/MirrorAggregator.sol:48"
+  ]
+ },
+ {
+  "id": "S-099",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:146",
+   "src/oracle/SessionOracle.sol:156",
+   "src/oracle/SessionOracle.sol:159",
+   "src/oracle/SessionOracle.sol:161",
+   "src/oracle/SessionOracle.sol:166",
+   "src/oracle/SessionOracle.sol:168",
+   "src/oracle/SessionOracle.sol:169",
+   "src/oracle/SessionOracle.sol:188"
+  ]
+ },
+ {
+  "id": "S-100",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CardModule._consumeAllowance(address,uint256) (src/core/CardModule.sol#187-198) uses timestamp for comparisons",
+  "locations": [
+   "src/core/CardModule.sol:187",
+   "src/core/CardModule.sol:189"
+  ]
+ },
+ {
+  "id": "S-101",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._confirmed(SessionOracle.FeedConfig,uint80,uint256,uint256) (src/oracle/SessionOracle.sol#213-234) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:213",
+   "src/oracle/SessionOracle.sol:221",
+   "src/oracle/SessionOracle.sol:222",
+   "src/oracle/SessionOracle.sol:225",
+   "src/oracle/SessionOracle.sol:233"
+  ]
+ },
+ {
+  "id": "S-102",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle.acceptFeedPrice(uint8) (src/oracle/SessionOracle.sol#115-128) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:115",
+   "src/oracle/SessionOracle.sol:118"
+  ]
+ },
+ {
+  "id": "S-103",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237) uses timestamp for comparisons",
+  "locations": [
+   "src/core/PerpModule.sol:178",
+   "src/core/PerpModule.sol:186"
+  ]
+ },
+ {
+  "id": "S-104",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CoreStorage._requireNewRiskAllowed() (src/core/CoreStorage.sol#86-89) uses timestamp for comparisons",
+  "locations": [
+   "src/core/CoreStorage.sol:86",
+   "src/core/CoreStorage.sol:88"
+  ]
+ },
+ {
+  "id": "S-105",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "TriggerOrders.executeTrigger(bytes32) (src/core/TriggerOrders.sol#44-58) uses timestamp for comparisons",
+  "locations": [
+   "src/core/TriggerOrders.sol:44",
+   "src/core/TriggerOrders.sol:47"
+  ]
+ },
+ {
+  "id": "S-106",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "CardModule.increaseHold(bytes32,uint128) (src/core/CardModule.sol#92-108) uses timestamp for comparisons",
+  "locations": [
+   "src/core/CardModule.sol:92",
+   "src/core/CardModule.sol:94"
+  ]
+ },
+ {
+  "id": "S-107",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle._withinClamp(SessionOracle.FeedConfig,SessionOracle.FeedState,uint256,bool) (src/oracle/SessionOracle.sol#202-209) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:202",
+   "src/oracle/SessionOracle.sol:207"
+  ]
+ },
+ {
+  "id": "S-108",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "StarterDrip.claimFor(address,uint64,bytes) (src/periphery/StarterDrip.sol#69-84) uses timestamp for comparisons",
+  "locations": [
+   "src/periphery/StarterDrip.sol:69",
+   "src/periphery/StarterDrip.sol:70"
+  ]
+ },
+ {
+  "id": "S-109",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "PerpModule._increase(address,uint8,bool,uint256,uint256,uint64) (src/core/PerpModule.sol#88-139) uses timestamp for comparisons",
+  "locations": [
+   "src/core/PerpModule.sol:88",
+   "src/core/PerpModule.sol:97"
+  ]
+ },
+ {
+  "id": "S-110",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "SessionOracle.observe(uint8) (src/oracle/SessionOracle.sol#78-88) uses timestamp for comparisons",
+  "locations": [
+   "src/oracle/SessionOracle.sol:78",
+   "src/oracle/SessionOracle.sol:83"
+  ]
+ },
+ {
+  "id": "S-111",
+  "check": "timestamp",
+  "impact": "Low",
+  "confidence": "Medium",
+  "description": "MockStable.faucet() (src/testnet/MockStable.sol#33-38) uses timestamp for comparisons",
+  "locations": [
+   "src/testnet/MockStable.sol:33",
+   "src/testnet/MockStable.sol:35"
+  ]
+ },
+ {
+  "id": "S-112",
+  "check": "costly-loop",
+  "impact": "Informational",
+  "confidence": "Medium",
+  "description": "MarketRegistry._addMarket(MarketParams) (src/core/MarketRegistry.sol#74-81) has costly operations inside a loop:",
+  "locations": [
+   "src/core/MarketRegistry.sol:74",
+   "src/core/MarketRegistry.sol:77"
+  ]
+ },
+ {
+  "id": "S-113",
+  "check": "cyclomatic-complexity",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "SessionOracle._evaluate(uint8) (src/oracle/SessionOracle.sol#146-191) has a high cyclomatic complexity (14).",
+  "locations": [
+   "src/oracle/SessionOracle.sol:146"
+  ]
+ },
+ {
+  "id": "S-114",
+  "check": "cyclomatic-complexity",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "PerpModule._decrease(address,uint8,uint256,uint256,uint64,PositionKind) (src/core/PerpModule.sol#178-237) has a high cyclomatic complexity (16).",
+  "locations": [
+   "src/core/PerpModule.sol:178"
+  ]
+ },
+ {
+  "id": "S-115",
+  "check": "cyclomatic-complexity",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "RiskModule._risk(address) (src/core/RiskModule.sol#48-90) has a high cyclomatic complexity (13).",
+  "locations": [
+   "src/core/RiskModule.sol:48"
+  ]
+ },
+ {
+  "id": "S-116",
+  "check": "low-level-calls",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Low level call in StarterDrip.withdrawNative(address,uint256) (src/periphery/StarterDrip.sol#129-133):",
+  "locations": [
+   "src/periphery/StarterDrip.sol:129",
+   "src/periphery/StarterDrip.sol:130"
+  ]
+ },
+ {
+  "id": "S-117",
+  "check": "low-level-calls",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Low level call in StarterDrip._sendNative(address,uint256) (src/periphery/StarterDrip.sol#147-159):",
+  "locations": [
+   "src/periphery/StarterDrip.sol:147",
+   "src/periphery/StarterDrip.sol:157"
+  ]
+ },
+ {
+  "id": "S-118",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable CoreStorage.USDC (src/core/CoreStorage.sol#34) is not in mixedCase",
+  "locations": [
+   "src/core/CoreStorage.sol:34"
+  ]
+ },
+ {
+  "id": "S-119",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Function CoreStorage.DOMAIN_SEPARATOR() (src/core/CoreStorage.sol#80-82) is not in mixedCase",
+  "locations": [
+   "src/core/CoreStorage.sol:80"
+  ]
+ },
+ {
+  "id": "S-120",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable CoreStorage.AUSD (src/core/CoreStorage.sol#33) is not in mixedCase",
+  "locations": [
+   "src/core/CoreStorage.sol:33"
+  ]
+ },
+ {
+  "id": "S-121",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable DepositInbox.AUSD (src/periphery/DepositInbox.sol#16) is not in mixedCase",
+  "locations": [
+   "src/periphery/DepositInbox.sol:16"
+  ]
+ },
+ {
+  "id": "S-122",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable DepositInbox.USER (src/periphery/DepositInbox.sol#14) is not in mixedCase",
+  "locations": [
+   "src/periphery/DepositInbox.sol:14"
+  ]
+ },
+ {
+  "id": "S-123",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable InboxFactory.CORE (src/periphery/InboxFactory.sol#15) is not in mixedCase",
+  "locations": [
+   "src/periphery/InboxFactory.sol:15"
+  ]
+ },
+ {
+  "id": "S-124",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable StarterDrip.CORE (src/periphery/StarterDrip.sol#46) is not in mixedCase",
+  "locations": [
+   "src/periphery/StarterDrip.sol:46"
+  ]
+ },
+ {
+  "id": "S-125",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable LpVault.CORE (src/lp/LpVault.sol#33) is not in mixedCase",
+  "locations": [
+   "src/lp/LpVault.sol:33"
+  ]
+ },
+ {
+  "id": "S-126",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable CollateralSwapper.CORE (src/periphery/CollateralSwapper.sol#67) is not in mixedCase",
+  "locations": [
+   "src/periphery/CollateralSwapper.sol:67"
+  ]
+ },
+ {
+  "id": "S-127",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable InboxFactory.AUSD (src/periphery/InboxFactory.sol#16) is not in mixedCase",
+  "locations": [
+   "src/periphery/InboxFactory.sol:16"
+  ]
+ },
+ {
+  "id": "S-128",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable CollateralSwapper.ROUTER (src/periphery/CollateralSwapper.sol#68) is not in mixedCase",
+  "locations": [
+   "src/periphery/CollateralSwapper.sol:68"
+  ]
+ },
+ {
+  "id": "S-129",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable DepositInbox.USDC (src/periphery/DepositInbox.sol#17) is not in mixedCase",
+  "locations": [
+   "src/periphery/DepositInbox.sol:17"
+  ]
+ },
+ {
+  "id": "S-130",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable CollateralSwapper.PERMIT2 (src/periphery/CollateralSwapper.sol#69) is not in mixedCase",
+  "locations": [
+   "src/periphery/CollateralSwapper.sol:69"
+  ]
+ },
+ {
+  "id": "S-131",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable InboxFactory.USDC (src/periphery/InboxFactory.sol#17) is not in mixedCase",
+  "locations": [
+   "src/periphery/InboxFactory.sol:17"
+  ]
+ },
+ {
+  "id": "S-132",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable CoreStorage.ORACLE (src/core/CoreStorage.sol#35) is not in mixedCase",
+  "locations": [
+   "src/core/CoreStorage.sol:35"
+  ]
+ },
+ {
+  "id": "S-133",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable IntentRouter.CORE (src/periphery/IntentRouter.sol#33) is not in mixedCase",
+  "locations": [
+   "src/periphery/IntentRouter.sol:33"
+  ]
+ },
+ {
+  "id": "S-134",
+  "check": "naming-convention",
+  "impact": "Informational",
+  "confidence": "High",
+  "description": "Variable DepositInbox.CORE (src/periphery/DepositInbox.sol#15) is not in mixedCase",
+  "locations": [
+   "src/periphery/DepositInbox.sol:15"
+  ]
+ },
+ {
+  "id": "S-135",
+  "check": "too-many-digits",
+  "impact": "Informational",
+  "confidence": "Medium",
+  "description": "InboxFactory._initCode(address) (src/periphery/InboxFactory.sol#48-50) uses literals with too many digits:",
+  "locations": [
+   "src/periphery/InboxFactory.sol:48",
+   "src/periphery/InboxFactory.sol:49"
+  ]
+ },
+ {
+  "id": "S-136",
+  "check": "cache-array-length",
+  "impact": "Optimization",
+  "confidence": "High",
+  "description": "Loop condition i < marketIds.length (src/oracle/SessionOracle.sol#97) should use cached array length instead of referencing `length` member of the storage array.",
+  "locations": [
+   "src/oracle/SessionOracle.sol:97"
+  ]
+ }
+]

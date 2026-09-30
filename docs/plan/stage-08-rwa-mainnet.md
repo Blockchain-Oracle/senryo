@@ -28,11 +28,12 @@ reuses everything below `apps/`.
       CIRCUIT on the 10.4 % catch-up push → self-confirms (D-118)
 - [x] S8.3 **[OK?]** deploy the indexer compose (`indexer.senryo.xyz`, S4 Handoff) → api `INDEXER_GRAPHQL_URL` → candles +
       history live for 10143 — live 30 Sep (user OK), image from CI (D-160), api + keeper wired; XAU/XAG OPEN on 10143
-- [ ] S8.4 Contracts: `CollateralSwapper` → 6-field `ExactInputSingleParams` (`minHopPriceX36`, D-122); mainnet-fork
+- [x] S8.4 Contracts: `CollateralSwapper` → 6-field `ExactInputSingleParams` (`minHopPriceX36`, D-122); mainnet-fork
       swap check matches the Quoter
-- [ ] S8.5 Assurance (D-024): Slither + Aderyn + Wake on `contracts/`; `security-review` on `services/`; every finding fixed
-      or documented in `docs/security/assurance.md`; invariants I1–I7 green after fixes
-- [ ] S8.6 Gas re-calibration (D-119): `forge snapshot --network monad` + fork/mainnet `eth_estimateGas` → `GAS_LIMITS`
+- [x] S8.5 Assurance (D-024): Slither + Aderyn + Wake on `contracts/`; every finding fixed or documented in
+      `docs/security/assurance.md`; invariants I1–I7 green after fixes — contracts track (D-180…D-185)
+- [ ] S8.5b `security-review` on `services/` (lead) before the mainnet deploy
+- [x] S8.6 Gas re-calibration (D-119): `forge snapshot --network monad` + fork/mainnet `eth_estimateGas` → `GAS_LIMITS`
 - [x] S8.7 `packages/core` risk mirror (preview only; contract wins): execution price/spread, N, IM/MM, uPnL, liq price,
       FreeToTrade after the trade, caps (OI/skew/trade/min), session calendar display, `blockers.ts` in F10 order;
       differential check vs `SenryoCore.quote` on the fork — `risk-mirror-check` 6/6 mirror checks (D-162); its
@@ -74,3 +75,45 @@ Assurance findings closed (fixed or documented) · mainnet deposit → XAU long 
 ## Findings
 
 ## Handoff
+
+### Contracts track (S8.4–S8.6)
+- **S8.4 (D-180, `707ff92`).** `CollateralSwapper` now encodes the 6-field `ExactInputSingleParams` with
+  `minHopPriceX36 = 0`, which for exact-in single is the same bound as `amountOutMinimum`; `minOut` stays the user's
+  protection. The pool key lives in `SeedConstants.stablePoolKey()`. `Deploy.s.sol` builds the swapper with it and
+  calls `core.setSwapper` on the first run. Before this, mainnet would have deployed a zero-key swapper the core never
+  used. Mainnet fork: 100 USDC → 100.020357 AUSD and 100 AUSD → 99.969617 USDC through `swapCollateral`, both equal to
+  the Quoter; the mainnet `Deploy.s.sol` dry run on the fork completes (31 txs). Fork suites run with
+  `MONAD_FORK_URL=<local anvil fork> forge test --match-path 'test/fork/*'`; they skip without it.
+- **S8.5 (D-181…D-184, `ed267f7`, `docs/security/assurance.md`).** Finding #1 (D-182, your differential check) is
+  fixed your way: `_settleFees` no longer snaps. Also fixed: #2 D-181 (decrease shortfall socialisation, a real
+  extraction PoC) and #3 D-183 (oracle answer bound). Added events for the silent setters. The invariant suite gained
+  `noPanics` + `aggregatesMatchPositions`, and the handler no longer warps backwards. All tool findings are triaged.
+- **Lead actions**
+  - **[OK?] Testnet redeploy (required, SenryoCore is immutable).** No constructor or deploy-script change is needed
+    for 10143; the S8.4 Deploy change is mainnet-only.
+    1. Build from a `git submodule update --init --recursive` checkout. The OZ nested-submodule remappings are part of
+       every metadata hash; without them all recorded contracts report `Drift`.
+    2. Delete `SenryoCore`, `SessionOracle`, `LpVault`, `StarterDrip`, `InboxFactory` and `IntentRouter` from
+       `packages/contracts/src/addresses/10143.json`.
+    3. Run `Deploy.s.sol` exactly as in S2.9, with the same KEEPER/OPERATOR/SPONSOR env.
+    4. Verify on Sourcify, `pnpm contracts:export`, re-sync the indexer (new addresses + start block, `address-drift`),
+       and redeploy api/keeper/card.
+
+    Dry run on a 10143 fork: it reuses AccessManager, MarketCalendar, MockAUSD/USDC and MirrorXAU/XAG, creates the six,
+    re-wires roles and re-seeds the books: 30 txs, ~23.4M gas simulated. Practice balances inside the old core stay
+    stranded. The new StarterDrip lets addresses claim again and needs its MON float.
+  - **Clients.** A close or decrease can now revert `PerpModule.LossExceedsBalance(shortfall)` (D-181). The S8.7
+    blockers need "close your profitable position first or add funds". The ABIs are re-exported.
+  - The unused errors in `Errors.sol` are kept on purpose until the next full redeploy (see assurance.md).
+- **S8.6 (D-185).** `GAS_LIMITS` is re-calibrated from `eth_estimateGas`-equivalents on mainnet and testnet forks.
+  Flat values are the budget for ONE open position. The new `positionGasLimit(action, positions)` adds
+  `POSITION_GAS` per extra position: count the traded position, and for an opening increase count it after the open.
+  `liquidateGasLimit` is 350k + 180k × n. New keys: `swapCollateral`, `setCardEnvelope`, `placeTrigger`,
+  `lpRequestRedeem`, `lpClaimRedeem`.
+  - **Lead: wire callers to pass the position count** (apps + keeper + card). Most important is
+    `services/card/src/submit.ts`, which sends `placeHold` with `fixedGas: GAS_LIMITS.placeHold`. That limit is
+    charged in full, so use `positionGasLimit("placeHold", positions)`. Mainnet costs are ~1.5–2× testnet (every
+    risk pass reads the AUSD/USDC Chainlink feeds), so the practice numbers are not a guide to mainnet.
+  - To re-measure: `anvil --fork-url https://rpc.monad.xyz --network monad` (or the testnet RPC), then
+    `MONAD_FORK_URL=http://127.0.0.1:<port> forge test --match-path test/fork/GasProfileFork.t.sol --isolate -vv`
+    and read the `estimate <action>.p<n>` log lines.
