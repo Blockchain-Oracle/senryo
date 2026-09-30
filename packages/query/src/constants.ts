@@ -13,6 +13,8 @@ export const CANDLES_REFETCH_MS = 60_000;
 /** Account reads between socket-driven invalidations (fallback when the socket is down). */
 export const ACCOUNT_REFETCH_MS = 10_000;
 export const GAS_REFETCH_MS = 15_000;
+/** Indexed equity curve (the socket invalidates the account on finalized changes). */
+export const EQUITY_REFETCH_MS = 60_000;
 
 /** Engine socket: keep-alive and reconnect backoff. */
 export const SOCKET_PING_MS = 25_000;

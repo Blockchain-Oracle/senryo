@@ -8,9 +8,14 @@ import { Area, CartesianChart, Line, useChartPressState } from "victory-native";
 import { fire } from "~/feedback/fire";
 import { clockTime } from "~/lib/format";
 import { toPlot, usd } from "~/lib/money";
-import type { EquityPoint } from "~/lib/sample";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { CHART } from "./constants";
+
+/** One equity sample: time (ms) and risk-adjusted equity (usd6). */
+export interface EquityPoint {
+  t: number;
+  equity6: bigint;
+}
 
 /**
  * RN port of 21st Balance Chart #30538: victory-native XL (Skia) area + line, the max label top-right and the min

@@ -79,6 +79,9 @@ export interface PositionView {
   entry: bigint;
   isLong: boolean;
   openedBlock: bigint;
+  /** Market funding / borrow index at the last settle (for the owed breakdown, F11). */
+  fundingSnap: bigint;
+  borrowSnap: bigint;
 }
 
 /** Open positions for the markets set in `positionBitmap` (one multicall). */
@@ -106,6 +109,8 @@ export async function readPositions(
     entry: p.entry,
     isLong: p.isLong,
     openedBlock: BigInt(p.openedBlock),
+    fundingSnap: BigInt(p.fundingSnap),
+    borrowSnap: BigInt(p.borrowSnap),
   }));
 }
 

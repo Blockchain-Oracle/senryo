@@ -1,14 +1,23 @@
+import type { AccountSnapshot, PositionView } from "@senryo/chain";
+import { ENGINE_MARKETS } from "@senryo/config";
+import { notional, previewPosition } from "@senryo/core";
+import { riskViewOf, useMarket } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Panel } from "~/components/kit/Surface";
+import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { positionRoute } from "~/lib/constants/routes";
-import { pct, price, signedUsd, usd } from "~/lib/money";
-import type { SamplePosition } from "~/lib/sample";
+import { pct, price18, signedUsd, usd } from "~/lib/money";
 import { HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
-/** D2 positions table: MKT · SIZE · LIQ · PNL; a row opens the position (close, TP/SL, margin in S8). */
-export function PositionsTable({ positions }: { positions: SamplePosition[] }) {
+const LIQ_DECIMALS = 1;
+
+/**
+ * D2 positions table: MKT · SIZE · LIQ · PNL. Each row prices itself from its market's live oracle view through the
+ * core preview (PnL at the conservative exit, liquidation price with the account's other positions held fixed).
+ */
+export function PositionsTable({ positions, account }: { positions: PositionView[]; account: AccountSnapshot }) {
   const { color } = useTheme();
   return (
     <Panel>
@@ -19,37 +28,62 @@ export function PositionsTable({ positions }: { positions: SamplePosition[] }) {
           </Text>
         ))}
       </View>
-      {positions.map((p, i) => {
-        const sideColor = p.side === "long" ? color.up : color.down;
-        const pnlColor = p.pnl6 < 0n ? color.down : color.up;
-        return (
-          <Pressable
-            key={p.id}
-            onPress={() => {
-              fire("tick");
-              router.push(positionRoute(p.id));
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`${p.market} ${p.side}, ${p.leverage} times, profit ${signedUsd(p.pnl6)}, liquidation ${pct(p.liqDistanceBps)} away`}
-            style={({ pressed }) => [
-              styles.row,
-              i > 0 ? { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline } : null,
-              pressed ? { backgroundColor: color.muted } : null,
-            ]}
-          >
-            <View style={styles.first}>
-              <Text style={[TYPE.numMd, { color: color.ink }]}>{p.market}-PERP</Text>
-              <Text style={[TYPE.numSm, { color: sideColor }]}>
-                {p.side.toUpperCase()} {p.leverage}x
-              </Text>
-            </View>
-            <Text style={[TYPE.numSm, styles.num, { color: color.ink }]}>{usd(p.size6, 0)}</Text>
-            <Text style={[TYPE.numSm, styles.num, { color: color.inkMuted }]}>{price(p.liqE8, 1)}</Text>
-            <Text style={[TYPE.numSm, styles.num, { color: pnlColor }]}>{signedUsd(p.pnl6)}</Text>
-          </Pressable>
-        );
-      })}
+      {positions.map((p, i) => (
+        <PositionRow key={p.marketId} position={p} account={account} first={i === 0} />
+      ))}
     </Panel>
+  );
+}
+
+function PositionRow({
+  position,
+  account,
+  first,
+}: {
+  position: PositionView;
+  account: AccountSnapshot;
+  first: boolean;
+}) {
+  const { color } = useTheme();
+  const market = useMarket(position.marketId);
+  const symbol = ENGINE_MARKETS.find((m) => m.id === position.marketId)?.symbol ?? `#${position.marketId}`;
+  const border = first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline };
+  const sideColor = position.isLong ? color.up : color.down;
+  const side = position.isLong ? "LONG" : "SHORT";
+  if (market.status === "unknown" || market.status === "failed") {
+    return (
+      <View style={[styles.row, border]}>
+        <Text style={[TYPE.numMd, styles.first, { color: color.ink }]}>{symbol}-PERP</Text>
+        <Skeleton width="45%" />
+      </View>
+    );
+  }
+  const m = market.value;
+  const health = previewPosition(m.risk, m.pv, riskViewOf(account), position);
+  const size = notional(position.size, m.pv.price18);
+  const away = health.liqDistanceBps;
+  return (
+    <Pressable
+      onPress={() => {
+        fire("tick");
+        router.push(positionRoute(String(position.marketId)));
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`${m.name} ${side.toLowerCase()}, size ${usd(size, 0)}, ${health.upnlUsd6 < 0n ? "loss" : "profit"} ${signedUsd(health.upnlUsd6)}${away === null ? "" : `, liquidation ${pct(away < 0n ? 0n : away)} away`}`}
+      style={({ pressed }) => [styles.row, border, pressed ? { backgroundColor: color.muted } : null]}
+    >
+      <View style={styles.first}>
+        <Text style={[TYPE.numMd, { color: color.ink }]}>{symbol}-PERP</Text>
+        <Text style={[TYPE.numSm, { color: sideColor }]}>{side}</Text>
+      </View>
+      <Text style={[TYPE.numSm, styles.num, { color: color.ink }]}>{usd(size, 0)}</Text>
+      <Text style={[TYPE.numSm, styles.num, { color: away !== null && away < 0n ? color.down : color.inkMuted }]}>
+        {health.liqPrice18 === null ? "—" : price18(health.liqPrice18, LIQ_DECIMALS)}
+      </Text>
+      <Text style={[TYPE.numSm, styles.num, { color: health.upnlUsd6 < 0n ? color.down : color.up }]}>
+        {signedUsd(health.upnlUsd6)}
+      </Text>
+    </Pressable>
   );
 }
 

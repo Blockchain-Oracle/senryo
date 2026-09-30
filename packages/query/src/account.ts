@@ -5,8 +5,9 @@
  */
 import { type AccountSnapshot, type PositionView, readAccountSnapshot, readPositions } from "@senryo/chain";
 import { type AccountRiskView, type Address, fromQuery, type Reading } from "@senryo/core";
+import { type EquityCurve, EquityDocument, equityVars } from "@senryo/indexer-client";
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { ACCOUNT_REFETCH_MS, GAS_REFETCH_MS } from "./constants.ts";
+import { ACCOUNT_REFETCH_MS, EQUITY_REFETCH_MS, GAS_REFETCH_MS } from "./constants.ts";
 import { type QueryEnv, useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
 
@@ -68,4 +69,29 @@ export function riskViewOf(s: AccountSnapshot): AccountRiskView {
     freeToTrade: s.freeToTrade,
     atRisk: s.positionBitmap !== 0 || s.holds > 0n || s.envelope > 0n || s.cardDebt > 0n,
   };
+}
+
+const MS_PER_SECOND = 1000;
+
+/**
+ * Equity curve over the last `windowSec` from indexed `AccountRiskUpdated` snapshots (portfolio chart + 24 h change).
+ * The key holds the window, not a timestamp, so it stays stable across renders.
+ */
+export function useEquityHistory(address: Address | undefined, windowSec: number): Reading<EquityCurve> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: [...keys.account(env.chainId, address ?? "0x"), "equity", windowSec] as const,
+    queryFn: ({ signal }) => {
+      const since = Math.floor(Date.now() / MS_PER_SECOND) - windowSec;
+      return env.indexer.request(
+        EquityDocument,
+        equityVars({ chainId: env.chainId, user: address ?? "0x" }, { since }),
+        signal,
+      );
+    },
+    enabled: address !== undefined,
+    refetchInterval: EQUITY_REFETCH_MS,
+    staleTime: EQUITY_REFETCH_MS,
+  });
+  return fromQuery(query);
 }

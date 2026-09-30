@@ -19,6 +19,9 @@ export interface MarketRiskSnapshot {
   updatedAt: bigint;
   calendarId: number;
   maxLeverageX: number;
+  /** Accrual indexes (1e18) as of the market's last accrual — funding/borrow owed ≈ Δ × entry notional (F11). */
+  fundingIndex: bigint;
+  borrowIndex: bigint;
 }
 
 export async function readMarketRisk(
@@ -66,6 +69,8 @@ export async function readMarketRisk(
     },
     updatedAt: BigInt(peek.updatedAt),
     calendarId: feed[1],
+    fundingIndex: BigInt(state.fundingIndex),
+    borrowIndex: BigInt(state.borrowIndex),
     maxLeverageX: imBps > 0n ? Number(RISK.BPS / imBps) : 0,
   };
 }
