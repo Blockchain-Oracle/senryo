@@ -35,6 +35,10 @@ export function failureWords(error: unknown): string {
   if (/SlippageExceeded/.test(first)) return "The price moved past your limit. Nothing was sent.";
   if (/InsufficientFreeCollateral/.test(first)) return "Not enough Free to trade at the new price. Nothing was sent.";
   if (/MarketNotOpen/.test(first)) return "The market just closed. Nothing was sent.";
+  if (/LossExceedsBalance/.test(first)) {
+    return "This close would leave a loss your balance can't cover while other positions stay open. Close the profitable one first, or add money. Nothing was sent.";
+  }
+  if (/MinHoldNotElapsed/.test(first)) return "Profit can be taken a few seconds after opening. Nothing was sent.";
   if (/Cancel|cancel/.test(first)) return "Cancelled — nothing was signed.";
   return first.length > 0 ? first : "The trade didn't go through";
 }

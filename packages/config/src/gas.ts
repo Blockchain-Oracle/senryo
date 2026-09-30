@@ -134,6 +134,13 @@ export function positionGasLimit(action: GasAction, positions: number): bigint {
   return GAS_LIMITS[action] + extra * BigInt(Math.max(positions - 1, 0));
 }
 
+/** Open positions in an `Account.positionBitmap` (one bit per market). */
+export function positionCount(bitmap: number): number {
+  let n = 0;
+  for (let bits = bitmap >>> 0; bits !== 0; bits &= bits - 1) n += 1;
+  return n;
+}
+
 /** Liquidation budget for an account with `positions` open positions. */
 export function liquidateGasLimit(positions: number): bigint {
   return GAS_LIMITS.liquidate + LIQUIDATE_GAS_PER_POSITION * BigInt(Math.max(positions, 1));

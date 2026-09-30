@@ -7,7 +7,7 @@ import {
   receiptEvents,
   sendTx,
 } from "@senryo/chain";
-import { GAS_LIMITS } from "@senryo/config";
+import { positionGasLimit } from "@senryo/config";
 import { type CardContext, operatorFor } from "./context.ts";
 import { books, post } from "./ledger.ts";
 
@@ -26,6 +26,8 @@ export interface HoldSubmit {
   txnToken: Hex;
   account: Address;
   amount: bigint;
+  /** Open positions on the account (the risk pass re-reads each market — D-185 scales the fixed limit). */
+  positions: number;
   /** Proposed-stage callback (the decision may approve on an envelope hold before finality). */
   onProposed?: (info: { hash: Hex; fromEnvelope: boolean }) => void;
 }
@@ -38,7 +40,7 @@ export async function submitHold(ctx: CardContext, hold: HoldSubmit): Promise<Su
     "placeHold",
     [ctx.issuer, hold.txnToken, hold.account, hold.amount],
     "placeHold",
-    { fixedGas: GAS_LIMITS.placeHold, meta: { holdId: hold.holdId } },
+    { fixedGas: positionGasLimit("placeHold", hold.positions), meta: { holdId: hold.holdId } },
   );
   await ctx.db`UPDATE holds SET status = 'SUBMITTED', operator = ${operator.account.address}, updated_at = now()
                 WHERE hold_id = ${hold.holdId}`;

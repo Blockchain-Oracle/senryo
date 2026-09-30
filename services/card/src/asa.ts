@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getAddress, type Hex } from "@senryo/chain";
+import { positionCount } from "@senryo/config";
 import type { LatencyTimer } from "@senryo/service-common";
 import { bytes32Of, holdAmount, holdIdOf, usd6ToCents } from "./amounts.ts";
 import { DUPLICATE_POLL_MS, RESPOND_MARGIN_MS } from "./constants.ts";
@@ -104,7 +105,8 @@ export async function handleAsa(ctx: CardContext, req: AsaRequest, timer: Latenc
     return { result };
   }
 
-  const submitted = submitHold(ctx, { holdId, txnToken, account, amount: amount.usd6 });
+  const positions = positionCount(reserve.snapshot.positionBitmap);
+  const submitted = submitHold(ctx, { holdId, txnToken, account, amount: amount.usd6, positions });
   const outcome = await Promise.race([submitted, sleep(Math.max(deadline - Date.now(), 0)).then(() => undefined)]);
   timer.mark("placeHold→finalized");
   if (outcome?.stage === "finalized") {

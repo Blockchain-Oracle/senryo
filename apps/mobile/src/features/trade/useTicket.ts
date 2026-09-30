@@ -4,7 +4,7 @@
  * in spec order; and the send — `increase` through `@senryo/chain` with the scoped signer (the session policy sees
  * market room + equity, so an in-scope open signs without a step-up; D-037 Face ID is the policy's call).
  */
-import { GAS_LIMITS } from "@senryo/config";
+import { positionCount, positionGasLimit } from "@senryo/config";
 import {
   capHeadroomUsd6,
   DECIMALS,
@@ -81,7 +81,8 @@ export function useTicket(market: LiveMarket) {
       ? nextTransition(calendar.value, nowSec, true)
       : undefined;
   const gasBalance = gas.status === "fresh" || gas.status === "stale" ? gas.value : undefined;
-  const needWei = gasPrice.data === undefined ? undefined : GAS_LIMITS.increase * gasPrice.data;
+  const openAfter = (snapshot ? positionCount(snapshot.positionBitmap) : 0) + (held ? 0 : 1);
+  const needWei = gasPrice.data === undefined ? undefined : positionGasLimit("increase", openAfter) * gasPrice.data;
   const hasGas = gasBalance === undefined || needWei === undefined ? true : gasBalance >= needWei;
   const trace = useSendTrace();
   const simulationRevert = trace.events.find((e) => e.stage === "failed")?.error;
@@ -110,7 +111,11 @@ export function useTicket(market: LiveMarket) {
       equityUsd6: () => snapshot.equityInit,
       marketLabel: (id) => (id === market.marketId ? market.name : undefined),
     });
-    return trace.run(sender, increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18));
+    const open = positionCount(snapshot.positionBitmap) + (held ? 0 : 1);
+    return trace.run(
+      sender,
+      increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18, open),
+    );
   };
 
   return {

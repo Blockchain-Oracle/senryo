@@ -4,7 +4,7 @@
  * (chain sizes the limit from the simulation). The contract re-checks price, caps and margin.
  */
 import { contractCall, type TxRequest } from "@senryo/chain";
-import type { ChainId } from "@senryo/config";
+import { type ChainId, positionGasLimit } from "@senryo/config";
 import { RISK } from "@senryo/core";
 
 /** Price protection between preview and inclusion (~1 s on Monad); the fill is still the oracle price ± spread. */
@@ -19,12 +19,14 @@ const acceptableFor = (buying: boolean, exec18: bigint) =>
     ? (exec18 * (RISK.BPS + TRADE_SLIPPAGE_BPS)) / RISK.BPS
     : (exec18 * (RISK.BPS - TRADE_SLIPPAGE_BPS)) / RISK.BPS;
 
+/** `positions` = open positions after the action (count the traded market) — the gas cap scales with it (D-185). */
 export function increaseRequest(
   chainId: ChainId,
   marketId: number,
   isLong: boolean,
   notionalUsd6: bigint,
   exec18: bigint,
+  positions: number,
 ): TxRequest {
   const acceptable = acceptableFor(isLong, exec18);
   return contractCall(
@@ -34,6 +36,7 @@ export function increaseRequest(
     [marketId, isLong, notionalUsd6, acceptable, deadline()],
     "increase",
     {
+      gasCap: positionGasLimit("increase", positions),
       meta: { kind: "increase", marketId: String(marketId) },
     },
   );
@@ -46,16 +49,25 @@ export function decreaseRequest(
   isLong: boolean,
   sizeDelta: bigint,
   exec18: bigint,
+  positions: number,
 ): TxRequest {
   const acceptable = acceptableFor(!isLong, exec18);
   return contractCall(chainId, "SenryoCore", "decrease", [marketId, sizeDelta, acceptable, deadline()], "decrease", {
+    gasCap: positionGasLimit("decrease", positions),
     meta: { kind: "decrease", marketId: String(marketId) },
   });
 }
 
-export function closeRequest(chainId: ChainId, marketId: number, isLong: boolean, exec18: bigint): TxRequest {
+export function closeRequest(
+  chainId: ChainId,
+  marketId: number,
+  isLong: boolean,
+  exec18: bigint,
+  positions: number,
+): TxRequest {
   const acceptable = acceptableFor(!isLong, exec18);
   return contractCall(chainId, "SenryoCore", "close", [marketId, acceptable, deadline()], "close", {
+    gasCap: positionGasLimit("close", positions),
     meta: { kind: "close", marketId: String(marketId) },
   });
 }
