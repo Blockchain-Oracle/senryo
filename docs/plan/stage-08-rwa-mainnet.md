@@ -22,8 +22,10 @@ reuses everything below `apps/`.
 
 ## Steps
 - [x] S8.1 Stage file
-- [ ] S8.2 **Practice prices live:** testnet keeper float (D-118 routes: faucets, deployer transfer) → **[OK?]** deploy
+- [x] S8.2 **Practice prices live:** testnet keeper float (D-118 routes: faucets, deployer transfer) → **[OK?]** deploy
       `senryo-keeper` on Coolify (256m, `KEEPER_JOBS` incl. `mirror`) → XAU/XAG OPEN on 10143 with a fresh round
+      — user faucet 5 MON split (ids-and-txs); keeper live 30 Sep (user OK), mirror XAU+XAG; XAG OPEN at once, XAU
+      CIRCUIT on the 10.4 % catch-up push → self-confirms (D-118)
 - [ ] S8.3 **[OK?]** deploy the indexer compose (`indexer.senryo.xyz`, S4 Handoff) → api `INDEXER_GRAPHQL_URL` → candles +
       history live for 10143
 - [ ] S8.4 Contracts: `CollateralSwapper` → 6-field `ExactInputSingleParams` (`minHopPriceX36`, D-122); mainnet-fork

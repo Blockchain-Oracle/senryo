@@ -47,7 +47,8 @@ services:
       start_period: 10s
 
   envio-indexer:
-    build: .
+    # Built by .github/workflows/images.yml (D-016: nothing builds on the server); Coolify sets INDEXER_IMAGE_TAG.
+    image: ghcr.io/blockchain-oracle/senryo-indexer:${INDEXER_IMAGE_TAG:-unset}
     restart: unless-stopped
     mem_limit: 800m
     cpus: 0.8

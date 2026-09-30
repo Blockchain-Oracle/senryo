@@ -10,7 +10,7 @@ on:
         description: "Which images to build"
         type: choice
         default: all
-        options: [all, api, web]
+        options: [all, api, web, indexer]
 
 concurrency:
   group: images-${{ github.ref }}
@@ -30,8 +30,14 @@ jobs:
         include:
           - app: api
             file: services/Dockerfile
+            context: .
           - app: web
             file: apps/web/Dockerfile
+            context: .
+          # Envio indexer: its own pnpm project outside the workspace, so its build context is indexer/ (S8.3).
+          - app: indexer
+            file: indexer/Dockerfile
+            context: indexer
     steps:
       - name: Skip unselected
         id: pick
@@ -53,7 +59,7 @@ jobs:
       - uses: docker/build-push-action@v7
         if: steps.pick.outputs.run == 'true'
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ matrix.file }}
           platforms: linux/amd64
           push: true
