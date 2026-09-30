@@ -1,6 +1,6 @@
 import type { AccountSnapshot } from "@senryo/chain";
-import { RISK } from "@senryo/core";
-import { useAccountRisk, useEquityHistory, usePositions } from "@senryo/query";
+import { isTerminalStage, RISK } from "@senryo/core";
+import { useAccountRisk, useEquityHistory, usePositions, useStarterStatus } from "@senryo/query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -52,6 +52,11 @@ export default function Portfolio() {
   const day = useEquityHistory(address, DAY_SEC);
   const curve = useEquityHistory(address, WINDOW_SEC[frame]);
   const positions = usePositions(address);
+  const starterStatus = useStarterStatus(address);
+  const lastRelay = starterStatus.data?.lastRelay;
+  // A claim in flight (or finalized onchain but not yet in the finalized read) is not "nothing here" (S8.16e).
+  const arriving =
+    starterStatus.data?.claimed === true || (lastRelay?.kind === "claim" && !isTerminalStage(lastRelay.stage));
 
   if (!address) {
     return (
@@ -113,11 +118,18 @@ export default function Portfolio() {
       <ReadingView reading={risk} loading="plate" loadingLabel="Reading buckets">
         {(s) =>
           s.equityInit === 0n && s.positionBitmap === 0 ? (
-            <EmptyState
-              why="Nothing here yet"
-              detail="Claim practice funds or deposit from any chain — then gold is one hold away."
-              action={{ label: "Add money", onPress: () => router.push(ROUTES.addMoney) }}
-            />
+            arriving ? (
+              <EmptyState
+                why="Your practice dollars are arriving"
+                detail="The claim is settling onchain · your balance appears here in a moment."
+              />
+            ) : (
+              <EmptyState
+                why="Nothing here yet"
+                detail="Claim practice funds or deposit from any chain — then gold is one hold away."
+                action={{ label: "Add money", onPress: () => router.push(ROUTES.addMoney) }}
+              />
+            )
           ) : (
             <>
               <BucketRegister buckets={bucketsOf(s)} />

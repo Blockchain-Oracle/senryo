@@ -71,9 +71,12 @@ reuses everything below `apps/`.
       swapCollateralRequest (10 bps min-out, per-position gas); portfolio CollateralPanel (mainnet only); the
       end-to-end swap runs with the S8.18 deploy (fork rehearsal first)
 - [x] S8.15 Geofence (F95, D-038): api country lookup (DB-IP Lite, D-121) + mainnet blocker; practice never gated — D-165 (DB-IP Lite in the api, ticket + mainnet starter gated)
-- [ ] S8.16a Stable readings (v2-plan W1): `packages/core` `fromQuery` stale = errored or age > per-query budget (not
+- [x] S8.16a Stable readings (v2-plan W1): `packages/core` `fromQuery` stale = errored or age > per-query budget (not
       TanStack `isStale`); `ReadingView` fixed child slots; Ticket out of the market ReadingView with a per-(mode, market)
       draft + in-flight trace store (no double submit on remount); tabs layout keeps only `hasOpenPositions`
+      — done: `fromQuery(query, {now, staleAfterMs})` + `readingOf` (2× each refetch interval); ReadingView keeps one
+      tree; ticket draft + keyed send trace survive remounts (no second submit while running); tabs layout reads only
+      `hasOpenPositions`, the mini-bar computes its own summary
 - [ ] S8.16b Gas budget = measured per-chain limit × the maxFee the sender signs (`gasBudgetWei`, `useGasBudget` per
       market/side/positions); NO_GAS generic and evaluated last (D-171)
 - [ ] S8.16c Auto top-up: api `POST /v1/starter/topup` (EIP-712 `TopUp`, sponsor `StarterDrip.topUp`, migration

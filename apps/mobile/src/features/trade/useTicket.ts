@@ -30,13 +30,14 @@ import {
   useSendTrace,
 } from "@senryo/query";
 import { onlineManager, useQuery } from "@tanstack/react-query";
-import { useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { applyKey, type KeypadKey } from "~/components/trade/Keypad";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { draftKey, type Side, useTicketDraft } from "./draft";
 
-export type Side = "long" | "short";
+export type { Side };
 export const DEFAULT_LEVERAGE = 5;
 const GAS_PRICE_STALE_MS = 30_000;
 const MS_PER_SECOND = 1000n;
@@ -45,9 +46,13 @@ export function useTicket(market: LiveMarket) {
   const env = useQueryEnv();
   const account = useAccount();
   const address = account.hint?.address;
-  const [side, setSide] = useState<Side>("long");
-  const [amountText, setAmountText] = useState("");
-  const [leverage, setLeverageRaw] = useState(Math.min(DEFAULT_LEVERAGE, market.maxLeverageX));
+  const key = draftKey(env.chainId, market.marketId);
+  const { draft, update } = useTicketDraft(key, {
+    side: "long",
+    amountText: "",
+    leverage: Math.min(DEFAULT_LEVERAGE, market.maxLeverageX),
+  });
+  const { side, amountText, leverage } = draft;
   const online = useSyncExternalStore(onlineManager.subscribe, () => onlineManager.isOnline());
   const risk = useAccountRisk(address, "latest");
   const positions = usePositions(address);
@@ -87,7 +92,7 @@ export function useTicket(market: LiveMarket) {
   const openAfter = (snapshot ? positionCount(snapshot.positionBitmap) : 0) + (held ? 0 : 1);
   const needWei = gasPrice.data === undefined ? undefined : positionGasLimit("increase", openAfter) * gasPrice.data;
   const hasGas = gasBalance === undefined || needWei === undefined ? true : gasBalance >= needWei;
-  const trace = useSendTrace();
+  const trace = useSendTrace(key);
   const simulationRevert = trace.events.find((e) => e.stage === "failed")?.error;
 
   const blocker: TradeBlocker | undefined = firstTradeBlocker({
@@ -123,14 +128,14 @@ export function useTicket(market: LiveMarket) {
 
   return {
     side,
-    setSide,
+    setSide: (s: Side) => update({ side: s }),
     amountText,
     amountUsd6,
-    onKey: (key: KeypadKey) => setAmountText((t) => applyKey(t, key)),
+    onKey: (k: KeypadKey) => update((d) => ({ amountText: applyKey(d.amountText, k) })),
     setAmountUsd6: (v: bigint) =>
-      setAmountText(v === 0n ? "" : formatUnits(v, DECIMALS.usd6, DECIMALS.cents, { grouping: false })),
+      update({ amountText: v === 0n ? "" : formatUnits(v, DECIMALS.usd6, DECIMALS.cents, { grouping: false }) }),
     leverage,
-    setLeverage: (v: number) => setLeverageRaw(Math.max(1, Math.min(v, market.maxLeverageX))),
+    setLeverage: (v: number) => update({ leverage: Math.max(1, Math.min(v, market.maxLeverageX)) }),
     notionalUsd6,
     preview,
     maxAmountUsd6,

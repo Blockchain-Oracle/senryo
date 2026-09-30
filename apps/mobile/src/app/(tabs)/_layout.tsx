@@ -1,7 +1,7 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { ICONS } from "~/components/kit/icons";
 import { PositionsAccessory } from "~/components/shell/PositionsAccessory";
-import { usePositionsSummary } from "~/features/portfolio/usePositionsSummary";
+import { useHasOpenPositions } from "~/features/portfolio/usePositionsSummary";
 import { useTheme } from "~/theme";
 
 const TABS = [
@@ -16,11 +16,11 @@ const TABS = [
  * NativeTabs (D-012): the real UITabBar / Material bar. On iOS 26 the system draws it in Liquid Glass and ignores the
  * background props; on iOS 18–25 and Android `backgroundColor` gives the solid D2 fallback, and
  * `disableTransparentOnScrollEdge` keeps it solid at the scroll edge. The open-positions mini-bar rides in the
- * BottomAccessory (iOS 26).
+ * BottomAccessory (iOS 26); the layout only tracks whether positions exist, the bar computes its own live summary.
  */
 export default function TabsLayout() {
   const { color } = useTheme();
-  const summary = usePositionsSummary();
+  const hasPositions = useHasOpenPositions();
   return (
     <NativeTabs
       backgroundColor={color.ground}
@@ -29,9 +29,9 @@ export default function TabsLayout() {
       labelStyle={{ default: { color: color.inkMuted }, selected: { color: color.ink } }}
       badgeBackgroundColor={color.primary}
     >
-      {summary ? (
+      {hasPositions ? (
         <NativeTabs.BottomAccessory>
-          <PositionsAccessory summary={summary} />
+          <PositionsAccessory />
         </NativeTabs.BottomAccessory>
       ) : null}
       {TABS.map((tab) => (
