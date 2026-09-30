@@ -85,3 +85,4 @@ Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: no
 | senryo-indexer (compose from git /indexer; ghcr.io/blockchain-oracle/senryo-indexer:sha-0b8a3dd; pg 512m · hasura 384m · envio 800m) | `gafyrh7f6esyaxbcubnogjwc` → https://indexer.senryo.xyz/v1/graphql (143 + 10143) · measured at start: envio 258 MiB, hasura 295 MiB, pg 79 MiB |
 | 10143 core-set redeploy (D-164, 30 Sep) | 31 txs from block 66968976 (`contracts/broadcast/Deploy.s.sol/10143/run-latest.json`); old StarterDrip float → deployer `0xa3a879a2…9f75f`; new StarterDrip +0.4 tMON `0x89e7edf9…ab9`; live claim `0x4f9dc291…7902` |
 | Coolify tags after D-164 | senryo-api, senryo-keeper, senryo-web `sha-66679dd`; senryo-indexer `INDEXER_IMAGE_TAG=sha-66679dd` (reset via `envio start -r`, then resumed) |
+| Coolify tags after S8.15 (30 Sep) | senryo-api, senryo-keeper `sha-c1893e5` (DB-IP geo loaded 2026-09; /v1/geo live) · senryo-web `sha-66679dd` · senryo-indexer `sha-66679dd` |
