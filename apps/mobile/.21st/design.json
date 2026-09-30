@@ -1,0 +1,529 @@
+{
+  "version": 1,
+  "project": {
+    "name": "@senryo/mobile",
+    "productType": "fintech trading app (Senryo 千両 + Kinpaku 金箔 card, Monad)",
+    "stack": ["expo-57", "react-native", "reanimated-4", "victory-native", "expo-router"]
+  },
+  "direction": {
+    "name": "D2 Desk",
+    "summary": "Pro terminal: dense, monospaced, dark default with a paper light alternate; top tabs; equity chart first; buckets as a three-cell register; execution trace after Face ID.",
+    "approved": "docs/plan/00-plan.md D-004; design/DIRECTIONS.md D2; screenshots design/screens/d2-*"
+  },
+  "sources": {
+    "tokens": ["packages/tokens/src/palette.ts", "packages/tokens/src/scale.ts", "packages/tokens/src/marks.ts"],
+    "components": ["apps/mobile/src/components (planned)"],
+    "assets": ["brand/"],
+    "instructions": ["CLAUDE.md", "docs/plan/specs/client.md"]
+  },
+  "design": {
+    "colorMode": "dark-default-with-light",
+    "colors": {
+      "--background": {
+        "dark": "#000000",
+        "light": "#f4f4f2",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--foreground": {
+        "dark": "#f5f5f5",
+        "light": "#0a0a0a",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--card": {
+        "dark": "#0c0c0d",
+        "light": "#ffffff",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--card-foreground": {
+        "dark": "#f5f5f5",
+        "light": "#0a0a0a",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--popover": {
+        "dark": "#111113",
+        "light": "#ffffff",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--popover-foreground": {
+        "dark": "#ffffff",
+        "light": "#0a0a0a",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--primary": {
+        "dark": "#2fe92b",
+        "light": "#0a0a0a",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--primary-foreground": {
+        "dark": "#000000",
+        "light": "#2fe92b",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--secondary": {
+        "dark": "#1b1b1d",
+        "light": "#e9e9e6",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--secondary-foreground": {
+        "dark": "#ffffff",
+        "light": "#0a0a0a",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--muted": {
+        "dark": "#141416",
+        "light": "#ececea",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--muted-foreground": {
+        "dark": "#8a8a93",
+        "light": "#62626b",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--accent": {
+        "dark": "#1b1b1d",
+        "light": "#e9e9e6",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--accent-foreground": {
+        "dark": "#fbfb0f",
+        "light": "#0a0a0a",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--destructive": {
+        "dark": "#ff5102",
+        "light": "#ff5102",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--destructive-foreground": {
+        "dark": "#000000",
+        "light": "#000000",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--border": {
+        "dark": "#26272d",
+        "light": "#dcdcd8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--input": {
+        "dark": "#26272d",
+        "light": "#dcdcd8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--ring": {
+        "dark": "#2fe92b",
+        "light": "#0f9d0c",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--surface": {
+        "dark": "#0c0c0d",
+        "light": "#ffffff",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--up": {
+        "dark": "#2fe92b",
+        "light": "#0f9d0c",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--down": {
+        "dark": "#ff4d4d",
+        "light": "#e0301e",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--gold": {
+        "dark": "#fbfb0f",
+        "light": "#b88a00",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--warn": {
+        "dark": "#fbfb0f",
+        "light": "#b88a00",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-1": {
+        "dark": "#fbfb0f",
+        "light": "#0a0a0a",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-2": {
+        "dark": "#2fe92b",
+        "light": "#0f9d0c",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-3": {
+        "dark": "#ff9821",
+        "light": "#c46a00",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-4": {
+        "dark": "#cfd919",
+        "light": "#8a9400",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-5": {
+        "dark": "#7c7cff",
+        "light": "#4b4bd6",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-up": {
+        "dark": "#2fe92b",
+        "light": "#0f9d0c",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-down": {
+        "dark": "#ff4d4d",
+        "light": "#e0301e",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-candle-down": {
+        "dark": "#ff4d4d",
+        "light": "#e0301e",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--kinpaku-lacquer": {
+        "value": "#070707",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-lacquer-edge": {
+        "value": "#1a1a1a",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-foil-highlight": {
+        "value": "#fffbd6",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-foil-light": {
+        "value": "#fff27a",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-foil-mid": {
+        "value": "#fbe10f",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-foil-shade": {
+        "value": "#c9a800",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-foil-deep": {
+        "value": "#6e5700",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--qr-ink": {
+        "value": "#000000",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--qr-paper": {
+        "value": "#ffffff",
+        "source": "packages/tokens/src/marks.ts"
+      }
+    },
+    "typography": {
+      "fonts": {
+        "sans": "Inter (next/font; labels, prose)",
+        "mono": "JetBrains Mono (every number, tabular + slashed zero)"
+      },
+      "roles": {
+        "micro": "10/14 mono uppercase tracked 0.12em — column heads, chips",
+        "label": "11/14 uppercase tracked 0.12–0.2em — section labels",
+        "caption": "12/16",
+        "body": "14/20",
+        "title": "17/22 semibold",
+        "num-sm": "13/18 mono",
+        "num-md": "16/22 mono",
+        "num-ticker": "24/30 mono semibold",
+        "num-lg": "28/34 mono",
+        "num-xl": "34/40 mono — equity hero",
+        "num-hero": "40/46 mono"
+      },
+      "source": "packages/tokens/src/scale.ts (TYPE) → tokens.css --type-* → Tailwind text-<role>"
+    },
+    "radius": {
+      "base": "4px (--radius 0.25rem)",
+      "scale": "xs .5× · sm .6× · md .8× · lg 1× · xl 1.4× · 2xl 1.8×",
+      "pill": "999 for dots/toggles only"
+    },
+    "spacing": {
+      "grid": "4px",
+      "source": "packages/tokens/src/scale.ts SPACE"
+    },
+    "motion": {
+      "durations_ms": {
+        "fast": 120,
+        "base": 160,
+        "slow": 200
+      },
+      "easing": "cubic-bezier(0.2, 0, 0, 1)",
+      "rules": [
+        "nothing bounces (no spring overshoot except sheets)",
+        "path draw on charts",
+        "spinner only on the active execution step",
+        "number changes roll (Number Flow) with timing, not spring",
+        "prefers-reduced-motion collapses to instant"
+      ]
+    },
+    "density": "high",
+    "must": [
+      "Colours only from @senryo/tokens (tokens.css / PALETTES) — no hex or px in components",
+      "JetBrains Mono tabular for every number; ▲▼ plus a sign with every up/down colour",
+      "1px hairlines, 4px radius, no shadows; dense rows; uppercase tracked mono labels",
+      "Network label (PRACTICE/MAINNET) on every money surface; PREVIEW DATA badge while sample data is shown",
+      "Reading<T>: skeleton → value → stale label; never a fabricated $0.00; success shown in place, not as a toast",
+      "Every component is a 21st item (search → preview → get → add → re-tokenize); record its source id here"
+    ],
+    "avoid": [
+      "gradients, glass, glow and drop shadows (the Kinpaku foil on the card is the only gradient)",
+      "bouncy springs, confetti, celebratory motion",
+      "rounded-2xl consumer cards, pill buttons",
+      "framer-motion imports (use motion/react)",
+      "invented components with no 21st source",
+      "floats for money"
+    ]
+  },
+  "components": {
+    "ports": [
+      {
+        "name": "vercel-tabs",
+        "source": "21st:yadwinder/vercel-tabs",
+        "id": 1597,
+        "url": "https://21st.dev/@yadwinder/components/vercel-tabs",
+        "use": "top tabs (link mode)",
+        "port": "NativeTabs + Liquid Glass (expo-router) — D2 top strip as solid header",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "balance-chart",
+        "source": "21st:ssychui/balance-chart",
+        "id": 30538,
+        "url": "https://21st.dev/@ssychui/components/balance-chart",
+        "use": "equity chart + timeframe pill",
+        "port": "victory-native CartesianChart + Line/Area + useChartPressState scrub",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "number-flow",
+        "source": "21st:barvian/number-flow",
+        "id": 1444,
+        "url": "https://21st.dev/@barvian/components/number-flow",
+        "use": "rolling numbers (@number-flow/react)",
+        "port": "number-flow-react-native 0.5.1 (timing, not spring)",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "partition-bar",
+        "source": "21st:8starlabs/partition-bar",
+        "id": 26545,
+        "url": "https://21st.dev/@8starlabs/components/partition-bar",
+        "use": "bucket proportion bar",
+        "port": "Views + Reanimated widths",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "segmented-control",
+        "source": "21st:ddoemonn/segmented-control",
+        "id": 23552,
+        "url": "https://21st.dev/@ddoemonn/components/segmented-control",
+        "use": "asset filter, long/short",
+        "port": "Pressable row + Reanimated sliding indicator",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "market-watchlist",
+        "source": "21st:ssychui/market-watchlist",
+        "id": 20110,
+        "url": "https://21st.dev/@ssychui/components/market-watchlist",
+        "use": "watchlist + sparklines",
+        "port": "FlashList 2 rows + static react-native-svg sparkline",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "market-heatmap",
+        "source": "21st:ssychui/market-heatmap",
+        "id": 30551,
+        "url": "https://21st.dev/@ssychui/components/market-heatmap",
+        "use": "OI heatmap",
+        "port": "squarified Views (packages/core treemap)",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "candle-chart",
+        "source": "21st:ssychui/candle-chart",
+        "id": 22250,
+        "url": "https://21st.dev/@ssychui/components/candle-chart",
+        "use": "candles + volume (split scale/layers/crosshair/volume)",
+        "port": "victory-native Candlestick + Bar volume (Skia)",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "slider",
+        "source": "21st:originui/slider",
+        "id": 304,
+        "url": "https://21st.dev/@originui/components/slider",
+        "use": "leverage with detents",
+        "port": "Gesture Handler Pan + detents 1/2/5/10 + haptic tick",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "gauge",
+        "source": "21st:designali-in/gauge-1",
+        "id": 3719,
+        "url": "https://21st.dev/@designali-in/components/gauge-1",
+        "use": "margin-use half gauge (split arc/value)",
+        "port": "Skia arc",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "task-steps",
+        "source": "21st:ddoemonn/task-steps",
+        "id": 23569,
+        "url": "https://21st.dev/@ddoemonn/components/task-steps",
+        "use": "execution trace",
+        "port": "Views + Reanimated check, driven by TxLifecycle",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "hold-and-release-button",
+        "source": "21st:kokonutd/hold-and-release-button",
+        "id": 8,
+        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
+        "use": "500 ms hold-to-confirm",
+        "port": "HoldToConfirm: GH LongPress (500 ms) + Reanimated fill + haptics",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "credit-debit-card",
+        "source": "21st:ravikatiyar162/credit-debit-card",
+        "id": 5276,
+        "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card",
+        "use": "Kinpaku card flip",
+        "port": "Reanimated rotateY flip; Kinpaku art from brand/kinpaku-card.svg",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "upstash-ratelimit",
+        "source": "21st:elements-/upstash-ratelimit",
+        "id": 29280,
+        "url": "https://21st.dev/@elements-/components/upstash-ratelimit",
+        "use": "FREE·SPEND meter",
+        "port": "Views (FREE·SPEND meter)",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "multi-chain-swap",
+        "source": "21st:starc007/be-ui-multi-chain-swap",
+        "id": 16251,
+        "url": "https://21st.dev/@starc007/components/be-ui-multi-chain-swap",
+        "use": "bridge + deposit (split panel/token-select/quote-rows)",
+        "port": "native form, same quote rows",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "qr-code-generator",
+        "source": "21st:user_xn1cklas/qr-code-generator",
+        "id": 6838,
+        "url": "https://21st.dev/@user_xn1cklas/components/qr-code-generator",
+        "use": "deposit QR",
+        "port": "react-native-qrcode-svg",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "copy-code-button",
+        "source": "21st:minhxthanh/copy-code-button",
+        "id": 9552,
+        "url": "https://21st.dev/@minhxthanh/components/copy-code-button",
+        "use": "copy address",
+        "port": "expo-clipboard + haptic",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "loading-state",
+        "source": "21st:theshanelevine/loading-state",
+        "id": 23591,
+        "url": "https://21st.dev/@theshanelevine/components/loading-state",
+        "use": "terminal loader",
+        "port": "Agari states kit loader",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "skeleton",
+        "source": "21st:shadcn/skeleton",
+        "id": 1588,
+        "url": "https://21st.dev/@shadcn/components/skeleton",
+        "use": "row skeletons",
+        "port": "Reanimated shimmer (Agari states kit)",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "interactive-empty-state",
+        "source": "21st:remcostoeten/interactive-empty-state",
+        "id": 22302,
+        "url": "https://21st.dev/@remcostoeten/components/interactive-empty-state",
+        "use": "empty + outage",
+        "port": "Agari states kit EmptyState",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "alert-toast",
+        "source": "21st:lavikatiyar/alert-toast",
+        "id": 8863,
+        "url": "https://21st.dev/@lavikatiyar/components/alert-toast",
+        "use": "risk events",
+        "port": "sonner-native custom toast",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "sonner",
+        "source": "21st:shadcn/sonner",
+        "id": 886,
+        "url": "https://21st.dev/@shadcn/components/sonner",
+        "use": "toaster (visibleToasts 1)",
+        "port": "sonner-native (visibleToasts 1)",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "drawer",
+        "source": "21st:shadcn/drawer",
+        "id": 1245,
+        "url": "https://21st.dev/@shadcn/components/drawer",
+        "use": "vaul sheets at phone widths",
+        "port": "ported Agari BottomDrawer (spring damping 26 / stiffness 260)",
+        "status": "planned (S5)"
+      }
+    ],
+    "customPieces": [
+      {
+        "name": "keypad",
+        "source": "21st:bankkroll/number-pad",
+        "id": 3711,
+        "url": "https://21st.dev/@bankkroll/components/number-pad",
+        "port": "Pressable 3x4 grid + haptic tick; candidate — confirm on preview in S5",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "session-chip",
+        "source": "21st:serafimcloud/status-badge",
+        "id": 521,
+        "url": "https://21st.dev/@serafimcloud/components/status-badge",
+        "port": "View + dot + mono countdown; candidate — confirm on preview in S5",
+        "status": "planned (S5)"
+      },
+      {
+        "name": "leverage-detents",
+        "source": "21st:originui/slider",
+        "id": 304,
+        "url": "https://21st.dev/@originui/components/slider",
+        "port": "same as slider port (GH Pan + detents 1/2/5/10)",
+        "status": "planned (S5)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "date": "2026-09-29",
+      "decision": "D2 Desk adopted; components from the D2 21st set, re-tokenized to @senryo/tokens",
+      "ref": "D-004, D-060…"
+    }
+  ],
+  "rules": [
+    "D-033: every RN piece is a port of a chosen 21st design; record its source here before building",
+    "no hex/rgba outside apps/mobile/src/theme"
+  ]
+}

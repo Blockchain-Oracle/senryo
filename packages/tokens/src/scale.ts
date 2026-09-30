@@ -10,6 +10,7 @@ export const FONT = {
 
 /** Font sizes in px (web converts to rem at 16 px; mobile uses points). */
 export const TYPE = {
+  micro: { size: 10, lineHeight: 14, tracking: 0.12, weight: 500, font: "mono", uppercase: true },
   label: { size: 11, lineHeight: 14, tracking: 0.12, weight: 500, font: "sans", uppercase: true },
   caption: { size: 12, lineHeight: 16, tracking: 0, weight: 400, font: "sans", uppercase: false },
   body: { size: 14, lineHeight: 20, tracking: 0, weight: 400, font: "sans", uppercase: false },
@@ -17,7 +18,9 @@ export const TYPE = {
   title: { size: 17, lineHeight: 22, tracking: 0, weight: 600, font: "sans", uppercase: false },
   numSm: { size: 13, lineHeight: 18, tracking: 0, weight: 500, font: "mono", uppercase: false },
   numMd: { size: 16, lineHeight: 22, tracking: 0, weight: 500, font: "mono", uppercase: false },
+  numTicker: { size: 24, lineHeight: 30, tracking: -0.02, weight: 600, font: "mono", uppercase: false },
   numLg: { size: 28, lineHeight: 34, tracking: -0.02, weight: 600, font: "mono", uppercase: false },
+  numXl: { size: 34, lineHeight: 40, tracking: -0.03, weight: 600, font: "mono", uppercase: false },
   numHero: { size: 40, lineHeight: 46, tracking: -0.03, weight: 600, font: "mono", uppercase: false },
 } as const;
 export type TypeRole = keyof typeof TYPE;
