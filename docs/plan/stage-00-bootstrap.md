@@ -16,7 +16,7 @@
 - [x] `.github/workflows/ci.yml` (fast gate + contracts)
 - [x] First commit (gate green) — `d80a701 chore(S0.1/plan): bootstrap plan system, tooling and invariants`
 - [x] OK-1: GitHub repo `Blockchain-Oracle/senryo` created **public** + pushed (public = readable by the judges' account)
-- [ ] **(user)** register in the portal + form the team (closes 6 Oct 23:59 UTC; target 5 Oct)
+- [x] **(user)** register in the portal + form the team — done 2026-09-30: solo team, project "Senryo 千両" created, track **Onchain Finance & Trading**, bounties Agora Mobile Trading (Onchain Trading) · Mera-Powered UX · Aurora Intents · Envio
 - [ ] Context7 library IDs recorded in `references.md` as each stage first uses a library (Biome: `/biomejs/website` ✓)
 
 ## Gate
