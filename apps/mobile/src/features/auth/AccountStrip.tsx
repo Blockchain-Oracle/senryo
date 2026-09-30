@@ -18,7 +18,7 @@ export function AccountStrip() {
   return (
     <View style={[styles.guest, { borderColor: color.hairline }]}>
       <Text style={[TYPE.caption, styles.text, { color: color.inkMuted }]}>
-        Browsing without an account · sample figures below.
+        Browsing without an account · prices are live.
       </Text>
       <Button label="Create" size="sm" block={false} onPress={() => router.push(ROUTES.accountRequired)} />
     </View>

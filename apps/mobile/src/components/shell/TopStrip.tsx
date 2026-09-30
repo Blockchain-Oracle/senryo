@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "~/components/kit/Icon";
 import { SessionChip } from "~/features/auth/SessionChip";
 import { fire } from "~/feedback/fire";
+import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
-import { SAMPLE_NETWORK } from "~/lib/sample";
 import { FONT, HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
@@ -35,12 +35,12 @@ export function TopStrip() {
           <SessionChip />
           <View
             accessible
-            accessibilityLabel={`Network ${SAMPLE_NETWORK.name}, block time ${SAMPLE_NETWORK.blockTimeLabel}`}
+            accessibilityLabel={`Network Monad, ${ACTIVE_NETWORK.modeLabel.toLowerCase()} mode`}
             style={styles.net}
           >
             <View style={[styles.dot, { backgroundColor: color.up }]} />
             {/* Block time moved to the label and Status (S6): the session chip needs the room on a 390 pt strip. */}
-            <Text style={[TYPE.numSm, { color: color.inkMuted }]}>{SAMPLE_NETWORK.name}</Text>
+            <Text style={[TYPE.numSm, { color: color.inkMuted }]}>MONAD</Text>
           </View>
           <Pressable
             onPress={() => go(ROUTES.alerts)}
