@@ -35,7 +35,7 @@ documents, zod-parsed results). Display only: the card path never reads the inde
       query through `@senryo/indexer-client` against testnet data
 - [x] S4.10 Gate evidence + handoff
 - [x] **(user)** Envio account + HyperSync API token → `~/.config/senryo/envio.env` (lead, 2026-09-30; HyperSync 200 on both chains)
-- [ ] **[OK?]** Coolify: indexer compose resource + `indexer.senryo.xyz` (S14 deploy train; DNS in S6) — steps in Handoff
+- [x] **[OK?]** Coolify: indexer compose resource + `indexer.senryo.xyz` (S14 deploy train; DNS in S6) — steps in Handoff — live 30 Sep in S8.3 (D-160)
 - [ ] S8 re-sync: our mainnet contracts on chain 143 + the real `ENVIO_APP_LAUNCH_BLOCK_143` (data change, Handoff)
 
 ## Gate

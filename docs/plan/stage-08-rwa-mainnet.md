@@ -26,8 +26,8 @@ reuses everything below `apps/`.
       `senryo-keeper` on Coolify (256m, `KEEPER_JOBS` incl. `mirror`) → XAU/XAG OPEN on 10143 with a fresh round
       — user faucet 5 MON split (ids-and-txs); keeper live 30 Sep (user OK), mirror XAU+XAG; XAG OPEN at once, XAU
       CIRCUIT on the 10.4 % catch-up push → self-confirms (D-118)
-- [ ] S8.3 **[OK?]** deploy the indexer compose (`indexer.senryo.xyz`, S4 Handoff) → api `INDEXER_GRAPHQL_URL` → candles +
-      history live for 10143
+- [x] S8.3 **[OK?]** deploy the indexer compose (`indexer.senryo.xyz`, S4 Handoff) → api `INDEXER_GRAPHQL_URL` → candles +
+      history live for 10143 — live 30 Sep (user OK), image from CI (D-160), api + keeper wired; XAU/XAG OPEN on 10143
 - [ ] S8.4 Contracts: `CollateralSwapper` → 6-field `ExactInputSingleParams` (`minHopPriceX36`, D-122); mainnet-fork
       swap check matches the Quoter
 - [ ] S8.5 Assurance (D-024): Slither + Aderyn + Wake on `contracts/`; `security-review` on `services/`; every finding fixed
