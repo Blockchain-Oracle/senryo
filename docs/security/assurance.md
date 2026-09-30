@@ -128,3 +128,28 @@ hash. Without them, the ensure-style `Deploy.s.sol` reports `Drift` on every rec
 | W-033 | Wake `unused-error` | info/high | Errors.sol:16 | Accepted (deferred) | As Aderyn unused-error. |
 | W-034 | Wake `unused-error` | info/high | Errors.sol:60 | Accepted (deferred) | As Aderyn unused-error. |
 | W-035 | Wake `unused-error` | info/high | Errors.sol:82 | Accepted (deferred) | As Aderyn unused-error. |
+
+## Services review (S8.5b, 30 Sep, lead + security-reviewer)
+
+Scope: `services/api`, `services/card`, `services/common` (keeper jobs, migrations and the deployed Traefik config not
+reviewed — see "Not covered"). Verdict before fixes: **block**; after fixes: no open high/medium.
+
+| # | Sev | Finding | Verdict |
+|---|---|---|---|
+| 1 | High | Starter relay anti-abuse was client-controlled: omitted Turnstile token passed; a missing `x-senryo-device` was stored NULL and never counted | **Fixed** — Turnstile required whenever configured, and mainnet claims require it configured (D-166); header-less clients share one `unknown` device bucket |
+| 2 | Medium | `trustProxy: true` took the client-controlled left-most X-Forwarded-For → spoofable IP for rate limits, /24 caps, geofence, Turnstile | **Fixed** — trust exactly one hop (Traefik): `request.ip` = the entry Traefik appended (`TRUSTED_PROXY_HOPS`) |
+| 3 | Medium | Country headers (`cf-ipcountry`, …) trusted from any client → geofence bypass | **Fixed** — ignored unless `TRUSTED_COUNTRY_HEADER` names the real edge; DB-IP on the client IP otherwise |
+| 4 | Medium | Parallel replays of one signed claim/voucher/allowance burned sponsor/operator gas on reverts; allowance relay needed no session | **Fixed** — one relay per (chain, user, kind) in flight (409 otherwise), claimed() re-read inside the lock; allowance requires the owner's session + its own in-flight guard |
+| 5 | Medium | Unauthenticated RPC-heavy reads had no rate limit | **Fixed** — 120/min per client IP on /v1/status, /v1/markets, /v1/account, /v1/starter/status |
+| 6 | Low | WS account push could stack overlapping ticks | **Fixed** — a busy tick skips the next; per-IP socket caps + token-expiry drop deferred (S14) |
+| 7 | Low | /v1/status echoed raw RPC errors (keyed URLs) | **Fixed** — fixed public line, full error to the log |
+| 8 | Low | Vault upsert check-then-act race could overwrite another account's first write | **Fixed** — owner-guarded `ON CONFLICT … WHERE`, 409 when it didn't apply |
+| 9 | Low | SIWE: `uri` not compared, nonce not bound to chain | **Fixed** — `uri` must equal `SIWE_URI`; nonce consumed only for its `chain_id` |
+| 10 | Low | Push token re-bind by any session knowing the token | **Accepted** — one phone / several accounts share an Expo token; tokens aren't public; worst case a missed notification |
+| 11 | Low | Card event dedupe row committed before routing → a failure lost the capture/release | **Fixed** — insert + outbox + processed_at in one transaction |
+| 12 | Low | Voucher route without per-device/network caps | **Accepted** — vouchers are single-use secret codes (`VOUCHER_USED` onchain) |
+| 13 | Low | /v1/events accepted client clocks / unbounded props / uncapped device header | **Fixed** — ±1 day clamp, props ≤ 2 KB, device header capped (retention job: S14) |
+
+Not covered (next pass before mainnet card/keeper deploys): `services/keeper/src/**` key handling and trigger/topup
+jobs, `services/common/src/{db,keys,migrate-cli}.ts`, SQL migrations (siwe_nonces purge), the deployed Traefik
+`forwardedHeaders` config (the one-hop trust assumes Traefik is the only hop — a CDN in front must raise it).

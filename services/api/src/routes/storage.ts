@@ -79,7 +79,10 @@ export function registerStorageRoutes(app: HttpServer, ctx: ApiContext): void {
       INSERT INTO vault_blobs (credential_id, address, label, vault)
       VALUES (${credentialId}, ${address}, ${body.label ?? null}, ${ctx.db.json(body.vault as never)})
       ON CONFLICT (credential_id) DO UPDATE SET label = EXCLUDED.label, vault = EXCLUDED.vault
+        WHERE vault_blobs.address = EXCLUDED.address
       RETURNING created_at`;
+    // A concurrent first write by another account won the row: nothing changed here (S8.5b #8).
+    if (!row) throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", "credential already holds a vault");
     return sendRoute(reply, vaultPutRoute, {
       credentialId,
       address: getAddress(address),

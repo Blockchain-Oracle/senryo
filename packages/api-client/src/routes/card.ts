@@ -101,7 +101,7 @@ export const cardEmbedRoute = defineRoute({
 export const cardAllowanceRoute = defineRoute({
   method: "POST",
   path: "/v1/card/allowance",
-  auth: "none",
+  auth: "session",
   params: undefined,
   query: undefined,
   body: cardAllowanceRequestSchema,

@@ -29,6 +29,9 @@ import { OPEN_HOLD_STATUSES } from "../reserve.ts";
 const DEFAULT_EMBED_TTL_SEC = 60;
 const RECENT_AUTHS = 20;
 
+/** Allowance relays in flight, by user (one process serves the card API). */
+const allowanceInflight = new Set<string>();
+
 /** App-facing card routes (session = the api's SIWE token; D-111). Lithic-backed ones need `LITHIC_API_KEY`. */
 export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
   const session = async (request: FastifyRequest): Promise<Session> => {
@@ -91,34 +94,46 @@ export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
     cardAllowanceRoute.path,
     { config: { rateLimit: { max: 5, timeWindow: "1 minute" } } },
     async (request, reply) => {
+      // S8.5b #4: only the signed-in owner may spend operator gas on their allowance, one relay at a time.
+      const s = await session(request);
       const { body } = parseRoute(cardAllowanceRoute, request);
       if (body.chainId !== ctx.chainId)
         throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "wrong chain for this card service");
-      const nonce = await readContract(ctx.chainId, "SenryoCore", ctx.read).read.allowanceNonce([body.user]);
-      const ok = await verifySpendAllowanceSignature({
-        chainId: ctx.chainId,
-        user: body.user,
-        dailyLimit: body.dailyLimitUsd6,
-        expiry: body.expiry,
-        nonce: BigInt(nonce),
-        signature: body.signature,
-      });
-      if (!ok) throw new HttpError(HTTP_STATUS.badRequest, "SIGNATURE_INVALID", "allowance signature does not match");
+      if (s.address.toLowerCase() !== body.user.toLowerCase())
+        throw new HttpError(HTTP_STATUS.forbidden, "FORBIDDEN", "allowance must be for the signed-in account");
+      const key = body.user.toLowerCase();
+      if (allowanceInflight.has(key))
+        throw new HttpError(HTTP_STATUS.conflict, "RELAYER_BUSY", "an allowance update is already in flight");
+      allowanceInflight.add(key);
       try {
-        const sent = await sendAndFinalize(
-          operatorFor(ctx, body.user),
-          contractCall(
-            ctx.chainId,
-            "SenryoCore",
-            "setSpendAllowance",
-            [body.user, body.dailyLimitUsd6, body.expiry, body.signature],
-            "setSpendAllowance",
-          ),
-        );
-        return sendRoute(reply, cardAllowanceRoute, { txHash: sent.hash, stage: sent.final.stage });
-      } catch (error) {
-        const code = error instanceof SimulationRevertedError ? "RELAY_REVERTED" : "RELAYER_BUSY";
-        throw new HttpError(HTTP_STATUS.badGateway, code, describeError(error));
+        const nonce = await readContract(ctx.chainId, "SenryoCore", ctx.read).read.allowanceNonce([body.user]);
+        const ok = await verifySpendAllowanceSignature({
+          chainId: ctx.chainId,
+          user: body.user,
+          dailyLimit: body.dailyLimitUsd6,
+          expiry: body.expiry,
+          nonce: BigInt(nonce),
+          signature: body.signature,
+        });
+        if (!ok) throw new HttpError(HTTP_STATUS.badRequest, "SIGNATURE_INVALID", "allowance signature does not match");
+        try {
+          const sent = await sendAndFinalize(
+            operatorFor(ctx, body.user),
+            contractCall(
+              ctx.chainId,
+              "SenryoCore",
+              "setSpendAllowance",
+              [body.user, body.dailyLimitUsd6, body.expiry, body.signature],
+              "setSpendAllowance",
+            ),
+          );
+          return sendRoute(reply, cardAllowanceRoute, { txHash: sent.hash, stage: sent.final.stage });
+        } catch (error) {
+          const code = error instanceof SimulationRevertedError ? "RELAY_REVERTED" : "RELAYER_BUSY";
+          throw new HttpError(HTTP_STATUS.badGateway, code, describeError(error));
+        }
+      } finally {
+        allowanceInflight.delete(key);
       }
     },
   );

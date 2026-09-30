@@ -1,7 +1,13 @@
 import { API_ORIGIN, type ChainId, isChainId, RP_ID, WEB_ORIGIN } from "@senryo/config";
 import { baseEnvSchema, csvSchema, parseEnv, portSchema, readSecret } from "@senryo/service-common";
 import { z } from "zod";
-import { API_PORT, MIN_APP_VERSION, STARTER_PER_DEVICE_PER_DAY, STARTER_PER_NETWORK_PER_DAY } from "./constants.ts";
+import {
+  API_PORT,
+  COUNTRY_HEADERS,
+  MIN_APP_VERSION,
+  STARTER_PER_DEVICE_PER_DAY,
+  STARTER_PER_NETWORK_PER_DAY,
+} from "./constants.ts";
 
 export const apiEnvSchema = baseEnvSchema.extend({
   PORT: portSchema.default(API_PORT),
@@ -19,6 +25,8 @@ export const apiEnvSchema = baseEnvSchema.extend({
   INDEXER_GRAPHQL_URL: z.url().optional(),
   STARTER_PER_DEVICE_PER_DAY: z.coerce.number().int().positive().default(STARTER_PER_DEVICE_PER_DAY),
   STARTER_PER_NETWORK_PER_DAY: z.coerce.number().int().positive().default(STARTER_PER_NETWORK_PER_DAY),
+  /** Trust this edge country header (only behind that CDN; S8.5b). Unset = DB-IP on the client IP only. */
+  TRUSTED_COUNTRY_HEADER: z.enum(COUNTRY_HEADERS).optional(),
   /** Feature flags served by /v1/config, e.g. `card=1,perpl=0`. */
   FEATURES: csvSchema.transform((list) =>
     Object.fromEntries((list ?? []).map((pair) => [pair.split("=")[0] ?? pair, pair.split("=")[1] !== "0"])),

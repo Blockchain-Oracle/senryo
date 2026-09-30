@@ -26,14 +26,22 @@ import { type ClaimRow, relay, relayFromRow, starterConfig } from "../starter.ts
 
 const RELAY_RATE = { max: 10, timeWindow: "1 minute" } as const;
 
-function deviceOf(request: FastifyRequest): string | undefined {
+/** Header-less (or oversized) clients share ONE device bucket, so omitting the header never skips the limit (S8.5b #1). */
+const UNKNOWN_DEVICE = "unknown";
+
+function deviceOf(request: FastifyRequest): string {
   const raw = request.headers[DEVICE_HEADER];
   const value = Array.isArray(raw) ? raw[0] : raw;
-  return value && value.length <= DEVICE_HASH_MAX_CHARS ? value : undefined;
+  return value && value.length <= DEVICE_HASH_MAX_CHARS ? value : UNKNOWN_DEVICE;
 }
 
-async function turnstileOk(ctx: ApiContext, token: string | undefined, ip: string): Promise<boolean> {
-  if (!ctx.secrets.turnstileSecret || !token) return true;
+/**
+ * Bot check (S8.5b #1, D-166): with `TURNSTILE_SECRET` set, a token is REQUIRED (omitting it no longer passes).
+ * Mainnet gas drips require the check to be configured at all; practice keeps working without it (testnet MON only).
+ */
+async function turnstileOk(ctx: ApiContext, chainId: number, token: string | undefined, ip: string): Promise<boolean> {
+  if (!ctx.secrets.turnstileSecret) return chainId !== MAINNET_CHAIN_ID;
+  if (!token) return false;
   const form = new URLSearchParams({ secret: ctx.secrets.turnstileSecret, response: token, remoteip: ip });
   const res = await fetch(CLOUDFLARE_TURNSTILE_VERIFY, {
     method: "POST",
@@ -45,15 +53,15 @@ async function turnstileOk(ctx: ApiContext, token: string | undefined, ip: strin
 }
 
 /** Next time this device / network may claim (null = now). One claim per device and a few per /24 per day. */
-async function nextClaimAt(ctx: ApiContext, chainId: number, device: string | undefined, prefix: string) {
+async function nextClaimAt(ctx: ApiContext, chainId: number, device: string, prefix: string) {
   const [row] = await ctx.db<{ device_count: bigint; net_count: bigint; oldest: Date | null }[]>`
-    SELECT count(*) FILTER (WHERE device_hash = ${device ?? ""})::bigint AS device_count,
+    SELECT count(*) FILTER (WHERE device_hash = ${device})::bigint AS device_count,
            count(*) FILTER (WHERE ip_prefix = ${prefix})::bigint AS net_count,
            min(created_at) AS oldest
       FROM starter_claims
      WHERE chain_id = ${chainId} AND kind = 'claim' AND stage NOT IN ('reverted', 'abandoned')
        AND created_at > now() - make_interval(secs => ${SECONDS_PER_DAY})
-       AND (device_hash = ${device ?? ""} OR ip_prefix = ${prefix})`;
+       AND (device_hash = ${device} OR ip_prefix = ${prefix})`;
   const limited =
     (row?.device_count ?? 0n) >= BigInt(ctx.env.STARTER_PER_DEVICE_PER_DAY) ||
     (row?.net_count ?? 0n) >= BigInt(ctx.env.STARTER_PER_NETWORK_PER_DAY);
@@ -69,10 +77,27 @@ function checkDeadline(deadline: bigint): void {
   }
 }
 
+/**
+ * One relay per (chain, user, kind) in flight (S8.5b #4): parallel replays of one signature used to pass simulation
+ * together and burn sponsor gas on the reverts. One api instance serves all traffic (D-121), so a process-local set
+ * suffices; the starter_claims row still records the outcome.
+ */
+const inflight = new Set<string>();
+async function once<T>(key: string, run: () => Promise<T>): Promise<T> {
+  if (inflight.has(key))
+    throw new HttpError(HTTP_STATUS.conflict, "RELAYER_BUSY", "a relay for this account is in flight");
+  inflight.add(key);
+  try {
+    return await run();
+  } finally {
+    inflight.delete(key);
+  }
+}
+
 /** D-038: practice is never gated; mainnet starter funds follow the mainnet trading geofence (F05 "geo (mainnet only)"). */
 function checkGeo(ctx: ApiContext, chainId: number, request: Parameters<typeof geoOf>[0]): void {
   if (chainId !== MAINNET_CHAIN_ID) return;
-  const geo = geoOf(request, ctx.geo);
+  const geo = geoOf(request, { db: ctx.geo, trustedHeader: ctx.env.TRUSTED_COUNTRY_HEADER });
   if (!geo.mainnetTradingAllowed) {
     throw new HttpError(HTTP_STATUS.forbidden, "GEO_BLOCKED", geo.reason ?? "not available in this region");
   }
@@ -92,7 +117,7 @@ export function registerStarterRoutes(app: HttpServer, ctx: ApiContext): void {
     });
     if (!signed)
       throw new HttpError(HTTP_STATUS.badRequest, "SIGNATURE_INVALID", "claim signature does not match the user");
-    if (!(await turnstileOk(ctx, body.turnstileToken, request.ip))) {
+    if (!(await turnstileOk(ctx, body.chainId, body.turnstileToken, request.ip))) {
       throw new HttpError(HTTP_STATUS.forbidden, "TURNSTILE_FAILED", "bot check failed");
     }
     const device = deviceOf(request);
@@ -102,9 +127,11 @@ export function registerStarterRoutes(app: HttpServer, ctx: ApiContext): void {
       const wait = Math.max(Math.ceil((next.getTime() - Date.now()) / MS_PER_SECOND), 0);
       throw new HttpError(HTTP_STATUS.tooMany, "RATE_LIMITED", "one claim per device per day", wait);
     }
-    const claimed = await readContract(body.chainId, "StarterDrip", chain.read).read.claimed([body.user]);
-    if (claimed) throw new HttpError(HTTP_STATUS.conflict, "ALREADY_CLAIMED", "this account already claimed");
-    const result = await relay(ctx, chain, { kind: "claim", ...body, ipPrefix: prefix, deviceHash: device });
+    const result = await once(`${body.chainId}:${body.user.toLowerCase()}:claim`, async () => {
+      const claimed = await readContract(body.chainId, "StarterDrip", chain.read).read.claimed([body.user]);
+      if (claimed) throw new HttpError(HTTP_STATUS.conflict, "ALREADY_CLAIMED", "this account already claimed");
+      return relay(ctx, chain, { kind: "claim", ...body, ipPrefix: prefix, deviceHash: device });
+    });
     return sendRoute(reply, starterClaimRoute, result);
   });
 
@@ -115,46 +142,52 @@ export function registerStarterRoutes(app: HttpServer, ctx: ApiContext): void {
     checkDeadline(body.deadline);
     const signed = await verifyVoucherSignature({ ...body, code: body.code });
     if (!signed) throw new HttpError(HTTP_STATUS.badRequest, "SIGNATURE_INVALID", "voucher signature does not match");
-    const result = await relay(ctx, chain, {
-      kind: "voucher",
-      ...body,
-      ipPrefix: networkPrefix(request.ip),
-      deviceHash: deviceOf(request),
-    });
+    const result = await once(`${body.chainId}:${body.user.toLowerCase()}:voucher`, () =>
+      relay(ctx, chain, {
+        kind: "voucher",
+        ...body,
+        ipPrefix: networkPrefix(request.ip),
+        deviceHash: deviceOf(request),
+      }),
+    );
     return sendRoute(reply, starterVoucherRoute, result);
   });
 
-  app.get(starterStatusRoute.path, async (request, reply) => {
-    const { query } = parseRoute(starterStatusRoute, request);
-    const chain = chainOf(ctx, query.chainId);
-    const drip = readContract(query.chainId, "StarterDrip", chain.read);
-    const [config, claimed, spentToday, budgetDay, redeemed] = await Promise.all([
-      starterConfig(chain),
-      drip.read.claimed([query.user], { blockTag: "finalized" }),
-      drip.read.spentToday(),
-      drip.read.budgetDay(),
-      drip.read.vouchersRedeemed(),
-    ]);
-    const today = BigInt(Math.floor(Date.now() / MS_PER_SECOND / SECONDS_PER_DAY));
-    const spent = budgetDay === today ? spentToday : 0n;
-    const [last] = await ctx.db<ClaimRow[]>`
+  app.get(
+    starterStatusRoute.path,
+    { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      const { query } = parseRoute(starterStatusRoute, request);
+      const chain = chainOf(ctx, query.chainId);
+      const drip = readContract(query.chainId, "StarterDrip", chain.read);
+      const [config, claimed, spentToday, budgetDay, redeemed] = await Promise.all([
+        starterConfig(chain),
+        drip.read.claimed([query.user], { blockTag: "finalized" }),
+        drip.read.spentToday(),
+        drip.read.budgetDay(),
+        drip.read.vouchersRedeemed(),
+      ]);
+      const today = BigInt(Math.floor(Date.now() / MS_PER_SECOND / SECONDS_PER_DAY));
+      const spent = budgetDay === today ? spentToday : 0n;
+      const [last] = await ctx.db<ClaimRow[]>`
       SELECT * FROM starter_claims WHERE chain_id = ${query.chainId} AND user_address = ${query.user.toLowerCase()}
       ORDER BY created_at DESC LIMIT 1`;
-    const next = await nextClaimAt(ctx, query.chainId, deviceOf(request), networkPrefix(request.ip));
-    return sendRoute(reply, starterStatusRoute, {
-      chainId: query.chainId,
-      user: query.user as Address,
-      claimed,
-      practice: config.practiceAmount > 0n,
-      dripWei: config.dripWei,
-      practiceUsd6: config.practiceAmount,
-      voucherUsd6: config.voucherAmount,
-      vouchersLeft: Number(config.maxVouchers > redeemed ? config.maxVouchers - redeemed : 0n),
-      budgetLeftWei: config.dailyBudgetWei > spent ? config.dailyBudgetWei - spent : 0n,
-      nextClaimAt: next?.toISOString() ?? null,
-      lastRelay: last ? relayFromRow(last) : null,
-    });
-  });
+      const next = await nextClaimAt(ctx, query.chainId, deviceOf(request), networkPrefix(request.ip));
+      return sendRoute(reply, starterStatusRoute, {
+        chainId: query.chainId,
+        user: query.user as Address,
+        claimed,
+        practice: config.practiceAmount > 0n,
+        dripWei: config.dripWei,
+        practiceUsd6: config.practiceAmount,
+        voucherUsd6: config.voucherAmount,
+        vouchersLeft: Number(config.maxVouchers > redeemed ? config.maxVouchers - redeemed : 0n),
+        budgetLeftWei: config.dailyBudgetWei > spent ? config.dailyBudgetWei - spent : 0n,
+        nextClaimAt: next?.toISOString() ?? null,
+        lastRelay: last ? relayFromRow(last) : null,
+      });
+    },
+  );
 
   app.get(starterRelayRoute.path, async (request, reply) => {
     const { params } = parseRoute(starterRelayRoute, request);

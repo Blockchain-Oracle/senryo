@@ -128,7 +128,20 @@ export class WsHub {
     }
   }
 
+  /** A tick still reading when the next fires is skipped, never stacked (S8.5b #6). */
+  private accountsBusy = false;
+
   private async pushAccounts(): Promise<void> {
+    if (this.accountsBusy) return;
+    this.accountsBusy = true;
+    try {
+      await this.pushAccountsOnce();
+    } finally {
+      this.accountsBusy = false;
+    }
+  }
+
+  private async pushAccountsOnce(): Promise<void> {
     for (const chain of this.ctx.chains.values()) {
       for (const channel of this.channelsOf(chain.chainId, "account")) {
         const address = getAddress(channel.split(":")[1] ?? "");

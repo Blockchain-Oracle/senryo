@@ -36,6 +36,7 @@ export function registerAuthRoutes(app: HttpServer, ctx: ApiContext): void {
       signature: body.signature,
       domain: ctx.env.SIWE_DOMAIN,
       statement: SIWE_STATEMENT,
+      uri: ctx.env.SIWE_URI,
     });
     if (!verified || !isChainId(verified.chainId)) {
       throw new HttpError(HTTP_STATUS.unauthorized, "SIGNATURE_INVALID", "SIWE message or signature rejected");
@@ -43,7 +44,8 @@ export function registerAuthRoutes(app: HttpServer, ctx: ApiContext): void {
     // Single use: the nonce must exist for this address, be unexpired and unused — consumed atomically.
     const used = await ctx.db`
       UPDATE siwe_nonces SET used_at = now()
-       WHERE nonce = ${verified.nonce} AND address = ${verified.address.toLowerCase()} AND used_at IS NULL
+       WHERE nonce = ${verified.nonce} AND address = ${verified.address.toLowerCase()}
+         AND chain_id = ${verified.chainId} AND used_at IS NULL
          AND expires_at > now()
       RETURNING nonce`;
     if (used.length === 0)

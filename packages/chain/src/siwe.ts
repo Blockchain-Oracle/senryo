@@ -51,11 +51,14 @@ export async function verifySiweSignature(params: {
   signature: Hex;
   domain: string;
   statement: string;
+  /** When set, the message's URI must equal it (the server issued the challenge with this URI). */
+  uri?: string | undefined;
   now?: Date | undefined;
 }): Promise<VerifiedSiwe | undefined> {
   const fields = parseSiweMessage(params.message);
   if (!fields.address || !fields.nonce || fields.chainId === undefined) return undefined;
   if (fields.statement !== params.statement || !fields.expirationTime) return undefined;
+  if (params.uri !== undefined && fields.uri !== params.uri) return undefined;
   const valid = validateSiweMessage({ message: fields, domain: params.domain, time: params.now ?? new Date() });
   if (!valid) return undefined;
   const signed = await verifyMessage({ address: fields.address, message: params.message, signature: params.signature });

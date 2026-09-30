@@ -32,7 +32,7 @@ reuses everything below `apps/`.
       swap check matches the Quoter
 - [x] S8.5 Assurance (D-024): Slither + Aderyn + Wake on `contracts/`; every finding fixed or documented in
       `docs/security/assurance.md`; invariants I1–I7 green after fixes — contracts track (D-180…D-185)
-- [ ] S8.5b `security-review` on `services/` (lead) before the mainnet deploy
+- [x] S8.5b `security-review` on `services/` (lead) before the mainnet deploy — D-166, assurance.md §Services: 10 fixed, 2 accepted; keeper + migrations pass still owed before the mainnet keeper/card deploys
 - [x] S8.6 Gas re-calibration (D-119): `forge snapshot --network monad` + fork/mainnet `eth_estimateGas` → `GAS_LIMITS`
 - [x] S8.7 `packages/core` risk mirror (preview only; contract wins): execution price/spread, N, IM/MM, uPnL, liq price,
       FreeToTrade after the trade, caps (OI/skew/trade/min), session calendar display, `blockers.ts` in F10 order;

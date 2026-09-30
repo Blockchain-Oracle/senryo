@@ -42,11 +42,13 @@ export const WS_MAX_SUBSCRIPTIONS = 16;
 export const WS_MAX_PAYLOAD_BYTES = 16 * 1024;
 /** Drop intermediate ticks for a socket with this much unsent data. */
 export const WS_BACKPRESSURE_BYTES = 64 * 1024;
-/** Upstream error text kept in /v1/status. */
-export const ERROR_DETAIL_MAX_CHARS = 120;
 
 /** Body limit for routes carrying encrypted blobs (prefs ≤ 64 KiB base64url + envelope). */
 export const BLOB_BODY_LIMIT_BYTES = 96 * 1024;
 
 export const CLOUDFLARE_TURNSTILE_VERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 export const UPSTREAM_TIMEOUT_MS = 3_000;
+
+/** Analytics events (S8.5b #13): client clocks may be off, never by more than a day; props stay small. */
+export const EVENT_CLOCK_SKEW_MS = 86_400_000;
+export const EVENT_PROPS_MAX_CHARS = 2_048;

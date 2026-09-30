@@ -39,12 +39,16 @@ export interface ServerOptions {
   live?: () => { ok: boolean; detail?: Record<string, unknown> };
 }
 
+/** Proxies between the internet and the service (deploy-runbook: Traefik only). */
+export const TRUSTED_PROXY_HOPS = 1;
+
 export function createHttpServer(options: ServerOptions) {
   const app = Fastify({
     loggerInstance: options.logger,
     bodyLimit: options.bodyLimit ?? DEFAULT_BODY_LIMIT_BYTES,
-    // Behind Traefik (Coolify): take the client IP from X-Forwarded-For.
-    trustProxy: true,
+    // Behind exactly one proxy (Coolify's Traefik): trust only the hop Traefik appended, so `request.ip` is the real
+    // client and a client-sent X-Forwarded-For can't choose it (S8.5b). A CDN in front adds a hop → raise this.
+    trustProxy: (_address: string, hop: number) => hop < TRUSTED_PROXY_HOPS,
   });
   const startedAt = Date.now();
 

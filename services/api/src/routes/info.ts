@@ -3,12 +3,21 @@ import { getAddress, isDeployed, readAccountSnapshot, readContract, readOracles,
 import { ENGINE_MARKETS, networkOf } from "@senryo/config";
 import { type HttpServer, MS_PER_SECOND, parseRoute, sendRoute } from "@senryo/service-common";
 import { bucketsOf } from "../buckets.ts";
-import { ERROR_DETAIL_MAX_CHARS, UPSTREAM_TIMEOUT_MS } from "../constants.ts";
+import { UPSTREAM_TIMEOUT_MS } from "../constants.ts";
 import { type ApiContext, chainOf } from "../context.ts";
 import { geoOf } from "../geo.ts";
 
 const BPS = 10_000;
 const MARKET_IDS = ENGINE_MARKETS.map((m) => m.id);
+
+/** A fixed public line; the full error (which may carry a keyed RPC URL) only goes to the log (S8.5b #7). */
+function rpcDown(ctx: ApiContext, error: unknown): string {
+  ctx.log.warn({ err: error instanceof Error ? error.message : String(error) }, "status: rpc down");
+  return "rpc unavailable";
+}
+
+/** Unauthenticated reads that fan out to RPC/indexer are rate-limited per client IP (S8.5b #5). */
+const READ_RATE = { rateLimit: { max: 120, timeWindow: "1 minute" } } as const;
 
 export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
   app.get(configRoute.path, async (_request, reply) =>
@@ -25,9 +34,11 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     }),
   );
 
-  app.get(geoRoute.path, async (request, reply) => sendRoute(reply, geoRoute, geoOf(request, ctx.geo)));
+  app.get(geoRoute.path, async (request, reply) =>
+    sendRoute(reply, geoRoute, geoOf(request, { db: ctx.geo, trustedHeader: ctx.env.TRUSTED_COUNTRY_HEADER })),
+  );
 
-  app.get(statusRoute.path, async (_request, reply) => {
+  app.get(statusRoute.path, { config: READ_RATE }, async (_request, reply) => {
     const nowSec = Math.floor(Date.now() / MS_PER_SECOND);
     const chains = await Promise.all(
       [...ctx.chains.values()].map(async (c) => {
@@ -51,7 +62,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
         } catch (error) {
           return {
             chainId: c.chainId,
-            rpc: { state: "down" as const, detail: String(error).slice(0, ERROR_DETAIL_MAX_CHARS) },
+            rpc: { state: "down" as const, detail: rpcDown(ctx, error) },
             headAgeSec: null,
             oracles: [],
             indexerLagBlocks: null,
@@ -74,7 +85,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     });
   });
 
-  app.get(marketsRoute.path, async (request, reply) => {
+  app.get(marketsRoute.path, { config: READ_RATE }, async (request, reply) => {
     const { query } = parseRoute(marketsRoute, request);
     const chainId = query.chainId ?? ctx.env.CHAIN_ID;
     const chain = chainOf(ctx, chainId);
@@ -105,7 +116,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     return sendRoute(reply, marketsRoute, { chainId, engine, perpl: [] });
   });
 
-  app.get(accountRoute.path, async (request, reply) => {
+  app.get(accountRoute.path, { config: READ_RATE }, async (request, reply) => {
     const { params, query } = parseRoute(accountRoute, request);
     const chainId = query.chainId ?? ctx.env.CHAIN_ID;
     const chain = chainOf(ctx, chainId);

@@ -23,14 +23,19 @@ export async function handleTransactionWebhook(ctx: CardContext, webhook: CardTr
     SELECT hold_id, account, amount_usd6, expected_usd6 FROM holds WHERE issuer = ${issuer} AND txn_token = ${webhook.token}`;
   let queued = 0;
   for (const event of webhook.events) {
-    const fresh = await ctx.db`
-      INSERT INTO card_events (event_token, issuer, txn_token, type, amount_cents, payload)
-      VALUES (${event.token}, ${issuer}, ${webhook.token}, ${event.type}, ${centsOf(event)},
-              ${ctx.db.json(event as never)})
-      ON CONFLICT (event_token) DO NOTHING RETURNING event_token`;
-    if (fresh.length === 0) continue;
-    queued += await route(ctx, event, hold, webhook);
-    await ctx.db`UPDATE card_events SET processed_at = now() WHERE event_token = ${event.token}`;
+    // One transaction per event (S8.5b #11): the dedupe row, the outbox action and processed_at land together, so a
+    // failure mid-way rolls the dedupe row back and Lithic's retry is processed instead of skipped as a duplicate.
+    queued += await ctx.db.begin(async (tx) => {
+      const fresh = await tx`
+        INSERT INTO card_events (event_token, issuer, txn_token, type, amount_cents, payload)
+        VALUES (${event.token}, ${issuer}, ${webhook.token}, ${event.type}, ${centsOf(event)},
+                ${tx.json(event as never)})
+        ON CONFLICT (event_token) DO NOTHING RETURNING event_token`;
+      if (fresh.length === 0) return 0;
+      const n = await route({ ...ctx, db: tx as unknown as CardContext["db"] }, event, hold, webhook);
+      await tx`UPDATE card_events SET processed_at = now() WHERE event_token = ${event.token}`;
+      return n;
+    });
   }
   return queued;
 }

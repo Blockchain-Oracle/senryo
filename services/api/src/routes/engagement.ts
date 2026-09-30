@@ -4,6 +4,7 @@ import {
   alertsCreateRoute,
   alertsDeleteRoute,
   alertsListRoute,
+  DEVICE_HASH_MAX_CHARS,
   DEVICE_HEADER,
   eventsRoute,
   pushTokenDeleteRoute,
@@ -11,6 +12,7 @@ import {
 } from "@senryo/api-client";
 import { HTTP_STATUS, HttpError, type HttpServer, parseRoute, type Session, sendRoute } from "@senryo/service-common";
 import type { FastifyRequest } from "fastify";
+import { EVENT_CLOCK_SKEW_MS, EVENT_PROPS_MAX_CHARS } from "../constants.ts";
 import type { ApiContext } from "../context.ts";
 
 const ALERTS_PER_ACCOUNT_MAX = 50;
@@ -86,16 +88,23 @@ export function registerEngagementRoutes(app: HttpServer, ctx: ApiContext): void
         ? await ctx.sessions.verify(request.headers.authorization.replace(/^Bearer /, ""))
         : undefined;
     const rawDevice = request.headers[DEVICE_HEADER];
-    const device = Array.isArray(rawDevice) ? rawDevice[0] : rawDevice;
-    const rows = body.events.map((e) => ({
-      name: e.name,
-      user_address: session?.address.toLowerCase() ?? null,
-      device_hash: device ?? null,
-      platform: body.platform,
-      app_version: body.appVersion,
-      props: ctx.db.json((e.props ?? {}) as never),
-      created_at: new Date(e.at),
-    }));
+    const deviceRaw = Array.isArray(rawDevice) ? rawDevice[0] : rawDevice;
+    const device = deviceRaw && deviceRaw.length <= DEVICE_HASH_MAX_CHARS ? deviceRaw : null;
+    const now = Date.now();
+    // Analytics hygiene (S8.5b #13): client time clamped to ±1 day, oversized props dropped, device header capped.
+    const rows = body.events.map((e) => {
+      const at = Math.min(Math.max(new Date(e.at).getTime(), now - EVENT_CLOCK_SKEW_MS), now + EVENT_CLOCK_SKEW_MS);
+      const props = e.props ?? {};
+      return {
+        name: e.name,
+        user_address: session?.address.toLowerCase() ?? null,
+        device_hash: device,
+        platform: body.platform,
+        app_version: body.appVersion,
+        props: ctx.db.json((JSON.stringify(props).length <= EVENT_PROPS_MAX_CHARS ? props : {}) as never),
+        created_at: new Date(Number.isFinite(at) ? at : now),
+      };
+    });
     await ctx.db`INSERT INTO events ${ctx.db(rows, "name", "user_address", "device_hash", "platform", "app_version", "props", "created_at")}`;
     return sendRoute(reply, eventsRoute, { accepted: rows.length });
   });
@@ -104,6 +113,8 @@ export function registerEngagementRoutes(app: HttpServer, ctx: ApiContext): void
     const s = await session(request);
     const { body } = parseRoute(pushTokenRoute, request);
     const ch = body.channels;
+    // Re-binding on conflict is intended: one phone, several accounts share an Expo token (S8.5b #10, accepted —
+    // tokens aren't public and the worst case is a missed notification).
     await ctx.db`
       INSERT INTO push_tokens (token, user_address, platform, kind, ch_fills, ch_liquidation, ch_deposits, ch_card, ch_price_alerts)
       VALUES (${body.token}, ${s.address.toLowerCase()}, ${body.platform}, ${body.kind}, ${ch.fills ?? true},
