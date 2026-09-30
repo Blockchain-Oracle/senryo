@@ -52,11 +52,11 @@ reuses everything below `apps/`.
       `HoldToConfirm`, Face ID gate (D-037), execution trace on the lifecycle, receipt + share
       — done (c6f2dda, 66679dd); `pnpm --filter @senryo/drive ticket-e2e` 3/3 on a 10143 fork: fund in scope, open signs
       in scope with TradeContext (no prompt), trace checking→…→finalized, close finalized
-- [ ] S8.11 Positions (F11, F12, F14): list + detail (PnL with funding/borrow), close (hold), partial close, TP/SL via
+- [x] S8.11 Positions (F11, F12, F14): list + detail (PnL with funding/borrow), close (hold), partial close, TP/SL via
       `TriggerOrders` (EIP-712 in session), liquidation-risk banner + post-mortem, reduce-only copy, `MIN_HOLD_BLOCKS`
       — done: list, detail (price/funding/borrow, liq, gauge), 25/50/75 %/all close by hold with previewDecrease,
       closed-session + anti-flash copy, live BottomAccessory mini-bar; TP/SL (sign in session, place/cancel, keeper
-      executes; ticket-e2e 5/5 incl. SL → TRIGGER fill); left: liquidation banner + post-mortem (F12)
+      executes; ticket-e2e 5/5 incl. SL → TRIGGER fill); liquidation-risk / paused-price banners + post-mortem card (F12, RiskBanner)
       · indexer `Trigger` has no chainId — add it in the S8.20 re-sync (keeper already ignores foreign ids)
 - [ ] S8.12 Portfolio from the chain: buckets (Free to trade · Free to spend · Locked) at `finalized`, equity, activity
       from the indexer, BottomAccessory mini-bar; delete every `useSample()`/`PreviewBadge` on these screens

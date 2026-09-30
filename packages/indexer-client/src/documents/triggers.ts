@@ -38,3 +38,39 @@ export function triggersVars(user: string, limit: number = PAGE_SIZE.positions):
 }
 
 export type Triggers = ResultOf<typeof TriggersDocument>;
+
+// ---------------------------------------------------------------- liquidations (F12 post-mortem)
+
+interface LiquidationVars {
+  user: string;
+  since: number;
+}
+
+const liquidation = z.object({
+  id: z.string(),
+  market_id: z.string().nullable(),
+  penalty: bigintish,
+  realizedPnl: bigintish,
+  positionsClosed: z.number().int(),
+  timestamp: z.number().int(),
+  txHash: z.string(),
+});
+
+/** The user's liquidations on our engine since `since` (unix s), newest first. */
+export const LiquidationsDocument = defineDocument<LiquidationVars>()(
+  "Liquidations",
+  `query Liquidations($user: String!, $since: Int!) {
+    Liquidation(
+      where: { user_id: { _eq: $user }, venue: { _eq: OURS }, timestamp: { _gte: $since } }
+      order_by: { timestamp: desc }
+      limit: 5
+    ) { id market_id penalty realizedPnl positionsClosed timestamp txHash }
+  }`,
+  z.object({ Liquidation: z.array(liquidation) }).transform((d) => d.Liquidation),
+);
+
+export function liquidationsVars(user: string, since: number): LiquidationVars {
+  return { user: user.toLowerCase(), since };
+}
+
+export type Liquidations = ResultOf<typeof LiquidationsDocument>;

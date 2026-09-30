@@ -6,7 +6,14 @@
 import { contractCall, coreDomain, type Sender, type TxRequest } from "@senryo/chain";
 import { type ChainId, positionGasLimit } from "@senryo/config";
 import { type Address, fromQuery, type Reading, RISK, TRIGGER_ORDER_TYPES } from "@senryo/core";
-import { type Triggers, TriggersDocument, triggersVars } from "@senryo/indexer-client";
+import {
+  type Liquidations,
+  LiquidationsDocument,
+  liquidationsVars,
+  type Triggers,
+  TriggersDocument,
+  triggersVars,
+} from "@senryo/indexer-client";
 import { useQuery } from "@tanstack/react-query";
 import { ACCOUNT_REFETCH_MS } from "./constants.ts";
 import { useQueryEnv } from "./env.tsx";
@@ -86,6 +93,22 @@ export function useTriggers(address: Address | undefined): Reading<Triggers> {
   const query = useQuery({
     queryKey: [...keys.account(env.chainId, address ?? "0x"), "triggers"] as const,
     queryFn: ({ signal }) => env.indexer.request(TriggersDocument, triggersVars(address ?? "0x"), signal),
+    enabled: address !== undefined,
+    refetchInterval: ACCOUNT_REFETCH_MS,
+    staleTime: ACCOUNT_REFETCH_MS,
+  });
+  return fromQuery(query);
+}
+
+/** Our-engine liquidations of the user within the last `windowSec` (F12 post-mortem); stable window key. */
+export function useRecentLiquidations(address: Address | undefined, windowSec: number): Reading<Liquidations> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: [...keys.account(env.chainId, address ?? "0x"), "liquidations", windowSec] as const,
+    queryFn: ({ signal }) => {
+      const since = Math.floor(Date.now() / MS_PER_SECOND) - windowSec;
+      return env.indexer.request(LiquidationsDocument, liquidationsVars(address ?? "0x", since), signal);
+    },
     enabled: address !== undefined,
     refetchInterval: ACCOUNT_REFETCH_MS,
     staleTime: ACCOUNT_REFETCH_MS,

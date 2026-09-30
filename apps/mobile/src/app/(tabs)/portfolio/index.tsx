@@ -13,6 +13,7 @@ import { AccountStrip } from "~/features/auth/AccountStrip";
 import { BucketRegister, type Buckets } from "~/features/portfolio/BucketRegister";
 import { DAY_SEC, MS_PER_SECOND, WINDOW_SEC } from "~/features/portfolio/constants";
 import { PositionsTable } from "~/features/portfolio/PositionsTable";
+import { RiskBanner } from "~/features/portfolio/RiskBanner";
 import { useAccount } from "~/lib/account/provider";
 import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
@@ -67,6 +68,7 @@ export default function Portfolio() {
   return (
     <Screen>
       <AccountStrip />
+      <RiskBanner />
       <ReadingView reading={risk} loading="line" loadingLabel="Reading your balance">
         {(s) => {
           const first = day.status === "fresh" || day.status === "stale" ? day.value[0] : undefined;

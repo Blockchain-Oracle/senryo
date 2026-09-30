@@ -17,4 +17,7 @@ export const STORAGE_KEYS = {
   device: "senryo.device.v1",
   /** F10: the three-card risk explainer was accepted ("I understand" hold) — shown once, before the first trade. */
   riskExplained: "senryo.risk-explained.v1",
+  /** F12: the newest liquidation id the user has seen (haptic once) and dismissed (post-mortem card hidden). */
+  liquidationSeen: "senryo.liquidation-seen.v1",
+  liquidationDismissed: "senryo.liquidation-dismissed.v1",
 } as const;
