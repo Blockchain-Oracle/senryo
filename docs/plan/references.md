@@ -30,3 +30,12 @@
 | Agari invariants | `/Users/abu/dev/hackathon/agari-wt/mobile-takeover/scripts/invariants` | record SHA (S0) | invariant runner + rules |
 | Agari money units | `agari-wt/*/packages/core/src/units/format.ts` | record SHA | bigint formatting |
 | Design preview (this repo) | `design/preview` | this repo | D2 Desk 21st components (re-tokenize on adoption) |
+
+## Docs read (S6)
+| Library | Id / source | Used for |
+|---|---|---|
+| Mera 0.2.0 | `references/mera` @ a3102f4 (`library/src/{passkey,session,viem,secret,errors,react-native-webauthn-client*}.ts`, `demos/shared/src/hd.ts`, `demos/mobile/src/{wallet,storage}.ts`, `demos/web/src/connect.ts`) — not on Context7 | ceremonies, frozen derivation, signing session, vaults, error codes, native unlock pattern |
+| react-native-passkey 3.6.1 | `references/react-native-passkey` (README "Error codes", PRF, CHANGELOG 3.6.2) | normalised `error` values (UserCancelled, NoCredentials, NoCreateOption, BadConfiguration, RequestFailed) |
+| expo-secure-store / expo-local-authentication | `/websites/expo_dev` (SecureStore `requireAuthentication`, invalidation → `null`, Android authenticates writes; LocalAuthentication API) + expo-secure-store 57.0.4 native sources (cancel messages) | native unlock + Face ID gate (D-142) |
+| viem | `/wevm/viem` (EIP-7702 `signAuthorization`, `executor: "self"` nonce rule, type-4 sends) | 7702 spike (D-145), `decodeFunctionData`, `toAccount`, SIWE |
+| WebAuthn PRF support | `context/08-integrations/mera.md` §4 (Mera authenticator table), `platforms-and-stores.md` §2.4 (MDN BCD 8.1.3) | copy for PRF-less providers, F65 |

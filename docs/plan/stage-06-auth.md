@@ -22,18 +22,18 @@ fingerprints. S11a (web shell + auth) is folded in here (D-103).
 
 ## Steps
 - [x] S6.1 Stage file
-- [ ] S6.2 Docs read + recorded (Mera source, react-native-passkey, expo-secure-store, expo-local-authentication,
+- [x] S6.2 Docs read + recorded (Mera source, react-native-passkey, expo-secure-store, expo-local-authentication,
       WebAuthn PRF, viem accounts + EIP-7702) · `@senryo/account` scaffold: `exports` conditions (`react-native` vs
       `default`) for `passkey`, `secret-store`, `sync`; exact pins (`@category-labs/mera@0.2.0`,
       `react-native-passkey@3.6.1`); viem-client-free boundary
-- [ ] S6.3 Frozen derivation (`derive.ts`, PRF → BIP-39 → `m/44'/60'/0'/0/0` per `hd.ts`) · ceremonies `.web`/`.native`
+- [x] S6.3 Frozen derivation (`derive.ts`, PRF → BIP-39 → `m/44'/60'/0'/0/0` per `hd.ts`) · ceremonies `.web`/`.native`
       (create, discoverable get, pinned get) · hints (non-secret) · error → copy map · rpId host guard (web)
-- [ ] S6.4 `specs/session-policy.md` · `Policy` (allowlist, selectors, caps decoded from calldata against the
+- [x] S6.4 `specs/session-policy.md` · `Policy` (allowlist, selectors, caps decoded from calldata against the
       `@senryo/contracts` ABIs, reduce-only uncapped, withdraw-to-self in scope, typed-data + message scope) ·
       `SessionManager` (TTL 30 / idle 5, lock, chip state, events) · step-up (pinned ceremony, one-shot, `end()` in
       `finally`) · Face ID gate (native SecureStore biometric read, web passkey assertion; D-037 defaults) · one ordered
       queue per address · `getSigner()`
-- [ ] S6.5 Targeted checks: derivation parity (web and native code paths, same PRF → same address; known vector) and
+- [x] S6.5 Targeted checks: derivation parity (web and native code paths, same PRF → same address; known vector) and
       session-policy scope checks
 - [ ] S6.6 Starter claim: StarterDrip `Claim`/`Voucher` typed data read from the contract, signed in session; app-side
       `StarterClient` interface (S3 relay `POST /v1/starter/claim` integration left open) · 7702 spike: signed

@@ -1,0 +1,46 @@
+{
+  "name": "@senryo/account",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Mera island: frozen passkey derivation, platform ceremonies, the scoped signing session (SessionManager + Policy + step-up + Face ID gate). Signs, never sends.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./passkey": {
+      "react-native": "./src/platform/passkey.native.ts",
+      "default": "./src/platform/passkey.web.ts"
+    },
+    "./secret-store": {
+      "react-native": "./src/platform/secret-store.native.ts",
+      "default": "./src/platform/secret-store.web.ts"
+    },
+    "./sync": {
+      "react-native": "./src/platform/sync.native.ts",
+      "default": "./src/platform/sync.web.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "check": "tsx --test checks/*.check.ts"
+  },
+  "dependencies": {
+    "@category-labs/mera": "0.2.0",
+    "@noble/hashes": "2.3.0",
+    "@scure/base": "2.3.0",
+    "@scure/bip32": "2.3.0",
+    "@scure/bip39": "2.3.0",
+    "@senryo/config": "workspace:*",
+    "@senryo/contracts": "workspace:*",
+    "@senryo/core": "workspace:*",
+    "viem": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "expo-secure-store": "~57.0.4",
+    "react-native-passkey": "3.6.1",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

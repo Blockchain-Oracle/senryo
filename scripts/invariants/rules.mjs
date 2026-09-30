@@ -63,6 +63,14 @@ export const rules = [
     pattern: /from\s+["']viem(\/[^"']*)?["']/,
   },
   {
+    id: "account-signs-only",
+    description: "packages/account signs, never sends: no viem clients, transports or chain objects (S6)",
+    scopes: ["packages/account/src"],
+    exts: TS,
+    pattern:
+      /\b(createWalletClient|createPublicClient|createClient|createTestClient|http|webSocket|fallback)\s*\(|from\s+["']viem\/chains["']/,
+  },
+  {
     id: "no-custody-backend",
     description: "services never touch user keys (Mera stays client-side)",
     scopes: ["services"],
