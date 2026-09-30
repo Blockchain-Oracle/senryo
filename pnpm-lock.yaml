@@ -93,6 +93,12 @@ importers:
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@senryo/indexer-client':
+        specifier: workspace:*
+        version: link:../../packages/indexer-client
+      '@senryo/query':
+        specifier: workspace:*
+        version: link:../../packages/query
       '@senryo/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens

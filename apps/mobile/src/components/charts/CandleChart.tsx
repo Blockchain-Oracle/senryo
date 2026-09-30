@@ -1,33 +1,40 @@
-import { DECIMALS } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Candlestick, CartesianChart } from "victory-native";
 import { clockTime } from "~/lib/format";
 import { toPlot } from "~/lib/money";
-import type { Candle } from "~/lib/sample";
 import { SIZE, useTheme } from "~/theme";
 import { CHART_FONT } from "~/theme/fonts";
 import { CHART } from "./constants";
 
+/** One OHLC bucket in integer base units (`decimals` places), `t` in ms. */
+export interface ChartCandle {
+  t: number;
+  open: bigint;
+  high: bigint;
+  low: bigint;
+  close: bigint;
+}
+
 /**
  * RN port of 21st Candle Chart #22250: victory-native XL `Candlestick` in D2 colours, price axis on the right in
- * JetBrains Mono, time ticks below. Candles are oracle rounds + fills in S4/S8 (D-020: no fabricated ticks); the
- * preview draws `SAMPLE_CANDLES`.
+ * JetBrains Mono, time ticks below. Candles are indexed Chainlink rounds (D-020, D-163: no fabricated ticks — gaps
+ * stay gaps).
  */
-export function CandleChart({ candles }: { candles: Candle[] }) {
+export function CandleChart({ candles, decimals }: { candles: ChartCandle[]; decimals: number }) {
   const { color } = useTheme();
   const font = useFont(CHART_FONT, CHART.axisFontSize);
   const data = useMemo(
     () =>
       candles.map((c) => ({
         t: c.t,
-        open: toPlot(c.openE8, DECIMALS.e8),
-        high: toPlot(c.highE8, DECIMALS.e8),
-        low: toPlot(c.lowE8, DECIMALS.e8),
-        close: toPlot(c.closeE8, DECIMALS.e8),
+        open: toPlot(c.open, decimals),
+        high: toPlot(c.high, decimals),
+        low: toPlot(c.low, decimals),
+        close: toPlot(c.close, decimals),
       })),
-    [candles],
+    [candles, decimals],
   );
   if (candles.length < CHART.minPoints) return null;
   return (

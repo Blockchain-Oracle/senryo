@@ -21,7 +21,15 @@ export function SectionLabel({ children, style }: { children: ReactNode; style?:
 }
 
 /** A label/value row (ticket summary, quote rows). */
-export function KeyValue({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+export function KeyValue({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string | undefined;
+}) {
   const { color } = useTheme();
   return (
     <View style={styles.kv} accessible accessibilityLabel={`${label} ${value}`}>

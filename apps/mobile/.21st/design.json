@@ -494,7 +494,7 @@
         "source": "21st:bankkroll/number-pad",
         "id": 3711,
         "url": "https://21st.dev/@bankkroll/components/number-pad",
-        "port": "Pressable 3x4 grid + haptic tick; candidate — confirm on preview in S5",
+        "port": "Pressable 3x4 grid + haptic tick; built S8.10 (src/components/trade/Keypad.tsx)",
         "status": "planned (S5)"
       },
       {
@@ -618,6 +618,42 @@
         "21st": "Drawer #1245 (ported BottomDrawer) + Passkey Sign-In #19045",
         "url": "https://21st.dev/@shadcn/components/drawer",
         "note": "live S6 sheets on the one-sheet primitive"
+      },
+      {
+        "rn": "src/components/trade/HoldToConfirm.tsx",
+        "21st": "Hold and Release Button #8",
+        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
+        "note": "Pressable + Reanimated linear sweep 500 ms; press/confirm haptics; VoiceOver activate confirms; web twin ui/hold-and-release-button.tsx"
+      },
+      {
+        "rn": "src/components/trade/ExecutionTrace.tsx",
+        "21st": "Task Steps #23569",
+        "url": "https://21st.dev/@ddoemonn/components/task-steps",
+        "note": "svg tick/cross + spinning arc, desk tweens; driven by @senryo/query send trace"
+      },
+      {
+        "rn": "src/components/trade/MarginGauge.tsx",
+        "21st": "Gauge #3719",
+        "url": "https://21st.dev/@designali-in/components/gauge-1",
+        "note": "true semicircle (web arc geometry), up/warn/down bands = MM ÷ E_liq"
+      },
+      {
+        "rn": "src/components/trade/LeverageSlider.tsx",
+        "21st": "Slider #304",
+        "url": "https://21st.dev/@originui/components/slider",
+        "note": "GH Pan on the UI thread, integer steps, tick/snap, detent marks, adjustable a11y"
+      },
+      {
+        "rn": "src/components/trade/Keypad.tsx",
+        "21st": "Number Pad #3711",
+        "url": "https://21st.dev/@bankkroll/components/number-pad",
+        "note": "3x4 hairline mono grid, tick per key; applyKey keeps 2 decimals"
+      },
+      {
+        "rn": "src/app/(sheets)/risk-explainer.tsx",
+        "21st": "Drawer #1245 + Hold and Release Button #8",
+        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
+        "note": "F10 three cards + 'I understand' hold; MMKV flag"
       }
     ]
   },

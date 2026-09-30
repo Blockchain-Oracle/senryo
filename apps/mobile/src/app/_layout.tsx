@@ -12,6 +12,7 @@ import { ToastHost } from "~/components/toast/ToastHost";
 import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
 import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
+import { MarketDataProvider } from "~/lib/market-data";
 import { FONT, ThemeProvider, useTheme } from "~/theme";
 import { useAppFonts } from "~/theme/fonts";
 
@@ -42,7 +43,9 @@ export default function RootLayout() {
         <QueryClientProvider client={client}>
           <ThemeProvider>
             <AccountProvider>
-              <RootStack />
+              <MarketDataProvider>
+                <RootStack />
+              </MarketDataProvider>
             </AccountProvider>
           </ThemeProvider>
         </QueryClientProvider>

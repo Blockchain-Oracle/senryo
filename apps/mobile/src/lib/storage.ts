@@ -15,4 +15,6 @@ export const STORAGE_KEYS = {
   measure: "senryo.measure.v1",
   /** Per-install id for the starter relay's rate limit (`x-senryo-device`) — not an identity. */
   device: "senryo.device.v1",
+  /** F10: the three-card risk explainer was accepted ("I understand" hold) — shown once, before the first trade. */
+  riskExplained: "senryo.risk-explained.v1",
 } as const;

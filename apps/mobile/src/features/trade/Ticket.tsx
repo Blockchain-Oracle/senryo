@@ -1,98 +1,139 @@
-import { BPS_DENOMINATOR } from "@senryo/core";
+import { blockerCopy, ONE_USD6 } from "@senryo/core";
+import type { LiveMarket } from "@senryo/query";
 import { router } from "expo-router";
-import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
-import { KeyValue, Panel, Rule, SectionLabel } from "~/components/kit/Surface";
+import { Panel, Rule, SectionLabel } from "~/components/kit/Surface";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
+import { Keypad } from "~/components/trade/Keypad";
+import { LeverageSlider } from "~/components/trade/LeverageSlider";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
-import { pct, usd } from "~/lib/money";
-import type { SampleBuckets, SampleMarket } from "~/lib/sample";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { DEFAULT_LEVERAGE, LEVERAGE_DETENTS, PREVIEW_FEE_BPS, PREVIEW_SIZE_USD6 } from "./constants";
+import { usd } from "~/lib/money";
+import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { DISABLED_OPACITY, HAIRLINE_PX, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { AMOUNT_CHIPS_USD } from "./constants";
+import { TicketSummary } from "./TicketSummary";
+import { TradeTrace } from "./TradeTrace";
+import { type Side, useTicket } from "./useTicket";
 
 const SIDES = [
   { value: "long", label: "Long" },
   { value: "short", label: "Short" },
 ] as const;
-type Side = (typeof SIDES)[number]["value"];
 
 /**
- * The ticket layout (D2): side, size, leverage detents, margin use, summary and the confirm button. In the preview the
- * button opens "Create account to trade" (F03); the keypad, hold-to-confirm, Face ID and execution trace are S8.
+ * The F10 ticket (D2): side, margin amount (keypad + $10/$25/$50/MAX chips), leverage (slider with detents), live
+ * notional/fee/margin/after/liquidation beside the margin gauge, the first blocker with its fix, then hold 500 ms →
+ * the execution trace. First leveraged trade → the three-card risk explainer before anything is signed.
  */
-export function Ticket({ market, buckets }: { market: SampleMarket; buckets: SampleBuckets }) {
+export function Ticket({ market }: { market: LiveMarket }) {
   const { color } = useTheme();
-  const [side, setSide] = useState<Side>("long");
-  const [leverage, setLeverage] = useState<number>(DEFAULT_LEVERAGE);
-  const notional = PREVIEW_SIZE_USD6 * BigInt(leverage);
-  const fee = (notional * PREVIEW_FEE_BPS) / BPS_DENOMINATOR;
-  const after = buckets.freeToTrade6 - PREVIEW_SIZE_USD6 - fee;
-  const useBps = buckets.freeToTrade6 === 0n ? 0n : (PREVIEW_SIZE_USD6 * BPS_DENOMINATOR) / buckets.freeToTrade6;
+  const t = useTicket(market);
   const sideTone = (s: Side) => (s === "long" ? color.up : color.down);
+
+  if (t.trace.events.length > 0) {
+    return <TradeTrace events={t.trace.events} running={t.trace.running} onDone={() => t.trace.reset()} />;
+  }
+
+  const copy = t.blocker ? blockerCopy(t.blocker, market.name, t.nowSec) : undefined;
+  const holdLabel = `Hold · ${t.side === "long" ? "Long" : "Short"} ${market.symbol} ${t.leverage}×`;
+  const confirm = () => {
+    if (!(storage.getBoolean(STORAGE_KEYS.riskExplained) ?? false)) {
+      router.push(ROUTES.riskExplainer);
+      return;
+    }
+    void t.submit();
+  };
+
   return (
     <Panel style={styles.panel}>
-      <Segmented options={SIDES} value={side} onChange={setSide} label="Side" tone={sideTone} />
+      <Segmented options={SIDES} value={t.side} onChange={t.setSide} label="Side" tone={sideTone} />
+
       <View style={styles.field}>
-        <SectionLabel>SIZE (USD)</SectionLabel>
-        <View style={[styles.input, { borderColor: color.hairline, backgroundColor: color.ground }]}>
-          <Text style={[TYPE.numMd, { color: color.ink }]}>{usd(PREVIEW_SIZE_USD6)}</Text>
+        <View style={styles.between}>
+          <SectionLabel>MARGIN (USD)</SectionLabel>
+          <Text style={[TYPE.label, { color: color.inkMuted }]}>
+            FREE·TRADE {t.snapshot ? usd(t.snapshot.freeToTrade) : "—"}
+          </Text>
         </View>
+        <Text
+          maxFontSizeMultiplier={HERO_FONT_SCALE}
+          style={[TYPE.numXl, { color: t.amountText === "" ? color.inkMuted : color.ink }]}
+          accessibilityLabel={`Margin ${t.amountText === "" ? "not set" : `${t.amountText} dollars`}`}
+        >
+          ${t.amountText === "" ? "0" : t.amountText}
+        </Text>
+        <View style={styles.chips}>
+          {AMOUNT_CHIPS_USD.map((c) => (
+            <Chip key={String(c)} label={`$${c}`} onPress={() => t.setAmountUsd6(c * ONE_USD6)} />
+          ))}
+          <Chip label="MAX" disabled={t.maxAmountUsd6 === 0n} onPress={() => t.setAmountUsd6(t.maxAmountUsd6)} />
+        </View>
+        <Keypad onKey={t.onKey} />
       </View>
+
       <View style={styles.field}>
         <View style={styles.between}>
           <SectionLabel>LEVERAGE</SectionLabel>
-          <Text style={[TYPE.numSm, { color: color.ink }]}>{leverage}x</Text>
+          <Text style={[TYPE.numSm, { color: color.ink }]}>{t.leverage}×</Text>
         </View>
-        <View style={styles.detents} accessibilityRole="radiogroup" accessibilityLabel="Leverage">
-          {LEVERAGE_DETENTS.map((d) => {
-            const on = d === leverage;
-            return (
-              <Pressable
-                key={d}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: on }}
-                onPress={() => {
-                  if (on) return;
-                  fire("tick");
-                  setLeverage(d);
-                }}
-                style={[
-                  styles.detent,
-                  {
-                    borderColor: on ? color.primary : color.hairline,
-                    backgroundColor: on ? color.upWash : color.ground,
-                  },
-                ]}
-              >
-                <Text style={[TYPE.numSm, { color: on ? color.primary : color.inkMuted }]}>{d}x</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <LeverageSlider value={t.leverage} max={market.maxLeverageX} onChange={t.setLeverage} />
       </View>
-      <View style={styles.field}>
-        <View style={styles.between}>
-          <SectionLabel>MARGIN USE</SectionLabel>
-          <Text style={[TYPE.numSm, { color: color.warn }]}>{pct(useBps)}</Text>
-        </View>
-        <View style={[styles.meter, { backgroundColor: color.muted }]}>
-          <View style={{ flex: Number(useBps), backgroundColor: color.warn }} />
-          <View style={{ flex: Number(BPS_DENOMINATOR - useBps) }} />
-        </View>
-      </View>
+
       <Rule />
-      <KeyValue label="NOTIONAL" value={usd(notional)} />
-      <KeyValue label={`FEE ${PREVIEW_FEE_BPS} BPS`} value={usd(fee)} />
-      <KeyValue label="FROM" value="FREE·TRADE" />
-      <KeyValue label="AFTER" value={usd(after)} />
-      <Button
-        label={`${side === "long" ? "Long" : "Short"} ${market.id} ${leverage}x · Face ID`}
-        onPress={() => router.push(ROUTES.accountRequired)}
-        accessibilityHint="Opens account creation; trading needs an account"
+      <TicketSummary
+        notionalUsd6={t.notionalUsd6}
+        preview={t.preview}
+        freeToTradeUsd6={t.snapshot?.freeToTrade}
+        feeBps={market.risk.feeBps}
       />
+
+      {copy ? (
+        <View
+          style={[styles.blocker, { borderColor: color.hairline, backgroundColor: color.warnWash }]}
+          accessibilityLiveRegion="polite"
+        >
+          <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{copy.title}</Text>
+          {copy.action ? <Text style={[TYPE.caption, { color: color.inkMuted }]}>{copy.action}</Text> : null}
+        </View>
+      ) : null}
+
+      {!t.hasAccount ? (
+        <Button label="Create account to trade" onPress={() => router.push(ROUTES.accountRequired)} />
+      ) : t.blocker?.code === "INSUFFICIENT_FREE" ? (
+        <Button label="Add money" onPress={() => router.push(ROUTES.addMoney)} />
+      ) : (
+        <HoldToConfirm
+          label={holdLabel}
+          disabled={t.blocker !== undefined || t.preview === undefined || !t.ready}
+          onConfirm={confirm}
+          accessibilityHint="Hold for half a second to place the trade"
+        />
+      )}
     </Panel>
+  );
+}
+
+function Chip({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
+  const { color } = useTheme();
+  return (
+    <Pressable
+      disabled={disabled}
+      onPress={() => {
+        fire("tick");
+        onPress();
+      }}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.chip,
+        { borderColor: color.hairline, backgroundColor: pressed ? color.muted : color.ground },
+        disabled ? { opacity: DISABLED_OPACITY } : null,
+      ]}
+    >
+      <Text style={[TYPE.numSm, { color: color.ink }]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -100,21 +141,14 @@ const styles = StyleSheet.create({
   panel: { padding: SPACE.md, gap: SPACE.lg },
   field: { gap: SPACE.sm },
   between: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  input: {
-    borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: SPACE.md,
-    minHeight: SIZE.touch,
-    justifyContent: "center",
-  },
-  detents: { flexDirection: "row", gap: SPACE.sm },
-  detent: {
+  chips: { flexDirection: "row", gap: SPACE.sm },
+  chip: {
     flex: 1,
-    minHeight: SIZE.touch,
+    minHeight: SIZE.buttonHeightSm,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: HAIRLINE_PX,
     borderRadius: RADIUS.sm,
   },
-  meter: { flexDirection: "row", height: SIZE.partitionBar, borderRadius: RADIUS.sm, overflow: "hidden" },
+  blocker: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md, gap: SPACE.xxs },
 });

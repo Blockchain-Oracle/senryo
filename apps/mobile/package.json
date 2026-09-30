@@ -19,6 +19,8 @@
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/indexer-client": "workspace:*",
+    "@senryo/query": "workspace:*",
     "@senryo/tokens": "workspace:*",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.6.2",

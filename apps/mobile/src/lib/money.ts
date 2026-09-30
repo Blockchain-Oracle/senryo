@@ -24,6 +24,11 @@ export function price(valueE8: bigint, shown: number = DECIMALS.cents): string {
   return formatUnits(valueE8, DECIMALS.e8, shown);
 }
 
+/** 4,189.06 from an engine price (1e18 USD per unit, risk-math.md units). */
+export function price18(value18: bigint, shown: number = DECIMALS.cents): string {
+  return formatUnits(value18, DECIMALS.e18, shown);
+}
+
 /** +0.82% from basis points. */
 export function signedPct(bps: bigint): string {
   const text = formatUnits(bps < 0n ? -bps : bps, DECIMALS.bpsAsPct, DECIMALS.cents);

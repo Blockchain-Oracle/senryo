@@ -1,55 +1,100 @@
+import { ENGINE_MARKETS } from "@senryo/config";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Sparkline } from "~/components/charts/Sparkline";
+import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { tradeRoute } from "~/lib/constants/routes";
-import { arrow, price, signedPct } from "~/lib/money";
-import type { SampleMarket } from "~/lib/sample";
+import { arrow, price18, signedPct } from "~/lib/money";
 import { DISABLED_OPACITY, HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { ageLabel, STATUS_LABEL, statusTone } from "./session";
+import { useMarketLine } from "./useMarketLine";
 
-const STATUS_LABEL = { open: "Open", closed: "Closed", soon: "Coming soon" } as const;
-const VENUE_LABEL = { senryo: "Senryo", perpl: "Perpl" } as const;
-const PRICE_DECIMALS_SMALL = 4;
-const SMALL_PRICE_E8 = 1_000_000_000n;
+const MS_PER_SECOND = 1000n;
 
-/** One watchlist row (21st Market Watchlist #20110): name, venue · status · max leverage, sparkline, price, change. */
-export function MarketRow({ market, first }: { market: SampleMarket; first: boolean }) {
+/**
+ * One engine watchlist row (21st Market Watchlist #20110): name, venue · session · max leverage, sparkline from
+ * hourly Chainlink rounds, oracle price with its age, 24 h change with ▲▼ and a sign (never colour alone).
+ */
+export function EngineMarketRow({ marketId, first }: { marketId: number; first: boolean }) {
   const { color } = useTheme();
-  const up = market.change24hBps >= 0n;
-  const tint = up ? color.up : color.down;
-  const live = market.status !== "soon";
-  const shown = market.priceE8 < SMALL_PRICE_E8 ? PRICE_DECIMALS_SMALL : undefined;
+  const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
+  const reading = useMarketLine(marketId, meta?.symbol ?? "");
+  const border = first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline };
+  if (reading.status === "unknown" || reading.status === "failed") {
+    return (
+      <View style={[styles.row, border]}>
+        <View style={styles.name}>
+          <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{meta?.symbol}</Text>
+          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+            {reading.status === "failed" ? "Price unavailable · retrying" : "Reading the oracle"}
+          </Text>
+        </View>
+        <Skeleton width={SIZE.sparklineWidth} height={SIZE.skeletonLine} />
+      </View>
+    );
+  }
+  const line = reading.value;
+  const change = line.change24hBps;
+  const tint = change === undefined ? color.inkMuted : change >= 0n ? color.up : color.down;
+  const age = ageLabel(line.updatedAt, BigInt(Date.now()) / MS_PER_SECOND);
+  const changeText = change === undefined ? "24h —" : `${arrow(change)} ${signedPct(change)}`;
   return (
     <Pressable
-      disabled={!live}
       onPress={() => {
         fire("tick");
-        router.push(tradeRoute(market.id));
+        router.push(tradeRoute(line.symbol));
       }}
       accessibilityRole="button"
-      accessibilityState={{ disabled: !live }}
-      accessibilityLabel={`${market.name}, ${VENUE_LABEL[market.venue]}, ${STATUS_LABEL[market.status]}, price ${price(market.priceE8, shown)}, ${up ? "up" : "down"} ${signedPct(market.change24hBps)}`}
-      style={({ pressed }) => [
-        styles.row,
-        first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline },
-        pressed ? { backgroundColor: color.muted } : null,
-        live ? null : { opacity: DISABLED_OPACITY },
-      ]}
+      accessibilityLabel={`${line.name}, Senryo, ${STATUS_LABEL[line.status]}, price ${price18(line.price18)} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}
+      style={({ pressed }) => [styles.row, border, pressed ? { backgroundColor: color.muted } : null]}
     >
       <View style={styles.name}>
-        <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{market.id}</Text>
+        <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{line.symbol}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          {VENUE_LABEL[market.venue]} · {STATUS_LABEL[market.status]} · {market.maxLeverage}x max
+          Senryo · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text> ·{" "}
+          {line.maxLeverageX}x max
         </Text>
       </View>
-      <Sparkline values={market.spark} stroke={tint} />
+      <Sparkline values={line.spark} stroke={tint} />
       <View style={styles.price}>
-        <Text style={[TYPE.numSm, { color: color.ink }]}>${price(market.priceE8, shown)}</Text>
-        <Text style={[TYPE.numSm, { color: tint }]}>
-          {arrow(market.change24hBps)} {signedPct(market.change24hBps)}
+        <Text style={[TYPE.numSm, { color: color.ink }]}>${price18(line.price18)}</Text>
+        <Text style={[TYPE.micro, { color: tint }]}>
+          {changeText} · {age}
         </Text>
       </View>
     </Pressable>
+  );
+}
+
+export interface UpcomingMarket {
+  symbol: string;
+  name: string;
+  venue: "Perpl" | "Senryo";
+  note: string;
+}
+
+/** A market that isn't live yet: name and why, never a price (plan §2.5: no fabricated numbers). */
+export function UpcomingMarketRow({ market, first }: { market: UpcomingMarket; first: boolean }) {
+  const { color } = useTheme();
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${market.name}, ${market.venue}, ${market.note}`}
+      style={[
+        styles.row,
+        first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline },
+        { opacity: DISABLED_OPACITY },
+      ]}
+    >
+      <View style={styles.name}>
+        <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{market.symbol}</Text>
+        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+          {market.venue} · {market.note}
+        </Text>
+      </View>
+      <Text style={[TYPE.label, { color: color.inkMuted }]}>{market.name}</Text>
+    </View>
   );
 }
 
