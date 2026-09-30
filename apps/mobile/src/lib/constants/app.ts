@@ -12,6 +12,12 @@ export const APP = {
   androidPackage: "xyz.senryo.app",
 } as const;
 
+/** EAS project on the user's Expo account (`eas init`, 2026-09-30). Public identifiers, not secrets. */
+export const EAS = {
+  owner: "0xabu",
+  projectId: "2d424d4b-644e-4231-a156-a8c63d802e9c",
+} as const;
+
 /** Passkey relying-party id and universal-link host (D-049). */
 export const RP_ID = "senryo.xyz";
 

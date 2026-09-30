@@ -5,6 +5,7 @@ import {
   ANDROID_MIN_SDK,
   APP,
   ASSOCIATED_DOMAINS,
+  EAS,
   FACE_ID_PERMISSION,
   IOS_DEPLOYMENT_TARGET,
   RP_ID,
@@ -13,12 +14,14 @@ import {
 
 /**
  * Senryo mobile (Expo SDK 57 dev build — Expo Go is unsupported: passkeys and biometric SecureStore need native code).
- * EAS project id / owner are added by `eas init` on the user's account (S5 user step), never hard-coded here.
+ * EAS project id / owner come from `eas init` on the user's account (S5 user step); `eas init` can't write a dynamic
+ * config, so they live in `src/lib/constants/app.ts`.
  */
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: APP.name,
   slug: APP.slug,
+  owner: EAS.owner,
   version: APP.version,
   scheme: APP.scheme,
   orientation: "portrait",
@@ -70,5 +73,5 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
   runtimeVersion: { policy: "appVersion" },
-  extra: { rpId: RP_ID },
+  extra: { rpId: RP_ID, eas: { projectId: EAS.projectId } },
 });

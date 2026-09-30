@@ -14,7 +14,8 @@ Real data arrives in S6–S8.
 - [x] S5.3 Navigation + shell: NativeTabs (Portfolio · Markets · Trade · Card · Fund, SF Symbols, Liquid Glass on iOS 26, solid on 18–25), D2 top strip, §2.5 routes + sheets, sample data in `src/lib/sample.ts` behind a PREVIEW DATA badge, loading/empty/error wired through the states kit; offline banner (F62); account/settings shell (F60)
 - [x] S5.4 Charts: victory-native XL equity area (Portfolio) and candles (Trade)
 - [x] S5.5 Gate: `expo export -p ios -p android`, `expo-doctor`, fast gate; decisions + references recorded
-- [ ] **(user)** `eas init` + `eas credentials` (Android keystore SHA-256 → S6 assetlinks), dev build on the user's iPhone + Android — needs the user's Expo account
+- [x] **(user)** `eas init` → project `@0xabu/senryo` (`2d424d4b-644e-4231-a156-a8c63d802e9c`, 2026-09-30); `eas init` cannot write a dynamic config, so owner + projectId live in `src/lib/constants/app.ts` (`EAS`)
+- [ ] **(user)** `eas credentials` (Android keystore SHA-256 → S6 assetlinks), dev build on the user's iPhone + Android
 - [ ] **[OK?]** Android developer registration (free limited tier, D-017)
 
 ## Gate
