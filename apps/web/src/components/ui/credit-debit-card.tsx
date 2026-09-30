@@ -90,7 +90,7 @@ const FlippableCreditCard = forwardRef<HTMLDivElement, FlippableCreditCardProps>
       >
         <div
           className={cn(
-            "relative size-full rounded-xl transition-transform duration-500 ease-desk transform-3d motion-reduce:transition-none",
+            "relative size-full rounded-xl transition-transform duration-(--motion-slow) ease-desk transform-3d motion-reduce:transition-none",
             flipped && "rotate-y-180",
           )}
         >
