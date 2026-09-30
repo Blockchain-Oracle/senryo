@@ -2,7 +2,7 @@ import { type Address, getAddress, type Hex, isAddress } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import { createIndexerClient, type IndexerClient, IndexerError } from "@senryo/indexer-client";
 import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
-import { INDEXER_TIMEOUT_MS, SCAN_LIMIT } from "./constants.ts";
+import { INDEXER_TIMEOUT_MS, MAX_SCAN_PAGES, SCAN_LIMIT } from "./constants.ts";
 import { OpenPositionUsersDocument, PlacedTriggersDocument } from "./indexer-documents.ts";
 
 /**
@@ -62,10 +62,24 @@ export class IndexerSource implements KeeperSource {
     this.client = createIndexerClient({ url, timeoutMs: INDEXER_TIMEOUT_MS });
   }
 
+  /** Every page, not just the first (S8.5b K2/K3): an idle account or an old order must never fall out of the scan. */
+  private async all<T>(page: (offset: number) => Promise<T[]>): Promise<T[]> {
+    const out: T[] = [];
+    for (let i = 0; i < MAX_SCAN_PAGES; i += 1) {
+      const rows = await page(i * SCAN_LIMIT);
+      out.push(...rows);
+      if (rows.length < SCAN_LIMIT) return out;
+    }
+    this.log.warn({ rows: out.length }, "scan hit MAX_SCAN_PAGES; raise it");
+    return out;
+  }
+
   async accounts(): Promise<Address[]> {
     const fromLedger = await this.fallback.accounts();
     try {
-      const users = await this.client.request(OpenPositionUsersDocument, { chainId: this.chainId, limit: SCAN_LIMIT });
+      const users = await this.all((offset) =>
+        this.client.request(OpenPositionUsersDocument, { chainId: this.chainId, limit: SCAN_LIMIT, offset }),
+      );
       return uniqueAddresses([...users, ...fromLedger]);
     } catch (error) {
       this.log.warn({ err: describeIndexerError(error) }, "indexer accounts unavailable; ledger only");
@@ -76,7 +90,9 @@ export class IndexerSource implements KeeperSource {
   async triggerOrders(): Promise<Hex[]> {
     try {
       const nowSec = Math.floor(Date.now() / MS_PER_SECOND);
-      const triggers = await this.client.request(PlacedTriggersDocument, { chainId: this.chainId, limit: SCAN_LIMIT });
+      const triggers = await this.all((offset) =>
+        this.client.request(PlacedTriggersDocument, { chainId: this.chainId, limit: SCAN_LIMIT, offset }),
+      );
       return triggers.filter((t) => t.expiry > nowSec).map((t) => t.id as Hex);
     } catch (error) {
       this.log.warn({ err: describeIndexerError(error) }, "indexer triggers unavailable");

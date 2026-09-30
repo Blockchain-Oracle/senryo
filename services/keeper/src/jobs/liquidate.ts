@@ -30,8 +30,19 @@ export function liquidationJob(ctx: KeeperContext): Job {
     async run() {
       const accounts = await ctx.source.accounts();
       const flags = await readLiquidatable(ctx.read, ctx.chainId, accounts);
-      const due = accounts.filter((a) => flags.get(a) && !inflight.has(a.toLowerCase()));
+      // Rows whose read failed are retried once on their own; still unread → the scan is incomplete and says so
+      // (job error + ops alert) instead of treating those accounts as healthy (S8.5b K1).
+      const unread = accounts.filter((a) => flags.get(a) === undefined);
+      const retried = unread.length > 0 ? await readLiquidatable(ctx.read, ctx.chainId, unread) : new Map();
+      const due = accounts.filter(
+        (a) => (flags.get(a) === true || retried.get(a) === true) && !inflight.has(a.toLowerCase()),
+      );
       await Promise.all(due.map((user) => liquidate(ctx, user, inflight)));
+      const missing = unread.filter((a) => retried.get(a) === undefined).length;
+      if (missing > 0) {
+        ctx.notifier.ops("warn", "liquidation scan incomplete", { unread: missing, scanned: accounts.length });
+        throw new Error(`liquidation scan incomplete: ${missing} of ${accounts.length} accounts unread`);
+      }
     },
   };
 }

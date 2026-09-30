@@ -8,13 +8,19 @@ import { z } from "zod";
 interface ScanVars {
   chainId: number;
   limit: number;
+  offset: number;
 }
 
-/** Accounts with at least one open position (lowercase addresses), most recently active first. */
+/** Accounts with at least one open position (lowercase addresses), paged in a stable order (every one is scanned). */
 export const OpenPositionUsersDocument = defineDocument<ScanVars>()(
   "KeeperOpenPositionUsers",
-  `query KeeperOpenPositionUsers($chainId: Int!, $limit: Int!) {
-    User(where: { chainId: { _eq: $chainId }, openPositions: { _gt: 0 } }, order_by: { lastActiveAt: desc }, limit: $limit) {
+  `query KeeperOpenPositionUsers($chainId: Int!, $limit: Int!, $offset: Int!) {
+    User(
+      where: { chainId: { _eq: $chainId }, openPositions: { _gt: 0 } }
+      order_by: { id: asc }
+      limit: $limit
+      offset: $offset
+    ) {
       id
     }
   }`,
@@ -24,8 +30,13 @@ export const OpenPositionUsersDocument = defineDocument<ScanVars>()(
 /** TP/SL orders still PLACED (id = the onchain orderId; expiry in unix seconds). */
 export const PlacedTriggersDocument = defineDocument<ScanVars>()(
   "KeeperPlacedTriggers",
-  `query KeeperPlacedTriggers($chainId: Int!, $limit: Int!) {
-    Trigger(where: { chainId: { _eq: $chainId }, status: { _eq: "PLACED" } }, order_by: { placedAt: asc }, limit: $limit) {
+  `query KeeperPlacedTriggers($chainId: Int!, $limit: Int!, $offset: Int!) {
+    Trigger(
+      where: { chainId: { _eq: $chainId }, status: { _eq: "PLACED" } }
+      order_by: { id: asc }
+      limit: $limit
+      offset: $offset
+    ) {
       id expiry
     }
   }`,

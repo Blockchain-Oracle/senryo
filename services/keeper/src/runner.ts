@@ -1,3 +1,4 @@
+import { describeError } from "@senryo/chain";
 import type { Logger } from "@senryo/service-common";
 
 /**
@@ -57,7 +58,8 @@ export class Runner {
         status.lastError = undefined;
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      // describeError keeps the short line only — viem's full message can carry a keyed RPC URL (S8.5b K5).
+      const message = describeError(error);
       if (status) status.lastError = message;
       this.log.warn({ job: job.name, err: message }, "job failed");
     } finally {

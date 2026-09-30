@@ -39,7 +39,7 @@ export function useLpVault(address: Address | undefined): Reading<LpSnapshot> {
 
 /**
  * Historical APR in bps over the last `LP_APR_DAYS`: (fees the pool kept + trader losses − trader gains) ÷ current
- * value, annualised. Undefined with no history or an empty pool. Practice rows only until the S8.20 chain scoping.
+ * value, annualised. Undefined with no history or an empty pool. Scoped to the active network.
  */
 export function useLpApr(totalAssets: bigint | undefined): Reading<bigint | undefined> {
   const env = useQueryEnv();
@@ -47,7 +47,7 @@ export function useLpApr(totalAssets: bigint | undefined): Reading<bigint | unde
     queryKey: ["lp", env.chainId, "apr", LP_APR_DAYS] as const,
     queryFn: ({ signal }) => {
       const today = Math.floor(Date.now() / MS_PER_SECOND / SECONDS_PER_DAY);
-      return env.indexer.request(LpDaysDocument, { fromDay: today - LP_APR_DAYS }, signal);
+      return env.indexer.request(LpDaysDocument, { chainId: env.chainId, fromDay: today - LP_APR_DAYS }, signal);
     },
     refetchInterval: CANDLES_REFETCH_MS,
     staleTime: CANDLES_REFETCH_MS,

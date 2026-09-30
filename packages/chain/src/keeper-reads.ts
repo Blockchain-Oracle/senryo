@@ -7,13 +7,16 @@ import { MARKET_STATUS, type MarketStatusName, type ReadTag } from "./reads.ts";
 
 /** Reads the keeper needs (batched through Multicall3 at one block tag). */
 
-/** `isLiquidatable(user)` for many accounts at once (view risk uses `peek`, so a fresh round counts immediately). */
+/**
+ * `isLiquidatable(user)` for many accounts at once (view risk uses `peek`, so a fresh round counts immediately).
+ * A row whose read failed maps to `undefined` — never `false`: an RPC hiccup must not look like a healthy account.
+ */
 export async function readLiquidatable(
   read: ReadClient,
   chainId: ChainId,
   users: readonly Address[],
   blockTag: ReadTag = "latest",
-): Promise<Map<Address, boolean>> {
+): Promise<Map<Address, boolean | undefined>> {
   if (users.length === 0) return new Map();
   const address = addressOf(chainId, "SenryoCore");
   const rows = await read.multicall({
@@ -21,7 +24,7 @@ export async function readLiquidatable(
     allowFailure: true,
     blockTag,
   });
-  return new Map(users.map((u, i) => [u, rows[i]?.status === "success" && rows[i]?.result === true]));
+  return new Map(users.map((u, i) => [u, rows[i]?.status === "success" ? rows[i]?.result === true : undefined]));
 }
 
 export interface OracleState {
@@ -104,4 +107,26 @@ export async function readHolds(read: ReadClient, chainId: ChainId, holdIds: rea
 export async function readBalances(read: ReadClient, addresses: readonly Address[]): Promise<Map<Address, bigint>> {
   const balances = await Promise.all(addresses.map((a) => read.getBalance({ address: a })));
   return new Map(addresses.map((a, i) => [a, balances[i] ?? 0n]));
+}
+
+/** `Account.positionBitmap` for many accounts in one multicall (failed rows omitted). */
+export async function readPositionBitmaps(
+  read: ReadClient,
+  chainId: ChainId,
+  users: readonly Address[],
+  blockTag: ReadTag = "latest",
+): Promise<Map<Address, number>> {
+  if (users.length === 0) return new Map();
+  const address = addressOf(chainId, "SenryoCore");
+  const rows = await read.multicall({
+    contracts: users.map((u) => ({ address, abi: senryoCoreAbi, functionName: "account", args: [u] }) as const),
+    allowFailure: true,
+    blockTag,
+  });
+  const out = new Map<Address, number>();
+  users.forEach((u, i) => {
+    const row = rows[i];
+    if (row?.status === "success") out.set(u, row.result.positionBitmap);
+  });
+  return out;
 }

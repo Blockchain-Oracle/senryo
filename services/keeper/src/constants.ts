@@ -14,7 +14,21 @@ export const INTERVALS_MS = {
   topups: 60_000,
   alerts: 10_000,
   wallets: 60_000,
+  retention: 86_400_000,
 } as const;
+
+/** Retention windows in days (S8.5b K9). */
+export const RETENTION_DAYS = {
+  siweNonces: 1,
+  latency: 30,
+  events: 90,
+  pushSends: 30,
+  outbox: 30,
+  cardEvents: 90,
+} as const;
+
+/** Top-ups per run at most (S8.5b K4); the contract still caps per address, per day and by the daily budget. */
+export const TOPUP_MAX_PER_RUN = 10;
 
 /**
  * Testnet mirror relay: push when the mainnet answer moved ≥ this many bps since the last mirrored answer, or when
@@ -50,3 +64,5 @@ export const BPS = 10_000n;
 export const INDEXER_TIMEOUT_MS = 3_000;
 /** Max candidates per indexer query (users with open positions, PLACED triggers). */
 export const SCAN_LIMIT = 500;
+/** Page cap for the indexer scans (40 × 500 = 20 000 rows); hitting it logs a warning. */
+export const MAX_SCAN_PAGES = 40;

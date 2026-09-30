@@ -92,7 +92,7 @@ export function useTriggers(address: Address | undefined): Reading<Triggers> {
   const env = useQueryEnv();
   const query = useQuery({
     queryKey: [...keys.account(env.chainId, address ?? "0x"), "triggers"] as const,
-    queryFn: ({ signal }) => env.indexer.request(TriggersDocument, triggersVars(address ?? "0x"), signal),
+    queryFn: ({ signal }) => env.indexer.request(TriggersDocument, triggersVars(env.chainId, address ?? "0x"), signal),
     enabled: address !== undefined,
     refetchInterval: ACCOUNT_REFETCH_MS,
     staleTime: ACCOUNT_REFETCH_MS,
@@ -107,7 +107,7 @@ export function useRecentLiquidations(address: Address | undefined, windowSec: n
     queryKey: [...keys.account(env.chainId, address ?? "0x"), "liquidations", windowSec] as const,
     queryFn: ({ signal }) => {
       const since = Math.floor(Date.now() / MS_PER_SECOND) - windowSec;
-      return env.indexer.request(LiquidationsDocument, liquidationsVars(address ?? "0x", since), signal);
+      return env.indexer.request(LiquidationsDocument, liquidationsVars(env.chainId, address ?? "0x", since), signal);
     },
     enabled: address !== undefined,
     refetchInterval: ACCOUNT_REFETCH_MS,

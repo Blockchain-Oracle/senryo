@@ -20,6 +20,7 @@ export const KEEPER_JOBS = [
   "topups",
   "alerts",
   "wallets",
+  "retention",
 ] as const;
 export type KeeperJob = (typeof KEEPER_JOBS)[number];
 
@@ -36,8 +37,8 @@ export const keeperEnvSchema = baseEnvSchema.extend({
   KEEPER_STALE_SEC: z.coerce.number().int().positive().default(KEEPER_STALE_SEC),
   /** Enabled jobs (default: everything except the relay and top-ups, which need extra roles). */
   KEEPER_JOBS: csvSchema.transform((list) =>
-    (list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets"]).filter((j): j is KeeperJob =>
-      (KEEPER_JOBS as readonly string[]).includes(j),
+    (list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets", "retention"]).filter(
+      (j): j is KeeperJob => (KEEPER_JOBS as readonly string[]).includes(j),
     ),
   ),
   /** Extra accounts to scan for liquidation until the indexer source is live (S4). */

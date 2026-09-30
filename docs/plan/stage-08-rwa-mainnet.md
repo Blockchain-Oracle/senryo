@@ -83,8 +83,8 @@ reuses everything below `apps/`.
       — `contracts/script/SeedMainnet.s.sol` (real AUSD/USDC from the deployer, idempotent; card float opt-in;
       StarterDrip float via STARTER_FUND_WEI above the 10 MON reserve)
 - [ ] S8.20 **[OK?]** S4 re-sync (143 addresses + `ENVIO_APP_LAUNCH_BLOCK_143`) + api `CHAIN_IDS=10143,143` redeploy
-      — **and** give `Trigger`, `Liquidation`, `LpPosition`, `LpRedeemRequest`, `LpPoolDaily` a chainId (ids today are
-      orderId / owner / requestId / day — practice and mainnet would collide once both are indexed); query by chain
+      — **and** chain-prefix the ids of `LpPosition` (owner), `LpRedeemRequest` (requestId), `LpPoolDaily` (day):
+      Envio adds a `chainId` column (queries now filter on it) but these ids would collide across 143/10143
 - [ ] S8.21 Gate + Handoff: mainnet deposit → XAU long → close from the phone; indexer shows it; a closed session blocks
       opens; assurance findings closed
 

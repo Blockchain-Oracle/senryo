@@ -207,6 +207,8 @@ export async function sendTx(sender: Sender, req: TxRequest): Promise<SentTx> {
 export async function sendAndFinalize(sender: Sender, req: TxRequest): Promise<SentTx & { final: Confirmation }> {
   const sent = await sendTx(sender, req);
   const final = await confirmFinalized({ read: sender.read, heads: sender.heads }, sent.receipt);
+  // The proposal carrying it was dropped: the local counter already moved past its nonce (S8.5b K7).
+  if (final.stage === "abandoned") sender.nonces.resync(sender.account.address);
   await sender.journal?.update(sent.hash, {
     stage: final.stage,
     blockNumber: final.receipt?.blockNumber.toString(),

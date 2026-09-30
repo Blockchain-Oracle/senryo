@@ -74,6 +74,7 @@ export async function sendTracked(
   const voted = await waitForCommit(opts, sent.receipt, "voted");
   if (voted.stage === "voted") emit("voted", { hash: sent.hash });
   const final = await waitForCommit(opts, voted.receipt ?? sent.receipt, "finalized");
+  if (final.stage === "abandoned") sender.nonces.resync(sender.account.address);
   await sender.journal?.update(sent.hash, {
     stage: final.stage,
     blockNumber: final.receipt?.blockNumber.toString(),

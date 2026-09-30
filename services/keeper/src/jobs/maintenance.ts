@@ -7,11 +7,12 @@ import {
   readContract,
   readHolds,
   readOracles,
+  readPositionBitmaps,
   sendAndFinalize,
 } from "@senryo/chain";
 import { ENGINE_MARKETS, GAS_LIMITS, positionGasLimit } from "@senryo/config";
 import { MS_PER_SECOND } from "@senryo/service-common";
-import { HOLD_RELEASABLE_AFTER_SEC, HOLD_RELEASE_GRACE_SEC, INTERVALS_MS } from "../constants.ts";
+import { HOLD_RELEASABLE_AFTER_SEC, HOLD_RELEASE_GRACE_SEC, INTERVALS_MS, TOPUP_MAX_PER_RUN } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
 import type { Job } from "../runner.ts";
 
@@ -109,15 +110,22 @@ export function topUpJob(ctx: KeeperContext): Job {
     name: "topups",
     intervalMs: INTERVALS_MS.topups,
     async run() {
+      // Only accounts that actually trade (an open position) — not every address that ever claimed — at most
+      // TOPUP_MAX_PER_RUN per run, and the run stops at the first budget refusal (S8.5b K4).
       const users = await ctx.source.accounts();
-      const balances = await readBalances(ctx.read, users);
-      const low = users.filter((u) => (balances.get(u) ?? 0n) < ctx.env.TOPUP_FLOOR_WEI);
-      for (const user of low) await topUp(ctx, user);
+      const bitmaps = await readPositionBitmaps(ctx.read, ctx.chainId, users);
+      const trading = users.filter((u) => (bitmaps.get(u) ?? 0) !== 0);
+      const balances = await readBalances(ctx.read, trading);
+      const low = trading.filter((u) => (balances.get(u) ?? 0n) < ctx.env.TOPUP_FLOOR_WEI).slice(0, TOPUP_MAX_PER_RUN);
+      for (const user of low) {
+        if (!(await topUp(ctx, user))) break;
+      }
     },
   };
 }
 
-async function topUp(ctx: KeeperContext, user: Address): Promise<void> {
+/** true = topped up (or skipped for a per-user cap); false = stop the run (budget or role). */
+async function topUp(ctx: KeeperContext, user: Address): Promise<boolean> {
   try {
     const sent = await sendAndFinalize(
       ctx.sender,
@@ -126,7 +134,10 @@ async function topUp(ctx: KeeperContext, user: Address): Promise<void> {
       }),
     );
     ctx.log.info({ user, tx: sent.hash, stage: sent.final.stage }, "gas top-up");
+    return true;
   } catch (error) {
-    ctx.log.warn({ user, err: describeError(error) }, "gas top-up refused (cap/budget/role)");
+    const reason = describeError(error);
+    ctx.log.warn({ user, err: reason }, "gas top-up refused (cap/budget/role)");
+    return !/Budget|Unauthorized|AccessManaged/i.test(reason);
   }
 }

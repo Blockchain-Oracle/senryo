@@ -153,3 +153,21 @@ reviewed — see "Not covered"). Verdict before fixes: **block**; after fixes: n
 Not covered (next pass before mainnet card/keeper deploys): `services/keeper/src/**` key handling and trigger/topup
 jobs, `services/common/src/{db,keys,migrate-cli}.ts`, SQL migrations (siwe_nonces purge), the deployed Traefik
 `forwardedHeaders` config (the one-hop trust assumes Traefik is the only hop — a CDN in front must raise it).
+
+### Keeper + migrations pass (S8.5b, follow-up)
+
+Verdict before fixes: needs_fix (4 medium, 6 low). A lying indexer can't make the keeper send a harmful tx (every
+candidate is re-checked onchain and simulated); the gaps were in candidate coverage.
+
+| # | Sev | Finding | Verdict |
+|---|---|---|---|
+| K1 | Medium | Failed multicall rows read as "not liquidatable" — silent coverage loss under RPC errors | **Fixed** — unread rows are `undefined`, retried once; still unread → job error + ops alert |
+| K2 | Medium | Only the 500 most recently active accounts were scanned | **Fixed** — full pagination in a stable order (page cap 20 000, warns) |
+| K3 | Medium | Only the 500 oldest PLACED triggers were fetched | **Fixed** — full pagination |
+| K4 | Medium | Top-ups (off by default) paid every past claimer daily | **Fixed** — only accounts with an open position, ≤ 10 per run, stop at the first budget/role refusal |
+| K5 | Low | `/v1/keeper/status` exposed full error text (keyed RPC URL) | **Fixed** — short `describeError` line; the port has no public domain |
+| K6 | Low | Candidate list unbounded; sequential reads | **Deferred (S14)** — accounts table + batched snapshots |
+| K7 | Low | An abandoned tx left the nonce counter past a gap | **Fixed** — `resync` on abandoned (chain send + query trace) |
+| K8 | Low | Testnet mirror trusts the source RPC round | **Accepted (testnet only)** — guarded to 10143; tighten if practice liquidations matter |
+| K9 | Low | No retention anywhere | **Fixed** — daily `retention` job (nonces 1 d, telemetry/outbox/push 30 d, events/card events 90 d) |
+| K10 | Low | One DB role migrates and serves every service | **Deferred (S14)** — least-privilege roles per service with the Coolify DB setup |
