@@ -33,9 +33,16 @@ interface StoredUnlock {
 export const secretStore: SecretStore = {
   kind: "native",
   async readHint(): Promise<AccountHint | undefined> {
-    const raw = await SecureStore.getItemAsync(STORAGE.hint, UNGATED);
+    let raw: string | null;
+    try {
+      raw = await SecureStore.getItemAsync(STORAGE.hint, UNGATED);
+    } catch {
+      // Keychain unavailable (e.g. an unsigned simulator build, errSecMissingEntitlement): a missing hint is the
+      // normal path (stateless test) — the app stays usable and "I already have an account" rebuilds everything.
+      return undefined;
+    }
     const hint = decodeHint(raw);
-    if (raw !== null && hint === undefined) await SecureStore.deleteItemAsync(STORAGE.hint, UNGATED);
+    if (raw !== null && hint === undefined) await SecureStore.deleteItemAsync(STORAGE.hint, UNGATED).catch(() => {});
     return hint;
   },
   async writeHint(hint: AccountHint): Promise<void> {

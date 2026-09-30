@@ -70,7 +70,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     setSettings(loadSettings());
     void import("./runtime").then(async ({ createWebAccountClient }) => {
       const c = createWebAccountClient(loadSettings(), (flow) => setExtraPrompt(flow));
-      const loaded = await c.load();
+      // A failed read never strands the page on a loader: no hint is the normal (stateless) path.
+      const loaded = await c.load().catch(() => undefined);
       if (!live) return c.session.dispose();
       clientRef.current = c;
       setClient(c);

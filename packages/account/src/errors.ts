@@ -107,6 +107,15 @@ export function isCeremonyError(error: unknown): boolean {
   return isMeraError(error) || fromCause(error) !== "unknown";
 }
 
+/**
+ * A failed *create* that may have left a usable passkey behind (Mera: failures after the creation ceremony keep the
+ * passkey, without its metadata) — the UI then offers "I already have an account" instead of creating twice. Refusals
+ * before any passkey exists (association files, no provider, no PRF support, insecure context) never qualify.
+ */
+export function mayHaveLeftPasskey(kind: AuthFailure): boolean {
+  return kind === "unknown" || kind === "interrupted" || kind === "timed-out";
+}
+
 /** Cancel is not an error (ux-product-feel B.11): callers return to where they were without a toast. */
 export function isSilent(kind: AuthFailure): boolean {
   return kind === "cancelled";

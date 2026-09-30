@@ -24,6 +24,7 @@ export {
   type AuthFailure,
   classifyAuthError,
   isSilent,
+  mayHaveLeftPasskey,
   OutOfScopeError,
   SessionLockedError,
 } from "./errors.ts";

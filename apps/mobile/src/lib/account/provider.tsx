@@ -57,11 +57,15 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setSettings(loadSettings());
     const unsubscribe = client.session.subscribe(() => setSnapshot(client.session.snapshot()));
-    void client.load().then((h) => {
-      setHint(h);
-      setSnapshot(client.session.snapshot());
-      setReady(true);
-    });
+    // A failed read never strands the app on a loader: no hint is the normal (stateless) path.
+    void client
+      .load()
+      .catch(() => undefined)
+      .then((h) => {
+        setHint(h);
+        setSnapshot(client.session.snapshot());
+        setReady(true);
+      });
     const sub = AppState.addEventListener("change", (state) => {
       setObscured(state !== "active");
       // Backgrounded: end the signing session now (Mera: "end the session when the app's session expires"); the

@@ -5,7 +5,7 @@
  * F65: a desktop whose passkey provider has no PRF gets "Use your phone" — a QR to the same page, because the
  * account is the passkey and phones carry PRF (iCloud Keychain, Google Password Manager).
  */
-import { type AuthFailure, authFailureCopy } from "@senryo/account";
+import { type AuthFailure, authFailureCopy, mayHaveLeftPasskey } from "@senryo/account";
 import { WEB_ORIGIN } from "@senryo/config";
 import { KeyRound, RotateCcw, Smartphone, TriangleAlert } from "lucide-react";
 import { AuthCard, AuthCardBody, AuthCardHeader } from "@/components/ui/auth-card";
@@ -41,7 +41,7 @@ export interface AuthFailureProps {
 
 export function AuthFailureCard({ kind, flow, onRetry, onSignIn, onCreate }: AuthFailureProps) {
   const copy = authFailureCopy(kind, "web");
-  const orphanRisk = flow === "create" && kind !== "prf-unavailable" && kind !== "not-supported";
+  const orphanRisk = flow === "create" && mayHaveLeftPasskey(kind);
   return (
     <div className="grid gap-3">
       <AuthCard role="alert">

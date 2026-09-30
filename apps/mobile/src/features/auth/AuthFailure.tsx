@@ -3,7 +3,7 @@
  * A failed *create* may have left a passkey behind: never create twice, offer "I already have an account" instead.
  * `bad-configuration` (association files) and `prf-unavailable` point to the web app, same account there.
  */
-import { type AuthFailure, authFailureCopy } from "@senryo/account";
+import { type AuthFailure, authFailureCopy, mayHaveLeftPasskey } from "@senryo/account";
 import { WEB_ORIGIN } from "@senryo/config";
 import { Linking, Platform, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -27,7 +27,7 @@ export function AuthFailureCard({
 }) {
   const { color } = useTheme();
   const copy = authFailureCopy(kind, Platform.OS === "ios" ? "ios" : "android");
-  const orphanRisk = flow === "create" && kind !== "prf-unavailable" && kind !== "not-supported";
+  const orphanRisk = flow === "create" && mayHaveLeftPasskey(kind);
   const webFallback = kind === "bad-configuration" || kind === "prf-unavailable" || kind === "not-supported";
   return (
     <AuthCard glyph="warning" tone="down" title={copy.title} body={copy.body}>
