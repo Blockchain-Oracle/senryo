@@ -1,0 +1,504 @@
+[
+ {
+  "id": "W-000",
+  "detector": "reentrancy",
+  "impact": "high",
+  "confidence": "medium",
+  "message": "Possible reentrancy in `AccountLedger.swapCollateral(address,uint256,uint256)`",
+  "location": {
+   "file": "src/core/AccountLedger.sol",
+   "line": 51,
+   "contract": "AccountLedger"
+  },
+  "subdetections": [
+   {
+    "message": "Exploitable from `AccountLedger.swapCollateral(address,uint256,uint256)`",
+    "file": "src/core/AccountLedger.sol",
+    "line": 51,
+    "contract": "AccountLedger"
+   }
+  ]
+ },
+ {
+  "id": "W-001",
+  "detector": "reentrancy",
+  "impact": "high",
+  "confidence": "low",
+  "message": "Possible reentrancy in `StarterDrip.claimFor(address,uint64,bytes)`",
+  "location": {
+   "file": "src/periphery/StarterDrip.sol",
+   "line": 78,
+   "contract": "StarterDrip"
+  },
+  "subdetections": [
+   {
+    "message": "Exploitable from `StarterDrip.claimFor(address,uint64,bytes)`",
+    "file": "src/periphery/StarterDrip.sol",
+    "line": 78,
+    "contract": "StarterDrip"
+   }
+  ]
+ },
+ {
+  "id": "W-002",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/AccountLedger.sol",
+   "line": 51,
+   "contract": "AccountLedger"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-003",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/AccountLedger.sol",
+   "line": 108,
+   "contract": "AccountLedger"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-004",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 37,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-005",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 47,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-006",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 62,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-007",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 64,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-008",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 136,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-009",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 138,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-010",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 164,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-011",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 166,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-012",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 214,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-013",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 227,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-014",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/CardModule.sol",
+   "line": 229,
+   "contract": "CardModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-015",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/LiquidationModule.sol",
+   "line": 57,
+   "contract": "LiquidationModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-016",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/LiquidationModule.sol",
+   "line": 59,
+   "contract": "LiquidationModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-017",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/LiquidationModule.sol",
+   "line": 60,
+   "contract": "LiquidationModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-018",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/LiquidationModule.sol",
+   "line": 71,
+   "contract": "LiquidationModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-019",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/LiquidationModule.sol",
+   "line": 72,
+   "contract": "LiquidationModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-020",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/MarketAccounting.sol",
+   "line": 21,
+   "contract": "MarketAccounting"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-021",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/MarketRegistry.sol",
+   "line": 19,
+   "contract": "MarketRegistry"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-022",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/PerpModule.sol",
+   "line": 76,
+   "contract": "PerpModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-023",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/PerpModule.sol",
+   "line": 236,
+   "contract": "PerpModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-024",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/PerpModule.sol",
+   "line": 250,
+   "contract": "PerpModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-025",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/PerpModule.sol",
+   "line": 264,
+   "contract": "PerpModule"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-026",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/SenryoCore.sol",
+   "line": 25,
+   "contract": "SenryoCore"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-027",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/core/TriggerOrders.sol",
+   "line": 26,
+   "contract": "TriggerOrders"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-028",
+  "detector": "unchecked-return-value",
+  "impact": "warning",
+  "confidence": "high",
+  "message": "Unchecked return value",
+  "location": {
+   "file": "src/oracle/SessionOracle.sol",
+   "line": 132,
+   "contract": "SessionOracle"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-029",
+  "detector": "missing-return",
+  "impact": "warning",
+  "confidence": "medium",
+  "message": "Not all execution paths have assigned return values",
+  "location": {
+   "file": "src/core/MarketAccounting.sol",
+   "line": 130,
+   "contract": "MarketAccounting"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-030",
+  "detector": "missing-return",
+  "impact": "warning",
+  "confidence": "medium",
+  "message": "Not all execution paths have assigned return values",
+  "location": {
+   "file": "src/oracle/SessionOracle.sol",
+   "line": 236,
+   "contract": "SessionOracle"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-031",
+  "detector": "reentrancy",
+  "impact": "warning",
+  "confidence": "medium",
+  "message": "Possible reentrancy in `StarterDrip.withdrawNative(address payable,uint256)`",
+  "location": {
+   "file": "src/periphery/StarterDrip.sol",
+   "line": 130,
+   "contract": "StarterDrip"
+  },
+  "subdetections": [
+   {
+    "message": "Exploitable from `StarterDrip.withdrawNative(address payable,uint256)`",
+    "file": "src/periphery/StarterDrip.sol",
+    "line": 130,
+    "contract": "StarterDrip"
+   }
+  ]
+ },
+ {
+  "id": "W-032",
+  "detector": "reentrancy",
+  "impact": "warning",
+  "confidence": "medium",
+  "message": "Possible reentrancy in `StarterDrip._sendNative(address,uint256)`",
+  "location": {
+   "file": "src/periphery/StarterDrip.sol",
+   "line": 157,
+   "contract": "StarterDrip"
+  },
+  "subdetections": [
+   {
+    "message": "Exploitable from `StarterDrip.claimFor(address,uint64,bytes)`",
+    "file": "src/periphery/StarterDrip.sol",
+    "line": 82,
+    "contract": "StarterDrip"
+   },
+   {
+    "message": "Exploitable from `StarterDrip.topUp(address,uint256)`",
+    "file": "src/periphery/StarterDrip.sol",
+    "line": 110,
+    "contract": "StarterDrip"
+   }
+  ]
+ },
+ {
+  "id": "W-033",
+  "detector": "unused-error",
+  "impact": "info",
+  "confidence": "high",
+  "message": "Unused error",
+  "location": {
+   "file": "src/libraries/Errors.sol",
+   "line": 16,
+   "contract": "Errors"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-034",
+  "detector": "unused-error",
+  "impact": "info",
+  "confidence": "high",
+  "message": "Unused error",
+  "location": {
+   "file": "src/libraries/Errors.sol",
+   "line": 60,
+   "contract": "Errors"
+  },
+  "subdetections": []
+ },
+ {
+  "id": "W-035",
+  "detector": "unused-error",
+  "impact": "info",
+  "confidence": "high",
+  "message": "Unused error",
+  "location": {
+   "file": "src/libraries/Errors.sol",
+   "line": 82,
+   "contract": "Errors"
+  },
+  "subdetections": []
+ }
+]
