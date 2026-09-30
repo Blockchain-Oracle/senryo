@@ -10,10 +10,14 @@ import { archiveRpcUrl } from "./env.ts";
 
 const clients = new Map<number, PublicClient>();
 
+/**
+ * No JSON-RPC batching: the monadinfra archive endpoints answer a batch array with 403 "Restricted JSON RPC method"
+ * (seen 2026-09-30). Each effect's rateLimit bounds the request rate instead.
+ */
 export function clientFor(chainId: number): PublicClient {
   let client = clients.get(chainId);
   if (!client) {
-    client = createPublicClient({ transport: http(archiveRpcUrl(chainId), { batch: true }) });
+    client = createPublicClient({ transport: http(archiveRpcUrl(chainId)) });
     clients.set(chainId, client);
   }
   return client;

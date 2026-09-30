@@ -122,14 +122,26 @@ indexer.onEvent(
       fill_id: meta.id,
     });
 
+    // MarketStateUpdated is emitted at accrual, before the size change: apply this fill's delta on top of it.
+    const adds = kind === "OPEN" || kind === "INCREASE";
+    const sized = (side: bigint) => (adds ? side + p.sizeDelta : side > p.sizeDelta ? side - p.sizeDelta : 0n);
+    const longSize = p.isLong ? sized(market.longSize) : market.longSize;
+    const shortSize = p.isLong ? market.shortSize : sized(market.shortSize);
     context.Market.set({
       ...market,
+      longSize,
+      shortSize,
       volume: market.volume + notional,
       tradeCount: market.tradeCount + 1,
       appVolume: market.appVolume + notional,
       appTradeCount: market.appTradeCount + 1,
     });
-    await updateMarketDaily(context, meta, market.id, (d) => ({ volume: d.volume + notional, trades: d.trades + 1 }));
+    await updateMarketDaily(context, meta, market.id, (d) => ({
+      volume: d.volume + notional,
+      trades: d.trades + 1,
+      longSize,
+      shortSize,
+    }));
     await recordTradeStats(context, meta, {
       userId: p.user,
       marketId: market.id,
@@ -158,6 +170,7 @@ indexer.onEvent(
   },
 );
 
+/** Accrual snapshot (pre-trade sizes, funding/borrow indices and rates); the fill that follows applies its delta. */
 indexer.onEvent(
   { contract: "SenryoCore", event: "MarketStateUpdated", fields: EVENT_FIELDS },
   async ({ event, context }) => {
@@ -182,7 +195,6 @@ indexer.onEvent(
       timestamp: meta.timestamp,
       block: meta.block,
     });
-    await updateMarketDaily(context, meta, market.id, () => ({ longSize: p.longSize, shortSize: p.shortSize }));
   },
 );
 

@@ -126,11 +126,16 @@ indexer.onEvent(
   },
 );
 
+/**
+ * The risk snapshot closes every mutation. It never creates a user on its own: an address whose first event is a
+ * snapshot is a liquidator/keeper paid a fee (Liquidated → _emitRisk(msg.sender)), not an app user.
+ */
 indexer.onEvent(
   { contract: "SenryoCore", event: "AccountRiskUpdated", fields: EVENT_FIELDS },
   async ({ event, context }) => {
     const meta = metaOf(event);
     const p = event.params;
+    if (!(await context.User.get(p.user))) return;
     const [tokens, balances] = await Promise.all([
       context.effect(coreTokens, event.srcAddress),
       context.effect(readAccountBalances, { core: event.srcAddress, user: p.user, block: meta.block }),

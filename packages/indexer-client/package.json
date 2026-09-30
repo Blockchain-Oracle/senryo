@@ -1,0 +1,21 @@
+{
+  "name": "@senryo/indexer-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed GraphQL documents + zod-parsed results for the Senryo Envio indexer (Hasura). No viem, no React.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}
