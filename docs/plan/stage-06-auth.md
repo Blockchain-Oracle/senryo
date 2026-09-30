@@ -44,7 +44,7 @@ fingerprints. S11a (web shell + auth) is folded in here (D-103).
 - [ ] S6.8 Mobile auth: onboarding (intro + value pages + Create-first), SecureStore gated PRF + ungated hint, unlock,
       session chip, step-up / session / account-required sheets live, lock on background + privacy plate, watch-only,
       recovery, security, delete data · RN ports recorded in `apps/mobile/.21st/design.json`
-- [ ] S6.9 `.well-known` generator (AASA + assetlinks from config + `~/.config/senryo/{apple,android}.env` or env) ·
+- [x] S6.9 `.well-known` generator (AASA + assetlinks from config + `~/.config/senryo/{apple,android}.env` or env) ·
       nginx config per runbook §6 (`location =`, `application/json`, no redirect) · web Dockerfile copies dot-folders
 - [ ] S6.10 Measurement hooks: TTFT start/stop + prompt counts per authenticator (log format, local sink)
 - [ ] S6.11 Gate + Handoff (fast gate, web build, expo export, parity + policy checks, local web sign-in)

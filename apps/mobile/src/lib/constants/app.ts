@@ -2,7 +2,7 @@
  * App identity and platform floors. The rpId host is owned by `@senryo/config` (frozen once the first account exists,
  * because the passkey rpId *is* the account); it is re-exported here for `app.config.ts`.
  */
-import { ASSOCIATED_DOMAINS, RP_ID } from "@senryo/config";
+import { ANDROID_PACKAGE, ASSOCIATED_DOMAINS, IOS_BUNDLE_ID, RP_ID } from "@senryo/config";
 
 export { ASSOCIATED_DOMAINS, RP_ID };
 export const APP = {
@@ -10,8 +10,8 @@ export const APP = {
   slug: "senryo",
   scheme: "senryo",
   version: "0.1.0",
-  bundleId: "xyz.senryo.app",
-  androidPackage: "xyz.senryo.app",
+  bundleId: IOS_BUNDLE_ID,
+  androidPackage: ANDROID_PACKAGE,
 } as const;
 
 /** EAS project on the user's Expo account (`eas init`, 2026-09-30). Public identifiers, not secrets. */

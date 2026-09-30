@@ -37,10 +37,19 @@ export interface SignedClaim {
   signature: Hex;
 }
 
-/** What the relay needs to call `StarterDrip.redeemVoucher(user, code, deadline, signature)`. */
+/** What the relay needs to call `StarterDrip.redeemVoucher(user, bytes(code), deadline, signature)`. */
 export interface SignedVoucher extends SignedClaim {
-  /** The voucher code as the bytes the contract hashes (`keccak256(code)`). */
-  code: Hex;
+  /** Canonical voucher text (D-143); the relay sends its UTF-8 bytes, the contract hashes them. */
+  code: string;
+}
+
+/** Canonical voucher text (D-143; S3 relay schema `/^[A-Z0-9-]{6,32}$/`). */
+export const VOUCHER_CODE = /^[A-Z0-9-]{6,32}$/;
+
+/** Trim + upper-case; `undefined` when the result is not a valid code (the field shows "Check the code"). */
+export function canonicalVoucherCode(input: string): string | undefined {
+  const code = input.trim().toUpperCase();
+  return VOUCHER_CODE.test(code) ? code : undefined;
 }
 
 function starterDomain(chainId: ChainId) {
@@ -64,7 +73,7 @@ export function claimTypedData(chainId: ChainId, user: Address, deadline: bigint
   } as const satisfies TypedDataDefinition;
 }
 
-/** Voucher codes are typed by people: normalise (trim, upper-case) before hashing so "gold-12" == "GOLD-12". */
+/** The bytes the contract hashes: UTF-8 of the canonical text, so "gold-12" and "GOLD-12" are one voucher. */
 export function voucherCodeBytes(code: string): Hex {
   return toHex(code.trim().toUpperCase());
 }

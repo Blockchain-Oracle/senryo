@@ -19,7 +19,7 @@ import {
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { scopeTargets } from "../src/policy/targets.ts";
-import { claimTypedData, voucherCodeBytes, voucherTypedData } from "../src/starter/typed-data.ts";
+import { canonicalVoucherCode, claimTypedData, voucherCodeBytes, voucherTypedData } from "../src/starter/typed-data.ts";
 
 const SOURCE = readFileSync(new URL("../../../contracts/src/periphery/StarterDrip.sol", import.meta.url), "utf8");
 const DOMAIN_TYPE = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
@@ -77,8 +77,12 @@ test("Claim digest == OZ _hashTypedDataV4(keccak256(abi.encode(CLAIM_TYPEHASH, u
 });
 
 test("Voucher digest matches, codes normalise before hashing", () => {
+  assert.equal(canonicalVoucherCode("  gold-12 "), "GOLD-12");
+  assert.equal(canonicalVoucherCode("ab"), undefined);
+  assert.equal(canonicalVoucherCode("gold 12!"), undefined);
   const code = voucherCodeBytes("  gold-12 ");
   assert.equal(code, voucherCodeBytes("GOLD-12"));
+  assert.equal(code, toHex("GOLD-12"));
   const def = voucherTypedData(TESTNET_CHAIN_ID, user.address, code, DEADLINE);
   const struct = keccak256(
     encodeAbiParameters(

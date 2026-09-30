@@ -3,6 +3,8 @@
  * `@senryo/account/{passkey,secret-store,sync}` and are handed to `AccountClient`. Signs, never sends.
  */
 
+/** viem types re-exported so apps never import viem directly (invariant `viem-import-boundary`). */
+export type { Address, Hex, LocalAccount } from "viem";
 export { createPasskey, getPasskey, type PromptListener } from "./ceremony.ts";
 export { AccountClient, type AccountClientOptions } from "./client.ts";
 export * from "./constants.ts";
@@ -57,11 +59,13 @@ export { UNLOCK_PROMPT } from "./session/signer.ts";
 export { signStarterClaim, signVoucher } from "./starter/sign.ts";
 export {
   CLAIM_TYPES,
+  canonicalVoucherCode,
   claimTypedData,
   type SignedClaim,
   type SignedVoucher,
   STARTER_DOMAIN,
   starterDeadline,
+  VOUCHER_CODE,
   VOUCHER_TYPES,
   voucherCodeBytes,
   voucherTypedData,

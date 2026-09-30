@@ -6,6 +6,7 @@
 import type { ChainId } from "@senryo/config";
 import type { LocalAccount } from "viem";
 import {
+  canonicalVoucherCode,
   claimTypedData,
   type SignedClaim,
   type SignedVoucher,
@@ -28,8 +29,10 @@ export async function signVoucher(
   nowMs: number,
 ): Promise<SignedVoucher> {
   if (!signer.signTypedData) throw new Error("Signer cannot sign typed data");
+  const canonical = canonicalVoucherCode(code);
+  if (canonical === undefined) throw new RangeError("Voucher codes are 6–32 letters, digits or dashes");
   const deadline = starterDeadline(nowMs);
-  const bytes = voucherCodeBytes(code);
+  const bytes = voucherCodeBytes(canonical);
   const signature = await signer.signTypedData(voucherTypedData(chainId, signer.address, bytes, deadline));
-  return { chainId, user: signer.address, deadline, signature, code: bytes };
+  return { chainId, user: signer.address, deadline, signature, code: canonical };
 }
