@@ -112,7 +112,10 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
       readAccountSnapshot(chain.read, query.chainId, address, "finalized"),
       readAccountSnapshot(chain.read, query.chainId, address, "latest"),
     ]);
-    const positions = await readPositions(chain.read, query.chainId, address, latest.positionBitmap, "latest");
+    const [positions, history] = await Promise.all([
+      readPositions(chain.read, query.chainId, address, latest.positionBitmap, "latest"),
+      ctx.indexer.history(query.chainId, address),
+    ]);
     return sendRoute(reply, accountRoute, {
       chainId: query.chainId,
       address,
@@ -130,7 +133,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
         leftUsd6: latest.allowanceLeft,
         expiry: latest.allowanceExpiry,
       },
-      history: null,
+      history,
     });
   });
 }

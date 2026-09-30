@@ -18,10 +18,10 @@ GitHub Actions `images.yml` matrix `api` (also runs card/keeper entrypoints), `w
 | senryo-docs | Docker Image (nginx) | 80 | `docs.<d>` | 64m |
 | senryo-api | Docker Image (single container → rolling updates) | 3000 | `api.<d>` | 384m |
 | senryo-card | Docker Image | 3001 | `api.<d>/v1/card/*` route | 192m |
-| senryo-keeper | Docker Image | 3002 internal | — | 160m |
+| senryo-keeper | Docker Image (`SERVICE=keeper`) | 3002 internal | — | 256m (D-124: idles at ~154 MiB; 160m left no headroom) |
 | senryo-ledger | Coolify Postgres 17 | 5432 internal | — | 256m |
 | senryo-indexer | Compose (indexer + postgres + hasura) | hasura 8080 | `indexer.<d>` | 800 + 512 + 384m |
-Total ≈ 2.8 GiB. Capacity decision in **S3**: after akashi's full deploy ≈ 1.15 GiB free → expect [OK?] a second small VPS (4–8 GB) added as a second Coolify server for the indexer compose + keeper. Never rely on swap for the card path.
+Total ≈ 2.9 GiB (keeper raised to 256m, D-124). Capacity decision in **S3**: after akashi's full deploy ≈ 1.15 GiB free → expect [OK?] a second small VPS (4–8 GB) added as a second Coolify server for the indexer compose + keeper. Never rely on swap for the card path.
 
 ## §5 Env
 `deploy/<app>.env.example` = names only; real values in gitignored `deploy/.env.<app>` or `~/.config/senryo/`; apply with `coolify app env sync <uuid> --file …` (creates/updates, never deletes); secrets runtime-only (Build off), Literal where they contain `$`; `NEXT_PUBLIC_*`/`EXPO_PUBLIC_*` non-secret only; runtime change → Restart, build change → new image. Never echo values.

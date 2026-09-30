@@ -17,6 +17,7 @@
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/indexer-client": "workspace:*",
     "@senryo/service-common": "workspace:*",
     "fastify": "5.12.5",
     "zod": "catalog:"

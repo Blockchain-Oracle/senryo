@@ -24,6 +24,8 @@ export const IPV6_PREFIX_GROUPS = 3;
 export const PRICE_POLL_MS = 1_000;
 export const ACCOUNT_POLL_MS = 1_000;
 export const INDEXER_POLL_MS = 500;
+/** Activity rows returned with /v1/account (full pages come from @senryo/indexer-client in the apps). */
+export const RECENT_ACTIVITY = 20;
 export const WS_MAX_SUBSCRIPTIONS = 16;
 export const WS_MAX_PAYLOAD_BYTES = 16 * 1024;
 /** Drop intermediate ticks for a socket with this much unsent data. */

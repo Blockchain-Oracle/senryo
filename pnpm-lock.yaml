@@ -378,6 +378,9 @@ importers:
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@senryo/indexer-client':
+        specifier: workspace:*
+        version: link:../../packages/indexer-client
       '@senryo/service-common':
         specifier: workspace:*
         version: link:../../services/common
@@ -418,6 +421,9 @@ importers:
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@senryo/indexer-client':
+        specifier: workspace:*
+        version: link:../../packages/indexer-client
       '@senryo/service-common':
         specifier: workspace:*
         version: link:../common
@@ -529,6 +535,9 @@ importers:
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@senryo/indexer-client':
+        specifier: workspace:*
+        version: link:../../packages/indexer-client
       '@senryo/service-common':
         specifier: workspace:*
         version: link:../common

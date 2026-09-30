@@ -9,13 +9,15 @@
     "liquidation": "tsx src/liquidation.ts",
     "card-concurrency": "tsx src/card-concurrency.ts",
     "typecheck": "tsc --noEmit -p .",
-    "api-smoke": "tsx src/api-smoke.ts"
+    "api-smoke": "tsx src/api-smoke.ts",
+    "indexer-check": "tsx src/indexer-check.ts"
   },
   "dependencies": {
     "@senryo/api-client": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/indexer-client": "workspace:*",
     "@senryo/service-common": "workspace:*",
     "zod": "catalog:"
   },

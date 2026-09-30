@@ -1,12 +1,15 @@
 import { type Address, getAddress, type Hex, isAddress } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
-import type { Db, Logger } from "@senryo/service-common";
+import { createIndexerClient, type IndexerClient, IndexerError } from "@senryo/indexer-client";
+import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
+import { INDEXER_TIMEOUT_MS, SCAN_LIMIT } from "./constants.ts";
+import { OpenPositionUsersDocument, PlacedTriggersDocument } from "./indexer-documents.ts";
 
 /**
  * Where the keeper learns which accounts / trigger orders to watch. The indexer (S4, Envio) is the real source —
- * `User` entities with open positions and `Trigger` entities — and lands with the S4 merge; until then the keeper
- * uses the ledger (users the api relayed claims for) plus an env watch list. Card authorisation never reads the
- * indexer; the keeper only uses it to find candidates and re-checks everything onchain before sending.
+ * `User` entities with open positions and PLACED `Trigger` entities (`IndexerSource`) — and
+ * is combined with the ledger (users the api relayed claims for, card-hold accounts) and an env watch list. Card
+ * authorisation never reads the indexer; the keeper only uses it to find candidates and re-checks onchain.
  */
 export interface KeeperSource {
   /** Accounts that may hold positions (liquidation / health scan). */
@@ -43,45 +46,45 @@ export class LedgerSource implements KeeperSource {
 }
 
 /**
- * Indexer-backed source (S4). The query shape follows specs/services.md (entities `User`, `Trigger`); it is a
- * best-effort stub until `@senryo/indexer-client` merges — failures fall back to the ledger source.
+ * Envio-backed source (S4, `@senryo/indexer-client`): users with open positions and PLACED triggers on this chain,
+ * merged with the ledger/watch list. Indexer failures fall back to the ledger source — a keeper never stops scanning
+ * because the (display-only) indexer is down.
  */
 export class IndexerSource implements KeeperSource {
+  private readonly client: IndexerClient;
+
   constructor(
-    private readonly url: string,
+    url: string,
     private readonly chainId: ChainId,
     private readonly fallback: KeeperSource,
     private readonly log: Logger,
-  ) {}
-
-  private async query<T>(query: string): Promise<T | undefined> {
-    try {
-      const res = await fetch(this.url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-      if (!res.ok) return undefined;
-      const json = (await res.json()) as { data?: T };
-      return json.data;
-    } catch (error) {
-      this.log.debug({ err: String(error) }, "indexer source unavailable");
-      return undefined;
-    }
+  ) {
+    this.client = createIndexerClient({ url, timeoutMs: INDEXER_TIMEOUT_MS });
   }
 
   async accounts(): Promise<Address[]> {
-    const data = await this.query<{ User?: Array<{ id: string }> }>(
-      `{ User(where: { chainId: { _eq: ${this.chainId} }, openPositions: { _gt: 0 } }) { id } }`,
-    );
-    const fromIndexer = data?.User?.map((u) => u.id.split("-").pop() ?? "") ?? [];
-    return uniqueAddresses([...fromIndexer, ...(await this.fallback.accounts())]);
+    const fromLedger = await this.fallback.accounts();
+    try {
+      const users = await this.client.request(OpenPositionUsersDocument, { chainId: this.chainId, limit: SCAN_LIMIT });
+      return uniqueAddresses([...users, ...fromLedger]);
+    } catch (error) {
+      this.log.warn({ err: describeIndexerError(error) }, "indexer accounts unavailable; ledger only");
+      return fromLedger;
+    }
   }
 
   async triggerOrders(): Promise<Hex[]> {
-    const data = await this.query<{ Trigger?: Array<{ orderId: string }> }>(
-      `{ Trigger(where: { chainId: { _eq: ${this.chainId} }, status: { _eq: "PLACED" } }) { orderId } }`,
-    );
-    return (data?.Trigger ?? []).map((t) => t.orderId as Hex);
+    try {
+      const nowSec = Math.floor(Date.now() / MS_PER_SECOND);
+      const triggers = await this.client.request(PlacedTriggersDocument, { chainId: this.chainId, limit: SCAN_LIMIT });
+      return triggers.filter((t) => t.expiry > nowSec).map((t) => t.id as Hex);
+    } catch (error) {
+      this.log.warn({ err: describeIndexerError(error) }, "indexer triggers unavailable");
+      return [];
+    }
   }
+}
+
+function describeIndexerError(error: unknown): string {
+  return error instanceof IndexerError ? `${error.kind}: ${error.message}` : String(error);
 }

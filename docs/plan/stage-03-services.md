@@ -36,6 +36,8 @@ The keeper liquidates a testnet position driven by a script, and the swap quote 
 - [x] S3.9 Dockerfile (one image, three entrypoints, `HEALTHCHECK`), `.github/workflows/images.yml` → GHCR
       `sha-<short>` (linux/amd64), `deploy/*.env.example` (names only)
 - [x] S3.10 Gate + handoff
+- [x] S3.12 Wire `@senryo/indexer-client` (after the S4 merge): api indexer bridge (`_meta` progress, account
+      `history`) and the keeper's `IndexerSource` (open-position users, PLACED triggers); keeper memory → 256m (D-124)
 
 ## Gate
 Images build; the keeper liquidates a testnet position (drive script, tx in `acceptance.md`); the swap quote matches the
@@ -83,15 +85,15 @@ pool; fast gate green; invariants `explicit-gas` + `finalized-for-money` active 
   `@senryo/core` `typed-data.ts`, `lifecycle.ts` (+ index exports); `pnpm-workspace.yaml` + `scripts/drive`.
 
 ### Pending (and why)
-- **Indexer bridge**: `services/api/src/indexer.ts` + keeper `IndexerSource` are stubs (Hasura `_meta` poll, `User`/
-  `Trigger` queries) until S4's `@senryo/indexer-client` merges — then swap the queries; account `history` is `null`.
+- **Indexer** (S3.12, D-124): api `EnvioIndexerBridge` (`INDEXER_GRAPHQL_URL`) + keeper `IndexerSource` run on
+  `@senryo/indexer-client`; WS `account:*` still pushes chain snapshots (history deltas over WS are a later refinement).
 - **Perpl** WS/proxy (`perpl:*`, `/v1/pub/context`) → S7; **Aurora** proxy/poller → S9; Expo/APNs push delivery and
   ops alert channel are recorded, not delivered (credentials [OK?]); PAN reveal/simulate/freeze need Lithic keys.
 - **Geo**: edge headers only; add a Traefik geo middleware or DB-IP Lite lookup (D-121).
 - **Latency**: fork p50 is not representative (anvil 0.5 s blocks); the real ASA p50/p99 harness is S10 on testnet.
 - **CollateralSwapper**: must add `minHopPriceX36` before S8 (D-122; contracts owner).
-- **Capacity**: keeper idles at ~154 MiB vs a 160 m limit (measured under amd64 emulation) — set keeper to 256 m or
-  `NODE_OPTIONS=--max-old-space-size=96` at deploy (runbook §4), re-measure natively on the server (D-102).
+- **Capacity**: keeper limit raised to 256m in runbook §4 (D-124); card idles at ~168 MiB vs its 192m — re-measure
+  natively on the server after deploy (D-102) and raise it the same way if it stays above ~160 MiB.
 
 ### User / [OK?] steps (none done by S3)
 1. **Testnet MON** for the keeper relay and StarterDrip float (D-118): claim at faucet.quicknode.com/monad/testnet

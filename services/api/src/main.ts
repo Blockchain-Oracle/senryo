@@ -5,7 +5,7 @@ import { createDb, createHttpServer, createLogger, listen, migrate, pingDb, Sess
 import { WS_MAX_PAYLOAD_BYTES } from "./constants.ts";
 import { type ApiContext, openChains } from "./context.ts";
 import { loadApiEnv } from "./env.ts";
-import { HasuraIndexerBridge, NullIndexerBridge } from "./indexer.ts";
+import { EnvioIndexerBridge, NullIndexerBridge } from "./indexer.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
@@ -20,7 +20,7 @@ await migrate(db, log);
 
 const chains = await openChains(env, log);
 const indexer = env.INDEXER_GRAPHQL_URL
-  ? new HasuraIndexerBridge(env.INDEXER_GRAPHQL_URL, log)
+  ? new EnvioIndexerBridge(env.INDEXER_GRAPHQL_URL, log)
   : new NullIndexerBridge();
 indexer.start();
 const ctx: ApiContext = {

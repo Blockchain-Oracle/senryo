@@ -45,3 +45,8 @@ export const TOPUP_FLOOR_WEI = 20_000_000_000_000_000n;
 export const TOPUP_AMOUNT_WEI = 50_000_000_000_000_000n;
 
 export const BPS = 10_000n;
+
+/** Indexer candidate queries (display-only data; a slow indexer must not stall the scan loop). */
+export const INDEXER_TIMEOUT_MS = 3_000;
+/** Max candidates per indexer query (users with open positions, PLACED triggers). */
+export const SCAN_LIMIT = 500;

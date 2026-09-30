@@ -94,6 +94,39 @@ export const bucketsSchema = z.object({
   nonce: uintCodec,
 });
 
+/** Envio-indexed history for one account (the apps query `@senryo/indexer-client` directly for full pages). */
+export const accountHistorySchema = z.object({
+  /** Indexer progress on this chain: the history covers blocks ≤ this. */
+  indexedBlock: uintCodec,
+  /** Cumulative stats (usd6; signed where the indexer is signed); null = the address never touched our contracts. */
+  stats: z
+    .object({
+      deposited: intCodec,
+      withdrawn: intCodec,
+      realizedPnl: intCodec,
+      feesPaid: intCodec,
+      fundingPaid: intCodec,
+      volume: intCodec,
+      cardSpent: intCodec,
+      tradeCount: z.int(),
+      liquidationCount: z.int(),
+      openPositions: z.int(),
+    })
+    .nullable(),
+  /** Newest activity first (unified feed: fills, moves, holds, triggers, liquidations). */
+  recent: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.string(),
+      timestamp: z.int(),
+      block: z.int(),
+      txHash: z.string(),
+      amount: intCodec.nullable(),
+      symbol: z.string().nullable(),
+    }),
+  ),
+});
+
 export const accountResponseSchema = z.object({
   chainId: chainIdSchema,
   address: addressSchema,
@@ -105,8 +138,8 @@ export const accountResponseSchema = z.object({
     z.object({ marketId: z.int(), isLong: z.boolean(), size18: uintCodec, entry18: uintCodec, openedBlock: uintCodec }),
   ),
   allowance: z.object({ dailyLimitUsd6: uintCodec, leftUsd6: uintCodec, expiry: uintCodec }),
-  /** History from the indexer (S4); null until the indexer is wired. */
-  history: z.null(),
+  /** Indexer view (display only, D-014); null when the indexer is unavailable — never a fabricated empty history. */
+  history: accountHistorySchema.nullable(),
 });
 
 export const configRoute = defineRoute({

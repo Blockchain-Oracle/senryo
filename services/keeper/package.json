@@ -13,6 +13,7 @@
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/indexer-client": "workspace:*",
     "@senryo/service-common": "workspace:*",
     "zod": "catalog:"
   },
