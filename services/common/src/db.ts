@@ -2,6 +2,7 @@ import postgres from "postgres";
 import * as m0001 from "../migrations/0001_card_ledger.ts";
 import * as m0002 from "../migrations/0002_api.ts";
 import * as m0003 from "../migrations/0003_cards.ts";
+import * as m0005 from "../migrations/0005_social.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -29,7 +30,7 @@ export function createDb(url: string, applicationName: string, max: number = DB_
 }
 
 /** Ordered, append-only. Never edit an applied migration — add the next one. */
-export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [m0001, m0002, m0003];
+export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [m0001, m0002, m0003, m0005];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */
 const MIGRATION_LOCK_KEY = 0x53_45_4e_52_59_4f; // "SENRYO"

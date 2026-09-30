@@ -24,7 +24,7 @@ and to App Store review (D-174). The add-ons are:
 **D-number range:** D-210…D-219.
 
 ## Steps
-- [ ] S12b.1 Migration `0005_social`:
+- [x] S12b.1 Migration `0005_social`:
   - `profiles`: handle `[a-z0-9_]{4,20}` (case-insensitive unique), reserved/blocked lists, 30-day tombstone, display name, bio ≤ 160, avatar id, per-network `listed_*` / `public_trades_*`;
   - `follows` (with a cap);
   - `posts` (thesis | reply, parent, optional position/market, ≤ 280);
