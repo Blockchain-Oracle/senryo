@@ -8,7 +8,6 @@ import {
   signatureSchema,
   txHashSchema,
   uintCodec,
-  unixSecondsSchema,
 } from "../primitives.ts";
 import { defineRoute } from "./define.ts";
 
@@ -25,7 +24,8 @@ import { defineRoute } from "./define.ts";
 const relayCommon = {
   chainId: chainIdSchema,
   user: addressSchema,
-  deadline: unixSecondsSchema,
+  /** uint64 unix seconds exactly as signed (bigint in the app, decimal string on the wire). */
+  deadline: uintCodec,
   signature: signatureSchema,
   /** Cloudflare Turnstile (invisible) token — web only; native clients omit it. */
   turnstileToken: z.string().max(TURNSTILE_TOKEN_MAX_CHARS).optional(),
@@ -35,7 +35,11 @@ export const starterClaimRequestSchema = z.object(relayCommon);
 
 export const starterVoucherRequestSchema = z.object({
   ...relayCommon,
-  /** Normalised (trimmed, upper-case) before hashing and signing. */
+  /**
+   * Canonical code text = `input.trim().toUpperCase()` (plain text on the wire). The signed `codeHash` and the
+   * `bytes code` sent to `redeemVoucher` are keccak256 / the UTF-8 bytes of exactly this string; vouchers are minted
+   * (`addVouchers`) from the same canonical form.
+   */
   code: z.string().regex(VOUCHER_CODE_PATTERN, "voucher codes are 6–32 of A–Z, 0–9 and -"),
 });
 
