@@ -45,3 +45,6 @@ references/
 
 # login-gated portal capture (kept local; may show personal account views) — D-048
 context/_portal/
+
+# forge script dry runs (simulations; real broadcasts are kept)
+contracts/broadcast/**/dry-run/
