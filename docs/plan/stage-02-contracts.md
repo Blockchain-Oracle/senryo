@@ -10,7 +10,7 @@
 - [x] S2.2 `SessionOracle` + `MarketCalendar` (clamp, circuit, 3-round confirm, reopen window, DST-union slots, holidays)
 - [x] S2.3 SenryoCore modules (AccountLedger, CollateralConfig, RiskModule, MarketRegistry, MarketAccounting, PerpModule, TriggerOrders, CardModule, LiquidationModule, AdminModule) composed into `SenryoCore`; size < 128 KB
 - [x] S2.4 `LpVault` (ERC-4626), periphery (`StarterDrip`, `IntentRouter`, `InboxFactory`/`DepositInbox`, `CollateralSwapper`), testnet (`MirrorAggregator`, `MockAUSD`, `MockUSDC`)
-- [ ] S2.5 Targeted checks: invariant suites I1–I7, PerpMath fuzz, SessionOracle/MarketCalendar scenarios (`forge test --network monad`)
+- [x] S2.5 Targeted checks: invariant suites I1–I7, PerpMath fuzz, SessionOracle/MarketCalendar scenarios (`forge test --network monad`)
 - [ ] S2.6 `script/SeedConstants.sol` + ensure-style `script/Deploy.s.sol` (addresses JSON, drift check, `chainid != 143` for testnet-only)
 - [ ] S2.7 `packages/contracts` (`@senryo/contracts`) + `scripts/contracts-export.mjs` (ABIs `as const`, addresses)
 - [ ] S2.8 Deployer keystore (`senryo-deployer`, public address only) + testnet MON balance check
