@@ -88,3 +88,6 @@ Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: no
 | Coolify tags after S8.15 (30 Sep) | senryo-api, senryo-keeper `sha-c1893e5` (DB-IP geo loaded 2026-09; /v1/geo live) · senryo-web `sha-66679dd` · senryo-indexer `sha-66679dd` |
 | Coolify tags after S8.5b (30 Sep) | senryo-api, senryo-keeper `sha-c66f65d` (security fixes live; spoofed X-Forwarded-For / cf-ipcountry ignored — verified) |
 | Coolify tags after the keeper pass (30 Sep) | senryo-api, senryo-keeper `sha-3c98d59` (keeper jobs + retention; KEEPER_JOBS env updated) |
+| StarterDrip.setConfig on 10143 (2026-09-30, user OK) | tx `0x7ebb0dc2c032f837b0aa0f60ad2c0deccc97b256bd9a8fdc3ce6a3747e73c28a` (block 67095606, gas limit 90k charged) — drip 0.05 → **0.15 MON**, top-up cap 0.2 → **0.5 MON**/user/day; budget 2 MON/day and practice/voucher amounts unchanged; float 0.35 tMON (user faucet to `0xD112a9A3Faa3491e3a91b95c0924b3eEaB85b207`) |
+| Coolify tags after S8.16 (30 Sep, user OK) | senryo-api `sha-e19168f` (top-up route, relay reconciler, migrations 0004 + 0005 applied, social handles/profiles/follows) · keeper unchanged `sha-3c98d59` |
+
