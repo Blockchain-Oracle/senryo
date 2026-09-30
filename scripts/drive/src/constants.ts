@@ -20,6 +20,8 @@ export const MAX_OPEN_TRIES = 3;
 export const WAIT = { observeMs: 30_000, liquidationMs: 90_000, pollMs: 1_000 } as const;
 export const SHOWN_DIGITS = 4;
 export const DEFAULT_KEEPER_URL = "http://127.0.0.1:3002";
+/** $5,000 in 1e18 (an alert far above the market). */
+export const XAU_ALERT_PRICE18 = 5_000n * 10n ** 18n;
 
 /** Console table column widths. */
 export const COLS = { step: 28, stage: 9, gas: 7 } as const;

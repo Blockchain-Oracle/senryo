@@ -41,8 +41,8 @@ export const GAS_LIMITS = {
   liquidate: 300_000n,
   lpDeposit: 220_000n,
   claimFor: 120_000n,
-  /** (S3) testnet claim also mints practice AUSD and deposits it into the core. */
-  claimForPractice: 400_000n,
+  /** (S3, D-119) testnet claim also mints practice AUSD and deposits it into the core — estimate 417k on the fork. */
+  claimForPractice: 480_000n,
   /** (S3) voucher = signature check + depositFor. */
   redeemVoucher: 300_000n,
   /** (S3) StarterDrip.topUp: capped native send. */

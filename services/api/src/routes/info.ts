@@ -1,0 +1,136 @@
+import { accountRoute, configRoute, geoRoute, marketsRoute, statusRoute } from "@senryo/api-client";
+import { getAddress, isDeployed, readAccountSnapshot, readContract, readOracles, readPositions } from "@senryo/chain";
+import { ENGINE_MARKETS, networkOf } from "@senryo/config";
+import { type HttpServer, MS_PER_SECOND, parseRoute, sendRoute } from "@senryo/service-common";
+import { bucketsOf } from "../buckets.ts";
+import { ERROR_DETAIL_MAX_CHARS, UPSTREAM_TIMEOUT_MS } from "../constants.ts";
+import { type ApiContext, chainOf } from "../context.ts";
+import { geoOf } from "../geo.ts";
+
+const BPS = 10_000;
+const MARKET_IDS = ENGINE_MARKETS.map((m) => m.id);
+
+export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
+  app.get(configRoute.path, async (_request, reply) =>
+    sendRoute(reply, configRoute, {
+      minAppVersion: ctx.env.MIN_APP_VERSION,
+      features: ctx.env.FEATURES,
+      networks: [...ctx.chains.values()].map((c) => ({
+        chainId: c.chainId,
+        modeLabel: networkOf(c.chainId).modeLabel,
+        deployed: c.deployed,
+        starter: c.deployed && isDeployed(c.chainId, "StarterDrip") && c.sponsor !== undefined,
+        card: Boolean(ctx.env.CARD_URL),
+      })),
+    }),
+  );
+
+  app.get(geoRoute.path, async (request, reply) => sendRoute(reply, geoRoute, geoOf(request)));
+
+  app.get(statusRoute.path, async (_request, reply) => {
+    const nowSec = Math.floor(Date.now() / MS_PER_SECOND);
+    const chains = await Promise.all(
+      [...ctx.chains.values()].map(async (c) => {
+        try {
+          const [block, oracles] = await Promise.all([
+            c.read.getBlock({ blockTag: "finalized" }),
+            c.deployed ? readOracles(c.read, c.chainId, MARKET_IDS) : Promise.resolve([]),
+          ]);
+          const progress = ctx.indexer.progressBlock(c.chainId);
+          return {
+            chainId: c.chainId,
+            rpc: { state: "ok" as const, detail: null },
+            headAgeSec: nowSec - Number(block.timestamp),
+            oracles: oracles.map((o) => ({
+              symbol: ENGINE_MARKETS.find((m) => m.id === o.marketId)?.symbol ?? String(o.marketId),
+              status: o.status,
+              ageSec: o.updatedAt === 0n ? null : nowSec - Number(o.updatedAt),
+            })),
+            indexerLagBlocks: progress === null ? null : Number(block.number - progress),
+          };
+        } catch (error) {
+          return {
+            chainId: c.chainId,
+            rpc: { state: "down" as const, detail: String(error).slice(0, ERROR_DETAIL_MAX_CHARS) },
+            headAgeSec: null,
+            oracles: [],
+            indexerLagBlocks: null,
+          };
+        }
+      }),
+    );
+    const card = ctx.env.CARD_URL
+      ? await fetch(`${ctx.env.CARD_URL}/ready`, { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) })
+          .then((r) => ({ state: r.ok ? ("ok" as const) : ("degraded" as const), detail: null }))
+          .catch(() => ({ state: "down" as const, detail: "unreachable" }))
+      : { state: "unknown" as const, detail: "not configured" };
+    const unknown = { state: "unknown" as const, detail: "S7/S9" };
+    return sendRoute(reply, statusRoute, {
+      at: new Date().toISOString(),
+      chains,
+      card,
+      perpl: unknown,
+      aurora: unknown,
+    });
+  });
+
+  app.get(marketsRoute.path, async (request, reply) => {
+    const { query } = parseRoute(marketsRoute, request);
+    const chain = chainOf(ctx, query.chainId);
+    const core = readContract(query.chainId, "SenryoCore", chain.read);
+    const [views, params] = await Promise.all([
+      readOracles(chain.read, query.chainId, MARKET_IDS),
+      Promise.all(MARKET_IDS.map((id) => core.read.marketParams([id]))),
+    ]);
+    const engine = ENGINE_MARKETS.map((m, i) => {
+      const view = views.find((v) => v.marketId === m.id);
+      const p = params[i];
+      return {
+        id: m.id,
+        symbol: m.symbol,
+        name: m.name,
+        venue: "SENRYO" as const,
+        status: view?.status ?? "HALTED",
+        price18: view?.price18 ?? 0n,
+        latest18: view?.latest18 ?? 0n,
+        updatedAt: Number(view?.updatedAt ?? 0n),
+        spreadBps: view?.spreadBps ?? 0,
+        imBps: p?.imBps ?? 0,
+        mmBps: p?.mmBps ?? 0,
+        feeBps: p?.feeBps ?? 0,
+        maxLeverageX: p?.imBps ? Math.floor(BPS / p.imBps) : 0,
+      };
+    });
+    return sendRoute(reply, marketsRoute, { chainId: query.chainId, engine, perpl: [] });
+  });
+
+  app.get(accountRoute.path, async (request, reply) => {
+    const { params, query } = parseRoute(accountRoute, request);
+    const chain = chainOf(ctx, query.chainId);
+    const address = getAddress(params.address);
+    const [finalized, latest] = await Promise.all([
+      readAccountSnapshot(chain.read, query.chainId, address, "finalized"),
+      readAccountSnapshot(chain.read, query.chainId, address, "latest"),
+    ]);
+    const positions = await readPositions(chain.read, query.chainId, address, latest.positionBitmap, "latest");
+    return sendRoute(reply, accountRoute, {
+      chainId: query.chainId,
+      address,
+      finalized: bucketsOf(finalized),
+      latest: bucketsOf(latest),
+      positions: positions.map((p) => ({
+        marketId: p.marketId,
+        isLong: p.isLong,
+        size18: p.size,
+        entry18: p.entry,
+        openedBlock: p.openedBlock,
+      })),
+      allowance: {
+        dailyLimitUsd6: latest.allowanceDailyLimit,
+        leftUsd6: latest.allowanceLeft,
+        expiry: latest.allowanceExpiry,
+      },
+      history: null,
+    });
+  });
+}

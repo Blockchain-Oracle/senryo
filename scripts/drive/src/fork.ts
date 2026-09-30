@@ -25,12 +25,21 @@ export async function anvil<T = unknown>(url: string, method: string, params: un
   return json.result as T;
 }
 
-/** Grant CARD_OPERATOR_ROLE to `operators` as the (impersonated) deployer and give everyone MON on the fork. */
-export async function prepareFork(url: string, operators: readonly string[], funded: readonly string[]) {
+/** AccessManager roles used on the fork (contracts/src/libraries/Constants.sol). */
+export const ROLES = { cardOperator: 30n, relayer: 60n } as const;
+
+/** Grant roles as the (impersonated) deployer and give every listed address MON on the fork. */
+export async function prepareFork(
+  url: string,
+  operators: readonly string[],
+  funded: readonly string[],
+  grants: ReadonlyArray<readonly [bigint, string]> = [],
+) {
   await anvil(url, "anvil_impersonateAccount", [DEPLOYER]);
   await anvil(url, "anvil_setBalance", [DEPLOYER, RICH]);
-  for (const operator of operators) {
-    const call = contractCall(CHAIN, "AccessManager", "grantRole", [CARD_OPERATOR_ROLE, operator as Hex, 0], "approve");
+  const all = [...operators.map((o) => [CARD_OPERATOR_ROLE, o] as const), ...grants];
+  for (const [role, account] of all) {
+    const call = contractCall(CHAIN, "AccessManager", "grantRole", [role, account as Hex, 0], "approve");
     await anvil(url, "eth_sendTransaction", [{ from: DEPLOYER, to: call.to, data: call.data, gas: ADMIN_GAS }]);
   }
   for (const address of [...operators, ...funded]) await anvil(url, "anvil_setBalance", [address, RICH]);
