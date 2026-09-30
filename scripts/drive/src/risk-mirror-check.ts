@@ -31,7 +31,7 @@ import { CHAIN } from "./lib.ts";
 
 const FORK = process.env.FORK_RPC ?? "http://127.0.0.1:18765";
 const RICH = "0x8ac7230489e80000";
-const DEPOSIT_USD6 = 8_000_000n;
+const DEPOSIT_USD6 = 12_000_000n;
 const XAU = 0;
 const XAG = 1;
 /** Oracle walk step, below the 200 bps clamp so every round is accepted. */
@@ -47,9 +47,9 @@ const MINE_WAIT_MS = 600;
 const MAX_WALK_ROUNDS = 40;
 const UINT256_BITS = 256n;
 const MAX_UINT256 = 2n ** UINT256_BITS - 1n;
-/** Trade sizes (usd6): with the 8 AUSD deposit they put both liquidation prices within a few oracle walks. */
+/** Trade sizes (usd6): with the 12 AUSD deposit they put both liquidation prices within a few oracle walks. */
 const XAU_OPEN_USD6 = 40_000_000n;
-const XAU_ADD_USD6 = 20_000_000n;
+const XAU_ADD_USD6 = 10_000_000n;
 const XAG_OPEN_USD6 = 20_000_000n;
 
 const checks: Record<string, boolean> = {};

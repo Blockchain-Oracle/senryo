@@ -113,17 +113,17 @@ chains:
         interval_ceiling: 100
     contracts:
       - name: SenryoCore
-        address: 0x36cF64452f64eB0e99AAC4Eb103C7838C1918cAA
+        address: 0xA7EE451ACeaC1ccDDb5c486B9e72D3EdE457D8aD
       - name: SessionOracle
-        address: 0x343A75a1d271937042D8688dD5d4D2F8c320BAd3
+        address: 0x251172dB8F38D204ff6b911c0365dF74e3efc21E
       - name: LpVault
-        address: 0x297877FCFEb4c077F68D11E07654c676c0883408
+        address: 0x0EB85EaAeDe329ca55D72B05De8d9A190a4E6fF6
       - name: StarterDrip
-        address: 0x5C1ab87DA4b02670723c6633278A5A45Cdf12e81
+        address: 0xD112a9A3Faa3491e3a91b95c0924b3eEaB85b207
       - name: IntentRouter
-        address: 0xc9dfaBAf49ea7AA1a6d57F82f816198448F190B1
+        address: 0x2eDaf2D629aDD04dfa7DB2Ad7b57e1d38FfCfC32
       - name: InboxFactory
-        address: 0x815D0669C708b72447d58Ac4170214A585759Bf3
+        address: 0x49D821CF92A76F41d7A878515230d2aBE9bBb8f5
       - name: DepositInbox
       - name: Stablecoin
         address:
