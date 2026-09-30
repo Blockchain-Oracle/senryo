@@ -22,6 +22,7 @@ Public values only. Secrets live in `~/.config/senryo/` or Coolify runtime env â
 | Universal Router 2.1.2 | 0xa6CE4F10d83dBdDAc17E68e1837ca9cE6a1b596e | idem |
 | Permit2 | 0x000000000022D473030F116dDEE9F6B43aC78BA3 | idem |
 | Safe v1.4.1 | 0x41675C099F32341bf84BFc5382aF534df5C7461a | contracts-and-tokens.md |
+| Uniswap v4 AUSD/USDC pool (fee 50, tickSpacing 1, hooks 0) | poolId 0x092b650478145f0aee73a1b400b342b9c6314db2e07aeb91faf7e75e8159ce72 | read onchain via StateView (S3.3, D-122) |
 
 ## Testnet (10143)
 | Name | Address | Source |

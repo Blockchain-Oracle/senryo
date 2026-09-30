@@ -5,6 +5,7 @@
 export {
   type Address,
   encodeAbiParameters,
+  erc20Abi,
   getAddress,
   type Hex,
   isAddress,

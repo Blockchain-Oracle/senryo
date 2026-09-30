@@ -23,5 +23,15 @@ export const DEFAULT_KEEPER_URL = "http://127.0.0.1:3002";
 /** $5,000 in 1e18 (an alert far above the market). */
 export const XAU_ALERT_PRICE18 = 5_000n * 10n ** 18n;
 
+/** S3.3 swap check: 100 USDC in, 10 bps min-out guard, fork-only funding cheats. */
+export const SWAP = {
+  amountUsd6: 100_000_000n,
+  bps: 10_000n,
+  slippageBps: 10n,
+  permitTtlSec: 3_600,
+  forkMon: "0x8ac7230489e80000",
+  adminGas: "0x30d40",
+} as const;
+
 /** Console table column widths. */
 export const COLS = { step: 28, stage: 9, gas: 7 } as const;

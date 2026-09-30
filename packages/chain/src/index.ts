@@ -15,4 +15,5 @@ export * from "./send.ts";
 export * from "./signer.ts";
 export * from "./siwe.ts";
 export * from "./typed.ts";
+export * from "./uniswap.ts";
 export * from "./utils.ts";

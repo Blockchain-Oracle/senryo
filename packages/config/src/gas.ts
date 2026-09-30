@@ -18,7 +18,8 @@ export const LIQUIDATE_GAS_PER_POSITION = 200_000n;
 
 export const GAS_LIMITS = {
   transfer: NATIVE_TRANSFER_GAS,
-  approve: 80_000n,
+  /** (S3, D-122) raised from 80k: mainnet USDC (FiatToken proxy) `approve` estimates 87k on a Monad-rules fork. */
+  approve: 110_000n,
   deposit: 150_000n,
   withdraw: 200_000n,
   increase: 450_000n,
@@ -57,6 +58,10 @@ export const GAS_LIMITS = {
   faucet: 120_000n,
   /** (S3) setSpendAllowance relay (EIP-712 check + allowance write). */
   setSpendAllowance: 150_000n,
+  /** (S3) Permit2.approve(token, Universal Router) before a v4 swap. */
+  permit2Approve: 120_000n,
+  /** (S3) Universal Router V4_SWAP exact-in single (fork-measured in the S3.3 swap check). */
+  uniswapSwap: 600_000n,
   /** Perpl IOC order (S7). */
   perplIoc: 700_000n,
 } as const;

@@ -18,7 +18,7 @@ The keeper liquidates a testnet position driven by a script, and the swap quote 
 - [x] S3.2 `packages/chain`: viem clients from `@senryo/config` (`blockTime` 300), `send.ts` (simulate → gas = estimate
       × `GAS_HEADROOM_BPS`, capped; never `gas: undefined`), `confirm.ts` (`finalized`), lifecycle submitted → proposed →
       voted → finalized, journal interface, `sendRawTransactionSync` to 2 RPCs + fallback (receipt via WS)
-- [ ] S3.3 Uniswap v4 helper: read the AUSD/USDC pool key onchain, Quoter quote, Universal Router encoding confirmed
+- [x] S3.3 Uniswap v4 helper: read the AUSD/USDC pool key onchain, Quoter quote, Universal Router encoding confirmed
       against 2.1.2 on a mainnet fork (D-093)
 - [x] S3.4 Ledger: Postgres 17 schema + forward-only idempotent migrations (all tables in `specs/services.md`)
 - [x] S3.5 `services/api` (Fastify): health/ready/config/geo/status/markets/account, starter + voucher relay (SIWE,

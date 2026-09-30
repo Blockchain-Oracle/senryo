@@ -1,5 +1,7 @@
 import type { ChainId, GasAction } from "@senryo/config";
 import {
+  type Abi,
+  type Address,
   type ContractFunctionArgs,
   type ContractFunctionName,
   type EncodeFunctionDataParameters,
@@ -38,6 +40,19 @@ export function contractCall<N extends ContractName, F extends WriteFunction<N>>
     args,
   } as unknown as EncodeFunctionDataParameters);
   return { to: addressOf(chainId, name), data, action, ...extra };
+}
+
+/** Tx request for an external contract with a caller-supplied ABI (Uniswap, tokens) — same explicit-gas rules. */
+export function externalCall<const TAbi extends Abi, F extends ContractFunctionName<TAbi, Mutability>>(
+  to: Address,
+  abi: TAbi,
+  functionName: F,
+  args: ContractFunctionArgs<TAbi, Mutability, F>,
+  action: GasAction,
+  extra?: Pick<TxRequest, "gasCap" | "fixedGas" | "meta" | "value">,
+): TxRequest {
+  const data = encodeFunctionData({ abi, functionName, args } as unknown as EncodeFunctionDataParameters);
+  return { to, data, action, ...extra };
 }
 
 /** Decoded events of `name`'s ABI in a receipt (e.g. `HoldPlaced` → holdId, nonce). */

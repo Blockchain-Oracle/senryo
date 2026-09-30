@@ -29,3 +29,12 @@ export const HEAD_FEED_STALE_MS = 3_000;
 
 /** BPS denominator (bigint) for gas maths. */
 export const BPS = 10_000n;
+
+/** Fee tiers (pips: 1e-6) × tick spacings tried for the stable pool; 50 = 0.005 % (D-021). */
+export const STABLE_POOL_CANDIDATES: ReadonlyArray<readonly [fee: number, tickSpacing: number]> = [
+  [50, 1],
+  [10, 1],
+  [100, 1],
+  [50, 10],
+  [100, 10],
+];
