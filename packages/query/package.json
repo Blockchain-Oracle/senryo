@@ -1,0 +1,28 @@
+{
+  "name": "@senryo/query",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TanStack Query keys + hooks, the engine price store and WS client, and the send lifecycle for Senryo's apps. No react-native, no react-dom.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@senryo/api-client": "workspace:*",
+    "@senryo/chain": "workspace:*",
+    "@senryo/config": "workspace:*",
+    "@senryo/core": "workspace:*",
+    "@senryo/indexer-client": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

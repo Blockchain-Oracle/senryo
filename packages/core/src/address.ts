@@ -5,3 +5,6 @@ const ADDRESS_TAIL = 4;
 export function shortAddress(address: string, head = ADDRESS_HEAD, tail = ADDRESS_TAIL): string {
   return address.length <= head + tail ? address : `${address.slice(0, head)}…${address.slice(-tail)}`;
 }
+
+/** A 0x-prefixed EVM address (checksummed or not); `@senryo/chain` validates, core only carries it. */
+export type Address = `0x${string}`;
