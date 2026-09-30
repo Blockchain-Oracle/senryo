@@ -1,4 +1,4 @@
-import type { ChainId } from "@senryo/config";
+import { type ChainId, MAINNET_CHAIN_ID, MAINNET_EXTERNAL } from "@senryo/config";
 import { lpVaultAbi, mockAUSDAbi, senryoCoreAbi } from "@senryo/contracts/abis";
 import type { Address } from "viem";
 import type { ReadClient } from "./clients.ts";
@@ -7,8 +7,10 @@ import type { ReadTag } from "./reads.ts";
 
 /** How many of the newest redeem request ids are scanned for the user's own (requests are few; ids are per vault). */
 export const LP_REQUEST_SCAN = 50;
-/** The pool-side AUSD: MockAUSD on practice, AUSD on mainnet (address book name). */
-const POOL_TOKEN = "MockAUSD";
+/** The LP pool's asset: AUSD on mainnet (external token), MockAUSD from our address book on practice. */
+export function poolTokenOf(chainId: ChainId): Address {
+  return chainId === MAINNET_CHAIN_ID ? MAINNET_EXTERNAL.ausd : addressOf(chainId, "MockAUSD");
+}
 
 export interface LpRedeemView {
   requestId: bigint;
@@ -41,7 +43,7 @@ export async function readLpVault(
   blockTag: ReadTag = "latest",
 ): Promise<LpSnapshot> {
   const vault = { address: addressOf(chainId, "LpVault"), abi: lpVaultAbi } as const;
-  const token = { address: addressOf(chainId, POOL_TOKEN), abi: mockAUSDAbi } as const;
+  const token = { address: poolTokenOf(chainId), abi: mockAUSDAbi } as const;
   const core = { address: addressOf(chainId, "SenryoCore"), abi: senryoCoreAbi } as const;
   const [totalAssets, totalSupply, tvlCap, maxDeposit, shares, walletAusd, allowance, allOpen, nextId] =
     await read.multicall({

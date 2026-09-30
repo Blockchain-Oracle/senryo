@@ -3,7 +3,15 @@
  * all-markets-open gate), the historical APR from indexed pool days (never a promise), and the request builders —
  * approve + deposit, request redeem, claim — all in the session policy's scope (LpVault is a known target/spender).
  */
-import { contractCall, type LpSnapshot, readLpVault, type TxRequest } from "@senryo/chain";
+import {
+  CONTRACT_ABIS,
+  contractCall,
+  externalCall,
+  type LpSnapshot,
+  poolTokenOf,
+  readLpVault,
+  type TxRequest,
+} from "@senryo/chain";
 import { type ChainId, positionGasLimit } from "@senryo/config";
 import { type Address, fromQuery, type Reading, RISK } from "@senryo/core";
 import { LpDaysDocument, SECONDS_PER_DAY } from "@senryo/indexer-client";
@@ -56,8 +64,9 @@ export function useLpApr(totalAssets: bigint | undefined): Reading<bigint | unde
   return { ...reading, value: (earned * RISK.BPS * DAYS_PER_YEAR) / (totalAssets * span) };
 }
 
+/** Approve the vault to pull AUSD (mainnet AUSD or practice MockAUSD — same ERC-20 `approve`). */
 export function lpApproveRequest(chainId: ChainId, vault: Address, amountUsd6: bigint): TxRequest {
-  return contractCall(chainId, "MockAUSD", "approve", [vault, amountUsd6], "approve");
+  return externalCall(poolTokenOf(chainId), CONTRACT_ABIS.MockAUSD, "approve", [vault, amountUsd6], "approve");
 }
 
 export function lpDepositRequest(chainId: ChainId, amountUsd6: bigint, receiver: Address): TxRequest {
