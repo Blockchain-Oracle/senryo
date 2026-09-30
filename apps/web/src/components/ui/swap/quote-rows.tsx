@@ -81,7 +81,7 @@ export function DestinationRow({ show, onToggle, address, onAddress, reduce }: D
               placeholder="Destination address"
               aria-label="Destination address"
               spellCheck={false}
-              className="mt-2 h-11 w-full rounded-xl border border-border bg-muted/30 px-3 font-mono text-body text-foreground outline-none placeholder:text-muted-foreground focus:border-ring"
+              className="mt-2 h-11 w-full rounded-xl border border-border bg-muted/30 px-3 font-mono text-body text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             />
           </motion.div>
         )}

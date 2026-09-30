@@ -55,6 +55,20 @@ export function plotValue(value: bigint, decimals = USD6_DECIMALS): number {
   return Number(value) / Number(TEN ** BigInt(decimals));
 }
 
+const COMPACT_STEPS = [
+  { unit: 1_000_000_000n, suffix: "B" },
+  { unit: 1_000_000n, suffix: "M" },
+  { unit: 1_000n, suffix: "K" },
+] as const;
+
+/** Compact usd6: `$18.4M`, `$950K`, `$12.40`. One decimal, bigint only. */
+export function usdCompact(value: bigint): string {
+  const whole = value / TEN ** BigInt(USD6_DECIMALS);
+  const step = COMPACT_STEPS.find((s) => whole >= s.unit);
+  if (!step) return usd(value);
+  return `$${formatUnits((value * TEN) / (step.unit * TEN ** BigInt(USD6_DECIMALS)), 1, 1)}${step.suffix}`;
+}
+
 const SECONDS_PER_MINUTE = 60;
 
 /** Compact age: `42s`, `3m`. */

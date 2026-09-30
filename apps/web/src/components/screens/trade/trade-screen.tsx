@@ -8,7 +8,7 @@ import { SectionLabel } from "@/components/shell/primitives";
 import { CandleChart } from "@/components/ui/candle";
 import { MarketWatchlist } from "@/components/ui/market-watchlist";
 import { ROUTES } from "@/lib/constants/routes";
-import { age, amount, pctBps, plotValue, usd } from "@/lib/format";
+import { age, amount, pctBps, plotValue, usdCompact } from "@/lib/format";
 import { changePct, toWatchlist } from "@/lib/market-view";
 import { MARKETS, POSITIONS, type SampleMarket } from "@/lib/sample";
 import { sampleCandles } from "@/lib/sample-series";
@@ -40,7 +40,7 @@ function MarketHeader({ market }: { market: SampleMarket }) {
         </div>
         <div>
           <dt className="inline">OI </dt>
-          <dd className="inline text-foreground">{usd(market.oi6, 0)}</dd>
+          <dd className="inline text-foreground">{usdCompact(market.oi6)}</dd>
         </div>
         <div>
           <dt className="inline">SESSION </dt>
@@ -63,7 +63,7 @@ export function TradeScreen({ market }: { market: SampleMarket }) {
   const router = useRouter();
   const candles = sampleCandles(plotValue(market.price6), market.seed);
   return (
-    <div className="lg:grid lg:grid-cols-[18rem_minmax(0,1fr)_24rem] lg:gap-x-4 lg:pt-3">
+    <div className="lg:grid lg:grid-cols-[20rem_minmax(0,1fr)_24rem] lg:gap-x-4 lg:pt-3">
       <aside aria-label="Watchlist" className="hidden lg:block">
         <MarketWatchlist
           title="Perps · 24h"
@@ -81,6 +81,7 @@ export function TradeScreen({ market }: { market: SampleMarket }) {
             exchange={market.venue}
             chrome={false}
             fill
+            plotClassName="h-72 lg:h-112"
             key={market.symbol}
           />
         </div>

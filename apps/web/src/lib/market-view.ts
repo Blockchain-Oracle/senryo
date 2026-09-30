@@ -2,10 +2,17 @@ import type { HeatTile } from "@/components/ui/market-heatmap";
 import type { WatchlistAsset } from "@/components/ui/market-watchlist";
 import { BPS_PERCENT_DECIMALS } from "@/lib/constants/money";
 import { plotValue } from "@/lib/format";
-import type { MarketKind, SampleMarket } from "@/lib/sample";
+import type { MarketKind, SampleMarket, Session } from "@/lib/sample";
 import { sampleSpark } from "@/lib/sample-series";
 
 const SPARK_DRIFT_PER_PCT = 0.2;
+
+export const SESSION_LABEL: Record<Session, string> = {
+  OPEN: "Open",
+  "24/7": "24/7",
+  CLOSED: "Closed",
+  SOON: "Coming soon",
+};
 
 export const changePct = (m: SampleMarket) => plotValue(m.changeBps, BPS_PERCENT_DECIMALS);
 
@@ -14,7 +21,7 @@ export function toWatchlist(m: SampleMarket): WatchlistAsset {
   const venue = m.venue === "PERPL" ? "Perpl · " : "";
   return {
     symbol: m.symbol,
-    name: `${venue}${m.session === "SOON" ? "Coming soon" : m.session} · ${m.maxLev}x max`,
+    name: `${venue}${SESSION_LABEL[m.session]} · ${m.maxLev}× max`,
     price: plotValue(m.price6),
     change: changePct(m),
     points: sampleSpark(m.seed, changePct(m) * SPARK_DRIFT_PER_PCT),

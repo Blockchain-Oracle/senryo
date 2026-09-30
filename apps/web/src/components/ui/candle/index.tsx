@@ -213,7 +213,7 @@ export default function CandleChart({
         <svg
           ref={svgRef}
           viewBox={`0 0 ${scale.vw} ${scale.vh}`}
-          className={cn("touch-none", fill ? "h-full w-full" : "w-full")}
+          className={cn("touch-none", fill ? "h-full w-full" : "w-full", fill && !box && "invisible")}
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
           role="img"

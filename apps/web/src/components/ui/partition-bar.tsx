@@ -34,7 +34,6 @@ function usePartitionBarContext(): Ctx {
 }
 
 const GAP_UNIT_REM = 0.25;
-const PERCENT = 100;
 
 export interface PartitionBarProps extends HTMLAttributes<HTMLUListElement>, VariantProps<typeof partitionBarVariants> {
   children?: ReactElement<PartitionBarSegmentProps> | ReactElement<PartitionBarSegmentProps>[];
@@ -110,14 +109,9 @@ export function PartitionBarSegment({
   className,
   ...props
 }: PartitionBarSegmentProps) {
-  const { total, size, shape } = usePartitionBarContext();
-  const widthPercent = total > 0 ? (num / total) * PERCENT : 0;
+  const { size, shape } = usePartitionBarContext();
   return (
-    <li
-      className="flex min-w-0 flex-col"
-      style={{ flexBasis: `${widthPercent}%`, flexGrow: 0, flexShrink: 0 }}
-      {...props}
-    >
+    <li className="flex min-w-0 flex-col" style={{ flexBasis: 0, flexGrow: num, flexShrink: 1 }} {...props}>
       <div
         className={cn(
           lineVariants({ variant }),

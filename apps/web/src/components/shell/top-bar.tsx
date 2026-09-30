@@ -12,7 +12,7 @@ import { NETWORK } from "@/lib/sample";
 import { cn } from "@/lib/utils";
 
 const ICON_BUTTON =
-  "inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-(--motion-fast) ease-desk hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring";
+  "inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-(--motion-fast) ease-desk hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring";
 
 /** D2 top strip: SENRYO wordmark · ● MONAD chip · bell, then the Vercel Tabs row. */
 export function TopBar() {
@@ -27,7 +27,7 @@ export function TopBar() {
         >
           <Wordmark />
         </Link>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-0.5">
           <PreviewBadge className="hidden min-[22rem]:inline-flex" />
           <span
             className="flex items-center gap-1 px-1 font-mono text-label text-muted-foreground"

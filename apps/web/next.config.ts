@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   transpilePackages: ["@senryo/tokens"],
   reactStrictMode: true,
+  devIndicators: false,
 };
 
 export default nextConfig;

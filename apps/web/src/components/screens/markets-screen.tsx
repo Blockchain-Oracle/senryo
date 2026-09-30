@@ -17,7 +17,7 @@ export function MarketsScreen() {
   const [filter, setFilter] = useState<MarketFilter>("all");
   const list = MARKETS.filter((m) => filter === "all" || m.kind === filter).map(toWatchlist);
   return (
-    <div className="grid gap-x-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section aria-label="Watchlist">
         <div className="px-3 pt-3">
           <SegmentedControl

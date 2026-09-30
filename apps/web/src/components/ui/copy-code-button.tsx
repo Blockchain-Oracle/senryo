@@ -69,7 +69,7 @@ export function CopyCode({ code, display, copiedLabel = "Address copied", classN
 
         <div
           className={cn(
-            "absolute inset-0 flex items-center justify-between gap-2 pr-2 pl-4 transition-all duration-500 ease-desk",
+            "absolute inset-0 flex items-center justify-between gap-2 pr-2 pl-4 transition-[transform,opacity] duration-(--motion-slow) ease-desk",
             copied ? "pointer-events-none z-0 scale-[0.92] opacity-0 blur-md" : "z-20 scale-100 opacity-100 blur-none",
           )}
         >
@@ -89,7 +89,7 @@ export function CopyCode({ code, display, copiedLabel = "Address copied", classN
         <div
           aria-live="polite"
           className={cn(
-            "pointer-events-none relative z-10 flex items-center gap-3 transition-all duration-700 ease-desk",
+            "pointer-events-none relative z-10 flex items-center gap-3 transition-[transform,opacity] duration-(--motion-slow) ease-desk",
             showConfirmation ? "scale-100 opacity-100 blur-none" : "scale-[1.08] opacity-0 blur-md",
           )}
         >

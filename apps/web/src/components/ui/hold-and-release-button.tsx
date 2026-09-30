@@ -1,7 +1,7 @@
 "use client";
 
 // 21st: kokonutd/hold-and-release-button (#8) — https://21st.dev/@kokonutd/components/hold-and-release-button
-// D2 hold-to-confirm: 500 ms linear fill in --primary (label re-inked on the fill via clip-path), fires `onConfirm`
+// D2 hold-to-confirm: solid --primary button, 500 ms linear shade sweep (primary-foreground/30 via clip-path), fires `onConfirm`
 // once when the hold completes. Pointer, touch and keyboard (Space/Enter held) supported; reduced motion keeps the
 // timer but skips the sweep. framer-motion → motion/react; the delete-demo styling is gone.
 import {
@@ -126,7 +126,7 @@ function ButtonHoldAndRelease({
       disabled={disabled}
       aria-describedby={undefined}
       className={cn(
-        "relative inline-flex h-12 min-w-40 touch-none select-none items-center justify-center overflow-hidden rounded-lg border border-primary bg-primary/10 px-4 font-mono text-body font-bold text-primary outline-none transition-colors duration-(--motion-fast) ease-desk focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+        "relative inline-flex h-12 min-w-40 touch-none select-none items-center justify-center overflow-hidden rounded-lg border border-primary bg-primary px-4 font-mono text-body font-bold text-primary-foreground outline-none transition-colors duration-(--motion-fast) ease-desk focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       onPointerDown={(e) => {
@@ -146,7 +146,7 @@ function ButtonHoldAndRelease({
       <motion.span
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-0 flex items-center bg-primary px-4 text-primary-foreground",
+          "pointer-events-none absolute inset-0 flex items-center bg-primary-foreground/30 px-4 text-primary-foreground",
           fillClassName,
         )}
         style={{ clipPath: clip }}

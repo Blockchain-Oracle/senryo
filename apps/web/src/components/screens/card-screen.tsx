@@ -6,7 +6,8 @@ import { SectionLabel } from "@/components/shell/primitives";
 import { Button } from "@/components/ui/button";
 import { FlippableCreditCard } from "@/components/ui/credit-debit-card";
 import { UpstashRatelimit } from "@/components/ui/upstash-ratelimit";
-import { plotValue } from "@/lib/format";
+import { USD6_ONE } from "@/lib/constants/money";
+import { plotValue, usd } from "@/lib/format";
 import { CARD } from "@/lib/sample";
 
 const MS_PER_SEC = 1000;
@@ -16,7 +17,7 @@ export function CardScreen() {
   const [resetAt, setResetAt] = useState(0);
   useEffect(() => setResetAt(Date.now() + CARD.resetInSec * MS_PER_SEC), []);
   return (
-    <div className="grid gap-x-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:pt-4">
+    <div className="grid grid-cols-1 gap-x-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:pt-4">
       <section aria-label="Kinpaku card">
         <div className="flex justify-center px-4 pt-5">
           <FlippableCreditCard
@@ -47,7 +48,7 @@ export function CardScreen() {
             remaining={plotValue(CARD.spendRemaining6)}
             reset={resetAt}
             okLabel="from FREE·SPEND"
-            format={(n) => `$${n}`}
+            format={(n) => usd(BigInt(Math.round(n)) * USD6_ONE, 0)}
           />
         </div>
         <SectionLabel>Authorizations</SectionLabel>

@@ -5,8 +5,10 @@
 // Adds link mode: pass `renderTab` (e.g. next/link) so the shell drives the active tab from the pathname.
 import {
   type CSSProperties,
+  type FocusEvent,
   forwardRef,
   type HTMLAttributes,
+  type PointerEvent,
   type ReactNode,
   useCallback,
   useLayoutEffect,
@@ -47,6 +49,21 @@ const toStyle = (box: Box): CSSProperties => ({
   width: `${box.width / PX_PER_REM}rem`,
 });
 
+const ROW = "relative flex items-center gap-1.5";
+
+/** Link mode is site navigation (`<nav>` + aria-current links); button mode is an ARIA tablist. */
+function TabRow({ asNav, label, children }: { asNav: boolean; label: string; children: ReactNode }) {
+  return asNav ? (
+    <nav aria-label={label} className={ROW}>
+      {children}
+    </nav>
+  ) : (
+    <div role="tablist" aria-label={label} className={ROW}>
+      {children}
+    </div>
+  );
+}
+
 const Tabs = forwardRef<HTMLDivElement, TabsProps>(
   ({ className, tabs, activeTab, onTabChange, renderTab, label = "Sections", ...props }, ref) => {
     const found = tabs.findIndex((t) => t.id === activeTab);
@@ -79,15 +96,15 @@ const Tabs = forwardRef<HTMLDivElement, TabsProps>(
         <div className="relative">
           <div
             aria-hidden
-            className="absolute top-1/2 h-8 -translate-y-1/2 rounded-md bg-accent transition-all duration-(--motion-base) ease-desk"
+            className="absolute top-1/2 h-8 -translate-y-1/2 rounded-md bg-accent transition-[left,width,opacity] duration-(--motion-base) ease-desk"
             style={{ ...toStyle(hoverBox), opacity: hoveredIndex !== null ? 1 : 0 }}
           />
           <div
             aria-hidden
-            className="absolute -bottom-1 h-0.5 bg-foreground transition-all duration-(--motion-base) ease-desk"
+            className="absolute -bottom-1 h-0.5 bg-foreground transition-[left,width] duration-(--motion-base) ease-desk"
             style={toStyle(activeBox)}
           />
-          <div role="tablist" aria-label={label} className="relative flex items-center gap-1.5">
+          <TabRow asNav={Boolean(renderTab)} label={label}>
             {tabs.map((tab, index) => {
               const active = index === activeIndex;
               const tabClass = cn(
@@ -98,9 +115,9 @@ const Tabs = forwardRef<HTMLDivElement, TabsProps>(
                 ref: (el: HTMLElement | null) => {
                   tabRefs.current[index] = el;
                 },
-                onMouseEnter: () => setHoveredIndex(index),
-                onMouseLeave: () => setHoveredIndex(null),
-                onFocus: () => setHoveredIndex(index),
+                onPointerEnter: (e: PointerEvent<HTMLElement>) => e.pointerType === "mouse" && setHoveredIndex(index),
+                onPointerLeave: () => setHoveredIndex(null),
+                onFocus: (e: FocusEvent<HTMLElement>) => e.target.matches(":focus-visible") && setHoveredIndex(index),
                 onBlur: () => setHoveredIndex(null),
               };
               if (renderTab) {
@@ -128,7 +145,7 @@ const Tabs = forwardRef<HTMLDivElement, TabsProps>(
                 </button>
               );
             })}
-          </div>
+          </TabRow>
         </div>
       </div>
     );

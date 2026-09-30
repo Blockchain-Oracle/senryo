@@ -19,6 +19,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 
 const PERCENT = 100;
+/** Detent labels closer than this (% of track) collapse to a tick so they never overlap. */
+const MIN_LABEL_GAP_PCT = 14;
+/** Labels this close to an end align inward instead of overhanging the track. */
+const EDGE_PCT = 6;
 
 type SliderProps = ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
   showTooltip?: boolean;
@@ -116,12 +120,21 @@ const Slider = forwardRef<ComponentRef<typeof SliderPrimitive.Root>, SliderProps
 
     if (!detents?.length) return root;
     const span = max - min || 1;
+    let lastLabelled = Number.NEGATIVE_INFINITY;
+    const stops = detents.map((d) => {
+      const pos = ((d - min) / span) * PERCENT;
+      const labelled = pos - lastLabelled >= MIN_LABEL_GAP_PCT;
+      if (labelled) lastLabelled = pos;
+      return { d, pos, labelled };
+    });
     return (
       <div className="w-full">
         {root}
         <div className="relative mt-1 h-6">
-          {detents.map((d) => {
+          {stops.map(({ d, pos, labelled }) => {
             const active = internalValue[0] === d;
+            const align =
+              pos < EDGE_PCT ? "translate-x-0" : pos > PERCENT - EDGE_PCT ? "-translate-x-full" : "-translate-x-1/2";
             return (
               <button
                 key={d}
@@ -129,12 +142,13 @@ const Slider = forwardRef<ComponentRef<typeof SliderPrimitive.Root>, SliderProps
                 aria-label={`${thumbLabel ?? "Value"} ${d}`}
                 onClick={() => handleValueChange([d])}
                 className={cn(
-                  "absolute top-0 -translate-x-1/2 rounded-sm px-1 font-mono text-micro tnum transition-colors duration-(--motion-fast) ease-desk hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "absolute top-0 flex h-6 min-w-3 items-start justify-center rounded-sm font-mono text-micro tnum transition-colors duration-(--motion-fast) ease-desk hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  align,
                   active ? "text-primary" : "text-muted-foreground",
                 )}
-                style={{ left: `${((d - min) / span) * PERCENT}%` }}
+                style={{ left: `${pos}%` }}
               >
-                {formatDetent(d)}
+                {labelled ? formatDetent(d) : <span aria-hidden className="mt-0.5 h-1.5 w-px bg-current" />}
               </button>
             );
           })}

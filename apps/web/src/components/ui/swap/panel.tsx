@@ -42,7 +42,7 @@ export function SwapField({ side, token, chain, amount, onAmount, quoting, onOpe
               inputMode="decimal"
               autoComplete="off"
               placeholder="0"
-              className="w-full bg-transparent font-mono font-semibold text-foreground text-num-lg tracking-tight outline-none tnum placeholder:text-muted-foreground"
+              className="w-full bg-transparent font-mono font-semibold rounded-xs text-foreground text-num-lg tracking-tight outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring tnum placeholder:text-muted-foreground"
             />
           ) : (
             <output

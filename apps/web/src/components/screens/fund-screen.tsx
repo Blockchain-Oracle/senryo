@@ -40,7 +40,7 @@ const QUOTE: SwapQuote = {
 export function FundScreen() {
   const qr = useQr(DEPOSIT_ADDRESS, QR_PX);
   return (
-    <div className="grid gap-x-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-2">
       <section aria-labelledby="fund-swap">
         <SectionLabel>
           <span id="fund-swap">Bridge + deposit · any chain → AUSD</span>
