@@ -8,6 +8,7 @@ export * from "./lp.ts";
 export * from "./markets.ts";
 export * from "./orders.ts";
 export * from "./price-store.ts";
+export * from "./social.ts";
 export * from "./socket.ts";
 export * from "./trace.ts";
 export * from "./triggers.ts";

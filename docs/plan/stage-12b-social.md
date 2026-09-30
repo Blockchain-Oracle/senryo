@@ -30,7 +30,7 @@ and to App Store review (D-174). The add-ons are:
   - `posts` (thesis | reply, parent, optional position/market, ≤ 280);
   - `likes`, `reports` (post | profile), `blocks`, `mutes`;
   - `feed_events`.
-- [ ] S12b.2 **Profile and handle routes**:
+- [x] S12b.2 **Profile and handle routes**:
   - availability endpoint (checking / unavailable / invalid / available);
   - `PUT /v1/profile` (session for the same address);
   - `GET /v1/profile/:handleOrAddress`, which **never reveals an unlisted network's handle**;
