@@ -14,7 +14,7 @@
 - [x] S2.6 `script/SeedConstants.sol` + ensure-style `script/Deploy.s.sol` (addresses JSON, drift check, `chainid != 143` for testnet-only)
 - [x] S2.7 `packages/contracts` (`@senryo/contracts`) + `scripts/contracts-export.mjs` (ABIs `as const`, addresses)
 - [x] S2.8 Deployer keystore (`senryo-deployer`, public address only) + testnet MON balance check
-- [ ] S2.9 Deploy to 10143 + Sourcify verify + export — **blocked: deployer unfunded** (0 MON on 10143, 30 Sep)
+- [x] S2.9 Deploy to 10143 + Sourcify verify + export — done 30 Sep: 12 contracts, all Sourcify exact_match, start block 66856078 (`packages/contracts/src/addresses/10143.json`, ids-and-txs.md)
 
 ## Gate
 `pnpm contracts:check` · `forge test --network monad` (invariants I1–I7 green, fuzz + oracle scenarios green) · `pnpm invariants` · `pnpm lint` · testnet verified · `address-drift` passes.

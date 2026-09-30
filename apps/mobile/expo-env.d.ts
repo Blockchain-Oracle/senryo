@@ -1,3 +1,3 @@
 /// <reference types="expo/types" />
 
-// Committed (unlike the template) so `tsc` works in CI before any `expo start` has generated it.
+// NOTE: This file should not be edited and should be in your git ignore
