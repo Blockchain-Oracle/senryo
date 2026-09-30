@@ -27,8 +27,11 @@ export function BucketRegister({ buckets }: { buckets: SampleBuckets }) {
             key={c.key}
             accessible
             accessibilityLabel={`${c.label.replace("·", " ")} ${usd(c.value, 0)}`}
-            style={[styles.cell, i % 2 === 1 ? { borderLeftWidth: HAIRLINE_PX, borderColor: color.hairline } : null,
-              i >= 2 ? { borderTopWidth: HAIRLINE_PX, borderColor: color.hairline } : null]}
+            style={[
+              styles.cell,
+              i % 2 === 1 ? { borderLeftWidth: HAIRLINE_PX, borderColor: color.hairline } : null,
+              i >= 2 ? { borderTopWidth: HAIRLINE_PX, borderColor: color.hairline } : null,
+            ]}
           >
             <Text style={[TYPE.label, { color: color.inkMuted }]}>{c.label}</Text>
             <Text style={[TYPE.numMd, { color: c.tint }]}>{usd(c.value, 0)}</Text>

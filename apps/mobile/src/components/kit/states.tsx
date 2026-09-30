@@ -7,8 +7,8 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { DIAGNOSIS_COPY, ERROR_COPY } from "~/lib/copy/diagnosis";
 import { ELAPSED_TICK_MS, MS_PER_SECOND } from "~/lib/constants/time";
+import { DIAGNOSIS_COPY, ERROR_COPY } from "~/lib/copy/diagnosis";
 import { clockTime } from "~/lib/format";
 import type { Diagnosis, Reading } from "~/lib/reading";
 import { HAIRLINE_PX, RADIUS, SIZE, SKELETON, SPACE, TYPE, useTheme } from "~/theme";
@@ -21,14 +21,12 @@ import { Button } from "./Button";
 export function Skeleton({ width = "100%", height = SIZE.skeletonLine }: { width?: DimensionValue; height?: number }) {
   const { color } = useTheme();
   const reduce = useReducedMotion();
-  const pulse = useSharedValue(SKELETON.from);
+  const pulse = useSharedValue<number>(SKELETON.from);
   useEffect(() => {
     if (!reduce) pulse.value = withRepeat(withTiming(SKELETON.to, { duration: SKELETON.periodMs }), -1, true);
   }, [reduce, pulse]);
   const style = useAnimatedStyle(() => ({ opacity: pulse.value }));
-  return (
-    <Animated.View style={[{ width, height, borderRadius: RADIUS.sm, backgroundColor: color.muted }, style]} />
-  );
+  return <Animated.View style={[{ width, height, borderRadius: RADIUS.sm, backgroundColor: color.muted }, style]} />;
 }
 
 export type LoadingShape = "line" | "row" | "list" | "plate" | "chart";
@@ -90,7 +88,9 @@ export function EmptyState({
     <View style={[styles.panel, styles.dashed, { borderColor: color.hairline, backgroundColor: color.card }]}>
       <Text style={[TYPE.title, styles.center, { color: color.ink }]}>{why}</Text>
       {detail ? <Text style={[TYPE.body, styles.center, { color: color.inkMuted }]}>{detail}</Text> : null}
-      {action ? <Button label={action.label} onPress={action.onPress} variant="outline" size="sm" block={false} /> : null}
+      {action ? (
+        <Button label={action.label} onPress={action.onPress} variant="outline" size="sm" block={false} />
+      ) : null}
     </View>
   );
 }
@@ -108,7 +108,9 @@ export function ErrorState({ diagnosis, retry }: { diagnosis: Diagnosis; retry?:
     >
       <Text style={[TYPE.title, styles.center, { color: color.ink }]}>{copy.headline}</Text>
       <Text style={[TYPE.body, styles.center, { color: color.inkMuted }]}>{copy.body}</Text>
-      {offerRetry ? <Button label={ERROR_COPY.retry} onPress={retry} variant="outline" size="sm" block={false} /> : null}
+      {offerRetry ? (
+        <Button label={ERROR_COPY.retry} onPress={retry} variant="outline" size="sm" block={false} />
+      ) : null}
       {diagnosis.technical ? (
         <Pressable onPress={() => setOpen((v) => !v)} accessibilityRole="button" hitSlop={SPACE.sm}>
           <Text style={[TYPE.caption, { color: color.inkMuted }]}>

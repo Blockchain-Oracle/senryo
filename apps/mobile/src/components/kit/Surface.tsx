@@ -5,7 +5,9 @@ import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 /** A D2 panel: card ground, 1 px hairline, 4 px corners, no shadow. */
 export function Panel({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const { color } = useTheme();
-  return <View style={[styles.panel, { backgroundColor: color.card, borderColor: color.hairline }, style]}>{children}</View>;
+  return (
+    <View style={[styles.panel, { backgroundColor: color.card, borderColor: color.hairline }, style]}>{children}</View>
+  );
 }
 
 /** The tracked uppercase section label ("POSITIONS · 2", "EQUITY · RISK-ADJUSTED"). */

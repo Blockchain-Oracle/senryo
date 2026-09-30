@@ -5,7 +5,7 @@ import { Button } from "~/components/kit/Button";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
-import { FONT, HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { FONT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * First launch (F01 entry / F03): the seal, one line of value, Create account (S6 passkey) and "Look around first",
@@ -21,7 +21,12 @@ export default function Welcome() {
     else router.push(path);
   };
   return (
-    <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top, paddingBottom: insets.bottom + SPACE.xl }]}>
+    <View
+      style={[
+        styles.root,
+        { backgroundColor: color.ground, paddingTop: insets.top, paddingBottom: insets.bottom + SPACE.xl },
+      ]}
+    >
       <View style={styles.center}>
         <View style={[styles.seal, { borderColor: color.primary }]}>
           <Text style={[styles.sealGlyph, { color: color.primary }]}>千</Text>
@@ -41,20 +46,18 @@ export default function Welcome() {
   );
 }
 
-const SEAL = { size: 88, glyph: 48 } as const;
-
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: SIZE.gutter, justifyContent: "space-between" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: SPACE.lg },
   seal: {
-    width: SEAL.size,
-    height: SEAL.size,
-    borderWidth: HAIRLINE_PX * 2,
+    width: SIZE.seal,
+    height: SIZE.seal,
+    borderWidth: SIZE.sealStroke,
     borderRadius: RADIUS.sm,
     alignItems: "center",
     justifyContent: "center",
   },
-  sealGlyph: { fontSize: SEAL.glyph, lineHeight: SEAL.size, fontFamily: FONT.sansBold },
+  sealGlyph: { fontSize: SIZE.sealGlyph, lineHeight: SIZE.seal, fontFamily: FONT.sansBold },
   word: { ...TYPE.numLg, fontFamily: FONT.monoStrong },
   line: { textAlign: "center" },
   actions: { gap: SPACE.md },

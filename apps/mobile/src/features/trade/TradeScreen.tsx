@@ -5,8 +5,8 @@ import { Screen } from "~/components/kit/Screen";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { SAMPLE_BUCKETS, SAMPLE_CANDLES, SAMPLE_MARKETS } from "~/lib/sample";
 import { useSample } from "~/lib/useSample";
-import { TradeHeader } from "./TradeHeader";
 import { Ticket } from "./Ticket";
+import { TradeHeader } from "./TradeHeader";
 
 /** Trade (D2): market header, candles, ticket. Same screen for the tab root and `/trade/[market]`. */
 export function TradeScreen({ marketId, pushed }: { marketId: string; pushed: boolean }) {

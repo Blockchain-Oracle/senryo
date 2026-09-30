@@ -5,11 +5,10 @@ import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Area, CartesianChart, Line, useChartPressState } from "victory-native";
 import { fire } from "~/feedback/fire";
-import { clockTime } from "~/lib/format";
-import { usd } from "~/lib/money";
-import type { EquityPoint } from "~/lib/sample";
 import { DECIMALS } from "~/lib/constants/units";
-import { toPlot } from "~/lib/money";
+import { clockTime } from "~/lib/format";
+import { toPlot, usd } from "~/lib/money";
+import type { EquityPoint } from "~/lib/sample";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { CHART } from "./constants";
 
@@ -44,7 +43,10 @@ export function EquityChart({ points }: { points: EquityPoint[] }) {
   if (points.length < CHART.minPoints) return null;
 
   return (
-    <View accessible accessibilityLabel={`Equity chart, low ${minP ? usd(minP.equity6, 0) : ""}, high ${maxP ? usd(maxP.equity6, 0) : ""}`}>
+    <View
+      accessible
+      accessibilityLabel={`Equity chart, low ${minP ? usd(minP.equity6, 0) : ""}, high ${maxP ? usd(maxP.equity6, 0) : ""}`}
+    >
       <Text style={[TYPE.numSm, styles.max, { color: color.inkMuted }]}>{maxP ? usd(maxP.equity6, 0) : ""}</Text>
       <View style={styles.chart}>
         <CartesianChart

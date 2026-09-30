@@ -4,8 +4,8 @@ import { Button } from "~/components/kit/Button";
 import { Icon } from "~/components/kit/Icon";
 import { PreviewBadge } from "~/components/kit/PreviewBadge";
 import { Screen } from "~/components/kit/Screen";
-import { EmptyState, ReadingView } from "~/components/kit/states";
 import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
+import { EmptyState, ReadingView } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { fundQrRoute, ROUTES } from "~/lib/constants/routes";
 import { pct, usd } from "~/lib/money";
@@ -41,7 +41,11 @@ export default function Fund() {
             <KeyValue label="NETWORK FEE" value={usd(q.networkFee6)} />
             <KeyValue label="SLIPPAGE" value={pct(q.slippageBps)} />
             <KeyValue label="ETA" value={`≈ ${q.etaSeconds}s`} />
-            <Button label={`Swap to ${q.receiveToken}`} onPress={() => router.push(ROUTES.fundSwap)} variant="secondary" />
+            <Button
+              label={`Swap to ${q.receiveToken}`}
+              onPress={() => router.push(ROUTES.fundSwap)}
+              variant="secondary"
+            />
           </Panel>
         )}
       </ReadingView>

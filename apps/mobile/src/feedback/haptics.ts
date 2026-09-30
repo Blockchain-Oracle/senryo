@@ -1,5 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
+import { LIQUIDATION_SECOND_BEAT_MS } from "./constants";
 
 /**
  * The app's eight haptic words (plan §2.4 iOS feel, ux-product-feel §B.1). The only module allowed to import
@@ -10,9 +11,6 @@ export type HapticEvent = "tick" | "press" | "snap" | "confirm" | "filled" | "wa
 
 const android = Platform.OS === "android";
 const A = Haptics.AndroidHaptics;
-
-/** Delay (ms) between the two beats of the liquidation pattern: error, then heavy. */
-const LIQUIDATION_SECOND_BEAT_MS = 140;
 
 function ios(event: HapticEvent): Promise<void> {
   switch (event) {

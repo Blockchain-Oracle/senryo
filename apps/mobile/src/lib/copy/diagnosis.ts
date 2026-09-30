@@ -36,4 +36,8 @@ export const DIAGNOSIS_COPY: Record<DiagnosisKind, { headline: string; body: str
   },
 };
 
-export const ERROR_COPY = { retry: "Retry", technical: "Technical details", staleFailed: "Latest refresh failed" } as const;
+export const ERROR_COPY = {
+  retry: "Retry",
+  technical: "Technical details",
+  staleFailed: "Latest refresh failed",
+} as const;

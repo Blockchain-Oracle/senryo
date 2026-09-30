@@ -60,7 +60,10 @@ export function Ticket({ market, buckets }: { market: SampleMarket; buckets: Sam
                 }}
                 style={[
                   styles.detent,
-                  { borderColor: on ? color.primary : color.hairline, backgroundColor: on ? color.upWash : color.ground },
+                  {
+                    borderColor: on ? color.primary : color.hairline,
+                    backgroundColor: on ? color.upWash : color.ground,
+                  },
                 ]}
               >
                 <Text style={[TYPE.numSm, { color: on ? color.primary : color.inkMuted }]}>{d}x</Text>

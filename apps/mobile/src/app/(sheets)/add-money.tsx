@@ -15,7 +15,10 @@ const OPTIONS: { title: string; detail: string; href: Href }[] = [
 
 export default function AddMoneySheet() {
   return (
-    <SheetRoute title="Add money" body="Practice mode gives free test funds after sign-in. Real deposits land in Free to trade.">
+    <SheetRoute
+      title="Add money"
+      body="Practice mode gives free test funds after sign-in. Real deposits land in Free to trade."
+    >
       <Options />
     </SheetRoute>
   );
@@ -26,7 +29,13 @@ function Options() {
   return (
     <Panel>
       {OPTIONS.map((o, i) => (
-        <ListRow key={o.title} first={i === 0} title={o.title} detail={o.detail} onPress={() => close(() => router.push(o.href))} />
+        <ListRow
+          key={o.title}
+          first={i === 0}
+          title={o.title}
+          detail={o.detail}
+          onPress={() => close(() => router.push(o.href))}
+        />
       ))}
     </Panel>
   );

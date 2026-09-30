@@ -3,6 +3,8 @@
 module.exports = function config(api) {
   api.cache(true);
   return {
-    presets: [["babel-preset-expo", { "react-compiler": { sources: (filename) => filename.includes("/mobile/src/") } }]],
+    presets: [
+      ["babel-preset-expo", { "react-compiler": { sources: (filename) => filename.includes("/mobile/src/") } }],
+    ],
   };
 };

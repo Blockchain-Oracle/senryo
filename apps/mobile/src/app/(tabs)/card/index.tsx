@@ -4,8 +4,8 @@ import { Button } from "~/components/kit/Button";
 import { Icon } from "~/components/kit/Icon";
 import { PreviewBadge } from "~/components/kit/PreviewBadge";
 import { Screen } from "~/components/kit/Screen";
-import { ReadingView } from "~/components/kit/states";
 import { Panel, SectionLabel } from "~/components/kit/Surface";
+import { ReadingView } from "~/components/kit/states";
 import { CardFace } from "~/features/card/CardFace";
 import { fire } from "~/feedback/fire";
 import { cardAuthRoute, ROUTES } from "~/lib/constants/routes";
@@ -44,7 +44,9 @@ export default function Card() {
                   label="Freeze"
                   variant="outline"
                   style={styles.flex}
-                  onPress={() => notify({ title: "Freeze arrives with the card service", description: "Nothing was changed." })}
+                  onPress={() =>
+                    notify({ title: "Freeze arrives with the card service", description: "Nothing was changed." })
+                  }
                 />
               </View>
               <Pressable onPress={() => router.push(ROUTES.cardAllowance)} accessibilityRole="button">
@@ -78,7 +80,10 @@ export default function Card() {
                       router.push(cardAuthRoute(a.id));
                     }}
                     accessibilityRole="button"
-                    style={[styles.auth, i > 0 ? { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline } : null]}
+                    style={[
+                      styles.auth,
+                      i > 0 ? { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline } : null,
+                    ]}
                   >
                     <Text style={[TYPE.numSm, styles.flex, { color: color.ink }]}>{a.merchant.toUpperCase()}</Text>
                     <Text style={[TYPE.numSm, { color: stateTint[a.state] }]}>{STATE_LABEL[a.state]}</Text>

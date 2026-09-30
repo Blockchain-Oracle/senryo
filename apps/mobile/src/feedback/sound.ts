@@ -1,4 +1,5 @@
 import { type AudioPlayer, type AudioSource, createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import { SOUND_VOLUME } from "./constants";
 
 /**
  * The UI sound palette (plan §2.4): fill, deposit, send, unlock, liquidation; error is optional and off by default.
@@ -14,16 +15,6 @@ export type SoundName = "fill" | "deposit" | "send" | "unlock" | "liquidation" |
  */
 const SOURCES: Partial<Record<SoundName, AudioSource>> = {};
 
-/** Per-sound gain, levelled so the palette sits together (ported volumes). */
-const VOLUME: Record<SoundName, number> = {
-  fill: 0.6,
-  deposit: 0.55,
-  send: 0.4,
-  unlock: 0.35,
-  liquidation: 0.7,
-  error: 0.4,
-};
-
 const players = new Map<SoundName, AudioPlayer>();
 let prepared = false;
 
@@ -38,7 +29,7 @@ export async function prepareSounds(): Promise<void> {
   }
   for (const [name, source] of Object.entries(SOURCES) as [SoundName, AudioSource][]) {
     const player = createAudioPlayer(source);
-    player.volume = VOLUME[name];
+    player.volume = SOUND_VOLUME[name];
     players.set(name, player);
   }
 }

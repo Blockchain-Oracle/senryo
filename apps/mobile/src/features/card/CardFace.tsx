@@ -5,7 +5,17 @@ import { FONT, HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme"
  * Kinpaku card face (RN port of 21st Credit/Debit Card #5276, flip in S10). The PAN is always masked here; the full
  * number shows only in the step-up `card-reveal` sheet (S10), never logged.
  */
-export function CardFace({ last4, holder, expires, route }: { last4: string; holder: string; expires: string; route: string }) {
+export function CardFace({
+  last4,
+  holder,
+  expires,
+  route,
+}: {
+  last4: string;
+  holder: string;
+  expires: string;
+  route: string;
+}) {
   const { color } = useTheme();
   return (
     <View
