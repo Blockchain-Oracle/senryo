@@ -33,9 +33,12 @@ reuses everything below `apps/`.
 - [ ] S8.5 Assurance (D-024): Slither + Aderyn + Wake on `contracts/`; `security-review` on `services/`; every finding fixed
       or documented in `docs/security/assurance.md`; invariants I1–I7 green after fixes
 - [ ] S8.6 Gas re-calibration (D-119): `forge snapshot --network monad` + fork/mainnet `eth_estimateGas` → `GAS_LIMITS`
-- [ ] S8.7 `packages/core` risk mirror (preview only; contract wins): execution price/spread, N, IM/MM, uPnL, liq price,
+- [x] S8.7 `packages/core` risk mirror (preview only; contract wins): execution price/spread, N, IM/MM, uPnL, liq price,
       FreeToTrade after the trade, caps (OI/skew/trade/min), session calendar display, `blockers.ts` in F10 order;
-      differential check vs `SenryoCore.quote` on the fork
+      differential check vs `SenryoCore.quote` on the fork — `risk-mirror-check` 6/6 mirror checks (D-162); its
+      increase + partial-close steps reproduce the D-161 contract bug and re-run after S8.5a
+- [ ] S8.5a D-161 fix (contracts track) → **testnet core-set redeploy** (addresses, indexer, api, keeper) →
+      `risk-mirror-check` fully green
 - [ ] S8.8 `packages/query`: keys, hooks (markets, market ctx/candles/session, account buckets/positions/orders,
       starter, geo), engine WS client + `PriceStore` (rAF flush, stale after `PRICE_STALE_MS`), TxLifecycle store
 - [ ] S8.9 Mobile Markets live: watchlist (session badge, oracle age, sparkline, ▲▼ + sign), market detail with candles

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit -p .",
     "api-smoke": "tsx src/api-smoke.ts",
     "indexer-check": "tsx src/indexer-check.ts",
-    "session-e2e": "tsx src/session-e2e.ts"
+    "session-e2e": "tsx src/session-e2e.ts",
+    "risk-mirror-check": "tsx src/risk-mirror-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",
