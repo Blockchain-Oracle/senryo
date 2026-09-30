@@ -87,3 +87,4 @@ Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: no
 | Coolify tags after D-164 | senryo-api, senryo-keeper, senryo-web `sha-66679dd`; senryo-indexer `INDEXER_IMAGE_TAG=sha-66679dd` (reset via `envio start -r`, then resumed) |
 | Coolify tags after S8.15 (30 Sep) | senryo-api, senryo-keeper `sha-c1893e5` (DB-IP geo loaded 2026-09; /v1/geo live) · senryo-web `sha-66679dd` · senryo-indexer `sha-66679dd` |
 | Coolify tags after S8.5b (30 Sep) | senryo-api, senryo-keeper `sha-c66f65d` (security fixes live; spoofed X-Forwarded-For / cf-ipcountry ignored — verified) |
+| Coolify tags after the keeper pass (30 Sep) | senryo-api, senryo-keeper `sha-3c98d59` (keeper jobs + retention; KEEPER_JOBS env updated) |
