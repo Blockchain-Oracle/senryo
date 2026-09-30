@@ -51,6 +51,15 @@ Must match `packages/contracts/src/addresses/*.json` and `indexer/config.yaml` (
 
 Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: none yet (S8).
 
+### Testnet operational keys (S3, D-115) — keys in `~/.config/senryo/testnet-<name>.key`, never committed
+| Role | Address | Roles granted |
+|---|---|---|
+| keeper | 0xf6a36dC37104e200B277Eedc60Af060440D33b10 | MIRROR_ROLE (70) |
+| trader (drive script user) | 0xBa0bE5c8DF7f7c8A452dD78b208b0aE71454A061 | — |
+| sponsor | 0xb00A73D3C207f8764A4cAD83a9b12186D9d6DA99 | — (RELAYER_ROLE pending; unfunded) |
+| operator1 | 0xbB1868EF38D70864657F09bCf6caCAcF26B9bAF6 | — (CARD_OPERATOR pending; unfunded) |
+| operator2 | 0xbfD5B98F36660c58FD58Fd54671B4b2db7529138 | — (CARD_OPERATOR pending; unfunded) |
+
 ## Coolify / builds / domains
 | Item | Value |
 |---|---|

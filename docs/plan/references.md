@@ -30,3 +30,11 @@
 | Agari invariants | `/Users/abu/dev/hackathon/agari-wt/mobile-takeover/scripts/invariants` | record SHA (S0) | invariant runner + rules |
 | Agari money units | `agari-wt/*/packages/core/src/units/format.ts` | record SHA | bigint formatting |
 | Design preview (this repo) | `design/preview` | this repo | D2 Desk 21st components (re-tokenize on adoption) |
+
+## Context7 library ids (S3)
+| Library | Id | Used for |
+|---|---|---|
+| viem | `/wevm/viem` | `sendRawTransactionSync`, fallback/webSocket transports, `defineChain`, local-account `signTransaction`, SIWE utilities (`createSiweMessage`, `parseSiweMessage`, `validateSiweMessage`), `verifyTypedData` |
+| Zod 4 | `/websites/zod_dev` | codecs (`z.codec`, encode/decode) for bigint wire amounts |
+| Lithic node SDK | `/lithic-com/lithic-node` | webhook verification (Standard Webhooks), `CardAuthorization` (ASA request) and transaction event types (read from `src/resources/{card-authorizations,transactions/transactions,webhooks}.ts` @ main, 30 Sep) |
+| Lithic docs | docs.lithic.com `auth-stream-access-asa`, `events-api`, `transaction-flow` | ASA response `result` values, 6 s / 3 s timing, retries on 5xx; `webhook-id.webhook-timestamp.body` HMAC-SHA256 with the base64 part of `whsec_…` |

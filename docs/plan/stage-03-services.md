@@ -15,7 +15,7 @@ The keeper liquidates a testnet position driven by a script, and the swap quote 
 - [x] S3.1 (lead) `packages/config` (networks 143/10143, rpc/ws/archive/explorers, `RP_ID` + hosts, `.well-known`
       paths, public env schema) and `packages/core` (bigint units/format/parse, `Reading<T>`, `shortAddress`); web and
       mobile consume them (their duplicate `formatUnits`/`Reading`/units/rpId removed)
-- [ ] S3.2 `packages/chain`: viem clients from `@senryo/config` (`blockTime` 300), `send.ts` (simulate → gas = estimate
+- [x] S3.2 `packages/chain`: viem clients from `@senryo/config` (`blockTime` 300), `send.ts` (simulate → gas = estimate
       × `GAS_HEADROOM_BPS`, capped; never `gas: undefined`), `confirm.ts` (`finalized`), lifecycle submitted → proposed →
       voted → finalized, journal interface, `sendRawTransactionSync` to 2 RPCs + fallback (receipt via WS)
 - [ ] S3.3 Uniswap v4 helper: read the AUSD/USDC pool key onchain, Quoter quote, Universal Router encoding confirmed
