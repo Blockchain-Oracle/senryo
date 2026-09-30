@@ -8,4 +8,5 @@ export const STORAGE_KEYS = {
   theme: "senryo.theme.v1",
   sounds: "senryo.sounds.v1",
   haptics: "senryo.haptics.v1",
+  welcomed: "senryo.welcomed.v1",
 } as const;
