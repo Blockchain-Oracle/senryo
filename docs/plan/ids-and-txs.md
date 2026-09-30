@@ -74,8 +74,9 @@ Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: no
 | DNS (Namecheap BasicDNS, 2026-09-30, user OK) | A `@`, `api`, `indexer`, `docs` → 84.46.247.92 (Coolify box) TTL 300; CNAME `www` → senryo.xyz; parking URL/CNAME records removed |
 | Coolify project `senryo` | `ftodkhszfqnkkzzbxekzrhv6` (server `7otp4kskhbwzkzybsug3uqgx`, env production), created 2026-09-30 |
 | senryo-ledger (Postgres 17-alpine, 256m) | `tey5siakdz1nau7wnzaytgcn` — internal only |
-| senryo-api (ghcr.io/blockchain-oracle/senryo-api:sha-0094793, 384m) | `lzumxcf5i0hvzv2k5gpzvfdr` → https://api.senryo.xyz (practice 10143) |
-| senryo-web (ghcr.io/blockchain-oracle/senryo-web:sha-0094793, 64m) | `2zeju5a5afmf7s0g4bzdgzjp` → https://senryo.xyz, https://www.senryo.xyz |
+| senryo-api (ghcr.io/blockchain-oracle/senryo-api:sha-4109f83, 384m) | `lzumxcf5i0hvzv2k5gpzvfdr` → https://api.senryo.xyz (practice 10143) |
+| senryo-web (ghcr.io/blockchain-oracle/senryo-web:sha-4109f83, 64m) | `2zeju5a5afmf7s0g4bzdgzjp` → https://senryo.xyz, https://www.senryo.xyz |
 | GHCR images | public (inherited from the public repo; anonymous manifest pull 200); images run 36692273246 |
 | Testnet sponsor (RELAYER_ROLE 60) | `0xb00A73D3C207f8764A4cAD83a9b12186D9d6DA99` — funded 0.35 MON (0x6c0e570b…df33), role granted (0xf97e0a29…6c06) |
 | StarterDrip float | 0.3 MON (0x421a3133…db6a) = 6 drips of 0.05 |
+| S6.12 live practice claim (virtual passkey, 30 Sep; sign → finalized 1.48 s, 1 prompt, 100 usd6) | user `0x9D14fcC0972c44E0Ab3D1b0c05ed1FFC332fE10D` · tx `0x303dd13844fac2a0fbe4542b4627b00b96049de895e1696268becace195e8b2b` (10143) |
