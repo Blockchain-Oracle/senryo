@@ -20,7 +20,13 @@
 ## Prior own work (pre-existing, disclosed)
 | Source | Path | Pinned at | Use |
 |---|---|---|---|
-| Agari mobile kit | `/Users/abu/dev/hackathon/agari-wt/mobile-takeover/mobile/src` | record SHA when porting (S5) | haptics, states, BottomDrawer, toast, audio pool, onboarding, push, Live Activity/widget patterns, polyfills |
+| Agari mobile kit | `/Users/abu/dev/hackathon/agari-wt/mobile-takeover/mobile/src` | `661a24eec7ff92a685758d62764d4e8ea851592d` (S5) | ported in S5 → `apps/mobile/src`: `theme/` structure, `kit/haptics.ts` → `feedback/{haptics,sound,fire}.ts`, `kit/states.tsx`, `drawer/BottomDrawer.tsx` → `sheet/Sheet.tsx`, `kit/PullRefresh.tsx`, `kit/Button.tsx`/`Screen.tsx` (rewritten D2), `polyfills.ts` (quick-crypto + AbortSignal only), `metro.config.js` singleton pinning, `app/_layout.tsx` headless hosts, `eas.json` profiles. Later stages: audio pool files, onboarding, push/AlertsHost, Live Activity/widget, CreditWelcome, WriteRecovery |
+
+## Context7 library ids (S5)
+| Library | Id | Used for |
+|---|---|---|
+| Expo docs | `/websites/expo_dev` | monorepos (pnpm isolated, auto Metro), NativeTabs, expo-glass-effect |
+| Victory Native XL | `/formidablelabs/victory-native-xl` | CartesianChart, Area/Line, Candlestick, useChartPressState, axes with useFont |
 | Agari invariants | `/Users/abu/dev/hackathon/agari-wt/mobile-takeover/scripts/invariants` | record SHA (S0) | invariant runner + rules |
 | Agari money units | `agari-wt/*/packages/core/src/units/format.ts` | record SHA | bigint formatting |
 | Design preview (this repo) | `design/preview` | this repo | D2 Desk 21st components (re-tokenize on adoption) |

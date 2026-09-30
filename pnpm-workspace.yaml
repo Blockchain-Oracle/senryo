@@ -7,6 +7,8 @@ packages:
 # Native/binary builds are opt-in; anything not listed is denied.
 allowBuilds:
   esbuild: true
+  # Copies Skia's prebuilt xcframeworks/.so from react-native-skia-{apple,android} into libs/ (read in S5; no network).
+  "@shopify/react-native-skia": true
 
 # One version per shared dependency across apps, packages and services (D-043 pnpm 11.24; D-046 TypeScript 6).
 catalog:
@@ -29,3 +31,11 @@ catalog:
 catalogs:
   mobile:
     react: 19.2.3
+    "@types/react": ~19.2.4
+
+minimumReleaseAgeExclude:
+  - '@expo/ui@57.0.21'
+  - expo-constants@57.0.20
+  - expo-modules-core@57.0.20
+  - expo-router@57.0.24
+  - expo@57.0.26
