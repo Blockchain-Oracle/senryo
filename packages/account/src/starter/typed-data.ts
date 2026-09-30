@@ -7,13 +7,13 @@
  * the shared ones in `@senryo/core` (S3 verifies the same types before relaying), so signer and relay can't drift.
  */
 import type { ChainId } from "@senryo/config";
-import { CLAIM_TYPES, EIP712_DOMAINS, VOUCHER_TYPES } from "@senryo/core";
+import { CLAIM_TYPES, EIP712_DOMAINS, TOPUP_TYPES, VOUCHER_TYPES } from "@senryo/core";
 import type { Address, Hex, TypedDataDefinition } from "viem";
 import { keccak256, toHex } from "viem";
 import { STARTER_DEADLINE_SECONDS } from "../constants.ts";
 import { scopeTargets } from "../policy/targets.ts";
 
-export { CLAIM_TYPES, VOUCHER_TYPES };
+export { CLAIM_TYPES, TOPUP_TYPES, VOUCHER_TYPES };
 export const STARTER_DOMAIN = EIP712_DOMAINS.starterDrip;
 export const TRIGGER_DOMAIN = EIP712_DOMAINS.core;
 
@@ -29,6 +29,15 @@ export interface SignedClaim {
 export interface SignedVoucher extends SignedClaim {
   /** Canonical voucher text (D-143); the relay sends its UTF-8 bytes, the contract hashes them. */
   code: string;
+}
+
+/** What the api needs to send a gas top-up (S8.16c): the signed need, never submitted onchain. */
+export interface SignedTopUp {
+  chainId: ChainId;
+  user: Address;
+  needWei: bigint;
+  deadline: bigint;
+  signature: Hex;
 }
 
 /** Canonical voucher text (D-143; S3 relay schema `/^[A-Z0-9-]{6,32}$/`). */
@@ -72,5 +81,14 @@ export function voucherTypedData(chainId: ChainId, user: Address, code: Hex, dea
     types: VOUCHER_TYPES,
     primaryType: "Voucher",
     message: { user, codeHash: keccak256(code), deadline },
+  } as const satisfies TypedDataDefinition;
+}
+
+export function topUpTypedData(chainId: ChainId, user: Address, needWei: bigint, deadline: bigint) {
+  return {
+    domain: starterDomain(chainId),
+    types: TOPUP_TYPES,
+    primaryType: "TopUp",
+    message: { user, needWei, deadline },
   } as const satisfies TypedDataDefinition;
 }

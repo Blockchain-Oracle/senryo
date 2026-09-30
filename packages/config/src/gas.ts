@@ -151,6 +151,12 @@ export function liquidateGasLimit(positions: number): bigint {
 }
 
 /** Monad's `eth_maxPriorityFeePerGas` is a hard-coded 2 gwei (network-and-endpoints.md). */
+/**
+ * A gas top-up (S8.16c, D-171) funds this many of the user's next sends at their budget (limit × max fee), so a
+ * practice session isn't a top-up per trade; the api clamps it to the drip's per-day cap.
+ */
+export const GAS_TOPUP_ACTIONS = 3n;
+
 export const PRIORITY_FEE_WEI = 2_000_000_000n;
 
 /**

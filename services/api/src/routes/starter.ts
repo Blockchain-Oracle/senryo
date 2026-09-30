@@ -6,8 +6,8 @@ import {
   starterStatusRoute,
   starterVoucherRoute,
 } from "@senryo/api-client";
-import { type Address, readContract, verifyClaimSignature, verifyVoucherSignature } from "@senryo/chain";
-import { MAINNET_CHAIN_ID } from "@senryo/config";
+import { type Address, readContract, startBlockOf, verifyClaimSignature, verifyVoucherSignature } from "@senryo/chain";
+import { type ChainId, MAINNET_CHAIN_ID } from "@senryo/config";
 import { RELAY_SIGNATURE_MAX_TTL_SECONDS } from "@senryo/core";
 import {
   HTTP_STATUS,
@@ -23,13 +23,14 @@ import { CLOUDFLARE_TURNSTILE_VERIFY, UPSTREAM_TIMEOUT_MS } from "../constants.t
 import { type ApiContext, chainOf } from "../context.ts";
 import { geoOf, networkPrefix } from "../geo.ts";
 import { type ClaimRow, relay, relayFromRow, starterConfig } from "../starter.ts";
+import { reconcileRelay } from "../topup.ts";
 
 const RELAY_RATE = { max: 10, timeWindow: "1 minute" } as const;
 
 /** Header-less (or oversized) clients share ONE device bucket, so omitting the header never skips the limit (S8.5b #1). */
 const UNKNOWN_DEVICE = "unknown";
 
-function deviceOf(request: FastifyRequest): string {
+export function deviceOf(request: FastifyRequest): string {
   const raw = request.headers[DEVICE_HEADER];
   const value = Array.isArray(raw) ? raw[0] : raw;
   return value && value.length <= DEVICE_HASH_MAX_CHARS ? value : UNKNOWN_DEVICE;
@@ -52,14 +53,19 @@ async function turnstileOk(ctx: ApiContext, chainId: number, token: string | und
   return json.success === true;
 }
 
-/** Next time this device / network may claim (null = now). One claim per device and a few per /24 per day. */
+/**
+ * Next time this device / network may claim (null = now). One claim per device and a few per /24 per day — counted
+ * against the CURRENT StarterDrip only (claims on a replaced drip, e.g. before the D-164 redeploy, don't block; S8.16e).
+ */
 async function nextClaimAt(ctx: ApiContext, chainId: number, device: string, prefix: string) {
+  const dripFrom = startBlockOf(chainId as ChainId, "StarterDrip");
   const [row] = await ctx.db<{ device_count: bigint; net_count: bigint; oldest: Date | null }[]>`
     SELECT count(*) FILTER (WHERE device_hash = ${device})::bigint AS device_count,
            count(*) FILTER (WHERE ip_prefix = ${prefix})::bigint AS net_count,
            min(created_at) AS oldest
       FROM starter_claims
      WHERE chain_id = ${chainId} AND kind = 'claim' AND stage NOT IN ('reverted', 'abandoned')
+       AND (block_number IS NULL OR block_number >= ${dripFrom})
        AND created_at > now() - make_interval(secs => ${SECONDS_PER_DAY})
        AND (device_hash = ${device} OR ip_prefix = ${prefix})`;
   const limited =
@@ -68,7 +74,7 @@ async function nextClaimAt(ctx: ApiContext, chainId: number, device: string, pre
   return limited && row?.oldest ? new Date(row.oldest.getTime() + SECONDS_PER_DAY * MS_PER_SECOND) : null;
 }
 
-function checkDeadline(deadline: bigint): void {
+export function checkDeadline(deadline: bigint): void {
   const now = BigInt(Math.floor(Date.now() / MS_PER_SECOND));
   if (deadline <= now)
     throw new HttpError(HTTP_STATUS.badRequest, "SIGNATURE_EXPIRED", "signature deadline has passed");
@@ -83,7 +89,7 @@ function checkDeadline(deadline: bigint): void {
  * suffices; the starter_claims row still records the outcome.
  */
 const inflight = new Set<string>();
-async function once<T>(key: string, run: () => Promise<T>): Promise<T> {
+export async function once<T>(key: string, run: () => Promise<T>): Promise<T> {
   if (inflight.has(key))
     throw new HttpError(HTTP_STATUS.conflict, "RELAYER_BUSY", "a relay for this account is in flight");
   inflight.add(key);
@@ -95,7 +101,7 @@ async function once<T>(key: string, run: () => Promise<T>): Promise<T> {
 }
 
 /** D-038: practice is never gated; mainnet starter funds follow the mainnet trading geofence (F05 "geo (mainnet only)"). */
-function checkGeo(ctx: ApiContext, chainId: number, request: Parameters<typeof geoOf>[0]): void {
+export function checkGeo(ctx: ApiContext, chainId: number, request: Parameters<typeof geoOf>[0]): void {
   if (chainId !== MAINNET_CHAIN_ID) return;
   const geo = geoOf(request, { db: ctx.geo, trustedHeader: ctx.env.TRUSTED_COUNTRY_HEADER });
   if (!geo.mainnetTradingAllowed) {
@@ -169,9 +175,11 @@ export function registerStarterRoutes(app: HttpServer, ctx: ApiContext): void {
       ]);
       const today = BigInt(Math.floor(Date.now() / MS_PER_SECOND / SECONDS_PER_DAY));
       const spent = budgetDay === today ? spentToday : 0n;
-      const [last] = await ctx.db<ClaimRow[]>`
+      const [row] = await ctx.db<ClaimRow[]>`
       SELECT * FROM starter_claims WHERE chain_id = ${query.chainId} AND user_address = ${query.user.toLowerCase()}
+        AND kind <> 'topup'
       ORDER BY created_at DESC LIMIT 1`;
+      const last = row ? await reconcileRelay(ctx, chain, row) : undefined;
       const next = await nextClaimAt(ctx, query.chainId, deviceOf(request), networkPrefix(request.ip));
       return sendRoute(reply, starterStatusRoute, {
         chainId: query.chainId,

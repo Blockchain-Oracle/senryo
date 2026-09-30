@@ -12,6 +12,8 @@ import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
 import { registerStarterRoutes } from "./routes/starter.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
+import { registerTopUpRoutes } from "./routes/topup.ts";
+import { reconcilePendingRelays } from "./topup.ts";
 import { WsHub } from "./ws.ts";
 
 const { env, secrets } = loadApiEnv();
@@ -53,8 +55,11 @@ await app.register(websocket, { options: { maxPayload: WS_MAX_PAYLOAD_BYTES } })
 registerInfoRoutes(app, ctx);
 registerAuthRoutes(app, ctx);
 registerStarterRoutes(app, ctx);
+registerTopUpRoutes(app, ctx);
 registerStorageRoutes(app, ctx);
 registerEngagementRoutes(app, ctx);
+// Rows left non-terminal by a previous process (restart mid-claim) get their real stage; never re-sent (S8.16e).
+void reconcilePendingRelays(ctx).catch((err) => log.warn({ err: String(err) }, "relay reconcile failed"));
 const hub = new WsHub(ctx);
 hub.register(app);
 hub.start();

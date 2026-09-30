@@ -54,13 +54,20 @@ function tapJournal(inner: TxJournal | undefined, onPut: (entry: JournalEntry) =
   };
 }
 
+/** Work that must succeed before signing (e.g. a gas top-up, S8.16c); a throw becomes the trace's `failed` event. */
+export interface SendOptions {
+  preflight?: (() => Promise<void>) | undefined;
+}
+
 export async function sendTracked(
   sender: Sender,
   request: TxRequest,
   onStage: (event: TraceEvent) => void,
+  options: SendOptions = {},
 ): Promise<TrackedResult> {
   const emit = (stage: TraceStage, extra: Partial<TraceEvent> = {}) => onStage({ stage, at: Date.now(), ...extra });
   emit("checking");
+  await options.preflight?.();
   const gas = await planGas(sender, request);
   emit("signing");
   const tapped: Sender = { ...sender, journal: tapJournal(sender.journal, (e) => emit("signed", { hash: e.hash })) };
@@ -131,12 +138,12 @@ export function useSendTrace(key?: string) {
   );
 
   const run = useCallback(
-    async (sender: Sender, request: TxRequest): Promise<TrackedResult | undefined> => {
+    async (sender: Sender, request: TxRequest, options: SendOptions = {}): Promise<TrackedResult | undefined> => {
       if ((traces.get(id) ?? IDLE).running) return undefined;
       setTrace(id, () => ({ events: [], running: true }));
       const push = (event: TraceEvent) => setTrace(id, (prev) => ({ ...prev, events: [...prev.events, event] }));
       try {
-        const result = await sendTracked(sender, request, push);
+        const result = await sendTracked(sender, request, push, options);
         const from = sender.account.address as Address;
         void queryClient.invalidateQueries({ queryKey: keys.account(env.chainId, from) });
         void queryClient.invalidateQueries({ queryKey: ["market", env.chainId] });

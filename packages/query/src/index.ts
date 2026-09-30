@@ -2,6 +2,7 @@ export * from "./account.ts";
 export * from "./collateral.ts";
 export * from "./constants.ts";
 export * from "./env.tsx";
+export * from "./gas.ts";
 export * from "./geo.ts";
 export * from "./keys.ts";
 export * from "./lp.ts";

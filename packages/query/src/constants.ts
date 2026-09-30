@@ -17,6 +17,8 @@ export const CANDLES_REFETCH_MS = 60_000;
 /** Account reads between socket-driven invalidations (fallback when the socket is down). */
 export const ACCOUNT_REFETCH_MS = 10_000;
 export const GAS_REFETCH_MS = 15_000;
+/** A trade's gas budget (limit × max fee) is re-estimated at most this often per market/side/position count. */
+export const GAS_BUDGET_STALE_MS = 60_000;
 /** Starter status changes only when the user claims (the claim flow invalidates it). */
 export const STARTER_STALE_MS = 300_000;
 /** Indexed equity curve (the socket invalidates the account on finalized changes). */

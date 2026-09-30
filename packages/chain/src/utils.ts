@@ -14,6 +14,7 @@ export {
   stringToBytes,
   stringToHex,
   type TransactionReceipt,
+  TransactionReceiptNotFoundError,
   toHex,
   zeroAddress,
 } from "viem";

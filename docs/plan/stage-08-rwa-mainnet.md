@@ -77,14 +77,16 @@ reuses everything below `apps/`.
       — done: `fromQuery(query, {now, staleAfterMs})` + `readingOf` (2× each refetch interval); ReadingView keeps one
       tree; ticket draft + keyed send trace survive remounts (no second submit while running); tabs layout reads only
       `hasOpenPositions`, the mini-bar computes its own summary
-- [ ] S8.16b Gas budget = measured per-chain limit × the maxFee the sender signs (`gasBudgetWei`, `useGasBudget` per
+- [x] S8.16b Gas budget = measured per-chain limit × the maxFee the sender signs (`gasBudgetWei`, `useGasBudget` per
       market/side/positions); NO_GAS generic and evaluated last (D-171)
-- [ ] S8.16c Auto top-up: api `POST /v1/starter/topup` (EIP-712 `TopUp`, sponsor `StarterDrip.topUp`, migration
+- [x] S8.16c Auto top-up: api `POST /v1/starter/topup` (EIP-712 `TopUp`, sponsor `StarterDrip.topUp`, migration
       `0004_starter_topup`), api keeps open-position holders at close budget, keeper `topups` job removed; app tops up at
       hold time, waits 3 blocks, continues the hold
+      — done: `gasBudgetFor`/`useGasBudget`; NO_GAS last with reasons; top-up at hold time and as a trace preflight for
+      close/TP-SL/LP (replaces the api floor loop); keeper `topups` removed; `gas-topup-check` 6/6 on a 10143 fork
 - [ ] S8.16d Gas economics from data: 24 h base fee on 10143/143; consensus rule settled by one testnet send; per-sender
       fee multiplier; **[OK?]** `StarterDrip.setConfig` + drip float on 10143; Q-017
-- [ ] S8.16e Claim state authoritative: starter query in `packages/query` for mobile + web (initial `checking`, `claimed`
+- [x] S8.16e Claim state authoritative: starter query in `packages/query` for mobile + web (initial `checking`, `claimed`
       wins, no Claim button on error, invalidates account/gas); `watchAccount` only with a session; api boot reconciler +
       status reconciliation; drip-scoped rate limit by `block_number`
 - [ ] S8.16 Practice gate: deposit → XAU long → partial close → TP/SL → close on 10143 from the phone; a CLOSED session

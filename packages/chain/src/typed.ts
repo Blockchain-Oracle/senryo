@@ -1,5 +1,5 @@
 import type { ChainId } from "@senryo/config";
-import { CLAIM_TYPES, EIP712_DOMAINS, SPEND_ALLOWANCE_TYPES, VOUCHER_TYPES } from "@senryo/core";
+import { CLAIM_TYPES, EIP712_DOMAINS, SPEND_ALLOWANCE_TYPES, TOPUP_TYPES, VOUCHER_TYPES } from "@senryo/core";
 import { type Address, type Hex, keccak256, stringToBytes, stringToHex, verifyTypedData } from "viem";
 import { addressOf } from "./contracts.ts";
 
@@ -37,6 +37,24 @@ export function verifyClaimSignature(params: {
     types: CLAIM_TYPES,
     primaryType: "Claim",
     message: { user: params.user, deadline: params.deadline },
+    signature: params.signature,
+  });
+}
+
+/** The off-chain gas top-up authorisation (S8.16c): same StarterDrip domain, a type the contract never accepts. */
+export function verifyTopUpSignature(params: {
+  chainId: ChainId;
+  user: Address;
+  needWei: bigint;
+  deadline: bigint;
+  signature: Hex;
+}): Promise<boolean> {
+  return verifyTypedData({
+    address: params.user,
+    domain: starterDripDomain(params.chainId),
+    types: TOPUP_TYPES,
+    primaryType: "TopUp",
+    message: { user: params.user, needWei: params.needWei, deadline: params.deadline },
     signature: params.signature,
   });
 }
