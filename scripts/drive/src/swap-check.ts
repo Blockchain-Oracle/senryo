@@ -2,8 +2,8 @@
  * S3.3 swap check (D-021/D-093). Read-only on Monad mainnet + a local anvil **mainnet fork** (no mainnet tx):
  *  1. find the AUSD/USDC v4 pool key onchain (StateView over candidate keys; no log scans), quote both directions
  *  2. on the fork: fund a throwaway EOA with USDC (impersonated PoolManager), Permit2-approve the Universal Router,
- *     `execute(V4_SWAP, [SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL])` with the 5-field ExactInputSingleParams that
- *     CollateralSwapper encodes — the output must equal the Quoter's quote at the same state.
+ *     `execute(V4_SWAP, [SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL])` with the 6-field ExactInputSingleParams that
+ *     CollateralSwapper encodes (D-122, D-180) — the output must equal the Quoter's quote at the same state.
  *   anvil --fork-url https://rpc.monad.xyz --network monad --port 18745
  *   MAINNET_FORK_RPC=http://127.0.0.1:18745 pnpm --filter @senryo/drive swap-check
  */

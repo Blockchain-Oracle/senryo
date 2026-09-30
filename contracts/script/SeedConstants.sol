@@ -3,6 +3,7 @@ pragma solidity 0.8.31;
 
 import {CALENDAR_WORD_COUNT} from "../src/libraries/Constants.sol";
 import {CollateralCfg, MarketParams} from "../src/libraries/Types.sol";
+import {PoolKey} from "../src/periphery/CollateralSwapper.sol";
 
 /// @title SeedConstants — every deploy/seed number (specs/contracts.md "Seed and market constants").
 /// @notice Each mainnet use of a seed amount is an [OK?] step. Values marked (D-0xx) were chosen in S2.
@@ -16,6 +17,12 @@ library SeedConstants {
     address internal constant MAINNET_AUSD_USD = 0xE20751C7B5867bCBef815ffc1b284c3f412a9e13;
     address internal constant UNIVERSAL_ROUTER = 0xa6CE4F10d83dBdDAc17E68e1837ca9cE6a1b596e;
     address internal constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+    /// @dev Uniswap v4 AUSD/USDC pool read onchain in S3 (D-122): currency0 AUSD < currency1 USDC, fee 50 = 0.005 %,
+    /// tick spacing 1, no hooks → poolId 0x092b6504…59ce72. The v4 Quoter and PoolManager are fork-test references.
+    uint24 internal constant STABLE_POOL_FEE = 50;
+    int24 internal constant STABLE_POOL_TICK_SPACING = 1;
+    address internal constant V4_POOL_MANAGER = 0x188d586Ddcf52439676Ca21A244753fA19F9Ea8e;
+    address internal constant V4_QUOTER = 0xa222Dd357A9076d1091Ed6Aa2e16C9742dD26891;
 
     // ---------------------------------------------------------------- feeds
     string internal constant XAU_DESCRIPTION = "XAU / USD";
@@ -118,6 +125,17 @@ library SeedConstants {
             fundingFactor: FUNDING_FACTOR,
             borrowBase: BORROW_BASE,
             borrowSlope: BORROW_SLOPE
+        });
+    }
+
+    /// @notice The AUSD/USDC v4 pool the CollateralSwapper routes through (mainnet).
+    function stablePoolKey() internal pure returns (PoolKey memory) {
+        return PoolKey({
+            currency0: MAINNET_AUSD,
+            currency1: MAINNET_USDC,
+            fee: STABLE_POOL_FEE,
+            tickSpacing: STABLE_POOL_TICK_SPACING,
+            hooks: address(0)
         });
     }
 
