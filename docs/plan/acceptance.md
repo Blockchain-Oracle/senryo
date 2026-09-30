@@ -13,3 +13,5 @@ Every chain action, deploy, spend and flow walk gets a row — including failure
 | 2026-09-30 | S2 | Sourcify verification (all 12 incl. OZ AccessManager) | testnet | F-70 | 0cdd349 | exact_match ×12 | 0 | ok |
 | 2026-09-30 | S1 | Domain senryo.xyz registered (namecheap-cli via Coolify static IP, D-051) | — | — | — | order 215459963 | $2.20 (user-approved ≤ ≈$2) | ok |
 | 2026-09-30 | S3 | Coolify capacity baseline (read-only: `free -h`, `docker stats`, PSI) | Coolify | — | 57ab490 | 7.8 GiB total · 3.0 GiB available · swap 3.7/8 GiB used · 38 containers · akashi live · PSI some avg300 0.34 | 0 | ok → D-102 |
+| 2026-09-30 | S5 | iOS dev build (EAS `development`, ad hoc; iPhone UDID …401C provisioned) | EAS | F-03, F-62 | 225231c | build 0ebf12c4-72c3-42dd-813a-4b1df4316a9b FINISHED (.ipa artifact) | 0 (EAS free tier) | ok — install on device pending (user) |
+| 2026-09-30 | S4 | HyperSync token check (`POST /query`, blocks 66856078–80) | testnet + mainnet (read) | — | 225231c | HTTP 200 on monad-testnet + monad HyperSync | 0 | ok |
