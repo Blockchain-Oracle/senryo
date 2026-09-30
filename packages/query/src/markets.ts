@@ -3,7 +3,7 @@
  * (`readMarketRisk`, re-read every few seconds) with the socket's newer price ticks laid over the oracle view;
  * the session calendar (display only); candles from the Envio indexer.
  */
-import { type MarketRiskSnapshot, readCalendar, readMarketRisk } from "@senryo/chain";
+import { addressOf, CONTRACT_ABIS, type MarketRiskSnapshot, readCalendar, readMarketRisk } from "@senryo/chain";
 import { type ChainId, ENGINE_MARKETS, MAINNET_CHAIN_ID } from "@senryo/config";
 import { fromQuery, type Reading, type WeekCalendar } from "@senryo/core";
 import { type CandleInterval, type Candles, CandlesDocument, candlesVars } from "@senryo/indexer-client";
@@ -21,6 +21,8 @@ import { keys } from "./keys.ts";
 import { PriceStore, type PriceTick } from "./price-store.ts";
 
 const MS_PER_SECOND = 1000;
+/** Pause flags change rarely; read them a sixth as often as market state. */
+const PROTOCOL_REFETCH_FACTOR = 6;
 
 export const marketRiskOptions = (env: QueryEnv, marketId: number) =>
   queryOptions({
@@ -117,6 +119,34 @@ export function useCandles(symbol: string, interval: CandleInterval): Reading<Ca
     },
     refetchInterval: CANDLES_REFETCH_MS,
     staleTime: CANDLES_REFETCH_MS,
+  });
+  return fromQuery(query);
+}
+
+/** Guardian pause (auto-expires, `MAX_PAUSE_SECONDS`) and settle-only mode — F45 global banner; reduce always works. */
+export interface ProtocolState {
+  /** Unix seconds; 0 or past = not paused. */
+  pausedUntil: bigint;
+  settleOnly: boolean;
+}
+
+export function useProtocolState(): Reading<ProtocolState> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: ["market", env.chainId, "protocol"] as const,
+    queryFn: async (): Promise<ProtocolState> => {
+      const core = { address: addressOf(env.chainId, "SenryoCore"), abi: CONTRACT_ABIS.SenryoCore } as const;
+      const [pausedUntil, settleOnly] = await env.read.multicall({
+        contracts: [
+          { ...core, functionName: "pausedUntil" },
+          { ...core, functionName: "settleOnly" },
+        ],
+        allowFailure: false,
+      });
+      return { pausedUntil: BigInt(pausedUntil), settleOnly };
+    },
+    refetchInterval: MARKET_REFETCH_MS * PROTOCOL_REFETCH_FACTOR,
+    staleTime: MARKET_REFETCH_MS * PROTOCOL_REFETCH_FACTOR,
   });
   return fromQuery(query);
 }

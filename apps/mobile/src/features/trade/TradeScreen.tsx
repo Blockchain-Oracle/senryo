@@ -6,6 +6,7 @@ import { Text } from "react-native";
 import { CandleChart } from "~/components/charts/CandleChart";
 import { Screen } from "~/components/kit/Screen";
 import { EmptyState, ReadingView } from "~/components/kit/states";
+import { HolidayBanner, ProtocolBanner } from "~/features/markets/MarketBanners";
 import { useMarketLine } from "~/features/markets/useMarketLine";
 import { TYPE, useTheme } from "~/theme";
 import { Ticket } from "./Ticket";
@@ -42,6 +43,8 @@ function EngineTrade({ marketId, symbol }: { marketId: number; symbol: string })
       {(l) => (
         <>
           <TradeHeader line={l} />
+          <ProtocolBanner />
+          <HolidayBanner calendarId={l.market.calendarId} name={l.name} />
           <ReadingView reading={candles} loading="chart" loadingLabel="Loading Chainlink rounds">
             {(rows) =>
               rows.length === 0 ? (

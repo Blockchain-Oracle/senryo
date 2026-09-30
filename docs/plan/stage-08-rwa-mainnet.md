@@ -45,8 +45,10 @@ reuses everything below `apps/`.
       starter, geo), engine WS client + `PriceStore` (rAF flush, stale after `PRICE_STALE_MS`), TxLifecycle store
       — `@senryo/query` (D-163): market/account/gas hooks, calendar, candles (mainnet feed), socket, send trace, order
       builders; starter/geo hooks stay in the apps' account layer (S6) until S8.15
-- [ ] S8.9 Mobile Markets live: watchlist (session badge, oracle age, sparkline, ▲▼ + sign), market detail with candles
+- [x] S8.9 Mobile Markets live: watchlist (session badge, oracle age, sparkline, ▲▼ + sign), market detail with candles
       (victory-native Candlestick), holiday/STALE/CIRCUIT/HALTED banners (F43–F45)
+      — live watchlist + trade header/candles (c6f2dda); ProtocolBanner (guardian pause countdown, settle-only) on
+      Markets + Trade, HolidayBanner (≤ 7 days ahead), paused-price copy (F44 in RiskBanner)
 - [x] S8.10 Mobile ticket (F10): risk explainer (3 cards, hold "I understand"), side, keypad + chips (MAX = Free to trade),
       leverage detents, margin gauge, live notional/fee/liq/"x% away", session chip, oracle age, blocker chain,
       `HoldToConfirm`, Face ID gate (D-037), execution trace on the lifecycle, receipt + share

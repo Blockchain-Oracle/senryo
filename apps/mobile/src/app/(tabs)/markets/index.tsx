@@ -5,6 +5,7 @@ import { Screen } from "~/components/kit/Screen";
 import { Segmented } from "~/components/kit/Segmented";
 import { Panel } from "~/components/kit/Surface";
 import { EmptyState } from "~/components/kit/states";
+import { ProtocolBanner } from "~/features/markets/MarketBanners";
 import { EngineMarketRow, type UpcomingMarket, UpcomingMarketRow } from "~/features/markets/MarketRow";
 import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { HAIRLINE_PX, SPACE, TYPE, useTheme } from "~/theme";
@@ -36,6 +37,7 @@ export default function Markets() {
   const count = metals.length + upcoming.length;
   return (
     <Screen>
+      <ProtocolBanner />
       <Segmented options={FILTERS} value={filter} onChange={setFilter} label="Asset class" />
       {count === 0 ? (
         <EmptyState
