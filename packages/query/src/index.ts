@@ -1,4 +1,5 @@
 export * from "./account.ts";
+export * from "./collateral.ts";
 export * from "./constants.ts";
 export * from "./env.tsx";
 export * from "./geo.ts";

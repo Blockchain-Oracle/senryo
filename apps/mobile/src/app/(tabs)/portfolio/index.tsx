@@ -11,6 +11,7 @@ import { SectionLabel } from "~/components/kit/Surface";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { AccountStrip } from "~/features/auth/AccountStrip";
 import { BucketRegister, type Buckets } from "~/features/portfolio/BucketRegister";
+import { CollateralPanel } from "~/features/portfolio/CollateralPanel";
 import { DAY_SEC, MS_PER_SECOND, WINDOW_SEC } from "~/features/portfolio/constants";
 import { PositionsTable } from "~/features/portfolio/PositionsTable";
 import { RiskBanner } from "~/features/portfolio/RiskBanner";
@@ -118,7 +119,10 @@ export default function Portfolio() {
               action={{ label: "Add money", onPress: () => router.push(ROUTES.addMoney) }}
             />
           ) : (
-            <BucketRegister buckets={bucketsOf(s)} />
+            <>
+              <BucketRegister buckets={bucketsOf(s)} />
+              <CollateralPanel snapshot={s} />
+            </>
           )
         }
       </ReadingView>
