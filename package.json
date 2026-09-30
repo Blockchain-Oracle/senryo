@@ -16,6 +16,7 @@
     "invariants": "node scripts/invariants/run.mjs",
     "env:check": "node scripts/env-check.mjs",
     "contracts:check": "cd contracts && forge build && (test -z \"$(ls src)\" || forge fmt --check) && forge lint",
+    "contracts:export": "node scripts/contracts-export.mjs",
     "gate": "pnpm typecheck && pnpm lint && pnpm invariants"
   },
   "devDependencies": {
