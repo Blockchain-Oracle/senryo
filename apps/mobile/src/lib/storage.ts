@@ -9,4 +9,10 @@ export const STORAGE_KEYS = {
   sounds: "senryo.sounds.v1",
   haptics: "senryo.haptics.v1",
   welcomed: "senryo.welcomed.v1",
+  /** Session settings (TTL, idle, Face ID per trade) — non-secret; loosening needs a step-up (S6). */
+  sessionSettings: "senryo.session-settings.v1",
+  /** S6.10 measurement ring buffer (prompt counts, flow timings, TTFT) — no secrets. */
+  measure: "senryo.measure.v1",
+  /** Per-install id for the starter relay's rate limit (`x-senryo-device`) — not an identity. */
+  device: "senryo.device.v1",
 } as const;

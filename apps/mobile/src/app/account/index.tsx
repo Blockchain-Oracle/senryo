@@ -3,6 +3,10 @@ import { View } from "react-native";
 import { ListRow } from "~/components/kit/ListRow";
 import { Screen } from "~/components/kit/Screen";
 import { Panel, SectionLabel } from "~/components/kit/Surface";
+import { DiagnosticsPanel } from "~/features/auth/DiagnosticsPanel";
+import { IdentityPanel } from "~/features/auth/IdentityPanel";
+import { StarterCard } from "~/features/auth/StarterCard";
+import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { SPACE } from "~/theme";
 
@@ -43,9 +47,12 @@ const SECTIONS: { label: string; rows: { title: string; detail: string; href: Hr
 ];
 
 export default function Account() {
+  const account = useAccount();
   return (
     <Screen>
       <Stack.Screen options={{ title: "Account" }} />
+      <IdentityPanel />
+      {account.hint ? <StarterCard /> : null}
       {SECTIONS.map((section) => (
         <View key={section.label} style={{ gap: SPACE.sm }}>
           <SectionLabel>{section.label}</SectionLabel>
@@ -62,6 +69,10 @@ export default function Account() {
           </Panel>
         </View>
       ))}
+      <View style={{ gap: SPACE.sm }}>
+        <SectionLabel>DIAGNOSTICS</SectionLabel>
+        <DiagnosticsPanel />
+      </View>
     </Screen>
   );
 }

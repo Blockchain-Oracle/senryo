@@ -14,6 +14,16 @@ export const ICONS = {
   chevron: { sf: "chevron.right", sfSelected: "chevron.right", md: "chevron_right" },
   faceId: { sf: "faceid", sfSelected: "faceid", md: "fingerprint" },
   shield: { sf: "checkmark.shield", sfSelected: "checkmark.shield.fill", md: "verified_user" },
+  lock: { sf: "lock", sfSelected: "lock.fill", md: "lock" },
+  key: { sf: "key", sfSelected: "key.fill", md: "key" },
+  warning: { sf: "exclamationmark.triangle", sfSelected: "exclamationmark.triangle.fill", md: "warning" },
+  coins: { sf: "dollarsign.circle", sfSelected: "dollarsign.circle.fill", md: "paid" },
+  lifebuoy: { sf: "lifepreserver", sfSelected: "lifepreserver.fill", md: "support" },
+  copy: { sf: "doc.on.doc", sfSelected: "doc.on.doc.fill", md: "content_copy" },
+  check: { sf: "checkmark", sfSelected: "checkmark", md: "check" },
+  eye: { sf: "eye", sfSelected: "eye.fill", md: "visibility" },
+  signOut: { sf: "rectangle.portrait.and.arrow.right", sfSelected: "rectangle.portrait.and.arrow.right", md: "logout" },
+  globe: { sf: "globe", sfSelected: "globe", md: "public" },
 } as const;
 
 export type IconName = keyof typeof ICONS;

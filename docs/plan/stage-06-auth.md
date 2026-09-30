@@ -48,10 +48,10 @@ fingerprints. S11a (web shell + auth) is folded in here (D-103).
       nginx config per runbook §6 (`location =`, `application/json`, no redirect) · web Dockerfile copies dot-folders
 - [ ] S6.10 Measurement hooks: TTFT start/stop + prompt counts per authenticator (log format, local sink)
 - [ ] S6.11 Gate + Handoff (fast gate, web build, expo export, parity + policy checks, local web sign-in)
-- [x] **(user)** Apple **Team ID** → `~/.config/senryo/apple.env` (`APPLE_TEAM_ID=…`); `eas credentials` → Android
-      signing SHA-256 → `~/.config/senryo/android.env`; then run the generator and commit the two files
-- [ ] **[OK?]** DNS A record `@` → Coolify; Coolify project + `senryo-web` deploy; `.well-known` checks (curl, Apple
-      CDN, Google Digital Asset Links)
+- [x] **(user)** Apple **Team ID** (`86C6ZFJ6V6`) + Android EAS keystore SHA-256 → constants in `@senryo/config`
+      (`APPLE_TEAM_ID`, `ANDROID_CERT_SHA256S`); generator run, AASA + assetlinks committed (df0f559)
+- [ ] **[OK?]** DNS A record `@` → Coolify (**live per lead 30 Sep: apex/www/api/indexer/docs → 84.46.247.92** — tick
+      at merge); Coolify project + `senryo-web` deploy; `.well-known` checks (curl, Apple CDN, Google Digital Asset Links)
 - [ ] **(user)** dev builds on iPhone + Android: same address web/iOS/Android, fresh-device rebuild, prompt counts per
       authenticator (iCloud, GPM, 1Password), TTFT (practice claim)
 - [ ] S6.12 Integration after S3 merges: starter claim client → `POST /v1/starter/claim` (`packages/api-client`
@@ -64,5 +64,47 @@ web sign-in in a local Chrome (rpId-matched, documented below). Device/deploy pa
 on web/iOS/Android, fresh-device rebuild on devices, prompt counts, TTFT) stay open with exact steps.
 
 ## Findings
+- **Web sign-in works end to end in real Chrome** (headless, CDP virtual authenticator ctap2 + resident key + UV +
+  `hasPrf`) on the production rpId: origin `http://local.senryo.xyz:3461` mapped by `--host-resolver-rules` and made
+  secure by `--unsafely-treat-insecure-origin-as-secure`, served by the real `deploy/nginx.conf` in an nginx container
+  (D-146). Walked: create → session unlocked → account page shows the same address → clear site data → "I already have
+  an account" → **same address** → Continue (pinned unlock) → starter claim → honest "relay offline" (S3 not deployed)
+  → step-up → 24-word phrase → backup passkey vault → clear data → recover from the file → **same address** (mode vault).
+  No console errors. Host guard verified on `localhost` (refuses, links to senryo.xyz).
+- Targeted checks (`pnpm --filter @senryo/account check`): **26/26** — derivation parity (24 random PRFs: web JS PBKDF2
+  == native `pbkdf2Sync` path == standard wallet import; fixed vector all-zero PRF → `0xF278cF59…1cdb`), policy scope
+  (11), signer wiring (6: one prompt when locked, TTL/idle, raw hash + 7702 refused, typed data/SIWE scope), starter
+  typed data == OZ `_hashTypedDataV4` from the `.sol` source.
+- `.well-known` through nginx: AASA and assetlinks → **200 `application/json`, no redirect**; `/portfolio` (no slash)
+  → 200 (no slash redirect); `/healthz` 200.
+- Web landing JS ≈ 207 KB gz, of which ≈ 190 KB is the Next 16 + React 19.2 framework baseline (> the 120 KB plan
+  target before S6 — for S11); the account runtime (~85 KB gz) and all auth sheets load lazily (D-149).
+- 7702: Simple7702Account (v0.8) is on mainnet only; MetaMask EIP7702StatelessDeleGator is on both (D-145).
+- Android authenticates SecureStore *writes*: sign-up on Android = passkey sheet + one biometric prompt to save the
+  unlock item (D-142) — expected in the prompt-count report.
+- Mera 0.2.0 vaults need WebCrypto `subtle` (HKDF + AES-GCM): fine on web; native relies on react-native-quick-crypto's
+  subtle (types list HKDF/AES-GCM) — unverified on device, so backup-passkey setup is web-first on mobile (F07 "vault
+  web-first"); the 24-word export works on native (no subtle needed).
 
 ## Handoff
+**Stopped at (2026-09-30, usage limit):** S6.8 mobile auth code written and committed as `wip` — fast gate green
+(typecheck, lint, invariants); **not yet run: `pnpm --filter @senryo/mobile exec expo export -p ios -p android`**, the
+mobile visual pass, and the mobile `.21st/design.json` records. Next, in order:
+1. Run the mobile export gate; fix any Metro resolution issue (new: `@senryo/account` via exports conditions,
+   `react-native-passkey@3.6.1`, SINGLETONS now pin `react-native-passkey` + `expo-secure-store`, quick-crypto PBKDF2).
+2. `apps/mobile/.21st/design.json`: record the RN ports — AuthCard ← sign-in-4 #19045, CeremonyCard ← verify-identity-3
+   #19036 + Task Steps #23569, PhraseGrid ← Encrypted Text #18575, SessionChip (D2 status pill), Onboarding pager.
+3. Tick S6.8, S6.10 (measurement hooks exist on both apps: `recordMeasure` → ring buffers, Account → Diagnostics),
+   S6.11; write the final Handoff sections below (API, routes, pending, user steps); final commit; report to lead.
+
+**`@senryo/account` public API (so far):** `AccountClient` (`load`, `create`, `signIn`, `unlock`, `confirm`, `stepUp`,
+`signer(context)`, `lock`, `signOut`, `session: SessionManager`); platform subpaths `@senryo/account/{passkey,
+secret-store,sync}`; `openAccount` / `openAccountFromMnemonic` / `prfOutputToMnemonic` / `mnemonicToSeed(pbkdf2?)`;
+policy `evaluateTransaction` / `evaluateTypedData` / `evaluateMessage` / `decodeCall` / `scopeTargets`; `chipState`;
+`enqueue` (per-address queue); starter `signStarterClaim` / `signVoucher` / `claimTypedData` / `voucherTypedData` /
+`canonicalVoucherCode`; recovery `revealRecoveryPhrase` / `addRecoveryPasskey` / `recoverWithVault`; 7702
+`signDelegation` / `DELEGATES`; errors `AuthError` / `OutOfScopeError` / `SessionLockedError` / `classifyAuthError`;
+copy `authFailureCopy` / `scopeCopy`; measurement `MeasureEvent` / `formatMeasure` / `ttftMs`.
+**Files outside S6 ownership touched:** `scripts/invariants/rules.mjs` (+`account-signs-only`), `biome.json`
+(ignore generated `apps/web/public/.well-known`), `packages/config/src/hosts.ts` (additive: `APPLE_TEAM_ID`,
+`IOS_BUNDLE_ID`, `ANDROID_PACKAGE`, `ANDROID_CERT_SHA256S`).

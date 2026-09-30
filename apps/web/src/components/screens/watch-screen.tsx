@@ -2,15 +2,14 @@
 
 /**
  * Watch mode (F91, D-031): any address, read-only — for judges who are geo-blocked or whose authenticator lacks PRF.
- * Nothing here can sign. The portfolio below is the same screen every account sees, still fed by the sample data
- * behind the PREVIEW DATA badge until the indexer/chain reads land (S4/S8 swap-in, D-064).
+ * Nothing here can sign. This address's balances, positions and history come from the indexer/chain reads (S4/S8
+ * swap-in); until then the page says so instead of showing sample numbers as if they were this address's.
  */
 import { explorerAddressUrl } from "@senryo/config";
 import { shortAddress } from "@senryo/core";
 import { ExternalLink, Eye } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
-import { PortfolioScreen } from "@/components/screens/portfolio-screen";
 import { Panel, SectionLabel } from "@/components/shell/primitives";
 import { Button } from "@/components/ui/button";
 import { CopyCode } from "@/components/ui/copy-code-button";
@@ -87,9 +86,12 @@ export function WatchScreen() {
           >
             {ACTIVE_NETWORK.modeLabel} explorer <ExternalLink className="size-3" aria-hidden />
           </a>
+          <p className="text-caption text-muted-foreground">
+            Live balances, positions and history for this address appear here once the indexer is connected; the
+            explorer shows its onchain activity now.
+          </p>
         </Panel>
       </div>
-      <PortfolioScreen />
     </div>
   );
 }
