@@ -77,6 +77,8 @@ reuses everything below `apps/`.
       insurance 50 AUSD, card float 50 USDC (`SeedConstants.sol`)
 - [ ] S8.18 **[OK?]** mainnet deploy (`Deploy.s.sol`, ensure-style) + Sourcify/Monadscan verify + roles + admin → Safe
       2-of-3 (owners from the user) + `143.json` export + `address-drift`
+      — rehearsed on a 143 fork (D-167): deploy + SeedMainnet + mainnet-rehearsal 6/6 (deposit, XAU long/close,
+      collateral swap, LP); procedure: throwaway worktree, `pnpm contracts:export` there, never commit its 143.json
 - [ ] S8.19 **[OK?]** seed LP/insurance/card float + mainnet StarterDrip budget (D-030 relayed gas drip)
       — `contracts/script/SeedMainnet.s.sol` (real AUSD/USDC from the deployer, idempotent; card float opt-in;
       StarterDrip float via STARTER_FUND_WEI above the 10 MON reserve)

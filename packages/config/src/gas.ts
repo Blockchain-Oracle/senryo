@@ -30,8 +30,12 @@ export const GAS_LIMITS = {
   deposit: 510_000n,
   /** (S8.6) 1 position: 462.8k mainnet · 271.7k testnet; 0 positions 289.5k. */
   withdraw: 510_000n,
-  /** (S8.6) 1 position: 490.8k mainnet · 397.3k testnet (lead's 10143 fork, 2 positions: 498.7k → positionGasLimit). */
-  increase: 540_000n,
+  /**
+   * (S8.6) 1 position: 490.8k mainnet · 397.3k testnet (lead's 10143 fork, 2 positions: 498.7k → positionGasLimit).
+   * (S8.18 rehearsal) the FIRST position in a freshly deployed mainnet market estimates 550.35k — its aggregate slots
+   * go zero → non-zero — so the cap is 620k; the limit sent is still estimate + headroom.
+   */
+  increase: 620_000n,
   /** (S8.6) 1 position: 440.5k mainnet · 283.6k testnet. */
   decrease: 490_000n,
   /** (S8.6) 1 position: 414.9k mainnet · 260.1k testnet. */
