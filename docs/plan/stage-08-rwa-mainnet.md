@@ -78,6 +78,8 @@ reuses everything below `apps/`.
 - [ ] S8.18 **[OK?]** mainnet deploy (`Deploy.s.sol`, ensure-style) + Sourcify/Monadscan verify + roles + admin → Safe
       2-of-3 (owners from the user) + `143.json` export + `address-drift`
 - [ ] S8.19 **[OK?]** seed LP/insurance/card float + mainnet StarterDrip budget (D-030 relayed gas drip)
+      — `contracts/script/SeedMainnet.s.sol` (real AUSD/USDC from the deployer, idempotent; card float opt-in;
+      StarterDrip float via STARTER_FUND_WEI above the 10 MON reserve)
 - [ ] S8.20 **[OK?]** S4 re-sync (143 addresses + `ENVIO_APP_LAUNCH_BLOCK_143`) + api `CHAIN_IDS=10143,143` redeploy
       — **and** give `Trigger`, `Liquidation`, `LpPosition`, `LpRedeemRequest`, `LpPoolDaily` a chainId (ids today are
       orderId / owner / requestId / day — practice and mainnet would collide once both are indexed); query by chain
