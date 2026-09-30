@@ -38,8 +38,9 @@ reuses everything below `apps/`.
       FreeToTrade after the trade, caps (OI/skew/trade/min), session calendar display, `blockers.ts` in F10 order;
       differential check vs `SenryoCore.quote` on the fork — `risk-mirror-check` 6/6 mirror checks (D-162); its
       increase + partial-close steps reproduce the D-161 contract bug and re-run after S8.5a
-- [ ] S8.5a D-161 fix (contracts track) → **testnet core-set redeploy** (addresses, indexer, api, keeper) →
-      `risk-mirror-check` fully green
+- [x] S8.5a D-161 fix (contracts track) → **testnet core-set redeploy** (addresses, indexer, api, keeper) →
+      `risk-mirror-check` fully green — D-164: redeployed + verified, api/keeper/web/indexer on sha-66679dd, indexer
+      reset + resumed, check 9/9, live claim finalized; per-position gas wired (card, keeper, orders)
 - [x] S8.8 `packages/query`: keys, hooks (markets, market ctx/candles/session, account buckets/positions/orders,
       starter, geo), engine WS client + `PriceStore` (rAF flush, stale after `PRICE_STALE_MS`), TxLifecycle store
       — `@senryo/query` (D-163): market/account/gas hooks, calendar, candles (mainnet feed), socket, send trace, order
