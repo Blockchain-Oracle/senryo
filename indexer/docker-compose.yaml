@@ -1,0 +1,97 @@
+# Senryo indexer stack for Coolify (Docker Compose resource from git, base dir /indexer) — adapted from
+# enviodev/local-docker-example for Coolify (context/09-product/deployment-coolify.md, plan §5):
+#   no `ports` (Traefik routes the Hasura domain), no `container_name`, no custom networks (Coolify gives the
+#   resource its own), `mem_limit` per service, required secrets fail the deploy while empty, Hasura console off,
+#   health checks on the real ports (indexer 9898 /healthz — the example probed 8080, which is Hasura's).
+# Coolify: set "Domains for graphql-engine" = https://indexer.senryo.xyz:8080 (target port, no host port).
+# Local run: docker compose -f docker-compose.yaml -f docker-compose.local.yaml up --build
+services:
+  envio-postgres:
+    image: postgres:17.5
+    restart: unless-stopped
+    mem_limit: 512m
+    volumes:
+      - envio-pg-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${ENVIO_PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${ENVIO_PG_PASSWORD:?}
+      POSTGRES_DB: ${ENVIO_PG_DATABASE:-envio}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  graphql-engine:
+    image: hasura/graphql-engine:v2.43.0
+    restart: unless-stopped
+    mem_limit: 384m
+    depends_on:
+      envio-postgres:
+        condition: service_healthy
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://${ENVIO_PG_USER:-postgres}:${ENVIO_PG_PASSWORD:?}@envio-postgres:5432/${ENVIO_PG_DATABASE:-envio}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:?}
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "false"
+      HASURA_GRAPHQL_DEV_MODE: "false"
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: public
+      HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, websocket-log
+      HASURA_GRAPHQL_NO_OF_RETRIES: "10"
+      HASURA_GRAPHQL_SERVER_PORT: "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  envio-indexer:
+    build: .
+    restart: unless-stopped
+    mem_limit: 800m
+    cpus: 0.8
+    depends_on:
+      graphql-engine:
+        condition: service_healthy
+    environment:
+      ENVIO_API_TOKEN: ${ENVIO_API_TOKEN:?}
+      ENVIO_PG_HOST: envio-postgres
+      ENVIO_PG_PORT: "5432"
+      ENVIO_PG_USER: ${ENVIO_PG_USER:-postgres}
+      ENVIO_PG_PASSWORD: ${ENVIO_PG_PASSWORD:?}
+      ENVIO_PG_DATABASE: ${ENVIO_PG_DATABASE:-envio}
+      # NODE_ENV=production (Dockerfile) disables Envio's dev fallbacks, so these are explicit (values = Envio's
+      # own dev defaults; Postgres is on the resource's private network, no TLS).
+      ENVIO_PG_SSL_MODE: "false"
+      ENVIO_THROTTLE_CHAIN_METADATA_INTERVAL_MILLIS: "500"
+      ENVIO_THROTTLE_PRUNE_STALE_DATA_INTERVAL_MILLIS: "30000"
+      HASURA_GRAPHQL_ENDPOINT: http://graphql-engine:8080/v1/metadata
+      HASURA_GRAPHQL_ROLE: admin
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:?}
+      ENVIO_INDEXER_HOST: 0.0.0.0
+      ENVIO_INDEXER_PORT: "9898"
+      ENVIO_TUI: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_STRATEGY: ${LOG_STRATEGY:-ecs-console}
+      # Optional overrides (empty = the defaults in config.yaml / src/lib/constants.ts).
+      ENVIO_APP_LAUNCH_BLOCK_143: ${ENVIO_APP_LAUNCH_BLOCK_143:-}
+      ENVIO_PERPL_BUILDER_ID: ${ENVIO_PERPL_BUILDER_ID:-}
+      ENVIO_FEED_START_BLOCK_143: ${ENVIO_FEED_START_BLOCK_143:-}
+      ENVIO_FEED_WATCH_START_BLOCK_143: ${ENVIO_FEED_WATCH_START_BLOCK_143:-}
+      ENVIO_PERPL_START_BLOCK_143: ${ENVIO_PERPL_START_BLOCK_143:-}
+      ENVIO_START_BLOCK_143: ${ENVIO_START_BLOCK_143:-}
+      ENVIO_SKIP_143: ${ENVIO_SKIP_143:-}
+      ENVIO_RPC_URL_143: ${ENVIO_RPC_URL_143:-}
+      ENVIO_RPC_URL_10143: ${ENVIO_RPC_URL_10143:-}
+      ENVIO_ARCHIVE_RPC_URL_143: ${ENVIO_ARCHIVE_RPC_URL_143:-}
+      ENVIO_ARCHIVE_RPC_URL_10143: ${ENVIO_ARCHIVE_RPC_URL_10143:-}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9898/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  envio-pg-data:

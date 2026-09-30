@@ -85,6 +85,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["indexer/schema.graphql"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
     }
   ],
   "css": {

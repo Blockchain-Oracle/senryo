@@ -22,12 +22,12 @@ Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows o
 | F-23 | Refund/settlement states handled | AU | S9 | Pending |
 | F-24 | ≥3 source chains incl. Solana | AU bonus | S9 | Pending |
 | F-25 | Cash-out via Swap API | AU | S9 | Pending |
-| F-30 | Multichain HyperIndex (143 + 10143) | EN | S4 | Pending |
-| F-31 | Derived/aggregated entities | EN | S4 | Pending |
-| F-32 | Perpl account linking + fill attribution | EN | S4/S7 | Pending |
-| F-33 | Indexer drives features (portfolio, activity, candles, stats) | EN | S4/S8 | Pending |
+| F-30 | Multichain HyperIndex (143 + 10143) | EN | S4 | Partial — local sync at head on both chains via HyperSync (41 s, 6fb6ecd); hosted deploy S14 |
+| F-31 | Derived/aggregated entities | EN | S4 | Done — daily/protocol aggregates computed in handlers; stats query returns (6fb6ecd, acceptance S4) |
+| F-32 | Perpl account linking + fill attribution | EN | S4/S7 | Partial — taker-fill cursor: 17,217 fills paired, 0 unattributed; app-user linking lands in S7 |
+| F-33 | Indexer drives features (portfolio, activity, candles, stats) | EN | S4/S8 | Partial — `@senryo/indexer-client` returns testnet portfolio/activity/candles/stats from the S3 drive; app wiring S8 |
 | F-34 | Public GraphQL + README | EN | S14 | Pending |
-| F-35 | HyperSync analytics script | EN | S4 | Pending |
+| F-35 | HyperSync analytics script | EN | S4 | Done — Perpl 7-day analytics ($87.4M volume, 474k fills, 93 liquidations) |
 | F-40 | RWA pool engine (testnet → mainnet) | T1 | S2/S8 | Pending |
 | F-41 | Session-aware oracle (hours, stale, circuit, reduce-only) | T1 originality | S2 | Pending |
 | F-42 | Risk buckets from chain | T1 design | S8 | Pending |
