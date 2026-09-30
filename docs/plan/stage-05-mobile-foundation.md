@@ -16,7 +16,7 @@ Real data arrives in S6–S8.
 - [x] S5.5 Gate: `expo export -p ios -p android`, `expo-doctor`, fast gate; decisions + references recorded
 - [x] **(user)** `eas init` → project `@0xabu/senryo` (`2d424d4b-644e-4231-a156-a8c63d802e9c`, 2026-09-30); `eas init` cannot write a dynamic config, so owner + projectId live in `src/lib/constants/app.ts` (`EAS`)
 - [x] iOS dev build `0ebf12c4` FINISHED (ad hoc; Team `86C6ZFJ6V6`, distribution cert + profile via EAS; iPhone registered) — install + Developer Mode on device (user)
-- [ ] **(user)** Android dev build + `eas credentials` (keystore SHA-256 → S6 assetlinks)
+- [x] Android dev build `e8d03e99` FINISHED (EAS default keystore; cert SHA-256 `E4:89:…:B1:A5` read from the APK v2 signing block → `ids-and-txs.md`, S6 assetlinks) — install on the Android phone (user)
 - [ ] **[OK?]** Android developer registration (free limited tier, D-017)
 
 ## Gate
