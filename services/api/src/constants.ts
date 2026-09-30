@@ -20,6 +20,12 @@ export const SANCTIONED = ["CU", "IR", "KP", "SY"] as const;
 /** Edge headers that may carry the viewer country (first match wins). */
 export const COUNTRY_HEADERS = ["cf-ipcountry", "x-vercel-ip-country", "x-geo-country"] as const;
 
+/** DB-IP "IP to Country Lite" (CC BY 4.0), monthly file; `{month}` = YYYY-MM (S8.15). */
+export const GEO_DB_URL = "https://download.db-ip.com/free/dbip-country-lite-{month}.mmdb.gz";
+/** Weekly refresh picks up the new monthly file; the download is ~5 MB gzipped. */
+export const GEO_DB_REFRESH_MS = 604_800_000;
+export const GEO_DB_TIMEOUT_MS = 60_000;
+
 /** Starter relay rate limits (per UTC day): one claim per device, a few per IPv4 /24 (or IPv6 /48). */
 export const STARTER_PER_DEVICE_PER_DAY = 1;
 export const STARTER_PER_NETWORK_PER_DAY = 5;

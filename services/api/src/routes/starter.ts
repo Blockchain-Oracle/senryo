@@ -7,6 +7,7 @@ import {
   starterVoucherRoute,
 } from "@senryo/api-client";
 import { type Address, readContract, verifyClaimSignature, verifyVoucherSignature } from "@senryo/chain";
+import { MAINNET_CHAIN_ID } from "@senryo/config";
 import { RELAY_SIGNATURE_MAX_TTL_SECONDS } from "@senryo/core";
 import {
   HTTP_STATUS,
@@ -20,7 +21,7 @@ import {
 import type { FastifyRequest } from "fastify";
 import { CLOUDFLARE_TURNSTILE_VERIFY, UPSTREAM_TIMEOUT_MS } from "../constants.ts";
 import { type ApiContext, chainOf } from "../context.ts";
-import { networkPrefix } from "../geo.ts";
+import { geoOf, networkPrefix } from "../geo.ts";
 import { type ClaimRow, relay, relayFromRow, starterConfig } from "../starter.ts";
 
 const RELAY_RATE = { max: 10, timeWindow: "1 minute" } as const;
@@ -68,10 +69,20 @@ function checkDeadline(deadline: bigint): void {
   }
 }
 
+/** D-038: practice is never gated; mainnet starter funds follow the mainnet trading geofence (F05 "geo (mainnet only)"). */
+function checkGeo(ctx: ApiContext, chainId: number, request: Parameters<typeof geoOf>[0]): void {
+  if (chainId !== MAINNET_CHAIN_ID) return;
+  const geo = geoOf(request, ctx.geo);
+  if (!geo.mainnetTradingAllowed) {
+    throw new HttpError(HTTP_STATUS.forbidden, "GEO_BLOCKED", geo.reason ?? "not available in this region");
+  }
+}
+
 export function registerStarterRoutes(app: HttpServer, ctx: ApiContext): void {
   app.post(starterClaimRoute.path, { config: { rateLimit: RELAY_RATE } }, async (request, reply) => {
     const { body } = parseRoute(starterClaimRoute, request);
     const chain = chainOf(ctx, body.chainId);
+    checkGeo(ctx, body.chainId, request);
     checkDeadline(body.deadline);
     const signed = await verifyClaimSignature({
       chainId: body.chainId,
@@ -100,6 +111,7 @@ export function registerStarterRoutes(app: HttpServer, ctx: ApiContext): void {
   app.post(starterVoucherRoute.path, { config: { rateLimit: RELAY_RATE } }, async (request, reply) => {
     const { body } = parseRoute(starterVoucherRoute, request);
     const chain = chainOf(ctx, body.chainId);
+    checkGeo(ctx, body.chainId, request);
     checkDeadline(body.deadline);
     const signed = await verifyVoucherSignature({ ...body, code: body.code });
     if (!signed) throw new HttpError(HTTP_STATUS.badRequest, "SIGNATURE_INVALID", "voucher signature does not match");

@@ -5,6 +5,7 @@ import { createDb, createHttpServer, createLogger, listen, migrate, pingDb, Sess
 import { CORS_METHODS, WS_MAX_PAYLOAD_BYTES } from "./constants.ts";
 import { type ApiContext, openChains } from "./context.ts";
 import { loadApiEnv } from "./env.ts";
+import { GeoDb } from "./geo-db.ts";
 import { EnvioIndexerBridge, NullIndexerBridge } from "./indexer.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
@@ -23,6 +24,8 @@ const indexer = env.INDEXER_GRAPHQL_URL
   ? new EnvioIndexerBridge(env.INDEXER_GRAPHQL_URL, log)
   : new NullIndexerBridge();
 indexer.start();
+const geo = new GeoDb(log);
+geo.start();
 const ctx: ApiContext = {
   env,
   secrets,
@@ -31,6 +34,7 @@ const ctx: ApiContext = {
   chains,
   sessions: secrets.sessionSecret ? new SessionKeys(secrets.sessionSecret) : undefined,
   indexer,
+  geo,
 };
 if (!ctx.sessions) log.warn("API_SESSION_SECRET unset — session routes answer 503");
 
@@ -58,6 +62,7 @@ hub.start();
 await listen(app, env.PORT, env.HOST, async () => {
   hub.stop();
   indexer.stop();
+  geo.stop();
   for (const chain of chains.values()) await chain.heads.stop();
   await db.end();
 });

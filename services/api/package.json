@@ -13,6 +13,7 @@
     "@fastify/cors": "11.3.0",
     "@fastify/rate-limit": "11.2.0",
     "@fastify/websocket": "11.3.1",
+    "@maxmind/geoip2-node": "7.1.0",
     "@senryo/api-client": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",

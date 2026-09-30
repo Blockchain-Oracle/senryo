@@ -25,7 +25,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     }),
   );
 
-  app.get(geoRoute.path, async (request, reply) => sendRoute(reply, geoRoute, geoOf(request)));
+  app.get(geoRoute.path, async (request, reply) => sendRoute(reply, geoRoute, geoOf(request, ctx.geo)));
 
   app.get(statusRoute.path, async (_request, reply) => {
     const nowSec = Math.floor(Date.now() / MS_PER_SECOND);

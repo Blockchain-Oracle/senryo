@@ -65,7 +65,7 @@ reuses everything below `apps/`.
       — LP screen on chain reads (readLpVault: value, cap, sLP, wallet AUSD, pending redeems, all-open gate),
       historical 7-day APR (indexed pool days), utilisation from live books, practice faucet; ticket-e2e LP 6/6
 - [ ] S8.14 Collateral swap (F26, mainnet): Quoter → `swapCollateral(minOut)` → trace; quote-moved + paused states
-- [ ] S8.15 Geofence (F95, D-038): api country lookup (DB-IP Lite, D-121) + mainnet blocker; practice never gated
+- [x] S8.15 Geofence (F95, D-038): api country lookup (DB-IP Lite, D-121) + mainnet blocker; practice never gated — D-165 (DB-IP Lite in the api, ticket + mainnet starter gated)
 - [ ] S8.16 Practice gate: deposit → XAU long → partial close → TP/SL → close on 10143 from the phone; a CLOSED session
       blocks opens and allows reduce; txs in `acceptance.md`
 - [ ] S8.17 **[OK?]** mainnet funding by the user (Q-012): deployer, sponsor, 2 operators, keeper MON; LP 250 AUSD,

@@ -18,6 +18,7 @@ import {
   type SessionKeys,
 } from "@senryo/service-common";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
+import type { GeoDb } from "./geo-db.ts";
 import type { IndexerBridge } from "./indexer.ts";
 
 /** One served network: reads, commit-state heads, and the sponsor (RELAYER_ROLE) that relays starter claims. */
@@ -37,6 +38,8 @@ export interface ApiContext {
   chains: Map<ChainId, ChainContext>;
   sessions: SessionKeys | undefined;
   indexer: IndexerBridge;
+  /** DB-IP Lite country lookup (S8.15); null country until loaded. */
+  geo: GeoDb;
 }
 
 export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId, ChainContext>> {

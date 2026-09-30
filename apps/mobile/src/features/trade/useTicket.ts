@@ -24,6 +24,7 @@ import {
   useAccountRisk,
   useCalendar,
   useGasBalance,
+  useGeo,
   usePositions,
   useQueryEnv,
   useSendTrace,
@@ -52,6 +53,8 @@ export function useTicket(market: LiveMarket) {
   const positions = usePositions(address);
   const gas = useGasBalance(address);
   const calendar = useCalendar(market.calendarId);
+  const geo = useGeo();
+  const geoValue = geo.status === "fresh" || geo.status === "stale" ? geo.value : undefined;
   const gasPrice = useQuery({
     queryKey: ["chain", env.chainId, "gasPrice"],
     queryFn: () => env.read.getGasPrice(),
@@ -90,8 +93,8 @@ export function useTicket(market: LiveMarket) {
   const blocker: TradeBlocker | undefined = firstTradeBlocker({
     online,
     mainnet: ACTIVE_NETWORK.modeLabel === "Mainnet",
-    geoAllowed: true,
-    country: null,
+    geoAllowed: geoValue?.mainnetTradingAllowed,
+    country: geoValue?.country ?? null,
     hasAccount: address !== undefined,
     hasGas,
     status: market.pv.status,
