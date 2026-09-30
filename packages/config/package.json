@@ -1,0 +1,21 @@
+{
+  "name": "@senryo/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The only home of chain ids, RPC URLs, hosts and the passkey rpId (plain data; imports zod only).",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

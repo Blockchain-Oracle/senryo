@@ -1,3 +1,4 @@
+import { DECIMALS } from "@senryo/core";
 import { Circle, LinearGradient, vec } from "@shopify/react-native-skia";
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -5,7 +6,6 @@ import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { Area, CartesianChart, Line, useChartPressState } from "victory-native";
 import { fire } from "~/feedback/fire";
-import { DECIMALS } from "~/lib/constants/units";
 import { clockTime } from "~/lib/format";
 import { toPlot, usd } from "~/lib/money";
 import type { EquityPoint } from "~/lib/sample";
@@ -19,7 +19,7 @@ import { CHART } from "./constants";
  */
 export function EquityChart({ points }: { points: EquityPoint[] }) {
   const { color } = useTheme();
-  const data = useMemo(() => points.map((p) => ({ t: p.t, equity: toPlot(p.equity6, DECIMALS.usd) })), [points]);
+  const data = useMemo(() => points.map((p) => ({ t: p.t, equity: toPlot(p.equity6, DECIMALS.usd6) })), [points]);
   const { state, isActive } = useChartPressState({ x: 0, y: { equity: 0 } });
   useAnimatedReaction(
     () => isActive,

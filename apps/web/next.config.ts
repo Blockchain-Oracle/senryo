@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
   images: { unoptimized: true },
-  transpilePackages: ["@senryo/tokens"],
+  transpilePackages: ["@senryo/config", "@senryo/core", "@senryo/tokens"],
   reactStrictMode: true,
   devIndicators: false,
 };

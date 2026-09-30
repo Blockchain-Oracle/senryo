@@ -1,6 +1,6 @@
+import { fromQuery, type Reading } from "@senryo/core";
 import { useQuery } from "@tanstack/react-query";
 import { SAMPLE_LATENCY_MS } from "./constants/time";
-import { fromQuery, type Reading } from "./reading";
 
 /**
  * A preview read: resolves `value` after a short delay through TanStack Query, so every shell screen exercises the real

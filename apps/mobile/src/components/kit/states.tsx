@@ -1,3 +1,4 @@
+import type { Diagnosis, Reading } from "@senryo/core";
 import { type ReactNode, useEffect, useState } from "react";
 import { type DimensionValue, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -10,7 +11,6 @@ import Animated, {
 import { ELAPSED_TICK_MS, MS_PER_SECOND } from "~/lib/constants/time";
 import { DIAGNOSIS_COPY, ERROR_COPY } from "~/lib/copy/diagnosis";
 import { clockTime } from "~/lib/format";
-import type { Diagnosis, Reading } from "~/lib/reading";
 import { HAIRLINE_PX, RADIUS, SIZE, SKELETON, SPACE, TYPE, useTheme } from "~/theme";
 import { Button } from "./Button";
 

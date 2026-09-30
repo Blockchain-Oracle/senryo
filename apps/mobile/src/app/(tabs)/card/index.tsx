@@ -1,3 +1,4 @@
+import { BPS_DENOMINATOR } from "@senryo/core";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -9,7 +10,6 @@ import { ReadingView } from "~/components/kit/states";
 import { CardFace } from "~/features/card/CardFace";
 import { fire } from "~/feedback/fire";
 import { cardAuthRoute, ROUTES } from "~/lib/constants/routes";
-import { BPS_DENOMINATOR } from "~/lib/constants/units";
 import { signedUsd, usd } from "~/lib/money";
 import { notify } from "~/lib/notify";
 import { SAMPLE_CARD } from "~/lib/sample";

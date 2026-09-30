@@ -1,4 +1,4 @@
-import type { DiagnosisKind } from "../reading";
+import type { DiagnosisKind } from "@senryo/core";
 
 /** Human copy per failure (ported pattern: why + what still works). Moves to `packages/core/copy` in S3. */
 export const DIAGNOSIS_COPY: Record<DiagnosisKind, { headline: string; body: string }> = {

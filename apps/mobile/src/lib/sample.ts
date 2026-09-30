@@ -4,6 +4,8 @@
  * (account/buckets from chain, markets from the oracle + Perpl, card from services/card) and delete this file.
  * Money is integer base units, as everywhere: usd6, e8 oracle prices, bps.
  */
+
+import { BPS_DENOMINATOR } from "@senryo/core";
 import {
   CANDLE_BODY_BPS,
   CANDLE_COUNT,
@@ -18,7 +20,6 @@ import {
   SPARK_POINTS,
   SPARK_STEP_BPS,
 } from "./constants/sample";
-import { BPS_DENOMINATOR } from "./constants/units";
 
 export const SAMPLE_NOTE = "Sample numbers for the preview build. Not your balance, not a live price.";
 

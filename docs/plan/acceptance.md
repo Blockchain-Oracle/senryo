@@ -12,3 +12,4 @@ Every chain action, deploy, spend and flow walk gets a row — including failure
 | 2026-09-30 | S2 | Testnet deploy of all contracts (`Deploy.s.sol`, ensure-style) | testnet | F-40, F-41, F-43, F-50 | 0cdd349 | 12 contracts, start block 66856078; `broadcast/Deploy.s.sol/10143/run-latest.json` | ≈2.93 testnet MON | ok |
 | 2026-09-30 | S2 | Sourcify verification (all 12 incl. OZ AccessManager) | testnet | F-70 | 0cdd349 | exact_match ×12 | 0 | ok |
 | 2026-09-30 | S1 | Domain senryo.xyz registered (namecheap-cli via Coolify static IP, D-051) | — | — | — | order 215459963 | $2.20 (user-approved ≤ ≈$2) | ok |
+| 2026-09-30 | S3 | Coolify capacity baseline (read-only: `free -h`, `docker stats`, PSI) | Coolify | — | 57ab490 | 7.8 GiB total · 3.0 GiB available · swap 3.7/8 GiB used · 38 containers · akashi live · PSI some avg300 0.34 | 0 | ok → D-102 |

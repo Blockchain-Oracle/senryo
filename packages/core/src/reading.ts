@@ -1,6 +1,6 @@
 /**
  * `Reading<T>` — the cross-cutting state rule (plan §2.5): nothing renders a number without a value, so there is never
- * a fabricated $0.00. Lives here until `packages/core` lands (S3), which then owns the type and this file re-exports it.
+ * a fabricated $0.00. Owned here; apps render it with their states kits.
  *
  *   unknown → skeleton · fresh → value · stale → value + "Updated 14:02 · refreshing" · failed (no cache) → ErrorState
  */

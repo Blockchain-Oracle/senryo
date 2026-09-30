@@ -1,8 +1,8 @@
+import { DECIMALS } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Candlestick, CartesianChart } from "victory-native";
-import { DECIMALS } from "~/lib/constants/units";
 import { clockTime } from "~/lib/format";
 import { toPlot } from "~/lib/money";
 import type { Candle } from "~/lib/sample";
@@ -22,10 +22,10 @@ export function CandleChart({ candles }: { candles: Candle[] }) {
     () =>
       candles.map((c) => ({
         t: c.t,
-        open: toPlot(c.openE8, DECIMALS.oracle),
-        high: toPlot(c.highE8, DECIMALS.oracle),
-        low: toPlot(c.lowE8, DECIMALS.oracle),
-        close: toPlot(c.closeE8, DECIMALS.oracle),
+        open: toPlot(c.openE8, DECIMALS.e8),
+        high: toPlot(c.highE8, DECIMALS.e8),
+        low: toPlot(c.lowE8, DECIMALS.e8),
+        close: toPlot(c.closeE8, DECIMALS.e8),
       })),
     [candles],
   );

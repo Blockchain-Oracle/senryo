@@ -1,6 +1,6 @@
+import { BPS_DENOMINATOR } from "@senryo/core";
 import { StyleSheet, Text, View } from "react-native";
 import { Panel } from "~/components/kit/Surface";
-import { BPS_DENOMINATOR } from "~/lib/constants/units";
 import { pct, usd } from "~/lib/money";
 import type { SampleBuckets } from "~/lib/sample";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";

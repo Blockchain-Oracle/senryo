@@ -1,3 +1,4 @@
+import { BPS_DENOMINATOR } from "@senryo/core";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -6,7 +7,6 @@ import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, Rule, SectionLabel } from "~/components/kit/Surface";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
-import { BPS_DENOMINATOR } from "~/lib/constants/units";
 import { pct, usd } from "~/lib/money";
 import type { SampleBuckets, SampleMarket } from "~/lib/sample";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
