@@ -61,3 +61,4 @@ Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: no
 | Expo / EAS project | `@0xabu/senryo` · projectId `2d424d4b-644e-4231-a156-a8c63d802e9c` (2026-09-30) |
 | Apple Developer team | Individual "Abubakr Jimoh" · Team ID `86C6ZFJ6V6` · bundle id `xyz.senryo.app` registered, Associated Domains enabled, distribution cert created via EAS (2026-09-30) |
 | Android signing cert (EAS keystore "Build Credentials fNFoZPe6lZ (default)") | SHA-256 `E4:89:29:5E:DF:D5:56:E0:52:65:5C:16:AB:81:FE:FE:60:56:22:0E:2A:2A:D0:F4:24:24:B9:1F:D1:8E:B1:A5` — read from the dev APK v2 signing block (build e8d03e99, 2026-09-30); goes in assetlinks.json |
+| DNS (Namecheap BasicDNS, 2026-09-30, user OK) | A `@`, `api`, `indexer`, `docs` → 84.46.247.92 (Coolify box) TTL 300; CNAME `www` → senryo.xyz; parking URL/CNAME records removed |
