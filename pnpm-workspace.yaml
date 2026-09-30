@@ -24,3 +24,8 @@ catalog:
   "@tailwindcss/postcss": ^4.1.0
   motion: ^13.4.4
   tsx: ^4.20.0
+
+# Expo SDK 57 pins React to its renderer (React Native refuses any other React); web keeps 19.2.8 above (D-070).
+catalogs:
+  mobile:
+    react: 19.2.3
