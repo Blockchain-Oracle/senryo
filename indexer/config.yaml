@@ -1,0 +1,161 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+# Senryo indexer (Envio HyperIndex V3). Plan §2.3, specs/services.md "Indexer", D-014, D-020, D-040, D-130+.
+# Env expressions are interpolated as raw text before YAML parsing, comments included: keep dollar-brace
+# expressions out of comments. Every ENVIO_* variable below has a default; `.env.example` lists them.
+# Our deployed addresses must match packages/contracts/src/addresses/<chainId>.json (invariant `address-drift`).
+name: senryo-indexer
+description: SenryoCore, LP, card, oracle rounds and Perpl on Monad mainnet (143) and testnet (10143)
+address_format: lowercase
+disable_default_cross_chain: true
+
+contracts:
+  # ---------------------------------------------------------------- ours (contracts/src/libraries/Events.sol)
+  - name: SenryoCore
+    events:
+      - event: Deposited(address indexed user, address indexed payer, address indexed token, uint256 amount, uint8 source, uint64 nonce)
+      - event: Withdrawn(address indexed user, address indexed to, address indexed token, uint256 amount, uint64 nonce)
+      - event: AccountRiskUpdated(address indexed user, uint64 nonce, int256 equityInit, uint256 imTotal, uint256 mmTotal, uint256 holds, uint256 cardDebt, uint256 envelope, int256 freeToTrade, int256 freeToSpend)
+      - event: CollateralSwapped(address indexed user, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, uint64 nonce)
+      - event: MarketConfigured(uint8 indexed marketId, bool enabled)
+      - event: MarketStateUpdated(uint8 indexed marketId, uint256 longSize, uint256 shortSize, int256 fundingIndex, uint256 borrowIndex, int256 fundingRate, uint256 borrowRate)
+      - event: PositionUpdated(address indexed user, uint8 indexed marketId, uint8 kind, bool isLong, uint256 sizeDelta, uint256 execPrice, uint256 oraclePrice, uint256 fee, int256 realizedPnl, int256 funding, uint256 borrow, uint256 sizeAfter, uint256 entryAfter, uint64 nonce)
+      - event: TriggerPlaced(address indexed user, bytes32 indexed orderId, uint8 indexed marketId, bool takeProfit, uint256 triggerPrice18, uint256 sizeDelta, uint64 expiry)
+      - event: TriggerCancelled(address indexed user, bytes32 indexed orderId)
+      - event: TriggerExecuted(address indexed user, bytes32 indexed orderId, address indexed keeper, uint256 sizeDelta)
+      - event: AllowanceSet(address indexed user, uint256 dailyLimit, uint64 expiry, uint64 nonce)
+      - event: CardEnvelopeSet(address indexed user, uint256 envelope, uint64 nonce)
+      - event: HoldPlaced(bytes32 indexed holdId, address indexed user, uint256 amount, uint64 expiry, bool fromEnvelope, uint64 nonce)
+      - event: HoldIncreased(bytes32 indexed holdId, address indexed user, uint256 delta, uint256 amount, uint64 nonce)
+      - event: HoldCaptured(bytes32 indexed holdId, address indexed user, uint256 captured, uint256 released, uint256 debtCreated)
+      - event: HoldReleased(bytes32 indexed holdId, address indexed user, uint256 amount, uint8 reason)
+      - event: CardRefunded(address indexed user, bytes32 indexed refId, uint256 amount, uint256 debtRepaid)
+      - event: CardDebtRepaid(address indexed user, uint256 amount, uint256 debtAfter)
+      - event: Liquidated(address indexed user, address indexed liquidator, uint256 penalty, uint256 liquidatorFee, uint256 shortfall, uint64 nonce)
+      - event: InsuranceCovered(address indexed user, uint256 covered, uint256 socialized)
+      - event: PausedUntil(uint64 until)
+      - event: SettleOnlySet(bool settleOnly)
+  - name: SessionOracle
+    events:
+      - event: MarketStatusChanged(uint8 indexed marketId, uint8 previous, uint8 current, uint256 price18)
+      - event: PriceRejected(uint8 indexed marketId, uint80 roundId, uint256 answer18, uint256 lastAccepted18)
+      - event: PriceAccepted(uint8 indexed marketId, uint80 roundId, uint256 price18, uint64 updatedAt)
+      - event: FeedSet(uint8 indexed marketId, address indexed feed, uint8 calendarId, uint16 clampBps, uint16 reopenClampBps)
+      - event: MarketHalted(uint8 indexed marketId, uint64 until)
+  - name: LpVault
+    events:
+      - event: Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares)
+      - event: Transfer(address indexed from, address indexed to, uint256 value)
+      - event: RedeemRequested(address indexed owner, address indexed receiver, uint256 indexed requestId, uint256 shares, uint64 claimableAt)
+      - event: Redeemed(address indexed owner, address indexed receiver, uint256 indexed requestId, uint256 shares, uint256 assets)
+  - name: StarterDrip
+    events:
+      - event: StarterClaimed(address indexed user, uint256 nativeAmount, uint256 practiceAmount)
+      - event: VoucherRedeemed(address indexed user, bytes32 indexed codeHash, uint256 amount)
+      - event: VouchersAdded(uint256 count)
+  - name: IntentRouter
+    events:
+      - event: OrderExecuted(address indexed user, bytes32 indexed orderHash, uint8 indexed marketId, uint256 notionalUsd6)
+      - event: OrderSkipped(address indexed user, bytes32 indexed orderHash, bytes reason)
+  - name: InboxFactory
+    events:
+      - event: InboxDeployed(address indexed user, address inbox)
+  - name: DepositInbox # one CREATE2 inbox per user, registered from InboxFactory.InboxDeployed
+    events:
+      - event: Swept(address indexed user, address indexed inbox, address indexed token, uint256 amount)
+  - name: Stablecoin # AUSD/USDC transfers into known inboxes = "arrived, awaiting sweep"
+    events:
+      - event: Transfer(address indexed from, address indexed to, uint256 value)
+  # ---------------------------------------------------------------- oracle rounds (D-020 candles)
+  # One contract name per asset, so the handler knows the symbol without an address table. The mainnet
+  # addresses are Chainlink OCR2 aggregators behind the XAU/XAG proxies; testnet uses our MirrorAggregators.
+  - name: FeedXAU
+    events: &answer_updated
+      - event: AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt)
+  - name: FeedXAG
+    events: *answer_updated
+  # Aggregators confirmed on the proxies after deployment (proxy v0.6 emits no event): registered at runtime by
+  # the wildcard ChainlinkAnswer watcher once the proxy's phase list includes them (src/handlers/feeds.ts).
+  - name: FeedXAUNext
+    events: *answer_updated
+  - name: FeedXAGNext
+    events: *answer_updated
+  - name: ChainlinkAnswer
+    events: *answer_updated
+  # ---------------------------------------------------------------- Perpl (third party; ABI subset of
+  # PerplFoundation/dex-sdk abi/dex/Exchange.json, MIT). Only the events the app needs (plan §5 Envio).
+  - name: PerplExchange
+    abi_file_path: ./abis/PerplExchange.json
+    events:
+      - event: AccountCreated
+      - event: CollateralDeposit
+      - event: CollateralWithdrawal
+      - event: ContractAdded
+      - event: ContractAddedV2
+      - event: PositionOpenedV2
+      - event: PositionIncreasedV2
+      - event: PositionDecreased
+      - event: PositionClosed
+      - event: PositionInverted
+      - event: PositionLiquidated
+      - event: PositionDeleveragedV2
+      - event: MakerOrderFilledV2
+      - event: TakerOrderFilledV2
+      - event: FundingEventCompleted
+
+chains:
+  # ---------------------------------------------------------------- Monad testnet (practice mode)
+  - id: 10143
+    start_block: 66856078
+    rpc:
+      - url: ${ENVIO_RPC_URL_10143:-https://testnet-rpc.monad.xyz}
+        for: ${ENVIO_RPC_FOR_10143:-fallback}
+        initial_block_interval: 100
+        interval_ceiling: 100
+    contracts:
+      - name: SenryoCore
+        address: 0x36cF64452f64eB0e99AAC4Eb103C7838C1918cAA
+      - name: SessionOracle
+        address: 0x343A75a1d271937042D8688dD5d4D2F8c320BAd3
+      - name: LpVault
+        address: 0x297877FCFEb4c077F68D11E07654c676c0883408
+      - name: StarterDrip
+        address: 0x5C1ab87DA4b02670723c6633278A5A45Cdf12e81
+      - name: IntentRouter
+        address: 0xc9dfaBAf49ea7AA1a6d57F82f816198448F190B1
+      - name: InboxFactory
+        address: 0x815D0669C708b72447d58Ac4170214A585759Bf3
+      - name: DepositInbox
+      - name: Stablecoin
+        address:
+          - 0xA56060259F6c5EF2b18257caEe1F51782e069E23 # MockAUSD
+          - 0x68225DA6Df9d1Bd54f26D308Fb453333dC2a69A1 # MockUSDC
+      - name: FeedXAU
+        address: 0x91ef95EC56a88786CDd41C23Ca2616Ffdfa4dc13 # MirrorXAU
+      - name: FeedXAG
+        address: 0x44C5397b710DCE7f666EFdAb9417DD1D9E13e360 # MirrorXAG
+
+  # ---------------------------------------------------------------- Monad mainnet
+  # Our own mainnet contracts land in S8: add the same entries as 10143 with the 143.json addresses and start
+  # blocks (a data change; handlers are chain-agnostic).
+  - id: 143
+    skip: ${ENVIO_SKIP_143:-false}
+    start_block: ${ENVIO_START_BLOCK_143:-54773010}
+    rpc:
+      - url: ${ENVIO_RPC_URL_143:-https://rpc.monad.xyz}
+        for: ${ENVIO_RPC_FOR_143:-fallback}
+        initial_block_interval: 100
+        interval_ceiling: 100
+    contracts:
+      - name: FeedXAU
+        address: 0xFeccbf9C82Ff5231073580334DC605740309ebCe # phase-1 aggregator of proxy 0x61dD…f1B4
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedXAG
+        address: 0x8Aa871027BA54dc1a9c803456AD613668a643fB4 # phase-1 aggregator of proxy 0x29bE…B4
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedXAUNext
+      - name: FeedXAGNext
+      - name: ChainlinkAnswer
+        start_block: ${ENVIO_FEED_WATCH_START_BLOCK_143:-109200000}
+      - name: PerplExchange
+        address: 0x34B6552d57a35a1D042CcAe1951BD1C370112a6F # ERC1967 proxy, deploy block 54773010
+        start_block: ${ENVIO_PERPL_START_BLOCK_143:-54773010}

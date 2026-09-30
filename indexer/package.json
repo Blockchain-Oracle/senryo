@@ -1,0 +1,31 @@
+{
+  "name": "senryo-indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Senryo 千両 — Envio HyperIndex V3 indexer for Monad 143 + 10143 (outside the pnpm workspace; own lockfile).",
+  "license": "MIT",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "codegen": "envio codegen",
+    "dev": "envio dev",
+    "start": "envio start",
+    "typecheck": "tsc --noEmit",
+    "gate": "envio codegen && tsc --noEmit",
+    "check:perpl-cursor": "tsx scripts/check-perpl-cursor.ts",
+    "hypersync:pools": "tsx scripts/hypersync/pool-analytics.ts"
+  },
+  "dependencies": {
+    "envio": "3.12.1",
+    "viem": "2.54.0"
+  },
+  "devDependencies": {
+    "@envio-dev/hypersync-client": "1.4.1",
+    "@types/node": "^24",
+    "tsx": "4.21.0",
+    "typescript": "~6.0.3"
+  }
+}

@@ -16,7 +16,7 @@ documents, zod-parsed results). Display only: the card path never reads the inde
 
 ## Steps
 - [x] S4.1 Stage file
-- [ ] S4.2 Scaffold `indexer/` (own `package.json` + `pnpm-lock.yaml` + `pnpm-workspace.yaml` settings, envio 3.12.1,
+- [x] S4.2 Scaffold `indexer/` (own `package.json` + `pnpm-lock.yaml` + `pnpm-workspace.yaml` settings, envio 3.12.1,
       tsconfig); `config.yaml` for 10143 (every `indexed: true` address, start block 66856078) and 143 (Chainlink
       XAU/XAG aggregators + wildcard follow, Perpl Exchange from `APP_LAUNCH_BLOCK`); `address-drift` +
       `indexer-isolated` green
