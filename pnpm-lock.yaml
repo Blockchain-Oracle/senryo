@@ -503,6 +503,9 @@ importers:
       '@senryo/indexer-client':
         specifier: workspace:*
         version: link:../../packages/indexer-client
+      '@senryo/query':
+        specifier: workspace:*
+        version: link:../../packages/query
       '@senryo/service-common':
         specifier: workspace:*
         version: link:../../services/common
@@ -513,6 +516,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
       tsx:
         specifier: 'catalog:'
         version: 4.23.15

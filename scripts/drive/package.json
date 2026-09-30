@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Testnet drive scripts (S3.8): deposit → XAU long → MirrorAggregator price move → keeper liquidation; card concurrency check.",
+  "description": "Testnet drive scripts (S3.8): deposit \u2192 XAU long \u2192 MirrorAggregator price move \u2192 keeper liquidation; card concurrency check.",
   "license": "MIT",
   "scripts": {
     "liquidation": "tsx src/liquidation.ts",
@@ -12,7 +12,8 @@
     "api-smoke": "tsx src/api-smoke.ts",
     "indexer-check": "tsx src/indexer-check.ts",
     "session-e2e": "tsx src/session-e2e.ts",
-    "risk-mirror-check": "tsx src/risk-mirror-check.ts"
+    "risk-mirror-check": "tsx src/risk-mirror-check.ts",
+    "ticket-e2e": "tsx src/ticket-e2e.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",
@@ -20,6 +21,7 @@
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/query": "workspace:*",
     "@senryo/indexer-client": "workspace:*",
     "@senryo/service-common": "workspace:*",
     "zod": "catalog:"
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@types/react": "catalog:"
   }
 }

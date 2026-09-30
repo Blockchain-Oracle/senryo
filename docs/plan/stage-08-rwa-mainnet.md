@@ -47,9 +47,11 @@ reuses everything below `apps/`.
       builders; starter/geo hooks stay in the apps' account layer (S6) until S8.15
 - [ ] S8.9 Mobile Markets live: watchlist (session badge, oracle age, sparkline, ▲▼ + sign), market detail with candles
       (victory-native Candlestick), holiday/STALE/CIRCUIT/HALTED banners (F43–F45)
-- [ ] S8.10 Mobile ticket (F10): risk explainer (3 cards, hold "I understand"), side, keypad + chips (MAX = Free to trade),
+- [x] S8.10 Mobile ticket (F10): risk explainer (3 cards, hold "I understand"), side, keypad + chips (MAX = Free to trade),
       leverage detents, margin gauge, live notional/fee/liq/"x% away", session chip, oracle age, blocker chain,
       `HoldToConfirm`, Face ID gate (D-037), execution trace on the lifecycle, receipt + share
+      — done (c6f2dda, 66679dd); `pnpm --filter @senryo/drive ticket-e2e` 3/3 on a 10143 fork: fund in scope, open signs
+      in scope with TradeContext (no prompt), trace checking→…→finalized, close finalized
 - [ ] S8.11 Positions (F11, F12, F14): list + detail (PnL with funding/borrow), close (hold), partial close, TP/SL via
       `TriggerOrders` (EIP-712 in session), liquidation-risk banner + post-mortem, reduce-only copy, `MIN_HOLD_BLOCKS`
       — done: list, detail (price/funding/borrow, liq, gauge), 25/50/75 %/all close by hold with previewDecrease,
