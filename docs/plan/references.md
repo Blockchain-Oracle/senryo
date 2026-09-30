@@ -40,3 +40,10 @@
 | HyperSync client | `@envio-dev/hypersync-client@1.4.1` (`index.d.ts`, `examples/all-erc20`) | `HypersyncClient.stream`, `Decoder.fromSignatures` in `indexer/scripts/hypersync/` |
 | Envio self-host example | `references/envio-local-docker-example` @ e158013 (no licence file) | compose/Dockerfile **structure** adapted for Coolify in `indexer/{docker-compose.yaml,Dockerfile}` (no code copied verbatim beyond standard boilerplate) |
 | Perpl Exchange ABI | `references/perpl-dex-sdk/crates/sdk/abi/dex/Exchange.json` @ 01b9910 (MIT, REVISION `rc_v1.1.7-203-g0e5902dd`) | **copied subset** (15 events) → `indexer/abis/PerplExchange.json` — needs a THIRD_PARTY_NOTICES.md entry (S17) |
+## Context7 library ids (S3)
+| Library | Id | Used for |
+|---|---|---|
+| viem | `/wevm/viem` | `sendRawTransactionSync`, fallback/webSocket transports, `defineChain`, local-account `signTransaction`, SIWE utilities (`createSiweMessage`, `parseSiweMessage`, `validateSiweMessage`), `verifyTypedData` |
+| Zod 4 | `/websites/zod_dev` | codecs (`z.codec`, encode/decode) for bigint wire amounts |
+| Lithic node SDK | `/lithic-com/lithic-node` | webhook verification (Standard Webhooks), `CardAuthorization` (ASA request) and transaction event types (read from `src/resources/{card-authorizations,transactions/transactions,webhooks}.ts` @ main, 30 Sep) |
+| Lithic docs | docs.lithic.com `auth-stream-access-asa`, `events-api`, `transaction-flow` | ASA response `result` values, 6 s / 3 s timing, retries on 5xx; `webhook-id.webhook-timestamp.body` HMAC-SHA256 with the base64 part of `whsec_…` |

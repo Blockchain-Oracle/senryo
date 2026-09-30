@@ -2,6 +2,8 @@ packages:
   - apps/*
   - packages/*
   - services/*
+  # Testnet drive scripts (S3.8) — a package so they import @senryo/chain like any other workspace.
+  - scripts/drive
   # indexer/ and contracts/ are deliberately outside the workspace (own toolchains; invariant `indexer-isolated`).
 
 # Native/binary builds are opt-in; anything not listed is denied.

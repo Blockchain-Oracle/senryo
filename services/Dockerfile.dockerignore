@@ -1,0 +1,15 @@
+# Context = repo root; only what the services bundle needs (Dockerfile-specific ignore, BuildKit).
+**
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!tsconfig.base.json
+!packages/**
+!services/**
+# Workspace members outside the bundle keep their manifests so pnpm sees the same importers as the lockfile.
+!apps/*/package.json
+!scripts/drive/package.json
+**/node_modules
+**/dist
+**/.turbo
+**/*.log

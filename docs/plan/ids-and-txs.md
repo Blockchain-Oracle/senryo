@@ -25,6 +25,7 @@ Public values only. Secrets live in `~/.config/senryo/` or Coolify runtime env �
 | Universal Router 2.1.2 | 0xa6CE4F10d83dBdDAc17E68e1837ca9cE6a1b596e | idem |
 | Permit2 | 0x000000000022D473030F116dDEE9F6B43aC78BA3 | idem |
 | Safe v1.4.1 | 0x41675C099F32341bf84BFc5382aF534df5C7461a | contracts-and-tokens.md |
+| Uniswap v4 AUSD/USDC pool (fee 50, tickSpacing 1, hooks 0) | poolId 0x092b650478145f0aee73a1b400b342b9c6314db2e07aeb91faf7e75e8159ce72 | read onchain via StateView (S3.3, D-122) |
 
 ## Testnet (10143)
 | Name | Address | Source |
@@ -53,6 +54,15 @@ Must match `packages/contracts/src/addresses/*.json` and `indexer/config.yaml` (
 | StarterDrip | 0x5C1ab87DA4b02670723c6633278A5A45Cdf12e81 | Sourcify exact_match |
 
 Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: none yet (S8).
+
+### Testnet operational keys (S3, D-115) — keys in `~/.config/senryo/testnet-<name>.key`, never committed
+| Role | Address | Roles granted |
+|---|---|---|
+| keeper | 0xf6a36dC37104e200B277Eedc60Af060440D33b10 | MIRROR_ROLE (70) |
+| trader (drive script user) | 0xBa0bE5c8DF7f7c8A452dD78b208b0aE71454A061 | — |
+| sponsor | 0xb00A73D3C207f8764A4cAD83a9b12186D9d6DA99 | — (RELAYER_ROLE pending; unfunded) |
+| operator1 | 0xbB1868EF38D70864657F09bCf6caCAcF26B9bAF6 | — (CARD_OPERATOR pending; unfunded) |
+| operator2 | 0xbfD5B98F36660c58FD58Fd54671B4b2db7529138 | — (CARD_OPERATOR pending; unfunded) |
 
 ## Coolify / builds / domains
 | Item | Value |

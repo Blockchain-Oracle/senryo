@@ -1,0 +1,26 @@
+{
+  "name": "@senryo/card",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "services/card (latency-critical): Lithic ASA responder — HMAC over the raw body, idempotency, advisory-lock reserve, operator shards, placeHold via sendRawTransactionSync, decide by the deadline, outbox lifecycle.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@fastify/rate-limit": "11.2.0",
+    "@senryo/api-client": "workspace:*",
+    "@senryo/chain": "workspace:*",
+    "@senryo/config": "workspace:*",
+    "@senryo/service-common": "workspace:*",
+    "fastify": "5.12.5",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

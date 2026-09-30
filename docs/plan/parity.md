@@ -14,7 +14,7 @@ Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows o
 | F-10 | TTFT measured (taps + seconds) | MR | S6/S12 | Pending |
 | F-11 | Scoped session + re-prompt matrix + expiry UX | MR session design | S6 | Pending |
 | F-12 | Stateless test (fresh device rebuild) | MR | S6 | Pending |
-| F-13 | Composability: relayed gas, Aurora intent signed by Mera, 7702 spike, second-passkey vault | MR bonus | S6/S9 | Pending |
+| F-13 | Composability: relayed gas, Aurora intent signed by Mera, 7702 spike, second-passkey vault | MR bonus | S6/S9 | Partial — S3: relayed starter claim reached finalized on a fork; vault/prefs storage routes (0882b3d). Aurora S9; 7702 spike S6 |
 | F-14 | No custody backend (invariant) | MR | S0+ | Pending |
 | F-20 | Intents Connect deposit → `depositFor` live | AU | S9 | Pending |
 | F-21 | `depositAndOpen` | AU | S9 | Pending |
@@ -31,14 +31,14 @@ Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows o
 | F-40 | RWA pool engine (testnet → mainnet) | T1 | S2/S8 | Pending |
 | F-41 | Session-aware oracle (hours, stale, circuit, reduce-only) | T1 originality | S2 | Pending |
 | F-42 | Risk buckets from chain | T1 design | S8 | Pending |
-| F-43 | Liquidation + insurance + TP/SL triggers | T1 | S2/S8 | Pending |
+| F-43 | Liquidation + insurance + TP/SL triggers | T1 | S2/S8 | Partial — keeper liquidated a testnet position in 1.7 s, finalized (tx 0x6b44a112…c4c3); trigger job built; mainnet S8 |
 | F-44 | LP deposit/redeem | T1 | S8 | Pending |
 | F-45 | Execution trace | T1 design | S8 | Pending |
-| F-50 | Card allowance + holds lifecycle | codex §A | S2/S10 | Pending |
+| F-50 | Card allowance + holds lifecycle | codex §A | S2/S10 | Partial — holds within the signed allowance, capture + release via the webhook outbox, ledger balanced (fork check, 0882b3d); live issuer S10 |
 | F-51 | Immersve sandbox card (testnet) | card route a | S10 | Pending |
-| F-52 | Lithic ASA hold-before-approve + p50/p99 + simulate | card route b | S10 | Pending |
+| F-52 | Lithic ASA hold-before-approve + p50/p99 + simulate | card route b | S10 | Partial — ASA responder built from Lithic docs, concurrency check passes on a fork; sandbox keys [OK?] + p50/p99 S10 |
 | F-53 | Laso real prepaid | card route c | S10 | Pending |
-| F-60 | Onboarding, practice mode, vouchers | product | S6/S12 | Pending |
+| F-60 | Onboarding, practice mode, vouchers | product | S6/S12 | Partial — services side: practice claim + voucher relay reached finalized on a fork (api smoke 17/17); client side lands with S6 |
 | F-61 | Haptic + sound map, Live Activities, widgets, push | product / iOS feel | S12 | Pending |
 | F-62 | Web desk (desktop) | T1 design | S11 | Pending |
 | F-63 | Docs site + legal + /stats | judges, traction | S13 | Pending |
