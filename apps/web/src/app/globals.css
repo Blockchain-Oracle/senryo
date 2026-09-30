@@ -1,0 +1,125 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@senryo/tokens/tokens.css";
+
+/* Dark is the D2 default (`:root, .dark` in tokens.css); `.light` on <html> switches to the paper alternate. */
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));
+
+@theme inline {
+  --font-sans: var(--font-inter), var(--font-sans-family);
+  --font-mono: var(--font-jbmono), var(--font-mono-family);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-gold: var(--gold);
+  --color-warn: var(--warn);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-up: var(--chart-up);
+  --color-chart-down: var(--chart-down);
+  --color-chart-candle-down: var(--chart-candle-down);
+  --color-qr-ink: var(--qr-ink);
+  --color-qr-paper: var(--qr-paper);
+  --color-kinpaku-lacquer: var(--kinpaku-lacquer);
+  --color-kinpaku-edge: var(--kinpaku-lacquer-edge);
+  --color-kinpaku-foil: var(--kinpaku-foil-mid);
+  --color-kinpaku-foil-light: var(--kinpaku-foil-light);
+  --color-kinpaku-foil-shade: var(--kinpaku-foil-shade);
+
+  /* D2: 4px base, the 21st scale steps stay proportional (matches the approved preview). */
+  --radius-xs: calc(var(--radius) * 0.5);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+
+  /* Type roles from @senryo/tokens TYPE (text-micro … text-num-hero). */
+  --text-micro: var(--type-micro-size);
+  --text-micro--line-height: var(--type-micro-leading);
+  --text-label: var(--type-label-size);
+  --text-label--line-height: var(--type-label-leading);
+  --text-caption: var(--type-caption-size);
+  --text-caption--line-height: var(--type-caption-leading);
+  --text-body: var(--type-body-size);
+  --text-body--line-height: var(--type-body-leading);
+  --text-title: var(--type-title-size);
+  --text-title--line-height: var(--type-title-leading);
+  --text-num-sm: var(--type-num-sm-size);
+  --text-num-sm--line-height: var(--type-num-sm-leading);
+  --text-num-md: var(--type-num-md-size);
+  --text-num-md--line-height: var(--type-num-md-leading);
+  --text-num-ticker: var(--type-num-ticker-size);
+  --text-num-ticker--line-height: var(--type-num-ticker-leading);
+  --text-num-lg: var(--type-num-lg-size);
+  --text-num-lg--line-height: var(--type-num-lg-leading);
+  --text-num-xl: var(--type-num-xl-size);
+  --text-num-xl--line-height: var(--type-num-xl-leading);
+  --text-num-hero: var(--type-num-hero-size);
+  --text-num-hero--line-height: var(--type-num-hero-leading);
+
+  --tracking-label: var(--type-label-tracking);
+  --ease-desk: var(--motion-ease);
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings:
+    "tnum" 1,
+    "zero" 1;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: dark;
+  }
+  html.light {
+    color-scheme: light;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat every component's own timing */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat every component's own timing */
+    transition-duration: 0.01ms !important;
+  }
+}
