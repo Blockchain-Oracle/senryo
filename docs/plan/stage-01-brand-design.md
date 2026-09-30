@@ -9,7 +9,7 @@
 - [x] Brand: 千 square seal mark (SVG, inverse), wordmark, app icon 1024, splash, logo ≤ 3 MB PNG, Kinpaku card art → `brand/`
 - [x] `apps/web` shell: Next 16 static export, Tailwind 4 + shadcn `components.json`, fonts Inter + JetBrains Mono, tokens.css, D2 top bar + tabs
 - [x] `21st add` the D2 set (per specs/client.md mapping), re-tokenize (no hex/px), split files > 400 lines, `framer-motion` → `motion/react`
-- [ ] `apps/web/.21st/design.json` + `apps/mobile/.21st/design.json` (colors, type, radius, motion, must/avoid, installed components, RN port sources)
+- [x] `apps/web/.21st/design.json` + `apps/mobile/.21st/design.json` (colors, type, radius, motion, must/avoid, installed components, RN port sources)
 - [ ] Sounds (fill, deposit, send, unlock, liquidation) — **[OK?]** ElevenLabs credits
 - [ ] Visual check vs `design/screens/d2-*` at 390/768/1440, both themes (chrome-devtools screenshots)
 - [ ] Domain senryo.xyz — **[OK?]** pre-approved at ≈ $2 once Namecheap API whitelist is set (D-049/D-051)
