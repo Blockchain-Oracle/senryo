@@ -29,7 +29,8 @@ export const SIZE = {
   skeletonSmall: 10,
   skeletonRow: 44,
   skeletonPlate: 96,
-  sheetTopRadius: 12,
+  cardChipWidth: 36,
+  cardChipHeight: 28,
 } as const;
 
 /** Motion: 120–200 ms on `bezier(0.2, 0, 0, 1)`; nothing bounces except the sheet's clamped spring (D-004). */
