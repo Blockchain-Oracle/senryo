@@ -3,11 +3,12 @@
  * `.well-known` generator (S6.9) — emits the two association files the rpId host must serve so iOS and Android use
  * the same passkeys as the web (Mera: "the rpId is the account"):
  *   public/.well-known/apple-app-site-association  (webcredentials + applinks, Team ID + bundle id from @senryo/config)
- *   public/.well-known/assetlinks.json              (get_login_creds + handle_all_urls, only when a signing SHA-256 exists)
- * Values are public identifiers, never secrets. No placeholder is ever written: assetlinks is generated only once the
- * Android signing fingerprint(s) are known — from `ANDROID_CERT_SHA256` (comma-separated) or
- * `~/.config/senryo/android.env` (`ANDROID_CERT_SHA256=AA:BB:…`): the EAS keystore, then Play App Signing and a debug
- * keystore when used. `--check` fails if the committed files differ from what would be generated (gate/CI).
+ *   public/.well-known/assetlinks.json              (get_login_creds + handle_all_urls for ANDROID_CERT_SHA256S)
+ * Values are public identifiers, never secrets, and live in @senryo/config (APPLE_TEAM_ID, IOS_BUNDLE_ID,
+ * ANDROID_PACKAGE, ANDROID_CERT_SHA256S). No placeholder is ever written: with no certificate, assetlinks is skipped.
+ * A local build signed by another key (e.g. a debug keystore) can add certificates with `ANDROID_CERT_SHA256`
+ * (comma-separated) or `~/.config/senryo/android.env`; the script warns, because anything served in production must
+ * be in config. `--check` fails if the committed files differ from what would be generated (gate/CI).
  *
  * Usage: pnpm --filter @senryo/web well-known [--check]
  */
@@ -15,7 +16,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ANDROID_PACKAGE, APPLE_TEAM_ID, IOS_BUNDLE_ID, WELL_KNOWN } from "../../../packages/config/src/hosts.ts";
+import {
+  ANDROID_CERT_SHA256S,
+  ANDROID_PACKAGE,
+  APPLE_TEAM_ID,
+  IOS_BUNDLE_ID,
+  WELL_KNOWN,
+} from "../../../packages/config/src/hosts.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, "..", "public");
@@ -59,15 +66,16 @@ function readEnvFile(file, name) {
 }
 
 function fingerprints() {
-  const raw = process.env.ANDROID_CERT_SHA256 ?? readEnvFile(ANDROID_ENV, "ANDROID_CERT_SHA256");
-  if (!raw) return [];
-  const list = raw
+  const raw = process.env.ANDROID_CERT_SHA256 ?? readEnvFile(ANDROID_ENV, "ANDROID_CERT_SHA256") ?? "";
+  const local = raw
     .split(",")
     .map((s) => s.trim().toUpperCase())
     .filter(Boolean);
+  const list = [...new Set([...ANDROID_CERT_SHA256S, ...local])];
   const bad = list.filter((f) => !FINGERPRINT.test(f));
-  if (bad.length > 0)
-    throw new Error(`ANDROID_CERT_SHA256 has ${bad.length} malformed fingerprint(s) (want AA:BB:… ×32)`);
+  if (bad.length > 0) throw new Error(`${bad.length} malformed Android certificate fingerprint(s) (want AA:BB:… ×32)`);
+  const extra = local.filter((f) => !ANDROID_CERT_SHA256S.includes(f));
+  if (extra.length > 0) console.warn(`⚠ ${extra.length} certificate(s) from env are not in @senryo/config — local only`);
   return list;
 }
 

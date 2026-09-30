@@ -48,7 +48,7 @@ fingerprints. S11a (web shell + auth) is folded in here (D-103).
       nginx config per runbook §6 (`location =`, `application/json`, no redirect) · web Dockerfile copies dot-folders
 - [ ] S6.10 Measurement hooks: TTFT start/stop + prompt counts per authenticator (log format, local sink)
 - [ ] S6.11 Gate + Handoff (fast gate, web build, expo export, parity + policy checks, local web sign-in)
-- [ ] **(user)** Apple **Team ID** → `~/.config/senryo/apple.env` (`APPLE_TEAM_ID=…`); `eas credentials` → Android
+- [x] **(user)** Apple **Team ID** → `~/.config/senryo/apple.env` (`APPLE_TEAM_ID=…`); `eas credentials` → Android
       signing SHA-256 → `~/.config/senryo/android.env`; then run the generator and commit the two files
 - [ ] **[OK?]** DNS A record `@` → Coolify; Coolify project + `senryo-web` deploy; `.well-known` checks (curl, Apple
       CDN, Google Digital Asset Links)
