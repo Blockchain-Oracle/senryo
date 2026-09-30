@@ -18,8 +18,8 @@ const chainId = TESTNET_CHAIN_ID;
 const indexer = createIndexerClient({ url });
 
 const meta = await indexer.request(MetaDocument, {});
-const openUsers = await indexer.request(OpenPositionUsersDocument, { chainId, limit: SCAN_LIMIT });
-const triggers = await indexer.request(PlacedTriggersDocument, { chainId, limit: SCAN_LIMIT });
+const openUsers = await indexer.request(OpenPositionUsersDocument, { chainId, limit: SCAN_LIMIT, offset: 0 });
+const triggers = await indexer.request(PlacedTriggersDocument, { chainId, limit: SCAN_LIMIT, offset: 0 });
 const accountView = await api.call(accountRoute, { params: { address: account }, query: { chainId } });
 const status = await api.call(statusRoute, {});
 const history = accountView.history;
