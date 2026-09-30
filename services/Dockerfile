@@ -7,11 +7,12 @@ FROM node:24-alpine AS build
 WORKDIR /repo
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=true
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
-# Lockfile first so the dependency layer caches across source changes.
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-RUN pnpm fetch --frozen-lockfile
+# The context is already trimmed by Dockerfile.dockerignore (sources of packages/ + services/, other members'
+# manifests only). A filtered install downloads just the services' dependency graph — `pnpm fetch` would pull the
+# whole lockfile (Expo/React Native included), which is what made the first amd64 build crawl.
 COPY . .
-RUN pnpm install --frozen-lockfile --offline \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile --store-dir /pnpm/store \
       --filter "@senryo/api..." --filter "@senryo/card..." --filter "@senryo/keeper..."
 RUN node services/common/scripts/bundle.mjs /out
 

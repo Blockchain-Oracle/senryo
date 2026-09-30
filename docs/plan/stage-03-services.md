@@ -33,13 +33,23 @@ The keeper liquidates a testnet position driven by a script, and the swap quote 
       deposit → XAU long → mirror price move → keeper liquidation
       - liquidation drive **done** 30 Sep: keeper liquidated the testnet position in 1.7 s, finalized
         (tx 0x6b44a112…c4c3, acceptance.md); card concurrency **pass** on a Monad-rules anvil fork (acceptance.md)
-- [ ] S3.9 Dockerfile (one image, three entrypoints, `HEALTHCHECK`), `.github/workflows/images.yml` → GHCR
+- [x] S3.9 Dockerfile (one image, three entrypoints, `HEALTHCHECK`), `.github/workflows/images.yml` → GHCR
       `sha-<short>` (linux/amd64), `deploy/*.env.example` (names only)
-- [ ] S3.10 Gate + handoff
+- [x] S3.10 Gate + handoff
 
 ## Gate
 Images build; the keeper liquidates a testnet position (drive script, tx in `acceptance.md`); the swap quote matches the
 pool; fast gate green; invariants `explicit-gas` + `finalized-for-money` active (no longer skipped).
+
+## Evidence (gate, 30 Sep)
+- Fast gate green at every commit (typecheck 13 tasks · biome · invariants 0 errors; `explicit-gas` and
+  `finalized-for-money` **active**).
+- Image: `docker build --platform linux/amd64 -f services/Dockerfile .` → **67.5 MB**, linux/amd64; api/card/keeper
+  containers from it all reported `healthy` (HEALTHCHECK → `/health`), `node dist/health.mjs` exit 0 inside each,
+  api `/v1/markets` + `/ready` answered from the container (acceptance.md). Idle RSS under emulation: api 150 MiB,
+  card 168 MiB, keeper 154 MiB.
+- Keeper liquidated a testnet position (tx `0x6b44a112…c4c3`); card concurrency pass on a Monad-rules fork; api smoke
+  17/17 on the fork; swap output = Quoter quote on a mainnet fork (all in acceptance.md).
 
 ## Handoff
 - S3.1 public API: `@senryo/config` → `MAINNET`/`TESTNET`/`NETWORKS`/`networkOf`, `RP_ID`, `API_ORIGIN`,
@@ -47,35 +57,50 @@ pool; fast gate green; invariants `explicit-gas` + `finalized-for-money` active 
   `formatUnits`, `parseUnits` (rejects extra decimals, never truncates), `divRound`, `applyBps`, `rescale`, `toPlot`,
   `Reading<T>`/`fromQuery`, `shortAddress`. Service env schemas live with each service, not in config.
 
-### Resume point (S3 agent, 30 Sep ~05:35Z — paused on the lead's request, usage limit)
-**Done:** S3.2 chain · S3.3 Uniswap (D-122) · S3.4 ledger · S3.5 api (+S3.5a contract) · S3.6 card · S3.7 keeper ·
-S3.8 checks (testnet liquidation drive + fork card concurrency) — all committed, fast gate green at each commit.
-**In progress — S3.9 (wip commit):** `services/Dockerfile` (+ `services/Dockerfile.dockerignore`, BuildKit per-Dockerfile
-ignore so S6's root-context web build is unaffected) and `services/common/scripts/bundle.mjs` (esbuild → `api.mjs`,
-`card.mjs`, `keeper.mjs`, `run.mjs` dispatching on `SERVICE`, `health.mjs` for HEALTHCHECK). The bundle is verified
-locally (bundled api served `/health` + `/v1/markets` on the fork); **`docker build --platform linux/amd64` was started
-and stopped before finishing** (`pnpm fetch` of the whole lockfile under amd64 emulation is slow) — not yet verified.
-**Next:** (1) finish/verify the image build (consider `pnpm fetch` → `pnpm install --filter …` only, or a `pnpm deploy`
-step, if the full fetch stays slow); run the image with `SERVICE=api|card|keeper` and check `HEALTHCHECK` →
-`healthy`. (2) `.github/workflows/images.yml`: `workflow_dispatch` only, linux/amd64, matrix `api` (this Dockerfile,
-context `.`, image `ghcr.io/blockchain-oracle/senryo-api:sha-<short>`; card/keeper run the same image) and `web`
-(`apps/web/Dockerfile` from S6, context `.`, `senryo-web`). (3) `deploy/{api,card,keeper}.env.example` (names only —
-list below). (4) S3.10 gate + full handoff (public APIs, env names, user [OK?] steps) + report to the lead.
-**Local state:** Postgres 17 container `senryo-ledger-dev` (127.0.0.1:55499, dbs `senryo` + `senryo_fork`) left running;
-anvil forks stopped; testnet keys in `~/.config/senryo/testnet-*.key`; local test secrets only in the session scratchpad.
+### S3 — what exists (merge `stage/S3-services`)
+- **`@senryo/chain`** (only sender; imports viem): `createReadClient/createBroadcastClients/createWsClient`,
+  `monadMainnet/monadTestnet/viemChain` (300 ms), `HeadTracker` (monadNewHeads), `createSender`, `sendTx`,
+  `sendAndFinalize`, `planGas`, `gasWithHeadroom`, `confirmFinalized/waitForCommit`, `FeeCache`, `LocalNonceSource`/
+  `NonceSource`, `MemoryJournal`/`kvJournal`/`TxJournal`, `contractCall`/`externalCall`/`receiptEvents`,
+  `addressOf/isDeployed/readContract/CONTRACT_ABIS`, `readAccountSnapshot/readPositions/readOracles`, keeper reads
+  (`readLiquidatable/readOracleStates/readFeedRound/readHolds/readBalances`), `verifyClaimSignature/
+  verifyVoucherSignature/verifySpendAllowanceSignature/starterDripDomain/coreDomain/voucherCodeHash`,
+  `buildSiweMessage/verifySiweSignature/newSiweNonce`, `decodeRevert/describeError` + error classes,
+  `signerFromPrivateKey`, Uniswap (`findStablePool/quoteExactIn/encodeExactInSingle/poolIdOf`), viem re-exports.
+  Apps plug the Mera signer in as `account` and may wrap `@senryo/account`'s `enqueue` as a `NonceSource`.
+- **`@senryo/api-client`**: `createApiClient`, `defineRoute` registry, codecs (bigint ⇄ decimal string), `ApiError`,
+  routes auth · starter · prefs/vault · info (config/geo/status/markets/account) · engagement (alerts/events/push) ·
+  card · WS (`WS_PATH`, client/server message schemas).
+- **Services** (one image, `SERVICE=api|card|keeper`): api `:3000` (all `/v1/*` above + `/v1/ws`), card `:3001`
+  (`/v1/card/lithic/asa|events`, `/v1/card/{simulate,freeze,embed,allowance,summary}`), keeper `:3002`
+  (`/v1/keeper/status`); all `/health` (liveness) + `/ready`. Ledger migrations 0001–0003 run on boot (advisory lock).
+- **Scripts** `@senryo/drive`: `liquidation` (testnet), `card-concurrency`, `api-smoke` (fork), `swap-check`
+  (mainnet read + mainnet fork). Commands in each file header.
+- **Env**: names in `deploy/{api,card,keeper}.env.example` (secrets as `NAME` or `NAME_FILE`).
+- **CI**: `.github/workflows/images.yml` — `workflow_dispatch` only, linux/amd64, `ghcr.io/blockchain-oracle/
+  senryo-{api,web}:sha-<short>` (web = S6's `apps/web/Dockerfile`, lands at merge); GHA cache per app.
+- **Additive outside S3 packages** (merge risk low): `@senryo/config` `gas.ts`, `markets.ts` (+ index exports);
+  `@senryo/core` `typed-data.ts`, `lifecycle.ts` (+ index exports); `pnpm-workspace.yaml` + `scripts/drive`.
 
-### Handoff notes so far (to be completed in S3.10)
-- **Env names** — all services: `NODE_ENV LOG_LEVEL HOST PORT DATABASE_URL CHAIN_ID RPC_HTTP RPC_WS` (secrets as `NAME`
-  or `NAME_FILE`). api: `CHAIN_IDS SIWE_DOMAIN SIWE_URI CORS_ORIGINS MIN_APP_VERSION CARD_URL INDEXER_GRAPHQL_URL
-  STARTER_PER_DEVICE_PER_DAY STARTER_PER_NETWORK_PER_DAY FEATURES` + secrets `API_SESSION_SECRET SPONSOR_PK
-  TURNSTILE_SECRET`. card: `INTERNAL_DEADLINE_MS WEBHOOK_TOLERANCE_S FX_BUFFER_BPS TIP_BUFFER_BPS CARD_ISSUER_LABEL
-  CARD_RELEASE_ONLY LITHIC_API_BASE` + secrets `LITHIC_ASA_SECRET LITHIC_WEBHOOK_SECRET LITHIC_API_KEY
-  API_SESSION_SECRET OPERATOR_1_PK … OPERATOR_8_PK`. keeper: `KEEPER_STALE_SEC KEEPER_JOBS KEEPER_WATCH_ACCOUNTS
-  INDEXER_GRAPHQL_URL SOURCE_RPC_HTTP MIRROR_MARKETS MIRROR_DEVIATION_BPS MIRROR_HEARTBEAT_SEC WALLET_FLOOR_WEI
-  OPS_WATCH_WALLETS TOPUP_FLOOR_WEI TOPUP_AMOUNT_WEI LIQUIDATE_MS OBSERVE_MS MIRROR_MS` + secret `KEEPER_PK`.
-- **Additive changes outside S3 packages:** `@senryo/config` `gas.ts` (GAS_LIMITS, GAS_HEADROOM_BPS, fee constants),
-  `markets.ts` (ENGINE_MARKETS, MAINNET_EXTERNAL); `@senryo/core` `typed-data.ts` (EIP-712 defs), `lifecycle.ts`
-  (TX_STAGES); `pnpm-workspace.yaml` adds `scripts/drive`.
-- **Blockers / [OK?] for the user:** CollateralSwapper must add `minHopPriceX36` before S8 (D-122, contracts owner);
-  testnet keeper float for the mirror relay (D-118; QuickNode faucet needs no account); Lithic sandbox account + keys
-  (ASA secret, webhook secret, API key) — [OK?]; Coolify resources/deploys, GHCR visibility — [OK?].
+### Pending (and why)
+- **Indexer bridge**: `services/api/src/indexer.ts` + keeper `IndexerSource` are stubs (Hasura `_meta` poll, `User`/
+  `Trigger` queries) until S4's `@senryo/indexer-client` merges — then swap the queries; account `history` is `null`.
+- **Perpl** WS/proxy (`perpl:*`, `/v1/pub/context`) → S7; **Aurora** proxy/poller → S9; Expo/APNs push delivery and
+  ops alert channel are recorded, not delivered (credentials [OK?]); PAN reveal/simulate/freeze need Lithic keys.
+- **Geo**: edge headers only; add a Traefik geo middleware or DB-IP Lite lookup (D-121).
+- **Latency**: fork p50 is not representative (anvil 0.5 s blocks); the real ASA p50/p99 harness is S10 on testnet.
+- **CollateralSwapper**: must add `minHopPriceX36` before S8 (D-122; contracts owner).
+- **Capacity**: keeper idles at ~154 MiB vs a 160 m limit (measured under amd64 emulation) — set keeper to 256 m or
+  `NODE_OPTIONS=--max-old-space-size=96` at deploy (runbook §4), re-measure natively on the server (D-102).
+
+### User / [OK?] steps (none done by S3)
+1. **Testnet MON** for the keeper relay and StarterDrip float (D-118): claim at faucet.quicknode.com/monad/testnet
+   (no account) or faucet.monad.xyz to the deployer `0x52d2…0E6A`; then enable `mirror` in `KEEPER_JOBS`.
+2. **Grant roles on testnet** when deploying: RELAYER_ROLE → sponsor `0xb00A…DA99`, CARD_OPERATOR_ROLE → operators
+   `0xbB18…BAF6`, `0xbfD5…9138` (deployer tx; the drive used anvil forks for these).
+3. **Lithic sandbox account** [OK?] → `LITHIC_API_KEY`, ASA HMAC secret (`GET /v1/auth_stream/secret`), webhook
+   secret; register `https://api.<rpId>/v1/card/lithic/asa` and `/events`.
+4. **GHCR**: run `images` workflow (manual), then package visibility public or `docker login ghcr.io` on the server [OK?].
+5. **Coolify** [OK?]: ledger Postgres 17 → api/card/keeper Docker Image resources from `senryo-api:sha-…` with
+   `SERVICE` set, env from `deploy/*.env.example`, secrets runtime-only; card routed at `api.<rpId>/v1/card/*`.
+6. **Cloudflare Turnstile** site + secret for the web claim (optional) [OK?].
