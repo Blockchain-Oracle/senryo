@@ -1,0 +1,77 @@
+{
+  "chainId": 10143,
+  "contracts": {
+    "AccessManager": {
+      "address": "0xed8A87E2823D65600d2F57Fd6D1A2A5F09F296Da",
+      "indexed": false,
+      "initCodeHash": "0x553b81eea471a5842ba8ac2822962bf6e0fdc864066e15c2832ff7e81f87bd76",
+      "startBlock": 66856078
+    },
+    "InboxFactory": {
+      "address": "0x815D0669C708b72447d58Ac4170214A585759Bf3",
+      "indexed": true,
+      "initCodeHash": "0x4dda9deed5f001a6f5eaedb7b82aafe573211297c336ba28c728075e9ddd798b",
+      "startBlock": 66856078
+    },
+    "IntentRouter": {
+      "address": "0xc9dfaBAf49ea7AA1a6d57F82f816198448F190B1",
+      "indexed": true,
+      "initCodeHash": "0xbf62842df27f27e7e40d85c2ae256608a13dcbfa949979ae1eb772a5fc73b276",
+      "startBlock": 66856078
+    },
+    "LpVault": {
+      "address": "0x297877FCFEb4c077F68D11E07654c676c0883408",
+      "indexed": true,
+      "initCodeHash": "0x4529686d84ff8d9638204dee5ca88050ae3fa8c91a84cd07d92fa5223c0b03e9",
+      "startBlock": 66856078
+    },
+    "MarketCalendar": {
+      "address": "0x739238AD0EE7482e12f9D35a58d760Ac3e8BcDEB",
+      "indexed": false,
+      "initCodeHash": "0xdb913963c2a732d7642a6dddc615caabafff8e3d0118d0cc7a31db9afa6d8f2e",
+      "startBlock": 66856078
+    },
+    "MirrorXAG": {
+      "address": "0x44C5397b710DCE7f666EFdAb9417DD1D9E13e360",
+      "indexed": true,
+      "initCodeHash": "0x898528ef491b14cd476f02e5c10ebb92c299251cc443344c82ec11b6f4eff1ec",
+      "startBlock": 66856078
+    },
+    "MirrorXAU": {
+      "address": "0x91ef95EC56a88786CDd41C23Ca2616Ffdfa4dc13",
+      "indexed": true,
+      "initCodeHash": "0xc4cd1bbc630ede89283f367ba7bca09adde47d0a17dee5f37db1cfd354fd192b",
+      "startBlock": 66856078
+    },
+    "MockAUSD": {
+      "address": "0xA56060259F6c5EF2b18257caEe1F51782e069E23",
+      "indexed": true,
+      "initCodeHash": "0x4e88d1c81a77568e3934ba980b8277050f4fcc9d0e7ef2ee0d2d614bd148e790",
+      "startBlock": 66856078
+    },
+    "MockUSDC": {
+      "address": "0x68225DA6Df9d1Bd54f26D308Fb453333dC2a69A1",
+      "indexed": true,
+      "initCodeHash": "0xeac60e97ea21cd44a9747abbecdd58a7dea368f404cb34a5730ed1285aefb609",
+      "startBlock": 66856078
+    },
+    "SenryoCore": {
+      "address": "0x36cF64452f64eB0e99AAC4Eb103C7838C1918cAA",
+      "indexed": true,
+      "initCodeHash": "0xce7235aa8b73e293a5a1f00868bb3f1cc42632b978ea54adf198cbbab482a6fc",
+      "startBlock": 66856078
+    },
+    "SessionOracle": {
+      "address": "0x343A75a1d271937042D8688dD5d4D2F8c320BAd3",
+      "indexed": true,
+      "initCodeHash": "0x97ab5d8117d490cb46ddd4b0502bc8b9abead40bbde3204549c3594cf3abea8d",
+      "startBlock": 66856078
+    },
+    "StarterDrip": {
+      "address": "0x5C1ab87DA4b02670723c6633278A5A45Cdf12e81",
+      "indexed": true,
+      "initCodeHash": "0x55f47475adac8a5c4ed996be6b564f6a6e93572be4122a300646fb77f8b6f398",
+      "startBlock": 66856078
+    }
+  }
+}

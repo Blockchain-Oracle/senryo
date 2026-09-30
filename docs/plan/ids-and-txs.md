@@ -31,7 +31,27 @@ Public values only. Secrets live in `~/.config/senryo/` or Coolify runtime env �
 | Immersve Universal EVM Funds Manager | 0x1754AE802dCcc5bd4fe2d2b42ac01e2AB3552086 | company-and-real-integrations.md |
 
 ## Our deployments
-_(none yet — filled by S2 / S8 deploy scripts; must match `packages/contracts/addresses/*.json` and `indexer/config.yaml` — invariant `address-drift`)_
+Must match `packages/contracts/src/addresses/*.json` and `indexer/config.yaml` (invariant `address-drift`).
+
+### Monad testnet (10143) — deployed 2026-09-30, start block 66856078, deployer 0x52d205731E97C90aAB738AE66371449F585C0E6A
+| Contract | Address | Verification |
+|---|---|---|
+| AccessManager | 0xed8A87E2823D65600d2F57Fd6D1A2A5F09F296Da | Sourcify exact_match |
+| InboxFactory | 0x815D0669C708b72447d58Ac4170214A585759Bf3 | Sourcify exact_match |
+| IntentRouter | 0xc9dfaBAf49ea7AA1a6d57F82f816198448F190B1 | Sourcify exact_match |
+| LpVault | 0x297877FCFEb4c077F68D11E07654c676c0883408 | Sourcify exact_match |
+| MarketCalendar | 0x739238AD0EE7482e12f9D35a58d760Ac3e8BcDEB | Sourcify exact_match |
+| MirrorXAG | 0x44C5397b710DCE7f666EFdAb9417DD1D9E13e360 | Sourcify exact_match |
+| MirrorXAU | 0x91ef95EC56a88786CDd41C23Ca2616Ffdfa4dc13 | Sourcify exact_match |
+| MockAUSD | 0xA56060259F6c5EF2b18257caEe1F51782e069E23 | Sourcify exact_match |
+| MockUSDC | 0x68225DA6Df9d1Bd54f26D308Fb453333dC2a69A1 | Sourcify exact_match |
+| SenryoCore | 0x36cF64452f64eB0e99AAC4Eb103C7838C1918cAA | Sourcify exact_match |
+| SessionOracle | 0x343A75a1d271937042D8688dD5d4D2F8c320BAd3 | Sourcify exact_match |
+| StarterDrip | 0x5C1ab87DA4b02670723c6633278A5A45Cdf12e81 | Sourcify exact_match |
+
+Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: none yet (S8).
 
 ## Coolify / builds / domains
-_(none yet)_
+| Item | Value |
+|---|---|
+| Domain | **senryo.xyz** — registered 2026-09-30 via namecheap-cli (order 215459963), $2.20 charged; renews $21.48/yr; WhoisGuard on; Namecheap BasicDNS (records added in S6 with [OK?]) |

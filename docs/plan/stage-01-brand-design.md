@@ -12,7 +12,7 @@
 - [x] `apps/web/.21st/design.json` + `apps/mobile/.21st/design.json` (colors, type, radius, motion, must/avoid, installed components, RN port sources)
 - [ ] Sounds (fill, deposit, send, unlock, liquidation) — **[OK?]** ElevenLabs credits
 - [x] Visual check vs `design/screens/d2-*` at 390/768/1440, both themes (chrome-devtools screenshots)
-- [ ] Domain senryo.xyz — **[OK?]** pre-approved at ≈ $2 once Namecheap API whitelist is set (D-049/D-051)
+- [x] Domain senryo.xyz registered (D-100; $2.20)
 
 ## Gate
 `design-literals-web` + `design-json-present` pass; logo exists; D2 screens match the approved screenshots.

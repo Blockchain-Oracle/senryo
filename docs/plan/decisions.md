@@ -37,6 +37,8 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 - **D-096** 2026-09-30 · Card: allowance days are UTC days (`block.timestamp / 86400`); capture allowed until `expiry + HOLD_RELEASE_GRACE`; release-only is per issuer id and ADMIN-set; refunds are bounded by Σ captured − Σ refunded per user and repay card debt first · D-032/D-036 · S2 agent.
 - **D-097** 2026-09-30 · Deposit source tagging: ADMIN-tagged callers (StarterDrip → VOUCHER), inbox addresses via `InboxFactory.inboxOf` → INBOX, self → DIRECT, any other payer → AURORA · specs/contracts.md `Deposited.source` · S2 agent.
 - **D-098** 2026-09-30 · `forge lint` runs as its own gate step (`lint_on_build = false`) · build noise · S2 agent.
+- **D-100** 2026-09-30 · senryo.xyz **registered** ($2.20 incl. fee; renews $21.48/yr) — rpId frozen as `senryo.xyz` once the first account exists · namecheap order 215459963 · user pre-approval.
+- **D-101** 2026-09-30 · Testnet deployed with 5 MON (not the 7–16 estimate): Monad gas at ~102 gwei × 24.7M gas ≈ 2.9 MON; StarterDrip MON float skipped (deployer < 10 MON reserve) — top up later · broadcast + balance 2.07 MON · planner.
 
 ## Open questions
 | Q | Owner / ask | Question | Blocks | Default | Status |

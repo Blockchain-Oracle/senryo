@@ -5,9 +5,9 @@ Last green commit (gate passed): d80a701 "chore(S0.1/plan): bootstrap plan syste
 In-flight: S5 mobile (wt stage/S5-mobile, agent, resumed after a stall) · S2 testnet deploy waits for a funded deployer; chain side-effects: none yet
 Done: — | Milestones: M0 repo builds [ ] · M1 testnet passkey trade [ ] · M2 mainnet end-to-end [ ] · M3 submitted [ ]
 Clock: registration closes 06 Oct 23:59Z (registered: [ ] — **user**) · code freeze 13 Oct 12:00Z · submit target 13 Oct 18:00Z · deadline 14 Oct 03:59Z
-Blockers: B-1 domain — user whitelists 84.46.247.92 in Namecheap API Access (D-051) · B-2 testnet deployer `0x52d205731E97C90aAB738AE66371449F585C0E6A` needs ≈16 testnet MON (faucet.monad.xyz; captcha = user)
+Blockers: none on the critical path (StarterDrip testnet MON float needs ~10+ MON more later — optional)
 Pending user OKs: OK-2 buy senryo.xyz (pre-approved only if ≈ $2)
 Env readiness (presence only): FIRECRAWL_API_KEY [x] · DEPLOYER_PK [ ] · SPONSOR_PK [ ] · OPERATOR_PK×2 [ ] · KEEPER_PK [ ] · AURORA_API_KEY [ ] · LITHIC_SANDBOX_KEY [ ] · ENVIO_API_TOKEN [ ] · EXPO_TOKEN [ ] · APPLE_TEAM_ID [ ]
-Networks: testnet addresses — none · mainnet addresses — none · indexer config — none
+Networks: testnet addresses packages/contracts/src/addresses/10143.json (12 contracts, all Sourcify exact_match, start block 66856078) · mainnet — none · indexer config — none
 Coolify: not touched (read-only baseline 29 Sep: 4.0 GiB available, 8 GiB swap; see context/09-product/deployment-coolify.md)
-Next action: merge S5 when it reports; once the deployer is funded run the S2 handoff deploy (stage-02 §Handoff) and export addresses; then open wave B (S3 services, S4 indexer, S6 auth).
+Next action: merge S5 when it reports; open wave B — S3 services (keeper mirror relay for MirrorXAU/XAG), S4 indexer (10143 from block 66856078), S6 auth on rpId senryo.xyz (DNS records [OK?]).
