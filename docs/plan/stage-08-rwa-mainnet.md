@@ -86,6 +86,8 @@ reuses everything below `apps/`.
       close/TP-SL/LP (replaces the api floor loop); keeper `topups` removed; `gas-topup-check` 6/6 on a 10143 fork
 - [ ] S8.16d Gas economics from data: 24 h base fee on 10143/143; consensus rule settled by one testnet send; per-sender
       fee multiplier; **[OK?]** `StarterDrip.setConfig` + drip float on 10143; Q-017
+      — measured + wired (D-171): user sends 1.25× (base floored at 100 gwei), services 2×; open ≈ 0.060 MON on
+      testnet. Open: **[OK?]** setConfig (drip 0.05 → 0.15 MON, top-up cap 0.2 → 0.5 MON) + drip float (0.35 tMON now)
 - [x] S8.16e Claim state authoritative: starter query in `packages/query` for mobile + web (initial `checking`, `claimed`
       wins, no Claim button on error, invalidates account/gas); `watchAccount` only with a session; api boot reconciler +
       status reconciliation; drip-scoped rate limit by `block_number`

@@ -165,5 +165,13 @@ export const PRIORITY_FEE_WEI = 2_000_000_000n;
  */
 export const MAX_FEE_BASE_MULTIPLIER_BPS = 20_000n;
 
+/**
+ * User sends (the app's sender and its gas budget) sign a tighter max fee: Monad consensus checks the balance against
+ * gas LIMIT × max fee, so 2× doubled every user's gas reserve for nothing. Measured over the last 24 h (12 windows ×
+ * 1,024 blocks, 30 Sep 2026; D-171): testnet flat at the 100 gwei floor; mainnet ≤ 106.1 gwei, worst 10-block rise
+ * 6.1 %. 1.25× keeps 4× that headroom and cuts the reserve ~37 %. Services (card, keeper, liquidations) keep 2×.
+ */
+export const USER_MAX_FEE_BASE_MULTIPLIER_BPS = 12_500n;
+
 /** Monad minimum base fee (100 MON-gwei) — used when a node reports none. */
 export const MIN_BASE_FEE_WEI = 100_000_000_000n;

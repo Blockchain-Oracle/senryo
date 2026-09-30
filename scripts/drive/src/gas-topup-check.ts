@@ -29,7 +29,7 @@ import {
 } from "@senryo/chain";
 import { GAS_TOPUP_ACTIONS, MIN_BASE_FEE_WEI, RP_ID } from "@senryo/config";
 import { capHeadroomUsd6, nextTransition, previewDecrease, previewIncrease, RISK } from "@senryo/core";
-import { closeRequest, gasBudgetFor, increaseRequest, riskViewOf, sendTracked } from "@senryo/query";
+import { closeRequest, gasBudgetFor, increaseRequest, riskViewOf, sendTracked, userFeeCache } from "@senryo/query";
 import { requireSecret } from "@senryo/service-common";
 import { E18_TO_FEED } from "./constants.ts";
 import { memoryStore, VirtualAuthenticator } from "./fake-passkey.ts";
@@ -81,6 +81,8 @@ const senderWith = (ctx: () => PolicyContext) =>
     rpc: { http: [FORK] },
     nonces,
     journal: new MemoryJournal(),
+    // Exactly as the app: the user fee quote the budget uses is the one the sender signs with (D-171).
+    fees: userFeeCache(read),
   });
 
 // Collateral in the core, as after a practice claim + deposit.

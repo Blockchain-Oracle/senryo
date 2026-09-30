@@ -4,8 +4,15 @@
  * (estimate × headroom, capped by the action budget; the cap when the simulation can't run) × the `FeeCache` max fee.
  * Estimated once per (action, market, side, position count), never per keystroke (D-162): gas barely depends on size.
  */
-import { type Address, FeeCache, gasWithHeadroom, type ReadClient, type TxRequest } from "@senryo/chain";
-import { GAS_LIMITS } from "@senryo/config";
+import {
+  type Address,
+  FEE_REFRESH_MS,
+  FeeCache,
+  gasWithHeadroom,
+  type ReadClient,
+  type TxRequest,
+} from "@senryo/chain";
+import { GAS_LIMITS, USER_MAX_FEE_BASE_MULTIPLIER_BPS } from "@senryo/config";
 import { useQuery } from "@tanstack/react-query";
 import { GAS_BUDGET_STALE_MS } from "./constants.ts";
 import { useQueryEnv } from "./env.tsx";
@@ -22,10 +29,14 @@ export interface GasBudget {
 
 const feeCaches = new WeakMap<ReadClient, FeeCache>();
 
-function feeCacheOf(read: ReadClient): FeeCache {
+/**
+ * The user-send fee quote (USER_MAX_FEE_BASE_MULTIPLIER_BPS, D-171), one per read client. The app's sender MUST use
+ * this same cache so the budget and the signed max fee can never disagree.
+ */
+export function userFeeCache(read: ReadClient): FeeCache {
   let cache = feeCaches.get(read);
   if (!cache) {
-    cache = new FeeCache(read);
+    cache = new FeeCache(read, FEE_REFRESH_MS, USER_MAX_FEE_BASE_MULTIPLIER_BPS);
     feeCaches.set(read, cache);
   }
   return cache;
@@ -60,6 +71,6 @@ export async function gasBudgetFor(read: ReadClient, address: Address, req: TxRe
       // Simulation couldn't run (e.g. a node that enforces the balance check): budget the cap instead.
     }
   }
-  const fees = await feeCacheOf(read).get();
+  const fees = await userFeeCache(read).get();
   return { limit, maxFeePerGas: fees.maxFeePerGas, needWei: limit * fees.maxFeePerGas, estimated };
 }
