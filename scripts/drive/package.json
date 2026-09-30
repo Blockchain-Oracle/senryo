@@ -1,0 +1,25 @@
+{
+  "name": "@senryo/drive",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Testnet drive scripts (S3.8): deposit → XAU long → MirrorAggregator price move → keeper liquidation; card concurrency check.",
+  "license": "MIT",
+  "scripts": {
+    "liquidation": "tsx src/liquidation.ts",
+    "card-concurrency": "tsx src/card-concurrency.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@senryo/chain": "workspace:*",
+    "@senryo/config": "workspace:*",
+    "@senryo/core": "workspace:*",
+    "@senryo/service-common": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -8,6 +8,7 @@ export * from "./errors.ts";
 export * from "./fees.ts";
 export * from "./heads.ts";
 export * from "./journal.ts";
+export * from "./keeper-reads.ts";
 export * from "./nonce.ts";
 export * from "./reads.ts";
 export * from "./send.ts";

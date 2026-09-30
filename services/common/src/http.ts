@@ -45,7 +45,6 @@ export function createHttpServer(options: ServerOptions) {
     bodyLimit: options.bodyLimit ?? DEFAULT_BODY_LIMIT_BYTES,
     // Behind Traefik (Coolify): take the client IP from X-Forwarded-For.
     trustProxy: true,
-    disableRequestLogging: false,
   });
   const startedAt = Date.now();
 

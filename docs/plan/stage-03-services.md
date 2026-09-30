@@ -27,10 +27,12 @@ The keeper liquidates a testnet position driven by a script, and the swap quote 
         relay, prefs, vault (D-110, D-111); EIP-712 types + lifecycle stages in `@senryo/core` (D-112)
 - [ ] S3.6 `services/card`: Lithic ASA responder (HMAC raw body, idempotency, advisory lock reserve, operator shard,
       send-sync, decide by deadline, outbox lifecycle), `card/simulate`, latency samples
-- [ ] S3.7 `services/keeper`: observe pokes, liquidation scan, triggers, hold expiry, gas top-ups, MirrorAggregator
+- [x] S3.7 `services/keeper`: observe pokes, liquidation scan, triggers, hold expiry, gas top-ups, MirrorAggregator
       relay (testnet), `/health` with `KEEPER_STALE_SEC`
 - [ ] S3.8 Targeted checks: card concurrency (parallel auths never exceed freeToSpend), `scripts/drive` testnet
       deposit → XAU long → mirror price move → keeper liquidation
+      - liquidation drive **done** 30 Sep: keeper liquidated the testnet position in 1.7 s, finalized
+        (tx 0x6b44a112…c4c3, acceptance.md); card concurrency pending (S3.6)
 - [ ] S3.9 Dockerfile (one image, three entrypoints, `HEALTHCHECK`), `.github/workflows/images.yml` → GHCR
       `sha-<short>` (linux/amd64), `deploy/*.env.example` (names only)
 - [ ] S3.10 Gate + handoff
