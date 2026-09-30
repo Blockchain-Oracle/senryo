@@ -55,3 +55,5 @@ Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: no
 | Item | Value |
 |---|---|
 | Domain | **senryo.xyz** — registered 2026-09-30 via namecheap-cli (order 215459963), $2.20 charged; renews $21.48/yr; WhoisGuard on; Namecheap BasicDNS (records added in S6 with [OK?]) |
+| Expo / EAS project | `@0xabu/senryo` · projectId `2d424d4b-644e-4231-a156-a8c63d802e9c` (2026-09-30) |
+| Apple Developer team | Individual "Abubakr Jimoh" · Team ID `86C6ZFJ6V6` · bundle id `xyz.senryo.app` registered, Associated Domains enabled, distribution cert created via EAS (2026-09-30) |
