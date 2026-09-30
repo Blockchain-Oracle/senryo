@@ -20,7 +20,7 @@
     ],
     "components": ["src/components/ui"],
     "assets": ["brand/"],
-    "instructions": ["CLAUDE.md", "docs/plan/specs/client.md"]
+    "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
   },
   "design": {
     "colorMode": "dark-default-with-light",

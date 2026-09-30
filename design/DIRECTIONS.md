@@ -1,3 +1,6 @@
+> **SUPERSEDED by D-168 (2026-09-30).** The user retired D2 Desk and every direction below. The design authority is
+> `docs/design/senryo-v2/direction.md` ("Living Lacquer") with `docs/design/reference-study-2026-09-30/`. Kept as history only.
+
 # Metropolis · four design directions
 
 Mobile-first trading app on Monad (iOS, Android, web): one balance split into **Free to trade / Free to spend / Locked**, Face ID (passkey) sign-in and confirmation, fund from any chain by QR, spend with a virtual card (Apple Pay). Journey and risk rules: `context/07-decision/codex-evaluation.md` §C.

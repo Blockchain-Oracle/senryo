@@ -14,7 +14,7 @@
     "tokens": ["packages/tokens/src/palette.ts", "packages/tokens/src/scale.ts", "packages/tokens/src/marks.ts"],
     "components": ["apps/mobile/src/components"],
     "assets": ["brand/"],
-    "instructions": ["CLAUDE.md", "docs/plan/specs/client.md"]
+    "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
   },
   "design": {
     "colorMode": "dark-default-with-light",

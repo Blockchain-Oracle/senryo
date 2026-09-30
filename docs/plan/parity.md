@@ -46,3 +46,12 @@ Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows o
 | F-70 | Public repo, MIT, AI disclosure, setup README | rules §4.1 | S0/S17 | Pending |
 | F-71 | Demo ≤3 min, pitch ≤2 min, logo | rules | S17 | Pending |
 | F-72 | Live link + judge guide + watch mode | track deliverables | S15/S17 | Pending |
+| F-80 | Runtime Practice ↔ Mainnet toggle (F06/F49), mode on every money surface | product honesty | S8.22 | Pending |
+| F-81 | Real identity marks for every known entity + original commodity/FX art | study LG01–LG38 (D-170) | S1b | Pending |
+| F-82 | Reference-led redesign "Living Lacquer" (journeys J1–J11, fidelity acceptance) | study C01–C44, M01–M18 (D-168) | S1b | Pending |
+| F-83 | Handles + avatars | study OP11, FT038/039/065 (D-174) | S12b | Pending |
+| F-84 | Follow + leaderboard + Your rank | study OP17, FT066/083/085 | S12b | Pending |
+| F-85 | Trade feed (fills, theses, replies, likes, Top Trades) + market Holders/Feed | study FT070/074–077/098/099 | S12b | Pending |
+| F-86 | Market breadth: FX majors on the engine; equities/indices indicative (B2 route); crypto via Perpl | user + study M09 (D-175) | S8.23/S7 | Pending |
+| F-87 | Spot Monad tokens (buy/sell via Uniswap v4) | study FT071 | S1b J11 | Pending |
+| F-88 | Mainnet cold start (inbox sweeper, vouchers, equity-gated top-ups) + TxRecovery | product (D-179) | S8.24 | Pending |

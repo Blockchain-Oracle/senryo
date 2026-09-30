@@ -59,7 +59,7 @@ reuses everything below `apps/`.
       — done: list, detail (price/funding/borrow, liq, gauge), 25/50/75 %/all close by hold with previewDecrease,
       closed-session + anti-flash copy, live BottomAccessory mini-bar; TP/SL (sign in session, place/cancel, keeper
       executes; ticket-e2e 5/5 incl. SL → TRIGGER fill); liquidation-risk / paused-price banners + post-mortem card (F12, RiskBanner)
-      · indexer `Trigger` has no chainId — add it in the S8.20 re-sync (keeper already ignores foreign ids)
+      · (corrected D-173: every entity already has an automatic `chainId` + composite key; documents filter on it)
 - [ ] S8.12 Portfolio from the chain: buckets (Free to trade · Free to spend · Locked) at `finalized`, equity, activity
       from the indexer, BottomAccessory mini-bar; delete every `useSample()`/`PreviewBadge` on these screens
 - [x] S8.13 LP (F24/F25): TVL, historical APR, utilisation, risks card, deposit, request redeem → countdown → claim;
@@ -71,6 +71,19 @@ reuses everything below `apps/`.
       swapCollateralRequest (10 bps min-out, per-position gas); portfolio CollateralPanel (mainnet only); the
       end-to-end swap runs with the S8.18 deploy (fork rehearsal first)
 - [x] S8.15 Geofence (F95, D-038): api country lookup (DB-IP Lite, D-121) + mainnet blocker; practice never gated — D-165 (DB-IP Lite in the api, ticket + mainnet starter gated)
+- [ ] S8.16a Stable readings (v2-plan W1): `packages/core` `fromQuery` stale = errored or age > per-query budget (not
+      TanStack `isStale`); `ReadingView` fixed child slots; Ticket out of the market ReadingView with a per-(mode, market)
+      draft + in-flight trace store (no double submit on remount); tabs layout keeps only `hasOpenPositions`
+- [ ] S8.16b Gas budget = measured per-chain limit × the maxFee the sender signs (`gasBudgetWei`, `useGasBudget` per
+      market/side/positions); NO_GAS generic and evaluated last (D-171)
+- [ ] S8.16c Auto top-up: api `POST /v1/starter/topup` (EIP-712 `TopUp`, sponsor `StarterDrip.topUp`, migration
+      `0004_starter_topup`), api keeps open-position holders at close budget, keeper `topups` job removed; app tops up at
+      hold time, waits 3 blocks, continues the hold
+- [ ] S8.16d Gas economics from data: 24 h base fee on 10143/143; consensus rule settled by one testnet send; per-sender
+      fee multiplier; **[OK?]** `StarterDrip.setConfig` + drip float on 10143; Q-017
+- [ ] S8.16e Claim state authoritative: starter query in `packages/query` for mobile + web (initial `checking`, `claimed`
+      wins, no Claim button on error, invalidates account/gas); `watchAccount` only with a session; api boot reconciler +
+      status reconciliation; drip-scoped rate limit by `block_number`
 - [ ] S8.16 Practice gate: deposit → XAU long → partial close → TP/SL → close on 10143 from the phone; a CLOSED session
       blocks opens and allows reduce; txs in `acceptance.md`
 - [ ] S8.17 **[OK?]** mainnet funding by the user (Q-012): deployer, sponsor, 2 operators, keeper MON; LP 250 AUSD,
@@ -82,17 +95,34 @@ reuses everything below `apps/`.
 - [ ] S8.19 **[OK?]** seed LP/insurance/card float + mainnet StarterDrip budget (D-030 relayed gas drip)
       — `contracts/script/SeedMainnet.s.sol` (real AUSD/USDC from the deployer, idempotent; card float opt-in;
       StarterDrip float via STARTER_FUND_WEI above the 10 MON reserve)
-- [ ] S8.20 **[OK?]** S4 re-sync (143 addresses + `ENVIO_APP_LAUNCH_BLOCK_143`) + api `CHAIN_IDS=10143,143` redeploy
-      — **and** chain-prefix the ids of `LpPosition` (owner), `LpRedeemRequest` (requestId), `LpPoolDaily` (day):
-      Envio adds a `chainId` column (queries now filter on it) but these ids would collide across 143/10143
+- [ ] S8.20 **[OK?]** indexer 143 config (addresses + `ENVIO_APP_LAUNCH_BLOCK_143`) + api `CHAIN_IDS=10143,143`
+      redeploy. **Corrected (D-173):** rows are already per chain (`disable_default_cross_chain: true` → composite
+      `(id, chainId)` keys), so no id prefixing and no reset of the practice indexer; add the invariant "every indexer
+      document filters on `chainId`" and (optional, with this change) `borrow` on `UserDailyStats` for the leaderboard
 - [ ] S8.21 Gate + Handoff: mainnet deposit → XAU long → close from the phone; indexer shows it; a closed session blocks
       opens; assurance findings closed
+- [ ] S8.22 Runtime Practice↔Mainnet (F06/F49, D-172): NetworkProvider, per-chain sender/nonces/session/policy, Face ID
+      per network (settings v2), usage reset + relock on entering Mainnet, mode capsule + `P$`, Mainnet read-only before
+      launch (feed-only prices), push/deep links carry chainId, ws session chain check
+- [ ] S8.23 FX majors on the engine (D-175, contracts track): EUR/GBP/JPY/CHF/CAD feeds verified on 143; risk params +
+      aggregate FX USD-exposure cap; FX calendar; mainnet at construction in `Deploy.s.sol`; testnet `AddMarkets.s.sol`
+      schedule → execute (6 h) **[OK?]**; keeper observe on status edges/OI; mirrors on 10143
+- [ ] S8.24 Mainnet cold start + TxRecovery (D-179): keeper `sweeps` job (`InboxFactory.sweep`); voucher path; mainnet
+      copy until a native bot check; per-chain TxRecovery host (never resends) + journal cap; app rebuild with 143.json
+      (EAS **[OK?]**)
 
 ## Gate
 Assurance findings closed (fixed or documented) · mainnet deposit → XAU long → close from the phone (txs in
 `acceptance.md`) · the indexer shows it · a closed session blocks opens · fast gate · `expo export` · contracts gate.
 
 ## Findings
+- **Phone test 30 Sep (user) → root causes (v2-plan §2):** (1) "Adding gas…" dead end — ticket needs 620k × gasPrice
+  (0.0632 MON) vs a 0.05 MON drip, nothing tops up (no api route; keeper `topups` off, trading-users-only, no RELAYER_ROLE),
+  and the signed maxFee (≈202 gwei) makes the drip worth ~247k gas = zero trades; (2) "keeps refreshing" — `ReadingView`
+  moves children between slots on fresh↔stale so the whole Ticket remounts, and `fromQuery` flips on TanStack `isStale`
+  every refetch cycle; (3) claim prompt returns — `use-starter` starts `idle`, trusts a stuck `lastRelay` over `claimed`,
+  falls back to Claim on errors, never invalidates; Account always shows the card; (4) Portfolio — same remounts + the
+  tabs layout re-rendering on every price tick. Fixes: S8.16a–e.
 
 ## Handoff
 
