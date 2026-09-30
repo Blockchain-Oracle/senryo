@@ -39,7 +39,8 @@ function label(phase: StarterPhase): string {
     case "sending":
       return "Sending…";
     case "settling":
-      return "Adding practice dollars…";
+      // Monad commit states as the relay reports them: proposed → voted → finalized (the "Ready" below).
+      return `Adding practice dollars · ${phase.relay.stage}…`;
     case "done":
       return "Ready";
     case "claimed":

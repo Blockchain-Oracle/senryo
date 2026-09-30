@@ -38,6 +38,22 @@ export function removeKey(key: string): void {
   } catch {}
 }
 
+/** A synchronous key-value view of localStorage for `@senryo/chain`'s `kvJournal` (never throws; drops on quota). */
+export const kvStore = {
+  getItem: (key: string): string | null => {
+    try {
+      return store()?.getItem(key) ?? null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      store()?.setItem(key, value);
+    } catch {}
+  },
+};
+
 /** A random per-install id for the relay's rate limit (`x-senryo-device`). Not an identity; cleared with site data. */
 export function deviceId(): string {
   const existing = readJson(AUTH_STORAGE.device, (v) => (typeof v === "string" ? v : undefined));

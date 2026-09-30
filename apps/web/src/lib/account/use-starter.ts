@@ -2,17 +2,17 @@
 
 /**
  * F05 practice starter claim (D-030): sign StarterDrip's `Claim` with the scoped session (in scope → no prompt while
- * unlocked; one passkey prompt when locked), the sponsor relays it, and the stage label follows the relay until the
- * claim is finalized — the TTFT stop (D-037). Never auto-retries a signed claim.
+ * unlocked; one passkey prompt when locked), the sponsor relays it (`POST /v1/starter/claim`), and the stage label
+ * follows the relay until the claim is finalized — the TTFT stop (D-037). A relay found in `status.lastRelay` (e.g.
+ * after a reload mid-claim) is resumed, never re-signed. Never auto-retries a signed claim.
  */
-import { classifyAuthError, defaultFaceIdMode, isSilent, type PolicyContext, signStarterClaim } from "@senryo/account";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { classifyAuthError, isSilent, signStarterClaim } from "@senryo/account";
+import { useCallback, useEffect, useState } from "react";
 import { ACTIVE_NETWORK, RELAY_POLL_MAX, RELAY_POLL_MS } from "@/lib/constants/auth";
-import { ENV } from "@/lib/env";
-import { deviceId } from "./local";
+import { policyContext } from "./api";
 import { ttftStop } from "./measure";
 import { useAccount } from "./provider";
-import { httpStarterClient, type RelayResult, StarterError, type StarterErrorCode, TERMINAL_STAGES } from "./starter";
+import { isTerminal, type RelayResult, StarterError, type StarterErrorCode, starter } from "./starter";
 
 export type StarterPhase =
   | { kind: "idle" }
@@ -29,8 +29,19 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export function useStarter() {
   const account = useAccount();
   const [phase, setPhase] = useState<StarterPhase>({ kind: "idle" });
-  const starter = useMemo(() => httpStarterClient(ENV.API_ORIGIN, deviceId()), []);
   const address = account.hint?.address;
+
+  const follow = useCallback(async (first: RelayResult) => {
+    let relay = first;
+    for (let i = 0; i < RELAY_POLL_MAX && !isTerminal(relay); i += 1) {
+      setPhase({ kind: "settling", relay });
+      await sleep(RELAY_POLL_MS);
+      relay = await starter.relay(relay.relayId);
+    }
+    if (relay.stage !== "finalized") return setPhase({ kind: "failed", code: "RELAY_REVERTED" });
+    ttftStop(Date.now());
+    setPhase({ kind: "done", creditUsd6: relay.creditUsd6 });
+  }, []);
 
   useEffect(() => {
     if (!address) return;
@@ -38,37 +49,28 @@ export function useStarter() {
     setPhase({ kind: "checking" });
     starter
       .status(ACTIVE_NETWORK.chainId, address)
-      .then((s) => live && setPhase(s.claimed ? { kind: "claimed" } : { kind: "idle" }))
+      .then((s) => {
+        if (!live) return;
+        const last = s.lastRelay;
+        if (last && last.kind === "claim" && !isTerminal(last)) return void follow(last).catch(() => undefined);
+        setPhase(s.claimed ? { kind: "claimed" } : { kind: "idle" });
+      })
       // Status unknown (relay offline): stay claimable; the claim itself reports the honest reason.
       .catch(() => live && setPhase({ kind: "idle" }));
     return () => {
       live = false;
     };
-  }, [address, starter]);
+  }, [address, follow]);
 
   const claim = useCallback(async () => {
     const client = account.client;
     if (!client || !address) return;
-    const context = (): PolicyContext => ({
-      chainId: ACTIVE_NETWORK.chainId,
-      self: address,
-      faceId: account.settings.faceId ?? defaultFaceIdMode(ACTIVE_NETWORK.key),
-      marketRoomUsd6: () => undefined,
-      equityUsd6: () => undefined,
-    });
     try {
       setPhase({ kind: "signing" });
-      const signed = await signStarterClaim(client.signer(context), ACTIVE_NETWORK.chainId, Date.now());
+      const signer = client.signer(policyContext(address, account.settings.faceId));
+      const signed = await signStarterClaim(signer, ACTIVE_NETWORK.chainId, Date.now());
       setPhase({ kind: "sending" });
-      let relay = await starter.claim(signed);
-      for (let i = 0; i < RELAY_POLL_MAX && !TERMINAL_STAGES.includes(relay.stage); i += 1) {
-        setPhase({ kind: "settling", relay });
-        await sleep(RELAY_POLL_MS);
-        relay = await starter.relay(relay.relayId);
-      }
-      if (relay.stage !== "finalized") return setPhase({ kind: "failed", code: "RELAY_REVERTED" });
-      ttftStop(Date.now());
-      setPhase({ kind: "done", creditUsd6: relay.creditUsd6 });
+      await follow(await starter.claim(signed));
     } catch (error) {
       if (error instanceof StarterError) {
         if (error.code === "ALREADY_CLAIMED") return setPhase({ kind: "claimed" });
@@ -81,7 +83,7 @@ export function useStarter() {
       const kind = classifyAuthError(error);
       setPhase(isSilent(kind) ? { kind: "idle" } : { kind: "failed", code: "AUTH", authKind: kind });
     }
-  }, [account.client, account.settings.faceId, address, starter]);
+  }, [account.client, account.settings.faceId, address, follow]);
 
   return { phase, claim, ready: account.status === "ready" && address !== undefined };
 }

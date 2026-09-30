@@ -3,12 +3,15 @@
 /**
  * F09 sign out / delete my data. Sign out ends the session and forgets this device's hint (the passkey stays with your
  * provider — "I already have an account" brings everything back). Delete also clears settings and the measurement
- * log; onchain history is public and permanent, which the copy says plainly. Server-side encrypted prefs (S3
- * `/v1/prefs`) join this in S6.12.
+ * log, and removes the encrypted prefs Senryo keeps (`DELETE /v1/prefs`, authenticated by the session — one unlock
+ * prompt if locked); onchain history is public and permanent, which the copy says plainly. Offline, the local data is
+ * still cleared and a toast says the server copy remains (it is ciphertext only this account can open).
  */
+import { classifyAuthError, isSilent } from "@senryo/account";
 import { LogOut, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Panel } from "@/components/shell/primitives";
 import { Button } from "@/components/ui/button";
 import { removeKey } from "@/lib/account/local";
@@ -28,6 +31,19 @@ export function DataPanel() {
     router.push(ROUTES.welcome);
   };
   const deleteData = async () => {
+    const client = account.client;
+    if (client && signedIn) {
+      try {
+        const { deleteRemotePrefs } = await import("@/lib/account/remote");
+        await deleteRemotePrefs(client, account.settings.faceId);
+      } catch (error) {
+        // Backing out of the unlock prompt cancels the whole delete.
+        if (isSilent(classifyAuthError(error))) return;
+        toast("Your encrypted settings are still on Senryo", {
+          description: "Senryo couldn't be reached. Sign in and delete again to remove them.",
+        });
+      }
+    }
     await account.signOut();
     for (const key of Object.values(AUTH_STORAGE)) removeKey(key);
     measureStore.clear();
@@ -50,8 +66,8 @@ export function DataPanel() {
         <div>
           <p className="font-mono text-caption">DELETE MY DATA</p>
           <p className="text-caption text-muted-foreground">
-            Clears everything Senryo keeps in this browser. Onchain history is public and permanent — it can't be
-            deleted by anyone.
+            Clears everything Senryo keeps in this browser and your encrypted settings on Senryo. Onchain history is
+            public and permanent — it can't be deleted by anyone.
           </p>
         </div>
         {confirming ? (

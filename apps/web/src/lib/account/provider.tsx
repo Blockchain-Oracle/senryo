@@ -118,16 +118,33 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     [need],
   );
 
+  const adopt = useCallback((c: AccountClient, next: SessionSettings) => {
+    c.session.applySettings(next);
+    saveSettings(next);
+    setSettings(next);
+  }, []);
+
+  // Encrypted prefs sync (S6.12): on each unlock, adopt the synced settings when they are at least as strict as ours.
+  const unlockedAs = snapshot.status === "unlocked" ? snapshot.address : undefined;
+  useEffect(() => {
+    const c = clientRef.current;
+    if (!c || !unlockedAs) return;
+    void import("./remote")
+      .then(({ pullPrefs }) => pullPrefs(c, c.session.settings))
+      .then((synced) => synced && adopt(c, synced))
+      // Offline or no API: this device's settings stand; the next unlock tries again.
+      .catch(() => undefined);
+  }, [unlockedAs, adopt]);
+
   const applySettings = useCallback(
     async (next: SessionSettings) => {
       const c = need();
       const networkDefault = defaultFaceIdMode(ACTIVE_NETWORK.key);
       if (isLoosening(c.session.settings, next, networkDefault)) await c.stepUp(async () => undefined);
-      c.session.applySettings(next);
-      saveSettings(next);
-      setSettings(next);
+      adopt(c, next);
+      void import("./remote").then(({ pushPrefs }) => pushPrefs(c, next)).catch(() => undefined);
     },
-    [need],
+    [need, adopt],
   );
 
   const value = useMemo<AccountContextValue>(
@@ -143,7 +160,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       signIn: () => flow((c) => c.signIn()),
       unlock: () => flow((c) => c.unlock()),
       lock: () => clientRef.current?.lock(),
-      signOut: () => flow((c) => c.signOut()),
+      signOut: () =>
+        flow(async (c) => {
+          await c.signOut();
+          await import("./api").then(({ clearApiSession }) => clearApiSession()).catch(() => undefined);
+        }),
       stepUp: (fn) => flow((c) => c.stepUp(fn)),
       applySettings,
       refresh: async () => {

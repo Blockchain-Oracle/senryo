@@ -1,30 +1,24 @@
 /**
- * Starter relay client (D-030, F05) behind a small interface. Shapes follow S3's `@senryo/api-client` routes
- * (`starterStatusRoute`, `starterClaimRoute`, `starterVoucherRoute`, `starterRelayRoute`); S6.12 swaps this module
- * for the api-client at merge. bigints travel as decimal strings. The user signs; the sponsor relays and pays gas.
+ * Starter relay (D-030, F05) over S3's `@senryo/api-client` routes — schemas as-is (`starterStatusRoute`,
+ * `starterClaimRoute`, `starterVoucherRoute`, `starterRelayRoute`). The user signs; the sponsor relays and pays gas.
+ * Any transport failure (relay not deployed, offline) is `UNREACHABLE` — the honest "relay offline" state.
  */
-import type { Address, Hex, SignedClaim, SignedVoucher } from "@senryo/account";
+import type { Address, SignedClaim, SignedVoucher } from "@senryo/account";
+import {
+  ApiError,
+  type ApiErrorCode,
+  type RelayResponse,
+  starterClaimRoute,
+  starterRelayRoute,
+  starterStatusRoute,
+  starterVoucherRoute,
+} from "@senryo/api-client";
+import type { ChainId } from "@senryo/config";
+import { isTerminalStage } from "@senryo/core";
+import { api } from "./api";
 
-export type RelayStage = "submitted" | "proposed" | "voted" | "finalized" | "reverted" | "abandoned";
-export const TERMINAL_STAGES: readonly RelayStage[] = ["finalized", "reverted", "abandoned"];
-
-export interface RelayResult {
-  relayId: string;
-  kind: string;
-  chainId: number;
-  user: Address;
-  txHash: Hex;
-  stage: RelayStage;
-  creditUsd6: bigint;
-  nativeWei: bigint;
-}
-
-export interface StarterStatus {
-  claimed: boolean;
-  practiceUsd6: bigint;
-  dripWei: bigint;
-  nextClaimAt: string | undefined;
-}
+export type RelayResult = RelayResponse;
+export const isTerminal = (relay: RelayResult) => isTerminalStage(relay.stage);
 
 export type StarterErrorCode =
   | "ALREADY_CLAIMED"
@@ -42,26 +36,7 @@ export type StarterErrorCode =
   | "UNREACHABLE"
   | "UNKNOWN";
 
-export class StarterError extends Error {
-  readonly code: StarterErrorCode;
-  readonly retryAfterSec: number | undefined;
-  constructor(code: StarterErrorCode, retryAfterSec?: number) {
-    super(`Starter relay: ${code}`);
-    this.name = "StarterError";
-    this.code = code;
-    this.retryAfterSec = retryAfterSec;
-  }
-}
-
-export interface StarterClient {
-  status(chainId: number, user: Address): Promise<StarterStatus>;
-  claim(signed: SignedClaim): Promise<RelayResult>;
-  voucher(signed: SignedVoucher): Promise<RelayResult>;
-  relay(relayId: string): Promise<RelayResult>;
-}
-
-const DEVICE_HEADER = "x-senryo-device";
-const KNOWN = new Set<string>([
+const PASS_THROUGH: ReadonlySet<ApiErrorCode> = new Set<ApiErrorCode>([
   "ALREADY_CLAIMED",
   "RATE_LIMITED",
   "BUDGET_EXHAUSTED",
@@ -76,66 +51,55 @@ const KNOWN = new Set<string>([
   "NOT_DEPLOYED",
 ]);
 
-const big = (v: unknown): bigint => (typeof v === "string" || typeof v === "number" ? BigInt(v) : 0n);
-
-function toRelay(raw: Record<string, unknown>): RelayResult {
-  return {
-    relayId: String(raw.relayId),
-    kind: String(raw.kind),
-    chainId: Number(raw.chainId),
-    user: raw.user as Address,
-    txHash: raw.txHash as Hex,
-    stage: raw.stage as RelayStage,
-    creditUsd6: big(raw.creditUsd6),
-    nativeWei: big(raw.nativeWei),
-  };
-}
-
-async function failure(res: Response): Promise<StarterError> {
-  const body = (await res.json().catch(() => ({}))) as {
-    code?: unknown;
-    error?: { code?: unknown };
-    retryAfterSec?: unknown;
-  };
-  const code = String(body.code ?? body.error?.code ?? "");
-  const retry =
-    typeof body.retryAfterSec === "number" ? body.retryAfterSec : Number(res.headers.get("retry-after")) || undefined;
-  return new StarterError(KNOWN.has(code) ? (code as StarterErrorCode) : "UNKNOWN", retry);
-}
-
-export function httpStarterClient(origin: string, device: string): StarterClient {
-  async function call(path: string, init?: { method: "POST"; body: unknown }): Promise<Record<string, unknown>> {
-    let res: Response;
-    try {
-      res = await fetch(`${origin}${path}`, {
-        method: init?.method ?? "GET",
-        headers: { "content-type": "application/json", [DEVICE_HEADER]: device },
-        ...(init ? { body: JSON.stringify(init.body, (_k, v) => (typeof v === "bigint" ? v.toString() : v)) } : {}),
-      });
-    } catch {
-      throw new StarterError("UNREACHABLE");
-    }
-    if (!res.ok) throw await failure(res);
-    return (await res.json()) as Record<string, unknown>;
+export class StarterError extends Error {
+  readonly code: StarterErrorCode;
+  readonly retryAfterSec: number | undefined;
+  constructor(code: StarterErrorCode, retryAfterSec?: number) {
+    super(`Starter relay: ${code}`);
+    this.name = "StarterError";
+    this.code = code;
+    this.retryAfterSec = retryAfterSec;
   }
-  return {
-    async status(chainId, user) {
-      const raw = await call(`/v1/starter/status?chainId=${chainId}&user=${user}`);
-      return {
-        claimed: raw.claimed === true,
-        practiceUsd6: big(raw.practiceUsd6),
-        dripWei: big(raw.dripWei),
-        nextClaimAt: typeof raw.nextClaimAt === "string" ? raw.nextClaimAt : undefined,
-      };
-    },
-    async claim(signed) {
-      return toRelay(await call("/v1/starter/claim", { method: "POST", body: signed }));
-    },
-    async voucher(signed) {
-      return toRelay(await call("/v1/starter/voucher", { method: "POST", body: signed }));
-    },
-    async relay(relayId) {
-      return toRelay(await call(`/v1/starter/relays/${encodeURIComponent(relayId)}`));
-    },
-  };
 }
+
+function toStarterError(error: unknown): StarterError {
+  if (error instanceof ApiError) {
+    if (PASS_THROUGH.has(error.code)) return new StarterError(error.code as StarterErrorCode, error.retryAfterSec);
+    if (error.code === "UPSTREAM_UNAVAILABLE") return new StarterError("RELAYER_BUSY", error.retryAfterSec);
+    return new StarterError("UNKNOWN", error.retryAfterSec);
+  }
+  // fetch rejected (DNS, CORS, connection refused): the relay isn't reachable from here.
+  return new StarterError("UNREACHABLE");
+}
+
+async function guarded<T>(run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    throw toStarterError(error);
+  }
+}
+
+export const starter = {
+  status: (chainId: ChainId, user: Address) =>
+    guarded(() => api().call(starterStatusRoute, { query: { chainId, user } })),
+  claim: (signed: SignedClaim) =>
+    guarded(() =>
+      api().call(starterClaimRoute, {
+        body: { chainId: signed.chainId, user: signed.user, deadline: signed.deadline, signature: signed.signature },
+      }),
+    ),
+  voucher: (signed: SignedVoucher) =>
+    guarded(() =>
+      api().call(starterVoucherRoute, {
+        body: {
+          chainId: signed.chainId,
+          user: signed.user,
+          deadline: signed.deadline,
+          signature: signed.signature,
+          code: signed.code,
+        },
+      }),
+    ),
+  relay: (relayId: string) => guarded(() => api().call(starterRelayRoute, { params: { relayId } })),
+};

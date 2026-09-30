@@ -8,10 +8,11 @@ import { toViemAccount } from "@category-labs/mera/viem";
 import { type Address, isAddressEqual, type LocalAccount } from "viem";
 import { createPasskey, getPasskey, type PromptListener, withCeremony } from "./ceremony.ts";
 import { type OpenedAccount, openAccount, openAccountFromMnemonic, type Pbkdf2Sha512 } from "./derive.ts";
-import { AuthError, classifyAuthError, isCeremonyError } from "./errors.ts";
+import { AuthError, classifyAuthError, isCeremonyError, SessionLockedError } from "./errors.ts";
 import type { Flow, MeasureSink } from "./measure.ts";
 import type { AccountHint, PasskeyPlatform, SecretStore, SessionSync } from "./platform/types.ts";
 import type { PolicyContext } from "./policy/types.ts";
+import { openPrefs, type Prefs, sealPrefs } from "./prefs.ts";
 import { type Clock, SessionManager, type SessionSettings, systemClock } from "./session/manager.ts";
 import { createScopedSigner, UNLOCK_PROMPT } from "./session/signer.ts";
 
@@ -141,6 +142,7 @@ export class AccountClient {
         return { value: await fn(toViemAccount(opened.session)), prompts };
       } finally {
         opened.session.end();
+        opened.prefsKey.fill(0);
       }
     });
   }
@@ -160,6 +162,19 @@ export class AccountClient {
 
   lock(): void {
     this.session.lock("manual");
+  }
+
+  /** Encrypt prefs for `/v1/prefs` with the live account's prefs key (throws `SessionLockedError` when locked). */
+  sealPrefs(prefs: Prefs): string {
+    const key = this.session.live()?.prefsKey;
+    if (!key) throw new SessionLockedError();
+    return sealPrefs(key, prefs);
+  }
+
+  /** Decrypt a `/v1/prefs` blob; `undefined` when locked or when it doesn't authenticate for this account. */
+  openPrefs(blob: string): Prefs | undefined {
+    const key = this.session.live()?.prefsKey;
+    return key ? openPrefs(key, blob) : undefined;
   }
 
   /** F09 sign out: ends the session, removes hint + gated item on this device (the passkey itself stays). */
@@ -214,6 +229,7 @@ export class AccountClient {
     }
     if (!isAddressEqual(opened.address, hint.address)) {
       opened.session.end();
+      opened.prefsKey.fill(0);
       throw new AuthError("wrong-account");
     }
     return { opened, prompts };
@@ -238,9 +254,10 @@ export class AccountClient {
   #start(hint: AccountHint, opened: OpenedAccount): void {
     if (!isAddressEqual(opened.address, hint.address)) {
       opened.session.end();
+      opened.prefsKey.fill(0);
       throw new AuthError("wrong-account");
     }
-    this.session.start(hint.address, opened.session);
+    this.session.start(hint.address, opened.session, opened.prefsKey);
   }
 
   async #flow<T>(flow: Flow, body: (onPrompt: PromptListener) => Promise<{ value: T; prompts: number }>): Promise<T> {

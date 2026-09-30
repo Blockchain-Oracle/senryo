@@ -11,7 +11,7 @@ import {
   parseSecretVault,
 } from "@category-labs/mera";
 import { isAddressEqual } from "viem";
-import { withCeremony } from "./ceremony.ts";
+import { getPasskey, withCeremony } from "./ceremony.ts";
 import type { AccountClient } from "./client.ts";
 import { PASSKEY_USER_NAME, RP_NAME } from "./constants.ts";
 import { openAccountFromMnemonic, prfOutputToMnemonic } from "./derive.ts";
@@ -48,6 +48,7 @@ async function phraseBehindCeremony(client: AccountClient, onPrompt: Parameters<
   });
   const opened = openAccountFromMnemonic(out.result, derive(client));
   opened.session.end();
+  opened.prefsKey.fill(0);
   if (!isAddressEqual(opened.address, hint.address)) throw new AuthError("wrong-account");
   return out;
 }
@@ -87,20 +88,51 @@ export function addRecoveryPasskey(client: AccountClient, now: Date): Promise<Pa
   });
 }
 
-/** Opens the account a vault protects with its (second) passkey and adopts it on this device (mode `vault`). */
+/** Decrypt a vault behind its pinned passkey and adopt the account it protects on this device (mode `vault`). */
+async function openVault(client: AccountClient, raw: unknown, onPrompt: Parameters<typeof withCeremony>[1]) {
+  const vault = parseSecretVault(raw);
+  const { result, prompts } = await withCeremony(client.options.passkey, onPrompt, (c) =>
+    decryptSecretVaultWithPasskey({ rpId: client.options.rpId, vault, ...c }),
+  );
+  const phrase = new TextDecoder().decode(result);
+  result.fill(0);
+  const opened = openAccountFromMnemonic(phrase, derive(client));
+  await client.adoptHint(
+    { address: opened.address, credential: vault.credential, mode: "vault", vault, savedAt: Date.now() },
+    opened,
+  );
+  return { value: opened.address, prompts };
+}
+
+/** Opens the account a vault (e.g. the recovery file) protects with its backup passkey. */
 export function recoverWithVault(client: AccountClient, raw: unknown): Promise<`0x${string}`> {
+  return client.run("vault-recover", (onPrompt) => openVault(client, raw, onPrompt));
+}
+
+/** The backup passkey has no vault on the server (it may be the main passkey — sign in normally instead). */
+export class VaultNotFoundError extends Error {
+  constructor() {
+    super("No recovery vault for this passkey");
+    this.name = "VaultNotFoundError";
+  }
+}
+
+/**
+ * Fresh-device recovery with no file (F08 + S3 `/v1/vault`): a discoverable assertion identifies the backup passkey
+ * (its PRF is discarded at once), `fetchVault(credentialId)` reads the public vault record, then the vault opens behind
+ * a second, pinned ceremony. Two prompts — recovery is rare and the vault salt is per-vault. The app supplies the
+ * fetch (this package never talks to the network).
+ */
+export function recoverWithServerVault(
+  client: AccountClient,
+  fetchVault: (credentialId: string) => Promise<unknown | undefined>,
+): Promise<`0x${string}`> {
   return client.run("vault-recover", async (onPrompt) => {
-    const vault = parseSecretVault(raw);
-    const { result, prompts } = await withCeremony(client.options.passkey, onPrompt, (c) =>
-      decryptSecretVaultWithPasskey({ rpId: client.options.rpId, vault, ...c }),
-    );
-    const phrase = new TextDecoder().decode(result);
-    result.fill(0);
-    const opened = openAccountFromMnemonic(phrase, derive(client));
-    await client.adoptHint(
-      { address: opened.address, credential: vault.credential, mode: "vault", vault, savedAt: Date.now() },
-      opened,
-    );
-    return { value: opened.address, prompts };
+    const picked = await getPasskey(client.options.passkey, client.options.rpId, undefined, onPrompt);
+    picked.result.prfOutput.fill(0);
+    const raw = await fetchVault(picked.result.credentialId);
+    if (raw === undefined) throw new VaultNotFoundError();
+    const out = await openVault(client, raw, onPrompt);
+    return { value: out.value, prompts: picked.prompts + out.prompts };
   });
 }

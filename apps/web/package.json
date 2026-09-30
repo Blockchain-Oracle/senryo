@@ -18,6 +18,8 @@
     "@radix-ui/react-slot": "1.3.3",
     "@radix-ui/react-tooltip": "1.2.16",
     "@senryo/account": "workspace:*",
+    "@senryo/api-client": "workspace:*",
+    "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
     "@senryo/tokens": "workspace:*",

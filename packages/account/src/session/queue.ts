@@ -26,3 +26,21 @@ export function enqueue<T>(address: Address, task: () => Promise<T>): Promise<T>
 export function isBusy(address: Address): boolean {
   return tails.has(address.toLowerCase());
 }
+
+/** The shape of `@senryo/chain`'s `NonceSource` (structural — this package never imports chain). */
+export interface NonceSourceLike {
+  withNext<T>(address: Address, fn: (nonce: number) => Promise<T>): Promise<T>;
+  resync(address: Address): void;
+}
+
+/**
+ * The `@senryo/chain` seam (S3 Handoff): wrap its `LocalNonceSource` so every assign → sign for an address runs through
+ * this package's one ordered queue — the same queue any other per-address signing work uses. A policy refusal inside
+ * `fn` rejects before the inner source counts the nonce, so a step-up retry reuses it.
+ */
+export function queuedNonces(inner: NonceSourceLike): NonceSourceLike {
+  return {
+    withNext: (address, fn) => enqueue(address, () => inner.withNext(address, fn)),
+    resync: (address) => inner.resync(address),
+  };
+}

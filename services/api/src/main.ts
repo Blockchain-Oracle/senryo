@@ -2,7 +2,7 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import { createDb, createHttpServer, createLogger, listen, migrate, pingDb, SessionKeys } from "@senryo/service-common";
-import { WS_MAX_PAYLOAD_BYTES } from "./constants.ts";
+import { CORS_METHODS, WS_MAX_PAYLOAD_BYTES } from "./constants.ts";
 import { type ApiContext, openChains } from "./context.ts";
 import { loadApiEnv } from "./env.ts";
 import { EnvioIndexerBridge, NullIndexerBridge } from "./indexer.ts";
@@ -42,7 +42,7 @@ const app = createHttpServer({
     ...Object.fromEntries([...chains.values()].map((c) => [`chain${c.chainId}`, c.heads.current().finalized > 0n])),
   }),
 });
-await app.register(cors, { origin: env.CORS_ORIGINS, credentials: false });
+await app.register(cors, { origin: env.CORS_ORIGINS, methods: [...CORS_METHODS], credentials: false });
 await app.register(rateLimit, { global: false });
 await app.register(websocket, { options: { maxPayload: WS_MAX_PAYLOAD_BYTES } });
 

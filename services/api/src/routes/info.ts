@@ -76,10 +76,11 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
 
   app.get(marketsRoute.path, async (request, reply) => {
     const { query } = parseRoute(marketsRoute, request);
-    const chain = chainOf(ctx, query.chainId);
-    const core = readContract(query.chainId, "SenryoCore", chain.read);
+    const chainId = query.chainId ?? ctx.env.CHAIN_ID;
+    const chain = chainOf(ctx, chainId);
+    const core = readContract(chainId, "SenryoCore", chain.read);
     const [views, params] = await Promise.all([
-      readOracles(chain.read, query.chainId, MARKET_IDS),
+      readOracles(chain.read, chainId, MARKET_IDS),
       Promise.all(MARKET_IDS.map((id) => core.read.marketParams([id]))),
     ]);
     const engine = ENGINE_MARKETS.map((m, i) => {
@@ -101,23 +102,24 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
         maxLeverageX: p?.imBps ? Math.floor(BPS / p.imBps) : 0,
       };
     });
-    return sendRoute(reply, marketsRoute, { chainId: query.chainId, engine, perpl: [] });
+    return sendRoute(reply, marketsRoute, { chainId, engine, perpl: [] });
   });
 
   app.get(accountRoute.path, async (request, reply) => {
     const { params, query } = parseRoute(accountRoute, request);
-    const chain = chainOf(ctx, query.chainId);
+    const chainId = query.chainId ?? ctx.env.CHAIN_ID;
+    const chain = chainOf(ctx, chainId);
     const address = getAddress(params.address);
     const [finalized, latest] = await Promise.all([
-      readAccountSnapshot(chain.read, query.chainId, address, "finalized"),
-      readAccountSnapshot(chain.read, query.chainId, address, "latest"),
+      readAccountSnapshot(chain.read, chainId, address, "finalized"),
+      readAccountSnapshot(chain.read, chainId, address, "latest"),
     ]);
     const [positions, history] = await Promise.all([
-      readPositions(chain.read, query.chainId, address, latest.positionBitmap, "latest"),
-      ctx.indexer.history(query.chainId, address),
+      readPositions(chain.read, chainId, address, latest.positionBitmap, "latest"),
+      ctx.indexer.history(chainId, address),
     ]);
     return sendRoute(reply, accountRoute, {
-      chainId: query.chainId,
+      chainId,
       address,
       finalized: bucketsOf(finalized),
       latest: bucketsOf(latest),

@@ -3,31 +3,19 @@
  *  - contracts/src/periphery/StarterDrip.sol — `EIP712("SenryoStarterDrip", "1")`,
  *    `Claim(address user,uint64 deadline)`, `Voucher(address user,bytes32 codeHash,uint64 deadline)`
  *  - contracts/src/core/CoreStorage.sol + TriggerOrders.sol — `EIP712("SenryoCore", "1")`, `TriggerOrder(...)`
- * `checks/starter.check.ts` re-derives the type strings from the .sol files and compares digests.
+ * `checks/starter.check.ts` re-derives the type strings from the .sol files and compares digests. The definitions are
+ * the shared ones in `@senryo/core` (S3 verifies the same types before relaying), so signer and relay can't drift.
  */
 import type { ChainId } from "@senryo/config";
+import { CLAIM_TYPES, EIP712_DOMAINS, VOUCHER_TYPES } from "@senryo/core";
 import type { Address, Hex, TypedDataDefinition } from "viem";
 import { keccak256, toHex } from "viem";
 import { STARTER_DEADLINE_SECONDS } from "../constants.ts";
 import { scopeTargets } from "../policy/targets.ts";
 
-export const STARTER_DOMAIN = { name: "SenryoStarterDrip", version: "1" } as const;
-export const TRIGGER_DOMAIN = { name: "SenryoCore", version: "1" } as const;
-
-export const CLAIM_TYPES = {
-  Claim: [
-    { name: "user", type: "address" },
-    { name: "deadline", type: "uint64" },
-  ],
-} as const;
-
-export const VOUCHER_TYPES = {
-  Voucher: [
-    { name: "user", type: "address" },
-    { name: "codeHash", type: "bytes32" },
-    { name: "deadline", type: "uint64" },
-  ],
-} as const;
+export { CLAIM_TYPES, VOUCHER_TYPES };
+export const STARTER_DOMAIN = EIP712_DOMAINS.starterDrip;
+export const TRIGGER_DOMAIN = EIP712_DOMAINS.core;
 
 /** What the relay needs to call `StarterDrip.claimFor(user, deadline, signature)`. */
 export interface SignedClaim {

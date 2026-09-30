@@ -64,6 +64,8 @@ export const GAS_LIMITS = {
   uniswapSwap: 600_000n,
   /** Perpl IOC order (S7). */
   perplIoc: 700_000n,
+  /** (S6.12, D-155) sponsor-sent type-4 tx, one authorization: fork-measured 46.0k used, 50.7k sent. */
+  delegate: 100_000n,
 } as const;
 
 export type GasAction = keyof typeof GAS_LIMITS;

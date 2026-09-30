@@ -5,6 +5,12 @@ export const API_PORT = 3000;
 export const MIN_APP_VERSION = "0.1.0";
 
 /**
+ * CORS methods for the web app (S6.12, D-154): `@fastify/cors` defaults to the safelisted GET/HEAD/POST, which makes
+ * the browser drop `PUT /v1/prefs`, `PUT /v1/vault` and the DELETEs after their preflight.
+ */
+export const CORS_METHODS = ["GET", "HEAD", "POST", "PUT", "DELETE"] as const;
+
+/**
  * D-023/D-038: mainnet new risk is gated for Perpl's blocked list plus comprehensively sanctioned jurisdictions.
  * Practice (testnet) is never gated; deposits/withdrawals of the user's own funds are never gated.
  */

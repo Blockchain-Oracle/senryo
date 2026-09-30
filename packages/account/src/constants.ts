@@ -49,8 +49,11 @@ export const MESSAGE_PREFIXES = ["Senryo:claim:", "Senryo:push:"] as const;
 /** SIWE messages signed in session must expire within this window. */
 export const SIWE_MAX_TTL_MS = 10 * MINUTES;
 
-/** Starter claim / voucher signatures expire after this many seconds (StarterDrip checks `deadline`). */
-export const STARTER_DEADLINE_SECONDS = 600n;
+/**
+ * Starter claim / voucher signatures expire after this many seconds (StarterDrip checks `deadline`). Half the relay's
+ * limit (`RELAY_SIGNATURE_MAX_TTL_SECONDS` = 600 in `@senryo/core`), so a phone clock a few minutes fast still passes.
+ */
+export const STARTER_DEADLINE_SECONDS = 300n;
 
 /** Hint + unlock storage keys (versioned). Only the unlock item holds secret bytes (native, biometric-gated). */
 export const STORAGE = {

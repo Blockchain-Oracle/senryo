@@ -19,6 +19,8 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 import { AppState } from "react-native";
 import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { clearApiSession } from "./api";
+import { pullPrefs, pushPrefs } from "./remote";
 import { createNativeAccountClient } from "./runtime";
 import { loadSettings, saveSettings } from "./settings";
 
@@ -91,15 +93,34 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const applySettings = useCallback(async (next: SessionSettings) => {
-    const c = clientRef.current;
-    if (isLoosening(c.session.settings, next, defaultFaceIdMode(ACTIVE_NETWORK.key))) {
-      await c.stepUp(async () => undefined);
-    }
-    c.session.applySettings(next);
+  const adopt = useCallback((next: SessionSettings) => {
+    clientRef.current.session.applySettings(next);
     saveSettings(next);
     setSettings(next);
   }, []);
+
+  // Encrypted prefs sync (S6.12): on each unlock, adopt the synced settings when they are at least as strict as ours.
+  const unlockedAs = snapshot.status === "unlocked" ? snapshot.address : undefined;
+  useEffect(() => {
+    const c = clientRef.current;
+    if (!unlockedAs) return;
+    pullPrefs(c, c.session.settings)
+      .then((synced) => synced && adopt(synced))
+      // Offline or no API: this phone's settings stand; the next unlock tries again.
+      .catch(() => undefined);
+  }, [unlockedAs, adopt]);
+
+  const applySettings = useCallback(
+    async (next: SessionSettings) => {
+      const c = clientRef.current;
+      if (isLoosening(c.session.settings, next, defaultFaceIdMode(ACTIVE_NETWORK.key))) {
+        await c.stepUp(async () => undefined);
+      }
+      adopt(next);
+      void pushPrefs(c, next).catch(() => undefined);
+    },
+    [adopt],
+  );
 
   const value = useMemo<AccountContextValue>(
     () => ({
@@ -114,7 +135,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       signIn: () => flow((c) => c.signIn()),
       unlock: () => flow((c) => c.unlock()),
       lock: () => client.lock(),
-      signOut: () => flow((c) => c.signOut()),
+      signOut: () =>
+        flow(async (c) => {
+          await c.signOut();
+          clearApiSession();
+        }),
       stepUp: (fn) => flow((c) => c.stepUp(fn)),
       applySettings,
       refresh: async () => {

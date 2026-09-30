@@ -44,7 +44,14 @@ export { scopeTargets } from "./policy/targets.ts";
 export { evaluateMessage, evaluateTypedData } from "./policy/typed-data.ts";
 export type { Action, FaceIdMode, PolicyContext, PolicyUsage, RejectReason, Verdict } from "./policy/types.ts";
 export { defaultFaceIdMode, emptyUsage } from "./policy/types.ts";
-export { addRecoveryPasskey, recoverWithVault, revealRecoveryPhrase } from "./recovery.ts";
+export { openPrefs, PREFS_VERSION, type Prefs, sealPrefs } from "./prefs.ts";
+export {
+  addRecoveryPasskey,
+  recoverWithServerVault,
+  recoverWithVault,
+  revealRecoveryPhrase,
+  VaultNotFoundError,
+} from "./recovery.ts";
 export { type ChipState, type ChipTone, chipState, clock } from "./session/chip.ts";
 export {
   type Clock,
@@ -55,7 +62,7 @@ export {
   type SessionSnapshot,
   systemClock,
 } from "./session/manager.ts";
-export { enqueue, isBusy } from "./session/queue.ts";
+export { enqueue, isBusy, type NonceSourceLike, queuedNonces } from "./session/queue.ts";
 export { UNLOCK_PROMPT } from "./session/signer.ts";
 export { signStarterClaim, signVoucher } from "./starter/sign.ts";
 export {

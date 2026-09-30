@@ -31,6 +31,8 @@ export interface LiveSession {
   readonly startedAt: number;
   lastUsedAt: number;
   usage: PolicyUsage;
+  /** The account's prefs key (see `OpenedAccount.prefsKey`); zeroed with the session. */
+  readonly prefsKey: Uint8Array | undefined;
 }
 
 export interface Clock {
@@ -94,12 +96,12 @@ export class SessionManager {
   }
 
   /** Starts a session with a freshly derived key (ends any previous one first). */
-  start(address: Address, session: Secp256k1SigningSession): void {
+  start(address: Address, session: Secp256k1SigningSession, prefsKey?: Uint8Array): void {
     this.#end();
     const now = this.#clock.now();
     this.#address = address;
     this.#reason = undefined;
-    this.#live = { address, session, startedAt: now, lastUsedAt: now, usage: emptyUsage() };
+    this.#live = { address, session, startedAt: now, lastUsedAt: now, usage: emptyUsage(), prefsKey };
     this.#reschedule();
     this.#emit();
     this.#sync?.publish({ type: "unlocked", address, tab: this.#sync.tab });
@@ -163,6 +165,7 @@ export class SessionManager {
     this.#timer = undefined;
     // Zeroes the key copy; later signing through it throws SESSION_ENDED (Mera session.ts).
     this.#live?.session.end();
+    this.#live?.prefsKey?.fill(0);
     this.#live = undefined;
   }
 

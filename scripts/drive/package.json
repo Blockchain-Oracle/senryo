@@ -10,9 +10,11 @@
     "card-concurrency": "tsx src/card-concurrency.ts",
     "typecheck": "tsc --noEmit -p .",
     "api-smoke": "tsx src/api-smoke.ts",
-    "indexer-check": "tsx src/indexer-check.ts"
+    "indexer-check": "tsx src/indexer-check.ts",
+    "session-e2e": "tsx src/session-e2e.ts"
   },
   "dependencies": {
+    "@senryo/account": "workspace:*",
     "@senryo/api-client": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",

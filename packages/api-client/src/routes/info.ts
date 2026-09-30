@@ -50,7 +50,8 @@ export const statusResponseSchema = z.object({
   aurora: component,
 });
 
-export const marketsQuerySchema = z.object({ chainId: z.coerce.number().pipe(chainIdSchema) });
+/** `chainId` omitted → the api's default chain (`CHAIN_ID`, practice today, D-156); the response names the chain. */
+export const marketsQuerySchema = z.object({ chainId: z.coerce.number().pipe(chainIdSchema).optional() });
 
 export const engineMarketSchema = z.object({
   id: z.int().nonnegative(),

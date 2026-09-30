@@ -36,7 +36,6 @@ const LABEL: Partial<Record<StarterPhase["kind"], string>> = {
   checking: "Checking…",
   signing: "Signing…",
   sending: "Sending…",
-  settling: "Adding practice dollars…",
 };
 
 function message(phase: StarterPhase): string {
@@ -83,7 +82,13 @@ export function StarterCard({ hideWhenClaimed = false }: { hideWhenClaimed?: boo
         />
       ) : (
         <Button
-          label={phase.kind === "failed" ? "Try again" : (LABEL[phase.kind] ?? "Claim practice funds")}
+          label={
+            phase.kind === "failed"
+              ? "Try again"
+              : phase.kind === "settling"
+                ? `Adding practice dollars · ${phase.relay.stage}…`
+                : (LABEL[phase.kind] ?? "Claim practice funds")
+          }
           loading={busy}
           disabled={!ready}
           onPress={() => void claim()}

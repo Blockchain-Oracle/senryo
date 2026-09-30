@@ -54,8 +54,11 @@ fingerprints. S11a (web shell + auth) is folded in here (D-103).
 - [x] **[OK?]** Coolify project + `senryo-web` deploy; `.well-known` checks (curl, Apple CDN, Google Digital Asset Links) — live 30 Sep (2zeju5a5afmf7s0g4bzdgzjp); Apple CDN serves AASA; Google DAL linked: true
 - [ ] **(user)** dev builds on iPhone + Android: same address web/iOS/Android, fresh-device rebuild, prompt counts per
       authenticator (iCloud, GPM, 1Password), TTFT (practice claim)
-- [ ] S6.12 Integration after S3 merges: starter claim client → `POST /v1/starter/claim` (`packages/api-client`
+- [x] S6.12 Integration after S3 merges: starter claim client → `POST /v1/starter/claim` (`packages/api-client`
       schemas); sends through `packages/chain` with `getSigner()`; 7702 send (type-4) through `packages/chain`
+      — web + mobile on `@senryo/api-client` (claim/voucher/status/relay, SIWE session, prefs D-152, vault D-153),
+      `userSender` = chain `createSender` + scoped signer + `queuedNonces`; chain `authorizationList` → type-4 (D-155);
+      `pnpm --filter @senryo/drive session-e2e` 13/13 on the testnet fork (30 Sep)
 
 ## Gate
 **Evidence (2026-09-30, final):** fast gate green (typecheck 7/7, lint 342 files, invariants 0 errors) · account
@@ -144,11 +147,10 @@ on web/iOS/Android, fresh-device rebuild on devices, prompt counts, TTFT) stay o
   `apps/mobile/.21st/design.json`; evidence in `design/screens/{web-s6,mobile-s6}/`.
 
 **Pending and why**
-- **S6.12 (after S3 merges):** swap `apps/{web,mobile}/src/lib/account/starter.ts` for `@senryo/api-client`
-  (`starterStatus/Claim/Voucher/RelayRoute`, device header, `ApiError.code`); route sends through `@senryo/chain`
-  `createSender({ account: client.signer(ctx), nonces: <withNext → enqueue> })`; vault server copy via
-  `vaultPut/Get` (+ recovery lookup by credential id, step-up on delete of server prefs); move `CLAIM_TYPES`/
-  `VOUCHER_TYPES` to S3's `@senryo/core` `typed-data.ts` (same definitions); sponsor-sent type-4 tx for the 7702 spike.
+- **S6.12 done (30 Sep, lead):** claim/voucher/status/relay through `@senryo/api-client`; sends via
+  `apps/*/src/lib/account/sender.ts` (`userSender`); prefs + vault server copies (D-152/D-153, CORS D-154); type-4
+  through `packages/chain` (D-155). Evidence: `session-e2e` 13/13 (anvil fork of 10143 + local api). The batched
+  7702 `execute` (approve + deposit + increase in one signature) is S8's trade flow on top of D-155.
 - Market room / equity in `PolicyContext` come from S8 reads; until then `increase` is `context-unavailable` (step-up).
 - Backup-passkey vault creation on native is web-first (Mera vaults need WebCrypto `subtle`; quick-crypto's subtle is
   unverified on device) — the 24-word export works natively.

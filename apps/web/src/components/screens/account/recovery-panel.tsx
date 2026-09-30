@@ -1,7 +1,8 @@
 "use client";
 
 /**
- * Recovery (F07, D-034): passkey sync first; a backup passkey (second-passkey vault → recovery file); and, under
+ * Recovery (F07, D-034): passkey sync first; a backup passkey (second-passkey vault → Senryo's `/v1/vault` copy + the
+ * same vault as a recovery file, D-153); and, under
  * Advanced only, the 24-word export behind a step-up. The phrase lives in component state only, is hidden again after
  * a minute or the moment the tab is hidden, and is never stored or logged.
  */
@@ -24,10 +25,19 @@ function download(json: unknown) {
   URL.revokeObjectURL(url);
 }
 
+/** Where the last backup landed: Senryo's encrypted copy + the file, or the file only (API unreachable). */
+type Backup = "none" | "saving" | "synced" | "file-only";
+
+const BACKUP_NOTE: Record<Exclude<Backup, "none">, string> = {
+  saving: "Saving an encrypted copy to Senryo…",
+  synced: "Saved to Senryo (encrypted to the backup passkey) and downloaded as a file.",
+  "file-only": "Senryo couldn't be reached — keep the downloaded file; it's the only copy of this backup.",
+};
+
 export function RecoveryPanel() {
   const account = useAccount();
   const stepUp = useStepUp();
-  const [saved, setSaved] = useState(false);
+  const [backup, setBackup] = useState<Backup>("none");
   const [phrase, setPhrase] = useState<string>();
   const ready = account.status === "ready" && account.client !== undefined && account.hint !== undefined;
 
@@ -38,14 +48,22 @@ export function RecoveryPanel() {
       {
         title: "Add a backup passkey",
         detail:
-          "First confirm with your current passkey, then create a second one (another device or provider). Together with the recovery file it opens this same account.",
+          "First confirm with your current passkey, then create a second one (another device or provider). It opens this same account on any device.",
         confirmLabel: "Start",
       },
       async () => (await import("@senryo/account")).addRecoveryPasskey(client, new Date()),
     );
     if (!vault) return;
     download(vault);
-    setSaved(true);
+    setBackup("saving");
+    try {
+      const { saveVault } = await import("@/lib/account/remote");
+      const label = `Backup passkey · ${new Date().toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
+      await saveVault(client, vault, label, account.settings.faceId);
+      setBackup("synced");
+    } catch {
+      setBackup("file-only");
+    }
   };
 
   const reveal = async () => {
@@ -77,13 +95,22 @@ export function RecoveryPanel() {
       <div className="grid gap-2 border-border border-b px-3 py-3">
         <p className="font-mono text-caption">BACKUP PASSKEY</p>
         <p className="text-caption text-muted-foreground">
-          For a provider that doesn't sync, or a move between Apple and Google: a second passkey plus a recovery file.
-          The file is encrypted to that passkey — useless on its own.
+          For a provider that doesn't sync, or a move between Apple and Google: a second passkey. Senryo keeps an
+          encrypted copy it can't open, and you get the same copy as a recovery file — both useless without that
+          passkey.
         </p>
-        <Button variant="outline" disabled={!ready} onClick={() => void addBackup()}>
-          {saved ? <Download /> : <KeyRound />}
-          {saved ? "Recovery file saved · add another" : "Add a backup passkey"}
+        <Button variant="outline" disabled={!ready || backup === "saving"} onClick={() => void addBackup()}>
+          {backup === "none" ? <KeyRound /> : <Download />}
+          {backup === "none" ? "Add a backup passkey" : "Add another backup passkey"}
         </Button>
+        {backup !== "none" ? (
+          <p
+            role="status"
+            className={backup === "file-only" ? "text-caption text-down" : "text-caption text-muted-foreground"}
+          >
+            {BACKUP_NOTE[backup]}
+          </p>
+        ) : null}
       </div>
       <details className="group px-3 py-3">
         <summary className="cursor-pointer list-none font-mono text-caption text-muted-foreground hover:text-foreground">

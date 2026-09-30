@@ -13,10 +13,13 @@ import {
   getEvmAddress,
   type Secp256k1SigningSession,
 } from "@category-labs/mera";
+import { hkdf } from "@noble/hashes/hkdf.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { HDKey } from "@scure/bip32";
 import { entropyToMnemonic, mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import { ACCOUNT_INDEX, derivationPath, PRF_OUTPUT_BYTES } from "./constants.ts";
+import { ACCOUNT_INDEX, derivationPath, HKDF_INFO, PRF_OUTPUT_BYTES } from "./constants.ts";
 
 /** BIP-39 §"From mnemonic to seed": PBKDF2-HMAC-SHA512, 2048 rounds, 64-byte seed, salt "mnemonic" + passphrase. */
 const BIP39_ROUNDS = 2048;
@@ -36,7 +39,15 @@ export interface DeriveOptions {
 export interface OpenedAccount {
   session: Secp256k1SigningSession;
   address: EvmAddress;
+  /**
+   * AES-256 key for the encrypted prefs blob (`/v1/prefs`): HKDF-SHA256(account key, info "senryo.prefs.v1"). A function
+   * of the *account*, so the passkey path and the backup-passkey (vault) path reach the same prefs (D-152). Held only
+   * with the live session and zeroed with it; never persisted.
+   */
+  prefsKey: Uint8Array;
 }
+
+const PREFS_KEY_BYTES = 32;
 
 /** PRF output (32 bytes) → 24-word BIP-39 phrase (the PRF bytes are the entropy). */
 export function prfOutputToMnemonic(prfOutput: Uint8Array): string {
@@ -74,7 +85,8 @@ function openFromSeed(seed: Uint8Array, index: number): OpenedAccount {
   try {
     privateKey = deriveEvmPrivateKey(seed, index);
     const session = createSecp256k1SigningSession({ privateKey });
-    return { session, address: getEvmAddress(session.publicKey) };
+    const prefsKey = hkdf(sha256, privateKey, undefined, utf8ToBytes(HKDF_INFO.prefs), PREFS_KEY_BYTES);
+    return { session, address: getEvmAddress(session.publicKey), prefsKey };
   } finally {
     seed.fill(0);
     privateKey?.fill(0);

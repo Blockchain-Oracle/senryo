@@ -11,7 +11,7 @@ import { readJson, writeJson } from "./local";
 
 const FACE_ID_MODES: readonly FaceIdMode[] = ["off", "above-threshold", "every-trade"];
 
-function parse(raw: unknown): SessionSettings | undefined {
+export function parseSettings(raw: unknown): SessionSettings | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const v = raw as Partial<Record<keyof SessionSettings, unknown>>;
   const ttl = (SESSION_TTL_CHOICES_MS as readonly unknown[]).includes(v.ttlMs) ? (v.ttlMs as number) : undefined;
@@ -25,7 +25,7 @@ function parse(raw: unknown): SessionSettings | undefined {
 }
 
 export function loadSettings(): SessionSettings {
-  return readJson(AUTH_STORAGE.settings, parse) ?? DEFAULT_SETTINGS;
+  return readJson(AUTH_STORAGE.settings, parseSettings) ?? DEFAULT_SETTINGS;
 }
 
 export function saveSettings(settings: SessionSettings): void {

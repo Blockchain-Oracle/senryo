@@ -1,6 +1,13 @@
 import { type ChainId, GAS_HEADROOM_BPS, GAS_LIMITS, type GasAction } from "@senryo/config";
 import type { TxStage } from "@senryo/core";
-import { type Address, type Hex, keccak256, type LocalAccount, type TransactionReceipt } from "viem";
+import {
+  type Address,
+  type Hex,
+  keccak256,
+  type LocalAccount,
+  type SignedAuthorization,
+  type TransactionReceipt,
+} from "viem";
 import { createBroadcastClients, createReadClient, type ReadClient, type RpcOverrides } from "./clients.ts";
 import { type Confirmation, confirmFinalized } from "./confirm.ts";
 import { BPS, POLL_INTERVAL_MS, RECEIPT_TIMEOUT_MS, SEND_SYNC_TIMEOUT_MS } from "./constants.ts";
@@ -67,6 +74,11 @@ export interface TxRequest {
   gasCap?: bigint | undefined;
   /** Skip the estimate and use this explicit limit (pre-calibrated hot paths); must be ≤ the budget. */
   fixedGas?: bigint | undefined;
+  /**
+   * EIP-7702 authorizations (signed by each EOA behind a step-up, `@senryo/account` `signDelegation`): present → a
+   * type-4 tx, e.g. the sponsor delegating a user's EOA (D-145, D-155). Monad supports type 4; clear = authorize `0x0`.
+   */
+  authorizationList?: readonly SignedAuthorization[] | undefined;
   meta?: Record<string, string> | undefined;
 }
 
@@ -100,6 +112,7 @@ export async function planGas(sender: Sender, req: TxRequest): Promise<bigint> {
       to: req.to,
       data: req.data,
       value: req.value ?? 0n,
+      ...(req.authorizationList ? { authorizationList: [...req.authorizationList] } : {}),
     });
   } catch (error) {
     throw new SimulationRevertedError(req.action, decodeRevert(error), error);
@@ -139,9 +152,8 @@ export async function sendTx(sender: Sender, req: TxRequest): Promise<SentTx> {
   const fees = await sender.fees.get();
   const from = sender.account.address;
   const signed = await sender.nonces.withNext(from, async (nonce) => {
-    const raw = await sender.account.signTransaction({
+    const common = {
       chainId: sender.chainId,
-      type: "eip1559",
       to: req.to,
       data: req.data,
       value: req.value ?? 0n,
@@ -149,7 +161,12 @@ export async function sendTx(sender: Sender, req: TxRequest): Promise<SentTx> {
       nonce,
       maxFeePerGas: fees.maxFeePerGas,
       maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
-    });
+    };
+    const raw = await sender.account.signTransaction(
+      req.authorizationList
+        ? { ...common, type: "eip7702", authorizationList: [...req.authorizationList] }
+        : { ...common, type: "eip1559" },
+    );
     const hash = keccak256(raw);
     const now = Date.now();
     await sender.journal?.put({
