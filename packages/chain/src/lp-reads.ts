@@ -1,0 +1,93 @@
+import type { ChainId } from "@senryo/config";
+import { lpVaultAbi, mockAUSDAbi, senryoCoreAbi } from "@senryo/contracts/abis";
+import type { Address } from "viem";
+import type { ReadClient } from "./clients.ts";
+import { addressOf } from "./contracts.ts";
+import type { ReadTag } from "./reads.ts";
+
+/** How many of the newest redeem request ids are scanned for the user's own (requests are few; ids are per vault). */
+export const LP_REQUEST_SCAN = 50;
+/** The pool-side AUSD: MockAUSD on practice, AUSD on mainnet (address book name). */
+const POOL_TOKEN = "MockAUSD";
+
+export interface LpRedeemView {
+  requestId: bigint;
+  shares: bigint;
+  claimableAt: bigint;
+}
+
+/** Everything the LP screen needs (F24/F25) from one block: vault value, the user's shares and wallet AUSD, gates. */
+export interface LpSnapshot {
+  /** Conservative pool value (redeem side), usd6. */
+  totalAssets: bigint;
+  totalSupply: bigint;
+  tvlCap: bigint;
+  /** What a new deposit may add before the cap (0 when paused/capped). */
+  maxDeposit: bigint;
+  shares: bigint;
+  /** The user's shares valued at the conservative price. */
+  sharesValue: bigint;
+  walletAusd: bigint;
+  allowance: bigint;
+  /** Redeem claims need every market OPEN (weekend-gap protection). */
+  allMarketsOpen: boolean;
+  pending: LpRedeemView[];
+}
+
+export async function readLpVault(
+  read: ReadClient,
+  chainId: ChainId,
+  user: Address,
+  blockTag: ReadTag = "latest",
+): Promise<LpSnapshot> {
+  const vault = { address: addressOf(chainId, "LpVault"), abi: lpVaultAbi } as const;
+  const token = { address: addressOf(chainId, POOL_TOKEN), abi: mockAUSDAbi } as const;
+  const core = { address: addressOf(chainId, "SenryoCore"), abi: senryoCoreAbi } as const;
+  const [totalAssets, totalSupply, tvlCap, maxDeposit, shares, walletAusd, allowance, allOpen, nextId] =
+    await read.multicall({
+      contracts: [
+        { ...vault, functionName: "totalAssets" },
+        { ...vault, functionName: "totalSupply" },
+        { ...vault, functionName: "tvlCap" },
+        { ...vault, functionName: "maxDeposit", args: [user] },
+        { ...vault, functionName: "balanceOf", args: [user] },
+        { ...token, functionName: "balanceOf", args: [user] },
+        { ...token, functionName: "allowance", args: [user, vault.address] },
+        { ...core, functionName: "allMarketsOpen" },
+        { ...vault, functionName: "nextRequestId" },
+      ],
+      allowFailure: false,
+      blockTag,
+    });
+  const first = nextId > BigInt(LP_REQUEST_SCAN) ? nextId - BigInt(LP_REQUEST_SCAN) : 0n;
+  const ids: bigint[] = [];
+  for (let id = first; id < nextId; id += 1n) ids.push(id);
+  const [value, requests] = await Promise.all([
+    read.readContract({ ...vault, functionName: "convertToAssets", args: [shares], blockTag }),
+    ids.length === 0
+      ? Promise.resolve([])
+      : read.multicall({
+          contracts: ids.map((id) => ({ ...vault, functionName: "requests", args: [id] }) as const),
+          allowFailure: false,
+          blockTag,
+        }),
+  ]);
+  const pending = requests.flatMap((r, i) => {
+    const [owner, , reqShares, claimableAt] = r;
+    return owner.toLowerCase() === user.toLowerCase() && reqShares > 0n
+      ? [{ requestId: ids[i] ?? 0n, shares: reqShares, claimableAt: BigInt(claimableAt) }]
+      : [];
+  });
+  return {
+    totalAssets,
+    totalSupply,
+    tvlCap,
+    maxDeposit,
+    shares,
+    sharesValue: value,
+    walletAusd,
+    allowance,
+    allMarketsOpen: allOpen,
+    pending,
+  };
+}

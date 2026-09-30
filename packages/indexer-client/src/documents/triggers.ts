@@ -74,3 +74,22 @@ export function liquidationsVars(user: string, since: number): LiquidationVars {
 }
 
 export type Liquidations = ResultOf<typeof LiquidationsDocument>;
+
+// ---------------------------------------------------------------- LP pool days (F24 historical APR)
+
+interface LpDaysVars {
+  fromDay: number;
+}
+
+const lpDay = z.object({ day: z.number().int(), traderFees: bigintish, traderPnl: bigintish });
+
+/** Pool days since `fromDay` (UTC day index): trader fees and trader realised PnL — the pool's side of both. */
+export const LpDaysDocument = defineDocument<LpDaysVars>()(
+  "LpDays",
+  `query LpDays($fromDay: Int!) {
+    LpPoolDaily(where: { day: { _gte: $fromDay } }, order_by: { day: asc }) { day traderFees traderPnl }
+  }`,
+  z.object({ LpPoolDaily: z.array(lpDay) }).transform((d) => d.LpPoolDaily),
+);
+
+export type LpDays = ResultOf<typeof LpDaysDocument>;

@@ -1,11 +1,12 @@
-import { ShellScreen } from "~/components/shell/ShellScreen";
+import { Stack } from "expo-router";
+import { Screen } from "~/components/kit/Screen";
+import { LpScreen } from "~/features/lp/LpScreen";
 
-export default function LiquiditypoolScreen() {
+export default function LiquidityPoolScreen() {
   return (
-    <ShellScreen
-      title="Liquidity pool"
-      why="The LP pool opens with the engine"
-      detail="APR is shown from historical fees, never promised, with utilisation and redeem delay explained."
-    />
+    <Screen>
+      <Stack.Screen options={{ title: "Liquidity pool" }} />
+      <LpScreen />
+    </Screen>
   );
 }

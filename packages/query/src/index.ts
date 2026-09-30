@@ -2,6 +2,7 @@ export * from "./account.ts";
 export * from "./constants.ts";
 export * from "./env.tsx";
 export * from "./keys.ts";
+export * from "./lp.ts";
 export * from "./markets.ts";
 export * from "./orders.ts";
 export * from "./price-store.ts";

@@ -60,8 +60,10 @@ reuses everything below `apps/`.
       · indexer `Trigger` has no chainId — add it in the S8.20 re-sync (keeper already ignores foreign ids)
 - [ ] S8.12 Portfolio from the chain: buckets (Free to trade · Free to spend · Locked) at `finalized`, equity, activity
       from the indexer, BottomAccessory mini-bar; delete every `useSample()`/`PreviewBadge` on these screens
-- [ ] S8.13 LP (F24/F25): TVL, historical APR, utilisation, risks card, deposit, request redeem → countdown → claim;
+- [x] S8.13 LP (F24/F25): TVL, historical APR, utilisation, risks card, deposit, request redeem → countdown → claim;
       blocked while any market isn't OPEN (explained)
+      — LP screen on chain reads (readLpVault: value, cap, sLP, wallet AUSD, pending redeems, all-open gate),
+      historical 7-day APR (indexed pool days), utilisation from live books, practice faucet; ticket-e2e LP 6/6
 - [ ] S8.14 Collateral swap (F26, mainnet): Quoter → `swapCollateral(minOut)` → trace; quote-moved + paused states
 - [ ] S8.15 Geofence (F95, D-038): api country lookup (DB-IP Lite, D-121) + mainnet blocker; practice never gated
 - [ ] S8.16 Practice gate: deposit → XAU long → partial close → TP/SL → close on 10143 from the phone; a CLOSED session
@@ -72,6 +74,8 @@ reuses everything below `apps/`.
       2-of-3 (owners from the user) + `143.json` export + `address-drift`
 - [ ] S8.19 **[OK?]** seed LP/insurance/card float + mainnet StarterDrip budget (D-030 relayed gas drip)
 - [ ] S8.20 **[OK?]** S4 re-sync (143 addresses + `ENVIO_APP_LAUNCH_BLOCK_143`) + api `CHAIN_IDS=10143,143` redeploy
+      — **and** give `Trigger`, `Liquidation`, `LpPosition`, `LpRedeemRequest`, `LpPoolDaily` a chainId (ids today are
+      orderId / owner / requestId / day — practice and mainnet would collide once both are indexed); query by chain
 - [ ] S8.21 Gate + Handoff: mainnet deposit → XAU long → close from the phone; indexer shows it; a closed session blocks
       opens; assurance findings closed
 

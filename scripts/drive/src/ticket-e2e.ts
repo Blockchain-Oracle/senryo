@@ -16,6 +16,7 @@ import {
   LocalNonceSource,
   MemoryJournal,
   readAccountSnapshot,
+  readLpVault,
   readMarketRisk,
   readPositions,
   receiptEvents,
@@ -28,12 +29,17 @@ import {
   cancelTriggerRequest,
   closeRequest,
   increaseRequest,
+  lpApproveRequest,
+  lpClaimRequest,
+  lpDepositRequest,
+  lpRequestRedeemRequest,
   placeTriggerRequest,
   riskViewOf,
   sendTracked,
   triggerOrder,
 } from "@senryo/query";
 import { requireSecret } from "@senryo/service-common";
+import { E18_TO_FEED } from "./constants.ts";
 import { memoryStore, VirtualAuthenticator } from "./fake-passkey.ts";
 import { anvil } from "./fork.ts";
 import { CHAIN } from "./lib.ts";
@@ -49,6 +55,8 @@ const TRACE = ["checking", "signing", "signed", "proposed", "voted", "finalized"
 const TP_BPS = 500n;
 const SL_BPS = 100n;
 const TRIGGER_KIND = 5;
+/** Past the redeem delay by a minute (fork time warp). */
+const LP_WARP_SLACK_SEC = 60;
 
 const checks: Record<string, boolean> = {};
 const record = (name: string, ok: boolean, detail = "") => {
@@ -201,6 +209,36 @@ record(
   "SL executes when the oracle crosses: TRIGGER fill, position closed",
   kind === TRIGGER_KIND && flat,
   `kind ${kind}`,
+);
+
+// LP (F24/F25): approve + deposit from the wallet, request a redeem, 24 h later (fresh oracle rounds so every market
+// is OPEN) claim — all in scope, no prompt.
+const LP_DEPOSIT_USD6 = 10_000_000n;
+const lpVault = addressOf(CHAIN, "LpVault");
+await sendTracked(trade, lpApproveRequest(CHAIN, lpVault, LP_DEPOSIT_USD6), () => undefined);
+await sendTracked(trade, lpDepositRequest(CHAIN, LP_DEPOSIT_USD6, address), () => undefined);
+const lp1 = await readLpVault(read, CHAIN, address);
+await sendTracked(trade, lpRequestRedeemRequest(CHAIN, lp1.shares, address), () => undefined);
+const lp2 = await readLpVault(read, CHAIN, address);
+const req = lp2.pending[0];
+await anvil(FORK, "evm_increaseTime", [Number(RISK.LP_REDEEM_DELAY) + LP_WARP_SLACK_SEC]);
+for (const id of [0, 1] as const) {
+  const pv = (await readMarketRisk(read, CHAIN, id)).pv;
+  const mirror = id === 0 ? "MirrorXAU" : "MirrorXAG";
+  await sendAndFinalize(keeper, contractCall(CHAIN, mirror, "pushAnswer", [pv.price18 / E18_TO_FEED], "pushAnswer"));
+  await sendAndFinalize(keeper, contractCall(CHAIN, "SessionOracle", "observe", [id], "observe"));
+}
+const claimed = req ? await sendTracked(trade, lpClaimRequest(CHAIN, req.requestId), () => undefined) : undefined;
+const lp3 = await readLpVault(read, CHAIN, address);
+record(
+  "LP: deposit → sLP, request redeem, claim after 24 h (all in scope)",
+  auth.ceremonies === 1 &&
+    lp1.shares > 0n &&
+    req !== undefined &&
+    claimed?.final?.stage === "finalized" &&
+    lp3.pending.length === 0 &&
+    lp3.walletAusd > lp2.walletAusd,
+  `shares ${lp1.shares} · back ${lp3.walletAusd - lp2.walletAusd} usd6`,
 );
 
 client.session.dispose();

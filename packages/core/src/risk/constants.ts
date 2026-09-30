@@ -25,6 +25,8 @@ export const RISK = {
   MAX_IMPACT_BPS: 50n,
 
   SAFETY_BUFFER_USD6: 1_000_000n,
+  /** Insurance fund's cut of every trading fee; the LP pool keeps the rest. */
+  FEE_TO_INSURANCE_BPS: 1_000n,
   LIQ_PENALTY_BPS: 100n,
 
   REOPEN_WINDOW: 300n,

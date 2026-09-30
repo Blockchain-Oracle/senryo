@@ -9,6 +9,7 @@ export * from "./fees.ts";
 export * from "./heads.ts";
 export * from "./journal.ts";
 export * from "./keeper-reads.ts";
+export * from "./lp-reads.ts";
 export * from "./market-reads.ts";
 export * from "./nonce.ts";
 export * from "./reads.ts";
