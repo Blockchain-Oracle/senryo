@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "~/components/kit/Icon";
+import { SessionChip } from "~/features/auth/SessionChip";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { SAMPLE_NETWORK } from "~/lib/sample";
@@ -31,15 +32,15 @@ export function TopStrip() {
           <Text style={{ color: color.inkMuted }}>千両</Text>
         </Text>
         <View style={styles.right}>
+          <SessionChip />
           <View
             accessible
             accessibilityLabel={`Network ${SAMPLE_NETWORK.name}, block time ${SAMPLE_NETWORK.blockTimeLabel}`}
             style={styles.net}
           >
             <View style={[styles.dot, { backgroundColor: color.up }]} />
-            <Text style={[TYPE.numSm, { color: color.inkMuted }]}>
-              {SAMPLE_NETWORK.name} {SAMPLE_NETWORK.blockTimeLabel}
-            </Text>
+            {/* Block time moved to the label and Status (S6): the session chip needs the room on a 390 pt strip. */}
+            <Text style={[TYPE.numSm, { color: color.inkMuted }]}>{SAMPLE_NETWORK.name}</Text>
           </View>
           <Pressable
             onPress={() => go(ROUTES.alerts)}

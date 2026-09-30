@@ -1,0 +1,60 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "86C6ZFJ6V6.xyz.senryo.app"
+        ],
+        "components": [
+          {
+            "/": "/portfolio/*"
+          },
+          {
+            "/": "/markets/*"
+          },
+          {
+            "/": "/trade/*"
+          },
+          {
+            "/": "/positions/*"
+          },
+          {
+            "/": "/orders/*"
+          },
+          {
+            "/": "/activity/*"
+          },
+          {
+            "/": "/alerts/*"
+          },
+          {
+            "/": "/card/*"
+          },
+          {
+            "/": "/fund/*"
+          },
+          {
+            "/": "/withdraw/*"
+          },
+          {
+            "/": "/lp/*"
+          },
+          {
+            "/": "/account/*"
+          },
+          {
+            "/": "/status/*"
+          },
+          {
+            "/": "/watch/*"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "86C6ZFJ6V6.xyz.senryo.app"
+    ]
+  }
+}

@@ -7,6 +7,7 @@ import { Screen } from "~/components/kit/Screen";
 import { Segmented } from "~/components/kit/Segmented";
 import { SectionLabel } from "~/components/kit/Surface";
 import { EmptyState, ReadingView } from "~/components/kit/states";
+import { AccountStrip } from "~/features/auth/AccountStrip";
 import { BucketRegister } from "~/features/portfolio/BucketRegister";
 import { PositionsTable } from "~/features/portfolio/PositionsTable";
 import { ROUTES } from "~/lib/constants/routes";
@@ -33,6 +34,7 @@ export default function Portfolio() {
   const positions = useSample("positions", SAMPLE_POSITIONS);
   return (
     <Screen>
+      <AccountStrip />
       <PreviewBadge />
       <ReadingView reading={buckets} loading="line" loadingLabel="Reading your balance">
         {(b) => {

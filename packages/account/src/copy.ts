@@ -1,0 +1,101 @@
+/**
+ * User copy for auth failures and scope refusals, shared by web and mobile. Plain words (ux-product-feel B.11): say
+ * "Face ID" on iOS, "fingerprint or screen lock" on Android, "passkey" on web; never PRF, seed or wallet up front.
+ */
+import type { AuthFailure } from "./errors.ts";
+import type { RejectReason } from "./policy/types.ts";
+
+export type Surface = "ios" | "android" | "web";
+
+export interface Copy {
+  title: string;
+  body: string;
+}
+
+export function biometricWord(surface: Surface): string {
+  if (surface === "ios") return "Face ID";
+  if (surface === "android") return "fingerprint or screen lock";
+  return "passkey";
+}
+
+const UNKNOWN_TITLE: Record<Surface, string> = { ios: "Face ID", android: "Fingerprint", web: "Passkey" };
+
+export function authFailureCopy(kind: AuthFailure, surface: Surface): Copy {
+  switch (kind) {
+    case "cancelled":
+      return { title: "Cancelled", body: "Nothing changed." };
+    case "prf-unavailable":
+      return {
+        title: "This passkey provider can't hold a Senryo account",
+        body:
+          surface === "web"
+            ? "Save the passkey to iCloud Keychain, Google Password Manager or 1Password. Chrome's local profile, Bitwarden and Dashlane don't support it yet."
+            : "iOS needs version 18 or newer; on Android, Google Password Manager and 1Password both work.",
+      };
+    case "no-credentials":
+      return {
+        title: "No Senryo passkey on this device",
+        body: "Create an account, or check that your passkey synced here (iCloud Keychain, Google Password Manager or 1Password).",
+      };
+    case "no-create-option":
+      return {
+        title: "No passkey provider is set up",
+        body: "Add a Google account in Settings (or turn on 1Password for passkeys), then try again.",
+      };
+    case "bad-configuration":
+      return {
+        title: "This build isn't linked to senryo.xyz yet",
+        body: "The app couldn't reach its passkey association. Use the web app meanwhile — your account is the same there.",
+      };
+    case "not-supported":
+      return {
+        title: "Passkeys aren't available here",
+        body: "Senryo needs iOS 18+, Android 9+, or a current Chrome, Safari or Firefox.",
+      };
+    case "insecure-context":
+      return { title: "Open Senryo over HTTPS", body: "Passkeys only work on a secure connection." };
+    case "wrong-account":
+      return {
+        title: "That passkey opens a different account",
+        body: "Pick the Senryo passkey you signed in with. Nothing was signed.",
+      };
+    case "invalidated":
+      return {
+        title: `${surface === "ios" ? "Face ID" : "Biometrics"} changed on this device`,
+        body: "For safety, confirm once with your passkey to unlock trading again.",
+      };
+    case "timed-out":
+      return { title: "That took too long", body: "Try again when you're ready." };
+    case "interrupted":
+      return { title: "Interrupted", body: "Try again." };
+    case "host-not-allowed":
+      return {
+        title: "This address can't hold Senryo accounts",
+        body: "Open senryo.xyz — passkeys belong to that domain, so any other host would create a different account.",
+      };
+    case "unknown":
+      return { title: `${UNKNOWN_TITLE[surface]} didn't work`, body: "Try again, or use your device passcode." };
+  }
+}
+
+export function scopeCopy(reason: RejectReason): Copy {
+  switch (reason) {
+    case "over-trade-cap":
+    case "over-session-total":
+    case "over-move-cap":
+    case "over-leverage":
+      return { title: "Above your session limit", body: "Confirm this one with a fresh passkey check." };
+    case "rate":
+      return { title: "Lots of orders in a minute", body: "Confirm this one with a fresh passkey check." };
+    case "destination":
+    case "send":
+    case "value":
+      return { title: "Sending money out", body: "Sends to other addresses always ask for a fresh passkey check." };
+    case "card-setting":
+      return { title: "Card limits", body: "Changing what your card may spend always asks for a fresh passkey check." };
+    case "context-unavailable":
+      return { title: "Balances are still loading", body: "Confirm with a fresh passkey check, or wait a moment." };
+    default:
+      return { title: "Needs a fresh check", body: "This action is outside the trading session." };
+  }
+}

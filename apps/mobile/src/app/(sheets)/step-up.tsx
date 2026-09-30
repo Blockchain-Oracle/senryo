@@ -1,10 +1,93 @@
-import { SheetRoute } from "~/components/sheet/SheetRoute";
+import { type AuthFailure, authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
+import { router } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { Platform, Text } from "react-native";
+import { Button } from "~/components/kit/Button";
+import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { AuthCard } from "~/features/auth/AuthCard";
+import { fire } from "~/feedback/fire";
+import { type StepUpRequest, useStepUpRequest } from "~/lib/account/step-up";
+import { TYPE, useTheme } from "~/theme";
+
+/**
+ * Step-up (spec session-policy §5): what is being approved, then one fresh passkey ceremony (never the in-session
+ * biometric read). Opened by `requestStepUp`; a direct deep link with nothing pending just explains the rule.
+ */
+function Body({ request }: { request: StepUpRequest | undefined }) {
+  const { color } = useTheme();
+  const close = useSheetClose();
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<AuthFailure>();
+  const settled = useRef(false);
+
+  useEffect(
+    () => () => {
+      // Dismissed by drag/scrim/back without confirming: the caller gets `undefined` (cancel is silent).
+      if (!settled.current) request?.settle(undefined);
+    },
+    [request],
+  );
+
+  if (!request) {
+    return (
+      <AuthCard
+        glyph="shield"
+        tone="gold"
+        title="Confirm with your passkey"
+        body="Withdrawals, sends, card limits, your recovery phrase and looser security settings always ask for a fresh passkey check."
+      >
+        <Button label="Close" variant="outline" onPress={() => close()} />
+      </AuthCard>
+    );
+  }
+  const confirm = async () => {
+    setBusy(true);
+    setFailure(undefined);
+    try {
+      const value = await request.action();
+      settled.current = true;
+      fire("confirm");
+      close(() => request.settle(value));
+    } catch (error) {
+      setBusy(false);
+      const kind = classifyAuthError(error);
+      if (isSilent(kind)) return;
+      if (kind === "unknown" && !(error instanceof Error && error.name === "AuthError")) {
+        settled.current = true;
+        close(() => request.fail(error));
+        return;
+      }
+      fire("fail");
+      setFailure(kind);
+    }
+  };
+  const copy = failure ? authFailureCopy(failure, Platform.OS === "ios" ? "ios" : "android") : undefined;
+  return (
+    <AuthCard glyph="shield" tone="gold" busy={busy} title={request.intent.title} body={request.intent.detail}>
+      {copy ? (
+        <Text accessibilityRole="alert" style={[TYPE.caption, { color: color.down }]}>
+          {copy.title}. {copy.body}
+        </Text>
+      ) : (
+        <Text style={[TYPE.micro, { color: color.inkMuted, textAlign: "center" }]}>
+          ALWAYS ASKED · NEVER INSIDE A TRADING SESSION
+        </Text>
+      )}
+      <Button
+        label={busy ? "Waiting for your passkey…" : (request.intent.confirmLabel ?? "Confirm with passkey")}
+        loading={busy}
+        onPress={() => void confirm()}
+      />
+      <Button label="Cancel" variant="ghost" disabled={busy} onPress={() => close()} />
+    </AuthCard>
+  );
+}
 
 export default function StepUpSheet() {
+  const request = useStepUpRequest();
   return (
-    <SheetRoute
-      title="Confirm with Face ID"
-      body="Withdrawals, sends, revealing your card and loosening security settings always ask for a fresh passkey check. Arrives with sign-in."
-    />
+    <Sheet onClose={() => router.back()} closeLabel="Close confirmation">
+      <Body request={request} />
+    </Sheet>
   );
 }

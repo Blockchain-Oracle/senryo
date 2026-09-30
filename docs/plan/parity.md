@@ -5,7 +5,7 @@ Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows o
 | F | Feature | Criterion | Stage | Status |
 |---|---|---|---|---|
 | F-01 | Native iOS + Android app | AG "mobile application" | S5/S15 | Pending |
-| F-02 | Passkey sign-in (Mera) mobile + web, one prompt | AG; MR one-prompt | S6 | Pending |
+| F-02 | Passkey sign-in (Mera) mobile + web, one prompt | AG; MR one-prompt | S6 | Partial — web create/sign-in/recovery verified in Chrome on rpId senryo.xyz; native code + simulator pass (21ae20c); device run + prompt counts after the senryo-web deploy |
 | F-03 | AUSD balance held + displayed | AG | S6/S8 | Pending |
 | F-04 | Fund AUSD from any chain / Monad wallet | AG; AU | S9 | Pending |
 | F-05 | Trade on Perpl from the app | AG deliverable | S7 | Pending |
@@ -13,8 +13,8 @@ Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows o
 | F-07 | One balance: gold/silver engine + card holds (+ Perpl bucket) | AG creativity; T1 originality | S8/S10 | Pending |
 | F-10 | TTFT measured (taps + seconds) | MR | S6/S12 | Pending |
 | F-11 | Scoped session + re-prompt matrix + expiry UX | MR session design | S6 | Pending |
-| F-12 | Stateless test (fresh device rebuild) | MR | S6 | Pending |
-| F-13 | Composability: relayed gas, Aurora intent signed by Mera, 7702 spike, second-passkey vault | MR bonus | S6/S9 | Partial — S3: relayed starter claim reached finalized on a fork; vault/prefs storage routes (0882b3d). Aurora S9; 7702 spike S6 |
+| F-12 | Stateless test (fresh device rebuild) | MR | S6 | Partial — web: clear site data → sign in → same address; backup-passkey recovery on a fresh profile → same address; device run pending |
+| F-13 | Composability: relayed gas, Aurora intent signed by Mera, 7702 spike, second-passkey vault | MR bonus | S6/S9 | Partial — S3: relayed starter claim reached finalized on a fork; vault/prefs storage routes (0882b3d); S6: 7702 signed authorization behind step-up (D-145), backup-passkey vault client. Aurora S9 |
 | F-14 | No custody backend (invariant) | MR | S0+ | Pending |
 | F-20 | Intents Connect deposit → `depositFor` live | AU | S9 | Pending |
 | F-21 | `depositAndOpen` | AU | S9 | Pending |
@@ -38,7 +38,7 @@ Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows o
 | F-51 | Immersve sandbox card (testnet) | card route a | S10 | Pending |
 | F-52 | Lithic ASA hold-before-approve + p50/p99 + simulate | card route b | S10 | Partial — ASA responder built from Lithic docs, concurrency check passes on a fork; sandbox keys [OK?] + p50/p99 S10 |
 | F-53 | Laso real prepaid | card route c | S10 | Pending |
-| F-60 | Onboarding, practice mode, vouchers | product | S6/S12 | Partial — services side: practice claim + voucher relay reached finalized on a fork (api smoke 17/17); client side lands with S6 |
+| F-60 | Onboarding, practice mode, vouchers | product | S6/S12 | Partial — services side: practice claim + voucher relay reached finalized on a fork (api smoke 17/17); client: Create-first onboarding, practice claim signing, watch-only (21ae20c); claim wiring S6.12 |
 | F-61 | Haptic + sound map, Live Activities, widgets, push | product / iOS feel | S12 | Pending |
 | F-62 | Web desk (desktop) | T1 design | S11 | Pending |
 | F-63 | Docs site + legal + /stats | judges, traction | S13 | Pending |

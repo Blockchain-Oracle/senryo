@@ -9,6 +9,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { FeedbackHost } from "~/components/shell/FeedbackHost";
 import { OfflineBanner } from "~/components/shell/OfflineBanner";
 import { ToastHost } from "~/components/toast/ToastHost";
+import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
+import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
 import { FONT, ThemeProvider, useTheme } from "~/theme";
 import { useAppFonts } from "~/theme/fonts";
@@ -39,7 +41,9 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={client}>
           <ThemeProvider>
-            <RootStack />
+            <AccountProvider>
+              <RootStack />
+            </AccountProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
@@ -49,7 +53,7 @@ export default function RootLayout() {
 
 /**
  * The stack over the tabs, plus the headless hosts mounted once (ported pattern): feedback (sound pool), toasts and
- * the offline banner. S6+ adds TxRecovery, AlertsHost and the session watcher here.
+ * the offline banner, and the privacy plate (S6). Later: TxRecovery, AlertsHost.
  */
 function RootStack() {
   const { name, color } = useTheme();
@@ -76,6 +80,7 @@ function RootStack() {
       <FeedbackHost />
       <OfflineBanner />
       <ToastHost />
+      <PrivacyPlate />
     </>
   );
 }

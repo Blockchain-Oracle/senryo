@@ -12,6 +12,23 @@ export const DOCS_ORIGIN = `https://docs.${RP_ID}`;
 /** iOS associated domains for passkeys (webcredentials) and universal links (applinks). */
 export const ASSOCIATED_DOMAINS = [`webcredentials:${RP_ID}`, `applinks:${RP_ID}`] as const;
 
+/**
+ * App identities the rpId host vouches for (AASA + assetlinks, S6). Public identifiers, not secrets. The Team ID is the
+ * user's Apple Developer team (Individual, from `eas credentials -p ios`, 2026-09-30).
+ */
+export const APPLE_TEAM_ID = "86C6ZFJ6V6";
+export const IOS_BUNDLE_ID = "xyz.senryo.app";
+export const ANDROID_PACKAGE = "xyz.senryo.app";
+
+/**
+ * Every certificate that signs the Android app (assetlinks `sha256_cert_fingerprints`; a missing one makes passkeys
+ * fail with `BadConfiguration`). [0] = EAS default keystore "Build Credentials fNFoZPe6lZ" (read from the dev APK's v2
+ * signing block, build e8d03e99, 2026-09-30). Append the Play App Signing certificate if Play distribution is used.
+ */
+export const ANDROID_CERT_SHA256S = [
+  "E4:89:29:5E:DF:D5:56:E0:52:65:5C:16:AB:81:FE:FE:60:56:22:0E:2A:2A:D0:F4:24:24:B9:1F:D1:8E:B1:A5",
+] as const;
+
 /** Files served by nginx on the rpId host (runbook §6). */
 export const WELL_KNOWN = {
   appleAppSiteAssociation: "/.well-known/apple-app-site-association",

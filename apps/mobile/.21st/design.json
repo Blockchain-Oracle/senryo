@@ -502,8 +502,8 @@
         "source": "21st:serafimcloud/status-badge",
         "id": 521,
         "url": "https://21st.dev/@serafimcloud/components/status-badge",
-        "port": "View + dot + mono countdown; candidate — confirm on preview in S5",
-        "status": "planned (S5)"
+        "port": "Pressable pill: status dot (filled unlocked / hollow locked / gold warning) + mono countdown; full sentence as VoiceOver label",
+        "status": "built (S6) — src/features/auth/SessionChip.tsx"
       },
       {
         "name": "leverage-detents",
@@ -582,6 +582,42 @@
         "21st": "Drawer #1245",
         "url": "https://21st.dev/@shadcn/components/drawer",
         "note": "ported pre-existing BottomDrawer"
+      },
+      {
+        "rn": "src/features/auth/AuthCard.tsx",
+        "21st": "Passkey Sign-In #19045 (felipemenezes098/sign-in-4)",
+        "url": "https://21st.dev/@felipemenezes098/components/sign-in-4",
+        "note": "glyph tile + title + one line + action stack + trust footer; D2 hairline card"
+      },
+      {
+        "rn": "src/features/auth/CeremonyCard.tsx",
+        "21st": "Push Approval Card #19036 (verify-identity-3) + Task Steps #23569",
+        "url": "https://21st.dev/@felipemenezes098/components/verify-identity-3",
+        "note": "spinner badge on the glyph, waiting row, step list; D-029 second-prompt copy"
+      },
+      {
+        "rn": "src/features/auth/SessionChip.tsx",
+        "21st": "Status Badge #521",
+        "url": "https://21st.dev/@serafimcloud/components/status-badge",
+        "note": "dot + label pill, tone by session state (D2 mono)"
+      },
+      {
+        "rn": "src/features/auth/Onboarding.tsx",
+        "21st": "Onboarding Steps Carousel #19097",
+        "url": "https://21st.dev/@cnippet-dev/components/onboarding-steps-carousel",
+        "note": "progress rule + 'N / 3' counter over paged value cards; swipe paging instead of Back/Next; brand intro before it"
+      },
+      {
+        "rn": "src/features/auth/PhraseGrid.tsx",
+        "21st": "Encrypted Text #18575",
+        "url": "https://21st.dev/@manuarora700/components/encrypted-text",
+        "note": "each recovery word decrypts in place; crypto RNG; static under Reduce Motion; screen capture blocked"
+      },
+      {
+        "rn": "src/app/(sheets)/{step-up,session,account-required}.tsx",
+        "21st": "Drawer #1245 (ported BottomDrawer) + Passkey Sign-In #19045",
+        "url": "https://21st.dev/@shadcn/components/drawer",
+        "note": "live S6 sheets on the one-sheet primitive"
       }
     ]
   },
@@ -595,6 +631,11 @@
       "date": "2026-09-30",
       "decision": "S5 ports recorded under components.built (RN file → 21st source)",
       "ref": "D-070…D-077"
+    },
+    {
+      "date": "2026-09-30",
+      "decision": "S6 mobile auth pieces are RN ports of the same 21st items as web (sign-in-4 #19045, verify-identity-3 #19036, Encrypted Text #18575) plus Status Badge #521 (session chip) and Onboarding Steps Carousel #19097 (value pages); the privacy plate is layout glue (seal on the D2 ground)",
+      "ref": "stage-06-auth.md S6.8, D-033"
     }
   ],
   "rules": [

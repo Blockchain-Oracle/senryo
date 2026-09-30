@@ -47,3 +47,11 @@
 | Zod 4 | `/websites/zod_dev` | codecs (`z.codec`, encode/decode) for bigint wire amounts |
 | Lithic node SDK | `/lithic-com/lithic-node` | webhook verification (Standard Webhooks), `CardAuthorization` (ASA request) and transaction event types (read from `src/resources/{card-authorizations,transactions/transactions,webhooks}.ts` @ main, 30 Sep) |
 | Lithic docs | docs.lithic.com `auth-stream-access-asa`, `events-api`, `transaction-flow` | ASA response `result` values, 6 s / 3 s timing, retries on 5xx; `webhook-id.webhook-timestamp.body` HMAC-SHA256 with the base64 part of `whsec_…` |
+## Docs read (S6)
+| Library | Id / source | Used for |
+|---|---|---|
+| Mera 0.2.0 | `references/mera` @ a3102f4 (`library/src/{passkey,session,viem,secret,errors,react-native-webauthn-client*}.ts`, `demos/shared/src/hd.ts`, `demos/mobile/src/{wallet,storage}.ts`, `demos/web/src/connect.ts`) — not on Context7 | ceremonies, frozen derivation, signing session, vaults, error codes, native unlock pattern |
+| react-native-passkey 3.6.1 | `references/react-native-passkey` (README "Error codes", PRF, CHANGELOG 3.6.2) | normalised `error` values (UserCancelled, NoCredentials, NoCreateOption, BadConfiguration, RequestFailed) |
+| expo-secure-store / expo-local-authentication | `/websites/expo_dev` (SecureStore `requireAuthentication`, invalidation → `null`, Android authenticates writes; LocalAuthentication API) + expo-secure-store 57.0.4 native sources (cancel messages) | native unlock + Face ID gate (D-142) |
+| viem | `/wevm/viem` (EIP-7702 `signAuthorization`, `executor: "self"` nonce rule, type-4 sends) | 7702 spike (D-145), `decodeFunctionData`, `toAccount`, SIWE |
+| WebAuthn PRF support | `context/08-integrations/mera.md` §4 (Mera authenticator table), `platforms-and-stores.md` §2.4 (MDN BCD 8.1.3) | copy for PRF-less providers, F65 |

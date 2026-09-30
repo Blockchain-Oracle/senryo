@@ -492,6 +492,88 @@
         "use": "vaul sheets at phone widths",
         "path": "src/components/ui/drawer.tsx",
         "retokenized": true
+      },
+      {
+        "name": "auth-card",
+        "source": "21st:felipemenezes098/sign-in-4",
+        "id": 19045,
+        "url": "https://21st.dev/@felipemenezes098/components/sign-in-4",
+        "use": "passkey auth card shell (glyph tile, title, action stack, trust footer) — welcome failures, host guard, step-up header",
+        "path": "src/components/ui/auth-card.tsx",
+        "retokenized": true,
+        "note": "written from `21st get` (the registry item fails `21st add` on its shadcn/button dependency, DIRECTIONS.md caveats)"
+      },
+      {
+        "name": "ceremony-card",
+        "source": "21st:felipemenezes098/verify-identity-3",
+        "id": 19036,
+        "url": "https://21st.dev/@felipemenezes098/components/verify-identity-3",
+        "use": "in-flight passkey ceremony (glyph + spinner badge, waiting row) + Task Steps trace; D-029 'one more confirmation'",
+        "path": "src/components/auth/ceremony-card.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "text-shimmer",
+        "source": "21st:ibelick/text-shimmer",
+        "id": 1641,
+        "url": "https://21st.dev/@ibelick/components/text-shimmer",
+        "use": "'Waiting for your passkey…' shimmer",
+        "path": "src/components/ui/text-shimmer.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "encrypted-text",
+        "source": "21st:manuarora700/encrypted-text",
+        "id": 18575,
+        "url": "https://21st.dev/@manuarora700/components/encrypted-text",
+        "use": "recovery phrase words decrypt in place after the step-up (desk timing, crypto RNG, static under reduced motion)",
+        "path": "src/components/ui/encrypted-text.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "dialog",
+        "source": "21st:shadcn/dialog (D2 preview copy)",
+        "id": null,
+        "url": "https://21st.dev/@shadcn/components/dialog",
+        "use": "desk (>=1024) sheets: step-up, session, recovery (ResponsiveSheet picks Dialog vs Drawer)",
+        "path": "src/components/ui/dialog.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "input + label",
+        "source": "shadcn/input, shadcn/label (dependencies of felipemenezes098/sign-in-4)",
+        "id": null,
+        "url": "https://21st.dev/@felipemenezes098/components/sign-in-4",
+        "use": "watch-address field, recovery-file field",
+        "path": "src/components/ui/{input,label}.tsx",
+        "retokenized": true
+      }
+    ],
+    "considered": [
+      {
+        "id": 20041,
+        "name": "Family Sign In Drawer",
+        "verdict": "rejected: email/passkey tabs — Senryo has no email path"
+      },
+      {
+        "id": 8255,
+        "name": "Identity Verification Dialog",
+        "verdict": "rejected: PIN field + ID-card art; step-up is a passkey"
+      },
+      {
+        "id": 29244,
+        "name": "Recovery Code",
+        "verdict": "rejected: code-entry form; our recovery is a backup passkey + file"
+      },
+      {
+        "id": 31481,
+        "name": "Vault Lock",
+        "verdict": "rejected: decorative vault art, off-D2"
+      },
+      {
+        "id": 25058,
+        "name": "Account Settings Fieldset",
+        "verdict": "rejected: profile fields; security uses the installed Segmented Control"
       }
     ]
   },
@@ -500,6 +582,11 @@
       "date": "2026-09-29",
       "decision": "D2 Desk adopted; components from the D2 21st set, re-tokenized to @senryo/tokens",
       "ref": "D-004, D-060…"
+    },
+    {
+      "date": "2026-09-30",
+      "decision": "S6 auth surfaces from 21st: Passkey Sign-In #19045 + Push Approval #19036 (felipemenezes098 family, the D2 preview's auth pieces), Text Shimmer #1641, Encrypted Text #18575, shadcn Dialog; composed with the installed Task Steps, Drawer, Segmented Control, QR Code Generator, Copy Code",
+      "ref": "stage-06-auth.md S6.7"
     }
   ]
 }
