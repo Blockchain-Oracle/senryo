@@ -10,6 +10,7 @@ import { TradeTrace } from "~/features/trade/TradeTrace";
 import { pct, price18, signedUsd, usd } from "~/lib/money";
 import { HERO_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 import { BLOCK_MS_ESTIMATE, REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "./constants";
+import { TriggerPanel } from "./TriggerPanel";
 import { usePosition } from "./usePosition";
 
 const SIZE_DECIMALS = 4;
@@ -120,6 +121,8 @@ export function PositionDetail({ marketId }: { marketId: number }) {
           accessibilityHint="Hold for half a second to close"
         />
       </Panel>
+
+      <TriggerPanel market={m} position={position} />
     </View>
   );
 }

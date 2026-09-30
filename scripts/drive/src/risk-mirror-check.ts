@@ -25,17 +25,16 @@ import {
 } from "@senryo/chain";
 import { type AccountRiskView, previewDecrease, previewIncrease, previewPosition, RISK } from "@senryo/core";
 import { requireSecret } from "@senryo/service-common";
-import { DEADLINE_SEC, E18_TO_FEED, MS_PER_SECOND, SLIPPAGE_BPS } from "./constants.ts";
+import { DEADLINE_SEC, MS_PER_SECOND, SLIPPAGE_BPS } from "./constants.ts";
 import { anvil, freshUser } from "./fork.ts";
 import { CHAIN } from "./lib.ts";
+import { walkTo as walkOracle } from "./oracle-walk.ts";
 
 const FORK = process.env.FORK_RPC ?? "http://127.0.0.1:18765";
 const RICH = "0x8ac7230489e80000";
 const DEPOSIT_USD6 = 12_000_000n;
 const XAU = 0;
 const XAG = 1;
-/** Oracle walk step, below the 200 bps clamp so every round is accepted. */
-const WALK_STEP_BPS = 150n;
 /** isLiquidatable is probed this far outside / inside the predicted price. */
 const PROBE_BAND_BPS = 20n;
 /** Borrow is ceil-rounded per elapsed second, so preview and read differ by a few micro-dollars of accrual. */
@@ -43,8 +42,6 @@ const RISK_TOLERANCE_USD6 = 10_000n;
 /** Until S8.6 lands per-position budgets: `increase` on a 2-position account estimates ~499k (> the flat 450k). */
 const INCREASE_GAS_CAP = 700_000n;
 const MINE_WAIT_MS = 600;
-/** Hard stop for an oracle walk (a 20 % move at 150 bps per round is ~15 rounds). */
-const MAX_WALK_ROUNDS = 40;
 const UINT256_BITS = 256n;
 const MAX_UINT256 = 2n ** UINT256_BITS - 1n;
 /** Trade sizes (usd6): with the 12 AUSD deposit they put both liquidation prices within a few oracle walks. */
@@ -85,20 +82,7 @@ await sendAndFinalize(
   contractCall(CHAIN, "SenryoCore", "deposit", [addressOf(CHAIN, "MockAUSD"), DEPOSIT_USD6], "deposit"),
 );
 
-/** Mirror answers are 8-decimal; walk toward `target18` in accepted steps, observing each round. */
-async function walkTo(marketId: number, target18: bigint) {
-  const mirror = marketId === XAU ? "MirrorXAU" : "MirrorXAG";
-  for (let round = 0; round < MAX_WALK_ROUNDS; round += 1) {
-    const cur = (await readMarketRisk(read, CHAIN, marketId)).pv.price18;
-    const gap = target18 > cur ? target18 - cur : cur - target18;
-    if (gap * RISK.BPS <= cur) return; // within 1 bp
-    const stepMax = (cur * WALK_STEP_BPS) / RISK.BPS;
-    const next = gap <= stepMax ? target18 : target18 > cur ? cur + stepMax : cur - stepMax;
-    await sendAndFinalize(ks, contractCall(CHAIN, mirror, "pushAnswer", [next / E18_TO_FEED], "pushAnswer"));
-    await sendAndFinalize(ks, contractCall(CHAIN, "SessionOracle", "observe", [marketId], "observe"));
-  }
-  throw new Error(`walkTo ${marketId}: oracle did not reach ${target18} in ${MAX_WALK_ROUNDS} rounds`);
-}
+const walkTo = (marketId: number, target18: bigint) => walkOracle(read, ks, marketId === XAU ? 0 : 1, target18);
 
 async function increase(marketId: number, isLong: boolean, notionalUsd6: bigint, label: string) {
   const m = await readMarketRisk(read, CHAIN, marketId);
