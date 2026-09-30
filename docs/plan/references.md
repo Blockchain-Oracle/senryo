@@ -30,3 +30,13 @@
 | Agari invariants | `/Users/abu/dev/hackathon/agari-wt/mobile-takeover/scripts/invariants` | record SHA (S0) | invariant runner + rules |
 | Agari money units | `agari-wt/*/packages/core/src/units/format.ts` | record SHA | bigint formatting |
 | Design preview (this repo) | `design/preview` | this repo | D2 Desk 21st components (re-tokenize on adoption) |
+
+## Context7 library ids and sources (S4)
+| Library | Id / source | Used for |
+|---|---|---|
+| Envio HyperIndex docs | `/websites/envio_dev` | effect API (`createEffect`, `context.cache = false` on failure), observability port 9898 `/healthz`, preload-phase error semantics |
+| Envio HyperIndex source | `references/envio-hyperindex` @ fb886a8 (bundled skills `packages/cli/templates/static/shared/.claude/skills/*`, `envio/src/Env.res`, `cli/src/config_parsing/{system_config,env_interpolation}.rs`) | V3 config/handler/schema API, RPC `for: sync` source selection, text-level env interpolation, prod env requirements |
+| envio (npm) | `envio@3.12.1` (`node_modules/envio/{evm.schema.json,index.d.ts}`) | config schema + handler/effect/contractRegister typings (identical to the reference HEAD schema) |
+| HyperSync client | `@envio-dev/hypersync-client@1.4.1` (`index.d.ts`, `examples/all-erc20`) | `HypersyncClient.stream`, `Decoder.fromSignatures` in `indexer/scripts/hypersync/` |
+| Envio self-host example | `references/envio-local-docker-example` @ e158013 (no licence file) | compose/Dockerfile **structure** adapted for Coolify in `indexer/{docker-compose.yaml,Dockerfile}` (no code copied verbatim beyond standard boilerplate) |
+| Perpl Exchange ABI | `references/perpl-dex-sdk/crates/sdk/abi/dex/Exchange.json` @ 01b9910 (MIT, REVISION `rc_v1.1.7-203-g0e5902dd`) | **copied subset** (15 events) → `indexer/abis/PerplExchange.json` — needs a THIRD_PARTY_NOTICES.md entry (S17) |

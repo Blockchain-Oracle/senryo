@@ -16,6 +16,9 @@ Public values only. Secrets live in `~/.config/senryo/` or Coolify runtime env �
 | Perpl Exchange (deploy block 54773010) | 0x34B6552d57a35a1D042CcAe1951BD1C370112a6F | agora-ausd-and-perpl.md §2 |
 | Chainlink XAU/USD | 0x61dD33A34E47a181EE02e42eE0546a3DA808f1B4 | chainlink-cre.md (read 2026-09-29) |
 | Chainlink XAG/USD | 0x29bEb7e730f09D33417357dbed020B549fdF7db4 | contracts design (directory JSON) |
+| Chainlink XAU/USD aggregator (OCR2 1.0.0, proxy phase 1) | 0xFeccbf9C82Ff5231073580334DC605740309ebCe | `aggregator()` / `phaseAggregators(1)` on the proxy, 2026-09-30 (S4) |
+| Chainlink XAG/USD aggregator (OCR2 1.0.0, proxy phase 1) | 0x8Aa871027BA54dc1a9c803456AD613668a643fB4 | idem |
+| HyperSync | https://monad.hypersync.xyz (143) · https://monad-testnet.hypersync.xyz (10143) | token in `~/.config/senryo/envio.env` (S4) |
 | Uniswap v4 PoolManager | 0x188d586ddcf52439676ca21a244753fa19f9ea8e | docs.uniswap.org (code verified) |
 | Uniswap v4 Quoter | 0xa222dd357a9076d1091ed6aa2e16c9742dd26891 | idem |
 | Uniswap v4 StateView | 0x77395f3b2e73ae90843717371294fa97cc419d64 | idem |
