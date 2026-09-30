@@ -75,7 +75,8 @@ function fingerprints() {
   const bad = list.filter((f) => !FINGERPRINT.test(f));
   if (bad.length > 0) throw new Error(`${bad.length} malformed Android certificate fingerprint(s) (want AA:BB:… ×32)`);
   const extra = local.filter((f) => !ANDROID_CERT_SHA256S.includes(f));
-  if (extra.length > 0) console.warn(`⚠ ${extra.length} certificate(s) from env are not in @senryo/config — local only`);
+  if (extra.length > 0)
+    console.warn(`⚠ ${extra.length} certificate(s) from env are not in @senryo/config — local only`);
   return list;
 }
 

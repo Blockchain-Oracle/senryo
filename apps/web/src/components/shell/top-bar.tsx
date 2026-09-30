@@ -3,6 +3,7 @@
 import { Bell, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SessionChip } from "@/components/auth/session-chip";
 import { PreviewBadge } from "@/components/shell/preview-badge";
 import { Wordmark } from "@/components/shell/seal";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
@@ -29,6 +30,7 @@ export function TopBar() {
         </Link>
         <div className="flex items-center gap-0.5">
           <PreviewBadge className="hidden min-[22rem]:inline-flex" />
+          <SessionChip />
           <span
             className="flex items-center gap-1 px-1 font-mono text-label text-muted-foreground"
             title={`${NETWORK.name} · ${NETWORK.mode}`}
@@ -37,7 +39,9 @@ export function TopBar() {
             {NETWORK.name}
             <span className="hidden text-muted-foreground/70 sm:inline">· {NETWORK.mode}</span>
           </span>
-          <ThemeToggle />
+          <span className="hidden sm:inline-flex">
+            <ThemeToggle />
+          </span>
           <button type="button" aria-label="Alerts" className={ICON_BUTTON}>
             <Bell className="size-4" />
           </button>

@@ -68,7 +68,8 @@ const Tabs = forwardRef<HTMLDivElement, TabsProps>(
   ({ className, tabs, activeTab, onTabChange, renderTab, label = "Sections", ...props }, ref) => {
     const found = tabs.findIndex((t) => t.id === activeTab);
     const [localIndex, setLocalIndex] = useState(Math.max(0, found));
-    const activeIndex = activeTab !== undefined && found >= 0 ? found : localIndex;
+    // Controlled with an id that is not a tab (e.g. /account on the desk) → no tab is active, not the first one.
+    const activeIndex = activeTab !== undefined ? found : localIndex;
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [hoverBox, setHoverBox] = useState<Box>(HIDDEN);
     const [activeBox, setActiveBox] = useState<Box>(HIDDEN);

@@ -9,6 +9,7 @@ export const ROUTES = {
   card: "/card/",
   fund: "/fund/",
   account: "/account/",
+  watch: "/watch/",
 } as const;
 
 export type DeskTab = { id: string; label: string; href: string; match: string };
@@ -25,3 +26,6 @@ export const DESK_TABS: readonly DeskTab[] = [
 export function activeTab(pathname: string): string | undefined {
   return DESK_TABS.find((t) => pathname.startsWith(t.match))?.id;
 }
+
+/** Read-only watch link (D-031). A query param, because the static export cannot pre-render every address. */
+export const watchHref = (address: string) => `/watch/?address=${address}` as const;

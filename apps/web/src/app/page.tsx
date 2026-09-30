@@ -1,9 +1,6 @@
-import { ArrowRight, Fingerprint } from "lucide-react";
-import Link from "next/link";
+import { WelcomeActions } from "@/components/auth/welcome-actions";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
-import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/constants/brand";
-import { ROUTES } from "@/lib/constants/routes";
 
 const POINTS = [
   ["ONE BALANCE", "Free to trade · Free to spend · Locked — risk-accounted, never double-counted."],
@@ -11,7 +8,7 @@ const POINTS = [
   ["KINPAKU 金箔", "A card that spends what's free, never your margin."],
 ] as const;
 
-/** Welcome (F01). Passkey sign-in is wired in S6; this is the static entry point. */
+/** Welcome (F01/F02/F03): the static brand block pre-renders; the passkey actions hydrate on the client (S6). */
 export default function Welcome() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-6 pb-10">
@@ -43,24 +40,7 @@ export default function Welcome() {
         </dl>
       </div>
 
-      <div className="space-y-3">
-        <Button size="lg" className="w-full" disabled aria-describedby="passkey-note">
-          <Fingerprint />
-          Continue with passkey
-        </Button>
-        <p
-          id="passkey-note"
-          className="text-center font-mono text-micro text-muted-foreground uppercase tracking-[0.12em]"
-        >
-          Passkey sign-in arrives with the account stage
-        </p>
-        <Button asChild variant="outline" size="lg" className="w-full">
-          <Link href={ROUTES.markets}>
-            Look around first
-            <ArrowRight />
-          </Link>
-        </Button>
-      </div>
+      <WelcomeActions />
     </main>
   );
 }

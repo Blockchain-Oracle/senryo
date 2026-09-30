@@ -35,10 +35,10 @@ fingerprints. S11a (web shell + auth) is folded in here (D-103).
       queue per address · `getSigner()`
 - [x] S6.5 Targeted checks: derivation parity (web and native code paths, same PRF → same address; known vector) and
       session-policy scope checks
-- [ ] S6.6 Starter claim: StarterDrip `Claim`/`Voucher` typed data read from the contract, signed in session; app-side
+- [x] S6.6 Starter claim: StarterDrip `Claim`/`Voucher` typed data read from the contract, signed in session; app-side
       `StarterClient` interface (S3 relay `POST /v1/starter/claim` integration left open) · 7702 spike: signed
       authorization construction (signing only, step-up) + findings D-entry
-- [ ] S6.7 Web auth (S11a): account provider, onboarding Create-first / "I already have an account" / hint path,
+- [x] S6.7 Web auth (S11a): account provider, onboarding Create-first / "I already have an account" / hint path,
       session chip, step-up + Face ID dialogs, BroadcastChannel sync, lock on `pagehide`/idle, watch-only `/watch`,
       recovery (vault + Advanced export), security settings, delete data · 21st items re-tokenized
 - [ ] S6.8 Mobile auth: onboarding (intro + value pages + Create-first), SecureStore gated PRF + ungated hint, unlock,

@@ -10,6 +10,7 @@ import {
   type AccountClient,
   type AccountHint,
   type Address,
+  DEFAULT_SETTINGS,
   defaultFaceIdMode,
   type Flow,
   isLoosening,
@@ -59,12 +60,14 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<SessionSnapshot>({ status: "none" });
   const [hint, setHint] = useState<AccountHint>();
   const [extraPrompt, setExtraPrompt] = useState<Flow>();
-  const [settings, setSettings] = useState<SessionSettings>(loadSettings);
+  // Read on mount, not during prerender (no storage on the server; avoids a hydration mismatch).
+  const [settings, setSettings] = useState<SessionSettings>(DEFAULT_SETTINGS);
   const clientRef = useRef<AccountClient | undefined>(undefined);
 
   useEffect(() => {
     let live = true;
     setHost(hostAllowed(window.location.hostname) ? "ok" : "not-allowed");
+    setSettings(loadSettings());
     void import("./runtime").then(async ({ createWebAccountClient }) => {
       const c = createWebAccountClient(loadSettings(), (flow) => setExtraPrompt(flow));
       const loaded = await c.load();

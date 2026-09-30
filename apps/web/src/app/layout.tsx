@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import type { ReactNode } from "react";
+import { StepUpProvider } from "@/components/auth/step-up";
 import { ThemeProvider } from "@/components/shell/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { AccountProvider } from "@/lib/account/provider";
 import { BRAND } from "@/lib/constants/brand";
 import "./globals.css";
 
@@ -28,7 +30,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={`${inter.variable} ${jbMono.variable} dark`} suppressHydrationWarning>
       <body className="min-h-dvh">
         <ThemeProvider>
-          {children}
+          <AccountProvider>
+            <StepUpProvider>{children}</StepUpProvider>
+          </AccountProvider>
           <Toaster />
         </ThemeProvider>
       </body>
