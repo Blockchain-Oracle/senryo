@@ -1,0 +1,23 @@
+{
+  "name": "@senryo/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "zod 4 schemas (wire codecs) for Senryo's own API routes, shared by services/api and both apps, plus a tiny fetch client.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@senryo/config": "workspace:*",
+    "@senryo/core": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}
