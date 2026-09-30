@@ -20,7 +20,7 @@ The keeper liquidates a testnet position driven by a script, and the swap quote 
       voted → finalized, journal interface, `sendRawTransactionSync` to 2 RPCs + fallback (receipt via WS)
 - [ ] S3.3 Uniswap v4 helper: read the AUSD/USDC pool key onchain, Quoter quote, Universal Router encoding confirmed
       against 2.1.2 on a mainnet fork (D-093)
-- [ ] S3.4 Ledger: Postgres 17 schema + forward-only idempotent migrations (all tables in `specs/services.md`)
+- [x] S3.4 Ledger: Postgres 17 schema + forward-only idempotent migrations (all tables in `specs/services.md`)
 - [ ] S3.5 `services/api` (Fastify): health/ready/config/geo/status/markets/account, starter + voucher relay (SIWE,
       rate limits), prefs/vault/alerts/events/push-token routes, WS channels + indexer bridge (stub until S4 merges)
       - S3.5a (early contract for S6, done): `@senryo/api-client` schemas for auth (SIWE), starter claim/voucher/status/
