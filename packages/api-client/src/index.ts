@@ -6,6 +6,7 @@ export * from "./routes/auth.ts";
 export * from "./routes/card.ts";
 export * from "./routes/define.ts";
 export * from "./routes/engagement.ts";
+export * from "./routes/follow.ts";
 export * from "./routes/info.ts";
 export * from "./routes/profile.ts";
 export * from "./routes/starter.ts";
