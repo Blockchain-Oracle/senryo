@@ -5,7 +5,7 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {console2} from "forge-std/console2.sol";
 import {Constants as C} from "../../src/libraries/Constants.sol";
 import {PerpMath} from "../../src/libraries/PerpMath.sol";
-import {Account as CoreAccount, Book, MarketParams, MarketState} from "../../src/libraries/Types.sol";
+import {Account as CoreAccount, Book, MarketParams, MarketState, Position} from "../../src/libraries/Types.sol";
 import {Fixture} from "../utils/Fixture.sol";
 import {TestToken} from "../utils/Mocks.sol";
 import {Handler} from "./Handler.sol";
@@ -73,6 +73,31 @@ contract CoreInvariantsTest is StdInvariant, Fixture {
         assertEq(handler.ghostI7Violations(), 0);
     }
 
+    /// @notice No handler action ever hit a Panic (arithmetic, division, bounds): rejections must be custom errors.
+    function invariant_noPanics() public view {
+        assertEq(handler.ghostPanics(), 0, string.concat("panic in ", vm.toString(bytes32(handler.lastPanicAction()))));
+    }
+
+    /// @notice D-182: each market's aggregates (sizes, notionals, funding/borrow snapshot sums — the LP receivables
+    /// base) equal the Σ over live positions, i.e. every aggregate is removed with the snapshots it was added with.
+    function invariant_aggregatesMatchPositions() public view {
+        for (uint8 m; m < core.marketCount(); ++m) {
+            Sums memory t;
+            for (uint256 i; i < handler.actorCount(); ++i) {
+                _add(t, core.position(handler.actors(i), m));
+            }
+            _add(t, core.position(handler.liquidator(), m));
+            MarketState memory s = core.marketState(m);
+            assertEq(s.longSize, t.longSize, "long size");
+            assertEq(s.shortSize, t.shortSize, "short size");
+            assertEq(s.longNotional, t.longNotional, "long notional");
+            assertEq(s.shortNotional, t.shortNotional, "short notional");
+            assertEq(s.longFundingSnapSum, t.longFunding, "long funding snapshots");
+            assertEq(s.shortFundingSnapSum, t.shortFunding, "short funding snapshots");
+            assertEq(s.borrowSnapSum, t.borrow, "borrow snapshots");
+        }
+    }
+
     /// @notice Per-run coverage log (`-vv`): successful calls per handler action, so a vacuous pass is visible.
     function afterInvariant() external view {
         string[18] memory names = [
@@ -100,6 +125,31 @@ contract CoreInvariantsTest is StdInvariant, Fixture {
             line = string.concat(line, " ", names[i], "=", vm.toString(handler.calls(bytes32(bytes(names[i])))));
         }
         console2.log(line);
+    }
+
+    struct Sums {
+        uint256 longSize;
+        uint256 shortSize;
+        uint256 longNotional;
+        uint256 shortNotional;
+        int256 longFunding;
+        int256 shortFunding;
+        uint256 borrow;
+    }
+
+    function _add(Sums memory t, Position memory p) internal pure {
+        if (p.size == 0) return;
+        uint256 n = PerpMath.notional(p.size, p.entry);
+        if (p.isLong) {
+            t.longSize += p.size;
+            t.longNotional += n;
+            t.longFunding += int256(n) * p.fundingSnap;
+        } else {
+            t.shortSize += p.size;
+            t.shortNotional += n;
+            t.shortFunding += int256(n) * p.fundingSnap;
+        }
+        t.borrow += n * p.borrowSnap;
     }
 
     function _conservation(TestToken token, bool isAusd) internal view {

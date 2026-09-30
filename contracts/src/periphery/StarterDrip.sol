@@ -34,6 +34,12 @@ contract StarterDrip is AccessManaged, EIP712, ReentrancyGuardTransient {
         uint256 maxVouchers;
     }
 
+    // Config events live here, not in `Events`, so the shared libraries keep their bytecode (S8.5).
+    event DripConfigSet(uint256 dripWei, uint256 dailyBudgetWei, uint256 topUpCapWei);
+    event GasToppedUp(address indexed user, uint256 amount);
+    /// @dev `token` is address(0) for native MON.
+    event DripWithdrawn(address indexed token, address indexed to, uint256 amount);
+
     bytes32 public constant CLAIM_TYPEHASH = keccak256("Claim(address user,uint64 deadline)");
     bytes32 public constant VOUCHER_TYPEHASH = keccak256("Voucher(address user,bytes32 codeHash,uint64 deadline)");
 
@@ -102,6 +108,7 @@ contract StarterDrip is AccessManaged, EIP712, ReentrancyGuardTransient {
         if (total > config.topUpCapWei) revert Errors.BudgetExceeded(total, config.topUpCapWei);
         toppedUp[user][day] = total;
         _sendNative(user, amount);
+        emit GasToppedUp(user, amount);
     }
 
     // ---------------------------------------------------------------- admin
@@ -115,15 +122,19 @@ contract StarterDrip is AccessManaged, EIP712, ReentrancyGuardTransient {
 
     function setConfig(Config calldata cfg) external restricted {
         config = cfg;
+        emit DripConfigSet(cfg.dripWei, cfg.dailyBudgetWei, cfg.topUpCapWei);
     }
 
+    /// @notice ADMIN (the Safe on mainnet): recover MON. The recipient is the admin's choice by design.
     function withdrawNative(address payable to, uint256 amount) external nonReentrant restricted {
         (bool ok,) = to.call{value: amount}("");
         if (!ok) revert Errors.NativeTransferFailed();
+        emit DripWithdrawn(address(0), to, amount);
     }
 
     function withdrawToken(IERC20 token, address to, uint256 amount) external restricted {
         token.safeTransfer(to, amount);
+        emit DripWithdrawn(address(token), to, amount);
     }
 
     // ---------------------------------------------------------------- internal

@@ -59,6 +59,11 @@ contract CollateralSwapper is AccessManaged, ICollateralSwapper {
     /// already expresses it; a contract-wide price floor would instead block a depeg exit the user chose to take.
     uint256 internal constant NO_HOP_PRICE_FLOOR = 0;
 
+    // Config events live here, not in `Events`, so the shared libraries keep their bytecode (S8.5).
+    event PoolKeySet(
+        address indexed currency0, address indexed currency1, uint24 fee, int24 tickSpacing, address hooks
+    );
+
     address public immutable CORE;
     IUniversalRouter public immutable ROUTER;
     IPermit2 public immutable PERMIT2;
@@ -78,6 +83,7 @@ contract CollateralSwapper is AccessManaged, ICollateralSwapper {
 
     function setPoolKey(PoolKey calldata key) external restricted {
         poolKey = key;
+        emit PoolKeySet(key.currency0, key.currency1, key.fee, key.tickSpacing, key.hooks);
     }
 
     /// @inheritdoc ICollateralSwapper

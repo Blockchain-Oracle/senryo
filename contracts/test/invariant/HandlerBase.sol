@@ -13,6 +13,7 @@ import {MockFeed, TestToken} from "../utils/Mocks.sol";
 abstract contract HandlerBase is Test {
     uint256 internal constant ACTORS = 3;
     uint256 internal constant FEED_SCALE = 1e10;
+    bytes4 internal constant PANIC_SELECTOR = 0x4e487b71;
 
     SenryoCore public core;
     SessionOracle public oracle;
@@ -32,6 +33,10 @@ abstract contract HandlerBase is Test {
     uint256 public ghostI5Violations;
     uint256 public ghostI7Violations;
     uint256 public ghostDoubleCaptures;
+    /// @dev Reverts are expected (fail_on_revert = false) but a Panic (overflow, div-by-zero…) is always a bug —
+    /// D-182's aggregate underflow hid behind `catch {}` until S8.5.
+    uint256 public ghostPanics;
+    bytes4 public lastPanicAction;
     bytes32[] public holdIds;
     mapping(bytes32 => uint256) public captures;
     mapping(uint256 => bool) public postedPrice18;
@@ -117,6 +122,14 @@ abstract contract HandlerBase is Test {
             address who = i < actors.length ? actors[i] : liquidator;
             if (who == a || who == b) continue;
             if (before[i] != afterSnap[i]) ++ghostI5Violations;
+        }
+    }
+
+    /// @dev Count Panic(uint256) reverts; any other revert is an expected rejection.
+    function _noPanic(bytes memory reason) internal {
+        if (reason.length >= 4 && bytes4(reason) == PANIC_SELECTOR) {
+            ++ghostPanics;
+            lastPanicAction = msg.sig;
         }
     }
 

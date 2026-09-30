@@ -52,7 +52,9 @@ contract Handler is TradeHandler {
         try core.setCardEnvelope(uint128(amount)) {
             ++calls["setEnvelope"];
             _checkI2(user);
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
     }
 
     function placeHold(uint256 seed, uint256 amount) external {
@@ -73,7 +75,9 @@ contract Handler is TradeHandler {
             holdIds.push(id);
             if (amount > leftBefore) ++ghostI7Violations;
             if (!core.hold(id).fromEnvelope) _checkI2(user);
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 
@@ -89,7 +93,9 @@ contract Handler is TradeHandler {
             ++calls["increaseHold"];
             if (delta > leftBefore) ++ghostI7Violations;
             if (!core.hold(id).fromEnvelope) _checkI2(h.user);
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, h.user, h.user);
     }
 
@@ -97,7 +103,8 @@ contract Handler is TradeHandler {
         if (holdIds.length == 0) return;
         bytes32 id = holdIds[idx % holdIds.length];
         Hold memory h = core.hold(id);
-        if (expire) vm.warp(uint256(h.expiry) + 1);
+        // Forward only: block timestamps are monotonic (a backwards warp fakes future-dated accepted prices).
+        if (expire && vm.getBlockTimestamp() <= h.expiry) vm.warp(uint256(h.expiry) + 1);
         mode = mode % CAPTURE_MODES;
         uint256 amount = mode == MODE_HALF
             ? h.amount * HALF_BPS / C.BPS
@@ -109,7 +116,9 @@ contract Handler is TradeHandler {
         try core.captureHold(id, uint128(amount)) {
             ++calls["capture"];
             if (++captures[id] > 1) ++ghostDoubleCaptures;
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, h.user, h.user);
     }
 
@@ -121,12 +130,16 @@ contract Handler is TradeHandler {
         if (asStranger) {
             try core.releaseExpiredHold(id) {
                 ++calls["releaseExpired"];
-            } catch {}
+            } catch (bytes memory reason) {
+                _noPanic(reason);
+            }
         } else {
             vm.prank(operator);
             try core.releaseHold(id) {
                 ++calls["release"];
-            } catch {}
+            } catch (bytes memory reason) {
+                _noPanic(reason);
+            }
         }
         _onlyChanged(before, user, user);
     }
@@ -138,7 +151,9 @@ contract Handler is TradeHandler {
         vm.prank(operator);
         try core.refund(user, keccak256(abi.encode(calls["refund-id"]++)), uint128(amount)) {
             ++calls["refund"];
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 
@@ -151,7 +166,9 @@ contract Handler is TradeHandler {
         vm.prank(user);
         try core.repayCardDebt(amount) {
             ++calls["repay"];
-        } catch {}
+        } catch (bytes memory reason) {
+            _noPanic(reason);
+        }
         _onlyChanged(before, user, user);
     }
 

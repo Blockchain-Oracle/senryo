@@ -17,6 +17,10 @@ abstract contract PerpModule is AccountLedger {
     using SafeCast for uint256;
     using SafeCast for int256;
 
+    /// @dev A decrease realised a loss the balance cannot cover while other positions stay open (D-181). Declared
+    /// here, not in `Errors`, so the shared libraries (and the testnet mocks built on them) keep their bytecode.
+    error LossExceedsBalance(uint256 shortfall);
+
     /// @dev Everything `PositionUpdated` carries, kept in memory to stay off the stack.
     struct Fill {
         PositionKind kind;
@@ -194,7 +198,7 @@ abstract contract PerpModule is AccountLedger {
         f.isLong = p.isLong;
         f.sizeDelta = sizeDelta;
         f.oraclePrice = pv.price18;
-        (f.funding, f.borrow) = _settleFees(user, marketId, p);
+        (f.funding, f.borrow) = _owed(marketId, p);
         f.execPrice = _exitPrice(marketId, p.isLong, pv);
         if (p.isLong ? f.execPrice < acceptablePrice18 : f.execPrice > acceptablePrice18) {
             revert Errors.SlippageExceeded(f.execPrice, acceptablePrice18);
@@ -218,8 +222,14 @@ abstract contract PerpModule is AccountLedger {
             _positions[user][marketId] = p;
         }
 
-        if (f.realizedPnl > 0) _payUser(user, f.realizedPnl.toUint256(), Book.POOL);
-        else if (f.realizedPnl < 0) _settleLoss(user, (-f.realizedPnl).toUint256());
+        // PnL, funding and borrow settle as one net amount (as in liquidation), so owed fees never socialise ahead
+        // of a profit. A loss the balance cannot cover is socialised only once nothing else is open: while other
+        // positions remain their value must pay it first (close those first, or be liquidated) — D-181.
+        int256 net = f.realizedPnl - f.funding - f.borrow.toInt256();
+        uint256 shortfall;
+        if (net > 0) _payUser(user, net.toUint256(), Book.POOL);
+        else if (net < 0) shortfall = _settleLoss(user, (-net).toUint256());
+        if (shortfall != 0 && _accounts[user].positionBitmap != 0) revert LossExceedsBalance(shortfall);
         f.fee = PerpMath.bpsUp(PerpMath.notional(sizeDelta, f.execPrice), m.feeBps);
         _chargeFee(user, f.fee);
         _emitFill(user, marketId, f, p);
@@ -228,7 +238,9 @@ abstract contract PerpModule is AccountLedger {
 
     // ---------------------------------------------------------------- shared
 
-    /// @notice Realise accrued funding + borrow of an existing position against POOL; snapshots reset by caller.
+    /// @notice Increase only: realise accrued funding + borrow of an existing position against POOL. A shortfall here
+    /// always fails the increase's I2 check, so it is never socialised. `p` keeps the snapshots it was aggregated
+    /// with: callers remove the aggregate first and re-snap just before re-adding it (D-182).
     function _settleFees(address user, uint8 marketId, Position memory p)
         internal
         returns (int256 funding, uint256 borrow)
@@ -237,7 +249,6 @@ abstract contract PerpModule is AccountLedger {
         int256 total = funding + borrow.toInt256();
         if (total > 0) _settleLoss(user, total.toUint256());
         else if (total < 0) _payUser(user, (-total).toUint256(), Book.POOL);
-        _snap(marketId, p);
     }
 
     function _snap(uint8 marketId, Position memory p) internal view {

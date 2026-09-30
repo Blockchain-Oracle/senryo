@@ -12,6 +12,10 @@ import {LiquidationModule} from "./LiquidationModule.sol";
 /// `setSettleOnly`, `setDepositSource`, `setInboxFactory` ADMIN (Safe on mainnet).
 /// The core is immutable (no proxy); the exit path is settle-only mode + redeploy + migration (F46).
 abstract contract AdminModule is LiquidationModule {
+    // Config events live here, not in `Events`, so the shared libraries keep their bytecode (S8.5).
+    event SwapperSet(address indexed swapper);
+    event InboxFactorySet(address indexed factory);
+
     /// @notice GUARDIAN: stop new risk until `now + MAX_PAUSE_SECONDS` (reduce, withdraw, liquidate still work).
     function pause() external restricted {
         pausedUntil = uint64(block.timestamp) + C.MAX_PAUSE_SECONDS;
@@ -36,12 +40,15 @@ abstract contract AdminModule is LiquidationModule {
         emit Events.DepositSourceSet(caller, source);
     }
 
+    /// @notice ADMIN: address(0) turns INBOX source detection off.
     function setInboxFactory(address factory) external restricted {
         inboxFactory = factory;
+        emit InboxFactorySet(factory);
     }
 
-    /// @notice PARAM_ADMIN (timelocked): the allowlisted collateral swap adapter.
+    /// @notice PARAM_ADMIN (timelocked): the allowlisted collateral swap adapter; address(0) disables swaps.
     function setSwapper(address swapper_) external restricted {
         swapper = swapper_;
+        emit SwapperSet(swapper_);
     }
 }
