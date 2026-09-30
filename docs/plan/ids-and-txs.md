@@ -72,3 +72,10 @@ Broadcast: `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`. Mainnet: no
 | Apple Developer team | Individual "Abubakr Jimoh" · Team ID `86C6ZFJ6V6` · bundle id `xyz.senryo.app` registered, Associated Domains enabled, distribution cert created via EAS (2026-09-30) |
 | Android signing cert (EAS keystore "Build Credentials fNFoZPe6lZ (default)") | SHA-256 `E4:89:29:5E:DF:D5:56:E0:52:65:5C:16:AB:81:FE:FE:60:56:22:0E:2A:2A:D0:F4:24:24:B9:1F:D1:8E:B1:A5` — read from the dev APK v2 signing block (build e8d03e99, 2026-09-30); goes in assetlinks.json |
 | DNS (Namecheap BasicDNS, 2026-09-30, user OK) | A `@`, `api`, `indexer`, `docs` → 84.46.247.92 (Coolify box) TTL 300; CNAME `www` → senryo.xyz; parking URL/CNAME records removed |
+| Coolify project `senryo` | `ftodkhszfqnkkzzbxekzrhv6` (server `7otp4kskhbwzkzybsug3uqgx`, env production), created 2026-09-30 |
+| senryo-ledger (Postgres 17-alpine, 256m) | `tey5siakdz1nau7wnzaytgcn` — internal only |
+| senryo-api (ghcr.io/blockchain-oracle/senryo-api:sha-0094793, 384m) | `lzumxcf5i0hvzv2k5gpzvfdr` → https://api.senryo.xyz (practice 10143) |
+| senryo-web (ghcr.io/blockchain-oracle/senryo-web:sha-0094793, 64m) | `2zeju5a5afmf7s0g4bzdgzjp` → https://senryo.xyz, https://www.senryo.xyz |
+| GHCR images | public (inherited from the public repo; anonymous manifest pull 200); images run 36692273246 |
+| Testnet sponsor (RELAYER_ROLE 60) | `0xb00A73D3C207f8764A4cAD83a9b12186D9d6DA99` — funded 0.35 MON (0x6c0e570b…df33), role granted (0xf97e0a29…6c06) |
+| StarterDrip float | 0.3 MON (0x421a3133…db6a) = 6 drips of 0.05 |

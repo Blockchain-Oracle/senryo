@@ -51,7 +51,7 @@ fingerprints. S11a (web shell + auth) is folded in here (D-103).
 - [x] **(user)** Apple **Team ID** (`86C6ZFJ6V6`) + Android EAS keystore SHA-256 → constants in `@senryo/config`
       (`APPLE_TEAM_ID`, `ANDROID_CERT_SHA256S`); generator run, AASA + assetlinks committed (df0f559)
 - [x] **[OK?]** DNS: `@`, `www`, `api`, `indexer`, `docs` → 84.46.247.92 (user OK, set by lead 30 Sep; dd4f002)
-- [ ] **[OK?]** Coolify project + `senryo-web` deploy; `.well-known` checks (curl, Apple CDN, Google Digital Asset Links)
+- [x] **[OK?]** Coolify project + `senryo-web` deploy; `.well-known` checks (curl, Apple CDN, Google Digital Asset Links) — live 30 Sep (2zeju5a5afmf7s0g4bzdgzjp); Apple CDN serves AASA; Google DAL linked: true
 - [ ] **(user)** dev builds on iPhone + Android: same address web/iOS/Android, fresh-device rebuild, prompt counts per
       authenticator (iCloud, GPM, 1Password), TTFT (practice claim)
 - [ ] S6.12 Integration after S3 merges: starter claim client → `POST /v1/starter/claim` (`packages/api-client`
