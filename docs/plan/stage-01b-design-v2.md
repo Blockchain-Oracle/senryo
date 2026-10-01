@@ -255,9 +255,13 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     a three-step first-use tutorial.
   - **Art** (agent art-seal): the seal in gold leaf carved in lacquer and everything built from it (icon, splash,
     lockups, the Kinpaku card front and back), Codex-reviewed; the lemon-yellow D2 seal and card are gone.
-  - **Still open:** Withdraw and send (J2 second half), deposit status, LP vault page (J10), the card's sub-pages
-    (reveal, allowance, authorization detail, wallet are placeholders), push notifications (needs expo-notifications
-    and a native rebuild), Face ID / notification primers, Holders, light theme and accessibility passes.
+  - **Later on 1 Oct (lead, all checked on the simulator with real testnet transactions):** LP vault page (faucet →
+    P$25 deposit), withdraw to own wallet, send to an address or @handle behind a step-up (P$17.17 to our trader
+    wallet), Kinpaku's real daily limit and Freeze on the onchain allowance (D-198), the portrait picker, the close
+    summary, light theme, large text (control font cap, 7efcbd3) and Reduce Motion.
+  - **Still open:** deposit status and other-chain deposits (wait for Aurora intents), the card's reveal /
+    authorization detail / wallet pages (wait for an issued card), push notifications and the Face ID / notification
+    primers (expo-notifications + a native rebuild), Holders (needs an indexer hook), VoiceOver pass.
 - **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
   guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), first pass complete, review open.** First-pass masters are in `brand/art/`: koban, chōgin, five FX
