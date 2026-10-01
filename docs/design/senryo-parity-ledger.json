@@ -61,7 +61,11 @@
       "apps/mobile/src, packages, services"
     ],
     "fields": "acceptance_evidence.status uses `acceptance_status_vocabulary`; accepted_revision, evidence, remaining per row; blocked_by / depends_on / excluded_by where they apply; prior_status keeps a free-text status this pass replaced",
-    "revisions": "acceptance rows whose Commit column says '(this commit)' are resolved to the commit that added the row (git blame)"
+    "revisions": "acceptance rows whose Commit column says '(this commit)' are resolved to the commit that added the row (git blame)",
+    "followups": [
+      "2026-10-01 records pass after the reconciliation: §5 items 16–19 fixed in the rows — FT063 target_treatment (D-194, no B9), the `required` text of the 15 Excluded rows that asked for a reserved screen (FT004/FT005/FT113/C05 per D-195; FT025/FT027/FT028/FT030/FT049–FT054/C24 per D-194), the FT070 note (the card opens the trader's account), the FT097 note and approved_deviation (the price alert in the history slot, unapproved); the matching `remaining` entries reworded. Statuses unchanged.",
+      "2026-10-01, after the reconciliation: main closed three code gaps it named — FT058's recents list (7393673), FT072's perps intro (185aedd, now its accepted_revision) and FT096's chart pan (b838dc5, now its accepted_revision); those `remaining` entries were updated. None of the three has an acceptance row yet, so no status changed."
+    ]
   },
   "blockers": [
     {
@@ -448,7 +452,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-195): no Senryo PIN or password step anywhere; without biometrics, unlock, trade confirm and step-up run the passkey ceremony, which the phone verifies with its own screen lock",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -491,7 +495,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-195): no Senryo PIN or password step anywhere; without biometrics, unlock, trade confirm and step-up run the passkey ceremony, which the phone verifies with its own screen lock",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -1415,7 +1419,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -1507,7 +1511,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -1550,7 +1554,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -1636,7 +1640,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -2540,7 +2544,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -2583,7 +2587,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -2627,7 +2631,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -2670,7 +2674,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -2713,7 +2717,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -2756,7 +2760,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -2950,10 +2954,11 @@
           "acceptance.md 2026-10-01T11:10Z @ae9784d",
           "acceptance.md 2026-10-01T16:50Z @9d22903 (exact amount, stable receipt)",
           "apps/mobile/src/features/withdraw/SendToAddress.tsx",
-          "apps/mobile/src/features/withdraw/AmountEntry.tsx"
+          "apps/mobile/src/features/withdraw/AmountEntry.tsx",
+          "apps/mobile/src/features/withdraw/RecentRecipients.tsx"
         ],
         "remaining": [
-          "a recents list / no-recents state is not built",
+          "the recents / no-recents state (built in 7393673) recorded in acceptance.md",
           "the unknown-outcome branch exercised on the simulator (in code; the recorded run finalized)",
           "S1b.17: 402×874 simulator screenshot beside P22",
           "S1b.17: parent restoration with values kept, loading/empty/error/retry, reduced motion/transparency",
@@ -3191,7 +3196,7 @@
         }
       ],
       "codex_classification": "Blocked",
-      "target_treatment": "Tracking purpose/decision B9; notifications covered by 043",
+      "target_treatment": "Tracking prompt Excluded (D-194: no screen, no reserved placeholder); notifications covered by 043",
       "journey": "J1",
       "stage_step": "S1b.13",
       "target_module": "apps/mobile/src/app/welcome.tsx + features/auth/* → onboarding stack (story → passkey → handle → follow → voucher → terms → primers → completion)",
@@ -3209,7 +3214,6 @@
         ],
         "remaining": [
           "push delivery on a physical iPhone: needs the user's Apple login for the push-capable profile + APNs key (STATUS Blockers)",
-          "ledger target_treatment still names 'B9' for the tracking branch; B9 was removed by D-194 (branch Excluded)",
           "S1b.17: 402×874 simulator screenshot beside F01",
           "S1b.17: parent restoration with values kept, loading/empty/error/retry, reduced motion/transparency",
           "a physical-iPhone run (no acceptance row is from a device yet)",
@@ -3546,7 +3550,7 @@
           "apps/mobile/src/features/home/TopTrades.tsx"
         ],
         "remaining": [
-          "a card opens the trader's account (watchRoute), not the shared-position sheet the ledger note names",
+          "the shared-position destination target_treatment names: a card opens the trader's account read-only instead (see note)",
           "S1b.17: 402×874 simulator screenshot beside F09, F13",
           "S1b.17: parent restoration with values kept, loading/empty/error/retry, reduced motion/transparency",
           "a physical-iPhone run (no acceptance row is from a device yet)",
@@ -3555,7 +3559,7 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Top Trades open the shared position sheet (J8)."
+      "note": "A Top Trades card opens the trader's account read-only (watchRoute in apps/mobile/src/features/home/TopTrades.tsx; the Social feed's Top Trades do the same), not the shared-position sheet target_treatment names."
     },
     {
       "id": "FT071",
@@ -3636,12 +3640,12 @@
       "acceptance_evidence": {
         "required": "402×874 simulator screenshots beside F11; motion start/intermediate/settle/exit against the M-clips; back/dismiss restores the parent with values kept; loading/empty/error/retry exercised; reduced motion/transparency (recorded in docs/plan/acceptance.md, S1b.17)",
         "status": "built",
-        "accepted_revision": "dd08d0c",
+        "accepted_revision": "185aedd",
         "evidence": [
-          "apps/mobile/src/features/markets/MarketsList.tsx"
+          "apps/mobile/src/features/markets/MarketsList.tsx",
+          "apps/mobile/src/features/markets/PerpsIntro.tsx"
         ],
         "remaining": [
-          "the dismissible perps education is not built",
           "S1b.17: 402×874 simulator screenshot beside F11",
           "S1b.17: parent restoration with values kept, loading/empty/error/retry, reduced motion/transparency",
           "a physical-iPhone run (no acceptance row is from a device yet)",
@@ -4785,13 +4789,13 @@
       "acceptance_evidence": {
         "required": "402×874 simulator screenshots beside F32, F35; motion start/intermediate/settle/exit against the M-clips; back/dismiss restores the parent with values kept; loading/empty/error/retry exercised; reduced motion/transparency (recorded in docs/plan/acceptance.md, S1b.17)",
         "status": "built",
-        "accepted_revision": "dd08d0c",
+        "accepted_revision": "b838dc5",
         "evidence": [
           "apps/mobile/src/features/markets/MarketChart.tsx",
-          "apps/mobile/src/features/markets/PeriodChips.tsx"
+          "apps/mobile/src/features/markets/PeriodChips.tsx",
+          "apps/mobile/src/components/charts/CandleChart.tsx"
         ],
         "remaining": [
-          "the chart has no pan gesture (period chips only)",
           "S1b.17: 402×874 simulator screenshot beside F32, F35",
           "S1b.17: parent restoration with values kept, loading/empty/error/retry, reduced motion/transparency",
           "a physical-iPhone run (no acceptance row is from a device yet)",
@@ -4828,7 +4832,7 @@
       "data_authority": "packages/query markets (SenryoCore + SessionOracle, Chainlink push feeds D-006/D-020), indexer candles (D-133/D-163), Perpl context (S7), api social (holders/feed, S12b)",
       "responsive_states": "Phone portrait at the 402×874 reference viewport first; Dynamic Type (hero numbers capped), reduced motion/transparency; web inherits tokens now and layouts in S11b (desktop dock = declared adaptation, direction §11)",
       "failure_recovery": "ReadingView stale stamp / error + Retry in place (S8.16a stable slots); indicative or unavailable instruments say why; never fabricated ticks",
-      "approved_deviation": "none",
+      "approved_deviation": "none — the price alert in F32's history slot is an unapproved code deviation (see note)",
       "acceptance_evidence": {
         "required": "402×874 simulator screenshots beside F32; motion start/intermediate/settle/exit against the M-clips; back/dismiss restores the parent with values kept; loading/empty/error/retry exercised; reduced motion/transparency (recorded in docs/plan/acceptance.md, S1b.17)",
         "status": "built",
@@ -4837,7 +4841,7 @@
           "apps/mobile/src/features/markets/MarketActions.tsx"
         ],
         "remaining": [
-          "the history utility is a price alert in code (MarketActions.tsx); the ledger row does not record that deviation",
+          "a market history destination for F32's history utility, or a decision approving the price alert in that slot",
           "S1b.17: 402×874 simulator screenshot beside F32",
           "S1b.17: parent restoration with values kept, loading/empty/error/retry, reduced motion/transparency",
           "a physical-iPhone run (no acceptance row is from a device yet)",
@@ -4846,7 +4850,7 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": "Deviation in code, not approved by a decision: F32's history utility is a price alert here (the bell opens this market's alert editor; apps/mobile/src/features/markets/MarketActions.tsx, dd08d0c). No market history destination exists. Favourite and share are built."
     },
     {
       "id": "FT098",
@@ -5599,7 +5603,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-195): no Senryo PIN or password step anywhere; without biometrics, unlock, trade confirm and step-up run the passkey ceremony, which the phone verifies with its own screen lock",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -6037,7 +6041,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-195): no Senryo PIN or password step anywhere; without biometrics, unlock, trade confirm and step-up run the passkey ceremony, which the phone verifies with its own screen lock",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [
@@ -7002,7 +7006,7 @@
       "failure_recovery": "Reserved screen states the dependency; no disabled decoration as a stand-in (direction 'Blocked items remain')",
       "approved_deviation": "none",
       "acceptance_evidence": {
-        "required": "Reserved screen states the blocker and its unblock path; no fake working state",
+        "required": "No screen and no reserved placeholder (D-194): nothing in the app or on the web names, links to or stubs this surface; the exclusion is recorded here and in decisions.md",
         "status": "excluded",
         "accepted_revision": null,
         "evidence": [

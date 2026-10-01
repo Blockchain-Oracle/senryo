@@ -189,6 +189,13 @@ Excluded branches inside other rows keep their `branches` entries.
 
 ## 5. Contradictions found (recorded, not fixed)
 
+**Follow-up (1 Oct, records pass):** items 1–4, 6–11, 13 and 16–20 are now fixed in the stage doc, STATUS,
+`acceptance.md`, the ledger rows (`reconciliation.followups`) and `v2-plan.md`, in the commit "docs(S1b): records match
+main …". Four are left. Item 5 was mostly covered by the lead's STATUS update (56755d9). Items 12, 14 and 15 each need
+their owner's call. Since this report, main also closed three code gaps named in §3: FT058's recents list (7393673),
+FT072's perps intro (185aedd) and FT096's chart pan (b838dc5). Their rows' `remaining` entries are updated; none of the
+three has an acceptance row yet.
+
 ### Stage doc and STATUS
 
 1. **S1b.8 is ticked**, but its scope lists Mainnet eligibility, and the stage's own finding says "Not done in S1b.8:
