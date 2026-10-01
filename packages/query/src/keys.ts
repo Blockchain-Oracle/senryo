@@ -19,4 +19,6 @@ export const keys = {
   activity: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "activity"] as const,
   /** Under the account key: one invalidation after a claim refreshes the claim state, buckets and gas together. */
   starter: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "starter"] as const,
+  /** Deposit inbox (S8.24): its balance + the api watch, refreshed with the account after a sweep. */
+  inbox: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "inbox"] as const,
 };
