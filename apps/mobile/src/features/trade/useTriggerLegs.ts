@@ -3,6 +3,7 @@ import {
   cancelTriggerRequest,
   type LiveMarket,
   placeTriggerRequest,
+  signedHash,
   triggerOrder,
   useQueryEnv,
   useSendTrace,
@@ -11,17 +12,22 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
-import { signedHash, useSendJournal } from "./send-outcome";
+import { useSendJournal } from "./send-outcome";
 import type { TriggerKind } from "./tpsl";
-import { alreadyActive, type LegState, legState, pendingTriggers } from "./trigger-legs";
+import {
+  alreadyActive,
+  type LegState,
+  legState,
+  pendingTriggers,
+  saveInOrder,
+  type TriggerLevel,
+} from "./trigger-legs";
+
+export type { TriggerLevel };
+
 import { useEnsureGas } from "./useGasTopUp";
 
 const ORDER: readonly TriggerKind[] = ["sl", "tp"];
-
-export interface TriggerLevel {
-  kind: TriggerKind;
-  price18: bigint;
-}
 
 /**
  * TP/SL on a held position, one outcome per transaction (review R01). Each level and the removal have their own
@@ -75,41 +81,34 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
       const from = sender();
       if (!from || !address || busy || unresolved) return [];
       const traces = { sl, tp };
-      const ordered = ORDER.flatMap((kind) => levels.filter((l) => l.kind === kind));
-      for (const kind of ORDER) if (!ordered.some((l) => l.kind === kind)) traces[kind].reset();
+      for (const kind of ORDER) if (!levels.some((l) => l.kind === kind)) traces[kind].reset();
       setSkipped(undefined);
-      const saved: TriggerKind[] = [];
-      for (const [index, level] of ordered.entries()) {
-        // A level that is already active (a retry after an unknown result landed) is done, not sent again.
-        const done =
-          alreadyActive(active, level.kind, level.price18) ||
-          (
-            await traces[level.kind].run(
-              from,
-              () =>
-                placeTriggerRequest(
-                  from,
-                  triggerOrder({
-                    user: address,
-                    marketId: market.marketId,
-                    isLong: position.isLong,
-                    takeProfit: level.kind === "tp",
-                    triggerPrice18: level.price18,
-                    sizeDelta: position.size,
-                  }),
-                ),
-              { preflight: (request) => gas.preflight(request)() },
-            )
-          )?.final?.stage === "finalized";
-        if (!done) {
-          const next = ordered[index + 1];
-          if (next) setSkipped({ kind: next.kind, blocker: level.kind });
-          break;
-        }
-        saved.push(level.kind);
-        onSaved?.(level.kind);
-      }
-      return saved;
+      const run = await saveInOrder(
+        levels,
+        (level) => alreadyActive(active, level.kind, level.price18),
+        async (level) => {
+          const result = await traces[level.kind].run(
+            from,
+            () =>
+              placeTriggerRequest(
+                from,
+                triggerOrder({
+                  user: address,
+                  marketId: market.marketId,
+                  isLong: position.isLong,
+                  takeProfit: level.kind === "tp",
+                  triggerPrice18: level.price18,
+                  sizeDelta: position.size,
+                }),
+              ),
+            { preflight: (request) => gas.preflight(request)() },
+          );
+          return result?.final?.stage === "finalized";
+        },
+        onSaved,
+      );
+      setSkipped(run.skipped);
+      return run.saved;
     },
     [sender, address, busy, unresolved, sl, tp, active, market.marketId, position.isLong, position.size, gas],
   );

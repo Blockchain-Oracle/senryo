@@ -49,8 +49,17 @@ export function TicketFooter({
   const copy = t.blocker ? blockerCopy(t.blocker, line.name, t.nowSec) : undefined;
   const qty = t.preview ? formatUnits(t.preview.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS) : undefined;
   const fee = t.preview ? `fee ${usd(t.preview.feeUsd6)}` : `fee ${line.market.risk.feeBps} bps`;
+  // A guest gets exactly one account action: the pill's place becomes "Create an account to trade" (review: one
+  // CTA, not a side button plus a disabled pill plus a warning line). The typed order is kept through sign-up.
+  const guest = commit.fix === "createAccount";
   // The fix button carries the blocker's action, so the line keeps only its title then.
-  const why = copy ? (commit.fix ? copy.title : [copy.title, copy.action].filter(Boolean).join(" · ")) : note;
+  const why = guest
+    ? undefined
+    : copy
+      ? commit.fix
+        ? copy.title
+        : [copy.title, copy.action].filter(Boolean).join(" · ")
+      : note;
   return (
     <View style={[styles.zone, { borderTopColor: color.border }]}>
       <View style={styles.row}>
@@ -88,33 +97,41 @@ export function TicketFooter({
           {why}
         </Text>
       ) : null}
-      <View style={styles.actions}>
-        <View style={styles.side}>
-          {commit.fix ? (
-            <FixButton fix={commit.fix} t={t} max={line.maxLeverageX} />
-          ) : (
-            <Button
-              label="Review"
-              variant="outline"
-              size="sm"
+      {guest ? (
+        <Button
+          label={commit.label}
+          onPress={() => router.push(ROUTES.accountRequired)}
+          accessibilityHint="Your order stays as you typed it"
+        />
+      ) : (
+        <View style={styles.actions}>
+          <View style={styles.side}>
+            {commit.fix ? (
+              <FixButton fix={commit.fix} t={t} max={line.maxLeverageX} />
+            ) : (
+              <Button
+                label="Review"
+                variant="outline"
+                size="sm"
+                disabled={!commit.holdable}
+                onPress={onReview}
+                accessibilityHint="Review the order: every number and an explicit Open button"
+              />
+            )}
+          </View>
+          <View style={styles.pill}>
+            <HoldToConfirm
+              label={commit.label}
               disabled={!commit.holdable}
-              onPress={onReview}
-              accessibilityHint="Review the order: every number and an explicit Open button"
+              onConfirm={onConfirm}
+              resetKey={resetKey}
+              onReset={onReset}
+              onAccessibleActivate={onReview}
+              accessibilityHint="Hold for half a second to open the position, or use Review"
             />
-          )}
+          </View>
         </View>
-        <View style={styles.pill}>
-          <HoldToConfirm
-            label={commit.label}
-            disabled={!commit.holdable}
-            onConfirm={onConfirm}
-            resetKey={resetKey}
-            onReset={onReset}
-            onAccessibleActivate={onReview}
-            accessibilityHint="Hold for half a second to open the position, or use Review"
-          />
-        </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -125,7 +142,8 @@ function FixButton({ fix, t, max }: { fix: Fix; t: TicketModel; max: number }) {
     case "addMoney":
       return <Button {...props} label="Add money" onPress={() => router.push(ROUTES.addMoney)} />;
     case "createAccount":
-      return <Button {...props} label="Create" onPress={() => router.push(ROUTES.accountRequired)} />;
+      // Not reached: a guest's footer is the single "Create an account to trade" button.
+      return null;
     case "maxLeverage":
       return <Button {...props} label={`Set ${max}×`} onPress={() => t.setLeverage(max)} />;
   }

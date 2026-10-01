@@ -58,6 +58,32 @@ export function traceOutcome(events: readonly TraceEvent[]): TraceOutcome | unde
   return events.some((e) => SIGNED_STAGES.has(e.stage)) ? "unknown" : "not-sent";
 }
 
+/** The hash a trace signed, if it got that far. */
+export function signedHash(events: readonly TraceEvent[]): `0x${string}` | undefined {
+  return events.find((e) => e.hash !== undefined)?.hash;
+}
+
+const OUTCOME_OF_STAGE: Partial<Record<JournalEntry["stage"], TraceOutcome>> = {
+  finalized: "finalized",
+  reverted: "reverted",
+  abandoned: "abandoned",
+};
+
+/**
+ * The trace's own outcome, with `unknown` replaced by the journal's once TxRecovery has settled that signed tx. Until
+ * then it stays `unknown`: the only state in which a screen must neither retry nor say "nothing changed".
+ */
+export function settledOutcome(
+  events: readonly TraceEvent[],
+  journal: readonly JournalEntry[],
+): TraceOutcome | undefined {
+  const outcome = traceOutcome(events);
+  if (outcome !== "unknown") return outcome;
+  const hash = signedHash(events);
+  const entry = journal.find((j) => j.hash === hash);
+  return (entry ? OUTCOME_OF_STAGE[entry.stage] : undefined) ?? "unknown";
+}
+
 /** Fires `onPut` when chain journals a freshly signed tx (the moment between signature and broadcast). */
 function tapJournal(inner: TxJournal | undefined, onPut: (entry: JournalEntry) => void): TxJournal {
   return {

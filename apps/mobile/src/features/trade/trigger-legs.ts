@@ -6,8 +6,7 @@
  */
 import type { JournalEntry } from "@senryo/chain";
 import { isTerminalStage } from "@senryo/core";
-import type { TraceEvent, TraceOutcome } from "@senryo/query";
-import { settledOutcome } from "./send-outcome";
+import { settledOutcome, type TraceEvent, type TraceOutcome } from "@senryo/query";
 import type { TriggerKind } from "./tpsl";
 
 /**
@@ -138,4 +137,42 @@ export function alreadyActive(
   price18: bigint,
 ): boolean {
   return active.some((t) => t.takeProfit === (kind === "tp") && t.triggerPrice === price18);
+}
+
+export interface TriggerLevel {
+  kind: TriggerKind;
+  price18: bigint;
+}
+
+export interface SaveRun {
+  /** Levels whose own transaction finalized (or that were already active), in the order they were done. */
+  saved: TriggerKind[];
+  /** The level never attempted because `blocker` didn't save. */
+  skipped: { kind: TriggerKind; blocker: TriggerKind } | undefined;
+}
+
+const SAVE_ORDER: readonly TriggerKind[] = ["sl", "tp"];
+
+/**
+ * Saves levels one transaction at a time, stop loss first. `send` resolves true only when that level's transaction
+ * finalized. The first level that doesn't stops the run: a later level is never sent on top of an unresolved one, and
+ * it is reported as skipped rather than failed. A level that is already active is done without sending.
+ */
+export async function saveInOrder(
+  levels: readonly TriggerLevel[],
+  isActive: (level: TriggerLevel) => boolean,
+  send: (level: TriggerLevel) => Promise<boolean>,
+  onSaved?: (kind: TriggerKind) => void,
+): Promise<SaveRun> {
+  const ordered = SAVE_ORDER.flatMap((kind) => levels.filter((l) => l.kind === kind));
+  const saved: TriggerKind[] = [];
+  for (const [index, level] of ordered.entries()) {
+    if (!(isActive(level) || (await send(level)))) {
+      const next = ordered[index + 1];
+      return { saved, skipped: next ? { kind: next.kind, blocker: level.kind } : undefined };
+    }
+    saved.push(level.kind);
+    onSaved?.(level.kind);
+  }
+  return { saved, skipped: undefined };
 }

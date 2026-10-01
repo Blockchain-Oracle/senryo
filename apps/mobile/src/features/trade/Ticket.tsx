@@ -10,6 +10,7 @@ import { LeverageRuler } from "~/components/trade/LeverageRuler";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { moneySymbol, pct, price18, priceDecimalsOf, usd } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
 import { DISABLED_OPACITY, HAIRLINE_PX, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useCandleStyle } from "./candle-style";
 import { AMOUNT_CHIPS_USD } from "./constants";
@@ -24,8 +25,9 @@ const MS_PER_SECOND = 1000;
 
 /**
  * The ticket's entry body in Fomo's anatomy (C39–C41, F37–F42; direction §5.8): the margin is the dominant number
- * (Inter Display 64/68), the leveraged size sits above it once there is an amount (FT102: $10 at 2× reads "Leveraged
- * size $20" while the margin stays $10); the centred leverage ruler; liquidation price ⓘ and Stop Loss / Take Profit;
+ * (Inter Display 64/68), named "Margin" with its money word ("Paper money" / "Real money") right above it, and the
+ * leveraged size joins that line once there is an amount (FT102: $10 at 2× reads "leveraged size $20" while the
+ * margin stays $10); the centred leverage ruler; liquidation price ⓘ and Stop Loss / Take Profit;
  * the keypad ↔ chart toggle; then presets + keypad, or the embedded candle chart with its settings — the amount and
  * leverage are kept across the toggle (FT105). Unknown values are placeholders or skeletons, never $0.00.
  */
@@ -55,11 +57,18 @@ export function TicketEntry({
 
 function Amount({ t }: { t: TicketModel }) {
   const { color } = useTheme();
+  const network = useNetwork();
   const empty = t.amountText === "";
   return (
     <View style={styles.amount}>
-      <Text style={[TYPE.meta, { color: color.text3, opacity: empty ? 0 : 1 }]} accessibilityElementsHidden={empty}>
-        Leveraged size <Text style={[TYPE.moneyMeta, { color: color.ink }]}>{usd(t.notionalUsd6)}</Text>
+      <Text style={[TYPE.meta, { color: color.text3 }]} numberOfLines={1}>
+        <Text style={{ color: color.text2 }}>Margin</Text> · {network.key === "testnet" ? "Paper money" : "Real money"}
+        {empty ? null : (
+          <>
+            {" "}
+            · leveraged size <Text style={[TYPE.moneyMeta, { color: color.ink }]}>{usd(t.notionalUsd6)}</Text>
+          </>
+        )}
       </Text>
       <Text
         maxFontSizeMultiplier={HERO_FONT_SCALE}
