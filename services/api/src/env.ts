@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from "@senryo/api-client";
 import { API_ORIGIN, type ChainId, isChainId, RP_ID, WEB_ORIGIN } from "@senryo/config";
 import { baseEnvSchema, csvSchema, parseEnv, portSchema, readSecret } from "@senryo/service-common";
 import { z } from "zod";
@@ -27,6 +28,9 @@ export const apiEnvSchema = baseEnvSchema.extend({
   STARTER_PER_NETWORK_PER_DAY: z.coerce.number().int().positive().default(STARTER_PER_NETWORK_PER_DAY),
   /** Trust this edge country header (only behind that CDN; S8.5b). Unset = DB-IP on the client IP only. */
   TRUSTED_COUNTRY_HEADER: z.enum(COUNTRY_HEADERS).optional(),
+  /** The contact point /v1/config publishes for reports and safety questions (App Store 1.2, S12b.6). */
+  SUPPORT_EMAIL: z.email().default(SUPPORT_EMAIL),
+  SUPPORT_URL: z.url().optional(),
   /** Feature flags served by /v1/config, e.g. `card=1,perpl=0`. */
   FEATURES: csvSchema.transform((list) =>
     Object.fromEntries((list ?? []).map((pair) => [pair.split("=")[0] ?? pair, pair.split("=")[1] !== "0"])),
@@ -38,6 +42,8 @@ export type ApiEnv = z.output<typeof apiEnvSchema>;
 export interface ApiSecrets {
   sessionSecret: string | undefined;
   turnstileSecret: string | undefined;
+  /** Operator bearer secret for the moderation review queue (S12b.6); unset → those routes answer 503. */
+  adminSecret: string | undefined;
 }
 
 export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
@@ -45,6 +51,10 @@ export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
   if (!env.CHAIN_IDS.includes(env.CHAIN_ID)) env.CHAIN_IDS.push(env.CHAIN_ID);
   return {
     env,
-    secrets: { sessionSecret: readSecret("API_SESSION_SECRET"), turnstileSecret: readSecret("TURNSTILE_SECRET") },
+    secrets: {
+      sessionSecret: readSecret("API_SESSION_SECRET"),
+      turnstileSecret: readSecret("TURNSTILE_SECRET"),
+      adminSecret: readSecret("API_ADMIN_SECRET"),
+    },
   };
 }

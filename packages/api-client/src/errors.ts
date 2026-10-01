@@ -35,6 +35,8 @@ export const API_ERROR_CODES = [
   "CONTENT_BLOCKED",
   "FOLLOW_LIMIT",
   "BLOCKED",
+  // S12b.6: posting needs the author's profile listed on that network.
+  "NOT_LISTED",
   "INTERNAL",
 ] as const;
 

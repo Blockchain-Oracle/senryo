@@ -35,6 +35,54 @@ export const PROFILE_VISIBILITY_DEFAULTS = {
   publicTradesMainnet: false,
 } as const;
 
+/** Indexer market ids (`ours-0` = our engine's XAU, `perpl-16` = a Perpl perp) — the ids posts and feed rows carry. */
+export const MARKET_ID_PATTERN = /^(ours|perpl)-\d{1,10}$/;
+/** Indexer position ids (`ours-0-0xabc…-123_4`, `perpl-16-7-123_4`). */
+export const POSITION_ID_PATTERN = /^[a-z0-9_-]{3,120}$/i;
+/** Keyset cursors are Postgres bigint ids; 18 digits always fit (no 500 on a garbage cursor). */
+export const ID_CURSOR_PATTERN = /^\d{1,18}$/;
+
+/** Feed (S12b.4): newest first, keyset on `feed_events.id`. */
+export const FEED_PAGE_DEFAULT = 30;
+export const FEED_PAGE_MAX = 100;
+/** Thread replies per page (oldest first under the thesis). */
+export const REPLIES_PAGE_DEFAULT = 50;
+
+/**
+ * Leaderboard (S12b.5, §5.9): realized PnL after fees, funding and borrow, per network. 24h is rolling over fills;
+ * 7d / 30d are UTC-day buckets (today included); All is lifetime.
+ */
+export const LEADERBOARD_PERIODS = ["24h", "7d", "30d", "all"] as const;
+export const LEADERBOARD_SCOPES = ["all", "following"] as const;
+export const LEADERBOARD_PAGE_MAX = 100;
+/** Onboarding "Follow top traders" (30d ranked floor only; none preselected). */
+export const RECOMMENDATIONS_MAX = 10;
+export const TOP_TRADES_MAX = 10;
+
+/** Posts (S12b.6): theses and one-level replies; a reply's parent is always a thesis. */
+export const POST_KINDS = ["thesis", "reply"] as const;
+/** Reasons a report can carry (App Store 1.2); `note` adds free text. */
+export const REPORT_REASONS = [
+  "spam",
+  "scam",
+  "harassment",
+  "hate",
+  "sexual",
+  "violence",
+  "impersonation",
+  "other",
+] as const;
+export const REPORT_NOTE_MAX_CHARS = 280;
+export const BLOCK_PAGE_MAX = 200;
+
+/** Search (S12b.7). */
+export const SEARCH_KINDS = ["markets", "tokens", "traders"] as const;
+export const SEARCH_QUERY_MAX_CHARS = 64;
+export const SEARCH_RESULTS_MAX = 20;
+
+/** The visible contact point for user-generated content (App Store 1.2), also served by `/v1/config`. */
+export const SUPPORT_EMAIL = "support@senryo.xyz";
+
 /** `" @Abu_J "` → `"abu_j"`: what the server stores and compares. */
 export function normalizeHandle(input: string): string {
   return input.trim().replace(/^@/, "").toLowerCase();

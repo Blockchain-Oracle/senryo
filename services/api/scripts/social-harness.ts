@@ -1,7 +1,14 @@
 import { randomBytes } from "node:crypto";
-import { type ApiClient, ApiError, type ApiErrorCode, createApiClient } from "@senryo/api-client";
-import type { Address } from "@senryo/chain";
-import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
+import {
+  type ApiClient,
+  ApiError,
+  type ApiErrorCode,
+  createApiClient,
+  type RouteDef,
+  SUPPORT_EMAIL,
+} from "@senryo/api-client";
+import { type Address, getAddress } from "@senryo/chain";
+import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
 import {
   createDb,
   createHttpServer,
@@ -13,12 +20,20 @@ import {
   SessionKeys,
 } from "@senryo/service-common";
 import { registerFollowRoutes } from "../src/routes/follow.ts";
+import { registerLeaderboardRoutes } from "../src/routes/leaderboard.ts";
+import { registerModerationRoutes } from "../src/routes/moderation.ts";
+import { registerPostRoutes } from "../src/routes/posts.ts";
 import { registerProfileRoutes } from "../src/routes/profile.ts";
+import { FeedPoller } from "../src/social/feed-poller.ts";
+import { LeaderboardService } from "../src/social/leaderboard.ts";
+import { FeedNotifier, type SocialRuntime } from "../src/social/runtime.ts";
+import { MockIndexer } from "./mock-indexer.ts";
 
 /**
- * In-process harness for the social check: the real profile/follow routes on a Fastify instance, a real Postgres
- * (`DATABASE_URL`, migrated here), and `@senryo/api-client` clients whose fetch is `app.inject` — the same encode /
- * decode path the apps use, with no port and no chain. Rate limits are not registered (they are per-IP config only).
+ * In-process harness for the social check: every social route on a Fastify instance, a real Postgres
+ * (`DATABASE_URL`, migrated here), the real leaderboard service and feed poller over an in-memory indexer
+ * (`MockIndexer`), and `@senryo/api-client` clients whose fetch is `app.inject` — the same encode / decode path the
+ * apps use, with no port and no chain. Rate limits are not registered (they are per-IP config only).
  */
 
 const ORIGIN = "http://social-check.local";
@@ -27,11 +42,24 @@ const ADDRESS_BYTES = 20;
 const HANDLE_SUFFIX_BYTES = 4;
 /** Enough connections for the concurrent-claim and cap races (each holds one inside its transaction). */
 const CHECK_POOL_MAX = 16;
+/** A per-run operator secret for the review-queue routes. */
+const ADMIN_SECRET_BYTES = 32;
 
 export interface Harness {
   db: Db;
   app: HttpServer;
   anon: ApiClient;
+  mock: MockIndexer;
+  social: SocialRuntime["social"];
+  poller: FeedPoller;
+  /** Feed notices emitted (chain, newest id). */
+  notices: Array<{ chainId: ChainId; latestId: bigint }>;
+  /** Call an `auth: "admin"` route with `secret` (default: the right one) — the app client never sends one. */
+  admin(
+    route: RouteDef,
+    input: { body?: unknown; query?: Record<string, string> },
+    secret?: string,
+  ): Promise<AdminReply>;
   /** A fresh account with a session on `chainId` (practice by default). */
   user(chainId?: ChainId): User;
   /** The same account with a session on another network. */
@@ -39,6 +67,11 @@ export interface Harness {
   /** Every address the run created (for cleanup). */
   addresses: string[];
   close(): Promise<void>;
+}
+
+export interface AdminReply {
+  status: number;
+  json: unknown;
 }
 
 export interface User {
@@ -77,10 +110,29 @@ export async function openHarness(): Promise<Harness> {
   const db = createDb(requireSecret("DATABASE_URL"), "senryo-social-check", CHECK_POOL_MAX);
   await migrate(db, log);
   const sessions = new SessionKeys(randomBytes(SESSION_SECRET_BYTES).toString("hex"));
+  const mock = new MockIndexer();
+  const chainIds = [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID] as const;
+  const notifier = new FeedNotifier();
+  const notices: Harness["notices"] = [];
+  notifier.on((chainId, latestId) => notices.push({ chainId, latestId }));
+  const adminSecret = randomBytes(ADMIN_SECRET_BYTES).toString("hex");
+  const social: SocialRuntime["social"] = {
+    indexer: mock,
+    leaderboard: new LeaderboardService({ db, indexer: mock, log, chainIds }),
+    notifier,
+    chainIds,
+    adminSecret,
+    contact: { email: SUPPORT_EMAIL, url: null },
+  };
+  const ctx: SocialRuntime = { db, sessions, social };
   const app = createHttpServer({ service: "api", logger: log });
-  registerProfileRoutes(app, { db, sessions });
-  registerFollowRoutes(app, { db, sessions });
+  registerProfileRoutes(app, ctx);
+  registerFollowRoutes(app, ctx);
+  registerPostRoutes(app, ctx);
+  registerLeaderboardRoutes(app, ctx);
+  registerModerationRoutes(app, ctx);
   await app.ready();
+  const poller = new FeedPoller({ db, indexer: mock, notifier, log, chainIds });
   const fetchImpl = injectFetch(app);
   const addresses: string[] = [];
   const clientFor = (getToken?: () => string | null) =>
@@ -102,9 +154,23 @@ export async function openHarness(): Promise<Harness> {
     db,
     app,
     anon: clientFor(),
+    mock,
+    social,
+    poller,
+    notices,
+    async admin(route, input, secret = adminSecret) {
+      const search = input.query ? `?${new URLSearchParams(input.query).toString()}` : "";
+      const res = await app.inject({
+        method: route.method,
+        url: `${route.path}${search}`,
+        headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
+        ...(input.body === undefined ? {} : { payload: JSON.stringify(input.body) }),
+      });
+      return { status: res.statusCode, json: res.json() };
+    },
     addresses,
     user(chainId = TESTNET_CHAIN_ID) {
-      const address = randomAddress();
+      const address = getAddress(randomAddress()) as Address;
       addresses.push(address.toLowerCase());
       return signedIn(address, chainId);
     },
@@ -132,10 +198,20 @@ export async function codeOf(promise: Promise<unknown>): Promise<ApiErrorCode | 
 /** Removes only this run's rows (the database may be shared with other scratch runs). */
 export async function cleanup(db: Db, addresses: string[]): Promise<void> {
   if (addresses.length === 0) return;
-  await db`DELETE FROM follows WHERE follower IN ${db(addresses)} OR followee IN ${db(addresses)}`;
-  await db`DELETE FROM blocks WHERE blocker IN ${db(addresses)} OR blocked IN ${db(addresses)}`;
-  await db`DELETE FROM handle_tombstones WHERE address IN ${db(addresses)}`;
-  await db`DELETE FROM profiles WHERE address IN ${db(addresses)}`;
+  const list = db(addresses);
+  await db`DELETE FROM moderation_reviews WHERE target_id IN ${list}
+              OR target_id IN (SELECT id::text FROM posts WHERE author IN ${list})`;
+  await db`DELETE FROM reports WHERE reporter IN ${list} OR target_id IN ${list}
+              OR target_id IN (SELECT id::text FROM posts WHERE author IN ${list})`;
+  await db`DELETE FROM likes WHERE address IN ${list}`;
+  await db`DELETE FROM posts WHERE author IN ${list}`;
+  await db`DELETE FROM feed_events WHERE actor IN ${list}`;
+  await db`DELETE FROM mutes WHERE muter IN ${list} OR muted IN ${list}`;
+  await db`DELETE FROM follows WHERE follower IN ${list} OR followee IN ${list}`;
+  await db`DELETE FROM blocks WHERE blocker IN ${list} OR blocked IN ${list}`;
+  await db`DELETE FROM starter_claims WHERE user_address IN ${list}`;
+  await db`DELETE FROM handle_tombstones WHERE address IN ${list}`;
+  await db`DELETE FROM profiles WHERE address IN ${list}`;
 }
 
 export class Checks {
@@ -143,7 +219,9 @@ export class Checks {
 
   record(name: string, ok: boolean, detail?: unknown): void {
     this.results.push({ name, ok });
-    console.log(`${ok ? "✓" : "✗"} ${name}${ok || detail === undefined ? "" : ` — got ${JSON.stringify(detail)}`}`);
+    console.log(
+      `${ok ? "✓" : "✗"} ${name}${ok || detail === undefined ? "" : ` — got ${JSON.stringify(detail, (_k, v) => (typeof v === "bigint" ? v.toString() : v))}`}`,
+    );
   }
 
   get failed(): number {

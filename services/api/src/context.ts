@@ -20,6 +20,7 @@ import {
 import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { GeoDb } from "./geo-db.ts";
 import type { IndexerBridge } from "./indexer.ts";
+import type { SocialServices } from "./social/runtime.ts";
 
 /** One served network: reads, commit-state heads, and the sponsor (RELAYER_ROLE) that relays starter claims. */
 export interface ChainContext {
@@ -40,6 +41,8 @@ export interface ApiContext {
   indexer: IndexerBridge;
   /** DB-IP Lite country lookup (S8.15); null country until loaded. */
   geo: GeoDb;
+  /** S12b social services: indexer reads, leaderboard snapshots, feed notices. */
+  social: SocialServices;
 }
 
 export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId, ChainContext>> {

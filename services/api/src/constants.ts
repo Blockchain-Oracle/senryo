@@ -46,6 +46,14 @@ export const WS_MAX_SUBSCRIPTIONS = 16;
 export const WS_MAX_PAYLOAD_BYTES = 16 * 1024;
 /** Drop intermediate ticks for a socket with this much unsent data. */
 export const WS_BACKPRESSURE_BYTES = 64 * 1024;
+/** Concurrent sockets per client IP (D-166 caps, moved here by S12b.4 before `feed:` fan-out). */
+export const WS_MAX_SOCKETS_PER_IP = 8;
+/** Client messages per socket per window; past the budget they are refused, past twice it the socket is closed. */
+export const WS_MESSAGES_PER_WINDOW = 60;
+export const WS_MESSAGE_WINDOW_MS = 60_000;
+export const WS_ABUSE_FACTOR = 2;
+/** RFC 6455 close code 1008 (policy violation). */
+export const WS_POLICY_CLOSE = 1008;
 
 /** Body limit for routes carrying encrypted blobs (prefs ≤ 64 KiB base64url + envelope). */
 export const BLOB_BODY_LIMIT_BYTES = 96 * 1024;

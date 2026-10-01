@@ -4,6 +4,7 @@ export * from "./documents/fragments.ts";
 export * from "./documents/history.ts";
 export * from "./documents/market-data.ts";
 export * from "./documents/portfolio.ts";
+export * from "./documents/social.ts";
 export * from "./documents/stats.ts";
 export * from "./documents/triggers.ts";
 export * from "./scalars.ts";

@@ -3,7 +3,7 @@ import { type Address, getAddress } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import { type Db, HTTP_STATUS, HttpError } from "@senryo/service-common";
 import { LOCK_NS } from "./constants.ts";
-import { advisoryLock, listedColumn, rethrowDeadlock } from "./shared.ts";
+import { advisoryLock, listedColumn, rethrowDeadlock, visibleOn } from "./shared.ts";
 
 /**
  * Follows (S12b.3). Account-level rows; every read that shows another account filters by the network's listing, so
@@ -12,11 +12,10 @@ import { advisoryLock, listedColumn, rethrowDeadlock } from "./shared.ts";
 
 /** `me`'s relationship with `other` as seen on `chainId` (the session's network). */
 export async function followState(db: Db, chainId: ChainId, me: string, other: string): Promise<FollowState> {
-  const listed = db(listedColumn(chainId));
   const [row] = await db<{ following: boolean; follows_you: boolean; blocked: boolean }[]>`
     SELECT EXISTS (SELECT 1 FROM follows WHERE follower = ${me} AND followee = ${other}) AS following,
            EXISTS (SELECT 1 FROM follows f JOIN profiles p ON p.address = f.follower
-                    WHERE f.follower = ${other} AND f.followee = ${me} AND p.${listed}) AS follows_you,
+                    WHERE f.follower = ${other} AND f.followee = ${me} AND ${visibleOn(db, "p", chainId)}) AS follows_you,
            EXISTS (SELECT 1 FROM blocks WHERE (blocker = ${me} AND blocked = ${other})
                                           OR (blocker = ${other} AND blocked = ${me})) AS blocked`;
   return {
@@ -37,7 +36,7 @@ export async function follow(db: Db, me: string, target: string): Promise<void> 
     await db.begin(async (tx) => {
       await advisoryLock(tx, LOCK_NS.follow, me);
       const [state] = await tx<{ listed: boolean | null; blocked: boolean; following: boolean; count: number }[]>`
-        SELECT (SELECT listed_practice OR listed_mainnet FROM profiles WHERE address = ${target}) AS listed,
+        SELECT (SELECT (listed_practice OR listed_mainnet) AND NOT hidden FROM profiles WHERE address = ${target}) AS listed,
                EXISTS (SELECT 1 FROM blocks WHERE (blocker = ${me} AND blocked = ${target})
                                               OR (blocker = ${target} AND blocked = ${me})) AS blocked,
                EXISTS (SELECT 1 FROM follows WHERE follower = ${me} AND followee = ${target}) AS following,
@@ -64,7 +63,7 @@ export async function unfollow(db: Db, me: string, target: string): Promise<void
 /** Whether `address` is listed on `chainId` (lists of a hidden account are as absent as the account). */
 export async function isListedOn(db: Db, chainId: ChainId, address: string): Promise<boolean> {
   const [row] = await db<{ ok: boolean }[]>`
-    SELECT ${db(listedColumn(chainId))} AS ok FROM profiles WHERE address = ${address}`;
+    SELECT ${db(listedColumn(chainId))} AND NOT hidden AS ok FROM profiles WHERE address = ${address}`;
   return row?.ok ?? false;
 }
 
@@ -80,7 +79,6 @@ export async function followPage(
   cursor: string | undefined,
   limit: number = FOLLOW_PAGE_DEFAULT,
 ): Promise<FollowPage> {
-  const listed = db(listedColumn(chainId));
   const [self, other] = direction === "followers" ? ["followee", "follower"] : ["follower", "followee"];
   const after = cursor === undefined ? db`` : db`AND f.id < ${BigInt(cursor)}`;
   const rows = await db<
@@ -95,7 +93,7 @@ export async function followPage(
   >`
     SELECT f.id, f.created_at, p.address, p.handle, p.display_name, p.avatar
       FROM follows f JOIN profiles p ON p.address = f.${db(other as string)}
-     WHERE f.${db(self as string)} = ${address} AND p.${listed} ${after}
+     WHERE f.${db(self as string)} = ${address} AND ${visibleOn(db, "p", chainId)} ${after}
      ORDER BY f.id DESC
      LIMIT ${limit + 1}`;
   const page = rows.slice(0, limit);
