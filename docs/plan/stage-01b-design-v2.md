@@ -67,7 +67,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - `docs/design/senryo-parity-ledger.json` (FT/C/M/LG rows with the fidelity-contract fields);
   - SUPERSEDED-by-D-168 banners on `design/DIRECTIONS.md`, the `d2-*` screenshots and the study's own D2 references (README:82, 05:89/104-105, 10:5, `reference-ledger.json`), recorded in `COPY-MANIFEST.json`;
   - `validate_study.py` passes.
-- [ ] S1b.6 **Tokens** (direction §2–4):
+- [x] S1b.6 **Tokens** (direction §2–4):
   - step 1 swaps values under the existing names (web stays green);
   - step 2 adds the new roles (practice/mainnet, glass, fan, materials) and retires the old names;
   - fonts: Inter, Inter Display (verify static SemiBold) and subset Noto Sans JP;
@@ -187,5 +187,20 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Retired: `CHAIN_HUE` and `ASSET_HUE`. The web swap panel's chain dot became an `EntityMark`, and the `colorVar`
     field left `sample.ts`/`fund-screen`.
   - Not yet using the new roles: screens (components still read the step-1 names); that changes per journey.
+- **S1b.6 fonts and icons (D-192):**
+  - Inter 4.1 is static and byte-for-byte on mobile; the web copies are Latin subsets. Inter Display SemiBold is
+    verified in the release. Noto Sans JP is subset to 千両金箔.
+  - Every font file carries provenance in `packages/tokens/src/fonts.ts`, checked by the `font-provenance` invariant.
+  - `lucide-react-native` is JS + SVG only, so no dev-client rebuild is needed.
+  - Fonts load through expo-font on mobile and next/font/local on web; no Google Fonts request remains.
+  - `apps/mobile/.21st/design.json` is rewritten per D-168:
+    - direction, authority, typography, radius, motion and materials;
+    - must/avoid rules and the amended D-033;
+    - reconstructions (EntityMark, venue chip, mark cluster);
+    - planned C15/C16/C18/C39–C43;
+    - D2 ports kept under `legacyD2`.
+
+    The web record points to the same direction.
+- **Lead files, open item:** `TopStrip` still draws the D2 "SENRYO/千両" wordmark in the system CJK face.
 
 ## Handoff

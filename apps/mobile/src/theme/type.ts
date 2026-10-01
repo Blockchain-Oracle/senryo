@@ -2,15 +2,21 @@ import { MAX_FONT_SCALE_HERO, TYPE as TOKEN_TYPE, type TypeFace, type TypeRole }
 import type { TextStyle } from "react-native";
 
 /**
- * Loaded face names (expo-font keys in fonts.ts). Inter 400–700 for UI; `display` is the big-number face. The `mono*`
- * names are legacy aliases from D2's monospace amounts: they resolve to Inter, and numbers get tabular lining figures.
+ * Loaded face names (expo-font keys in fonts.ts). Inter 400–700 for UI; Inter Display SemiBold for numbers and titles
+ * ≥ 32; Noto Sans JP for Japanese text (React Native does not fall back per glyph to a custom font, so Japanese runs set
+ * `jp*` explicitly). The `mono*` names are legacy aliases from D2's monospace amounts: they resolve to Inter, and numbers
+ * get tabular lining figures.
  */
 export const FONT = {
   sans: "Inter_400Regular",
   sansMedium: "Inter_500Medium",
   sansStrong: "Inter_600SemiBold",
   sansBold: "Inter_700Bold",
-  display: "Inter_600SemiBold",
+  display: "InterDisplay_600SemiBold",
+  jp: "NotoSansJP_400Regular",
+  jpMedium: "NotoSansJP_500Medium",
+  jpStrong: "NotoSansJP_600SemiBold",
+  jpBold: "NotoSansJP_700Bold",
   mono: "Inter_400Regular",
   monoMedium: "Inter_500Medium",
   monoStrong: "Inter_600SemiBold",

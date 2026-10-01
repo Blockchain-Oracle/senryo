@@ -18,8 +18,8 @@ export interface ChartCandle {
 }
 
 /**
- * RN port of 21st Candle Chart #22250: victory-native XL `Candlestick` in D2 colours, price axis on the right in
- * JetBrains Mono, time ticks below. Candles are indexed Chainlink rounds (D-020, D-163: no fabricated ticks — gaps
+ * RN port of 21st Candle Chart #22250: victory-native XL `Candlestick` in the token colours, price axis on the right in
+ * Inter (theme CHART_FONT), time ticks below. Candles are indexed Chainlink rounds (D-020, D-163: no fabricated ticks — gaps
  * stay gaps).
  */
 export function CandleChart({ candles, decimals }: { candles: ChartCandle[]; decimals: number }) {

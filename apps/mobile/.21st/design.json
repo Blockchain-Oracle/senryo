@@ -1,20 +1,49 @@
 {
-  "version": 1,
+  "version": 2,
   "project": {
     "name": "@senryo/mobile",
     "productType": "fintech trading app (Senryo 千両 + Kinpaku 金箔 card, Monad)",
-    "stack": ["expo-57", "react-native", "reanimated-4", "victory-native", "expo-router"]
+    "stack": [
+      "expo-57",
+      "react-native-0.86",
+      "expo-router",
+      "reanimated-4",
+      "skia",
+      "victory-native",
+      "lucide-react-native"
+    ]
   },
   "direction": {
-    "name": "D2 Desk",
-    "summary": "Pro terminal: dense, monospaced, dark default with a paper light alternate; top tabs; equity chart first; buckets as a three-cell register; execution trace after Face ID.",
-    "approved": "docs/plan/00-plan.md D-004; design/DIRECTIONS.md D2; screenshots design/screens/d2-*"
+    "name": "Living Lacquer",
+    "summary": "Fomo's rounded trading interface and dark violet surfaces + Phantom's contextual action fan + Solflare's illustrated onboarding and material artwork; Senryo's seal, gold leaf and lacquer are the identity inside that language. The reference study is the minimum baseline.",
+    "approved": "D-168 (user, 30 Sep 2026); docs/design/senryo-v2/direction.md; docs/plan/v2-plan.md §5",
+    "supersedes": "D2 Desk (D-004, design/DIRECTIONS.md, design/screens/d2-*) — history only"
+  },
+  "authority": {
+    "direction": "docs/design/senryo-v2/direction.md",
+    "baseline": "docs/design/reference-study-2026-09-30/ (local until Q-021)",
+    "handoff": "docs/design/senryo-v2/PROJECT-HANDOFF.md",
+    "ledger": "docs/design/senryo-parity-ledger.json",
+    "tokenValues": "docs/design/senryo-v2/tokens-consult.md (Codex, D-191)",
+    "order": [
+      "user's latest words",
+      "study evidence (screens, motion)",
+      "study guides",
+      "Senryo product rules (00-plan §0/§1)"
+    ]
   },
   "sources": {
-    "tokens": ["packages/tokens/src/palette.ts", "packages/tokens/src/scale.ts", "packages/tokens/src/marks.ts"],
-    "components": ["apps/mobile/src/components"],
-    "assets": ["brand/", "brand/art/", "packages/identity/sources/"],
-    "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
+    "tokens": [
+      "packages/tokens/src/palette.ts",
+      "packages/tokens/src/scale.ts",
+      "packages/tokens/src/marks.ts",
+      "packages/tokens/src/fonts.ts",
+      "apps/mobile/src/theme/"
+    ],
+    "components": ["apps/mobile/src/components", "apps/mobile/src/features"],
+    "assets": ["brand/", "brand/art/", "packages/identity/sources/", "apps/mobile/assets/fonts/"],
+    "icons": "lucide-react-native (actions only; SVG via react-native-svg, no native module)",
+    "instructions": ["docs/plan/00-plan.md §0", "docs/plan/stage-01b-design-v2.md"]
   },
   "design": {
     "colorMode": "dark-default-with-light",
@@ -413,301 +442,101 @@
     },
     "typography": {
       "fonts": {
-        "sans": "Inter (next/font; labels, prose)",
-        "mono": "JetBrains Mono (every number, tabular + slashed zero)"
+        "sans": "Inter 400/500/600/700 (Inter 4.1 static TTF, rsms/inter, OFL) — UI",
+        "display": "Inter Display SemiBold (Inter 4.1 static) — big numbers and titles ≥ 32 pt, −0.02 em",
+        "jp": "Noto Sans JP, subset to the glyphs we ship (千両金箔), OFL — Japanese only; the seal stays vector"
       },
+      "figures": "tabular + lining (tnum, lnum) for money, quotes, fees and aligned columns",
+      "case": "sentence/title case; no tracked uppercase",
       "roles": {
-        "micro": "10/14 mono uppercase tracked 0.12em — column heads, chips",
-        "label": "11/14 uppercase tracked 0.12–0.2em — section labels",
-        "caption": "12/16",
-        "body": "14/20",
-        "title": "17/22 semibold",
-        "num-sm": "13/18 mono",
-        "num-md": "16/22 mono",
-        "num-ticker": "24/30 mono semibold",
-        "num-lg": "28/34 mono",
-        "num-xl": "34/40 mono — equity hero",
-        "num-hero": "40/46 mono"
+        "displayBalance": "52/56 Inter Display 600 (Home balance)",
+        "displayMargin": "64/68 Inter Display 600 (ticket margin)",
+        "displayPrice": "40/44 Inter Display 600 (market price)",
+        "pageTitle": "32/38 Inter Display 600",
+        "sheetTitle": "24/28 600",
+        "sectionTitle": "20/24 600",
+        "body": "16/22",
+        "row": "16/20 500",
+        "rowAmount": "16/20 600 numeric",
+        "meta": "12/16",
+        "moneyMeta": "12/16 500 numeric",
+        "buttonLabel": "16/20 600",
+        "buttonCompact": "14/20 600",
+        "tabLabel": "12/16 600",
+        "chipLabel": "12/16 500",
+        "modeLabel": "12/16 600",
+        "fanLabel": "24/28 600",
+        "legacy": "micro/label/caption 12/16 · body/bodyStrong 16/22 · title 20/24 · numSm 16/20 · numMd 20/24 · numTicker/numLg 40/44 · numXl/numHero 52/56"
       },
-      "source": "packages/tokens/src/scale.ts (TYPE) → tokens.css --type-* → Tailwind text-<role>"
+      "source": "packages/tokens/src/scale.ts (TYPE) → tokens.css --type-* → Tailwind text-<role>; apps/mobile/src/theme/type.ts"
     },
     "radius": {
-      "base": "4px (--radius 0.25rem)",
-      "scale": "xs .5× · sm .6× · md .8× · lg 1× · xl 1.4× · 2xl 1.8×",
-      "pill": "999 for dots/toggles only"
+      "scale": "8 / 12 / 16 / 24 / 32 / pill",
+      "use": "chips · inputs · action rows · cards and sheet tops · onboarding hero · buttons, dock, fan, avatars",
+      "compat": "RADIUS.sm = 12 for components not rebuilt yet",
+      "source": "packages/tokens/src/scale.ts RADIUS"
     },
     "spacing": {
-      "grid": "4px",
-      "source": "packages/tokens/src/scale.ts SPACE"
+      "grid": "4 pt (2 = optical micro-gap only)",
+      "screenInset": 20,
+      "rowMinHeight": 64,
+      "touchTarget": 44,
+      "source": "packages/tokens/src/scale.ts SPACE; apps/mobile/src/theme/layout.ts SIZE/DOCK/FAN"
     },
     "motion": {
-      "durations_ms": {
-        "fast": 120,
-        "base": 160,
-        "slow": 200
+      "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "families": {
+        "press": "100 ms",
+        "selection": "170 ms",
+        "pagePush": "320 ms",
+        "compactSelector": "~420 ms, spring 1/260/30 clamped (M02)",
+        "tallDetail": "~450 ms, spring 1/240/30 clamped (M07/M08/M13)",
+        "parentChild": "~600 ms (M16)",
+        "fan": "200 ms/item, 25 ms stagger, spring 1/420/30; Send overshoots; backdrop 160; plus→× 180 (45°); exit 180 (M06)",
+        "dockActive": "260 ms, spring 1/500/36 (M10)",
+        "headerCollapse": "scroll-driven over 132 pt (M09)",
+        "rulerSnap": "direct gesture, snap 1/500/40 (M14)",
+        "numbers": "160 ms on real change only",
+        "chartReveal": "750 ms after data (M08)",
+        "onboardingScene": "850 ms (M01)",
+        "qr": "650 ms, valid payload (M04)",
+        "ambient": "8 s loops",
+        "completionFoil": "800 ms after the real outcome (M18)"
       },
-      "easing": "cubic-bezier(0.2, 0, 0, 1)",
-      "rules": [
-        "nothing bounces (no spring overshoot except sheets)",
-        "path draw on charts",
-        "spinner only on the active execution step",
-        "number changes roll (Number Flow) with timing, not spring",
-        "prefers-reduced-motion collapses to instant"
-      ]
+      "reducedMotion": "static art, ~100 ms crossfades; reduced transparency → opaque glass/fan backdrop",
+      "haptics": "selection ticks, one on submit, one on the confirmed outcome; no sound by default",
+      "source": "packages/tokens/src/scale.ts MOTION/SPRING; apps/mobile/src/theme/motion.ts"
     },
-    "density": "high",
+    "materials": {
+      "glass": "dock only (expo-glass-effect on iOS 26; blur + glassTint elsewhere; glassOpaque under reduced transparency)",
+      "blur": "strong live blur only behind the fan (expo-blur) + fanScrim",
+      "dim": "ordinary sheets dim the parent (sheetScrim); no universal sheet blur",
+      "elevation": "dock 0/8/24 #00000033; sheet 0/−4/16 #0000001F; raised content has no shadow",
+      "ramps": "gold leaf #886426/#D4AE5B/#FFF0BC · silver #697383/#C9D0DD/#F4F6FB · lacquer #17121B/#29212F/#514357 (artwork only)",
+      "gold": "gold identifies Senryo and Kinpaku; never buy, profit, warning or mainnet"
+    },
+    "density": "comfortable: rounded controls, rows ≥ 64, 20 pt inset",
     "must": [
-      "Colours only from @senryo/tokens (tokens.css / PALETTES) — no hex or px in components",
-      "JetBrains Mono tabular for every number; ▲▼ plus a sign with every up/down colour",
-      "1px hairlines, 4px radius, no shadows; dense rows; uppercase tracked mono labels",
-      "Network label (PRACTICE/MAINNET) on every money surface; PREVIEW DATA badge while sample data is shown",
-      "Reading<T>: skeleton → value → stale label; never a fabricated $0.00; success shown in place, not as a toast",
-      "Every component is a 21st item (search → preview → get → add → re-tokenize); record its source id here"
+      "Reference evidence first: every component names its C/F/M evidence IDs and declared deviations here before it is built",
+      "Colours only from @senryo/tokens (theme/ on mobile, tokens.css on web); no hex/rgba elsewhere",
+      "Known entities render their real first-party mark (EntityMark, @senryo/identity); Lucide icons identify actions only",
+      "Mode capsule ('Practice · Paper money' violet / 'Mainnet · Real money' blue) on every money surface; P$ for paper",
+      "Success only after finalization; the 500 ms hold confirms (D-177) with an accessible explicit alternative",
+      "Reading<T>: skeleton → value → stale/unavailable; never a fabricated $0.00 or tick",
+      "Content padded clear of the dock; tab, stack and scroll restored; parents restored after every sheet"
     ],
     "avoid": [
-      "gradients, glass, glow and drop shadows (the Kinpaku foil on the card is the only gradient)",
-      "bouncy springs, confetti, celebratory motion",
-      "rounded-2xl consumer cards, pill buttons",
-      "framer-motion imports (use motion/react)",
-      "invented components with no 21st source",
-      "floats for money"
+      "D2 terminal identity: pure black, monospace amounts, green/yellow primaries, 4 px corners, hairline grids, tracked caps",
+      "universal sheet blur, literal radial fans, flat-logo 'material' wobble",
+      "success flourishes on submit; celebratory motion before the real outcome",
+      "generic coins, letter discs or recoloured approximations for known entities",
+      "an available component dictating layout or dropping states (C40 is never a plain slider)",
+      "fictitious 21st attribution for a custom reconstruction",
+      "framer-motion imports (use motion/react on web); floats for money"
     ]
   },
   "components": {
-    "ports": [
-      {
-        "name": "vercel-tabs",
-        "source": "21st:yadwinder/vercel-tabs",
-        "id": 1597,
-        "url": "https://21st.dev/@yadwinder/components/vercel-tabs",
-        "use": "top tabs (link mode)",
-        "port": "NativeTabs + Liquid Glass (expo-router) — D2 top strip as solid header",
-        "status": "built (S5)"
-      },
-      {
-        "name": "balance-chart",
-        "source": "21st:ssychui/balance-chart",
-        "id": 30538,
-        "url": "https://21st.dev/@ssychui/components/balance-chart",
-        "use": "equity chart + timeframe pill",
-        "port": "victory-native CartesianChart + Line/Area + useChartPressState scrub",
-        "status": "built (S5)"
-      },
-      {
-        "name": "number-flow",
-        "source": "21st:barvian/number-flow",
-        "id": 1444,
-        "url": "https://21st.dev/@barvian/components/number-flow",
-        "use": "rolling numbers (@number-flow/react)",
-        "port": "number-flow-react-native 0.5.1 (timing, not spring)",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "partition-bar",
-        "source": "21st:8starlabs/partition-bar",
-        "id": 26545,
-        "url": "https://21st.dev/@8starlabs/components/partition-bar",
-        "use": "bucket proportion bar",
-        "port": "Views + Reanimated widths",
-        "status": "built (S5)"
-      },
-      {
-        "name": "segmented-control",
-        "source": "21st:ddoemonn/segmented-control",
-        "id": 23552,
-        "url": "https://21st.dev/@ddoemonn/components/segmented-control",
-        "use": "asset filter, long/short",
-        "port": "Pressable row + Reanimated sliding indicator",
-        "status": "built (S5)"
-      },
-      {
-        "name": "market-watchlist",
-        "source": "21st:ssychui/market-watchlist",
-        "id": 20110,
-        "url": "https://21st.dev/@ssychui/components/market-watchlist",
-        "use": "watchlist + sparklines",
-        "port": "FlashList 2 rows + static react-native-svg sparkline",
-        "status": "built (S5)"
-      },
-      {
-        "name": "market-heatmap",
-        "source": "21st:ssychui/market-heatmap",
-        "id": 30551,
-        "url": "https://21st.dev/@ssychui/components/market-heatmap",
-        "use": "OI heatmap",
-        "port": "squarified Views (packages/core treemap)",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "candle-chart",
-        "source": "21st:ssychui/candle-chart",
-        "id": 22250,
-        "url": "https://21st.dev/@ssychui/components/candle-chart",
-        "use": "candles + volume (split scale/layers/crosshair/volume)",
-        "port": "victory-native Candlestick + Bar volume (Skia)",
-        "status": "built (S5)"
-      },
-      {
-        "name": "slider",
-        "source": "21st:originui/slider",
-        "id": 304,
-        "url": "https://21st.dev/@originui/components/slider",
-        "use": "leverage with detents",
-        "port": "Gesture Handler Pan + detents 1/2/5/10 + haptic tick",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "gauge",
-        "source": "21st:designali-in/gauge-1",
-        "id": 3719,
-        "url": "https://21st.dev/@designali-in/components/gauge-1",
-        "use": "margin-use half gauge (split arc/value)",
-        "port": "Skia arc",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "task-steps",
-        "source": "21st:ddoemonn/task-steps",
-        "id": 23569,
-        "url": "https://21st.dev/@ddoemonn/components/task-steps",
-        "use": "execution trace",
-        "port": "Views + Reanimated check, driven by TxLifecycle",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "hold-and-release-button",
-        "source": "21st:kokonutd/hold-and-release-button",
-        "id": 8,
-        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
-        "use": "500 ms hold-to-confirm",
-        "port": "HoldToConfirm: GH LongPress (500 ms) + Reanimated fill + haptics",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "credit-debit-card",
-        "source": "21st:ravikatiyar162/credit-debit-card",
-        "id": 5276,
-        "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card",
-        "use": "Kinpaku card flip",
-        "port": "Reanimated rotateY flip; Kinpaku art from brand/kinpaku-card.svg",
-        "status": "built (S5)"
-      },
-      {
-        "name": "upstash-ratelimit",
-        "source": "21st:elements-/upstash-ratelimit",
-        "id": 29280,
-        "url": "https://21st.dev/@elements-/components/upstash-ratelimit",
-        "use": "FREE·SPEND meter",
-        "port": "Views (FREE·SPEND meter)",
-        "status": "built (S5)"
-      },
-      {
-        "name": "multi-chain-swap",
-        "source": "21st:starc007/be-ui-multi-chain-swap",
-        "id": 16251,
-        "url": "https://21st.dev/@starc007/components/be-ui-multi-chain-swap",
-        "use": "bridge + deposit (split panel/token-select/quote-rows)",
-        "port": "native form, same quote rows",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "qr-code-generator",
-        "source": "21st:user_xn1cklas/qr-code-generator",
-        "id": 6838,
-        "url": "https://21st.dev/@user_xn1cklas/components/qr-code-generator",
-        "use": "deposit QR",
-        "port": "react-native-qrcode-svg",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "copy-code-button",
-        "source": "21st:minhxthanh/copy-code-button",
-        "id": 9552,
-        "url": "https://21st.dev/@minhxthanh/components/copy-code-button",
-        "use": "copy address",
-        "port": "expo-clipboard + haptic",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "loading-state",
-        "source": "21st:theshanelevine/loading-state",
-        "id": 23591,
-        "url": "https://21st.dev/@theshanelevine/components/loading-state",
-        "use": "terminal loader",
-        "port": "Agari states kit loader",
-        "status": "built (S5)"
-      },
-      {
-        "name": "skeleton",
-        "source": "21st:shadcn/skeleton",
-        "id": 1588,
-        "url": "https://21st.dev/@shadcn/components/skeleton",
-        "use": "row skeletons",
-        "port": "Reanimated shimmer (Agari states kit)",
-        "status": "built (S5)"
-      },
-      {
-        "name": "interactive-empty-state",
-        "source": "21st:remcostoeten/interactive-empty-state",
-        "id": 22302,
-        "url": "https://21st.dev/@remcostoeten/components/interactive-empty-state",
-        "use": "empty + outage",
-        "port": "Agari states kit EmptyState",
-        "status": "built (S5)"
-      },
-      {
-        "name": "alert-toast",
-        "source": "21st:lavikatiyar/alert-toast",
-        "id": 8863,
-        "url": "https://21st.dev/@lavikatiyar/components/alert-toast",
-        "use": "risk events",
-        "port": "sonner-native custom toast",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "sonner",
-        "source": "21st:shadcn/sonner",
-        "id": 886,
-        "url": "https://21st.dev/@shadcn/components/sonner",
-        "use": "toaster (visibleToasts 1)",
-        "port": "sonner-native (visibleToasts 1)",
-        "status": "built (S5)"
-      },
-      {
-        "name": "drawer",
-        "source": "21st:shadcn/drawer",
-        "id": 1245,
-        "url": "https://21st.dev/@shadcn/components/drawer",
-        "use": "vaul sheets at phone widths",
-        "port": "ported Agari BottomDrawer (spring damping 26 / stiffness 260)",
-        "status": "built (S5)"
-      }
-    ],
-    "customPieces": [
-      {
-        "name": "keypad",
-        "source": "21st:bankkroll/number-pad",
-        "id": 3711,
-        "url": "https://21st.dev/@bankkroll/components/number-pad",
-        "port": "Pressable 3x4 grid + haptic tick; built S8.10 (src/components/trade/Keypad.tsx)",
-        "status": "planned (S5)"
-      },
-      {
-        "name": "session-chip",
-        "source": "21st:serafimcloud/status-badge",
-        "id": 521,
-        "url": "https://21st.dev/@serafimcloud/components/status-badge",
-        "port": "Pressable pill: status dot (filled unlocked / hollow locked / gold warning) + mono countdown; full sentence as VoiceOver label",
-        "status": "built (S6) — src/features/auth/SessionChip.tsx"
-      },
-      {
-        "name": "leverage-detents",
-        "source": "21st:originui/slider",
-        "id": 304,
-        "url": "https://21st.dev/@originui/components/slider",
-        "port": "same as slider port (GH Pan + detents 1/2/5/10)",
-        "status": "planned (S5)"
-      },
+    "reconstructions": [
       {
         "name": "entity-mark",
         "source": "reference-native reconstruction (no 21st source)",
@@ -732,148 +561,417 @@
         "status": "built (S1b.4) — src/components/identity/MarkCluster.tsx"
       }
     ],
-    "built": [
+    "planned": [
       {
-        "rn": "src/app/(tabs)/_layout.tsx",
-        "21st": "Vercel Tabs #1597",
-        "url": "https://21st.dev/@yadwinder/components/vercel-tabs",
-        "note": "native NativeTabs + Liquid Glass instead of top tabs (D-012)"
+        "id": "C15",
+        "name": "floating glass dock",
+        "evidence": ["F12", "F16", "M09", "M10"],
+        "journey": "SH",
+        "route": "expo-router/ui headless tabs (spike D-193)",
+        "status": "spike"
       },
       {
-        "rn": "src/components/charts/EquityChart.tsx",
-        "21st": "Balance Chart #30538",
-        "url": "https://21st.dev/@ssychui/components/balance-chart"
+        "id": "C16",
+        "name": "collapsing header + chips",
+        "evidence": ["F09", "F10", "F11", "F12", "M09"],
+        "journey": "SH",
+        "status": "pending S1b.7"
       },
       {
-        "rn": "src/components/charts/CandleChart.tsx",
-        "21st": "Candle Chart #22250",
-        "url": "https://21st.dev/@ssychui/components/candle-chart"
+        "id": "C18",
+        "name": "Phantom action fan",
+        "evidence": ["P19", "M06", "M07"],
+        "journey": "SH",
+        "status": "pending S1b.7"
       },
       {
-        "rn": "src/features/portfolio/BucketRegister.tsx",
-        "21st": "Partition Bar #26545",
-        "url": "https://21st.dev/@8starlabs/components/partition-bar"
-      },
-      {
-        "rn": "src/components/kit/Segmented.tsx",
-        "21st": "Segmented Control #23552",
-        "url": "https://21st.dev/@ddoemonn/components/segmented-control"
-      },
-      {
-        "rn": "src/features/markets/MarketRow.tsx",
-        "21st": "Market Watchlist #20110",
-        "url": "https://21st.dev/@ssychui/components/market-watchlist"
-      },
-      {
-        "rn": "src/features/card/CardFace.tsx",
-        "21st": "Credit or Debit Card #5276",
-        "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card"
-      },
-      {
-        "rn": "src/app/(tabs)/card/index.tsx (spend meter)",
-        "21st": "Upstash Ratelimit #29280",
-        "url": "https://21st.dev/@elements-/components/upstash-ratelimit"
-      },
-      {
-        "rn": "src/components/kit/states.tsx (LoadingState)",
-        "21st": "Loading State #23591",
-        "url": "https://21st.dev/@theshanelevine/components/loading-state"
-      },
-      {
-        "rn": "src/components/kit/states.tsx (Skeleton)",
-        "21st": "Skeleton #1588",
-        "url": "https://21st.dev/@shadcn/components/skeleton"
-      },
-      {
-        "rn": "src/components/kit/states.tsx (EmptyState)",
-        "21st": "Interactive Empty State #22302",
-        "url": "https://21st.dev/@remcostoeten/components/interactive-empty-state"
-      },
-      {
-        "rn": "src/components/toast/ToastHost.tsx",
-        "21st": "Alert Toast #8863 + Sonner #886",
-        "url": "https://21st.dev/@shadcn/components/sonner",
-        "note": "sonner-native"
-      },
-      {
-        "rn": "src/components/sheet/Sheet.tsx",
-        "21st": "Drawer #1245",
-        "url": "https://21st.dev/@shadcn/components/drawer",
-        "note": "ported pre-existing BottomDrawer"
-      },
-      {
-        "rn": "src/features/auth/AuthCard.tsx",
-        "21st": "Passkey Sign-In #19045 (felipemenezes098/sign-in-4)",
-        "url": "https://21st.dev/@felipemenezes098/components/sign-in-4",
-        "note": "glyph tile + title + one line + action stack + trust footer; D2 hairline card"
-      },
-      {
-        "rn": "src/features/auth/CeremonyCard.tsx",
-        "21st": "Push Approval Card #19036 (verify-identity-3) + Task Steps #23569",
-        "url": "https://21st.dev/@felipemenezes098/components/verify-identity-3",
-        "note": "spinner badge on the glyph, waiting row, step list; D-029 second-prompt copy"
-      },
-      {
-        "rn": "src/features/auth/SessionChip.tsx",
-        "21st": "Status Badge #521",
-        "url": "https://21st.dev/@serafimcloud/components/status-badge",
-        "note": "dot + label pill, tone by session state (D2 mono)"
-      },
-      {
-        "rn": "src/features/auth/Onboarding.tsx",
-        "21st": "Onboarding Steps Carousel #19097",
-        "url": "https://21st.dev/@cnippet-dev/components/onboarding-steps-carousel",
-        "note": "progress rule + 'N / 3' counter over paged value cards; swipe paging instead of Back/Next; brand intro before it"
-      },
-      {
-        "rn": "src/features/auth/PhraseGrid.tsx",
-        "21st": "Encrypted Text #18575",
-        "url": "https://21st.dev/@manuarora700/components/encrypted-text",
-        "note": "each recovery word decrypts in place; crypto RNG; static under Reduce Motion; screen capture blocked"
-      },
-      {
-        "rn": "src/app/(sheets)/{step-up,session,account-required}.tsx",
-        "21st": "Drawer #1245 (ported BottomDrawer) + Passkey Sign-In #19045",
-        "url": "https://21st.dev/@shadcn/components/drawer",
-        "note": "live S6 sheets on the one-sheet primitive"
-      },
-      {
-        "rn": "src/components/trade/HoldToConfirm.tsx",
-        "21st": "Hold and Release Button #8",
-        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
-        "note": "Pressable + Reanimated linear sweep 500 ms; press/confirm haptics; VoiceOver activate confirms; web twin ui/hold-and-release-button.tsx"
-      },
-      {
-        "rn": "src/components/trade/ExecutionTrace.tsx",
-        "21st": "Task Steps #23569",
-        "url": "https://21st.dev/@ddoemonn/components/task-steps",
-        "note": "svg tick/cross + spinning arc, desk tweens; driven by @senryo/query send trace"
-      },
-      {
-        "rn": "src/components/trade/MarginGauge.tsx",
-        "21st": "Gauge #3719",
-        "url": "https://21st.dev/@designali-in/components/gauge-1",
-        "note": "true semicircle (web arc geometry), up/warn/down bands = MM ÷ E_liq"
-      },
-      {
-        "rn": "src/components/trade/LeverageSlider.tsx",
-        "21st": "Slider #304",
-        "url": "https://21st.dev/@originui/components/slider",
-        "note": "GH Pan on the UI thread, integer steps, tick/snap, detent marks, adjustable a11y"
-      },
-      {
-        "rn": "src/components/trade/Keypad.tsx",
-        "21st": "Number Pad #3711",
-        "url": "https://21st.dev/@bankkroll/components/number-pad",
-        "note": "3x4 hairline mono grid, tick per key; applyKey keeps 2 decimals"
-      },
-      {
-        "rn": "src/app/(sheets)/risk-explainer.tsx",
-        "21st": "Drawer #1245 + Hold and Release Button #8",
-        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
-        "note": "F10 three cards + 'I understand' hold; MMKV flag"
+        "id": "C39–C43",
+        "name": "order ticket, ruler, keypad↔chart, TP/SL child, hold pill",
+        "evidence": ["F37", "F38", "F39", "F40", "F41", "F42", "F43", "F44", "F45", "M14", "M15"],
+        "journey": "J4",
+        "status": "pending S1b.8"
       }
-    ]
+    ],
+    "legacyD2": {
+      "note": "Built under D2 (S5–S8); superseded as visual authority by D-168. Each piece keeps working on the new tokens until its journey rebuilds or replaces it.",
+      "ports": [
+        {
+          "name": "vercel-tabs",
+          "source": "21st:yadwinder/vercel-tabs",
+          "id": 1597,
+          "url": "https://21st.dev/@yadwinder/components/vercel-tabs",
+          "use": "top tabs (link mode)",
+          "port": "NativeTabs + Liquid Glass (expo-router) — D2 top strip as solid header",
+          "status": "built (S5)"
+        },
+        {
+          "name": "balance-chart",
+          "source": "21st:ssychui/balance-chart",
+          "id": 30538,
+          "url": "https://21st.dev/@ssychui/components/balance-chart",
+          "use": "equity chart + timeframe pill",
+          "port": "victory-native CartesianChart + Line/Area + useChartPressState scrub",
+          "status": "built (S5)"
+        },
+        {
+          "name": "number-flow",
+          "source": "21st:barvian/number-flow",
+          "id": 1444,
+          "url": "https://21st.dev/@barvian/components/number-flow",
+          "use": "rolling numbers (@number-flow/react)",
+          "port": "number-flow-react-native 0.5.1 (timing, not spring)",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "partition-bar",
+          "source": "21st:8starlabs/partition-bar",
+          "id": 26545,
+          "url": "https://21st.dev/@8starlabs/components/partition-bar",
+          "use": "bucket proportion bar",
+          "port": "Views + Reanimated widths",
+          "status": "built (S5)"
+        },
+        {
+          "name": "segmented-control",
+          "source": "21st:ddoemonn/segmented-control",
+          "id": 23552,
+          "url": "https://21st.dev/@ddoemonn/components/segmented-control",
+          "use": "asset filter, long/short",
+          "port": "Pressable row + Reanimated sliding indicator",
+          "status": "built (S5)"
+        },
+        {
+          "name": "market-watchlist",
+          "source": "21st:ssychui/market-watchlist",
+          "id": 20110,
+          "url": "https://21st.dev/@ssychui/components/market-watchlist",
+          "use": "watchlist + sparklines",
+          "port": "FlashList 2 rows + static react-native-svg sparkline",
+          "status": "built (S5)"
+        },
+        {
+          "name": "market-heatmap",
+          "source": "21st:ssychui/market-heatmap",
+          "id": 30551,
+          "url": "https://21st.dev/@ssychui/components/market-heatmap",
+          "use": "OI heatmap",
+          "port": "squarified Views (packages/core treemap)",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "candle-chart",
+          "source": "21st:ssychui/candle-chart",
+          "id": 22250,
+          "url": "https://21st.dev/@ssychui/components/candle-chart",
+          "use": "candles + volume (split scale/layers/crosshair/volume)",
+          "port": "victory-native Candlestick + Bar volume (Skia)",
+          "status": "built (S5)"
+        },
+        {
+          "name": "slider",
+          "source": "21st:originui/slider",
+          "id": 304,
+          "url": "https://21st.dev/@originui/components/slider",
+          "use": "leverage with detents",
+          "port": "Gesture Handler Pan + detents 1/2/5/10 + haptic tick",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "gauge",
+          "source": "21st:designali-in/gauge-1",
+          "id": 3719,
+          "url": "https://21st.dev/@designali-in/components/gauge-1",
+          "use": "margin-use half gauge (split arc/value)",
+          "port": "Skia arc",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "task-steps",
+          "source": "21st:ddoemonn/task-steps",
+          "id": 23569,
+          "url": "https://21st.dev/@ddoemonn/components/task-steps",
+          "use": "execution trace",
+          "port": "Views + Reanimated check, driven by TxLifecycle",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "hold-and-release-button",
+          "source": "21st:kokonutd/hold-and-release-button",
+          "id": 8,
+          "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
+          "use": "500 ms hold-to-confirm",
+          "port": "HoldToConfirm: GH LongPress (500 ms) + Reanimated fill + haptics",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "credit-debit-card",
+          "source": "21st:ravikatiyar162/credit-debit-card",
+          "id": 5276,
+          "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card",
+          "use": "Kinpaku card flip",
+          "port": "Reanimated rotateY flip; Kinpaku art from brand/kinpaku-card.svg",
+          "status": "built (S5)"
+        },
+        {
+          "name": "upstash-ratelimit",
+          "source": "21st:elements-/upstash-ratelimit",
+          "id": 29280,
+          "url": "https://21st.dev/@elements-/components/upstash-ratelimit",
+          "use": "FREE·SPEND meter",
+          "port": "Views (FREE·SPEND meter)",
+          "status": "built (S5)"
+        },
+        {
+          "name": "multi-chain-swap",
+          "source": "21st:starc007/be-ui-multi-chain-swap",
+          "id": 16251,
+          "url": "https://21st.dev/@starc007/components/be-ui-multi-chain-swap",
+          "use": "bridge + deposit (split panel/token-select/quote-rows)",
+          "port": "native form, same quote rows",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "qr-code-generator",
+          "source": "21st:user_xn1cklas/qr-code-generator",
+          "id": 6838,
+          "url": "https://21st.dev/@user_xn1cklas/components/qr-code-generator",
+          "use": "deposit QR",
+          "port": "react-native-qrcode-svg",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "copy-code-button",
+          "source": "21st:minhxthanh/copy-code-button",
+          "id": 9552,
+          "url": "https://21st.dev/@minhxthanh/components/copy-code-button",
+          "use": "copy address",
+          "port": "expo-clipboard + haptic",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "loading-state",
+          "source": "21st:theshanelevine/loading-state",
+          "id": 23591,
+          "url": "https://21st.dev/@theshanelevine/components/loading-state",
+          "use": "terminal loader",
+          "port": "Agari states kit loader",
+          "status": "built (S5)"
+        },
+        {
+          "name": "skeleton",
+          "source": "21st:shadcn/skeleton",
+          "id": 1588,
+          "url": "https://21st.dev/@shadcn/components/skeleton",
+          "use": "row skeletons",
+          "port": "Reanimated shimmer (Agari states kit)",
+          "status": "built (S5)"
+        },
+        {
+          "name": "interactive-empty-state",
+          "source": "21st:remcostoeten/interactive-empty-state",
+          "id": 22302,
+          "url": "https://21st.dev/@remcostoeten/components/interactive-empty-state",
+          "use": "empty + outage",
+          "port": "Agari states kit EmptyState",
+          "status": "built (S5)"
+        },
+        {
+          "name": "alert-toast",
+          "source": "21st:lavikatiyar/alert-toast",
+          "id": 8863,
+          "url": "https://21st.dev/@lavikatiyar/components/alert-toast",
+          "use": "risk events",
+          "port": "sonner-native custom toast",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "sonner",
+          "source": "21st:shadcn/sonner",
+          "id": 886,
+          "url": "https://21st.dev/@shadcn/components/sonner",
+          "use": "toaster (visibleToasts 1)",
+          "port": "sonner-native (visibleToasts 1)",
+          "status": "built (S5)"
+        },
+        {
+          "name": "drawer",
+          "source": "21st:shadcn/drawer",
+          "id": 1245,
+          "url": "https://21st.dev/@shadcn/components/drawer",
+          "use": "vaul sheets at phone widths",
+          "port": "ported Agari BottomDrawer (spring damping 26 / stiffness 260)",
+          "status": "built (S5)"
+        }
+      ],
+      "built": [
+        {
+          "rn": "src/app/(tabs)/_layout.tsx",
+          "21st": "Vercel Tabs #1597",
+          "url": "https://21st.dev/@yadwinder/components/vercel-tabs",
+          "note": "native NativeTabs + Liquid Glass instead of top tabs (D-012)"
+        },
+        {
+          "rn": "src/components/charts/EquityChart.tsx",
+          "21st": "Balance Chart #30538",
+          "url": "https://21st.dev/@ssychui/components/balance-chart"
+        },
+        {
+          "rn": "src/components/charts/CandleChart.tsx",
+          "21st": "Candle Chart #22250",
+          "url": "https://21st.dev/@ssychui/components/candle-chart"
+        },
+        {
+          "rn": "src/features/portfolio/BucketRegister.tsx",
+          "21st": "Partition Bar #26545",
+          "url": "https://21st.dev/@8starlabs/components/partition-bar"
+        },
+        {
+          "rn": "src/components/kit/Segmented.tsx",
+          "21st": "Segmented Control #23552",
+          "url": "https://21st.dev/@ddoemonn/components/segmented-control"
+        },
+        {
+          "rn": "src/features/markets/MarketRow.tsx",
+          "21st": "Market Watchlist #20110",
+          "url": "https://21st.dev/@ssychui/components/market-watchlist"
+        },
+        {
+          "rn": "src/features/card/CardFace.tsx",
+          "21st": "Credit or Debit Card #5276",
+          "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card"
+        },
+        {
+          "rn": "src/app/(tabs)/card/index.tsx (spend meter)",
+          "21st": "Upstash Ratelimit #29280",
+          "url": "https://21st.dev/@elements-/components/upstash-ratelimit"
+        },
+        {
+          "rn": "src/components/kit/states.tsx (LoadingState)",
+          "21st": "Loading State #23591",
+          "url": "https://21st.dev/@theshanelevine/components/loading-state"
+        },
+        {
+          "rn": "src/components/kit/states.tsx (Skeleton)",
+          "21st": "Skeleton #1588",
+          "url": "https://21st.dev/@shadcn/components/skeleton"
+        },
+        {
+          "rn": "src/components/kit/states.tsx (EmptyState)",
+          "21st": "Interactive Empty State #22302",
+          "url": "https://21st.dev/@remcostoeten/components/interactive-empty-state"
+        },
+        {
+          "rn": "src/components/toast/ToastHost.tsx",
+          "21st": "Alert Toast #8863 + Sonner #886",
+          "url": "https://21st.dev/@shadcn/components/sonner",
+          "note": "sonner-native"
+        },
+        {
+          "rn": "src/components/sheet/Sheet.tsx",
+          "21st": "Drawer #1245",
+          "url": "https://21st.dev/@shadcn/components/drawer",
+          "note": "ported pre-existing BottomDrawer"
+        },
+        {
+          "rn": "src/features/auth/AuthCard.tsx",
+          "21st": "Passkey Sign-In #19045 (felipemenezes098/sign-in-4)",
+          "url": "https://21st.dev/@felipemenezes098/components/sign-in-4",
+          "note": "glyph tile + title + one line + action stack + trust footer; D2 hairline card"
+        },
+        {
+          "rn": "src/features/auth/CeremonyCard.tsx",
+          "21st": "Push Approval Card #19036 (verify-identity-3) + Task Steps #23569",
+          "url": "https://21st.dev/@felipemenezes098/components/verify-identity-3",
+          "note": "spinner badge on the glyph, waiting row, step list; D-029 second-prompt copy"
+        },
+        {
+          "rn": "src/features/auth/SessionChip.tsx",
+          "21st": "Status Badge #521",
+          "url": "https://21st.dev/@serafimcloud/components/status-badge",
+          "note": "dot + label pill, tone by session state (D2 mono)"
+        },
+        {
+          "rn": "src/features/auth/Onboarding.tsx",
+          "21st": "Onboarding Steps Carousel #19097",
+          "url": "https://21st.dev/@cnippet-dev/components/onboarding-steps-carousel",
+          "note": "progress rule + 'N / 3' counter over paged value cards; swipe paging instead of Back/Next; brand intro before it"
+        },
+        {
+          "rn": "src/features/auth/PhraseGrid.tsx",
+          "21st": "Encrypted Text #18575",
+          "url": "https://21st.dev/@manuarora700/components/encrypted-text",
+          "note": "each recovery word decrypts in place; crypto RNG; static under Reduce Motion; screen capture blocked"
+        },
+        {
+          "rn": "src/app/(sheets)/{step-up,session,account-required}.tsx",
+          "21st": "Drawer #1245 (ported BottomDrawer) + Passkey Sign-In #19045",
+          "url": "https://21st.dev/@shadcn/components/drawer",
+          "note": "live S6 sheets on the one-sheet primitive"
+        },
+        {
+          "rn": "src/components/trade/HoldToConfirm.tsx",
+          "21st": "Hold and Release Button #8",
+          "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
+          "note": "Pressable + Reanimated linear sweep 500 ms; press/confirm haptics; VoiceOver activate confirms; web twin ui/hold-and-release-button.tsx"
+        },
+        {
+          "rn": "src/components/trade/ExecutionTrace.tsx",
+          "21st": "Task Steps #23569",
+          "url": "https://21st.dev/@ddoemonn/components/task-steps",
+          "note": "svg tick/cross + spinning arc, desk tweens; driven by @senryo/query send trace"
+        },
+        {
+          "rn": "src/components/trade/MarginGauge.tsx",
+          "21st": "Gauge #3719",
+          "url": "https://21st.dev/@designali-in/components/gauge-1",
+          "note": "true semicircle (web arc geometry), up/warn/down bands = MM ÷ E_liq"
+        },
+        {
+          "rn": "src/components/trade/LeverageSlider.tsx",
+          "21st": "Slider #304",
+          "url": "https://21st.dev/@originui/components/slider",
+          "note": "GH Pan on the UI thread, integer steps, tick/snap, detent marks, adjustable a11y"
+        },
+        {
+          "rn": "src/components/trade/Keypad.tsx",
+          "21st": "Number Pad #3711",
+          "url": "https://21st.dev/@bankkroll/components/number-pad",
+          "note": "3x4 hairline mono grid, tick per key; applyKey keeps 2 decimals"
+        },
+        {
+          "rn": "src/app/(sheets)/risk-explainer.tsx",
+          "21st": "Drawer #1245 + Hold and Release Button #8",
+          "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
+          "note": "F10 three cards + 'I understand' hold; MMKV flag"
+        }
+      ],
+      "customPieces": [
+        {
+          "name": "keypad",
+          "source": "21st:bankkroll/number-pad",
+          "id": 3711,
+          "url": "https://21st.dev/@bankkroll/components/number-pad",
+          "port": "Pressable 3x4 grid + haptic tick; built S8.10 (src/components/trade/Keypad.tsx)",
+          "status": "planned (S5)"
+        },
+        {
+          "name": "session-chip",
+          "source": "21st:serafimcloud/status-badge",
+          "id": 521,
+          "url": "https://21st.dev/@serafimcloud/components/status-badge",
+          "port": "Pressable pill: status dot (filled unlocked / hollow locked / gold warning) + mono countdown; full sentence as VoiceOver label",
+          "status": "built (S6) — src/features/auth/SessionChip.tsx"
+        },
+        {
+          "name": "leverage-detents",
+          "source": "21st:originui/slider",
+          "id": 304,
+          "url": "https://21st.dev/@originui/components/slider",
+          "port": "same as slider port (GH Pan + detents 1/2/5/10)",
+          "status": "planned (S5)"
+        }
+      ]
+    }
   },
   "decisions": [
     {
@@ -890,10 +988,36 @@
       "date": "2026-09-30",
       "decision": "S6 mobile auth pieces are RN ports of the same 21st items as web (sign-in-4 #19045, verify-identity-3 #19036, Encrypted Text #18575) plus Status Badge #521 (session chip) and Onboarding Steps Carousel #19097 (value pages); the privacy plate is layout glue (seal on the D2 ground)",
       "ref": "stage-06-auth.md S6.8, D-033"
+    },
+    {
+      "date": "2026-09-30",
+      "decision": "D2 superseded by Living Lacquer; D-033 amended (reference evidence first)",
+      "ref": "D-168"
+    },
+    {
+      "date": "2026-10-01",
+      "decision": "Adaptation packet + parity ledger",
+      "ref": "D-190"
+    },
+    {
+      "date": "2026-10-01",
+      "decision": "Token values (step 1 + step 2 roles, light Text 3 #716C7F 4.62:1)",
+      "ref": "D-191"
+    },
+    {
+      "date": "2026-10-01",
+      "decision": "Fonts (Inter 4.1 + Inter Display SemiBold, Noto Sans JP subset) and Lucide icons",
+      "ref": "D-192"
+    },
+    {
+      "date": "2026-10-01",
+      "decision": "Navigation shell spike (expo-router/ui headless tabs)",
+      "ref": "D-193"
     }
   ],
   "rules": [
-    "D-033: every RN piece is a port of a chosen 21st design; record its source here before building",
-    "no hex/rgba outside apps/mobile/src/theme"
+    "D-033 as amended by D-168: Reference evidence first; 21st.dev first among component sources that preserve that evidence. RN ports and reference-native reconstructions are recorded here, with evidence IDs, provenance and declared deviations.",
+    "no hex/rgba outside apps/mobile/src/theme (invariant design-literals-mobile)",
+    "no UI tests (invariant no-ui-tests)"
   ]
 }

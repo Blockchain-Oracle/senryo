@@ -56,7 +56,7 @@ function Intro({ onDone }: { onDone: () => void }) {
       </Animated.View>
       <Animated.Text entering={FadeIn.delay(DURATION.base)} style={[styles.word, { color: color.ink }]}>
         SENRYO<Text style={{ color: color.primary }}>/</Text>
-        <Text style={{ color: color.inkMuted }}>千両</Text>
+        <Text style={{ color: color.inkMuted, fontFamily: FONT.jpStrong }}>千両</Text>
       </Animated.Text>
     </Pressable>
   );

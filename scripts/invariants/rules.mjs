@@ -7,6 +7,7 @@
  * Rules whose files have not landed yet are `optional` / return `skipped`.
  */
 
+import { fontProvenance } from "./lib/font-checks.mjs";
 import { identityProvenance } from "./lib/identity-checks.mjs";
 import { indexerDocsChainFilter } from "./lib/indexer-checks.mjs";
 import {
@@ -188,6 +189,11 @@ export const rules = [
     id: "identity-provenance",
     description: "every mark has a source, licence and matching sha256; generated components are current (S1b.1)",
     check: identityProvenance,
+  },
+  {
+    id: "font-provenance",
+    description: "every shipped font has a source, licence and matching sha256 (S1b.6)",
+    check: fontProvenance,
   },
   {
     id: "address-drift",

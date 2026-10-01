@@ -7,9 +7,9 @@
 @custom-variant light (&:where(.light, .light *));
 
 @theme inline {
-  --font-sans: var(--font-inter), var(--font-sans-family);
+  --font-sans: var(--font-inter), var(--font-noto-jp), var(--font-sans-family);
   /* `font-mono` is a legacy name: amounts are Inter with tabular lining figures (no monospace face). */
-  --font-mono: var(--font-inter), var(--font-mono-family);
+  --font-mono: var(--font-inter), var(--font-noto-jp), var(--font-mono-family);
   --font-mono--font-feature-settings: "tnum" 1, "lnum" 1;
 
   --color-background: var(--background);
@@ -103,7 +103,7 @@
   /* Only the dock and sheets are elevated (shadow-dock, shadow-sheet). */
   --shadow-dock: var(--elevation-dock);
   --shadow-sheet: var(--elevation-sheet);
-  --font-display: var(--font-inter-display), var(--font-display-family);
+  --font-display: var(--font-inter-display), var(--font-inter), var(--font-noto-jp), var(--font-display-family);
 
   /* Type roles from @senryo/tokens TYPE (text-micro … text-num-hero). */
   --text-micro: var(--type-micro-size);
