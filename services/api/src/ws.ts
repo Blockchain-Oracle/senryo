@@ -88,7 +88,9 @@ export class WsHub {
     }
     if (kind === "account") {
       const session = token && this.ctx.sessions ? await this.ctx.sessions.verify(token) : undefined;
-      const own = session && target && isAddress(target) && getAddress(target) === session.address;
+      // The session is per chain (S8.22): a Practice token never opens a Mainnet account stream, or the reverse.
+      const own =
+        session && session.chainId === chainId && target && isAddress(target) && getAddress(target) === session.address;
       return own ? undefined : ("UNAUTHORIZED" as const);
     }
     return "NOT_DEPLOYED" as const; // perpl:* arrives with S7

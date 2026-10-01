@@ -118,8 +118,17 @@ reuses everything below `apps/`.
       — app side done: `~/lib/network` store (MMKV), per-chain read/nonces/API session/policy context, effective Face
       ID per network (mainnet never below its default), lock on entering Mainnet, mode capsule + selector sheet +
       Account → Mode, `P$` for paper money, pre-launch Mainnet = live Chainlink prices read-only on Markets/Trade/
-      Portfolio/LP, per-chain liquidation memory. Open: ws session chain check + push/deep-link chainId (server, with
-      the mainnet api)
+      Portfolio/LP, per-chain liquidation memory.
+      - *Server side done (1 Oct):*
+        - the ws `account:` channel needs a session of the SAME chain;
+        - alerts list, create and delete are bound to the session's chain (403 FORBIDDEN across networks);
+        - every keeper push stores `chain_id` under a chain-prefixed key (keepers of both networks share one ledger);
+        - `+native-intent` → `linkTarget`: a link for the other network opens the selector with it requested (Mainnet
+          lands on the deliberate confirm) and continues only after the switch, to an in-app path only.
+      - **Open:**
+        - the network-switch drive check (nonces/sessions/policy per chain, Face ID v1 → v2);
+        - push delivery itself (expo-notifications, W4 dev-client build **[OK?]**);
+        - the phone round-trip.
 - [ ] S8.23 FX majors on the engine (D-175, contracts track): EUR/GBP/JPY/CHF/CAD feeds verified on 143; risk params +
       aggregate FX USD-exposure cap; FX calendar; mainnet at construction in `Deploy.s.sol`; testnet `AddMarkets.s.sol`
       schedule → execute (6 h) **[OK?]**; keeper observe on status edges/OI; mirrors on 10143

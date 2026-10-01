@@ -51,14 +51,18 @@ export function registerEngagementRoutes(app: HttpServer, ctx: ApiContext): void
 
   app.get(alertsListRoute.path, async (request, reply) => {
     const s = await session(request);
+    // Sessions are per chain (S8.22): a Practice session lists Practice alerts only.
     const rows = await ctx.db<AlertRow[]>`SELECT * FROM price_alerts WHERE user_address = ${s.address.toLowerCase()}
-                                          AND status <> 'cancelled' ORDER BY created_at DESC`;
+                                          AND chain_id = ${s.chainId} AND status <> 'cancelled' ORDER BY created_at DESC`;
     return sendRoute(reply, alertsListRoute, { alerts: rows.map(alertOf) });
   });
 
   app.post(alertsCreateRoute.path, async (request, reply) => {
     const s = await session(request);
     const { body } = parseRoute(alertsCreateRoute, request);
+    if (body.chainId !== s.chainId) {
+      throw new HttpError(HTTP_STATUS.forbidden, "FORBIDDEN", "this session belongs to the other network");
+    }
     const user = s.address.toLowerCase();
     const [count] = await ctx.db<{ n: bigint }[]>`SELECT count(*)::bigint AS n FROM price_alerts
                                                  WHERE user_address = ${user} AND status = 'active'`;
@@ -76,7 +80,8 @@ export function registerEngagementRoutes(app: HttpServer, ctx: ApiContext): void
     const s = await session(request);
     const { params } = parseRoute(alertsDeleteRoute, request);
     const [row] = await ctx.db<AlertRow[]>`UPDATE price_alerts SET status = 'cancelled'
-                                           WHERE id = ${params.id} AND user_address = ${s.address.toLowerCase()} RETURNING *`;
+                                           WHERE id = ${params.id} AND user_address = ${s.address.toLowerCase()}
+                                             AND chain_id = ${s.chainId} RETURNING *`;
     if (!row) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such alert");
     return sendRoute(reply, alertsDeleteRoute, alertOf(row));
   });

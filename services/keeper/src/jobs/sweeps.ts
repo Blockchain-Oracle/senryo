@@ -60,7 +60,7 @@ export function sweepJob(ctx: KeeperContext): Job {
             { user: c.user, inbox: c.inbox, usd6: balances.get(c.inbox)?.toString(), tx: sent.hash },
             "inbox swept",
           );
-          await ctx.notifier.push(`sweep:${ctx.chainId}:${sent.hash}`, c.user, "deposits", "Your deposit has arrived");
+          await ctx.notifier.push(ctx.chainId, `sweep:${sent.hash}`, c.user, "deposits", "Your deposit has arrived");
         } catch (error) {
           retryAt.set(c.user, now + SWEEP_RETRY_MS);
           ctx.log.warn({ user: c.user, inbox: c.inbox, err: describeError(error) }, "inbox sweep failed; retry later");

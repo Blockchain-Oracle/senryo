@@ -26,7 +26,13 @@ export function alertsJob(ctx: KeeperContext): Job {
           RETURNING id, user_address, direction`;
         for (const hit of hits) {
           const symbol = ENGINE_MARKETS.find((m) => m.id === view.marketId)?.symbol ?? String(view.marketId);
-          await ctx.notifier.push(`alert:${hit.id}`, hit.user_address, "price_alerts", `${symbol} crossed your alert`);
+          await ctx.notifier.push(
+            ctx.chainId,
+            `alert:${hit.id}`,
+            hit.user_address,
+            "price_alerts",
+            `${symbol} crossed your alert`,
+          );
         }
       }
       await healthWatch(ctx, views.map((v) => `${v.marketId}:${v.updatedAt}`).join(","));
@@ -41,7 +47,13 @@ async function healthWatch(ctx: KeeperContext, roundKey: string): Promise<void> 
     if (snap.positionBitmap === 0 || snap.mm === 0n) continue;
     const warnBelow = snap.mm + (snap.mm * BigInt(HEALTH_WARN_MARGIN_BPS)) / BPS;
     if (snap.equityLiq >= warnBelow) continue;
-    await ctx.notifier.push(`health:${user}:${roundKey}`, user, "liquidation", "Your position is near liquidation");
+    await ctx.notifier.push(
+      ctx.chainId,
+      `health:${user}:${roundKey}`,
+      user,
+      "liquidation",
+      "Your position is near liquidation",
+    );
   }
 }
 
