@@ -46,14 +46,16 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
   const tp = useSendTrace(`${scope}:tp`);
   const removal = useSendTrace(`${scope}:remove`);
   const [skipped, setSkipped] = useState<{ kind: TriggerKind; blocker: TriggerKind } | undefined>();
+  // Levels whose removal finalized here: gone from the list at once, before the indexer has caught up.
+  const [removed, setRemoved] = useState<ReadonlySet<string>>(() => new Set());
 
   const marketKey = `ours-${market.marketId}`;
   const active = useMemo(
     () =>
       triggers.status === "fresh" || triggers.status === "stale"
-        ? triggers.value.filter((t) => t.market_id === marketKey)
+        ? triggers.value.filter((t) => t.market_id === marketKey && !removed.has(t.id))
         : [],
-    [triggers, marketKey],
+    [triggers, marketKey, removed],
   );
 
   const busy = sl.running || tp.running || removal.running;
@@ -117,9 +119,10 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
     async (orderId: string): Promise<void> => {
       const from = sender();
       if (!from || busy || unresolved) return;
-      await removal.run(from, cancelTriggerRequest(env.chainId, orderId as `0x${string}`), {
+      const result = await removal.run(from, cancelTriggerRequest(env.chainId, orderId as `0x${string}`), {
         preflight: (request) => gas.preflight(request)(),
       });
+      if (result?.final?.stage === "finalized") setRemoved((prev) => new Set(prev).add(orderId));
     },
     [sender, busy, unresolved, removal, env.chainId, gas],
   );
@@ -132,6 +135,8 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
     skipped,
     pending,
     busy,
+    /** A level is being placed (as opposed to one being removed). */
+    placing: sl.running || tp.running,
     blocked: unresolved,
     ready: Boolean(account.client),
     save,

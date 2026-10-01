@@ -78,8 +78,9 @@ export function skippedMessage(skipped: TriggerKind, blocker: TriggerKind): LegM
 export function removalMessage(state: LegState): LegMessage | undefined {
   switch (state) {
     case "idle":
-    case "saved":
       return undefined;
+    case "saved":
+      return { text: "Level removed · finalized.", tone: "up" };
     case "saving":
       return { text: "Removing the level…", tone: "muted" };
     case "unknown":

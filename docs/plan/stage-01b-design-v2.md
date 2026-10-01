@@ -225,6 +225,16 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     resume after a kill, the keyboard-up layout (the simulator's software keyboard was off).
   - Still open in J1: notification and Face ID primers (need `expo-notifications` and a rebuild), the completion foil
     and the avatars (art branch), the seal's gold-leaf recolour.
+- **J4/J5 walked end to end on the simulator (1 Oct).** Create → claim → open (hold) → receipt → position → TP and SL
+  placed → both removed → close (hold): every step finalized (rows in `acceptance.md`). Screenshots (local, beside
+  the review evidence): `docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/`.
+  - Fixed on the way: a removed level stayed in the list until the indexer caught up, with no confirmation, and the
+    place button read "Placing…" during a removal (`useTriggerLegs`, `trigger-legs.ts`, `TriggerPanel`).
+  - Home and Positions were rebuilt by agent `j6-home` (merged): F09 hero, period chips, availability → balance
+    details sheet, position rows, Kinpaku/LP tiles, Top Trades, real Orders and Activity lists. The lead removed its
+    derived "Long 0.5×" multiple (cross-margin has no per-position leverage; it contradicted the ticket's 5×).
+  - Open: the close result is a trace and Done, with no summary of what was realised; a newly placed level appears in
+    the list only once the indexer has it (a few seconds).
 - **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
   guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), first pass complete, review open.** First-pass masters are in `brand/art/`: koban, chōgin, five FX

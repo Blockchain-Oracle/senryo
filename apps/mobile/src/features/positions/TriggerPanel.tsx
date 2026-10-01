@@ -106,13 +106,13 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
       ) : null}
       <Button
         label={
-          busy
+          legs.placing
             ? "Placing…"
             : `Place ${takeProfit ? "TP" : "SL"} at ${price18(trigger18, priceDecimalsOf(market.marketId))}`
         }
         variant="secondary"
         disabled={busy || legs.blocked || !legs.ready || position.size === 0n}
-        loading={busy}
+        loading={legs.placing}
         onPress={() => void legs.save([{ kind, price18: trigger18 }])}
         accessibilityHint={`Closes the whole position when ${market.name} reaches ${price18(trigger18, priceDecimalsOf(market.marketId))}, ${pct(stepBps)} from now`}
       />
