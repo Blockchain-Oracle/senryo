@@ -16,11 +16,19 @@ import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { price18, priceDecimalsOf } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
+import { type PushStatus, usePushStatus } from "~/lib/notifications/usePushStatus";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { AlertRow } from "./AlertRow";
 import { ALERT_SUGGESTIONS_BPS, BPS_PER_PERCENT } from "./constants";
 import { type Alert, alertErrorCopy, useAlerts, useCreateAlert, useRemoveAlert } from "./useAlerts";
 import { type MarketLine, useMarketLine } from "./useMarketLine";
+
+/** What happens when the alert fires, as this phone is set up (the page never promises a push that won't come). */
+const PUSH_NOTE: Record<PushStatus, string> = {
+  on: "When it crosses you get a notification, and it shows as Triggered in Alerts.",
+  off: "Notifications are off on this phone, so an alert that fires shows as Triggered in Alerts.",
+  muted: "Price-alert notifications are switched off in You → Notifications, so it shows as Triggered in Alerts.",
+};
 
 const DIRECTIONS = [
   { value: "above", label: "Rises above" },
@@ -63,6 +71,7 @@ export function AlertEditor({ marketId, onSeeAll }: { marketId: number; onSeeAll
 function Form({ meta, line, onSeeAll }: { meta: EngineMarket; line: MarketLine; onSeeAll?: () => void }) {
   const { color } = useTheme();
   const network = useNetwork();
+  const push = usePushStatus("priceAlerts");
   const [direction, setDirection] = useState<Direction>("above");
   const [text, setText] = useState("");
   const create = useCreateAlert();
@@ -142,8 +151,7 @@ function Form({ meta, line, onSeeAll }: { meta: EngineMarket; line: MarketLine; 
         onPress={save}
       />
       <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-        {network.modeLabel} alert, checked against the oracle price. Push notifications aren’t set up on this phone yet,
-        so an alert that fires shows as Triggered in Alerts.
+        {network.modeLabel} alert, checked against the oracle price. {PUSH_NOTE[push ?? "on"]}
       </Text>
       <Existing marketId={meta.id} name={meta.name} />
       {onSeeAll ? <Button label="All alerts" variant="ghost" size="sm" onPress={onSeeAll} /> : null}

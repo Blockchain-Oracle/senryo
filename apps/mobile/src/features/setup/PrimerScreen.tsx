@@ -22,8 +22,8 @@ import { Button } from "~/components/kit/Button";
 import { EASE, SIZE, SPACE, SPRING, TIMING, TYPE, useTheme } from "~/theme";
 import { arriving, SetupBar } from "./SetupScreen";
 
-/** The art is drawn square; this wide on the page. */
-export const PRIMER_ART = 184;
+/** The art is drawn square with room around its subject; this wide on the page, so the subject reads at S14/P10 scale. */
+export const PRIMER_ART = 248;
 /** It settles from a little small; nothing appears from nothing. */
 const ART_FROM_SCALE = 0.9;
 /** The one gesture after it lands: a bell's sway about its cord (each swing smaller) or a lock's lift (pt). */
