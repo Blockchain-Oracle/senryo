@@ -40,7 +40,9 @@ function OpenInterestMap({ lines, filter }: { lines: MarketLines; filter: Market
   const tiles = heatTiles(lines, filter);
   const reading = lines.some((l) => known(l.reading) !== undefined);
   if (tiles.length > 0) {
-    return <MarketHeatmap title="Heat · by open interest" subtitle="sized by open interest" data={tiles} />;
+    return (
+      <MarketHeatmap title="Open interest" subtitle="tile size · open interest; colour · 24 h change" data={tiles} />
+    );
   }
   return (
     <div className="grid min-h-48 content-center justify-items-center gap-2 rounded-lg border border-border border-dashed p-6 text-center">
