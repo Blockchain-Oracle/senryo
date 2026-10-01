@@ -6,9 +6,10 @@
  */
 import { type AuthFailure, authFailureCopy, classifyAuthError, isSilent, SESSION_IDLE_MS } from "@senryo/account";
 import { shortAddress } from "@senryo/core";
-import { KeyRound, Lock, LogOut, ScanFace, Settings2 } from "lucide-react";
+import { Lock, LogOut, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Button } from "@/components/ui/button";
 import { CopyCode } from "@/components/ui/copy-code-button";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
@@ -62,13 +63,13 @@ export function SessionSheet({ open, onOpenChange }: { open: boolean; onOpenChan
             </Button>
           ) : (
             <Button className="w-full" disabled={busy} onClick={() => void attempt(account.unlock)}>
-              <ScanFace />
+              <PasskeyGlyph />
               {busy ? "Waiting for your passkey…" : "Unlock with passkey"}
             </Button>
           )}
           <div className="grid grid-cols-2 gap-2">
             <Button variant="ghost" disabled={busy} onClick={() => void attempt(account.signIn)}>
-              <KeyRound />
+              <PasskeyGlyph />
               Switch
             </Button>
             <Button

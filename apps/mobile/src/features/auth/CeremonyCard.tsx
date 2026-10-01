@@ -28,7 +28,7 @@ export function CeremonyCard({ kind, extraPrompt }: { kind: CeremonyKind; extraP
   const { color } = useTheme();
   return (
     <AuthCard
-      glyph="faceId"
+      glyph={kind === "unlock" ? "faceId" : "passkey"}
       busy
       title={TITLE[kind]}
       body={

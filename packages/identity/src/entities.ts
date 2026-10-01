@@ -215,14 +215,7 @@ const orgRows = (): Entity[] => [
   org(ids.provider("db-ip"), "DB-IP", "data-provider", "db-ip"),
   org(ids.provider("aurora"), "Aurora", "route-provider", "aurora"),
   org(ids.provider("uniswap"), "Uniswap", "route-provider", "uniswap"),
-  org(
-    ids.provider("passkey"),
-    "Passkey",
-    "auth-provider",
-    undefined,
-    "FIDO passkey icon is behind FIDO Alliance's download form + usage agreement (fidoalliance.org/passkey-download/); " +
-      "submitting it is the user's [OK?]",
-  ),
+  org(ids.provider("passkey"), "Passkey", "auth-provider", "passkey"),
   org(ids.exchange("coinbase"), "Coinbase", "exchange", "coinbase"),
   org(ids.exchange("binance"), "Binance", "exchange", "binance"),
   org(ids.exchange("kraken"), "Kraken", "exchange", "kraken"),

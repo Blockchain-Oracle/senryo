@@ -42,6 +42,7 @@
   "coinbase/wordmarkLight": "a4cd3b11e0394b32c3b930bbe59dcd68f1cadf18fb3c6b9ed08cfb079c8113f0",
   "binance/symbol": "83eef421c3682a87d0a7107f6872a1e36222cb1623ade9211b817ee2dfc0059b",
   "kraken/symbol": "ca91bbec180f787373b68367c9ff112779fbfe1df3bcc8b99f563afeab57c8c3",
+  "passkey/symbol": "27a87be2f975b2f858d2d549065d932767e976443ac0880d9a3f5e86995948ef",
   "flag-eu/symbol": "c15c9ce1d754dec3d2ba61d5e9456888f85cad9014e3b9231933fe599f10494a",
   "flag-us/symbol": "48f0d3e4a7bf2d5c0c8d09cd975696acb2f3af601aaca80c537933ad9ec166ec",
   "flag-gb/symbol": "b93bb15033d6c2219f290121d40c0a741765bd4b077ebcf5a5b0d917ff725a28",

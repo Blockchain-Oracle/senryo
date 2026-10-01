@@ -11,6 +11,7 @@ import { formatUnits } from "@senryo/core";
 import { Stack } from "expo-router";
 import { useState } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
+import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { Segmented } from "~/components/kit/Segmented";
@@ -117,9 +118,12 @@ export default function SecurityScreen() {
           />
         </Row>
       </Panel>
-      <Text accessibilityLiveRegion="polite" style={[TYPE.caption, { color: color.inkMuted }]}>
-        {note ?? "Withdrawals, sends, card limits and your recovery phrase always ask for a fresh passkey."}
-      </Text>
+      <View style={styles.passkey}>
+        <PasskeyGlyph color={color.inkMuted} />
+        <Text accessibilityLiveRegion="polite" style={[TYPE.caption, styles.note, { color: color.inkMuted }]}>
+          {note ?? "Withdrawals, sends, card limits and your recovery phrase always ask for a fresh passkey."}
+        </Text>
+      </View>
       <Button
         label="Lock now"
         variant="outline"
@@ -133,4 +137,6 @@ export default function SecurityScreen() {
 const styles = StyleSheet.create({
   panel: { paddingHorizontal: SPACE.md },
   row: { gap: SPACE.sm, paddingVertical: SPACE.md },
+  passkey: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  note: { flex: 1 },
 });

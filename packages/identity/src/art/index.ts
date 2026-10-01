@@ -1,5 +1,6 @@
 /** Every artwork record — first-party, public-domain and Senryo original — by key. */
 import type { ArtSource } from "../types.ts";
+import { AUTH_ART } from "./auth.ts";
 import { EXCHANGE_ART } from "./exchanges.ts";
 import { FLAG_ART } from "./flags.ts";
 import { NETWORK_ART } from "./networks.ts";
@@ -10,6 +11,7 @@ export const ART_SOURCES: readonly ArtSource[] = [
   ...NETWORK_ART,
   ...PROVIDER_ART,
   ...EXCHANGE_ART,
+  ...AUTH_ART,
   ...FLAG_ART,
   ...ORIGINAL_ART,
 ];

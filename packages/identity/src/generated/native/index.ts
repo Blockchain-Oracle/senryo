@@ -45,6 +45,7 @@ import ArtCoinbaseWordmark from "./coinbase-wordmark.tsx";
 import ArtCoinbaseWordmarkLight from "./coinbase-wordmarklight.tsx";
 import ArtBinanceSymbol from "./binance-symbol.tsx";
 import ArtKrakenSymbol from "./kraken-symbol.tsx";
+import ArtPasskeySymbol from "./passkey-symbol.tsx";
 import ArtFlagEuSymbol from "./flag-eu-symbol.tsx";
 import ArtFlagUsSymbol from "./flag-us-symbol.tsx";
 import ArtFlagGbSymbol from "./flag-gb-symbol.tsx";
@@ -86,6 +87,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "coinbase": { disc: ArtCoinbaseDisc, monoDark: ArtCoinbaseMonoDark, wordmark: ArtCoinbaseWordmark, wordmarkLight: ArtCoinbaseWordmarkLight },
   "binance": { symbol: ArtBinanceSymbol },
   "kraken": { symbol: ArtKrakenSymbol },
+  "passkey": { symbol: ArtPasskeySymbol },
   "flag-eu": { symbol: ArtFlagEuSymbol },
   "flag-us": { symbol: ArtFlagUsSymbol },
   "flag-gb": { symbol: ArtFlagGbSymbol },

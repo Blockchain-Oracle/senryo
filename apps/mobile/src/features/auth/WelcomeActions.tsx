@@ -8,6 +8,7 @@ import { shortAddress } from "@senryo/core";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { LoadingState } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
@@ -76,14 +77,27 @@ export function WelcomeActions() {
     <View style={styles.actions}>
       {hint ? (
         <>
-          <Button label={`Continue · ${shortAddress(hint.address)}`} onPress={() => void unlock()} />
+          <Button
+            label={`Continue · ${shortAddress(hint.address)}`}
+            leading={<PasskeyGlyph color={color.primaryForeground} />}
+            onPress={() => void unlock()}
+          />
           <Button label="Open portfolio · locked" variant="outline" onPress={() => router.replace(ROUTES.portfolio)} />
           <Button label="Use a different account" variant="ghost" onPress={() => void signIn()} />
         </>
       ) : (
         <>
-          <Button label="Create account" onPress={() => void create()} />
-          <Button label="I already have an account" variant="outline" onPress={() => void signIn()} />
+          <Button
+            label="Create account"
+            leading={<PasskeyGlyph color={color.primaryForeground} />}
+            onPress={() => void create()}
+          />
+          <Button
+            label="I already have an account"
+            variant="outline"
+            leading={<PasskeyGlyph color={color.foreground} />}
+            onPress={() => void signIn()}
+          />
           <Button label="Look around first" variant="ghost" onPress={lookAround} />
         </>
       )}

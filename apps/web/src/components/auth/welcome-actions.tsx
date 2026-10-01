@@ -7,11 +7,12 @@
  */
 import { type AuthFailure, classifyAuthError, isSilent } from "@senryo/account";
 import { shortAddress } from "@senryo/core";
-import { ArrowRight, KeyRound, LifeBuoy, ScanFace, UserRoundPlus } from "lucide-react";
+import { ArrowRight, LifeBuoy } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ttftStart } from "@/lib/account/measure";
@@ -86,7 +87,7 @@ export function WelcomeActions() {
       {hint ? (
         <>
           <Button size="lg" className="w-full" onClick={() => void unlock()}>
-            <ScanFace />
+            <PasskeyGlyph />
             Continue · {shortAddress(hint.address)}
           </Button>
           <Button asChild variant="outline" size="lg" className="w-full">
@@ -96,18 +97,18 @@ export function WelcomeActions() {
             </Link>
           </Button>
           <Button variant="ghost" className="w-full" onClick={() => void signIn()}>
-            <KeyRound />
+            <PasskeyGlyph />
             Use a different account
           </Button>
         </>
       ) : (
         <>
           <Button size="lg" className="w-full" onClick={() => void create()}>
-            <UserRoundPlus />
+            <PasskeyGlyph />
             Create account
           </Button>
           <Button variant="outline" size="lg" className="w-full" onClick={() => void signIn()}>
-            <KeyRound />I already have an account
+            <PasskeyGlyph />I already have an account
           </Button>
           <Button asChild variant="ghost" className="w-full">
             <Link href={ROUTES.markets}>
