@@ -11,5 +11,8 @@ export const BRAND = {
   network: "MONAD",
 } as const;
 
-/** Top-bar seal edge (px). brand/README.md: the full seal needs ≥ 24 px (below that, use the favicon mark). */
-export const SEAL_MARK_SIZE = 24;
+/**
+ * Top-bar seal edge (CSS px). brand/README.md: the full seal needs ≥ 32 device px (below that, use the favicon mark),
+ * so the bar draws it at 32 and a 1× screen still gets the whole carving.
+ */
+export const SEAL_MARK_SIZE = 32;
