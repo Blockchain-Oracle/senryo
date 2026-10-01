@@ -38,7 +38,7 @@ export function WelcomeActions() {
     try {
       await action();
       fire("confirm", { sound: "unlock" });
-      router.replace(ROUTES.portfolio);
+      router.replace(ROUTES.home);
     } catch (error) {
       const failure = classifyAuthError(error);
       if (!isSilent(failure)) fire("fail");
@@ -77,7 +77,7 @@ export function WelcomeActions() {
       {hint ? (
         <>
           <Button label={`Continue · ${shortAddress(hint.address)}`} onPress={() => void unlock()} />
-          <Button label="Open portfolio · locked" variant="outline" onPress={() => router.replace(ROUTES.portfolio)} />
+          <Button label="Open Home · locked" variant="outline" onPress={() => router.replace(ROUTES.home)} />
           <Button label="Use a different account" variant="ghost" onPress={() => void signIn()} />
         </>
       ) : (

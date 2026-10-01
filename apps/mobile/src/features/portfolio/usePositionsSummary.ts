@@ -1,5 +1,6 @@
 /**
- * The at-a-glance summary behind the BottomAccessory mini-bar ("2 POS · +$115.80 · XAU LIQ 12% AWAY"): open positions
+ * The at-a-glance positions summary on Home's positions heading (it replaced the retired NativeTabs mini-bar,
+ * "2 positions · +$115.80 · XAU liq 12% away"): open positions
  * on the latest snapshot, total unrealised PnL at the conservative exit, and the position closest to liquidation —
  * each priced by its market's live view through the core preview. Undefined while there is nothing to show.
  */
@@ -37,14 +38,4 @@ export function usePositionsSummary(): PositionsSummary | undefined {
       nearest = { symbol: m.symbol, distanceBps: away };
   }
   return { count: positions.value.length, upnlUsd6: upnl, nearest };
-}
-
-/**
- * The tabs layout only needs to know WHETHER to mount the mini-bar. This reads positions alone (10 s refetch), not every
- * market's price ticks, so the whole navigator no longer re-renders on each tick (phone test, S8.16a).
- */
-export function useHasOpenPositions(): boolean {
-  const address = useAccount().hint?.address;
-  const positions = usePositions(address);
-  return (positions.status === "fresh" || positions.status === "stale") && positions.value.length > 0;
 }

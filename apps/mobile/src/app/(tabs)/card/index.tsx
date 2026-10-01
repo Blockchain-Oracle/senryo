@@ -4,9 +4,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Icon } from "~/components/kit/Icon";
 import { PreviewBadge } from "~/components/kit/PreviewBadge";
-import { Screen } from "~/components/kit/Screen";
 import { Panel, SectionLabel } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
+import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
+import { TabTitle } from "~/components/shell/TabTitle";
 import { CardFace } from "~/features/card/CardFace";
 import { fire } from "~/feedback/fire";
 import { cardAuthRoute, ROUTES } from "~/lib/constants/routes";
@@ -18,12 +19,15 @@ import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const STATE_LABEL = { hold: "HOLD", settled: "SETTLED", declined: "DECLINED" } as const;
 
-/** Card (D2, Kinpaku): face, wallet/freeze, the daily spend allowance meter (D-032) and authorizations. */
+/**
+ * Card tab root (Kinpaku; J7 rebuilds it in S1b.15): face, wallet/freeze, the daily spend allowance meter (D-032) and
+ * authorizations, under the shell's fixed header (title, mode, utility row).
+ */
 export default function Card() {
   const { color } = useTheme();
   const card = useSample("card", SAMPLE_CARD);
   return (
-    <Screen>
+    <CollapsingScreen tab="card" left={<TabTitle>Kinpaku</TabTitle>}>
       <PreviewBadge />
       <ReadingView reading={card} loading="plate" loadingLabel="Reading your card">
         {(c) => {
@@ -95,7 +99,7 @@ export default function Card() {
           );
         }}
       </ReadingView>
-    </Screen>
+    </CollapsingScreen>
   );
 }
 

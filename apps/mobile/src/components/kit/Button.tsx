@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, type StyleProp, StyleSheet, Text, type ViewStyle } from "react-native";
 import { fire } from "~/feedback/fire";
-import { DISABLED_OPACITY, FONT, HAIRLINE_PX, type Palette, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { DISABLED_OPACITY, HAIRLINE_PX, type Palette, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
-/** D2 button: 4 px corners, hairline outline, mono uppercase label (the preview's "PAY · ADD" / "FREEZE"). */
+/**
+ * Living Lacquer button (direction §3, S1b.7): a pill, sentence-case Inter label (no tracked uppercase), primary 56 /
+ * compact 44 pt, the blue primary that darkens on press. Replaces the D2 square mono-uppercase button.
+ */
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 
 interface Props {
@@ -23,13 +26,13 @@ interface Props {
 function tones(variant: ButtonVariant, c: Palette) {
   switch (variant) {
     case "primary":
-      return { bg: c.primary, pressed: c.up, ink: c.primaryForeground, border: c.primary };
+      return { bg: c.primary, pressed: c.primaryPressed, ink: c.primaryForeground, border: c.primary };
     case "secondary":
-      return { bg: c.secondary, pressed: c.muted, ink: c.secondaryForeground, border: c.secondary };
+      return { bg: c.secondary, pressed: c.rowPressed, ink: c.secondaryForeground, border: c.secondary };
     case "outline":
-      return { bg: c.transparent, pressed: c.muted, ink: c.foreground, border: c.border };
+      return { bg: c.transparent, pressed: c.rowPressed, ink: c.foreground, border: c.border };
     case "ghost":
-      return { bg: c.transparent, pressed: c.muted, ink: c.primary, border: c.transparent };
+      return { bg: c.transparent, pressed: c.rowPressed, ink: c.link, border: c.transparent };
     case "destructive":
       return { bg: c.destructiveWash, pressed: c.destructiveWash, ink: c.destructive, border: c.destructive };
   }
@@ -86,11 +89,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: SPACE.sm,
     paddingHorizontal: SPACE.lg,
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.pill,
     borderWidth: HAIRLINE_PX,
-    minHeight: SIZE.touch - SPACE.sm,
+    minHeight: SIZE.touch,
   },
   block: { alignSelf: "stretch" },
   inline: { alignSelf: "flex-start" },
-  label: { ...TYPE.numSm, fontFamily: FONT.monoMedium, textTransform: "uppercase" },
+  label: TYPE.buttonLabel,
 });

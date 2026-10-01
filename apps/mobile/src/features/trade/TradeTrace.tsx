@@ -1,7 +1,8 @@
 /**
- * F10 step 6: the ticket becomes the execution trace after the hold — risk check (simulation) → signed (Face ID /
- * session) → proposed → voted ("Filled", `filled` + fill sound) → finalized ("Settled", buckets refetch). Timings are
- * from the hold. Failures show the decoded reason; nothing is resent (the journal reconciles on the next launch).
+ * F10 step 6 / D-163: the ticket becomes the execution trace after the hold — checking (simulation) → signed (Face ID /
+ * session) → proposed → voted → finalized. Timings are from the hold. Success is finalized only (D-114): the one
+ * confirmed-outcome haptic (and the fill sound, if enabled) fires on finalized, never on a submit or a vote. Failures
+ * show the decoded reason; nothing is resent (the journal reconciles on the next launch, D-231).
  */
 import type { TraceEvent, TraceStage } from "@senryo/query";
 import { useEffect, useRef } from "react";
@@ -14,11 +15,11 @@ import { shortAddress } from "~/lib/format";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 const STEP_DEFS: ReadonlyArray<{ id: string; label: string; stage: TraceStage }> = [
-  { id: "risk", label: "Risk check", stage: "checking" },
+  { id: "risk", label: "Checking", stage: "checking" },
   { id: "signed", label: "Signed", stage: "signed" },
   { id: "proposed", label: "Proposed", stage: "proposed" },
-  { id: "voted", label: "Filled", stage: "voted" },
-  { id: "final", label: "Settled", stage: "finalized" },
+  { id: "voted", label: "Voted", stage: "voted" },
+  { id: "final", label: "Finalized", stage: "finalized" },
 ];
 const COMPLETES: Partial<Record<TraceStage, number>> = { signing: 1, signed: 2, proposed: 3, voted: 4, finalized: 5 };
 const MS_PER_SECOND = 1000;
@@ -57,20 +58,19 @@ export function TradeTrace({
   const failed = events.find((e) => e.stage === "failed" || e.stage === "reverted" || e.stage === "abandoned");
   const reached = events.reduce((n, e) => Math.max(n, COMPLETES[e.stage] ?? 0), 0);
   const hash = events.find((e) => e.hash)?.hash;
-  const filled = events.some((e) => e.stage === "voted");
   const settled = events.some((e) => e.stage === "finalized");
-  const notified = useRef({ filled: false, failed: false });
+  const notified = useRef({ settled: false, failed: false });
 
   useEffect(() => {
-    if (filled && !notified.current.filled) {
-      notified.current.filled = true;
+    if (settled && !notified.current.settled) {
+      notified.current.settled = true;
       fire("filled", { sound: "fill" });
     }
     if (failed && !notified.current.failed) {
       notified.current.failed = true;
       fire("fail");
     }
-  }, [filled, failed]);
+  }, [settled, failed]);
 
   const steps: TraceStep[] = STEP_DEFS.map((d) => {
     const at = events.find((e) => e.stage === d.stage)?.at;
@@ -80,7 +80,7 @@ export function TradeTrace({
   return (
     <Panel style={styles.panel}>
       <ExecutionTrace steps={steps} current={reached} failed={failed !== undefined} />
-      {hash ? <Text style={[TYPE.micro, { color: color.inkMuted }]}>tx {shortAddress(hash)}</Text> : null}
+      {hash ? <Text style={[TYPE.meta, { color: color.text3 }]}>Transaction {shortAddress(hash)}</Text> : null}
       {failed ? (
         <Text style={[TYPE.body, { color: color.down }]}>
           {failed.stage === "reverted"
@@ -99,7 +99,7 @@ export function TradeTrace({
           />
         </View>
       ) : running ? (
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>Don't close the app until it settles.</Text>
+        <Text style={[TYPE.meta, { color: color.text2 }]}>Keep the app open until it’s finalized.</Text>
       ) : null}
     </Panel>
   );

@@ -6,7 +6,7 @@ import { Sparkline } from "~/components/charts/Sparkline";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
-import { tradeRoute } from "~/lib/constants/routes";
+import { marketRoute } from "~/lib/constants/routes";
 import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { DISABLED_OPACITY, HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -50,7 +50,7 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
     <Pressable
       onPress={() => {
         fire("tick");
-        router.push(tradeRoute(line.symbol));
+        router.push(marketRoute(line.symbol));
       }}
       accessibilityRole="button"
       accessibilityLabel={`${line.name}, Senryo, ${STATUS_LABEL[line.status]}, price ${price18(line.price18, priceDecimalsOf(marketId))} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}

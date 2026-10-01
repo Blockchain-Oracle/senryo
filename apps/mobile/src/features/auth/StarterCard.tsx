@@ -92,7 +92,7 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
         <Button
           label={phase.kind === "done" ? "Trade gold" : "Open Fund"}
           variant="outline"
-          onPress={() => router.navigate(phase.kind === "done" ? ROUTES.markets : ROUTES.fund)}
+          onPress={() => router.navigate(phase.kind === "done" ? ROUTES.markets : ROUTES.addMoney)}
         />
       ) : phase.kind === "unchecked" ? (
         <Button label="Retry" variant="outline" onPress={recheck} />

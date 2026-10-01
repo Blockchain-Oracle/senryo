@@ -89,12 +89,7 @@ function Body() {
           disabled={busy}
           onPress={() => void attempt(account.signIn)}
         />
-        <Button
-          label="Account"
-          variant="ghost"
-          block={false}
-          onPress={() => close(() => router.push(ROUTES.account))}
-        />
+        <Button label="Account" variant="ghost" block={false} onPress={() => close(() => router.push(ROUTES.you))} />
         <Button
           label="Sign out"
           variant="ghost"

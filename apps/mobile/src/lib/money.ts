@@ -12,6 +12,11 @@ export { formatUnits, toPlot } from "@senryo/core";
 /** The money glyph per network (S8.22, Living Lacquer §5.6): paper money is never written as plain dollars. */
 const MONEY_SYMBOL: Record<NetworkKey, string> = { testnet: "P$", mainnet: "$" };
 
+/** "P$" in practice, "$" on mainnet — for amounts typed by the user (the ticket's margin). */
+export function moneySymbol(network: NetworkKey = activeNetwork().key): string {
+  return MONEY_SYMBOL[network];
+}
+
 /** $12,480.52 on mainnet, P$12,480.52 in practice (account money only — market prices use `price18`). */
 export function usd(value6: bigint, shown: number = DECIMALS.cents, network: NetworkKey = activeNetwork().key): string {
   const text = formatUnits(value6, DECIMALS.usd6, shown);
