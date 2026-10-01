@@ -1,0 +1,45 @@
+{
+  "name": "@senryo/identity",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Real marks for every known entity (assets, chains, venues, providers, exchanges): the provenance registry, react-native-svg + web components generated from first-party SVGs, and EntityMark.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./native": "./src/native/index.ts",
+    "./web": "./src/web/index.ts"
+  },
+  "scripts": {
+    "codegen": "node scripts/codegen.ts",
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.native.json"
+  },
+  "dependencies": {
+    "@senryo/config": "workspace:*",
+    "@senryo/tokens": "workspace:*",
+    "react": "catalog:"
+  },
+  "peerDependencies": {
+    "react-native": "*",
+    "react-native-svg": ">=15"
+  },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    },
+    "react-native-svg": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@svgr/core": "8.1.0",
+    "@svgr/plugin-jsx": "8.1.0",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "react-native": "0.86.3",
+    "react-native-svg": "15.15.4",
+    "svgo": "4.1.0",
+    "typescript": "catalog:"
+  }
+}

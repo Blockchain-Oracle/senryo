@@ -37,7 +37,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
 **D-number range:** D-190…D-209.
 
 ## Steps
-- [ ] S1b.1 **Identity registry** `packages/identity`:
+- [x] S1b.1 **Identity registry** `packages/identity`:
   - canonical entity ids;
   - first-party SVG sources with URL, licence, date and sha256;
   - variants: colour disc / mono light/dark / symbol / wordmark;
@@ -130,5 +130,26 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
 - The parity ledger has no unrecorded Excluded row.
 
 ## Findings
+- **S1b.1 (identity package):** `packages/identity` holds the canonical ids, the entity table, one provenance record per
+  artwork (`src/art/*`), the platform-free planner and `EntityMark` for native and web. Codegen:
+  `pnpm --filter @senryo/identity codegen [--rehash]`. The web keeps an owner's own drop shadows (MON token, Bitcoin
+  disc), but native drops `<filter>` because SVGR has no native mapping for it. PNG-only owner files (Perpl kit,
+  Coinbase/Binance site icons) render as images, unchanged. The optimised web SVGs match every source (worst RMSE 0.0018).
+- **S1b.2 (marks), partial.** 49 first-party or public-domain files are vendored byte-for-byte in `packages/identity/sources/`.
+  Named gaps, with nothing substituted:
+  - FIDO passkey icon: behind a form and agreement at fidoalliance.org/passkey-download (needs the user's **[OK?]**).
+  - Binance and Kraken press kits are password-gated or email-only; site-hosted first-party files are used instead.
+  - Coinbase's press kit is wordmark-only.
+  - USDC Symbol, Perpl colour mark and Aurora B/W sign: no vector published.
+  - No mono logomark for Monad, Solana or Bitcoin, and no white ETH diamond.
+  - LIT, VVV, PUMP, NEAR and NVDA art not acquired.
+  - BNB, Tron and Polygon not attempted yet.
+- **Licence flags for the user:**
+  - Circle: "NO COMMERCIAL USE" vs "used to represent USDC … in a UI context".
+  - Written permission required: Arbitrum, Uniswap, Chainlink (logo use), and Solana (combining with badges).
+  - Flags: Euroflag design copyright, Canada prohibited mark, Swiss cross.
+  - Coinbase: press-footer terms.
+- **S1b.3 (art), partial.** First-pass masters are in `brand/art/` (koban, chōgin, five FX pair discs, venue chip).
+  Still open: onboarding scenes, completion foil and the 12 avatars. B12 review stays open.
 
 ## Handoff

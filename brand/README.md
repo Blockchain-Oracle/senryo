@@ -19,6 +19,22 @@ Senryo (千両, "a thousand ryō") is the app; Kinpaku (金箔, "gold leaf") is 
 | `kinpaku-card.svg`, `kinpaku-card-1536x969.png` | Card front: lacquer black, a field of gold-leaf sheets torn along one edge, flakes drifting into the black, the seal stamped on the leaf, `KINPAKU` / `金箔` top right, `SENRYO` pressed into the leaf. **Bottom right is left empty for the network mark.** | ISO ID-1 85.6 × 54 mm → 856 × 540 viewBox |
 | `kinpaku-card-back.svg`, `kinpaku-card-back-1536x969.png` | Card back: a torn leaf band where a magstripe sits, mono seal, quiet type | same |
 
+### Identity art (`art/`, S1b.3 first-pass masters, pending design review — B12)
+
+Written by `scripts/art.py` (deterministic, no fonts: the 千 is the seal's own outlined glyph). Gradients, clip paths,
+masks and opacity only, so react-native-svg draws them exactly; ids are prefixed per file. Each file is registered with
+its sha256 in `packages/identity/src/art/originals.ts` (invariant `identity-provenance`).
+
+| File | Use |
+|---|---|
+| `art/xau-koban.svg` / `-disc.svg` | XAU: gold koban with hammer lines, kiri stamps and an embossed 千; the disc variant sits on a lacquer plate with a gold rim. Never Tether Gold. |
+| `art/xag-chogin.svg` / `-disc.svg` | XAG: cast silver chōgin bar with ripples and a 千 stamp; same viewpoint and optical scale as the koban. |
+| `art/fx-{eur,gbp,jpy,chf,cad}-usd.svg` | FX pair discs: base-currency flag overlapped by the US flag (public-domain Commons files in `packages/identity/sources/flag-*`); the pair text is always shown beside them. |
+| `art/senryo-venue.svg` | Senryo venue chip: the simplified seal geometry through the gold-leaf ramp, carved lacquer 千. |
+
+`render.sh` also writes `apps/mobile/assets/images/kinpaku-card.png` (the card face; its grain filter doesn't draw in
+react-native-svg) and re-runs `art.py` + the identity codegen.
+
 Copied into the web app by `render.sh`: `apps/web/public/icon.svg` (favicon), `apps/web/public/apple-touch-icon.png` (180 × 180), `apps/web/public/brand/{seal,wordmark,kinpaku-card,kinpaku-card-back}.svg`.
 
 ## Colour (from `packages/tokens`)

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["src/*.ts", "src/art", "src/native", "src/generated/native"]
+}

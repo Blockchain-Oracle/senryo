@@ -6,6 +6,8 @@
  *  - check rules:   { check(rule, ctx) } — arbitrary logic returning findings (lib/repo-checks.mjs)
  * Rules whose files have not landed yet are `optional` / return `skipped`.
  */
+
+import { identityProvenance } from "./lib/identity-checks.mjs";
 import {
   addressDrift,
   designJsonPresent,
@@ -181,6 +183,11 @@ export const rules = [
     check: indexerIsolated,
   },
   { id: "design-json-present", description: "each app keeps its 21st design record", check: designJsonPresent },
+  {
+    id: "identity-provenance",
+    description: "every mark has a source, licence and matching sha256; generated components are current (S1b.1)",
+    check: identityProvenance,
+  },
   {
     id: "address-drift",
     description: "deployed addresses agree between contracts export and indexer",
