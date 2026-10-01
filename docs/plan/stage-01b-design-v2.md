@@ -53,7 +53,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Coinbase, Binance, Kraken;
   - the passkey icon (Material Symbols, Apache-2.0; A4, bccf226);
   - FX flags (public domain).
-- [ ] S1b.3 **Original art masters** in SVG + Skia:
+- [x] S1b.3 **Original art masters** in SVG + Skia:
   - XAU koban (embossed 千), XAG chōgin, five FX flag-pair discs, the Senryo venue chip;
   - six onboarding scenes, completion foil, 12 default avatars.
 
@@ -74,7 +74,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - `lucide-react-native` for utility icons;
   - light text-3 contrast ≥ 4.5:1;
   - `.21st/design.json` rewritten per D-168 (evidence IDs, provenance, deviations).
-- [ ] S1b.7 **Navigation shell spike → build**:
+- [x] S1b.7 **Navigation shell spike → build**:
   - five-tab floating dock Home · Markets · Card · Social · You on `expo-router/ui`, with stack/scroll restoration verified;
     fallback is NativeTabs on iOS 26 as an Adapted C15;
   - collapsing header with seal, balance and mode;
@@ -82,7 +82,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - sheet grammar (Gorhom 5.2.14 + formSheet);
   - route migration (Trade → market detail/ticket, Fund → Add money) with deep links remapped;
   - new native modules (expo-camera, expo-notifications, sharing) → **[OK?]** EAS dev-client build (user).
-- [ ] S1b.8 **J4 Ticket** (C39–C43, M14, FT102–FT112):
+- [x] S1b.8 **J4 Ticket** (C39–C43, M14, FT102–FT112):
   - margin vs leveraged size, centred ruler, presets + keypad ↔ chart, candle settings;
   - liquidation info, SL/TP child with keyboard lift;
   - mainnet eligibility;
@@ -92,7 +92,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   its own transaction for the resulting position size, with its own outcome (`useTriggerLegs`). Levels are validated
   against the previewed liquidation price. If a level fails, the position is open and unprotected at that level, and the
   receipt says so. Until this ships the entry reads "SL/TP after opening" and C42 stays Adapted.
-- [ ] S1b.9 **J3 Markets** (C22/C25/C26, FT071/072/095–101):
+- [x] S1b.9 **J3 Markets** (C22/C25/C26, FT071/072/095–101):
   - watchlist, categories (Commodities · FX · Crypto · Equities/Indices), filters, search;
   - detail with Holders / Feed / About, history, alerts;
   - sticky Short/Long.
@@ -101,7 +101,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Kinpaku/LP tiles, Top Trades;
   - mode capsule + selector (D-172);
   - LP vault/deposit/redemption.
-- [ ] S1b.11 **J5 Positions**: own position detail, add margin/reduce/close, orders/triggers, activity, receipts.
+- [x] S1b.11 **J5 Positions**: own position detail, add margin/reduce/close, orders/triggers, activity, receipts.
 - [ ] S1b.12 **J2 Add money**:
   - hub, practice claim, voucher, source-chain/asset selectors;
   - other-chain primer/config/QR/status;
@@ -111,7 +111,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - six-scene story, passkey create/sign-in/recovery guide;
   - handle, follow, voucher code, terms;
   - Face ID and notification primers, completion foil, account-required, step-up.
-- [ ] S1b.14 **J8 Social screens** (with S12b):
+- [x] S1b.14 **J8 Social screens** (with S12b):
   - feed, thesis detail/replies/compose, people, leaderboard;
   - trader profile, followers, profile/avatar editor;
   - global search, send recipient/contacts/scanner/review.
@@ -235,6 +235,29 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     derived "Long 0.5×" multiple (cross-margin has no per-position leverage; it contradicted the ticket's 5×).
   - Open: the close result is a trace and Done, with no summary of what was realised; a newly placed level appears in
     the list only once the indexer has it (a few seconds).
+- **1 Oct, afternoon — the journeys, merged and checked on the simulator** (lead + agents on Opus 5.5 after the Fable
+  limit; screenshots in the local `reviews/2026-10-01-senryo-mobile/rebuild/` folder):
+  - **J3 Markets** (agent j3-markets, `dd08d0c`): Watchlist · All underline tabs, category chips led by search, flat
+    rows with the leverage badge and an "Arriving" group, a Search page (All / Markets / Traders, recents), market
+    detail with alert / favourite / share utilities, a price block, candles with the current-price line and period
+    chips, About and Feed tabs; real price alerts (no push yet: alerts show "Triggered" in the list). No Holders tab:
+    there is no hook for public positions by market.
+  - **J8 Social** (agent j8-social, `4a4bf0f`): Feed (Global / Friends) with verb plates, threads with replies, compose
+    thesis, report / mute / block / delete, People (Following / Followers / Recommended), the leaderboard with Your
+    rank and its metric explained, trader profiles. Seen live: the feed shows this simulator account's real trades.
+  - **J9 You** (agent j9-you, `ad2a657`): the tab is a profile; the editor (username with availability, display name,
+    bio, per-network listing and trade sharing) and, by the lead, a portrait picker for the twelve authored avatars
+    (saved `avatar-11-kasa`, read back from the api). Delete-my-data now clears the server's social data too.
+  - **J2 Add money** (lead): mode-aware hub with the practice claim in place, voucher sheet, receive QR with the Monad
+    mark at its centre and a one-time reveal (decoded: it scans to the shown address), the swap page (P20 ticket on
+    Mainnet, honest page in Practice: no pool on the test network) on a shared `useCollateralSwap`.
+  - **J7 Kinpaku** (lead): hero card that settles in and catches light, the real Free to spend, sample data tagged,
+    a three-step first-use tutorial.
+  - **Art** (agent art-seal): the seal in gold leaf carved in lacquer and everything built from it (icon, splash,
+    lockups, the Kinpaku card front and back), Codex-reviewed; the lemon-yellow D2 seal and card are gone.
+  - **Still open:** Withdraw and send (J2 second half), deposit status, LP vault page (J10), the card's sub-pages
+    (reveal, allowance, authorization detail, wallet are placeholders), push notifications (needs expo-notifications
+    and a native rebuild), Face ID / notification primers, Holders, light theme and accessibility passes.
 - **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
   guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), first pass complete, review open.** First-pass masters are in `brand/art/`: koban, chōgin, five FX
