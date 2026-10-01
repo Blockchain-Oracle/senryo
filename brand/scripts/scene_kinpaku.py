@@ -12,6 +12,8 @@ SEED = 1505
 CARD_AT, CARD_W, CARD_TILT = (80, 548), 596, -14
 BOOK_AT, BOOK_SIZE, BOOK_TILT, BOOK_SHEETS = (508, 280), 236, 11, 5
 LEAF_INSET = 20
+BOOK_DEPTH, FLAKE_DEPTH = 0.4, 0.7
+MOTION = {"subject": "card", "mostMotion": ["card"]}
 BAMBOO = ("#F3E7BE", "#D8C489", "#A08A52")
 
 
@@ -73,17 +75,11 @@ def build() -> tuple[str, str]:
     card_t = f"translate({CARD_AT[0]} {CARD_AT[1]}) rotate({CARD_TILT})"
     book, book_outline = leaf_book(c, rng)
     book_t = f"translate({BOOK_AT[0]} {BOOK_AT[1]}) rotate({BOOK_TILT})"
-    c.put(
-        "shadow",
-        contact(book_outline, dark, book_t, 0.7, f"{KEY}-leaf-book-shadow"),
-        contact(card_outline, dark, card_t, 0.7, f"{KEY}-card-shadow"),
-    )
-    c.put(
-        "back",
-        f'<g id="{KEY}-leaf-book" transform="{book_t}">{book}</g>',
-        f'<g id="{KEY}-tweezers" transform="translate(646 118) rotate(114)">{tweezers(c, 250)}</g>',
-    )
-    c.put("main", f'<g id="{KEY}-card" transform="{card_t}">{card}</g>')
+    c.put("leaf-book-shadow", contact(book_outline, dark, book_t, 0.7), role="shadow", depth=BOOK_DEPTH, of="leaf-book")
+    c.put("card-shadow", contact(card_outline, dark, card_t, 0.7), role="shadow", depth=1, of="card")
+    c.put("leaf-book", f'<g transform="{book_t}">{book}</g>', depth=BOOK_DEPTH)
+    c.put("tweezers", f'<g transform="translate(646 118) rotate(114)">{tweezers(c, 250)}</g>', depth=BOOK_DEPTH)
+    c.put("card", f'<g transform="{card_t}">{card}</g>', depth=1)
     spots = [(668, 474, 11), (700, 514, 6), (104, 824, 15), (150, 866, 7), (78, 300, 9), (112, 262, 5)]
-    c.put("fore", f'<g id="{KEY}-flakes">{flakes(c, rng, spots)}</g>')
+    c.put("flakes", flakes(c, rng, spots), role="accent", depth=FLAKE_DEPTH)
     return f"{KEY}.svg", c.svg()

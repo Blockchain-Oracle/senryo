@@ -244,6 +244,13 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Codex reviewed the package over five rounds; in the closing round all nine pieces pass as static first-pass
     masters for the user's design review (`docs/design/reviews/2026-10-01-j1-art-review.md`, verbatim, with what
     still falls short).
+  - Also redrawn in the same pass: the Kinpaku card face and back (the scene-5 card, flat; the Card tab's raster) and
+    the seal through the gold-leaf ramp (geometry kept; app icon, splash seal and web copies refreshed by
+    `brand/scripts/render.sh`). Codex: card front and back pass as first-pass masters; the seal passes at app sizes,
+    and its large-size finish and inverse were fixed once after round 8 and not re-reviewed (same review file).
+  - `brand/art/onboarding/layers.json` lists each master's layers (one per unit of motion) for the J1 story screen.
+    The app's story still moves five bands: `apps/mobile/scripts/onboarding-art.mjs` composes them from those layers
+    as contiguous runs (master stacking kept); moving the hero to per-layer depths is an app-side follow-up.
   - **B12 stays open:** the user's design review is the gate. Motion as implemented, on-device rendering and the
     pending screen's layout are unreviewed. Contact sheets and motion samples: `brand/scripts/sheets.py`, `motion.py`.
 - **S1b.4, partial:**

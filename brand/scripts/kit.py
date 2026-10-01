@@ -42,6 +42,8 @@ FIELD_DEPTH = {
 SHADOW_STEPS = 16
 # Label anchors recorded by Canvas.label(), by master key: onboarding.py writes them to labels.json for the app.
 LABELS: dict[str, list[dict]] = {}
+# Layer lists recorded by Canvas.svg(), by master key: onboarding.py writes them to layers.json for the app.
+MANIFEST: dict[str, list[dict]] = {}
 
 
 def n(v: float) -> str:
@@ -93,12 +95,15 @@ def rot(p, deg: float, c=(0.0, 0.0)):
 
 
 class Canvas:
-    """One SVG master: defs plus ordered, named top-level layers."""
+    """One SVG master: defs plus ordered, named top-level layers. A layer is one unit of motion: the field, one object,
+    or one object's shadow. Each records its role (field, shadow, ground, object, accent), the object a shadow belongs
+    to, and a depth: how far it travels relative to the others (0 = still; equal depths move together)."""
 
     def __init__(self, key: str, title: str, w: float = SCENE_W, h: float = SCENE_H):
         self.key, self.title, self.w, self.h = key, title, w, h
         self.defs: list[str] = []
         self.layers: dict[str, list[str]] = {}
+        self.roles: dict[str, dict] = {}
         self.labels: list[dict] = []
         self.count = 0
 
@@ -143,10 +148,13 @@ class Canvas:
         )
         return f"url(#{pid})"
 
-    def label(self, name: str, text: str, x: float, y: float, w: float, h: float, plate: str, ink: str) -> str:
+    def label(self, name: str, layer: str, text: str, x: float, y: float, w: float, h: float, plate: str, ink: str) -> str:
         """A label plate the app fills with native text (never drawn into the master): returns the plate markup and
-        records its anchor (box in master units, the text, its ink) for labels.json."""
-        self.labels.append({"id": f"{self.key}-label-{name}", "text": text, "x": round(x, 1), "y": round(y, 1), "width": w, "height": h, "ink": ink})
+        records its anchor for labels.json: the box in master units, the text, its ink, and the layer the plate is
+        drawn in (the native text must move with that layer)."""
+        self.labels.append(
+            {"id": f"{self.key}-label-{name}", "layer": f"{self.key}-{layer}", "text": text, "x": round(x, 1), "y": round(y, 1), "width": w, "height": h, "ink": ink}
+        )
         LABELS[self.key] = self.labels
         return (
             f'<g id="{self.key}-label-{name}">'
@@ -154,11 +162,14 @@ class Canvas:
             f'<rect x="{n(x)}" y="{n(y)}" width="{n(w)}" height="{n(h)}" rx="{n(h / 2)}" fill="{plate}"/></g>'
         )
 
-    def put(self, layer: str, *markup: str) -> None:
+    def put(self, layer: str, *markup: str, role: str = "object", depth: float = 0.0, of: str = "") -> None:
+        if layer not in self.layers:
+            self.roles[layer] = {"id": f"{self.key}-{layer}", "role": role, "depth": depth} | ({"of": f"{self.key}-{of}"} if of else {})
         self.layers.setdefault(layer, []).extend(markup)
 
     def svg(self) -> str:
         groups = "\n  ".join(f'<g id="{self.key}-{name}">{"".join(body)}</g>' for name, body in self.layers.items())
+        MANIFEST[self.key] = [self.roles[name] for name in self.layers]
         return (
             f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
             f'viewBox="0 0 {n(self.w)} {n(self.h)}" width="{n(self.w)}" height="{n(self.h)}">\n'
@@ -212,6 +223,7 @@ def field(c: Canvas, color: str) -> None:
         f'<rect width="{n(c.w)}" height="{n(c.h)}" fill="{color}"/>',
         f'<rect width="{n(c.w)}" height="{n(c.h)}" fill="{glow}"/>',
         f'<rect width="{n(c.w)}" height="{n(c.h)}" fill="{deep}"/>',
+        role="field",
     )
 
 
@@ -273,6 +285,30 @@ def sen(transform: str, fill: str, bold=30.0, opacity=1.0) -> str:
         f'<path transform="{transform}" fill="{fill}" stroke="{fill}" stroke-width="{n(bold)}" stroke-linejoin="round"{o} '
         f'd="{GLYPH["d"]}"/>'
     )
+
+
+SEAL_UNITS = 512  # the seal master's box (build.py seal_group): its frames and glyph are placed in these units
+SEAL_FRAME, SEAL_HAIRLINE = (34, 16, 10), (60, 4, 4)  # inset, stroke width, corner radius
+SEAL_GLYPH_BOX, SEAL_GLYPH_LIFT, SEAL_BOLD = 90, 4, 22
+
+
+def carved_seal(x: float, y: float, size: float, ink: str, catch: str = "", catch_opacity: float = 0.7) -> str:
+    """The seal's own carving at any size, in one ink and with no field: heavy frame, hairline frame and 千 exactly as
+    in brand/senryo-seal.svg (build.py seal_group). Wherever the seal appears carved, stamped or printed, it is this.
+    `catch` adds the line of light a carved edge catches."""
+    k = size / SEAL_UNITS
+
+    def inked(colour: str) -> str:
+        frames = "".join(
+            f'<rect x="{n(x + inset * k)}" y="{n(y + inset * k)}" width="{n(size - 2 * inset * k)}" height="{n(size - 2 * inset * k)}" '
+            f'rx="{n(radius * k)}" fill="none" stroke="{colour}" stroke-width="{n(width * k)}"/>'
+            for inset, width, radius in (SEAL_FRAME, SEAL_HAIRLINE)
+        )
+        box = SEAL_GLYPH_BOX * k
+        return frames + sen(glyph_in(x + box, y + box - SEAL_GLYPH_LIFT * k, size - 2 * box, size - 2 * box), colour, SEAL_BOLD)
+
+    under = f'<g transform="translate({n(2 * k)} {n(2.6 * k)})" opacity="{n(catch_opacity)}">{inked(catch)}</g>' if catch else ""
+    return under + inked(ink)
 
 
 def seal_tile(c: Canvas, x: float, y: float, size: float, carve: str = LACQUER["shadow"]) -> str:

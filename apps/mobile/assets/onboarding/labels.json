@@ -12,7 +12,7 @@
         "width": 146,
         "height": 48,
         "ink": "paperInk",
-        "layer": "fore"
+        "layer": "main"
       },
       {
         "text": "JPY/USD",
@@ -21,18 +21,18 @@
         "width": 146,
         "height": 48,
         "ink": "paperInk",
-        "layer": "fore"
+        "layer": "main"
       }
     ],
     "modes": [
       {
         "text": "Practice · Paper money",
-        "x": 438,
+        "x": 452,
         "y": 700,
-        "width": 298,
+        "width": 284,
         "height": 48,
         "ink": "paperPractice",
-        "layer": "fore"
+        "layer": "main"
       },
       {
         "text": "Mainnet · Real money",
@@ -41,7 +41,7 @@
         "width": 284,
         "height": 48,
         "ink": "paperMainnet",
-        "layer": "fore"
+        "layer": "back"
       }
     ]
   }

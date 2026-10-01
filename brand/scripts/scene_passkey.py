@@ -14,6 +14,8 @@ KEY_AT, KEY_TILT, KEY_SCALE = (140, 664), -43, 1.0
 BED_DROP = (15, 21)  # the bed lies straight under the hovering key, this far down-right: only a sliver of it shows
 PHONE_AT, PHONE_W, PHONE_H, PHONE_R, PHONE_TILT = (622, 262), 172, 344, 38, 12
 TAG_AT, TAG_TILT = (96, 800), 12
+TABLET_DEPTH, PHONE_DEPTH, GLINT_DEPTH = 0.4, 0.6, 0.2
+MOTION = {"subject": "key", "mostMotion": ["key", "cord", "tag"]}
 
 
 def phone(c: Canvas) -> tuple[str, str]:
@@ -53,25 +55,22 @@ def build() -> tuple[str, str]:
     device_t = f"translate({PHONE_AT[0]} {PHONE_AT[1]}) rotate({PHONE_TILT})"
     key_t = f"translate({KEY_AT[0]} {KEY_AT[1]}) rotate({KEY_TILT}) scale({KEY_SCALE})"
     tag_t = f"translate({TAG_AT[0]} {TAG_AT[1]}) rotate({TAG_TILT})"
-    c.put("shadow", contact(slab_outline, dark, slab_t, 0.8, f"{KEY}-tablet-shadow"), contact(device_outline, dark, device_t, 0.7, f"{KEY}-phone-shadow"))
-    c.put(
-        "back",
-        f'<g id="{KEY}-tablet" transform="{slab_t}">{slab}<g transform="{bed_t}">{key_bed(c, KEY_TILT)}</g></g>',
-        f'<g id="{KEY}-phone" transform="{device_t}">{device}</g>',
-    )
+    c.put("tablet-shadow", contact(slab_outline, dark, slab_t, 0.8), role="shadow", depth=TABLET_DEPTH, of="tablet")
+    c.put("phone-shadow", contact(device_outline, dark, device_t, 0.7), role="shadow", depth=PHONE_DEPTH, of="phone")
+    c.put("tablet", f'<g transform="{slab_t}">{slab}<g transform="{bed_t}">{key_bed(c, KEY_TILT)}</g></g>', depth=TABLET_DEPTH)
+    c.put("phone", f'<g transform="{device_t}">{device}</g>', depth=PHONE_DEPTH)
     cord_shadow, cord_body = cord([(188, 676), (160, 724), (100, 744), (96, 800)], PRACTICE["deep"], PRACTICE["mid"], 9)
-    # The key floats above the tablet: its shadow lands on the lacquer, offset by its height, and moves on its own.
+    # The key floats above the tablet: its shadow lands on the lacquer, offset by its height, and moves on its own
+    # (it closes under the key as the key settles). Key, cord and tag hang together: same depth.
+    c.put("tag-shadow", soft_path(tag_outline(), 9, INK, 0.3, transform=f"translate(6 10) {tag_t}"), role="shadow", depth=TABLET_DEPTH, of="tag")
+    c.put("cord", cord_shadow, cord_body, depth=1)
+    c.put("tag", f'<g transform="{tag_t}">{tag(c)}</g>', depth=1)
+    c.put("key-shadow", soft_path(key_outline(), 18, INK, 0.3, transform=f"translate({BED_DROP[0]} {BED_DROP[1]}) {key_t}"), role="shadow", depth=TABLET_DEPTH, of="key")
+    c.put("key", f'<g transform="{key_t}">{key(c, KEY_TILT, COLOR)}</g>', depth=1)
     c.put(
-        "main",
-        soft_path(tag_outline(), 9, INK, 0.3, transform=f"translate(6 10) {tag_t}", name=f"{KEY}-tag-shadow"),
-        f'<g id="{KEY}-cord-shadow">{cord_shadow}</g><g id="{KEY}-cord">{cord_body}</g>',
-        f'<g id="{KEY}-tag" transform="{tag_t}">{tag(c)}</g>',
-        soft_path(key_outline(), 18, INK, 0.3, transform=f"translate({BED_DROP[0]} {BED_DROP[1]}) {key_t}", name=f"{KEY}-key-shadow"),
-        f'<g id="{KEY}-key" transform="{key_t}">{key(c, KEY_TILT, COLOR)}</g>',
-    )
-    c.put(
-        "fore",
-        f'<g id="{KEY}-glints">{sparkle(92, 452, 20, WHITE, 0.9, 8)}{sparkle(130, 498, 9, WHITE, 0.75, 20)}'
-        f'{sparkle(690, 498, 15, WHITE, 0.85)}{sparkle(664, 620, 20, LACQUER["shadow"], 0.45)}{sparkle(626, 668, 9, LACQUER["shadow"], 0.36, 20)}</g>',
-    )
+        "glints",
+        sparkle(92, 452, 20, WHITE, 0.9, 8) + sparkle(130, 498, 9, WHITE, 0.75, 20) + sparkle(690, 498, 15, WHITE, 0.85)
+        + sparkle(664, 620, 20, LACQUER["shadow"], 0.45) + sparkle(626, 668, 9, LACQUER["shadow"], 0.36, 20),
+        role="accent", depth=GLINT_DEPTH,
+    )  # fmt: skip
     return f"{KEY}.svg", c.svg()

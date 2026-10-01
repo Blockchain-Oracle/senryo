@@ -1,0 +1,400 @@
+{
+  "masters": {
+    "scene-balance": {
+      "subject": "scene-balance-chest",
+      "mostMotion": [
+        "scene-balance-card",
+        "scene-balance-koban"
+      ],
+      "layers": [
+        {
+          "id": "scene-balance-field",
+          "role": "field",
+          "depth": 0.0
+        },
+        {
+          "id": "scene-balance-chest-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-balance-chest"
+        },
+        {
+          "id": "scene-balance-path-spend",
+          "role": "ground",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-balance-path-trade",
+          "role": "ground",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-balance-pad-spend",
+          "role": "ground",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-balance-card-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-balance-card"
+        },
+        {
+          "id": "scene-balance-pad-trade",
+          "role": "ground",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-balance-koban-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-balance-koban"
+        },
+        {
+          "id": "scene-balance-chest",
+          "role": "object",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-balance-card",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "scene-balance-koban",
+          "role": "object",
+          "depth": 1
+        }
+      ]
+    },
+    "scene-passkey": {
+      "subject": "scene-passkey-key",
+      "mostMotion": [
+        "scene-passkey-key",
+        "scene-passkey-cord",
+        "scene-passkey-tag"
+      ],
+      "layers": [
+        {
+          "id": "scene-passkey-field",
+          "role": "field",
+          "depth": 0.0
+        },
+        {
+          "id": "scene-passkey-tablet-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-passkey-tablet"
+        },
+        {
+          "id": "scene-passkey-phone-shadow",
+          "role": "shadow",
+          "depth": 0.6,
+          "of": "scene-passkey-phone"
+        },
+        {
+          "id": "scene-passkey-tablet",
+          "role": "object",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-passkey-phone",
+          "role": "object",
+          "depth": 0.6
+        },
+        {
+          "id": "scene-passkey-tag-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-passkey-tag"
+        },
+        {
+          "id": "scene-passkey-cord",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "scene-passkey-tag",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "scene-passkey-key-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-passkey-key"
+        },
+        {
+          "id": "scene-passkey-key",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "scene-passkey-glints",
+          "role": "accent",
+          "depth": 0.2
+        }
+      ]
+    },
+    "scene-markets": {
+      "subject": "scene-markets-fx",
+      "mostMotion": [
+        "scene-markets-commodities",
+        "scene-markets-fx",
+        "scene-markets-crypto"
+      ],
+      "layers": [
+        {
+          "id": "scene-markets-field",
+          "role": "field",
+          "depth": 0.0
+        },
+        {
+          "id": "scene-markets-commodities-shadow",
+          "role": "shadow",
+          "depth": 0.6,
+          "of": "scene-markets-commodities"
+        },
+        {
+          "id": "scene-markets-fx-shadow",
+          "role": "shadow",
+          "depth": 0.8,
+          "of": "scene-markets-fx"
+        },
+        {
+          "id": "scene-markets-crypto-shadow",
+          "role": "shadow",
+          "depth": 1.0,
+          "of": "scene-markets-crypto"
+        },
+        {
+          "id": "scene-markets-commodities",
+          "role": "object",
+          "depth": 0.6
+        },
+        {
+          "id": "scene-markets-fx",
+          "role": "object",
+          "depth": 0.8
+        },
+        {
+          "id": "scene-markets-crypto",
+          "role": "object",
+          "depth": 1.0
+        }
+      ]
+    },
+    "scene-lp": {
+      "subject": "scene-lp-well",
+      "mostMotion": [
+        "scene-lp-drop"
+      ],
+      "layers": [
+        {
+          "id": "scene-lp-field",
+          "role": "field",
+          "depth": 0.0
+        },
+        {
+          "id": "scene-lp-well-shadow",
+          "role": "shadow",
+          "depth": 0.5,
+          "of": "scene-lp-well"
+        },
+        {
+          "id": "scene-lp-door-shadow",
+          "role": "shadow",
+          "depth": 0.5,
+          "of": "scene-lp-door"
+        },
+        {
+          "id": "scene-lp-door",
+          "role": "object",
+          "depth": 0.5
+        },
+        {
+          "id": "scene-lp-well",
+          "role": "object",
+          "depth": 0.5
+        },
+        {
+          "id": "scene-lp-ripples",
+          "role": "accent",
+          "depth": 0.5
+        },
+        {
+          "id": "scene-lp-drop",
+          "role": "accent",
+          "depth": 1
+        }
+      ]
+    },
+    "scene-kinpaku": {
+      "subject": "scene-kinpaku-card",
+      "mostMotion": [
+        "scene-kinpaku-card"
+      ],
+      "layers": [
+        {
+          "id": "scene-kinpaku-field",
+          "role": "field",
+          "depth": 0.0
+        },
+        {
+          "id": "scene-kinpaku-leaf-book-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-kinpaku-leaf-book"
+        },
+        {
+          "id": "scene-kinpaku-card-shadow",
+          "role": "shadow",
+          "depth": 1,
+          "of": "scene-kinpaku-card"
+        },
+        {
+          "id": "scene-kinpaku-leaf-book",
+          "role": "object",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-kinpaku-tweezers",
+          "role": "object",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-kinpaku-card",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "scene-kinpaku-flakes",
+          "role": "accent",
+          "depth": 0.7
+        }
+      ]
+    },
+    "scene-modes": {
+      "subject": "scene-modes-bundle",
+      "mostMotion": [
+        "scene-modes-note",
+        "scene-modes-bundle"
+      ],
+      "layers": [
+        {
+          "id": "scene-modes-field",
+          "role": "field",
+          "depth": 0.0
+        },
+        {
+          "id": "scene-modes-mainnet-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-modes-mainnet"
+        },
+        {
+          "id": "scene-modes-bundle-shadow",
+          "role": "shadow",
+          "depth": 0.8,
+          "of": "scene-modes-bundle"
+        },
+        {
+          "id": "scene-modes-mainnet",
+          "role": "object",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-modes-bundle",
+          "role": "object",
+          "depth": 0.8
+        },
+        {
+          "id": "scene-modes-note-shadow",
+          "role": "shadow",
+          "depth": 0.8,
+          "of": "scene-modes-note"
+        },
+        {
+          "id": "scene-modes-note",
+          "role": "object",
+          "depth": 1
+        }
+      ]
+    },
+    "passkey-pending": {
+      "subject": "passkey-pending-key",
+      "mostMotion": [
+        "passkey-pending-key",
+        "passkey-pending-tag"
+      ],
+      "layers": [
+        {
+          "id": "passkey-pending-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "passkey-pending-tablet"
+        },
+        {
+          "id": "passkey-pending-tablet",
+          "role": "object",
+          "depth": 0.4
+        },
+        {
+          "id": "passkey-pending-tag",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "passkey-pending-key-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "passkey-pending-key"
+        },
+        {
+          "id": "passkey-pending-key",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "passkey-pending-glints",
+          "role": "accent",
+          "depth": 0.4
+        }
+      ]
+    },
+    "completion-foil": {
+      "subject": "completion-foil-leaf",
+      "mostMotion": [
+        "completion-foil-sheen"
+      ],
+      "layers": [
+        {
+          "id": "completion-foil-shadow",
+          "role": "shadow",
+          "depth": 1,
+          "of": "completion-foil-leaf"
+        },
+        {
+          "id": "completion-foil-leaf",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "completion-foil-seal",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "completion-foil-sheen",
+          "role": "accent",
+          "depth": 1
+        },
+        {
+          "id": "completion-foil-flakes",
+          "role": "accent",
+          "depth": 0.6
+        }
+      ]
+    }
+  }
+}

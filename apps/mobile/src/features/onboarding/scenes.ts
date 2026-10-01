@@ -78,7 +78,6 @@ export const SCENES: readonly Scene[] = [
     layers: {
       shadow: require("../../../assets/onboarding/scene-markets-shadow.webp"),
       main: require("../../../assets/onboarding/scene-markets-main.webp"),
-      fore: require("../../../assets/onboarding/scene-markets-fore.webp"),
     },
     labels: LABELS.scenes.markets as readonly SceneLabel[],
   },

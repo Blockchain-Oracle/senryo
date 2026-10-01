@@ -2,8 +2,8 @@
 
   python3 brand/scripts/motion.py     # needs rsvg-convert, ImageMagick 7 (`magick`) and ffmpeg
 
-Three short samples, each driven only by moving the masters' named groups (a transform and an opacity per group, per
-frame), which is what the Skia/Reanimated implementation will do. They show that the layers come apart cleanly and
+Three short samples, each driven only by moving the masters' layers (a transform and an opacity per top-level group,
+per frame), which is what the Skia/Reanimated implementation will do with the rasterised layers. They show that the layers come apart cleanly and
 where the motion grammar of direction §4 lands on this art; they are not the implementation and prove no device
 performance. Timings: scene travel ≈ 850 ms, completion foil reveal ≈ 800 ms, then slow ambient movement.
 
@@ -78,7 +78,6 @@ def passkey(t: float) -> dict[str, tuple[str, float]]:
         f"{k}-tag": (about(140, 700, f"rotate({sway + lift * 10:.2f})"), min(key * 1.6, 1)),
         f"{k}-tag-shadow": (about(140, 700, f"rotate({sway + lift * 10:.2f})"), key),
         f"{k}-cord": (about(170, 680, f"rotate({sway * 0.5:.2f})"), min(key * 1.6, 1)),
-        f"{k}-cord-shadow": (about(170, 680, f"rotate({sway * 0.5:.2f})"), key),
         f"{k}-glints": ("translate(0 0)", 0.35 + 0.65 * (0.5 + 0.5 * math.sin(math.tau * t / 2.4)) * span(t, 1.0, 0.4)),
     }
 
