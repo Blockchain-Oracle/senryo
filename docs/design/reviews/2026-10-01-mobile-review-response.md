@@ -22,9 +22,19 @@ Answers [the review](2026-10-01-mobile-ux-review.md) and [the brief](2026-10-01-
 - **R14** guest Home: one invitation tied to what an account gives in this mode, and the listed markets with their prices; the session chip says "Browsing" (`home-guest.png`). Social and You still need their own guest/empty/unavailable states.
 - **R15** identity: every market row resolves to its real mark — Perpl's nine mainnet markets, the five FX pairs as pairs (EUR/USD…), Nvidia (`markets-identities.png`, `fetched-marks-contact-sheet.png`). Marks are now fetched by script (`packages/identity/scripts/fetch-marks.ts`); no entity has an artwork gap. Original art (six scenes, foil, avatars, the Kinpaku recolour) is in progress on `stage/S1b-art` with its own Codex review; B12 stays open.
 
+## R03 / R09, first half (added later on 1 Oct, `ba409c9`)
+
+The welcome is now the six-scene story: an inset rounded hero whose colour fields crossfade while the artwork layers
+travel at different depths, one headline and one sentence per scene, and Create account / I have an account / Browse
+markets fixed below and usable from the first frame. No timed logo intro, no uppercase kicker lines. Evidence:
+`story-scenes-1-3.png`, `story-scenes-4-6.png` (guest, dark). The art is the first pass from `stage/S1b-art`, still in
+its own review; B12 is open. **Not done:** the new-account setup sequence after the passkey (handle, follow, voucher,
+terms, notifications, completion) and its resumable state — the second half of R03. Light theme, large text and
+VoiceOver on the story are not captured yet.
+
 ## Still open (not claimed)
 
-R03 (the J1 state machine and six-scene story — waits for the art package), R09, R10 (blank-chart capture: the detail chart renders in `tour-markets-detail-card.png`; the clipped-fan capture was not reproduced), R12, R13, R16 (the card still shows the lemon D2 art and a live-looking Freeze), R17.
+R03 second half (the new-account state machine), R10 (blank-chart capture: the detail chart renders in `tour-markets-detail-card.png`; the clipped-fan capture was not reproduced), R12, R13, R16 (the card still shows the lemon D2 art and a live-looking Freeze), R17.
 
 ## Next smallest complete journey for review
 

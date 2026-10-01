@@ -263,7 +263,10 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
      recolour belong to the same pass.
   2. **J4 acceptance with an account** — create a practice account on the simulator, claim, open, protect (both
      levels), remove one, close; capture dark/light and the motion clips; fill the S1b.17 rows. Then S1b.8a.
-  3. **J1** (review R03): the new-account state machine and the six-scene story, once the art passes its gate.
+  3. **J1** (review R03): the six-scene story is in (`features/onboarding`, ba409c9; layer images come from
+     `apps/mobile/scripts/onboarding-art.mjs` — re-run it after the art branch merges). Still to build: the
+     new-account sequence after the passkey (passkey education → ceremony → handle → follow → voucher → terms →
+     notifications → completion foil) with versioned, account-bound, resumable progress; returning accounts skip it.
   4. Then the plan's order: J3 Markets (search, watchlist, detail sections), J6 Home + J10 LP, J5, J2.
 - **Logos:** adding a mark is one line in `packages/identity/scripts/catalog.ts`, then `pnpm --filter
   @senryo/identity fetch` and `codegen`. Never collect one by hand.
