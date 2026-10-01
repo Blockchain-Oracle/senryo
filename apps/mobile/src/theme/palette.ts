@@ -1,8 +1,8 @@
 import { DARK as DARK_TOKENS, LIGHT as LIGHT_TOKENS, type Palette as TokenPalette } from "@senryo/tokens";
 
 /**
- * The app palette: every role from `@senryo/tokens` (the only colour source, D-004) plus the few washes React Native
- * needs precomputed (it has no color-mix()). Ported structure: one `roles()` per theme, same keys in both.
+ * The app palette: every role from `@senryo/tokens` (the only colour source, Living Lacquer D-168) plus the few washes
+ * React Native needs precomputed (it has no color-mix()). One `roles()` per theme, same keys in both.
  * This folder is the only place a hex or rgba() may appear in apps/mobile (invariant design-literals-mobile).
  */
 const HEX_RADIX = 16;
@@ -16,8 +16,12 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${(n >> RED_SHIFT) & BYTE}, ${(n >> GREEN_SHIFT) & BYTE}, ${n & BYTE}, ${alpha})`;
 }
 
-/** Wash strengths (fractions of the base colour), matching the web's `color-mix` percentages. */
-const WASH = { soft: 0.12, strong: 0.24, scrim: 0.72, chartFill: 0.28, chartFillEnd: 0 } as const;
+/**
+ * Wash strengths (fractions of the base colour). The sheet scrim is #00000066 dark / #17151F38 light (direction §2):
+ * 0x66 = 0.4 of black, 0x38 ≈ 0.22 of Text 1.
+ */
+const WASH = { soft: 0.12, strong: 0.24, scrimDark: 0.4, scrimLight: 0.22, chartFill: 0.16, chartFillEnd: 0 } as const;
+const BLACK = "#000000";
 
 function roles(t: TokenPalette, dark: boolean) {
   return {
@@ -38,14 +42,14 @@ function roles(t: TokenPalette, dark: boolean) {
     destructiveWash: withAlpha(t.destructive, WASH.soft),
     chartFillTop: withAlpha(t.chartUp, WASH.chartFill),
     chartFillBottom: withAlpha(t.chartUp, WASH.chartFillEnd),
-    scrim: withAlpha(dark ? DARK_TOKENS.background : LIGHT_TOKENS.foreground, WASH.scrim),
+    scrim: dark ? withAlpha(BLACK, WASH.scrimDark) : withAlpha(LIGHT_TOKENS.foreground, WASH.scrimLight),
     /** Text on a light plate (QR card) in both themes. */
     paper: LIGHT_TOKENS.card,
     paperInk: LIGHT_TOKENS.foreground,
     /** Text on the Kinpaku card's lacquer (the art is black in both themes). */
     onLacquer: DARK_TOKENS.foreground,
     onLacquerMuted: DARK_TOKENS.mutedForeground,
-    /** Shadows are off in D2; the toast needs one colour for its plate border only. */
+    /** Content surfaces carry no shadow (direction §3); the toast needs one colour for its plate border only. */
     transparent: "transparent",
   };
 }

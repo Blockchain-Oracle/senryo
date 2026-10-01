@@ -20,191 +20,201 @@
     "colorMode": "dark-default-with-light",
     "colors": {
       "--background": {
-        "dark": "#000000",
-        "light": "#f4f4f2",
+        "dark": "#0A0911",
+        "light": "#F5F4F8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--foreground": {
-        "dark": "#f5f5f5",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--card": {
-        "dark": "#0c0c0d",
-        "light": "#ffffff",
+        "dark": "#13121A",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--card-foreground": {
-        "dark": "#f5f5f5",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--popover": {
-        "dark": "#111113",
-        "light": "#ffffff",
+        "dark": "#191822",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--popover-foreground": {
-        "dark": "#ffffff",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--primary": {
-        "dark": "#2fe92b",
-        "light": "#0a0a0a",
+        "dark": "#414EF4",
+        "light": "#414EF4",
         "source": "packages/tokens/src/palette.ts"
       },
       "--primary-foreground": {
-        "dark": "#000000",
-        "light": "#2fe92b",
+        "dark": "#FFFFFF",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--secondary": {
-        "dark": "#1b1b1d",
-        "light": "#e9e9e6",
+        "dark": "#201E2B",
+        "light": "#ECE9F2",
         "source": "packages/tokens/src/palette.ts"
       },
       "--secondary-foreground": {
-        "dark": "#ffffff",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--muted": {
-        "dark": "#141416",
-        "light": "#ececea",
+        "dark": "#201E2B",
+        "light": "#ECE9F2",
         "source": "packages/tokens/src/palette.ts"
       },
       "--muted-foreground": {
-        "dark": "#8a8a93",
-        "light": "#62626b",
+        "dark": "#B8B5C4",
+        "light": "#5F5B6B",
         "source": "packages/tokens/src/palette.ts"
       },
       "--accent": {
-        "dark": "#1b1b1d",
-        "light": "#e9e9e6",
+        "dark": "#1B2040",
+        "light": "#E8EBFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--accent-foreground": {
-        "dark": "#fbfb0f",
-        "light": "#0a0a0a",
+        "dark": "#8B95FF",
+        "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--destructive": {
-        "dark": "#ff5102",
-        "light": "#ff5102",
+        "dark": "#FF5A48",
+        "light": "#C83225",
         "source": "packages/tokens/src/palette.ts"
       },
       "--destructive-foreground": {
-        "dark": "#000000",
-        "light": "#000000",
+        "dark": "#17151F",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--border": {
-        "dark": "#26272d",
-        "light": "#dcdcd8",
+        "dark": "#2C2938",
+        "light": "#DEDBE6",
         "source": "packages/tokens/src/palette.ts"
       },
       "--input": {
-        "dark": "#26272d",
-        "light": "#dcdcd8",
+        "dark": "#2C2938",
+        "light": "#DEDBE6",
         "source": "packages/tokens/src/palette.ts"
       },
       "--ring": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#8B95FF",
+        "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--surface": {
-        "dark": "#0c0c0d",
-        "light": "#ffffff",
+        "dark": "#13121A",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--up": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#25CF68",
+        "light": "#087F3C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--down": {
-        "dark": "#ff4d4d",
-        "light": "#e0301e",
+        "dark": "#FF5A48",
+        "light": "#C83225",
         "source": "packages/tokens/src/palette.ts"
       },
       "--gold": {
-        "dark": "#fbfb0f",
-        "light": "#b88a00",
+        "dark": "#D4AE5B",
+        "light": "#89611F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--warn": {
-        "dark": "#fbfb0f",
-        "light": "#b88a00",
+        "dark": "#F2B85C",
+        "light": "#8A5800",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-1": {
-        "dark": "#fbfb0f",
-        "light": "#0a0a0a",
+        "dark": "#8B95FF",
+        "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-2": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#B69DF8",
+        "light": "#7049C8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-3": {
-        "dark": "#ff9821",
-        "light": "#c46a00",
+        "dark": "#5CCAD8",
+        "light": "#087A8A",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-4": {
-        "dark": "#cfd919",
-        "light": "#8a9400",
+        "dark": "#F18BB7",
+        "light": "#AD3265",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-5": {
-        "dark": "#7c7cff",
-        "light": "#4b4bd6",
+        "dark": "#C9D0DD",
+        "light": "#626D7E",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-up": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#25CF68",
+        "light": "#087F3C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-down": {
-        "dark": "#ff4d4d",
-        "light": "#e0301e",
+        "dark": "#FF5A48",
+        "light": "#C83225",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-candle-down": {
-        "dark": "#ff4d4d",
-        "light": "#e0301e",
+        "dark": "#FF5A48",
+        "light": "#C83225",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--practice": {
+        "dark": "#B69DF8",
+        "light": "#7049C8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--mainnet": {
+        "dark": "#8B95FF",
+        "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--kinpaku-lacquer": {
-        "value": "#070707",
+        "value": "#17121B",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-lacquer-edge": {
-        "value": "#1a1a1a",
+        "value": "#29212F",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-highlight": {
-        "value": "#fffbd6",
+        "value": "#FFF0BC",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-light": {
-        "value": "#fff27a",
+        "value": "#EACF8C",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-mid": {
-        "value": "#fbe10f",
+        "value": "#D4AE5B",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-shade": {
-        "value": "#c9a800",
+        "value": "#AE8941",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-deep": {
-        "value": "#6e5700",
+        "value": "#886426",
         "source": "packages/tokens/src/marks.ts"
       },
       "--qr-ink": {

@@ -2,13 +2,15 @@
 @import "tw-animate-css";
 @import "@senryo/tokens/tokens.css";
 
-/* Dark is the D2 default (`:root, .dark` in tokens.css); `.light` on <html> switches to the paper alternate. */
+/* Living Lacquer: dark is the default (`:root, .dark` in tokens.css); `.light` on <html> switches to the light theme. */
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));
 
 @theme inline {
   --font-sans: var(--font-inter), var(--font-sans-family);
-  --font-mono: var(--font-jbmono), var(--font-mono-family);
+  /* `font-mono` is a legacy name: amounts are Inter with tabular lining figures (no monospace face). */
+  --font-mono: var(--font-inter), var(--font-mono-family);
+  --font-mono--font-feature-settings: "tnum" 1, "lnum" 1;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -50,7 +52,7 @@
   --color-kinpaku-foil-light: var(--kinpaku-foil-light);
   --color-kinpaku-foil-shade: var(--kinpaku-foil-shade);
 
-  /* D2: 4px base, the 21st scale steps stay proportional (matches the approved preview). */
+  /* Step 1 (S1b.6): proportional to the 12 px compatibility base; step 2 maps each class to the 8/12/16/24/32 scale. */
   --radius-xs: calc(var(--radius) * 0.5);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -88,10 +90,10 @@
 }
 
 @utility tnum {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings:
     "tnum" 1,
-    "zero" 1;
+    "lnum" 1;
 }
 
 @layer base {

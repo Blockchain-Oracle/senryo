@@ -3,15 +3,18 @@
  * and third-party chain/asset identity hues used for small glyph discs. Same in dark and light.
  */
 
-/** Kinpaku card: gold leaf on lacquer black. Foil stops are derived from the D2 gold `#fbfb0f` toward a warm leaf. */
+/**
+ * Kinpaku card: gold leaf on lacquer, on the direction's material ramps (§2): gold leaf #886426 / #D4AE5B / #FFF0BC
+ * at foil stops 0 / 50 / 100 %, with Codex's 25 % and 75 % intermediates; lacquer shadow / midtone for the body / edge.
+ */
 export const KINPAKU = {
-  lacquer: "#070707",
-  lacquerEdge: "#1a1a1a",
-  foilHighlight: "#fffbd6",
-  foilLight: "#fff27a",
-  foilMid: "#fbe10f",
-  foilShade: "#c9a800",
-  foilDeep: "#6e5700",
+  lacquer: "#17121B",
+  lacquerEdge: "#29212F",
+  foilHighlight: "#FFF0BC",
+  foilLight: "#EACF8C",
+  foilMid: "#D4AE5B",
+  foilShade: "#AE8941",
+  foilDeep: "#886426",
 } as const;
 
 export const QR = { ink: "#000000", paper: "#ffffff" } as const;

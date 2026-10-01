@@ -165,5 +165,19 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     equal those blobs.
   - `validate_study.py` passes, including Pillow image/crop checks: run with a scratch `uv` venv, because the system Python
     has no Pillow.
+- **S1b.6 (tokens), Codex consult:** Codex (gpt-6.1-sol, xhigh, read-only) gave every value that direction §2–4 leaves
+  open. The answer is stored verbatim in `docs/design/senryo-v2/tokens-consult.md`. Highlights:
+  - `mutedForeground` = Text 2. `secondary`/`muted` = #201E2B / #ECE9F2. `accent` = mainnet surface + link ink.
+    `destructive` = Down. `ring` = link. Chart series run blue · violet · cyan · rose · silver; gold never means profit.
+  - Light Text 3 = **#716C7F: 4.62:1 on #F5F4F8**, 5.06:1 on #FFFFFF (was #746F82 at 4.42:1). Ratios are computed with
+    WCAG relative luminance by the same-hue OKLab darkening script. Dark Text 3 #8F8B9F is 6.00:1 on the background and
+    5.32:1 on a sheet.
+  - Kinpaku foil = the gold-leaf ramp with intermediates #AE8941 and #EACF8C; the lacquer body and edge come from the
+    lacquer ramp.
+  - Type: micro, label and caption are all 12/16; body 16/22; title 20/24; numSm 16/20; numMd 20/24; numTicker and
+    numLg 40/44; numXl and numHero 52/56. Inter Display at ≥ 32 with −0.02 em tracking. No uppercase anywhere.
+  - Radius: `sm` → 12 in step 1. Spacing names kept, plus `lgPlus`/`inset` 20.
+  - Motion: press 100, selection 170, page push 320, easing (0.2, 0.8, 0.2, 1); springs per direction §4 with
+    `overshootClamping` except the fan's Send.
 
 ## Handoff

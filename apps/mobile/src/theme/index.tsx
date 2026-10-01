@@ -19,7 +19,7 @@ interface ThemeValue {
 
 const ThemeContext = createContext<ThemeValue | null>(null);
 
-/** A stored choice wins over the system setting; D2 defaults to dark. */
+/** A stored choice wins over the system setting; Living Lacquer defaults to dark. */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
   const [stored, setStored] = useMMKVString(STORAGE_KEYS.theme, storage);

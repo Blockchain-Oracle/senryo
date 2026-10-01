@@ -3,16 +3,19 @@ import { Easing } from "react-native-reanimated";
 
 export { HAIRLINE_PX, RADIUS, SPACE };
 
-/** Fixed chrome and component sizes (pt), the phone layout of the D2 preview at 390 px. */
+/** Screen inset (pt): Living Lacquer's default horizontal gutter (direction §3). */
+const SCREEN_INSET = 20;
+
+/** Fixed chrome and component sizes (pt) at the 402×874 reference viewport (direction §3/§5; Codex S1b.6 consult, D-191). */
 export const SIZE = {
   touch: 44,
   strip: 48,
-  gutter: SPACE.lg,
-  icon: 18,
-  iconSm: 14,
+  gutter: SCREEN_INSET,
+  icon: 24,
+  iconSm: 16,
   dot: 6,
-  buttonHeight: 48,
-  buttonHeightSm: 36,
+  buttonHeight: 56,
+  buttonHeightSm: 44,
   chartEquity: 220,
   chartCandles: 260,
   sparkline: 28,
@@ -43,12 +46,12 @@ export const SIZE = {
   markChip: 16,
 } as const;
 
-/** Motion: 120–200 ms on `bezier(0.2, 0, 0, 1)`; nothing bounces except the sheet's clamped spring (D-004). */
+/** Motion: press 100 · selection 170 · page push 320 ms on `cubic-bezier(0.2, 0.8, 0.2, 1)` (direction §4). */
 export const EASE = Easing.bezier(...MOTION.easing);
 export const DURATION = { fast: MOTION.fastMs, base: MOTION.baseMs, slow: MOTION.slowMs } as const;
 /** Skeleton breathing (ms) and its opacity range — static under Reduce Motion. */
-export const SKELETON = { periodMs: 900, from: 0.55, to: 1 } as const;
+export const SKELETON = { periodMs: 1200, from: 0.65, to: 1 } as const;
 /** Disabled controls dim to this opacity. */
-export const DISABLED_OPACITY = 0.45;
+export const DISABLED_OPACITY = 0.5;
 /** Press feedback scale on tappable plates. */
 export const PRESS_SCALE = 0.98;

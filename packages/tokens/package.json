@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "D2 Desk design tokens — single source for web CSS variables and the mobile theme.",
+  "description": "Living Lacquer design tokens (D-168) — single source for web CSS variables and the mobile theme.",
   "exports": {
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css"

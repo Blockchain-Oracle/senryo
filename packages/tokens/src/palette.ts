@@ -1,8 +1,8 @@
 /**
- * D2 Desk palette (D-004) — the single source of colour for web and mobile.
- * Values come from the approved preview (`design/preview/app/directions.css`, `.theme-d2` / `.theme-d2.light`),
- * plus the three tokens the 21st Candle Chart expects but the preview never defined
- * (`chartUp`, `chartCandleDown`, `surface` — see docs/plan/specs/client.md).
+ * "Living Lacquer" palette (D-168, docs/design/senryo-v2/direction.md §2; v2-plan §5.2): the single source of colour for
+ * web and mobile. Dark is the default; the first dark tokens follow the study's sampled Fomo colours, the light theme is a
+ * declared adaptation. Roles the direction leaves implicit (secondary, muted, accent, ring, chart series) are Codex's
+ * values from the S1b.6 consult (D-191). The role names are the shadcn/Tailwind ones the web already maps.
  */
 
 export type ColorRole =
@@ -38,86 +38,86 @@ export type ColorRole =
   | "chartUp"
   | "chartDown"
   | "chartCandleDown"
-  /** S8.22 mode identity (Living Lacquer §5.2, D-172): practice = violet, mainnet = blue — never gold. */
+  /** Mode identity (D-172): practice = violet, mainnet = blue — never gold. */
   | "practice"
   | "mainnet";
 
 export type Palette = Readonly<Record<ColorRole, string>>;
 
-/** Dark is the default D2 look. */
+/** Dark is the default. Background · raised (`card`) · sheet (`popover`); Text 1 / Text 2 (`mutedForeground`). */
 export const DARK: Palette = {
-  background: "#000000",
-  foreground: "#f5f5f5",
-  card: "#0c0c0d",
-  cardForeground: "#f5f5f5",
-  popover: "#111113",
-  popoverForeground: "#ffffff",
-  primary: "#2fe92b",
-  primaryForeground: "#000000",
-  secondary: "#1b1b1d",
-  secondaryForeground: "#ffffff",
-  muted: "#141416",
-  mutedForeground: "#8a8a93",
-  accent: "#1b1b1d",
-  accentForeground: "#fbfb0f",
-  destructive: "#ff5102",
-  destructiveForeground: "#000000",
-  border: "#26272d",
-  input: "#26272d",
-  ring: "#2fe92b",
-  surface: "#0c0c0d",
-  up: "#2fe92b",
-  down: "#ff4d4d",
-  gold: "#fbfb0f",
-  warn: "#fbfb0f",
-  chart1: "#fbfb0f",
-  chart2: "#2fe92b",
-  chart3: "#ff9821",
-  chart4: "#cfd919",
-  chart5: "#7c7cff",
-  chartUp: "#2fe92b",
-  chartDown: "#ff4d4d",
-  chartCandleDown: "#ff4d4d",
-  practice: "#b69df8",
-  mainnet: "#8b95ff",
+  background: "#0A0911",
+  foreground: "#F5F4FA",
+  card: "#13121A",
+  cardForeground: "#F5F4FA",
+  popover: "#191822",
+  popoverForeground: "#F5F4FA",
+  primary: "#414EF4",
+  primaryForeground: "#FFFFFF",
+  secondary: "#201E2B",
+  secondaryForeground: "#F5F4FA",
+  muted: "#201E2B",
+  mutedForeground: "#B8B5C4",
+  accent: "#1B2040",
+  accentForeground: "#8B95FF",
+  destructive: "#FF5A48",
+  destructiveForeground: "#17151F",
+  border: "#2C2938",
+  input: "#2C2938",
+  ring: "#8B95FF",
+  surface: "#13121A",
+  up: "#25CF68",
+  down: "#FF5A48",
+  gold: "#D4AE5B",
+  warn: "#F2B85C",
+  chart1: "#8B95FF",
+  chart2: "#B69DF8",
+  chart3: "#5CCAD8",
+  chart4: "#F18BB7",
+  chart5: "#C9D0DD",
+  chartUp: "#25CF68",
+  chartDown: "#FF5A48",
+  chartCandleDown: "#FF5A48",
+  practice: "#B69DF8",
+  mainnet: "#8B95FF",
 };
 
-/** Light alternate from the preview; roles the preview left unset inherit sensible light values. */
+/** Light theme (declared adaptation, direction §2). */
 export const LIGHT: Palette = {
-  background: "#f4f4f2",
-  foreground: "#0a0a0a",
-  card: "#ffffff",
-  cardForeground: "#0a0a0a",
-  popover: "#ffffff",
-  popoverForeground: "#0a0a0a",
-  primary: "#0a0a0a",
-  primaryForeground: "#2fe92b",
-  secondary: "#e9e9e6",
-  secondaryForeground: "#0a0a0a",
-  muted: "#ececea",
-  mutedForeground: "#62626b",
-  accent: "#e9e9e6",
-  accentForeground: "#0a0a0a",
-  destructive: "#ff5102",
-  destructiveForeground: "#000000",
-  border: "#dcdcd8",
-  input: "#dcdcd8",
-  ring: "#0f9d0c",
-  surface: "#ffffff",
-  up: "#0f9d0c",
-  down: "#e0301e",
-  gold: "#b88a00",
-  warn: "#b88a00",
-  chart1: "#0a0a0a",
-  chart2: "#0f9d0c",
-  chart3: "#c46a00",
-  chart4: "#8a9400",
-  chart5: "#4b4bd6",
-  chartUp: "#0f9d0c",
-  chartDown: "#e0301e",
-  chartCandleDown: "#e0301e",
-  practice: "#7049c8",
-  mainnet: "#3643d8",
+  background: "#F5F4F8",
+  foreground: "#17151F",
+  card: "#FFFFFF",
+  cardForeground: "#17151F",
+  popover: "#FFFFFF",
+  popoverForeground: "#17151F",
+  primary: "#414EF4",
+  primaryForeground: "#FFFFFF",
+  secondary: "#ECE9F2",
+  secondaryForeground: "#17151F",
+  muted: "#ECE9F2",
+  mutedForeground: "#5F5B6B",
+  accent: "#E8EBFF",
+  accentForeground: "#3643D8",
+  destructive: "#C83225",
+  destructiveForeground: "#FFFFFF",
+  border: "#DEDBE6",
+  input: "#DEDBE6",
+  ring: "#3643D8",
+  surface: "#FFFFFF",
+  up: "#087F3C",
+  down: "#C83225",
+  gold: "#89611F",
+  warn: "#8A5800",
+  chart1: "#3643D8",
+  chart2: "#7049C8",
+  chart3: "#087A8A",
+  chart4: "#AD3265",
+  chart5: "#626D7E",
+  chartUp: "#087F3C",
+  chartDown: "#C83225",
+  chartCandleDown: "#C83225",
+  practice: "#7049C8",
+  mainnet: "#3643D8",
 };
 
 export const PALETTES = { dark: DARK, light: LIGHT } as const;
