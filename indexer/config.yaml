@@ -155,6 +155,16 @@ chains:
         address: 0x91ef95EC56a88786CDd41C23Ca2616Ffdfa4dc13 # MirrorXAU
       - name: FeedXAG
         address: 0x44C5397b710DCE7f666EFdAb9417DD1D9E13e360 # MirrorXAG
+      - name: FeedEUR
+        address: 0x43B8aBD44f7449440ad40D3D78F50410F78006e4 # MirrorEUR
+      - name: FeedGBP
+        address: 0x1522c08A436b81fFCaB31C1D580977acE9288c6c # MirrorGBP
+      - name: FeedJPY
+        address: 0x05Eb5fa4Ad197DA61de2bfEdEAD4adf73111615a # MirrorJPY
+      - name: FeedCHF
+        address: 0xcBA9503f66FCc4FB94c48388D906438b3ca78c73 # MirrorCHF
+      - name: FeedCAD
+        address: 0x12eA933c1BB0086bE750845a9B2590479C1A84Ec # MirrorCAD
 
   # ---------------------------------------------------------------- Monad mainnet
   # Our own mainnet contracts land in S8: add the same entries as 10143 with the 143.json addresses and start
