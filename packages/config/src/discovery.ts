@@ -108,15 +108,15 @@ const both = (gate: ExecutionGate): Readonly<Record<ChainId, ExecutionGate>> => 
 const PERPL_EXECUTION: Readonly<Record<ChainId, ExecutionGate>> = {
   [MAINNET_CHAIN_ID]: {
     state: "unavailable",
-    reason: "Trading opens with the Perpl adapter (S7)",
-    source: "00-plan S7 · v2-plan W6",
+    reason: "Trading opens when Senryo connects to Perpl",
+    source: "00-plan S7 (the Perpl adapter) · v2-plan W6",
   },
   [TESTNET_CHAIN_ID]: {
     state: "blocked",
     blocker: "B10",
     reason: "Perpl has no practice venue here yet",
-    unblocks: "A funded Perpl testnet flow (Q-002) or a labelled paper adapter",
-    source: "v2-plan §7 B10",
+    unblocks: "a funded Perpl practice venue, or clearly labelled paper trading",
+    source: "v2-plan §7 B10 · Q-002 (Perpl testnet flow) or a labelled paper adapter",
   },
 };
 
@@ -164,12 +164,12 @@ const LISTABLE: ExecutionGate = {
 };
 
 /** D-220 (b): single names and EWY — the jumps a usable spread can't cover. */
-const jumpy = (maxJumpBps: string, perDay: string): ExecutionGate => ({
+const jumpy = (maxJump: string, perDay: string): ExecutionGate => ({
   state: "blocked",
   blocker: "B2",
-  reason: `Single-round jumps up to ${maxJumpBps} bps (${perDay}) — more than a usable spread covers`,
-  unblocks: "Chainlink Data Streams (Q-008), or ≥ 30 days of feed history including an earnings print",
-  source: "D-220 (b) · v2-plan §7 B2",
+  reason: `Its price can jump ${maxJump} in one update (${perDay}) — more than a usable spread covers`,
+  unblocks: "Chainlink Data Streams, or 30 days of feed history that includes an earnings report",
+  source: "D-220 (b) · v2-plan §7 B2 · Q-008 (Data Streams)",
 });
 
 const CALCULATED_DISCLOSURE = "Indicative · calculated feed (tokenized wrapper) · trading unavailable";
@@ -265,7 +265,7 @@ export const CALCULATED_EQUITIES: readonly CalculatedEquityInstrument[] = [
     wrapperName: "Wrapped NVIDIA xStock",
     proxy: "0x03ffa4673c060339E6a8E5Ba1a12B3301c966bf0",
     aggregator: "0x3C04C0c74EEe95a27d62efA8FC9Da0f2b7f4578E",
-    gate: jumpy("87", "2.2 a day over 30 bps"),
+    gate: jumpy("0.87%", "2.2 a day over 0.3%"),
   }),
   calculated({
     ticker: "TSLA",
@@ -274,7 +274,7 @@ export const CALCULATED_EQUITIES: readonly CalculatedEquityInstrument[] = [
     wrapperName: "Wrapped Tesla xStock",
     proxy: "0xE42022cCe1913626AE4297B99291d3Ba24Cc9281",
     aggregator: "0x81eDD5F657b28d7E38192B33BD3901179673c780",
-    gate: jumpy("149", "at the US open; 2.0 a day over 50 bps"),
+    gate: jumpy("1.49%", "at the US open; 2.0 a day over 0.5%"),
   }),
   calculated({
     ticker: "SPCX",
@@ -283,7 +283,7 @@ export const CALCULATED_EQUITIES: readonly CalculatedEquityInstrument[] = [
     wrapperName: "Wrapped SpaceX xStock",
     proxy: "0x7577154038de77668d0188baF47707EDcd86d0b3",
     aggregator: "0x9568322beD79945f814f8Be94C7fD47e7606C7a3",
-    gate: jumpy("116", "3.5 a day over 50 bps"),
+    gate: jumpy("1.16%", "3.5 a day over 0.5%"),
   }),
   calculated({
     ticker: "EWY",
@@ -292,7 +292,7 @@ export const CALCULATED_EQUITIES: readonly CalculatedEquityInstrument[] = [
     wrapperName: "Wrapped EWY xStock",
     proxy: "0x54D1645F9C1338f63407Fa64156eCeD9e195AB25",
     aggregator: "0xFb075BA1535A190d099c46573D341d5435370B67",
-    gate: jumpy("77", "1.6 a day over 30 bps"),
+    gate: jumpy("0.77%", "1.6 a day over 0.3%"),
   }),
 ];
 

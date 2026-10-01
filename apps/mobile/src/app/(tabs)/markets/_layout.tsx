@@ -25,6 +25,7 @@ export default function Layout() {
       <Stack.Screen name="[market]/ticket" options={sheet} />
       <Stack.Screen name="[market]/alert" options={sheet} />
       <Stack.Screen name="tokens/[token]/index" options={{ headerShown: false }} />
+      <Stack.Screen name="discover/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="tokens/[token]/trade" options={sheet} />
     </TabStack>
   );

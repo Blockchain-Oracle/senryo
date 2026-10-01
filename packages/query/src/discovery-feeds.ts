@@ -93,7 +93,7 @@ function quoteOf(
             fromPrice18: to18(from.answer),
             fromAt: from.updatedAt,
             bps: divRound((read.latest.answer - from.answer) * BPS_DENOMINATOR, from.answer),
-            basis: "Latest round vs the last round 24 h before it",
+            basis: "Latest round vs 24 h earlier",
           })
         : lacks("The feed's current aggregator is younger than 24 h"),
     openInterest: lacks(`${NO_MARKET}: no open interest`),

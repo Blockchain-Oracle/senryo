@@ -52,6 +52,21 @@ export function compactUsd(value: number): string {
   return `$${value.toFixed(0)}`;
 }
 
+const COMPACT_STEPS = [
+  { digits: 9, suffix: "B" },
+  { digits: 6, suffix: "M" },
+  { digits: 3, suffix: "K" },
+] as const;
+
+/** `compactUsd` from usd6, in integer digits (a venue's open interest or volume is money). */
+export function compactUsd6(value6: bigint): string {
+  for (const step of COMPACT_STEPS) {
+    const unitDecimals = DECIMALS.usd6 + step.digits;
+    if (value6 >= BigInt(TEN) ** BigInt(unitDecimals)) return `$${formatUnits(value6, unitDecimals, 1)}${step.suffix}`;
+  }
+  return `$${formatUnits(value6, DECIMALS.usd6, 0)}`;
+}
+
 const BPS_PER_PERCENT = 100;
 const FINE_DECIMALS = 2;
 
