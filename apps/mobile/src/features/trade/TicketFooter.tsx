@@ -46,7 +46,7 @@ export function TicketFooter({
   onReview: () => void;
 }) {
   const { color } = useTheme();
-  const copy = t.blocker ? blockerCopy(t.blocker, line.name, t.nowSec) : undefined;
+  const copy = t.blocker ? blockerCopy(t.blocker, line.name, t.nowSec, (v) => usd(v)) : undefined;
   const qty = t.preview ? formatUnits(t.preview.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS) : undefined;
   const fee = t.preview ? `fee ${usd(t.preview.feeUsd6)}` : `fee ${line.market.risk.feeBps} bps`;
   // A guest gets exactly one account action: the hold's place becomes "Create an account to trade" (review: one

@@ -90,7 +90,7 @@ export interface BlockerCopy {
   action?: string;
 }
 
-const usd = (usd6: bigint) => `$${formatUnits(usd6, DECIMALS.usd6, DECIMALS.cents)}`;
+const dollars = (usd6: bigint) => `$${formatUnits(usd6, DECIMALS.usd6, DECIMALS.cents)}`;
 const SECONDS_PER_MINUTE = 60n;
 const MINUTES_PER_HOUR = 60n;
 const HOURS_PER_DAY = 24n;
@@ -117,7 +117,16 @@ export function utcSlotLabel(at: bigint): string {
   return `${WEEKDAYS[d.getUTCDay()]} ${hh}:${mm} UTC`;
 }
 
-export function blockerCopy(b: TradeBlocker, market: string, now: bigint): BlockerCopy {
+/**
+ * The words for a blocker. `money` formats an amount in the selected network's money (P$ in Practice); without it,
+ * dollars.
+ */
+export function blockerCopy(
+  b: TradeBlocker,
+  market: string,
+  now: bigint,
+  money: (usd6: bigint) => string = dollars,
+): BlockerCopy {
   switch (b.code) {
     case "OFFLINE":
       return { title: "You're offline", action: "Trading resumes when you reconnect" };
@@ -128,7 +137,7 @@ export function blockerCopy(b: TradeBlocker, market: string, now: bigint): Block
     case "NO_GAS":
       return gasCopy(b.reason, b.retryAfterSec);
     case "INSUFFICIENT_FREE":
-      return { title: `Add ${usd(b.shortUsd6)} to trade`, action: "Add money" };
+      return { title: `Add ${money(b.shortUsd6)} to trade`, action: "Add money" };
     case "MARKET_CLOSED":
       return {
         title: b.opensAt
@@ -143,11 +152,11 @@ export function blockerCopy(b: TradeBlocker, market: string, now: bigint): Block
     case "LEVERAGE_ABOVE_MAX":
       return { title: `Max leverage is ${b.maxLeverageX}×`, action: `Set to ${b.maxLeverageX}×` };
     case "MARKET_FULL":
-      return { title: "Market full", action: `Try ≤ ${usd(b.maxNotionalUsd6)}` };
+      return { title: "Market full", action: `Try ≤ ${money(b.maxNotionalUsd6)}` };
     case "PRICE_IMPACT":
       return { title: "Too large for the pool right now", action: "Try a smaller size" };
     case "BELOW_MIN":
-      return { title: `Minimum position is ${usd(b.minUsd6)}`, action: "Increase the amount" };
+      return { title: `Minimum position is ${money(b.minUsd6)}`, action: "Increase the amount" };
     case "SIMULATION_REVERTED":
       return { title: b.reason };
   }

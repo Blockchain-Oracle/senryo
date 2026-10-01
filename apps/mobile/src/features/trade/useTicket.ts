@@ -95,8 +95,10 @@ export function useTicket(market: LiveMarket) {
   const needWei = budget.data?.needWei;
   const topUp = useGasTopUp();
   const gasShort = gasBalance !== undefined && needWei !== undefined && gasBalance < needWei;
+  // A refused top-up blocks only while the balance is still short: MON added another way ("or add MON") clears it.
+  const topUpRefused = topUp.step.kind === "failed" && (gasShort || gasBalance === undefined);
   const gasGate: GasGate =
-    topUp.step.kind === "failed"
+    topUp.step.kind === "failed" && topUpRefused
       ? {
           kind: "unavailable",
           reason: topUp.step.reason,
