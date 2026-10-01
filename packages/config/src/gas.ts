@@ -109,6 +109,11 @@ export const GAS_LIMITS = {
   /** (S8.6) setCardEnvelope (risk-checked): 1 position 373.5k mainnet · 218.6k testnet; 0 positions 200.5k. */
   setCardEnvelope: 420_000n,
   /**
+   * revokeSpendAllowance (the card freeze, D-039): not fork-measured yet; bounded by setSpendAllowance — the same
+   * risk pass (`_emitRisk`) without the EIP-712 recovery — so it carries that budget.
+   */
+  revokeSpendAllowance: 410_000n,
+  /**
    * (S8.6) SenryoCore.swapCollateral via CollateralSwapper → Universal Router (mainnet only): 0 positions 592.3k,
    * 1 position 765.2k.
    */
@@ -144,6 +149,7 @@ export const POSITION_GAS: Partial<Record<GasAction, bigint>> = {
   refund: 130_000n,
   executeTrigger: 130_000n,
   setSpendAllowance: 130_000n,
+  revokeSpendAllowance: 130_000n,
   setCardEnvelope: 130_000n,
   swapCollateral: 130_000n,
   /** Two depositFor risk passes (AUSD and USDC) when both are swept. */

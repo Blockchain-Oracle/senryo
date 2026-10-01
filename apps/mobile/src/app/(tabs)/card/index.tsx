@@ -1,11 +1,9 @@
-import { BPS_DENOMINATOR } from "@senryo/core";
-import { useAccountRisk } from "@senryo/query";
+import { allowanceState, useAccountRisk } from "@senryo/query";
 import { router, useFocusEffect } from "expo-router";
 import { type ReactNode, useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
-import { Panel } from "~/components/kit/Surface";
 import { ReadingView, Skeleton } from "~/components/kit/states";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
@@ -14,6 +12,8 @@ import { AuthorizationRow } from "~/features/card/AuthorizationRow";
 import { CardFace } from "~/features/card/CardFace";
 import { CardHero } from "~/features/card/CardHero";
 import { SampleTag } from "~/features/card/SampleTag";
+import { SpendLimit } from "~/features/card/SpendLimit";
+import { useCardAllowance } from "~/features/card/useCardAllowance";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
@@ -22,9 +22,10 @@ import { useNetwork } from "~/lib/network";
 import { SAMPLE_CARD } from "~/lib/sample";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { useSample } from "~/lib/useSample";
-import { HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const PLATE_PRESS_SCALE = 0.985;
+const MS_PER_SECOND = 1000n;
 
 /** A tappable plate (the card face, the spend limit): it shrinks a hair under the finger, with a `tick`. */
 function PressPlate({ onPress, hint, children }: { onPress: () => void; hint: string; children: ReactNode }) {
@@ -51,8 +52,9 @@ function PressPlate({ onPress, hint, children }: { onPress: () => void; hint: st
  * Card tab root (J7; Solflare S15/S18 adapted): the Kinpaku card as the hero, one line of its state, then the real
  * **Free to spend** — what your positions don't need, which is all the card can ever draw on — as the page's figure,
  * the controls, the daily limit (D-032) as a filled cell, and authorizations as bare rows. There is no issued card or
- * card service yet: the card's number, limit and authorizations are sample data and each such section says so with a
- * small tag. Freeze stays disabled with its reason (review R16). The first visit opens the short tutorial (C21).
+ * card service yet: the card's number and authorizations are sample data and say so with a small tag. The daily limit
+ * and Freeze are real — the onchain spend allowance the card operator must stay inside (D-032, D-039). The first
+ * visit opens the short tutorial (C21).
  */
 export default function Card() {
   const { color } = useTheme();
@@ -68,8 +70,6 @@ export default function Card() {
     <CollapsingScreen left={<TabTitle>Kinpaku</TabTitle>}>
       <ReadingView reading={card} loading="plate" loadingLabel="Reading your card">
         {(c) => {
-          const left = c.dailyLimit6 - c.spentToday6;
-          const leftBps = c.dailyLimit6 === 0n ? 0n : (left * BPS_DENOMINATOR) / c.dailyLimit6;
           return (
             <>
               <View style={styles.hero}>
@@ -90,34 +90,7 @@ export default function Card() {
                 </Text>
               </View>
               <FreeToSpend />
-              <View style={styles.controls}>
-                <View style={styles.actions}>
-                  <Button label="Add to Wallet" onPress={() => router.push(ROUTES.cardWallet)} style={styles.flex} />
-                  <Button label="Freeze" variant="outline" style={styles.flex} disabled />
-                </View>
-                {/* A safety action can't look live when it isn't (review R16): disabled, with the reason beside it. */}
-                <Text style={[TYPE.meta, styles.center, { color: color.text3 }]}>
-                  Freeze arrives with the card service: there is no issued card behind this preview yet.
-                </Text>
-              </View>
-              <PressPlate onPress={() => router.push(ROUTES.cardAllowance)} hint="Opens the spend limit">
-                <Panel style={styles.limit}>
-                  <View style={styles.between}>
-                    <Text style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]}>Spend limit · 24h</Text>
-                    <Text style={[TYPE.rowPrice, { color: color.ink }]}>
-                      {usd(left, 0)} <Text style={{ color: color.text3 }}>of {usd(c.dailyLimit6, 0)}</Text>
-                    </Text>
-                  </View>
-                  <View style={[styles.meter, { backgroundColor: color.raised2 }]}>
-                    <View style={{ flex: Number(leftBps), backgroundColor: color.gold }} />
-                    <View style={{ flex: Number(BPS_DENOMINATOR - leftBps) }} />
-                  </View>
-                  <View style={styles.between}>
-                    <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Resets in {c.resetsIn}</Text>
-                    <SampleTag />
-                  </View>
-                </Panel>
-              </PressPlate>
+              <CardControls />
               <View>
                 <View style={styles.heading}>
                   <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
@@ -134,6 +107,59 @@ export default function Card() {
         }}
       </ReadingView>
     </CollapsingScreen>
+  );
+}
+
+/**
+ * Wallet and Freeze, then the onchain daily limit. Freeze revokes the allowance (in scope, D-039) and is live
+ * whenever a limit is; with none, the card is already frozen and the cell offers to set one.
+ */
+function CardControls() {
+  const { color } = useTheme();
+  const address = useAccount().hint?.address;
+  const risk = useAccountRisk(address, "latest");
+  const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
+  const card = useCardAllowance(snapshot);
+  if (!address || !snapshot) return null;
+  const live =
+    allowanceState(
+      snapshot.allowanceDailyLimit,
+      snapshot.allowanceExpiry,
+      snapshot.allowanceLeft,
+      BigInt(Date.now()) / MS_PER_SECOND,
+    ).kind === "live";
+  const busy = card.trace.running;
+  return (
+    <>
+      <View style={styles.actions}>
+        <Button label="Add to Wallet" onPress={() => router.push(ROUTES.cardWallet)} style={styles.flex} />
+        {live ? (
+          <Button
+            label={busy ? "Freezing…" : "Freeze"}
+            variant="outline"
+            style={styles.flex}
+            loading={busy}
+            disabled={busy || !card.ready}
+            onPress={() => void card.freeze()}
+          />
+        ) : (
+          <Button
+            label="Set a limit"
+            variant="outline"
+            style={styles.flex}
+            onPress={() => router.push(ROUTES.cardAllowance)}
+          />
+        )}
+      </View>
+      {card.done ? (
+        <Text accessibilityLiveRegion="polite" style={[TYPE.meta, styles.center, { color: color.up }]}>
+          {card.done}
+        </Text>
+      ) : null}
+      <PressPlate onPress={() => router.push(ROUTES.cardAllowance)} hint="Opens the spend limit">
+        <SpendLimit snapshot={snapshot} />
+      </PressPlate>
+    </>
   );
 }
 
@@ -184,12 +210,7 @@ const styles = StyleSheet.create({
   hero: { gap: SPACE.md, paddingTop: SPACE.sm, paddingHorizontal: SPACE.sm },
   center: { textAlign: "center" },
   figure: { gap: SPACE.xs },
-  controls: { gap: SPACE.sm },
   actions: { flexDirection: "row", gap: SPACE.md },
   flex: { flex: 1 },
-  limit: { padding: SPACE.lg, gap: SPACE.md },
-  between: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: SPACE.sm },
-  shrink: { flexShrink: 1 },
   heading: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, paddingBottom: SPACE.xs },
-  meter: { flexDirection: "row", height: SIZE.partitionBar, borderRadius: RADIUS.pill, overflow: "hidden" },
 });
