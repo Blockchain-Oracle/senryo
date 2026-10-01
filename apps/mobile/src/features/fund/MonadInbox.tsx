@@ -8,16 +8,17 @@
  */
 
 import { INBOX_SWEEP_MIN_USD6 } from "@senryo/config";
-import { collateralId } from "@senryo/identity";
+import { collateralId, ids } from "@senryo/identity";
 import { keys, useInbox, useInboxWatch } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Share, StyleSheet, Text, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { MarkedLine } from "~/components/identity/MarkedLine";
 import { Button } from "~/components/kit/Button";
-import { QrCode } from "~/components/kit/QrCode";
+import { QR_CENTER_SHARE, QrCode } from "~/components/kit/QrCode";
 import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
@@ -27,6 +28,11 @@ import { ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+
+/** The full receive page's code (S21 fills most of the width); the compact sheet keeps the kit size. */
+const RECEIVE_QR = 236;
+/** The chain mark fills this much of the paper disc at the code's centre. */
+const QR_MARK_FILL = 0.82;
 
 export function MonadInbox({ compact = false }: { compact?: boolean }) {
   const account = useAccount();
@@ -68,7 +74,19 @@ function InboxPanel({ user, compact }: { user: `0x${string}`; compact: boolean }
               {practice ? "Practice · Paper money" : "Mainnet · Real money"} · {network.name} · AUSD or USDC
             </Text>
             <View style={styles.qr}>
-              <QrCode value={address} label={`Deposit address ${address}`} />
+              <QrCode
+                value={address}
+                label={`Deposit address ${address}`}
+                size={compact ? SIZE.qr : RECEIVE_QR}
+                center={
+                  <EntityMark
+                    id={ids.evmChain(network.chainId)}
+                    size={(compact ? SIZE.qr : RECEIVE_QR) * QR_CENTER_SHARE * QR_MARK_FILL}
+                    decorative
+                    ground={color.paper}
+                  />
+                }
+              />
             </View>
             <Text
               selectable

@@ -59,6 +59,8 @@ export const ROUTES = {
   session: "/session",
   cardReveal: "/card-reveal",
   accountRequired: "/account-required",
+  /** Redeem a voucher (the add-money hub's child sheet). */
+  voucher: "/voucher",
   /** Social (J8, S1b.14): compose a thesis, and what a post or a profile's overflow opens. */
   composeThesis: "/compose-thesis",
   socialActions: "/social-actions",
