@@ -62,7 +62,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
 - [ ] S1b.4 **Replace every placeholder** (v2-plan W3 list): the fake live-font 千 seals, TopStrip "MONAD" dot, market,
   ticket and position symbols, the "In Perpl" swatch, collateral/LP/fund text rows, StarterCard coins, provider and source
   names, CardFace art, and the web `TokenIcon`/`SealMark`. Delete `ASSET_HUE`/`CHAIN_HUE`.
-- [ ] S1b.5 **Handoff packet**:
+- [x] S1b.5 **Handoff packet**:
   - `PROJECT-HANDOFF.md` (authority record, journeys with FT/C/M/LG IDs, ledger, Senryo rules, art tasks);
   - `docs/design/senryo-parity-ledger.json` (FT/C/M/LG rows with the fidelity-contract fields);
   - SUPERSEDED-by-D-168 banners on `design/DIRECTIONS.md`, the `d2-*` screenshots and the study's own D2 references (README:82, 05:89/104-105, 10:5, `reference-ledger.json`), recorded in `COPY-MANIFEST.json`;
@@ -157,5 +157,13 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Remaining (the lead's files): TopStrip, StarterCard, Ticket, PositionsAccessory.
   - Remaining web: the chain dot in `swap/panel.tsx`, and the live-font 千 in `app/page.tsx` and `ui/credit-debit-card.tsx`.
   - `CHAIN_HUE` is still read by that chain dot. `ASSET_HUE` only feeds unused `--asset-*` CSS vars; delete both after the lead's token work lands.
+- **S1b.5 (handoff packet, agent A2, D-190):**
+  - `PROJECT-HANDOFF.md` is written twice, identically: in the study folder (local only, Q-021) and at
+    `docs/design/senryo-v2/PROJECT-HANDOFF.md`. Its paths are code spans, so the study's link validator passes in either place.
+  - The parity ledger `docs/design/senryo-parity-ledger.json` has 216 rows.
+  - The study was briefly committed in 1137f57 and untracked again in 6d96a4d. The pre-edit hashes in its `COPY-MANIFEST.json`
+    equal those blobs.
+  - `validate_study.py` passes, including Pillow image/crop checks: run with a scratch `uv` venv, because the system Python
+    has no Pillow.
 
 ## Handoff
