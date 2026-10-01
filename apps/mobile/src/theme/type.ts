@@ -61,3 +61,5 @@ export const TYPE = Object.fromEntries(
 export const HERO_FONT_SCALE = MAX_FONT_SCALE_HERO;
 /** Dynamic Type cap for dense controls (buttons, chips, tabs, value and market rows, the ticket). */
 export const CONTROL_FONT_SCALE = MAX_FONT_SCALE_CONTROL;
+/** Past this Dynamic Type scale a row of side-by-side cells has no room: they stack, one per line. */
+export const STACK_FONT_SCALE = 1.2;

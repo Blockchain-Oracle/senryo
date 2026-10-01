@@ -108,7 +108,7 @@ export function ExpandedBalance() {
               <Text
                 maxFontSizeMultiplier={CONTROL_FONT_SCALE}
                 style={[TYPE.rowChange, { color: change >= 0n ? color.up : color.down }]}
-                numberOfLines={1}
+                numberOfLines={2}
               >
                 {arrow(change)} {signedUsd(change)}
                 {changeBps === undefined ? "" : ` (${signedPct(changeBps)})`}

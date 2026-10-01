@@ -40,6 +40,8 @@ function roles(t: TokenPalette) {
     destructiveWash: t.destructiveSurface,
     chartFillTop: withAlpha(t.chartUp, WASH.chartFill),
     chartFillBottom: withAlpha(t.chartUp, WASH.chartFillEnd),
+    chartDownFillTop: withAlpha(t.chartDown, WASH.chartFill),
+    chartDownFillBottom: withAlpha(t.chartDown, WASH.chartFillEnd),
     /** Ordinary sheets dim the parent (#00000066 / #17151F38); the fan has its own `fanScrim` over live blur. */
     scrim: t.sheetScrim,
     /** Depth without borders: 1 px inner highlights (Fomo's buttons, sheets and dock bubble). */

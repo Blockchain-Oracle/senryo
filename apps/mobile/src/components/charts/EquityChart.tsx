@@ -41,10 +41,14 @@ function stamp(t: number, spanMs: number): string {
  * right and its low at the bottom left; holding the chart scrubs it, and the point under the finger reads out its
  * value and time in place (a `tick` when the finger lands). The curve draws once, left to right, when its data
  * arrives (direction §4: 600–900 ms) and never again on a refresh. Skia draws on the UI thread; the path only
- * rebuilds when `points` changes.
+ * rebuilds when `points` changes. `tone` is how the window went — the caller decides net of money moved in or out —
+ * so the curve never reads green while the balance header says the period lost money.
  */
-export function EquityChart({ points }: { points: EquityPoint[] }) {
+export function EquityChart({ points, tone = "up" }: { points: EquityPoint[]; tone?: "up" | "down" }) {
   const { color } = useTheme();
+  const ink = tone === "up" ? color.chartUp : color.chartDown;
+  const fill =
+    tone === "up" ? [color.chartFillTop, color.chartFillBottom] : [color.chartDownFillTop, color.chartDownFillBottom];
   const reduce = useReducedMotion();
   const data = useMemo(() => points.map((p) => ({ t: p.t, equity: toPlot(p.equity6, DECIMALS.usd6) })), [points]);
   const { state, isActive } = useChartPressState({ x: 0, y: { equity: 0 } });
@@ -103,16 +107,12 @@ export function EquityChart({ points }: { points: EquityPoint[] }) {
             <>
               <Reveal bounds={chartBounds} progress={drawn}>
                 <Area points={pts.equity} y0={chartBounds.bottom} curveType="linear">
-                  <LinearGradient
-                    start={vec(0, chartBounds.top)}
-                    end={vec(0, chartBounds.bottom)}
-                    colors={[color.chartFillTop, color.chartFillBottom]}
-                  />
+                  <LinearGradient start={vec(0, chartBounds.top)} end={vec(0, chartBounds.bottom)} colors={fill} />
                 </Area>
-                <Line points={pts.equity} color={color.chartUp} strokeWidth={CHART.stroke} curveType="linear" />
+                <Line points={pts.equity} color={ink} strokeWidth={CHART.stroke} curveType="linear" />
               </Reveal>
               {isActive ? (
-                <Circle cx={state.x.position} cy={state.y.equity.position} r={CHART.dot} color={color.chartUp} />
+                <Circle cx={state.x.position} cy={state.y.equity.position} r={CHART.dot} color={ink} />
               ) : null}
             </>
           )}

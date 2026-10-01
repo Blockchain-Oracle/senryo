@@ -1,6 +1,6 @@
 import type { Address } from "@senryo/core";
 import { isTerminalStage } from "@senryo/core";
-import { useAccountRisk, useEquityHistory, useStarterStatus } from "@senryo/query";
+import { useAccountRisk, useEquityHistory, useNetFlows, useStarterStatus } from "@senryo/query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -93,12 +93,20 @@ function HomeBody() {
 
 /**
  * The balance's curve under the header (F16): the chart bare on the page with its period chips right-aligned under
- * it. The chips stay put while a window loads, so switching period never moves them.
+ * it. The chips stay put while a window loads, so switching period never moves them. The curve's colour is how the
+ * window went net of money moved in or out (the header's rule): a send or a withdrawal draws a drop, not a red loss.
  */
 function BalanceCurve({ address }: { address: Address }) {
   const [frame, setFrame] = useState<Timeframe>("24H");
   const curve = useEquityHistory(address, WINDOW_SEC[frame]);
   const retry = useAccountRetry();
+  const known = curve.status === "fresh" || curve.status === "stale" ? curve.value : undefined;
+  const flows = useNetFlows(address, known?.[0]?.timestamp);
+  const moved = flows.status === "fresh" || flows.status === "stale" ? flows.value.net : undefined;
+  const first = known?.[0]?.equityInit;
+  const last = known?.at(-1)?.equityInit;
+  const tone =
+    first !== undefined && last !== undefined && moved !== undefined && last - first - moved < 0n ? "down" : "up";
   return (
     <View style={styles.stack}>
       {curve.status === "unknown" ? (
@@ -111,7 +119,10 @@ function BalanceCurve({ address }: { address: Address }) {
             points.length < 2 ? (
               <QuietLine>The chart starts with your first deposit or trade.</QuietLine>
             ) : (
-              <EquityChart points={points.map((p) => ({ t: p.timestamp * MS_PER_SECOND, equity6: p.equityInit }))} />
+              <EquityChart
+                points={points.map((p) => ({ t: p.timestamp * MS_PER_SECOND, equity6: p.equityInit }))}
+                tone={tone}
+              />
             )
           }
         </ReadingView>
