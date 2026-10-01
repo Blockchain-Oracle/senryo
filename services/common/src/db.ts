@@ -6,6 +6,7 @@ import * as m0004 from "../migrations/0004_starter_topup.ts";
 import * as m0005 from "../migrations/0005_social.ts";
 import * as m0006 from "../migrations/0006_inbox_watches.ts";
 import * as m0007 from "../migrations/0007_social_feed.ts";
+import * as m0008 from "../migrations/0008_push_tickets.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -33,7 +34,16 @@ export function createDb(url: string, applicationName: string, max: number = DB_
 }
 
 /** Ordered, append-only. Never edit an applied migration — add the next one. */
-export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [m0001, m0002, m0003, m0004, m0005, m0006, m0007];
+export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [
+  m0001,
+  m0002,
+  m0003,
+  m0004,
+  m0005,
+  m0006,
+  m0007,
+  m0008,
+];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */
 const MIGRATION_LOCK_KEY = 0x53_45_4e_52_59_4f; // "SENRYO"

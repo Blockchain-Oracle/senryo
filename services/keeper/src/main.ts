@@ -20,9 +20,11 @@ import {
 } from "@senryo/service-common";
 import { type KeeperContext, RecentActions } from "./context.ts";
 import { type KeeperJob, loadKeeperEnv } from "./env.ts";
+import { expoClient } from "./expo.ts";
 import { liquidationJob } from "./jobs/liquidate.ts";
 import { holdExpiryJob, triggerJob } from "./jobs/maintenance.ts";
 import { mirrorJob, observeJob } from "./jobs/oracle.ts";
+import { pushReceiptsJob } from "./jobs/receipts.ts";
 import { retentionJob } from "./jobs/retention.ts";
 import { sweepJob } from "./jobs/sweeps.ts";
 import { alertsJob, walletsJob } from "./jobs/watch.ts";
@@ -63,7 +65,7 @@ const ctx: KeeperContext = {
   source: env.INDEXER_GRAPHQL_URL
     ? new IndexerSource(env.INDEXER_GRAPHQL_URL, env.CHAIN_ID, ledgerSource, log)
     : ledgerSource,
-  notifier: new LedgerNotifier(db, log),
+  notifier: new LedgerNotifier(db, log, expoClient(env)),
   mainnet: createReadClient(MAINNET_CHAIN_ID, { http: env.SOURCE_RPC_HTTP }),
   recent: new RecentActions(),
 };
@@ -78,10 +80,14 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   alerts: alertsJob,
   wallets: walletsJob,
   sweeps: sweepJob,
+  receipts: pushReceiptsJob,
 };
 const runner = new Runner(log);
 runner.start(env.KEEPER_JOBS.map((name) => factories[name](ctx)));
-log.info({ keeper: account.address, chainId: env.CHAIN_ID, jobs: env.KEEPER_JOBS }, "keeper started");
+log.info(
+  { keeper: account.address, chainId: env.CHAIN_ID, jobs: env.KEEPER_JOBS, pushDelivery: env.PUSH_DELIVERY },
+  "keeper started",
+);
 
 const app = createHttpServer({
   service: "keeper",
