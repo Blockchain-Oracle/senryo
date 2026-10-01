@@ -160,6 +160,39 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   - **Provenance:** every font file is recorded in `packages/tokens/src/fonts.ts` (owner, source URL + sha256, licence, date, derivation, per-file sha256). The new invariant **`font-provenance`** re-hashes each file and fails on an unregistered font. OFL texts ship next to the fonts.
   - **Icons:** `lucide-react-native` 1.49.0 (ISC). Its only dependency is a react-native-svg 12–15 peer (15.15.4 installed) and it has no native code, so **no new dev-client build**. Lucide identifies actions; entities always use `EntityMark`.
   - · S1b agent A2 (lead merges).
+- **D-193** 2026-10-01 · **Navigation-shell spike: `expo-router/ui` headless tabs carry the C15 dock. Proven on iOS; the NativeTabs fallback is not needed.**
+  - **Setup.**
+    - Expo SDK 57, expo-router 57.0.24, RN 0.86.3 (new architecture), Reanimated 4.5.1.
+    - Source: the installed `expo-router/build/ui` types and source (`Tabs`, `TabSlot`, `TabList`, `TabTrigger`, `useTabTrigger`).
+    - Code: the dev-only route `apps/mobile/src/app/dev-shell-spike/**` + `src/features/shell-spike/*`. It is never linked; outside `__DEV__` it redirects to `/` unless the bundle sets `EXPO_PUBLIC_SHELL_SPIKE=1`.
+    - Shape: five tabs Home · Markets · Card · Social · You, each its own Expo Router `Stack`. The floating dock is built from `TabTrigger asChild` buttons, with a hidden `TabList` defining the routes.
+  - **Run.**
+    - Device: a separate iPhone 17 simulator (iOS 26.5, 402×874).
+    - Build: the existing Senryo release app with this branch's Hermes bundle swapped in (`expo export:embed --bytecode`).
+    - A self-running probe (`?probe=1`) printed its verdicts on screen. All five pass:
+      1. **Stack kept per tab:** Home's pushed detail is still there after switching Markets → Card → Home.
+      2. **Scroll kept, Home:** under a pushed page, the probe row is at y = 616 before and after.
+      3. **Scroll kept, Markets:** after a tab switch, the probe row is at y = 916 before and after. `TabSlot` keeps visited tabs mounted (`react-native-screens` `activityState` 0, `display: none`), and Fabric does not reset the offsets.
+      4. **Dock hides in transaction entry:** a focused entry screen holds the dock hidden (`useHideDockWhileFocused`; the dock slides out over 170 ms), and it returns after back.
+      5. **Content clears the dock:** with `useDockInset()` = safe area + 92, the last row's bottom is at 740 pt vs the dock top at 764 pt.
+    - Also confirmed:
+      - deep links switch tabs (`senryo:///dev-shell-spike/markets`);
+      - the parent root-stack header is hidden from inside the layout (`<Stack.Screen options={{ headerShown: false }}/>`), so the shared root layout is untouched;
+      - the active region springs 1/500/36.
+  - **Material.** iOS 26 uses `GlassView` when `isLiquidGlassAvailable()`; otherwise expo-blur BlurView + `glassTint`; under Reduce Transparency, `glassOpaque`.
+  - **Lessons for the S1b.7 build.**
+    - `useSegments()` is global (it names the focused route), so a tab screen must know its own tab statically.
+    - Take the focused tab by route name, not by `state.index` order.
+    - `Navigator.useContext()` is marked `@hidden`; prefer `useTabTrigger().getTrigger(name).isFocused` in production.
+    - `backBehavior: "history"` makes back from a tab root return to the previous tab; decide this per F41 deep-link rules.
+  - **Not verified:**
+    - a physical device;
+    - Android (no build in this run);
+    - iOS 18–25 (blur fallback) and Reduce Transparency;
+    - gesture-driven back.
+
+    These belong to S1b.7 acceptance. The fallback stays documented for that case (NativeTabs on iOS 26 styled as an Adapted C15, a custom capsule elsewhere).
+  - · S1b agent A2 (lead merges; the shell build stays the lead's `(tabs)/_layout.tsx`).
 - **D-210** 2026-09-30 · **Social identity rules beyond the plan, adopted** (S12b agent, reviewed by lead): a fifth handle state `held` (a released handle is tombstoned 30 days with `heldUntil`; its previous owner may reclaim it); at most 5 released handles per account per 30 days (429) so renaming can't squat; blocked-word/impersonation filter on handles, display names and bios; a DB CHECK that a network's public trades require its listing; `GET /v1/profile` for the owner's settings; unlisted and absent profiles answer the same 404; follows capped at 1,000 per account (exact under concurrency) · `services/api/scripts/social-check.ts` 39/39 on local Postgres, re-run after the merge with migrations 0001–0005 · S12b agent + lead. Open: whether the handle tombstone survives "delete my data" (anti-impersonation vs unlinking) — Q-022.
 - **D-220** 2026-09-30 · **Equities feeds measured (W6 step 1) → split verdict.** Read-only `getRoundData` over each feed's whole life (launched 21 Sep 09:32 UTC → 30 Sep 23:13, 9.6 days): wNVDAx `0x03ffa4673c060339E6a8E5Ba1a12B3301c966bf0` (2,814 rounds) · wSPYx `0x2e2dA5717eDE960F8b77Af4cFcBDC4Ca3099006D` (783) · wTSLAx `0xE42022cCe1913626AE4297B99291d3Ba24Cc9281` (3,127) · wQQQx `0x7CA45B17D8D43059a222dEC5d991B613F61c02d9` (1,434) · wSPCXx `0x7577154038de77668d0188baF47707EDcd86d0b3` (3,605) · wEWYx `0x54D1645F9C1338f63407Fa64156eCeD9e195AB25` (4,338); all "w<X>x-USD (Calculated)", 8 dec, pricing the **tokenized wrapper**. **They are deviation-triggered, not heartbeat-only:** > 99 % of rounds arrive before the 3,600 s heartbeat, and the p5 move of those rounds is 5.04–5.14 bps → **threshold 0.05 %** (the directory's value); heartbeat rounds only when flat. They publish **24/5 including extended hours** (e.g. NVDA 1,534 regular-session + 1,276 extended rounds) from Mon 00:00 UTC (Sun 20:00 EDT) to Fri ≈ 23:15–23:53 UTC (Fri 20:00 EDT), silent ≈ 48.3 h over the weekend; max in-session gap 3,688 s (< 3,600 + FEED_GRACE). Single-round jumps (the latency-arbitrage exposure a spread must cover): **index ETFs calm** — wSPYx 0.1/day > 30 bps (max 31.8, the Monday reopen), wQQQx 0 (max 26.2); **single names and EWY are not** — wNVDAx 2.2/day > 30 bps (max 87.4), wEWYx 1.6/day (max 76.6), wTSLAx 7.8/day > 30 and 2.0/day > 50 bps (max 149.4 at the US open, 13:31–13:33 UTC), wSPCXx 10.2/day > 30, 3.5/day > 50 and 0.4/day > 100 bps (max 116.3); no earnings event in the window. **Recommendation:** (a) **wSPYx and wQQQx are listable** as a post-launch timelocked slice (no redeploy: `addMarket`/`setFeed`/`setWeek` through the AccessManager — the Safe on mainnet [OK?], an AddMarkets-style script on 10143): 5× (IM 2000 / MM 1000), spread base 10 / dev 5 (round trip 30 bps ≥ every observed in-session jump), max profit 25 %, OI cap 5 % of pool (12.5 USD) each, Σ equities ≤ 10 %, trade cap 2.5 %, a US-equities 24/5 calendar (DST union open Mon 01:00 → Sat 00:00 UTC; NYSE holidays via guardian `addHoliday`, the feeds don't update then), heartbeat 3,600; each listed market adds ≈ 100k gas to every LP deposit/claim (1.04M today) — re-measure before listing. (b) **wNVDAx, wTSLAx, wSPCXx, wEWYx stay Blocked (B2)** "Indicative · calculated feed (tokenized wrapper)": their open/extended-hours jumps exceed any spread that keeps a market usable on a 250 AUSD pool; unblock via Data Streams (Q-008) or ≥ 30 days of feed history including an earnings print · reproduce as D-186 (each feed's full phase-1 history) · S8 contracts agent (recommendation; listing is a lead/user call).
 - **D-230** 2026-10-01 · **Inbox sweeps find undeployed inboxes through an api watch list, and spend gas only after money lands.** The indexer only learns an inbox once `InboxDeployed` registers it, and the first sweep is what deploys it, so a user's first deposit was invisible.

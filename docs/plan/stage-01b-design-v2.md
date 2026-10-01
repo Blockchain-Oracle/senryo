@@ -202,5 +202,21 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
 
     The web record points to the same direction.
 - **Lead files, open item:** `TopStrip` still draws the D2 "SENRYO/千両" wordmark in the system CJK face.
+- **S1b.7 spike (D-193): headless tabs pass.** The run was on a separate iPhone 17 simulator, using the release app with
+  this branch's Hermes bundle swapped in. All five probe checks pass: stack per tab, scroll (Home and Markets), the dock
+  hiding during entry, and the content inset.
+  - The spike lives at `src/app/dev-shell-spike/**` and `src/features/shell-spike/*`. It is dev-only and not linked
+    from the app; `?probe=1` reruns the checks.
+  - Screenshots (scratchpad): `shots/spike3/t01–t22.png` and `shots/compare/dock-vs-F12.png`.
+  - The S1b.7 build itself (the lead's `(tabs)/_layout.tsx` migration, the fan, the header and the route remap) is
+    still open, so S1b.7 stays unticked.
+- **Visual check of the token swap** (scratchpad `shots/app`, `shots/compare`): every screen now shows the violet-black
+  surfaces, blue primary and Inter. These D2-era features still show, because they come from their components, not
+  the tokens; each is rebuilt in its journey:
+  - uppercase button and segment labels (`kit/Button`, `kit/Segmented`);
+  - the green eyebrow on the welcome;
+  - the TopStrip wordmark;
+  - the Kinpaku card PNG, which is still the D2 lemon gold (`brand/kinpaku-card*`): an art task to recolour through the
+    gold-leaf ramp (S1b.3, B12).
 
 ## Handoff
