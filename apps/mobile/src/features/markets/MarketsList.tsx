@@ -5,6 +5,7 @@ import { useNetwork } from "~/lib/network";
 import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 import { ProtocolBanner } from "./MarketBanners";
 import { ArrivingMarketRow, EngineMarketRow } from "./MarketRow";
+import { PerpsIntro } from "./PerpsIntro";
 import { QuietLine } from "./QuietLine";
 import { arrivingMarkets, inFilter, MARKET_FILTERS, type MarketFilter, tradeableMarkets } from "./universe";
 import { useWatchlist } from "./useWatchlist";
@@ -21,6 +22,7 @@ export function MarketsList({ view, filter }: { view: Exclude<MarketsView, "toke
   return (
     <>
       <ProtocolBanner />
+      {view === "perps" ? <PerpsIntro /> : null}
       {view === "watchlist" ? <Watchlist filter={filter} /> : <AllMarkets filter={filter} />}
     </>
   );
