@@ -10,6 +10,8 @@ const CARD_ART = require("../../../assets/images/kinpaku-card.png");
 
 /** The number and holder sit on the lacquer (right half), above the bottom-right area kept for the network mark. */
 const OVERLAY = { left: "52%", top: "30%", bottom: "30%" } as const;
+/** How far a long holder name may shrink to fit the lacquer before it truncates. */
+const HOLDER_MIN_SCALE = 0.75;
 
 /**
  * Kinpaku card face (flip in S10). The PAN is always masked here; the full number shows only in the step-up
@@ -32,18 +34,10 @@ export function CardFace({
     <View accessible accessibilityLabel={`Kinpaku card ending ${last4}, ${route}`} style={styles.card}>
       <Image source={CARD_ART} style={styles.art} resizeMode="contain" />
       <View style={[styles.overlay, OVERLAY]}>
-        <Text allowFontScaling={false} style={[TYPE.numMd, { color: color.onLacquer }]}>
-          •••• {last4}
-        </Text>
-        <View style={styles.bottom}>
-          <View style={styles.flex}>
-            <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
-              Card holder
-            </Text>
-            <Text allowFontScaling={false} style={[TYPE.numSm, { color: color.onLacquer }]} numberOfLines={1}>
-              {holder}
-            </Text>
-          </View>
+        <View style={styles.top}>
+          <Text allowFontScaling={false} style={[TYPE.numMd, { color: color.onLacquer }]}>
+            •••• {last4}
+          </Text>
           <View style={styles.right}>
             <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
               Expires
@@ -52,6 +46,21 @@ export function CardFace({
               {expires}
             </Text>
           </View>
+        </View>
+        {/* The holder has the lacquer's full width; a long name shrinks a little before it is cut. */}
+        <View>
+          <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
+            Card holder
+          </Text>
+          <Text
+            allowFontScaling={false}
+            style={[TYPE.numSm, { color: color.onLacquer }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={HOLDER_MIN_SCALE}
+          >
+            {holder}
+          </Text>
         </View>
       </View>
     </View>
@@ -63,7 +72,6 @@ const styles = StyleSheet.create({
   // Explicit size: a bundled image otherwise keeps its own pixel size, however it is positioned.
   art: { position: "absolute", width: "100%", height: "100%" },
   overlay: { position: "absolute", right: SPACE.xl, justifyContent: "space-between" },
-  bottom: { flexDirection: "row", justifyContent: "space-between", gap: SPACE.sm },
-  flex: { flex: 1 },
+  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: SPACE.sm },
   right: { alignItems: "flex-end" },
 });
