@@ -228,6 +228,19 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     resume after a kill, the keyboard-up layout (the simulator's software keyboard was off).
   - Still open in J1: notification and Face ID primers (need `expo-notifications` and a rebuild), the completion foil
     and the avatars (art branch), the seal's gold-leaf recolour.
+  - **Primers shipped 1 Oct (lead):** setup is now handle → follow → voucher → terms → Face ID → notifications → done.
+    `PrimerScreen` (art in the middle, title and one sentence, a reserved outcome line, Turn on / Not now pinned):
+    the Face ID primer asks iOS for Senryo's Face ID permission in context and does one real scan (unlocking already
+    reads a Face ID–gated key; this never stands in for the passkey); the notification primer raises the OS prompt and
+    registers the phone (`PUT /v1/push/token`, every channel on). Each says plainly when the phone has no Face ID,
+    when the permission was refused (Open Settings), and when the build lacks the module. Both native modules are
+    loaded lazily (`lib/native-modules.ts`), so a dev client built before them still runs today's bundle. Art: the
+    gold fūrin and the ebi-jō lock (agent art-primers, pending merge). Checked on the simulator (acceptance rows).
+  - **Notifications (S1b.15):** You → Notifications has the permission state with the one action each needs and five
+    switches (trades and stop losses, liquidation, price alerts, deposits, card) saved at once; `PushHost` shows a push
+    as a banner in the app, opens its screen in its own mode on a tap (cold start included) and sends a registration
+    the phone still owes at the next unlock; sign-out stops pushes to the phone. Delivery from the keeper through Expo
+    (titled, deep-linked, receipts checked, dead tokens disabled) is agent keeper-push's branch, pending merge.
 - **J4/J5 walked end to end on the simulator (1 Oct).** Create → claim → open (hold) → receipt → position → TP and SL
   placed → both removed → close (hold): every step finalized (rows in `acceptance.md`). Screenshots (local, beside
   the review evidence): `docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/`.

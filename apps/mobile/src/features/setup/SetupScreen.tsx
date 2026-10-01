@@ -48,41 +48,7 @@ export function SetupScreen({
   }));
   return (
     <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top }]}>
-      <View style={styles.bar}>
-        <View style={styles.side}>
-          {onBack ? (
-            <Pressable
-              onPress={() => {
-                fire("tick");
-                onBack();
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Back"
-              hitSlop={SPACE.md}
-              style={styles.tap}
-            >
-              <ChevronLeft size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.text2} />
-            </Pressable>
-          ) : null}
-        </View>
-        <EntityMark id={SEAL} size={SIZE.avatarSm} variant="symbol" decorative ground={color.ground} />
-        <View style={[styles.side, styles.end]}>
-          {onSkip ? (
-            <Pressable
-              onPress={() => {
-                fire("tick");
-                onSkip();
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Skip this step"
-              hitSlop={SPACE.md}
-              style={styles.tap}
-            >
-              <Text style={[TYPE.buttonLabel, { color: color.text3 }]}>Skip</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
+      <SetupBar onBack={onBack} onSkip={onSkip} />
       <Animated.View entering={arriving(0)} style={styles.heading}>
         <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.center, { color: color.ink }]}>
           {title}
@@ -95,6 +61,48 @@ export function SetupScreen({
       <Animated.View entering={arriving(2)} style={[styles.footer, lift]}>
         {footer}
       </Animated.View>
+    </View>
+  );
+}
+
+/** Back and Skip in the corners with the seal between them; either corner may be empty. */
+export function SetupBar({ onBack, onSkip }: { onBack?: (() => void) | undefined; onSkip?: (() => void) | undefined }) {
+  const { color } = useTheme();
+  return (
+    <View style={styles.bar}>
+      <View style={styles.side}>
+        {onBack ? (
+          <Pressable
+            onPress={() => {
+              fire("tick");
+              onBack();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            hitSlop={SPACE.md}
+            style={styles.tap}
+          >
+            <ChevronLeft size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.text2} />
+          </Pressable>
+        ) : null}
+      </View>
+      <EntityMark id={SEAL} size={SIZE.avatarSm} variant="symbol" decorative ground={color.ground} />
+      <View style={[styles.side, styles.end]}>
+        {onSkip ? (
+          <Pressable
+            onPress={() => {
+              fire("tick");
+              onSkip();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Skip this step"
+            hitSlop={SPACE.md}
+            style={styles.tap}
+          >
+            <Text style={[TYPE.buttonLabel, { color: color.text3 }]}>Skip</Text>
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }

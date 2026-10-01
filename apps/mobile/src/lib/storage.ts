@@ -22,7 +22,7 @@ export const STORAGE_KEYS = {
   liquidationDismissed: "senryo.liquidation-dismissed.v1",
   /** S8.22 (F06/F49): the selected network — Practice (testnet) or Mainnet; fresh installs start in Practice. */
   network: "senryo.network.v1",
-  /** J1: each new account's first-run setup step (handle → follow → voucher → terms → done), by address. */
+  /** J1: each new account's first-run setup step (handle → … → terms → primers → done), by address. */
   setup: "senryo.setup.v1",
   /** J1 terms step: the `LEGAL_VERSION` each account acknowledged, by address (a newer version asks again). */
   termsAccepted: "senryo.terms-accepted.v1",
@@ -32,4 +32,6 @@ export const STORAGE_KEYS = {
   candles: "senryo.candles.v1",
   /** J3 Markets: what the Markets tab keeps on this phone, per network — starred markets and recent searches. */
   markets: "senryo.markets.v1",
+  /** S1b.13: this phone's push registration — the Expo token, the account it was sent for, and the chosen channels. */
+  push: "senryo.push.v1",
 } as const;

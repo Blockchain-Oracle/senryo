@@ -65,6 +65,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       { backgroundColor: DARK.background, image: "./assets/images/splash-icon.png", imageWidth: SPLASH_IMAGE_WIDTH },
     ],
     ["expo-secure-store", { faceIDPermission: FACE_ID_PERMISSION }],
+    ["expo-local-authentication", { faceIDPermission: FACE_ID_PERMISSION }],
+    // APNs environment: EAS production builds use production APNs; dev clients and local builds use the sandbox.
+    ["expo-notifications", { mode: process.env.EAS_BUILD_PROFILE === "production" ? "production" : "development" }],
     [
       "expo-build-properties",
       {

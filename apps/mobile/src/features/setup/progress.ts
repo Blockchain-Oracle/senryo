@@ -7,7 +7,7 @@ import type { Address } from "@senryo/account";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
 /** In order. `done` is the completion scene; after it the entry reads `finished`. */
-export const SETUP_STEPS = ["handle", "follow", "voucher", "terms", "done"] as const;
+export const SETUP_STEPS = ["handle", "follow", "voucher", "terms", "face-id", "notifications", "done"] as const;
 export type SetupStep = (typeof SETUP_STEPS)[number];
 type Stored = Record<string, SetupStep | "finished">;
 

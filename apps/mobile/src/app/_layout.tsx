@@ -14,6 +14,7 @@ import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
 import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
 import { MarketDataProvider } from "~/lib/market-data";
+import { PushHost } from "~/lib/notifications/PushHost";
 import { FONT, ThemeProvider, useTheme } from "~/theme";
 import { useAppFonts } from "~/theme/fonts";
 
@@ -72,8 +73,9 @@ export default function RootLayout() {
 
 /**
  * The stack over the five-tab shell (S1b.7: `(tabs)` is the Living Lacquer dock on headless tabs), plus the headless
- * hosts mounted once (ported pattern): feedback (sound pool), toasts and the offline banner, the privacy plate (S6) and
- * TxRecovery (S8.24). Root pages (account, positions, funding) push over the shell; sheets are transparent modals.
+ * hosts mounted once (ported pattern): feedback (sound pool), toasts and the offline banner, the privacy plate (S6),
+ * TxRecovery (S8.24) and pushes (S1b.13). Root pages (account, positions, funding) push over the shell; sheets are
+ * transparent modals.
  */
 function RootStack() {
   const { name, color } = useTheme();
@@ -105,6 +107,7 @@ function RootStack() {
       <OfflineBanner />
       <ToastHost />
       <TxRecoveryHost />
+      <PushHost />
       <PrivacyPlate />
     </>
   );

@@ -1,4 +1,4 @@
-import { ENGINE_MARKETS } from "@senryo/config";
+import { ENGINE_MARKETS, marketPair } from "@senryo/config";
 import { ids } from "@senryo/identity";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -56,6 +56,9 @@ export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen
   const tint = change === undefined ? color.inkMuted : change >= 0n ? color.up : color.down;
   const age = ageLabel(line.updatedAt, now);
   const changeText = change === undefined ? "24h —" : `${arrow(change)} ${signedPct(change)}`;
+  // A currency reads as its code over its pair ("GBP" over "GBP/USD"); "British pound" would truncate beside the
+  // sparkline, and the full name is on the market page.
+  const fx = meta?.category === "fx";
   return (
     <Pressable
       onPress={() => {
@@ -75,20 +78,25 @@ export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen
             style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]}
             numberOfLines={1}
           >
-            {line.name}
+            {fx ? line.symbol : line.name}
           </Text>
           <LeverageBadge x={line.maxLeverageX} />
         </View>
-        <Text
-          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-          style={[TYPE.rowDetail, { color: color.text3 }]}
-          numberOfLines={1}
-        >
-          {line.symbol} ·{" "}
-          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
-            {STATUS_LABEL[line.status]}
+        <View style={styles.detailLine}>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.rowDetail, styles.shrink, { color: color.text3 }]}
+            numberOfLines={1}
+          >
+            {fx && meta ? marketPair(meta) : line.symbol}
           </Text>
-        </Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+            ·{" "}
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
+              {STATUS_LABEL[line.status]}
+            </Text>
+          </Text>
+        </View>
       </View>
       {roomy ? <Sparkline values={line.spark} stroke={tint} /> : null}
       <View style={styles.price}>
@@ -152,6 +160,8 @@ const styles = StyleSheet.create({
   },
   name: { flex: 1, gap: SPACE.xxs },
   titleLine: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  // The name gives way before the session word: "British pound · Open", never "British pound · O…".
+  detailLine: { flexDirection: "row", gap: SPACE.xs },
   shrink: { flexShrink: 1 },
   price: { alignItems: "flex-end", gap: SPACE.xxs, minWidth: SIZE.sparklineWidth + SPACE.lg },
 });

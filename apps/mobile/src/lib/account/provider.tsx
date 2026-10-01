@@ -19,6 +19,7 @@ import {
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { activeNetwork } from "~/lib/network";
+import { unregisterPush } from "~/lib/notifications/push";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { clearApiSession } from "./api";
 import { pullPrefs, pushPrefs } from "./remote";
@@ -140,6 +141,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       lock: () => client.lock(),
       signOut: () =>
         flow(async (c) => {
+          // Pushes for this account stop reaching the phone. Locked, it is forgotten here only (no prompt on sign-out).
+          await unregisterPush(c, settings.faceId, snapshot.status === "unlocked");
           await c.signOut();
           clearApiSession();
         }),
