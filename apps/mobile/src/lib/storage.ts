@@ -32,6 +32,8 @@ export const STORAGE_KEYS = {
   candles: "senryo.candles.v1",
   /** J3 Markets: what the Markets tab keeps on this phone, per network — starred markets and recent searches. */
   markets: "senryo.markets.v1",
+  /** FT101: the eligibility version each account confirmed before its first Mainnet trade, by address. */
+  eligibilityAccepted: "senryo.eligibility-accepted.v1",
   /** FT072: the Perps list's "Go long or short" intro was dismissed on this phone. */
   perpsIntroDismissed: "senryo.perps-intro-dismissed.v1",
   /** When the watchlist last changed on this phone (unix ms): the sync's last-writer-wins clock. */

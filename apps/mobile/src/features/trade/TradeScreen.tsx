@@ -1,6 +1,6 @@
 import { type EngineMarket, engineMarket, engineMarketsOn } from "@senryo/config";
 import { useQueryClient } from "@tanstack/react-query";
-import { router, Stack } from "expo-router";
+import { type Href, router, Stack } from "expo-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -20,6 +20,7 @@ import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { SCROLL_THROTTLE_MS } from "~/components/shell/constants";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
+import { hasConfirmedEligibility } from "~/features/legal/eligibility";
 import { MarketAbout } from "~/features/markets/MarketAbout";
 import { MarketActions } from "~/features/markets/MarketActions";
 import { HolidayBanner, ProtocolBanner } from "~/features/markets/MarketBanners";
@@ -31,7 +32,8 @@ import { QuietLine } from "~/features/markets/QuietLine";
 import { type MarketLine, useMarketLine } from "~/features/markets/useMarketLine";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { fire } from "~/feedback/fire";
-import { type TicketSide, ticketRoute } from "~/lib/constants/routes";
+import { useAccount } from "~/lib/account/provider";
+import { ROUTES, type TicketSide, ticketRoute } from "~/lib/constants/routes";
 import { priceDecimalsOf } from "~/lib/money";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { BUTTON, EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
@@ -201,9 +203,17 @@ function BarRight({ collapsed, actions, compact }: { collapsed: boolean; actions
 function SideBar({ symbol }: { symbol: string }) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
+  const network = useNetwork();
+  const address = useAccount().hint?.address;
   const open = (side: TicketSide) => {
     fire("press");
-    router.push(ticketRoute(symbol, side));
+    const ticket = ticketRoute(symbol, side);
+    // FT101 / M13: real money asks once per account, before its first ticket; Practice never does.
+    if (network.key === "mainnet" && address && !hasConfirmedEligibility(address)) {
+      router.push(`${ROUTES.eligibility}?next=${encodeURIComponent(ticket)}` as Href);
+      return;
+    }
+    router.push(ticket);
   };
   return (
     <View style={[styles.bar, { paddingBottom: insets.bottom + SPACE.sm, backgroundColor: color.ground }]}>

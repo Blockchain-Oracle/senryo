@@ -33,6 +33,7 @@ const SHEETS = [
   "add-money",
   "step-up",
   "risk-explainer",
+  "eligibility",
   "receipt",
   "session",
   "card-reveal",

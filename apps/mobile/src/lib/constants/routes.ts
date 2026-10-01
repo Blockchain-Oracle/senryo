@@ -57,6 +57,7 @@ export const ROUTES = {
   network: "/network",
   stepUp: "/step-up",
   riskExplainer: "/risk-explainer",
+  eligibility: "/eligibility",
   receipt: "/receipt",
   session: "/session",
   cardReveal: "/card-reveal",
