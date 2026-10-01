@@ -39,6 +39,8 @@ export const SPOT_HOLDINGS_REFETCH_MS = 30_000;
  * a minute, so a token page never spends more than a tenth of the device's allowance.
  */
 export const SPOT_CANDLES_REFETCH_MS = 60_000;
+/** The list's 24 h line (one GeckoTerminal call for every token; its free tier allows ~10 a minute per IP). */
+export const SPOT_STATS_REFETCH_MS = 60_000;
 
 /** Engine socket: keep-alive and reconnect backoff. */
 export const SOCKET_PING_MS = 25_000;

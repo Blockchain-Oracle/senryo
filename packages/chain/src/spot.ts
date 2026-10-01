@@ -197,3 +197,8 @@ export function spotValueUsd6(balance: bigint, decimals: number, priceUsd18: big
 export function isNativeSpot(token: Pick<SpotToken, "address">): boolean {
   return same(token.address, SPOT_NATIVE);
 }
+
+/** The quote currency a buy spends: the owner's mainnet USDC balance (raw, 6 decimals). */
+export async function readWalletUsdc(read: ReadClient, owner: Address): Promise<bigint> {
+  return read.readContract({ address: MAINNET_EXTERNAL.usdc, abi: erc20Abi, functionName: "balanceOf", args: [owner] });
+}

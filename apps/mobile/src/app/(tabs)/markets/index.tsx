@@ -11,34 +11,38 @@ import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { MarketsList, type MarketsView } from "~/features/markets/MarketsList";
 import { MARKET_FILTERS, type MarketFilter } from "~/features/markets/universe";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
+import { TokensList } from "~/features/tokens/TokensList";
 import { ROUTES } from "~/lib/constants/routes";
 import { useReadOnlyNetwork } from "~/lib/network";
 import { SIZE, SPACE, TIMING, useTheme } from "~/theme";
 
+/** F10's three lists: what you starred, the spot tokens, the perpetuals. */
 const VIEWS = [
   { value: "watchlist", label: "Watchlist", icon: Star },
-  { value: "all", label: "All" },
+  { value: "tokens", label: "Tokens" },
+  { value: "perps", label: "Perps" },
 ] as const;
 
 /**
- * Markets tab root (J3, S1b.9; Fomo F09–F12, direction §8): the title and mode stay in the fixed bar; under it pin the
- * Watchlist / All tabs with their sliding underline (F09) and the category chips, led by the search control where
- * F09 has its filter button. Search pushes its own page (F31); price alerts open from a market's header and from Home
- * and You. Browsable without an account (F03). Mainnet before launch shows live prices read-only (S8.22). A row opens
- * market detail on this stack; the ticket opens from there.
+ * Markets tab root (J3/J11, S1b.9/S1b.16; Fomo F09–F12, direction §8): the title and mode stay in the fixed bar;
+ * under it pin the Watchlist / Tokens / Perps tabs with their sliding underline (F10) and, for perps, the category
+ * chips led by the search control where F09 has its filter button. Search pushes its own page (F31); price alerts open
+ * from a market's header and from Home and You. Browsable without an account (F03). Tokens are Monad mainnet spot
+ * tokens (Uniswap v4), live on Mainnet even before our engine launches; perps on Mainnet before launch show live
+ * prices read-only (S8.22). A row opens its detail on this stack; tickets open from there.
  */
 export default function Markets() {
   const readOnly = useReadOnlyNetwork();
   const { color } = useTheme();
-  const [view, setView] = useState<MarketsView>("all");
+  const [view, setView] = useState<MarketsView>("perps");
   const [filter, setFilter] = useState<MarketFilter>("all");
   return (
     <CollapsingScreen
       left={<TabTitle>Markets</TabTitle>}
       sticky={
-        readOnly ? undefined : (
-          <View style={styles.sticky}>
-            <UnderlineTabs options={VIEWS} value={view} onChange={setView} label="Market list" />
+        <View style={styles.sticky}>
+          <UnderlineTabs options={VIEWS} value={view} onChange={setView} label="Market list" />
+          {view === "tokens" || readOnly ? null : (
             <ChipRow
               options={MARKET_FILTERS}
               value={filter}
@@ -50,18 +54,20 @@ export default function Markets() {
                 </UtilityButton>
               }
             />
-          </View>
-        )
+          )}
+        </View>
       }
     >
-      {readOnly ? (
-        <PrelaunchMainnet surface="markets" />
-      ) : (
-        // The list of the chosen tab arrives with a short fade instead of snapping in under the moving underline.
-        <Animated.View key={view} entering={FadeIn.duration(TIMING.selection)} style={styles.list}>
+      {/* The list of the chosen tab arrives with a short fade instead of snapping in under the moving underline. */}
+      <Animated.View key={view} entering={FadeIn.duration(TIMING.selection)} style={styles.list}>
+        {view === "tokens" ? (
+          <TokensList />
+        ) : readOnly ? (
+          <PrelaunchMainnet surface="markets" />
+        ) : (
           <MarketsList view={view} filter={filter} />
-        </Animated.View>
-      )}
+        )}
+      </Animated.View>
     </CollapsingScreen>
   );
 }

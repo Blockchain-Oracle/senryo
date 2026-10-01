@@ -26,6 +26,7 @@ export const keys = {
   spotQuote: (symbol: string, side: string, amountIn: string, slippageBps: string) =>
     ["spot", MAINNET_CHAIN_ID, "quote", symbol, side, amountIn, slippageBps] as const,
   spotCandles: (symbol: string, interval: number) => ["spot", MAINNET_CHAIN_ID, "candles", symbol, interval] as const,
+  spotStats: (tokens: string) => ["spot", MAINNET_CHAIN_ID, "stats", tokens] as const,
   /** Under the mainnet account key, so a finalized swap's account invalidation refreshes the holdings. */
   spotHoldings: (address: Address, tokens: string) =>
     ["account", MAINNET_CHAIN_ID, address.toLowerCase(), "spot", tokens] as const,

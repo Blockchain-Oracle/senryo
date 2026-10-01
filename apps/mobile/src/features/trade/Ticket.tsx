@@ -9,6 +9,7 @@ import { EmptyState, ReadingView, Skeleton } from "~/components/kit/states";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { Keypad } from "~/components/trade/Keypad";
 import { LeverageRuler } from "~/components/trade/LeverageRuler";
+import { Preset } from "~/components/trade/Preset";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { moneySymbol, pct, price18, priceDecimalsOf, usd } from "~/lib/money";
@@ -230,42 +231,22 @@ function KeypadRegion({ t }: { t: TicketModel }) {
     <View style={styles.region}>
       <View style={styles.presets}>
         {AMOUNT_CHIPS_USD.map((c) => (
-          <Preset key={String(c)} label={`${moneySymbol()}${c}`} onPress={() => t.setAmountUsd6(c * ONE_USD6)} />
+          <Preset
+            key={String(c)}
+            label={`${moneySymbol()}${c}`}
+            accessibilityLabel={`Set margin to ${moneySymbol()}${c}`}
+            onPress={() => t.setAmountUsd6(c * ONE_USD6)}
+          />
         ))}
-        <Preset label="Max" disabled={t.maxAmountUsd6 === 0n} onPress={() => t.setAmountUsd6(t.maxAmountUsd6)} />
+        <Preset
+          label="Max"
+          accessibilityLabel="Max: everything Free to trade allows"
+          disabled={t.maxAmountUsd6 === 0n}
+          onPress={() => t.setAmountUsd6(t.maxAmountUsd6)}
+        />
       </View>
       <Keypad onKey={t.onKey} />
     </View>
-  );
-}
-
-/** An amount preset (F37's $10 / $50 / $100 row): a borderless filled plate that shrinks under the finger. */
-function Preset({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
-  const { color } = useTheme();
-  const press = usePressScale();
-  return (
-    <Animated.View style={[styles.presetSlot, press.style]}>
-      <Pressable
-        disabled={disabled}
-        onPressIn={press.onPressIn}
-        onPressOut={press.onPressOut}
-        onPress={() => {
-          fire("tick");
-          onPress();
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={label === "Max" ? "Max: everything Free to trade allows" : `Set margin to ${label}`}
-        style={({ pressed }) => [
-          styles.preset,
-          { backgroundColor: pressed ? color.rowPressed : color.raised2 },
-          disabled ? { opacity: DISABLED_OPACITY } : null,
-        ]}
-      >
-        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowAmount, { color: color.ink }]}>
-          {label}
-        </Text>
-      </Pressable>
-    </Animated.View>
   );
 }
 
@@ -329,13 +310,6 @@ const styles = StyleSheet.create({
   toggleCell: { paddingHorizontal: SPACE.md, paddingVertical: SPACE.xs, borderRadius: RADIUS.xs },
   region: { flex: 1, gap: SPACE.sm },
   presets: { flexDirection: "row", gap: SPACE.sm },
-  presetSlot: { flex: 1 },
-  preset: {
-    minHeight: SIZE.touch,
-    borderRadius: BUTTON.radius.sm,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   chartBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   gear: { width: SIZE.touch, height: SIZE.touch, alignItems: "center", justifyContent: "center" },
   chart: { flex: 1 },

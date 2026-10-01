@@ -36,15 +36,15 @@ export function SwapTicket({ snapshot }: { snapshot: AccountSnapshot }) {
   return (
     <View style={styles.stack}>
       <View>
-        <Side
+        <SwapSide
           label="You pay"
           mark={collateralId(env.chainId, SYMBOL[s.from])}
           symbol={SYMBOL[s.from]}
           amount={usd(s.amountIn)}
           note={`You hold ${usd(held)}`}
         />
-        <Flip onPress={() => s.setFrom(to)} />
-        <Side
+        <SwapFlip onPress={() => s.setFrom(to)} />
+        <SwapSide
           label="You receive ≈"
           mark={collateralId(env.chainId, SYMBOL[to])}
           symbol={SYMBOL[to]}
@@ -82,7 +82,7 @@ export function SwapTicket({ snapshot }: { snapshot: AccountSnapshot }) {
   );
 }
 
-function Side({
+export function SwapSide({
   label,
   mark,
   symbol,
@@ -118,7 +118,7 @@ function Side({
   );
 }
 
-function Flip({ onPress }: { onPress: () => void }) {
+export function SwapFlip({ onPress }: { onPress: () => void }) {
   const { color } = useTheme();
   const press = usePressScale();
   return (

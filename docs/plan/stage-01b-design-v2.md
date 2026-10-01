@@ -122,6 +122,12 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - card tutorial, home, reveal, allowance, freeze, wallet, activity, auth detail, simulation;
   - identity/addresses, security/passkeys, session policy, preferences, notifications, advanced, delete data, help, terms, status.
 - [ ] S1b.16 **J11 Spot tokens:** token list and detail, buy/sell via the Uniswap v4 route, holdings in Home.
+  - Built 1 Oct (agent j11-data: list, pools, prices, quotes, holdings, candles, swap builder, `fd2ffb7`; lead: the
+    screens): Markets is Watchlist · Tokens · Perps (F10); Tokens lists the nine Monad tokens with a live hook-free v4
+    pool (real logos, onchain mid prices, GeckoTerminal 24 h change where honest); a token page (price, pool candles,
+    facts, Sell / Buy, Practice offers the switch); the swap ticket (P20) with live quotes, impact, fees and the
+    minimum. Every spot trade is a passkey step-up (the session's scope rejects router calls — deliberate, not
+    widened). Open: holdings on Home, a real swap (needs the user's mainnet USDC and MON).
 - [ ] S1b.17 **Fidelity acceptance per journey:**
   - 402×874 simulator screenshots next to the reference frames;
   - motion start/settle/exit against the M-clips;

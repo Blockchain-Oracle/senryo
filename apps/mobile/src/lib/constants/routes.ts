@@ -78,6 +78,10 @@ export type TicketSide = "long" | "short";
 
 /** Market detail, pushed on the Markets stack (the old `/trade/[market]`). */
 export const marketRoute = (market: string) => `/markets/${market}` as const;
+/** J11: a spot token's page and its buy/sell ticket (Mainnet pools; `side` opens the ticket on that side). */
+export const tokenRoute = (symbol: string) => `/markets/tokens/${symbol}` as const;
+export const tokenTradeRoute = (symbol: string, side: "buy" | "sell") =>
+  `/markets/tokens/${symbol}/trade?side=${side}` as const;
 /** The order ticket over market detail (full-height transaction, C39), opened on a side from the sticky Short/Long. */
 export const ticketRoute = (market: string, side: TicketSide) => `/markets/${market}/ticket?side=${side}` as const;
 /** The price-alert editor for one market: a compact sheet over market detail (J3). */

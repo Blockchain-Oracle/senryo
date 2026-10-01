@@ -11,6 +11,7 @@ import {
   type ReadClient,
   readSpotHoldings,
   readSpotPrices,
+  readWalletUsdc,
   SPOT_SLIPPAGE_BPS,
   type SpotHolding,
   type SpotPrice,
@@ -96,6 +97,19 @@ export function useTokenHoldings(
     queryKey: keys.spotHoldings(address ?? "0x", tokenKey(tokens)),
     queryFn: () => readSpotHoldings(mainnetReadOf(env), address as Address, tokens),
     enabled: address !== undefined && tokens.length > 0,
+    refetchInterval: SPOT_HOLDINGS_REFETCH_MS,
+    staleTime: SPOT_HOLDINGS_REFETCH_MS,
+  });
+  return readingOf(query, SPOT_HOLDINGS_REFETCH_MS);
+}
+
+/** The owner's mainnet USDC — what a buy spends — under the 143 account key, so a finalized swap refreshes it. */
+export function useWalletUsdc(address: Address | undefined): Reading<bigint> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: [...keys.account(MAINNET_CHAIN_ID, address ?? "0x"), "wallet-usdc"] as const,
+    queryFn: () => readWalletUsdc(mainnetReadOf(env), address as Address),
+    enabled: address !== undefined,
     refetchInterval: SPOT_HOLDINGS_REFETCH_MS,
     staleTime: SPOT_HOLDINGS_REFETCH_MS,
   });

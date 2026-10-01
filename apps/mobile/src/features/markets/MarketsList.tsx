@@ -9,15 +9,15 @@ import { QuietLine } from "./QuietLine";
 import { arrivingMarkets, inFilter, MARKET_FILTERS, type MarketFilter, tradeableMarkets } from "./universe";
 import { useWatchlist } from "./useWatchlist";
 
-export type MarketsView = "watchlist" | "all";
+export type MarketsView = "watchlist" | "tokens" | "perps";
 
 /**
- * The Markets list (Fomo F09/F12; direction §8). **All**: the markets that trade on this network lead, bare on the
+ * The Markets list (Fomo F09/F12; direction §8). **Perps**: the markets that trade on this network lead, bare on the
  * page; the ones that don't trade here yet follow under a quiet "Arriving" label — real mark and name, one short
  * reason, never a price. **Watchlist**: the markets starred on this phone, newest star first; with none, one quiet
  * line and nothing else. The category chips narrow both.
  */
-export function MarketsList({ view, filter }: { view: MarketsView; filter: MarketFilter }) {
+export function MarketsList({ view, filter }: { view: Exclude<MarketsView, "tokens">; filter: MarketFilter }) {
   return (
     <>
       <ProtocolBanner />

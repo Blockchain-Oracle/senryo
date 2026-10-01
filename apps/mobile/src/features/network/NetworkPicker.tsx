@@ -1,8 +1,8 @@
 /**
  * Practice ↔ Mainnet (S8.22, F06/F49; Living Lacquer §5.6): two explained rows with each network's balance. Practice
  * switches at once; Mainnet takes a deliberate "Switch to real money" — which also locks the session, so the next
- * signature starts fresh limits under mainnet's Face ID floor (D-037). Before the mainnet launch the row is open for
- * browsing live prices and says trading opens at launch. A deep link for the other network passes `request`: a
+ * signature starts fresh limits under mainnet's Face ID floor (D-037). Before the mainnet launch the row says spot
+ * tokens (J11, Uniswap v4) trade now and perps open at launch. A deep link for the other network passes `request`: a
  * Mainnet request opens straight on the confirmation, which still takes the deliberate tap.
  */
 import { MAINNET, TESTNET } from "@senryo/config";
@@ -73,7 +73,7 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
             ? `Real money · ${MAINNET.name}${
                 balances.mainnet === undefined ? "" : ` · ${usd(balances.mainnet, undefined, MAINNET.key)}`
               }`
-            : `Real money · ${MAINNET.name} · trading opens at launch`
+            : `Real money · ${MAINNET.name} · spot tokens now, perps at launch`
         }
         selected={network.key === MAINNET.key}
         onPress={() => choose(MAINNET.key)}
@@ -85,7 +85,7 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
             {live
               ? "Trades and card spends use your real funds on Monad. Face ID confirms anything above your limit; your session locks now and starts fresh."
-              : "Mainnet isn't open for trading yet — you can browse live prices. Your practice positions stay where they are."}
+              : "Spot tokens trade on Mainnet now, with your real funds; perps open at launch, and until then their prices are live to browse. Your practice positions stay where they are."}
           </Text>
           <Button label="Switch to real money" onPress={switchToReal} />
           <Button label="Stay in practice" variant="ghost" size="sm" onPress={() => setConfirming(false)} />

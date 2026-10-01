@@ -14,7 +14,8 @@ const sheet = {
  * full-height transaction sheet that draws its own scrim over market detail (transparent modal; the dock hides while
  * it is focused), and the price-alert editor, a compact sheet over it. Search and market detail draw their own bar
  * (the market's identity sits in it), so the native header is off for them. Dismissing the ticket restores market
- * detail with the draft kept per (mode, market) — FT112.
+ * detail with the draft kept per (mode, market) — FT112. Spot tokens (J11) follow the same shape: the token's page
+ * (page push) and its swap ticket (transaction sheet).
  */
 export default function Layout() {
   return (
@@ -23,6 +24,8 @@ export default function Layout() {
       <Stack.Screen name="[market]/index" options={{ headerShown: false }} />
       <Stack.Screen name="[market]/ticket" options={sheet} />
       <Stack.Screen name="[market]/alert" options={sheet} />
+      <Stack.Screen name="tokens/[token]/index" options={{ headerShown: false }} />
+      <Stack.Screen name="tokens/[token]/trade" options={sheet} />
     </TabStack>
   );
 }
