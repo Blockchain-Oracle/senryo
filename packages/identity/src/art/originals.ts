@@ -61,7 +61,7 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       symbol: {
         path: "brand/senryo-seal.svg",
         url: "brand/senryo-seal.svg",
-        sha256: "167cd8b9876b0bac52f7931238115e71ae8d8b1a5781730b32c17baad4144870",
+        sha256: "1026cff09c17d2466c0bb09f543d073bc381ec9c73d478c95e1d682cd48c003d",
         viewBox: "0 0 512 512",
         insetPermille: 0,
         surface: "any",
@@ -70,7 +70,7 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       monoLight: {
         path: "brand/senryo-seal-mono.svg",
         url: "brand/senryo-seal-mono.svg",
-        sha256: "f4c3dd048d9651914e5b8ea8a9bb9858272c16a2a861bf3443d212844c260881",
+        sha256: "db06ea2c49ceee05438f94ba24a2684a71d95a81a8cc17e81d5cfa94d44eb91c",
         viewBox: "0 0 512 512",
         insetPermille: 0,
         surface: "dark",

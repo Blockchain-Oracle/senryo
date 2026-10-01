@@ -96,8 +96,9 @@ the master after a change (`codegen --emit-svg <dir>`).
 
 **Review status.** Codex reviewed the J1 package over five rounds, then the redrawn card face and gold-leaf seal over
 two; in the closing rounds every piece passes as a static first-pass master for the user's design review, with a list
-of what still falls short (`docs/design/reviews/2026-10-01-j1-art-review.md`). B12 stays open until the user's design
-review passes.
+of what still falls short (`docs/design/reviews/2026-10-01-j1-art-review.md`). A last round on the seal alone (round 8)
+passed it at app sizes and failed its large-size finish and the inverse; both were fixed once and not re-reviewed.
+B12 stays open until the user's design review passes.
 
 `render.sh` also writes `apps/mobile/assets/images/kinpaku-card.png` (the card face as the Card tab's raster) and re-runs
 `art.py`, `onboarding.py` and the identity codegen.

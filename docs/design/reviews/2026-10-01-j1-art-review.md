@@ -8,7 +8,8 @@ This is the review record for the authored J1 artwork package of plan step S1b.3
 blocker B12): six onboarding scenes, the pending-passkey art, the completion foil and twelve default avatars, written
 by `brand/scripts/onboarding.py` into `brand/art/onboarding/` and `brand/art/avatars/`. The artwork owner (an agent)
 ran the review after each revision and worked through every finding; the reviewer's text below is verbatim. The
-redrawn Kinpaku card face and the gold-leaf seal were added afterwards (rounds 6 and 7).
+redrawn Kinpaku card face and the gold-leaf seal were added afterwards (rounds 6 and 7), and the seal's finish was
+reviewed once more on its own (round 8, at the end of this file).
 
 ## How it was run
 
@@ -62,6 +63,17 @@ reviewed those two over two further rounds (same command, verbatim at the end of
 - **Changed after the round-7 verdict, not re-reviewed** (each one a refinement the reviewer asked for): the Practice
   label plate narrowed to restore its 10 pt right inset; fewer and smaller leaf fragments along the card's tear (card
   face, scenes 1 and 5); the card back's band lost its continuous outline and some creases.
+- **Round 8: the seal's finish, on its own.** Before the round, the seal's field moved to the full five-stop ramp
+  (`MATERIAL.goldLeaf` with `#AE8941` and `#EACF8C`), a soft radial bloom replaced the even corner highlight, and the
+  inverse took a lit lacquer field with gold-leaf inlay. Codex saw the seal at 24, 32, 48 and 88 px on `#0A0911` and
+  `#13121A` (`brand/review/seal-sizes.png`), the variants at 264 px, the old lemon seal and the card front at 400 px.
+  Verdict: small seal PASS (narrowly), large seal FAIL (brass plaque: a broad ochre face and a conspicuous cream line
+  under the carving), inverse FAIL (its 千 lit apart from its frames), mono PASS, card front PASS.
+- **Fixed once after round 8, not re-reviewed.** Large seal: the ramp starts at the cream highlight and carries the light
+  gold across the upper-left face (`#FFF0BC` 0, `#EACF8C` .2, `#D4AE5B` .48, `#AE8941` .8, `#886426` 1), the bloom is
+  weaker, and the light caught under the carving dropped from 0.5 to 0.3 opacity at half the offset, fading toward the
+  far corner. Inverse: the 千 is placed in seal coordinates (no transform), so its `userSpaceOnUse` inlay gradient is the
+  same light as the frames'. Geometry unchanged in both.
 
 Findings from those rounds that are not art and are still open: the Card tab's overlay starts at 52 % across and its
 holder/expiry row is cramped at phone width (the art leaves clear lacquer from about 42 %); the app icon's seal scale
@@ -923,3 +935,32 @@ Changes, in priority order:
 - **Immediate visual punch:** the muted seal attracts less attention than the old yellow square. That is an intentional palette tradeoff, but the app icon’s generous margins compound it.
 
 The old heavy grain and lemon colour should not return; recover the finer edge and softer reflection within the new ramp.
+
+## Seal and card front — round 8 verdict (verbatim)
+
+Shown: `brand/review/seal-sizes.png`, `seal-sizes-lemon-before.png`, `seal-variants.png`, `kinpaku-card-400.png` and the
+scene-2 phone mock. The fix that followed is described under "After round 5" above and was not re-reviewed.
+
+**(a) Small seal, 24–88 px — PASS, narrowly.** At 24 px, 千 retains its upper sweep, crossbar and stem on both backgrounds. The hairline frame softens, but the glyph stays distinct. At 32–88 px, the lighter upper-left face and darker lower-right corner provide enough variation to read as a small gold object. The 3x versions improve edge definition. It clears the “flat mustard square” threshold, although the gold is subdued.
+
+**(b) Large seal — FAIL.** At 264 px, the broad ochre-brown face, heavy lacquer frame and continuous pale line beneath the carving read as a brass plaque. The cream outline beneath the stem and lower frame makes the bevel-and-emboss construction conspicuous. The onboarding tile has a clearer pale reflection and less visually dominant edge treatment.
+
+Fix, in priority order:
+
+1. **Improve the face reflection.** In [LEAF_DEFS](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/scripts/build.py:42), the base gradient actually has **four stops**, starting at `#EACF8C`; `#FFF0BC` appears only through the translucent bloom and bevel. Put the cream highlight into the base ramp, carry the lighter gold farther across the upper-left face, and confine the deepest brown toward the far corner. The [reference tile’s face ramp](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/scripts/kit.py:314) is a useful starting point.
+2. **Reduce the carving’s caught-light outline.** Start by lowering `CATCH_OPACITY` from `0.5` toward `0.2` and roughly halving the displacement. Fade its strength toward the far corner. Preserve the geometry; the problem is the lighting hierarchy.
+
+**(c) Inverse and mono — FAIL overall: inverse FAIL; mono PASS.** The inverse’s lacquer field is appropriately quiet, but at 264 px its upper 千 is pale cream while nearby frame sections are already deeper gold. The pieces appear separately illuminated.
+
+There is a concrete source cause: the [inverse glyph](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/senryo-seal-inverse.svg:8) has a translation and scale, which also transform its `userSpaceOnUse` gradient. The frames use that gradient in untransformed seal coordinates.
+
+**Priority fix:** transform the glyph coordinates into the seal’s 512-unit space before applying the shared gradient, or compensate its gradient transform. Gold at the same position should receive the same light across glyph and frames.
+
+The mono specimen passes: one consistent colour, clear 千 and clean frame hierarchy. Its simplicity suits a monochrome mark.
+
+**(d) Kinpaku card front, 400 px — PASS.** This is the strongest material treatment. The broad pale reflection across the left field, faint overlapping sheets and finely torn boundary read as thin leaf on lacquer. The roughly 50 px seal remains legible and feels pressed into the surface. The lacquer reflection is restrained, and the right half gives the number room. “Senryo” is small but readable; `金箔` works as subordinate detail. The sheet seams are near the upper limit of visibility—stronger seams would start resembling tiles.
+
+Compared with the inspected Solflare and Phantom recording frames, the card meets the authored-material bar more convincingly than the large seal.
+
+**Single most valuable change: give the primary seal a broader cream reflection across its face, bringing its lighting closer to the onboarding tile.**
+

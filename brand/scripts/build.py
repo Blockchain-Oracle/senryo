@@ -6,6 +6,7 @@ gold-leaf ramp (MATERIAL.goldLeaf in src/marks.ts), carved in lacquer; grounds a
 """
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -35,18 +36,21 @@ def gradient(gid: str, stops: list[tuple], attrs: str = 'x1="0" y1="0" x2="1" y2
 
 
 # The gold-leaf seal, lit from the upper left (the onboarding scenes' lamp): the field runs the whole ramp corner to
-# corner, the lamp's reflection is a soft round bloom of the highlight off the lit corner (so the light falls off in
-# two directions, not in one straight band), and the bevel is light along the lit edges and shade along the far ones,
-# fading out between.
+# corner (cream at the lit corner, the light gold carried across the upper-left face, the deepest brown only in the far
+# corner), the lamp's reflection is a soft round bloom off the lit corner (so the light falls off in two directions, not
+# in one straight band), and the bevel is light along the lit edges and shade along the far ones, fading out between.
+# The light a carved edge catches is faint and fades toward the far corner too.
 LEAF_FILL, LEAF_SHEEN, LEAF_BEVEL = "url(#senryo-leaf)", "url(#senryo-leaf-sheen)", "url(#senryo-leaf-bevel)"
+LEAF_CATCH = "url(#senryo-leaf-catch)"
 LEAF_DEFS = (
-    gradient("senryo-leaf", [(0, LEAF["light"]), (0.3, LEAF["mid"]), (0.7, LEAF["shade"]), (1, LEAF["shadow"])])
-    + f'<radialGradient id="senryo-leaf-sheen" cx=".26" cy=".22" r=".62"><stop offset="0" stop-color="{LEAF["highlight"]}" '
-    f'stop-opacity=".4"/><stop offset=".5" stop-color="{LEAF["highlight"]}" stop-opacity=".13"/>'
+    gradient("senryo-leaf", [(0, LEAF["highlight"]), (0.2, LEAF["light"]), (0.48, LEAF["mid"]), (0.8, LEAF["shade"]), (1, LEAF["shadow"])])
+    + f'<radialGradient id="senryo-leaf-sheen" cx=".3" cy=".26" r=".6"><stop offset="0" stop-color="{LEAF["highlight"]}" '
+    f'stop-opacity=".26"/><stop offset=".5" stop-color="{LEAF["highlight"]}" stop-opacity=".08"/>'
     f'<stop offset="1" stop-color="{LEAF["highlight"]}" stop-opacity="0"/></radialGradient>'
     + gradient("senryo-leaf-bevel", [(0, LEAF["highlight"], 0.85), (0.4, LEAF["highlight"], 0), (0.6, LEAF["shadow"], 0), (1, LEAF["shadow"], 0.85)])
+    + gradient("senryo-leaf-catch", [(0, LEAF["highlight"]), (1, LEAF["highlight"], 0.2)])
 )
-CATCH_SHIFT, CATCH_OPACITY = (2.0, 2.6), 0.5  # the light a carved edge catches: offset in seal units (of 512), strength
+CATCH_SHIFT, CATCH_OPACITY = (1.0, 1.3), 0.3  # the light a carved edge catches: offset in seal units (of 512), strength
 BEVEL_WIDTH = 5  # seal units (of 512)
 # The inverse seal: lacquer lit the same way, the carving filled with gold leaf (one ramp across the whole seal).
 INVERSE_FILL, INVERSE_CARVE = "url(#senryo-lacquer)", "url(#senryo-leaf-inlay)"
@@ -67,13 +71,37 @@ def outline(font: str, text: str, tracking: float = 0) -> dict:
     return json.loads(out)
 
 
-def fit(glyph: dict, box_x: float, box_y: float, box_w: float, box_h: float) -> str:
-    """Transform that scales the glyph bbox into the box (uniform) and centres it."""
+def fit_params(glyph: dict, box_x: float, box_y: float, box_w: float, box_h: float) -> tuple[float, float, float]:
+    """(tx, ty, s): the uniform scale that fits the glyph bbox into the box, and the translation that centres it."""
     x0, y0, x1, y1 = glyph["bbox"]
     s = min(box_w / (x1 - x0), box_h / (y1 - y0))
-    tx = box_x + (box_w - (x1 - x0) * s) / 2 - x0 * s
-    ty = box_y + (box_h - (y1 - y0) * s) / 2 - y0 * s
+    return round(box_x + (box_w - (x1 - x0) * s) / 2 - x0 * s, 2), round(box_y + (box_h - (y1 - y0) * s) / 2 - y0 * s, 2), round(s, 5)
+
+
+def fit(glyph: dict, box_x: float, box_y: float, box_w: float, box_h: float) -> str:
+    """Transform that scales the glyph bbox into the box (uniform) and centres it."""
+    tx, ty, s = fit_params(glyph, box_x, box_y, box_w, box_h)
     return f"translate({tx:.2f} {ty:.2f}) scale({s:.5f})"
+
+
+def placed(d: str, tx: float, ty: float, s: float) -> str:
+    """The path `d` (absolute M/L/H/V/Q/Z only, as outline.py writes glyphs) moved by translate(tx ty) scale(s)."""
+    out, cmd, axis = [], "", 0
+    for tok in re.findall(r"[A-Za-z]|-?\d*\.?\d+", d):
+        if tok.isalpha():
+            if tok not in "MLHVQZ":
+                raise ValueError(f"placed(): unsupported path command {tok}")
+            out.append(tok)
+            cmd, axis = tok, 0
+            continue
+        v = float(tok)
+        if cmd == "H" or (cmd != "V" and axis == 0):
+            v = tx + s * v
+        else:
+            v = ty + s * v
+        axis = 0 if cmd in "HV" else 1 - axis
+        out.append(f"{v:.2f}")
+    return " ".join(out).replace(" Z", "Z")
 
 
 def write(name: str, body: str) -> None:
@@ -87,9 +115,13 @@ WORD = outline(MONO, "SENRYO", -10)
 
 
 # --- seal ---------------------------------------------------------------------
-def seal_group(size: float, fill: str, carve: str, simple: bool = False, edge: str | None = None, leaf: bool = False) -> str:
+def seal_group(
+    size: float, fill: str, carve: str, simple: bool = False, edge: str | None = None, leaf: bool = False, inlay: bool = False
+) -> str:
     """角印: filled square, carved double border (thick + hairline), carved 千. Coordinates 0..size.
-    `leaf` is the gold-leaf seal: a sheen and a bevel on the field and a line of light caught under every carved edge."""
+    `leaf` is the gold-leaf seal: a sheen and a bevel on the field and a line of light caught under every carved edge.
+    `inlay` places the 千 in seal coordinates (no transform), so one userSpaceOnUse paint lights glyph and frames alike;
+    otherwise the path stays in font units (art.py reads the glyph from the primary seal that way)."""
     k = size / 512
     r = 14 * k
     parts = [f'<rect width="{size}" height="{size}" rx="{r:.2f}" fill="{fill}"/>']
@@ -121,16 +153,18 @@ def seal_group(size: float, fill: str, carve: str, simple: bool = False, edge: s
     else:
         box = 56 * k
     # Optical centre: nudge the glyph up a hair (mincho 千 carries weight in its lower stem).
-    t = fit(SEN, box, box - 4 * k, size - 2 * box, size - 2 * box)
+    tx, ty, s = fit_params(SEN, box, box - 4 * k, size - 2 * box, size - 2 * box)
     # Embolden with a same-colour stroke (font units): mincho hairlines become carved seal strokes.
     bold = 34 if simple else 22
-    carved.append(
-        f'<path transform="{t}" fill="INK" stroke="INK" stroke-width="{bold}" stroke-linejoin="round" d="{SEN["d"]}"/>'
-    )
+    if inlay:
+        glyph = f'stroke-width="{bold * s:.2f}" d="{placed(SEN["d"], tx, ty, s)}"'
+    else:
+        glyph = f'transform="{fit(SEN, box, box - 4 * k, size - 2 * box, size - 2 * box)}" stroke-width="{bold}" d="{SEN["d"]}"'
+    carved.append(f'<path fill="INK" stroke="INK" stroke-linejoin="round" {glyph}/>')
     carving = "\n  ".join(carved)  # drawn once per ink: "INK" stands for the colour
     if leaf:
         dx, dy = CATCH_SHIFT[0] * k, CATCH_SHIFT[1] * k
-        caught = carving.replace("INK", LEAF["highlight"])
+        caught = carving.replace("INK", LEAF_CATCH)
         parts.append(f'<g transform="translate({dx:.2f} {dy:.2f})" opacity="{CATCH_OPACITY}">{caught}</g>')
     parts.append(carving.replace("INK", carve))
     return "\n  ".join(parts)
@@ -177,7 +211,7 @@ def build_marks() -> None:
         svg(
             512,
             512,
-            seal_group(512, INVERSE_FILL, INVERSE_CARVE, edge=INVERSE_CARVE),
+            seal_group(512, INVERSE_FILL, INVERSE_CARVE, edge=INVERSE_CARVE, inlay=True),
             "Senryo 千両 seal (inverse)",
             extra_defs=INVERSE_DEFS,
         ),
