@@ -1,9 +1,10 @@
 /**
  * The watchlist (Fomo F09's star tab, F32's favourite; direction §8 "All / Watchlist"): the markets the user starred,
- * kept on this phone per network (`device-store`). Symbols are our engine's (`XAU`, `EUR`); newest star first.
+ * kept per network (`device-store`) and synced to the account (`WatchlistSync`). Symbols are our engine's (`XAU`,
+ * `EUR`); newest star first.
  */
 import { useNetwork } from "~/lib/network";
-import { updateMarketsDevice, useMarketsDevice } from "./device-store";
+import { touchWatchlist, updateMarketsDevice, useMarketsDevice } from "./device-store";
 
 export interface Watchlist {
   symbols: readonly string[];
@@ -26,6 +27,7 @@ export function useWatchlist(): Watchlist {
           ? [symbol, ...slice.watchlist.filter((s) => s !== symbol)]
           : slice.watchlist.filter((s) => s !== symbol),
       }));
+      touchWatchlist();
       return starred;
     },
   };

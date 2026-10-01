@@ -1,7 +1,8 @@
 /**
  * What the Markets tab keeps on this phone (J3): starred markets and recent searches, per network, in one MMKV value
- * (`senryo.markets.v1`, JSON). Nothing here is an account setting — it never leaves the device, and a guest has it
- * too. Reads are defensive: a value this build can't parse reads as empty, never as a crash.
+ * (`senryo.markets.v1`, JSON). Recent searches never leave the device; the starred markets also sync to the account
+ * through the encrypted prefs (`WatchlistSync`, last writer wins), so they come back on a new device. A guest keeps
+ * both here only. Reads are defensive: a value this build can't parse reads as empty, never as a crash.
  */
 import { useMMKVString } from "react-native-mmkv";
 import type { NetworkKey } from "~/lib/network";
@@ -64,4 +65,28 @@ export function useMarketsDevice(network: NetworkKey): NetworkSlice {
 export function updateMarketsDevice(network: NetworkKey, change: (slice: NetworkSlice) => NetworkSlice): void {
   const all = parse(storage.getString(STORAGE_KEYS.markets));
   storage.set(STORAGE_KEYS.markets, JSON.stringify({ ...all, [network]: change(all[network] ?? EMPTY_SLICE) }));
+}
+
+/** Both networks' starred markets and when they last changed here (0 = never), for the account sync. */
+export function localWatchlist(): { at: number; lists: Record<NetworkKey, string[]> } {
+  const all = parse(storage.getString(STORAGE_KEYS.markets));
+  return {
+    at: storage.getNumber(STORAGE_KEYS.watchlistAt) ?? 0,
+    lists: Object.fromEntries(NETWORKS.map((key) => [key, all[key]?.watchlist ?? []])) as Record<NetworkKey, string[]>,
+  };
+}
+
+/** Records a watchlist change made on this phone (the sync pushes it while the session is live). */
+export function touchWatchlist(at: number = Date.now()): void {
+  storage.set(STORAGE_KEYS.watchlistAt, at);
+}
+
+/** Adopts a newer synced watchlist (lists and its time); recents stay this phone's own. */
+export function adoptWatchlist(synced: { at: number; lists: Partial<Record<NetworkKey, string[]>> }): void {
+  const all = parse(storage.getString(STORAGE_KEYS.markets));
+  const next = Object.fromEntries(
+    NETWORKS.map((key) => [key, { ...(all[key] ?? EMPTY_SLICE), watchlist: synced.lists[key] ?? [] }]),
+  );
+  storage.set(STORAGE_KEYS.markets, JSON.stringify(next));
+  touchWatchlist(synced.at);
 }

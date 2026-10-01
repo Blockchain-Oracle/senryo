@@ -32,6 +32,8 @@ export const STORAGE_KEYS = {
   candles: "senryo.candles.v1",
   /** J3 Markets: what the Markets tab keeps on this phone, per network — starred markets and recent searches. */
   markets: "senryo.markets.v1",
+  /** When the watchlist last changed on this phone (unix ms): the sync's last-writer-wins clock. */
+  watchlistAt: "senryo.watchlist-at.v1",
   /** S1b.13: this phone's push registration — the Expo token, the account it was sent for, and the chosen channels. */
   push: "senryo.push.v1",
 } as const;

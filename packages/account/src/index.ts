@@ -44,7 +44,7 @@ export { scopeTargets } from "./policy/targets.ts";
 export { evaluateMessage, evaluateTypedData } from "./policy/typed-data.ts";
 export type { Action, FaceIdMode, PolicyContext, PolicyUsage, RejectReason, Verdict } from "./policy/types.ts";
 export { defaultFaceIdMode, emptyUsage } from "./policy/types.ts";
-export { openPrefs, PREFS_VERSION, type Prefs, sealPrefs } from "./prefs.ts";
+export { mergePrefs, openPrefs, PREFS_VERSION, type Prefs, type SyncedWatchlist, sealPrefs } from "./prefs.ts";
 export {
   addRecoveryPasskey,
   recoverWithServerVault,

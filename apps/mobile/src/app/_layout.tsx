@@ -11,6 +11,7 @@ import { OfflineBanner } from "~/components/shell/OfflineBanner";
 import { TxRecoveryHost } from "~/components/shell/TxRecoveryHost";
 import { ToastHost } from "~/components/toast/ToastHost";
 import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
+import { WatchlistSync } from "~/features/markets/WatchlistSync";
 import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
 import { MarketDataProvider } from "~/lib/market-data";
@@ -108,6 +109,7 @@ function RootStack() {
       <ToastHost />
       <TxRecoveryHost />
       <PushHost />
+      <WatchlistSync />
       <PrivacyPlate />
     </>
   );

@@ -9,8 +9,8 @@ import {
   type AccountHint,
   defaultFaceIdMode,
   isLoosening,
+  mergePrefs,
   type PolicyContext,
-  PREFS_VERSION,
   type SessionSettings,
 } from "@senryo/account";
 import {
@@ -70,20 +70,28 @@ async function readRemote(client: AccountClient, faceId: FaceId) {
   return remote;
 }
 
-/** Encrypt and store this device's settings (a stale version re-reads once and writes over it). */
+/**
+ * Encrypt and store this device's settings, merged into the stored blob so fields another device wrote (the phone's
+ * synced watchlist) are kept (one re-read on a version conflict).
+ */
 export async function pushPrefs(client: AccountClient, settings: SessionSettings): Promise<void> {
   const live = client.session.live();
   if (!live) return;
   const key = live.address.toLowerCase();
-  const blob = client.sealPrefs({ v: PREFS_VERSION, session: settings });
-  const put = (ifVersion: number) =>
-    withSession(client, settings.faceId, () => api().call(prefsPutRoute, { body: { blob, ifVersion } }));
+  const attempt = async () => {
+    const remote = await readRemote(client, settings.faceId);
+    const current = remote.blob ? client.openPrefs(remote.blob) : undefined;
+    const blob = client.sealPrefs(mergePrefs(current, { session: settings }));
+    return withSession(client, settings.faceId, () =>
+      api().call(prefsPutRoute, { body: { blob, ifVersion: remote.version } }),
+    );
+  };
   let written: { version: number };
   try {
-    written = await put(versions.get(key) ?? (await readRemote(client, settings.faceId)).version);
+    written = await attempt();
   } catch (error) {
     if (!(error instanceof ApiError) || error.code !== "CONFLICT") throw error;
-    written = await put((await readRemote(client, settings.faceId)).version);
+    written = await attempt();
   }
   versions.set(key, written.version);
 }

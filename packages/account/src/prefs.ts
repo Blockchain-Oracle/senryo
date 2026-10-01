@@ -11,10 +11,27 @@ import type { FaceIdMode } from "./policy/types.ts";
 
 export const PREFS_VERSION = 1;
 
+/** Starred markets per network, with when they last changed (last writer wins across devices). */
+export interface SyncedWatchlist {
+  /** Unix ms of the change this list reflects. */
+  at: number;
+  lists: Partial<Record<"testnet" | "mainnet", string[]>>;
+}
+
 export interface Prefs {
   v: typeof PREFS_VERSION;
   /** Security → session length / idle lock / Face ID per trade (restored on a new device). */
   session?: { ttlMs: number; idleMs: number; faceId?: FaceIdMode | undefined };
+  /** Markets → Watchlist (restored on a new device; review: one stateless-restoration contract). */
+  watchlist?: SyncedWatchlist;
+}
+
+/**
+ * What a writer stores: the blob it read with its own fields replaced. Every writer (phone, web) merges, so one that
+ * only knows `session` never erases another's `watchlist`.
+ */
+export function mergePrefs(base: Prefs | undefined, patch: Partial<Omit<Prefs, "v">>): Prefs {
+  return { ...(base ?? {}), ...patch, v: PREFS_VERSION };
 }
 
 export function sealPrefs(key: Uint8Array, prefs: Prefs): string {
