@@ -1,14 +1,21 @@
 /**
- * The account, shown large (F08 proof: create on the phone, sign in on the web → the identical address), with copy
- * and a read-only watch link to share (D-031). No account → the way in, never a blank. The mode is a small filled
- * badge in its own colour (practice violet, mainnet blue), not an outlined pill.
+ * Account identity (J9; direction's "Account identity / addresses" row): the address, shown large and selectable
+ * (F08 proof: create on the phone, sign in on the web → the identical address), with Copy as the page's one primary
+ * action and a read-only watch link to share (D-031). Under it, the two networks the same address lives on — each
+ * with Monad's own mark, its chain id and its explorer — and the passkey behind the account. This was the You tab's
+ * hero; the person is now (F16), and the address has its own page. No account → the way in, never a blank.
  */
-import { WEB_ORIGIN } from "@senryo/config";
+import { explorerAddressUrl, MAINNET, TESTNET, WEB_ORIGIN } from "@senryo/config";
+import { ids } from "@senryo/identity";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
+import { ExternalLink } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Share, StyleSheet, Text, View } from "react-native";
+import { Linking, Share, StyleSheet, Text, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
+import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
+import { ListRow } from "~/components/kit/ListRow";
 import { Panel } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
@@ -16,10 +23,14 @@ import { useAccount } from "~/lib/account/provider";
 import { COPIED_MS } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
-import { RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const CREDENTIAL_SHOWN = 10;
 const watchUrl = (address: string) => `${WEB_ORIGIN}/watch/?address=${address}`;
+const NETWORKS = [
+  { network: TESTNET, money: "Paper money" },
+  { network: MAINNET, money: "Real money" },
+] as const;
 
 export function IdentityPanel() {
   const network = useNetwork();
@@ -34,55 +45,58 @@ export function IdentityPanel() {
 
   if (!account.ready) {
     return (
-      <Panel style={styles.panel}>
+      <View style={styles.hero} accessibilityRole="progressbar" accessibilityLabel="Loading your account">
         <Skeleton width="40%" />
-        <Skeleton />
-      </Panel>
+        <Skeleton height={SIZE.skeletonRow} />
+      </View>
     );
   }
   const hint = account.hint;
   if (!hint) {
     return (
-      <Panel style={styles.panel}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>No account on this phone</Text>
-        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-          Create one with Face ID, or open the account you already have — the same passkey gives the same address on
+      <View style={styles.hero}>
+        <Text style={[TYPE.sectionTitle, { color: color.ink }]}>No account on this phone</Text>
+        <Text style={[TYPE.body, { color: color.text2 }]}>
+          Create one with a passkey, or open the account you already have. The same passkey gives the same address on
           every device.
         </Text>
         <Button label="Create or sign in" onPress={() => router.push(ROUTES.welcome)} />
-      </Panel>
+      </View>
     );
   }
   const practice = network.key === "testnet";
   return (
-    <Panel style={styles.panel}>
-      <View style={styles.head}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Your account</Text>
+    <>
+      <View style={styles.hero}>
+        <View style={styles.head}>
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>Your address</Text>
+          <Text
+            style={[
+              TYPE.chipLabel,
+              styles.badge,
+              practice
+                ? { color: color.practice, backgroundColor: color.practiceWash }
+                : { color: color.mainnet, backgroundColor: color.mainnetWash },
+            ]}
+          >
+            {network.modeLabel}
+          </Text>
+        </View>
         <Text
-          style={[
-            TYPE.chipLabel,
-            styles.badge,
-            practice
-              ? { color: color.practice, backgroundColor: color.practiceWash }
-              : { color: color.mainnet, backgroundColor: color.mainnetWash },
-          ]}
+          selectable
+          accessibilityLabel={`Account address ${hint.address}`}
+          style={[TYPE.numMd, { color: color.ink }]}
         >
-          {network.modeLabel}
+          {hint.address}
+        </Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
+          One address in Practice and on Mainnet. Anyone who has it can watch this account; nobody can move money with
+          it.
         </Text>
       </View>
-      <Text
-        selectable
-        accessibilityLabel={`Account address ${hint.address}`}
-        style={[TYPE.numSm, { color: color.ink }]}
-      >
-        {hint.address}
-      </Text>
       <View style={styles.actions}>
         <Button
           label={copied ? "Copied" : "Copy address"}
-          variant="outline"
-          size="sm"
-          block={false}
           onPress={() => {
             void Clipboard.setStringAsync(hint.address).then(() => {
               fire("tick");
@@ -93,22 +107,50 @@ export function IdentityPanel() {
         <Button
           label="Share watch link"
           variant="ghost"
-          size="sm"
-          block={false}
+          accessibilityHint="Shares a read-only link to this account"
           onPress={() => void Share.share({ message: watchUrl(hint.address) })}
         />
       </View>
-      <Text style={[TYPE.meta, { color: color.text3 }]}>
-        {hint.mode === "vault" ? "Backup passkey" : "Passkey"} ·{" "}
-        {hint.credential.credentialId.slice(0, CREDENTIAL_SHOWN)}…
-      </Text>
-    </Panel>
+      <View style={styles.section}>
+        <Text accessibilityRole="header" style={[TYPE.rowTitle, { color: color.ink }]}>
+          Networks
+        </Text>
+        <Panel>
+          {NETWORKS.map(({ network: n, money }) => (
+            <ListRow
+              key={n.key}
+              title={`${n.modeLabel} · ${n.name}`}
+              detail={`${money} · chain ${n.chainId}`}
+              leading={<EntityMark id={ids.evmChain(n.chainId)} size={SIZE.markRow} decorative />}
+              trailing={<ExternalLink size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />}
+              onPress={() => void Linking.openURL(explorerAddressUrl(n.chainId, hint.address))}
+            />
+          ))}
+        </Panel>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
+          Each row opens this address in that network’s explorer.
+        </Text>
+      </View>
+      <View style={styles.section}>
+        <Text accessibilityRole="header" style={[TYPE.rowTitle, { color: color.ink }]}>
+          Signed in with
+        </Text>
+        <Panel>
+          <ListRow
+            title={hint.mode === "vault" ? "Backup passkey" : "Passkey"}
+            detail={`Credential ${hint.credential.credentialId.slice(0, CREDENTIAL_SHOWN)}…`}
+            leading={<PasskeyGlyph color={color.ink} />}
+          />
+        </Panel>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.lg, gap: SPACE.md },
+  hero: { gap: SPACE.md },
   head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   badge: { borderRadius: RADIUS.xs, paddingHorizontal: SPACE.sm, paddingVertical: SPACE.xxs, overflow: "hidden" },
-  actions: { flexDirection: "row", gap: SPACE.sm, flexWrap: "wrap" },
+  actions: { gap: SPACE.xs },
+  section: { gap: SPACE.md },
 });

@@ -28,6 +28,10 @@ export const ROUTES = {
   lp: "/lp",
   /** Compatibility: `/account` is the You tab. */
   account: "/account",
+  /** J9: the profile editor, the address page, and diagnostics (moved off the You tab). */
+  accountProfile: "/account/profile",
+  accountIdentity: "/account/identity",
+  accountDiagnostics: "/account/diagnostics",
   accountSecurity: "/account/security",
   accountRecovery: "/account/recovery",
   accountPreferences: "/account/preferences",
@@ -65,6 +69,13 @@ export const cardAuthRoute = (id: string) => `/card/auth/${id}` as const;
 export const fundQrRoute = (family: string) => `/fund/qr/${family}` as const;
 export const depositRoute = (id: string) => `/fund/deposit/${id}` as const;
 export const watchRoute = (address: string) => `/watch/${address}` as const;
+
+export type FollowDirection = "followers" | "following";
+/** The signed-in account's followers or following list (J9). */
+export const followsRoute = (direction: FollowDirection) => `/account/follows?direction=${direction}` as const;
+/** The profile editor opened on one field ("Add a bio", "Add a username"). */
+export type ProfileFocus = "username" | "name" | "bio";
+export const profileEditRoute = (focus: ProfileFocus) => `/account/profile?focus=${focus}` as const;
 
 /** The market the old Trade tab opened on (gold first, D-005); `/trade` links land on its detail. */
 export const DEFAULT_MARKET = "XAU";
