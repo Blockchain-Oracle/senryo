@@ -1,14 +1,21 @@
 import { DECIMALS } from "@senryo/core";
-import { Circle, LinearGradient, vec } from "@shopify/react-native-skia";
-import { useMemo } from "react";
+import { Circle, Group, LinearGradient, vec } from "@shopify/react-native-skia";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useAnimatedReaction } from "react-native-reanimated";
+import {
+  type SharedValue,
+  useAnimatedReaction,
+  useDerivedValue,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { Area, CartesianChart, Line, useChartPressState } from "victory-native";
+import { Area, CartesianChart, type ChartBounds, Line, useChartPressState } from "victory-native";
 import { fire } from "~/feedback/fire";
 import { clockTime } from "~/lib/format";
 import { toPlot, usd } from "~/lib/money";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { CHART } from "./constants";
 
 /** One equity sample: time (ms) and risk-adjusted equity (usd6). */
@@ -17,19 +24,45 @@ export interface EquityPoint {
   equity6: bigint;
 }
 
+const DAY_MS = 86_400_000;
+/** No point is under the finger. */
+const NO_POINT = -1;
+
+/** "14:02" inside a day's window, "12 Sep · 14:02" across days — a clock time alone says nothing on a month chart. */
+function stamp(t: number, spanMs: number): string {
+  if (spanMs <= DAY_MS) return clockTime(t);
+  const day = new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  return `${day} · ${clockTime(t)}`;
+}
+
 /**
- * RN port of 21st Balance Chart #30538: victory-native XL (Skia) area + line, the max label top-right and the min
- * bottom-left, time ticks under it, press to scrub (a `tick` when the finger lands). Skia draws on the UI thread; the
- * path only rebuilds when `points` changes.
+ * The balance chart (Fomo F16's portfolio curve; RN port of 21st Balance Chart #30538): a victory-native XL (Skia)
+ * line over a fading area, bare on the page — no frame, no grid, no axis. The window's high sits quietly at the top
+ * right and its low at the bottom left; holding the chart scrubs it, and the point under the finger reads out its
+ * value and time in place (a `tick` when the finger lands). The curve draws once, left to right, when its data
+ * arrives (direction §4: 600–900 ms) and never again on a refresh. Skia draws on the UI thread; the path only
+ * rebuilds when `points` changes.
  */
 export function EquityChart({ points }: { points: EquityPoint[] }) {
   const { color } = useTheme();
+  const reduce = useReducedMotion();
   const data = useMemo(() => points.map((p) => ({ t: p.t, equity: toPlot(p.equity6, DECIMALS.usd6) })), [points]);
   const { state, isActive } = useChartPressState({ x: 0, y: { equity: 0 } });
+  const [scrub, setScrub] = useState(NO_POINT);
+  const drawn = useSharedValue(reduce ? 1 : 0);
+  useEffect(() => {
+    drawn.value = withTiming(1, { duration: TIMING.chartReveal, easing: EASE });
+  }, [drawn]);
   useAnimatedReaction(
     () => isActive,
     (active, was) => {
       if (active && !was) scheduleOnRN(fire, "tick");
+    },
+  );
+  useAnimatedReaction(
+    () => state.matchedIndex.value,
+    (index, was) => {
+      if (index !== was) scheduleOnRN(setScrub, index);
     },
   );
   const [minP, maxP] = useMemo(() => {
@@ -41,18 +74,23 @@ export function EquityChart({ points }: { points: EquityPoint[] }) {
     }
     return [lo, hi];
   }, [points]);
-  const ticks = useMemo(() => {
-    const step = Math.max(1, Math.floor(points.length / (CHART.timeTicks - 1)));
-    return points.filter((_, i) => i % step === 0).slice(0, CHART.timeTicks);
-  }, [points]);
   if (points.length < CHART.minPoints) return null;
+  const first = points[0];
+  const last = points.at(-1);
+  const span = first && last ? last.t - first.t : 0;
+  const held = isActive ? points[scrub] : undefined;
 
   return (
     <View
       accessible
-      accessibilityLabel={`Equity chart, low ${minP ? usd(minP.equity6, 0) : ""}, high ${maxP ? usd(maxP.equity6, 0) : ""}`}
+      accessibilityLabel={`Balance chart, low ${minP ? usd(minP.equity6, 0) : ""}, high ${maxP ? usd(maxP.equity6, 0) : ""}`}
     >
-      <Text style={[TYPE.numSm, styles.max, { color: color.inkMuted }]}>{maxP ? usd(maxP.equity6, 0) : ""}</Text>
+      <View style={styles.edge}>
+        <Text style={[TYPE.moneyMeta, { color: held ? color.ink : color.transparent }]} numberOfLines={1}>
+          {held ? `${usd(held.equity6)} · ${stamp(held.t, span)}` : " "}
+        </Text>
+        <Text style={[TYPE.moneyMeta, { color: color.text3 }]}>{maxP ? usd(maxP.equity6, 0) : ""}</Text>
+      </View>
       <View style={styles.chart}>
         <CartesianChart
           data={data}
@@ -63,14 +101,16 @@ export function EquityChart({ points }: { points: EquityPoint[] }) {
         >
           {({ points: pts, chartBounds }) => (
             <>
-              <Area points={pts.equity} y0={chartBounds.bottom} curveType="linear">
-                <LinearGradient
-                  start={vec(0, chartBounds.top)}
-                  end={vec(0, chartBounds.bottom)}
-                  colors={[color.chartFillTop, color.chartFillBottom]}
-                />
-              </Area>
-              <Line points={pts.equity} color={color.chartUp} strokeWidth={CHART.stroke} curveType="linear" />
+              <Reveal bounds={chartBounds} progress={drawn}>
+                <Area points={pts.equity} y0={chartBounds.bottom} curveType="linear">
+                  <LinearGradient
+                    start={vec(0, chartBounds.top)}
+                    end={vec(0, chartBounds.bottom)}
+                    colors={[color.chartFillTop, color.chartFillBottom]}
+                  />
+                </Area>
+                <Line points={pts.equity} color={color.chartUp} strokeWidth={CHART.stroke} curveType="linear" />
+              </Reveal>
               {isActive ? (
                 <Circle cx={state.x.position} cy={state.y.equity.position} r={CHART.dot} color={color.chartUp} />
               ) : null}
@@ -78,20 +118,31 @@ export function EquityChart({ points }: { points: EquityPoint[] }) {
           )}
         </CartesianChart>
       </View>
-      <Text style={[TYPE.numSm, { color: color.inkMuted }]}>{minP ? usd(minP.equity6, 0) : ""}</Text>
-      <View style={styles.ticks}>
-        {ticks.map((p) => (
-          <Text key={p.t} style={[TYPE.caption, { color: color.inkMuted }]}>
-            {clockTime(p.t)}
-          </Text>
-        ))}
-      </View>
+      <Text style={[TYPE.moneyMeta, { color: color.text3 }]}>{minP ? usd(minP.equity6, 0) : ""}</Text>
     </View>
   );
 }
 
+/** Clips the curve to the drawn share of the plot, so it appears from the left edge rather than fading in whole. */
+function Reveal({
+  bounds,
+  progress,
+  children,
+}: {
+  bounds: ChartBounds;
+  progress: SharedValue<number>;
+  children: ReactNode;
+}) {
+  const clip = useDerivedValue(() => ({
+    x: bounds.left,
+    y: 0,
+    width: (bounds.right - bounds.left) * progress.value,
+    height: bounds.bottom,
+  }));
+  return <Group clip={clip}>{children}</Group>;
+}
+
 const styles = StyleSheet.create({
   chart: { height: SIZE.chartEquity },
-  max: { alignSelf: "flex-end" },
-  ticks: { flexDirection: "row", justifyContent: "space-between", marginTop: SPACE.sm },
+  edge: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: SPACE.sm },
 });

@@ -13,12 +13,20 @@ import { arrow, signedPct, signedUsd, usd } from "~/lib/money";
 import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
- * Home's collapsing header pieces (C16/C19, FT069/FT073; Codex S1b.7 consult #9). The bar keeps the 千 seal and — once
- * collapsed — the compact balance; the expanded block is the "Risk-adjusted balance" with its sourced 24 h change
- * ("24h —" when unknown) and the primary Add money button (Fomo's Deposit, F09: a rounded rectangle). Unknown balances are skeletons, never
- * $0.00 (D-020).
+ * Home's collapsing header pieces (C16/C19, FT069/FT073; Fomo F09 / F12). The bar keeps the 千 seal and — once
+ * collapsed — the compact balance (F12). The expanded block is F09's: the balance as the one big figure with its
+ * cents in quiet ink, its sourced 24 h change under it ("— 24h" when unknown), and Add money to its right at the
+ * Deposit's proportions. The figure is the risk-adjusted balance; Balance details names it and reconciles it, so no
+ * label stands over it here. Unknown balances are skeletons, never $0.00 (D-020).
  */
 const SEAL = ids.brand("senryo");
+/** The big figure may shrink to this share of its size before it truncates, so a long balance still fits beside the button. */
+const BALANCE_MIN_SCALE = 0.5;
+/** Skeleton widths while the balance and its change are unknown. */
+const BALANCE_SKELETON_WIDTH = 168;
+const CHANGE_SKELETON_WIDTH = 96;
+/** F09's Deposit measures 140 pt wide; the kit button keeps its own 56 pt height and 12 pt corners. */
+const ADD_MONEY_WIDTH = 140;
 
 export function HomeSeal() {
   const { color } = useTheme();
@@ -57,38 +65,52 @@ export function ExpandedBalance() {
   const { color } = useTheme();
   const { address, equity, change, changeBps } = useBalance();
   if (!address) return null;
+  const text = equity === undefined ? "" : usd(equity);
+  // F09: "$0" in full ink, ".00" quiet — the whole units carry the figure.
+  const point = text.lastIndexOf(".");
+  const whole = point < 0 ? text : text.slice(0, point);
+  const cents = point < 0 ? "" : text.slice(point);
   return (
     <View style={styles.hero}>
       <View style={styles.amounts}>
-        <Text style={[TYPE.meta, { color: color.text3 }]}>Risk-adjusted balance</Text>
         {equity === undefined ? (
-          <Skeleton width="60%" height={TYPE.displayBalance.lineHeight ?? SIZE.skeletonPlate} />
+          <View style={styles.pending}>
+            <Skeleton width={BALANCE_SKELETON_WIDTH} height={SIZE.skeletonRow} />
+            <Skeleton width={CHANGE_SKELETON_WIDTH} height={SIZE.skeletonSmall} />
+          </View>
         ) : (
-          <Text
-            maxFontSizeMultiplier={HERO_FONT_SCALE}
-            adjustsFontSizeToFit
-            numberOfLines={1}
-            accessibilityLabel={`Risk-adjusted balance ${usd(equity)}`}
-            style={[TYPE.displayBalance, { color: color.ink }]}
-          >
-            {usd(equity)}
-          </Text>
-        )}
-        {change === undefined ? (
-          <Text style={[TYPE.moneyMeta, { color: color.text3 }]}>24h —</Text>
-        ) : (
-          <Text style={[TYPE.moneyMeta, { color: change >= 0n ? color.up : color.down }]}>
-            {arrow(change)} {signedUsd(change)}
-            {changeBps === undefined ? "" : ` (${signedPct(changeBps)})`} · 24h
-          </Text>
+          <>
+            <Text
+              maxFontSizeMultiplier={HERO_FONT_SCALE}
+              adjustsFontSizeToFit
+              minimumFontScale={BALANCE_MIN_SCALE}
+              numberOfLines={1}
+              accessibilityLabel={`Risk-adjusted balance ${text}`}
+              style={[TYPE.displayBalance, { color: color.ink }]}
+            >
+              {whole}
+              <Text style={{ color: color.text3 }}>{cents}</Text>
+            </Text>
+            {change === undefined ? (
+              <Text style={[TYPE.rowChange, { color: color.text3 }]}>— 24h</Text>
+            ) : (
+              <Text style={[TYPE.rowChange, { color: change >= 0n ? color.up : color.down }]} numberOfLines={1}>
+                {arrow(change)} {signedUsd(change)}
+                {changeBps === undefined ? "" : ` (${signedPct(changeBps)})`}
+                <Text style={{ color: color.text3 }}> 24h</Text>
+              </Text>
+            )}
+          </>
         )}
       </View>
-      <Button label="Add money" block={false} onPress={() => router.push(ROUTES.addMoney)} />
+      <Button label="Add money" block={false} style={styles.add} onPress={() => router.push(ROUTES.addMoney)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { flexDirection: "row", alignItems: "center", gap: SPACE.md, paddingTop: SPACE.sm, paddingBottom: SPACE.lg },
+  hero: { flexDirection: "row", alignItems: "center", gap: SPACE.lg, paddingTop: SPACE.sm, paddingBottom: SPACE.lg },
   amounts: { flex: 1, gap: SPACE.xxs },
+  pending: { gap: SPACE.sm, paddingVertical: SPACE.xs },
+  add: { alignSelf: "center", minWidth: ADD_MONEY_WIDTH },
 });

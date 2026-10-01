@@ -1,9 +1,11 @@
 /**
- * F12 on the portfolio: (1) liquidation risk — maintenance margin ÷ liquidation equity in the danger band → "Add money
- * or reduce" with both actions; (2) a held market's price paused (STALE/CIRCUIT/HALTED) → "liquidations paused" so a
- * frozen number isn't read as safety; (3) a liquidation in the last week → the post-mortem (positions closed, penalty,
- * realised, tx), the `liquidation` haptic once, dismissible. All from the chain + indexer, nothing inferred. Each is a
- * borderless card: the down wash for danger, the warning wash for a pause, the plain group fill for the post-mortem.
+ * F12 on Home: (1) liquidation risk — maintenance margin ÷ liquidation equity in the danger band → "Add money or
+ * reduce"; (2) a held market's price paused (STALE/CIRCUIT/HALTED) → "liquidations paused" so a frozen number isn't
+ * read as safety; (3) a liquidation in the last week → the post-mortem (positions closed, penalty, realised, tx), the
+ * `liquidation` haptic once, dismissible. All from the chain + indexer, nothing inferred. Each is a filled wash with
+ * no border (the down wash for danger, the warning wash for a pause, the plain group fill for the post-mortem): a
+ * title, one quiet sentence, and its action sized to its label. Danger keeps a second, text-only way out (Reduce)
+ * beside Add money, because either one ends the risk.
  */
 import { PAUSED_STATUSES, RISK } from "@senryo/core";
 import { useAccountRisk, useMarkets, usePositions, useQueryEnv, useRecentLiquidations } from "@senryo/query";
@@ -62,7 +64,7 @@ export function RiskBanner() {
     <>
       {danger ? (
         <View style={[styles.box, { backgroundColor: color.downWash }]} accessibilityLiveRegion="assertive">
-          <Text style={[TYPE.bodyStrong, { color: color.ink }]}>Liquidation risk · margin use {pct(usage)}</Text>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>Liquidation risk · margin use {pct(usage)}</Text>
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
             At 100 % your positions are closed with a {pct(RISK.LIQ_PENALTY_BPS)} penalty. Add money or reduce.
           </Text>
@@ -72,7 +74,7 @@ export function RiskBanner() {
               <Button
                 label="Reduce"
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 block={false}
                 onPress={() => router.push(positionRoute(String(nearest.marketId)))}
               />
@@ -82,7 +84,7 @@ export function RiskBanner() {
       ) : null}
       {paused.length > 0 ? (
         <View style={[styles.box, { backgroundColor: color.warnWash }]}>
-          <Text style={[TYPE.bodyStrong, { color: color.ink }]}>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>
             {paused.map((m) => m.name).join(", ")} price paused · liquidations paused
           </Text>
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
@@ -92,7 +94,7 @@ export function RiskBanner() {
       ) : null}
       {latest && latest.id !== dismissed ? (
         <View style={[styles.box, { backgroundColor: fill }]}>
-          <Text style={[TYPE.bodyStrong, { color: color.ink }]}>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>
             Liquidated · {latest.positionsClosed} {latest.positionsClosed === 1 ? "position" : "positions"} closed
           </Text>
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
@@ -119,5 +121,5 @@ export function RiskBanner() {
 
 const styles = StyleSheet.create({
   box: { borderRadius: SHEET_SHAPE.rowRadius, padding: SPACE.lg, gap: SPACE.xs },
-  actions: { flexDirection: "row", gap: SPACE.sm, marginTop: SPACE.xs },
+  actions: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm },
 });
