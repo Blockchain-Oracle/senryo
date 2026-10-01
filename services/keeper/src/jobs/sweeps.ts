@@ -10,6 +10,8 @@ import {
 import { positionCount, positionGasLimit } from "@senryo/config";
 import { SWEEP_RETRY_MS, SWEEPS_PER_TICK } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
+import { receiptDepositedUsd6 } from "../fills.ts";
+import { depositArrivedPush } from "../push-messages.ts";
 import type { Job } from "../runner.ts";
 import type { InboxCandidate } from "../sources.ts";
 
@@ -60,7 +62,15 @@ export function sweepJob(ctx: KeeperContext): Job {
             { user: c.user, inbox: c.inbox, usd6: balances.get(c.inbox)?.toString(), tx: sent.hash },
             "inbox swept",
           );
-          await ctx.notifier.push(ctx.chainId, `sweep:${sent.hash}`, c.user, "deposits", "Your deposit has arrived");
+          // "Arrived" only once the credit is final; the amount is what the core credited (its `Deposited` events).
+          if (sent.final.stage === "finalized")
+            await ctx.notifier.push(
+              ctx.chainId,
+              `sweep:${sent.hash}`,
+              c.user,
+              "deposits",
+              depositArrivedPush(ctx.chainId, receiptDepositedUsd6(sent.final.receipt, c.user)),
+            );
         } catch (error) {
           retryAt.set(c.user, now + SWEEP_RETRY_MS);
           ctx.log.warn({ user: c.user, inbox: c.inbox, err: describeError(error) }, "inbox sweep failed; retry later");

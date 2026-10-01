@@ -15,6 +15,7 @@ export const INTERVALS_MS = {
   wallets: 60_000,
   retention: 86_400_000,
   sweeps: 15_000,
+  receipts: 900_000,
 } as const;
 
 /** Retention windows in days (S8.5b K9). */
@@ -26,7 +27,26 @@ export const RETENTION_DAYS = {
   outbox: 30,
   cardEvents: 90,
   inboxWatches: 30,
+  /** Checked Expo push tickets (deleted by the `receipts` job, not the daily sweep). */
+  pushTickets: 7,
 } as const;
+
+/**
+ * Expo Push Service (docs.expo.dev/push-notifications/sending-notifications, read 2026-10-01): at most 100 messages
+ * per send and 1,000 ids per getReceipts request (PUSH_TOO_MANY_NOTIFICATIONS / PUSH_TOO_MANY_RECEIPTS otherwise).
+ */
+export const EXPO_PUSH = {
+  sendUrl: "https://exp.host/--/api/v2/push/send",
+  receiptsUrl: "https://exp.host/--/api/v2/push/getReceipts",
+  sendBatch: 100,
+  receiptsBatch: 1_000,
+  timeoutMs: 10_000,
+} as const;
+/** Receipts are fetched this long after the send (Expo's recommendation) and are gone after Expo clears them (24 h). */
+export const PUSH_RECEIPT_DELAY_SEC = 900;
+export const PUSH_RECEIPT_TTL_SEC = 86_400;
+/** Tickets checked per `receipts` run (the rest wait for the next run). */
+export const PUSH_RECEIPTS_PER_RUN = 10_000;
 
 /**
  * Testnet mirror relay: push when the mainnet answer moved ≥ this many bps since the last mirrored answer, or when

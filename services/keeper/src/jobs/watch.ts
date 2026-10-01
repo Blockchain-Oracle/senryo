@@ -1,7 +1,8 @@
 import { type Address, getAddress, readAccountSnapshot, readBalances, readOracles } from "@senryo/chain";
-import { ENGINE_MARKETS, engineMarketsOn } from "@senryo/config";
+import { engineMarketsOn } from "@senryo/config";
 import { BPS, HEALTH_WARN_MARGIN_BPS, INTERVALS_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
+import { healthWarningPush, priceAlertPush } from "../push-messages.ts";
 import type { Job } from "../runner.ts";
 
 /**
@@ -18,20 +19,21 @@ export function alertsJob(ctx: KeeperContext): Job {
       const views = await readOracles(ctx.read, ctx.chainId, marketIds, "finalized");
       for (const view of views) {
         if (view.price18 === 0n) continue;
-        const hits = await ctx.db<{ id: string; user_address: string; direction: string }[]>`
+        const hits = await ctx.db<
+          { id: string; user_address: string; direction: "above" | "below"; price18: string }[]
+        >`
           UPDATE price_alerts SET status = 'triggered', triggered_at = now()
            WHERE chain_id = ${ctx.chainId} AND market_id = ${view.marketId} AND status = 'active'
              AND ((direction = 'above' AND price18 <= ${view.price18.toString()}::numeric)
                OR (direction = 'below' AND price18 >= ${view.price18.toString()}::numeric))
-          RETURNING id, user_address, direction`;
+          RETURNING id, user_address, direction, price18`;
         for (const hit of hits) {
-          const symbol = ENGINE_MARKETS.find((m) => m.id === view.marketId)?.symbol ?? String(view.marketId);
           await ctx.notifier.push(
             ctx.chainId,
             `alert:${hit.id}`,
             hit.user_address,
-            "price_alerts",
-            `${symbol} crossed your alert`,
+            "priceAlerts",
+            priceAlertPush(ctx.chainId, view.marketId, hit.direction, BigInt(hit.price18), view.price18),
           );
         }
       }
@@ -52,9 +54,15 @@ async function healthWatch(ctx: KeeperContext, roundKey: string): Promise<void> 
       `health:${user}:${roundKey}`,
       user,
       "liquidation",
-      "Your position is near liquidation",
+      healthWarningPush(ctx.chainId, soleMarket(snap.positionBitmap)),
     );
   }
+}
+
+/** The market id when the bitmap holds exactly one position (a warning then opens it), else undefined. */
+function soleMarket(bitmap: number): number | undefined {
+  if (bitmap === 0 || (bitmap & (bitmap - 1)) !== 0) return undefined;
+  return Math.log2(bitmap);
 }
 
 /** Ops: operational wallets below their floor (Monad reserve rule: senders of value keep > 10 MON on mainnet). */

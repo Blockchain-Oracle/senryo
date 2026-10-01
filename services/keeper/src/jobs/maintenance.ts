@@ -11,6 +11,8 @@ import { engineMarketsOn, positionGasLimit } from "@senryo/config";
 import { MS_PER_SECOND } from "@senryo/service-common";
 import { HOLD_RELEASABLE_AFTER_SEC, HOLD_RELEASE_GRACE_SEC, INTERVALS_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
+import { receiptFills } from "../fills.ts";
+import { triggerFillPush } from "../push-messages.ts";
 import type { Job } from "../runner.ts";
 
 /**
@@ -57,7 +59,7 @@ export function holdExpiryJob(ctx: KeeperContext): Job {
 /**
  * TP/SL triggers (D-034): orders come from the indexer (`TriggerPlaced`); execute when the oracle crosses. The order
  * struct is read onchain (`triggerOrder(orderId)`), the crossing re-checked by the contract (a miss reverts in
- * simulation and nothing is sent).
+ * simulation and nothing is sent). A finalized execution pushes `fills` to the owner at the receipt's fill price.
  */
 export function triggerJob(ctx: KeeperContext): Job {
   return {
@@ -90,6 +92,16 @@ export function triggerJob(ctx: KeeperContext): Job {
             }),
           );
           ctx.log.info({ orderId, tx: sent.hash, stage: sent.final.stage }, "trigger executed");
+          if (sent.final.stage === "finalized") {
+            const [fill] = receiptFills(sent.final.receipt, order.user, "TRIGGER");
+            await ctx.notifier.push(
+              ctx.chainId,
+              `fill:${sent.hash}`,
+              order.user,
+              "fills",
+              triggerFillPush(ctx.chainId, order, fill),
+            );
+          }
         } catch (error) {
           ctx.log.warn({ orderId, err: describeError(error) }, "trigger not executable");
         }

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "services/keeper (D-035): liquidations, observe pokes, TP/SL triggers, hold expiry, deposit inbox sweeps, testnet MirrorAggregator relay, price alerts, wallet floors.",
+  "description": "services/keeper (D-035): liquidations, observe pokes, TP/SL triggers, hold expiry, deposit inbox sweeps, testnet MirrorAggregator relay, price alerts, wallet floors, user pushes through Expo (receipts checked).",
   "license": "MIT",
   "scripts": {
     "dev": "tsx src/main.ts",

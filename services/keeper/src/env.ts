@@ -22,6 +22,7 @@ export const KEEPER_JOBS = [
   "wallets",
   "retention",
   "sweeps",
+  "receipts",
 ] as const;
 export type KeeperJob = (typeof KEEPER_JOBS)[number];
 
@@ -32,16 +33,21 @@ const bigintEnv = (fallback: bigint) =>
     .optional()
     .transform((text) => (text === undefined ? fallback : BigInt(text)));
 
-/** Secrets (`KEEPER_PK` / `KEEPER_PK_FILE`) are read separately by `loadSigner`, never through this schema. */
+/**
+ * Secrets (`KEEPER_PK` / `KEEPER_PK_FILE`, the optional `EXPO_ACCESS_TOKEN` / `EXPO_ACCESS_TOKEN_FILE`) are read
+ * separately (`loadSigner`, `expoClient`), never through this schema.
+ */
 export const keeperEnvSchema = baseEnvSchema.extend({
   PORT: portSchema.default(KEEPER_PORT),
   KEEPER_STALE_SEC: z.coerce.number().int().positive().default(KEEPER_STALE_SEC),
   /** Enabled jobs (default: everything except the mirror relay, which needs MIRROR_ROLE). Gas top-ups live in the api (D-171). */
   KEEPER_JOBS: csvSchema.transform((list) =>
-    (list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets", "retention", "sweeps"]).filter(
-      (j): j is KeeperJob => (KEEPER_JOBS as readonly string[]).includes(j),
-    ),
+    (
+      list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets", "retention", "sweeps", "receipts"]
+    ).filter((j): j is KeeperJob => (KEEPER_JOBS as readonly string[]).includes(j)),
   ),
+  /** User push delivery through Expo; `off` only records the `push_sends` row and logs (local runs, checks). */
+  PUSH_DELIVERY: z.enum(["on", "off"]).default("on"),
   /** Extra accounts to scan for liquidation until the indexer source is live (S4). */
   KEEPER_WATCH_ACCOUNTS: csvSchema,
   /** Envio GraphQL endpoint (S4); unset → accounts come from the ledger + watch list only. */

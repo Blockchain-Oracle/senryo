@@ -8,6 +8,8 @@ import {
 } from "@senryo/chain";
 import { liquidateGasLimit } from "@senryo/config";
 import type { KeeperContext } from "../context.ts";
+import { receiptFills } from "../fills.ts";
+import { liquidatedPush } from "../push-messages.ts";
 import type { Job } from "../runner.ts";
 
 /** Bits set in the account's position bitmap (= open positions → liquidation gas budget). */
@@ -20,7 +22,8 @@ export function countPositions(bitmap: number): number {
 /**
  * Liquidation scan: candidates from the source → one multicall `isLiquidatable` (view risk uses `peek`, so a fresh
  * oracle round counts at once) → `liquidate(user)` simulated (estimate) and sent with the per-position gas budget,
- * confirmed at `finalized`. Permissionless onchain; the keeper just makes sure someone does it promptly.
+ * confirmed at `finalized`, then the owner gets a `liquidation` push naming what closed. Permissionless onchain; the
+ * keeper just makes sure someone does it promptly.
  */
 export function liquidationJob(ctx: KeeperContext): Job {
   const inflight = new Set<string>();
@@ -67,6 +70,14 @@ async function liquidate(ctx: KeeperContext, user: Address, inflight: Set<string
     ctx.recent.add({ job: "liquidate", subject: user, tx: sent.hash, stage: sent.final.stage });
     if (sent.final.stage !== "finalized")
       ctx.notifier.ops("warn", "liquidation did not finalize", { user, tx: sent.hash });
+    else
+      await ctx.notifier.push(
+        ctx.chainId,
+        `liquidated:${sent.hash}`,
+        user,
+        "liquidation",
+        liquidatedPush(ctx.chainId, receiptFills(sent.final.receipt, user, "LIQUIDATE")),
+      );
   } catch (error) {
     // A race (someone else liquidated, or the price moved back) reverts in simulation: nothing was sent.
     ctx.log.warn({ user, err: describeError(error) }, "liquidation skipped");
