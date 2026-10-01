@@ -1,7 +1,8 @@
 /**
  * What Mainnet shows before the mainnet launch (S8.22, D-172): an honest read-only state — live Chainlink prices on
- * Monad mainnet, "trading opens at launch", and one tap back to Practice. No balances or tickets pretend to work. The
- * notice is a mainnet wash card (no border); the prices are one filled group under their label.
+ * Monad mainnet, "perps open at launch" (spot tokens trade now, J11), and one tap back to Practice. No balances or
+ * tickets pretend to work. The notice is a mainnet wash card (no border); the prices are one filled group under their
+ * label.
  */
 import { formatUnits } from "@senryo/core";
 import { StyleSheet, Text, View } from "react-native";
@@ -21,9 +22,11 @@ function feedTime(updatedSec: bigint): string {
 }
 
 const COPY = {
-  markets: "Prices are live from Chainlink on Monad mainnet. Trading with real money opens at launch.",
+  markets:
+    "Prices are live from Chainlink on Monad mainnet. Perps with real money open at launch; spot tokens trade now.",
   trade: "Real-money trading opens at launch. Until then, practice the same trade with paper money.",
-  portfolio: "Your real-money account appears here when mainnet opens. Practice keeps working meanwhile.",
+  portfolio:
+    "Spot tokens trade now with your real funds — Markets → Tokens. Your perps account appears here when they open; Practice keeps working meanwhile.",
   lp: "The mainnet liquidity pool opens at launch.",
 } as const;
 
@@ -34,7 +37,7 @@ export function PrelaunchMainnet({ surface }: { surface: keyof typeof COPY }) {
   return (
     <View style={styles.wrap}>
       <View style={[styles.banner, { backgroundColor: color.mainnetWash }]}>
-        <Text style={[TYPE.bodyStrong, { color: color.ink }]}>Mainnet · Real money opens at launch</Text>
+        <Text style={[TYPE.bodyStrong, { color: color.ink }]}>Mainnet · Perps open at launch</Text>
         <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{COPY[surface]}</Text>
         <Button
           label="Switch to Practice"

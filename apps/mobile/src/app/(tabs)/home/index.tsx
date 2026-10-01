@@ -23,6 +23,7 @@ import { useAccountRetry } from "~/features/portfolio/account";
 import { MS_PER_SECOND, WINDOW_SEC } from "~/features/portfolio/constants";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { RiskBanner } from "~/features/portfolio/RiskBanner";
+import { TokenHoldings } from "~/features/tokens/TokenHoldings";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { useReadOnlyNetwork } from "~/lib/network";
@@ -61,7 +62,14 @@ export default function Home() {
       status={<SessionChip />}
       expanded={readOnly ? null : <ExpandedBalance />}
     >
-      {readOnly ? <PrelaunchMainnet surface="portfolio" /> : <HomeBody />}
+      {readOnly ? (
+        <>
+          <TokenHoldings />
+          <PrelaunchMainnet surface="portfolio" />
+        </>
+      ) : (
+        <HomeBody />
+      )}
     </CollapsingScreen>
   );
 }
@@ -76,6 +84,7 @@ function HomeBody() {
       <BalanceCurve address={address} />
       <AvailabilitySection address={address} />
       <PositionsSection />
+      <TokenHoldings />
       <HomeTiles />
       <TopTrades />
     </>
