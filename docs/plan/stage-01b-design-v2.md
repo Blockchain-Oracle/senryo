@@ -278,6 +278,10 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - **Still open:** deposit status and other-chain deposits (wait for Aurora intents), the card's reveal /
     authorization detail / wallet pages (wait for an issued card), push notifications and the Face ID / notification
     primers (expo-notifications + a native rebuild), Holders (needs an indexer hook), VoiceOver pass.
+  - **Holders shipped 1 Oct** (agent holders-api + lead): the first market-detail tab (Holders · Feed · About, F32),
+    open positions of people who share their trades on that network, largest first by notional at the accepted
+    price, with side (no per-position leverage — cross margin), average entry, leveraged size and price-move P&L;
+    Friends behind the session gate. Push and primers shipped the same afternoon (above).
 - **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
   guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), first pass complete, review open.** First-pass masters are in `brand/art/`: koban, chōgin, five FX
