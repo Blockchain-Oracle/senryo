@@ -371,6 +371,6 @@ if __name__ == "__main__":
     venue_chip()
     for flag, currency in (("eu", "eur"), ("gb", "gbp"), ("jp", "jpy"), ("ch", "chf"), ("ca", "cad")):
         fx_pair(flag, "us", f"fx-{currency}-usd")
-    for name in sorted(os.listdir(OUT)):
+    for name in sorted(n for n in os.listdir(OUT) if n.endswith(".svg")):  # subfolders belong to onboarding.py
         body = open(os.path.join(OUT, name)).read()
         assert "<text" not in body and "<filter" not in body and "<style" not in body, name

@@ -227,8 +227,15 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     and the avatars (art branch), the seal's gold-leaf recolour.
 - **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
   guest Home shows the listed markets and one invitation.
-- **S1b.3 (art), partial.** First-pass masters are in `brand/art/` (koban, chōgin, five FX pair discs, venue chip).
-  Still open: onboarding scenes, completion foil and the 12 avatars. B12 review stays open.
+- **S1b.3 (art), first pass complete, review open.** First-pass masters are in `brand/art/`: koban, chōgin, five FX
+  pair discs, venue chip, and now the J1 package (`brand/scripts/onboarding.py`): six onboarding scenes, pending-passkey
+  art, completion foil, twelve avatars, plus `labels.json` (native label anchors), all registered in
+  `packages/identity/src/art/onboarding.ts`.
+  - Codex reviewed the package over five rounds; in the closing round all nine pieces pass as static first-pass
+    masters for the user's design review (`docs/design/reviews/2026-10-01-j1-art-review.md`, verbatim, with what
+    still falls short).
+  - **B12 stays open:** the user's design review is the gate. Motion as implemented, on-device rendering and the
+    pending screen's layout are unreviewed. Contact sheets and motion samples: `brand/scripts/sheets.py`, `motion.py`.
 - **S1b.4, partial:**
   - Done: MarketRow, TradeHeader, PositionDetail, PositionsTable, BucketRegister, CollateralPanel, LpScreen, Fund,
     add-money, Onboarding/PrivacyPlate seal, recovery, help, CardFace, web `TokenIcon`/`SealMark`.
