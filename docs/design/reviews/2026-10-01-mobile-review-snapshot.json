@@ -1,0 +1,187 @@
+{
+  "review_date": "2026-10-01",
+  "captured_at_utc": "2026-10-01T06:49:41.095428+00:00",
+  "scope": "Documentation review; no product implementation edited. Agent screenshots can precede dirty source. No fresh account/money/device acceptance performed.",
+  "checkouts": [
+    {
+      "label": "main",
+      "path": "/Users/abu/dev/hackathon/metropolis",
+      "branch": "main",
+      "head": "c3e82394d3782442b773c799f51aa49298d3e47c",
+      "dirty_entries": 0,
+      "source_fingerprints": {
+        "apps/mobile/src/features/auth/Onboarding.tsx": "1b6cd38455d6353dde4b8dff3aac9d414046983cf9ebbf9b85f1a47b9bb289d8",
+        "apps/mobile/src/features/auth/WelcomeActions.tsx": "c1a021b39114166dde3fa9bf5f6643bbe27ce3f0d83b2b4ddab78186c6bc2d96",
+        "apps/mobile/src/features/auth/AuthFailure.tsx": "37280b11c3ab14964f56e3fa8027be36780491de77a82f94dc1b51339fdb58e9",
+        "apps/mobile/src/features/auth/CeremonyCard.tsx": "c5cdda04c891b003895c858f4f773c01c61deb5e6f0adcd3ff5c07e41ac30069",
+        "apps/mobile/src/features/auth/AuthCard.tsx": "e068fd2a92581ee3094f7fdcaec147c994b5b67fac704ca879a5709c06a12351",
+        "apps/mobile/src/lib/account/provider.tsx": "25aa7f3f76f7fb4c9b472c55b8d5a8470e4090cb45ada5ece8965455829f46ee",
+        "apps/mobile/src/lib/storage.ts": "57aefc87ff4e5e2b35938f785ac9905346dcd1554e0ba6c9ca035c9aae086bf2",
+        "apps/mobile/src/components/trade/HoldToConfirm.tsx": "ac8018dc6c2568d93bdc2dbf1e98679e1f51f763aa5d1ba3defce84077046364",
+        "packages/query/src/trace.ts": "efdb56592685eb2bb9d9941b037cc531c03dd5c76ca70a85b12490baba941c73",
+        "apps/mobile/src/components/kit/Segmented.tsx": "505902c489eb02bf9b371b83c4a097e980ad88465a16b63c840bcc6a0783a969",
+        "docs/plan/stage-01b-design-v2.md": "df00e65c091ae97b17ed93d715adb8ad1ed3cacbcb683fabd103afd9918c5a3f",
+        "docs/design/senryo-v2/PROJECT-HANDOFF.md": "93cd9f53a1756dba85b9ef0b1f25a5e86cdbb9229543cd067e49e347627fa98a",
+        "docs/design/senryo-parity-ledger.json": "e2ab6bbede27e201d2756865f71c94ee6695a69be9b74f8d2ff28d6d7fcd5d02"
+      }
+    },
+    {
+      "label": "A3-shell-ticket",
+      "path": "/Users/abu/dev/hackathon/metropolis/.claude/worktrees/agent-a1ba38b2613c31cc6",
+      "branch": "worktree-agent-a1ba38b2613c31cc6",
+      "head": "98e61c45df1c1cc80bfe11401fec843d35f6626c",
+      "dirty_entries": 98,
+      "source_fingerprints": {
+        "apps/mobile/src/features/auth/Onboarding.tsx": "1b6cd38455d6353dde4b8dff3aac9d414046983cf9ebbf9b85f1a47b9bb289d8",
+        "apps/mobile/src/features/auth/WelcomeActions.tsx": "7706edf9f3833f6afa84f5c4ce6dc0350f966e7f196327e8a85697ce52a7d859",
+        "apps/mobile/src/features/auth/AuthFailure.tsx": "37280b11c3ab14964f56e3fa8027be36780491de77a82f94dc1b51339fdb58e9",
+        "apps/mobile/src/features/auth/CeremonyCard.tsx": "c5cdda04c891b003895c858f4f773c01c61deb5e6f0adcd3ff5c07e41ac30069",
+        "apps/mobile/src/features/auth/AuthCard.tsx": "e068fd2a92581ee3094f7fdcaec147c994b5b67fac704ca879a5709c06a12351",
+        "apps/mobile/src/lib/account/provider.tsx": "25aa7f3f76f7fb4c9b472c55b8d5a8470e4090cb45ada5ece8965455829f46ee",
+        "apps/mobile/src/lib/storage.ts": "b911d2525012a4e2b1a35f18953fc7a5fb9bb7e5d54f25330d92544f25c59322",
+        "apps/mobile/src/components/trade/HoldToConfirm.tsx": "f6bf529dd561c537b27aca3dfe0ffaa479c07513db9e7fdc496d2dcd2ecc4cfb",
+        "apps/mobile/src/features/trade/TpSlChild.tsx": "a1d05bbd2ab29d4ea0747d5c6263df3b397dc12cc0b4eb503d7513bd2326e47f",
+        "packages/query/src/trace.ts": "efdb56592685eb2bb9d9941b037cc531c03dd5c76ca70a85b12490baba941c73",
+        "apps/mobile/src/components/sheet/ChildSheet.tsx": "32b94937ac89f055bf495109c314dda65d6e7c7d9951553c638d6db4746c2595",
+        "apps/mobile/src/components/sheet/TransactionSheet.tsx": "5fa44f8879c4987e4d6080676580b1db1d9fec5b7946626f9b2769ebb168dbea",
+        "apps/mobile/src/components/shell/ActionFan.tsx": "f7d4fcec7a6fe3a632880ca9562aa88163379255c7e91c0297e3350f56150b34",
+        "apps/mobile/src/components/shell/CollapsingScreen.tsx": "bcc100f0d5e11aca1d8a3b9f89af9fc241f2816efb6622d80ffca691e33414ce",
+        "apps/mobile/src/components/kit/Segmented.tsx": "091f8978c1be2ea5d0302564d536c4c93c5598b4f6e41c40b2eff93e77a7c03a",
+        "apps/mobile/src/components/kit/ChipRow.tsx": "f4a40901c0b7b666db3a6f71feb24b3b47a955112494fd04c94af7238e894cc6",
+        "apps/mobile/src/features/home/HomeHeader.tsx": "761f8cc0b84a91b2c9f4c090ef2d110e77d2757374d6b4a70c1b14253717fe95",
+        "apps/mobile/src/features/home/Availability.tsx": "ef56dc2c7f6a273702254bf051d4b476f600a3802d0b1ade80afbc040c735760",
+        "docs/plan/stage-01b-design-v2.md": "df00e65c091ae97b17ed93d715adb8ad1ed3cacbcb683fabd103afd9918c5a3f",
+        "docs/design/senryo-v2/PROJECT-HANDOFF.md": "ce09913a018b04888f032185ebb5aeb544101656e322f62507fe1f09e1a1c4ff",
+        "docs/design/senryo-parity-ledger.json": "b7f2f2774cafcb21f5af12d10699632e4fc4c66bc812bf30ba4c0ae9e7a993cf"
+      }
+    },
+    {
+      "label": "A4-identity",
+      "path": "/Users/abu/dev/hackathon/metropolis/.claude/worktrees/agent-a9be93059e7b22f08",
+      "branch": "worktree-agent-a9be93059e7b22f08",
+      "head": "bccf2262508c7da708ab7c7b292a5ca18dc3719e",
+      "dirty_entries": 0,
+      "source_fingerprints": {
+        "apps/mobile/src/features/auth/Onboarding.tsx": "f4e807b61a1439006bde971d724618f40606de8f5fb8c5c973515a5f87c06ee0",
+        "apps/mobile/src/features/auth/WelcomeActions.tsx": "b5c324ad5cc5592419a47ae158c097c502b853ef3603ed98f18deeada3de771c",
+        "apps/mobile/src/features/auth/AuthFailure.tsx": "37280b11c3ab14964f56e3fa8027be36780491de77a82f94dc1b51339fdb58e9",
+        "apps/mobile/src/features/auth/CeremonyCard.tsx": "4b432ae56d90608347593da86e8275bcb69caa18977cd6705f233bf9fa7fe594",
+        "apps/mobile/src/features/auth/AuthCard.tsx": "42a6b733c52f0c3e400eb3a738b5114af10eebc1d4ada6a4211544fa3facb64d",
+        "apps/mobile/src/lib/account/provider.tsx": "25aa7f3f76f7fb4c9b472c55b8d5a8470e4090cb45ada5ece8965455829f46ee",
+        "apps/mobile/src/lib/storage.ts": "57aefc87ff4e5e2b35938f785ac9905346dcd1554e0ba6c9ca035c9aae086bf2",
+        "apps/mobile/src/components/trade/HoldToConfirm.tsx": "ac8018dc6c2568d93bdc2dbf1e98679e1f51f763aa5d1ba3defce84077046364",
+        "packages/query/src/trace.ts": "efdb56592685eb2bb9d9941b037cc531c03dd5c76ca70a85b12490baba941c73",
+        "apps/mobile/src/components/kit/Segmented.tsx": "505902c489eb02bf9b371b83c4a097e980ad88465a16b63c840bcc6a0783a969",
+        "docs/plan/stage-01b-design-v2.md": "df00e65c091ae97b17ed93d715adb8ad1ed3cacbcb683fabd103afd9918c5a3f",
+        "docs/design/senryo-v2/PROJECT-HANDOFF.md": "93cd9f53a1756dba85b9ef0b1f25a5e86cdbb9229543cd067e49e347627fa98a",
+        "docs/design/senryo-parity-ledger.json": "e2ab6bbede27e201d2756865f71c94ee6695a69be9b74f8d2ff28d6d7fcd5d02"
+      }
+    }
+  ],
+  "ledger": {
+    "rows": 216,
+    "classifications": {
+      "Adapted": 160,
+      "Blocked": 26,
+      "Excluded": 19,
+      "Exact": 9,
+      "Additive": 2
+    },
+    "acceptance_status": {
+      "pending": 178,
+      "acquired (S1b.2); mono silhouette gap": 1,
+      "acquired; white diamond gap": 1,
+      "acquired; mono gap; licence flag (combining with badges needs permission)": 1,
+      "acquired; Symbol vector gap; licence flag (Circle)": 1,
+      "not acquired": 4,
+      "acquired": 2,
+      "Perpl PNG kit + HYPE acquired; Perpl colour vector gap": 1,
+      "not attempted yet": 3,
+      "acquired; licence flag (written permission)": 1,
+      "acquired; mono logomark gap": 1,
+      "route support unverified; art not acquired": 2,
+      "pattern adopted; company art per listed equity is B12": 1,
+      "pattern adopted": 2,
+      "rule enforced in registry": 1,
+      "lands with J11": 1,
+      "site icon acquired; press kit is wordmark-only": 1,
+      "site-hosted first-party file (press kit gated)": 1,
+      "binding exclusion": 2,
+      "pending S10 provider evidence": 1,
+      "brand/ seal kept, recoloured via gold ramp": 1,
+      "B12 art open": 1,
+      "brand/": 1,
+      "avatars not authored yet (B12)": 1,
+      "reserved": 3,
+      "built (S1b.1)": 1,
+      "lucide-react-native (S1b.6)": 1,
+      "first pass in brand/art (S1b.3); B12 review open": 1
+    }
+  },
+  "media": [
+    {
+      "file": "onboarding-reference-comparison.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/a2/shots/compare/welcome-tokens-vs-S01.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/onboarding-reference-comparison.png",
+      "sha256": "181e00356ebee483e24a0d230db1a758436258c9a02ffc39b17412681dd18be4",
+      "source_mtime_utc": "2026-10-01T05:50:00.075863+00:00"
+    },
+    {
+      "file": "foundation-contact-sheet.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/a2/shots/app/contact.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/foundation-contact-sheet.png",
+      "sha256": "f80539bae4c4f4ff9a79112aa9de88065800d97ebe68f5c09a9a04f5d600f1e0",
+      "source_mtime_utc": "2026-10-01T05:49:25.277117+00:00"
+    },
+    {
+      "file": "a3-static-review.json",
+      "source": "/private/tmp/senryo-mobile-review-2026-10-01-cli.json",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/a3-static-review.json",
+      "sha256": "699ccdbab91e67c2e51d0472794bbdd8811311f3b1c5822ed0c63e2b94bcf2d0",
+      "source_mtime_utc": "2026-10-01T06:44:32.909338+00:00"
+    },
+    {
+      "file": "a3-markets.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/shots/04-markets.small.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/a3-markets.png",
+      "sha256": "cd8862fc09f2106c1945be7f346ddf0b4c1fafa16064b0258e7ecdeca377ff5e",
+      "source_mtime_utc": "2026-10-01T06:39:09.417830+00:00"
+    },
+    {
+      "file": "a3-social.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/shots/10-social.small.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/a3-social.png",
+      "sha256": "83fb24512e14cbd33dbd7aaf701166466af83a380a0a268e24344de5c3e05cb0",
+      "source_mtime_utc": "2026-10-01T06:41:40.561507+00:00"
+    },
+    {
+      "file": "a3-you.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/shots/11-you.small.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/a3-you.png",
+      "sha256": "716f5d4b1a7b8e33d0a29e0003f6ab5af6af93b068c3447668703158805fdc70",
+      "source_mtime_utc": "2026-10-01T06:41:44.001614+00:00"
+    },
+    {
+      "file": "a3-fan.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/shots/12-fan-open.small.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/a3-fan.png",
+      "sha256": "9a4c4dc446367371e33d293ac169e388d2964bc9d92ba71bea2d713b1ad1a65d",
+      "source_mtime_utc": "2026-10-01T06:42:01.123289+00:00"
+    },
+    {
+      "file": "a3-market-detail.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/shots/20-market-detail.small.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/a3-market-detail.png",
+      "sha256": "9fb211c985cdb15cb19d8e021fa2c763e72427ca1c5ebe3db1696fcc0b692541",
+      "source_mtime_utc": "2026-10-01T06:45:34.087589+00:00"
+    },
+    {
+      "file": "a3-ticket.png",
+      "source": "/private/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/14fe9f06-b632-4a9a-adba-bb60940bdf58/scratchpad/shots/24-ticket-amount-lev.small.png",
+      "local_evidence": "/Users/abu/dev/hackathon/metropolis/docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/a3-ticket.png",
+      "sha256": "1e5fdb19eef49eec181521ebe5f137bb9cb71730910c680cfa1af1e5ae978255",
+      "source_mtime_utc": "2026-10-01T06:49:51.257851+00:00"
+    }
+  ],
+  "evidence_policy": "Reference-derived media remain in the existing ignored reference-study directory; not intended for git."
+}
