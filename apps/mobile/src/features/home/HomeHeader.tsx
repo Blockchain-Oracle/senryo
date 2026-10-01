@@ -1,6 +1,6 @@
 import { RISK } from "@senryo/core";
 import { ids } from "@senryo/identity";
-import { useAccountRisk, useEquityHistory } from "@senryo/query";
+import { useAccountRisk, useEquityHistory, useNetFlows } from "@senryo/query";
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
@@ -15,9 +15,9 @@ import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from
 /**
  * Home's collapsing header pieces (C16/C19, FT069/FT073; Fomo F09 / F12). The bar keeps the 千 seal and — once
  * collapsed — the compact balance (F12). The expanded block is F09's: the balance as the one big figure with its
- * cents in quiet ink, its sourced 24 h change under it ("— 24h" when unknown), and Add money to its right at the
- * Deposit's proportions. The figure is the risk-adjusted balance; Balance details names it and reconciles it, so no
- * label stands over it here. Unknown balances are skeletons, never $0.00 (D-020).
+ * cents in quiet ink, its sourced 24 h change under it — net of money moved in or out ("— 24h" when unknown) — and
+ * Add money to its right at the Deposit's proportions. The figure is the risk-adjusted balance; Balance details names
+ * it and reconciles it, so no label stands over it here. Unknown balances are skeletons, never $0.00 (D-020).
  */
 const SEAL = ids.brand("senryo");
 /** The big figure may shrink to this share of its size before it truncates, so a long balance still fits beside the button. */
@@ -37,15 +37,22 @@ export function HomeSeal() {
   );
 }
 
+/**
+ * The balance and how it did over the day: today's balance against the day's first one, less the money moved in or
+ * out since (a withdrawal or a send is not a loss; a deposit or a claim is not a gain). Percent of what the day
+ * started with plus what came in.
+ */
 function useBalance() {
   const address = useAccount().hint?.address;
   const risk = useAccountRisk(address, "finalized");
   const day = useEquityHistory(address, DAY_SEC);
   const equity = risk.status === "fresh" || risk.status === "stale" ? risk.value.equityInit : undefined;
   const first = day.status === "fresh" || day.status === "stale" ? day.value[0] : undefined;
-  const change = first && equity !== undefined ? equity - first.equityInit : undefined;
-  const changeBps =
-    first && first.equityInit > 0n && change !== undefined ? (change * RISK.BPS) / first.equityInit : undefined;
+  const flows = useNetFlows(address, first?.timestamp);
+  const moved = flows.status === "fresh" || flows.status === "stale" ? flows.value : undefined;
+  const change = first && moved && equity !== undefined ? equity - first.equityInit - moved.net : undefined;
+  const base = first && moved ? first.equityInit + moved.inflow : undefined;
+  const changeBps = base !== undefined && base > 0n && change !== undefined ? (change * RISK.BPS) / base : undefined;
   return { address, equity, change, changeBps };
 }
 

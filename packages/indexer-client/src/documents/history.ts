@@ -77,10 +77,13 @@ export const ActivityDocument = defineDocument<ActivityVars>()(
   z.object({ Activity: z.array(activity) }).transform((d) => d.Activity),
 );
 
-/** Next page = rows strictly after `before` in (timestamp desc, id desc) order — no gaps or repeats within a block. */
+/**
+ * Next page = rows strictly after `before` in (timestamp desc, id desc) order — no gaps or repeats within a block.
+ * `after` keeps only rows strictly later than that unix second (a window's money movements).
+ */
 export function activityVars(
   account: AccountVars,
-  opts: { before?: { timestamp: number; id: string }; kinds?: readonly string[]; limit?: number } = {},
+  opts: { before?: { timestamp: number; id: string }; after?: number; kinds?: readonly string[]; limit?: number } = {},
 ): ActivityVars {
   const b = opts.before;
   const where: Where = {
@@ -88,6 +91,7 @@ export function activityVars(
     ...(b
       ? { _or: [{ timestamp: { _lt: b.timestamp } }, { timestamp: { _eq: b.timestamp }, id: { _lt: b.id } }] }
       : {}),
+    ...(opts.after !== undefined ? { timestamp: { _gt: opts.after } } : {}),
     ...(opts.kinds ? { kind: { _in: opts.kinds } } : {}),
   };
   return { where, limit: opts.limit ?? PAGE_SIZE.activity };

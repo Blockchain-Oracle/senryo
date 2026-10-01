@@ -5,7 +5,7 @@
  */
 import { type AccountSnapshot, type PositionView, readAccountSnapshot, readPositions } from "@senryo/chain";
 import type { AccountRiskView, Address, Reading } from "@senryo/core";
-import { type EquityCurve, EquityDocument, equityVars } from "@senryo/indexer-client";
+import { ActivityDocument, activityVars, type EquityCurve, EquityDocument, equityVars } from "@senryo/indexer-client";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { ACCOUNT_REFETCH_MS, EQUITY_REFETCH_MS, GAS_REFETCH_MS } from "./constants.ts";
 import { type QueryEnv, useQueryEnv } from "./env.tsx";
@@ -91,6 +91,52 @@ export function useEquityHistory(address: Address | undefined, windowSec: number
       );
     },
     enabled: address !== undefined,
+    refetchInterval: EQUITY_REFETCH_MS,
+    staleTime: EQUITY_REFETCH_MS,
+  });
+  return readingOf(query, EQUITY_REFETCH_MS);
+}
+
+/**
+ * Money moved in or out of the account (not trading): deposits — claims, vouchers and arrivals included, since each
+ * lands as a deposit — withdrawals and sends, card spending and refunds. Their indexed amounts are already signed
+ * changes of the balance (usd6).
+ */
+const FLOW_KINDS = ["DEPOSIT", "WITHDRAW", "CARD_CAPTURE", "CARD_REFUND"] as const;
+/** More movements than this in one window is not a phone's account; the sum stops there. */
+const FLOWS_LIMIT = 500;
+
+export interface NetFlows {
+  /** Signed total (usd6): positive when more came in than went out. */
+  net: bigint;
+  /** What came in (usd6), for a change's percentage base. */
+  inflow: bigint;
+}
+
+/** The account's money movements strictly after `afterSec` (unix seconds), summed; `afterSec` undefined waits. */
+export function useNetFlows(address: Address | undefined, afterSec: number | undefined): Reading<NetFlows> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: [...keys.account(env.chainId, address ?? "0x"), "flows", afterSec ?? 0] as const,
+    queryFn: async ({ signal }): Promise<NetFlows> => {
+      const rows = await env.indexer.request(
+        ActivityDocument,
+        activityVars(
+          { chainId: env.chainId, user: address ?? "0x" },
+          { after: afterSec ?? 0, kinds: FLOW_KINDS, limit: FLOWS_LIMIT },
+        ),
+        signal,
+      );
+      let net = 0n;
+      let inflow = 0n;
+      for (const row of rows) {
+        const amount = row.amount ?? 0n;
+        net += amount;
+        if (amount > 0n) inflow += amount;
+      }
+      return { net, inflow };
+    },
+    enabled: address !== undefined && afterSec !== undefined,
     refetchInterval: EQUITY_REFETCH_MS,
     staleTime: EQUITY_REFETCH_MS,
   });
