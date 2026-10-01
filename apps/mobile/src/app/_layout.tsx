@@ -37,6 +37,7 @@ const SHEETS = [
   "account-required",
   "network",
   "receive",
+  "balance-details",
 ];
 
 export default function RootLayout() {

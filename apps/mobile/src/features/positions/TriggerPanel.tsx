@@ -6,7 +6,7 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
-import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
+import { KeyValue, Panel } from "~/components/kit/Surface";
 import { LEG_NAME, legMessage, removalMessage } from "~/features/trade/trigger-legs";
 import { useTriggerLegs } from "~/features/trade/useTriggerLegs";
 import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
@@ -23,7 +23,9 @@ type Kind = (typeof KINDS)[number]["value"];
  * F14 TP/SL on a held position (TriggerOrders.sol): active orders with Cancel; a new order N % from the oracle price
  * with the realised PnL previewed at the trigger; signed in session, placed by the user (in scope), executed by any
  * keeper when the accepted oracle price crosses. Closed sessions queue until the market opens (stated). One borderless
- * filled group.
+ * filled group under a plain heading: the levels already set as rows (side in colour and in words, Cancel beside each),
+ * then the two selectors and the preview. Placing a level is the group's quiet plate — the page's one primary action
+ * is the close hold pinned at the bottom.
  */
 export function TriggerPanel({ market, position }: { market: LiveMarket; position: PositionView }) {
   const { color } = useTheme();
@@ -53,10 +55,12 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
 
   return (
     <Panel style={styles.panel}>
-      <SectionLabel>TP / SL</SectionLabel>
+      <Text accessibilityRole="header" style={[TYPE.rowTitle, { color: color.ink }]}>
+        TP / SL
+      </Text>
       {mine.map((t) => (
         <View key={t.id} style={styles.row}>
-          <Text style={[TYPE.rowAmount, { color: t.takeProfit ? color.up : color.down, flex: 1 }]}>
+          <Text style={[TYPE.rowAmount, styles.level, { color: t.takeProfit ? color.up : color.down }]}>
             {t.takeProfit ? "TP" : "SL"} · {price18(t.triggerPrice, priceDecimalsOf(market.marketId))} ·{" "}
             {t.size >= position.size ? "all" : "part"}
           </Text>
@@ -86,8 +90,10 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
         onChange={(v) => setStepBps(BigInt(v))}
         label="Distance from the oracle price"
       />
-      <KeyValue label={`${symbol} at`} value={price18(trigger18, priceDecimalsOf(market.marketId))} />
-      <KeyValue label="Realised at trigger" value={signedUsd(atTrigger.netUsd6)} />
+      <View>
+        <KeyValue label={`${symbol} at`} value={price18(trigger18, priceDecimalsOf(market.marketId))} />
+        <KeyValue label="Realised at trigger" value={signedUsd(atTrigger.netUsd6)} />
+      </View>
       {market.pv.status !== "OPEN" ? (
         <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
           The market is {market.pv.status.toLowerCase()}: a crossing executes once it opens.
@@ -104,6 +110,7 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
             ? "Placing…"
             : `Place ${takeProfit ? "TP" : "SL"} at ${price18(trigger18, priceDecimalsOf(market.marketId))}`
         }
+        variant="secondary"
         disabled={busy || legs.blocked || !legs.ready || position.size === 0n}
         loading={busy}
         onPress={() => void legs.save([{ kind, price18: trigger18 }])}
@@ -116,4 +123,5 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
 const styles = StyleSheet.create({
   panel: { padding: SPACE.lg, gap: SPACE.md },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  level: { flex: 1 },
 });

@@ -1,6 +1,7 @@
 /**
- * Above the portfolio: the practice starter claim for a signed-in account that hasn't claimed (F05, the TTFT moment),
- * or the way in for a guest (F03) as one borderless filled row. Hidden once claimed — the balance itself is the proof.
+ * At the top of Home: the practice starter claim for a signed-in account that hasn't claimed (F05, the TTFT moment),
+ * or the way in for a guest (F03) as one borderless filled row with its one action. Hidden once claimed — the balance
+ * itself is the proof — so a funded Home opens straight on the balance's curve.
  */
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
@@ -22,7 +23,13 @@ export function AccountStrip() {
       <Text style={[TYPE.rowDetail, styles.text, { color: color.text2 }]}>
         Browsing without an account · prices are live.
       </Text>
-      <Button label="Create" size="sm" block={false} onPress={() => router.push(ROUTES.accountRequired)} />
+      <Button
+        label="Create"
+        size="sm"
+        block={false}
+        style={styles.action}
+        onPress={() => router.push(ROUTES.accountRequired)}
+      />
     </View>
   );
 }
@@ -37,4 +44,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE.lg,
   },
   text: { flex: 1 },
+  // The kit's inline button pins to the top of a row; here it sits on the text's centre line.
+  action: { alignSelf: "center" },
 });

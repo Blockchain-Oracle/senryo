@@ -1,21 +1,28 @@
 import { engineMarket } from "@senryo/config";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Screen } from "~/components/kit/Screen";
-import { EmptyState } from "~/components/kit/states";
+import { QuietLine } from "~/features/portfolio/QuietLine";
 import { PositionDetail } from "~/features/positions/PositionDetail";
 
-/** `/positions/[id]` — id is the engine market id (one net position per market). */
+/**
+ * `/positions/[id]` — id is the engine market id (one net position per market). A pushed page; `PositionDetail` owns
+ * the scroll and the pinned close action under it.
+ */
 export default function PositionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const market = engineMarket(Number(id));
   return (
-    <Screen>
+    <>
       <Stack.Screen options={{ title: market ? `${market.symbol} position` : "Position" }} />
       {market ? (
         <PositionDetail marketId={market.id} />
       ) : (
-        <EmptyState why="Unknown position" detail="This link doesn't match a market on this network." />
+        <Screen>
+          <QuietLine action={{ label: "Go back", onPress: () => router.back() }}>
+            This link doesn’t match a market on this network.
+          </QuietLine>
+        </Screen>
       )}
-    </Screen>
+    </>
   );
 }
