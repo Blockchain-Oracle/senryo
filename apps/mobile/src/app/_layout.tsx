@@ -37,6 +37,9 @@ const SHEETS = [
   "account-required",
   "network",
   "receive",
+  "compose-thesis",
+  "social-actions",
+  "leaderboard-info",
 ];
 
 export default function RootLayout() {

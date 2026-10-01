@@ -49,6 +49,12 @@ export const ROUTES = {
   session: "/session",
   cardReveal: "/card-reveal",
   accountRequired: "/account-required",
+  /** Social (J8, S1b.14): compose a thesis, and what a post or a profile's overflow opens. */
+  composeThesis: "/compose-thesis",
+  socialActions: "/social-actions",
+  leaderboardInfo: "/leaderboard-info",
+  /** Where a profile's listing and handle are edited. The You tab holds it until it has its own page (J9). */
+  profileSettings: "/you",
 } as const;
 
 /** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
@@ -65,6 +71,20 @@ export const cardAuthRoute = (id: string) => `/card/auth/${id}` as const;
 export const fundQrRoute = (family: string) => `/fund/qr/${family}` as const;
 export const depositRoute = (id: string) => `/fund/deposit/${id}` as const;
 export const watchRoute = (address: string) => `/watch/${address}` as const;
+/** A thesis with its replies, pushed on the Social stack. */
+export const postRoute = (id: string) => `/social/post/${id}` as const;
+/** The same thread opened from its author's profile (a root page), so back returns to the profile. */
+export const traderPostRoute = (address: string, id: string) => `/watch/${address}/post/${id}` as const;
+/** A trader's followers or following, pushed over their profile. */
+export const followListRoute = (address: string, list: "followers" | "following") =>
+  `/watch/${address}/${list}` as const;
+/** A post's overflow: report, mute, block — or delete when it is yours. `thesis` marks the thread's own post. */
+export const postActionsRoute = (post: { id: string; author: string; thesis: boolean }) =>
+  `/social-actions?post=${post.id}&author=${post.author}&thesis=${post.thesis ? "1" : "0"}` as const;
+/** A profile's overflow: report, mute, block. */
+export const profileActionsRoute = (address: string) => `/social-actions?author=${address}` as const;
+/** What the leaderboard ranks, for the period on screen. */
+export const leaderboardInfoRoute = (period: string) => `/leaderboard-info?period=${period}` as const;
 
 /** The market the old Trade tab opened on (gold first, D-005); `/trade` links land on its detail. */
 export const DEFAULT_MARKET = "XAU";
