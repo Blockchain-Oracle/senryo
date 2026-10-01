@@ -5,7 +5,6 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { Screen } from "~/components/kit/Screen";
 import { Panel } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
-import { effectiveLeverage } from "~/features/portfolio/leverage";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { useSettledOutcome } from "~/features/trade/send-outcome";
 import { TradeTrace } from "~/features/trade/TradeTrace";
@@ -65,13 +64,12 @@ export function PositionDetail({ marketId }: { marketId: number }) {
       ? (reduce.holdReadyBlock - p.headBlock) * BLOCK_MS_ESTIMATE
       : undefined;
   const label = p.closingAll ? `Hold · Close ${m.symbol} ${side.toLowerCase()}` : `Hold · Close ${pct(p.shareBps)}`;
-  const leverage = p.snapshot ? effectiveLeverage(p.currentNotionalUsd6, p.snapshot.equityInit) : undefined;
 
   return (
     <>
       <Screen contentStyle={styles.content}>
         <Rise index={0}>
-          <PositionHeader market={m} position={position} leverage={leverage} />
+          <PositionHeader market={m} position={position} />
         </Rise>
         <Rise index={1}>
           <PnlHero priceUsd6={health.upnlUsd6} fundingUsd6={p.fundingUsd6} borrowUsd6={p.borrowUsd6} />

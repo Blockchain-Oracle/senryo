@@ -14,15 +14,7 @@ import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
  * badge ("Long 2.4×") beside it, the explicit venue chip under it, and the market's session status at the right as a
  * dot and a word in its tone — no plate around any of it.
  */
-export function PositionHeader({
-  market,
-  position,
-  leverage,
-}: {
-  market: LiveMarket;
-  position: PositionView;
-  leverage: string | undefined;
-}) {
+export function PositionHeader({ market, position }: { market: LiveMarket; position: PositionView }) {
   const network = useNetwork();
   const { color } = useTheme();
   const tone = statusTone(market.pv.status, color);
@@ -39,7 +31,7 @@ export function PositionHeader({
           >
             {market.symbol}
           </Text>
-          <SideBadge isLong={position.isLong} leverage={leverage} />
+          <SideBadge isLong={position.isLong} />
         </View>
         <VenueChip venue={ids.venue("senryo")} />
       </View>

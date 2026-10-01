@@ -4,6 +4,7 @@ import { useTopTrades } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { Avatar } from "~/components/identity/Avatar";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { useGroupFill } from "~/components/kit/Surface";
 import { usePressScale } from "~/components/kit/usePressScale";
@@ -21,7 +22,7 @@ const CARD_WIDTH = 164;
 /**
  * Weekly Top Trades (Fomo F09, C23): a row of small filled cards that scrolls off the right edge — who (on a lighter
  * band across the card's top), on which market, and the position's realised result after fees, funding and borrow,
- * signed and coloured. A trader's avatar art is not in the app yet, so the disc carries their initial. They are this
+ * signed and coloured. They are this
  * network's verified trades from the api; when it has none (or cannot be reached) the section is simply absent: no
  * sample cards, no empty box. A card opens that account read-only.
  */
@@ -73,9 +74,7 @@ function TradeCard({ trade, index }: { trade: TopTrade; index: number }) {
           style={({ pressed }) => [styles.card, { backgroundColor: pressed ? color.rowPressed : fill }]}
         >
           <View style={[styles.line, styles.who, { backgroundColor: color.raised2 }]}>
-            <View style={[styles.avatar, { backgroundColor: color.rowPressed }]}>
-              <Text style={[TYPE.label, { color: color.text2 }]}>{who.replace(/^@/, "").charAt(0).toUpperCase()}</Text>
-            </View>
+            <Avatar avatar={trade.trader.avatar} address={trade.trader.address} size={SIZE.avatarXs} />
             <Text style={[TYPE.row, styles.shrink, { color: color.ink }]} numberOfLines={1}>
               {who}
             </Text>
@@ -112,12 +111,5 @@ const styles = StyleSheet.create({
   // F09: the person sits on a lighter band (36 pt) across the top of the card, the result on the card itself (52 pt).
   who: { paddingVertical: SPACE.xs + SPACE.xxs },
   result: { paddingVertical: SPACE.md + SPACE.xxs },
-  avatar: {
-    width: SIZE.avatarXs,
-    height: SIZE.avatarXs,
-    borderRadius: RADIUS.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   shrink: { flexShrink: 1 },
 });

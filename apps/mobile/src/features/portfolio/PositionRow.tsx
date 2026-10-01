@@ -14,7 +14,6 @@ import { positionRoute } from "~/lib/constants/routes";
 import { arrow, pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
-import { effectiveLeverage } from "./leverage";
 import { SideBadge } from "./SideBadge";
 
 /** A page-wide row barely moves under the finger (the same reason as a sheet row). */
@@ -55,7 +54,6 @@ export function PositionRow({
   const m = market.status === "fresh" || market.status === "stale" ? market.value : undefined;
   const health = m && account ? previewPosition(m.risk, m.pv, riskViewOf(account), position) : undefined;
   const exposure = m ? notional(position.size, m.pv.price18) : undefined;
-  const leverage = exposure !== undefined && account ? effectiveLeverage(exposure, account.equityInit) : undefined;
   const entry = price18(position.entry, priceDecimalsOf(position.marketId));
   const away = health?.liqDistanceBps ?? null;
   const summary = health
@@ -82,7 +80,7 @@ export function PositionRow({
           accessibilityRole="button"
           accessibilityLabel={`${m?.name ?? symbol} ${side}${
             exposure === undefined ? "" : `, exposure ${usd(exposure, 0)}`
-          }${leverage ? `, ${leverage.replace("×", " times")} your balance` : ""}, entry ${entry}, ${summary}`}
+          }, entry ${entry}, ${summary}`}
           accessibilityHint="Opens the position"
           style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.card } : null]}
         >
@@ -92,7 +90,7 @@ export function PositionRow({
               <Text style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]} numberOfLines={1}>
                 {symbol}
               </Text>
-              <SideBadge isLong={position.isLong} leverage={leverage} />
+              <SideBadge isLong={position.isLong} />
             </View>
             <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
               {exposure === undefined ? `Entry ${entry}` : `${usd(exposure, 0)} · entry ${entry}`}
