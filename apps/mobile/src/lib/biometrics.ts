@@ -8,8 +8,11 @@ import { Platform } from "react-native";
 import { countingPrompts } from "~/lib/account/system-prompt";
 import { localAuthModule } from "~/lib/native-modules";
 
-/** `ready`: hardware and an enrolled face or finger. `unavailable`: no hardware, or this build lacks the module. */
-export type BiometricState = "ready" | "not-enrolled" | "unavailable";
+/**
+ * `ready`: hardware and an enrolled face or finger. `unavailable`: no biometric hardware. `old-build`: this binary
+ * predates the module — the phone may well have Face ID, and unlocking still uses it; only this primer can't ask.
+ */
+export type BiometricState = "ready" | "not-enrolled" | "unavailable" | "old-build";
 export type BiometricOutcome = "on" | "cancelled" | "denied" | "locked-out" | "failed";
 
 export interface Biometrics {
@@ -21,7 +24,7 @@ export interface Biometrics {
 export async function readBiometrics(): Promise<Biometrics> {
   const auth = localAuthModule();
   const fallbackWord = Platform.OS === "ios" ? "Face ID" : "fingerprint";
-  if (!auth) return { state: "unavailable", word: fallbackWord };
+  if (!auth) return { state: "old-build", word: fallbackWord };
   const [hardware, enrolled, types] = await Promise.all([
     auth.hasHardwareAsync(),
     auth.isEnrolledAsync(),

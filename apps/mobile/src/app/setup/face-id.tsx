@@ -65,6 +65,19 @@ export default function FaceIdStep() {
     setOutcome(result);
   };
 
+  if (phone?.state === "old-build") {
+    return (
+      <PrimerScreen
+        art={art}
+        motion="lift"
+        title={`Unlock with ${gestureOf(word)}`}
+        body={`The first time you unlock trading, iOS asks whether Senryo may use ${word}. Say yes and it opens with ${gestureOf(word)} after that.`}
+        granted={false}
+        primary={{ label: "Continue", onPress: next }}
+        onBack={back}
+      />
+    );
+  }
   if (phone && phone.state !== "ready") {
     const enrolLater = phone.state === "not-enrolled";
     return (
