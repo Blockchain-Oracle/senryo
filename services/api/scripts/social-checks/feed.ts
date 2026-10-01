@@ -199,5 +199,10 @@ async function searchChecks(h: Harness, checks: Checks, s: User): Promise<void> 
     (await find(stem, "traders", MAINNET_CHAIN_ID)).traders.length === 0,
   );
   checks.record("search: exact address", (await find(s.address, "traders")).traders[0]?.address === s.address);
-  checks.record("search: tokens empty until a token list exists", (await find("usdc")).tokens.length === 0);
+  checks.record(
+    "search: tokens from the J11 spot list (MON by symbol, Wrapped BTC by name; USDC is the quote, not listed)",
+    (await find("mon")).tokens.some((t) => t.symbol === "MON") &&
+      (await find("wrapped b")).tokens.some((t) => t.symbol === "WBTC") &&
+      (await find("usdc")).tokens.every((t) => t.symbol !== "USDC"),
+  );
 }

@@ -89,8 +89,9 @@ export const feedRoute = defineRoute({
 });
 
 /**
- * Global search (S12b.7): markets (our engine's listings on that network), tokens (no token list yet → always
- * empty) and traders (profiles listed on that network; handle prefix, or an exact address). `kind` omitted = all.
+ * Global search (S12b.7): markets (our engine's listings on that network), tokens (the J11 spot list, mainnet
+ * pools, either network) and traders (profiles listed on that network; handle prefix, or an exact address). `kind`
+ * omitted = all.
  */
 export const searchQuerySchema = z.object({
   chainId: z.coerce.number().pipe(chainIdSchema),

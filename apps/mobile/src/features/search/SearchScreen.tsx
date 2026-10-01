@@ -1,7 +1,7 @@
 import type { SearchResult } from "@senryo/api-client";
-import { engineMarketsOn } from "@senryo/config";
+import { engineMarketsOn, type SpotToken } from "@senryo/config";
 import { ids } from "@senryo/identity";
-import { SEARCH_MIN_CHARS, socialKeys, useQueryEnv, useSearch } from "@senryo/query";
+import { SEARCH_MIN_CHARS, socialKeys, spotToken, useQueryEnv, useSearch, useTokenPrices } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
@@ -16,6 +16,7 @@ import type { RecentSearch } from "~/features/markets/device-store";
 import { EngineMarketRow } from "~/features/markets/MarketRow";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { QuietLine } from "~/features/markets/QuietLine";
+import { TokenRow } from "~/features/tokens/TokenRow";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, useTheme } from "~/theme";
 import { SEARCH_FIELD_HEIGHT, SearchField } from "./SearchField";
@@ -109,7 +110,9 @@ function Found({ result, query, kind }: { result: SearchResult; query: string; k
   const markets =
     kind === "traders" ? [] : result.markets.flatMap((m) => listed.find((l) => l.id === m.engineId) ?? []);
   const traders = kind === "markets" ? [] : result.traders;
-  if (markets.length + traders.length === 0) return <QuietLine>No results for “{query}”</QuietLine>;
+  // Spot tokens (J11) sit with the markets: their own list, mainnet pools, shown on either network.
+  const tokens = kind === "traders" ? [] : result.tokens.flatMap((t) => spotToken(t.symbol) ?? []);
+  if (markets.length + tokens.length + traders.length === 0) return <QuietLine>No results for “{query}”</QuietLine>;
   return (
     <>
       {markets.length > 0 ? (
@@ -120,6 +123,7 @@ function Found({ result, query, kind }: { result: SearchResult; query: string; k
           ))}
         </View>
       ) : null}
+      {tokens.length > 0 ? <FoundTokens tokens={tokens} /> : null}
       {traders.length > 0 ? (
         <View>
           <SectionLabel style={styles.label}>Traders</SectionLabel>
@@ -181,6 +185,25 @@ function Recents({ kind }: { kind: Kind }) {
 interface Resolved {
   recent: RecentSearch;
   marketId?: number;
+}
+
+/** Matching spot tokens with their live prices (one read for the matches). */
+function FoundTokens({ tokens }: { tokens: SpotToken[] }) {
+  const prices = useTokenPrices(tokens);
+  const priced = prices.status === "fresh" || prices.status === "stale" ? prices.value : undefined;
+  return (
+    <View>
+      <SectionLabel style={styles.label}>Tokens</SectionLabel>
+      {tokens.map((t) => (
+        <TokenRow
+          key={t.symbol}
+          token={t}
+          priceUsd18={priced ? (priced.find((p) => p.token.symbol === t.symbol)?.priceUsd18 ?? null) : undefined}
+          change24hBps={undefined}
+        />
+      ))}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

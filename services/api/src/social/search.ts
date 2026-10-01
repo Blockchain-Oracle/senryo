@@ -7,14 +7,14 @@ import {
   type SearchResult,
   type SearchTrader,
 } from "@senryo/api-client";
-import { type ChainId, engineMarketsOn, marketPair } from "@senryo/config";
+import { type ChainId, engineMarketsOn, marketPair, SPOT_TOKENS } from "@senryo/config";
 import type { Db } from "@senryo/service-common";
 import { viewerAccountFilter } from "./posts.ts";
 import { identityOf, visibleOn } from "./shared.ts";
 
 /**
  * Global search (S12b.7). Markets come from `@senryo/config` (our engine's listings on that network); traders from
- * profiles visible on that network (handle prefix, or an exact address); tokens wait for a token list.
+ * profiles visible on that network (handle prefix, or an exact address); tokens from the J11 spot list.
  */
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -72,6 +72,18 @@ export async function searchTraders(
   return rows.map(identityOf);
 }
 
+/**
+ * Spot tokens (J11) by symbol prefix or name: the generated list of Monad tokens with a live Uniswap v4 pool. They
+ * trade on mainnet only, and are listed on either network (a Practice search shows them; their page says where they
+ * trade).
+ */
+export function searchTokens(q: string): { symbol: string; name: string; address: `0x${string}` }[] {
+  const needle = q.trim().toLowerCase();
+  return SPOT_TOKENS.filter((t) => t.symbol.toLowerCase().startsWith(needle) || t.name.toLowerCase().includes(needle))
+    .slice(0, SEARCH_RESULTS_MAX)
+    .map((t) => ({ symbol: t.symbol, name: t.name, address: t.address }));
+}
+
 export async function search(
   db: Db,
   chainId: ChainId,
@@ -83,8 +95,7 @@ export async function search(
   return {
     q,
     markets: wants("markets") ? searchMarkets(chainId, q) : [],
-    // TODO(S12b.7): tokens need a token list (none in @senryo/config yet); until then this section is always empty.
-    tokens: [],
+    tokens: wants("tokens") ? searchTokens(q) : [],
     traders: wants("traders") ? await searchTraders(db, chainId, q, viewer) : [],
   };
 }
