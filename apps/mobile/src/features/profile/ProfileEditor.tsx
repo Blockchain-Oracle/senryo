@@ -4,8 +4,9 @@
  * pinned to the bottom and lifted above the keyboard. Save is the quiet plate until something changed and every
  * field is valid (F17 → enabled); it shows its spinner while saving, a refusal lands on the field it is about, and a
  * saved profile returns to You. Only what changed is sent (`PUT /v1/profile` keeps the rest).
- * Not here, on purpose: F17's banner and avatar pencils (the portrait set isn't merged, so there is no picker yet),
- * linked accounts (X linking is blocked, B6), the address list (Account identity) and Export keys (Recovery).
+ * The picture is one of the twelve authored portraits (`AvatarPicker`; there are no uploads). Not here, on purpose:
+ * F17's banner, linked accounts (X linking is blocked, B6), the address list (Account identity) and Export keys
+ * (Recovery).
  */
 import type { Address } from "@senryo/account";
 import {
@@ -22,12 +23,13 @@ import { useRef, useState } from "react";
 import { Keyboard, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Avatar } from "~/components/identity/Avatar";
+import { Avatar, defaultAvatar } from "~/components/identity/Avatar";
 import { Button } from "~/components/kit/Button";
 import { fire } from "~/feedback/fire";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
 import { type ProfileFocus, ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { AvatarPicker } from "./AvatarPicker";
 import { cleanBio, cleanLine } from "./format";
 import { ProfileField } from "./ProfileField";
 import { PROFILE_AVATAR } from "./ProfileHeader";
@@ -67,6 +69,8 @@ export function ProfileEditor({
   const [name, setName] = useState(saved.name);
   const [bio, setBio] = useState(saved.bio);
   const [visibility, setVisibility] = useState<Visibility>(() => visibilityOf(saved));
+  const savedAvatar = base?.avatar ?? null;
+  const [avatar, setAvatar] = useState<string | null>(savedAvatar);
   const [refusal, setRefusal] = useState<SaveRefusal>();
 
   const update: ProfileUpdate = {};
@@ -74,6 +78,10 @@ export function ProfileEditor({
   if (name.trim() !== saved.name) update.displayName = name.trim() || null;
   if (bio.trim() !== saved.bio) update.bio = bio.trim() || null;
   for (const key of VISIBILITY_KEYS) if (visibility[key] !== saved[key]) update[key] = visibility[key];
+  // Choosing the portrait the account already shows by default is not a change.
+  const shownAvatar = avatar ?? defaultAvatar(address) ?? null;
+  const savedShown = savedAvatar ?? defaultAvatar(address) ?? null;
+  if (shownAvatar !== savedShown) update.avatar = avatar;
   const changed = Object.keys(update).length > 0;
   // A first save states every visibility choice shown, rather than leaning on the server's defaults.
   const body: ProfileUpdate = base ? update : { ...visibility, ...update };
@@ -109,14 +117,15 @@ export function ProfileEditor({
         keyboardDismissMode="interactive"
       >
         <View style={styles.person}>
-          <Avatar {...portrait(base?.avatar, address)} size={PROFILE_AVATAR} />
+          <Avatar {...portrait(avatar, address)} size={PROFILE_AVATAR} />
           <View style={styles.personText}>
             <Text numberOfLines={1} style={[TYPE.rowTitle, { color: color.ink }]}>
               {preview}
             </Text>
-            <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Choosing a picture arrives with a later build.</Text>
+            <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Pick a portrait below.</Text>
           </View>
         </View>
+        <AvatarPicker value={avatar} address={address} onChange={setAvatar} />
         <ProfileField
           label="Username"
           value={handle.text}
