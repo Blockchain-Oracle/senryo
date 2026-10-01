@@ -85,8 +85,10 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
 - [x] S1b.8 **J4 Ticket** (C39–C43, M14, FT102–FT112):
   - margin vs leveraged size, centred ruler, presets + keypad ↔ chart, candle settings;
   - liquidation info, SL/TP child with keyboard lift;
-  - mainnet eligibility;
   - 500 ms hold pill (D-177), trace, receipt + share.
+
+  Built and merged 1 Oct (583c93d); walked on the simulator (acceptance 08:32Z, 09:40Z, 14:23Z). Mainnet eligibility
+  was in this step's scope and is not built: it moved to S1b.8b so this box stays true.
 - [x] S1b.8a **SL/TP on a new order** ("open, then protect"; lead decision 1 Oct, review R05, C42 parity): the ticket
   takes stop-loss / take-profit levels for the order being entered; after the open finalizes, each level is placed as
   its own transaction for the resulting position size, with its own outcome (`useTriggerLegs`). Levels are validated
@@ -95,10 +97,27 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   kept per network, account and market until it is placed). Checked on testnet: XAG long with SL and TP, then a gold
   long at 5× with a 3% stop at $4,047.97 — each level finalized, its line inside the receipt under "Quoted at your
   hold".
+- [ ] S1b.8b **Mainnet eligibility on the ticket** (FT101, M13; split out of S1b.8 on 1 Oct): the C12 eligibility
+  checkbox sheet and pending gate before a Mainnet ticket (D-023/D-165). Not built: today a geo block only shows as
+  the hold button's reason, "Mainnet trading unavailable" (`GEO_BLOCKED` in `features/trade/ticket-commit.ts`).
 - [x] S1b.9 **J3 Markets** (C22/C25/C26, FT071/072/095–101):
   - watchlist, categories (Commodities · FX · Crypto · Equities/Indices), filters, search;
-  - detail with Holders / Feed / About, history, alerts;
+  - detail with Holders / Feed / About, alerts;
   - sticky Short/Long.
+
+  Built 1 Oct: dd08d0c (Markets, search, detail, price alerts), 08262bf (Holders), 0a8c915 (a row whose price can't
+  be read), 185aedd (the dismissible perps intro, FT072), b838dc5 (chart pan, FT096). Two parts of this step's scope
+  are still short: they moved to S1b.9a so this box stays true.
+- [ ] S1b.9a **J3, what S1b.9 left short** (split out on 1 Oct; ledger reconciliation §5):
+  - equity discovery (FT032): Equities shows only a non-interactive "Arriving" Nvidia row. Indicative discovery on the
+    D-220 wrapper feeds is in progress with agent discovery-data on `stage/S1b-discovery-data` (review S03); nothing
+    of it is on main yet;
+  - market history (FT097): F32's history utility is a price alert in code (`features/markets/MarketActions.tsx`).
+    No decision approves that; it is recorded as a deviation in the ledger row. Either build history or approve the
+    alert in that slot.
+
+  The reconciliation also found perps education (FT072) and chart pan (FT096) missing; both landed on main later on
+  1 Oct (185aedd, b838dc5) and have no acceptance row yet.
 - [ ] S1b.10 **J6 Home + J10 LP**:
   - balance, availability cells, balance details (D-178), positions;
   - Kinpaku/LP tiles, Top Trades;
@@ -123,11 +142,14 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - identity/addresses, security/passkeys, session policy, preferences, notifications, advanced, delete data, help, terms, status.
 - [ ] S1b.16 **J11 Spot tokens:** token list and detail, buy/sell via the Uniswap v4 route, holdings in Home.
   - Built 1 Oct (agent j11-data: list, pools, prices, quotes, holdings, candles, swap builder, `fd2ffb7`; lead: the
-    screens): Markets is Watchlist · Tokens · Perps (F10); Tokens lists the nine Monad tokens with a live hook-free v4
-    pool (real logos, onchain mid prices, GeckoTerminal 24 h change where honest); a token page (price, pool candles,
-    facts, Sell / Buy, Practice offers the switch); the swap ticket (P20) with live quotes, impact, fees and the
-    minimum. Every spot trade is a passkey step-up (the session's scope rejects router calls — deliberate, not
-    widened). Open: holdings on Home, a real swap (needs the user's mainnet USDC and MON).
+    screens, `166181d`): Markets is Watchlist · Tokens · Perps (F10); Tokens lists the nine Monad tokens with a live
+    hook-free v4 pool (real logos, onchain mid prices, GeckoTerminal 24 h change where honest); a token page (price,
+    pool candles, facts, Sell / Buy, Practice offers the switch); the swap ticket (P20) with live quotes, impact, fees
+    and the minimum. Every spot trade is a passkey step-up (the session's scope rejects router calls — deliberate, not
+    widened).
+  - Since then: Home on Mainnet lists the spot tokens you hold, with their worth (`d949f6a`); Search finds spot tokens
+    (`f9cd161`); the swap ticket keeps the full outcome contract (`d623626`).
+  - Open: a real swap. It needs the user's mainnet USDC and MON; acceptance 15:55Z is partial (quotes, no swap).
 - [ ] S1b.17 **Fidelity acceptance per journey:**
   - 402×874 simulator screenshots next to the reference frames;
   - motion start/settle/exit against the M-clips;
@@ -192,6 +214,10 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - **Not done in S1b.7:** the new native modules (expo-camera, expo-notifications, sharing) and their dev-client
     build; Gorhom sheets (J2). **Not done in S1b.8:** S1b.8a, mainnet eligibility on the ticket, and every native
     acceptance row (S1b.17) — signed-in flows, VoiceOver, Reduce Motion, Android, motion clips.
+    - Since then: expo-notifications and expo-local-authentication came with the primers (22b0732); expo-camera is
+      still not in the app (no QR scan). D-196 replaced Gorhom with one custom Reanimated sheet host. S1b.8a shipped
+      (52de228). Signed-in flows, light theme, large text and Reduce Motion have simulator rows in `acceptance.md`.
+      Still owed: mainnet eligibility (S1b.8b), the spoken VoiceOver pass, Android and the motion clips.
 - **Controls, sheets and navigation rebuilt after the user's 1 Oct rejection (D-196).** The user tested the build and
   rejected the buttons, the way sheets and the auth step appear, and the navigation ("learn from Fomo"). What changed:
   - **Authority:** the Fomo frames, measured (2 px per pt), plus a Codex consult stored verbatim with the lead's
@@ -232,8 +258,10 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Checked on the simulator: all five steps; a real handle claim (`@swiftlantern86` on 10143) through to Home.
     Not checked: a voucher redemption (no code minted), following a ranked trader (the practice board is empty),
     resume after a kill, the keyboard-up layout (the simulator's software keyboard was off).
-  - Still open in J1: notification and Face ID primers (need `expo-notifications` and a rebuild), the completion foil
-    and the avatars (art branch), the seal's gold-leaf recolour.
+  - What was still open in J1 at this point is now on main: the notification and Face ID primers (22b0732; their art
+    c70d1ca, merged in 7c01665), the completion foil and the twelve avatars (art package merged in d0e4917, in the app
+    since 812fce3; the portrait picker is cb09307), and the seal's gold-leaf recolour (merged in 8fc1326). B12 stays
+    open until the user's design review.
   - **Primers shipped 1 Oct (lead):** setup is now handle → follow → voucher → terms → Face ID → notifications → done.
     `PrimerScreen` (art in the middle, title and one sentence, a reserved outcome line, Turn on / Not now pinned):
     the Face ID primer asks iOS for Senryo's Face ID permission in context and does one real scan (unlocking already
@@ -241,12 +269,14 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     registers the phone (`PUT /v1/push/token`, every channel on). Each says plainly when the phone has no Face ID,
     when the permission was refused (Open Settings), and when the build lacks the module. Both native modules are
     loaded lazily (`lib/native-modules.ts`), so a dev client built before them still runs today's bundle. Art: the
-    gold fūrin and the ebi-jō lock (agent art-primers, pending merge). Checked on the simulator (acceptance rows).
+    gold fūrin and the ebi-jō lock (agent art-primers, c70d1ca, merged in 7c01665). Checked on the simulator
+    (acceptance rows).
   - **Notifications (S1b.15):** You → Notifications has the permission state with the one action each needs and five
     switches (trades and stop losses, liquidation, price alerts, deposits, card) saved at once; `PushHost` shows a push
     as a banner in the app, opens its screen in its own mode on a tap (cold start included) and sends a registration
     the phone still owes at the next unlock; sign-out stops pushes to the phone. Delivery from the keeper through Expo
-    (titled, deep-linked, receipts checked, dead tokens disabled) is agent keeper-push's branch, pending merge.
+    (titled, deep-linked, receipts checked, dead tokens disabled) is agent keeper-push's 7db9389, merged in dd3a8b1.
+    Delivery to a physical iPhone still needs the user's Apple login (STATUS Blockers).
 - **J4/J5 walked end to end on the simulator (1 Oct).** Create → claim → open (hold) → receipt → position → TP and SL
   placed → both removed → close (hold): every step finalized (rows in `acceptance.md`). Screenshots (local, beside
   the review evidence): `docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/`.
@@ -255,15 +285,17 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Home and Positions were rebuilt by agent `j6-home` (merged): F09 hero, period chips, availability → balance
     details sheet, position rows, Kinpaku/LP tiles, Top Trades, real Orders and Activity lists. The lead removed its
     derived "Long 0.5×" multiple (cross-margin has no per-position leverage; it contradicted the ticket's 5×).
-  - Open: the close result is a trace and Done, with no summary of what was realised; a newly placed level appears in
-    the list only once the indexer has it (a few seconds).
+  - Open at this point: the close result was a trace and Done, with no summary of what was realised — the close
+    summary shipped later the same day (69958c3). Still open: a newly placed level appears in the list only once the
+    indexer has it (a few seconds).
 - **1 Oct, afternoon — the journeys, merged and checked on the simulator** (lead + agents on Opus 5.5 after the Fable
   limit; screenshots in the local `reviews/2026-10-01-senryo-mobile/rebuild/` folder):
   - **J3 Markets** (agent j3-markets, `dd08d0c`): Watchlist · All underline tabs, category chips led by search, flat
     rows with the leverage badge and an "Arriving" group, a Search page (All / Markets / Traders, recents), market
     detail with alert / favourite / share utilities, a price block, candles with the current-price line and period
-    chips, About and Feed tabs; real price alerts (no push yet: alerts show "Triggered" in the list). No Holders tab:
-    there is no hook for public positions by market.
+    chips, About and Feed tabs; real price alerts (no push at this merge: alerts showed "Triggered" in the list; push
+    delivery came with 7db9389 and 22b0732). At this merge there was no Holders tab, because nothing listed public
+    positions by market; Holders shipped later the same day (08262bf, below).
   - **J8 Social** (agent j8-social, `4a4bf0f`): Feed (Global / Friends) with verb plates, threads with replies, compose
     thesis, report / mute / block / delete, People (Following / Followers / Recommended), the leaderboard with Your
     rank and its metric explained, trader profiles. Seen live: the feed shows this simulator account's real trades.
@@ -281,9 +313,11 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     P$25 deposit), withdraw to own wallet, send to an address or @handle behind a step-up (P$17.17 to our trader
     wallet), Kinpaku's real daily limit and Freeze on the onchain allowance (D-198), the portrait picker, the close
     summary, light theme, large text (control font cap, 7efcbd3) and Reduce Motion.
-  - **Still open:** deposit status and other-chain deposits (wait for Aurora intents), the card's reveal /
-    authorization detail / wallet pages (wait for an issued card), push notifications and the Face ID / notification
-    primers (expo-notifications + a native rebuild), Holders (needs an indexer hook), VoiceOver pass.
+  - **Still open** (checked against main the same evening): deposit status and other-chain deposits (wait for Aurora
+    intents); the card's reveal and wallet pages, which say no card is issued yet (c424a53) and wait for an issued
+    card (B11); the spoken VoiceOver pass. Shipped since this list was written: the Face ID / notification primers and
+    push (22b0732; keeper delivery 7db9389, merged in dd3a8b1), Holders (08262bf), and the authorization detail on the
+    labelled sample record (cd80b65).
   - **Holders shipped 1 Oct** (agent holders-api + lead): the first market-detail tab (Holders · Feed · About, F32),
     open positions of people who share their trades on that network, largest first by notional at the accepted
     price, with side (no per-position leverage — cross margin), average entry, leveraged size and price-move P&L;
@@ -309,7 +343,9 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
 - **S1b.4, partial:**
   - Done: MarketRow, TradeHeader, PositionDetail, PositionsTable, BucketRegister, CollateralPanel, LpScreen, Fund,
     add-money, Onboarding/PrivacyPlate seal, recovery, help, CardFace, web `TokenIcon`/`SealMark`.
-  - Remaining (the lead's files): TopStrip, StarterCard, Ticket, PositionsAccessory.
+  - Remaining (the lead's files): TopStrip, StarterCard, Ticket, PositionsAccessory. TopStrip and PositionsAccessory
+    were deleted in the shell rebuild (5917f97); StarterCard and the ticket were not re-checked in the 1 Oct records
+    pass.
   - Remaining web: the chain dot in `swap/panel.tsx`, and the live-font 千 in `app/page.tsx` and `ui/credit-debit-card.tsx`.
   - `CHAIN_HUE` is still read by that chain dot. `ASSET_HUE` only feeds unused `--asset-*` CSS vars; delete both after the lead's token work lands.
 - **S1b.5 (handoff packet, agent A2, D-190):**
@@ -356,15 +392,16 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     - D2 ports kept under `legacyD2`.
 
     The web record points to the same direction.
-- **Lead files, open item:** `TopStrip` still draws the D2 "SENRYO/千両" wordmark in the system CJK face.
+- **Lead files:** `TopStrip`, which drew the D2 "SENRYO/千両" wordmark in the system CJK face, was deleted in the
+  shell rebuild (5917f97).
 - **S1b.7 spike (D-193): headless tabs pass.** The run was on a separate iPhone 17 simulator, using the release app with
   this branch's Hermes bundle swapped in. All five probe checks pass: stack per tab, scroll (Home and Markets), the dock
   hiding during entry, and the content inset.
   - The spike lives at `src/app/dev-shell-spike/**` and `src/features/shell-spike/*`. It is dev-only and not linked
     from the app; `?probe=1` reruns the checks.
   - Screenshots (scratchpad): `shots/spike3/t01–t22.png` and `shots/compare/dock-vs-F12.png`.
-  - The S1b.7 build itself (the lead's `(tabs)/_layout.tsx` migration, the fan, the header and the route remap) is
-    still open, so S1b.7 stays unticked.
+  - The S1b.7 build itself (the lead's `(tabs)/_layout.tsx` migration, the fan, the header and the route remap) was
+    still open at the spike. It was built and merged in 583c93d, and S1b.7 is ticked.
 - **Visual check of the token swap** (scratchpad `shots/app`, `shots/compare`): every screen now shows the violet-black
   surfaces, blue primary and Inter. These D2-era features still show, because they come from their components, not
   the tokens; each is rebuilt in its journey:
@@ -374,6 +411,10 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - the Kinpaku card PNG, which is still the D2 lemon gold (`brand/kinpaku-card*`): an art task to recolour through the
     gold-leaf ramp (S1b.3, B12).
 
+  All four are gone on main: no `textTransform` is left in `apps/mobile/src` (the D-196 kit and the surface sweep),
+  the welcome is the six-scene story (ba409c9), TopStrip was deleted (5917f97), and the card was redrawn through the
+  gold-leaf ramp (3ac46c9, merged in 8fc1326).
+
 ## Handoff
 - **Simulator loop (D-197):** the simulator can now do everything a phone can. Native build once:
   `cd apps/mobile && CI=1 npx expo prebuild -p ios --clean && xcodebuild -workspace ios/Senryo.xcworkspace -scheme
@@ -382,17 +423,21 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   (Findings, "Simulator workflow") and relaunch — about 40 s. Face ID: `xcrun simctl spawn <sim> notifyutil -s
   com.apple.BiometricKit.enrollmentChanged 1 && … -p com.apple.BiometricKit.enrollmentChanged` to enrol, `… -p
   com.apple.BiometricKit_Sim.pearl.match` to match. `apps/mobile/ios` is generated and ignored.
-- **Resume here (1 Oct, lead):**
-  1. **Art package** — agent `art-j1` on branch `stage/S1b-art` (worktree `.claude/worktrees/art-j1`): six onboarding
-     scenes, pending-passkey art, completion foil, twelve avatars, with a Codex review loop. Look at its contact sheets
-     before merging; B12 stays open. The Kinpaku card art (still the lemon D2 PNG, review R16) and the seal's gold-leaf
-     recolour belong to the same pass.
-  2. **J4 acceptance with an account** — create a practice account on the simulator, claim, open, protect (both
-     levels), remove one, close; capture dark/light and the motion clips; fill the S1b.17 rows. Then S1b.8a.
-  3. **J1** (review R03): the six-scene story is in (`features/onboarding`, ba409c9; layer images come from
-     `apps/mobile/scripts/onboarding-art.mjs` — re-run it after the art branch merges). Still to build: the
-     new-account sequence after the passkey (passkey education → ceremony → handle → follow → voucher → terms →
-     notifications → completion foil) with versioned, account-bound, resumable progress; returning accounts skip it.
-  4. Then the plan's order: J3 Markets (search, watchlist, detail sections), J6 Home + J10 LP, J5, J2.
+- **Resume here (updated 1 Oct evening against main; the morning list is done):**
+  1. **Art package:** merged (d0e4917) and in the app (812fce3). The seal's gold-leaf recolour and the Kinpaku card
+     front and back are redrawn (merged in 8fc1326), and the primer art is in (c70d1ca, merged in
+     7c01665). B12 stays open until the user's design review.
+  2. **J4 with an account:** walked on the simulator — claim, open, both levels placed and removed, close, and open
+     then protect (acceptance 08:32Z, 09:40Z, 12:01Z, 14:23Z); S1b.8a shipped (52de228). Still owed: the motion clips
+     and the S1b.17 fidelity rows.
+  3. **J1** (review R03): the six-scene story (ba409c9, layers refreshed from the merged art in 812fce3) and the
+     new-account sequence after the passkey are built: handle → follow → voucher → terms (3d44e5b) → Face ID →
+     notifications (22b0732) → completion foil (812fce3). Progress is versioned, account-bound and resumable;
+     returning accounts skip it. Not yet checked: resume after a kill, a voucher redemption, a real follow.
+  4. **J3, J6 + J10, J5, J2:** built and merged — J3 dd08d0c; J6 ce856cb, J10 e7310b8; J5 69958c3; J2 05c2384,
+     bd3e87f, ae9784d, cbf7937 and the outcome contract 9d22903.
+  - **Next:** the open boxes in Steps. What each still owes is in the parity ledger (`acceptance_evidence.remaining`
+    and `depends_on`; the 16 pending rows are listed in `docs/design/reviews/2026-10-01-ledger-reconciliation.md` §4)
+    and in STATUS "Next action".
 - **Logos:** adding a mark is one line in `packages/identity/scripts/catalog.ts`, then `pnpm --filter
   @senryo/identity fetch` and `codegen`. Never collect one by hand.

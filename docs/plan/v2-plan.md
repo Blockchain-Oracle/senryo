@@ -308,7 +308,7 @@ Today the network is a source constant (`apps/mobile/src/lib/constants/auth.ts:7
    - art tasks with provenance.
 
    Also:
-   - A machine ledger `docs/design/senryo-parity-ledger.json`, fields per the fidelity contract §3. It covers FT, C, M and LG rows. Component rows mirror the FT decisions, e.g. C24 prediction cards → B8, C05 passcode → B4, C36 fiat ticket → B3.
+   - A machine ledger `docs/design/senryo-parity-ledger.json`, fields per the fidelity contract §3. It covers FT, C, M and LG rows. Component rows mirror the FT decisions, e.g. C24 prediction cards → Excluded (D-194), C05 passcode → Excluded (D-195), C36 fiat ticket → B3.
    - Codex's direction stored verbatim at `docs/design/senryo-v2/direction.md`.
    - **"SUPERSEDED by D-168" banners** so no builder mistakes D2 for authority. They go on `design/DIRECTIONS.md`, the `d2-*` screenshots and **the study's own D2 references**: `README.md:82`, `05-components-and-agent-handoff.md:89` and the copyable brief `:104-105`, `10-redesign-opportunities.md:5`, and `reference-ledger.json` `target_design_authority`. These edits are recorded as declared adaptations in `COPY-MANIFEST.json`.
    - Then validate with `~/.claude/skills/mobile-reference-study/scripts/validate_study.py`.
@@ -738,10 +738,12 @@ These are the user's approved add-ons plus every reference capability the parity
 - **Crypto on Perpl:** BTC, ETH, SOL, MON, HYPE, ZEC.
 - **Equities/indices/oil:** NVDA, SPY, QQQ, TSLA, SPCX, EWY, oil. There is a research route to tradability (W6).
 
-## 7. Parity-ledger triage (FT001–FT116) and **proposed exclusions awaiting the user's explicit decision**
+## 7. Parity-ledger triage (FT001–FT116) and **the exclusions decided on 1 Oct (D-194, D-195)**
 
-Per the fidelity contract, an Excluded row without a user decision is a defect. Nothing is Excluded by this plan unless the
-user confirms the proposal list below. Everything else is Exact, Adapted, Additive, or Blocked with an unblock path.
+Per the fidelity contract, an Excluded row without a recorded decision is a defect. This plan excluded nothing by itself;
+the proposal list below was decided on 1 Oct: D-194 records the user's exclusions, and D-195 records the lead's
+researched, reversible exclusion of a separate PIN or password, made after the user asked for that research. Everything
+else is Exact, Adapted, Additive, or Blocked with an unblock path.
 The machine version goes in `docs/design/senryo-parity-ledger.json`, one row per FT/C/M/LG with target module, data
 authority, failure/recovery and acceptance evidence.
 
@@ -753,9 +755,10 @@ The full row-by-row table (FT001–FT116, class plus target treatment) is Codex'
 | **Exact** | 010 012 018 043 045 061 102 112 |
 | **Adapted** | 001 002 006–009 011 013–017 019 022–024 026 033–035 038 039 042 044 046 048 055–059 062 065 066 068–079 083 085–088 094–101 103–111 |
 | **Adapted, where our lead review corrected Codex** | **081**: our own 24-word export under step-up already exists (S6 `PhraseGrid`). · **041/067**: the code/Paste/"I don't have one"/skip pattern **redeems a Senryo voucher**, which already exists (`redeemVoucher` + the voucher route). The semantic difference is disclosed; the referral-*reward* branch stays B5. · **091/093**: minimum-deposit validation and retained amount + fee lines already exist in the Aurora/QR deposit (F17/F21 "below min") and swap tickets. · **092**: the identity-verification handoff pattern is used for **card KYC** (Immersve hosted KYC, S10/B11), not fiat. |
-| **Partial rows** (the Adapted part ships; the named branch keeps its class) | **060** Add money → hub (its fiat "Add Cash" branch is B3) · **080** address disclosure (Google link X, X link B6) · **082** history/settings (Rewards B5) · **032** equity discovery (execution B2, competition B5) · **063** notification primer (tracking B9) |
+| **Partial rows** (the Adapted part ships; the named branch keeps its class) | **060** Add money → hub (its fiat "Add Cash" branch is B3) · **080** address disclosure (Google link X, X link B6) · **082** history/settings (Rewards B5) · **032** equity discovery (execution B2, competition B5) · **063** notification primer (its tracking-prompt branch is Excluded, D-194) |
 | **Additive** | 114 (real passkey ceremonies), 116 (a11y/reduced motion/haptics) |
-| **Blocked** (kept as reserved screens) | 003/036 private-key and hardware alternatives + 004/005/113 PIN/password (B4) · 020/021/089/090 fiat purchase (B3) · 025/029/030 benefits/campaigns/cashback (B5) · 031/040/047/084 news/X/chat/clans (B6) · 027/028 (B7) · 049–054 predictions (B8) · 115 until our own lifecycles are proven (B1) |
+| **Blocked** (kept as reserved screens) | 003/036 private-key and hardware alternatives (B4) · 020/021/089/090 fiat purchase (B3) · 029 rewards campaign (B5) · 031/040/047/084 news/X/chat/clans (B6) · 115 until our own lifecycles are proven (B1) |
+| **Excluded, decided 1 Oct** (no screen, no reserved placeholder) | D-194 (user): 025 travel/borrowing/virtual accounts and 030 cashback · 027 collectibles (NFTs) · 028 in-app web discovery (dApp browser) · 049–054 predictions and sports · the tracking-prompt branch of 063. D-195 (lead, researched, reversible): 004/005/113 PIN/password — the passkey falls back to the phone's own screen lock |
 | **Excluded, binding** (existing product rules, not new decisions) | 037/064 Google/Apple/Privy OAuth (D-029) · the **recovery-phrase import** branch of 003/036. Its private-key/hardware siblings stay B4. |
 
 **Blockers and what unblocks each:**
@@ -765,33 +768,32 @@ The full row-by-row table (FT001–FT116, class plus target treatment) is Codex'
 | B1 | FT115 completed lifecycles | Our own finalized deposits/orders/TP-SL/close/send/spend, with receipts and recovery (acceptance.md) |
 | B2 | Equities/oil execution | W6 feed research passes, or Data Streams (Q-008) / Pyth (Q-014, paid → [OK?]) |
 | B3 | Fiat purchase | User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC) + D-041 change + [OK?] |
-| B4 | PIN/password/hardware/private-key | An explicit security model beside passkeys |
+| B4 | Hardware/private-key import (PIN/password: Excluded, D-195) | An explicit security model beside passkeys |
 | B5 | Rewards, referrals, competitions, benefits | A defined programme (eligibility, accounting, payout) |
 | B6 | News, chat, X link, clans | Real sources/services and moderation |
-| B7 | NFTs, dApp browser | Ownership/connect contracts |
-| B8 | Predictions | Market/settlement authority and policy |
-| B9 | Tracking prompt | A demonstrated purpose |
+| B7 | ~~NFTs, dApp browser~~ — retired 1 Oct | Not applicable: D-194 excluded the rows |
+| B8 | ~~Predictions~~ — retired 1 Oct | Not applicable: D-194 excluded the rows |
+| B9 | ~~Tracking prompt~~ — retired 1 Oct | Not applicable: D-194 excluded the branch |
 | B10 | Perpl practice + Perpl TP/SL | A funded testnet flow (Q-002) or a labelled paper adapter; Q-003 prerequisites |
 | B11 | Real Kinpaku issuance/spend | S10 provider evidence |
 | B12 | Production logos + authored art | First-party provenance plus material review (W3/§5.10) |
 
-**Proposed exclusions** (Codex's list; none adopted without the user). Approving this plan does **not** exclude them; they stay
-Blocked and reserved until the user says "exclude" or "build":
-- fiat purchase (B3)
-- predictions and sports (B8)
-- clans and competitions
-- NFTs
-- dApp browser
-- travel, borrowing, virtual accounts and cashback
-- campaign rewards and referrals
-- organisation news and live chat
-- X import/linking
-- a separate PIN or text password
-- the tracking prompt
+**Proposed exclusions** (Codex's list) and what was decided on 1 Oct:
+- fiat purchase (B3) — kept Blocked with a path (D-194)
+- predictions and sports (B8) — **excluded** (D-194)
+- clans and competitions — kept Blocked with a path (D-194; B5/B6)
+- NFTs — **excluded** (D-194)
+- dApp browser — **excluded** (D-194)
+- travel, borrowing, virtual accounts and cashback — **excluded** (D-194)
+- campaign rewards and referrals — kept Blocked with a path (D-194; B5)
+- organisation news and live chat — kept Blocked with a path (D-194; B6)
+- X import/linking — kept Blocked with a path (D-194; B6)
+- a separate PIN or text password — **excluded** (D-195, after research)
+- the tracking prompt — **excluded** (D-194)
 
-**Recommendation to the user** (the only product question left open): exclude predictions/sports, NFTs, the dApp browser,
-travel/borrow/cashback, the tracking prompt, and PIN/password, since each is a separate product. Keep fiat (B3) and referrals
-(B5) Blocked-with-path, because both serve the "fund your account" and growth promises.
+**Recommendation to the user** (closed 1 Oct by D-194 and D-195; kept for the record): exclude predictions/sports, NFTs, the
+dApp browser, travel/borrow/cashback, the tracking prompt, and PIN/password, since each is a separate product. Keep fiat (B3)
+and referrals (B5) Blocked-with-path, because both serve the "fund your account" and growth promises.
 
 **Decided 1 Oct 2026 (D-194, D-195):**
 - The user **excluded** predictions and sports, NFTs, the dApp browser, travel/borrowing/virtual accounts/cashback, and the
