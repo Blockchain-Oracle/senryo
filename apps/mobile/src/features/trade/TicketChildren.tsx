@@ -90,9 +90,11 @@ export function ReviewOrder({
       <View>
         <KeyValue label="Market" value={`${line.symbol} · ${line.name} · Senryo`} />
         <KeyValue label="Side" value={sideWord} />
-        <KeyValue label="Margin" value={usd(p?.marginUsd6 ?? 0n)} />
+        <KeyValue label="Margin" value={usd(t.amountUsd6)} />
         <KeyValue label="Leverage" value={`${t.leverage}×`} />
         <KeyValue label="Exposure" value={usd(t.notionalUsd6)} />
+        {/* What the engine holds at its own initial-margin rate — less than the margin above below max leverage. */}
+        <KeyValue label="Locked while open" value={p ? usd(p.marginUsd6) : "—"} />
         <KeyValue
           label="Quantity"
           value={p ? `${formatUnits(p.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS)} ${line.symbol}` : "—"}
