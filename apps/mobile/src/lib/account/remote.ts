@@ -14,7 +14,7 @@ import {
   type SessionSettings,
 } from "@senryo/account";
 import { ApiError, prefsDeleteRoute, prefsGetRoute, prefsPutRoute } from "@senryo/api-client";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { activeNetwork } from "~/lib/network";
 import { api, withSession } from "./api";
 import { parseSettings } from "./settings";
 
@@ -61,7 +61,7 @@ export async function pullPrefs(client: AccountClient, local: SessionSettings): 
   }
   const synced = parseSettings(client.openPrefs(remote.blob)?.session);
   if (!synced || same(synced, local)) return undefined;
-  return isLoosening(local, synced, defaultFaceIdMode(ACTIVE_NETWORK.key)) ? undefined : synced;
+  return isLoosening(local, synced, defaultFaceIdMode(activeNetwork().key)) ? undefined : synced;
 }
 
 /** F09: remove the encrypted prefs from the server (needs the live session to authenticate). */

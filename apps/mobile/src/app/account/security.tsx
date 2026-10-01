@@ -18,7 +18,7 @@ import { Panel, Rule, SectionLabel } from "~/components/kit/Surface";
 import { EmptyState } from "~/components/kit/states";
 import { useAccount } from "~/lib/account/provider";
 import { requestStepUp } from "~/lib/account/step-up";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 const MS_PER_MINUTE = 60_000;
@@ -45,15 +45,16 @@ function Row({ title, hint, children }: { title: string; hint: string; children:
 
 /** F60 / F04 security (D-037): tighten instantly; loosening asks for a fresh passkey first (session-policy §2). */
 export default function SecurityScreen() {
+  const network = useNetwork();
   const { color } = useTheme();
   const account = useAccount();
   const [note, setNote] = useState<string>();
   const s = account.settings;
-  const faceId: FaceIdMode = s.faceId ?? defaultFaceIdMode(ACTIVE_NETWORK.key);
+  const faceId: FaceIdMode = s.faceId ?? defaultFaceIdMode(network.key);
 
   const apply = async (next: SessionSettings) => {
     setNote(undefined);
-    if (!isLoosening(s, next, defaultFaceIdMode(ACTIVE_NETWORK.key))) {
+    if (!isLoosening(s, next, defaultFaceIdMode(network.key))) {
       await account.applySettings(next);
       return setNote("Saved.");
     }

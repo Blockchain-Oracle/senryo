@@ -7,7 +7,8 @@ import { Panel } from "~/components/kit/Surface";
 import { EmptyState } from "~/components/kit/states";
 import { ProtocolBanner } from "~/features/markets/MarketBanners";
 import { EngineMarketRow, type UpcomingMarket, UpcomingMarketRow } from "~/features/markets/MarketRow";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
+import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { HAIRLINE_PX, SPACE, TYPE, useTheme } from "~/theme";
 
 const FILTERS = [
@@ -28,8 +29,21 @@ const UPCOMING: ReadonlyArray<UpcomingMarket & { assetClass: Exclude<Filter, "al
   { symbol: "NVDA", name: "Nvidia", venue: "Senryo", note: "Waits for a live price feed", assetClass: "equity" },
 ];
 
-/** Markets (D2): asset-class filter and the dense perps watchlist. Browsable without an account (F03). */
+/** Mainnet before launch shows live prices read-only; Practice and a live Mainnet show the screen (S8.22). */
 export default function Markets() {
+  const readOnly = useReadOnlyNetwork();
+  return readOnly ? (
+    <Screen>
+      <PrelaunchMainnet surface="markets" />
+    </Screen>
+  ) : (
+    <MarketsLive />
+  );
+}
+
+/** Markets (D2): asset-class filter and the dense perps watchlist. Browsable without an account (F03). */
+function MarketsLive() {
+  const network = useNetwork();
   const { color } = useTheme();
   const [filter, setFilter] = useState<Filter>("all");
   const metals = filter === "all" || filter === "metals" ? ENGINE_MARKETS : [];
@@ -50,7 +64,7 @@ export default function Markets() {
           <View style={[styles.head, { borderBottomColor: color.hairline }]}>
             <Text style={[TYPE.bodyStrong, { color: color.ink }]}>Perps · 24h</Text>
             <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-              {ACTIVE_NETWORK.modeLabel.toUpperCase()} · Oracle: Chainlink
+              {network.modeLabel.toUpperCase()} · Oracle: Chainlink
             </Text>
           </View>
           {metals.map((m, i) => (

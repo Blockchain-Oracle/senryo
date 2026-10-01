@@ -30,6 +30,8 @@ export const ROUTES = {
   accountMode: "/account/mode",
   status: "/status",
   addMoney: "/add-money",
+  /** S8.22 mode selector sheet (the top-strip capsule). */
+  network: "/network",
   stepUp: "/step-up",
   riskExplainer: "/risk-explainer",
   receipt: "/receipt",

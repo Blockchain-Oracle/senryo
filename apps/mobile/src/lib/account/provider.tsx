@@ -17,7 +17,7 @@ import {
 } from "@senryo/account";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { activeNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { clearApiSession } from "./api";
 import { pullPrefs, pushPrefs } from "./remote";
@@ -113,7 +113,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const applySettings = useCallback(
     async (next: SessionSettings) => {
       const c = clientRef.current;
-      if (isLoosening(c.session.settings, next, defaultFaceIdMode(ACTIVE_NETWORK.key))) {
+      if (isLoosening(c.session.settings, next, defaultFaceIdMode(activeNetwork().key))) {
         await c.stepUp(async () => undefined);
       }
       adopt(next);

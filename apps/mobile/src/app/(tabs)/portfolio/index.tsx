@@ -10,15 +10,16 @@ import { Segmented } from "~/components/kit/Segmented";
 import { SectionLabel } from "~/components/kit/Surface";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { AccountStrip } from "~/features/auth/AccountStrip";
+import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { BucketRegister, type Buckets } from "~/features/portfolio/BucketRegister";
 import { CollateralPanel } from "~/features/portfolio/CollateralPanel";
 import { DAY_SEC, MS_PER_SECOND, WINDOW_SEC } from "~/features/portfolio/constants";
 import { PositionsTable } from "~/features/portfolio/PositionsTable";
 import { RiskBanner } from "~/features/portfolio/RiskBanner";
 import { useAccount } from "~/lib/account/provider";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
 import { arrow, signedPct, signedUsd, usd } from "~/lib/money";
+import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { HERO_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 
 const TIMEFRAMES = [
@@ -41,8 +42,21 @@ function bucketsOf(s: AccountSnapshot): Buckets {
   };
 }
 
-/** Portfolio (D2 home): equity hero + chart, the bucket register, positions. Empty account → the Add-money card. */
+/** Mainnet before launch shows live prices read-only; Practice and a live Mainnet show the screen (S8.22). */
 export default function Portfolio() {
+  const readOnly = useReadOnlyNetwork();
+  return readOnly ? (
+    <Screen>
+      <PrelaunchMainnet surface="portfolio" />
+    </Screen>
+  ) : (
+    <PortfolioLive />
+  );
+}
+
+/** Portfolio (D2 home): equity hero + chart, the bucket register, positions. Empty account → the Add-money card. */
+function PortfolioLive() {
+  const network = useNetwork();
   const { color } = useTheme();
   const account = useAccount();
   const address = account.hint?.address;
@@ -64,7 +78,7 @@ export default function Portfolio() {
         <AccountStrip />
         <EmptyState
           why="No account on this phone yet"
-          detail={`Create one with Face ID to trade gold and silver — ${ACTIVE_NETWORK.modeLabel.toLowerCase()} funds are on the house.`}
+          detail={`Create one with Face ID to trade gold and silver — ${network.modeLabel.toLowerCase()} funds are on the house.`}
           action={{ label: "Create account", onPress: () => router.push(ROUTES.accountRequired) }}
         />
       </Screen>
@@ -83,7 +97,7 @@ export default function Portfolio() {
             first && first.equityInit > 0n && change !== undefined ? (change * RISK.BPS) / first.equityInit : undefined;
           return (
             <View style={styles.hero}>
-              <SectionLabel>EQUITY · RISK-ADJUSTED · {ACTIVE_NETWORK.modeLabel.toUpperCase()}</SectionLabel>
+              <SectionLabel>EQUITY · RISK-ADJUSTED · {network.modeLabel.toUpperCase()}</SectionLabel>
               <Text
                 maxFontSizeMultiplier={HERO_FONT_SCALE}
                 accessibilityLabel={`Equity ${usd(s.equityInit)}`}

@@ -127,6 +127,8 @@
   --chart-up: #2fe92b;
   --chart-down: #ff4d4d;
   --chart-candle-down: #ff4d4d;
+  --practice: #b69df8;
+  --mainnet: #8b95ff;
 }
 
 .light {
@@ -162,5 +164,7 @@
   --chart-up: #0f9d0c;
   --chart-down: #e0301e;
   --chart-candle-down: #e0301e;
+  --practice: #7049c8;
+  --mainnet: #3643d8;
 }
 

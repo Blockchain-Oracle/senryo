@@ -4,7 +4,7 @@
  * in spec order; and the send — `increase` through `@senryo/chain` with the scoped signer (the session policy sees
  * market room + equity, so an in-scope open signs without a step-up; D-037 Face ID is the policy's call).
  */
-import { positionCount } from "@senryo/config";
+import { MAINNET_CHAIN_ID, positionCount } from "@senryo/config";
 import {
   capHeadroomUsd6,
   DECIMALS,
@@ -36,7 +36,6 @@ import { useSyncExternalStore } from "react";
 import { applyKey, type KeypadKey } from "~/components/trade/Keypad";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { draftKey, type Side, useTicketDraft } from "./draft";
 import { useGasTopUp } from "./useGasTopUp";
 
@@ -110,7 +109,7 @@ export function useTicket(market: LiveMarket) {
 
   const blocker: TradeBlocker | undefined = firstTradeBlocker({
     online,
-    mainnet: ACTIVE_NETWORK.modeLabel === "Mainnet",
+    mainnet: env.chainId === MAINNET_CHAIN_ID,
     geoAllowed: geoValue?.mainnetTradingAllowed,
     country: geoValue?.country ?? null,
     hasAccount: address !== undefined,

@@ -15,8 +15,9 @@ import {
   type ReadClient,
   type Sender,
 } from "@senryo/chain";
+import type { ChainId } from "@senryo/config";
 import { userFeeCache } from "@senryo/query";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { activeNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
 import { policyContext } from "./api";
 
@@ -25,13 +26,30 @@ const mmkv: KvStore = {
   setItem: (key, value) => storage.set(key, value),
 };
 
-let read: ReadClient | undefined;
-let nonces: NonceSource | undefined;
+/**
+ * One read client and one nonce counter PER CHAIN (S8.22): a nonce cached for an address on practice must never be
+ * reused on mainnet (the counter is keyed by address only), and reads must follow the selected network.
+ */
+const reads = new Map<ChainId, ReadClient>();
+const nonceSources = new Map<ChainId, NonceSource>();
 
-/** The app's one viem read client (sends, the query layer's market/account reads). */
-export function sharedRead(): ReadClient {
-  read ??= createReadClient(ACTIVE_NETWORK.chainId);
+/** The app's viem read client for a chain (default: the selected network). */
+export function sharedRead(chainId: ChainId = activeNetwork().chainId): ReadClient {
+  let read = reads.get(chainId);
+  if (!read) {
+    read = createReadClient(chainId);
+    reads.set(chainId, read);
+  }
   return read;
+}
+
+function sharedNonces(chainId: ChainId): NonceSource {
+  let nonces = nonceSources.get(chainId);
+  if (!nonces) {
+    nonces = queuedNonces(new LocalNonceSource(sharedRead(chainId)));
+    nonceSources.set(chainId, nonces);
+  }
+  return nonces;
 }
 
 /** What a trade call site knows that the policy needs (S8): market room, equity, a label for the Face ID prompt. */
@@ -47,14 +65,14 @@ export function userSender(
   faceId: FaceIdMode | undefined,
   trade?: TradeContext,
 ): Sender {
-  const read = sharedRead();
-  nonces ??= queuedNonces(new LocalNonceSource(read));
+  const chainId = activeNetwork().chainId;
+  const read = sharedRead(chainId);
   const base = policyContext(address, faceId);
   return createSender({
-    chainId: ACTIVE_NETWORK.chainId,
+    chainId,
     account: client.signer(trade ? () => ({ ...base(), ...trade }) : base),
     read,
-    nonces,
+    nonces: sharedNonces(chainId),
     journal: kvJournal(mmkv),
     // The same quote the gas budget uses (D-171): what the ticket checks is exactly what gets signed.
     fees: userFeeCache(read),

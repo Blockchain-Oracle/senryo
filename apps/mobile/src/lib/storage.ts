@@ -20,4 +20,6 @@ export const STORAGE_KEYS = {
   /** F12: the newest liquidation id the user has seen (haptic once) and dismissed (post-mortem card hidden). */
   liquidationSeen: "senryo.liquidation-seen.v1",
   liquidationDismissed: "senryo.liquidation-dismissed.v1",
+  /** S8.22 (F06/F49): the selected network — Practice (testnet) or Mainnet; fresh installs start in Practice. */
+  network: "senryo.network.v1",
 } as const;

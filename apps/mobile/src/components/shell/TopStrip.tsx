@@ -4,16 +4,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "~/components/kit/Icon";
 import { SessionChip } from "~/features/auth/SessionChip";
 import { fire } from "~/feedback/fire";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { FONT, HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
- * The D2 top strip as a solid header (spec: `SENRYO · ● MONAD 0.3s · bell`): wordmark left, network + block time,
- * then alerts and account. The tabs themselves live at the bottom (NativeTabs), so the strip carries no tab row.
+ * The top strip as a solid header: wordmark left, the session chip, the Practice/Mainnet mode capsule (S8.22), then
+ * alerts and account. The tabs themselves live at the bottom (NativeTabs), so the strip carries no tab row.
  */
 export function TopStrip() {
+  const network = useNetwork();
   const { color } = useTheme();
+  const practice = network.key === "testnet";
+  const tone = practice ? color.practice : color.mainnet;
   const insets = useSafeAreaInsets();
   const go = (path: typeof ROUTES.alerts | typeof ROUTES.account) => {
     fire("tick");
@@ -33,15 +36,23 @@ export function TopStrip() {
         </Text>
         <View style={styles.right}>
           <SessionChip />
-          <View
-            accessible
-            accessibilityLabel={`Network Monad, ${ACTIVE_NETWORK.modeLabel.toLowerCase()} mode`}
-            style={styles.net}
+          {/* The mode capsule (S8.22, Living Lacquer §5.6): always visible, one tap to the Practice ↔ Mainnet selector. */}
+          <Pressable
+            onPress={() => {
+              fire("tick");
+              router.push(ROUTES.network);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={`${practice ? "Practice, paper money" : "Mainnet, real money"}. Change network`}
+            hitSlop={SPACE.xs}
+            style={[
+              styles.net,
+              { borderColor: tone, backgroundColor: practice ? color.practiceWash : color.mainnetWash },
+            ]}
           >
-            <View style={[styles.dot, { backgroundColor: color.up }]} />
-            {/* Block time moved to the label and Status (S6): the session chip needs the room on a 390 pt strip. */}
-            <Text style={[TYPE.numSm, { color: color.inkMuted }]}>MONAD</Text>
-          </View>
+            <View style={[styles.dot, { backgroundColor: tone }]} />
+            <Text style={[TYPE.numSm, { color: tone }]}>{practice ? "PRACTICE" : "MAINNET"}</Text>
+          </Pressable>
           <Pressable
             onPress={() => go(ROUTES.alerts)}
             accessibilityRole="button"
@@ -77,7 +88,16 @@ const styles = StyleSheet.create({
   },
   word: { ...TYPE.numMd, fontFamily: FONT.monoStrong },
   right: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
-  net: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, marginRight: SPACE.xs },
+  net: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.xs,
+    marginRight: SPACE.xs,
+    borderWidth: HAIRLINE_PX,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACE.sm,
+    minHeight: SIZE.buttonHeightSm,
+  },
   dot: { width: SIZE.dot, height: SIZE.dot, borderRadius: RADIUS.pill },
   tap: { width: SIZE.touch, height: SIZE.touch, alignItems: "center", justifyContent: "center" },
 });

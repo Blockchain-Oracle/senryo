@@ -9,14 +9,15 @@ import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { useChip } from "~/lib/account/use-chip";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 const MS_PER_MINUTE = 60_000;
 
 /** F04 / F02 / F09: who is signed in, how long trading stays unlocked, lock / unlock / switch / sign out. */
 function Body() {
+  const network = useNetwork();
   const { color } = useTheme();
   const account = useAccount();
   const chip = useChip();
@@ -53,7 +54,7 @@ function Body() {
       </Text>
       <Panel style={styles.panel}>
         <KeyValue
-          label={ACTIVE_NETWORK.modeLabel.toUpperCase()}
+          label={network.modeLabel.toUpperCase()}
           value={chip.label}
           valueColor={unlocked ? color.up : color.inkMuted}
         />

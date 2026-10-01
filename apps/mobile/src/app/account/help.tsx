@@ -3,7 +3,7 @@ import { Stack } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { Screen } from "~/components/kit/Screen";
 import { Panel, SectionLabel } from "~/components/kit/Surface";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 /** Where every number comes from, with the attributions the sources require (DB-IP Lite is CC BY 4.0, S8.15). */
@@ -24,12 +24,13 @@ const SOURCES = [
 ] as const;
 
 export default function HelpScreen() {
+  const network = useNetwork();
   const { color } = useTheme();
   return (
     <Screen>
       <Stack.Screen options={{ title: "About & sources" }} />
       <Panel style={styles.panel}>
-        <SectionLabel>SENRYO · {ACTIVE_NETWORK.modeLabel.toUpperCase()}</SectionLabel>
+        <SectionLabel>SENRYO · {network.modeLabel.toUpperCase()}</SectionLabel>
         <Text style={[TYPE.body, { color: color.inkMuted }]}>
           Cash-settled gold and silver perps on Monad. You never own the metal; leverage multiplies gains and losses.
         </Text>

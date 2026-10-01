@@ -1,10 +1,7 @@
 /**
  * Mobile auth constants (S6). The rpId is `RP_ID` from `@senryo/config` — never duplicated here.
  */
-import { TESTNET } from "@senryo/config";
-
-/** Practice (testnet) is the only live network until the mainnet deploy (S8); Account → Mode says so. */
-export const ACTIVE_NETWORK = TESTNET;
+// The selected network lives in `~/lib/network` (S8.22): `useNetwork()` in React, `activeNetwork()` elsewhere.
 
 /** The session chip re-renders once a second while unlocked. */
 export const CHIP_TICK_MS = 1_000;

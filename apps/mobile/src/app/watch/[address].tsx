@@ -6,8 +6,8 @@ import { Linking, StyleSheet, Text, TextInput } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { Panel, SectionLabel } from "~/components/kit/Surface";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { watchRoute } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
@@ -18,6 +18,7 @@ const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
  * says so rather than showing someone else's sample numbers as this address's.
  */
 export default function WatchScreen() {
+  const network = useNetwork();
   const { color } = useTheme();
   const params = useLocalSearchParams<{ address: string }>();
   const raw = typeof params.address === "string" ? params.address : "";
@@ -65,11 +66,11 @@ export default function WatchScreen() {
           {raw}
         </Text>
         <Button
-          label={`${ACTIVE_NETWORK.modeLabel} explorer`}
+          label={`${network.modeLabel} explorer`}
           variant="outline"
           size="sm"
           block={false}
-          onPress={() => void Linking.openURL(explorerAddressUrl(ACTIVE_NETWORK.chainId, raw))}
+          onPress={() => void Linking.openURL(explorerAddressUrl(network.chainId, raw))}
         />
       </Panel>
       <Text style={[TYPE.caption, { color: color.inkMuted }]}>

@@ -14,8 +14,8 @@ import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { pct, usd } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { COLLATERAL_STEPS_BPS } from "./constants";
 
@@ -26,6 +26,7 @@ const DIRECTIONS = [
 type From = (typeof DIRECTIONS)[number]["value"];
 
 export function CollateralPanel({ snapshot }: { snapshot: AccountSnapshot }) {
+  const network = useNetwork();
   const { color } = useTheme();
   const env = useQueryEnv();
   const account = useAccount();
@@ -35,7 +36,7 @@ export function CollateralPanel({ snapshot }: { snapshot: AccountSnapshot }) {
   const balance = from === "usdc" ? snapshot.usdc : snapshot.ausd;
   const amountIn = (balance * shareBps) / RISK.BPS;
   const quote = useCollateralQuote(COLLATERAL_TOKENS[from], amountIn);
-  if (ACTIVE_NETWORK.modeLabel !== "Mainnet") return null;
+  if (network.modeLabel !== "Mainnet") return null;
   const q = quote.status === "fresh" || quote.status === "stale" ? quote.value : undefined;
   const busy = trace.running;
   const swap = async () => {

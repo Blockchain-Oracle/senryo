@@ -4,19 +4,28 @@
  * mobile's glyphs (true minus sign, ▲/▼).
  */
 import { DECIMALS, formatUnits } from "@senryo/core";
+import { activeNetwork, type NetworkKey } from "~/lib/network";
 
 export { formatUnits, toPlot } from "@senryo/core";
 
-/** $12,480.52 */
-export function usd(value6: bigint, shown: number = DECIMALS.cents): string {
+/** The money glyph per network (S8.22, Living Lacquer §5.6): paper money is never written as plain dollars. */
+const MONEY_SYMBOL: Record<NetworkKey, string> = { testnet: "P$", mainnet: "$" };
+
+/** $12,480.52 on mainnet, P$12,480.52 in practice (account money only — market prices use `price18`). */
+export function usd(value6: bigint, shown: number = DECIMALS.cents, network: NetworkKey = activeNetwork().key): string {
   const text = formatUnits(value6, DECIMALS.usd6, shown);
-  return text.startsWith("-") ? `-$${text.slice(1)}` : `$${text}`;
+  const symbol = MONEY_SYMBOL[network];
+  return text.startsWith("-") ? `-${symbol}${text.slice(1)}` : `${symbol}${text}`;
 }
 
 /** +$184.22 / −$6.40 — a sign always, so colour is never the only signal. */
-export function signedUsd(value6: bigint, shown: number = DECIMALS.cents): string {
-  if (value6 < 0n) return `−${usd(-value6, shown)}`;
-  return `+${usd(value6, shown)}`;
+export function signedUsd(
+  value6: bigint,
+  shown: number = DECIMALS.cents,
+  network: NetworkKey = activeNetwork().key,
+): string {
+  if (value6 < 0n) return `−${usd(-value6, shown, network)}`;
+  return `+${usd(value6, shown, network)}`;
 }
 
 /** 2,687.40 from an e8 oracle price. */

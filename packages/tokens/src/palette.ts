@@ -37,7 +37,10 @@ export type ColorRole =
   | "chart5"
   | "chartUp"
   | "chartDown"
-  | "chartCandleDown";
+  | "chartCandleDown"
+  /** S8.22 mode identity (Living Lacquer §5.2, D-172): practice = violet, mainnet = blue — never gold. */
+  | "practice"
+  | "mainnet";
 
 export type Palette = Readonly<Record<ColorRole, string>>;
 
@@ -75,6 +78,8 @@ export const DARK: Palette = {
   chartUp: "#2fe92b",
   chartDown: "#ff4d4d",
   chartCandleDown: "#ff4d4d",
+  practice: "#b69df8",
+  mainnet: "#8b95ff",
 };
 
 /** Light alternate from the preview; roles the preview left unset inherit sensible light values. */
@@ -111,6 +116,8 @@ export const LIGHT: Palette = {
   chartUp: "#0f9d0c",
   chartDown: "#e0301e",
   chartCandleDown: "#e0301e",
+  practice: "#7049c8",
+  mainnet: "#3643d8",
 };
 
 export const PALETTES = { dark: DARK, light: LIGHT } as const;

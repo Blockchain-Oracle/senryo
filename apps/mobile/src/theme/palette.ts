@@ -28,6 +28,9 @@ function roles(t: TokenPalette, dark: boolean) {
     inkMuted: t.mutedForeground,
     hairline: t.border,
     upWash: withAlpha(t.up, WASH.soft),
+    /** Mode surfaces (S8.22): the capsule and selector rows tint with their mode colour. */
+    practiceWash: withAlpha(t.practice, WASH.soft),
+    mainnetWash: withAlpha(t.mainnet, WASH.soft),
     downWash: withAlpha(t.down, WASH.soft),
     upWashStrong: withAlpha(t.up, WASH.strong),
     downWashStrong: withAlpha(t.down, WASH.strong),

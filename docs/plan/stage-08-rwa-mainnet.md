@@ -111,6 +111,11 @@ reuses everything below `apps/`.
 - [ ] S8.22 Runtime Practice↔Mainnet (F06/F49, D-172): NetworkProvider, per-chain sender/nonces/session/policy, Face ID
       per network (settings v2), usage reset + relock on entering Mainnet, mode capsule + `P$`, Mainnet read-only before
       launch (feed-only prices), push/deep links carry chainId, ws session chain check
+      — app side done: `~/lib/network` store (MMKV), per-chain read/nonces/API session/policy context, effective Face
+      ID per network (mainnet never below its default), lock on entering Mainnet, mode capsule + selector sheet +
+      Account → Mode, `P$` for paper money, pre-launch Mainnet = live Chainlink prices read-only on Markets/Trade/
+      Portfolio/LP, per-chain liquidation memory. Open: ws session chain check + push/deep-link chainId (server, with
+      the mainnet api)
 - [ ] S8.23 FX majors on the engine (D-175, contracts track): EUR/GBP/JPY/CHF/CAD feeds verified on 143; risk params +
       aggregate FX USD-exposure cap; FX calendar; mainnet at construction in `Deploy.s.sol`; testnet `AddMarkets.s.sol`
       schedule → execute (6 h) **[OK?]**; keeper observe on status edges/OI; mirrors on 10143

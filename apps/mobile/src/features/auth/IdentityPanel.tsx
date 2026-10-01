@@ -12,14 +12,16 @@ import { Panel } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
-import { ACTIVE_NETWORK, COPIED_MS } from "~/lib/constants/auth";
+import { COPIED_MS } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 
 const CREDENTIAL_SHOWN = 10;
 const watchUrl = (address: string) => `${WEB_ORIGIN}/watch/?address=${address}`;
 
 export function IdentityPanel() {
+  const network = useNetwork();
   const { color } = useTheme();
   const account = useAccount();
   const [copied, setCopied] = useState(false);
@@ -55,7 +57,7 @@ export function IdentityPanel() {
       <View style={styles.head}>
         <Text style={[TYPE.label, { color: color.inkMuted }]}>YOUR ACCOUNT</Text>
         <Text style={[TYPE.micro, styles.pill, { color: color.up, borderColor: color.up }]}>
-          {ACTIVE_NETWORK.modeLabel.toUpperCase()}
+          {network.modeLabel.toUpperCase()}
         </Text>
       </View>
       <Text

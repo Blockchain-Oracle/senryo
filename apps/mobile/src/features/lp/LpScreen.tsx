@@ -5,8 +5,8 @@ import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
 import { EmptyState, ReadingView } from "~/components/kit/states";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { pct, usd } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { LP_DEPOSIT_CHIPS_USD, LP_REDEEM_STEPS_BPS } from "./constants";
 import { useLp } from "./useLp";
@@ -20,6 +20,7 @@ const RISKS = [
 
 /** F24/F25 (D2): pool value, cap, utilisation and historical APR, your share, risks, deposit, redeem, claims. */
 export function LpScreen() {
+  const network = useNetwork();
   const { color } = useTheme();
   const lp = useLp();
   const [depositUsd6, setDepositUsd6] = useState<bigint>(LP_DEPOSIT_CHIPS_USD[1] * ONE_USD6);
@@ -40,7 +41,7 @@ export function LpScreen() {
         return (
           <View style={styles.stack}>
             <Panel style={styles.panel}>
-              <SectionLabel>POOL · {ACTIVE_NETWORK.modeLabel.toUpperCase()}</SectionLabel>
+              <SectionLabel>POOL · {network.modeLabel.toUpperCase()}</SectionLabel>
               <KeyValue label="VALUE" value={usd(v.totalAssets)} />
               <KeyValue label="CAP" value={usd(v.tvlCap, 0)} />
               <KeyValue label="UTILISATION" value={lp.utilisationBps === undefined ? "—" : pct(lp.utilisationBps)} />
@@ -69,7 +70,7 @@ export function LpScreen() {
                 onChange={(val) => setDepositUsd6(val === "max" ? maxIn : BigInt(val))}
                 label="Deposit amount"
               />
-              {v.walletAusd === 0n && ACTIVE_NETWORK.modeLabel === "Practice" ? (
+              {v.walletAusd === 0n && network.modeLabel === "Practice" ? (
                 <Button label="Get practice AUSD" variant="outline" disabled={busy} onPress={() => void lp.faucet()} />
               ) : null}
               <Button

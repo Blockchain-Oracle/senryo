@@ -8,6 +8,8 @@ import { Screen } from "~/components/kit/Screen";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { HolidayBanner, ProtocolBanner } from "~/features/markets/MarketBanners";
 import { useMarketLine } from "~/features/markets/useMarketLine";
+import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
+import { useReadOnlyNetwork } from "~/lib/network";
 import { TYPE, useTheme } from "~/theme";
 import { Ticket } from "./Ticket";
 import { TradeHeader } from "./TradeHeader";
@@ -19,10 +21,13 @@ const MS_PER_SECOND = 1000;
 /** Trade (D2): market header, candles from indexed oracle rounds, the ticket. Tab root and `/trade/[market]`. */
 export function TradeScreen({ marketId, pushed }: { marketId: string; pushed: boolean }) {
   const meta = engineMarket(marketId);
+  const readOnly = useReadOnlyNetwork();
   return (
     <Screen>
       {pushed ? <Stack.Screen options={{ title: `${marketId}-PERP` }} /> : null}
-      {meta ? (
+      {readOnly ? (
+        <PrelaunchMainnet surface="trade" />
+      ) : meta ? (
         <EngineTrade marketId={meta.id} symbol={meta.symbol} />
       ) : (
         <EmptyState

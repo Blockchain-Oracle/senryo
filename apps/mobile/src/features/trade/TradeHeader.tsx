@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 import { ageLabel, STATUS_CHIP, statusTone } from "~/features/markets/session";
 import type { MarketLine } from "~/features/markets/useMarketLine";
-import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { arrow, price18, signedPct } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
 import { HERO_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 
 const MS_PER_SECOND = 1000n;
@@ -12,6 +12,7 @@ const MS_PER_SECOND = 1000n;
  * right ("Oracle price · updated 3m ago", D-020). PRACTICE/MAINNET on every money surface.
  */
 export function TradeHeader({ line }: { line: MarketLine }) {
+  const network = useNetwork();
   const { color } = useTheme();
   const change = line.change24hBps;
   const age = ageLabel(line.updatedAt, BigInt(Date.now()) / MS_PER_SECOND);
@@ -41,7 +42,7 @@ export function TradeHeader({ line }: { line: MarketLine }) {
           SESSION <Text style={{ color: statusTone(line.status, color) }}>{STATUS_CHIP[line.status]}</Text>
         </Text>
         <Text style={[TYPE.label, { color: color.inkMuted }]}>
-          {line.maxLeverageX}× MAX · {ACTIVE_NETWORK.modeLabel.toUpperCase()}
+          {line.maxLeverageX}× MAX · {network.modeLabel.toUpperCase()}
         </Text>
         <Text style={[TYPE.label, { color: color.inkMuted }]}>ORACLE · {age}</Text>
       </View>

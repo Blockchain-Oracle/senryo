@@ -5,7 +5,7 @@
  * realised, tx), the `liquidation` haptic once, dismissible. All from the chain + indexer, nothing inferred.
  */
 import { PAUSED_STATUSES, RISK } from "@senryo/core";
-import { useAccountRisk, useMarkets, usePositions, useRecentLiquidations } from "@senryo/query";
+import { useAccountRisk, useMarkets, usePositions, useQueryEnv, useRecentLiquidations } from "@senryo/query";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -22,17 +22,21 @@ import { LIQUIDATION_WINDOW_SEC } from "./constants";
 
 export function RiskBanner() {
   const { color } = useTheme();
+  // Seen/dismissed liquidation ids are kept per network (S8.22): a practice notice never hides a mainnet one.
+  const env = useQueryEnv();
   const address = useAccount().hint?.address;
   const risk = useAccountRisk(address, "latest");
   const positions = usePositions(address);
   const markets = useMarkets();
   const liqs = useRecentLiquidations(address, LIQUIDATION_WINDOW_SEC);
-  const [dismissed, setDismissed] = useState(() => storage.getString(STORAGE_KEYS.liquidationDismissed));
+  const [dismissed, setDismissed] = useState(() =>
+    storage.getString(`${STORAGE_KEYS.liquidationDismissed}:${env.chainId}`),
+  );
   const latest = liqs.status === "fresh" || liqs.status === "stale" ? liqs.value[0] : undefined;
 
   useEffect(() => {
-    if (!latest || storage.getString(STORAGE_KEYS.liquidationSeen) === latest.id) return;
-    storage.set(STORAGE_KEYS.liquidationSeen, latest.id);
+    if (!latest || storage.getString(`${STORAGE_KEYS.liquidationSeen}:${env.chainId}`) === latest.id) return;
+    storage.set(`${STORAGE_KEYS.liquidationSeen}:${env.chainId}`, latest.id);
     fire("liquidation");
   }, [latest]);
 
@@ -102,7 +106,7 @@ export function RiskBanner() {
               variant="outline"
               block={false}
               onPress={() => {
-                storage.set(STORAGE_KEYS.liquidationDismissed, latest.id);
+                storage.set(`${STORAGE_KEYS.liquidationDismissed}:${env.chainId}`, latest.id);
                 setDismissed(latest.id);
               }}
             />

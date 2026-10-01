@@ -5,10 +5,12 @@
  * ≤ 10 min expiry), so no prompt while unlocked. The bearer token lives in memory only.
  */
 import type { AccountClient, Address, PolicyContext } from "@senryo/account";
-import { defaultFaceIdMode } from "@senryo/account";
+import { defaultFaceIdMode, type FaceIdMode } from "@senryo/account";
 import { type ApiClient, ApiError, authNonceRoute, authVerifyRoute, createApiClient } from "@senryo/api-client";
-import { ACTIVE_NETWORK, DEVICE_ID_BYTES } from "~/lib/constants/auth";
+import type { ChainId } from "@senryo/config";
+import { DEVICE_ID_BYTES } from "~/lib/constants/auth";
 import { ENV } from "~/lib/env";
+import { activeNetwork, type NetworkKey } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
 const HTTP_UNAUTHORIZED = 401;
@@ -16,7 +18,8 @@ const HEX_RADIX = 16;
 const HEX_PER_BYTE = 2;
 
 let client: ApiClient | undefined;
-let session: { token: string; address: Address; expiresAt: number } | undefined;
+/** One API session per (address, chain): the SIWE message binds a chain, so a switch never reuses the other one. */
+let session: { token: string; address: Address; chainId: ChainId; expiresAt: number } | undefined;
 
 /** Per-install id for the relay's rate limit (`x-senryo-device`): random, MMKV, not an identity. */
 function deviceId(): string {
@@ -34,26 +37,46 @@ export function api(): ApiClient {
   return client;
 }
 
-/** What the scoped signer checks every signature against (S8 adds market room and equity reads). */
+const FACE_ID_STRICTNESS: Record<FaceIdMode, number> = { off: 0, "above-threshold": 1, "every-trade": 2 };
+
+/**
+ * The Face ID mode a network actually uses (S8.22, D-037): practice follows the setting (default off); mainnet is
+ * never weaker than its default, so a practice "off" can't carry into real money.
+ */
+export function effectiveFaceId(network: NetworkKey, stored: FaceIdMode | undefined): FaceIdMode {
+  const fallback = defaultFaceIdMode(network);
+  const chosen = stored ?? fallback;
+  if (network !== "mainnet") return chosen;
+  return FACE_ID_STRICTNESS[chosen] >= FACE_ID_STRICTNESS[fallback] ? chosen : fallback;
+}
+
+/**
+ * What the scoped signer checks every signature against (S8 adds market room and equity reads). Read at signing
+ * time, so the chain and the Face ID mode always follow the selected network.
+ */
 export function policyContext(address: Address, faceId: PolicyContext["faceId"] | undefined): () => PolicyContext {
-  return () => ({
-    chainId: ACTIVE_NETWORK.chainId,
-    self: address,
-    faceId: faceId ?? defaultFaceIdMode(ACTIVE_NETWORK.key),
-    marketRoomUsd6: () => undefined,
-    equityUsd6: () => undefined,
-  });
+  return () => {
+    const network = activeNetwork();
+    return {
+      chainId: network.chainId,
+      self: address,
+      faceId: effectiveFaceId(network.key, faceId),
+      marketRoomUsd6: () => undefined,
+      equityUsd6: () => undefined,
+    };
+  };
 }
 
 /** A valid API session for the signed-in account (SIWE: nonce → in-session signMessage → verify). */
 export async function ensureApiSession(account: AccountClient, faceId?: PolicyContext["faceId"]): Promise<void> {
   const address = account.hint?.address;
   if (!address) throw new Error("No account on this device");
-  if (session && session.address === address && session.expiresAt > Date.now()) return;
-  const challenge = await api().call(authNonceRoute, { body: { address, chainId: ACTIVE_NETWORK.chainId } });
+  const chainId = activeNetwork().chainId;
+  if (session && session.address === address && session.chainId === chainId && session.expiresAt > Date.now()) return;
+  const challenge = await api().call(authNonceRoute, { body: { address, chainId } });
   const signature = await account.signer(policyContext(address, faceId)).signMessage({ message: challenge.message });
   const verified = await api().call(authVerifyRoute, { body: { message: challenge.message, signature } });
-  session = { token: verified.token, address, expiresAt: Date.parse(verified.expiresAt) };
+  session = { token: verified.token, address, chainId, expiresAt: Date.parse(verified.expiresAt) };
 }
 
 export function clearApiSession(): void {
