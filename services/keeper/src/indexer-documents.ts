@@ -42,3 +42,24 @@ export const PlacedTriggersDocument = defineDocument<ScanVars>()(
   }`,
   z.object({ Trigger: z.array(z.object({ id: z.string(), expiry: z.number().int() })) }).transform((d) => d.Trigger),
 );
+
+/**
+ * Deployed deposit inboxes holding stablecoins that arrived after their last sweep (`Inbox.pending`, usd6). Inboxes
+ * not yet deployed are invisible here; those come from the api's `inbox_watches` (S8.24).
+ */
+export const PendingInboxesDocument = defineDocument<ScanVars>()(
+  "KeeperPendingInboxes",
+  `query KeeperPendingInboxes($chainId: Int!, $limit: Int!, $offset: Int!) {
+    Inbox(
+      where: { chainId: { _eq: $chainId }, pending: { _gt: "0" } }
+      order_by: { id: asc }
+      limit: $limit
+      offset: $offset
+    ) {
+      id user_id
+    }
+  }`,
+  z
+    .object({ Inbox: z.array(z.object({ id: z.string(), user_id: z.string() })) })
+    .transform((d) => d.Inbox.map((i) => ({ inbox: i.id, user: i.user_id }))),
+);

@@ -132,6 +132,17 @@ reuses everything below `apps/`.
 - [ ] S8.24 Mainnet cold start + TxRecovery (D-179): keeper `sweeps` job (`InboxFactory.sweep`); voucher path; mainnet
       copy until a native bot check; per-chain TxRecovery host (never resends) + journal cap; app rebuild with 143.json
       (EAS **[OK?]**)
+      - *Sweeper done (1 Oct, D-230):*
+        - keeper `sweeps` job (on by default), with candidates from two sources:
+          - indexer `Inbox.pending > 0` (deployed inboxes);
+          - `inbox_watches` (migration 0006), written by the new public `POST /v1/inbox/watch` when the app shows its
+            counterfactual inbox;
+        - balance re-read onchain, then `sweep(user)` once AUSD + USDC ≥ `INBOX_SWEEP_MIN_USD6` ($1);
+        - ≤ 10 per tick, 5 min retry after a failure, a `deposits` push, and `sweepInbox` gas scaling with positions.
+        - Proof: `pnpm --filter @senryo/keeper sweep-check` (10143 fork + scratch Postgres) passes 9/9. A keyless,
+          MON-less user is credited $25, then $20 in AUSD + USDC through the indexer path; dust waits and expired
+          watches are ignored.
+        - **Open:** app receive + watch call, mainnet copy, TxRecovery, and the keeper/api redeploy **[OK?]**.
 
 ## Gate
 Assurance findings closed (fixed or documented) · mainnet deposit → XAU long → close from the phone (txs in

@@ -1,3 +1,4 @@
+import { INBOX_SWEEP_MIN_USD6 } from "@senryo/config";
 import { baseEnvSchema, csvSchema, parseEnv, portSchema } from "@senryo/service-common";
 import { z } from "zod";
 import {
@@ -20,6 +21,7 @@ export const KEEPER_JOBS = [
   "alerts",
   "wallets",
   "retention",
+  "sweeps",
 ] as const;
 export type KeeperJob = (typeof KEEPER_JOBS)[number];
 
@@ -36,7 +38,7 @@ export const keeperEnvSchema = baseEnvSchema.extend({
   KEEPER_STALE_SEC: z.coerce.number().int().positive().default(KEEPER_STALE_SEC),
   /** Enabled jobs (default: everything except the mirror relay, which needs MIRROR_ROLE). Gas top-ups live in the api (D-171). */
   KEEPER_JOBS: csvSchema.transform((list) =>
-    (list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets", "retention"]).filter(
+    (list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets", "retention", "sweeps"]).filter(
       (j): j is KeeperJob => (KEEPER_JOBS as readonly string[]).includes(j),
     ),
   ),
@@ -56,6 +58,9 @@ export const keeperEnvSchema = baseEnvSchema.extend({
   LIQUIDATE_MS: z.coerce.number().int().positive().default(INTERVALS_MS.liquidate),
   OBSERVE_MS: z.coerce.number().int().positive().default(INTERVALS_MS.observe),
   MIRROR_MS: z.coerce.number().int().positive().default(INTERVALS_MS.mirror),
+  SWEEPS_MS: z.coerce.number().int().positive().default(INTERVALS_MS.sweeps),
+  /** Deposit inbox sweep threshold, usd6 (S8.24); raise it on mainnet if dust deposits cost more MON than they bring. */
+  SWEEP_MIN_USD6: bigintEnv(INBOX_SWEEP_MIN_USD6),
 });
 
 export type KeeperEnv = z.output<typeof keeperEnvSchema>;

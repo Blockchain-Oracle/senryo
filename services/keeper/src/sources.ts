@@ -3,7 +3,7 @@ import type { ChainId } from "@senryo/config";
 import { createIndexerClient, type IndexerClient, IndexerError } from "@senryo/indexer-client";
 import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
 import { INDEXER_TIMEOUT_MS, MAX_SCAN_PAGES, SCAN_LIMIT } from "./constants.ts";
-import { OpenPositionUsersDocument, PlacedTriggersDocument } from "./indexer-documents.ts";
+import { OpenPositionUsersDocument, PendingInboxesDocument, PlacedTriggersDocument } from "./indexer-documents.ts";
 
 /**
  * Where the keeper learns which accounts / trigger orders to watch. The indexer (S4, Envio) is the real source —
@@ -16,6 +16,13 @@ export interface KeeperSource {
   accounts(): Promise<Address[]>;
   /** Open trigger order ids (TP/SL). */
   triggerOrders(): Promise<Hex[]>;
+  /** Deployed deposit inboxes with arrivals since their last sweep (S8.24). */
+  pendingInboxes(): Promise<InboxCandidate[]>;
+}
+
+export interface InboxCandidate {
+  user: Address;
+  inbox: Address;
 }
 
 function uniqueAddresses(values: Iterable<string>): Address[] {
@@ -41,6 +48,10 @@ export class LedgerSource implements KeeperSource {
   }
 
   async triggerOrders(): Promise<Hex[]> {
+    return [];
+  }
+
+  async pendingInboxes(): Promise<InboxCandidate[]> {
     return [];
   }
 }
@@ -96,6 +107,22 @@ export class IndexerSource implements KeeperSource {
       return triggers.filter((t) => t.expiry > nowSec).map((t) => t.id as Hex);
     } catch (error) {
       this.log.warn({ err: describeIndexerError(error) }, "indexer triggers unavailable");
+      return [];
+    }
+  }
+
+  async pendingInboxes(): Promise<InboxCandidate[]> {
+    try {
+      const rows = await this.all((offset) =>
+        this.client.request(PendingInboxesDocument, { chainId: this.chainId, limit: SCAN_LIMIT, offset }),
+      );
+      return rows.flatMap((r) =>
+        isAddress(r.user, { strict: false }) && isAddress(r.inbox, { strict: false })
+          ? [{ user: getAddress(r.user), inbox: getAddress(r.inbox) }]
+          : [],
+      );
+    } catch (error) {
+      this.log.warn({ err: describeIndexerError(error) }, "indexer inboxes unavailable; watches only");
       return [];
     }
   }

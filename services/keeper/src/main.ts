@@ -24,6 +24,7 @@ import { liquidationJob } from "./jobs/liquidate.ts";
 import { holdExpiryJob, triggerJob } from "./jobs/maintenance.ts";
 import { mirrorJob, observeJob } from "./jobs/oracle.ts";
 import { retentionJob } from "./jobs/retention.ts";
+import { sweepJob } from "./jobs/sweeps.ts";
 import { alertsJob, walletsJob } from "./jobs/watch.ts";
 import { LedgerNotifier } from "./notify.ts";
 import { type Job, Runner } from "./runner.ts";
@@ -76,6 +77,7 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   retention: retentionJob,
   alerts: alertsJob,
   wallets: walletsJob,
+  sweeps: sweepJob,
 };
 const runner = new Runner(log);
 runner.start(env.KEEPER_JOBS.map((name) => factories[name](ctx)));

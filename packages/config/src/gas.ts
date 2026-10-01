@@ -78,6 +78,12 @@ export const GAS_LIMITS = {
   claimForPractice: 480_000n,
   /** (S8.6) signature check + depositFor: 436.1k mainnet · 285.5k testnet. */
   redeemVoucher: 480_000n,
+  /**
+   * InboxFactory.sweep (S8.24): first use deploys the inbox, then a depositFor per stablecoin held. 10143 fork, fresh
+   * account: deploy + AUSD 501.6k · deploy + AUSD + USDC 583.2k · deployed, both 277.6k. Mainnet depositFor also reads
+   * both stable feeds (+~193k each, see `deposit`) → worst ≈ 970k.
+   */
+  sweepInbox: 1_200_000n,
   /** (S8.6) StarterDrip.topUp, capped native send: 143.6k. */
   topUp: 160_000n,
   /**
@@ -140,6 +146,8 @@ export const POSITION_GAS: Partial<Record<GasAction, bigint>> = {
   setSpendAllowance: 130_000n,
   setCardEnvelope: 130_000n,
   swapCollateral: 130_000n,
+  /** Two depositFor risk passes (AUSD and USDC) when both are swept. */
+  sweepInbox: 260_000n,
 };
 
 /**

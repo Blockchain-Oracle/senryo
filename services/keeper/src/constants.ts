@@ -14,6 +14,7 @@ export const INTERVALS_MS = {
   alerts: 10_000,
   wallets: 60_000,
   retention: 86_400_000,
+  sweeps: 15_000,
 } as const;
 
 /** Retention windows in days (S8.5b K9). */
@@ -24,6 +25,7 @@ export const RETENTION_DAYS = {
   pushSends: 30,
   outbox: 30,
   cardEvents: 90,
+  inboxWatches: 30,
 } as const;
 
 /**
@@ -62,7 +64,12 @@ export const HEALTH_WARN_MARGIN_BPS = 5_000;
 /** Wallet floor below which an ops alert fires (testnet default 0.05 MON; mainnet set by env ≥ 10 MON rule). */
 export const WALLET_FLOOR_WEI = 50_000_000_000_000_000n;
 
-/** Gas top-up (D-030) when a user's MON is under the floor; StarterDrip caps it per address/day onchain. */
+/**
+ * Deposit inbox sweeps (S8.24): at most this many sends per tick (a burst of dust-above-minimum deposits can't drain
+ * the keeper in one go), and a failed sweep waits this long before the next attempt.
+ */
+export const SWEEPS_PER_TICK = 10;
+export const SWEEP_RETRY_MS = 300_000;
 
 export const BPS = 10_000n;
 

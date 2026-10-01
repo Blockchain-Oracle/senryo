@@ -3,11 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "services/keeper (D-035): liquidations, observe pokes, TP/SL triggers, hold expiry, gas top-ups, testnet MirrorAggregator relay, price alerts, wallet floors.",
+  "description": "services/keeper (D-035): liquidations, observe pokes, TP/SL triggers, hold expiry, deposit inbox sweeps, testnet MirrorAggregator relay, price alerts, wallet floors.",
   "license": "MIT",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "sweep-check": "tsx scripts/sweep-check.ts"
   },
   "dependencies": {
     "@senryo/chain": "workspace:*",

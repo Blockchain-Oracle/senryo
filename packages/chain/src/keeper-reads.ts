@@ -1,6 +1,6 @@
 import type { ChainId } from "@senryo/config";
-import { aggregatorV3InterfaceAbi, senryoCoreAbi, sessionOracleAbi } from "@senryo/contracts/abis";
-import type { Address, Hex } from "viem";
+import { aggregatorV3InterfaceAbi, inboxFactoryAbi, senryoCoreAbi, sessionOracleAbi } from "@senryo/contracts/abis";
+import { type Address, erc20Abi, type Hex } from "viem";
 import type { ReadClient } from "./clients.ts";
 import { addressOf } from "./contracts.ts";
 import { MARKET_STATUS, type MarketStatusName, type ReadTag } from "./reads.ts";
@@ -147,6 +147,43 @@ export async function readPositionBitmaps(
   users.forEach((u, i) => {
     const row = rows[i];
     if (row?.status === "success") out.set(u, row.result.positionBitmap);
+  });
+  return out;
+}
+
+/**
+ * AUSD + USDC (6 decimals each) waiting in each deposit inbox — the stablecoins are the factory's own immutables, so a
+ * sweep credits exactly what is counted here. A failed row is omitted: unknown is never "empty".
+ */
+export async function readInboxBalances(
+  read: ReadClient,
+  chainId: ChainId,
+  inboxes: readonly Address[],
+  blockTag: ReadTag = "latest",
+): Promise<Map<Address, bigint>> {
+  if (inboxes.length === 0) return new Map();
+  const factory = { address: addressOf(chainId, "InboxFactory"), abi: inboxFactoryAbi } as const;
+  const [ausd, usdc] = await read.multicall({
+    contracts: [
+      { ...factory, functionName: "AUSD" },
+      { ...factory, functionName: "USDC" },
+    ],
+    allowFailure: false,
+    blockTag,
+  });
+  const rows = await read.multicall({
+    contracts: inboxes.flatMap((inbox) =>
+      [ausd, usdc].map(
+        (token) => ({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [inbox] }) as const,
+      ),
+    ),
+    allowFailure: true,
+    blockTag,
+  });
+  const out = new Map<Address, bigint>();
+  inboxes.forEach((inbox, i) => {
+    const [a, u] = [rows[2 * i], rows[2 * i + 1]];
+    if (a?.status === "success" && u?.status === "success") out.set(inbox, a.result + u.result);
   });
   return out;
 }
