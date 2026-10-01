@@ -5,6 +5,7 @@
  */
 import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Icon } from "~/components/kit/Icon";
 import type { IconName } from "~/components/kit/icons";
 import { HAIRLINE_PX, type Palette, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -29,7 +30,8 @@ export function AuthCard({
   children,
   footer,
 }: {
-  glyph: IconName;
+  /** A kit icon, or `passkey` for a passkey ceremony (the identity glyph, one flat colour in the tone's ink). */
+  glyph: IconName | "passkey";
   tone?: GlyphTone;
   /** verify-identity-3's spinner badge on the glyph while a ceremony is in flight. */
   busy?: boolean;
@@ -47,7 +49,11 @@ export function AuthCard({
     >
       <View style={styles.head}>
         <View style={[styles.tile, { backgroundColor: t.wash, borderColor: t.ink }]}>
-          <Icon name={glyph} size={SIZE.icon + SPACE.sm} tint={t.ink} />
+          {glyph === "passkey" ? (
+            <PasskeyGlyph size={SIZE.icon + SPACE.sm} color={t.ink} />
+          ) : (
+            <Icon name={glyph} size={SIZE.icon + SPACE.sm} tint={t.ink} />
+          )}
           {busy ? (
             <View style={[styles.badge, { backgroundColor: color.primary, borderColor: color.card }]}>
               <ActivityIndicator size="small" color={color.primaryForeground} />

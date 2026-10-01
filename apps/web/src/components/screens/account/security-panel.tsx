@@ -17,6 +17,7 @@ import { formatUnits } from "@senryo/core";
 import { Lock } from "lucide-react";
 import { useState } from "react";
 import { useStepUp } from "@/components/auth/step-up";
+import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Panel } from "@/components/shell/primitives";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -107,8 +108,9 @@ export function SecurityPanel() {
         />
       </Row>
       <div className="flex items-center justify-between gap-3 px-3 py-3">
-        <p className="text-caption text-muted-foreground" aria-live="polite">
-          {note ?? "Withdrawals, sends, card limits and your recovery phrase always ask."}
+        <p className="flex items-center gap-2 text-caption text-muted-foreground" aria-live="polite">
+          <PasskeyGlyph />
+          {note ?? "Withdrawals, sends, card limits and your recovery phrase always ask for a fresh passkey."}
         </p>
         <Button
           variant="outline"

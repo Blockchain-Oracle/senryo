@@ -89,6 +89,21 @@ export function planMark(id: string | undefined, request: VariantRequest, scheme
   return { kind: "gap", entity: e, reason: `artwork "${source.key}" has no drawable variant` };
 }
 
+export interface GlyphPlan {
+  entity: Entity;
+  source: ArtSource;
+  variant: MarkVariant;
+  file: ArtFile;
+}
+
+/** The entity's one-colour glyph (an `ArtFile.tintable` symbol, e.g. the passkey icon), or undefined if it has none. */
+export function glyphFor(id: string | undefined): GlyphPlan | undefined {
+  const e = entity(id);
+  const source = e?.art === undefined ? undefined : ART[e.art];
+  const file = source?.variants.symbol;
+  return e && source && file?.tintable ? { entity: e, source, variant: "symbol", file } : undefined;
+}
+
 /** True when the entity's real artwork is on file (a caller can omit an optional mark rather than show a fallback). */
 export function hasArt(id: string | undefined): boolean {
   return planMark(id, "symbol", "dark").kind === "art";

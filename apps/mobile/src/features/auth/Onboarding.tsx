@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import Animated, { FadeIn, FadeOut, useReducedMotion, ZoomIn } from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { fire } from "~/feedback/fire";
 import { INTRO_HOLD_MS } from "~/lib/constants/auth";
 import { DURATION, FONT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -39,6 +40,7 @@ const PAGES = [
     kicker: "FACE ID IS YOUR ACCOUNT",
     title: "No seed phrase. No password.",
     body: "A passkey on this phone opens your account on any device with the same passkey — web included.",
+    passkey: true,
   },
 ] as const;
 
@@ -85,6 +87,7 @@ function Pages() {
       >
         {PAGES.map((p) => (
           <View key={p.kicker} style={[styles.page, { width }]}>
+            {"passkey" in p ? <PasskeyGlyph size={SIZE.icon + SPACE.sm} color={color.up} /> : null}
             <Text style={[TYPE.label, { color: color.up }]}>{p.kicker}</Text>
             <Text accessibilityRole="header" style={[TYPE.numLg, { color: color.ink }]}>
               {p.title}

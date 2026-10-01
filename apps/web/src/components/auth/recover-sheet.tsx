@@ -7,8 +7,9 @@
  * the backup passkey's PRF: useless without it.
  */
 import { authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
-import { FileKey2, KeyRound, Loader2 } from "lucide-react";
+import { FileKey2, Loader2 } from "lucide-react";
 import { useId, useState } from "react";
+import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
@@ -94,7 +95,7 @@ export function RecoverSheet({
             disabled={busy || !account.client || (source === "file" && !file)}
             onClick={() => void recover()}
           >
-            {busy ? <Loader2 className="animate-spin" /> : source === "server" ? <KeyRound /> : <FileKey2 />}
+            {busy ? <Loader2 className="animate-spin" /> : source === "server" ? <PasskeyGlyph /> : <FileKey2 />}
             {busy ? "Waiting for your passkey…" : "Open my account"}
           </Button>
           <Button

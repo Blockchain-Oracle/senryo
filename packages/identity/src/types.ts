@@ -23,7 +23,8 @@ export type InstrumentType = "native-token" | "stablecoin" | "perp" | "commodity
  * Artwork variants. `disc` is the contained asset presentation (market rows, pickers); `symbol` the uncontained mark;
  * `monoLight` a one-colour light-ink silhouette for dark grounds; `monoDark` a one-colour dark-ink silhouette for light
  * grounds; `wordmark` the name as drawn by its owner and `wordmarkLight` its light-ink version for dark grounds.
- * A variant that isn't on file is never synthesised by recolouring another.
+ * A variant that isn't on file is never synthesised at render time; one is derived (a recorded, reproducible recolour)
+ * only where the owner's guidelines or licence allow that colourway (`ArtFile.derived`).
  */
 export type MarkVariant = "disc" | "symbol" | "monoLight" | "monoDark" | "wordmark" | "wordmarkLight";
 
@@ -34,6 +35,22 @@ export type ArtShape = "disc" | "tile" | "free";
 
 /** How the file came to exist: downloaded from the owner, public domain, or authored by Senryo. */
 export type Provenance = "first-party" | "public-domain" | "senryo-original";
+
+/**
+ * A variant made from another registered file by an exact colour substitution, and only where the owner's own
+ * guidelines (or the licence) allow that colourway. The derived bytes are reproducible: `deriveSvg(from, this)` must
+ * equal the file on disk (codegen `--derive` writes it; invariant `identity-provenance` re-derives and compares).
+ */
+export interface Derivation {
+  /** Repo-root-relative path of the registered source file. */
+  from: string;
+  /** Literal colour substitutions applied to the source text, source → derived (case-insensitive, e.g. "#70D44B"). */
+  recolour: Readonly<Record<string, string>>;
+  /** A fill set on the root `<svg>`, for shapes that carry no fill of their own (the implicit black). */
+  rootFill?: string;
+  /** The clause that permits the colourway, quoted with its URL. */
+  basis: string;
+}
 
 export interface ArtFile {
   /** Repo-root-relative path of the file exactly as delivered (or authored): SVG, or PNG where the owner ships raster only. */
@@ -58,6 +75,13 @@ export interface ArtFile {
    * behind them — or `free` (an uncontained mark that gets a plate when a disc is asked for).
    */
   shape: ArtShape;
+  /**
+   * A one-colour glyph whose owner allows any single flat colour (the passkey icon): `EntityGlyph` draws it in the
+   * caller's ink. Never set on a brand mark, which keeps its owner's colours.
+   */
+  tintable?: boolean;
+  /** Set when this file was derived from another registered file (never for files kept as delivered). */
+  derived?: Derivation;
 }
 
 export interface ArtSource {

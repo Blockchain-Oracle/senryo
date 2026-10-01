@@ -2,6 +2,7 @@ import { type AuthFailure, classifyAuthError, isSilent } from "@senryo/account";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Text } from "react-native";
+import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { AuthFailureCard } from "~/features/auth/AuthFailure";
@@ -53,10 +54,16 @@ function Body() {
       <Text style={[TYPE.body, { color: color.inkMuted }]}>
         Your account is a passkey — Face ID, no seed phrase. Practice mode gives you test dollars to start.
       </Text>
-      <Button label="Create account" disabled={!account.ready} onPress={() => void run("create", account.create)} />
+      <Button
+        label="Create account"
+        leading={<PasskeyGlyph color={color.primaryForeground} />}
+        disabled={!account.ready}
+        onPress={() => void run("create", account.create)}
+      />
       <Button
         label="I already have an account"
         variant="outline"
+        leading={<PasskeyGlyph color={color.foreground} />}
         disabled={!account.ready}
         onPress={() => void run("sign-in", account.signIn)}
       />

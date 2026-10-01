@@ -31,7 +31,7 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
   if (!request) {
     return (
       <AuthCard
-        glyph="shield"
+        glyph="passkey"
         tone="gold"
         title="Confirm with your passkey"
         body="Withdrawals, sends, card limits, your recovery phrase and looser security settings always ask for a fresh passkey check."
@@ -63,7 +63,7 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
   };
   const copy = failure ? authFailureCopy(failure, Platform.OS === "ios" ? "ios" : "android") : undefined;
   return (
-    <AuthCard glyph="shield" tone="gold" busy={busy} title={request.intent.title} body={request.intent.detail}>
+    <AuthCard glyph="passkey" tone="gold" busy={busy} title={request.intent.title} body={request.intent.detail}>
       {copy ? (
         <Text accessibilityRole="alert" style={[TYPE.caption, { color: color.down }]}>
           {copy.title}. {copy.body}
