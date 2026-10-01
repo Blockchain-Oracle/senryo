@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Testnet drive scripts (S3.8): deposit \u2192 XAU long \u2192 MirrorAggregator price move \u2192 keeper liquidation; card concurrency check.",
+  "description": "Testnet drive scripts (S3.8): deposit → XAU long → MirrorAggregator price move → keeper liquidation; card concurrency check.",
   "license": "MIT",
   "scripts": {
     "liquidation": "tsx src/liquidation.ts",
@@ -17,7 +17,9 @@
     "gas-topup-check": "tsx src/gas-topup-check.ts",
     "recovery-check": "tsx src/recovery-check.ts",
     "network-switch-check": "tsx src/network-switch-check.ts",
-    "trigger-outcome-check": "tsx src/trigger-outcome-check.ts"
+    "trigger-outcome-check": "tsx src/trigger-outcome-check.ts",
+    "spot-tokens": "tsx src/spot-tokens.ts",
+    "spot-check": "tsx src/spot-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",

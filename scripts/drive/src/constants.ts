@@ -33,6 +33,23 @@ export const SWAP = {
   adminGas: "0x30d40",
 } as const;
 
+/**
+ * S1b.16 spot check: the $10 USDC smoke quote per token; on the fork, $100,000 USDC and 100 MON of cheats (every
+ * $10, $1,000 and $10,000 buy is sold back, MON included). Simple7702Account is the delegated-receiver probe.
+ */
+export const SPOT = {
+  smokeUsd6: 10_000_000n,
+  forkUsdc6: 100_000_000_000n,
+  largeMultiple: 10n,
+  forkAttempts: 4,
+  forkMon: "0x56bc75e2d63100000",
+  adminGas: "0x30d40",
+  priceDigits: 6,
+  amountDigits: 8,
+  eip7702Designator: "0xef0100",
+  simple7702Account: "0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9",
+} as const;
+
 /** Console table column widths. */
 export const COLS = { step: 28, stage: 9, gas: 7 } as const;
 

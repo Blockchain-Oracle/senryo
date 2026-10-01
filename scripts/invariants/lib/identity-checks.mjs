@@ -12,6 +12,8 @@
  *   native and a web component.
  * - Every entity resolves to an artwork record or states a gap; ids are unique; practice token addresses equal the
  *   address book, so a redeploy can't silently orphan their marks.
+ * - Every J11 spot token (the generated `SPOT_TOKENS`) names an entity that has artwork on file — a token never ships
+ *   without its own logo.
  */
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -28,6 +30,7 @@ const PROVENANCE = new Set(["first-party", "public-domain", "senryo-original", "
 /** A paint value other than none/currentColor on fill, stroke or a gradient stop. */
 const OWN_COLOUR = /(?:fill|stroke|stop-color)(?:\s*=\s*["']|\s*:\s*)(?!none\b|currentColor\b)[#a-z(]/i;
 const ADDRESS_BOOK = "packages/contracts/src/addresses/10143.json";
+const SPOT_LIST = "packages/config/src/generated/spot-tokens.ts";
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const posix = (p) => p.split(sep).join("/");
@@ -150,6 +153,16 @@ export async function identityProvenance(rule, ctx) {
       findings.push(finding(rule, `${e.id}: artwork "${e.art}" is not registered`, `${PKG}/src/entities.ts`));
     if (e.art === undefined && !(e.gap ?? "").trim())
       findings.push(finding(rule, `${e.id}: no artwork and no recorded gap`, `${PKG}/src/entities.ts`));
+  }
+  if (existsSync(join(root, SPOT_LIST))) {
+    const { SPOT_TOKENS } = await import(pathToFileURL(join(root, SPOT_LIST)).href);
+    const byId = new Map(ENTITIES.map((e) => [e.id, e]));
+    for (const t of SPOT_TOKENS) {
+      const e = byId.get(t.mark);
+      if (!e) findings.push(finding(rule, `spot token ${t.symbol}: mark ${t.mark} is not an entity`, SPOT_LIST));
+      else if (e.art === undefined || !keys.has(e.art))
+        findings.push(finding(rule, `spot token ${t.symbol}: no artwork on file for ${t.mark}`, SPOT_LIST));
+    }
   }
   const book = JSON.parse(readFileSync(join(root, ADDRESS_BOOK), "utf8")).contracts ?? {};
   const mocks = { ausd: book.MockAUSD?.address, usdc: book.MockUSDC?.address };

@@ -126,5 +126,13 @@
   "lib-binance/monoLight": "30d03537e5b2f08c090c4fedd7cf3fbfeaf1aff66cf2845357ecc963c5118c59",
   "lib-binance/monoDark": "0eba2cd7c36188cbdc9dec7826f8be0ebdb80a0eec6cc19b5199cee98125bbbe",
   "lib-kraken/monoLight": "73708160c078eb10b604ac2e977c6a23ed82f08b4edf2c98d8b10f921bde12c3",
-  "lib-kraken/monoDark": "6a6b53362dd49518a18f2803b757cb7e14cd7e3e37a0df9421682c901d3fa432"
+  "lib-kraken/monoDark": "6a6b53362dd49518a18f2803b757cb7e14cd7e3e37a0df9421682c901d3fa432",
+  "tokenlist-gho/disc": "f6f26f74576a4a7a7c34737e07ada96cb62fb452e9b1e3d165b09e993324b84c",
+  "tokenlist-usdt0/disc": "daa6f5c226f22195d2051c70eb135a1ce91499908951ceb16e344b66eb12b62d",
+  "tokenlist-wbtc/disc": "f0fad73d38a9c2c31983c38c701d602d3211b431044e962179a6240d95dbfecf",
+  "tokenlist-weth/disc": "adef4ea6a6b0424c0955dfea7e1f8f4a245e2dcd938e10203b36ab53fcbea78b",
+  "tokenlist-cbbtc/disc": "0876ab3c9315c942fc8e44ee896671f903fa2af964b1773e51753e12116f69bb",
+  "tokenlist-musd/disc": "7ea6d3584ae67e61a68c0cd81cc7e55e158dd676c5f2066ae0f4b3e1864659bb",
+  "tokenlist-shmon/disc": "650ab7e32534153cb1cf758cac791a2c1903d77e0e0c6e85db4c577b56e9eaa2",
+  "tokenlist-syrupusdc/disc": "0900f08fd81ca879c9195678678375a023f037b2465841508e8eaf33a66d58bc"
 }

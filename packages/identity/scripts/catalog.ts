@@ -10,7 +10,12 @@
  *   too new for the libraries (Lighter, Venice, Pump).
  * - Simple Icons (github.com/simple-icons/simple-icons, CC0-1.0): one-path company marks plus the brand hex, for the
  *   underlying companies of equity markets.
+ * - Monad's token list (github.com/monad-crypto/token-list, pinned by commit in `MONAD_TOKEN_LIST`): the logo each
+ *   issuer submitted with its token (`mainnet/<SYMBOL>/logo.svg|png`), for the J11 spot tokens (`SPOT_TOKENS`, itself
+ *   generated from that list). Native MON keeps Monad's own first-party mark.
  */
+import { SPOT_TOKENS } from "@senryo/config";
+import { spotArtKey } from "../src/ids.ts";
 
 /** web3icons variant → ours: `background` is clipped to a disc, `mono` also yields the derived dark-ink silhouette. */
 export type Web3IconsTake = "disc" | "symbol" | "mono";
@@ -18,7 +23,8 @@ export type Web3IconsTake = "disc" | "symbol" | "mono";
 export type FetchSpec =
   | { from: "web3icons"; group: "tokens" | "networks" | "exchanges"; name: string; take: readonly Web3IconsTake[] }
   | { from: "hyperliquid"; coin: string }
-  | { from: "simple-icons"; slug: string };
+  | { from: "simple-icons"; slug: string }
+  | { from: "monad-token-list"; dir: string; file: string; symbol: string };
 
 export interface CatalogEntry {
   /** Artwork key (`Entity.art`, or the `supplement` of a first-party record when prefixed `lib-`). */
@@ -95,4 +101,11 @@ const SUPPLEMENTS: readonly CatalogEntry[] = [
   },
 ];
 
-export const CATALOG: readonly CatalogEntry[] = [...STANDALONE, ...SUPPLEMENTS];
+/** Every listed spot token except native MON, keyed by its token-list folder. */
+const SPOT_LOGOS: readonly CatalogEntry[] = SPOT_TOKENS.filter((t) => !t.native).map((t) => ({
+  key: spotArtKey(t.list.dir),
+  owner: `${t.name} (${t.symbol}) — its issuer's token art, as submitted to Monad's token list`,
+  spec: { from: "monad-token-list", dir: t.list.dir, file: t.list.logo, symbol: t.symbol },
+}));
+
+export const CATALOG: readonly CatalogEntry[] = [...STANDALONE, ...SUPPLEMENTS, ...SPOT_LOGOS];

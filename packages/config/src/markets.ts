@@ -121,6 +121,8 @@ export const MAINNET_EXTERNAL = {
     stateView: "0x77395f3b2e73ae90843717371294fa97cc419d64",
     universalRouter: "0xa6CE4F10d83dBdDAc17E68e1837ca9cE6a1b596e",
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    /** `poolKeys(bytes25)` recovers a pool's key from its id (docs.uniswap.org v4 deployments, Monad: 143). */
+    positionManager: "0x5b7ec4a94ff9bedb700fb82ab09d5846972f4016",
   },
   perplExchange: "0x34B6552d57a35a1D042CcAe1951BD1C370112a6F",
 } as const;

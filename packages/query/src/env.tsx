@@ -17,6 +17,8 @@ import { EngineSocket } from "./socket.ts";
 export interface QueryEnv {
   chainId: ChainId;
   read: ReadClient;
+  /** A Monad mainnet (143) client for mainnet-only data read in either mode (J11 spot tokens); see `mainnetReadOf`. */
+  mainnetRead?: ReadClient | undefined;
   api: ApiClient;
   indexer: IndexerClient;
   prices: PriceStore;
@@ -28,6 +30,8 @@ const Context = createContext<QueryEnv | undefined>(undefined);
 export interface QueryEnvProviderProps {
   chainId: ChainId;
   read: ReadClient;
+  /** The app's shared 143 client (`sharedRead(MAINNET_CHAIN_ID)`); without it the spot hooks make their own. */
+  mainnetRead?: ReadClient | undefined;
   api: ApiClient;
   indexer: IndexerClient;
   /** API origin for the engine socket. */
@@ -35,7 +39,15 @@ export interface QueryEnvProviderProps {
   children: ReactNode;
 }
 
-export function QueryEnvProvider({ chainId, read, api, indexer, apiOrigin, children }: QueryEnvProviderProps) {
+export function QueryEnvProvider({
+  chainId,
+  read,
+  mainnetRead,
+  api,
+  indexer,
+  apiOrigin,
+  children,
+}: QueryEnvProviderProps) {
   const queryClient = useQueryClient();
   const env = useMemo<QueryEnv>(() => {
     const prices = new PriceStore();
@@ -45,8 +57,8 @@ export function QueryEnvProvider({ chainId, read, api, indexer, apiOrigin, child
       prices,
       onAccount: (address: Address) => void queryClient.invalidateQueries({ queryKey: keys.account(chainId, address) }),
     });
-    return { chainId, read, api, indexer, prices, socket };
-  }, [chainId, read, api, indexer, apiOrigin, queryClient]);
+    return { chainId, read, mainnetRead, api, indexer, prices, socket };
+  }, [chainId, read, mainnetRead, api, indexer, apiOrigin, queryClient]);
 
   useEffect(() => {
     env.socket.start();

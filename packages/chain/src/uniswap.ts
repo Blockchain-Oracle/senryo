@@ -8,7 +8,8 @@ import { STABLE_POOL_CANDIDATES } from "./constants.ts";
  *  - PoolId = keccak256(abi.encode(PoolKey{currency0, currency1, fee, tickSpacing, hooks})), currency0 < currency1
  *  - StateView.getSlot0 / getLiquidity read pool state; Quoter.quoteExactInputSingle is simulated (eth_call)
  *  - Universal Router `execute(commands, inputs, deadline)`: command V4_SWAP (0x10) with actions
- *    SWAP_EXACT_IN_SINGLE (0x06) · SETTLE_ALL (0x0c) · TAKE_ALL (0x0f) (same actions as CollateralSwapper).
+ *    SWAP_EXACT_IN_SINGLE (0x06) · SETTLE_ALL (0x0c) · TAKE_ALL (0x0f) (same actions as CollateralSwapper); spot
+ *    tokens (J11) route multi-hop with SWAP_EXACT_IN (0x07) · SETTLE_ALL · TAKE (0x0e) to a recipient.
  * The AUSD/USDC pool key is discovered onchain (no log scans): candidate keys → the one with liquidity.
  */
 
@@ -50,7 +51,44 @@ const stateViewAbi = [
   },
 ] as const;
 
+/** v4-periphery `PathKey`: the next currency of a hop and the pool that reaches it. */
+const PATH_KEY_COMPONENTS = [
+  { name: "intermediateCurrency", type: "address" },
+  { name: "fee", type: "uint24" },
+  { name: "tickSpacing", type: "int24" },
+  { name: "hooks", type: "address" },
+  { name: "hookData", type: "bytes" },
+] as const;
+
+export interface PathKey {
+  intermediateCurrency: Address;
+  fee: number;
+  tickSpacing: number;
+  hooks: Address;
+  hookData: Hex;
+}
+
 export const v4QuoterAbi = [
+  {
+    type: "function",
+    name: "quoteExactInput",
+    stateMutability: "nonpayable",
+    inputs: [
+      {
+        name: "params",
+        type: "tuple",
+        components: [
+          { name: "exactCurrency", type: "address" },
+          { name: "path", type: "tuple[]", components: PATH_KEY_COMPONENTS },
+          { name: "exactAmount", type: "uint128" },
+        ],
+      },
+    ],
+    outputs: [
+      { name: "amountOut", type: "uint256" },
+      { name: "gasEstimate", type: "uint256" },
+    ],
+  },
   {
     type: "function",
     name: "quoteExactInputSingle",
@@ -101,34 +139,36 @@ export interface PoolState {
   liquidity: bigint;
 }
 
+/** Slot0 + in-range liquidity of each key (one multicall); an uninitialised pool reads sqrtPriceX96 = 0. */
+export async function readPoolStates(read: ReadClient, keys: readonly PoolKey[]): Promise<PoolState[]> {
+  const ids = keys.map(poolIdOf);
+  const stateView = { address: MAINNET_EXTERNAL.uniswapV4.stateView, abi: stateViewAbi } as const;
+  const rows = await read.multicall({
+    contracts: ids.flatMap((poolId) => [
+      { ...stateView, functionName: "getSlot0", args: [poolId] } as const,
+      { ...stateView, functionName: "getLiquidity", args: [poolId] } as const,
+    ]),
+    allowFailure: false,
+  });
+  return keys.map((key, i) => {
+    const [sqrtPriceX96, tick, , lpFee] = rows[2 * i] as readonly [bigint, number, number, number];
+    const liquidity = rows[2 * i + 1] as bigint;
+    return { key, poolId: ids[i] as Hex, sqrtPriceX96, tick, lpFee, liquidity };
+  });
+}
+
+/** Initialised with liquidity in range — a pool a swap can actually go through. */
+export function isLive(state: PoolState): boolean {
+  return state.sqrtPriceX96 !== 0n && state.liquidity > 0n;
+}
+
 /** The deepest initialised AUSD/USDC pool among the candidates (mainnet only). */
 export async function findStablePool(read: ReadClient): Promise<PoolState | undefined> {
   if (read.chain.id !== MAINNET_CHAIN_ID) return undefined;
-  const { ausd, usdc, uniswapV4 } = MAINNET_EXTERNAL;
+  const { ausd, usdc } = MAINNET_EXTERNAL;
   const keys = STABLE_POOL_CANDIDATES.map(([fee, spacing]) => sortedKey(ausd, usdc, fee, spacing));
-  const states = await Promise.all(
-    keys.map(async (key) => {
-      const poolId = poolIdOf(key);
-      const [[sqrtPriceX96, tick, , lpFee], liquidity] = await Promise.all([
-        read.readContract({
-          address: uniswapV4.stateView,
-          abi: stateViewAbi,
-          functionName: "getSlot0",
-          args: [poolId],
-        }),
-        read.readContract({
-          address: uniswapV4.stateView,
-          abi: stateViewAbi,
-          functionName: "getLiquidity",
-          args: [poolId],
-        }),
-      ]);
-      return { key, poolId, sqrtPriceX96, tick, lpFee, liquidity };
-    }),
-  );
-  return states
-    .filter((s) => s.sqrtPriceX96 !== 0n && s.liquidity > 0n)
-    .sort((a, b) => (b.liquidity > a.liquidity ? 1 : -1))[0];
+  const states = await readPoolStates(read, keys);
+  return states.filter(isLive).sort((a, b) => (b.liquidity > a.liquidity ? 1 : -1))[0];
 }
 
 /** Quoter `quoteExactInputSingle` (simulated). */
@@ -138,6 +178,23 @@ export async function quoteExactIn(read: ReadClient, key: PoolKey, zeroForOne: b
     abi: v4QuoterAbi,
     functionName: "quoteExactInputSingle",
     args: [{ poolKey: key, zeroForOne, exactAmount: amountIn, hookData: "0x" }],
+  });
+  const [amountOut, gasEstimate] = result;
+  return { amountOut, gasEstimate };
+}
+
+/** Quoter `quoteExactInput` along a multi-hop path from `currencyIn` (simulated). */
+export async function quoteExactInPath(
+  read: ReadClient,
+  currencyIn: Address,
+  path: readonly PathKey[],
+  amountIn: bigint,
+) {
+  const { result } = await read.simulateContract({
+    address: MAINNET_EXTERNAL.uniswapV4.quoter,
+    abi: v4QuoterAbi,
+    functionName: "quoteExactInput",
+    args: [{ exactCurrency: currencyIn, path: [...path], exactAmount: amountIn }],
   });
   const [amountOut, gasEstimate] = result;
   return { amountOut, gasEstimate };
@@ -173,7 +230,17 @@ export const permit2Abi = [
 ] as const;
 
 /** Universal Router command/action bytes (docs.uniswap.org; CollateralSwapper constants). */
-export const UR = { V4_SWAP: 0x10, SWAP_EXACT_IN_SINGLE: 0x06, SETTLE_ALL: 0x0c, TAKE_ALL: 0x0f } as const;
+export const UR = {
+  V4_SWAP: 0x10,
+  SWAP_EXACT_IN_SINGLE: 0x06,
+  SWAP_EXACT_IN: 0x07,
+  SETTLE_ALL: 0x0c,
+  TAKE: 0x0e,
+  TAKE_ALL: 0x0f,
+} as const;
+
+/** v4-periphery `ActionConstants.OPEN_DELTA`: TAKE the whole credit the swap left (its own minimum already held). */
+const OPEN_DELTA = 0n;
 
 /**
  * `execute` inputs for an exact-in single-hop swap. Universal Router 2.1.2 pins v4-periphery 545a5d2, whose
@@ -216,6 +283,55 @@ export function encodeExactInSingle(params: { key: PoolKey; zeroForOne: boolean;
   const settle = encodeAbiParameters([{ type: "address" }, { type: "uint256" }], [tokenIn, params.amountIn]);
   const take = encodeAbiParameters([{ type: "address" }, { type: "uint256" }], [tokenOut, params.minOut]);
   const actions = encodePacked(["uint8", "uint8", "uint8"], [UR.SWAP_EXACT_IN_SINGLE, UR.SETTLE_ALL, UR.TAKE_ALL]);
+  const input = encodeAbiParameters([{ type: "bytes" }, { type: "bytes[]" }], [actions, [swap, settle, take]]);
+  return { commands: encodePacked(["uint8"], [UR.V4_SWAP]), inputs: [input] };
+}
+
+/**
+ * `execute` inputs for an exact-in swap along a path (`SWAP_EXACT_IN`, then SETTLE_ALL the input and TAKE the whole
+ * output to `recipient`). The same v4-periphery 545a5d2 layout as above: `ExactInputParams` is (currencyIn, path,
+ * minHopPriceX36[], amountIn, amountOutMinimum); an empty `minHopPriceX36` skips the per-hop floors (the router allows
+ * length 0) and `amountOutMinimum` holds the whole route. A native input (`address(0)`) is settled from the call's
+ * `value`; a native output is sent to `recipient` as MON.
+ */
+export function encodeExactIn(params: {
+  currencyIn: Address;
+  path: readonly PathKey[];
+  amountIn: bigint;
+  minOut: bigint;
+  recipient: Address;
+}): { commands: Hex; inputs: Hex[] } {
+  const last = params.path.at(-1);
+  if (!last) throw new Error("encodeExactIn: empty path");
+  const swap = encodeAbiParameters(
+    [
+      {
+        type: "tuple",
+        components: [
+          { name: "currencyIn", type: "address" },
+          { name: "path", type: "tuple[]", components: PATH_KEY_COMPONENTS },
+          { name: "minHopPriceX36", type: "uint256[]" },
+          { name: "amountIn", type: "uint128" },
+          { name: "amountOutMinimum", type: "uint128" },
+        ],
+      },
+    ],
+    [
+      {
+        currencyIn: params.currencyIn,
+        path: [...params.path],
+        minHopPriceX36: [],
+        amountIn: params.amountIn,
+        amountOutMinimum: params.minOut,
+      },
+    ],
+  );
+  const settle = encodeAbiParameters([{ type: "address" }, { type: "uint256" }], [params.currencyIn, params.amountIn]);
+  const take = encodeAbiParameters(
+    [{ type: "address" }, { type: "address" }, { type: "uint256" }],
+    [last.intermediateCurrency, params.recipient, OPEN_DELTA],
+  );
+  const actions = encodePacked(["uint8", "uint8", "uint8"], [UR.SWAP_EXACT_IN, UR.SETTLE_ALL, UR.TAKE]);
   const input = encodeAbiParameters([{ type: "bytes" }, { type: "bytes[]" }], [actions, [swap, settle, take]]);
   return { commands: encodePacked(["uint8"], [UR.V4_SWAP]), inputs: [input] };
 }

@@ -8,10 +8,11 @@ import {
   type EngineSymbol,
   MAINNET_CHAIN_ID,
   MAINNET_EXTERNAL,
+  SPOT_TOKENS,
   TESTNET_CHAIN_ID,
 } from "@senryo/config";
 import { EXTERNAL_CHAIN_IDS, PERPL_MARKETS, PRACTICE_TOKENS, USDC_ELSEWHERE } from "./constants.ts";
-import { CAIP2, ids } from "./ids.ts";
+import { CAIP2, ids, spotArtKey } from "./ids.ts";
 import type { Entity } from "./types.ts";
 
 const MONAD_NETWORKS = [
@@ -182,6 +183,21 @@ function externalRows(): Entity[] {
   ];
 }
 
+/**
+ * J11 spot tokens (the generated `SPOT_TOKENS`), each keyed by chain + contract with its own logo from Monad's token
+ * list (`scripts/catalog.ts`). Native MON is the Monad row above, so it is not repeated here.
+ */
+const spotRows = (): Entity[] =>
+  SPOT_TOKENS.filter((t) => !t.native).map((t) => ({
+    id: ids.token(MAINNET_CHAIN_ID, t.address),
+    name: t.name,
+    symbol: t.symbol,
+    role: "asset",
+    instrument: "token",
+    network: ids.evmChain(MAINNET_CHAIN_ID),
+    art: spotArtKey(t.list.dir),
+  }));
+
 const FX_PAIRS = [
   { base: "EUR", name: "Euro / US Dollar", art: "fx-eur-usd" },
   { base: "GBP", name: "British Pound / US Dollar", art: "fx-gbp-usd" },
@@ -232,6 +248,7 @@ const orgRows = (): Entity[] => [
 
 export const ENTITIES: readonly Entity[] = [
   ...monadRows(),
+  ...spotRows(),
   ...perplRows(),
   ...externalRows(),
   ...fxRows(),

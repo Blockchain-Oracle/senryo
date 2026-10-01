@@ -1,4 +1,4 @@
-import type { ChainId } from "@senryo/config";
+import { type ChainId, MAINNET_CHAIN_ID } from "@senryo/config";
 import type { Address } from "@senryo/core";
 
 /**
@@ -21,4 +21,12 @@ export const keys = {
   starter: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "starter"] as const,
   /** Deposit inbox (S8.24): its balance + the api watch, refreshed with the account after a sweep. */
   inbox: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "inbox"] as const,
+  /** J11 spot tokens: mainnet-only pools, so the chain in these keys is always 143 whichever network is selected. */
+  spotPrices: (tokens: string) => ["spot", MAINNET_CHAIN_ID, "prices", tokens] as const,
+  spotQuote: (symbol: string, side: string, amountIn: string, slippageBps: string) =>
+    ["spot", MAINNET_CHAIN_ID, "quote", symbol, side, amountIn, slippageBps] as const,
+  spotCandles: (symbol: string, interval: number) => ["spot", MAINNET_CHAIN_ID, "candles", symbol, interval] as const,
+  /** Under the mainnet account key, so a finalized swap's account invalidation refreshes the holdings. */
+  spotHoldings: (address: Address, tokens: string) =>
+    ["account", MAINNET_CHAIN_ID, address.toLowerCase(), "spot", tokens] as const,
 };
