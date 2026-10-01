@@ -5,7 +5,8 @@
  * D2 execution trace (21st Task Steps) — honest about what is happening while the browser's passkey sheet is up.
  * The D-029 interstitial: when a provider asks twice on first setup, the copy says so before the second prompt.
  */
-import { Loader2, ScanFace, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
+import { PASSKEY_TILE_EDGE, PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { AuthCard, AuthCardBody, AuthCardFooter, AuthCardHeader } from "@/components/ui/auth-card";
 import { TaskSteps } from "@/components/ui/task-steps";
 import { TextShimmer } from "@/components/ui/text-shimmer";
@@ -44,7 +45,11 @@ const STEPS: Record<CeremonyKind, { id: string; label: string }[]> = {
 export function CeremonyCard({ kind, extraPrompt }: { kind: CeremonyKind; extraPrompt: boolean }) {
   return (
     <AuthCard aria-busy>
-      <AuthCardHeader glyph={<ScanFace />} badge={<Loader2 className="animate-spin" />} title={TITLE[kind]}>
+      <AuthCardHeader
+        glyph={<PasskeyGlyph size={PASSKEY_TILE_EDGE} />}
+        badge={<Loader2 className="animate-spin" />}
+        title={TITLE[kind]}
+      >
         {extraPrompt
           ? "One more confirmation — some passkey providers ask twice the first time. Same passkey, same account."
           : "Your browser shows its passkey sheet: confirm with Face ID, Touch ID or your device PIN."}

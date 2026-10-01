@@ -8,6 +8,7 @@ import type { ArtSource } from "../types.ts";
 export const PROVIDER_ART: readonly ArtSource[] = [
   {
     key: "usdc",
+    supplement: "lib-usdc",
     owner: "Circle Internet Group",
     provenance: "first-party",
     pageUrl: "https://www.circle.com/pressroom",
@@ -15,7 +16,7 @@ export const PROVIDER_ART: readonly ArtSource[] = [
       'Circle Brand Use Policy (linked from the pressroom): "NO MODIFICATION" and "NO COMMERCIAL USE: Circle does not permit any use of its Brand Assets for commercial purposes." USDC Brand Guide: "The USDC Token Logo is used to represent the USDC stablecoin in the event of a transaction or a UI context." The commercial-use conflict is flagged. Attribution where feasible: "All trademarks shown are the property of Circle Internet Group, Inc. and/or its affiliates".',
     retrieved: "2026-09-30",
     usage:
-      "Token logo ≥ 32 px; always blue, never black or inverted; monochrome contexts need the USDC Symbol, which Circle publishes only as PNG (gap).",
+      "Token logo ≥ 32 px; always blue, never black or inverted; monochrome contexts need the USDC Symbol, which Circle publishes only as PNG (the library supplement fills it: art/generated/fetched.ts).",
     variants: {
       disc: {
         path: "packages/identity/sources/usdc/usdc-token.svg",
@@ -206,6 +207,7 @@ export const PROVIDER_ART: readonly ArtSource[] = [
   },
   {
     key: "aurora",
+    supplement: "lib-aurora",
     owner: "Aurora Labs",
     provenance: "first-party",
     pageUrl: "https://brand.aurora.dev/",
@@ -213,7 +215,7 @@ export const PROVIDER_ART: readonly ArtSource[] = [
       'Aurora Brand Guidelines + Media Kit 2023 (https://brand.aurora.dev/): "Aurora logo should only be used in our brand colors. Black and white are allowed as an exception if necessary." "It should not be reimagined, tampered with, or modified in any way." The disc is the Aurora Intents app icon (intents.aurora.dev).',
     retrieved: "2026-09-30",
     usage:
-      '"Powered by Aurora" only on routes Aurora performs; margin ≥ half the mark\'s width. No mono sign is published (gap).',
+      '"Powered by Aurora" only on routes Aurora performs; margin ≥ half the mark\'s width. No mono sign is published (the library supplement fills it: art/generated/fetched.ts).',
     variants: {
       disc: {
         path: "packages/identity/sources/aurora/aurora-intents-app-icon.svg",

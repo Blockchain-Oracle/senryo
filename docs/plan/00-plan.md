@@ -32,7 +32,7 @@
   - pnpm only;
   - integer base units for money.
 - **Architect for performance.** Deadlines never justify a mediocre choice. Competition is irrelevant. Don't block yourself: when there's an obstacle, research the route.
-- **Deploy on the user's Coolify.** Every server change, deploy, money spend, or outbound sponsor message needs the user's **explicit OK at that moment** (marked **[OK?]** below).
+- **Deploy on the user's Coolify.** The lead deploys, changes servers and runs testnet transactions without asking (user, 1 Oct 2026). **Only real-money funding waits for the user.** Every **[OK?]** marker below now means just that: a step that needs the user's real funds (mainnet funding/seeding); anything else proceeds.
 - **Secrets** are never printed or committed.
 - **Product, not demo:**
   - onboarding;

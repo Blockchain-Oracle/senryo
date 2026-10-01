@@ -6,9 +6,10 @@
  * `undefined` when the user backs out (cancel is silent). Failures stay in the sheet with their fix.
  */
 import { type AuthFailure, authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
-import { Loader2, ScanFace, ShieldAlert } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { PASSKEY_TILE_EDGE, PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { AuthCardHeader } from "@/components/ui/auth-card";
 import { Button } from "@/components/ui/button";
 
@@ -94,7 +95,7 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
           footer={
             <>
               <Button className="w-full" disabled={busy} onClick={() => void run()}>
-                {busy ? <Loader2 className="animate-spin" /> : <ScanFace />}
+                {busy ? <Loader2 className="animate-spin" /> : <PasskeyGlyph />}
                 {busy ? "Waiting for your passkey…" : (pending?.intent.confirmLabel ?? "Confirm with passkey")}
               </Button>
               <Button variant="ghost" className="w-full" disabled={busy} onClick={() => close(undefined)}>
@@ -105,7 +106,11 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
         >
           {pending ? (
             <div className="pb-2">
-              <AuthCardHeader glyph={<ShieldAlert />} tone="gold" title={pending.intent.title}>
+              <AuthCardHeader
+                glyph={<PasskeyGlyph size={PASSKEY_TILE_EDGE} />}
+                tone="gold"
+                title={pending.intent.title}
+              >
                 {pending.intent.detail}
               </AuthCardHeader>
               {copy ? (

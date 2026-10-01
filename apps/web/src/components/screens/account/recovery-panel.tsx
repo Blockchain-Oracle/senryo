@@ -6,9 +6,10 @@
  * Advanced only, the 24-word export behind a step-up. The phrase lives in component state only, is hidden again after
  * a minute or the moment the tab is hidden, and is never stored or logged.
  */
-import { Cloud, Download, KeyRound } from "lucide-react";
+import { Download } from "lucide-react";
 import { useState } from "react";
 import { useStepUp } from "@/components/auth/step-up";
+import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Panel } from "@/components/shell/primitives";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/lib/account/provider";
@@ -84,7 +85,7 @@ export function RecoveryPanel() {
     <Panel className="mx-4">
       <div className="grid gap-1 border-border border-b px-3 py-3">
         <p className="flex items-center gap-1.5 font-mono text-caption">
-          <Cloud className="size-3.5 text-primary" aria-hidden />
+          <PasskeyGlyph className="text-primary" />
           PASSKEY SYNC
         </p>
         <p className="text-caption text-muted-foreground">
@@ -100,7 +101,7 @@ export function RecoveryPanel() {
           passkey.
         </p>
         <Button variant="outline" disabled={!ready || backup === "saving"} onClick={() => void addBackup()}>
-          {backup === "none" ? <KeyRound /> : <Download />}
+          {backup === "none" ? <PasskeyGlyph /> : <Download />}
           {backup === "none" ? "Add a backup passkey" : "Add another backup passkey"}
         </Button>
         {backup !== "none" ? (

@@ -49,8 +49,15 @@ const FILTER_PARTS = new Set([
   "feMorphology",
 ]);
 const FORBIDDEN_TEXT = new Set(["text", "tspan", "textPath"]);
-/** Editor leftovers that draw nothing (styles are already inlined) and have no react-native-svg prop. */
-const INERT_ATTRIBUTES = ["class", "xml:space", "data-name"] as const;
+/** Editor leftovers and rendering hints that draw nothing (styles are already inlined) and have no react-native-svg prop. */
+const INERT_ATTRIBUTES = [
+  "class",
+  "xml:space",
+  "data-name",
+  "image-rendering",
+  "text-rendering",
+  "shape-rendering",
+] as const;
 
 function guard(label: string, platform: Platform): CustomPlugin {
   return {
@@ -74,6 +81,24 @@ function guard(label: string, platform: Platform): CustomPlugin {
       },
     }),
   };
+}
+
+const ROOT_OPEN = /<svg\b[^>]*>/;
+const ROOT_CLOSE = /<\/svg>\s*$/;
+const HALF = 2;
+
+/**
+ * `ArtFile.crop: "disc"`: clips a full-bleed square file (an icon library's brand-colour background variant) to its
+ * inscribed circle. The id is prefixed per mark by `prefixIds` afterwards.
+ */
+export function cropToDisc(raw: string, viewBox: string): string {
+  const [minX = 0, minY = 0, width = 0, height = 0] = viewBox.split(" ").map(Number);
+  const open = ROOT_OPEN.exec(raw);
+  if (!open || !ROOT_CLOSE.test(raw) || width <= 0 || height <= 0) throw new Error("cropToDisc: not a croppable SVG");
+  const circle = `<circle cx="${minX + width / HALF}" cy="${minY + height / HALF}" r="${Math.min(width, height) / HALF}"/>`;
+  const head = raw.slice(0, open.index + open[0].length);
+  const body = raw.slice(open.index + open[0].length).replace(ROOT_CLOSE, "");
+  return `${head}<defs><clipPath id="disc-crop">${circle}</clipPath></defs><g clip-path="url(#disc-crop)">${body}</g></svg>`;
 }
 
 export function optimise(raw: string, path: string, prefix: string, platform: Platform): string {

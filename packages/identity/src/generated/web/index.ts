@@ -45,6 +45,7 @@ import ArtCoinbaseWordmark from "./coinbase-wordmark.tsx";
 import ArtCoinbaseWordmarkLight from "./coinbase-wordmarklight.tsx";
 import ArtBinanceSymbol from "./binance-symbol.tsx";
 import ArtKrakenSymbol from "./kraken-symbol.tsx";
+import ArtPasskeySymbol from "./passkey-symbol.tsx";
 import ArtFlagEuSymbol from "./flag-eu-symbol.tsx";
 import ArtFlagUsSymbol from "./flag-us-symbol.tsx";
 import ArtFlagGbSymbol from "./flag-gb-symbol.tsx";
@@ -63,6 +64,50 @@ import ArtXauKobanDisc from "./xau-koban-disc.tsx";
 import ArtXauKobanSymbol from "./xau-koban-symbol.tsx";
 import ArtXagChoginDisc from "./xag-chogin-disc.tsx";
 import ArtXagChoginSymbol from "./xag-chogin-symbol.tsx";
+import ArtNearDisc from "./near-disc.tsx";
+import ArtNearSymbol from "./near-symbol.tsx";
+import ArtNearMonoLight from "./near-monolight.tsx";
+import ArtNearMonoDark from "./near-monodark.tsx";
+import ArtBnbDisc from "./bnb-disc.tsx";
+import ArtBnbSymbol from "./bnb-symbol.tsx";
+import ArtBnbMonoLight from "./bnb-monolight.tsx";
+import ArtBnbMonoDark from "./bnb-monodark.tsx";
+import ArtTronDisc from "./tron-disc.tsx";
+import ArtTronSymbol from "./tron-symbol.tsx";
+import ArtTronMonoLight from "./tron-monolight.tsx";
+import ArtTronMonoDark from "./tron-monodark.tsx";
+import ArtPolygonDisc from "./polygon-disc.tsx";
+import ArtPolygonSymbol from "./polygon-symbol.tsx";
+import ArtPolygonMonoLight from "./polygon-monolight.tsx";
+import ArtPolygonMonoDark from "./polygon-monodark.tsx";
+import ArtLighterDisc from "./lighter-disc.tsx";
+import ArtVeniceDisc from "./venice-disc.tsx";
+import ArtPumpDisc from "./pump-disc.tsx";
+import ArtNvidiaMonoDark from "./nvidia-monodark.tsx";
+import ArtNvidiaSymbol from "./nvidia-symbol.tsx";
+import ArtNvidiaMonoLight from "./nvidia-monolight.tsx";
+import ArtLibMonadMonoLight from "./lib-monad-monolight.tsx";
+import ArtLibMonadMonoDark from "./lib-monad-monodark.tsx";
+import ArtLibBitcoinSymbol from "./lib-bitcoin-symbol.tsx";
+import ArtLibBitcoinMonoLight from "./lib-bitcoin-monolight.tsx";
+import ArtLibBitcoinMonoDark from "./lib-bitcoin-monodark.tsx";
+import ArtLibEthereumMonoLight from "./lib-ethereum-monolight.tsx";
+import ArtLibEthereumMonoDark from "./lib-ethereum-monodark.tsx";
+import ArtLibSolanaMonoLight from "./lib-solana-monolight.tsx";
+import ArtLibSolanaMonoDark from "./lib-solana-monodark.tsx";
+import ArtLibUsdcSymbol from "./lib-usdc-symbol.tsx";
+import ArtLibUsdcMonoLight from "./lib-usdc-monolight.tsx";
+import ArtLibUsdcMonoDark from "./lib-usdc-monodark.tsx";
+import ArtLibAuroraMonoLight from "./lib-aurora-monolight.tsx";
+import ArtLibAuroraMonoDark from "./lib-aurora-monodark.tsx";
+import ArtLibCoinbaseSymbol from "./lib-coinbase-symbol.tsx";
+import ArtLibCoinbaseMonoLight from "./lib-coinbase-monolight.tsx";
+import ArtLibCoinbaseMonoDark from "./lib-coinbase-monodark.tsx";
+import ArtLibBinanceDisc from "./lib-binance-disc.tsx";
+import ArtLibBinanceMonoLight from "./lib-binance-monolight.tsx";
+import ArtLibBinanceMonoDark from "./lib-binance-monodark.tsx";
+import ArtLibKrakenMonoLight from "./lib-kraken-monolight.tsx";
+import ArtLibKrakenMonoDark from "./lib-kraken-monodark.tsx";
 
 export type ArtComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -86,6 +131,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "coinbase": { disc: ArtCoinbaseDisc, monoDark: ArtCoinbaseMonoDark, wordmark: ArtCoinbaseWordmark, wordmarkLight: ArtCoinbaseWordmarkLight },
   "binance": { symbol: ArtBinanceSymbol },
   "kraken": { symbol: ArtKrakenSymbol },
+  "passkey": { symbol: ArtPasskeySymbol },
   "flag-eu": { symbol: ArtFlagEuSymbol },
   "flag-us": { symbol: ArtFlagUsSymbol },
   "flag-gb": { symbol: ArtFlagGbSymbol },
@@ -101,4 +147,21 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "senryo-venue": { symbol: ArtSenryoVenueSymbol },
   "xau-koban": { disc: ArtXauKobanDisc, symbol: ArtXauKobanSymbol },
   "xag-chogin": { disc: ArtXagChoginDisc, symbol: ArtXagChoginSymbol },
+  "near": { disc: ArtNearDisc, symbol: ArtNearSymbol, monoLight: ArtNearMonoLight, monoDark: ArtNearMonoDark },
+  "bnb": { disc: ArtBnbDisc, symbol: ArtBnbSymbol, monoLight: ArtBnbMonoLight, monoDark: ArtBnbMonoDark },
+  "tron": { disc: ArtTronDisc, symbol: ArtTronSymbol, monoLight: ArtTronMonoLight, monoDark: ArtTronMonoDark },
+  "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
+  "lighter": { disc: ArtLighterDisc },
+  "venice": { disc: ArtVeniceDisc },
+  "pump": { disc: ArtPumpDisc },
+  "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
+  "lib-monad": { monoLight: ArtLibMonadMonoLight, monoDark: ArtLibMonadMonoDark },
+  "lib-bitcoin": { symbol: ArtLibBitcoinSymbol, monoLight: ArtLibBitcoinMonoLight, monoDark: ArtLibBitcoinMonoDark },
+  "lib-ethereum": { monoLight: ArtLibEthereumMonoLight, monoDark: ArtLibEthereumMonoDark },
+  "lib-solana": { monoLight: ArtLibSolanaMonoLight, monoDark: ArtLibSolanaMonoDark },
+  "lib-usdc": { symbol: ArtLibUsdcSymbol, monoLight: ArtLibUsdcMonoLight, monoDark: ArtLibUsdcMonoDark },
+  "lib-aurora": { monoLight: ArtLibAuroraMonoLight, monoDark: ArtLibAuroraMonoDark },
+  "lib-coinbase": { symbol: ArtLibCoinbaseSymbol, monoLight: ArtLibCoinbaseMonoLight, monoDark: ArtLibCoinbaseMonoDark },
+  "lib-binance": { disc: ArtLibBinanceDisc, monoLight: ArtLibBinanceMonoLight, monoDark: ArtLibBinanceMonoDark },
+  "lib-kraken": { monoLight: ArtLibKrakenMonoLight, monoDark: ArtLibKrakenMonoDark },
 };

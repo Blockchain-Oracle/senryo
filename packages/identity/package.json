@@ -12,6 +12,7 @@
     "./web": "./src/web/index.ts"
   },
   "scripts": {
+    "fetch": "node scripts/fetch-marks.ts",
     "codegen": "node scripts/codegen.ts",
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.native.json"
   },

@@ -4,6 +4,10 @@
  *   sha256 that matches the bytes on disk (first-party files are never re-pinned; `codegen --rehash` touches only
  *   Senryo originals).
  * - No source contains `<text>` (type is outlined), and every file under the identity sources is registered.
+ * - Fetched records (`open-library`, `venue-metadata`: scripts/fetch-marks.ts) meet the same bar; a `supplement` names a
+ *   registered record.
+ * - A derived variant names a registered source and equals `deriveSvg(source)` byte for byte, with the clause that
+ *   permits the colourway; a tintable glyph carries no colour of its own (the caller supplies one flat ink).
  * - The generated components are current: `src/generated/manifest.json` pins the same hashes, and every variant has a
  *   native and a web component.
  * - Every entity resolves to an artwork record or states a gap; ids are unique; practice token addresses equal the
@@ -20,7 +24,9 @@ const SOURCE_DIRS = ["packages/identity/sources", "brand/art"];
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const MIN_LICENCE_CHARS = 24;
-const PROVENANCE = new Set(["first-party", "public-domain", "senryo-original"]);
+const PROVENANCE = new Set(["first-party", "public-domain", "senryo-original", "open-library", "venue-metadata"]);
+/** A paint value other than none/currentColor on fill, stroke or a gradient stop. */
+const OWN_COLOUR = /(?:fill|stroke|stop-color)(?:\s*=\s*["']|\s*:\s*)(?!none\b|currentColor\b)[#a-z(]/i;
 const ADDRESS_BOOK = "packages/contracts/src/addresses/10143.json";
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -41,7 +47,22 @@ function listSvgs(root, dir) {
   return out;
 }
 
-function checkSource(rule, root, source, manifest, registered) {
+function checkDerived(rule, root, label, file, deriveSvg, sources, bytes) {
+  const d = file.derived;
+  if (!d) return [];
+  const findings = [];
+  if ((d.basis ?? "").length < MIN_LICENCE_CHARS)
+    findings.push(finding(rule, `${label}: derived without the clause that permits it`, file.path));
+  if (!sources.has(d.from))
+    findings.push(finding(rule, `${label}: derivation source ${d.from} is not registered`, file.path));
+  const from = join(root, d.from);
+  if (!existsSync(from)) return [...findings, finding(rule, `${label}: derivation source not found`, d.from)];
+  if (deriveSvg(readFileSync(from, "utf8"), d) !== bytes.toString("utf8"))
+    findings.push(finding(rule, `${label}: not reproducible from ${d.from} — run codegen --derive`, file.path));
+  return findings;
+}
+
+function checkSource(rule, root, source, manifest, registered, deriveSvg, sources) {
   const findings = [];
   const where = `${PKG}/src/art (${source.key})`;
   const need = (ok, message) => (ok ? null : findings.push(finding(rule, message, where)));
@@ -68,6 +89,9 @@ function checkSource(rule, root, source, manifest, registered) {
     const actual = sha256(bytes);
     if (actual !== file.sha256) findings.push(finding(rule, `${label}: sha256 ${actual} ≠ registry`, file.path));
     if (/<text[\s>]/.test(bytes.toString("utf8"))) findings.push(finding(rule, `${label}: contains <text>`, file.path));
+    findings.push(...checkDerived(rule, root, label, file, deriveSvg, sources, bytes));
+    if (file.tintable && (!file.path.endsWith(".svg") || OWN_COLOUR.test(bytes.toString("utf8"))))
+      findings.push(finding(rule, `${label}: a tintable glyph must be an SVG with no colour of its own`, file.path));
     if (manifest[label] !== file.sha256)
       findings.push(
         finding(rule, `${label}: generated components are stale — run codegen`, `${PKG}/src/generated/manifest.json`),
@@ -90,20 +114,28 @@ export async function identityProvenance(rule, ctx) {
   const root = ctx.root;
   if (!existsSync(join(root, PKG, "src/art/index.ts"))) return { findings: [], skipped: "identity package not landed" };
   const load = (rel) => import(pathToFileURL(join(root, PKG, rel)).href);
-  const [{ ART_SOURCES }, { ENTITIES }, { PRACTICE_TOKENS }] = await Promise.all([
+  const [{ ART_SOURCES }, { ENTITIES }, { PRACTICE_TOKENS }, { deriveSvg }] = await Promise.all([
     load("src/art/index.ts"),
     load("src/entities.ts"),
     load("src/constants.ts"),
+    load("src/derive.ts"),
   ]);
   const manifestPath = join(root, PKG, "src/generated/manifest.json");
   const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : {};
   const findings = [];
   const registered = new Set();
   const keys = new Set();
+  const sources = new Set(ART_SOURCES.flatMap((s) => Object.values(s.variants ?? {}).map((f) => f.path)));
   for (const source of ART_SOURCES) {
     if (keys.has(source.key)) findings.push(finding(rule, `duplicate artwork key ${source.key}`, `${PKG}/src/art`));
     keys.add(source.key);
-    findings.push(...checkSource(rule, root, source, manifest, registered));
+    findings.push(...checkSource(rule, root, source, manifest, registered, deriveSvg, sources));
+  }
+  for (const source of ART_SOURCES) {
+    if (source.supplement !== undefined && !keys.has(source.supplement))
+      findings.push(
+        finding(rule, `${source.key}: supplement "${source.supplement}" is not registered`, `${PKG}/src/art`),
+      );
   }
   for (const dir of SOURCE_DIRS) {
     for (const rel of listSvgs(root, dir)) {

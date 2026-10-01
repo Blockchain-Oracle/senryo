@@ -40,7 +40,7 @@ export function authFailureCopy(kind: AuthFailure, surface: Surface): Copy {
     case "no-create-option":
       return {
         title: "No passkey provider is set up",
-        body: "Add a Google account in Settings (or turn on 1Password for passkeys), then try again.",
+        body: "Passkeys need a screen lock (PIN, pattern or passcode) and a passkey provider: add a Google account in Settings (or turn on 1Password for passkeys), then try again.",
       };
     case "bad-configuration":
       return {
@@ -50,7 +50,7 @@ export function authFailureCopy(kind: AuthFailure, surface: Surface): Copy {
     case "not-supported":
       return {
         title: "Passkeys aren't available here",
-        body: "Senryo needs iOS 18+, Android 9+, or a current Chrome, Safari or Firefox.",
+        body: "Senryo needs iOS 18+, Android 9+, or a current Chrome, Safari or Firefox, and a screen lock on the phone (PIN, pattern or passcode). No Face ID or fingerprint needed.",
       };
     case "insecure-context":
       return { title: "Open Senryo over HTTPS", body: "Passkeys only work on a secure connection." };

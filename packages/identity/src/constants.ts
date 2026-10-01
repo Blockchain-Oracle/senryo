@@ -2,7 +2,7 @@
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
 
 /** External EVM chains shown in funding routes (EIP-155 ids). */
-export const EXTERNAL_CHAIN_IDS = { ethereum: 1, base: 8453, arbitrum: 42161 } as const;
+export const EXTERNAL_CHAIN_IDS = { ethereum: 1, base: 8453, arbitrum: 42161, bnb: 56, polygon: 137 } as const;
 
 /**
  * Practice collateral mocks from `packages/contracts/src/addresses/10143.json` (invariant `identity-provenance`

@@ -1,9 +1,8 @@
 import { WEB_ORIGIN } from "@senryo/config";
-import { hasArt, ids } from "@senryo/identity";
 import { Stack } from "expo-router";
 import { useCallback, useState } from "react";
 import { Linking, Platform, StyleSheet, Text, View } from "react-native";
-import { EntityMark } from "~/components/identity/EntityMark";
+import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { Panel, Rule, SectionLabel } from "~/components/kit/Surface";
@@ -11,19 +10,13 @@ import { EmptyState } from "~/components/kit/states";
 import { PhraseGrid } from "~/features/auth/PhraseGrid";
 import { useAccount } from "~/lib/account/provider";
 import { requestStepUp } from "~/lib/account/step-up";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * The storage provider is named from the platform only in text: its logo appears only where the OS identifies the
  * provider (v2-plan §5.12), which this screen can't know.
  */
 const SYNC = Platform.OS === "ios" ? "iCloud Keychain" : "Google Password Manager";
-/**
- * The FIDO passkey icon (single flat colour, ≥ 24 px, hidden from screen readers next to its label, per FIDO's usage
- * guidelines). It's a recorded gap until the icon is downloaded through FIDO's form; until then the line is text only.
- */
-const PASSKEY = ids.provider("passkey");
-
 /**
  * F07 recovery (D-034): passkey sync first; a backup passkey (web-first — the vault needs WebCrypto and a file, and S6.12
  * adds the server copy); the 24-word export only under Advanced, behind a step-up, screenshot-blocked.
@@ -65,7 +58,7 @@ export default function RecoveryScreen() {
       <SectionLabel>PASSKEY SYNC</SectionLabel>
       <Panel style={styles.panel}>
         <View style={styles.row}>
-          {hasArt(PASSKEY) ? <EntityMark id={PASSKEY} size={SIZE.markToken} variant="mono" decorative /> : null}
+          <PasskeyGlyph color={color.ink} />
           <Text style={[TYPE.body, { color: color.ink }]}>Your passkey is your account.</Text>
         </View>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>

@@ -94,6 +94,9 @@ function Art({ plan, size, theme }: { plan: Extract<MarkPlan, { kind: "art" }>; 
   const Component = ART_COMPONENTS[plan.source.key]?.[plan.variant];
   if (!Component) return <Fallback size={size} text={plan.entity.symbol ?? plan.entity.name} theme={theme} dashed />;
   if (plan.wordmark) return <Component width={size * plan.aspect} height={size} aria-hidden focusable={false} />;
+  // A one-colour glyph (passkey) takes the theme's secondary-text ink; EntityGlyph lets a caller match its label.
+  if (plan.file.tintable)
+    return <Component width={size} height={size} fill={theme.fallbackInk} aria-hidden focusable={false} />;
   const fill = plateColor(plan.plate, theme);
   const inner = innerSize(size, plan.file.insetPermille, fill !== undefined, plan.file.shape !== "free");
   const plate: CSSProperties =
