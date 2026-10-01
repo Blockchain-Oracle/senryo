@@ -4,6 +4,7 @@ export * from "./clients.ts";
 export * from "./confirm.ts";
 export * from "./constants.ts";
 export * from "./contracts.ts";
+export * from "./discovery-reads.ts";
 export * from "./errors.ts";
 export * from "./fees.ts";
 export * from "./heads.ts";

@@ -42,6 +42,22 @@ export const SPOT_CANDLES_REFETCH_MS = 60_000;
 /** The list's 24 h line (one GeckoTerminal call for every token; its free tier allows ~10 a minute per IP). */
 export const SPOT_STATS_REFETCH_MS = 60_000;
 
+/**
+ * Discovery quotes (review S03): Perpl's markets (one multicall + Perpl's keyless ticker) and the calculated feeds
+ * (one multicall + the 24 h search, usually one more call) while a markets surface is open.
+ */
+export const DISCOVERY_QUOTES_REFETCH_MS = 10_000;
+export const DISCOVERY_CANDLES_REFETCH_MS = 60_000;
+/** Perpl's `/v1/pub/context` (funding intervals) is re-read at most this often. */
+export const PERPL_CONTEXT_TTL_MS = 600_000;
+/** A Perpl REST call that takes longer is "didn't answer" (the onchain price beside it still shows). */
+export const PERPL_HTTP_TIMEOUT_MS = 6_000;
+/**
+ * Onchain rounds a calculated-feed chart reads back at most, per feed, while the indexer doesn't index these feeds:
+ * ≈ 13 days of the busiest feed (wEWYx ≈ 450 rounds/day, D-220), the whole of SPY's ≈ 80/day life so far.
+ */
+export const FEED_HISTORY_MAX_ROUNDS = 6_000;
+
 /** Engine socket: keep-alive and reconnect backoff. */
 export const SOCKET_PING_MS = 25_000;
 export const SOCKET_BACKOFF_MS = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000] as const;

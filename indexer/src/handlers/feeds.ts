@@ -2,7 +2,8 @@
  * Oracle rounds → OracleRound + OracleFeed + candles (D-020). Feed<SYMBOL> are the configured aggregators (mainnet
  * OCR2 behind the Chainlink proxies, testnet MirrorAggregators); Feed<SYMBOL>Next are aggregators the proxies switch
  * to later, registered at runtime by the wildcard watcher below. Metals answer in 8 decimals, FX (S8.23) in 18; every
- * price is stored at 1e18 in the feed's own orientation (JPY is USD per yen, never inverted).
+ * price is stored at 1e18 in the feed's own orientation (JPY is USD per yen, never inverted). FeedW…X are the calculated
+ * tokenized-equity feeds (mainnet only, read-only discovery charts, review S03): their feed id is the wrapper (wSPYx).
  */
 import { indexer, type OracleFeed } from "envio";
 import { recordTick } from "../lib/candles.ts";
@@ -79,6 +80,12 @@ indexer.onEvent({ contract: "FeedGBP", ...on }, ({ event, context }) => recordRo
 indexer.onEvent({ contract: "FeedJPY", ...on }, ({ event, context }) => recordRound(context, event, "JPY"));
 indexer.onEvent({ contract: "FeedCHF", ...on }, ({ event, context }) => recordRound(context, event, "CHF"));
 indexer.onEvent({ contract: "FeedCAD", ...on }, ({ event, context }) => recordRound(context, event, "CAD"));
+indexer.onEvent({ contract: "FeedWSPYX", ...on }, ({ event, context }) => recordRound(context, event, "wSPYx"));
+indexer.onEvent({ contract: "FeedWQQQX", ...on }, ({ event, context }) => recordRound(context, event, "wQQQx"));
+indexer.onEvent({ contract: "FeedWNVDAX", ...on }, ({ event, context }) => recordRound(context, event, "wNVDAx"));
+indexer.onEvent({ contract: "FeedWTSLAX", ...on }, ({ event, context }) => recordRound(context, event, "wTSLAx"));
+indexer.onEvent({ contract: "FeedWSPCXX", ...on }, ({ event, context }) => recordRound(context, event, "wSPCXx"));
+indexer.onEvent({ contract: "FeedWEWYX", ...on }, ({ event, context }) => recordRound(context, event, "wEWYx"));
 indexer.onEvent({ contract: "FeedXAUNext", ...on }, ({ event, context }) => recordRound(context, event, "XAU"));
 indexer.onEvent({ contract: "FeedXAGNext", ...on }, ({ event, context }) => recordRound(context, event, "XAG"));
 indexer.onEvent({ contract: "FeedEURNext", ...on }, ({ event, context }) => recordRound(context, event, "EUR"));
@@ -86,14 +93,21 @@ indexer.onEvent({ contract: "FeedGBPNext", ...on }, ({ event, context }) => reco
 indexer.onEvent({ contract: "FeedJPYNext", ...on }, ({ event, context }) => recordRound(context, event, "JPY"));
 indexer.onEvent({ contract: "FeedCHFNext", ...on }, ({ event, context }) => recordRound(context, event, "CHF"));
 indexer.onEvent({ contract: "FeedCADNext", ...on }, ({ event, context }) => recordRound(context, event, "CAD"));
+indexer.onEvent({ contract: "FeedWSPYXNext", ...on }, ({ event, context }) => recordRound(context, event, "wSPYx"));
+indexer.onEvent({ contract: "FeedWQQQXNext", ...on }, ({ event, context }) => recordRound(context, event, "wQQQx"));
+indexer.onEvent({ contract: "FeedWNVDAXNext", ...on }, ({ event, context }) => recordRound(context, event, "wNVDAx"));
+indexer.onEvent({ contract: "FeedWTSLAXNext", ...on }, ({ event, context }) => recordRound(context, event, "wTSLAx"));
+indexer.onEvent({ contract: "FeedWSPCXXNext", ...on }, ({ event, context }) => recordRound(context, event, "wSPCXx"));
+indexer.onEvent({ contract: "FeedWEWYXNext", ...on }, ({ event, context }) => recordRound(context, event, "wEWYx"));
 
 /** Addresses already indexed under a Feed* name on this chain (static config or earlier registration). */
 const registered = new Set<string>();
 
-function isConfigured(chainId: 143 | 10143, address: string): boolean {
-  const c = indexer.chains[chainId];
+function isConfigured(address: string): boolean {
+  const c = indexer.chains[MAINNET_CHAIN_ID];
   const statics = [c.FeedXAU, c.FeedXAG, c.FeedEUR, c.FeedGBP, c.FeedJPY, c.FeedCHF, c.FeedCAD];
-  return statics.some((feed) => feed.addresses.some((a) => a.toLowerCase() === address));
+  const equities = [c.FeedWSPYX, c.FeedWQQQX, c.FeedWNVDAX, c.FeedWTSLAX, c.FeedWSPCXX, c.FeedWEWYX];
+  return [...statics, ...equities].some((feed) => feed.addresses.some((a) => a.toLowerCase() === address));
 }
 
 /**
@@ -105,7 +119,7 @@ indexer.contractRegister(
   { contract: "ChainlinkAnswer", event: "AnswerUpdated", wildcard: true },
   async ({ event, context }) => {
     const address = event.srcAddress.toLowerCase();
-    if (event.chainId !== MAINNET_CHAIN_ID || registered.has(address) || isConfigured(event.chainId, address)) return;
+    if (event.chainId !== MAINNET_CHAIN_ID || registered.has(address) || isConfigured(address)) return;
     const symbol = await aggregatorSymbol(event.chainId, address);
     if (!symbol) return;
     registered.add(address);
@@ -117,6 +131,12 @@ indexer.contractRegister(
       JPY: context.chain.FeedJPYNext,
       CHF: context.chain.FeedCHFNext,
       CAD: context.chain.FeedCADNext,
+      wSPYx: context.chain.FeedWSPYXNext,
+      wQQQx: context.chain.FeedWQQQXNext,
+      wNVDAx: context.chain.FeedWNVDAXNext,
+      wTSLAx: context.chain.FeedWTSLAXNext,
+      wSPCXx: context.chain.FeedWSPCXXNext,
+      wEWYx: context.chain.FeedWEWYXNext,
     }[symbol];
     next.add(event.srcAddress);
     context.log.info(`registered new ${symbol} aggregator ${address} (proxy phase list)`);

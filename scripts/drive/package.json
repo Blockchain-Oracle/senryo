@@ -19,7 +19,8 @@
     "network-switch-check": "tsx src/network-switch-check.ts",
     "trigger-outcome-check": "tsx src/trigger-outcome-check.ts",
     "spot-tokens": "tsx src/spot-tokens.ts",
-    "spot-check": "tsx src/spot-check.ts"
+    "spot-check": "tsx src/spot-check.ts",
+    "discovery-check": "tsx src/discovery-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",

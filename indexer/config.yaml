@@ -85,6 +85,21 @@ contracts:
     events: *answer_updated
   - name: FeedCAD
     events: *answer_updated
+  # Calculated tokenized-equity feeds (review S03, D-220): 8-decimal OCR2 aggregators pricing the xStocks wrapper
+  # (wSPYx…), mainnet only. Read-only discovery charts; none of them is one of our markets. Feed ids keep the
+  # wrapper's symbol. Undeployed until the indexer is re-synced with them (they start at the shared feed block).
+  - name: FeedWSPYX
+    events: *answer_updated
+  - name: FeedWQQQX
+    events: *answer_updated
+  - name: FeedWNVDAX
+    events: *answer_updated
+  - name: FeedWTSLAX
+    events: *answer_updated
+  - name: FeedWSPCXX
+    events: *answer_updated
+  - name: FeedWEWYX
+    events: *answer_updated
   # Aggregators confirmed on the proxies after deployment (proxy v0.6 emits no event): registered at runtime by
   # the wildcard ChainlinkAnswer watcher once the proxy's phase list includes them (src/handlers/feeds.ts).
   - name: FeedXAUNext
@@ -100,6 +115,18 @@ contracts:
   - name: FeedCHFNext
     events: *answer_updated
   - name: FeedCADNext
+    events: *answer_updated
+  - name: FeedWSPYXNext
+    events: *answer_updated
+  - name: FeedWQQQXNext
+    events: *answer_updated
+  - name: FeedWNVDAXNext
+    events: *answer_updated
+  - name: FeedWTSLAXNext
+    events: *answer_updated
+  - name: FeedWSPCXXNext
+    events: *answer_updated
+  - name: FeedWEWYXNext
     events: *answer_updated
   - name: ChainlinkAnswer
     events: *answer_updated
@@ -201,6 +228,25 @@ chains:
       - name: FeedCAD
         address: 0xCe18C8ccd1a91d10D1Ca8187BBA44c6BdB057c53 # phase-1 aggregator of proxy 0x3293eA5650E9f8c4091642b7EB1C46CFEe5197cA
         start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      # Calculated equity feeds: phase-1 aggregators = the directory's contractAddress = aggregator() (2026-10-01).
+      - name: FeedWSPYX
+        address: 0x652Cb99415670fE21D190cb6cBc82652b916Eb43 # phase-1 aggregator of proxy 0x2e2dA5717eDE960F8b77Af4cFcBDC4Ca3099006D
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedWQQQX
+        address: 0xd2AA78Fa96E7B49e1D678151818204B638fb1293 # phase-1 aggregator of proxy 0x7CA45B17D8D43059a222dEC5d991B613F61c02d9
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedWNVDAX
+        address: 0x3C04C0c74EEe95a27d62efA8FC9Da0f2b7f4578E # phase-1 aggregator of proxy 0x03ffa4673c060339E6a8E5Ba1a12B3301c966bf0
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedWTSLAX
+        address: 0x81eDD5F657b28d7E38192B33BD3901179673c780 # phase-1 aggregator of proxy 0xE42022cCe1913626AE4297B99291d3Ba24Cc9281
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedWSPCXX
+        address: 0x9568322beD79945f814f8Be94C7fD47e7606C7a3 # phase-1 aggregator of proxy 0x7577154038de77668d0188baF47707EDcd86d0b3
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedWEWYX
+        address: 0xFb075BA1535A190d099c46573D341d5435370B67 # phase-1 aggregator of proxy 0x54D1645F9C1338f63407Fa64156eCeD9e195AB25
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
       - name: FeedXAUNext
       - name: FeedXAGNext
       - name: FeedEURNext
@@ -208,6 +254,12 @@ chains:
       - name: FeedJPYNext
       - name: FeedCHFNext
       - name: FeedCADNext
+      - name: FeedWSPYXNext
+      - name: FeedWQQQXNext
+      - name: FeedWNVDAXNext
+      - name: FeedWTSLAXNext
+      - name: FeedWSPCXXNext
+      - name: FeedWEWYXNext
       - name: ChainlinkAnswer
         start_block: ${ENVIO_FEED_WATCH_START_BLOCK_143:-109200000}
       - name: PerplExchange
