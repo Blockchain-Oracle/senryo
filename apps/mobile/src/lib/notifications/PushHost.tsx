@@ -20,7 +20,9 @@ export function tapTarget(data: Record<string, unknown> | undefined): string | u
   const url = data?.url;
   if (typeof url !== "string" || url.length === 0) return undefined;
   const chainId = typeof data?.chainId === "number" ? data.chainId : Number(data?.chainId);
-  const withChain = Number.isFinite(chainId) ? `${url}${url.includes("?") ? "&" : "?"}chainId=${chainId}` : url;
+  // The keeper's links already name their network; `data.chainId` covers any that don't.
+  const named = /[?&]chainId=/.test(url) || !Number.isFinite(chainId);
+  const withChain = named ? url : `${url}${url.includes("?") ? "&" : "?"}chainId=${chainId}`;
   return linkTarget(withChain, activeNetwork().chainId);
 }
 
