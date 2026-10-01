@@ -12,7 +12,6 @@ import { setActiveNetwork } from "~/lib/network";
 import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 import { usePrelaunchPrices } from "./usePrelaunchPrices";
 
-const SHOWN_DECIMALS = 2;
 const MS_PER_SECOND = 1000;
 
 /** A feed round's unix-seconds timestamp as local clock time (a time, not money). */
@@ -56,7 +55,7 @@ export function PrelaunchMainnet({ surface }: { surface: keyof typeof COPY }) {
               detail={p.price ? `Updated ${feedTime(p.price.updatedAt)}` : "Reading the feed…"}
               trailing={
                 <Text style={[TYPE.numSm, { color: color.ink }]}>
-                  {p.price ? formatUnits(p.price.answer, p.price.decimals, SHOWN_DECIMALS) : "—"}
+                  {p.price ? formatUnits(p.price.answer, p.price.decimals, p.price.shown) : "—"}
                 </Text>
               }
             />

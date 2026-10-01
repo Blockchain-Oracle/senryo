@@ -58,6 +58,26 @@ export async function readOracleStates(
   }));
 }
 
+/**
+ * Whether each market has open interest (`SenryoCore.marketState` longSize + shortSize > 0) — the keeper's observe
+ * budget pokes price drift only where positions are open (S8.23).
+ */
+export async function readOpenInterest(
+  read: ReadClient,
+  chainId: ChainId,
+  marketIds: readonly number[],
+): Promise<Map<number, boolean>> {
+  const address = addressOf(chainId, "SenryoCore");
+  const rows = await read.multicall({
+    contracts: marketIds.map(
+      (id) => ({ address, abi: senryoCoreAbi, functionName: "marketState", args: [id] }) as const,
+    ),
+    allowFailure: false,
+    blockTag: "latest",
+  });
+  return new Map(marketIds.map((id, i) => [id, (rows[i]?.longSize ?? 0n) + (rows[i]?.shortSize ?? 0n) > 0n]));
+}
+
 export interface FeedRound {
   roundId: bigint;
   answer: bigint;

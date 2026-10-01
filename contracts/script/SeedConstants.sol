@@ -40,6 +40,77 @@ library SeedConstants {
     uint16 internal constant CLAMP_BPS = 200;
     uint16 internal constant REOPEN_CLAMP_BPS = 500;
 
+    // ---------------------------------------------------------------- FX majors (S8.23, D-186…D-189)
+    /// @dev Chainlink FX push feeds on Monad mainnet (reference-data-directory feeds-monad-mainnet.json; description,
+    /// decimals and rounds read onchain 2026-09-30): 18 decimals, 240 s heartbeat, 0.15 % deviation threshold.
+    /// The quote is the feed's own orientation: JPY / USD is USD per yen (≈ 0.00635), never inverted.
+    address internal constant MAINNET_EUR_USD = 0x00D7E359c8CE46168eFDD4D65b708fFb16c4b99a;
+    address internal constant MAINNET_GBP_USD = 0x1ffC8B75a16FFfbd7879F042B580F7607Dcf5C30;
+    address internal constant MAINNET_JPY_USD = 0xF64664Ea54cE47eCC7a1816C49d1Bc6deF828927;
+    address internal constant MAINNET_CHF_USD = 0x6DBa7f3A7B5B7c1079337104caD14D19150F6B8d;
+    address internal constant MAINNET_CAD_USD = 0x3293eA5650E9f8c4091642b7EB1C46CFEe5197cA;
+    string internal constant EUR_DESCRIPTION = "EUR / USD";
+    string internal constant GBP_DESCRIPTION = "GBP / USD";
+    string internal constant JPY_DESCRIPTION = "JPY / USD";
+    string internal constant CHF_DESCRIPTION = "CHF / USD";
+    string internal constant CAD_DESCRIPTION = "CAD / USD";
+    uint8 internal constant FX_FEED_DECIMALS = 18;
+    /// @dev SessionOracle heartbeat for the mainnet FX feeds: the feeds' 240 s heartbeat plus the largest in-session
+    /// gap measured over 7 days (D-186), so a healthy feed never flickers STALE; FEED_GRACE (600 s) comes on top.
+    uint32 internal constant FX_HEARTBEAT = 240;
+    /// @dev Testnet FX mirrors age by the keeper's FX relay cadence (MIRROR_FX_HEARTBEAT_SEC 9,000 s): FX moves
+    /// ≈ 0.5 %/day, and five mirrors at the metals' 3,000 s cadence would burn ≈ 2.1 tMON/day of keeper gas (D-188).
+    uint32 internal constant FX_MIRROR_HEARTBEAT = 10_800;
+    uint8 internal constant FX_CALENDAR = 1;
+    uint8 internal constant EUR_MARKET = 2;
+    uint8 internal constant GBP_MARKET = 3;
+    uint8 internal constant JPY_MARKET = 4;
+    uint8 internal constant CHF_MARKET = 5;
+    uint8 internal constant CAD_MARKET = 6;
+    uint256 internal constant FX_MARKET_COUNT = 5;
+    /// @dev Testnet mirror seed answers (18 dec, ≈ the 30 Sep mainnet answers); the first real push is accepted as
+    /// the first price (SessionOracle starts with no accepted price) or self-confirms after 3 rounds (D-055).
+    int256 internal constant EUR_MIRROR_SEED_ANSWER = 1.13e18;
+    int256 internal constant GBP_MIRROR_SEED_ANSWER = 1.32e18;
+    int256 internal constant JPY_MIRROR_SEED_ANSWER = 0.00635e18;
+    int256 internal constant CHF_MIRROR_SEED_ANSWER = 1.19e18;
+    int256 internal constant CAD_MIRROR_SEED_ANSWER = 0.7e18;
+
+    // ---------------------------------------------------------------- FX risk (D-187)
+    /// @dev 20× where the pair's worst modern gaps sit inside MM (EUR, GBP, CAD); 10× for JPY (MoF/BoJ interventions
+    /// moved it 2–5 % within an hour in 2022/2024) and CHF (SNB floor removal, Jan 2015).
+    uint16 internal constant FX_IM_BPS = 500;
+    uint16 internal constant FX_MM_BPS = 250;
+    uint16 internal constant FX_GAP_IM_BPS = 1000;
+    uint16 internal constant FX_GAP_MM_BPS = 500;
+    /// @dev devSpread ≥ the feed's deviation threshold (risk-math.md): 0.15 % → 15 bps each side.
+    uint16 internal constant FX_DEV_SPREAD_BPS = 15;
+    /// @dev A realised FX profit is capped at 10 % of entry notional (200 % of margin at 20×) — the hard per-exposure
+    /// bound on what the pool can pay out, and a 5× smaller I4 reserve per dollar of FX open interest than metals.
+    uint16 internal constant FX_MAX_PROFIT_BPS = 1000;
+    uint16 internal constant FX_TRADE_CAP_POOL_BPS = 1000;
+    /// @dev Per-market OI caps per side = min(abs, pool × bps), sized by liquidity (EUR 15 %, GBP/JPY 10 %, CHF/CAD
+    /// 7.5 %); skew caps equal the OI caps and a trade cap never exceeds its market's OI cap. The abs caps equal the
+    /// pool-bps caps at the 250 AUSD seed, so the FX sum stays ≤ FX_EXPOSURE_SHARE_BPS of the pool whether the pool
+    /// shrinks (bps binds) or grows to the TVL cap (abs binds: 125 / 1,000 = 12.5 %). No two FX markets may share
+    /// identical MarketParams: an AccessManager op id is hash(caller, target, data), so two identical `addMarket`
+    /// calls cannot both be scheduled (AddMarkets.s.sol, FxListing.assertExposureWithinShare).
+    uint16 internal constant EUR_OI_CAP_POOL_BPS = 1500;
+    uint128 internal constant EUR_OI_CAP_ABS_USD6 = 37.5e6;
+    uint16 internal constant GBP_OI_CAP_POOL_BPS = 1000;
+    uint128 internal constant GBP_OI_CAP_ABS_USD6 = 25e6;
+    uint16 internal constant JPY_OI_CAP_POOL_BPS = 1000;
+    uint128 internal constant JPY_OI_CAP_ABS_USD6 = 25e6;
+    uint16 internal constant CHF_OI_CAP_POOL_BPS = 750;
+    uint128 internal constant CHF_OI_CAP_ABS_USD6 = 18.75e6;
+    uint16 internal constant CAD_OI_CAP_POOL_BPS = 750;
+    uint128 internal constant CAD_OI_CAP_ABS_USD6 = 18.75e6;
+    /// @dev Correlated-exposure bound (D-187): EUR, GBP, JPY, CHF and CAD all quote against the USD, so a USD move
+    /// hits every FX book the same way. Σ per-side OI caps ≤ 50 % of the pool and of the LP seed; with the 10 % profit
+    /// cap the pool's worst FX payout is 5 % of the seed. Asserted by FxListing.assertExposureWithinShare in every
+    /// script that lists FX.
+    uint16 internal constant FX_EXPOSURE_SHARE_BPS = 5000;
+
     // ---------------------------------------------------------------- gold (silver mirrors gold with its own feed)
     uint16 internal constant IM_BPS = 1000;
     uint16 internal constant MM_BPS = 500;
@@ -98,15 +169,49 @@ library SeedConstants {
     uint256 internal constant SUNDAY_OPEN_HOUR = 23;
 
     /// @notice CME metals weekly bitmap (bit = 1 open); slot 0 = Monday 00:00 UTC.
-    function cmeMetalsWeek() internal pure returns (uint256[CALENDAR_WORD_COUNT] memory bits) {
+    function cmeMetalsWeek() internal pure returns (uint256[CALENDAR_WORD_COUNT] memory) {
+        return _week(true);
+    }
+
+    /// @notice FX 24/5 bitmap. Chainlink Forex hours are 18:00 ET Sunday → 17:00 ET Friday with no daily break
+    /// (docs.chain.link market hours); the DST union opens Sun 23:00 UTC (EST) and closes Fri 21:00 UTC (EDT).
+    function fxWeek() internal pure returns (uint256[CALENDAR_WORD_COUNT] memory) {
+        return _week(false);
+    }
+
+    function _week(bool dailyBreak) private pure returns (uint256[CALENDAR_WORD_COUNT] memory bits) {
         for (uint256 slot; slot < SLOTS_PER_WEEK; ++slot) {
             uint256 day = slot / SLOTS_PER_DAY;
             uint256 hour = (slot % SLOTS_PER_DAY) / SLOTS_PER_HOUR;
-            bool closed = (hour >= DAILY_BREAK_START_HOUR && hour < DAILY_BREAK_END_HOUR)
+            bool closed = (dailyBreak && hour >= DAILY_BREAK_START_HOUR && hour < DAILY_BREAK_END_HOUR)
                 || (day == FRIDAY && hour >= FRIDAY_CLOSE_HOUR) || day == SATURDAY
                 || (day == SUNDAY && hour < SUNDAY_OPEN_HOUR);
             if (!closed) bits[slot / BITS_PER_WORD] |= uint256(1) << (slot % BITS_PER_WORD);
         }
+    }
+
+    /// @notice FX market params (D-187); `gapRisk` selects the 10× margins for JPY and CHF.
+    function fxParams(bool gapRisk, uint16 oiCapPoolBps, uint128 oiCapAbsUsd6, uint16 tradeCapPoolBps)
+        internal
+        pure
+        returns (MarketParams memory)
+    {
+        return MarketParams({
+            imBps: gapRisk ? FX_GAP_IM_BPS : FX_IM_BPS,
+            mmBps: gapRisk ? FX_GAP_MM_BPS : FX_MM_BPS,
+            feeBps: FEE_BPS,
+            baseSpreadBps: BASE_SPREAD_BPS,
+            devSpreadBps: FX_DEV_SPREAD_BPS,
+            oiCapPoolBps: oiCapPoolBps,
+            skewCapPoolBps: oiCapPoolBps,
+            tradeCapPoolBps: tradeCapPoolBps,
+            maxProfitBps: FX_MAX_PROFIT_BPS,
+            enabled: true,
+            oiCapAbsUsd6: oiCapAbsUsd6,
+            fundingFactor: FUNDING_FACTOR,
+            borrowBase: BORROW_BASE,
+            borrowSlope: BORROW_SLOPE
+        });
     }
 
     function goldParams() internal pure returns (MarketParams memory) {

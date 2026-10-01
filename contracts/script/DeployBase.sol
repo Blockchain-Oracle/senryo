@@ -57,6 +57,28 @@ abstract contract DeployBase is Script {
         _record(name, a, h, block.number, isIndexed);
     }
 
+    /// @notice Carry every recorded entry into this run's output, so a script that adds contracts to an existing
+    /// deployment (AddMarkets.s.sol) rewrites the address book without dropping what it didn't touch.
+    function _keepRecorded() internal {
+        if (!_hasFile) return;
+        string[] memory names = vm.parseJsonKeys(_json, ".contracts");
+        for (uint256 i; i < names.length; ++i) {
+            string memory key = string.concat(".contracts.", names[i]);
+            _record(
+                names[i],
+                _json.readAddress(string.concat(key, ".address")),
+                _json.readBytes32(string.concat(key, ".initCodeHash")),
+                _json.readUint(string.concat(key, ".startBlock")),
+                _json.readBool(string.concat(key, ".indexed"))
+            );
+        }
+    }
+
+    /// @return the recorded address of `name` (reverts when the address book has no such entry).
+    function _recorded(string memory name) internal view returns (address) {
+        return _json.readAddress(string.concat(".contracts.", name, ".address"));
+    }
+
     /// @notice Record an external (not deployed here) address, e.g. mainnet AUSD or a Chainlink feed.
     function _external(string memory name, address a, bool isIndexed) internal {
         _record(name, a, bytes32(0), 0, isIndexed);

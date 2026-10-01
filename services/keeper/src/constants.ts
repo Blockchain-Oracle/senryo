@@ -34,6 +34,18 @@ export const RETENTION_DAYS = {
 export const MIRROR_DEVIATION_BPS = 50;
 export const MIRROR_HEARTBEAT_SEC = 3_000;
 /**
+ * FX mirrors (S8.23): the testnet oracle ages them against SeedConstants.FX_MIRROR_HEARTBEAT (10,800 s) + 600 s grace.
+ * FX moves ≈ 0.5 %/day, so relaying every 9,000 s (plus ≥ MIRROR_DEVIATION_BPS moves) costs ≈ 10 pushes/day/feed
+ * instead of ≈ 29 — five feeds ≈ 0.7 tMON/day at 102 gwei, not ≈ 2.1 (D-188).
+ */
+export const MIRROR_FX_HEARTBEAT_SEC = 9_000;
+
+/**
+ * Observe budget (S8.23, D-188): with open interest, poke when the feed has drifted this far from the persisted
+ * price — half of SeedConstants.CLAMP_BPS (200), so a sustained move never parks a market with positions in CIRCUIT.
+ */
+export const OBSERVE_DRIFT_BPS = 100;
+/**
  * While the market is CIRCUIT (a relay push jumped past the clamp), keep pushing the same source answer this often so
  * SessionOracle self-confirms: ≥ 3 in-band rounds spanning ≥ CONFIRM_SECONDS (300 s) — D-055/D-056.
  */

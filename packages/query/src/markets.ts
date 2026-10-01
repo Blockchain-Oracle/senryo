@@ -4,7 +4,7 @@
  * the session calendar (display only); candles from the Envio indexer.
  */
 import { addressOf, CONTRACT_ABIS, type MarketRiskSnapshot, readCalendar, readMarketRisk } from "@senryo/chain";
-import { type ChainId, ENGINE_MARKETS, MAINNET_CHAIN_ID } from "@senryo/config";
+import { type ChainId, ENGINE_MARKETS, engineMarketsOn, MAINNET_CHAIN_ID } from "@senryo/config";
 import type { Reading, WeekCalendar } from "@senryo/core";
 import { type CandleInterval, type Candles, CandlesDocument, candlesVars } from "@senryo/indexer-client";
 import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
@@ -78,13 +78,15 @@ export function useMarket(marketId: number): Reading<LiveMarket> {
   return mapReading(readingOf(query, MARKET_REFETCH_MS), (s) => overlay(s, tick, Date.now()));
 }
 
-/** Every engine market (Markets screen), each its own Reading so one failing read never blanks the list. */
+/** Every engine market listed on the active chain (Markets screen), each its own Reading so one failing read never
+ * blanks the list. */
 export function useMarkets(): Array<{ symbol: string; reading: Reading<LiveMarket> }> {
   const env = useQueryEnv();
-  const queries = useQueries({ queries: ENGINE_MARKETS.map((m) => marketRiskOptions(env, m.id)) });
+  const listed = engineMarketsOn(env.chainId);
+  const queries = useQueries({ queries: listed.map((m) => marketRiskOptions(env, m.id)) });
   const ticks = useSyncExternalStore(env.prices.subscribe, env.prices.all, env.prices.all);
   const snapshotAt = Date.now();
-  return ENGINE_MARKETS.map((m, i) => {
+  return listed.map((m, i) => {
     const query = queries[i];
     const reading = query ? readingOf(query, MARKET_REFETCH_MS) : ({ status: "unknown" } as const);
     return {

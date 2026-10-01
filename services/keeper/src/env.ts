@@ -5,7 +5,9 @@ import {
   KEEPER_PORT,
   KEEPER_STALE_SEC,
   MIRROR_DEVIATION_BPS,
+  MIRROR_FX_HEARTBEAT_SEC,
   MIRROR_HEARTBEAT_SEC,
+  OBSERVE_DRIFT_BPS,
   WALLET_FLOOR_WEI,
 } from "./constants.ts";
 
@@ -47,6 +49,8 @@ export const keeperEnvSchema = baseEnvSchema.extend({
   MIRROR_MARKETS: csvSchema.transform((list) => list ?? ["XAU"]),
   MIRROR_DEVIATION_BPS: z.coerce.number().int().positive().default(MIRROR_DEVIATION_BPS),
   MIRROR_HEARTBEAT_SEC: z.coerce.number().int().positive().default(MIRROR_HEARTBEAT_SEC),
+  MIRROR_FX_HEARTBEAT_SEC: z.coerce.number().int().positive().default(MIRROR_FX_HEARTBEAT_SEC),
+  OBSERVE_DRIFT_BPS: z.coerce.number().int().positive().default(OBSERVE_DRIFT_BPS),
   WALLET_FLOOR_WEI: bigintEnv(WALLET_FLOOR_WEI),
   OPS_WATCH_WALLETS: csvSchema,
   LIQUIDATE_MS: z.coerce.number().int().positive().default(INTERVALS_MS.liquidate),

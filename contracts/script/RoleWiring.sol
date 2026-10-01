@@ -58,15 +58,20 @@ library RoleWiring {
         if (t.swapper != address(0)) {
             _set(am, t.swapper, _single(CollateralSwapper.setPoolKey.selector), C.PARAM_ADMIN_ROLE);
         }
-        for (uint256 i; i < t.mirrors.length; ++i) {
-            _set(am, t.mirrors[i], _single(MirrorAggregator.pushAnswer.selector), C.MIRROR_ROLE);
-        }
+        wireMirrors(am, t.mirrors);
         for (uint256 i; i < t.mocks.length; ++i) {
             _set(am, t.mocks[i], _single(MockStable.mint.selector), C.MINTER_ROLE);
         }
         // The guardian may cancel any scheduled PARAM_ADMIN operation.
         if (am.getRoleGuardian(C.PARAM_ADMIN_ROLE) != C.GUARDIAN_ROLE) {
             am.setRoleGuardian(C.PARAM_ADMIN_ROLE, C.GUARDIAN_ROLE);
+        }
+    }
+
+    /// @notice Map `pushAnswer` of testnet mirrors to MIRROR_ROLE (also AddMarkets.s.sol's new FX mirrors).
+    function wireMirrors(AccessManager am, address[] memory mirrors) internal {
+        for (uint256 i; i < mirrors.length; ++i) {
+            _set(am, mirrors[i], _single(MirrorAggregator.pushAnswer.selector), C.MIRROR_ROLE);
         }
     }
 

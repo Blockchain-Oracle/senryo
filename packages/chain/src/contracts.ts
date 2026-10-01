@@ -31,6 +31,12 @@ export const CONTRACT_ABIS = {
   CollateralSwapper: collateralSwapperAbi,
   MirrorXAU: mirrorAggregatorAbi,
   MirrorXAG: mirrorAggregatorAbi,
+  /** FX mirrors on 10143 (S8.23, `AddMarkets.s.sol`). */
+  MirrorEUR: mirrorAggregatorAbi,
+  MirrorGBP: mirrorAggregatorAbi,
+  MirrorJPY: mirrorAggregatorAbi,
+  MirrorCHF: mirrorAggregatorAbi,
+  MirrorCAD: mirrorAggregatorAbi,
   MockAUSD: mockAUSDAbi,
   MockUSDC: mockUSDCAbi,
 } as const;

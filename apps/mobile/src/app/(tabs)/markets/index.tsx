@@ -1,4 +1,4 @@
-import { ENGINE_MARKETS } from "@senryo/config";
+import { engineMarketsOn } from "@senryo/config";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Screen } from "~/components/kit/Screen";
@@ -25,7 +25,7 @@ const UPCOMING: ReadonlyArray<UpcomingMarket & { assetClass: Exclude<Filter, "al
   { symbol: "BTC", name: "Bitcoin", venue: "Perpl", note: "Mainnet · arriving next", assetClass: "crypto" },
   { symbol: "ETH", name: "Ether", venue: "Perpl", note: "Mainnet · arriving next", assetClass: "crypto" },
   { symbol: "MON", name: "Monad", venue: "Perpl", note: "Mainnet · arriving next", assetClass: "crypto" },
-  { symbol: "EURUSD", name: "Euro / Dollar", venue: "Senryo", note: "Waits for a live price feed", assetClass: "fx" },
+  { symbol: "EUR", name: "Euro", venue: "Senryo", note: "Listing on practice after the timelock", assetClass: "fx" },
   { symbol: "NVDA", name: "Nvidia", venue: "Senryo", note: "Waits for a live price feed", assetClass: "equity" },
 ];
 
@@ -46,9 +46,15 @@ function MarketsLive() {
   const network = useNetwork();
   const { color } = useTheme();
   const [filter, setFilter] = useState<Filter>("all");
-  const metals = filter === "all" || filter === "metals" ? ENGINE_MARKETS : [];
-  const upcoming = UPCOMING.filter((m) => filter === "all" || m.assetClass === filter);
-  const count = metals.length + upcoming.length;
+  const listed = engineMarketsOn(network.chainId);
+  const engine = listed.filter(
+    (m) =>
+      filter === "all" || (filter === "metals" && m.category === "metal") || (filter === "fx" && m.category === "fx"),
+  );
+  const upcoming = UPCOMING.filter(
+    (m) => (filter === "all" || m.assetClass === filter) && !listed.some((l) => l.symbol === m.symbol),
+  );
+  const count = engine.length + upcoming.length;
   return (
     <Screen>
       <ProtocolBanner />
@@ -67,11 +73,11 @@ function MarketsLive() {
               {network.modeLabel.toUpperCase()} · Oracle: Chainlink
             </Text>
           </View>
-          {metals.map((m, i) => (
+          {engine.map((m, i) => (
             <EngineMarketRow key={m.id} marketId={m.id} first={i === 0} />
           ))}
           {upcoming.map((m, i) => (
-            <UpcomingMarketRow key={m.symbol} market={m} first={metals.length === 0 && i === 0} />
+            <UpcomingMarketRow key={m.symbol} market={m} first={engine.length === 0 && i === 0} />
           ))}
         </Panel>
       )}

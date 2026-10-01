@@ -19,6 +19,7 @@ import {MockUSDC} from "../src/testnet/MockUSDC.sol";
 import {CALENDAR_WORD_COUNT, Constants as C} from "../src/libraries/Constants.sol";
 import {DepositSource, MarketParams} from "../src/libraries/Types.sol";
 import {DeployBase} from "./DeployBase.sol";
+import {FxListing} from "./FxListing.sol";
 import {RoleWiring} from "./RoleWiring.sol";
 import {SeedConstants as S} from "./SeedConstants.sol";
 import {Seeder} from "./Seeder.sol";
@@ -29,6 +30,9 @@ import {Seeder} from "./Seeder.sol";
 /// creates only what is missing and reverts on drift. Testnet-only contracts assert chainid != 143; mainnet needs
 /// SENRYO_MAINNET_OK=true (an [OK?] step, S8). Roles: the broadcaster is ADMIN, GUARDIAN and PARAM_ADMIN (delayed)
 /// on testnet; KEEPER / OPERATOR / SPONSOR env addresses default to the broadcaster.
+/// Markets: gold (0) and silver (1) everywhere; on mainnet the five FX majors (2…6, `FxListing`) and the FX calendar
+/// are configured at construction (S8.23), before admin moves to the Safe. Testnet lists FX through the timelocked
+/// `AddMarkets.s.sol`, so every testnet init code here stays byte-identical to the recorded 10143 deployment.
 contract Deploy is DeployBase, Seeder {
     struct Stack {
         AccessManager am;
@@ -44,10 +48,17 @@ contract Deploy is DeployBase, Seeder {
         InboxFactory factory;
         IntentRouter router;
         address swapper;
+        /// @dev Mainnet only; empty on testnet.
+        FxListing.Market[] fx;
     }
+
+    /// @dev Gold + silver; FX ids start right after them.
+    uint256 internal constant METAL_MARKETS = 2;
+    uint256 internal constant METALS_AND_FX_CALENDARS = 2;
 
     error MainnetNotApproved();
     error FeedMismatch(address feed);
+    error MarketIdOrder(uint8 marketId);
 
     function run() external {
         bool mainnet = block.chainid == C.MAINNET_CHAIN_ID;
@@ -74,6 +85,12 @@ contract Deploy is DeployBase, Seeder {
             _external("USDC", s.usdc, true);
             _external("XAU_USD", s.xau, true);
             _external("XAG_USD", s.xag, true);
+            FxListing.assertExposureWithinShare();
+            s.fx = FxListing.markets();
+            for (uint256 i; i < s.fx.length; ++i) {
+                _external(s.fx[i].externalName, s.fx[i].mainnetFeed, true);
+                _checkFeed(s.fx[i].mainnetFeed, s.fx[i].description, S.FX_FEED_DECIMALS);
+            }
         } else {
             _assertTestnet();
             s.ausd = _ensure("MockAUSD", abi.encodePacked(type(MockAUSD).creationCode, abi.encode(am)), true);
@@ -81,20 +98,10 @@ contract Deploy is DeployBase, Seeder {
             s.xau = _mirror("MirrorXAU", am, S.XAU_DESCRIPTION, S.XAU_MIRROR_SEED_ANSWER);
             s.xag = _mirror("MirrorXAG", am, S.XAG_DESCRIPTION, S.XAG_MIRROR_SEED_ANSWER);
         }
-        _checkFeed(s.xau, S.XAU_DESCRIPTION);
-        _checkFeed(s.xag, S.XAG_DESCRIPTION);
+        _checkFeed(s.xau, S.XAU_DESCRIPTION, S.FEED_DECIMALS);
+        _checkFeed(s.xag, S.XAG_DESCRIPTION, S.FEED_DECIMALS);
 
-        uint8[] memory ids = new uint8[](1);
-        ids[0] = S.CME_METALS_CALENDAR;
-        uint256[CALENDAR_WORD_COUNT][] memory weekBits = new uint256[CALENDAR_WORD_COUNT][](1);
-        weekBits[0] = S.cmeMetalsWeek();
-        s.calendar = MarketCalendar(
-            _ensure(
-                "MarketCalendar",
-                abi.encodePacked(type(MarketCalendar).creationCode, abi.encode(am, ids, weekBits)),
-                false
-            )
-        );
+        s.calendar = MarketCalendar(_ensure("MarketCalendar", _calendarInitCode(am, mainnet), false));
         s.oracle = SessionOracle(
             _ensure(
                 "SessionOracle",
@@ -176,10 +183,29 @@ contract Deploy is DeployBase, Seeder {
 
     // ---------------------------------------------------------------- init codes
 
+    /// @dev CME metals everywhere; the FX 24/5 calendar joins at construction on mainnet only.
+    function _calendarInitCode(address am, bool mainnet) internal pure returns (bytes memory) {
+        uint256 count = mainnet ? METALS_AND_FX_CALENDARS : 1;
+        uint8[] memory ids = new uint8[](count);
+        uint256[CALENDAR_WORD_COUNT][] memory weekBits = new uint256[CALENDAR_WORD_COUNT][](count);
+        ids[0] = S.CME_METALS_CALENDAR;
+        weekBits[0] = S.cmeMetalsWeek();
+        if (mainnet) {
+            ids[1] = S.FX_CALENDAR;
+            weekBits[1] = S.fxWeek();
+        }
+        return abi.encodePacked(type(MarketCalendar).creationCode, abi.encode(am, ids, weekBits));
+    }
+
     function _coreInitCode(Stack memory s, bool mainnet) internal pure returns (bytes memory) {
-        MarketParams[] memory markets = new MarketParams[](2);
+        MarketParams[] memory markets = new MarketParams[](METAL_MARKETS + s.fx.length);
         markets[S.GOLD_MARKET] = S.goldParams();
         markets[S.SILVER_MARKET] = S.goldParams();
+        for (uint256 i; i < s.fx.length; ++i) {
+            // SenryoCore assigns ids in array order; SessionOracle takes them from FeedInit — they must agree.
+            if (s.fx[i].marketId != METAL_MARKETS + i) revert MarketIdOrder(s.fx[i].marketId);
+            markets[s.fx[i].marketId] = s.fx[i].params;
+        }
         address ausdFeed = mainnet ? S.MAINNET_AUSD_USD : address(0);
         address usdcFeed = mainnet ? S.MAINNET_USDC_USD : address(0);
         return abi.encodePacked(
@@ -197,9 +223,12 @@ contract Deploy is DeployBase, Seeder {
     }
 
     function _feedInits(Stack memory s) internal pure returns (SessionOracle.FeedInit[] memory inits) {
-        inits = new SessionOracle.FeedInit[](2);
+        inits = new SessionOracle.FeedInit[](METAL_MARKETS + s.fx.length);
         inits[0] = _feedInit(S.GOLD_MARKET, s.xau, S.XAU_DESCRIPTION);
         inits[1] = _feedInit(S.SILVER_MARKET, s.xag, S.XAG_DESCRIPTION);
+        for (uint256 i; i < s.fx.length; ++i) {
+            inits[METAL_MARKETS + i] = FxListing.feedInit(s.fx[i], s.fx[i].mainnetFeed, S.FX_HEARTBEAT);
+        }
     }
 
     function _feedInit(uint8 marketId, address feed, string memory desc)
@@ -240,9 +269,9 @@ contract Deploy is DeployBase, Seeder {
         );
     }
 
-    function _checkFeed(address feed, string memory desc) internal view {
+    function _checkFeed(address feed, string memory desc, uint8 decimals) internal view {
         AggregatorV3Interface f = AggregatorV3Interface(feed);
-        if (keccak256(bytes(f.description())) != keccak256(bytes(desc)) || f.decimals() != S.FEED_DECIMALS) {
+        if (keccak256(bytes(f.description())) != keccak256(bytes(desc)) || f.decimals() != decimals) {
             revert FeedMismatch(feed);
         }
     }

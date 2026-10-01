@@ -73,11 +73,33 @@ contracts:
       - event: AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt)
   - name: FeedXAG
     events: *answer_updated
+  # FX majors (S8.23): 18-decimal Chainlink FX aggregators on 143; the MirrorEUR…MirrorCAD mirrors on 10143 once
+  # AddMarkets.s.sol has deployed them. Quotes keep the feed's orientation (JPY / USD = USD per yen).
+  - name: FeedEUR
+    events: *answer_updated
+  - name: FeedGBP
+    events: *answer_updated
+  - name: FeedJPY
+    events: *answer_updated
+  - name: FeedCHF
+    events: *answer_updated
+  - name: FeedCAD
+    events: *answer_updated
   # Aggregators confirmed on the proxies after deployment (proxy v0.6 emits no event): registered at runtime by
   # the wildcard ChainlinkAnswer watcher once the proxy's phase list includes them (src/handlers/feeds.ts).
   - name: FeedXAUNext
     events: *answer_updated
   - name: FeedXAGNext
+    events: *answer_updated
+  - name: FeedEURNext
+    events: *answer_updated
+  - name: FeedGBPNext
+    events: *answer_updated
+  - name: FeedJPYNext
+    events: *answer_updated
+  - name: FeedCHFNext
+    events: *answer_updated
+  - name: FeedCADNext
     events: *answer_updated
   - name: ChainlinkAnswer
     events: *answer_updated
@@ -146,14 +168,36 @@ chains:
         initial_block_interval: 100
         interval_ceiling: 100
     contracts:
+      # Comments name each proxy in full: the address book records the proxies (XAU_USD, EUR_USD, …) and the
+      # `address-drift` invariant looks for them here.
       - name: FeedXAU
-        address: 0xFeccbf9C82Ff5231073580334DC605740309ebCe # phase-1 aggregator of proxy 0x61dD…f1B4
+        address: 0xFeccbf9C82Ff5231073580334DC605740309ebCe # phase-1 aggregator of proxy 0x61dD33A34E47a181EE02e42eE0546a3DA808f1B4
         start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
       - name: FeedXAG
-        address: 0x8Aa871027BA54dc1a9c803456AD613668a643fB4 # phase-1 aggregator of proxy 0x29bE…B4
+        address: 0x8Aa871027BA54dc1a9c803456AD613668a643fB4 # phase-1 aggregator of proxy 0x29bEb7e730f09D33417357dbed020B549fdF7db4
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedEUR
+        address: 0xfeED8e42f0CdC789DfF245f27a892835E51E41F3 # phase-1 aggregator of proxy 0x00D7E359c8CE46168eFDD4D65b708fFb16c4b99a
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedGBP
+        address: 0xBDF2f6EF73854376E71c57376951EB708Be29147 # phase-1 aggregator of proxy 0x1ffC8B75a16FFfbd7879F042B580F7607Dcf5C30
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedJPY
+        address: 0x3022021b400c6A87661e278382f875EDaa40B3Be # phase-1 aggregator of proxy 0xF64664Ea54cE47eCC7a1816C49d1Bc6deF828927
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedCHF
+        address: 0xBCbe57157Ba17BCA8484Cd19F6E10720A71aD436 # phase-1 aggregator of proxy 0x6DBa7f3A7B5B7c1079337104caD14D19150F6B8d
+        start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
+      - name: FeedCAD
+        address: 0xCe18C8ccd1a91d10D1Ca8187BBA44c6BdB057c53 # phase-1 aggregator of proxy 0x3293eA5650E9f8c4091642b7EB1C46CFEe5197cA
         start_block: ${ENVIO_FEED_START_BLOCK_143:-100500000}
       - name: FeedXAUNext
       - name: FeedXAGNext
+      - name: FeedEURNext
+      - name: FeedGBPNext
+      - name: FeedJPYNext
+      - name: FeedCHFNext
+      - name: FeedCADNext
       - name: ChainlinkAnswer
         start_block: ${ENVIO_FEED_WATCH_START_BLOCK_143:-109200000}
       - name: PerplExchange
