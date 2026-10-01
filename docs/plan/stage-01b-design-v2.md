@@ -112,9 +112,13 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   be read), 185aedd (the dismissible perps intro, FT072), b838dc5 (chart pan, FT096). Two parts of this step's scope
   are still short: they moved to S1b.9a so this box stays true.
 - [ ] S1b.9a **J3, what S1b.9 left short** (split out on 1 Oct; ledger reconciliation §5):
-  - equity discovery (FT032): Equities shows only a non-interactive "Arriving" Nvidia row. Indicative discovery on the
-    D-220 wrapper feeds is in progress with agent discovery-data on `stage/S1b-discovery-data` (review S03); nothing
-    of it is on main yet;
+  - equity and crypto discovery (FT032, review S03): **built and accepted on the simulator 1 Oct** (0d51e85 data,
+    55f171b UI; acceptance.md 17:45Z). Perps lists Perpl's 15 crypto markets and the six D-220 calculated feeds as
+    read-only rows with live prices; each opens a read-only page (price + basis, its own history, OI/volume/funding
+    or the feed's facts and disclosure, the gate in plain words). Still short: the SPY/QQQ/TSLA/SPCX/EWY and oil
+    marks draw the unidentified fallback (agent equity-marks fetching them by script); the indexer's `FeedW…X` config is
+    deployed (sha-ba4b5e2, reset 18:02 UTC) — the feed history reads rounds onchain until it has caught up; web
+    parity is S11b;
   - market history (FT097): built 1 Oct — F32's history utility now leads market detail's utilities (history ·
     alert · star · share) and opens your activity in that market (`/activity?market=XAU`, the indexer's `market_id`
     filter). The ledger row's deviation note is superseded.
