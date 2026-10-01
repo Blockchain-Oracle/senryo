@@ -1,30 +1,31 @@
-import { ids } from "@senryo/identity";
+import { NATIVE_ART } from "@senryo/identity/native";
 import { useMyProfile } from "@senryo/query";
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
 import { arriving } from "~/features/setup/SetupScreen";
 import { useSetupNav } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
 import { useNetwork } from "~/lib/network";
-import { SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
-const SEAL = ids.brand("senryo");
-/** The seal settles from a little small; nothing appears from nothing. */
-const SEAL_FROM_SCALE = 0.9;
+const Foil = NATIVE_ART["completion-foil"]?.symbol;
+/** The foil is drawn square; this wide on the page. */
+const FOIL = 240;
+/** It settles from a little small; nothing appears from nothing. */
+const FOIL_FROM_SCALE = 0.9;
 /** Stagger positions: the copy follows the seal, the action follows the copy. */
 const COPY_ORDER = 2;
 const ACTION_ORDER = 4;
 
 /**
- * Setup step 5 — completion (C08; Solflare S13/M18 adapted): the seal arrives, one line says what now exists (the
- * account, and the @handle when one was claimed), and one action opens Home. The gold-leaf foil that flexes behind
- * the seal is original art still in review (S1b.3); until it merges the seal stands alone — no flat wobble pretending
- * to be material. Shown only after the account really exists and the earlier steps are recorded.
+ * Setup step 5 — completion (C08; Solflare S13/M18 adapted): the gold-leaf foil with the pressed seal arrives, one
+ * line says what now exists (the account, and the @handle when one was claimed), and one action opens Home. The foil
+ * is the first-pass master (S1b.3, review B12 open) and is still: its flex is a material effect that needs a shader,
+ * and a flat wobble would only pretend. Shown only after the account really exists and the earlier steps are recorded.
  */
 export default function DoneStep() {
   const { color } = useTheme();
@@ -42,10 +43,12 @@ export default function DoneStep() {
       <View style={styles.centre}>
         <Animated.View
           entering={ZoomIn.duration(TIMING.completionFoil).withInitialValues({
-            transform: [{ scale: SEAL_FROM_SCALE }],
+            transform: [{ scale: FOIL_FROM_SCALE }],
           })}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         >
-          <EntityMark id={SEAL} size={SIZE.seal} variant="symbol" decorative ground={color.ground} />
+          {Foil ? <Foil width={FOIL} height={FOIL} /> : null}
         </Animated.View>
         <Animated.View entering={arriving(COPY_ORDER)} style={styles.copy}>
           <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.center, { color: color.ink }]}>

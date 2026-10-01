@@ -23,6 +23,7 @@ function ink(tone: GlyphTone, c: Palette): string {
 
 export function AuthCard({
   glyph,
+  art,
   tone = "primary",
   busy = false,
   title,
@@ -32,6 +33,8 @@ export function AuthCard({
 }: {
   /** A kit icon, or `passkey` for a passkey ceremony (the identity glyph, one flat colour). Omit for a plain message. */
   glyph?: IconName | "passkey";
+  /** Authored artwork in place of the glyph (the pending-passkey art while a ceremony is in flight). */
+  art?: ReactNode;
   tone?: GlyphTone;
   /** A ceremony is in flight: the spinner sits under the explanation. */
   busy?: boolean;
@@ -46,7 +49,9 @@ export function AuthCard({
   return (
     <View accessibilityRole={tone === "down" ? "alert" : undefined} style={styles.wrap}>
       <View style={styles.head}>
-        {glyph === "passkey" ? (
+        {art ? (
+          art
+        ) : glyph === "passkey" ? (
           <PasskeyGlyph size={GLYPH} color={tint} />
         ) : glyph ? (
           <Icon name={glyph} size={GLYPH} tint={tint} />

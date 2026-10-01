@@ -50,6 +50,9 @@ function roles(t: TokenPalette) {
     /** Text on a light plate (QR card) in both themes. */
     paper: LIGHT_TOKENS.card,
     paperInk: LIGHT_TOKENS.foreground,
+    /** The mode names on the story artwork's light label plates (light-theme inks in both themes). */
+    paperPractice: LIGHT_TOKENS.practice,
+    paperMainnet: LIGHT_TOKENS.mainnet,
     /** Text on the Kinpaku card's lacquer (the art is black in both themes). */
     onLacquer: DARK_TOKENS.foreground,
     onLacquerMuted: DARK_TOKENS.mutedForeground,

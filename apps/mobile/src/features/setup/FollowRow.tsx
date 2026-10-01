@@ -52,7 +52,7 @@ export function FollowRow({
         style={[styles.row, { backgroundColor: color.card, borderColor: selected ? color.ring : color.transparent }]}
       >
         <Text style={[TYPE.rowChange, styles.rank, { color: color.text3 }]}>{trader.rank}</Text>
-        <Avatar avatar={trader.avatar} />
+        <Avatar avatar={trader.avatar} address={trader.address} />
         <View style={styles.text}>
           <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
             {name}

@@ -1,0 +1,48 @@
+{
+  "viewBox": [
+    756,
+    940
+  ],
+  "scenes": {
+    "markets": [
+      {
+        "text": "EUR/USD",
+        "x": 280.8,
+        "y": 546.7,
+        "width": 146,
+        "height": 48,
+        "ink": "paperInk",
+        "layer": "fore"
+      },
+      {
+        "text": "JPY/USD",
+        "x": 494.3,
+        "y": 561.6,
+        "width": 146,
+        "height": 48,
+        "ink": "paperInk",
+        "layer": "fore"
+      }
+    ],
+    "modes": [
+      {
+        "text": "Practice · Paper money",
+        "x": 438,
+        "y": 700,
+        "width": 298,
+        "height": 48,
+        "ink": "paperPractice",
+        "layer": "fore"
+      },
+      {
+        "text": "Mainnet · Real money",
+        "x": 404,
+        "y": 376,
+        "width": 284,
+        "height": 48,
+        "ink": "paperMainnet",
+        "layer": "fore"
+      }
+    ]
+  }
+}

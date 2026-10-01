@@ -5,12 +5,30 @@
  * no returns, no rates, no promise about where a card works or how passkeys sync.
  */
 import type { ImageSourcePropType } from "react-native";
+import LABELS from "../../../assets/onboarding/labels.json";
 
 /** Back-to-front. `depth` is how far a layer travels relative to the hero when scenes change (1 = with the page). */
 export type SceneLayerName = "shadow" | "back" | "main" | "fore";
 
 export const LAYER_DEPTH: Readonly<Record<SceneLayerName, number>> = { shadow: 1, back: 0.8, main: 1, fore: 1.3 };
 export const LAYER_ORDER: readonly SceneLayerName[] = ["shadow", "back", "main", "fore"];
+
+/**
+ * Text the artwork leaves blank for the app to draw (a pair's name, a mode's name): its box in the master's own
+ * units, the theme role of its ink, and the layer its plate is on, so the text travels with the plate.
+ */
+export interface SceneLabel {
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  ink: "paperInk" | "paperPractice" | "paperMainnet";
+  layer: SceneLayerName;
+}
+
+/** The masters' drawing size; the hero covers its stage with it. */
+export const ART_SIZE = { width: LABELS.viewBox[0] ?? 1, height: LABELS.viewBox[1] ?? 1 } as const;
 
 export interface Scene {
   key: string;
@@ -21,6 +39,7 @@ export interface Scene {
   /** The colour field: crossfades between scenes instead of travelling. */
   field: ImageSourcePropType;
   layers: Partial<Record<SceneLayerName, ImageSourcePropType>>;
+  labels?: readonly SceneLabel[];
 }
 
 export const SCENES: readonly Scene[] = [
@@ -61,6 +80,7 @@ export const SCENES: readonly Scene[] = [
       main: require("../../../assets/onboarding/scene-markets-main.webp"),
       fore: require("../../../assets/onboarding/scene-markets-fore.webp"),
     },
+    labels: LABELS.scenes.markets as readonly SceneLabel[],
   },
   {
     key: "lp",
@@ -70,6 +90,7 @@ export const SCENES: readonly Scene[] = [
     field: require("../../../assets/onboarding/scene-lp-field.webp"),
     layers: {
       shadow: require("../../../assets/onboarding/scene-lp-shadow.webp"),
+      back: require("../../../assets/onboarding/scene-lp-back.webp"),
       main: require("../../../assets/onboarding/scene-lp-main.webp"),
       fore: require("../../../assets/onboarding/scene-lp-fore.webp"),
     },
@@ -99,5 +120,6 @@ export const SCENES: readonly Scene[] = [
       main: require("../../../assets/onboarding/scene-modes-main.webp"),
       fore: require("../../../assets/onboarding/scene-modes-fore.webp"),
     },
+    labels: LABELS.scenes.modes as readonly SceneLabel[],
   },
 ];
