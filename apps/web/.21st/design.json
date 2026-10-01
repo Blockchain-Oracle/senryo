@@ -6,9 +6,11 @@
     "stack": ["nextjs-16-static-export", "react-19", "tailwind-v4", "shadcn"]
   },
   "direction": {
-    "name": "D2 Desk",
-    "summary": "Pro terminal: dense, monospaced, dark default with a paper light alternate; top tabs; equity chart first; buckets as a three-cell register; execution trace after Face ID.",
-    "approved": "docs/plan/00-plan.md D-004; design/DIRECTIONS.md D2; screenshots design/screens/d2-*"
+    "name": "Living Lacquer",
+    "summary": "Fomo's rounded trading interface and dark violet surfaces + Phantom's contextual action fan + Solflare's illustrated onboarding and material artwork; Senryo's seal, gold leaf and lacquer are the identity inside that language. The reference study is the minimum baseline.",
+    "approved": "D-168 (user, 30 Sep 2026); docs/design/senryo-v2/direction.md; docs/plan/v2-plan.md §5",
+    "supersedes": "D2 Desk (D-004, design/DIRECTIONS.md, design/screens/d2-*) — history only",
+    "web": "Web inherits the tokens now; its layouts follow in S11b with the same route/state contracts (desktop dock = declared adaptation, direction §11)."
   },
   "sources": {
     "tokens": [
@@ -16,201 +18,398 @@
       "packages/tokens/src/scale.ts",
       "packages/tokens/src/marks.ts",
       "packages/tokens/src/tokens.css",
-      "apps/web/src/app/globals.css"
+      "packages/tokens/src/fonts.ts",
+      "apps/web/src/app/globals.css",
+      "apps/web/src/app/fonts.ts"
     ],
     "components": ["src/components/ui"],
-    "assets": ["brand/"],
+    "assets": ["brand/", "apps/web/src/app/fonts/", "packages/identity/sources/"],
     "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
   },
   "design": {
     "colorMode": "dark-default-with-light",
     "colors": {
       "--background": {
-        "dark": "#000000",
-        "light": "#f4f4f2",
+        "dark": "#0A0911",
+        "light": "#F5F4F8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--foreground": {
-        "dark": "#f5f5f5",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--card": {
-        "dark": "#0c0c0d",
-        "light": "#ffffff",
+        "dark": "#13121A",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--card-foreground": {
-        "dark": "#f5f5f5",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--popover": {
-        "dark": "#111113",
-        "light": "#ffffff",
+        "dark": "#191822",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--popover-foreground": {
-        "dark": "#ffffff",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--primary": {
-        "dark": "#2fe92b",
-        "light": "#0a0a0a",
+        "dark": "#414EF4",
+        "light": "#414EF4",
         "source": "packages/tokens/src/palette.ts"
       },
       "--primary-foreground": {
-        "dark": "#000000",
-        "light": "#2fe92b",
+        "dark": "#FFFFFF",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--secondary": {
-        "dark": "#1b1b1d",
-        "light": "#e9e9e6",
+        "dark": "#201E2B",
+        "light": "#ECE9F2",
         "source": "packages/tokens/src/palette.ts"
       },
       "--secondary-foreground": {
-        "dark": "#ffffff",
-        "light": "#0a0a0a",
+        "dark": "#F5F4FA",
+        "light": "#17151F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--muted": {
-        "dark": "#141416",
-        "light": "#ececea",
+        "dark": "#201E2B",
+        "light": "#ECE9F2",
         "source": "packages/tokens/src/palette.ts"
       },
       "--muted-foreground": {
-        "dark": "#8a8a93",
-        "light": "#62626b",
+        "dark": "#B8B5C4",
+        "light": "#5F5B6B",
         "source": "packages/tokens/src/palette.ts"
       },
       "--accent": {
-        "dark": "#1b1b1d",
-        "light": "#e9e9e6",
+        "dark": "#1B2040",
+        "light": "#E8EBFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--accent-foreground": {
-        "dark": "#fbfb0f",
-        "light": "#0a0a0a",
+        "dark": "#8B95FF",
+        "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--destructive": {
-        "dark": "#ff5102",
-        "light": "#ff5102",
+        "dark": "#FF5A48",
+        "light": "#C83225",
         "source": "packages/tokens/src/palette.ts"
       },
       "--destructive-foreground": {
-        "dark": "#000000",
-        "light": "#000000",
+        "dark": "#17151F",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--border": {
-        "dark": "#26272d",
-        "light": "#dcdcd8",
+        "dark": "#2C2938",
+        "light": "#DEDBE6",
         "source": "packages/tokens/src/palette.ts"
       },
       "--input": {
-        "dark": "#26272d",
-        "light": "#dcdcd8",
+        "dark": "#2C2938",
+        "light": "#DEDBE6",
         "source": "packages/tokens/src/palette.ts"
       },
       "--ring": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#8B95FF",
+        "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--surface": {
-        "dark": "#0c0c0d",
-        "light": "#ffffff",
+        "dark": "#13121A",
+        "light": "#FFFFFF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--up": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#25CF68",
+        "light": "#087F3C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--down": {
-        "dark": "#ff4d4d",
-        "light": "#e0301e",
+        "dark": "#FF5A48",
+        "light": "#C83225",
         "source": "packages/tokens/src/palette.ts"
       },
       "--gold": {
-        "dark": "#fbfb0f",
-        "light": "#b88a00",
+        "dark": "#D4AE5B",
+        "light": "#89611F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--warn": {
-        "dark": "#fbfb0f",
-        "light": "#b88a00",
+        "dark": "#F2B85C",
+        "light": "#8A5800",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-1": {
-        "dark": "#fbfb0f",
-        "light": "#0a0a0a",
+        "dark": "#8B95FF",
+        "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-2": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#B69DF8",
+        "light": "#7049C8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-3": {
-        "dark": "#ff9821",
-        "light": "#c46a00",
+        "dark": "#5CCAD8",
+        "light": "#087A8A",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-4": {
-        "dark": "#cfd919",
-        "light": "#8a9400",
+        "dark": "#F18BB7",
+        "light": "#AD3265",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-5": {
-        "dark": "#7c7cff",
-        "light": "#4b4bd6",
+        "dark": "#C9D0DD",
+        "light": "#626D7E",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-up": {
-        "dark": "#2fe92b",
-        "light": "#0f9d0c",
+        "dark": "#25CF68",
+        "light": "#087F3C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-down": {
-        "dark": "#ff4d4d",
-        "light": "#e0301e",
+        "dark": "#FF5A48",
+        "light": "#C83225",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-candle-down": {
-        "dark": "#ff4d4d",
-        "light": "#e0301e",
+        "dark": "#FF5A48",
+        "light": "#C83225",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--practice": {
+        "dark": "#B69DF8",
+        "light": "#7049C8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--mainnet": {
+        "dark": "#8B95FF",
+        "light": "#3643D8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--text-2": {
+        "dark": "#B8B5C4",
+        "light": "#5F5B6B",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--text-3": {
+        "dark": "#8F8B9F",
+        "light": "#716C7F",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--link": {
+        "dark": "#8B95FF",
+        "light": "#3643D8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--glass-tint": {
+        "dark": "#201E2BD9",
+        "light": "#FFFFFFD9",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--glass-rim": {
+        "dark": "#FFFFFF24",
+        "light": "#FFFFFFB3",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--glass-opaque": {
+        "dark": "#201E2B",
+        "light": "#FFFFFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-circle": {
+        "dark": "#C3B5F6",
+        "light": "#D5C8FF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-text": {
+        "dark": "#211A31",
+        "light": "#211A31",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-label": {
+        "dark": "#F5F4FA",
+        "light": "#17151F",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-circle-pressed": {
+        "dark": "#AE9BE8",
+        "light": "#C1B0F2",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-backdrop-opaque": {
+        "dark": "#191822",
+        "light": "#F5F4F8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--sheet-scrim": {
+        "dark": "#00000066",
+        "light": "#17151F38",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-scrim": {
+        "dark": "#0A091180",
+        "light": "#17151F55",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--warning-surface": {
+        "dark": "#332719",
+        "light": "#FFF0D5",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--practice-surface": {
+        "dark": "#282038",
+        "light": "#EEE7FF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--mainnet-surface": {
+        "dark": "#1B2040",
+        "light": "#E8EBFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--up-surface": {
+        "dark": "#102A1C",
+        "light": "#E4F4E9",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--down-surface": {
+        "dark": "#35201F",
+        "light": "#FBE8E5",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--destructive-surface": {
+        "dark": "#35201F",
+        "light": "#FBE8E5",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--silver": {
+        "dark": "#C9D0DD",
+        "light": "#626D7E",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--raised-2": {
+        "dark": "#201E2B",
+        "light": "#ECE9F2",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--row-pressed": {
+        "dark": "#2C2938",
+        "light": "#E5E1EE",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--selected-row": {
+        "dark": "#1B2040",
+        "light": "#E8EBFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--skeleton": {
+        "dark": "#2C2938",
+        "light": "#DEDBE6",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--primary-pressed": {
+        "dark": "#343ED3",
+        "light": "#343ED3",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--up-foreground": {
+        "dark": "#17151F",
+        "light": "#FFFFFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--down-foreground": {
+        "dark": "#17151F",
+        "light": "#FFFFFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-neutral": {
+        "dark": "#8F8B9F",
+        "light": "#716C7F",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--sheet-handle": {
+        "dark": "#8F8B9F",
+        "light": "#716C7F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--kinpaku-lacquer": {
-        "value": "#070707",
+        "value": "#17121B",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-lacquer-edge": {
-        "value": "#1a1a1a",
+        "value": "#29212F",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-lacquer-highlight": {
+        "value": "#514357",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-highlight": {
-        "value": "#fffbd6",
+        "value": "#FFF0BC",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-light": {
-        "value": "#fff27a",
+        "value": "#EACF8C",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-mid": {
-        "value": "#fbe10f",
+        "value": "#D4AE5B",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-shade": {
-        "value": "#c9a800",
+        "value": "#AE8941",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-deep": {
-        "value": "#6e5700",
+        "value": "#886426",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--gold-leaf-shadow": {
+        "value": "#886426",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--gold-leaf-mid": {
+        "value": "#D4AE5B",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--gold-leaf-highlight": {
+        "value": "#FFF0BC",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--silver-shadow": {
+        "value": "#697383",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--silver-mid": {
+        "value": "#C9D0DD",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--silver-highlight": {
+        "value": "#F4F6FB",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--lacquer-shadow": {
+        "value": "#17121B",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--lacquer-mid": {
+        "value": "#29212F",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--lacquer-highlight": {
+        "value": "#514357",
         "source": "packages/tokens/src/marks.ts"
       },
       "--qr-ink": {
@@ -218,71 +417,103 @@
         "source": "packages/tokens/src/marks.ts"
       },
       "--qr-paper": {
-        "value": "#ffffff",
+        "value": "#FFFFFF",
         "source": "packages/tokens/src/marks.ts"
       }
     },
     "typography": {
       "fonts": {
-        "sans": "Inter (next/font; labels, prose)",
-        "mono": "JetBrains Mono (every number, tabular + slashed zero)"
+        "sans": "Inter 400/500/600/700 (Inter 4.1 static TTF, rsms/inter, OFL) — UI",
+        "display": "Inter Display SemiBold (Inter 4.1 static) — big numbers and titles ≥ 32 pt, −0.02 em",
+        "jp": "Noto Sans JP, subset to the glyphs we ship (千両金箔), OFL — Japanese only; the seal stays vector"
       },
+      "figures": "tabular + lining (tnum, lnum) for money, quotes, fees and aligned columns",
+      "case": "sentence/title case; no tracked uppercase",
       "roles": {
-        "micro": "10/14 mono uppercase tracked 0.12em — column heads, chips",
-        "label": "11/14 uppercase tracked 0.12–0.2em — section labels",
-        "caption": "12/16",
-        "body": "14/20",
-        "title": "17/22 semibold",
-        "num-sm": "13/18 mono",
-        "num-md": "16/22 mono",
-        "num-ticker": "24/30 mono semibold",
-        "num-lg": "28/34 mono",
-        "num-xl": "34/40 mono — equity hero",
-        "num-hero": "40/46 mono"
+        "displayBalance": "52/56 Inter Display 600 (Home balance)",
+        "displayMargin": "64/68 Inter Display 600 (ticket margin)",
+        "displayPrice": "40/44 Inter Display 600 (market price)",
+        "pageTitle": "32/38 Inter Display 600",
+        "sheetTitle": "24/28 600",
+        "sectionTitle": "20/24 600",
+        "body": "16/22",
+        "row": "16/20 500",
+        "rowAmount": "16/20 600 numeric",
+        "meta": "12/16",
+        "moneyMeta": "12/16 500 numeric",
+        "buttonLabel": "16/20 600",
+        "buttonCompact": "14/20 600",
+        "tabLabel": "12/16 600",
+        "chipLabel": "12/16 500",
+        "modeLabel": "12/16 600",
+        "fanLabel": "24/28 600",
+        "legacy": "micro/label/caption 12/16 · body/bodyStrong 16/22 · title 20/24 · numSm 16/20 · numMd 20/24 · numTicker/numLg 40/44 · numXl/numHero 52/56"
       },
-      "source": "packages/tokens/src/scale.ts (TYPE) → tokens.css --type-* → Tailwind text-<role>"
+      "source": "packages/tokens/src/scale.ts (TYPE) → tokens.css --type-* → Tailwind text-<role>; apps/mobile/src/theme/type.ts"
     },
     "radius": {
-      "base": "4px (--radius 0.25rem)",
-      "scale": "xs .5× · sm .6× · md .8× · lg 1× · xl 1.4× · 2xl 1.8×",
-      "pill": "999 for dots/toggles only"
+      "scale": "8 / 12 / 16 / 24 / 32 / pill",
+      "use": "chips · inputs · action rows · cards and sheet tops · onboarding hero · buttons, dock, fan, avatars",
+      "compat": "RADIUS.sm = 12 for components not rebuilt yet",
+      "source": "packages/tokens/src/scale.ts RADIUS",
+      "tailwind": "rounded-xs 8 · sm 12 · md 16 · lg 24 · xl/2xl/3xl 32 · full pill (globals.css)"
     },
     "spacing": {
       "grid": "4px",
       "source": "packages/tokens/src/scale.ts SPACE"
     },
     "motion": {
-      "durations_ms": {
-        "fast": 120,
-        "base": 160,
-        "slow": 200
+      "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "families": {
+        "press": "100 ms",
+        "selection": "170 ms",
+        "pagePush": "320 ms",
+        "compactSelector": "~420 ms, spring 1/260/30 clamped (M02)",
+        "tallDetail": "~450 ms, spring 1/240/30 clamped (M07/M08/M13)",
+        "parentChild": "~600 ms (M16)",
+        "fan": "200 ms/item, 25 ms stagger, spring 1/420/30; Send overshoots; backdrop 160; plus→× 180 (45°); exit 180 (M06)",
+        "dockActive": "260 ms, spring 1/500/36 (M10)",
+        "headerCollapse": "scroll-driven over 132 pt (M09)",
+        "rulerSnap": "direct gesture, snap 1/500/40 (M14)",
+        "numbers": "160 ms on real change only",
+        "chartReveal": "750 ms after data (M08)",
+        "onboardingScene": "850 ms (M01)",
+        "qr": "650 ms, valid payload (M04)",
+        "ambient": "8 s loops",
+        "completionFoil": "800 ms after the real outcome (M18)"
       },
-      "easing": "cubic-bezier(0.2, 0, 0, 1)",
-      "rules": [
-        "nothing bounces (no spring overshoot except sheets)",
-        "path draw on charts",
-        "spinner only on the active execution step",
-        "number changes roll (Number Flow) with timing, not spring",
-        "prefers-reduced-motion collapses to instant"
-      ]
+      "reducedMotion": "static art, ~100 ms crossfades; reduced transparency → opaque glass/fan backdrop",
+      "haptics": "selection ticks, one on submit, one on the confirmed outcome; no sound by default",
+      "source": "packages/tokens/src/scale.ts MOTION/SPRING; apps/mobile/src/theme/motion.ts",
+      "web": "durations as --motion-* vars; ease-lacquer (ease-desk is the legacy alias)"
     },
     "density": "high",
     "must": [
-      "Colours only from @senryo/tokens (tokens.css / PALETTES) — no hex or px in components",
-      "JetBrains Mono tabular for every number; ▲▼ plus a sign with every up/down colour",
-      "1px hairlines, 4px radius, no shadows; dense rows; uppercase tracked mono labels",
-      "Network label (PRACTICE/MAINNET) on every money surface; PREVIEW DATA badge while sample data is shown",
-      "Reading<T>: skeleton → value → stale label; never a fabricated $0.00; success shown in place, not as a toast",
-      "Every component is a 21st item (search → preview → get → add → re-tokenize); record its source id here"
+      "Reference evidence first: every component names its C/F/M evidence IDs and declared deviations here before it is built",
+      "Colours only from @senryo/tokens (theme/ on mobile, tokens.css on web); no hex/rgba elsewhere",
+      "Known entities render their real first-party mark (EntityMark, @senryo/identity); Lucide icons identify actions only",
+      "Mode capsule ('Practice · Paper money' violet / 'Mainnet · Real money' blue) on every money surface; P$ for paper",
+      "Success only after finalization; the 500 ms hold confirms (D-177) with an accessible explicit alternative",
+      "Reading<T>: skeleton → value → stale/unavailable; never a fabricated $0.00 or tick",
+      "Content padded clear of the dock; tab, stack and scroll restored; parents restored after every sheet"
     ],
     "avoid": [
-      "gradients, glass, glow and drop shadows (the Kinpaku foil on the card is the only gradient)",
-      "bouncy springs, confetti, celebratory motion",
-      "rounded-2xl consumer cards, pill buttons",
-      "framer-motion imports (use motion/react)",
-      "invented components with no 21st source",
-      "floats for money"
-    ]
+      "D2 terminal identity: pure black, monospace amounts, green/yellow primaries, 4 px corners, hairline grids, tracked caps",
+      "universal sheet blur, literal radial fans, flat-logo 'material' wobble",
+      "success flourishes on submit; celebratory motion before the real outcome",
+      "generic coins, letter discs or recoloured approximations for known entities",
+      "an available component dictating layout or dropping states (C40 is never a plain slider)",
+      "fictitious 21st attribution for a custom reconstruction",
+      "framer-motion imports (use motion/react on web); floats for money"
+    ],
+    "materials": {
+      "glass": "dock only (expo-glass-effect on iOS 26; blur + glassTint elsewhere; glassOpaque under reduced transparency)",
+      "blur": "strong live blur only behind the fan (expo-blur) + fanScrim",
+      "dim": "ordinary sheets dim the parent (sheetScrim); no universal sheet blur",
+      "elevation": "dock 0/8/24 #00000033; sheet 0/−4/16 #0000001F; raised content has no shadow",
+      "ramps": "gold leaf #886426/#D4AE5B/#FFF0BC · silver #697383/#C9D0DD/#F4F6FB · lacquer #17121B/#29212F/#514357 (artwork only)",
+      "gold": "gold identifies Senryo and Kinpaku; never buy, profit, warning or mainnet"
+    }
   },
   "components": {
     "installed": [
@@ -587,6 +818,29 @@
       "date": "2026-09-30",
       "decision": "S6 auth surfaces from 21st: Passkey Sign-In #19045 + Push Approval #19036 (felipemenezes098 family, the D2 preview's auth pieces), Text Shimmer #1641, Encrypted Text #18575, shadcn Dialog; composed with the installed Task Steps, Drawer, Segmented Control, QR Code Generator, Copy Code",
       "ref": "stage-06-auth.md S6.7"
+    },
+    {
+      "date": "2026-10-01",
+      "decision": "Tokens moved to Living Lacquer; web layouts follow in S11b",
+      "ref": "D-168, D-191"
     }
+  ],
+  "authority": {
+    "direction": "docs/design/senryo-v2/direction.md",
+    "baseline": "docs/design/reference-study-2026-09-30/ (local until Q-021)",
+    "handoff": "docs/design/senryo-v2/PROJECT-HANDOFF.md",
+    "ledger": "docs/design/senryo-parity-ledger.json",
+    "tokenValues": "docs/design/senryo-v2/tokens-consult.md (Codex, D-191)",
+    "order": [
+      "user's latest words",
+      "study evidence (screens, motion)",
+      "study guides",
+      "Senryo product rules (00-plan §0/§1)"
+    ]
+  },
+  "rules": [
+    "D-033 as amended by D-168: Reference evidence first; 21st.dev first among component sources that preserve that evidence. RN ports and reference-native reconstructions are recorded here, with evidence IDs, provenance and declared deviations.",
+    "no hex/px literals in web components — use tokens (invariant design-literals-web)",
+    "no UI tests (invariant no-ui-tests)"
   ]
 }

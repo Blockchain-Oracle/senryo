@@ -12,8 +12,6 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@expo-google-fonts/inter": "^0.4.2",
-    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@senryo/account": "workspace:*",
     "@senryo/api-client": "workspace:*",
     "@senryo/chain": "workspace:*",
@@ -46,6 +44,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
+    "lucide-react-native": "^1.49.0",
     "qrcode": "1.5.4",
     "react": "catalog:mobile",
     "react-native": "0.86.3",

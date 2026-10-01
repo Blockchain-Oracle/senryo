@@ -17,7 +17,6 @@ const CHAINS: Chain[] = SWAP_CHAINS.map((c) => ({
   id: c.id,
   name: c.name,
   shortName: c.shortName,
-  color: `var(${c.colorVar})`,
   entity: c.entity,
 }));
 

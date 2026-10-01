@@ -1,26 +1,25 @@
-// Per-weight subpaths, so only these seven faces are bundled (the package index pulls every weight and italic).
-import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
-import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
-import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
-import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
-import { JetBrainsMono_400Regular } from "@expo-google-fonts/jetbrains-mono/400Regular";
-import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono/500Medium";
-import { JetBrainsMono_600SemiBold } from "@expo-google-fonts/jetbrains-mono/600SemiBold";
 import { useFonts } from "expo-font";
 
-/** The D2 faces, keyed by the names `type.ts` uses. */
+/**
+ * Living Lacquer faces (D-192), loaded at runtime through expo-font from the vendored files in assets/fonts. Inter
+ * 400–700 and Inter Display SemiBold are byte-for-byte from the official Inter 4.1 release; Noto Sans JP is instanced and
+ * subset to the Japanese glyphs we ship (千両金箔). Provenance + sha256 in `packages/tokens/src/fonts.ts` (invariant
+ * font-provenance). Keys are the family names `type.ts` uses.
+ */
 const FACES = {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  JetBrainsMono_400Regular,
-  JetBrainsMono_500Medium,
-  JetBrainsMono_600SemiBold,
+  Inter_400Regular: require("../../assets/fonts/Inter-Regular.ttf"),
+  Inter_500Medium: require("../../assets/fonts/Inter-Medium.ttf"),
+  Inter_600SemiBold: require("../../assets/fonts/Inter-SemiBold.ttf"),
+  Inter_700Bold: require("../../assets/fonts/Inter-Bold.ttf"),
+  InterDisplay_600SemiBold: require("../../assets/fonts/InterDisplay-SemiBold.ttf"),
+  NotoSansJP_400Regular: require("../../assets/fonts/NotoSansJP-Regular-subset.ttf"),
+  NotoSansJP_500Medium: require("../../assets/fonts/NotoSansJP-Medium-subset.ttf"),
+  NotoSansJP_600SemiBold: require("../../assets/fonts/NotoSansJP-SemiBold-subset.ttf"),
+  NotoSansJP_700Bold: require("../../assets/fonts/NotoSansJP-Bold-subset.ttf"),
 };
 
-/** The chart's axis face (Skia loads its own copy of the file). */
-export const CHART_FONT = JetBrainsMono_400Regular;
+/** The chart's axis face (Skia loads its own copy of the file); axis figures are drawn with Inter. */
+export const CHART_FONT = FACES.Inter_400Regular;
 
 /** True once every face is ready — or failed: the system face stands in rather than holding the splash forever. */
 export function useAppFonts(): boolean {

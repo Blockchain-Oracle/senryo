@@ -2,13 +2,15 @@
 @import "tw-animate-css";
 @import "@senryo/tokens/tokens.css";
 
-/* Dark is the D2 default (`:root, .dark` in tokens.css); `.light` on <html> switches to the paper alternate. */
+/* Living Lacquer: dark is the default (`:root, .dark` in tokens.css); `.light` on <html> switches to the light theme. */
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));
 
 @theme inline {
-  --font-sans: var(--font-inter), var(--font-sans-family);
-  --font-mono: var(--font-jbmono), var(--font-mono-family);
+  --font-sans: var(--font-inter), var(--font-noto-jp), var(--font-sans-family);
+  /* `font-mono` is a legacy name: amounts are Inter with tabular lining figures (no monospace face). */
+  --font-mono: var(--font-inter), var(--font-noto-jp), var(--font-mono-family);
+  --font-mono--font-feature-settings: "tnum" 1, "lnum" 1;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -50,14 +52,58 @@
   --color-kinpaku-foil-light: var(--kinpaku-foil-light);
   --color-kinpaku-foil-shade: var(--kinpaku-foil-shade);
 
-  /* D2: 4px base, the 21st scale steps stay proportional (matches the approved preview). */
-  --radius-xs: calc(var(--radius) * 0.5);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
+  /* Living Lacquer roles (S1b.6 step 2): text-text-2, bg-glass-tint, bg-practice-surface, … */
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-link: var(--link);
+  --color-glass-tint: var(--glass-tint);
+  --color-glass-rim: var(--glass-rim);
+  --color-glass-opaque: var(--glass-opaque);
+  --color-fan-circle: var(--fan-circle);
+  --color-fan-text: var(--fan-text);
+  --color-fan-label: var(--fan-label);
+  --color-fan-circle-pressed: var(--fan-circle-pressed);
+  --color-fan-backdrop-opaque: var(--fan-backdrop-opaque);
+  --color-sheet-scrim: var(--sheet-scrim);
+  --color-fan-scrim: var(--fan-scrim);
+  --color-warning-surface: var(--warning-surface);
+  --color-practice: var(--practice);
+  --color-practice-surface: var(--practice-surface);
+  --color-mainnet: var(--mainnet);
+  --color-mainnet-surface: var(--mainnet-surface);
+  --color-up-surface: var(--up-surface);
+  --color-down-surface: var(--down-surface);
+  --color-destructive-surface: var(--destructive-surface);
+  --color-silver: var(--silver);
+  --color-raised-2: var(--raised-2);
+  --color-row-pressed: var(--row-pressed);
+  --color-selected-row: var(--selected-row);
+  --color-skeleton: var(--skeleton);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-up-foreground: var(--up-foreground);
+  --color-down-foreground: var(--down-foreground);
+  --color-chart-neutral: var(--chart-neutral);
+  --color-sheet-handle: var(--sheet-handle);
+  --color-gold-leaf-shadow: var(--gold-leaf-shadow);
+  --color-gold-leaf-mid: var(--gold-leaf-mid);
+  --color-gold-leaf-highlight: var(--gold-leaf-highlight);
+  --color-lacquer-shadow: var(--lacquer-shadow);
+  --color-lacquer-mid: var(--lacquer-mid);
+  --color-lacquer-highlight: var(--lacquer-highlight);
+
+  /* Radius 8 / 12 / 16 / 24 / 32 / pill (direction §3): chips · inputs · rows · cards + sheet tops · hero · pills. */
+  --radius-xs: var(--radius-step-xs);
+  --radius-sm: var(--radius-step-sm);
+  --radius-md: var(--radius-step-md);
+  --radius-lg: var(--radius-step-lg);
+  --radius-xl: var(--radius-step-xl);
+  --radius-2xl: var(--radius-step-xl);
+  --radius-3xl: var(--radius-step-xl);
+
+  /* Only the dock and sheets are elevated (shadow-dock, shadow-sheet). */
+  --shadow-dock: var(--elevation-dock);
+  --shadow-sheet: var(--elevation-sheet);
+  --font-display: var(--font-inter-display), var(--font-inter), var(--font-noto-jp), var(--font-display-family);
 
   /* Type roles from @senryo/tokens TYPE (text-micro … text-num-hero). */
   --text-micro: var(--type-micro-size);
@@ -82,16 +128,47 @@
   --text-num-xl--line-height: var(--type-num-xl-leading);
   --text-num-hero: var(--type-num-hero-size);
   --text-num-hero--line-height: var(--type-num-hero-leading);
+  /* Living Lacquer roles: display numbers (Inter Display), rows, meta, titles, controls. */
+  --text-display-balance: var(--type-display-balance-size);
+  --text-display-balance--line-height: var(--type-display-balance-leading);
+  --text-display-balance--letter-spacing: var(--type-display-balance-tracking);
+  --text-display-margin: var(--type-display-margin-size);
+  --text-display-margin--line-height: var(--type-display-margin-leading);
+  --text-display-margin--letter-spacing: var(--type-display-margin-tracking);
+  --text-display-price: var(--type-display-price-size);
+  --text-display-price--line-height: var(--type-display-price-leading);
+  --text-display-price--letter-spacing: var(--type-display-price-tracking);
+  --text-page-title: var(--type-page-title-size);
+  --text-page-title--line-height: var(--type-page-title-leading);
+  --text-page-title--letter-spacing: var(--type-page-title-tracking);
+  --text-sheet-title: var(--type-sheet-title-size);
+  --text-sheet-title--line-height: var(--type-sheet-title-leading);
+  --text-section-title: var(--type-section-title-size);
+  --text-section-title--line-height: var(--type-section-title-leading);
+  --text-row: var(--type-row-size);
+  --text-row--line-height: var(--type-row-leading);
+  --text-meta: var(--type-meta-size);
+  --text-meta--line-height: var(--type-meta-leading);
+  --text-button: var(--type-button-label-size);
+  --text-button--line-height: var(--type-button-label-leading);
+  --text-button-compact: var(--type-button-compact-size);
+  --text-button-compact--line-height: var(--type-button-compact-leading);
+  --text-tab: var(--type-tab-label-size);
+  --text-tab--line-height: var(--type-tab-label-leading);
+  --text-fan: var(--type-fan-label-size);
+  --text-fan--line-height: var(--type-fan-label-leading);
 
   --tracking-label: var(--type-label-tracking);
+  --ease-lacquer: var(--motion-ease);
+  /* Legacy name from D2 (ease-desk), still used by existing components; same curve. */
   --ease-desk: var(--motion-ease);
 }
 
 @utility tnum {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings:
     "tnum" 1,
-    "zero" 1;
+    "lnum" 1;
 }
 
 @layer base {

@@ -1,29 +1,40 @@
-import { MAX_FONT_SCALE_HERO, TYPE as TOKEN_TYPE, type TypeRole } from "@senryo/tokens";
+import { MAX_FONT_SCALE_HERO, TYPE as TOKEN_TYPE, type TypeFace, type TypeRole } from "@senryo/tokens";
 import type { TextStyle } from "react-native";
 
-/** Loaded face names (expo-font keys in fonts.ts): Inter for labels, JetBrains Mono (tabular) for every number. */
+/**
+ * Loaded face names (expo-font keys in fonts.ts). Inter 400–700 for UI; Inter Display SemiBold for numbers and titles
+ * ≥ 32; Noto Sans JP for Japanese text (React Native does not fall back per glyph to a custom font, so Japanese runs set
+ * `jp*` explicitly). The `mono*` names are legacy aliases from D2's monospace amounts: they resolve to Inter, and numbers
+ * get tabular lining figures.
+ */
 export const FONT = {
   sans: "Inter_400Regular",
   sansMedium: "Inter_500Medium",
   sansStrong: "Inter_600SemiBold",
   sansBold: "Inter_700Bold",
-  mono: "JetBrainsMono_400Regular",
-  monoMedium: "JetBrainsMono_500Medium",
-  monoStrong: "JetBrainsMono_600SemiBold",
+  display: "InterDisplay_600SemiBold",
+  jp: "NotoSansJP_400Regular",
+  jpMedium: "NotoSansJP_500Medium",
+  jpStrong: "NotoSansJP_600SemiBold",
+  jpBold: "NotoSansJP_700Bold",
+  mono: "Inter_400Regular",
+  monoMedium: "Inter_500Medium",
+  monoStrong: "Inter_600SemiBold",
 } as const;
 
-const WEIGHT = { regular: 400, medium: 500, strong: 600 } as const;
+const WEIGHT = { medium: 500, strong: 600, bold: 700 } as const;
 
-function face(font: "sans" | "mono", weight: number): string {
-  if (font === "mono") {
-    if (weight >= WEIGHT.strong) return FONT.monoStrong;
-    return weight >= WEIGHT.medium ? FONT.monoMedium : FONT.mono;
-  }
+/** Money and other changing figures align in columns: tabular + lining figures (Inter's `tnum`/`lnum`). */
+export const NUMERIC_VARIANT: TextStyle["fontVariant"] = ["tabular-nums", "lining-nums"];
+
+function face(font: TypeFace, weight: number): string {
+  if (font === "display") return FONT.display;
+  if (weight >= WEIGHT.bold) return FONT.sansBold;
   if (weight >= WEIGHT.strong) return FONT.sansStrong;
   return weight >= WEIGHT.medium ? FONT.sansMedium : FONT.sans;
 }
 
-/** Token type scale → RN text styles; tracking is em in the tokens, points here. Numbers are always tabular. */
+/** Token type scale → RN text styles; tracking is em in the tokens, points here. Sentence case: no text transform. */
 function toStyle(role: TypeRole): TextStyle {
   const t = TOKEN_TYPE[role];
   return {
@@ -31,25 +42,14 @@ function toStyle(role: TypeRole): TextStyle {
     fontSize: t.size,
     lineHeight: t.lineHeight,
     letterSpacing: t.tracking * t.size,
-    ...(t.uppercase ? { textTransform: "uppercase" as const } : {}),
-    ...(t.font === "mono" ? { fontVariant: ["tabular-nums" as const] } : {}),
+    ...(t.numeric ? { fontVariant: NUMERIC_VARIANT } : {}),
   };
 }
 
-export const TYPE = {
-  micro: toStyle("micro"),
-  label: toStyle("label"),
-  caption: toStyle("caption"),
-  body: toStyle("body"),
-  bodyStrong: toStyle("bodyStrong"),
-  title: toStyle("title"),
-  numSm: toStyle("numSm"),
-  numMd: toStyle("numMd"),
-  numTicker: toStyle("numTicker"),
-  numLg: toStyle("numLg"),
-  numXl: toStyle("numXl"),
-  numHero: toStyle("numHero"),
-} satisfies Record<TypeRole, TextStyle>;
+/** Every token role as an RN text style: the step-1 names plus displayBalance/Margin/Price, row, meta, titles, controls. */
+export const TYPE = Object.fromEntries(
+  (Object.keys(TOKEN_TYPE) as TypeRole[]).map((role) => [role, toStyle(role)]),
+) as Readonly<Record<TypeRole, TextStyle>>;
 
 /** Dynamic Type cap for hero numbers so a six-digit balance never wraps. */
 export const HERO_FONT_SCALE = MAX_FONT_SCALE_HERO;

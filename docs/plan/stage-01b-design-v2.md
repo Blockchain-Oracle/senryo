@@ -62,12 +62,12 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
 - [ ] S1b.4 **Replace every placeholder** (v2-plan W3 list): the fake live-font 千 seals, TopStrip "MONAD" dot, market,
   ticket and position symbols, the "In Perpl" swatch, collateral/LP/fund text rows, StarterCard coins, provider and source
   names, CardFace art, and the web `TokenIcon`/`SealMark`. Delete `ASSET_HUE`/`CHAIN_HUE`.
-- [ ] S1b.5 **Handoff packet**:
+- [x] S1b.5 **Handoff packet**:
   - `PROJECT-HANDOFF.md` (authority record, journeys with FT/C/M/LG IDs, ledger, Senryo rules, art tasks);
   - `docs/design/senryo-parity-ledger.json` (FT/C/M/LG rows with the fidelity-contract fields);
   - SUPERSEDED-by-D-168 banners on `design/DIRECTIONS.md`, the `d2-*` screenshots and the study's own D2 references (README:82, 05:89/104-105, 10:5, `reference-ledger.json`), recorded in `COPY-MANIFEST.json`;
   - `validate_study.py` passes.
-- [ ] S1b.6 **Tokens** (direction §2–4):
+- [x] S1b.6 **Tokens** (direction §2–4):
   - step 1 swaps values under the existing names (web stays green);
   - step 2 adds the new roles (practice/mainnet, glass, fan, materials) and retires the old names;
   - fonts: Inter, Inter Display (verify static SemiBold) and subset Noto Sans JP;
@@ -157,5 +157,66 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Remaining (the lead's files): TopStrip, StarterCard, Ticket, PositionsAccessory.
   - Remaining web: the chain dot in `swap/panel.tsx`, and the live-font 千 in `app/page.tsx` and `ui/credit-debit-card.tsx`.
   - `CHAIN_HUE` is still read by that chain dot. `ASSET_HUE` only feeds unused `--asset-*` CSS vars; delete both after the lead's token work lands.
+- **S1b.5 (handoff packet, agent A2, D-190):**
+  - `PROJECT-HANDOFF.md` is written twice, identically: in the study folder (local only, Q-021) and at
+    `docs/design/senryo-v2/PROJECT-HANDOFF.md`. Its paths are code spans, so the study's link validator passes in either place.
+  - The parity ledger `docs/design/senryo-parity-ledger.json` has 216 rows.
+  - The study was briefly committed in 1137f57 and untracked again in 6d96a4d. The pre-edit hashes in its `COPY-MANIFEST.json`
+    equal those blobs.
+  - `validate_study.py` passes, including Pillow image/crop checks: run with a scratch `uv` venv, because the system Python
+    has no Pillow.
+- **S1b.6 (tokens), Codex consult:** Codex (gpt-6.1-sol, xhigh, read-only) gave every value that direction §2–4 leaves
+  open. The answer is stored verbatim in `docs/design/senryo-v2/tokens-consult.md`. Highlights:
+  - `mutedForeground` = Text 2. `secondary`/`muted` = #201E2B / #ECE9F2. `accent` = mainnet surface + link ink.
+    `destructive` = Down. `ring` = link. Chart series run blue · violet · cyan · rose · silver; gold never means profit.
+  - Light Text 3 = **#716C7F: 4.62:1 on #F5F4F8**, 5.06:1 on #FFFFFF (was #746F82 at 4.42:1). Ratios are computed with
+    WCAG relative luminance by the same-hue OKLab darkening script. Dark Text 3 #8F8B9F is 6.00:1 on the background and
+    5.32:1 on a sheet.
+  - Kinpaku foil = the gold-leaf ramp with intermediates #AE8941 and #EACF8C; the lacquer body and edge come from the
+    lacquer ramp.
+  - Type: micro, label and caption are all 12/16; body 16/22; title 20/24; numSm 16/20; numMd 20/24; numTicker and
+    numLg 40/44; numXl and numHero 52/56. Inter Display at ≥ 32 with −0.02 em tracking. No uppercase anywhere.
+  - Radius: `sm` → 12 in step 1. Spacing names kept, plus `lgPlus`/`inset` 20.
+  - Motion: press 100, selection 170, page push 320, easing (0.2, 0.8, 0.2, 1); springs per direction §4 with
+    `overshootClamping` except the fan's Send.
+- **S1b.6 step 2 (D-191):**
+  - The new roles live in `palette.ts`, beside the shadcn names, so web CSS emits them as `--text-2`, `--glass-tint`, …
+  - RN takes the 8-digit scrims directly; the old `withAlpha` cannot parse `#RRGGBBAA`.
+  - Mobile springs live in `apps/mobile/src/theme/motion.ts`, which also takes over EASE/DURATION/PRESS_SCALE from
+    `layout.ts`.
+  - Retired: `CHAIN_HUE` and `ASSET_HUE`. The web swap panel's chain dot became an `EntityMark`, and the `colorVar`
+    field left `sample.ts`/`fund-screen`.
+  - Not yet using the new roles: screens (components still read the step-1 names); that changes per journey.
+- **S1b.6 fonts and icons (D-192):**
+  - Inter 4.1 is static and byte-for-byte on mobile; the web copies are Latin subsets. Inter Display SemiBold is
+    verified in the release. Noto Sans JP is subset to 千両金箔.
+  - Every font file carries provenance in `packages/tokens/src/fonts.ts`, checked by the `font-provenance` invariant.
+  - `lucide-react-native` is JS + SVG only, so no dev-client rebuild is needed.
+  - Fonts load through expo-font on mobile and next/font/local on web; no Google Fonts request remains.
+  - `apps/mobile/.21st/design.json` is rewritten per D-168:
+    - direction, authority, typography, radius, motion and materials;
+    - must/avoid rules and the amended D-033;
+    - reconstructions (EntityMark, venue chip, mark cluster);
+    - planned C15/C16/C18/C39–C43;
+    - D2 ports kept under `legacyD2`.
+
+    The web record points to the same direction.
+- **Lead files, open item:** `TopStrip` still draws the D2 "SENRYO/千両" wordmark in the system CJK face.
+- **S1b.7 spike (D-193): headless tabs pass.** The run was on a separate iPhone 17 simulator, using the release app with
+  this branch's Hermes bundle swapped in. All five probe checks pass: stack per tab, scroll (Home and Markets), the dock
+  hiding during entry, and the content inset.
+  - The spike lives at `src/app/dev-shell-spike/**` and `src/features/shell-spike/*`. It is dev-only and not linked
+    from the app; `?probe=1` reruns the checks.
+  - Screenshots (scratchpad): `shots/spike3/t01–t22.png` and `shots/compare/dock-vs-F12.png`.
+  - The S1b.7 build itself (the lead's `(tabs)/_layout.tsx` migration, the fan, the header and the route remap) is
+    still open, so S1b.7 stays unticked.
+- **Visual check of the token swap** (scratchpad `shots/app`, `shots/compare`): every screen now shows the violet-black
+  surfaces, blue primary and Inter. These D2-era features still show, because they come from their components, not
+  the tokens; each is rebuilt in its journey:
+  - uppercase button and segment labels (`kit/Button`, `kit/Segmented`);
+  - the green eyebrow on the welcome;
+  - the TopStrip wordmark;
+  - the Kinpaku card PNG, which is still the D2 lemon gold (`brand/kinpaku-card*`): an art task to recolour through the
+    gold-leaf ramp (S1b.3, B12).
 
 ## Handoff

@@ -243,12 +243,12 @@ export const CARD_HOLDS: readonly SampleHold[] = [
 /** Sample deposit address (not a real account). Real persistent addresses come from Aurora in S9. */
 export const DEPOSIT_ADDRESS = "0x7a3F9c2E41b0D5e8A6f1c93B24dE70aF5b1C8e42";
 
-/** `entity` is the canonical network id whose real mark badges each token (S1b.4). */
+/** `entity` is the canonical network id whose real mark badges each token and labels the network chip (S1b.4/S1b.6). */
 export const SWAP_CHAINS = [
-  { id: "base", name: "Base", shortName: "BASE", colorVar: "--chain-base", entity: ROUTE_CHAIN_ID.base },
-  { id: "ethereum", name: "Ethereum", shortName: "ETH", colorVar: "--chain-ethereum", entity: ROUTE_CHAIN_ID.ethereum },
-  { id: "solana", name: "Solana", shortName: "SOL", colorVar: "--chain-solana", entity: ROUTE_CHAIN_ID.solana },
-  { id: "monad", name: "Monad", shortName: "MON", colorVar: "--chain-monad", entity: ROUTE_CHAIN_ID.monad },
+  { id: "base", name: "Base", shortName: "BASE", entity: ROUTE_CHAIN_ID.base },
+  { id: "ethereum", name: "Ethereum", shortName: "ETH", entity: ROUTE_CHAIN_ID.ethereum },
+  { id: "solana", name: "Solana", shortName: "SOL", entity: ROUTE_CHAIN_ID.solana },
+  { id: "monad", name: "Monad", shortName: "MON", entity: ROUTE_CHAIN_ID.monad },
 ] as const;
 
 export const SWAP_TOKENS = [

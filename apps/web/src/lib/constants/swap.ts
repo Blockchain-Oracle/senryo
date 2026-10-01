@@ -14,6 +14,8 @@ export const SWAP_QUOTE_DEBOUNCE_MS = 450;
 
 /** Token mark edge in the picker and field (px): a ≥ 32 px disc (Circle's USDC minimum, v2-plan §5.12). */
 export const TOKEN_MARK_SIZE = 32;
+/** Network mark in the field's network chip (px), replacing the old chain-hue dot (S1b.6). */
+export const NETWORK_MARK_SIZE = 16;
 export const SWAP_FLIP_DEG = 180;
 
 /** Display-only amount formatting thresholds. */
