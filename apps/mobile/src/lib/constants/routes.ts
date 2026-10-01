@@ -15,6 +15,8 @@ export const ROUTES = {
   card: "/card",
   cardWallet: "/card/wallet",
   cardAllowance: "/card/allowance",
+  /** C21 first-use tutorial, pushed over the Card tab. */
+  cardIntro: "/card/intro",
   social: "/social",
   you: "/you",
   /** Compatibility: `/fund` opens the add-money hub over Home. */

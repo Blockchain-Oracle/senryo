@@ -26,6 +26,8 @@ export const STORAGE_KEYS = {
   setup: "senryo.setup.v1",
   /** J1 terms step: the `LEGAL_VERSION` each account acknowledged, by address (a newer version asks again). */
   termsAccepted: "senryo.terms-accepted.v1",
+  /** C21: the Kinpaku first-use tutorial was finished (or skipped) on this device. */
+  cardIntroSeen: "senryo.card-intro-seen.v1",
   /** FT106: the ticket chart's candle style (body, colour pair, colour by previous close) — saved on "Save" only. */
   candles: "senryo.candles.v1",
   /** J3 Markets: what the Markets tab keeps on this phone, per network — starred markets and recent searches. */
