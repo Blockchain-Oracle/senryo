@@ -4,6 +4,8 @@
  *   sha256 that matches the bytes on disk (first-party files are never re-pinned; `codegen --rehash` touches only
  *   Senryo originals).
  * - No source contains `<text>` (type is outlined), and every file under the identity sources is registered.
+ * - Fetched records (`open-library`, `venue-metadata`: scripts/fetch-marks.ts) meet the same bar; a `supplement` names a
+ *   registered record.
  * - A derived variant names a registered source and equals `deriveSvg(source)` byte for byte, with the clause that
  *   permits the colourway; a tintable glyph carries no colour of its own (the caller supplies one flat ink).
  * - The generated components are current: `src/generated/manifest.json` pins the same hashes, and every variant has a
@@ -22,7 +24,7 @@ const SOURCE_DIRS = ["packages/identity/sources", "brand/art"];
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const MIN_LICENCE_CHARS = 24;
-const PROVENANCE = new Set(["first-party", "public-domain", "senryo-original"]);
+const PROVENANCE = new Set(["first-party", "public-domain", "senryo-original", "open-library", "venue-metadata"]);
 /** A paint value other than none/currentColor on fill, stroke or a gradient stop. */
 const OWN_COLOUR = /(?:fill|stroke|stop-color)(?:\s*=\s*["']|\s*:\s*)(?!none\b|currentColor\b)[#a-z(]/i;
 const ADDRESS_BOOK = "packages/contracts/src/addresses/10143.json";
@@ -128,6 +130,12 @@ export async function identityProvenance(rule, ctx) {
     if (keys.has(source.key)) findings.push(finding(rule, `duplicate artwork key ${source.key}`, `${PKG}/src/art`));
     keys.add(source.key);
     findings.push(...checkSource(rule, root, source, manifest, registered, deriveSvg, sources));
+  }
+  for (const source of ART_SOURCES) {
+    if (source.supplement !== undefined && !keys.has(source.supplement))
+      findings.push(
+        finding(rule, `${source.key}: supplement "${source.supplement}" is not registered`, `${PKG}/src/art`),
+      );
   }
   for (const dir of SOURCE_DIRS) {
     for (const rel of listSvgs(root, dir)) {

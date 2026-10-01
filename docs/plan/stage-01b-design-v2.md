@@ -44,14 +44,14 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - codegen (SVG → react-native-svg + web) with arc-flag normalisation and no `<text>`;
   - an `EntityMark` with loading, failed and unidentified states;
   - invariant `identity-provenance`.
-- [ ] S1b.2 **Marks acquired** (first-party only):
+- [x] S1b.2 **Marks acquired** (first-party where the owner publishes one; otherwise fetched by `fetch-marks.ts`):
   - Monad (logomark, token, mono) and MON;
   - USDC (Circle), AUSD (`monad-crypto/token-list`/Agora);
   - BTC, ETH, SOL, HYPE, ZEC;
   - Base, Arbitrum, BNB, Tron, Polygon (as Aurora supports them);
   - Chainlink, Uniswap, Perpl, Aurora, Envio, DB-IP;
   - Coinbase, Binance, Kraken;
-  - the FIDO passkey icon (Q-019);
+  - the passkey icon (Material Symbols, Apache-2.0; A4, bccf226);
   - FX flags (public domain).
 - [ ] S1b.3 **Original art masters** in SVG + Skia:
   - XAU koban (embossed 千), XAG chōgin, five FX flag-pair discs, the Senryo venue chip;
@@ -135,20 +135,32 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   `pnpm --filter @senryo/identity codegen [--rehash]`. The web keeps an owner's own drop shadows (MON token, Bitcoin
   disc), but native drops `<filter>` because SVGR has no native mapping for it. PNG-only owner files (Perpl kit,
   Coinbase/Binance site icons) render as images, unchanged. The optimised web SVGs match every source (worst RMSE 0.0018).
-- **S1b.2 (marks), partial.** 49 first-party or public-domain files are vendored byte-for-byte in `packages/identity/sources/`.
-  Named gaps, with nothing substituted:
-  - FIDO passkey icon: behind a form and agreement at fidoalliance.org/passkey-download (needs the user's **[OK?]**).
-  - Binance and Kraken press kits are password-gated or email-only; site-hosted first-party files are used instead.
-  - Coinbase's press kit is wordmark-only.
-  - USDC Symbol, Perpl colour mark and Aurora B/W sign: no vector published.
-  - No mono logomark for Monad, Solana or Bitcoin, and no white ETH diamond.
-  - LIT, VVV, PUMP, NEAR and NVDA art not acquired.
-  - BNB, Tron and Polygon not attempted yet.
-- **Licence flags for the user:**
-  - Circle: "NO COMMERCIAL USE" vs "used to represent USDC … in a UI context".
-  - Written permission required: Arbitrum, Uniswap, Chainlink (logo use), and Solana (combining with badges).
-  - Flags: Euroflag design copyright, Canada prohibited mark, Swiss cross.
-  - Coinbase: press-footer terms.
+- **S1b.2 (marks), done 1 Oct — acquisition is now programmatic.** The user's rule: research the download route, never
+  collect logos by hand. Docs were read through Context7 (`ctx7` CLI: `/0xa3k5/web3icons`, `/simple-icons/simple-icons`,
+  `/logo-dev/docs.logo.dev`, `/llmstxt/brandfetch_llms_txt`, `/websites/coingecko`).
+  - **How it works:** `packages/identity/scripts/catalog.ts` lists each mark as data (key, owner, source);
+    `pnpm --filter @senryo/identity fetch` downloads every entry over pinned HTTPS, stores the bytes in
+    `sources/<key>/`, and writes the records (URL, sha256, viewBox, licence) to `src/art/generated/fetched.ts`; then
+    `codegen`. Adding a mark = one catalog line + those two commands. No npm dependency was added.
+  - **Sources chosen:**
+    - **web3icons** (MIT, pinned to commit `ad3cbe0`): tokens, networks and exchanges as colour mark, white silhouette
+      and brand-colour background. The background variant is clipped to a disc by codegen (`ArtFile.crop`); the dark
+      silhouette is a recorded recolour (`ArtFile.derived`).
+    - **Hyperliquid's per-coin icon** (`app.hyperliquid.xyz/coins/<COIN>.svg`): vector discs for assets the libraries
+      don't carry yet (Lighter, Venice, Pump). web3icons' `LIT` is Litentry, a ticker collision, so it is not used.
+    - **Simple Icons** (CC0, pinned to 16.33.0): company marks + brand hex for equity underlyings (NVDA).
+  - **Rejected, with the reason:** logo.dev (key required; SVG is enterprise-only), Brandfetch (client id; hotlink
+    terms), Parqet (free only with a visible attribution link on every page that shows a logo), CoinGecko (raster only).
+    They stay options for a runtime long-tail token list (J11 spot tokens), where `monad-crypto/token-list` `logoURI`
+    is the first source.
+  - **What it filled:** NEAR, BNB, TRON and Polygon (all variants); Lighter, Venice and Pump discs; Nvidia; and, as
+    `supplement` records behind the first-party ones, the mono silhouettes the owners don't publish (Monad, Bitcoin,
+    Ethereum white, Solana, USDC, Aurora, Coinbase, Binance, Kraken) plus vector symbols for Bitcoin, USDC and Coinbase
+    and a vector Binance disc. A first-party file always wins over its supplement, per variant.
+  - 17 fetched records, 43 files; 106 generated marks per platform. No entity in the table has an artwork gap left.
+  - **Licences are not a user ask.** Showing a project's mark beside its ticker to identify it is nominative use; each
+    record quotes its licence or terms. The earlier "written permission" flags (Arbitrum, Uniswap, Chainlink, Solana,
+    Circle, Coinbase, flags) are closed on that basis and stay documented in the records.
 - **S1b.3 (art), partial.** First-pass masters are in `brand/art/` (koban, chōgin, five FX pair discs, venue chip).
   Still open: onboarding scenes, completion foil and the 12 avatars. B12 review stays open.
 - **S1b.4, partial:**

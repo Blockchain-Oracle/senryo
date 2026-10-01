@@ -8,6 +8,7 @@ import type { ArtSource } from "../types.ts";
 export const EXCHANGE_ART: readonly ArtSource[] = [
   {
     key: "coinbase",
+    supplement: "lib-coinbase",
     owner: "Coinbase, Inc.",
     provenance: "first-party",
     pageUrl: "https://www.coinbase.com/press",
@@ -66,11 +67,12 @@ export const EXCHANGE_ART: readonly ArtSource[] = [
   },
   {
     key: "binance",
+    supplement: "lib-binance",
     owner: "Binance",
     provenance: "first-party",
     pageUrl: "https://www.binance.com/en-GB/press",
     licence:
-      "Press kit gated: the pressroom's Media Assets link to a password-protected Binance Style Guide (gap). This 200 px symbol is served by Binance's own CDN (site-hosted raster). No explicit licence; used nominatively to identify Binance.",
+      "Press kit gated: the pressroom's Media Assets link to a password-protected Binance Style Guide (the library supplement fills it: art/generated/fetched.ts). This 200 px symbol is served by Binance's own CDN (site-hosted raster). No explicit licence; used nominatively to identify Binance.",
     retrieved: "2026-09-30",
     usage: "No vector symbol is public; raster used as delivered.",
     variants: {
@@ -87,11 +89,12 @@ export const EXCHANGE_ART: readonly ArtSource[] = [
   },
   {
     key: "kraken",
+    supplement: "lib-kraken",
     owner: "Payward, Inc. (Kraken)",
     provenance: "first-party",
     pageUrl: "https://www.kraken.com/press",
     licence:
-      "Logos are provided on request (press@kraken.com) and brand.kraken.com is password-protected (gap). This tile is the Kraken app icon served by Kraken's own CMS (assets-cms.kraken.com). No explicit licence; used nominatively to identify Kraken.",
+      "Logos are provided on request (press@kraken.com) and brand.kraken.com is password-protected (the library supplement fills it: art/generated/fetched.ts). This tile is the Kraken app icon served by Kraken's own CMS (assets-cms.kraken.com). No explicit licence; used nominatively to identify Kraken.",
     retrieved: "2026-09-30",
     usage: "No bare vector symbol is public.",
     variants: {

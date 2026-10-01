@@ -9,7 +9,8 @@
  * 1. Each file's sha256 must equal the registry's. A changed first-party file is an error and is never re-pinned. A
  *    derived variant (`ArtFile.derived`) must equal `deriveSvg(source)` byte for byte; `--derive` writes it and prints
  *    its sha256 for the record.
- * 2. SVG → SVGO + guard + SVGR per platform (./svg-pipeline.ts); PNG (owner ships raster only) → an image component.
+ * 2. SVG → (disc crop where the record asks) → SVGO + guard + SVGR per platform (./svg-pipeline.ts); PNG (owner ships
+ *    raster only) → an image component.
  * 3. `src/generated/{native,web}/index.ts` map key → variant → component; `manifest.json` pins what was generated, so
  *    the invariant `identity-provenance` catches a registry change that wasn't regenerated.
  */
@@ -20,7 +21,7 @@ import { fileURLToPath } from "node:url";
 import { ART_SOURCES } from "../src/art/index.ts";
 import { deriveSvg } from "../src/derive.ts";
 import type { ArtFile, ArtSource, MarkVariant } from "../src/types.ts";
-import { optimise, type Platform, rasterComponent, svgComponent } from "./svg-pipeline.ts";
+import { cropToDisc, optimise, type Platform, rasterComponent, svgComponent } from "./svg-pipeline.ts";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = resolve(PKG, "../..");
@@ -42,7 +43,7 @@ const pascal = (s: string): string =>
 
 /** Pins the new hash of a re-rendered Senryo original in whichever src/art file records the old one. */
 function rehash(oldHash: string, newHash: string): void {
-  for (const name of readdirSync(ART_DIR)) {
+  for (const name of readdirSync(ART_DIR).filter((n) => n.endsWith(".ts"))) {
     const path = join(ART_DIR, name);
     const text = readFileSync(path, "utf8");
     if (text.includes(oldHash)) writeFileSync(path, text.replace(oldHash, newHash));
@@ -96,7 +97,8 @@ async function componentFor(file: ArtFile, bytes: Buffer, stem: string, componen
     const asset = relative(join(OUT, platform), join(ROOT, file.path)).split("\\").join("/");
     return rasterComponent(component, asset, platform);
   }
-  const svg = optimise(bytes.toString("utf8"), file.path, stem, platform);
+  const raw = bytes.toString("utf8");
+  const svg = optimise(file.crop === "disc" ? cropToDisc(raw, file.viewBox) : raw, file.path, stem, platform);
   if (EMIT && platform === "web") writeFileSync(join(resolve(EMIT), `${stem}.svg`), svg);
   return svgComponent(svg, component, platform);
 }

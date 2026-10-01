@@ -33,7 +33,7 @@ const ENGINE_ART: Readonly<Record<EngineSymbol, string>> = {
   CAD: "fx-cad-usd",
 };
 
-/** Crypto assets by ticker: display name and artwork key (undefined = first-party art not on file, see `gap`). */
+/** Crypto assets by ticker: display name and artwork key (undefined = no artwork on file, see `gap`). */
 const CRYPTO: Readonly<Record<string, { name: string; art?: string; gap?: string }>> = {
   BTC: { name: "Bitcoin", art: "bitcoin" },
   ETH: { name: "Ether", art: "ethereum" },
@@ -41,10 +41,10 @@ const CRYPTO: Readonly<Record<string, { name: string; art?: string; gap?: string
   MON: { name: "Monad", art: "monad" },
   HYPE: { name: "Hyperliquid", art: "hyperliquid" },
   ZEC: { name: "Zcash", art: "zcash" },
-  LIT: { name: "Lighter", gap: "Lighter first-party artwork not acquired yet" },
-  VVV: { name: "Venice", gap: "Venice first-party artwork not acquired yet" },
-  PUMP: { name: "Pump", gap: "pump.fun first-party artwork not acquired yet" },
-  NEAR: { name: "NEAR", gap: "NEAR Foundation first-party artwork not acquired yet" },
+  LIT: { name: "Lighter", art: "lighter" },
+  VVV: { name: "Venice", art: "venice" },
+  PUMP: { name: "Pump", art: "pump" },
+  NEAR: { name: "NEAR", art: "near" },
 };
 
 const network = (id: string, name: string, art: string, practice = false): Entity => ({
@@ -128,7 +128,7 @@ function perplRows(): Entity[] {
 }
 
 function externalRows(): Entity[] {
-  const { ethereum, base, arbitrum } = EXTERNAL_CHAIN_IDS;
+  const { ethereum, base, arbitrum, bnb, polygon } = EXTERNAL_CHAIN_IDS;
   const usdc = (id: string, chain: string): Entity => ({
     id,
     name: "USD Coin",
@@ -144,6 +144,10 @@ function externalRows(): Entity[] {
     network(ids.evmChain(arbitrum), "Arbitrum One", "arbitrum"),
     network(ids.caipChain(CAIP2.solana), "Solana", "solana"),
     network(ids.caipChain(CAIP2.bitcoin), "Bitcoin", "bitcoin"),
+    network(ids.evmChain(bnb), "BNB Smart Chain", "bnb"),
+    network(ids.evmChain(polygon), "Polygon", "polygon"),
+    network(ids.caipChain(CAIP2.tron), "TRON", "tron"),
+    network(ids.caipChain(CAIP2.near), "NEAR", "near"),
     {
       id: ids.native(ethereum, "ETH"),
       name: "Ether",
@@ -220,7 +224,7 @@ const orgRows = (): Entity[] => [
   org(ids.exchange("binance"), "Binance", "exchange", "binance"),
   org(ids.exchange("kraken"), "Kraken", "exchange", "kraken"),
   {
-    ...org(ids.equity("NVDA"), "Nvidia", "asset", undefined, "NVIDIA press-kit artwork not acquired yet"),
+    ...org(ids.equity("NVDA"), "Nvidia", "asset", "nvidia"),
     symbol: "NVDA",
     instrument: "equity",
   },

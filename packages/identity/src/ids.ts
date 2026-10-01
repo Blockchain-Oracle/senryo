@@ -9,6 +9,8 @@ export type EntityId = string;
 export const CAIP2 = {
   bitcoin: "bip122:000000000019d6689c085ae165831e93",
   solana: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  tron: "tron:0x2b6653dc",
+  near: "near:mainnet",
 } as const;
 
 export const ids = {

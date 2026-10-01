@@ -70,23 +70,31 @@ function plateFor(surface: ContrastSurface, scheme: Scheme, needsDisc: boolean):
   return needsDisc ? "theme" : "none";
 }
 
+/** The record that holds a variant's file: the entity's own, else its supplement (a fetched library record). */
+function holderOf(source: ArtSource, variant: MarkVariant): ArtSource | undefined {
+  if (source.variants[variant]) return source;
+  const extra = source.supplement === undefined ? undefined : ART[source.supplement];
+  return extra?.variants[variant] ? extra : undefined;
+}
+
 export function planMark(id: string | undefined, request: VariantRequest, scheme: Scheme): MarkPlan {
   const e = entity(id);
   if (!e) return { kind: "unidentified", id };
-  const source = e.art === undefined ? undefined : ART[e.art];
-  if (!source) return { kind: "gap", entity: e, reason: e.gap ?? `artwork "${e.art}" is not on file` };
+  const own = e.art === undefined ? undefined : ART[e.art];
+  if (!own) return { kind: "gap", entity: e, reason: e.gap ?? `artwork "${e.art}" is not on file` };
   for (const variant of FALLBACKS[wantedFor(request, scheme)]) {
-    const file = source.variants[variant];
-    if (!file) continue;
+    const source = holderOf(own, variant);
+    const file = source?.variants[variant];
+    if (!source || !file) continue;
     const wordmark = variant === "wordmark" || variant === "wordmarkLight";
     const needsDisc = request === "disc" && file.shape === "free" && !wordmark;
-    const plate = plateFor(file.surface, scheme, needsDisc && !source.noContainer);
+    const plate = plateFor(file.surface, scheme, needsDisc && !own.noContainer);
     // An owner who forbids containers (Uniswap) gets the next variant that reads on this ground instead of a plate.
-    if (source.noContainer && plate !== "none") continue;
+    if (own.noContainer && plate !== "none") continue;
     const shape = file.shape === "free" ? "disc" : file.shape;
     return { kind: "art", entity: e, source, variant, file, plate, shape, wordmark, aspect: aspectOf(file.viewBox) };
   }
-  return { kind: "gap", entity: e, reason: `artwork "${source.key}" has no drawable variant` };
+  return { kind: "gap", entity: e, reason: `artwork "${own.key}" has no drawable variant` };
 }
 
 export interface GlyphPlan {

@@ -33,8 +33,12 @@ export type ContrastSurface = "any" | "dark" | "light";
 
 export type ArtShape = "disc" | "tile" | "free";
 
-/** How the file came to exist: downloaded from the owner, public domain, or authored by Senryo. */
-export type Provenance = "first-party" | "public-domain" | "senryo-original";
+/**
+ * How the file came to exist: downloaded from the owner, public domain, authored by Senryo, fetched from an openly
+ * licensed icon library (web3icons, Simple Icons), or fetched from the venue that lists the instrument (its own icon
+ * for that market). The last two are acquired by `scripts/fetch-marks.ts` from `scripts/catalog.ts`, never by hand.
+ */
+export type Provenance = "first-party" | "public-domain" | "senryo-original" | "open-library" | "venue-metadata";
 
 /**
  * A variant made from another registered file by an exact colour substitution, and only where the owner's own
@@ -82,6 +86,11 @@ export interface ArtFile {
   tintable?: boolean;
   /** Set when this file was derived from another registered file (never for files kept as delivered). */
   derived?: Derivation;
+  /**
+   * The delivered file is a full-bleed square (an icon library's "background" variant); codegen clips it to the
+   * inscribed circle. The file on disk stays byte-for-byte as delivered.
+   */
+  crop?: "disc";
 }
 
 export interface ArtSource {
@@ -102,6 +111,11 @@ export interface ArtSource {
   usage?: string;
   /** Other sources this artwork is composed from (e.g. public-domain flags inside an FX pair disc). */
   derivedFrom?: readonly string[];
+  /**
+   * Key of a fetched library record for the same mark. It fills only the variants this record has no file for (an
+   * owner that publishes no mono silhouette); a variant on file here always wins.
+   */
+  supplement?: string;
 }
 
 export interface Entity {

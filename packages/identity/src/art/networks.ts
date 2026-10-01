@@ -8,6 +8,7 @@ import type { ArtSource } from "../types.ts";
 export const NETWORK_ART: readonly ArtSource[] = [
   {
     key: "monad",
+    supplement: "lib-monad",
     owner: "Monad Foundation",
     provenance: "first-party",
     pageUrl: "https://www.monad.xyz/brand-and-media-kit",
@@ -15,7 +16,7 @@ export const NETWORK_ART: readonly ArtSource[] = [
       'No explicit licence on the kit page. Monad Brand Guidelines v.02.01 (PDF in the kit ZIP): "The logo mark may be used on its own when the full brand name is already present. This includes … web pages, and apps." "Alterations or modifications are not permitted." Trademarks of the Monad Foundation (https://www.monad.xyz/terms-of-service §3.2); used nominatively to identify Monad and MON.',
     retrieved: "2026-09-30",
     usage:
-      "Clear space = the logomark's own height/width; Monad Purple #6E54FF. The disc is the kit's MON token (its drop-shadow filter is dropped on native only). The kit ships no standalone mono logomark (gap).",
+      "Clear space = the logomark's own height/width; Monad Purple #6E54FF. The disc is the kit's MON token (its drop-shadow filter is dropped on native only). The kit ships no standalone mono logomark (the library supplement fills it: art/generated/fetched.ts).",
     variants: {
       disc: {
         path: "packages/identity/sources/monad/mon-token-480.svg",
@@ -44,6 +45,7 @@ export const NETWORK_ART: readonly ArtSource[] = [
   },
   {
     key: "bitcoin",
+    supplement: "lib-bitcoin",
     owner: "Bitcoin Core project (github.com/bitcoin/bitcoin)",
     provenance: "first-party",
     pageUrl: "https://github.com/bitcoin/bitcoin/blob/master/src/qt/res/src/bitcoin.svg",
@@ -51,7 +53,7 @@ export const NETWORK_ART: readonly ArtSource[] = [
       'File header: "Designer: Jonas Schnelli / License: MIT" (repository COPYING: MIT). The Bitcoin logo is public domain: "They are in the public domain." (https://en.bitcoin.it/wiki/Promotional_graphics). bitcoin.org publishes the disc only inside its lockups (img/icons, MIT).',
     retrieved: "2026-09-30",
     usage:
-      "The reference client's disc (gradient + drop shadow; the filter is dropped on native only). No mono disc is published (gap).",
+      "The reference client's disc (gradient + drop shadow; the filter is dropped on native only). No mono disc is published (the library supplement fills it: art/generated/fetched.ts).",
     variants: {
       disc: {
         path: "packages/identity/sources/bitcoin/bitcoin-disc-core.svg",
@@ -66,13 +68,15 @@ export const NETWORK_ART: readonly ArtSource[] = [
   },
   {
     key: "ethereum",
+    supplement: "lib-ethereum",
     owner: "ethereum.org",
     provenance: "first-party",
     pageUrl: "https://ethereum.org/en/assets/",
     licence:
       "ethereum.org Terms of Use: non-code content is \"licensed under the Creative Commons Attribution 4.0 International License\" (https://ethereum.org/en/terms-of-use/); listed under 'Ethereum brand assets'.",
     retrieved: "2026-09-30",
-    usage: "CC BY 4.0: credit ethereum.org where sources are listed. No white diamond is published (gap).",
+    usage:
+      "CC BY 4.0: credit ethereum.org where sources are listed. No white diamond is published (the library supplement fills it: art/generated/fetched.ts).",
     variants: {
       symbol: {
         path: "packages/identity/sources/ethereum/eth-diamond-purple.svg",
@@ -96,13 +100,15 @@ export const NETWORK_ART: readonly ArtSource[] = [
   },
   {
     key: "solana",
+    supplement: "lib-solana",
     owner: "Solana Foundation",
     provenance: "first-party",
     pageUrl: "https://solana.com/branding",
     licence:
       'Solana Foundation Brand Guidelines (June 2026, linked from https://solana.com/branding): the marks may not suggest "sponsorship, endorsement or affiliation … where none exists", may not be recoloured or altered, and may not be combined "with any third-party design … unless you have received explicit, written permission". Written permission for badge combinations is open (flagged).',
     retrieved: "2026-09-30",
-    usage: "Never recolour; no shadows or outlines; no mono logomark is published (gap).",
+    usage:
+      "Never recolour; no shadows or outlines; no mono logomark is published (the library supplement fills it: art/generated/fetched.ts).",
     variants: {
       symbol: {
         path: "packages/identity/sources/solana/solana-logomark-gradient.svg",
