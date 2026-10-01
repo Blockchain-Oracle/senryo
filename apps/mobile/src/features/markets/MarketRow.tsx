@@ -1,5 +1,6 @@
 import { ENGINE_MARKETS, marketPair } from "@senryo/config";
 import { ids } from "@senryo/identity";
+import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Sparkline } from "~/components/charts/Sparkline";
@@ -35,20 +36,56 @@ export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen
   // With large text the name needs the sparkline's width; the price and change carry the movement alone.
   const roomy = useWindowDimensions().fontScale < SPARKLINE_MAX_FONT_SCALE;
   const mark = ids.engineMarket(network.chainId, marketId);
+  const client = useQueryClient();
+  const retrying = useIsFetching({ queryKey: ["market", network.chainId] }) > 0;
   if (reading.status === "unknown" || reading.status === "failed") {
+    const failed = reading.status === "failed";
+    // Loading and failed are different states (review S05): both still open the market (its page has its own
+    // states), and a failed read says so, with a Retry that shows when it is working.
     return (
-      <View style={styles.row}>
+      <Pressable
+        onPress={() => {
+          fire("tick");
+          onOpen?.();
+          router.push(marketRoute(meta?.symbol ?? String(marketId)));
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`${meta?.name ?? meta?.symbol}, ${failed ? "price unavailable" : "reading the price"}`}
+        style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.card } : null]}
+      >
         <EntityMark id={mark} size={SIZE.markDetail} decorative />
         <View style={styles.name}>
           <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowTitle, { color: color.ink }]}>
-            {meta?.symbol}
+            {meta?.category === "fx" ? meta.symbol : (meta?.name ?? meta?.symbol)}
           </Text>
-          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
-            {reading.status === "failed" ? "Price unavailable · retrying" : "Reading the oracle"}
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.rowDetail, { color: failed ? color.warn : color.text3 }]}
+          >
+            {failed ? "Price unavailable" : "Reading the oracle"}
           </Text>
         </View>
-        <Skeleton width={SIZE.sparklineWidth} height={SIZE.skeletonLine} />
-      </View>
+        {failed ? (
+          <Pressable
+            onPress={() => {
+              fire("tick");
+              void client.invalidateQueries({ queryKey: ["market", network.chainId] });
+            }}
+            disabled={retrying}
+            accessibilityRole="button"
+            accessibilityLabel={`Retry reading ${meta?.name ?? "the price"}`}
+            accessibilityState={{ busy: retrying }}
+            hitSlop={SPACE.sm}
+            style={[styles.retry, { backgroundColor: color.raised2 }]}
+          >
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.ink }]}>
+              {retrying ? "Retrying…" : "Retry"}
+            </Text>
+          </Pressable>
+        ) : (
+          <Skeleton width={SIZE.sparklineWidth} height={SIZE.skeletonLine} />
+        )}
+      </Pressable>
     );
   }
   const line = reading.value;
@@ -160,6 +197,12 @@ const styles = StyleSheet.create({
   },
   name: { flex: 1, gap: SPACE.xxs },
   titleLine: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  retry: {
+    paddingHorizontal: SPACE.md,
+    minHeight: SIZE.touch - SPACE.md,
+    borderRadius: BUTTON.radius.sm,
+    justifyContent: "center",
+  },
   // The name gives way before the session word: "British pound · Open", never "British pound · O…".
   detailLine: { flexDirection: "row", gap: SPACE.xs },
   shrink: { flexShrink: 1 },
