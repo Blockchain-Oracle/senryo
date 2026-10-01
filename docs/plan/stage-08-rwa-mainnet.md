@@ -142,7 +142,15 @@ reuses everything below `apps/`.
         - Proof: `pnpm --filter @senryo/keeper sweep-check` (10143 fork + scratch Postgres) passes 9/9. A keyless,
           MON-less user is credited $25, then $20 in AUSD + USDC through the indexer path; dust waits and expired
           watches are ignored.
-        - **Open:** app receive + watch call, mainnet copy, TxRecovery, and the keeper/api redeploy **[OK?]**.
+        - App: Fund → Monad wallet shows the account's own inbox (chain read), QR (decode-verified), copy and share,
+          mode + network, the $1 minimum, and live status (waiting → below minimum → crediting → credited).
+      - *TxRecovery done (1 Oct, D-231):*
+        - `reconcileEntry` (chain) reads only the entry's own chain and never broadcasts;
+        - `TxRecoveryHost` (mobile root) runs at launch, on foreground, and every 5 s while unresolved;
+        - an abandoned entry resyncs that chain's nonce; outcomes are toasted with their own mode;
+        - the kv journal is capped at 50 and drops only settled entries (nothing ever removed entries before).
+        - Proof: `pnpm --filter @senryo/drive recovery-check` 8/8 on a 10143 fork, through the real sender.
+      - **Open:** mainnet copy until a native bot check, web TxRecovery (S11b), and the keeper/api redeploy **[OK?]**.
 
 ## Gate
 Assurance findings closed (fixed or documented) · mainnet deposit → XAU long → close from the phone (txs in

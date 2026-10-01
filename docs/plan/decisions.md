@@ -137,6 +137,16 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   - The deposit address shown to the user always comes from the app's own `inboxOf` read, never from the api response.
   - Gas: `sweepInbox` 1.2M (fork 583k worst at 0 positions + the mainnet feed reads ≈ 970k) + 260k per extra position.
   - Source: `services/keeper/src/jobs/sweeps.ts`, `services/api/src/routes/inbox.ts` · approved (D-179 follow-up).
+- **D-231** 2026-10-01 · **App TxRecovery reconciles and never re-broadcasts.** This amends the journal note that allowed re-sending the same signed bytes.
+  - A trade or LP request replayed minutes after an app kill could fill at a price the user has walked away from. After a "failed" screen, the user may already have retried.
+  - `reconcileEntry` reads each entry on its own chain and decides:
+    - a receipt at or below the finalized head with the canonical hash → finalized/reverted;
+    - no receipt and the finalized nonce moved past it → abandoned (`nonce-used`);
+    - no receipt and untouched for 10 min → abandoned (`dropped`).
+  - An abandoned entry resyncs the nonce, so the next send reuses it. That voids the old bytes if they ever resurface, and double execution is impossible.
+  - Entries a live send touched in the last 30 s are left to it.
+  - `kvJournal` is capped at 50 entries and drops only the oldest settled ones. Settled entries are removed after 24 h.
+  - Source: `packages/chain/src/recovery.ts`, `apps/mobile/src/components/shell/TxRecoveryHost.tsx` · approved (D-179 follow-up).
 - **Number ranges (v2):** S8 lead D-160…D-179 (full) · contracts D-186…D-189 then D-220…D-229 · S1b design v2 D-190…D-209 · S12b social D-210…D-219 · W7/mainnet follow-ups D-230…D-239.
 
 ## Open questions
