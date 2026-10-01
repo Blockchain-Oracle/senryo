@@ -72,6 +72,8 @@ import ArtSceneKinpakuSymbol from "./scene-kinpaku-symbol.tsx";
 import ArtSceneModesSymbol from "./scene-modes-symbol.tsx";
 import ArtPasskeyPendingSymbol from "./passkey-pending-symbol.tsx";
 import ArtCompletionFoilSymbol from "./completion-foil-symbol.tsx";
+import ArtPrimerNotificationsSymbol from "./primer-notifications-symbol.tsx";
+import ArtPrimerFaceIdSymbol from "./primer-face-id-symbol.tsx";
 import ArtAvatar01TopknotSymbol from "./avatar-01-topknot-symbol.tsx";
 import ArtAvatar02BobSymbol from "./avatar-02-bob-symbol.tsx";
 import ArtAvatar03KanzashiSymbol from "./avatar-03-kanzashi-symbol.tsx";
@@ -175,6 +177,8 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "scene-modes": { symbol: ArtSceneModesSymbol },
   "passkey-pending": { symbol: ArtPasskeyPendingSymbol },
   "completion-foil": { symbol: ArtCompletionFoilSymbol },
+  "primer-notifications": { symbol: ArtPrimerNotificationsSymbol },
+  "primer-face-id": { symbol: ArtPrimerFaceIdSymbol },
   "avatar-01-topknot": { symbol: ArtAvatar01TopknotSymbol },
   "avatar-02-bob": { symbol: ArtAvatar02BobSymbol },
   "avatar-03-kanzashi": { symbol: ArtAvatar03KanzashiSymbol },

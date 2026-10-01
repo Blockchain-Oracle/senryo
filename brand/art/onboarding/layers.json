@@ -395,6 +395,111 @@
           "depth": 0.6
         }
       ]
+    },
+    "primer-notifications": {
+      "subject": "primer-notifications-bell",
+      "mostMotion": [
+        "primer-notifications-tanzaku",
+        "primer-notifications-clapper"
+      ],
+      "layers": [
+        {
+          "id": "primer-notifications-bell-shadow",
+          "role": "shadow",
+          "depth": 0.6,
+          "of": "primer-notifications-bell"
+        },
+        {
+          "id": "primer-notifications-tanzaku-shadow",
+          "role": "shadow",
+          "depth": 0.6,
+          "of": "primer-notifications-tanzaku"
+        },
+        {
+          "id": "primer-notifications-clapper-shadow",
+          "role": "shadow",
+          "depth": 0.6,
+          "of": "primer-notifications-clapper"
+        },
+        {
+          "id": "primer-notifications-bell",
+          "role": "object",
+          "depth": 0.6
+        },
+        {
+          "id": "primer-notifications-ring",
+          "role": "accent",
+          "depth": 0.6
+        },
+        {
+          "id": "primer-notifications-tanzaku",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "primer-notifications-clapper",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "primer-notifications-glints",
+          "role": "accent",
+          "depth": 0.4
+        }
+      ],
+      "pivots": {
+        "primer-notifications-bell": [
+          286,
+          52
+        ],
+        "primer-notifications-clapper": [
+          305.7,
+          277.4
+        ],
+        "primer-notifications-tanzaku": [
+          333.5,
+          323.7
+        ],
+        "primer-notifications-ring": [
+          297.6,
+          184.7
+        ]
+      }
+    },
+    "primer-face-id": {
+      "subject": "primer-face-id-body",
+      "mostMotion": [
+        "primer-face-id-shackle"
+      ],
+      "layers": [
+        {
+          "id": "primer-face-id-shadow",
+          "role": "shadow",
+          "depth": 0.5,
+          "of": "primer-face-id-body"
+        },
+        {
+          "id": "primer-face-id-shackle",
+          "role": "object",
+          "depth": 1
+        },
+        {
+          "id": "primer-face-id-body",
+          "role": "object",
+          "depth": 0.5
+        },
+        {
+          "id": "primer-face-id-glints",
+          "role": "accent",
+          "depth": 0.3
+        }
+      ],
+      "pivots": {
+        "primer-face-id-shackle": [
+          238.0,
+          315.8
+        ]
+      }
     }
   }
 }

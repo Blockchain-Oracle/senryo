@@ -53,6 +53,8 @@ the upper left on every object and thickness falls to the lower right.
 | `art/onboarding/layers.json` | Every master's layers, back to front, with role, depth, subject and what moves most (see **Layers**). | — |
 | `art/onboarding/passkey-pending.svg` | Shown while the OS passkey sheet is open: the key over its bed, alone, transparent ground. It may sway and glint; it never counts, fills or scans. | 640 × 640 |
 | `art/onboarding/completion-foil.svg` | One square of beaten gold leaf with the seal pressed in. The sheet is a computed surface (broad bends, a lifted corner, a few creases): its outline, seal and creases are projected from it, and each bend's light is one continuous gradient across the whole sheet (no facets). The seal is shade over the leaf, so the gold under it still turns. Only after a verified outcome. | 640 × 640 |
+| `art/onboarding/primer-notifications.svg` | Notification primer hero (S1b.13): a gold fūrin seen from a little below, its mouth open on black lacquer, a lacquer band with gold dust round its waist, a holed gold coin for its clapper, and an uchigumori tanzaku (indigo washi, clouded lighter at the head and violet at the foot, gold dust and cut leaf) in a breeze from the left; arcs of light off its shoulders say it is ringing. The bell is laid in kinpaku (faint broken seams, a few creases). Layers: bell (swings about its cord loop), ring, tanzaku (sways most, about the coin's hole), clapper, glints; the pivots are in `layers.json`. Transparent ground. | 640 × 640 |
+| `art/onboarding/primer-face-id.svg` | Face ID primer hero (S1b.13): an ebi-jō (Edo shrimp lock) opened: a barrel of black lacquer with gold dust, gold caps with a kiku (chrysanthemum-petal) edge, a finial and a keyhole, the seal inlaid; the gold shackle, bent like a shrimp's back, lifted out of its socket so the bolt's steel spring leaves show. Four tapered corners of gold light frame it: they suggest a look being framed and are not the system Face ID glyph, which stays on the control. Layers: shackle (lifts and swings about its fixed leg: pivot in `layers.json`), body, glints. Transparent ground. | 640 × 640 |
 | `art/avatars/avatar-NN-*.svg` | Twelve default avatars: one family (same collar, light and drawing), different people (jaw, nose, eye spacing, skin, hair or headwear, one accessory). The face fills about half the disc. Full-bleed squares; the app clips them to discs. | 256 × 256 |
 
 **Conventions.** Two viewpoints only. Lying objects (cards, trays, notes, key, coins) are seen from straight above with
@@ -69,7 +71,7 @@ tokens; paper, bamboo, straw, skin and hair are material pigments named in the s
 `scene-passkey-key-shadow`, `scene-lp-ripples`, `scene-lp-drop`, …). `art/onboarding/layers.json` lists them for each
 master in order, with a `role` (field, shadow with the object it belongs `of`, ground, object, accent), a `depth`
 (relative travel: 0 stays still, 1 travels most, equal depths move together, e.g. the chest and the paths that run off
-it), the scene's `subject` and what has the `mostMotion`. `python3 scripts/onboarding.py --layers <dir>` writes one
+it), the scene's `subject`, what has the `mostMotion` and, for a layer that swings or lifts, its `pivots` (master units). `python3 scripts/onboarding.py --layers <dir>` writes one
 stand-alone SVG per layer (same viewBox and defs), so each can be rasterised with a transparent ground and animated on
 its own with Skia/Reanimated and still register with the others. The static master is the Reduced Motion composition:
 same artwork, nothing missing. Label plates sit in the layer of the object they name (`labels.json` gives that layer),
@@ -77,7 +79,7 @@ so native text must move with it.
 
 **Scripts** (each under 400 lines): `kit.py` (canvas, layers, shadows, materials, label plates, mark embedding),
 `props.py` (Kinpaku card, gold leaf, lacquer dish, badges), `chest.py` (the senryō-bako), `keyart.py` (key, tag, tablet),
-`scene_*.py` (one per scene), `pending.py`, `foil.py`, `avatars.py` + `avatar_parts.py`, `onboarding.py` (writes everything), `sheets.py` and `motion.py` (review aids).
+`scene_*.py` (one per scene), `pending.py`, `foil.py`, `primer_bell.py`, `primer_lock.py`, `avatars.py` + `avatar_parts.py`, `onboarding.py` (writes everything), `sheets.py` and `motion.py` (review aids).
 
 **Review aids** (written to `brand/review/`, gitignored; phone chrome, copy and label text on them are mock context,
 never part of a master):

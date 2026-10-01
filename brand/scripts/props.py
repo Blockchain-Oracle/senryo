@@ -3,7 +3,7 @@ badges. Every function returns markup in local coordinates (the caller places it
 import math
 import random
 
-from kit import FOIL, GOLD, INK, LACQUER, WHITE, Canvas, carved_seal, embed, flake, n, pts, ramp, rrect
+from kit import FOIL, GOLD, INK, LACQUER, WHITE, Canvas, carved_seal, embed, flake, mix, n, pts, ramp, rrect
 
 CARD_RATIO = 85.6 / 54  # ISO/IEC 7810 ID-1
 CARD_CORNER = 3.18 / 85.6  # corner radius as a share of the width
@@ -178,6 +178,26 @@ def sparkle(x: float, y: float, r: float, fill: str, opacity=1.0, deg=0.0) -> st
         f"M0 {n(-r)}Q{n(k)} {n(-k)} {n(r)} 0Q{n(k)} {n(k)} 0 {n(r)}Q{n(-k)} {n(k)} {n(-r)} 0Q{n(-k)} {n(-k)} 0 {n(-r)}Z"
     )
     return f'<path transform="translate({n(x)} {n(y)}) rotate({n(deg)})" d="{d}" fill="{fill}" opacity="{n(opacity)}"/>'
+
+
+def glint(x: float, y: float, r: float, tone: str, deg: float = 0.0) -> str:
+    """A sparkle that holds on either theme's ground: a toned glint with a paler core."""
+    return sparkle(x, y, r, tone, 0.95, deg) + sparkle(x, y, r * 0.45, mix(tone, WHITE, 0.6), 0.95, deg)
+
+
+def taper(points, width: float, power: float = 0.8) -> str:
+    """A streak of light along a polyline: a filled outline widest at its middle and drawn out to nothing at both
+    ends, so it reads as light caught, never as a drawn line."""
+    last = len(points) - 1
+    outer, inner = [], []
+    for i, (px, py) in enumerate(points):
+        (ox, oy), (qx, qy) = points[max(i - 1, 0)], points[min(i + 1, last)]
+        length = math.hypot(qx - ox, qy - oy) or 1
+        nx, ny = -(qy - oy) / length, (qx - ox) / length
+        w = width / 2 * math.sin(math.pi * i / last) ** power
+        outer.append((px + nx * w, py + ny * w))
+        inner.append((px - nx * w, py - ny * w))
+    return pts(outer + inner[::-1])
 
 
 def rivets(points, r: float, c: Canvas) -> str:
