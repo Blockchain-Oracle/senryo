@@ -13,7 +13,7 @@ import {
   PREFS_VERSION,
   type SessionSettings,
 } from "@senryo/account";
-import { ApiError, prefsDeleteRoute, prefsGetRoute, prefsPutRoute } from "@senryo/api-client";
+import { ApiError, prefsDeleteRoute, prefsGetRoute, prefsPutRoute, socialDeleteRoute } from "@senryo/api-client";
 import { activeNetwork } from "~/lib/network";
 import { api, withSession } from "./api";
 import { parseSettings } from "./settings";
@@ -64,9 +64,16 @@ export async function pullPrefs(client: AccountClient, local: SessionSettings): 
   return isLoosening(local, synced, defaultFaceIdMode(activeNetwork().key)) ? undefined : synced;
 }
 
-/** F09: remove the encrypted prefs from the server (needs the live session to authenticate). */
-export async function deleteRemotePrefs(client: AccountClient, faceId: FaceId): Promise<void> {
+/**
+ * F09: remove what Senryo keeps for this account (needs the live session to authenticate, one unlock at most): the
+ * encrypted prefs, then the social data (S12b, D-217). The profile, posts, likes, follows, blocks, mutes and own
+ * reports are deleted; the handle stays held 30 days so nobody can take it over.
+ */
+export async function deleteRemoteData(client: AccountClient, faceId: FaceId): Promise<void> {
   const address = client.session.live()?.address;
-  await withSession(client, faceId, () => api().call(prefsDeleteRoute, {}));
+  await withSession(client, faceId, async () => {
+    await api().call(prefsDeleteRoute, {});
+    await api().call(socialDeleteRoute, {});
+  });
   if (address) versions.delete(address.toLowerCase());
 }
