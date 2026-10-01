@@ -16,11 +16,14 @@ export function TicketSummary({
   preview,
   freeToTradeUsd6,
   feeBps,
+  priceDecimals,
 }: {
   notionalUsd6: bigint;
   preview: IncreasePreview | undefined;
   freeToTradeUsd6: bigint | undefined;
   feeBps: bigint;
+  /** The market's display precision (`priceDecimalsOf`). */
+  priceDecimals: number;
 }) {
   const { color } = useTheme();
   const after = preview?.freeToTradeAfter;
@@ -31,7 +34,7 @@ export function TicketSummary({
       ? preview
         ? "none above $0"
         : "—"
-      : `${price18(liq)}${away === null || away === undefined ? "" : ` · ${pct(away < 0n ? -away : away)} ${away < 0n ? "past" : "away"}`}`;
+      : `${price18(liq, priceDecimals)}${away === null || away === undefined ? "" : ` · ${pct(away < 0n ? -away : away)} ${away < 0n ? "past" : "away"}`}`;
   return (
     <View style={styles.row}>
       <View style={styles.rows}>

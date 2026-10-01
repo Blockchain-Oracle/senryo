@@ -10,7 +10,7 @@ import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { MarginGauge } from "~/components/trade/MarginGauge";
 import { STATUS_CHIP, statusTone } from "~/features/markets/session";
 import { TradeTrace } from "~/features/trade/TradeTrace";
-import { pct, price18, signedUsd, usd } from "~/lib/money";
+import { pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { BLOCK_MS_ESTIMATE, REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "./constants";
@@ -80,14 +80,14 @@ export function PositionDetail({ marketId }: { marketId: number }) {
           <View style={styles.rows}>
             <KeyValue label="SIZE" value={`${formatUnits(position.size, DECIMALS.e18, SIZE_DECIMALS)} oz`} />
             <KeyValue label="NOTIONAL" value={usd(p.currentNotionalUsd6)} />
-            <KeyValue label="ENTRY" value={price18(position.entry)} />
-            <KeyValue label="ORACLE" value={price18(m.pv.price18)} />
+            <KeyValue label="ENTRY" value={price18(position.entry, priceDecimalsOf(marketId))} />
+            <KeyValue label="ORACLE" value={price18(m.pv.price18, priceDecimalsOf(marketId))} />
             <KeyValue
               label="LIQ"
               value={
                 health.liqPrice18 === null
                   ? "none above $0"
-                  : `${price18(health.liqPrice18)}${away === null ? "" : ` · ${away <= 0n ? "now" : `${pct(away)} away`}`}`
+                  : `${price18(health.liqPrice18, priceDecimalsOf(marketId))}${away === null ? "" : ` · ${away <= 0n ? "now" : `${pct(away)} away`}`}`
               }
               valueColor={away !== null && away <= 0n ? color.down : undefined}
             />
@@ -106,7 +106,7 @@ export function PositionDetail({ marketId }: { marketId: number }) {
         />
         {reduce ? (
           <>
-            <KeyValue label="EXIT PRICE" value={price18(reduce.execPrice18)} />
+            <KeyValue label="EXIT PRICE" value={price18(reduce.execPrice18, priceDecimalsOf(marketId))} />
             <KeyValue
               label={reduce.profitCapped ? "REALISED · CAPPED" : "REALISED"}
               value={signedUsd(reduce.realizedPnlUsd6)}
