@@ -12,8 +12,8 @@ import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 /**
- * Withdraw (J2): out of the account to your own wallet — the same passkey holds it. Sending to someone else's address
- * asks for a fresh passkey check and arrives with the send flow; cash-out to another chain arrives with intents.
+ * Withdraw (J2): out of the account to your own wallet — the same passkey holds it. Sending to someone else is the
+ * Send page (a fresh passkey check), one tap away; cash-out to another chain arrives with intents (Aurora, S9).
  */
 export default function WithdrawScreen() {
   const { color } = useTheme();
@@ -40,9 +40,16 @@ export default function WithdrawScreen() {
           {(snapshot) => <WithdrawToSelf snapshot={snapshot} />}
         </ReadingView>
       )}
+      {readOnly || !address ? null : (
+        <Button
+          label="Send to someone else"
+          variant="ghost"
+          size="sm"
+          onPress={() => router.push(ROUTES.withdrawSend)}
+        />
+      )}
       <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-        Sending to another address asks for a fresh passkey check and arrives with the send flow. Cash-out to another
-        chain arrives with intents.
+        Sending to someone else asks for a fresh passkey check. Cash-out to another chain arrives with intents.
       </Text>
     </Screen>
   );

@@ -10,6 +10,7 @@ import { ReadingView } from "~/components/kit/states";
 import { CARD_LIMIT_CHIPS_USD } from "~/features/card/constants";
 import { SpendLimit } from "~/features/card/SpendLimit";
 import { ALLOWANCE_DAYS, useCardAllowance } from "~/features/card/useCardAllowance";
+import { OutcomeNote, useOutcome } from "~/features/trade/OutcomeNote";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
@@ -29,8 +30,9 @@ export default function AllowanceScreen() {
   const [pick, setPick] = useState<bigint>(CARD_LIMIT_CHIPS_USD[1]);
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
   const card = useCardAllowance(snapshot);
-  const busy = card.trace.running;
-  const last = card.trace.events.at(-1)?.stage;
+  const { outcome, unresolved } = useOutcome(card.trace.events);
+  // An unconfirmed signed change keeps both actions locked: a second one could race the first.
+  const busy = card.trace.running || unresolved;
   if (!address) {
     return (
       <Screen contentStyle={styles.page}>
@@ -79,15 +81,7 @@ export default function AllowanceScreen() {
                   onPress={() => void card.freeze()}
                 />
               ) : null}
-              {card.done ? (
-                <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: color.up }]}>
-                  {card.done}
-                </Text>
-              ) : last === "failed" || last === "reverted" ? (
-                <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down }]}>
-                  That didn’t go through; nothing changed.
-                </Text>
-              ) : null}
+              {card.trace.running ? null : <OutcomeNote outcome={outcome} thing="limit change" success={card.done} />}
             </View>
           );
         }}

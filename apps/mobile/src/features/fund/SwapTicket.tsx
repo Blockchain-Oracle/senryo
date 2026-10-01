@@ -18,6 +18,7 @@ import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, useGroupFill } from "~/components/kit/Surface";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { COLLATERAL_STEPS_BPS } from "~/features/portfolio/constants";
+import { OutcomeNote, useOutcome } from "~/features/trade/OutcomeNote";
 import { fire } from "~/feedback/fire";
 import { pct, usd } from "~/lib/money";
 import { BUTTON, RADIUS, SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -30,6 +31,8 @@ export function SwapTicket({ snapshot }: { snapshot: AccountSnapshot }) {
   const { color } = useTheme();
   const env = useQueryEnv();
   const s = useCollateralSwap(snapshot);
+  // A signed swap that isn't confirmed yet keeps the button locked: a second one could swap twice.
+  const { outcome, unresolved } = useOutcome(s.trace.events);
   const to = s.from === "usdc" ? "ausd" : "usdc";
   const held = s.from === "usdc" ? snapshot.usdc : snapshot.ausd;
   const heldTo = to === "usdc" ? snapshot.usdc : snapshot.ausd;
@@ -67,15 +70,13 @@ export function SwapTicket({ snapshot }: { snapshot: AccountSnapshot }) {
           No quote right now. The pool may be busy; try again.
         </Text>
       ) : null}
-      {s.swapped ? (
-        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: color.up }]}>
-          Swapped · finalized. Your balances update in a moment.
-        </Text>
-      ) : null}
+      {s.busy ? null : (
+        <OutcomeNote outcome={outcome} thing="swap" success="Swapped · finalized. Your balances update in a moment." />
+      )}
       <Button
         label={s.busy ? "Swapping…" : `Swap ${SYMBOL[s.from]} for ${SYMBOL[to]}`}
         loading={s.busy}
-        disabled={s.busy || !s.q || s.amountIn === 0n || !s.ready}
+        disabled={s.busy || unresolved || !s.q || s.amountIn === 0n || !s.ready}
         onPress={() => void s.swap()}
       />
     </View>

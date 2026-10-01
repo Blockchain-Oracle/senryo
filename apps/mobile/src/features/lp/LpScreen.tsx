@@ -8,6 +8,7 @@ import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { Panel } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
+import { OutcomeNote, useOutcome } from "~/features/trade/OutcomeNote";
 import { ROUTES } from "~/lib/constants/routes";
 import { pct, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
@@ -31,10 +32,9 @@ export function LpScreen() {
   const lp = useLp();
   const [depositUsd6, setDepositUsd6] = useState<bigint>(LP_DEPOSIT_CHIPS_USD[1] * ONE_USD6);
   const [redeemBps, setRedeemBps] = useState<bigint>(LP_REDEEM_STEPS_BPS[2]);
-  const busy = lp.trace.running;
-  const last = lp.trace.events.at(-1)?.stage;
-  const failed = last === "failed" || last === "reverted";
-  const finalized = !busy && last === "finalized";
+  const { outcome, unresolved } = useOutcome(lp.trace.events);
+  // A signed LP send that isn't confirmed yet locks the page's actions too: repeating it could deposit twice.
+  const busy = lp.trace.running || unresolved;
   const nowSec = BigInt(Date.now()) / MS_PER_SECOND;
   const practice = network.key === "testnet";
 
@@ -183,15 +183,13 @@ export function LpScreen() {
                 ) : null}
               </Panel>
             ) : null}
-            {failed ? (
-              <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down }]}>
-                That didn’t go through; nothing changed.
-              </Text>
-            ) : finalized ? (
-              <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: color.up }]}>
-                Done · finalized. The pool updates in a moment.
-              </Text>
-            ) : null}
+            {lp.trace.running ? null : (
+              <OutcomeNote
+                outcome={outcome}
+                thing="transaction"
+                success="Done · finalized. The pool updates in a moment."
+              />
+            )}
           </View>
         );
       }}

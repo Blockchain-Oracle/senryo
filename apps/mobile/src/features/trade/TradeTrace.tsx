@@ -33,8 +33,8 @@ function seconds(ms: number): string {
 }
 
 /** Plain words for a failed send (simulation reverts carry the decoded contract error). */
-export function failureWords(error: unknown): string {
-  if (!(error instanceof Error)) return "The trade didn't go through";
+export function failureWords(error: unknown, thing = "trade"): string {
+  if (!(error instanceof Error)) return `The ${thing} didn't go through. Nothing was sent.`;
   const first = error.message.split("\n")[0] ?? "";
   if (/SlippageExceeded/.test(first)) return "The price moved past your limit. Nothing was sent.";
   if (/InsufficientFreeCollateral/.test(first)) return "Not enough Free to trade at the new price. Nothing was sent.";
@@ -44,13 +44,39 @@ export function failureWords(error: unknown): string {
   }
   if (/MinHoldNotElapsed/.test(first)) return "Profit can be taken a few seconds after opening. Nothing was sent.";
   if (/Cancel|cancel/.test(first)) return "Cancelled — nothing was signed.";
-  return first.length > 0 ? first : "The trade didn't go through";
+  return first.length > 0 ? first : `The ${thing} didn't go through. Nothing was sent.`;
 }
 
-const UNKNOWN_COPY =
-  "This order was signed, but its result isn’t confirmed yet. Don’t place it again: it settles on its own, and this screen updates when it does.";
-const LEAVE_COPY =
-  "You can leave this screen. The order is on its way and can’t be cancelled from here; its result shows on your position and when you reopen this ticket.";
+/**
+ * What a trace calls its operation, so every money screen shares one outcome contract (review S01) with its own
+ * nouns: a signed send that the watch lost is "not confirmed yet" exactly like an order, never "nothing moved".
+ */
+export interface TraceWords {
+  /** "order", "send", "withdrawal", "swap". */
+  thing: string;
+  /** What not to do while it's unknown: "place it again", "send it again". */
+  again: string;
+  /** Said when a lost watch is later confirmed to have landed. */
+  landed: string;
+  /** Said after a confirmed revert (gas was paid). */
+  reverted: string;
+  /** The action once it finalized, and after a failure that changed nothing. */
+  done: string;
+  back: string;
+  /** Said while it runs, about leaving the screen. */
+  leave: string;
+}
+
+export const ORDER_WORDS: TraceWords = {
+  thing: "order",
+  again: "place it again",
+  landed: "Confirmed: the order went through. Your position shows it.",
+  reverted: "The trade reverted onchain (gas was paid). Nothing else changed.",
+  done: "Done",
+  back: "Back to ticket",
+  leave:
+    "You can leave this screen. The order is on its way and can’t be cancelled from here; its result shows on your position and when you reopen this ticket.",
+};
 
 export function TradeTrace({
   events,
@@ -58,6 +84,7 @@ export function TradeTrace({
   outcome,
   onDone,
   onLeave,
+  words = ORDER_WORDS,
 }: {
   events: readonly TraceEvent[];
   running: boolean;
@@ -66,6 +93,8 @@ export function TradeTrace({
   onDone: () => void;
   /** Closes the screen without touching the trace (while running, or while the result is unknown). */
   onLeave: () => void;
+  /** The operation's nouns (default: an order). */
+  words?: TraceWords;
 }) {
   const { color } = useTheme();
   const start = events[0]?.at ?? Date.now();
@@ -103,7 +132,8 @@ export function TradeTrace({
       {hash ? <Text style={[TYPE.meta, { color: color.text3 }]}>Transaction {shortAddress(hash)}</Text> : null}
       {unknown ? (
         <Text accessibilityLiveRegion="polite" style={[TYPE.body, { color: color.warn }]}>
-          {UNKNOWN_COPY}
+          This {words.thing} was signed, but its result isn’t confirmed yet. Don’t {words.again}: it settles on its own,
+          and this screen updates when it does.
         </Text>
       ) : recovered ? (
         <Text
@@ -111,18 +141,18 @@ export function TradeTrace({
           style={[TYPE.body, { color: outcome === "finalized" ? color.up : color.down }]}
         >
           {outcome === "finalized"
-            ? "Confirmed: the order went through. Your position shows it."
+            ? words.landed
             : outcome === "reverted"
-              ? "Confirmed: the trade reverted onchain (gas was paid). Nothing else changed."
-              : "Confirmed: the trade never reached a block. Nothing changed; you can try again."}
+              ? `Confirmed: ${words.reverted.charAt(0).toLowerCase()}${words.reverted.slice(1)}`
+              : `Confirmed: the ${words.thing} never reached a block. Nothing changed; you can try again.`}
         </Text>
       ) : failed ? (
         <Text style={[TYPE.body, { color: color.down }]}>
           {failed.stage === "reverted"
-            ? "The trade reverted onchain (gas was paid). Nothing else changed."
+            ? words.reverted
             : failed.stage === "abandoned"
-              ? "The block carrying the trade was dropped. Nothing changed; you can try again."
-              : failureWords(failed.error)}
+              ? `The block carrying the ${words.thing} was dropped. Nothing changed; you can try again.`
+              : failureWords(failed.error, words.thing)}
         </Text>
       ) : null}
       {unknown ? (
@@ -132,14 +162,14 @@ export function TradeTrace({
       ) : settled || failed ? (
         <View style={styles.actions}>
           <Button
-            label={settled || outcome === "finalized" ? "Done" : "Back to ticket"}
+            label={settled || outcome === "finalized" ? words.done : words.back}
             variant={settled ? "primary" : "outline"}
             onPress={onDone}
           />
         </View>
       ) : running ? (
         <View style={styles.actions}>
-          <Text style={[TYPE.meta, { color: color.text2 }]}>{LEAVE_COPY}</Text>
+          <Text style={[TYPE.meta, { color: color.text2 }]}>{words.leave}</Text>
           <Button label="Leave this screen" variant="ghost" onPress={onLeave} />
         </View>
       ) : null}

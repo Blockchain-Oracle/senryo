@@ -1,28 +1,33 @@
 /**
  * Withdraw to your own wallet (D-039; in session scope): pick AUSD or USDC, a share of what can leave, and confirm.
  * What can leave is the lower of that token's balance and Free to trade (`maxWithdrawable`; the core re-checks). The
- * destination is the account's own address — the same passkey keeps the funds — so no extra check is asked. The result
- * is said once the transaction is finalized; a failure says nothing moved.
+ * destination is the account's own address — the same passkey keeps the funds — so no extra check is asked. The
+ * amount is typed exactly (presets fill it, review S02); once sent, the screen is the receipt of what was signed, on
+ * the shared outcome contract — a signed withdrawal still unknown is never "nothing moved" (S01) — until "Withdraw
+ * again" starts a fresh draft (S06).
  */
 import type { AccountSnapshot } from "@senryo/chain";
 import { positionCount } from "@senryo/config";
-import { RISK } from "@senryo/core";
 import { collateralId } from "@senryo/identity";
 import { type CollateralSymbol, maxWithdrawable, useQueryEnv, useSendTrace, withdrawRequest } from "@senryo/query";
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MarkedLine } from "~/components/identity/MarkedLine";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel } from "~/components/kit/Surface";
-import { COLLATERAL_STEPS_BPS as SHARES_BPS } from "~/features/portfolio/constants";
 import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 import { shortAddress } from "~/lib/format";
-import { pct, usd } from "~/lib/money";
+import { usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { AmountEntry } from "./AmountEntry";
+import { useAmountDraft } from "./amount-draft";
+import { type ExecutedMove, MoneyReceipt } from "./MoneyReceipt";
+import { WITHDRAW_WORDS } from "./words";
 
 const TOKENS = [
   { value: "AUSD", label: "AUSD" },
@@ -38,48 +43,53 @@ export function WithdrawToSelf({ snapshot }: { snapshot: AccountSnapshot }) {
   const gas = useEnsureGas();
   const address = account.hint?.address;
   const [symbol, setSymbol] = useState<CollateralSymbol>(snapshot.ausd >= snapshot.usdc ? "AUSD" : "USDC");
-  const [shareBps, setShareBps] = useState<bigint>(RISK.BPS);
-  /** What the last send moved, so its result line names it after the balances refresh. */
-  const [sent, setSent] = useState<{ amount: bigint; symbol: CollateralSymbol }>();
   const max = maxWithdrawable(snapshot, symbol);
-  const amount = (max * shareBps) / RISK.BPS;
+  const draft = useAmountDraft(max);
+  /** The withdrawal as it was signed — frozen, so a balance refresh never changes what the receipt says. */
+  const [executed, setExecuted] = useState<ExecutedMove>();
+  const amount = draft.amount;
   const held = symbol === "AUSD" ? snapshot.ausd : snapshot.usdc;
   const practice = network.key === "testnet";
-  const last = trace.events.at(-1)?.stage;
-  const busy = trace.running;
+  const ready = amount > 0n && !draft.over && account.client !== undefined;
   const send = async () => {
     const client = account.client;
-    if (!client || !address || amount <= 0n) return;
+    if (!client || !address || !ready) return;
     const request = withdrawRequest(env.chainId, symbol, amount, address, positionCount(snapshot.positionBitmap));
-    setSent({ amount, symbol });
+    setExecuted({
+      amount,
+      symbol,
+      chainId: env.chainId,
+      to: `Your wallet · ${shortAddress(address)}`,
+      network: network.name,
+      practice,
+    });
     await trace.run(userSender(client, address, account.settings.faceId), request, {
       preflight: gas.preflight(request),
     });
   };
+
+  // Once it is out, the screen is its receipt until it settles: no second withdrawal beside an unresolved one.
+  if (executed && (trace.running || trace.events.length > 0)) {
+    return (
+      <MoneyReceipt
+        move={executed}
+        events={trace.events}
+        running={trace.running}
+        words={WITHDRAW_WORDS}
+        onAgain={(fresh) => {
+          trace.reset();
+          setExecuted(undefined);
+          if (fresh) draft.reset();
+        }}
+        onLeave={() => router.back()}
+      />
+    );
+  }
+
   return (
     <View style={styles.stack}>
-      <View style={styles.hero}>
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>You withdraw</Text>
-        <Text
-          maxFontSizeMultiplier={HERO_FONT_SCALE}
-          adjustsFontSizeToFit
-          numberOfLines={1}
-          style={[TYPE.displayBalance, { color: color.ink }]}
-        >
-          {usd(amount)}
-        </Text>
-        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-          {symbol}
-          {practice ? " · test token" : ""} · up to {usd(max)} can leave now
-        </Text>
-      </View>
       <Segmented options={TOKENS} value={symbol} onChange={setSymbol} label="Token" />
-      <Segmented
-        options={SHARES_BPS.map((b) => ({ value: String(b), label: b >= RISK.BPS ? "All" : pct(b) }))}
-        value={String(shareBps)}
-        onChange={(v) => setShareBps(BigInt(v))}
-        label="How much"
-      />
+      <AmountEntry draft={draft} max={max} symbol={symbol} label="Amount to withdraw" />
       <Panel style={styles.rows}>
         <MarkedLine
           id={collateralId(env.chainId, symbol)}
@@ -96,19 +106,9 @@ export function WithdrawToSelf({ snapshot }: { snapshot: AccountSnapshot }) {
           The rest backs your open positions and holds; it can leave once they close.
         </Text>
       ) : null}
-      {last === "finalized" && !busy ? (
-        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: color.up }]}>
-          {sent ? `${usd(sent.amount)} ${sent.symbol} withdrawn` : "Withdrawn"} · finalized. It is in your wallet.
-        </Text>
-      ) : last === "failed" || last === "reverted" ? (
-        <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down }]}>
-          That didn’t go through; nothing moved.
-        </Text>
-      ) : null}
       <Button
-        label={busy ? "Withdrawing…" : `Withdraw ${usd(amount)} to your wallet`}
-        loading={busy}
-        disabled={busy || amount <= 0n || !account.client}
+        label={amount > 0n ? `Withdraw ${usd(amount)} to your wallet` : "Withdraw to your wallet"}
+        disabled={!ready}
         onPress={() => void send()}
       />
     </View>

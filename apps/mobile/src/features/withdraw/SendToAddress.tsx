@@ -3,11 +3,13 @@
  * The recipient is an address or an @handle resolved on this network; the review always shows the full resolved
  * address, the token, the network and the mode before anything is signed. A send outside the account is outside the
  * session's scope, so it runs behind a step-up (`requestStepUp` → `account.stepUp`, a one-shot signer). What can leave
- * is the lower of the token's balance and Free to trade; the core re-checks. The result is said once finalized.
+ * is the lower of the token's balance and Free to trade; the core re-checks. The amount is typed exactly (presets fill
+ * it, review S02); the request is frozen when it goes to the passkey check, and the screen becomes its receipt — the
+ * shared outcome contract, never "nothing moved" for a signed send that is still unknown (S01) — until a fresh draft
+ * starts with "Send another" (S06).
  */
 import type { AccountSnapshot } from "@senryo/chain";
 import { positionCount } from "@senryo/config";
-import { RISK } from "@senryo/core";
 import { collateralId } from "@senryo/identity";
 import { type CollateralSymbol, maxWithdrawable, useQueryEnv, useSendTrace, withdrawRequest } from "@senryo/query";
 import { router } from "expo-router";
@@ -17,7 +19,6 @@ import { MarkedLine } from "~/components/identity/MarkedLine";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel } from "~/components/kit/Surface";
-import { COLLATERAL_STEPS_BPS as SHARES_BPS } from "~/features/portfolio/constants";
 import { type FieldTone, SetupField } from "~/features/setup/SetupField";
 import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { fire } from "~/feedback/fire";
@@ -27,10 +28,14 @@ import { requestStepUp } from "~/lib/account/step-up";
 import { readClipboard } from "~/lib/clipboard";
 import { ROUTES } from "~/lib/constants/routes";
 import { shortAddress } from "~/lib/format";
-import { pct, usd } from "~/lib/money";
+import { usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { AmountEntry } from "./AmountEntry";
+import { useAmountDraft } from "./amount-draft";
+import { type ExecutedMove, MoneyReceipt } from "./MoneyReceipt";
 import { type Recipient, useRecipient } from "./useRecipient";
+import { SEND_WORDS } from "./words";
 
 const TOKENS = [
   { value: "AUSD", label: "AUSD" },
@@ -68,32 +73,56 @@ export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
   const [input, setInput] = useState("");
   const recipient = useRecipient(input);
   const [symbol, setSymbol] = useState<CollateralSymbol>(snapshot.ausd >= snapshot.usdc ? "AUSD" : "USDC");
-  const [shareBps, setShareBps] = useState<bigint>(SHARES_BPS[0]);
-  const [sent, setSent] = useState<{ amount: bigint; symbol: CollateralSymbol; to: string }>();
   const max = maxWithdrawable(snapshot, symbol);
-  const amount = (max * shareBps) / RISK.BPS;
+  const draft = useAmountDraft(max);
+  /** The request as it went to the passkey check — frozen, so a balance refresh never changes what was sent. */
+  const [executed, setExecuted] = useState<ExecutedMove>();
+  const amount = draft.amount;
   const self = recipient.status === "ready" && me !== undefined && recipient.address.toLowerCase() === me.toLowerCase();
   const line = recipientLine(recipient, self);
-  const ready = recipient.status === "ready" && !self && amount > 0n;
+  const ready = recipient.status === "ready" && !self && amount > 0n && !draft.over;
   const practice = network.key === "testnet";
-  const busy = trace.running;
-  const last = trace.events.at(-1)?.stage;
 
   const send = async () => {
-    if (recipient.status !== "ready" || !account.client) return;
+    if (recipient.status !== "ready" || !account.client || !ready) return;
     const to = recipient.address;
     const name = recipient.handle ? `@${recipient.handle}` : shortAddress(to);
     const request = withdrawRequest(env.chainId, symbol, amount, to, positionCount(snapshot.positionBitmap));
-    setSent({ amount, symbol, to: name });
+    const move: ExecutedMove = { amount, symbol, chainId: env.chainId, to: name, network: network.name, practice };
     await requestStepUp(
       {
         title: `Send ${usd(amount)} ${symbol}`,
         detail: `To ${recipient.handle ? `@${recipient.handle} · ` : ""}${to} on ${network.name}${practice ? " (practice money)" : ""}. Sends outside your account always ask for a fresh passkey check.`,
         confirmLabel: "Send with passkey",
       },
-      () => account.stepUp((signer) => trace.run(stepUpSender(signer), request, { preflight: gas.preflight(request) })),
+      () =>
+        account.stepUp((signer) => {
+          setExecuted(move);
+          return trace.run(stepUpSender(signer), request, { preflight: gas.preflight(request) });
+        }),
     );
   };
+
+  // Once it is out, the screen is its receipt until it settles: no second send can start beside an unresolved one.
+  if (executed && (trace.running || trace.events.length > 0)) {
+    return (
+      <MoneyReceipt
+        move={executed}
+        events={trace.events}
+        running={trace.running}
+        words={SEND_WORDS}
+        onAgain={(fresh) => {
+          trace.reset();
+          setExecuted(undefined);
+          if (fresh) {
+            draft.reset();
+            setInput("");
+          }
+        }}
+        onLeave={() => router.back()}
+      />
+    );
+  }
 
   return (
     <View style={styles.stack}>
@@ -114,28 +143,8 @@ export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
         tone={line.tone}
         input={{ autoCapitalize: "none", maxLength: RECIPIENT_MAX, returnKeyType: "done" }}
       />
-      <View style={styles.hero}>
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>You send</Text>
-        <Text
-          maxFontSizeMultiplier={HERO_FONT_SCALE}
-          adjustsFontSizeToFit
-          numberOfLines={1}
-          style={[TYPE.displayBalance, { color: color.ink }]}
-        >
-          {usd(amount)}
-        </Text>
-        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-          {symbol}
-          {practice ? " · test token" : ""} · up to {usd(max)} can leave now
-        </Text>
-      </View>
       <Segmented options={TOKENS} value={symbol} onChange={setSymbol} label="Token" />
-      <Segmented
-        options={SHARES_BPS.map((b) => ({ value: String(b), label: b >= RISK.BPS ? "All" : pct(b) }))}
-        value={String(shareBps)}
-        onChange={(v) => setShareBps(BigInt(v))}
-        label="How much"
-      />
+      <AmountEntry draft={draft} max={max} symbol={symbol} label="Amount to send" />
       <Panel style={styles.rows}>
         <MarkedLine id={collateralId(env.chainId, symbol)} label={symbol} value={usd(amount)} size={SIZE.markToken} />
         <KeyValue
@@ -151,19 +160,13 @@ export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
         <KeyValue label="Network" value={network.name} />
         <KeyValue label="Money" value={practice ? "Practice · paper money" : "Mainnet · real money"} />
       </Panel>
-      {last === "finalized" && !busy && sent ? (
-        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: color.up }]}>
-          {usd(sent.amount)} {sent.symbol} sent to {sent.to} · finalized.
-        </Text>
-      ) : last === "failed" || last === "reverted" ? (
-        <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down }]}>
-          That didn’t go through; nothing moved.
-        </Text>
-      ) : null}
+      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
+        {symbol}
+        {practice ? " · test token" : ""}. The amount above is what the passkey check signs.
+      </Text>
       <Button
-        label={busy ? "Sending…" : "Review and send"}
-        loading={busy}
-        disabled={busy || !ready}
+        label={amount > 0n ? `Review and send ${usd(amount)}` : "Review and send"}
+        disabled={!ready}
         onPress={() => {
           fire("press");
           void send();

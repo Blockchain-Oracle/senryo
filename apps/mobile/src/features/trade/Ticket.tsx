@@ -3,10 +3,8 @@ import { useCandles } from "@senryo/query";
 import { ChartCandlestick, Grid3x3, Info, SlidersHorizontal } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated from "react-native-reanimated";
 import { CandleChart } from "~/components/charts/CandleChart";
 import { EmptyState, ReadingView, Skeleton } from "~/components/kit/states";
-import { usePressScale } from "~/components/kit/usePressScale";
 import { Keypad } from "~/components/trade/Keypad";
 import { LeverageRuler } from "~/components/trade/LeverageRuler";
 import { Preset } from "~/components/trade/Preset";
@@ -14,17 +12,7 @@ import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { moneySymbol, pct, price18, priceDecimalsOf, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import {
-  BUTTON,
-  CONTROL_FONT_SCALE,
-  DISABLED_OPACITY,
-  HERO_FONT_SCALE,
-  RADIUS,
-  SIZE,
-  SPACE,
-  TYPE,
-  useTheme,
-} from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useCandleStyle } from "./candle-style";
 import { AMOUNT_CHIPS_USD } from "./constants";
 import { usePlannedTriggers } from "./planned-triggers";
