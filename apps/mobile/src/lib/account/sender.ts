@@ -5,7 +5,14 @@
  * (`kvJournal`, capped) so an app kill mid-send is reconciled on the next launch by `recoverJournal` (S8.24) — read
  * only, on each entry's own chain, never re-broadcast.
  */
-import { type AccountClient, type Address, type FaceIdMode, type PolicyContext, queuedNonces } from "@senryo/account";
+import {
+  type AccountClient,
+  type Address,
+  type FaceIdMode,
+  type LocalAccount,
+  type PolicyContext,
+  queuedNonces,
+} from "@senryo/account";
 import {
   createReadClient,
   createSender,
@@ -86,6 +93,24 @@ export function userSender(
     nonces: sharedNonces(chainId),
     journal,
     // The same quote the gas budget uses (D-171): what the ticket checks is exactly what gets signed.
+    fees: userFeeCache(read),
+  });
+}
+
+/**
+ * A sender for a one-shot, unscoped signer from a step-up ceremony (`account.stepUp`): sends outside the session's
+ * scope (to someone else's address). It shares the app's read client, nonce counter, journal and fee quote, so the
+ * send is journalled and recovered like any other; the signer ends when the ceremony's callback returns.
+ */
+export function stepUpSender(signer: LocalAccount): Sender {
+  const chainId = activeNetwork().chainId;
+  const read = sharedRead(chainId);
+  return createSender({
+    chainId,
+    account: signer,
+    read,
+    nonces: sharedNonces(chainId),
+    journal,
     fees: userFeeCache(read),
   });
 }

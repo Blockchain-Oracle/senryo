@@ -1,5 +1,4 @@
 import { canonicalVoucherCode } from "@senryo/account";
-import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -10,6 +9,7 @@ import { SetupField } from "~/features/setup/SetupField";
 import { useVoucher, type VoucherPhase } from "~/features/setup/useVoucher";
 import { fire } from "~/feedback/fire";
 import type { StarterErrorCode } from "~/lib/account/starter";
+import { readClipboard } from "~/lib/clipboard";
 import { usd } from "~/lib/money";
 import { SPACE } from "~/theme";
 
@@ -66,8 +66,7 @@ function Body() {
         placeholder="Voucher code"
         action={{
           label: "Paste",
-          onPress: () =>
-            void Clipboard.getStringAsync().then((t) => setCode(t.trim().toUpperCase().slice(0, VOUCHER_MAX))),
+          onPress: () => void readClipboard().then((t) => setCode(t.trim().toUpperCase().slice(0, VOUCHER_MAX))),
         }}
         {...(message ? { message } : {})}
         tone={phase.kind === "done" ? "good" : phase.kind === "failed" ? "bad" : "quiet"}

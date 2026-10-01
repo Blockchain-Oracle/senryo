@@ -1,5 +1,4 @@
 import { canonicalVoucherCode } from "@senryo/account";
-import * as Clipboard from "expo-clipboard";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/kit/Button";
 import { SetupField } from "~/features/setup/SetupField";
@@ -8,6 +7,7 @@ import { useSetupNav } from "~/features/setup/useSetupNav";
 import { useVoucher } from "~/features/setup/useVoucher";
 import { fire } from "~/feedback/fire";
 import type { StarterErrorCode } from "~/lib/account/starter";
+import { readClipboard } from "~/lib/clipboard";
 import { usd } from "~/lib/money";
 
 const VOUCHER_MAX = 32;
@@ -86,8 +86,7 @@ export default function VoucherStep() {
         placeholder="Voucher code"
         action={{
           label: "Paste",
-          onPress: () =>
-            void Clipboard.getStringAsync().then((t) => setCode(t.trim().toUpperCase().slice(0, VOUCHER_MAX))),
+          onPress: () => void readClipboard().then((t) => setCode(t.trim().toUpperCase().slice(0, VOUCHER_MAX))),
         }}
         {...(message ? { message } : {})}
         tone={phase.kind === "done" ? "good" : phase.kind === "failed" ? "bad" : "quiet"}

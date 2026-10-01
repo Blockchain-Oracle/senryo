@@ -1,19 +1,17 @@
 import { SEARCH_QUERY_MAX_CHARS } from "@senryo/api-client";
-import * as Clipboard from "expo-clipboard";
 import { X } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
-import { countingPrompts } from "~/lib/account/system-prompt";
+import { readClipboard } from "~/lib/clipboard";
 import { DOCK, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /** The field's height: the app's input height (F31 measures 49 pt). */
 export const SEARCH_FIELD_HEIGHT = SIZE.inputHeight;
 
 /** iOS asks before a paste; counted as the app's own prompt, the privacy plate stays down behind it. */
-const clipboard = countingPrompts({ read: () => Clipboard.getStringAsync() });
 
 /**
  * The search field (Fomo F31): a pill-shaped filled field floating low on the page — above the dock, and above the
@@ -36,7 +34,7 @@ export function SearchField({
     transform: [{ translateY: -Math.max(0, keyboard.height.value + SPACE.sm - bottom) }],
   }));
   const paste = async () => {
-    const text = (await clipboard.read()).trim();
+    const text = (await readClipboard()).trim();
     if (text) onChange(text.slice(0, SEARCH_QUERY_MAX_CHARS));
   };
   return (
