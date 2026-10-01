@@ -63,6 +63,7 @@ export function TokenChart({ token, priceUsd18 }: { token: SpotToken; priceUsd18
                   formatTime={(ms) => axisTimeLabel(chosen.axis, ms)}
                   {...(priceUsd18 ? { last: { value: priceUsd18, label: tokenPrice(priceUsd18) } } : {})}
                   candles={plotted}
+                  pannable
                 />
               </Animated.View>
             )

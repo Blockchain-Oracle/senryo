@@ -9,7 +9,7 @@ import {
 } from "@shopify/react-native-skia";
 import { useMemo } from "react";
 import { View } from "react-native";
-import { Candlestick, type CandlestickOptionsFn, CartesianChart } from "victory-native";
+import { Candlestick, type CandlestickOptionsFn, CartesianChart, useChartTransformState } from "victory-native";
 import { clockTime } from "~/lib/format";
 import { toPlot } from "~/lib/money";
 import { SIZE, useTheme } from "~/theme";
@@ -56,6 +56,7 @@ export function CandleChart({
   axisDecimals = 0,
   axisPrefix = "",
   formatTime = clockTime,
+  pannable = false,
 }: {
   candles: ChartCandle[];
   decimals: number;
@@ -65,6 +66,11 @@ export function CandleChart({
   axisDecimals?: number;
   axisPrefix?: string;
   formatTime?: (ms: number) => string;
+  /**
+   * FT096 (F32/F35 reframing): open on the newest `CHART.panVisible` candles and drag sideways through the rest. The
+   * drag starts only on a clearly horizontal move, so the page around it still scrolls.
+   */
+  pannable?: boolean;
 }) {
   const { color } = useTheme();
   const up = style?.palette === "cyanRose" ? color.chart3 : color.chartUp;
@@ -103,6 +109,10 @@ export function CandleChart({
         return { body: { color: tone, opacity: style.body ? 1 : 0 }, wick: { color: tone } };
       }
     : undefined;
+  const transform = useChartTransformState();
+  const pan = pannable && data.length > CHART.panVisible;
+  const firstShown = pan ? data[data.length - CHART.panVisible] : undefined;
+  const lastShown = data[data.length - 1];
   if (candles.length < CHART.minPoints) return null;
   const newest = data[data.length - 1];
   const rising = lastAt !== undefined && newest !== undefined && lastAt >= newest.open;
@@ -120,6 +130,20 @@ export function CandleChart({
         padding={{ left: CHART.padLeft, right: CHART.padRight }}
         domainPadding={{ top: CHART.padTop, bottom: CHART.padTop, left: CHART.padLeft, right: CHART.padRight }}
         {...(domain ? { domain } : {})}
+        {...(pan && firstShown && lastShown
+          ? {
+              viewport: { x: [firstShown.t, lastShown.t] as [number, number] },
+              transformState: transform.state,
+              transformConfig: {
+                pan: {
+                  dimensions: "x" as const,
+                  activeOffsetX: [-CHART.panSlop, CHART.panSlop] as [number, number],
+                  failOffsetY: [-CHART.panSlop, CHART.panSlop] as [number, number],
+                },
+                pinch: { enabled: false },
+              },
+            }
+          : {})}
         xAxis={{
           font,
           tickCount: CHART.timeTicks,

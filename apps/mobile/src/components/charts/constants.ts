@@ -8,6 +8,10 @@ export const CHART = {
   padRight: 6,
   timeTicks: 5,
   minPoints: 2,
+  /** A pannable chart opens on this many newest candles (F32 shows about this many on a phone). */
+  panVisible: 96,
+  /** Horizontal travel (pt) before a drag pans the chart; vertical travel past it hands the touch to the page. */
+  panSlop: 12,
   axisFontSize: 10,
   yTicks: 4,
   /** Candle body width as a fraction of the slot. */

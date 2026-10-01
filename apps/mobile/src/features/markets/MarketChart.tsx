@@ -68,6 +68,7 @@ export function MarketChart({ line }: { line: MarketLine }) {
                   formatTime={(ms) => axisTimeLabel(chosen.axis, ms)}
                   last={{ value: line.price18, label: `$${price18(line.price18, decimals)}` }}
                   candles={plotted}
+                  pannable
                 />
               </Animated.View>
             )
