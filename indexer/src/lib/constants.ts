@@ -14,7 +14,10 @@ export const TEN = 10n;
 export const WAD = TEN ** 18n;
 /** size (1e18) × price (1e18) = usd36 → usd6 */
 export const SIZE_PRICE_TO_USD6 = TEN ** 30n;
-/** Chainlink XAU/USD and XAG/USD answers (8 decimals; read onchain 2026-09-30) and the testnet mirrors (D-055). */
+/**
+ * Chainlink XAU/USD and XAG/USD answers (8 decimals; read onchain 2026-09-30), the testnet mirrors (D-055) and the
+ * calculated equity feeds (8 decimals, read 2026-10-01).
+ */
 export const FEED_DECIMALS = 8;
 /** Chainlink FX answers on Monad (EUR/GBP/JPY/CHF/CAD / USD: 18 decimals, read onchain 2026-09-30) and their mirrors. */
 export const FX_FEED_DECIMALS = 18;
@@ -97,8 +100,17 @@ export const CHAINLINK_PROXIES: ReadonlyArray<{ proxy: `0x${string}`; symbol: Fe
   { proxy: "0xf64664ea54ce47ecc7a1816c49d1bc6def828927", symbol: "JPY" },
   { proxy: "0x6dba7f3a7b5b7c1079337104cad14d19150f6b8d", symbol: "CHF" },
   { proxy: "0x3293ea5650e9f8c4091642b7eb1c46cfee5197ca", symbol: "CAD" },
+  // Calculated tokenized-equity feeds (D-220; packages/config CALCULATED_EQUITIES, description() read 2026-10-01).
+  { proxy: "0x2e2da5717ede960f8b77af4cfcbdc4ca3099006d", symbol: "wSPYx" },
+  { proxy: "0x7ca45b17d8d43059a222dec5d991b613f61c02d9", symbol: "wQQQx" },
+  { proxy: "0x03ffa4673c060339e6a8e5ba1a12b3301c966bf0", symbol: "wNVDAx" },
+  { proxy: "0xe42022cce1913626ae4297b99291d3ba24cc9281", symbol: "wTSLAx" },
+  { proxy: "0x7577154038de77668d0188baf47707edcd86d0b3", symbol: "wSPCXx" },
+  { proxy: "0x54d1645f9c1338f63407fa64156eced9e195ab25", symbol: "wEWYx" },
 ];
-export type FeedSymbol = "XAU" | "XAG" | "EUR" | "GBP" | "JPY" | "CHF" | "CAD";
+/** Calculated wrapper feeds keep the wrapper's symbol as their id: the price is wSPYx's, not SPY's. */
+export type EquityFeedSymbol = "wSPYx" | "wQQQx" | "wNVDAx" | "wTSLAx" | "wSPCXx" | "wEWYx";
+export type FeedSymbol = "XAU" | "XAG" | "EUR" | "GBP" | "JPY" | "CHF" | "CAD" | EquityFeedSymbol;
 /** Answer decimals per feed (the price is stored at 1e18). */
 export const FEED_DECIMALS_OF: Readonly<Record<FeedSymbol, number>> = {
   XAU: FEED_DECIMALS,
@@ -108,4 +120,10 @@ export const FEED_DECIMALS_OF: Readonly<Record<FeedSymbol, number>> = {
   JPY: FX_FEED_DECIMALS,
   CHF: FX_FEED_DECIMALS,
   CAD: FX_FEED_DECIMALS,
+  wSPYx: FEED_DECIMALS,
+  wQQQx: FEED_DECIMALS,
+  wNVDAx: FEED_DECIMALS,
+  wTSLAx: FEED_DECIMALS,
+  wSPCXx: FEED_DECIMALS,
+  wEWYx: FEED_DECIMALS,
 };

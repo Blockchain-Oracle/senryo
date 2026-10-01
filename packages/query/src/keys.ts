@@ -27,6 +27,10 @@ export const keys = {
     ["spot", MAINNET_CHAIN_ID, "quote", symbol, side, amountIn, slippageBps] as const,
   spotCandles: (symbol: string, interval: number) => ["spot", MAINNET_CHAIN_ID, "candles", symbol, interval] as const,
   spotStats: (tokens: string) => ["spot", MAINNET_CHAIN_ID, "stats", tokens] as const,
+  /** Read-only discovery (S03): mainnet data in either mode, so the chain is always 143. */
+  discoveryQuotes: (group: "perpl" | "feeds", ids: string) =>
+    ["discovery", MAINNET_CHAIN_ID, "quotes", group, ids] as const,
+  discoveryCandles: (id: string, interval: number) => ["discovery", MAINNET_CHAIN_ID, "candles", id, interval] as const,
   /** Under the mainnet account key, so a finalized swap's account invalidation refreshes the holdings. */
   spotHoldings: (address: Address, tokens: string) =>
     ["account", MAINNET_CHAIN_ID, address.toLowerCase(), "spot", tokens] as const,

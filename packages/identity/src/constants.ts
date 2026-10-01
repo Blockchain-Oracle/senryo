@@ -1,5 +1,4 @@
 /** Identity data constants: external chain ids, venue market ids and token addresses the entity table is keyed by. */
-import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
 
 /** External EVM chains shown in funding routes (EIP-155 ids). */
 export const EXTERNAL_CHAIN_IDS = { ethereum: 1, base: 8453, arbitrum: 42161, bnb: 56, polygon: 137 } as const;
@@ -21,11 +20,8 @@ export const USDC_ELSEWHERE = {
   solanaMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
 } as const;
 
-/** Perpl market ids per network (live `/v1/pub/context`, context/08-integrations/agora-ausd-and-perpl.md). */
-export const PERPL_MARKETS: Readonly<Record<number, Readonly<Record<string, number>>>> = {
-  [MAINNET_CHAIN_ID]: { BTC: 1, MON: 10, ETH: 20, SOL: 31, HYPE: 40, ZEC: 50, LIT: 60, VVV: 70, PUMP: 90 },
-  [TESTNET_CHAIN_ID]: { BTC: 16, ETH: 32, SOL: 48, MON: 64, ZEC: 256, LIT: 272, PUMP: 320, NEAR: 336 },
-};
+/** Perpl market ids per network: the registry lives in `@senryo/config` (`perpl.ts`), shared with discovery. */
+export { PERPL_MARKETS } from "@senryo/config";
 
 // --- EntityMark layout (shared by native and web) ---
 

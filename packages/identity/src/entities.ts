@@ -8,6 +8,7 @@ import {
   type EngineSymbol,
   MAINNET_CHAIN_ID,
   MAINNET_EXTERNAL,
+  PERPL_ASSET_NAMES,
   SPOT_TOKENS,
   TESTNET_CHAIN_ID,
 } from "@senryo/config";
@@ -34,18 +35,21 @@ const ENGINE_ART: Readonly<Record<EngineSymbol, string>> = {
   CAD: "fx-cad-usd",
 };
 
-/** Crypto assets by ticker: display name and artwork key (undefined = no artwork on file, see `gap`). */
-const CRYPTO: Readonly<Record<string, { name: string; art?: string; gap?: string }>> = {
-  BTC: { name: "Bitcoin", art: "bitcoin" },
-  ETH: { name: "Ether", art: "ethereum" },
-  SOL: { name: "Solana", art: "solana" },
-  MON: { name: "Monad", art: "monad" },
-  HYPE: { name: "Hyperliquid", art: "hyperliquid" },
-  ZEC: { name: "Zcash", art: "zcash" },
-  LIT: { name: "Lighter", art: "lighter" },
-  VVV: { name: "Venice", art: "venice" },
-  PUMP: { name: "Pump", art: "pump" },
-  NEAR: { name: "NEAR", art: "near" },
+/**
+ * Crypto assets by ticker: artwork key (undefined = no artwork on file, see `gap`); display names come with the Perpl
+ * registry (`PERPL_ASSET_NAMES`).
+ */
+const CRYPTO: Readonly<Record<string, { art?: string; gap?: string }>> = {
+  BTC: { art: "bitcoin" },
+  ETH: { art: "ethereum" },
+  SOL: { art: "solana" },
+  MON: { art: "monad" },
+  HYPE: { art: "hyperliquid" },
+  ZEC: { art: "zcash" },
+  LIT: { art: "lighter" },
+  VVV: { art: "venice" },
+  PUMP: { art: "pump" },
+  NEAR: { art: "near" },
 };
 
 const network = (id: string, name: string, art: string, practice = false): Entity => ({
@@ -115,7 +119,7 @@ function perplRows(): Entity[] {
       const practice = Number(chainId) === TESTNET_CHAIN_ID;
       return {
         id: ids.perplMarket(Number(chainId), marketId),
-        name: asset?.name ?? symbol,
+        name: PERPL_ASSET_NAMES[symbol] ?? symbol,
         symbol,
         role: "asset",
         instrument: "perp",
