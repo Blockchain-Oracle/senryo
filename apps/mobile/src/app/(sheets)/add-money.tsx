@@ -6,6 +6,7 @@ import { MarkCluster } from "~/components/identity/MarkCluster";
 import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetRoute } from "~/components/sheet/SheetRoute";
 import { SheetRow } from "~/components/sheet/SheetRow";
+import { TintBadge } from "~/features/markets/LeverageBadge";
 import { useAccount } from "~/lib/account/provider";
 import { type StarterPhase, useStarter } from "~/lib/account/use-starter";
 import { fundQrRoute, ROUTES } from "~/lib/constants/routes";
@@ -18,6 +19,8 @@ interface Route {
   detail: string;
   href: Href;
   marks: readonly string[];
+  /** Not open on this network: the row says so before it is tapped (review "Add money"), and its page explains. */
+  soon?: { badge: string; line: string };
 }
 
 /** Where money comes from, per network (direction §6: Practice has paper money; Mainnet real routes only). */
@@ -33,18 +36,21 @@ function routesOn(chainId: number, practice: boolean): Route[] {
     detail: "Base, Ethereum, Arbitrum and more",
     href: fundQrRoute("evm"),
     marks: [ROUTE_CHAIN_ID.base, ROUTE_CHAIN_ID.ethereum, ROUTE_CHAIN_ID.arbitrum],
+    soon: { badge: "Soon", line: "Not open yet · arrives with cross-chain intents" },
   };
   const wallet: Route = {
     title: "From a wallet",
     detail: "Approve an intent with Face ID",
     href: ROUTES.fundWallet,
     marks: [ids.provider("aurora")],
+    soon: { badge: "Soon", line: "Not open yet · arrives with cross-chain intents" },
   };
   const swap: Route = {
     title: "Swap USDC ↔ AUSD",
     detail: "Uniswap v4 on Monad",
     href: ROUTES.fundSwap,
     marks: [collateralId(chainId, "USDC"), collateralId(chainId, "AUSD")],
+    ...(practice ? { soon: { badge: "Mainnet", line: "Mainnet only · the test network has no pool" } } : {}),
   };
   return practice ? [monad, otherChain, swap] : [monad, otherChain, wallet, swap];
 }
@@ -73,7 +79,8 @@ function claimDetail(phase: StarterPhase): string | undefined {
  * F20 Add-money hub (C33): one tap away from the fan, Home and the empty states. Filled rows with the real marks of
  * what each route moves through at the trailing edge. Practice leads with the free claim — it runs right here, its
  * second line following the claim — then a voucher (a child sheet, F21), receiving on Monad, other chains and the
- * swap. Mainnet has no claim. A route that opens a page closes the sheet first; back returns to the page under it.
+ * swap. Mainnet has no claim. A route not open on this network says so in its row ("Soon" and why) before it is tapped.
+ * A route that opens a page closes the sheet first; back returns to the page under it.
  */
 export default function AddMoneySheet() {
   const network = useNetwork();
@@ -111,13 +118,20 @@ function Options({ practice }: { practice: boolean }) {
           key={o.title}
           index={index++}
           title={o.title}
-          detail={o.detail}
+          detail={o.soon?.line ?? o.detail}
+          {...(o.soon ? { badge: <SoonBadge text={o.soon.badge} /> } : {})}
           trailing={<MarkCluster ids={o.marks} size={SIZE.markCell} />}
           onPress={() => open(o.href)}
         />
       ))}
     </>
   );
+}
+
+/** The quiet plate beside a route that isn't open on this network ("Soon", "Mainnet"). */
+function SoonBadge({ text }: { text: string }) {
+  const { color } = useTheme();
+  return <TintBadge text={text} ink={color.text2} fill={color.raised2} label={`${text}: not open here`} />;
 }
 
 function GiftMark() {
