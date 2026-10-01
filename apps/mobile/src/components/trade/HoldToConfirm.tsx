@@ -127,6 +127,17 @@ export function HoldToConfirm({
     return () => sub.remove();
   }, [cancel]);
 
+  // Unmount (the ticket closed or navigated away mid-hold) voids the attempt: no queued completion may confirm an
+  // order whose screen is gone (review R02). The timer is the Reduce Motion path, the animation the default one.
+  useEffect(
+    () => () => {
+      attempt.current += 1;
+      clearTimeout(timer.current);
+      cancelAnimation(progress);
+    },
+    [progress],
+  );
+
   const fill = useAnimatedStyle(() => ({ width: `${progress.value * PERCENT}%` }));
 
   return (

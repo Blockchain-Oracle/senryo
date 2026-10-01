@@ -69,6 +69,7 @@ export function WelcomeActions() {
         onRetry={() => void retry()}
         onSignIn={() => void signIn()}
         onCreate={() => void create()}
+        onBack={() => setPhase({ kind: "idle" })}
       />
     );
   }

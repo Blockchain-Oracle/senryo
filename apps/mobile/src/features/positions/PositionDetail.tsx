@@ -1,5 +1,6 @@
 import { DECIMALS, formatUnits } from "@senryo/core";
 import { ids } from "@senryo/identity";
+import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { VenueChip } from "~/components/identity/VenueChip";
@@ -9,6 +10,7 @@ import { EmptyState, LoadingState } from "~/components/kit/states";
 import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { MarginGauge } from "~/components/trade/MarginGauge";
 import { STATUS_CHIP, statusTone } from "~/features/markets/session";
+import { useSettledOutcome } from "~/features/trade/send-outcome";
 import { TradeTrace } from "~/features/trade/TradeTrace";
 import { pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
@@ -31,8 +33,17 @@ export function PositionDetail({ marketId }: { marketId: number }) {
   const network = useNetwork();
   const { color } = useTheme();
   const p = usePosition(marketId);
+  const outcome = useSettledOutcome(p.trace.events);
   if (p.trace.events.length > 0) {
-    return <TradeTrace events={p.trace.events} running={p.trace.running} onDone={() => p.trace.reset()} />;
+    return (
+      <TradeTrace
+        events={p.trace.events}
+        running={p.trace.running}
+        outcome={outcome}
+        onDone={() => p.trace.reset()}
+        onLeave={() => router.back()}
+      />
+    );
   }
   if (p.loading) return <LoadingState shape="plate" label="Reading the position" />;
   if (!p.position || !p.market || !p.health) {

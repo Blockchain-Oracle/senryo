@@ -9,6 +9,7 @@ import { type AccountClient, type Address, type FaceIdMode, type PolicyContext, 
 import {
   createReadClient,
   createSender,
+  type JournalEntry,
   type KvStore,
   kvJournal,
   LocalNonceSource,
@@ -87,6 +88,14 @@ export function userSender(
     // The same quote the gas budget uses (D-171): what the ticket checks is exactly what gets signed.
     fees: userFeeCache(read),
   });
+}
+
+/**
+ * The send journal as it stands (settled entries stay SETTLED_KEEP_MS). A screen whose live watch lost a signed tx
+ * reads its true outcome here once TxRecovery has reconciled it, instead of guessing or sending again.
+ */
+export function journalEntries(): Promise<JournalEntry[]> {
+  return journal.list();
 }
 
 export interface Recovered {

@@ -32,10 +32,11 @@ import {
   useSendTrace,
 } from "@senryo/query";
 import { onlineManager } from "@tanstack/react-query";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { applyKey, type KeypadKey } from "~/components/trade/Keypad";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
+import { activeNetwork } from "~/lib/network";
 import { draftKey, type Side, useTicketDraft } from "./draft";
 import { useGasTopUp } from "./useGasTopUp";
 
@@ -122,11 +123,26 @@ export function useTicket(market: LiveMarket) {
     simulationRevert: simulationRevert instanceof Error ? simulationRevert.message.split("\n")[0] : undefined,
   });
 
+  // What the ticket is showing right now, readable after an await (review R02): a confirmed order may only be sent
+  // while its screen is still mounted on the same network and account it was reviewed on.
+  const live = useRef({ mounted: true, address });
+  live.current.address = address;
+  useEffect(() => {
+    live.current.mounted = true;
+    return () => {
+      live.current.mounted = false;
+    };
+  }, []);
+
   const submit = async () => {
     const client = account.client;
     if (!client || !address || !preview || !snapshot) return undefined;
     // Short on gas → top up first, then continue this same hold (never a dead-end "Adding gas…"; S8.16c).
     if (gasShort && needWei !== undefined && !(await topUp.run(needWei)).ok) return undefined;
+    // The top-up can take seconds. If the ticket closed, or the mode or account changed meanwhile, the reviewed
+    // intent is gone: nothing is signed, and a fresh hold is required.
+    const now = live.current;
+    if (!now.mounted || now.address !== address || activeNetwork().chainId !== env.chainId) return undefined;
     const sender = userSender(client, address, account.settings.faceId, {
       marketRoomUsd6: (id, long) =>
         id === market.marketId ? capHeadroomUsd6(market.risk, market.book, market.pv, long) : undefined,

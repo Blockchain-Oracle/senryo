@@ -120,7 +120,7 @@ function RiskRow({ t, line, onChild }: { t: TicketModel; line: MarketLine; onChi
       <Pressable onPress={() => onChild("tpsl")} accessibilityRole="button" style={[styles.riskCell, styles.end]}>
         <Text style={[TYPE.meta, { color: color.text3 }]}>Stop Loss / Take Profit</Text>
         <Text style={[TYPE.rowStrong, { color: t.amountText === "" && !t.held ? color.text3 : color.link }]}>
-          {t.held ? "Manage current position" : "Add SL/TP"}
+          {t.held ? "Protect current position" : "SL/TP after opening"}
         </Text>
       </Pressable>
     </View>

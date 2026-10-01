@@ -22,3 +22,5 @@ export const QUANTITY_DECIMALS = 4;
 export const TRIGGER_SUGGESTIONS_BPS = [1_000n, 1_500n, 2_500n, 5_000n] as const;
 /** TP/SL percent input: two decimals of a percent, i.e. 1 bp resolution. */
 export const PERCENT_DECIMALS = 2;
+/** How often a screen waiting on an unresolved send re-reads the journal (TxRecovery settles entries behind it). */
+export const JOURNAL_POLL_MS = 3_000;

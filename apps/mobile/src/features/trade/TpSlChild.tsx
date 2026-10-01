@@ -1,26 +1,19 @@
-import type { PositionView, TxRequest } from "@senryo/chain";
-import { previewDecrease, RISK } from "@senryo/core";
-import {
-  cancelTriggerRequest,
-  type LiveMarket,
-  placeTriggerRequest,
-  triggerOrder,
-  useQueryEnv,
-  useSendTrace,
-  useTriggers,
-} from "@senryo/query";
+import type { PositionView } from "@senryo/chain";
+import { ENGINE_MARKETS } from "@senryo/config";
+import { DECIMALS, formatUnits, previewDecrease, RISK } from "@senryo/core";
+import type { LiveMarket } from "@senryo/query";
 import { X } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { usePosition } from "~/features/positions/usePosition";
 import { fire } from "~/feedback/fire";
-import { useAccount } from "~/lib/account/provider";
-import { userSender } from "~/lib/account/sender";
 import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { TRIGGER_SUGGESTIONS_BPS } from "./constants";
+import { QUANTITY_DECIMALS, TRIGGER_SUGGESTIONS_BPS } from "./constants";
+import { TriggerInput } from "./TriggerInput";
 import {
   bpsFromPrice,
   isAbove,
@@ -32,15 +25,19 @@ import {
   type TriggerKind,
   triggerProblem,
 } from "./tpsl";
-import { useEnsureGas } from "./useGasTopUp";
+import { EMPTY_FIELD, type TriggerField, useTriggerDraft } from "./tpsl-draft";
+import { LEG_NAME, type LegMessage, legMessage, removalMessage, skippedMessage } from "./trigger-legs";
+import { type TriggerLevel, useTriggerLegs } from "./useTriggerLegs";
 
 const TITLE = "Stop loss and take profit";
-const SUBTITLE = "Auto close the position when it hits your price target.";
+const SUBTITLE = "Auto close the position you hold when it hits your price target.";
+const KINDS: readonly TriggerKind[] = ["sl", "tp"];
 
 /**
  * The TP/SL child (FT110–FT112, C42, F44/F45/M15; Codex S1b.7 consult #2). It works on the position already held in
- * this market: the order being entered opens without SL/TP, and attaching levels to a not-yet-open order is a logic
- * change left to the lead. With no position it explains that and returns to the order; it never offers a pretend Save.
+ * this market, and says so before any field (review R05): the order being entered opens without SL/TP. With no
+ * position it explains that and returns to the order; it never offers a pretend Save. Each level is its own
+ * transaction with its own outcome (review R01, `useTriggerLegs`).
  */
 export function TpSlChild({
   open,
@@ -84,9 +81,6 @@ function Explainer({ kind, body }: { kind: string; body: string }) {
   );
 }
 
-type Field = { price: string; percent: string };
-const EMPTY: Field = { price: "", percent: "" };
-
 function HeldTriggers({
   market,
   position,
@@ -97,19 +91,19 @@ function HeldTriggers({
   onDone: () => void;
 }) {
   const { color } = useTheme();
-  const env = useQueryEnv();
-  const account = useAccount();
-  const address = account.hint?.address;
+  const network = useNetwork();
   const p = usePosition(market.marketId);
-  const triggers = useTriggers(address);
-  const trace = useSendTrace();
-  const gas = useEnsureGas();
-  const [fields, setFields] = useState<Record<TriggerKind, Field>>({ sl: EMPTY, tp: EMPTY });
+  const legs = useTriggerLegs(market, position);
+  const [{ fields, attempted }, setDraft] = useTriggerDraft(legs.scope);
+  const setField = (kind: TriggerKind, field: TriggerField) =>
+    setDraft((d) => ({ ...d, fields: { ...d.fields, [kind]: field } }));
   const [focus, setFocus] = useState<TriggerKind | undefined>();
   const mark = market.pv.price18;
   const decimals = priceDecimalsOf(market.marketId);
   const liq = p.health?.liqPrice18;
   const side = position.isLong ? "Long" : "Short";
+  const symbol = ENGINE_MARKETS.find((m) => m.id === market.marketId)?.symbol ?? "";
+  const toneColor = { up: color.up, down: color.down, warn: color.warn, muted: color.text3 } as const;
 
   const priceOf = (kind: TriggerKind) => parsePrice(fields[kind].price);
   const problemOf = (kind: TriggerKind) => {
@@ -129,59 +123,35 @@ function HeldTriggers({
 
   const setPrice = (kind: TriggerKind, text: string) => {
     const value = parsePrice(text);
-    setFields((f) => ({ ...f, [kind]: { price: text, percent: value ? percentText(bpsFromPrice(mark, value)) : "" } }));
+    setField(kind, { price: text, percent: value ? percentText(bpsFromPrice(mark, value)) : "" });
   };
   const setPercent = (kind: TriggerKind, text: string) => {
     const bps = parsePercent(text);
     const value = bps === undefined ? undefined : priceFromBps(mark, bps, kind, position.isLong);
-    setFields((f) => ({
-      ...f,
-      [kind]: { percent: text, price: value !== undefined && value > 0n ? priceText(value, decimals) : "" },
-    }));
+    setField(kind, { percent: text, price: value !== undefined && value > 0n ? priceText(value, decimals) : "" });
   };
-  const clear = (kind: TriggerKind) => setFields((f) => ({ ...f, [kind]: EMPTY }));
+  const clear = (kind: TriggerKind) => setField(kind, EMPTY_FIELD);
 
-  const entered = (["sl", "tp"] as const).filter((k) => priceOf(k) !== undefined);
+  const entered = KINDS.filter((k) => priceOf(k) !== undefined);
   const valid = entered.length > 0 && entered.every((k) => problemOf(k) === undefined);
-  const busy = trace.running;
-  const failed = trace.events.find((e) => e.stage === "failed" || e.stage === "reverted" || e.stage === "abandoned");
-  const saved = !busy && !failed && trace.events.some((e) => e.stage === "finalized");
+  const busy = legs.busy;
+  const saved = !busy && attempted.length > 0 && attempted.every((k) => legs.states[k] === "saved");
 
-  const send = async (build: () => Promise<TxRequest>) => {
-    const client = account.client;
-    if (!client || !address) return;
-    const sender = userSender(client, address, account.settings.faceId);
-    const request = await build().catch(() => undefined);
-    if (request) await trace.run(sender, request, { preflight: gas.preflight(request) });
-  };
   const save = async () => {
     fire("press");
-    for (const kind of entered) {
+    const levels = entered.flatMap((kind): TriggerLevel[] => {
       const value = priceOf(kind);
-      const client = account.client;
-      if (value === undefined || !client || !address) continue;
-      await send(async () =>
-        placeTriggerRequest(
-          userSender(client, address, account.settings.faceId),
-          triggerOrder({
-            user: address,
-            marketId: market.marketId,
-            isLong: position.isLong,
-            takeProfit: kind === "tp",
-            triggerPrice18: value,
-            sizeDelta: position.size,
-          }),
-        ),
-      );
-    }
-    setFields({ sl: EMPTY, tp: EMPTY });
+      return value === undefined ? [] : [{ kind, price18: value }];
+    });
+    setDraft((d) => ({ ...d, attempted: levels.map((l) => l.kind) }));
+    // Only a level whose own transaction finalized leaves its field; anything else stays typed for the retry. The
+    // draft lives outside this component, so this also holds when the child was closed before the save finished.
+    await legs.save(levels, (kind) => setField(kind, EMPTY_FIELD));
   };
+  const noteOf = (kind: TriggerKind): LegMessage | undefined =>
+    legs.skipped?.kind === kind ? skippedMessage(kind, legs.skipped.blocker) : legMessage(kind, legs.states[kind]);
+  const removal = removalMessage(legs.removing);
 
-  const marketKey = `ours-${market.marketId}`;
-  const active =
-    triggers.status === "fresh" || triggers.status === "stale"
-      ? triggers.value.filter((t) => t.market_id === marketKey)
-      : [];
   const suggestions = focus
     ? TRIGGER_SUGGESTIONS_BPS.filter((bps) => {
         const value = priceFromBps(mark, bps, focus, position.isLong);
@@ -194,11 +164,24 @@ function HeldTriggers({
 
   return (
     <>
-      <Text style={[TYPE.meta, { color: color.text2 }]}>
-        Applies to your current {side} position. Size is fixed when signed; additional size is not included. Oracle
-        price ${price18(mark, decimals)}.
-      </Text>
-      {active.map((t) => (
+      <View style={[styles.identity, { borderColor: color.border }]} accessible accessibilityRole="text">
+        <Text style={[TYPE.rowStrong, { color: color.ink }]}>
+          {market.name} · {side} · {formatUnits(position.size, DECIMALS.e18, QUANTITY_DECIMALS)} {symbol}
+        </Text>
+        <Text style={[TYPE.meta, { color: color.text2 }]}>
+          {network.modeLabel} · your current position only. The size is fixed when you save; an order you are still
+          entering is not covered. Oracle price ${price18(mark, decimals)}.
+        </Text>
+      </View>
+      {legs.pending.map((t) => (
+        <Text key={t.hash} style={[TYPE.meta, { color: color.warn }]}>
+          {t.action === "remove"
+            ? "A removal is still being confirmed."
+            : `${t.leg ? LEG_NAME[t.leg] : "A level"}${t.price18 === undefined ? "" : ` at $${price18(t.price18, decimals)}`} is still being confirmed.`}{" "}
+          Saving is paused until it settles, so nothing is placed twice.
+        </Text>
+      ))}
+      {legs.active.map((t) => (
         <View key={t.id} style={[styles.active, { borderColor: color.border }]}>
           <Text style={[TYPE.rowAmount, styles.flex, { color: t.takeProfit ? color.up : color.down }]}>
             {t.takeProfit ? "Take profit" : "Stop loss"} · ${price18(t.triggerPrice, decimals)}
@@ -208,14 +191,16 @@ function HeldTriggers({
             size="sm"
             variant="outline"
             block={false}
-            disabled={busy}
-            onPress={() => void send(async () => cancelTriggerRequest(env.chainId, t.id as `0x${string}`))}
+            disabled={busy || legs.blocked}
+            onPress={() => void legs.remove(t.id)}
           />
         </View>
       ))}
-      {(["sl", "tp"] as const).map((kind) => {
+      {removal ? <Text style={[TYPE.meta, { color: toneColor[removal.tone] }]}>{removal.text}</Text> : null}
+      {KINDS.map((kind) => {
         const value = priceOf(kind);
         const problem = problemOf(kind);
+        const note = noteOf(kind);
         const sign = isAbove(kind, position.isLong) ? "+" : "−";
         return (
           <View key={kind} style={styles.group}>
@@ -223,7 +208,7 @@ function HeldTriggers({
               <Text style={[TYPE.rowStrong, styles.kind, { color: color.ink }]}>
                 {kind === "sl" ? "Stop loss" : "Take profit"}
               </Text>
-              <Input
+              <TriggerInput
                 value={fields[kind].price}
                 placeholder={kind === "sl" ? "SL price" : "TP price"}
                 prefix="$"
@@ -231,7 +216,7 @@ function HeldTriggers({
                 onFocus={() => setFocus(kind)}
                 label={`${kind === "sl" ? "Stop loss" : "Take profit"} price`}
               />
-              <Input
+              <TriggerInput
                 value={fields[kind].percent}
                 placeholder="0"
                 prefix={sign}
@@ -252,21 +237,24 @@ function HeldTriggers({
                 <Text style={[TYPE.meta, { color: color.text3 }]}>Clear</Text>
               </Pressable>
             </View>
+            {note ? (
+              <Text accessibilityLiveRegion="polite" style={[TYPE.meta, styles.note, { color: toneColor[note.tone] }]}>
+                {note.text}
+              </Text>
+            ) : null}
           </View>
         );
       })}
       {liq === undefined || liq === null ? (
         <Text style={[TYPE.meta, { color: color.warn }]}>Liquidation check unavailable.</Text>
       ) : null}
-      {failed ? (
-        <Text style={[TYPE.meta, { color: color.down }]}>That didn’t go through; nothing changed.</Text>
-      ) : saved ? (
+      {saved ? (
         <Text style={[TYPE.meta, { color: color.up }]}>Saved onchain · finalized. Keepers watch the oracle.</Text>
       ) : null}
       <Button
         label={busy ? "Saving…" : "Save changes"}
         loading={busy}
-        disabled={!valid || busy || !account.client}
+        disabled={!valid || busy || legs.blocked || !legs.ready}
         onPress={() => void save()}
       />
       {saved ? <Button label="Back to order" variant="ghost" onPress={onDone} /> : null}
@@ -310,48 +298,9 @@ function problemText(problem: NonNullable<ReturnType<typeof triggerProblem>>, is
   }
 }
 
-function Input({
-  value,
-  placeholder,
-  prefix,
-  suffix,
-  onChange,
-  onFocus,
-  label,
-}: {
-  value: string;
-  placeholder: string;
-  prefix?: string;
-  suffix?: string;
-  onChange: (text: string) => void;
-  onFocus: () => void;
-  label: string;
-}) {
-  const { color } = useTheme();
-  const [focused, setFocused] = useState(false);
-  return (
-    <View style={[styles.input, { backgroundColor: color.raised2, borderColor: focused ? color.ring : color.border }]}>
-      {prefix ? <Text style={[TYPE.rowAmount, { color: color.text3 }]}>{prefix}</Text> : null}
-      <TextInput
-        value={value}
-        onChangeText={(text) => onChange(text.replace(",", "."))}
-        placeholder={placeholder}
-        placeholderTextColor={color.text3}
-        keyboardType="decimal-pad"
-        accessibilityLabel={label}
-        onFocus={() => {
-          setFocused(true);
-          onFocus();
-        }}
-        onBlur={() => setFocused(false)}
-        style={[TYPE.rowAmount, styles.text, { color: color.ink }]}
-      />
-      {suffix ? <Text style={[TYPE.rowAmount, { color: color.text3 }]}>{suffix}</Text> : null}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
+  identity: { gap: SPACE.xxs, paddingBottom: SPACE.sm, borderBottomWidth: HAIRLINE_PX },
+  note: { paddingLeft: SIZE.avatarXl + SPACE.lg + SPACE.sm },
   explainer: { gap: SPACE.xxs, paddingVertical: SPACE.sm, borderBottomWidth: HAIRLINE_PX },
   active: {
     flexDirection: "row",
@@ -364,17 +313,6 @@ const styles = StyleSheet.create({
   group: { gap: SPACE.xs },
   fieldRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   kind: { width: SIZE.avatarXl + SPACE.lg },
-  input: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: SIZE.inputHeight,
-    paddingHorizontal: SPACE.md,
-    borderRadius: RADIUS.sm,
-    borderWidth: HAIRLINE_PX,
-    gap: SPACE.xxs,
-  },
-  text: { flex: 1, paddingVertical: SPACE.xs },
   resultRow: { flexDirection: "row", alignItems: "center", paddingLeft: SIZE.avatarXl + SPACE.lg + SPACE.sm },
   clear: { flexDirection: "row", alignItems: "center", gap: SPACE.xxs, minHeight: SIZE.touch },
   suggestions: { flexDirection: "row", gap: SPACE.sm },

@@ -1,3 +1,4 @@
+import { X } from "lucide-react-native";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef } from "react";
 import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -25,8 +26,11 @@ export function useTransactionClose(): (after?: () => void) => void {
  * reconstruction, Gorhom deferred to J2): an opaque panel that rises over its dimmed parent on the tall-detail spring
  * (1/240/30, M07/M08/M13) to just below the status bar, with a handle and fixed identity / entry / action zones laid
  * out by its children. Only the handle and identity zone drag (the keypad and the ruler keep their gestures); a drag past a
- * quarter of the height or a flick dismisses, as do the scrim, Android back and `useTransactionClose`. Reduce Motion:
- * a ~100 ms crossfade. `locked` holds it open while a transaction is in flight (the trace stays attached).
+ * quarter of the height or a flick dismisses, as do the visible close button beside the handle (review R06: the sheet
+ * is nearly full height, so the scrim and the drag are not discoverable enough on their own), the scrim, Android back
+ * and `useTransactionClose`. Reduce Motion: a ~100 ms crossfade. `locked` holds it open while a transaction is in
+ * flight (the trace stays attached): the close button, drag, scrim and back are off, and the content offers its own
+ * explicit "leave" that says what leaving does and doesn't do.
  */
 export function TransactionSheet({
   onClose,
@@ -129,12 +133,28 @@ export function TransactionSheet({
         >
           <GestureDetector gesture={pan}>
             <View>
-              <View
-                style={styles.handleZone}
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-              >
-                <View style={[styles.handle, { backgroundColor: color.sheetHandle }]} />
+              <View style={styles.handleZone}>
+                {locked ? (
+                  <View style={styles.close} />
+                ) : (
+                  <Pressable
+                    onPress={() => close()}
+                    accessibilityRole="button"
+                    accessibilityLabel={closeLabel}
+                    hitSlop={SPACE.xs}
+                    style={styles.close}
+                  >
+                    <X size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.text2} />
+                  </Pressable>
+                )}
+                <View
+                  style={styles.handleSlot}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                >
+                  <View style={[styles.handle, { backgroundColor: color.sheetHandle }]} />
+                </View>
+                <View style={styles.close} />
               </View>
               {header}
             </View>
@@ -157,6 +177,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: RADIUS.lg,
     overflow: "hidden",
   },
-  handleZone: { alignItems: "center", paddingTop: SPACE.sm, paddingBottom: SPACE.sm },
+  handleZone: { flexDirection: "row", alignItems: "center", paddingHorizontal: SPACE.sm },
+  handleSlot: { flex: 1, alignItems: "center" },
+  close: { width: SIZE.touch, height: SIZE.touch, alignItems: "center", justifyContent: "center" },
   handle: { width: SIZE.handleWidth, height: SIZE.handleHeight, borderRadius: RADIUS.pill },
 });

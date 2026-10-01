@@ -15,6 +15,7 @@ import { positionRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE } from "~/theme";
+import { useSettledOutcome } from "./send-outcome";
 import { type EntryMode, type TicketChild, TicketEntry } from "./Ticket";
 import { CandleSettings, LiquidationInfo, ReviewOrder } from "./TicketChildren";
 import { TicketFooter } from "./TicketFooter";
@@ -147,7 +148,11 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
   return (
     <View style={styles.fill}>
       <TransactionSheet
-        onClose={() => router.back()}
+        onClose={() => {
+          // Closing after a finished trade starts the next ticket clean; a draft or an unresolved trace is kept.
+          if (settled) t.trace.reset();
+          router.back();
+        }}
         closeLabel="Close the order ticket"
         locked={t.trace.running}
         header={
@@ -166,9 +171,7 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
           settled && order ? (
             <Receipt order={order} t={t} onShare={() => setChild("share")} marketId={line.marketId} />
           ) : (
-            <View style={styles.pad}>
-              <TradeTrace events={t.trace.events} running={t.trace.running} onDone={() => t.trace.reset()} />
-            </View>
+            <PendingTrace t={t} />
           )
         ) : (
           <>
@@ -205,6 +208,26 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
           hash={t.trace.events.find((e) => e.hash)?.hash}
         />
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * The trace while the order runs or after it failed. Leaving closes the sheet and keeps the trace (it is keyed outside
+ * React), so the order continues and reopening the ticket shows where it got to; nothing is cancelled or resent.
+ */
+function PendingTrace({ t }: { t: ReturnType<typeof useTicket> }) {
+  const close = useTransactionClose();
+  const outcome = useSettledOutcome(t.trace.events);
+  return (
+    <View style={styles.pad}>
+      <TradeTrace
+        events={t.trace.events}
+        running={t.trace.running}
+        outcome={outcome}
+        onDone={() => t.trace.reset()}
+        onLeave={() => close()}
+      />
     </View>
   );
 }

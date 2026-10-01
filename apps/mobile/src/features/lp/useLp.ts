@@ -4,7 +4,7 @@
  * claim — each through the scoped signer (LpVault is in scope) with the trace of the step in flight.
  */
 
-import { addressOf } from "@senryo/chain";
+import { addressOf, type TxRequest } from "@senryo/chain";
 import { type Address, notional, RISK } from "@senryo/core";
 import {
   lpApproveRequest,
@@ -43,7 +43,7 @@ export function useLp() {
   const utilisationBps =
     snapshot && snapshot.totalAssets > 0n ? (openNotional * RISK.BPS) / snapshot.totalAssets : undefined;
 
-  const run = async (build: (from: Address) => Parameters<typeof trace.run>[1]) => {
+  const run = async (build: (from: Address) => TxRequest) => {
     const client = account.client;
     if (!client || !address) return undefined;
     const request = build(address);

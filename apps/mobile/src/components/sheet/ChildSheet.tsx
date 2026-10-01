@@ -1,6 +1,6 @@
 import { ChevronLeft } from "lucide-react-native";
 import { type ReactNode, useEffect, useState } from "react";
-import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, {
   useAnimatedKeyboard,
   useAnimatedStyle,
@@ -17,8 +17,10 @@ import { EASE, ELEVATION, RADIUS, SIZE, SPACE, SPRING, TIMING, TYPE, useTheme } 
 /**
  * A nested child over a transaction sheet (sheet grammar §5.5: "nested child — explicit back, keyboard-aware"; C42,
  * F43–F45, M15): the parent stays mounted and dimmed behind it with every value kept (FT112), the child rises on the
- * compact-selector spring (1/260/30) to its content height and lifts with the native keyboard. Back, the scrim and
- * Android back all close it; Reduce Motion crossfades. Render it inside the screen that owns the parent sheet.
+ * compact-selector spring (1/260/30) to its content height and lifts with the native keyboard. It never grows past
+ * the space between the status bar and the keyboard: beyond that its body scrolls, so a long list of levels, large
+ * text or a small phone can't push the title or the action off screen (review R08). Back, the scrim and Android back
+ * all close it; Reduce Motion crossfades. Render it inside the screen that owns the parent sheet.
  */
 export function ChildSheet({
   open,
@@ -35,6 +37,7 @@ export function ChildSheet({
 }) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const reduce = useReducedMotion();
   const keyboard = useAnimatedKeyboard();
   const [mounted, setMounted] = useState(open);
@@ -74,6 +77,9 @@ export function ChildSheet({
       { translateY: (reduce ? 0 : (1 - progress.value) * (height.value + insets.bottom)) - keyboard.height.value },
     ],
   }));
+  const bound = useAnimatedStyle(() => ({
+    maxHeight: windowHeight - insets.top - SPACE.lg - keyboard.height.value,
+  }));
   const pad = useAnimatedStyle(() => ({
     paddingBottom: Math.max(SPACE.lg, insets.bottom + SPACE.sm - keyboard.height.value),
   }));
@@ -95,7 +101,7 @@ export function ChildSheet({
         onLayout={(e) => {
           height.value = e.nativeEvent.layout.height;
         }}
-        style={[styles.panel, ELEVATION.sheet, { backgroundColor: color.popover }, panel]}
+        style={[styles.panel, ELEVATION.sheet, { backgroundColor: color.popover }, panel, bound]}
       >
         <View style={styles.handleZone} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           <View style={[styles.handle, { backgroundColor: color.sheetHandle }]} />
@@ -121,7 +127,16 @@ export function ChildSheet({
           </View>
           <View style={styles.back} />
         </View>
-        <Animated.View style={[styles.body, pad]}>{children}</Animated.View>
+        <Animated.View style={[styles.bodyWrap, pad]}>
+          <ScrollView
+            contentContainerStyle={styles.body}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {children}
+          </ScrollView>
+        </Animated.View>
       </Animated.View>
     </View>
   );
@@ -142,5 +157,6 @@ const styles = StyleSheet.create({
   back: { width: SIZE.touch, height: SIZE.touch, alignItems: "center", justifyContent: "center" },
   titles: { flex: 1, gap: SPACE.xxs },
   center: { textAlign: "center" },
+  bodyWrap: { flexShrink: 1 },
   body: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.md },
 });
