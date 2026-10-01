@@ -692,5 +692,165 @@ export const FETCHED_ART: readonly ArtSource[] = [
         }
       }
     }
+  },
+  {
+    "key": "tokenlist-gho",
+    "owner": "Gho Token (GHO) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/GHO",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/GHO/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". GHO is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-gho/gho-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/GHO/logo.svg",
+        "sha256": "f6f26f74576a4a7a7c34737e07ada96cb62fb452e9b1e3d165b09e993324b84c",
+        "viewBox": "0 0 300 300",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "tokenlist-usdt0",
+    "owner": "USDT0 (USDT0) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/USDT0",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/USDT0/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". USDT0 is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-usdt0/usdt0-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/USDT0/logo.svg",
+        "sha256": "daa6f5c226f22195d2051c70eb135a1ce91499908951ceb16e344b66eb12b62d",
+        "viewBox": "0 0 256 256",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "tokenlist-wbtc",
+    "owner": "Wrapped BTC (WBTC) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/WBTC",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/WBTC/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". WBTC is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-wbtc/wbtc-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/WBTC/logo.svg",
+        "sha256": "f0fad73d38a9c2c31983c38c701d602d3211b431044e962179a6240d95dbfecf",
+        "viewBox": "0 0 510.29 510.29",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "tokenlist-weth",
+    "owner": "Wrapped Ether (WETH) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/WETH",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/WETH/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". WETH is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-weth/weth-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/WETH/logo.svg",
+        "sha256": "adef4ea6a6b0424c0955dfea7e1f8f4a245e2dcd938e10203b36ab53fcbea78b",
+        "viewBox": "0 0 256 256",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "tokenlist-cbbtc",
+    "owner": "Coinbase Wrapped BTC (cbBTC) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/cbBTC",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/cbBTC/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". cbBTC is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-cbbtc/cbbtc-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/cbBTC/logo.svg",
+        "sha256": "0876ab3c9315c942fc8e44ee896671f903fa2af964b1773e51753e12116f69bb",
+        "viewBox": "0 0 256 256",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "tokenlist-musd",
+    "owner": "MetaMask USD (mUSD) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/mUSD",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/mUSD/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". mUSD is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-musd/musd-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/mUSD/logo.svg",
+        "sha256": "7ea6d3584ae67e61a68c0cd81cc7e55e158dd676c5f2066ae0f4b3e1864659bb",
+        "viewBox": "0 0 1024 1024",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "tokenlist-shmon",
+    "owner": "ShMonad (shMON) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/shMON",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/shMON/logo.png at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". shMON is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-shmon/shmon-token-monad-tokenlist.png",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/shMON/logo.png",
+        "sha256": "650ab7e32534153cb1cf758cac791a2c1903d77e0e0c6e85db4c577b56e9eaa2",
+        "viewBox": "0 0 256 256",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "tokenlist-syrupusdc",
+    "owner": "Syrup USDC (syrupUSDC) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/syrupUSDC",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/syrupUSDC/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". syrupUSDC is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-01",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-syrupusdc/syrupusdc-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/syrupUSDC/logo.svg",
+        "sha256": "0900f08fd81ca879c9195678678375a023f037b2465841508e8eaf33a66d58bc",
+        "viewBox": "0 0 256 256",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
   }
 ];

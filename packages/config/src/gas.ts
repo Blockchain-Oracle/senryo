@@ -12,6 +12,7 @@
 
 /** +10 % over `eth_estimateGas`: small on purpose — the whole limit is paid. */
 export const GAS_HEADROOM_BPS = 1_000n;
+const GAS_BPS = 10_000n;
 
 /** Plain MON transfer (fixed cost). */
 export const NATIVE_TRANSFER_GAS = 21_000n;
@@ -24,7 +25,10 @@ export const LIQUIDATE_GAS_PER_POSITION = 180_000n;
 
 export const GAS_LIMITS = {
   transfer: NATIVE_TRANSFER_GAS,
-  /** (S3, D-122) raised from 80k: mainnet USDC (FiatToken proxy) `approve` estimates 87k on a Monad-rules fork. */
+  /**
+   * (S3, D-122) raised from 80k: mainnet USDC (FiatToken proxy) `approve` estimates 87k on a Monad-rules fork.
+   * (S1b.16) every J11 spot token's `approve(Permit2)` on a 143 fork: worst 96.0k (cbBTC) — inside.
+   */
   approve: 110_000n,
   /** (S8.6) 1 position: estimate 460.6k mainnet (both stable feeds read) · 267.5k testnet; 0 positions 287.3k. */
   deposit: 510_000n,
@@ -118,10 +122,16 @@ export const GAS_LIMITS = {
    * 1 position 765.2k.
    */
   swapCollateral: 850_000n,
-  /** (S3) Permit2.approve(token, Universal Router) before a v4 swap. */
+  /** (S3) Permit2.approve(token, Universal Router) before a v4 swap. (S1b.16) spot tokens, 143 fork: worst 53.5k. */
   permit2Approve: 120_000n,
   /** (S3) Universal Router V4_SWAP exact-in single (fork-measured in the S3.3 swap check). */
   uniswapSwap: 600_000n,
+  /**
+   * (S1b.16) Universal Router V4_SWAP exact-in along a J11 spot route, ONE hop (SWAP_EXACT_IN · SETTLE_ALL · TAKE to
+   * the user). 143 fork, `--network monad`, every listed token bought and sold back at $10 and $1,000: worst 313.8k
+   * (cbBTC buy) → 350k. More hops and larger trades: `spotSwapGasLimit`.
+   */
+  spotSwap: 350_000n,
   /** Perpl IOC order (S7). */
   perplIoc: 700_000n,
   /** (S6.12, D-155) sponsor-sent type-4 tx, one authorization: fork-measured 46.0k used, 50.7k sent. */
@@ -129,6 +139,30 @@ export const GAS_LIMITS = {
 } as const;
 
 export type GasAction = keyof typeof GAS_LIMITS;
+
+/**
+ * (S1b.16) Each pool past the first on a spot route (a MON-quoted token bought with USDC crosses two): the 2-hop worst
+ * at $10–$1,000 was 346.5k (shMON buy) → 390k = `spotSwap` + this.
+ */
+export const SPOT_SWAP_GAS_PER_HOP = 40_000n;
+
+/**
+ * (S1b.16) What a spot swap spends beyond the pools' own swaps (router decode, Permit2 pull, settle, take, the token
+ * transfers): `eth_estimateGas` − the Quoter's `gasEstimate` for the same swap. 143 fork, 55 swaps from $10 to $10,000:
+ * 170.6k (MON buy) … 322.5k (a $10,000 USDT0 buy that crosses ~2.2M gas of ticks) → 330k.
+ */
+export const SPOT_SWAP_OVERHEAD_GAS = 330_000n;
+
+/**
+ * Budget for a spot swap crossing `hops` pools: the flat measured budget, or — when the quote's own gas metering is
+ * given — that plus the overhead, with headroom, whichever is larger (tick crossings scale with the trade's size).
+ */
+export function spotSwapGasLimit(hops: number, quotedSwapGas?: bigint): bigint {
+  const flat = GAS_LIMITS.spotSwap + SPOT_SWAP_GAS_PER_HOP * BigInt(Math.max(hops - 1, 0));
+  if (quotedSwapGas === undefined) return flat;
+  const sized = ((SPOT_SWAP_OVERHEAD_GAS + quotedSwapGas) * (GAS_BPS + GAS_HEADROOM_BPS)) / GAS_BPS;
+  return sized > flat ? sized : flat;
+}
 
 /**
  * (S8.6, D-185) Extra budget per open position beyond the first, for actions whose risk pass reads every held market.

@@ -17,7 +17,16 @@ export type EntityRole =
   | "auth-provider"
   | "brand";
 
-export type InstrumentType = "native-token" | "stablecoin" | "perp" | "commodity" | "fx-pair" | "equity" | "none";
+/** `token`: an ERC-20 held and traded spot on Monad (J11), whatever it tracks. */
+export type InstrumentType =
+  | "native-token"
+  | "stablecoin"
+  | "token"
+  | "perp"
+  | "commodity"
+  | "fx-pair"
+  | "equity"
+  | "none";
 
 /**
  * Artwork variants. `disc` is the contained asset presentation (market rows, pickers); `symbol` the uncontained mark;

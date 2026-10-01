@@ -37,3 +37,8 @@ export const ids = {
   exchange: (slug: string): EntityId => `exchange:${slug}`,
   brand: (slug: string): EntityId => `brand:${slug}`,
 } as const;
+
+/** Artwork key of a J11 spot token's logo from Monad's token list (its folder there, slugged: "BTC.b" → "tokenlist-btc-b"). */
+export function spotArtKey(listDir: string): string {
+  return `tokenlist-${listDir.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+}

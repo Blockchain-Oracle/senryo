@@ -130,6 +130,14 @@ import ArtLibBinanceMonoLight from "./lib-binance-monolight.tsx";
 import ArtLibBinanceMonoDark from "./lib-binance-monodark.tsx";
 import ArtLibKrakenMonoLight from "./lib-kraken-monolight.tsx";
 import ArtLibKrakenMonoDark from "./lib-kraken-monodark.tsx";
+import ArtTokenlistGhoDisc from "./tokenlist-gho-disc.tsx";
+import ArtTokenlistUsdt0Disc from "./tokenlist-usdt0-disc.tsx";
+import ArtTokenlistWbtcDisc from "./tokenlist-wbtc-disc.tsx";
+import ArtTokenlistWethDisc from "./tokenlist-weth-disc.tsx";
+import ArtTokenlistCbbtcDisc from "./tokenlist-cbbtc-disc.tsx";
+import ArtTokenlistMusdDisc from "./tokenlist-musd-disc.tsx";
+import ArtTokenlistShmonDisc from "./tokenlist-shmon-disc.tsx";
+import ArtTokenlistSyrupusdcDisc from "./tokenlist-syrupusdc-disc.tsx";
 
 export type ArtComponent = ComponentType<SvgProps>;
 
@@ -208,4 +216,12 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "lib-coinbase": { symbol: ArtLibCoinbaseSymbol, monoLight: ArtLibCoinbaseMonoLight, monoDark: ArtLibCoinbaseMonoDark },
   "lib-binance": { disc: ArtLibBinanceDisc, monoLight: ArtLibBinanceMonoLight, monoDark: ArtLibBinanceMonoDark },
   "lib-kraken": { monoLight: ArtLibKrakenMonoLight, monoDark: ArtLibKrakenMonoDark },
+  "tokenlist-gho": { disc: ArtTokenlistGhoDisc },
+  "tokenlist-usdt0": { disc: ArtTokenlistUsdt0Disc },
+  "tokenlist-wbtc": { disc: ArtTokenlistWbtcDisc },
+  "tokenlist-weth": { disc: ArtTokenlistWethDisc },
+  "tokenlist-cbbtc": { disc: ArtTokenlistCbbtcDisc },
+  "tokenlist-musd": { disc: ArtTokenlistMusdDisc },
+  "tokenlist-shmon": { disc: ArtTokenlistShmonDisc },
+  "tokenlist-syrupusdc": { disc: ArtTokenlistSyrupusdcDisc },
 };

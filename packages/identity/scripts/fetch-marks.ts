@@ -5,7 +5,7 @@
  *   pnpm --filter @senryo/identity codegen    # then regenerate the components
  *
  * Each file is stored byte-for-byte as served, with its URL and sha256 in the generated record. Upstreams are pinned
- * (web3icons by commit, Simple Icons by version), so a re-run only changes a record when the catalog or a pin changes;
+ * (web3icons and Monad's token list by commit, Simple Icons by version), so a re-run only changes a record when the catalog or a pin changes;
  * `retrieved` moves only for a record whose bytes changed. Derived colourways (the dark-ink silhouette, a brand-hex
  * fill) are written with `deriveSvg`, the same function codegen and the `identity-provenance` invariant re-run.
  */
@@ -13,6 +13,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { MONAD_TOKEN_LIST } from "@senryo/config";
 import { deriveSvg } from "../src/derive.ts";
 import type { ArtFile, ArtSource, Derivation, MarkVariant, Provenance } from "../src/types.ts";
 import { CATALOG, type CatalogEntry, type FetchSpec } from "./catalog.ts";
@@ -48,6 +49,12 @@ const LUMA_GREEN = 0.587;
 const LUMA_BLUE = 0.114;
 const LUMA_NEEDS_LIGHT_GROUND = 0.2;
 const LUMA_NEEDS_DARK_GROUND = 0.85;
+const PNG_SIGNATURE = Buffer.from("89504e470d0a1a0a", "hex");
+/** A commit named in a licence line: its first 8 hex digits. */
+const SHORT_SHA_CHARS = 8;
+/** IHDR is the first chunk: width and height (big-endian u32) sit right after its length and type. */
+const PNG_WIDTH_OFFSET = 16;
+const PNG_HEIGHT_OFFSET = 20;
 
 type Presentation = Pick<ArtFile, "insetPermille" | "surface" | "shape" | "crop">;
 
@@ -56,7 +63,8 @@ interface Piece {
   /** File name inside sources/<key>/. */
   name: string;
   url: string;
-  svg: string;
+  /** The file as delivered: SVG text, or PNG bytes where the owner ships raster only. */
+  body: string | Buffer;
   present: Presentation;
   derived?: Derivation;
 }
@@ -69,13 +77,26 @@ interface Fetched {
   pieces: Piece[];
 }
 
-const sha256 = (text: string): string => createHash("sha256").update(text).digest("hex");
+const sha256 = (bytes: string | Buffer): string => createHash("sha256").update(bytes).digest("hex");
 const pathOf = (key: string, name: string): string => `${SOURCES}/${key}/${name}`;
 
-async function get(url: string): Promise<string> {
+async function fetched(url: string): Promise<Response> {
   const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  return res.text();
+  return res;
+}
+
+const get = async (url: string): Promise<string> => (await fetched(url)).text();
+
+/** A raster file must really be a PNG; its viewBox is its pixel size (IHDR width × height). */
+async function getPng(url: string): Promise<Buffer> {
+  const bytes = Buffer.from(await (await fetched(url)).arrayBuffer());
+  if (!bytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) throw new Error(`${url}: not a PNG`);
+  return bytes;
+}
+
+function pngViewBox(png: Buffer): string {
+  return `0 0 ${png.readUInt32BE(PNG_WIDTH_OFFSET)} ${png.readUInt32BE(PNG_HEIGHT_OFFSET)}`;
 }
 
 /** A delivered file must be a self-contained vector: no raster, no live text, nothing foreign. */
@@ -116,7 +137,7 @@ async function fromWeb3Icons(key: string, spec: Extract<FetchSpec, { from: "web3
         variant: "disc",
         name: name("background"),
         url: url("background"),
-        svg: await getSvg(url("background")),
+        body: await getSvg(url("background")),
         present,
       });
     } else if (take === "symbol") {
@@ -125,7 +146,7 @@ async function fromWeb3Icons(key: string, spec: Extract<FetchSpec, { from: "web3
         variant: "symbol",
         name: name("branded"),
         url: url("branded"),
-        svg: await getSvg(url("branded")),
+        body: await getSvg(url("branded")),
         present,
       });
     } else {
@@ -140,14 +161,14 @@ async function fromWeb3Icons(key: string, spec: Extract<FetchSpec, { from: "web3
         variant: "monoLight",
         name: name("mono"),
         url: url("mono"),
-        svg: light,
+        body: light,
         present: { ...base, surface: "dark" },
       });
       pieces.push({
         variant: "monoDark",
         name: name("mono", "-dark"),
         url: url("mono"),
-        svg: deriveSvg(light, derived),
+        body: deriveSvg(light, derived),
         present: { ...base, surface: "light" },
         derived,
       });
@@ -171,7 +192,7 @@ async function fromHyperliquid(spec: Extract<FetchSpec, { from: "hyperliquid" }>
     pageUrl: `${HYPERLIQUID_APP}/trade/${spec.coin}`,
     licence: `No separate licence: this is the icon Hyperliquid's own app serves for the ${spec.coin} market it lists (${url}), i.e. venue-published instrument metadata. The mark belongs to its project and is used nominatively, only to identify that asset beside its ticker.`,
     usage: "A full disc as served; shown only for the asset itself, never as a venue badge.",
-    pieces: [{ variant: "disc", name: `hyperliquid-coin-${spec.coin}.svg`, url, svg: await getSvg(url), present }],
+    pieces: [{ variant: "disc", name: `hyperliquid-coin-${spec.coin}.svg`, url, body: await getSvg(url), present }],
   };
 }
 
@@ -221,12 +242,12 @@ async function fromSimpleIcons(key: string, spec: Extract<FetchSpec, { from: "si
     licence: `CC0 1.0 Universal (${SIMPLE_ICONS_LICENCE_URL}) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #${icon.hex} is the value in the library's data file.`,
     usage: `Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #${icon.hex}.`,
     pieces: [
-      { variant: "monoDark", name: name(), url, svg: delivered, present: { ...base, surface: "light" } },
+      { variant: "monoDark", name: name(), url, body: delivered, present: { ...base, surface: "light" } },
       {
         variant: "symbol",
         name: name("-brand"),
         url,
-        svg: deriveSvg(delivered, brand),
+        body: deriveSvg(delivered, brand),
         present: { ...base, surface: surfaceFor(icon.hex) },
         derived: brand,
       },
@@ -234,7 +255,7 @@ async function fromSimpleIcons(key: string, spec: Extract<FetchSpec, { from: "si
         variant: "monoLight",
         name: name("-light"),
         url,
-        svg: deriveSvg(delivered, light),
+        body: deriveSvg(delivered, light),
         present: { ...base, surface: "dark" },
         derived: light,
       },
@@ -242,10 +263,31 @@ async function fromSimpleIcons(key: string, spec: Extract<FetchSpec, { from: "si
   };
 }
 
+/**
+ * A J11 spot token's logo from Monad's token list at the pinned commit — the file its issuer submitted (SVG or PNG),
+ * kept as delivered. Token art is a full disc (checked by rendering the listed logos, 1 Oct 2026).
+ */
+async function fromMonadTokenList(spec: Extract<FetchSpec, { from: "monad-token-list" }>): Promise<Fetched> {
+  const folder = `mainnet/${encodeURIComponent(spec.dir)}`;
+  const url = `${MONAD_TOKEN_LIST.raw}/${MONAD_TOKEN_LIST.commit}/${folder}/${spec.file}`;
+  const present: Presentation = { insetPermille: 0, surface: "any", shape: "disc" };
+  const body = spec.file.endsWith(".png") ? await getPng(url) : await getSvg(url);
+  const ext = spec.file.slice(spec.file.lastIndexOf("."));
+  return {
+    provenance: "first-party",
+    pageUrl: `${MONAD_TOKEN_LIST.repo}/tree/${MONAD_TOKEN_LIST.commit}/${folder}`,
+    licence: `monad-crypto/token-list (Monad's official token list), ${folder}/${spec.file} at commit ${MONAD_TOKEN_LIST.commit.slice(0, SHORT_SHA_CHARS)}: the logo the issuer submitted with its token (CONTRIBUTING.md: "must provide a logo in SVG or PNG format"). The repo has no LICENSE and says inclusion "does not imply endorsement". ${spec.symbol} is its issuer's mark, used nominatively beside its ticker.`,
+    usage:
+      "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    pieces: [{ variant: "disc", name: `${spec.dir.toLowerCase()}-token-monad-tokenlist${ext}`, url, body, present }],
+  };
+}
+
 function fetchEntry(entry: CatalogEntry): Promise<Fetched> {
   const { spec } = entry;
   if (spec.from === "web3icons") return fromWeb3Icons(entry.key, spec);
   if (spec.from === "hyperliquid") return fromHyperliquid(spec);
+  if (spec.from === "monad-token-list") return fromMonadTokenList(spec);
   return fromSimpleIcons(entry.key, spec);
 }
 
@@ -254,12 +296,12 @@ function toRecord(entry: CatalogEntry, fetched: Fetched, previous: ArtSource | u
   for (const piece of fetched.pieces) {
     const path = pathOf(entry.key, piece.name);
     mkdirSync(dirname(join(ROOT, path)), { recursive: true });
-    writeFileSync(join(ROOT, path), piece.svg);
+    writeFileSync(join(ROOT, path), piece.body);
     variants[piece.variant] = {
       path,
       url: piece.url,
-      sha256: sha256(piece.svg),
-      viewBox: viewBoxOf(piece.svg, piece.url),
+      sha256: sha256(piece.body),
+      viewBox: typeof piece.body === "string" ? viewBoxOf(piece.body, piece.url) : pngViewBox(piece.body),
       ...piece.present,
       ...(piece.derived ? { derived: piece.derived } : {}),
     };

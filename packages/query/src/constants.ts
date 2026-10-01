@@ -28,6 +28,18 @@ export const INBOX_WATCH_REFRESH_MS = 3_600_000;
 /** Indexed equity curve (the socket invalidates the account on finalized changes). */
 export const EQUITY_REFETCH_MS = 60_000;
 
+/** J11 spot-token mid prices (one multicall of slot0s) while a token surface is open. */
+export const SPOT_PRICE_REFETCH_MS = 10_000;
+/** A spot ticket re-quotes this often (the same cadence as the collateral swap sheet). */
+export const SPOT_QUOTE_REFRESH_MS = 10_000;
+/** Spot holdings between swap-driven invalidations. */
+export const SPOT_HOLDINGS_REFETCH_MS = 30_000;
+/**
+ * Spot-token candles from GeckoTerminal's keyless API (10 calls/min per IP on the free tier): one chart refreshes once
+ * a minute, so a token page never spends more than a tenth of the device's allowance.
+ */
+export const SPOT_CANDLES_REFETCH_MS = 60_000;
+
 /** Engine socket: keep-alive and reconnect backoff. */
 export const SOCKET_PING_MS = 25_000;
 export const SOCKET_BACKOFF_MS = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000] as const;

@@ -15,6 +15,8 @@ export * from "./social.ts";
 export * from "./social-feed.ts";
 export * from "./social-posts.ts";
 export * from "./socket.ts";
+export * from "./spot.ts";
+export * from "./spot-candles.ts";
 export * from "./starter.ts";
 export * from "./trace.ts";
 export * from "./triggers.ts";
