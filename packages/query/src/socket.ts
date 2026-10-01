@@ -4,7 +4,7 @@
  * queries. One socket per app; reconnects with backoff and re-subscribes; messages are zod-parsed (never trusted raw).
  */
 import { WS_PATH, type WsClientMessage, wsServerMessageSchema } from "@senryo/api-client";
-import { type ChainId, ENGINE_MARKETS } from "@senryo/config";
+import { type ChainId, engineMarketsOn } from "@senryo/config";
 import type { Address } from "@senryo/core";
 import { SOCKET_BACKOFF_MS, SOCKET_PING_MS } from "./constants.ts";
 import type { PriceStore } from "./price-store.ts";
@@ -61,7 +61,7 @@ export class EngineSocket {
     socket.onopen = () => {
       this.attempt = 0;
       this.opts.onStatus?.(true);
-      for (const m of ENGINE_MARKETS) {
+      for (const m of engineMarketsOn(this.opts.chainId)) {
         this.send({ op: "subscribe", channel: `prices:${m.symbol}`, chainId: this.opts.chainId });
       }
       if (this.account) this.subscribeAccount(this.account);

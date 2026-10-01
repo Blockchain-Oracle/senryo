@@ -1,6 +1,6 @@
 import { accountRoute, configRoute, geoRoute, marketsRoute, statusRoute } from "@senryo/api-client";
 import { getAddress, isDeployed, readAccountSnapshot, readContract, readOracles, readPositions } from "@senryo/chain";
-import { ENGINE_MARKETS, networkOf } from "@senryo/config";
+import { type ChainId, ENGINE_MARKETS, engineMarketsOn, networkOf } from "@senryo/config";
 import { type HttpServer, MS_PER_SECOND, parseRoute, sendRoute } from "@senryo/service-common";
 import { bucketsOf } from "../buckets.ts";
 import { UPSTREAM_TIMEOUT_MS } from "../constants.ts";
@@ -8,7 +8,9 @@ import { type ApiContext, chainOf } from "../context.ts";
 import { geoOf } from "../geo.ts";
 
 const BPS = 10_000;
-const MARKET_IDS = ENGINE_MARKETS.map((m) => m.id);
+
+/** Market ids SenryoCore lists on `chainId` (FX joins 10143 only after AddMarkets executes, S8.23). */
+const marketIdsOn = (chainId: ChainId) => engineMarketsOn(chainId).map((m) => m.id);
 
 /** A fixed public line; the full error (which may carry a keyed RPC URL) only goes to the log (S8.5b #7). */
 function rpcDown(ctx: ApiContext, error: unknown): string {
@@ -45,7 +47,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
         try {
           const [block, oracles] = await Promise.all([
             c.read.getBlock({ blockTag: "finalized" }),
-            c.deployed ? readOracles(c.read, c.chainId, MARKET_IDS) : Promise.resolve([]),
+            c.deployed ? readOracles(c.read, c.chainId, marketIdsOn(c.chainId)) : Promise.resolve([]),
           ]);
           const progress = ctx.indexer.progressBlock(c.chainId);
           return {
@@ -91,10 +93,10 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     const chain = chainOf(ctx, chainId);
     const core = readContract(chainId, "SenryoCore", chain.read);
     const [views, params] = await Promise.all([
-      readOracles(chain.read, chainId, MARKET_IDS),
-      Promise.all(MARKET_IDS.map((id) => core.read.marketParams([id]))),
+      readOracles(chain.read, chainId, marketIdsOn(chainId)),
+      Promise.all(marketIdsOn(chainId).map((id) => core.read.marketParams([id]))),
     ]);
-    const engine = ENGINE_MARKETS.map((m, i) => {
+    const engine = engineMarketsOn(chainId).map((m, i) => {
       const view = views.find((v) => v.marketId === m.id);
       const p = params[i];
       return {

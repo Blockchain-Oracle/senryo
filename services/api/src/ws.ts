@@ -1,6 +1,6 @@
 import { WS_PATH, type WsServerMessage, wsClientMessageSchema, wsServerMessageSchema } from "@senryo/api-client";
 import { getAddress, isAddress, type OracleView, readAccountSnapshot, readOracles } from "@senryo/chain";
-import { type ChainId, ENGINE_MARKETS } from "@senryo/config";
+import { type ChainId, ENGINE_MARKETS, engineMarketsOn } from "@senryo/config";
 import type { HttpServer } from "@senryo/service-common";
 import type { WebSocket } from "ws";
 import { bucketsOf } from "./buckets.ts";
@@ -12,7 +12,6 @@ import type { ApiContext } from "./context.ts";
  * bucket deltas on finalized account changes (session token required, own address only), `perpl:*` in S7.
  * Under backpressure intermediate ticks are dropped (the next one supersedes them).
  */
-const MARKET_IDS = ENGINE_MARKETS.map((m) => m.id);
 
 type Key = string;
 const keyOf = (chainId: ChainId, channel: string): Key => `${chainId}|${channel}`;
@@ -84,7 +83,9 @@ export class WsHub {
     const chain = this.ctx.chains.get(chainId);
     if (!chain?.deployed) return "NOT_DEPLOYED" as const;
     const [kind, target] = channel.split(":");
-    if (kind === "prices") return ENGINE_MARKETS.some((m) => m.symbol === target) ? undefined : ("NOT_FOUND" as const);
+    if (kind === "prices") {
+      return engineMarketsOn(chainId).some((m) => m.symbol === target) ? undefined : ("NOT_FOUND" as const);
+    }
     if (kind === "account") {
       const session = token && this.ctx.sessions ? await this.ctx.sessions.verify(token) : undefined;
       const own = session && target && isAddress(target) && getAddress(target) === session.address;
@@ -102,7 +103,8 @@ export class WsHub {
   private async pushPrices(): Promise<void> {
     for (const chain of this.ctx.chains.values()) {
       if (this.channelsOf(chain.chainId, "prices").length === 0) continue;
-      const views = await readOracles(chain.read, chain.chainId, MARKET_IDS).catch(() => [] as OracleView[]);
+      const ids = engineMarketsOn(chain.chainId).map((m) => m.id);
+      const views = await readOracles(chain.read, chain.chainId, ids).catch(() => [] as OracleView[]);
       for (const view of views) {
         const symbol = ENGINE_MARKETS.find((m) => m.id === view.marketId)?.symbol ?? "";
         const channel = `prices:${symbol}`;

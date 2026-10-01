@@ -107,6 +107,12 @@ reuses everything below `apps/`.
 - [ ] S8.23 FX majors on the engine (D-175, contracts track): EUR/GBP/JPY/CHF/CAD feeds verified on 143; risk params +
       aggregate FX USD-exposure cap; FX calendar; mainnet at construction in `Deploy.s.sol`; testnet `AddMarkets.s.sol`
       schedule → execute (6 h) **[OK?]**; keeper observe on status edges/OI; mirrors on 10143
+      — contracts track (D-186…D-189, D-220): 5 feeds verified (18 dec, 240 s, weekend-publishing) ✓ · params + Σ-cap
+      bound (50 % of the seed, 5 % worst payout) ✓ · FX 24/5 calendar ✓ · mainnet at construction, 143 fork
+      rehearsal 10/10 (7 markets OPEN, XAU/EUR/JPY round trips) ✓ · `AddMarkets.s.sol` two-run on a 10143 fork ✓ ·
+      keeper edge/OI-drift policy ✓ · FX mirrors ✓ · equities measured: deviation-bounded 0.05 %, SPY/QQQ listable in
+      a later timelocked slice, single names + EWY stay B2 (D-220) ✓ — **left:** the real 10143 run 1 →
+      6 h → run 2 **[OK?]**, then `chains` += 10143 and the indexer/keeper follow-ups in the Handoff
 - [ ] S8.24 Mainnet cold start + TxRecovery (D-179): keeper `sweeps` job (`InboxFactory.sweep`); voucher path; mainnet
       copy until a native bot check; per-chain TxRecovery host (never resends) + journal cap; app rebuild with 143.json
       (EAS **[OK?]**)
@@ -167,3 +173,42 @@ Assurance findings closed (fixed or documented) · mainnet deposit → XAU long 
   - To re-measure: `anvil --fork-url https://rpc.monad.xyz --network monad` (or the testnet RPC), then
     `MONAD_FORK_URL=http://127.0.0.1:<port> forge test --match-path test/fork/GasProfileFork.t.sol --isolate -vv`
     and read the `estimate <action>.p<n>` log lines.
+
+### Contracts track (S8.23)
+- **What landed (D-186…D-189, D-220).** EUR/GBP/JPY/CHF/CAD are markets 2…6: `SeedConstants.sol` (feeds, params,
+  `fxWeek`), `FxListing.sol` (the shared list + the Σ-cap assert), `Deploy.s.sol` mainnet branch (FX at
+  construction; testnet init codes unchanged), `AddMarkets.s.sol` (testnet, timelocked), `FxListing.t.sol` 7/7.
+  Config `ENGINE_MARKETS` has the FX entries with `category`, `priceDecimals` and `chains`; every chain-read site
+  (keeper, api, query, mobile Markets) iterates `engineMarketsOn(chainId)`. Indexer: `FeedEUR…FeedCAD` (+ `…Next`) on
+  143 with per-feed decimals (FX 18). Keeper: edge/OI-drift observe policy, FX mirror cadence.
+- **Evidence.** 143 fork (throwaway deployer, fork 143.json + broadcasts deleted, never committed): Deploy 31 txs /
+  23.2M gas → SeedMainnet → `mainnet-rehearsal` 10/10 at 23:08 UTC (all 7 OPEN on live feeds; XAU long, EUR long, JPY
+  short opened and closed to `finalized`; swap; LP). 10143 fork: `AddMarkets` run 1 (21 txs, 4.22M) → waits → +6 h →
+  run 2 (11 txs, 2.31M) → 7 markets OPEN → run 3 no-op; testnet `Deploy.s.sol` dry run 0 txs (no Drift). Gates:
+  contracts (build, fmt, lint, `forge test` 42 passed incl. invariants), `pnpm typecheck && pnpm lint && pnpm
+  invariants`, indexer `envio codegen` + `tsc`.
+- **Lead actions**
+  - **[OK?] Testnet listing.** `forge script script/AddMarkets.s.sol --rpc-url monad_testnet --account
+    senryo-deployer --sender <deployer> --broadcast --slow --gas-estimate-multiplier 110` (run 1: ≈ 0.47 tMON at 102
+    gwei), then `pnpm contracts:export`, add `MirrorEUR…MirrorCAD` to `indexer/config.yaml` (10143, under
+    `FeedEUR…FeedCAD`; `address-drift` requires them), and set the keeper's `MIRROR_MARKETS=XAU,XAG,EUR,GBP,JPY,CHF,CAD`
+    **before** run 2 so the mirrors are fresh. Run 2 is the same command ≥ 6 h later (≈ 0.26 tMON). Then add
+    `TESTNET_CHAIN_ID` to the FX `chains` in `packages/config/src/markets.ts` and redeploy api/keeper/apps.
+  - **[OK?] Mainnet deploy (S8.18)** now lists FX at construction — nothing extra to run. Rehearse again right
+    before the real deploy (`anvil --fork-url https://rpc.monad.xyz --network monad --block-time 0.5 --mixed-mining
+    --slots-in-an-epoch 1`; `finalized` never advances on an automine-only fork). FX feeds freeze on a fork, so run
+    deploy → seed → drive back to back (every feed must stay within 240 + 600 s), and after 23:05 UTC on a weekday
+    (metals daily break 21–23 UTC).
+  - **Budgets changed (D-188):** `lpDeposit` 1.15M, `lpClaimRedeem` 1.16M (they peek every listed market — the old
+    caps would refuse every mainnet LP action), `increase` 690k, new `poke` 320k. D-171's NO_GAS threshold reads
+    these limits.
+  - **Keeper env:** `OBSERVE_DRIFT_BPS` (100), `MIRROR_FX_HEARTBEAT_SEC` (9,000). The keeper key needs no new role
+    (`SenryoCore.poke` is permissionless). Q-012's keeper line: ≈ 0.16 MON/day of edge pokes + drift pokes where OI.
+  - **UI (other tracks):** show FX prices with `priceDecimals` (the `price18` default of 2 would show JPY/USD as
+    0.01); label pairs with `marketPair` ("JPY/USD", never inverted); leverage detents stop at 10 while FX allows 20×;
+    identity marks key on the symbols `EUR GBP JPY CHF CAD`; the D-189 "close a position first" blocker is a proposal.
+  - **Indexer 143 (S8.20):** comments now carry the full proxy addresses, so `address-drift` passes for
+    `XAU_USD`…`CAD_USD`; the 143 entries for AUSD/USDC (Stablecoin) and our contracts are still to add with 143.json.
+  - **Equities (D-220):** the calculated feeds are deviation-bounded (0.05 %, 24/5 incl. extended hours). wSPYx and
+    wQQQx pass for a post-launch timelocked listing (params in D-220; your/user call, mainnet via the Safe [OK?]);
+    wNVDAx/wTSLAx/wSPCXx/wEWYx stay B2 (single-round jumps up to 149 bps at the US open).

@@ -10,7 +10,7 @@ import {
   readPositionBitmaps,
   sendAndFinalize,
 } from "@senryo/chain";
-import { ENGINE_MARKETS, GAS_LIMITS, positionGasLimit } from "@senryo/config";
+import { engineMarketsOn, GAS_LIMITS, positionGasLimit } from "@senryo/config";
 import { MS_PER_SECOND } from "@senryo/service-common";
 import { HOLD_RELEASABLE_AFTER_SEC, HOLD_RELEASE_GRACE_SEC, INTERVALS_MS, TOPUP_MAX_PER_RUN } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
@@ -73,7 +73,7 @@ export function triggerJob(ctx: KeeperContext): Job {
       const views = await readOracles(
         ctx.read,
         ctx.chainId,
-        ENGINE_MARKETS.map((m) => m.id),
+        engineMarketsOn(ctx.chainId).map((m) => m.id),
       );
       for (const orderId of orderIds) {
         const order = await core.read.triggerOrder([orderId]);
@@ -89,7 +89,7 @@ export function triggerJob(ctx: KeeperContext): Job {
             ctx.sender,
             // Cap for an account holding every market (D-185); the limit itself is estimate + headroom.
             contractCall(ctx.chainId, "SenryoCore", "executeTrigger", [orderId], "executeTrigger", {
-              gasCap: positionGasLimit("executeTrigger", ENGINE_MARKETS.length),
+              gasCap: positionGasLimit("executeTrigger", engineMarketsOn(ctx.chainId).length),
             }),
           );
           ctx.log.info({ orderId, tx: sent.hash, stage: sent.final.stage }, "trigger executed");

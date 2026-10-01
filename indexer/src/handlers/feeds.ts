@@ -1,16 +1,15 @@
 /**
- * Oracle rounds → OracleRound + OracleFeed + candles (D-020). FeedXAU/FeedXAG are the configured aggregators
- * (mainnet OCR2 behind the Chainlink proxies, testnet MirrorAggregators); FeedXAUNext/FeedXAGNext are aggregators the
- * proxies switch to later, registered at runtime by the wildcard watcher below.
+ * Oracle rounds → OracleRound + OracleFeed + candles (D-020). Feed<SYMBOL> are the configured aggregators (mainnet
+ * OCR2 behind the Chainlink proxies, testnet MirrorAggregators); Feed<SYMBOL>Next are aggregators the proxies switch
+ * to later, registered at runtime by the wildcard watcher below. Metals answer in 8 decimals, FX (S8.23) in 18; every
+ * price is stored at 1e18 in the feed's own orientation (JPY is USD per yen, never inverted).
  */
 import { indexer, type OracleFeed } from "envio";
 import { recordTick } from "../lib/candles.ts";
-import { FEED_DECIMALS, type FeedSymbol, TEN, WAD_DECIMALS } from "../lib/constants.ts";
+import { FEED_DECIMALS_OF, type FeedSymbol, MAINNET_CHAIN_ID, TEN, WAD_DECIMALS } from "../lib/constants.ts";
 import { aggregatorSymbol } from "../lib/feeds.ts";
 import { type Ctx, EVENT_FIELDS, metaOf, small } from "../lib/meta.ts";
 import { updateProtocol } from "../lib/stats.ts";
-
-const FEED_TO_WAD = TEN ** BigInt(WAD_DECIMALS - FEED_DECIMALS);
 
 interface RoundEvent {
   chainId: number;
@@ -25,7 +24,8 @@ async function recordRound(ctx: Ctx, event: RoundEvent, symbol: FeedSymbol): Pro
   const meta = metaOf(event);
   const { current: answer, roundId, updatedAt } = event.params;
   const aggregator = event.srcAddress.toLowerCase();
-  const price = answer > 0n ? answer * FEED_TO_WAD : 0n;
+  const decimals = FEED_DECIMALS_OF[symbol];
+  const price = answer > 0n ? answer * TEN ** BigInt(WAD_DECIMALS - decimals) : 0n;
   const at = small(updatedAt);
   ctx.OracleRound.set({
     id: `${aggregator}-${roundId}`,
@@ -59,7 +59,7 @@ async function recordRound(ctx: Ctx, event: RoundEvent, symbol: FeedSymbol): Pro
   ctx.OracleFeed.set({
     id: symbol,
     symbol,
-    decimals: FEED_DECIMALS,
+    decimals,
     aggregator,
     latestRoundId: roundId,
     latestAnswer: answer,
@@ -71,25 +71,29 @@ async function recordRound(ctx: Ctx, event: RoundEvent, symbol: FeedSymbol): Pro
   await updateProtocol(ctx, meta, (s) => ({ oracleRounds: s.oracleRounds + 1 }));
 }
 
-indexer.onEvent({ contract: "FeedXAU", event: "AnswerUpdated", fields: EVENT_FIELDS }, ({ event, context }) =>
-  recordRound(context, event, "XAU"),
-);
-indexer.onEvent({ contract: "FeedXAG", event: "AnswerUpdated", fields: EVENT_FIELDS }, ({ event, context }) =>
-  recordRound(context, event, "XAG"),
-);
-indexer.onEvent({ contract: "FeedXAUNext", event: "AnswerUpdated", fields: EVENT_FIELDS }, ({ event, context }) =>
-  recordRound(context, event, "XAU"),
-);
-indexer.onEvent({ contract: "FeedXAGNext", event: "AnswerUpdated", fields: EVENT_FIELDS }, ({ event, context }) =>
-  recordRound(context, event, "XAG"),
-);
+const on = { event: "AnswerUpdated", fields: EVENT_FIELDS } as const;
+indexer.onEvent({ contract: "FeedXAU", ...on }, ({ event, context }) => recordRound(context, event, "XAU"));
+indexer.onEvent({ contract: "FeedXAG", ...on }, ({ event, context }) => recordRound(context, event, "XAG"));
+indexer.onEvent({ contract: "FeedEUR", ...on }, ({ event, context }) => recordRound(context, event, "EUR"));
+indexer.onEvent({ contract: "FeedGBP", ...on }, ({ event, context }) => recordRound(context, event, "GBP"));
+indexer.onEvent({ contract: "FeedJPY", ...on }, ({ event, context }) => recordRound(context, event, "JPY"));
+indexer.onEvent({ contract: "FeedCHF", ...on }, ({ event, context }) => recordRound(context, event, "CHF"));
+indexer.onEvent({ contract: "FeedCAD", ...on }, ({ event, context }) => recordRound(context, event, "CAD"));
+indexer.onEvent({ contract: "FeedXAUNext", ...on }, ({ event, context }) => recordRound(context, event, "XAU"));
+indexer.onEvent({ contract: "FeedXAGNext", ...on }, ({ event, context }) => recordRound(context, event, "XAG"));
+indexer.onEvent({ contract: "FeedEURNext", ...on }, ({ event, context }) => recordRound(context, event, "EUR"));
+indexer.onEvent({ contract: "FeedGBPNext", ...on }, ({ event, context }) => recordRound(context, event, "GBP"));
+indexer.onEvent({ contract: "FeedJPYNext", ...on }, ({ event, context }) => recordRound(context, event, "JPY"));
+indexer.onEvent({ contract: "FeedCHFNext", ...on }, ({ event, context }) => recordRound(context, event, "CHF"));
+indexer.onEvent({ contract: "FeedCADNext", ...on }, ({ event, context }) => recordRound(context, event, "CAD"));
 
 /** Addresses already indexed under a Feed* name on this chain (static config or earlier registration). */
 const registered = new Set<string>();
 
 function isConfigured(chainId: 143 | 10143, address: string): boolean {
-  const chain = indexer.chains[chainId];
-  return [chain.FeedXAU, chain.FeedXAG].some((c) => c.addresses.some((a) => a.toLowerCase() === address));
+  const c = indexer.chains[chainId];
+  const statics = [c.FeedXAU, c.FeedXAG, c.FeedEUR, c.FeedGBP, c.FeedJPY, c.FeedCHF, c.FeedCAD];
+  return statics.some((feed) => feed.addresses.some((a) => a.toLowerCase() === address));
 }
 
 /**
@@ -101,12 +105,20 @@ indexer.contractRegister(
   { contract: "ChainlinkAnswer", event: "AnswerUpdated", wildcard: true },
   async ({ event, context }) => {
     const address = event.srcAddress.toLowerCase();
-    if (registered.has(address) || isConfigured(event.chainId, address)) return;
+    if (event.chainId !== MAINNET_CHAIN_ID || registered.has(address) || isConfigured(event.chainId, address)) return;
     const symbol = await aggregatorSymbol(event.chainId, address);
     if (!symbol) return;
     registered.add(address);
-    if (symbol === "XAU") context.chain.FeedXAUNext.add(event.srcAddress);
-    else context.chain.FeedXAGNext.add(event.srcAddress);
+    const next = {
+      XAU: context.chain.FeedXAUNext,
+      XAG: context.chain.FeedXAGNext,
+      EUR: context.chain.FeedEURNext,
+      GBP: context.chain.FeedGBPNext,
+      JPY: context.chain.FeedJPYNext,
+      CHF: context.chain.FeedCHFNext,
+      CAD: context.chain.FeedCADNext,
+    }[symbol];
+    next.add(event.srcAddress);
     context.log.info(`registered new ${symbol} aggregator ${address} (proxy phase list)`);
   },
 );

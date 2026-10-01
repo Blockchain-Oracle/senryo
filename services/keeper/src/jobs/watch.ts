@@ -1,10 +1,8 @@
 import { type Address, getAddress, readAccountSnapshot, readBalances, readOracles } from "@senryo/chain";
-import { ENGINE_MARKETS } from "@senryo/config";
+import { ENGINE_MARKETS, engineMarketsOn } from "@senryo/config";
 import { BPS, HEALTH_WARN_MARGIN_BPS, INTERVALS_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
 import type { Job } from "../runner.ts";
-
-const MARKET_IDS = ENGINE_MARKETS.map((m) => m.id);
 
 /**
  * Price alerts (`price_alerts`) and `healthWatch` (a warning push per oracle round when an account's liquidation
@@ -16,7 +14,8 @@ export function alertsJob(ctx: KeeperContext): Job {
     name: "alerts",
     intervalMs: INTERVALS_MS.alerts,
     async run() {
-      const views = await readOracles(ctx.read, ctx.chainId, MARKET_IDS, "finalized");
+      const marketIds = engineMarketsOn(ctx.chainId).map((m) => m.id);
+      const views = await readOracles(ctx.read, ctx.chainId, marketIds, "finalized");
       for (const view of views) {
         if (view.price18 === 0n) continue;
         const hits = await ctx.db<{ id: string; user_address: string; direction: string }[]>`

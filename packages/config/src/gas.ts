@@ -33,9 +33,11 @@ export const GAS_LIMITS = {
   /**
    * (S8.6) 1 position: 490.8k mainnet · 397.3k testnet (lead's 10143 fork, 2 positions: 498.7k → positionGasLimit).
    * (S8.18 rehearsal) the FIRST position in a freshly deployed mainnet market estimates 550.35k — its aggregate slots
-   * go zero → non-zero — so the cap is 620k; the limit sent is still estimate + headroom.
+   * go zero → non-zero. (S8.23, 7 markets on a 143 fork) the first EUR position, including that market's first
+   * oracle write (STALE → OPEN) and the I4 reserve loop over every listed market, estimates 624.1k → cap 690k; the
+   * limit sent is still estimate + headroom.
    */
-  increase: 620_000n,
+  increase: 690_000n,
   /** (S8.6) 1 position: 440.5k mainnet · 283.6k testnet. */
   decrease: 490_000n,
   /** (S8.6) 1 position: 414.9k mainnet · 260.1k testnet. */
@@ -58,12 +60,18 @@ export const GAS_LIMITS = {
   refund: 470_000n,
   /** (S8.6) `liquidateGasLimit(positions)` = this + LIQUIDATE_GAS_PER_POSITION × positions. */
   liquidate: 350_000n,
-  /** (S8.6) ERC-4626 deposit (two poolValue passes, fundPool): 544.2k mainnet · 460.8k testnet. */
-  lpDeposit: 600_000n,
+  /**
+   * ERC-4626 deposit: two poolValue passes peek EVERY listed market, so it scales with the market count, not the
+   * depositor's positions. (S8.6, 2 markets) 544.2k mainnet · 460.8k testnet; (S8.23, 7 markets, 143 fork) 1,041.2k.
+   */
+  lpDeposit: 1_150_000n,
   /** (S8.6) escrow shares: 156.5k (both). */
   lpRequestRedeem: 180_000n,
-  /** (S8.6) 415.9k testnet; mainnet ≈ 499.2k (+ lpDeposit's measured mainnet/testnet feed delta, same 4 reads). */
-  lpClaimRedeem: 550_000n,
+  /**
+   * allMarketsOpen + a poolValue pass over every listed market. (S8.6, 2 markets) 415.9k testnet, ≈ 499.2k mainnet;
+   * (S8.23, 7 markets, 143 fork) 1,045.8k.
+   */
+  lpClaimRedeem: 1_160_000n,
   /** (S8.6) mainnet claim = MON drip only: 162.1k. */
   claimFor: 180_000n,
   /** (S3, D-119) testnet claim also mints practice AUSD and deposits it (first-time account): estimate 417k. */
@@ -77,6 +85,11 @@ export const GAS_LIMITS = {
    * CONFIRM_LOOKBACK_ROUNDS adds 53.9k (testnet mirror) → mainnet worst ≈ 217k; the S3 budget stands.
    */
   observe: 250_000n,
+  /**
+   * SenryoCore.poke = observe + funding/borrow accrual — the keeper's poke where a market has open interest (S8.23).
+   * 143 fork: 231.0k (first accrual) · 164.5k after; + the 53.9k CIRCUIT confirm walk → worst ≈ 285k.
+   */
+  poke: 320_000n,
   /** (S8.6) TriggerOrders.executeTrigger ≈ a decrease + bookkeeping: 1 position 476.8k mainnet · 317.9k testnet. */
   executeTrigger: 530_000n,
   /** (S8.6) placeTrigger (relayed EIP-712 TP/SL): 165.7k, no risk pass. */
@@ -137,6 +150,15 @@ export function positionGasLimit(action: GasAction, positions: number): bigint {
   const extra = POSITION_GAS[action] ?? 0n;
   return GAS_LIMITS[action] + extra * BigInt(Math.max(positions - 1, 0));
 }
+
+/**
+ * Proposed per-account cap on open engine positions (S8.23, D-189) — NOT enforced onchain: SenryoCore (immutable)
+ * has no count check, so its bound is the listed market count (7 with FX). At 4 positions every action stays
+ * ≤ ~1.2M gas (increase 690k + 3 × 170k; placeHold 500k + 3 × 220k; liquidate 350k + 4 × 180k), i.e. ≤ 0.123 MON at
+ * 102 gwei — inside one TOPUP_CAP (0.2 MON). Clients may block a 5th distinct market; budgets (keeper, card, top-ups)
+ * must still scale with the ACTUAL count via `positionGasLimit` / `liquidateGasLimit`.
+ */
+export const MAX_OPEN_POSITIONS = 4;
 
 /** Open positions in an `Account.positionBitmap` (one bit per market). */
 export function positionCount(bitmap: number): number {
