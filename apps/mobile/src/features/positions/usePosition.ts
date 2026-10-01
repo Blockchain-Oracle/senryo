@@ -25,6 +25,17 @@ import { REDUCE_ALL_BPS } from "./constants";
 
 const HEAD_REFETCH_MS = 2_000;
 
+/** What a reduce was quoted at when the hold completed: the close summary shows this, labelled as quoted. */
+export interface ReduceQuote {
+  isLong: boolean;
+  closingAll: boolean;
+  shareBps: bigint;
+  execPrice18: bigint;
+  realizedPnlUsd6: bigint;
+  feeUsd6: bigint;
+  netUsd6: bigint;
+}
+
 export function usePosition(marketId: number) {
   const env = useQueryEnv();
   const account = useAccount();
@@ -40,6 +51,7 @@ export function usePosition(marketId: number) {
   const [shareBps, setShareBps] = useState<bigint>(REDUCE_ALL_BPS);
   const trace = useSendTrace();
   const gas = useEnsureGas();
+  const [quoted, setQuoted] = useState<ReduceQuote | undefined>();
 
   const m = market.status === "fresh" || market.status === "stale" ? market.value : undefined;
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
@@ -67,6 +79,15 @@ export function usePosition(marketId: number) {
     const request = closingAll
       ? closeRequest(env.chainId, marketId, position.isLong, reduce.execPrice18, positionsNow)
       : decreaseRequest(env.chainId, marketId, position.isLong, sizeDelta, reduce.execPrice18, positionsNow);
+    setQuoted({
+      isLong: position.isLong,
+      closingAll,
+      shareBps,
+      execPrice18: reduce.execPrice18,
+      realizedPnlUsd6: reduce.realizedPnlUsd6,
+      feeUsd6: reduce.feeUsd6,
+      netUsd6: reduce.netUsd6,
+    });
     // Closing needs gas too: top up first when short, and show why if that's impossible (S8.16c).
     return trace.run(sender, request, { preflight: gas.preflight(request) });
   };
@@ -86,6 +107,7 @@ export function usePosition(marketId: number) {
     reduce,
     headBlock: head.data,
     trace,
+    quoted,
     submit,
     ready: account.client !== undefined,
   };

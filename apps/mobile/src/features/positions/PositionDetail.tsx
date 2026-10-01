@@ -10,6 +10,7 @@ import { useSettledOutcome } from "~/features/trade/send-outcome";
 import { TradeTrace } from "~/features/trade/TradeTrace";
 import { pct } from "~/lib/money";
 import { SIZE, SPACE, STAGGER_RISE, TIMING } from "~/theme";
+import { CloseSummary } from "./CloseSummary";
 import { CloseBar, CloseTicket } from "./CloseTicket";
 import { BLOCK_MS_ESTIMATE } from "./constants";
 import { PnlHero } from "./PnlHero";
@@ -29,8 +30,10 @@ export function PositionDetail({ marketId }: { marketId: number }) {
   const p = usePosition(marketId);
   const outcome = useSettledOutcome(p.trace.events);
   if (p.trace.events.length > 0) {
+    const finalized = p.trace.events.some((e) => e.stage === "finalized");
     return (
-      <Screen>
+      <Screen contentStyle={styles.outcome}>
+        {finalized && p.quoted ? <CloseSummary marketId={marketId} quote={p.quoted} /> : null}
         <TradeTrace
           events={p.trace.events}
           running={p.trace.running}
@@ -151,6 +154,7 @@ function PositionSkeleton() {
 const styles = StyleSheet.create({
   // The hold is pinned under the scroll, so the content only needs to end clear of it.
   content: { paddingBottom: SPACE.xl },
+  outcome: { gap: SPACE.xl },
   loading: { gap: SPACE.xl },
   head: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
   mark: { borderRadius: SIZE.markDetail, overflow: "hidden" },
