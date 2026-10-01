@@ -1,12 +1,19 @@
+import { SUPPORT_EMAIL } from "@senryo/api-client";
 import { ids } from "@senryo/identity";
 import * as Linking from "expo-linking";
 import { Stack } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { MarkedLine } from "~/components/identity/MarkedLine";
+import { ListRow } from "~/components/kit/ListRow";
 import { Screen } from "~/components/kit/Screen";
-import { Panel, SectionLabel } from "~/components/kit/Surface";
+import { Panel } from "~/components/kit/Surface";
+import { SectionHeading } from "~/features/profile/SectionHeading";
+import { APP } from "~/lib/constants/app";
 import { useNetwork } from "~/lib/network";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+
+const SEAL = ids.brand("senryo");
 
 /**
  * Where every number comes from, with the attributions the sources require (DB-IP Lite is CC BY 4.0, S8.15). Each
@@ -38,42 +45,79 @@ const MARKS_CREDIT =
   "affiliates (USDC), and of their respective owners. ETH diamond: ethereum.org, CC BY 4.0. Flags: Wikimedia " +
   "Commons, public domain. Passkey icon: Material Symbols by Google, Apache License 2.0.";
 
+/**
+ * About & sources (J9): the seal, the version and the mode at the top, bare on the page; then one filled group per
+ * source with its real mark, what it provides and the attribution it asks for; the contact address (the visible
+ * contact point App Store 1.2 requires); and the logo credits as plain small text.
+ */
 export default function HelpScreen() {
   const network = useNetwork();
   const { color } = useTheme();
   return (
     <Screen>
       <Stack.Screen options={{ title: "About & sources" }} />
-      <Panel style={styles.panel}>
-        <SectionLabel>Senryo · {network.modeLabel}</SectionLabel>
+      <View style={styles.about}>
+        <EntityMark id={SEAL} size={SIZE.avatarLg} variant="symbol" decorative ground={color.ground} />
+        <View style={styles.name}>
+          <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
+            {APP.name}
+          </Text>
+          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
+            Version {APP.version} · {network.modeLabel}
+          </Text>
+        </View>
         <Text style={[TYPE.body, { color: color.text2 }]}>
           Cash-settled gold and silver perps on Monad. You never own the metal; leverage multiplies gains and losses.
         </Text>
-      </Panel>
-      {SOURCES.map((s) => (
-        <Panel key={s.title} style={styles.panel}>
-          <SectionLabel>{s.title}</SectionLabel>
-          <MarkedLine id={s.provider.id} label={s.provider.name} value={s.provider.role} variant={s.provider.variant} />
-          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{s.body}</Text>
-          {"link" in s ? (
-            <View>
-              <Text
-                accessibilityRole="link"
-                onPress={() => void Linking.openURL(s.link.url)}
-                style={[TYPE.bodyStrong, { color: color.link }]}
-              >
-                {s.link.label}
-              </Text>
-            </View>
-          ) : null}
+      </View>
+      <View style={styles.section}>
+        <SectionHeading>Sources</SectionHeading>
+        {SOURCES.map((s) => (
+          <Panel key={s.title} style={styles.panel}>
+            <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{s.title}</Text>
+            <MarkedLine
+              id={s.provider.id}
+              label={s.provider.name}
+              value={s.provider.role}
+              variant={s.provider.variant}
+            />
+            <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{s.body}</Text>
+            {"link" in s ? (
+              <View style={styles.link}>
+                <Text
+                  accessibilityRole="link"
+                  onPress={() => void Linking.openURL(s.link.url)}
+                  style={[TYPE.bodyStrong, { color: color.link }]}
+                >
+                  {s.link.label}
+                </Text>
+              </View>
+            ) : null}
+          </Panel>
+        ))}
+      </View>
+      <View style={styles.section}>
+        <SectionHeading>Contact</SectionHeading>
+        <Panel>
+          <ListRow
+            title="Email Senryo"
+            detail={SUPPORT_EMAIL}
+            onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
+          />
         </Panel>
-      ))}
-      <Panel style={styles.panel}>
-        <SectionLabel>Logos</SectionLabel>
+      </View>
+      <View style={styles.section}>
+        <SectionHeading>Logos and trademarks</SectionHeading>
         <Text style={[TYPE.meta, { color: color.text3 }]}>{MARKS_CREDIT}</Text>
-      </Panel>
+      </View>
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({ panel: { padding: SPACE.lg, gap: SPACE.sm } });
+const styles = StyleSheet.create({
+  about: { gap: SPACE.md },
+  name: { gap: SPACE.xxs },
+  section: { gap: SPACE.md },
+  panel: { padding: SPACE.lg, gap: SPACE.sm },
+  link: { alignSelf: "flex-start" },
+});
