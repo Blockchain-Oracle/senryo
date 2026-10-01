@@ -1,7 +1,7 @@
 /** Which version of the terms each account has acknowledged, on this device (J1 terms step; C12). */
 import type { Address } from "@senryo/account";
+import { LEGAL_VERSION } from "@senryo/config";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
-import { LEGAL_VERSION } from "./content";
 
 type Stored = Record<string, string>;
 

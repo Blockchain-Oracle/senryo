@@ -1,5 +1,6 @@
 /**
- * Senryo's terms of use and privacy notice as the app shows them (J1 terms step, You → Help). Plain language, and only
+ * Senryo's terms of use and privacy notice — one text for the app (J1 terms step, You → Help) and the website
+ * (senryo.xyz/terms, /privacy, the store listings' policy URL). Plain language, and only
  * what the product does today. **Draft v0.1 (1 Oct 2026), written by the build team and not yet reviewed by a lawyer:
  * it must be reviewed before real money (mainnet) opens.** `LEGAL_VERSION` is stored with each acknowledgment, so a
  * change here asks again.

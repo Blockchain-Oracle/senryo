@@ -1,5 +1,5 @@
+import { PRIVACY } from "@senryo/config";
 import { Stack } from "expo-router";
-import { PRIVACY } from "~/features/legal/content";
 import { LegalPage } from "~/features/legal/LegalPage";
 
 export default function PrivacyPage() {

@@ -1,7 +1,7 @@
+import type { LegalDocument } from "@senryo/config";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import type { LegalDocument } from "./content";
 
 /** A legal document as a plain reading page: title, date, then headed paragraphs. No boxes; it is text to be read. */
 export function LegalPage({ document }: { document: LegalDocument }) {
