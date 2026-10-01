@@ -20,6 +20,12 @@ export class IndexerError extends Error {
   }
 }
 
+/**
+ * A Hasura `where` passed as a `$where` variable. Every indexer row exists once per chain (D-173), so the filter can't
+ * be built without its chain; the `indexer-docs-chain-filter` invariant requires this type on every `$where` document.
+ */
+export type ChainWhere = { chainId: { _eq: number } } & Record<string, unknown>;
+
 /** A named query, its variables type and the schema that parses its `data`. */
 export interface IndexerDocument<Vars, Result> {
   readonly name: string;

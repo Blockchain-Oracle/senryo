@@ -3,13 +3,13 @@
  * `where` built by the matching `*Vars` helper, which always scopes to one chain and one user.
  */
 import { z } from "zod";
-import { defineDocument, type ResultOf } from "../client.ts";
+import { type ChainWhere, defineDocument, type ResultOf } from "../client.ts";
 import { PAGE_SIZE } from "../constants.ts";
 import { bigintish, type PositionStatus } from "../scalars.ts";
 import { ACTIVITY_FIELDS, activity, FILL_FIELDS, fill, POSITION_FIELDS, position } from "./fragments.ts";
 import type { AccountVars } from "./portfolio.ts";
 
-type Where = Record<string, unknown>;
+type Where = ChainWhere;
 
 interface PageVars {
   where: Where;

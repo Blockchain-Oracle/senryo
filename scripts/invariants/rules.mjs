@@ -6,6 +6,8 @@
  *  - check rules:   { check(rule, ctx) } — arbitrary logic returning findings (lib/repo-checks.mjs)
  * Rules whose files have not landed yet are `optional` / return `skipped`.
  */
+
+import { indexerDocsChainFilter } from "./lib/indexer-checks.mjs";
 import {
   addressDrift,
   designJsonPresent,
@@ -190,5 +192,10 @@ export const rules = [
     id: "risk-mirror-constants",
     description: "the core risk mirror's constants equal Constants.sol by name",
     check: riskMirrorConstants,
+  },
+  {
+    id: "indexer-docs-chain-filter",
+    description: "every indexer document filters on chainId (rows exist once per chain, D-173)",
+    check: indexerDocsChainFilter,
   },
 ];

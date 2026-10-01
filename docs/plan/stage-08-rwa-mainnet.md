@@ -104,8 +104,12 @@ reuses everything below `apps/`.
       StarterDrip float via STARTER_FUND_WEI above the 10 MON reserve)
 - [ ] S8.20 **[OK?]** indexer 143 config (addresses + `ENVIO_APP_LAUNCH_BLOCK_143`) + api `CHAIN_IDS=10143,143`
       redeploy. **Corrected (D-173):** rows are already per chain (`disable_default_cross_chain: true` → composite
-      `(id, chainId)` keys), so no id prefixing and no reset of the practice indexer; add the invariant "every indexer
-      document filters on `chainId`" and (optional, with this change) `borrow` on `UserDailyStats` for the leaderboard
+      `(id, chainId)` keys), so no id prefixing and no reset of the practice indexer. (optional, with this change)
+      `borrow` on `UserDailyStats` for the leaderboard
+      - *Consumer audit done (1 Oct):* the `indexer-docs-chain-filter` invariant checks every `defineDocument` root
+        field: an inline `chainId: { _eq: $… }`, a `_by_pk` `chainId: $…`, or a `$where` typed `ChainWhere` (a type
+        that can't be built without its chain). `_meta` is exempt: one row per chain, picked by `isIndexed`. All 14
+        documents pass, and a scratch tree with four kinds of violation fails on each one.
 - [ ] S8.21 Gate + Handoff: mainnet deposit → XAU long → close from the phone; indexer shows it; a closed session blocks
       opens; assurance findings closed
 - [ ] S8.22 Runtime Practice↔Mainnet (F06/F49, D-172): NetworkProvider, per-chain sender/nonces/session/policy, Face ID
