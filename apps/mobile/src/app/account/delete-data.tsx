@@ -8,7 +8,7 @@ import { Panel } from "~/components/kit/Surface";
 import { fire } from "~/feedback/fire";
 import { measureStore } from "~/lib/account/measure";
 import { useAccount } from "~/lib/account/provider";
-import { deleteRemotePrefs } from "~/lib/account/remote";
+import { deleteRemoteData } from "~/lib/account/remote";
 import { ROUTES } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -19,7 +19,7 @@ import { SPACE, TYPE, useTheme } from "~/theme";
  * passkey stays with your provider). Delete also clears settings, the measurement log and the first-run flag. Onchain
  * history is public and permanent. Delete also removes the encrypted prefs Senryo keeps (`DELETE /v1/prefs`,
  * authenticated by the session — one Face ID read if locked; backing out cancels the delete). Offline, the phone is
- * still cleared and a toast says the server copy (ciphertext only this account opens) remains.
+ * still cleared and a toast says the server copy remains. The same call removes the social data (S12b, D-217).
  */
 export default function DeleteDataScreen() {
   const { color } = useTheme();
@@ -34,12 +34,12 @@ export default function DeleteDataScreen() {
     const client = account.client;
     if (client && account.hint) {
       try {
-        await deleteRemotePrefs(client, account.settings.faceId);
+        await deleteRemoteData(client, account.settings.faceId);
       } catch (error) {
         if (isSilent(classifyAuthError(error))) return;
         notify({
-          title: "Your encrypted settings are still on Senryo",
-          description: "Senryo couldn't be reached. Sign in and delete again to remove them.",
+          title: "Some of your data is still on Senryo",
+          description: "Senryo couldn't be reached. Sign in and delete again to remove it.",
           tone: "warning",
         });
       }
@@ -64,7 +64,8 @@ export default function DeleteDataScreen() {
       <Panel style={styles.panel}>
         <Text style={[TYPE.label, { color: color.ink }]}>DELETE MY DATA</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          Clears everything Senryo keeps on this phone and your encrypted settings on Senryo. Onchain history is public
+          Clears everything Senryo keeps on this phone, your encrypted settings, and your profile, posts, likes and
+          follows on Senryo. Your handle stays reserved for 30 days so nobody can pose as you. Onchain history is public
           and permanent — it can't be deleted by anyone.
         </Text>
         {confirming ? (

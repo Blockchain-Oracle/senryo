@@ -21,6 +21,18 @@ export const RECEIPT_TIMEOUT_MS = 12_000;
 /** Give up waiting for `finalized` after this (finality is ~600–900 ms; this only guards a stalled feed). */
 export const FINALIZE_TIMEOUT_MS = 15_000;
 
+/**
+ * TxRecovery (S8.24): a journaled tx with no receipt and no journal update for this long was dropped (Monad includes
+ * or drops within seconds; this leaves a wide margin past RECEIPT_TIMEOUT_MS + FINALIZE_TIMEOUT_MS).
+ */
+export const JOURNAL_ABANDON_AFTER_MS = 600_000;
+
+/**
+ * Journal cap (S8.24): every entry keeps its signed bytes, so a kv journal (one JSON document in MMKV/localStorage)
+ * drops its oldest SETTLED entries past this size. Non-terminal entries are never dropped.
+ */
+export const JOURNAL_MAX_ENTRIES = 50;
+
 /** Recent finalized heights whose block hash the head tracker remembers (reorg check for receipts). */
 export const FINALIZED_HASH_WINDOW = 512;
 

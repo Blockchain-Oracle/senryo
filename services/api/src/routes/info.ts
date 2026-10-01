@@ -33,6 +33,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
         starter: c.deployed && isDeployed(c.chainId, "StarterDrip") && c.sponsor !== undefined,
         card: Boolean(ctx.env.CARD_URL),
       })),
+      contact: ctx.social.contact,
     }),
   );
 

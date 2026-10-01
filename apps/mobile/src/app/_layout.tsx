@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { FeedbackHost } from "~/components/shell/FeedbackHost";
 import { OfflineBanner } from "~/components/shell/OfflineBanner";
+import { TxRecoveryHost } from "~/components/shell/TxRecoveryHost";
 import { ToastHost } from "~/components/toast/ToastHost";
 import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
 import { AccountProvider } from "~/lib/account/provider";
@@ -65,7 +66,7 @@ export default function RootLayout() {
 
 /**
  * The stack over the tabs, plus the headless hosts mounted once (ported pattern): feedback (sound pool), toasts and
- * the offline banner, and the privacy plate (S6). Later: TxRecovery, AlertsHost.
+ * the offline banner, the privacy plate (S6) and TxRecovery (S8.24). Later: AlertsHost.
  */
 function RootStack() {
   const { name, color } = useTheme();
@@ -92,6 +93,7 @@ function RootStack() {
       <FeedbackHost />
       <OfflineBanner />
       <ToastHost />
+      <TxRecoveryHost />
       <PrivacyPlate />
     </>
   );

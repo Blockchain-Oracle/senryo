@@ -10,7 +10,7 @@ import { Panel } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { positionRoute } from "~/lib/constants/routes";
-import { pct, price18, signedUsd, usd } from "~/lib/money";
+import { pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -89,7 +89,9 @@ function PositionRow({
       </View>
       <Text style={[TYPE.numSm, styles.num, { color: color.ink }]}>{usd(size, 0)}</Text>
       <Text style={[TYPE.numSm, styles.num, { color: away !== null && away < 0n ? color.down : color.inkMuted }]}>
-        {health.liqPrice18 === null ? "—" : price18(health.liqPrice18, LIQ_DECIMALS)}
+        {health.liqPrice18 === null
+          ? "—"
+          : price18(health.liqPrice18, Math.max(LIQ_DECIMALS, priceDecimalsOf(position.marketId) - 1))}
       </Text>
       <Text style={[TYPE.numSm, styles.num, { color: health.upnlUsd6 < 0n ? color.down : color.up }]}>
         {signedUsd(health.upnlUsd6)}

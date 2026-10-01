@@ -12,10 +12,17 @@ import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerFollowRoutes } from "./routes/follow.ts";
 import { registerInboxRoutes } from "./routes/inbox.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
+import { registerLeaderboardRoutes } from "./routes/leaderboard.ts";
+import { registerModerationRoutes } from "./routes/moderation.ts";
+import { registerPostRoutes } from "./routes/posts.ts";
 import { registerProfileRoutes } from "./routes/profile.ts";
 import { registerStarterRoutes } from "./routes/starter.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
 import { registerTopUpRoutes } from "./routes/topup.ts";
+import { FeedPoller } from "./social/feed-poller.ts";
+import { EnvioSocialIndexer, type SocialIndexer, UnavailableSocialIndexer } from "./social/indexer-source.ts";
+import { LeaderboardService } from "./social/leaderboard.ts";
+import { FeedNotifier, type SocialServices } from "./social/runtime.ts";
 import { reconcilePendingRelays } from "./topup.ts";
 import { WsHub } from "./ws.ts";
 
@@ -31,6 +38,21 @@ const indexer = env.INDEXER_GRAPHQL_URL
 indexer.start();
 const geo = new GeoDb(log);
 geo.start();
+// S12b social: indexer reads for the feed poller, leaderboard snapshots and position checks.
+const socialIndexer: SocialIndexer = env.INDEXER_GRAPHQL_URL
+  ? new EnvioSocialIndexer(env.INDEXER_GRAPHQL_URL, log)
+  : new UnavailableSocialIndexer();
+const notifier = new FeedNotifier();
+const leaderboard = new LeaderboardService({ db, indexer: socialIndexer, log, chainIds: env.CHAIN_IDS });
+const feedPoller = new FeedPoller({ db, indexer: socialIndexer, notifier, log, chainIds: env.CHAIN_IDS });
+const social: SocialServices = {
+  indexer: socialIndexer,
+  leaderboard,
+  notifier,
+  chainIds: env.CHAIN_IDS,
+  adminSecret: secrets.adminSecret,
+  contact: { email: env.SUPPORT_EMAIL, url: env.SUPPORT_URL ?? null },
+};
 const ctx: ApiContext = {
   env,
   secrets,
@@ -40,8 +62,10 @@ const ctx: ApiContext = {
   sessions: secrets.sessionSecret ? new SessionKeys(secrets.sessionSecret) : undefined,
   indexer,
   geo,
+  social,
 };
 if (!ctx.sessions) log.warn("API_SESSION_SECRET unset — session routes answer 503");
+if (!secrets.adminSecret) log.warn("API_ADMIN_SECRET unset — the moderation review queue answers 503");
 
 const app = createHttpServer({
   service: "api",
@@ -64,14 +88,23 @@ registerStorageRoutes(app, ctx);
 registerEngagementRoutes(app, ctx);
 registerProfileRoutes(app, ctx);
 registerFollowRoutes(app, ctx);
+registerPostRoutes(app, ctx);
+registerLeaderboardRoutes(app, ctx);
+registerModerationRoutes(app, ctx);
 // Rows left non-terminal by a previous process (restart mid-claim) get their real stage; never re-sent (S8.16e).
 void reconcilePendingRelays(ctx).catch((err) => log.warn({ err: String(err) }, "relay reconcile failed"));
 const hub = new WsHub(ctx);
 hub.register(app);
 hub.start();
+if (env.INDEXER_GRAPHQL_URL) {
+  leaderboard.start();
+  feedPoller.start();
+}
 
 await listen(app, env.PORT, env.HOST, async () => {
   hub.stop();
+  feedPoller.stop();
+  leaderboard.stop();
   indexer.stop();
   geo.stop();
   for (const chain of chains.values()) await chain.heads.stop();

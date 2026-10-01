@@ -1,7 +1,8 @@
 /**
  * 0006 — deposit inbox watches (S8.24, D-179). A counterfactual inbox is invisible to the indexer until its first
  * sweep deploys it, so the api records it when the app shows the address and the keeper's `sweeps` job reads its
- * balance until `expires_at`. Lowercase addresses (one row per chain + user). Forward-only, idempotent.
+ * balance until `expires_at`. Lowercase addresses (one row per chain + user). Also: `push_sends.chain_id` (S8.22)
+ * — every user push names its network, so delivery deep-links into the right mode. Forward-only, idempotent.
  */
 export const id = "0006_inbox_watches";
 
@@ -18,4 +19,6 @@ CREATE TABLE IF NOT EXISTS inbox_watches (
   PRIMARY KEY (chain_id, user_address)
 );
 CREATE INDEX IF NOT EXISTS inbox_watches_active_idx ON inbox_watches (chain_id, expires_at);
+
+ALTER TABLE push_sends ADD COLUMN IF NOT EXISTS chain_id integer;
 `;

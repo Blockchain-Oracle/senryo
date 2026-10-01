@@ -28,8 +28,6 @@ export const GEO_DB_TIMEOUT_MS = 60_000;
 
 /** Starter relay rate limits (per UTC day): one claim per device, a few per IPv4 /24 (or IPv6 /48). */
 export const STARTER_PER_DEVICE_PER_DAY = 1;
-/** Mainnet gas top-ups need real collateral in the account (the anti-sybil cost instead of a bot check; D-171). */
-export const MAINNET_TOPUP_MIN_EQUITY_USD6 = 10_000_000n;
 /** A relay row younger than this is still being followed by its own background check. */
 export const RELAY_RECONCILE_AFTER_MS = 30_000;
 /** No receipt after this long → the tx never landed (abandoned); it's never re-sent. */
@@ -48,6 +46,14 @@ export const WS_MAX_SUBSCRIPTIONS = 16;
 export const WS_MAX_PAYLOAD_BYTES = 16 * 1024;
 /** Drop intermediate ticks for a socket with this much unsent data. */
 export const WS_BACKPRESSURE_BYTES = 64 * 1024;
+/** Concurrent sockets per client IP (D-166 caps, moved here by S12b.4 before `feed:` fan-out). */
+export const WS_MAX_SOCKETS_PER_IP = 8;
+/** Client messages per socket per window; past the budget they are refused, past twice it the socket is closed. */
+export const WS_MESSAGES_PER_WINDOW = 60;
+export const WS_MESSAGE_WINDOW_MS = 60_000;
+export const WS_ABUSE_FACTOR = 2;
+/** RFC 6455 close code 1008 (policy violation). */
+export const WS_POLICY_CLOSE = 1008;
 
 /** Body limit for routes carrying encrypted blobs (prefs ≤ 64 KiB base64url + envelope). */
 export const BLOB_BODY_LIMIT_BYTES = 96 * 1024;

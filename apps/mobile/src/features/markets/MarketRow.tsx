@@ -7,7 +7,7 @@ import { EntityMark } from "~/components/identity/EntityMark";
 import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { tradeRoute } from "~/lib/constants/routes";
-import { arrow, price18, signedPct } from "~/lib/money";
+import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { DISABLED_OPACITY, HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ageLabel, STATUS_LABEL, statusTone } from "./session";
@@ -53,7 +53,7 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
         router.push(tradeRoute(line.symbol));
       }}
       accessibilityRole="button"
-      accessibilityLabel={`${line.name}, Senryo, ${STATUS_LABEL[line.status]}, price ${price18(line.price18)} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}
+      accessibilityLabel={`${line.name}, Senryo, ${STATUS_LABEL[line.status]}, price ${price18(line.price18, priceDecimalsOf(marketId))} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}
       style={({ pressed }) => [styles.row, border, pressed ? { backgroundColor: color.muted } : null]}
     >
       <EntityMark id={mark} size={SIZE.markRow} decorative />
@@ -66,7 +66,7 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
       </View>
       <Sparkline values={line.spark} stroke={tint} />
       <View style={styles.price}>
-        <Text style={[TYPE.numSm, { color: color.ink }]}>${price18(line.price18)}</Text>
+        <Text style={[TYPE.numSm, { color: color.ink }]}>${price18(line.price18, priceDecimalsOf(marketId))}</Text>
         <Text style={[TYPE.micro, { color: tint }]}>
           {changeText} · {age}
         </Text>

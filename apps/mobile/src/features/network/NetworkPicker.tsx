@@ -2,7 +2,8 @@
  * Practice ↔ Mainnet (S8.22, F06/F49; Living Lacquer §5.6): two explained rows with each network's balance. Practice
  * switches at once; Mainnet takes a deliberate "Switch to real money" — which also locks the session, so the next
  * signature starts fresh limits under mainnet's Face ID floor (D-037). Before the mainnet launch the row is open for
- * browsing live prices and says trading opens at launch.
+ * browsing live prices and says trading opens at launch. A deep link for the other network passes `request`: a
+ * Mainnet request opens straight on the confirmation, which still takes the deliberate tap.
  */
 import { MAINNET, TESTNET } from "@senryo/config";
 import { useState } from "react";
@@ -23,12 +24,12 @@ function Mark({ label, tone, wash }: { label: string; tone: string; wash: string
   );
 }
 
-export function NetworkPicker({ onDone }: { onDone?: () => void }) {
+export function NetworkPicker({ onDone, request }: { onDone?: () => void; request?: NetworkKey | undefined }) {
   const { color } = useTheme();
   const network = useNetwork();
   const account = useAccount();
   const balances = useNetworkBalances();
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState(request === MAINNET.key && network.key !== MAINNET.key);
   const live = mainnetTradingLive();
 
   const choose = (key: NetworkKey) => {

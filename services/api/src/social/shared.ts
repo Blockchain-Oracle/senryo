@@ -1,7 +1,7 @@
-import type { MyProfile } from "@senryo/api-client";
+import type { MyProfile, SocialIdentity } from "@senryo/api-client";
 import { type Address, getAddress } from "@senryo/chain";
 import { type ChainId, MAINNET_CHAIN_ID } from "@senryo/config";
-import { HTTP_STATUS, HttpError, type Session, type Tx } from "@senryo/service-common";
+import { type Db, HTTP_STATUS, HttpError, type Session, type Tx } from "@senryo/service-common";
 import type { FastifyRequest } from "fastify";
 import type { ApiContext } from "../context.ts";
 import { PG_DEADLOCK_DETECTED } from "./constants.ts";
@@ -28,6 +28,34 @@ export function publicTradesColumn(chainId: ChainId): "public_trades_mainnet" | 
   return chainId === MAINNET_CHAIN_ID ? "public_trades_mainnet" : "public_trades_practice";
 }
 
+/** When that network's trade sharing was last turned on (the feed never shows a fill from before it). */
+export function sharingSinceColumn(chainId: ChainId): "public_trades_mainnet_since" | "public_trades_practice_since" {
+  return chainId === MAINNET_CHAIN_ID ? "public_trades_mainnet_since" : "public_trades_practice_since";
+}
+
+/**
+ * `<alias>.listed_<network> AND NOT <alias>.hidden` — the one test for "this profile may be shown on `chainId`".
+ * A moderation-hidden profile reads exactly like an unlisted one.
+ */
+export function visibleOn(db: Db | Tx, alias: string, chainId: ChainId) {
+  return db`${db(alias)}.${db(listedColumn(chainId))} AND NOT ${db(alias)}.hidden`;
+}
+
+/** Visible on `chainId` AND sharing its trades (the feed's and Top Trades' test for fills). */
+export function sharingOn(db: Db | Tx, alias: string, chainId: ChainId) {
+  return db`${visibleOn(db, alias, chainId)} AND ${db(alias)}.${db(publicTradesColumn(chainId))}`;
+}
+
+/**
+ * The session when a valid bearer token came with the request; anonymous otherwise (an expired token on a public read
+ * must not force a Face ID prompt — the client refreshes the session on its own schedule).
+ */
+export async function optionalSession(ctx: SocialContext, request: FastifyRequest): Promise<Session | undefined> {
+  const [scheme, token] = (request.headers.authorization ?? "").split(" ");
+  if (!ctx.sessions || scheme !== "Bearer" || !token) return undefined;
+  return ctx.sessions.verify(token);
+}
+
 export interface ProfileRow {
   address: string;
   handle: string | null;
@@ -38,9 +66,27 @@ export interface ProfileRow {
   listed_mainnet: boolean;
   public_trades_practice: boolean;
   public_trades_mainnet: boolean;
+  public_trades_practice_since: Date | null;
+  public_trades_mainnet_since: Date | null;
+  hidden: boolean;
   handle_changed_at: Date | null;
   created_at: Date;
   updated_at: Date;
+}
+
+/** An identity as shown on a network (only ever built from a row that passed `visibleOn`). */
+export function identityOf(row: {
+  address: string;
+  handle: string | null;
+  display_name: string | null;
+  avatar: string | null;
+}): SocialIdentity {
+  return {
+    address: getAddress(row.address) as Address,
+    handle: row.handle,
+    displayName: row.display_name,
+    avatar: row.avatar,
+  };
 }
 
 export function myProfileOf(row: ProfileRow): MyProfile {

@@ -2,7 +2,8 @@
  * User sends (S6.12 — the seam S8's trade flows call): `@senryo/chain` is the only sender, the Mera scoped signer is
  * its viem `account` (the policy runs before every signature; one Face ID read when locked), nonces run through
  * `@senryo/account`'s per-address queue around chain's `LocalNonceSource`, and the lifecycle journal lives in MMKV
- * (`kvJournal`) so an app kill mid-send reconciles the same signed bytes on the next launch.
+ * (`kvJournal`, capped) so an app kill mid-send is reconciled on the next launch by `recoverJournal` (S8.24) — read
+ * only, on each entry's own chain, never re-broadcast.
  */
 import { type AccountClient, type Address, type FaceIdMode, type PolicyContext, queuedNonces } from "@senryo/account";
 import {
@@ -13,9 +14,12 @@ import {
   LocalNonceSource,
   type NonceSource,
   type ReadClient,
+  type Reconciled,
+  reconcileEntry,
   type Sender,
 } from "@senryo/chain";
-import type { ChainId } from "@senryo/config";
+import { type ChainId, isChainId } from "@senryo/config";
+import { isTerminalStage } from "@senryo/core";
 import { userFeeCache } from "@senryo/query";
 import { activeNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
@@ -25,6 +29,12 @@ const mmkv: KvStore = {
   getItem: (key) => storage.getString(key),
   setItem: (key, value) => storage.set(key, value),
 };
+const journal = kvJournal(mmkv);
+
+/** A live send watches its own tx for ≤ RECEIPT + FINALIZE timeouts (27 s); recovery leaves younger entries to it. */
+const RECOVERY_MIN_AGE_MS = 30_000;
+/** Reconciled entries stay this long (a pending screen can still read its outcome), then go. */
+const SETTLED_KEEP_MS = 86_400_000;
 
 /**
  * One read client and one nonce counter PER CHAIN (S8.22): a nonce cached for an address on practice must never be
@@ -73,8 +83,59 @@ export function userSender(
     account: client.signer(trade ? () => ({ ...base(), ...trade }) : base),
     read,
     nonces: sharedNonces(chainId),
-    journal: kvJournal(mmkv),
+    journal,
     // The same quote the gas budget uses (D-171): what the ticket checks is exactly what gets signed.
     fees: userFeeCache(read),
   });
+}
+
+export interface Recovered {
+  chainId: ChainId;
+  from: Address;
+  action: string;
+  outcome: Exclude<Reconciled, { kind: "pending" }>;
+}
+
+/**
+ * One TxRecovery pass over the journal (S8.24, D-179). Each non-terminal entry older than a live send's watch is
+ * reconciled on ITS chain (`reconcileEntry`, never a broadcast); an abandoned one resyncs that chain's nonce
+ * counter. Settled entries past SETTLED_KEEP_MS are removed. Returns what changed and how many still wait.
+ */
+export async function recoverJournal(now = Date.now()): Promise<{ recovered: Recovered[]; waiting: number }> {
+  const recovered: Recovered[] = [];
+  let waiting = 0;
+  for (const entry of await journal.list()) {
+    if (isTerminalStage(entry.stage)) {
+      if (now - entry.updatedAt > SETTLED_KEEP_MS) await journal.remove(entry.hash);
+      continue;
+    }
+    if (!isChainId(entry.chainId)) {
+      await journal.remove(entry.hash);
+      continue;
+    }
+    if (now - entry.updatedAt < RECOVERY_MIN_AGE_MS) {
+      waiting += 1;
+      continue;
+    }
+    const chainId = entry.chainId;
+    const outcome = await reconcileEntry(sharedRead(chainId), entry, now).catch(
+      (): Reconciled => ({ kind: "pending" }),
+    );
+    if (outcome.kind === "pending") {
+      waiting += 1;
+      continue;
+    }
+    if (outcome.kind === "settled") {
+      await journal.update(entry.hash, {
+        stage: outcome.stage,
+        blockNumber: outcome.receipt.blockNumber.toString(),
+        blockHash: outcome.receipt.blockHash,
+      });
+    } else {
+      await journal.update(entry.hash, { stage: "abandoned", error: outcome.reason });
+      sharedNonces(chainId).resync(entry.from);
+    }
+    recovered.push({ chainId, from: entry.from, action: String(entry.action), outcome });
+  }
+  return { recovered, waiting };
 }

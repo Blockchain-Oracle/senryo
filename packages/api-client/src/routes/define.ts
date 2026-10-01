@@ -6,9 +6,12 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
  * How a route authenticates:
  *  - none: public (rate-limited)
  *  - session: `Authorization: Bearer <token>` from `POST /v1/auth/verify` (SIWE signed by the Mera EOA)
+ *  - optional: public, but the client sends the session token when it has one (viewer-specific filtering: blocks,
+ *    mutes, likes, "Your rank"); the server reads an invalid or missing token as anonymous
  *  - webhook: issuer signature over the raw body (card service only)
+ *  - admin: operator bearer secret (`API_ADMIN_SECRET`); never in an app bundle, so the app client never sends one
  */
-export type RouteAuth = "none" | "session" | "webhook";
+export type RouteAuth = "none" | "session" | "optional" | "webhook" | "admin";
 
 export interface RouteDef<
   Params extends z.ZodType | undefined = z.ZodType | undefined,

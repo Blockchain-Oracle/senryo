@@ -13,6 +13,7 @@ export * from "./lp-reads.ts";
 export * from "./market-reads.ts";
 export * from "./nonce.ts";
 export * from "./reads.ts";
+export * from "./recovery.ts";
 export * from "./send.ts";
 export * from "./signer.ts";
 export * from "./siwe.ts";

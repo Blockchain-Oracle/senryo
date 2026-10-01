@@ -18,7 +18,7 @@ import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
 import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
-import { pct, price18, signedUsd } from "~/lib/money";
+import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { DEFAULT_TRIGGER_STEP_BPS, TRIGGER_STEPS_BPS } from "./constants";
 
@@ -78,7 +78,8 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
       {mine.map((t) => (
         <View key={t.id} style={styles.row}>
           <Text style={[TYPE.numSm, { color: t.takeProfit ? color.up : color.down, flex: 1 }]}>
-            {t.takeProfit ? "TP" : "SL"} · {price18(t.triggerPrice)} · {t.size >= position.size ? "all" : "part"}
+            {t.takeProfit ? "TP" : "SL"} · {price18(t.triggerPrice, priceDecimalsOf(market.marketId))} ·{" "}
+            {t.size >= position.size ? "all" : "part"}
           </Text>
           <Button
             label="Cancel"
@@ -97,7 +98,7 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
         onChange={(v) => setStepBps(BigInt(v))}
         label="Distance from the oracle price"
       />
-      <KeyValue label={`${symbol} AT`} value={price18(trigger18)} />
+      <KeyValue label={`${symbol} AT`} value={price18(trigger18, priceDecimalsOf(market.marketId))} />
       <KeyValue label="REALISED AT TRIGGER" value={signedUsd(atTrigger.netUsd6)} />
       {market.pv.status !== "OPEN" ? (
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
@@ -110,7 +111,11 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
         <Text style={[TYPE.caption, { color: color.up }]}>Saved onchain · keepers watch the oracle.</Text>
       ) : null}
       <Button
-        label={busy ? "Placing…" : `Place ${takeProfit ? "TP" : "SL"} at ${price18(trigger18)}`}
+        label={
+          busy
+            ? "Placing…"
+            : `Place ${takeProfit ? "TP" : "SL"} at ${price18(trigger18, priceDecimalsOf(market.marketId))}`
+        }
         disabled={busy || !account.client || position.size === 0n}
         loading={busy}
         onPress={() =>
@@ -129,7 +134,7 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
             return placeTriggerRequest(userSender(client, address, account.settings.faceId), order);
           })
         }
-        accessibilityHint={`Closes the whole position when ${market.name} reaches ${price18(trigger18)}, ${pct(stepBps)} from now`}
+        accessibilityHint={`Closes the whole position when ${market.name} reaches ${price18(trigger18, priceDecimalsOf(market.marketId))}, ${pct(stepBps)} from now`}
       />
     </Panel>
   );

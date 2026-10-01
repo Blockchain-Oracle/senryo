@@ -3,6 +3,7 @@
  * `e8` (Chainlink 8 decimals); rates are basis points. The bigint algorithm lives in `@senryo/core`; this file owns
  * mobile's glyphs (true minus sign, ▲/▼).
  */
+import { ENGINE_MARKETS } from "@senryo/config";
 import { DECIMALS, formatUnits } from "@senryo/core";
 import { activeNetwork, type NetworkKey } from "~/lib/network";
 
@@ -33,7 +34,12 @@ export function price(valueE8: bigint, shown: number = DECIMALS.cents): string {
   return formatUnits(valueE8, DECIMALS.e8, shown);
 }
 
-/** 4,189.06 from an engine price (1e18 USD per unit, risk-math.md units). */
+/** A market's display precision (S8.23): metals in cents, FX majors to 5 places, JPY/USD to 7. */
+export function priceDecimalsOf(marketId: number): number {
+  return ENGINE_MARKETS.find((m) => m.id === marketId)?.priceDecimals ?? DECIMALS.cents;
+}
+
+/** 4,189.06 from an engine price (1e18 USD per unit, risk-math.md units); pass `priceDecimalsOf(id)` for a market. */
 export function price18(value18: bigint, shown: number = DECIMALS.cents): string {
   return formatUnits(value18, DECIMALS.e18, shown);
 }

@@ -118,8 +118,22 @@ reuses everything below `apps/`.
       — app side done: `~/lib/network` store (MMKV), per-chain read/nonces/API session/policy context, effective Face
       ID per network (mainnet never below its default), lock on entering Mainnet, mode capsule + selector sheet +
       Account → Mode, `P$` for paper money, pre-launch Mainnet = live Chainlink prices read-only on Markets/Trade/
-      Portfolio/LP, per-chain liquidation memory. Open: ws session chain check + push/deep-link chainId (server, with
-      the mainnet api)
+      Portfolio/LP, per-chain liquidation memory.
+      - *Server side done (1 Oct):*
+        - the ws `account:` channel needs a session of the SAME chain;
+        - alerts list, create and delete are bound to the session's chain (403 FORBIDDEN across networks);
+        - every keeper push stores `chain_id` under a chain-prefixed key (keepers of both networks share one ledger);
+        - `+native-intent` → `linkTarget`: a link for the other network opens the selector with it requested (Mainnet
+          lands on the deliberate confirm) and continues only after the switch, to an in-app path only.
+      - *Network-switch check:* `pnpm --filter @senryo/drive network-switch-check` passes 6/6. It checks that:
+        - a Practice context signs a Practice open;
+        - a session never signs the other network's tx, either way (`wrong-chain`, no step-up);
+        - entering Mainnet locks the session, and nothing carries over into the next one.
+        - Per-chain nonces and reads are the app's `Map`s (`sender.ts`). Face ID needed no v2 settings, because the
+          effective mode is derived per network (mainnet never below its default).
+      - **Open:**
+        - push delivery itself (expo-notifications, W4 dev-client build **[OK?]**);
+        - the phone round-trip.
 - [ ] S8.23 FX majors on the engine (D-175, contracts track): EUR/GBP/JPY/CHF/CAD feeds verified on 143; risk params +
       aggregate FX USD-exposure cap; FX calendar; mainnet at construction in `Deploy.s.sol`; testnet `AddMarkets.s.sol`
       schedule → execute (6 h) **[OK?]**; keeper observe on status edges/OI; mirrors on 10143
@@ -142,7 +156,24 @@ reuses everything below `apps/`.
         - Proof: `pnpm --filter @senryo/keeper sweep-check` (10143 fork + scratch Postgres) passes 9/9. A keyless,
           MON-less user is credited $25, then $20 in AUSD + USDC through the indexer path; dust waits and expired
           watches are ignored.
-        - **Open:** app receive + watch call, mainnet copy, TxRecovery, and the keeper/api redeploy **[OK?]**.
+        - App: Fund → Monad wallet shows the account's own inbox (chain read), QR (decode-verified), copy and share,
+          mode + network, the $1 minimum, and live status (waiting → below minimum → crediting → credited).
+      - *TxRecovery done (1 Oct, D-231):*
+        - `reconcileEntry` (chain) reads only the entry's own chain and never broadcasts;
+        - `TxRecoveryHost` (mobile root) runs at launch, on foreground, and every 5 s while unresolved;
+        - an abandoned entry resyncs that chain's nonce; outcomes are toasted with their own mode;
+        - the kv journal is capped at 50 and drops only settled entries (nothing ever removed entries before).
+        - Proof: `pnpm --filter @senryo/drive recovery-check` 8/8 on a 10143 fork, through the real sender.
+      - *Mainnet copy done (1 Oct):* on Mainnet the starter card becomes "Start with real money": deposit AUSD/USDC
+        through the inbox (no MON needed) and gas once the balance reaches `MAINNET_TOPUP_MIN_EQUITY_USD6`
+        ($10, now in `@senryo/config` and shared by the api and the app). On Portfolio it hides once the account
+        holds money.
+      - **Open:**
+        - a voucher code entry on mobile: the relay exists (`starter.voucher`), but the screen comes with the J2
+          add-money hub and the J1 code step;
+        - web TxRecovery (S11b);
+        - the keeper/api redeploy **[OK?]**;
+        - the app rebuild with 143.json after S8.18 (EAS **[OK?]**).
 
 ## Gate
 Assurance findings closed (fixed or documented) · mainnet deposit → XAU long → close from the phone (txs in

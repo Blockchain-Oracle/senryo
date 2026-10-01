@@ -45,6 +45,7 @@
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
     "lucide-react-native": "^1.49.0",
+    "qrcode": "1.5.4",
     "react": "catalog:mobile",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
@@ -62,6 +63,7 @@
     "victory-native": "^42.0.1"
   },
   "devDependencies": {
+    "@types/qrcode": "1.5.6",
     "@types/react": "catalog:mobile",
     "babel-preset-expo": "~57.0.13",
     "typescript": "catalog:"

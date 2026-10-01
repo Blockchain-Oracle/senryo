@@ -10,7 +10,7 @@ import { Keypad } from "~/components/trade/Keypad";
 import { LeverageSlider } from "~/components/trade/LeverageSlider";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
-import { usd } from "~/lib/money";
+import { priceDecimalsOf, usd } from "~/lib/money";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { DISABLED_OPACITY, HAIRLINE_PX, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { AMOUNT_CHIPS_USD } from "./constants";
@@ -103,6 +103,7 @@ export function Ticket({ market }: { market: LiveMarket }) {
         preview={t.preview}
         freeToTradeUsd6={t.snapshot?.freeToTrade}
         feeBps={market.risk.feeBps}
+        priceDecimals={priceDecimalsOf(market.marketId)}
       />
 
       {copy ? (

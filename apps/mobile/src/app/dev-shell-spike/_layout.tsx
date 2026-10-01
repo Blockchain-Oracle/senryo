@@ -49,15 +49,9 @@ function SpikeShell() {
 function FocusedDock() {
   const { state } = Navigator.useContext();
   // Match by route name: the router's route order need not follow the dock's order.
-  const name = state.routes[state.index]?.name;
-  return (
-    <Dock
-      focused={Math.max(
-        0,
-        SPIKE_TABS.findIndex((tab) => tab === name),
-      )}
-    />
-  );
+  const name = state.routes[state.index]?.name ?? "";
+  const tabs: readonly string[] = SPIKE_TABS;
+  return <Dock focused={Math.max(0, tabs.indexOf(name))} />;
 }
 
 const styles = StyleSheet.create({

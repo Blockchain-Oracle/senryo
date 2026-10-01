@@ -34,13 +34,13 @@ export function DataPanel() {
     const client = account.client;
     if (client && signedIn) {
       try {
-        const { deleteRemotePrefs } = await import("@/lib/account/remote");
-        await deleteRemotePrefs(client, account.settings.faceId);
+        const { deleteRemoteData } = await import("@/lib/account/remote");
+        await deleteRemoteData(client, account.settings.faceId);
       } catch (error) {
         // Backing out of the unlock prompt cancels the whole delete.
         if (isSilent(classifyAuthError(error))) return;
-        toast("Your encrypted settings are still on Senryo", {
-          description: "Senryo couldn't be reached. Sign in and delete again to remove them.",
+        toast("Some of your data is still on Senryo", {
+          description: "Senryo couldn't be reached. Sign in and delete again to remove it.",
         });
       }
     }
@@ -66,7 +66,8 @@ export function DataPanel() {
         <div>
           <p className="font-mono text-caption">DELETE MY DATA</p>
           <p className="text-caption text-muted-foreground">
-            Clears everything Senryo keeps in this browser and your encrypted settings on Senryo. Onchain history is
+            Clears everything Senryo keeps in this browser, your encrypted settings, and your profile, posts, likes and
+            follows on Senryo. Your handle stays reserved for 30 days so nobody can pose as you. Onchain history is
             public and permanent — it can't be deleted by anyone.
           </p>
         </div>

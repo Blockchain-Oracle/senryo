@@ -21,6 +21,10 @@ export const GAS_REFETCH_MS = 15_000;
 export const GAS_BUDGET_STALE_MS = 60_000;
 /** Starter status changes only when the user claims (the claim flow invalidates it). */
 export const STARTER_STALE_MS = 300_000;
+/** Deposit inbox balance while its screen is open (arrival → crediting, S8.24). */
+export const INBOX_REFETCH_MS = 5_000;
+/** Re-register the inbox watch (api TTL 7 days) at most this often while its screen is open. */
+export const INBOX_WATCH_REFRESH_MS = 3_600_000;
 /** Indexed equity curve (the socket invalidates the account on finalized changes). */
 export const EQUITY_REFETCH_MS = 60_000;
 

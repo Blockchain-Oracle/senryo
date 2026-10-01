@@ -147,7 +147,8 @@ record(
 );
 const [watch] = await db<{ sweep_count: number }[]>`
   SELECT sweep_count FROM inbox_watches WHERE chain_id = ${CHAIN} AND user_address = ${alice.toLowerCase()}`;
-const [push] = await db`SELECT 1 FROM push_sends WHERE event_key = ${`sweep:${CHAIN}:${first?.tx}`}`;
+const [push] =
+  await db`SELECT 1 FROM push_sends WHERE event_key = ${`${CHAIN}:sweep:${first?.tx}`} AND chain_id = ${CHAIN}`;
 record("watch row and deposit push recorded", watch?.sweep_count === 1 && push !== undefined);
 
 // 3 — an expired watch is ignored; the indexer path sweeps both stablecoins from the now-deployed inbox.

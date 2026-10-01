@@ -20,6 +20,8 @@ export const configResponseSchema = z.object({
       card: z.boolean(),
     }),
   ),
+  /** The visible contact point for reports and safety questions (App Store 1.2, S12b.6). */
+  contact: z.object({ email: z.email(), url: z.url().nullable() }),
 });
 
 export const geoResponseSchema = z.object({

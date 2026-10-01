@@ -13,7 +13,9 @@ import { Icon } from "~/components/kit/Icon";
 import { fire } from "~/feedback/fire";
 import { type StarterPhase, useStarter } from "~/lib/account/use-starter";
 import { ROUTES } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { MainnetStartCard } from "./MainnetStartCard";
 
 const USD_DECIMALS = 6;
 const CENTS = 2;
@@ -54,7 +56,17 @@ function message(phase: StarterPhase): string {
   return hours ? `${base} · next in ${hours}h` : base;
 }
 
+/** Practice: the free starter claim. Mainnet: the real-money way in (deposit, no MON needed). */
 export function StarterCard({ hideWhenClaimed = false }: { hideWhenClaimed?: boolean }) {
+  const network = useNetwork();
+  return network.modeLabel === "Mainnet" ? (
+    <MainnetStartCard hideWhenFunded={hideWhenClaimed} />
+  ) : (
+    <PracticeStarterCard hideWhenClaimed={hideWhenClaimed} />
+  );
+}
+
+function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) {
   const { color } = useTheme();
   const { phase, claim, recheck, ready } = useStarter();
   useEffect(() => {

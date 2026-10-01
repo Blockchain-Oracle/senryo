@@ -4,7 +4,7 @@ import { EntityMark } from "~/components/identity/EntityMark";
 import { VenueChip } from "~/components/identity/VenueChip";
 import { ageLabel, STATUS_CHIP, statusTone } from "~/features/markets/session";
 import type { MarketLine } from "~/features/markets/useMarketLine";
-import { arrow, price18, signedPct } from "~/lib/money";
+import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -35,9 +35,9 @@ export function TradeHeader({ line }: { line: MarketLine }) {
         <Text
           maxFontSizeMultiplier={HERO_FONT_SCALE}
           style={[TYPE.numLg, { color: color.ink }]}
-          accessibilityLabel={`Oracle price ${price18(line.price18)} dollars, updated ${age}`}
+          accessibilityLabel={`Oracle price ${price18(line.price18, priceDecimalsOf(line.marketId))} dollars, updated ${age}`}
         >
-          {price18(line.price18)}
+          {price18(line.price18, priceDecimalsOf(line.marketId))}
         </Text>
         {change === undefined ? (
           <Text style={[TYPE.numSm, { color: color.inkMuted }]}>24h —</Text>
