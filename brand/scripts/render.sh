@@ -42,8 +42,11 @@ cp kinpaku-card-back.svg "$WEB_PUBLIC/brand/kinpaku-card-back.svg"
 # (1200 px = a 400 pt card at 3x). S1b.4.
 png kinpaku-card.svg "$BRAND/../apps/mobile/assets/images/kinpaku-card.png" 1200 757
 
-# Original identity art (S1b.3): koban, chōgin, FX pair discs, venue chip → brand/art/, then re-pin + regenerate.
+# Original identity art (S1b.3): koban, chōgin, FX pair discs, venue chip → brand/art/; then the J1 artwork that
+# composes them (six onboarding scenes, pending-passkey art, completion foil, twelve avatars) → brand/art/onboarding/
+# and brand/art/avatars/; then re-pin + regenerate. Contact sheets for review: python3 scripts/sheets.py.
 python3 scripts/art.py
+python3 scripts/onboarding.py
 (cd "$BRAND/.." && pnpm --filter @senryo/identity codegen --rehash)
 
 ls -la "$BRAND"/*.png

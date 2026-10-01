@@ -64,6 +64,26 @@ import ArtXauKobanDisc from "./xau-koban-disc.tsx";
 import ArtXauKobanSymbol from "./xau-koban-symbol.tsx";
 import ArtXagChoginDisc from "./xag-chogin-disc.tsx";
 import ArtXagChoginSymbol from "./xag-chogin-symbol.tsx";
+import ArtSceneBalanceSymbol from "./scene-balance-symbol.tsx";
+import ArtScenePasskeySymbol from "./scene-passkey-symbol.tsx";
+import ArtSceneMarketsSymbol from "./scene-markets-symbol.tsx";
+import ArtSceneLpSymbol from "./scene-lp-symbol.tsx";
+import ArtSceneKinpakuSymbol from "./scene-kinpaku-symbol.tsx";
+import ArtSceneModesSymbol from "./scene-modes-symbol.tsx";
+import ArtPasskeyPendingSymbol from "./passkey-pending-symbol.tsx";
+import ArtCompletionFoilSymbol from "./completion-foil-symbol.tsx";
+import ArtAvatar01TopknotSymbol from "./avatar-01-topknot-symbol.tsx";
+import ArtAvatar02BobSymbol from "./avatar-02-bob-symbol.tsx";
+import ArtAvatar03KanzashiSymbol from "./avatar-03-kanzashi-symbol.tsx";
+import ArtAvatar04HachimakiSymbol from "./avatar-04-hachimaki-symbol.tsx";
+import ArtAvatar05CurlsSymbol from "./avatar-05-curls-symbol.tsx";
+import ArtAvatar06ElderSymbol from "./avatar-06-elder-symbol.tsx";
+import ArtAvatar07BunsSymbol from "./avatar-07-buns-symbol.tsx";
+import ArtAvatar08SweepSymbol from "./avatar-08-sweep-symbol.tsx";
+import ArtAvatar09PonytailSymbol from "./avatar-09-ponytail-symbol.tsx";
+import ArtAvatar10ScarfSymbol from "./avatar-10-scarf-symbol.tsx";
+import ArtAvatar11KasaSymbol from "./avatar-11-kasa-symbol.tsx";
+import ArtAvatar12KitsuneSymbol from "./avatar-12-kitsune-symbol.tsx";
 import ArtNearDisc from "./near-disc.tsx";
 import ArtNearSymbol from "./near-symbol.tsx";
 import ArtNearMonoLight from "./near-monolight.tsx";
@@ -147,6 +167,26 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "senryo-venue": { symbol: ArtSenryoVenueSymbol },
   "xau-koban": { disc: ArtXauKobanDisc, symbol: ArtXauKobanSymbol },
   "xag-chogin": { disc: ArtXagChoginDisc, symbol: ArtXagChoginSymbol },
+  "scene-balance": { symbol: ArtSceneBalanceSymbol },
+  "scene-passkey": { symbol: ArtScenePasskeySymbol },
+  "scene-markets": { symbol: ArtSceneMarketsSymbol },
+  "scene-lp": { symbol: ArtSceneLpSymbol },
+  "scene-kinpaku": { symbol: ArtSceneKinpakuSymbol },
+  "scene-modes": { symbol: ArtSceneModesSymbol },
+  "passkey-pending": { symbol: ArtPasskeyPendingSymbol },
+  "completion-foil": { symbol: ArtCompletionFoilSymbol },
+  "avatar-01-topknot": { symbol: ArtAvatar01TopknotSymbol },
+  "avatar-02-bob": { symbol: ArtAvatar02BobSymbol },
+  "avatar-03-kanzashi": { symbol: ArtAvatar03KanzashiSymbol },
+  "avatar-04-hachimaki": { symbol: ArtAvatar04HachimakiSymbol },
+  "avatar-05-curls": { symbol: ArtAvatar05CurlsSymbol },
+  "avatar-06-elder": { symbol: ArtAvatar06ElderSymbol },
+  "avatar-07-buns": { symbol: ArtAvatar07BunsSymbol },
+  "avatar-08-sweep": { symbol: ArtAvatar08SweepSymbol },
+  "avatar-09-ponytail": { symbol: ArtAvatar09PonytailSymbol },
+  "avatar-10-scarf": { symbol: ArtAvatar10ScarfSymbol },
+  "avatar-11-kasa": { symbol: ArtAvatar11KasaSymbol },
+  "avatar-12-kitsune": { symbol: ArtAvatar12KitsuneSymbol },
   "near": { disc: ArtNearDisc, symbol: ArtNearSymbol, monoLight: ArtNearMonoLight, monoDark: ArtNearMonoDark },
   "bnb": { disc: ArtBnbDisc, symbol: ArtBnbSymbol, monoLight: ArtBnbMonoLight, monoDark: ArtBnbMonoDark },
   "tron": { disc: ArtTronDisc, symbol: ArtTronSymbol, monoLight: ArtTronMonoLight, monoDark: ArtTronMonoDark },

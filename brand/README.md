@@ -32,6 +32,64 @@ its sha256 in `packages/identity/src/art/originals.ts` (invariant `identity-prov
 | `art/fx-{eur,gbp,jpy,chf,cad}-usd.svg` | FX pair discs: base-currency flag overlapped by the US flag (public-domain Commons files in `packages/identity/sources/flag-*`); the pair text is always shown beside them. |
 | `art/senryo-venue.svg` | Senryo venue chip: the simplified seal geometry through the gold-leaf ramp, carved lacquer 千. |
 
+### J1 onboarding artwork (`art/onboarding/`, `art/avatars/`, S1b.3 first-pass masters, pending design review — B12)
+
+Written by `scripts/onboarding.py` (deterministic, seeded; Python standard library only). The look is the v2 "Living
+Lacquer" direction (`docs/design/senryo-v2/direction.md` §2, §10), not the D2 terminal described at the top of this file:
+lacquer, gold leaf and silver from the material ramps, on the six scene fields (`SCENE_FIELD` in `packages/tokens`).
+Same rules as the identity art: no `<text>`, no `<filter>`, no `<style>`; gradients, clip paths, masks and opacity only.
+Soft shadows are stacked translucent shapes or radial gradients, tinted with the field's own deep tone. Light comes from
+the upper left on every object and thickness falls to the lower right.
+
+| File | What it is | Size |
+|---|---|---|
+| `art/onboarding/scene-balance.svg` | 1 · One balance (orange): a lacquer senryō-bako (千両箱). Two gold inlaid lines leave the seal on its lid, run down its front and carry on as flat inlay across the ground to two inlaid rings: the Kinpaku card hovers over one (spend), the XAU koban over the other (trade). No amounts, no partition. | 756 × 940 (the 378 × 470 pt hero at 2x) |
+| `art/onboarding/scene-passkey.svg` | 2 · Passkey (periwinkle): an original silver key (its bow is the seal's rounded square) hovering just over its bed in a lacquer tablet, a phone as the device cue, a seal tag. No scan, no progress. | 756 × 940 |
+| `art/onboarding/scene-markets.svg` | 3 · Markets (yellow): three lacquer trays of equal weight: commodities (koban, chōgin), FX (EUR/USD and JPY/USD pair discs, each with a plate for its native pair label), crypto (the registered Bitcoin and MON marks, uniformly scaled, never recoloured). No quotes. | 756 × 940 |
+| `art/onboarding/scene-lp.svg` | 4 · LP (lime): the vault as a lacquer well whose round, bolted door stands open on its hinges, one shared pool inside (far wall mirrored, a meniscus at the near wall), one drop above the point it disturbs. No rate. | 756 × 940 |
+| `art/onboarding/scene-kinpaku.svg` | 5 · Kinpaku (pink): the card (lacquer, a torn field of thin gold leaf with one sheen direction, carved seal) over a book of beaten gold leaf and bamboo tweezers. No network mark, no number. | 756 × 940 |
+| `art/onboarding/scene-modes.svg` | 6 · Practice / Mainnet (gray): washi notes printed in the practice violet in front; metal money in a lacquer tray lined in the mainnet blue, apart and behind; a plate beside each for its native mode label. The blue carries Mainnet, never the gold. | 756 × 940 |
+| `art/onboarding/labels.json` | The label plates the app fills with native text (`EUR/USD`, `JPY/USD`, `Practice · Paper money`, `Mainnet · Real money`): id, box in master units, text, ink. Text is never outlined into a scene, so it stays localisable and readable by assistive technology. | — |
+| `art/onboarding/passkey-pending.svg` | Shown while the OS passkey sheet is open: the key over its bed, alone, transparent ground. It may sway and glint; it never counts, fills or scans. | 640 × 640 |
+| `art/onboarding/completion-foil.svg` | One square of beaten gold leaf with the seal pressed in. The sheet is a computed surface (broad bends, a lifted corner, a few creases): its outline, seal and creases are projected from it, and each bend's light is one continuous gradient across the whole sheet (no facets). The seal is shade over the leaf, so the gold under it still turns. Only after a verified outcome. | 640 × 640 |
+| `art/avatars/avatar-NN-*.svg` | Twelve default avatars: one family (same collar, light and drawing), different people (jaw, nose, eye spacing, skin, hair or headwear, one accessory). The face fills about half the disc. Full-bleed squares; the app clips them to discs. | 256 × 256 |
+
+**Conventions.** Two viewpoints only. Lying objects (cards, trays, notes, key, coins) are seen from straight above with
+their thickness falling to the lower right; standing objects (the chest, the vault) use one three-quarter view from the
+front right. A resting object gets a tight contact shadow plus a short throw (`kit.contact`), a hovering one a soft
+shadow on what it hovers over; every shadow is its own named group so it can move apart from its object. Gold is
+brand and card material only; the financial green and red never appear. Robes and grounds of the avatars use palette
+tokens; paper, bamboo, straw, skin and hair are material pigments named in the scripts.
+
+**Layers.** Every master keeps its layers as named top-level groups, back to front: scenes use `<key>-field`, `-shadow`,
+`-back`, `-main`, `-fore`; the foil uses `-shadow`, `-leaf`, `-seal`, `-sheen`, `-flakes`; the pending art `-shadow`,
+`-tablet`, `-tag`, `-key-shadow`, `-key`, `-glints`. Movable objects and their shadows are named groups inside them
+(`scene-balance-chest`, `-card`, `-koban`, `-path-spend`, `-path-trade`, `scene-lp-door`, `-pool`, `-ripples`, `-drop`, …).
+`python3 scripts/onboarding.py --layers <dir>` writes one stand-alone SVG per top-level group (same viewBox and defs), so a layer can be drawn and animated on its own with Skia/Reanimated and still
+register with the others. The static master is the Reduced Motion composition: same artwork, nothing missing.
+
+**Scripts** (each under 400 lines): `kit.py` (canvas, layers, shadows, materials, label plates, mark embedding),
+`props.py` (Kinpaku card, gold leaf, lacquer dish, badges), `chest.py` (the senryō-bako), `keyart.py` (key, tag, tablet),
+`scene_*.py` (one per scene), `pending.py`, `foil.py`, `avatars.py` + `avatar_parts.py`, `onboarding.py` (writes everything), `sheets.py` and `motion.py` (review aids).
+
+**Review aids** (written to `brand/review/`, gitignored; phone chrome, copy and label text on them are mock context,
+never part of a master):
+- `python3 scripts/sheets.py` renders the scenes inside 402 × 874 phones on the dark and light grounds (native labels
+  drawn from `labels.json`), the pending art and foil on both grounds, and the avatars as discs at 48 px and 96 px.
+- `python3 scripts/motion.py` (needs ffmpeg) renders three short motion samples by moving only the masters' named groups:
+  scene 2 arriving and the key settling, the LP drop and ripples, the foil reveal with the highlight crossing the seal.
+  They show the layers come apart cleanly; they are not the Skia/Reanimated implementation.
+
+Every file is registered with its sha256 in `packages/identity/src/art/onboarding.ts` (invariant `identity-provenance`),
+which also generates a react-native-svg and a web component per master. Replacing a piece is one file plus
+`pnpm --filter @senryo/identity codegen --rehash`. One authoring trap: the codegen's SVGO pass rounds a merged transform
+to the precision of any `matrix()` it meets, so write a plain squash as `scale()` and compare the generated output with
+the master after a change (`codegen --emit-svg <dir>`).
+
+**Review status.** Codex reviewed the package over five rounds; in the closing round every piece passes as a static
+first-pass master for the user's design review, with a list of what still falls short
+(`docs/design/reviews/2026-10-01-j1-art-review.md`). B12 stays open until the user's design review passes.
+
 `render.sh` also writes `apps/mobile/assets/images/kinpaku-card.png` (the card face; its grain filter doesn't draw in
 react-native-svg) and re-runs `art.py` + the identity codegen.
 
