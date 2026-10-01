@@ -2,7 +2,7 @@ import { DECIMALS, ONE_USD6 } from "@senryo/core";
 import { useCandles } from "@senryo/query";
 import { ChartCandlestick, Grid3x3, Info, SlidersHorizontal } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { CandleChart } from "~/components/charts/CandleChart";
 import { EmptyState, ReadingView, Skeleton } from "~/components/kit/states";
 import { Keypad } from "~/components/trade/Keypad";
@@ -12,7 +12,17 @@ import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { moneySymbol, pct, price18, priceDecimalsOf, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { BUTTON, CONTROL_FONT_SCALE, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import {
+  BUTTON,
+  CONTROL_FONT_SCALE,
+  HERO_FONT_SCALE,
+  RADIUS,
+  SIZE,
+  SPACE,
+  STACK_FONT_SCALE,
+  TYPE,
+  useTheme,
+} from "~/theme";
 import { useCandleStyle } from "./candle-style";
 import { AMOUNT_CHIPS_USD } from "./constants";
 import { usePlannedTriggers } from "./planned-triggers";
@@ -31,7 +41,8 @@ const MS_PER_SECOND = 1000;
  * leveraged size joins that line once there is an amount (FT102: $10 at 2× reads "leveraged size $20" while the
  * margin stays $10); the centred leverage ruler; liquidation price ⓘ and Stop Loss / Take Profit;
  * the keypad ↔ chart toggle; then presets + keypad, or the embedded candle chart with its settings — the amount and
- * leverage are kept across the toggle (FT105). Unknown values are placeholders or skeletons, never $0.00.
+ * leverage are kept across the toggle (FT105). Unknown values are placeholders or skeletons, never $0.00. At large
+ * text sizes the body scrolls instead of squeezing: keys keep their full touch height and the chart its own.
  */
 export function TicketEntry({
   t,
@@ -49,14 +60,25 @@ export function TicketEntry({
   /** Where SL/TP planned for this order are kept (S1b.8a). */
   planKey: string;
 }) {
-  return (
-    <View style={styles.body}>
+  const fits = useWindowDimensions().fontScale <= STACK_FONT_SCALE;
+  const content = (
+    <>
       <Amount t={t} />
       <LeverageRuler value={t.leverage} max={line.maxLeverageX} onChange={t.setLeverage} />
       <RiskRow t={t} line={line} onChild={onChild} planKey={planKey} />
       <ModeToggle mode={mode} onMode={onMode} />
-      {mode === "keypad" ? <KeypadRegion t={t} /> : <ChartRegion line={line} onSettings={() => onChild("candles")} />}
-    </View>
+      {mode === "keypad" ? (
+        <KeypadRegion t={t} />
+      ) : (
+        <ChartRegion line={line} onSettings={() => onChild("candles")} fixed={!fits} />
+      )}
+    </>
+  );
+  if (fits) return <View style={styles.body}>{content}</View>;
+  return (
+    <ScrollView style={styles.fill} contentContainerStyle={styles.scrollBody} keyboardShouldPersistTaps="handled">
+      {content}
+    </ScrollView>
   );
 }
 
@@ -156,13 +178,14 @@ function RiskRow({
         )}
       </Pressable>
       <Pressable onPress={() => onChild("tpsl")} accessibilityRole="button" style={[styles.riskCell, styles.end]}>
-        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, styles.right, { color: color.text3 }]}>
           Stop Loss / Take Profit
         </Text>
         <Text
           maxFontSizeMultiplier={CONTROL_FONT_SCALE}
           style={[
             TYPE.rowStrong,
+            styles.right,
             { color: planned.length > 0 ? color.up : t.amountText === "" && !t.held ? color.text3 : color.link },
           ]}
         >
@@ -239,7 +262,7 @@ function KeypadRegion({ t }: { t: TicketModel }) {
 }
 
 /** The embedded chart (F39): Chainlink candles in the saved style; the gear opens the candle settings child (F40). */
-function ChartRegion({ line, onSettings }: { line: MarketLine; onSettings: () => void }) {
+function ChartRegion({ line, onSettings, fixed }: { line: MarketLine; onSettings: () => void; fixed: boolean }) {
   const { color } = useTheme();
   const candles = useCandles(line.symbol, CHART_INTERVAL);
   const style = useCandleStyle();
@@ -260,7 +283,7 @@ function ChartRegion({ line, onSettings }: { line: MarketLine; onSettings: () =>
           <SlidersHorizontal size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text2} />
         </Pressable>
       </View>
-      <View style={styles.chart} onLayout={(e) => setHeight(e.nativeEvent.layout.height)}>
+      <View style={fixed ? styles.chartFixed : styles.chart} onLayout={(e) => setHeight(e.nativeEvent.layout.height)}>
         <ReadingView reading={candles} loading="chart" loadingLabel="Loading Chainlink rounds">
           {(rows) =>
             rows.length === 0 ? (
@@ -288,10 +311,14 @@ function ChartRegion({ line, onSettings }: { line: MarketLine; onSettings: () =>
 
 const styles = StyleSheet.create({
   body: { flex: 1, paddingHorizontal: SIZE.gutter, gap: SPACE.sm },
+  fill: { flex: 1 },
+  scrollBody: { paddingHorizontal: SIZE.gutter, gap: SPACE.sm, paddingBottom: SPACE.md },
   amount: { alignItems: "center", gap: SPACE.xxs },
   risk: { flexDirection: "row", justifyContent: "space-between", gap: SPACE.md },
-  riskCell: { gap: SPACE.xxs, minHeight: SIZE.touch, justifyContent: "center" },
+  // Each cell may shrink, so at large text a long value wraps instead of running off the sheet.
+  riskCell: { flexShrink: 1, gap: SPACE.xxs, minHeight: SIZE.touch, justifyContent: "center" },
   end: { alignItems: "flex-end" },
+  right: { textAlign: "right" },
   inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   toggleRow: { flexDirection: "row", justifyContent: "center" },
   toggle: { flexDirection: "row", borderRadius: BUTTON.radius.sm, padding: SPACE.xxs, gap: SPACE.xxs },
@@ -301,4 +328,5 @@ const styles = StyleSheet.create({
   chartBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   gear: { width: SIZE.touch, height: SIZE.touch, alignItems: "center", justifyContent: "center" },
   chart: { flex: 1 },
+  chartFixed: { height: SIZE.chartCandles },
 });

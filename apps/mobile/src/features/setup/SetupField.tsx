@@ -86,7 +86,8 @@ const styles = StyleSheet.create({
   plate: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACE.xs,
+    // Room between the text and its trailing action, so a long placeholder never reads as one word with "Paste".
+    gap: SPACE.md,
     height: SIZE.fieldHeight,
     paddingHorizontal: SPACE.lg,
     borderRadius: BUTTON.radius.md + SPACE.xs,

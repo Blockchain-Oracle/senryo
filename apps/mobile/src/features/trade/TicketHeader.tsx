@@ -63,8 +63,8 @@ export function TicketHeader({
           </Text>
           <Text
             maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.meta, { color: line.market.tickStale ? color.warn : color.text3 }]}
-            numberOfLines={1}
+            style={[TYPE.meta, styles.right, { color: line.market.tickStale ? color.warn : color.text3 }]}
+            numberOfLines={2}
           >
             <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.link }}>
               Market
@@ -97,8 +97,10 @@ export function TicketHeader({
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: SIZE.gutter, gap: SPACE.sm, paddingBottom: SPACE.xs },
   identity: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
-  titles: { flex: 1, gap: SPACE.xxs },
-  price: { alignItems: "flex-end", gap: SPACE.xxs },
+  // The symbol and venue keep their width; the price column takes the rest and its status line wraps at large text.
+  titles: { flexGrow: 1, flexShrink: 0, gap: SPACE.xxs },
+  price: { flexShrink: 1, alignItems: "flex-end", gap: SPACE.xxs },
+  right: { textAlign: "right" },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
   sides: { flex: 1 },
 });
