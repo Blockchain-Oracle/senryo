@@ -125,8 +125,13 @@ reuses everything below `apps/`.
         - every keeper push stores `chain_id` under a chain-prefixed key (keepers of both networks share one ledger);
         - `+native-intent` → `linkTarget`: a link for the other network opens the selector with it requested (Mainnet
           lands on the deliberate confirm) and continues only after the switch, to an in-app path only.
+      - *Network-switch check:* `pnpm --filter @senryo/drive network-switch-check` passes 6/6. It checks that:
+        - a Practice context signs a Practice open;
+        - a session never signs the other network's tx, either way (`wrong-chain`, no step-up);
+        - entering Mainnet locks the session, and nothing carries over into the next one.
+        - Per-chain nonces and reads are the app's `Map`s (`sender.ts`). Face ID needed no v2 settings, because the
+          effective mode is derived per network (mainnet never below its default).
       - **Open:**
-        - the network-switch drive check (nonces/sessions/policy per chain, Face ID v1 → v2);
         - push delivery itself (expo-notifications, W4 dev-client build **[OK?]**);
         - the phone round-trip.
 - [ ] S8.23 FX majors on the engine (D-175, contracts track): EUR/GBP/JPY/CHF/CAD feeds verified on 143; risk params +

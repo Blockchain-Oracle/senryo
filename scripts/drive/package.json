@@ -15,7 +15,8 @@
     "risk-mirror-check": "tsx src/risk-mirror-check.ts",
     "ticket-e2e": "tsx src/ticket-e2e.ts",
     "gas-topup-check": "tsx src/gas-topup-check.ts",
-    "recovery-check": "tsx src/recovery-check.ts"
+    "recovery-check": "tsx src/recovery-check.ts",
+    "network-switch-check": "tsx src/network-switch-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",
