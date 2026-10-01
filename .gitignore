@@ -52,3 +52,6 @@ context/_portal/
 .claude/worktrees/
 # forge script dry runs (simulations; real broadcasts are kept)
 contracts/broadcast/**/dry-run/
+
+# The user's reference study (other apps' recordings + study docs) stays local until Q-021 decides what is committed.
+docs/design/reference-study-2026-09-30/
