@@ -17,6 +17,9 @@ export type HeatTile = {
   /** % change — drives the tile's colour */
   chg: number;
   price: number;
+  /** Exact text for the readout (bigint-formatted); the plot numbers above only size and colour the tile. */
+  priceText?: string;
+  capText?: string;
 };
 
 export interface MarketHeatmapProps {
@@ -308,8 +311,8 @@ export default function MarketHeatmap({
             </div>
             <div className="mt-0.5 text-micro text-muted-foreground">{hotTile.co.name}</div>
             <div className="mt-1 flex justify-between font-mono text-micro text-muted-foreground tabular-nums">
-              <span>{formatPrice(hotTile.co.price)}</span>
-              <span>{formatCap(hotTile.co.cap)}</span>
+              <span>{hotTile.co.priceText ?? formatPrice(hotTile.co.price)}</span>
+              <span>{hotTile.co.capText ?? formatCap(hotTile.co.cap)}</span>
             </div>
           </div>
         )}

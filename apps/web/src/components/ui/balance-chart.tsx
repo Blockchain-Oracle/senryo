@@ -3,6 +3,7 @@
 // 21st: ssychui/balance-chart (#30538) — https://21st.dev/@ssychui/components/balance-chart
 // Re-tokenized for D2 Desk: data-driven frames (no seeded demo inside), bare by default (no card chrome),
 // line hue from --chart-up/--chart-down, scrub dot/crosshair in HTML, pill glides on ease-desk (nothing bounces).
+// S11b: `pills={false}` hands the timeframe row to the caller (`FramePills`), which loads one window at a time.
 
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,49 @@ export interface BalanceChartProps {
   formatValue?: (n: number, fractionDigits: number) => string;
   /** "bare" (D2 default) sits on the page; "card" draws the 21st surface + hairline */
   variant?: "bare" | "card";
+  /** false: no timeframe row (the caller draws `FramePills` and switches `frames` itself) */
+  pills?: boolean;
   className?: string;
+}
+
+/** The timeframe pills — the glide thumb under the chart. */
+export function FramePills({
+  ids,
+  value,
+  onChange,
+}: {
+  ids: readonly string[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const index = Math.max(0, ids.indexOf(value));
+  return (
+    <fieldset className="relative mx-auto mt-3 flex w-full max-w-90 min-w-0 gap-1 border-0 p-0">
+      <legend className="sr-only">Timeframe</legend>
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 rounded-full bg-foreground/7 transition-transform duration-(--motion-slow) ease-desk motion-reduce:transition-none"
+        style={{
+          width: `calc((100% - ${ids.length - 1} * 0.25rem) / ${ids.length})`,
+          transform: `translateX(calc(${index} * (100% + 0.25rem)))`,
+        }}
+      />
+      {ids.map((id) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onChange(id)}
+          aria-pressed={value === id}
+          className={cn(
+            "relative z-1 h-7 flex-1 rounded-full text-caption font-medium tabular-nums transition-colors duration-(--motion-base) ease-desk motion-reduce:transition-none",
+            value === id ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {id}
+        </button>
+      ))}
+    </fieldset>
+  );
 }
 
 const UP = "var(--chart-up)";
@@ -94,6 +137,7 @@ export default function BalanceChart({
   initialFrame,
   formatValue = usd,
   variant = "bare",
+  pills = true,
   className,
 }: BalanceChartProps) {
   const [tf, setTf] = useState(initialFrame ?? frames[0]?.id ?? "");
@@ -148,7 +192,6 @@ export default function BalanceChart({
   const hovered = hover != null ? chart.pts[hover] : undefined;
   const cardRight = hovered ? hovered.x / W < HALF : false;
   const clampIdx = (i: number) => Math.max(0, Math.min(n - 1, i));
-  const frameIdx = Math.max(0, frames.indexOf(frame));
 
   const scrubTo = (clientX: number) => {
     const rect = svgRef.current?.getBoundingClientRect();
@@ -264,34 +307,16 @@ export default function BalanceChart({
           <span key={i}>{t}</span>
         ))}
       </div>
-      <fieldset className="relative mx-auto mt-3 flex w-full max-w-90 min-w-0 gap-1 border-0 p-0">
-        <legend className="sr-only">Timeframe</legend>
-        <span
-          aria-hidden
-          className="absolute inset-y-0 left-0 rounded-full bg-foreground/7 transition-transform duration-(--motion-slow) ease-desk motion-reduce:transition-none"
-          style={{
-            width: `calc((100% - ${frames.length - 1} * 0.25rem) / ${frames.length})`,
-            transform: `translateX(calc(${frameIdx} * (100% + 0.25rem)))`,
+      {pills && (
+        <FramePills
+          ids={frames.map((f) => f.id)}
+          value={frame.id}
+          onChange={(id) => {
+            setTf(id);
+            setHover(null);
           }}
         />
-        {frames.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => {
-              setTf(f.id);
-              setHover(null);
-            }}
-            aria-pressed={tf === f.id}
-            className={cn(
-              "relative z-1 h-7 flex-1 rounded-full text-caption font-medium tabular-nums transition-colors duration-(--motion-base) ease-desk motion-reduce:transition-none",
-              tf === f.id ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {f.id}
-          </button>
-        ))}
-      </fieldset>
+      )}
     </div>
   );
 }

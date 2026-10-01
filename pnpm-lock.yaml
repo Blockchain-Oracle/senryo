@@ -277,9 +277,18 @@ importers:
       '@senryo/identity':
         specifier: workspace:*
         version: link:../../packages/identity
+      '@senryo/indexer-client':
+        specifier: workspace:*
+        version: link:../../packages/indexer-client
+      '@senryo/query':
+        specifier: workspace:*
+        version: link:../../packages/query
       '@senryo/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
+      '@tanstack/react-query':
+        specifier: 'catalog:'
+        version: 5.104.0(react@19.2.8)
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1

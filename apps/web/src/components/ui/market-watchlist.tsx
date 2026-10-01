@@ -2,30 +2,32 @@
 
 // 21st: ssychui/market-watchlist (#20110) — https://21st.dev/@ssychui/components/market-watchlist
 // Re-tokenized for D2 Desk: hairline border, 4px radius, full width, selection accent = --chart-1 (D2 yellow),
-// up/down from --chart-up/--chart-down. Data-driven (no demo assets inside); `onSelect` lets rows route to a ticket.
+// up/down from --chart-up/--chart-down. S11b: the shell (title, count, sortable column header) is data-agnostic — each
+// row is rendered by the screen from its own Reading, so a loading or failed market keeps its place in the list.
 
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
-export type WatchlistAsset = {
-  symbol: string;
-  /** second line, e.g. "Open · 20x max" */
+export type WatchlistRow = {
+  key: string;
+  /** Sort by Asset. */
   name: string;
-  price: number;
-  /** % change over the list's window */
-  change: number;
-  /** sparkline samples, oldest → newest */
-  points: readonly number[];
+  /** Sort by Change (plot-only percent); undefined sorts last. */
+  change?: number | undefined;
 };
 
-export interface MarketWatchlistProps {
-  assets: readonly WatchlistAsset[];
+export interface MarketWatchlistProps<T extends WatchlistRow> {
+  rows: readonly T[];
+  renderRow: (row: T, selected: boolean) => ReactNode;
   title?: string;
-  initial?: string;
-  onSelect?: (symbol: string) => void;
-  formatPrice?: (price: number) => string;
-  className?: string;
+  /** The row the page is about (the trade route's market). */
+  selected?: string | undefined;
+  /** Rows that never sort (markets not tradeable here yet), drawn under the list. */
+  footer?: ReactNode;
+  /** No trend column (rows must use `WATCHLIST_GRID_COMPACT` too). */
+  compact?: boolean;
+  className?: string | undefined;
 }
 
 const SPARK_W = 80;
@@ -34,17 +36,11 @@ const SPARK_PAD_X = 2;
 const SPARK_PAD_Y = 3;
 const SPARK_INNER_W = 76;
 const SPARK_INNER_H = 23;
-const SMALL_PRICE = 10;
-const SMALL_DP = 4;
-const DP = 2;
+const SPARK_MIN_POINTS = 2;
 const CARET = 10;
 
-const defaultPrice = (p: number) =>
-  p < SMALL_PRICE
-    ? `$${p.toFixed(SMALL_DP)}`
-    : `$${p.toLocaleString("en-US", { minimumFractionDigits: DP, maximumFractionDigits: DP })}`;
-
-function Sparkline({ points, up }: { points: readonly number[]; up: boolean }) {
+export function Sparkline({ points, up }: { points: readonly number[]; up: boolean | undefined }) {
+  if (points.length < SPARK_MIN_POINTS) return <span aria-hidden className="h-7 w-20" />;
   const max = Math.max(...points);
   const min = Math.min(...points);
   const last = Math.max(1, points.length - 1);
@@ -55,43 +51,43 @@ function Sparkline({ points, up }: { points: readonly number[]; up: boolean }) {
       return `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`;
     })
     .join(" ");
+  const stroke = up === undefined ? "var(--chart-neutral)" : up ? "var(--chart-up)" : "var(--chart-down)";
   return (
     <svg viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} className="h-7 w-20" aria-hidden>
-      <path
-        d={d}
-        fill="none"
-        stroke={up ? "var(--chart-up)" : "var(--chart-down)"}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d={d} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
-const GRID = "grid grid-cols-[minmax(0,1fr)_5rem_5.75rem] items-center";
+export const WATCHLIST_GRID = "grid grid-cols-[minmax(0,1fr)_5rem_6.5rem] items-center";
+/** A narrow column (the trade page's sidebar) drops the sparkline so names and sessions don't truncate. */
+export const WATCHLIST_GRID_COMPACT = "grid grid-cols-[minmax(0,1fr)_6.5rem] items-center";
 
-export default function MarketWatchlist({
-  assets,
+type Sort = "listed" | "symbol" | "change";
+
+export default function MarketWatchlist<T extends WatchlistRow>({
+  rows,
+  renderRow,
   title = "Market watchlist",
-  initial,
-  onSelect,
-  formatPrice = defaultPrice,
+  selected,
+  footer,
+  compact = false,
   className,
-}: MarketWatchlistProps) {
-  const [sort, setSort] = useState<"symbol" | "change">("change");
+}: MarketWatchlistProps<T>) {
+  const [sort, setSort] = useState<Sort>("listed");
   const [descending, setDescending] = useState(true);
-  const [active, setActive] = useState(initial ?? assets[0]?.symbol);
 
-  const rows = useMemo(
-    () =>
-      [...assets].sort((a, b) => {
-        const r = sort === "change" ? a.change - b.change : a.symbol.localeCompare(b.symbol);
-        return descending ? -r : r;
-      }),
-    [sort, descending, assets],
-  );
+  const sorted = useMemo(() => {
+    if (sort === "listed") return rows;
+    return [...rows].sort((a, b) => {
+      if (sort === "symbol") return (descending ? -1 : 1) * a.name.localeCompare(b.name);
+      if (a.change === undefined) return b.change === undefined ? 0 : 1;
+      if (b.change === undefined) return -1;
+      return (descending ? -1 : 1) * (a.change - b.change);
+    });
+  }, [sort, descending, rows]);
 
-  const changeSort = (next: "symbol" | "change") => {
+  const changeSort = (next: Exclude<Sort, "listed">) => {
     if (sort === next) setDescending((v) => !v);
     else {
       setSort(next);
@@ -104,54 +100,40 @@ export default function MarketWatchlist({
     <div className={cn("w-full overflow-hidden rounded-lg border border-border bg-card", className)}>
       <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
         <h3 className="text-num-sm font-semibold text-foreground">{title}</h3>
-        <span className="text-micro text-muted-foreground">{assets.length} assets</span>
+        <span className="text-micro text-muted-foreground">{rows.length} markets</span>
       </div>
-      <div className={cn(GRID, "border-b border-border px-5 py-2 text-micro tracking-[0.07em] text-muted-foreground")}>
-        <button type="button" onClick={() => changeSort("symbol")} className="flex items-center gap-1 text-left">
+      <div
+        className={cn(
+          compact ? WATCHLIST_GRID_COMPACT : WATCHLIST_GRID,
+          "border-b border-border px-5 py-2 text-micro tracking-[0.07em] text-muted-foreground",
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => changeSort("symbol")}
+          aria-pressed={sort === "symbol"}
+          className="flex items-center gap-1 text-left"
+        >
           Asset {caret(sort === "symbol")}
         </button>
-        <span className="text-center">Trend</span>
-        <button type="button" onClick={() => changeSort("change")} className="flex items-center justify-end gap-1">
+        {compact ? null : <span className="text-center">24h</span>}
+        <button
+          type="button"
+          onClick={() => changeSort("change")}
+          aria-pressed={sort === "change"}
+          className="flex items-center justify-end gap-1"
+        >
           Change {caret(sort === "change")}
         </button>
       </div>
-      {rows.map((asset) => {
-        const selected = active === asset.symbol;
-        const up = asset.change >= 0;
-        return (
-          <button
-            key={asset.symbol}
-            type="button"
-            aria-pressed={selected}
-            aria-label={`${asset.symbol}, ${formatPrice(asset.price)}, ${up ? "up" : "down"} ${Math.abs(asset.change).toFixed(DP)}%`}
-            onClick={() => {
-              setActive(asset.symbol);
-              onSelect?.(asset.symbol);
-            }}
-            className={cn(
-              GRID,
-              "w-full border-b border-border px-5 py-3 text-left transition-colors duration-(--motion-fast) ease-desk last:border-b-0 hover:bg-foreground/3",
-              selected && "bg-chart-1/5",
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-3">
-              <span className={cn("h-4 w-0.5 shrink-0 rounded-full", selected ? "bg-chart-1" : "bg-foreground/12")} />
-              <span className="min-w-0">
-                <span className="block text-caption font-semibold text-foreground">{asset.symbol}</span>
-                <span className="block truncate text-micro text-muted-foreground">{asset.name}</span>
-              </span>
-            </span>
-            <Sparkline points={asset.points} up={up} />
-            <span className="text-right tabular-nums">
-              <span className="block text-caption font-semibold text-foreground">{formatPrice(asset.price)}</span>
-              <span className={cn("text-micro font-semibold", up ? "text-chart-up" : "text-chart-down")}>
-                {up ? "▲ +" : "▼ "}
-                {asset.change.toFixed(DP)}%
-              </span>
-            </span>
-          </button>
-        );
-      })}
+      <ul>
+        {sorted.map((row) => (
+          <li key={row.key} className="border-b border-border last:border-b-0">
+            {renderRow(row, row.key === selected)}
+          </li>
+        ))}
+      </ul>
+      {footer}
     </div>
   );
 }

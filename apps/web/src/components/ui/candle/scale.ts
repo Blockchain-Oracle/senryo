@@ -92,7 +92,8 @@ export interface Scale {
 
 /**
  * Price band around the visible candles (`banded`, the pinned 21st mode that agrees with a book mid) or a 0-based
- * ceiling. `yScale` is the wheel/drag zoom around the band centre.
+ * ceiling. `yScale` is the wheel/drag zoom around the band centre. `include` (the live price) always stays in the band,
+ * so its guide line is never off the plot.
  */
 export function makeScale(
   view: readonly Candle[],
@@ -101,12 +102,13 @@ export function makeScale(
   yScale: number,
   banded: boolean,
   ceil: number,
+  include?: number,
 ): Scale {
   const plotW = box.vw - AXIS_W;
   const plotH = box.vh - volH - GAP;
   const slot = plotW / Math.max(1, view.length);
-  const maxHigh = Math.max(...view.map((k) => k.h));
-  const minLow = Math.min(...view.map((k) => k.l));
+  const maxHigh = Math.max(...view.map((k) => k.h), include ?? Number.NEGATIVE_INFINITY);
+  const minLow = Math.min(...view.map((k) => k.l), include ?? Number.POSITIVE_INFINITY);
   const mid = (maxHigh + minLow) / HALF;
   const half = ((maxHigh - minLow) / HALF) * BAND_PAD * (banded ? yScale : 1);
   const top = banded ? mid + half : Math.max(ceil * yScale, maxHigh * CEIL_PAD);

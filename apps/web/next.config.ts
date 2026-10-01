@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
     "@senryo/contracts",
     "@senryo/core",
     "@senryo/identity",
+    "@senryo/indexer-client",
+    "@senryo/query",
     "@senryo/tokens",
   ],
   reactStrictMode: true,

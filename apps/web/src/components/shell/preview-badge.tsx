@@ -1,19 +1,25 @@
-import { IS_PREVIEW_DATA } from "@/lib/sample";
 import { cn } from "@/lib/utils";
 
-/** Visible on every screen fed by `src/lib/sample.ts`; removed screen by screen as S6–S8 wire real data. */
-export function PreviewBadge({ className }: { className?: string }) {
-  if (!IS_PREVIEW_DATA) return null;
+/**
+ * Marks a section still fed by `src/lib/sample.ts` (S11b removes it section by section as each is connected). `missing`
+ * says, visibly, what the section is waiting for — the badge never stands alone.
+ */
+export function PreviewBadge({
+  missing,
+  tag = "Preview data",
+  className,
+}: {
+  missing: string;
+  /** The chip's word: "Preview data" for sample values, or what isn't connected ("Not sent"). */
+  tag?: string;
+  className?: string;
+}) {
   return (
-    <span
-      role="note"
-      title="Sample values from src/lib/sample.ts — real data arrives in S6–S8"
-      className={cn(
-        "inline-flex items-center rounded-xs border border-gold/60 px-1.5 py-0.5 font-mono text-micro text-gold uppercase tracking-[0.14em]",
-        className,
-      )}
-    >
-      Preview data
-    </span>
+    <p role="note" className={cn("flex items-start gap-2 text-caption text-muted-foreground", className)}>
+      <span className="inline-flex shrink-0 items-center rounded-xs border border-gold/60 px-1.5 py-0.5 font-mono text-gold text-micro uppercase tracking-[0.14em]">
+        {tag}
+      </span>
+      <span className="pt-px">{missing}</span>
+    </p>
   );
 }

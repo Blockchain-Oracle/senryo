@@ -1,4 +1,5 @@
-import { DEFAULT_MARKET } from "@/lib/sample";
+/** The market the Trade tab opens on (gold, our first engine market). */
+export const DEFAULT_MARKET = "XAU";
 
 /** Same paths on web and mobile (plan §2.4 Screens). */
 export const ROUTES = {

@@ -11,6 +11,7 @@ import {
   AXIS_INSET,
   AXIS_TEXT,
   AXIS_TOP_MIN,
+  AXIS_W,
   type Candle,
   clamp,
   DIM_CANDLE,
@@ -18,6 +19,8 @@ import {
   GRID,
   HALF,
   type Scale,
+  TAG_H,
+  TAG_HALF,
   UP,
 } from "./scale";
 
@@ -46,10 +49,42 @@ export function GridLayer({ scale, axisFmt }: { scale: Scale; axisFmt: (n: numbe
   );
 }
 
-export function LastCloseGuide({ scale, close }: { scale: Scale; close: number }) {
+const TAG_RX = 3;
+const TAG_INSET = 2;
+const TAG_TEXT_X = 4;
+const TAG_TEXT_Y = 11;
+
+/** The last close — or, with `label`, the live price — as a dotted line, its value tagged on the price axis. */
+export function LastCloseGuide({ scale, close, label }: { scale: Scale; close: number; label?: string | undefined }) {
   const y = scale.yPrice(close);
   return (
-    <line x1={0} x2={scale.plotW} y1={y} y2={y} stroke={UP} strokeOpacity="0.4" strokeDasharray="2 4" strokeWidth="1" />
+    <g pointerEvents="none">
+      <line
+        x1={0}
+        x2={scale.plotW}
+        y1={y}
+        y2={y}
+        stroke={UP}
+        strokeOpacity="0.4"
+        strokeDasharray="2 4"
+        strokeWidth="1"
+      />
+      {label ? (
+        <g transform={`translate(${scale.plotW}, ${clamp(y, TAG_HALF, scale.plotH - TAG_HALF) - TAG_HALF})`}>
+          <rect x={0} y={0} width={AXIS_W - TAG_INSET} height={TAG_H} rx={TAG_RX} fill={UP} />
+          <text
+            x={TAG_TEXT_X}
+            y={TAG_TEXT_Y}
+            fontSize={AXIS_FONT}
+            fontWeight={600}
+            fill="var(--up-foreground)"
+            className="font-mono tabular-nums"
+          >
+            {label}
+          </text>
+        </g>
+      ) : null}
+    </g>
   );
 }
 
