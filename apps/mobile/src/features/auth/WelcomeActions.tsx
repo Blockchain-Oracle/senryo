@@ -1,13 +1,13 @@
 /**
  * Welcome actions (F01 / F02 / F03 / F08, D-029). No hint → **Create account** (one passkey ceremony) is primary and
- * "I already have an account" runs the discoverable sign-in; with a hint, continuing as that account is primary.
- * "Look around first" opens Markets without an account. Cancel is silent; failures name their fix.
+ * "I have an account" runs the discoverable sign-in; with a hint, continuing as that account is primary.
+ * "Browse markets" opens Markets without an account. Cancel is silent; failures name their fix.
  */
 import { type AuthFailure, classifyAuthError, isSilent } from "@senryo/account";
 import { shortAddress } from "@senryo/core";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { LoadingState } from "~/components/kit/states";
@@ -16,7 +16,7 @@ import { ttftStart, ttftTap } from "~/lib/account/measure";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { SPACE, useTheme } from "~/theme";
 import { AuthFailureCard } from "./AuthFailure";
 import { CeremonyCard, type CeremonyKind } from "./CeremonyCard";
 
@@ -74,6 +74,7 @@ export function WelcomeActions() {
     );
   }
   const hint = account.hint;
+  // One primary action, two quiet ones beside each other: the controls never crowd the story above them.
   return (
     <View style={styles.actions}>
       {hint ? (
@@ -83,8 +84,22 @@ export function WelcomeActions() {
             leading={<PasskeyGlyph color={color.primaryForeground} />}
             onPress={() => void unlock()}
           />
-          <Button label="Open Home · locked" variant="outline" onPress={() => router.replace(ROUTES.home)} />
-          <Button label="Use a different account" variant="ghost" onPress={() => void signIn()} />
+          <View style={styles.row}>
+            <Button
+              label="Open Home, locked"
+              variant="ghost"
+              size="sm"
+              style={styles.flex}
+              onPress={() => router.replace(ROUTES.home)}
+            />
+            <Button
+              label="Another account"
+              variant="ghost"
+              size="sm"
+              style={styles.flex}
+              onPress={() => void signIn()}
+            />
+          </View>
         </>
       ) : (
         <>
@@ -93,23 +108,24 @@ export function WelcomeActions() {
             leading={<PasskeyGlyph color={color.primaryForeground} />}
             onPress={() => void create()}
           />
-          <Button
-            label="I already have an account"
-            variant="outline"
-            leading={<PasskeyGlyph color={color.foreground} />}
-            onPress={() => void signIn()}
-          />
-          <Button label="Look around first" variant="ghost" onPress={lookAround} />
+          <View style={styles.row}>
+            <Button
+              label="I have an account"
+              variant="ghost"
+              size="sm"
+              style={styles.flex}
+              onPress={() => void signIn()}
+            />
+            <Button label="Browse markets" variant="ghost" size="sm" style={styles.flex} onPress={lookAround} />
+          </View>
         </>
       )}
-      <Text style={[TYPE.micro, styles.note, { color: color.inkMuted }]}>
-        A PASSKEY IS YOUR ACCOUNT · NO SEED PHRASE
-      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  actions: { gap: SPACE.md },
-  note: { textAlign: "center" },
+  actions: { gap: SPACE.sm },
+  row: { flexDirection: "row", gap: SPACE.sm },
+  flex: { flex: 1 },
 });
