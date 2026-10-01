@@ -56,12 +56,12 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
     licence: SEAL_LICENCE,
     retrieved: AUTHORED,
     usage:
-      "Full seal ≥ 24 px; never recolour outside the three variants, never set 千 in a live font (brand/README.md).",
+      "Full seal ≥ 32 device px (simplified geometry below); never recolour outside the three variants, never set 千 in a live font (brand/README.md).",
     variants: {
       symbol: {
         path: "brand/senryo-seal.svg",
         url: "brand/senryo-seal.svg",
-        sha256: "232eed7ae570ac25a97731cc99080ab1e8dbf9b57f2558d0b4832227211a8783",
+        sha256: "167cd8b9876b0bac52f7931238115e71ae8d8b1a5781730b32c17baad4144870",
         viewBox: "0 0 512 512",
         insetPermille: 0,
         surface: "any",
@@ -70,7 +70,7 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       monoLight: {
         path: "brand/senryo-seal-mono.svg",
         url: "brand/senryo-seal-mono.svg",
-        sha256: "0c0124183cd0ba4561cb7b3ac0dda0a69be2906eed14cae0b724b5a31466a419",
+        sha256: "f4c3dd048d9651914e5b8ea8a9bb9858272c16a2a861bf3443d212844c260881",
         viewBox: "0 0 512 512",
         insetPermille: 0,
         surface: "dark",

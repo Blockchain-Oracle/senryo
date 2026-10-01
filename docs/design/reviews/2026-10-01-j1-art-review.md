@@ -1,4 +1,4 @@
-# J1 onboarding artwork: Codex design review (five rounds)
+# J1 onboarding artwork, card face and seal: Codex design review
 
 **Reviewed 1 October 2026 by Codex (`gpt-6.1-sol`, reasoning `xhigh`, read-only sandbox). Closing verdict (round 5): all nine
 pieces PASS as static first-pass masters suitable for the user's design review. B12 stays open: the user's own design
@@ -7,7 +7,8 @@ review is the gate, and nothing here establishes motion, native rendering or J1 
 This is the review record for the authored J1 artwork package of plan step S1b.3 (`docs/plan/stage-01b-design-v2.md`,
 blocker B12): six onboarding scenes, the pending-passkey art, the completion foil and twelve default avatars, written
 by `brand/scripts/onboarding.py` into `brand/art/onboarding/` and `brand/art/avatars/`. The artwork owner (an agent)
-ran the review after each revision and worked through every finding; the reviewer's text below is verbatim.
+ran the review after each revision and worked through every finding; the reviewer's text below is verbatim. The
+redrawn Kinpaku card face and the gold-leaf seal were added afterwards (rounds 6 and 7).
 
 ## How it was run
 
@@ -40,6 +41,31 @@ matrix and drew the door wrongly in the generated component. The master renders 
 
 The motion strips the reviewer mentions are review aids from `brand/scripts/motion.py` (three samples made only by
 moving the masters' named groups). They are not the Skia/Reanimated implementation.
+
+## After round 5: integration contract, card face and seal
+
+The lead then set the integration contract for the scenes and asked for two more pieces in the same pass. Codex
+reviewed those two over two further rounds (same command, verbatim at the end of this file).
+
+- **Layers.** Every master was restructured so its top-level groups are one layer per unit of motion (object or
+  shadow), listed in `brand/art/onboarding/layers.json`. Rendered output was compared before and after: pixel-identical
+  (RMSE 0) for all eight onboarding masters.
+- **Kinpaku card face and back** (`brand/kinpaku-card*.svg`, the Card tab's raster) redrawn as the scene-5 card, flat.
+  Round 6: front FAIL (its seal was a redrawn single-frame version; the tear read thick), back PASS. Round 7: front
+  PASS, back PASS.
+- **Seal** (`brand/senryo-seal.svg` and the marks built from it) recoloured through the gold-leaf ramp, geometry
+  unchanged. Round 6 and 7: PASS, with the small-size hairline called out (the README now sends sizes under 32 px to
+  the simplified geometry).
+- **Shared change that touched reviewed scenes.** The round-6 fix put the seal's own carving on the card and on the
+  practice notes, and made the leaf tear finer; that changed the card inside scenes 1 and 5 and the stamps in scene 6.
+  Round 7 re-confirmed all three: the round-5 PASS stands for each.
+- **Changed after the round-7 verdict, not re-reviewed** (each one a refinement the reviewer asked for): the Practice
+  label plate narrowed to restore its 10 pt right inset; fewer and smaller leaf fragments along the card's tear (card
+  face, scenes 1 and 5); the card back's band lost its continuous outline and some creases.
+
+Findings from those rounds that are not art and are still open: the Card tab's overlay starts at 52 % across and its
+holder/expiry row is cramped at phone width (the art leaves clear lacquer from about 42 %); the app icon's seal scale
+and the D2 wordmark were left as they are.
 
 ## What still falls short (the reviewer's closing list, in short)
 
@@ -756,3 +782,144 @@ The unchanged full-colour discs behave consistently across dark/light; switching
 1. **Repair the instructional relationships in Scenes 1, 3 and 6:** visible shared-balance connections, named FX pairs and explicitly labelled Practice/Mainnet states.
 2. **Replace the shared shadow/material treatment:** smooth contact shadows, thin overlapping gold leaf and irregular completion-foil bends will improve most of the package at once.
 3. **Recompose the weakest silhouettes:** turn LP’s cooking pot into a purposeful vault and enlarge avatar faces before investing in additional texture or animation.
+
+## Card face and seal — round 7 verdict (verbatim)
+
+**1. Overall verdict**
+
+**The Kinpaku card front now PASSes as a first-pass master for the user’s design review.** The canonical seal is restored, the tear no longer has the previous thick continuous outline, and the flat card’s lacquer reflection is substantially quieter. The back, seal, shown variants/app icon and scenes 1, 5 and 6 retain PASS, with the remaining defects below. This was read-only, with no project builds; these verdicts cover static artwork and do not close B12 before the user’s design review.
+
+**2. Per piece**
+
+**Kinpaku card front — PASS**
+
+The heavy frame, hairline frame and 千 now match the primary carving. The source uses [carved_seal](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/scripts/kit.py:286), and the generated card contains the canonical glyph path. The finer, broken-shade boundary now suggests thin applied leaf sufficiently for this acceptance bar. The number remains clearly readable on both grounds.
+
+Remaining changes, in priority order:
+
+1. **Resolve the overlay’s cramped bottom row in the app.** “CARD HOLDER EXPIRES” nearly reads as one caption, and even the ordinary sample holder truncates. The artwork provides additional lacquer to the left: use that space to widen the holder column while preserving a clear gutter before expiry. This is an integration defect, not grounds to reject the art master.
+2. **Correct the mock’s typography before treating it as an exact app reproduction.** The layout positions and truncation intent match, but [sheets.py](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/scripts/sheets.py:178) uses Medium for labels and SemiBold for holder/expiry; the app’s tokens specify SemiBold labels and Medium small numbers. The sheet therefore demonstrates the arrangement, not exact native text widths.
+3. **Break the remaining tiled regularity.** Across the lower gold field, similarly sized rectangular overlaps still form conspicuous rows. Vary selected sheet dimensions and angles, and lose several seams into the sheen.
+4. **Refine the central fragment cluster.** The closely packed polygon chips beside the middle tear still resemble decorative confetti more than fragile leaf. Make several smaller or more slender and reduce the cluster’s density.
+
+The previous seal inconsistency and thick-edge defects should no longer be carried forward as unresolved failures.
+
+**Kinpaku card back — PASS**
+
+The narrow horizontal leaf field, lower-left naming and lower-right seal remain sufficient for a coherent reverse. The lacquer silhouette survives dark ground; light ground gives it a clear boundary.
+
+Remaining changes, in priority order:
+
+1. **Bring the band’s edge treatment closer to the front.** Its thin but continuous brown perimeter remains visible, particularly along the lower edge. Interrupt that shade rather than outlining the entire strip.
+2. **Reduce construction detail inside the narrow band.** Repeated overlaps and numerous diagonal hairlines become busy within such a shallow area. Remove selected scratches and let more seams disappear.
+3. **Further soften the long lacquer reflection boundaries.** They remain recognizably straight diagonal edges, although sufficiently subdued to retain PASS.
+
+**Seal — primary, including small sizes — PASS**
+
+At 96 and 48 px, both frames and the glyph are distinct. At 32 and 24 px, 千 remains recognizable on both grounds, but the hairline frame becomes uneven and the carved-edge catch largely disappears. That limitation has **not** been fixed by standardizing the carving.
+
+Remaining changes, in priority order:
+
+1. **Correct the documented small-size rule.** Contrary to the supplied change description, [README.md](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/README.md:114) still says “full seal 24 px” and directs only smaller sizes to the favicon. Change it to the intended below-32-px routing. The existing simplified favicon is the appropriate available treatment; another master redraw is unnecessary for this pass.
+2. **Improve large-size material specificity.** The smooth diagonal gradient and continuous bevel still suggest a brass plaque more strongly than gold leaf. Introduce restrained variation in the reflected light and soften the uniformly enclosed bevel while preserving the carving.
+
+**Seal variants and app icon — PASS for the shown uses**
+
+The inverse retains clear gold carving against lacquer. The pale mono is readable on dark ground, and the light-ground favicon gives the glyph sufficient space. The icon’s centred seal remains identifiable within its dark field.
+
+Remaining changes, in priority order:
+
+1. **Show the existing favicon at 16 and 24 px in the next sheet.** Its current large presentation does not demonstrate the small-size route being prescribed.
+2. **Validate the icon under actual platform masks and at home-screen size.** The unchanged 58% seal scale leaves a relatively quiet mark within generous margins. That remains adequate for this first-pass master, but the sheet’s square preview does not settle its final optical size.
+
+The light row substitutes the favicon for mono; it does not demonstrate a light-ground monochrome variant. The separate wordmark redesign remains unresolved and receives no new acceptance here.
+
+**3. Scenes 1, 5 and 6 after the shared change**
+
+**Scene 1 — Does the round-5 PASS stand? Yes.**
+
+The small card still reads immediately as the spending destination, and its canonical glyph remains recognizable. The finer tear does not weaken its silhouette or the chest-to-destination relationship. The closed landing ellipses and decorative-cord/path ambiguity remain the previous refinements; the shared change introduces no blocking defect.
+
+**Scene 5 — Does the round-5 PASS stand? Yes.**
+
+The card remains dominant, its double-frame seal is clear, and the thinner tear improves the gold-to-lacquer transition. The book and tweezers remain identifiable supporting objects. Regular overlap rows, the central chip cluster and the book’s weak leaf-to-paper separation still limit material conviction.
+
+**The secondary lacquer reflection remains here.** Its removal applies only to the flat card: the dimensional prop still carries two bands. They are visibly graphic and deserve further softening, but do not reverse the scene’s existing PASS.
+
+**Scene 6 — Does the round-5 PASS stand? Yes.**
+
+The foreground note’s canonical seal remains readable, while the smaller white stamp on the bundle band retains glyph recognition despite losing hairline detail. Both labels remain legible, unclipped and clearly associated with their objects. The SVG confirms the Mainnet plate is in the tray’s `back` layer and the Practice plate in the bundle’s `main` layer; this establishes layer membership, not accepted motion.
+
+The blue tray still attracts a disproportionately strong first glance, and the bundle still compresses into a fairly solid block at phone scale. Those round-5 limitations remain.
+
+**4. Anything that got worse**
+
+- **Practice-label edge clearance is tighter.** Its right inset decreased from **10 pt to 6 pt** because the plate moved right and narrowed. The current static render remains unclipped, but it has visibly less breathing room against the hero’s right edge.
+- **Small stamped seals have less border presence.** The canonical inset frame and thinner stroke make Scene 1’s card stamp and Scene 6’s band stamp quieter than the former enclosing frame. Recognition survives, so this is an optical tradeoff rather than a reason to reverse PASS.
+- **The new overlay mock looks more crowded than the previous simplified presentation.** It exposes an existing app-layout weakness; it is not deterioration in the card artwork.
+
+I see no new blocking visual regression in the requested masters.
+
+### Card face and seal — round 6 verdict (verbatim)
+
+**1. Overall verdict**
+
+The recolouring removes the lemon-yellow presentation and brings the assets into the specified gold/lacquer palette, but I would not approve the complete set yet. The front fails because its seal changes the canonical geometry and its outlined tear reads thicker than gold leaf. The back, standalone seal and variants are adequate first-pass masters for the user’s design review; that does not establish production readiness or card issuance.
+
+**2. Per piece**
+
+**Kinpaku card front — FAIL**
+
+The masked number and mock holder are legible on both grounds. The leaf stops sufficiently far left of the overlay, “Kinpaku” remains subordinate to the number, and the bottom-right network position is clear.
+
+Changes, in priority order:
+
+1. **Restore the canonical seal geometry.** The front has one rounded frame; the standalone seal and back retain the double frame. Its glyph-to-frame proportions also differ. This is visibly a second mark, contrary to direction §10’s geometry-preservation requirement. Use the canonical carving paths against the existing leaf field. The separate construction is confirmed in [props.py](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/scripts/props.py:112).
+2. **Make the tear look thin.** The continuous brown outline, broad angular bites and conspicuous triangular notch near the middle make the gold look like cut sheet material. Reduce the outline substantially, interrupt its shading, and introduce finer irregularities between the larger tears. Keep the fragments closer to that edge.
+3. **Refine the reflection.** The broad, straight diagonal bands cross the lacquer like printed stripes. Soften their boundaries and reduce the secondary band’s strength. The square overlaps are appropriate to laid leaf, but the scattered straight scratches look drawn independently of its folds; concentrate them around overlaps and small wrinkles.
+4. **Review the complete app overlay.** The sheet substitutes “A. Holder” and omits expiry. The actual [CardFace.tsx](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/apps/mobile/src/features/card/CardFace.tsx:33) places holder and expiry side by side and uses uppercase labels. At 343 px, that row has only about 141 px available before dividing those fields. Show the real overlay, including the sample holder and a longer name, before accepting its hierarchy and truncation.
+
+There is no invented network logo or issuance claim in the artwork itself. The numbered presentation needs an adjacent **Design preview** or applicable **Sandbox · No charge** label when shown outside the app’s existing preview context, consistent with R16.
+
+**Kinpaku card back — PASS**
+
+The narrow gold band, quiet lower-left naming and lower-right canonical seal form a coherent reverse. The lacquer silhouette remains distinguishable on dark ground and clearly bounded on light ground. Its empty centre is acceptable for this decorative master.
+
+Changes, in priority order:
+
+1. Soften the diagonal lacquer reflection to match the corrected front.
+2. Vary the band’s tearing more finely. Its long straight stretches and angular notches currently suggest a torn ribbon; subtler overlap changes would better suggest applied leaf.
+3. Treat the small lower-left lettering as branding, not required information. At phone width, “Kinpaku” is approximately 10 px high and 金箔 approximately 9 px; any functional text needs a separate readable treatment.
+
+The band occupies the familiar magnetic-stripe position, but its appearance alone does not claim working hardware. There is no reason to add issuer, network or security furniture without provider evidence.
+
+**Seal — primary, including small sizes — PASS**
+
+At 96 and 48 px, the double frame and 千 are distinct. At 32 and 24 px, 千 remains recognizable on both grounds; the internal dark carving carries recognition even where the light ground weakens the pale upper-left perimeter.
+
+Changes, in priority order:
+
+1. Create an optical small-size treatment. The inner border is only **0.25 px at 32 px and 0.19 px at 24 px**. It becomes uneven and crowds the heavier frame; the carved-edge highlight also largely disappears. Simplify those decorative details while preserving the master glyph and overall proportions.
+2. At large sizes, introduce a restrained irregularity in the reflected light. The smooth diagonal gradient and continuous bevel currently read more like a brass plaque than leaf. This is acceptable abstraction for a first-pass identity mark, but its material specificity could improve.
+
+The small-size problem is border fidelity, not loss of glyph recognition.
+
+**Seal variants and app icon — PASS for the shown uses**
+
+The inverse is readable on both grounds. The mono is clear on dark ground, and the simplified favicon gives 千 substantially more space. The app icon’s opaque violet-black field and centred gold seal are coherent with the primary.
+
+Changes, in priority order:
+
+1. Apply the same small-size border simplification to inverse and mono variants.
+2. Check the app icon under its actual platform mask and at home-screen size. The seal occupies 58% of the canvas, leaving generous margins and reducing its impact; compare a modest enlargement before selecting the final scale.
+3. Supply an ink mono variant if a monochrome light-ground use is required. The current pale mono asset is unsuitable there; the sheet substitutes the favicon and therefore does not demonstrate that case.
+4. Address the remaining typography inconsistency in the associated outputs: [build.py](/Users/abu/dev/hackathon/metropolis/.claude/worktrees/art-j1/brand/scripts/build.py:62) still generates the uppercase JetBrains Mono wordmark for lockups, splash and logos. That retains D2 typography against §5.3’s replacement direction.
+
+**3. Anything that got worse than the old versions**
+
+- **Front identity consistency:** the old card carried the recognizable double-frame seal; the redraw replaces it with a single-frame interpretation.
+- **Leaf-edge plausibility:** the old finer, fragmented boundary suggested fragile leaf more convincingly. The new continuous outline makes the edge look thick.
+- **Lacquer plausibility:** the old soft reflection suggested a continuous surface; the new diagonal bands look more like graphic decoration.
+- **Immediate visual punch:** the muted seal attracts less attention than the old yellow square. That is an intentional palette tradeoff, but the app icon’s generous margins compound it.
+
+The old heavy grain and lemon colour should not return; recover the finer edge and softer reflection within the new ramp.

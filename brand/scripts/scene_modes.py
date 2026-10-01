@@ -22,9 +22,11 @@ INKS = (PRACTICE["deep"], "#8B6BD6", PRACTICE["mid"])
 FIBRES = 46
 EDGE_TONES = ("#EFE7D3", "#E4DAC4")  # the bundle's page edges: two close paper tones, never a hard stripe
 LABEL_H = 48
+MAINNET_DEPTH, BUNDLE_DEPTH = 0.4, 0.8
+MOTION = {"subject": "bundle", "mostMotion": ["note", "bundle"]}
 LABELS = (
-    ("practice", "Practice · Paper money", (438, 700), 298, PRACTICE["pale"], PRACTICE["deep"]),
-    ("mainnet", "Mainnet · Real money", (404, 376), 284, "#E8EBFF", MAINNET["deep"]),
+    ("practice", "bundle", "Practice · Paper money", (452, 700), 284, PRACTICE["pale"], PRACTICE["deep"]),
+    ("mainnet", "mainnet", "Mainnet · Real money", (404, 376), 284, "#E8EBFF", MAINNET["deep"]),
 )
 
 
@@ -146,11 +148,14 @@ def build() -> tuple[str, str]:
     loose_t = f"translate({LOOSE_AT[0]} {LOOSE_AT[1]}) rotate({LOOSE_TILT})"
     tray, tray_outline = blue_tray(c)
     tray_t = f"translate({TRAY_AT[0]} {TRAY_AT[1]}) rotate({TRAY_TILT})"
-    c.put("shadow", contact(tray_outline, dark, tray_t, 0.8, f"{KEY}-mainnet-shadow"), contact(outline, dark, bundle_t, 1.5, f"{KEY}-bundle-shadow"))
-    c.put("back", f'<g id="{KEY}-mainnet" transform="{tray_t}">{tray}</g>')
-    c.put("main", f'<g id="{KEY}-bundle" transform="{bundle_t}">{bundle(c, rng, sheet)}</g>')
+    # Practice in front travels most; Mainnet sits apart and behind. Each label plate rides in its own state's layer.
+    c.put("mainnet-shadow", contact(tray_outline, dark, tray_t, 0.8), role="shadow", depth=MAINNET_DEPTH, of="mainnet")
+    c.put("bundle-shadow", contact(outline, dark, bundle_t, 1.5), role="shadow", depth=BUNDLE_DEPTH, of="bundle")
+    c.put("mainnet", f'<g transform="{tray_t}">{tray}</g>', depth=MAINNET_DEPTH)
+    c.put("bundle", f'<g transform="{bundle_t}">{bundle(c, rng, sheet)}</g>', depth=BUNDLE_DEPTH)
     loose, _ = note(c, rng, 0.35)
-    c.put("fore", contact(outline, dark, loose_t, 0.4, f"{KEY}-note-shadow"), f'<g id="{KEY}-note" transform="{loose_t}">{loose}</g>')
-    for name, text, (x, y), width, plate, ink in LABELS:
-        c.put("fore", c.label(name, text, x, y, width, LABEL_H, plate, ink))
+    for name, layer, text, (x, y), width, plate, ink in LABELS:
+        c.put(layer, c.label(name, layer, text, x, y, width, LABEL_H, plate, ink))
+    c.put("note-shadow", contact(outline, dark, loose_t, 0.4), role="shadow", depth=BUNDLE_DEPTH, of="note")
+    c.put("note", f'<g transform="{loose_t}">{loose}</g>', depth=1)
     return f"{KEY}.svg", c.svg()

@@ -29,6 +29,8 @@ LIGHT = (-0.5, -0.5)  # the lamp's direction across the sheet (it stands to the 
 TONE_MID, TONE_GAIN = 0.5, 1.05  # the leaf's resting tone on the foil ramp, and how hard a slope swings it
 SHEEN_FROM, SHEEN_GAIN, SHEEN_MAX = 0.22, 1.5, 0.42  # where a turn toward the lamp starts to glare
 BEND_STOPS = 28
+FLAKE_DEPTH = 0.6
+MOTION = {"subject": "leaf", "mostMotion": ["sheen"]}
 SEAL_BOX = (0.28, 0.28, 0.44)  # u, v, size of the pressed seal on the sheet
 DECKLE = 0.012
 CURVE_STEPS = 6
@@ -214,7 +216,8 @@ def build() -> tuple[str, str]:
         "shadow",
         soft_ellipse(c, CENTER[0] + 14, CENTER[1] + 100, 204, 54, LACQUER["shadow"], 0.28, YAW * 0.4),
         soft_ellipse(c, corner[0] - 30, corner[1] + 34, 70, 20, LACQUER["shadow"], 0.3, -14),
-    )
+        role="shadow", depth=1, of="leaf",
+    )  # fmt: skip
     c.put(
         "leaf",
         leaf,
@@ -223,8 +226,9 @@ def build() -> tuple[str, str]:
         f'<path d="{crease_d}" fill="none" stroke="{GOLD["light"]}" stroke-opacity=".7" stroke-width=".9" stroke-linecap="round" transform="translate(.9 1.3)"/>',
         f'<path d="{edge}" fill="none" stroke="{FOIL[1]}" stroke-opacity=".7" stroke-width="1.2"/><path d="{edge}" fill="none" stroke="{rim}" stroke-width="1"/>'
         f'<path d="{under}" fill="none" stroke="{FOIL[0]}" stroke-width="2.6" stroke-linecap="round"/>',  # the lifted corner shows a line of its underside
+        depth=1,
     )
-    c.put("seal", seal)
-    c.put("sheen", "".join(f'<path d="{edge}" fill="{sheen}"/>' for _, sheen in paints[:2]))
-    c.put("flakes", flakes(c, rng, [(96, 176, 10), (128, 142, 5), (566, 486, 11), (598, 444, 5)]))
+    c.put("seal", seal, depth=1)
+    c.put("sheen", "".join(f'<path d="{edge}" fill="{sheen}"/>' for _, sheen in paints[:2]), role="accent", depth=1)
+    c.put("flakes", flakes(c, rng, [(96, 176, 10), (128, 142, 5), (566, 486, 11), (598, 444, 5)]), role="accent", depth=FLAKE_DEPTH)
     return f"{KEY}.svg", c.svg()

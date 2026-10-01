@@ -3,25 +3,27 @@ badges. Every function returns markup in local coordinates (the caller places it
 import math
 import random
 
-from kit import FOIL, GOLD, INK, LACQUER, WHITE, Canvas, embed, flake, glyph_in, n, pts, ramp, rrect, sen
+from kit import FOIL, GOLD, INK, LACQUER, WHITE, Canvas, carved_seal, embed, flake, n, pts, ramp, rrect
 
 CARD_RATIO = 85.6 / 54  # ISO/IEC 7810 ID-1
 CARD_CORNER = 3.18 / 85.6  # corner radius as a share of the width
 CARD_SEED = 1000
 LEAF_ROWS = 3.4  # gold-leaf squares across the card's height
-TORN_STEPS = 46
-CRUMBS = 14  # leaf fragments that came away along the torn edge
+CRINKLES = 26
+TORN_STEPS = 120
+CRUMBS = 9  # leaf fragments that came away along the torn edge
+TEAR_SHADE = "23 9 41 14 7 19 58 11"  # the tear's faint shade comes and goes: leaf has no edge to outline
 
 
 def torn_edge(rng: random.Random, top, bottom, jitter: float, steps=TORN_STEPS) -> list[tuple[float, float]]:
-    """A hand-torn leaf edge between two points: unevenly spaced, a slow wander with a fine tremor, and now and then
-    one deeper bite. Nothing about it repeats."""
+    """A hand-torn leaf edge between two points: leaf this thin tears in a fine, feathered line. Unevenly spaced
+    points, a slow wander, a fine tremor between them, and rarely one small bite. Nothing about it repeats."""
     cuts = sorted(rng.random() for _ in range(steps - 1))
     drift, out = 0.0, []
     for t in (0.0, *cuts, 1.0):
-        drift = drift * 0.7 + rng.uniform(-1, 1) * jitter
-        bite = jitter * rng.uniform(1.4, 2.6) if rng.random() < 0.07 else 0
-        out.append((top[0] + (bottom[0] - top[0]) * t + drift + rng.uniform(-0.3, 0.3) * jitter + bite, top[1] + (bottom[1] - top[1]) * t))
+        drift = drift * 0.9 + rng.uniform(-1, 1) * jitter * 0.45
+        bite = jitter * rng.uniform(0.8, 1.6) if rng.random() < 0.03 else 0
+        out.append((top[0] + (bottom[0] - top[0]) * t + drift + rng.uniform(-0.35, 0.35) * jitter + bite, top[1] + (bottom[1] - top[1]) * t))
     return out
 
 
@@ -62,8 +64,8 @@ def crinkles(rng: random.Random, w: float, h: float, count: int) -> str:
         seg = f"M{n(x)} {n(y)}q{n(length * 0.5 * math.cos(a) + rng.uniform(-2, 2))} {n(length * 0.5 * math.sin(a))} {n(length * math.cos(a))} {n(length * math.sin(a))}"
         (light if rng.random() < 0.5 else dark).append(seg)
     return (
-        f'<path d="{"".join(light)}" fill="none" stroke="{WHITE}" stroke-opacity=".28" stroke-width=".8" stroke-linecap="round"/>'
-        f'<path d="{"".join(dark)}" fill="none" stroke="{GOLD["shadow"]}" stroke-opacity=".3" stroke-width=".8" stroke-linecap="round"/>'
+        f'<path d="{"".join(light)}" fill="none" stroke="{WHITE}" stroke-opacity=".2" stroke-width=".8" stroke-linecap="round"/>'
+        f'<path d="{"".join(dark)}" fill="none" stroke="{GOLD["shadow"]}" stroke-opacity=".2" stroke-width=".8" stroke-linecap="round"/>'
     )
 
 
@@ -75,9 +77,16 @@ def foil_paint(c: Canvas, x1=0.0, y1=0.0, x2=1.0, y2=1.0) -> str:
     )  # fmt: skip
 
 
-def kinpaku_card(c: Canvas, w: float, seed: int = CARD_SEED) -> tuple[str, str]:
+CARD_TEAR = (0.56, 0.4)  # where the leaf's torn edge meets the top and the bottom of the card (share of its width)
+CARD_SEAL, CARD_GLOSS = 0.23, 0.16  # the seal's edge as a share of the card's height; strength of the lacquer reflection
+
+
+def kinpaku_card(
+    c: Canvas, w: float, seed: int = CARD_SEED, tear=CARD_TEAR, flat: bool = False, seal_size: float = CARD_SEAL, shine: float = CARD_GLOSS
+) -> tuple[str, str]:
     """The Kinpaku card face up: lacquer body, a torn field of gold leaf with one sheen direction, the carved seal.
-    Returns (markup, outline path) in local coordinates, origin at the card's top-left corner."""
+    Returns (markup, outline path) in local coordinates, origin at the card's top-left corner. `flat` leaves out the
+    card's thickness (the card face used as an image, not as an object in a scene)."""
     rng = random.Random(seed)
     h = w / CARD_RATIO
     r = w * CARD_CORNER
@@ -85,36 +94,29 @@ def kinpaku_card(c: Canvas, w: float, seed: int = CARD_SEED) -> tuple[str, str]:
     outline = rrect(0, 0, w, h, r)
     body = c.lin([(0, "#43364B"), (0.3, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
     clip = c.clip(f'<path d="{outline}"/>')
-    edge = "".join(
+    edge = "" if flat else "".join(
         f'<path d="{rrect(i * 0.8, i, w, h, r)}" fill="{mix_edge(i / t)}"/>' for i in (t, t * 0.66, t * 0.33)
     )
     # The leaf: left part of the card, torn along a slanted edge.
-    torn = torn_edge(rng, (w * 0.56, -2), (w * 0.4, h + 2), w * 0.008)
+    torn = torn_edge(rng, (w * tear[0], -2), (w * tear[1], h + 2), w * 0.008)
     leaf = pts([(-2, -2), *torn, (-2, h + 2)])
     leaf_clip = c.clip(f'<path d="{leaf}"/>')
     cell = h / LEAF_ROWS
     crumbs = []
     for _ in range(CRUMBS):
         ty = rng.uniform(0, h)
-        tx = w * 0.56 + (w * 0.4 - w * 0.56) * (ty / h)
-        reach = abs(rng.gauss(0, 0.05)) * w
-        size = max(w * 0.008 * (1 - reach / (w * 0.3)), w * 0.0025)
+        tx = w * (tear[0] + (tear[1] - tear[0]) * (ty / h))
+        reach = abs(rng.gauss(0, 0.028)) * w
+        size = max(w * 0.006 * (1 - reach / (w * 0.3)), w * 0.0022)
         crumbs.append((tx + w * 0.012 + reach, ty, size))
     crumb_paint = c.lin([(0, FOIL[4]), (0.5, FOIL[2]), (1, FOIL[0])], 0, 0, 1, 1)
     crumb_d = "".join(flake(rng, x, y, s) for x, y, s in crumbs)
-    seal = h * 0.23
+    seal = h * seal_size
     sx, sy = w * 0.075, h * 0.13
-    gl = glyph_in(sx + seal * 0.17, sy + seal * 0.15, seal * 0.66, seal * 0.66)
     carve = LACQUER["shadow"]
-    seal_markup = (
-        f'<rect x="{n(sx + 1)}" y="{n(sy + 1.2)}" width="{n(seal)}" height="{n(seal)}" rx="{n(seal * 0.06)}" fill="none" '
-        f'stroke="{GOLD["light"]}" stroke-opacity=".7" stroke-width="{n(seal * 0.05)}"/>'
-        f'<rect x="{n(sx)}" y="{n(sy)}" width="{n(seal)}" height="{n(seal)}" rx="{n(seal * 0.06)}" fill="none" '
-        f'stroke="{carve}" stroke-width="{n(seal * 0.05)}"/>'
-        f"{sen(f'translate(1 1.2) {gl}', GOLD['light'], 30, 0.7)}{sen(gl, carve, 30)}"
-    )
+    seal_markup = carved_seal(sx, sy, seal, carve, GOLD["light"])  # the seal's own geometry, carved into the leaf
     band = pts([(w * 0.5, 0), (w * 0.74, 0), (w * 0.4, h), (w * 0.16, h)])
-    band_paint = c.lin([(0, WHITE, 0), (0.5, WHITE, 0.16), (1, WHITE, 0)], 0, 0, 1, 0.25)
+    band_paint = c.lin([(0, WHITE, 0), (0.5, WHITE, shine), (1, WHITE, 0)], 0, 0, 1, 0.25)
     thin = pts([(w * 0.8, 0), (w * 0.86, 0), (w * 0.52, h), (w * 0.46, h)])
     rim = c.lin([(0, WHITE, 0.55), (0.4, WHITE, 0.04), (0.6, INK, 0.05), (1, INK, 0.5)], 0, 0, 1, 1)
     sheen = c.lin([(0, WHITE, 0), (0.5, WHITE, 0.55), (1, WHITE, 0)], 0, 0, 1, 0.3)
@@ -123,13 +125,13 @@ def kinpaku_card(c: Canvas, w: float, seed: int = CARD_SEED) -> tuple[str, str]:
         f'<path d="{outline}" fill="{body}"/>'
         f'<g clip-path="{clip}">'
         f'<g clip-path="{leaf_clip}"><rect x="-2" y="-2" width="{n(w * 0.6)}" height="{n(h + 4)}" fill="{foil_paint(c, 0, 0, 1, 0.9)}"/>'
-        f"{leaf_squares(c, rng, w * 0.6, h, cell)}{crinkles(rng, w * 0.56, h, 46)}"
-        f'<g id="{c.uid("foil-sheen")}"><path d="{pts([(w * 0.17, 0), (w * 0.33, 0), (w * 0.09, h), (-w * 0.07, h)])}" fill="{sheen}" opacity=".6"/></g>'
+        f"{leaf_squares(c, rng, w * 0.6, h, cell)}{crinkles(rng, w * 0.56, h, CRINKLES)}"
+        f'<g id="{c.key}-card-sheen"><path d="{pts([(w * 0.17, 0), (w * 0.33, 0), (w * 0.09, h), (-w * 0.07, h)])}" fill="{sheen}" opacity=".6"/></g>'
         f"{seal_markup}</g>"
-        f'<path d="M{"L".join(f"{n(x)} {n(y)}" for x, y in torn)}" fill="none" stroke="{GOLD["shadow"]}" stroke-opacity=".7" '
-        f'stroke-width="{n(w * 0.004)}" stroke-linejoin="round"/>'
+        f'<path d="M{"L".join(f"{n(x)} {n(y)}" for x, y in torn)}" fill="none" stroke="{GOLD["shadow"]}" stroke-opacity=".34" '
+        f'stroke-width="{n(max(w * 0.0016, 0.8))}" stroke-linejoin="round" stroke-dasharray="{TEAR_SHADE}"/>'
         f'<path d="{crumb_d}" fill="{crumb_paint}"/>'
-        f'<path d="{band}" fill="{band_paint}"/><path d="{thin}" fill="{band_paint}" opacity=".6"/></g>'
+        f'<path d="{band}" fill="{band_paint}"/>{"" if flat else f'<path d="{thin}" fill="{band_paint}" opacity=".6"/>'}</g>'
         f'<path d="{rrect(0.8, 0.8, w - 1.6, h - 1.6, r)}" fill="none" stroke="{rim}" stroke-width="1.6"/>'
     )
     return markup, outline

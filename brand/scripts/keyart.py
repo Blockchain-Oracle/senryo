@@ -5,7 +5,7 @@ labelled on the controls, exactly as its usage rules require."""
 import math
 import random
 
-from kit import GOLD, INK, LACQUER, SILVER, WHITE, Canvas, glyph_in, gloss, n, pts, rrect, seal_tile, sen, sprinkle
+from kit import GOLD, INK, LACQUER, SILVER, WHITE, Canvas, carved_seal, gloss, n, pts, rrect, seal_tile, sprinkle
 
 BOW, BOW_R, HOLE, HOLE_R = 170, 46, 64, 18
 SHAFT_HALF, KEY_LEN = 19, 470
@@ -153,9 +153,5 @@ def cord(points, color: str, light: str, width: float = 7) -> tuple[str, str]:
 
 
 def seal_stamp(c: Canvas, x: float, y: float, size: float, ink: str) -> str:
-    """The seal drawn as a stamp impression in one ink (frame + 千)."""
-    t = glyph_in(x + size * 0.18, y + size * 0.16, size * 0.64, size * 0.64)
-    return (
-        f'<rect x="{n(x)}" y="{n(y)}" width="{n(size)}" height="{n(size)}" rx="{n(size * 0.07)}" fill="none" stroke="{ink}" '
-        f'stroke-width="{n(size * 0.06)}"/>{sen(t, ink, 30)}'
-    )
+    """The seal as a stamp impression in one ink: its own carving, nothing redrawn."""
+    return carved_seal(x, y, size, ink)

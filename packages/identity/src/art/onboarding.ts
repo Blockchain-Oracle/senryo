@@ -1,7 +1,8 @@
 /**
  * The authored J1 artwork (v2-plan §5.10, S1b.3 first pass): six onboarding scenes, the pending-passkey art, the
- * completion foil and the twelve default avatars. Written by `brand/scripts/onboarding.py` (layered SVG masters: named
- * top-level groups per layer, no <text>, no filters; `brand/art/onboarding/labels.json` anchors the native labels). The user's design agent or an illustrator reviews and may replace
+ * completion foil and the twelve default avatars. Written by `brand/scripts/onboarding.py` (layered SVG masters: one
+ * top-level group per unit of motion, no <text>, no filters; `brand/art/onboarding/layers.json` lists the layers and
+ * `labels.json` anchors the native labels). The user's design agent or an illustrator reviews and may replace
  * any file (B12 stays open until that review passes); a swap is one file plus `codegen --rehash`.
  */
 import type { ArtSource } from "../types.ts";
@@ -57,34 +58,34 @@ export const ONBOARDING_ART: readonly ArtSource[] = [
   scene(
     "scene-balance",
     "One balance. The lacquer senryō-bako; two inlaid gold paths run from its seal to the Kinpaku card and the koban.",
-    "94aece3f0654f464d1d0c15bda9f4288cb0a7a3b99f827e360a2f53cd6c17f82",
+    "9df264ae7c2be90742b4ce39b6fc05469fdb9ca4d24ced1225f0cb008c75e498",
     ["xau-koban"],
   ),
   scene(
     "scene-passkey",
     "Passkey. The silver key settling into its lacquer bed, with a phone and the seal tag.",
-    "c34ffbdae7d0b948342de98cbd9116f2f8bcd7e2cec975a5370bd76504bcc4b7",
+    "ed459da3e8b4603a07ee3f579a01e63d1cac0f4b2d131f6dcc7f8bcbaf8902a8",
   ),
   scene(
     "scene-markets",
     "Markets. Three lacquer trays: koban and chōgin, the EUR/USD and JPY/USD pair discs, the Bitcoin and MON marks. Pair names are native text over its label plates (labels.json).",
-    "6f49ed9e5e7e716f4bd52054c431a91c25976ef791947bc0f2096ec097369ed7",
+    "6d07b19ecbee899225d03792f20c7da83bdfec2e35399b0dc8fd798c4e661c52",
     ["xau-koban", "xag-chogin", "bitcoin", "monad", "fx-eur-usd", "fx-jpy-usd"],
   ),
   scene(
     "scene-lp",
     "LP vault. The lacquer vault well, its round bolted door open, one shared pool inside.",
-    "3ef75a7cdc0035bca6a94a4eef1875a1b1bd6c8fb9ade922575b7f69f0650a8a",
+    "698ffa82a49092719bbdee8d495c7cb3c2fbeefadb33f07a195a4e5597f44e9d",
   ),
   scene(
     "scene-kinpaku",
     "Kinpaku. The lacquer and gold-leaf card over a book of beaten gold leaf.",
-    "98b024975fe9ac00db5acf6b26efb3f2b391332fd24374aa86ba69564619730d",
+    "8a198e75016e5a73b5cbefc01894db8b15ca3b82091a847640b7712136dad8ef",
   ),
   scene(
     "scene-modes",
     "Practice / Mainnet. Washi notes in the practice violet in front; koban and chōgin in a tray lined in the mainnet blue, apart. Mode names are native text over its label plates (labels.json).",
-    "7c412401a11e3a53ba75c390806e78d5f976b2ab244ed478afefdaad4d9a1c63",
+    "dad61399a3c53d5a01283890f8ca614eb71a1ef2e169728b1495be7a672fbbcc",
     ["xau-koban", "xag-chogin"],
   ),
   {

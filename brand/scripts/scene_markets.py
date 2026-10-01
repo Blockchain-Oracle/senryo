@@ -23,6 +23,9 @@ PAIR_DISCS = ((96 / 256, 96 / 256, 86 / 256), (188 / 256, 188 / 256, 62 / 256))
 BTC_INSET = 34 / 580  # the Bitcoin Core file's own margin around the disc
 LABEL_W, LABEL_H = 146, 48
 LABEL_INK = "#17151F"
+# Three trays of equal weight: they arrive one after another (a short stagger), the nearest travelling most.
+DEPTHS = {"commodities": 0.6, "fx": 0.8, "crypto": 1.0}
+MOTION = {"subject": "fx", "mostMotion": ["commodities", "fx", "crypto"]}
 
 
 def tray(c: Canvas, rng: random.Random, h: float) -> tuple[str, str]:
@@ -88,14 +91,19 @@ def build() -> tuple[str, str]:
     field(c, COLOR)
     dark = shade(COLOR, 0.8)
     contents = {"commodities": commodities, "fx": fx, "crypto": crypto}
+    trays: dict[str, tuple[str, str]] = {}
     for name, (x, y), height, tilt in TRAYS:
         body, outline = tray(c, rng, height)
         t = f"translate({x} {y}) rotate({tilt})"
-        c.put("shadow", contact(outline, dark, t, 0.5, f"{KEY}-{name}-tray-shadow"))
-        c.put("main", f'<g id="{KEY}-{name}" transform="{t}">{body}{contents[name](c)}</g>')
-    # Plates for the native pair labels (the app draws the text; a pair disc is never shown without its name).
+        trays[name] = (contact(outline, dark, t, 0.5), f'<g transform="{t}">{body}{contents[name](c)}</g>')
+    for name, depth in DEPTHS.items():  # every tray shadow lies under every tray
+        c.put(f"{name}-shadow", trays[name][0], role="shadow", depth=depth, of=name)
+    for name, depth in DEPTHS.items():
+        c.put(name, trays[name][1], depth=depth)
+    # Plates for the native pair labels (the app draws the text; a pair disc is never shown without its name). They sit
+    # in the FX tray's own layer, so they travel with it.
     _, (fx_x, fx_y), _, fx_tilt = TRAYS[1]
     for name, _, x, text in PAIRS:
         lx, ly = rot((x + PAIR_D * 0.06, LABEL_Y), fx_tilt)
-        c.put("fore", c.label(name, text, fx_x + lx - LABEL_W / 2, fx_y + ly - LABEL_H / 2, LABEL_W, LABEL_H, PAPER["light"], LABEL_INK))
+        c.put("fx", c.label(name, "fx", text, fx_x + lx - LABEL_W / 2, fx_y + ly - LABEL_H / 2, LABEL_W, LABEL_H, PAPER["light"], LABEL_INK))
     return f"{KEY}.svg", c.svg()

@@ -38,9 +38,16 @@ cp senryo-wordmark.svg "$WEB_PUBLIC/brand/wordmark.svg"
 cp kinpaku-card.svg "$WEB_PUBLIC/brand/kinpaku-card.svg"
 cp kinpaku-card-back.svg "$WEB_PUBLIC/brand/kinpaku-card-back.svg"
 
-# Mobile card face: the SVG's feTurbulence grain doesn't render in react-native-svg, so the app ships this raster
-# (1200 px = a 400 pt card at 3x). S1b.4.
+# Mobile card face: the Card tab draws this raster (1200 px = a 400 pt card at 3x). S1b.4.
 png kinpaku-card.svg "$BRAND/../apps/mobile/assets/images/kinpaku-card.png" 1200 757
+
+# Mobile app icon, splash seal and Android adaptive foreground (the seal at 600 px centred on a transparent 1024 px
+# canvas, inside the adaptive icon's safe zone): the same seal as everywhere else, so they never drift from it.
+# android-icon-monochrome.png is a one-colour 千 for themed icons and has no colour to refresh.
+MOBILE_IMAGES="$BRAND/../apps/mobile/assets/images"
+cp app-icon-1024.png "$MOBILE_IMAGES/icon.png"
+cp senryo-seal-512.png "$MOBILE_IMAGES/splash-icon.png"
+rsvg-convert -w 600 -h 600 senryo-seal.svg | magick - -background none -gravity center -extent 1024x1024 "$MOBILE_IMAGES/android-icon-foreground.png"
 
 # Original identity art (S1b.3): koban, chōgin, FX pair discs, venue chip → brand/art/; then the J1 artwork that
 # composes them (six onboarding scenes, pending-passkey art, completion foil, twelve avatars) → brand/art/onboarding/

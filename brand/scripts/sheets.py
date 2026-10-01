@@ -7,6 +7,9 @@
 - j1-scene-<n>-{dark,light}@2x.png: one phone at 2x.
 - j1-extras.png: pending-passkey art and completion foil on both grounds.
 - j1-avatars.png: the twelve avatars as discs at 48 px and 96 px on both grounds.
+- brand-card-seal.png: the Kinpaku card face (with a mock of the app's overlay) and back, the seal at header sizes with
+  its variants and the app icon, on both grounds.
+- seal-sizes.png: the seal at 24, 32, 48 and 88 px on the dark ground and surface, at 1x and 3x, with 8x close-ups.
 """
 import json
 import os
@@ -41,6 +44,11 @@ def run(*args: str) -> None:
 
 def raster(svg: str, png: str, width: int) -> None:
     run("rsvg-convert", "-w", str(width), "-o", png, svg)
+
+
+def text_width(font: str, size: int, text: str) -> int:
+    out = subprocess.run(["magick", "-font", font, "-pointsize", str(size), f"label:{text}", "-format", "%w", "info:"], check=True, capture_output=True, text=True)
+    return int(out.stdout)
 
 
 def phone(index: int, key: str, title: str, body: str, theme: str) -> str:
@@ -142,11 +150,97 @@ def avatars() -> None:
     grid(big, 6, os.path.join(REVIEW, "j1-avatars-256.png"), "#0A0911", 0, "100%")
 
 
+def brand_marks() -> None:
+    """The Kinpaku card face as the Card tab shows it (with a mock of the app's overlay: sample number, holder and
+    expiry, a design preview and no issued card), its back, and the seal at header sizes with its variants and the app
+    icon, on both grounds."""
+    rows = []
+    card_w, seal_sizes = 343, (96, 48, 32, 24)  # the card at the Card tab's width; the seal from hero to header size
+    for theme, t in THEMES.items():
+        s = SCALE
+        tiles = []
+        for name in ("kinpaku-card", "kinpaku-card-back"):
+            png = os.path.join(REVIEW, f".{name}-{theme}.png")
+            raster(os.path.join(BRAND, f"{name}.svg"), png, card_w * s)
+            tiles.append(png)
+        # The app's own overlay (apps/mobile/src/features/card/CardFace.tsx): from 52 % across, between 30 % and 70 %
+        # down, 24 pt from the right edge; number on top, holder and expiry side by side at the bottom.
+        w, h = card_w * s, round(card_w * s / (85.6 / 54))
+        left, right, top, bottom = round(w * 0.52), 24 * s, round(h * 0.3), round(h * 0.7)
+        semi, medium = os.path.join(FONTS, "Inter-SemiBold.ttf"), os.path.join(FONTS, "Inter-Medium.ttf")
+        # The holder shares its row with the expiry and is cut to one line, as the app does (numberOfLines={1}).
+        room = w - left - right - text_width(medium, 16 * s, "08/29") - 8 * s
+        holder = "Sample Holder"
+        while text_width(medium, 16 * s, holder) > room and len(holder) > 2:
+            holder = holder[:-2].rstrip() + "…"
+        run(
+            "magick", tiles[0],
+            "-gravity", "NorthWest", "-font", medium, "-pointsize", str(20 * s), "-fill", "#F5F4FA", "-annotate", f"+{left}+{top}", "•••• 4242",
+            "-font", semi, "-pointsize", str(12 * s), "-fill", "#B8B5C4", "-annotate", f"+{left}+{bottom - 38 * s}", "CARD HOLDER",
+            "-font", medium, "-pointsize", str(16 * s), "-fill", "#F5F4FA", "-annotate", f"+{left}+{bottom - 20 * s}", holder,
+            "-gravity", "NorthEast", "-font", semi, "-pointsize", str(12 * s), "-fill", "#B8B5C4", "-annotate", f"+{right}+{bottom - 38 * s}", "EXPIRES",
+            "-font", medium, "-pointsize", str(16 * s), "-fill", "#F5F4FA", "-annotate", f"+{right}+{bottom - 20 * s}", "08/29",
+            tiles[0],
+        )  # fmt: skip
+        for size in seal_sizes:
+            png = os.path.join(REVIEW, f".seal-{size}-{theme}.png")
+            raster(os.path.join(BRAND, "senryo-seal.svg"), png, size * s)
+            tiles.append(png)
+        for name in ("senryo-seal-inverse", "senryo-seal-mono" if theme == "dark" else "favicon", "app-icon"):
+            png = os.path.join(REVIEW, f".{name}-{theme}.png")
+            raster(os.path.join(BRAND, f"{name}.svg"), png, 96 * s)
+            tiles.append(png)
+        for size in (24, 16):  # under 32 px the seal is drawn with the simplified favicon geometry
+            png = os.path.join(REVIEW, f".favicon-{size}-{theme}.png")
+            raster(os.path.join(BRAND, "favicon.svg"), png, size * s)
+            tiles.append(png)
+        row = os.path.join(REVIEW, f".brand-{theme}.png")
+        run("magick", *tiles, "-bordercolor", t["ground"], "-border", f"{10 * s}", "-background", t["ground"], "-gravity", "center",
+            "+append", "-border", f"{10 * s}", row)  # fmt: skip
+        rows.append(row)
+    run("magick", *rows, "-gravity", "west", "-background", "#3A3550", "-append", os.path.join(REVIEW, "brand-card-seal.png"))
+
+
+SEAL_SIZES, SEAL_GROUNDS = (24, 32, 48, 88), ("#0A0911", "#13121A")  # the app's seal sizes; ground and surface
+
+
+def seal_sizes(seal: str = os.path.join(BRAND, "senryo-seal.svg"), out: str = "seal-sizes.png") -> None:
+    """The seal at the app's sizes on the dark ground and surface: each size at 1x (its literal pixels) and at 3x (a
+    phone's), then the 24 and 32 px renders blown up 8x without smoothing, so the 千 and the frames can be judged pixel
+    by pixel. `seal` is the master to show (another version can be compared), `out` the sheet's name."""
+    label = os.path.join(FONTS, "Inter-Medium.ttf")
+    rows = []
+    for ground in SEAL_GROUNDS:
+        tiles = []
+        for scale in (1, 3):
+            for size in SEAL_SIZES:
+                png = os.path.join(REVIEW, f".seal-{size}x{scale}-{ground[1:]}.png")
+                raster(seal, png, size * scale)
+                run("magick", png, "-background", ground, "-gravity", "center", "-extent", f"{max(size * scale, 64) + 24}x{88 * 3 + 24}",
+                    "-gravity", "south", "-font", label, "-pointsize", "13", "-fill", "#B8B5C4", "-splice", "0x22", "-annotate", "+0+4",
+                    f"{size} px" + (f" @{scale}x" if scale > 1 else ""), png)  # fmt: skip
+                tiles.append(png)
+        for size in (24, 32):
+            png = os.path.join(REVIEW, f".seal-{size}-zoom-{ground[1:]}.png")
+            raster(seal, png, size)
+            run("magick", "-size", f"{size}x{size}", f"xc:{ground}", png, "-composite", "-filter", "point", "-resize", "800%",
+                "-background", ground, "-gravity", "center", "-extent", f"{size * 8 + 24}x{88 * 3 + 24}",
+                "-gravity", "south", "-font", label, "-pointsize", "13", "-fill", "#B8B5C4", "-splice", "0x22", "-annotate", "+0+4",
+                f"{size} px, 8x", png)  # fmt: skip
+            tiles.append(png)
+        row = os.path.join(REVIEW, f".seal-row-{ground[1:]}.png")
+        run("magick", *tiles, "-background", ground, "+append", "-bordercolor", ground, "-border", "16", row)
+        rows.append(row)
+    run("magick", *rows, "-append", "+repage", os.path.join(REVIEW, out))
+
+
 def main() -> None:
     os.makedirs(REVIEW, exist_ok=True)
     scenes()
     extras()
     avatars()
+    brand_marks()
+    seal_sizes()
     for name in os.listdir(REVIEW):
         if name.startswith("."):
             os.remove(os.path.join(REVIEW, name))
