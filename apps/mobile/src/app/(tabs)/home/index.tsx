@@ -9,6 +9,7 @@ import { EmptyState, ReadingView } from "~/components/kit/states";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { AccountStrip } from "~/features/auth/AccountStrip";
 import { Availability } from "~/features/home/Availability";
+import { GuestHome } from "~/features/home/GuestHome";
 import { CompactBalance, ExpandedBalance, HomeSeal } from "~/features/home/HomeHeader";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { CollateralPanel } from "~/features/portfolio/CollateralPanel";
@@ -19,7 +20,7 @@ import { usePositionsSummary } from "~/features/portfolio/usePositionsSummary";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { pct, signedUsd } from "~/lib/money";
-import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
+import { useReadOnlyNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 const TIMEFRAMES = [
@@ -58,7 +59,6 @@ export default function Home() {
 }
 
 function HomeBody() {
-  const network = useNetwork();
   const { color } = useTheme();
   const account = useAccount();
   const address = account.hint?.address;
@@ -73,18 +73,7 @@ function HomeBody() {
   const arriving =
     starterStatus.data?.claimed === true || (lastRelay?.kind === "claim" && !isTerminalStage(lastRelay.stage));
 
-  if (!address) {
-    return (
-      <>
-        <AccountStrip />
-        <EmptyState
-          why="No account on this phone yet"
-          detail={`Create one with Face ID to trade gold and silver — ${network.modeLabel.toLowerCase()} funds are on the house.`}
-          action={{ label: "Create account", onPress: () => router.push(ROUTES.accountRequired) }}
-        />
-      </>
-    );
-  }
+  if (!address) return <GuestHome />;
 
   return (
     <>
@@ -115,7 +104,7 @@ function HomeBody() {
             ) : (
               <EmptyState
                 why="Nothing here yet"
-                detail="Claim practice funds or deposit from any chain — then gold is one hold away."
+                detail="Claim practice funds or deposit from any chain, then open your first position."
                 action={{ label: "Add money", onPress: () => router.push(ROUTES.addMoney) }}
               />
             )
@@ -134,7 +123,7 @@ function HomeBody() {
             {list.length === 0 ? (
               <EmptyState
                 why="No open positions"
-                detail="Gold, silver and FX trade at the oracle price. Start small in practice mode."
+                detail="Every market trades at its live oracle price. Start small in practice mode."
                 action={{ label: "Browse markets", onPress: () => router.navigate(ROUTES.markets) }}
               />
             ) : live.status === "fresh" || live.status === "stale" ? (

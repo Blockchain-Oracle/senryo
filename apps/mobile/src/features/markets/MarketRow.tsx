@@ -16,8 +16,8 @@ import { useMarketLine } from "./useMarketLine";
 const MS_PER_SECOND = 1000n;
 
 /**
- * One engine watchlist row (21st Market Watchlist #20110): the market's own art (koban / chōgin), name, venue ·
- * session · max leverage, sparkline from hourly Chainlink rounds, oracle price with its age, 24 h change with ▲▼ and
+ * One engine watchlist row (21st Market Watchlist #20110): the market's own art (koban / chōgin), name over ticker ·
+ * session · max leverage (the venue is the list's own heading, or a badge on the mark when venues mix), sparkline from hourly Chainlink rounds, oracle price with its age, 24 h change with ▲▼ and
  * a sign (never colour alone). The mark is the market's identity, so it shows while the price is still loading.
  */
 export function EngineMarketRow({ marketId, first }: { marketId: number; first: boolean }) {
@@ -58,9 +58,11 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
     >
       <EntityMark id={mark} size={SIZE.markRow} decorative />
       <View style={styles.name}>
-        <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{line.symbol}</Text>
+        <Text style={[TYPE.bodyStrong, { color: color.ink }]} numberOfLines={1}>
+          {line.name}
+        </Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]} numberOfLines={1}>
-          Senryo · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text> ·{" "}
+          {line.symbol} · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text> ·{" "}
           {line.maxLeverageX}×
         </Text>
       </View>

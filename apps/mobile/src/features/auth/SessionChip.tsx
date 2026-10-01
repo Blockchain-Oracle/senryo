@@ -1,6 +1,7 @@
 /**
  * The trading-session chip (spec client.md; Living Lacquer utility row, Codex S1b.7 consult #6): "Session 24:10"
- * unlocked · "Locks in 0:59" in the last minute · "Locked" · "Create account" with no account (F03). Sentence case, a
+ * unlocked · "Locks in 0:59" in the last minute · "Locked" · "Browsing" with no account (F03; a state, not a second
+ * create button: each screen carries one account invitation). Sentence case, a
  * pill on the quiet raised surface; the full sentence is its VoiceOver label. Opens the session sheet (or welcome).
  */
 import { router } from "expo-router";
@@ -31,7 +32,7 @@ export function SessionChip() {
         router.push(none ? ROUTES.welcome : ROUTES.session);
       }}
       accessibilityRole="button"
-      accessibilityLabel={none ? "Create an account" : `Trading session: ${chip.label}`}
+      accessibilityLabel={none ? "Browsing without an account. Create one" : `Trading session: ${chip.label}`}
       hitSlop={SPACE.sm}
       style={[styles.chip, { borderColor: color.border, backgroundColor: color.card }]}
     >
@@ -42,7 +43,7 @@ export function SessionChip() {
         ]}
       />
       <Text style={[TYPE.chipLabel, { color: none ? color.ink : ink }]}>
-        {none ? "Create account" : shortLabel(chip.label, chip.tone)}
+        {none ? "Browsing" : shortLabel(chip.label, chip.tone)}
       </Text>
     </Pressable>
   );
