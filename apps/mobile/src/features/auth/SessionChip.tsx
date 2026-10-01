@@ -1,7 +1,8 @@
 /**
- * Session chip in the D2 top strip (spec client.md): `● 24:10` unlocked / `● LOCKS 0:59` / `○ LOCKED`, compact for
- * the phone strip; the full sentence is its VoiceOver label. No account → "SIGN UP" (F03). Opens the session sheet.
- * RN port of the web chip (21st-derived D2 status pill, see apps/mobile/.21st/design.json).
+ * The trading-session chip (spec client.md; Living Lacquer utility row, Codex S1b.7 consult #6): "Session 24:10"
+ * unlocked · "Locks in 0:59" in the last minute · "Locked" · "Browsing" with no account (F03; a state, not a second
+ * create button: each screen carries one account invitation). Sentence case, a
+ * pill on the quiet raised surface; the full sentence is its VoiceOver label. Opens the session sheet (or welcome).
  */
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -12,9 +13,9 @@ import { ROUTES } from "~/lib/constants/routes";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 function shortLabel(label: string, tone: string): string {
-  if (tone === "locked") return "LOCKED";
+  if (tone === "locked") return "Locked";
   const time = label.split(" ").at(-1) ?? "";
-  return tone === "warning" ? `LOCKS ${time}` : time;
+  return tone === "warning" ? `Locks in ${time}` : `Session ${time}`;
 }
 
 export function SessionChip() {
@@ -23,7 +24,7 @@ export function SessionChip() {
   const chip = useChip();
   if (!account.ready) return null;
   const none = chip.tone === "none";
-  const ink = none || chip.tone === "unlocked" ? color.up : chip.tone === "warning" ? color.warn : color.inkMuted;
+  const ink = chip.tone === "unlocked" ? color.up : chip.tone === "warning" ? color.warn : color.text2;
   return (
     <Pressable
       onPress={() => {
@@ -31,17 +32,19 @@ export function SessionChip() {
         router.push(none ? ROUTES.welcome : ROUTES.session);
       }}
       accessibilityRole="button"
-      accessibilityLabel={none ? "Create an account" : `Trading session: ${chip.label}`}
-      hitSlop={SPACE.xs}
-      style={[styles.chip, { borderColor: ink }]}
+      accessibilityLabel={none ? "Browsing without an account. Create one" : `Trading session: ${chip.label}`}
+      hitSlop={SPACE.sm}
+      style={[styles.chip, { borderColor: color.border, backgroundColor: color.card }]}
     >
       <View
         style={[
           styles.dot,
-          chip.tone === "locked" ? { borderWidth: HAIRLINE_PX, borderColor: ink } : { backgroundColor: ink },
+          chip.tone === "locked" || none ? { borderWidth: HAIRLINE_PX, borderColor: ink } : { backgroundColor: ink },
         ]}
       />
-      <Text style={[TYPE.micro, { color: ink }]}>{none ? "SIGN UP" : shortLabel(chip.label, chip.tone)}</Text>
+      <Text style={[TYPE.chipLabel, { color: none ? color.ink : ink }]}>
+        {none ? "Browsing" : shortLabel(chip.label, chip.tone)}
+      </Text>
     </Pressable>
   );
 }
@@ -51,10 +54,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: SPACE.xs,
-    height: SIZE.buttonHeightSm - SPACE.sm,
-    paddingHorizontal: SPACE.sm,
+    height: SIZE.chipHeight,
+    paddingHorizontal: SPACE.md,
     borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.pill,
   },
   dot: { width: SIZE.dot, height: SIZE.dot, borderRadius: RADIUS.pill },
 });

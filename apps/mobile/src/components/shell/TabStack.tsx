@@ -1,12 +1,13 @@
 import { Stack } from "expo-router";
+import type { ReactNode } from "react";
 import { FONT, useTheme } from "~/theme";
-import { TopStrip } from "./TopStrip";
 
 /**
- * Each tab is its own stack: the tab root shows the D2 top strip as a solid header; pushed screens get a plain D2
- * header with a minimal back button (edge swipe / system back), staying inside the tab.
+ * Each dock destination is its own Expo Router stack (D-193: stack and scroll survive tab switches). The tab root
+ * draws its own collapsing header (`CollapsingScreen`); pages pushed on the tab get a plain Living Lacquer header with
+ * a minimal back button (edge swipe / system back) and keep the dock under them.
  */
-export function TabStack() {
+export function TabStack({ children }: { children?: ReactNode }) {
   const { color } = useTheme();
   return (
     <Stack
@@ -19,7 +20,8 @@ export function TabStack() {
         contentStyle: { backgroundColor: color.ground },
       }}
     >
-      <Stack.Screen name="index" options={{ header: () => <TopStrip /> }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      {children}
     </Stack>
   );
 }

@@ -16,7 +16,8 @@
     "ticket-e2e": "tsx src/ticket-e2e.ts",
     "gas-topup-check": "tsx src/gas-topup-check.ts",
     "recovery-check": "tsx src/recovery-check.ts",
-    "network-switch-check": "tsx src/network-switch-check.ts"
+    "network-switch-check": "tsx src/network-switch-check.ts",
+    "trigger-outcome-check": "tsx src/trigger-outcome-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",

@@ -2,7 +2,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fire } from "~/feedback/fire";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
-/** RN port of 21st Segmented Control #23552 (asset filter, Long/Short, timeframe): a `tick` on every change. */
+/**
+ * RN port of 21st Segmented Control #23552 (asset filter, Long/Short, timeframe): a `tick` on every change. Living
+ * Lacquer (S1b.7): pill track and cells, sentence-case labels, the raised cell marks the selection.
+ */
 export function Segmented<T extends string>({
   options,
   value,
@@ -37,15 +40,9 @@ export function Segmented<T extends string>({
               fire("tick");
               onChange(o.value);
             }}
-            style={[styles.cell, selected ? { backgroundColor: color.foreground } : null]}
+            style={[styles.cell, selected ? { backgroundColor: color.raised2 } : null]}
           >
-            <Text
-              style={[
-                TYPE.numSm,
-                styles.text,
-                { color: selected ? (tone?.(o.value) ?? color.background) : color.inkMuted },
-              ]}
-            >
+            <Text style={[TYPE.chipLabel, { color: selected ? (tone?.(o.value) ?? color.ink) : color.text3 }]}>
               {o.label}
             </Text>
           </Pressable>
@@ -60,15 +57,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: SPACE.xs,
     gap: SPACE.xs,
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.pill,
     borderWidth: HAIRLINE_PX,
   },
   cell: {
     flex: 1,
-    minHeight: SIZE.touch - SPACE.md,
+    minHeight: SIZE.chipHeight,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.pill,
   },
-  text: { textTransform: "uppercase" },
 });

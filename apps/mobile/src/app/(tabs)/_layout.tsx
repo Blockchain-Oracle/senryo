@@ -1,45 +1,47 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
-import { ICONS } from "~/components/kit/icons";
-import { PositionsAccessory } from "~/components/shell/PositionsAccessory";
-import { useHasOpenPositions } from "~/features/portfolio/usePositionsSummary";
+import { TabList, TabSlot, Tabs, TabTrigger } from "expo-router/ui";
+import { StyleSheet, View } from "react-native";
+import { ActionFan } from "~/components/shell/ActionFan";
+import { TAB_HREF, TABS } from "~/components/shell/constants";
+import { Dock } from "~/components/shell/Dock";
+import { DockProvider } from "~/components/shell/dock-context";
+import { useFanActions } from "~/components/shell/useFanActions";
 import { useTheme } from "~/theme";
 
-const TABS = [
-  { name: "portfolio", label: "Portfolio", icon: ICONS.portfolio },
-  { name: "markets", label: "Markets", icon: ICONS.markets },
-  { name: "trade", label: "Trade", icon: ICONS.trade },
-  { name: "card", label: "Card", icon: ICONS.card },
-  { name: "fund", label: "Fund", icon: ICONS.fund },
-] as const;
-
 /**
- * NativeTabs (D-012): the real UITabBar / Material bar. On iOS 26 the system draws it in Liquid Glass and ignores the
- * background props; on iOS 18–25 and Android `backgroundColor` gives the solid D2 fallback, and
- * `disableTransparentOnScrollEdge` keeps it solid at the scroll edge. The open-positions mini-bar rides in the
- * BottomAccessory (iOS 26); the layout only tracks whether positions exist, the bar computes its own live summary.
+ * The Living Lacquer shell (S1b.7, D-176; spike D-193): five destinations Home · Markets · Card · Social · You on
+ * `expo-router/ui` headless tabs, each its own stack. Visited tabs stay mounted, so stack and scroll survive switches.
+ * Over the slot: the floating glass dock (C15) and the Phantom fan's plus (C18). The hidden `TabList` defines the
+ * routes; the dock's triggers render outside it. NativeTabs is retired as the visual shell (D-176).
  */
 export default function TabsLayout() {
-  const { color } = useTheme();
-  const hasPositions = useHasOpenPositions();
   return (
-    <NativeTabs
-      backgroundColor={color.ground}
-      tintColor={color.primary}
-      indicatorColor={color.muted}
-      labelStyle={{ default: { color: color.inkMuted }, selected: { color: color.ink } }}
-      badgeBackgroundColor={color.primary}
-    >
-      {hasPositions ? (
-        <NativeTabs.BottomAccessory>
-          <PositionsAccessory />
-        </NativeTabs.BottomAccessory>
-      ) : null}
-      {TABS.map((tab) => (
-        <NativeTabs.Trigger key={tab.name} name={tab.name} disableTransparentOnScrollEdge>
-          <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf={{ default: tab.icon.sf, selected: tab.icon.sfSelected }} md={tab.icon.md} />
-        </NativeTabs.Trigger>
-      ))}
-    </NativeTabs>
+    <DockProvider>
+      <Tabs>
+        <Shell />
+        <TabList style={styles.hidden}>
+          {TABS.map((tab) => (
+            <TabTrigger key={tab} name={tab} href={TAB_HREF[tab]} />
+          ))}
+        </TabList>
+      </Tabs>
+    </DockProvider>
   );
 }
+
+/** Slot, dock and fan share the tabs' navigator context (the dock reads which tab is focused). */
+function Shell() {
+  const { color } = useTheme();
+  const onAction = useFanActions();
+  return (
+    <View style={[styles.fill, { backgroundColor: color.ground }]}>
+      <TabSlot />
+      <Dock />
+      <ActionFan onAction={onAction} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  hidden: { display: "none" },
+});

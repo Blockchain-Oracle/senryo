@@ -1,4 +1,3 @@
-import { BlurView } from "expo-blur";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef } from "react";
 import { BackHandler, type LayoutChangeEvent, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
@@ -14,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fire } from "~/feedback/fire";
-import { DURATION, EASE, HAIRLINE_PX, RADIUS, SIZE, SPACE, useTheme } from "~/theme";
+import { DURATION, EASE, HAIRLINE_PX, RADIUS, SIZE, SPACE, SPRING, useTheme } from "~/theme";
 import { SHEET } from "./constants";
 
 const OUT = { duration: DURATION.slow, easing: EASE };
@@ -37,13 +36,14 @@ interface SheetProps {
 }
 
 /**
- * The app's one sheet (ported BottomDrawer; plan: "the one sheet"): a scrim that fades in, a content-sized panel that
- * springs up (damping 26 / stiffness 260, overshoot clamped), drag-down to dismiss past 25 % of its height or
+ * The app's compact selector (ported BottomDrawer; sheet grammar §5.5): a dimming scrim that fades in — no blur: only
+ * the fan blurs (direction §3, S1b.7) — and a content-sized panel with 24 pt top corners that springs up on the
+ * compact-selector spring (1/260/30, M02), drag-down to dismiss past 25 % of its height or
  * 900 pt/s that hands over to the content's own scroll, the safe area under it, and the keyboard pushing it up.
  * Reduce Motion swaps the spring for a fade. Rendered by a transparent-modal route.
  */
 export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeight }: SheetProps) {
-  const { name, color } = useTheme();
+  const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const reduce = useReducedMotion();
@@ -92,7 +92,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
     if (reduce) drag.value = 0;
     else {
       drag.value = e.nativeEvent.layout.height;
-      drag.value = withSpring(0, SHEET.spring);
+      drag.value = withSpring(0, SPRING.compactSelector);
     }
   };
 
@@ -111,7 +111,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
     .onEnd((e) => {
       if (scrollY.value > 0 && drag.value <= 0) return;
       if (drag.value > height.value * SHEET.closeFraction || e.velocityY > SHEET.closeVelocity) runOnJS(close)();
-      else drag.value = withSpring(0, SHEET.spring);
+      else drag.value = withSpring(0, SPRING.compactSelector);
     });
 
   const panelStyle = useAnimatedStyle(() => ({
@@ -127,11 +127,6 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
     <View style={styles.root}>
       <SheetContext.Provider value={close}>
         <Animated.View style={[StyleSheet.absoluteFill, scrimStyle]}>
-          <BlurView
-            intensity={SHEET.blurIntensity}
-            tint={name === "dark" ? "dark" : "light"}
-            style={StyleSheet.absoluteFill}
-          />
           <Pressable
             style={[StyleSheet.absoluteFill, { backgroundColor: color.scrim }]}
             onPress={() => close()}
@@ -145,7 +140,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
             accessibilityViewIsModal
             style={[
               styles.panel,
-              { maxHeight: windowHeight * maxHeight, backgroundColor: color.card, borderColor: color.hairline },
+              { maxHeight: windowHeight * maxHeight, backgroundColor: color.popover, borderColor: color.hairline },
               panelStyle,
             ]}
           >
@@ -174,13 +169,13 @@ const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: "flex-end" },
   panel: {
     width: "100%",
-    borderTopLeftRadius: RADIUS.sm,
-    borderTopRightRadius: RADIUS.sm,
+    borderTopLeftRadius: RADIUS.lg,
+    borderTopRightRadius: RADIUS.lg,
     borderWidth: HAIRLINE_PX,
     borderBottomWidth: 0,
     overflow: "hidden",
   },
   handleZone: { alignItems: "center", paddingTop: SPACE.sm, paddingBottom: SPACE.xs },
-  handle: { width: SIZE.handleWidth, height: SIZE.handleHeight, borderRadius: RADIUS.sm },
+  handle: { width: SIZE.handleWidth, height: SIZE.handleHeight, borderRadius: RADIUS.pill },
   content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm, gap: SPACE.lg },
 });

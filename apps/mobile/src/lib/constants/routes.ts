@@ -1,16 +1,22 @@
 /**
- * Every app path (same paths on web, plan §2.4). Deep links on the rpId host map 1:1 onto these (S12 allowlists them).
- * Moves to `packages/config` ROUTES when it lands.
+ * Every app path (plan §2.4). The five dock destinations are Home · Markets · Card · Social · You (D-176, S1b.7);
+ * Trade became market detail → ticket and Fund became the add-money hub. Old paths (`/portfolio`, `/trade/XAU`,
+ * `/fund`, `/account`) still open the right place: deep links and push taps are remapped in `lib/deep-link.ts`
+ * (`LEGACY_PATHS`), and the old in-app routes redirect. Deep links on the rpId host map 1:1 onto these.
  */
 export const ROUTES = {
   welcome: "/welcome",
-  portfolio: "/portfolio",
+  home: "/home",
   markets: "/markets",
-  trade: "/trade",
   card: "/card",
   cardWallet: "/card/wallet",
   cardAllowance: "/card/allowance",
+  social: "/social",
+  you: "/you",
+  /** Compatibility: `/fund` opens the add-money hub over Home. */
   fund: "/fund",
+  /** Home with the add-money hub opened over it (old `/fund` links). */
+  homeAddMoney: "/home?open=add-money",
   fundWallet: "/fund/wallet",
   fundSwap: "/fund/swap",
   orders: "/orders",
@@ -20,6 +26,7 @@ export const ROUTES = {
   withdrawSend: "/withdraw/send",
   withdrawCashOut: "/withdraw/cash-out",
   lp: "/lp",
+  /** Compatibility: `/account` is the You tab. */
   account: "/account",
   accountSecurity: "/account/security",
   accountRecovery: "/account/recovery",
@@ -30,7 +37,9 @@ export const ROUTES = {
   accountMode: "/account/mode",
   status: "/status",
   addMoney: "/add-money",
-  /** S8.22 mode selector sheet (the top-strip capsule). */
+  /** The fan's Receive: compact QR sheet over the page under the fan (P21, FT057). */
+  receive: "/receive",
+  /** S8.22 mode selector sheet (the mode capsule). */
   network: "/network",
   stepUp: "/step-up",
   riskExplainer: "/risk-explainer",
@@ -40,12 +49,17 @@ export const ROUTES = {
   accountRequired: "/account-required",
 } as const;
 
-export const tradeRoute = (market: string) => `/trade/${market}` as const;
+export type TicketSide = "long" | "short";
+
+/** Market detail, pushed on the Markets stack (the old `/trade/[market]`). */
+export const marketRoute = (market: string) => `/markets/${market}` as const;
+/** The order ticket over market detail (full-height transaction, C39), opened on a side from the sticky Short/Long. */
+export const ticketRoute = (market: string, side: TicketSide) => `/markets/${market}/ticket?side=${side}` as const;
 export const positionRoute = (id: string) => `/positions/${id}` as const;
 export const cardAuthRoute = (id: string) => `/card/auth/${id}` as const;
 export const fundQrRoute = (family: string) => `/fund/qr/${family}` as const;
 export const depositRoute = (id: string) => `/fund/deposit/${id}` as const;
 export const watchRoute = (address: string) => `/watch/${address}` as const;
 
-/** The default market the Trade tab opens on (gold first, D-005). */
+/** The market the old Trade tab opened on (gold first, D-005); `/trade` links land on its detail. */
 export const DEFAULT_MARKET = "XAU";

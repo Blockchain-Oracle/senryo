@@ -43,6 +43,7 @@ function Body() {
         onRetry={() => void run(phase.flow, phase.flow === "create" ? account.create : account.signIn)}
         onSignIn={() => void run("sign-in", account.signIn)}
         onCreate={() => void run("create", account.create)}
+        onBack={() => setPhase({ kind: "idle" })}
       />
     );
   }
