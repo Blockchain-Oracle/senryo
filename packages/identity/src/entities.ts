@@ -243,10 +243,50 @@ const orgRows = (): Entity[] => [
   org(ids.exchange("coinbase"), "Coinbase", "exchange", "coinbase"),
   org(ids.exchange("binance"), "Binance", "exchange", "binance"),
   org(ids.exchange("kraken"), "Kraken", "exchange", "kraken"),
-  {
-    ...org(ids.equity("NVDA"), "Nvidia", "asset", "nvidia"),
-    symbol: "NVDA",
+];
+
+/**
+ * Underlyings by ticker: the calculated equity feeds (`CALCULATED_EQUITIES`) and NVDA's arriving market. A company
+ * shows its own mark, a fund its issuer's brand (SPDR, Invesco, iShares) — never the xStocks wrapper's art, whatever
+ * the feed prices. Sources and the researched dead ends: scripts/catalog.ts.
+ */
+const EQUITIES: Readonly<Record<string, { name: string; art?: string; gap?: string }>> = {
+  SPY: {
+    name: "SPDR S&P 500 ETF",
+    gap: "SPDR (a trademark of Standard & Poor's Financial Services LLC, licensed to State Street) has no file under a usable grant: State Street's ETF sites (us, uk, au, ie) and the SPY page serve only the State Street Investment Management logo, Commons and Wikidata hold no SPDR mark, and Brandfetch forbids programmatic download (researched 1 Oct 2026)",
+  },
+  QQQ: {
+    name: "Invesco QQQ",
+    gap: "Invesco's only public vector is its site logo (invesco.com/etc.clientlibs/invesco/clientlib-global/clientlib/resources/images/logo-new.svg), and its Terms of Use forbid it: \"Without Invesco's express written permission, copy, modify, or display Invesco's name or logo\"; Wikipedia holds the logo as non-free fair use, Commons and Wikidata have none, and no press kit is public (researched 1 Oct 2026)",
+  },
+  NVDA: { name: "Nvidia", art: "nvidia" },
+  TSLA: { name: "Tesla", art: "tesla" },
+  SPCX: { name: "SpaceX", art: "spacex" },
+  EWY: { name: "iShares MSCI South Korea ETF", art: "ishares" },
+};
+
+const equityRows = (): Entity[] =>
+  Object.entries(EQUITIES).map(([ticker, e]) => ({
+    id: ids.equity(ticker),
+    name: e.name,
+    symbol: ticker,
+    role: "asset",
     instrument: "equity",
+    ...(e.art ? { art: e.art } : { gap: e.gap ?? "artwork not acquired yet" }),
+  }));
+
+/**
+ * Crude oil (`UNPRICED_INSTRUMENTS`, no feed on Monad yet): a commodity no owner's mark identifies, so a neutral glyph
+ * (Material Symbols `oil_barrel`). Keyed `ids.equity` like the other arriving rows until it has a venue market id.
+ */
+const commodityRows = (): Entity[] => [
+  {
+    id: ids.equity("OIL"),
+    name: "Crude oil (WTI / Brent)",
+    symbol: "OIL",
+    role: "asset",
+    instrument: "commodity",
+    art: "oil-barrel",
   },
 ];
 
@@ -257,4 +297,6 @@ export const ENTITIES: readonly Entity[] = [
   ...externalRows(),
   ...fxRows(),
   ...orgRows(),
+  ...equityRows(),
+  ...commodityRows(),
 ];

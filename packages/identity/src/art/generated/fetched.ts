@@ -333,6 +333,177 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "tesla",
+    "owner": "Tesla, Inc.",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=tesla",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #CC0000 is the value in the library's data file.",
+    "retrieved": "2026-10-01",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #CC0000.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/tesla/simple-icons-tesla.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/tesla.svg",
+        "sha256": "4b94d9eaf23849d6feec7a9c819e3699a35cbb76045ba7d482d17cbcc97414a5",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/tesla/simple-icons-tesla-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/tesla.svg",
+        "sha256": "0a4fd5f20aea8430e25a3e9bb9be4ab00b1bdac6751ea48dd6e39e40ae9098b7",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "any",
+        "derived": {
+          "from": "packages/identity/sources/tesla/simple-icons-tesla.svg",
+          "recolour": {},
+          "rootFill": "#CC0000",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/tesla/simple-icons-tesla-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/tesla.svg",
+        "sha256": "6cee3bea541af410a75cd519aa7ffffdc15e1b08ae80412b5b1ad86b9fd44bf1",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/tesla/simple-icons-tesla.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "spacex",
+    "owner": "Space Exploration Technologies Corp. (SpaceX)",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=spacex",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #000000 is the value in the library's data file.",
+    "retrieved": "2026-10-01",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #000000.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/spacex/simple-icons-spacex.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/spacex.svg",
+        "sha256": "b62123e05102ff4faa0a900d385c5312426f397a72ed9b6e4018821d9c18ac9a",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/spacex/simple-icons-spacex-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/spacex.svg",
+        "sha256": "9d9bb986fdf63ebbaf375321d6f2a2b98a167a78164f705cea6329f732f9b955",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/spacex/simple-icons-spacex.svg",
+          "recolour": {},
+          "rootFill": "#000000",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/spacex/simple-icons-spacex-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/spacex.svg",
+        "sha256": "a72b76f836120db58b1498222f53d275f9644a8ff1c850665b2c12c000e67e6f",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/spacex/simple-icons-spacex.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "ishares",
+    "owner": "BlackRock, Inc. (iShares)",
+    "provenance": "public-domain",
+    "pageUrl": "https://commons.wikimedia.org/wiki/File:Logo-ishares_2019.svg",
+    "licence": "Wikimedia Commons, File:Logo-ishares 2019.svg (version of 2020-07-20T09:26:25Z, sha1 c88e0c781deb3fb5d02d865e20341caba6cee26a): the file page records Copyrighted \"False\", License \"pd\", LicenseShortName \"Public domain\", Restrictions \"trademarked\" — read from the MediaWiki API (imageinfo extmetadata). Credited there to BlackRock; source given: https://www.ishares.com/uk-retail-assets/cache-1574850694000/images/media-bin/web/global/svg/logo-ishares.svg. Public domain covers the file only; the mark stays its owner's trademark and is used nominatively, to identify what it belongs to.",
+    "retrieved": "2026-10-01",
+    "usage": "Always beside the ticker and type it identifies, never as a venue badge or an endorsement; drawn whole as delivered, never cropped or re-set.",
+    "variants": {
+      "symbol": {
+        "path": "packages/identity/sources/ishares/commons-ishares.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Logo-ishares_2019.svg",
+        "sha256": "5b23833a34cd5b7ca33df62c7e29652c5ff3f38ae343739351c1b499d55ad1ab",
+        "viewBox": "0 0 299.99872 102.08701",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/ishares/commons-ishares-light.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Logo-ishares_2019.svg",
+        "sha256": "56304c93ed0d6e79ec244deff08f0ea9bfdc76d93c73f6106ca9740766a556aa",
+        "viewBox": "0 0 299.99872 102.08701",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/ishares/commons-ishares.svg",
+          "recolour": {
+            "#000000": "#FFFFFF"
+          },
+          "basis": "The file page records Copyrighted \"False\", License \"pd\", LicenseShortName \"Public domain\" (https://commons.wikimedia.org/wiki/File:Logo-ishares_2019.svg): no copyright condition limits a colourway. The silhouette is the delivered one-ink file recoloured, its shapes untouched."
+        }
+      }
+    }
+  },
+  {
+    "key": "oil-barrel",
+    "owner": "Google — Material Symbols (github.com/google/material-design-icons)",
+    "provenance": "open-library",
+    "pageUrl": "https://fonts.google.com/icons?selected=Material+Symbols+Rounded:oil_barrel",
+    "licence": "Apache License 2.0 (https://github.com/google/material-design-icons/blob/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/LICENSE), google/material-design-icons at commit bd8cb85b. README: \"We have made these icons available for you to incorporate into your products under the Apache License Version 2.0 … Feel free to remix and re-share these icons and documentation in your products.\" The licence text ships beside the files (LICENSE-material-design-icons.txt, §4a); credited in About & sources.",
+    "retrieved": "2026-10-01",
+    "usage": "A neutral glyph for an instrument with no owner's mark — never an issuer's or a venue's logo, always beside its ticker and type.",
+    "variants": {
+      "symbol": {
+        "path": "packages/identity/sources/oil-barrel/material-symbols-rounded-oil-barrel-fill1-24px.svg",
+        "url": "https://raw.githubusercontent.com/google/material-design-icons/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/symbols/web/oil_barrel/materialsymbolsrounded/oil_barrel_fill1_24px.svg",
+        "sha256": "036f278d7ab293048efd0cd57c0b31a36afad9a8a7ed0c8e54c71f3af01405e7",
+        "viewBox": "0 -960 960 960",
+        "insetPermille": 83,
+        "shape": "free",
+        "surface": "light"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/oil-barrel/material-symbols-rounded-oil-barrel-fill1-24px-light.svg",
+        "url": "https://raw.githubusercontent.com/google/material-design-icons/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/symbols/web/oil_barrel/materialsymbolsrounded/oil_barrel_fill1_24px.svg",
+        "sha256": "78a9d40705215f695b0290f85af486fb5524f07bfe012c385b1a6cc4af0efc99",
+        "viewBox": "0 -960 960 960",
+        "insetPermille": 83,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/oil-barrel/material-symbols-rounded-oil-barrel-fill1-24px.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "Apache License 2.0 (https://github.com/google/material-design-icons/blob/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/LICENSE) §2: \"a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display … and distribute the Work\" — the one-ink glyph filled white for dark grounds."
+        }
+      }
+    }
+  },
+  {
     "key": "lib-monad",
     "owner": "Monad Foundation",
     "provenance": "open-library",
