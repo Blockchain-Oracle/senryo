@@ -22,15 +22,26 @@ import {
   saveInOrder,
   type TriggerLevel,
 } from "../../../apps/mobile/src/features/trade/trigger-legs.ts";
+import {
+  CHECK_HASH_A,
+  CHECK_HASH_B,
+  CHECK_HASH_C,
+  CHECK_MAINNET_CHAIN_ID,
+  CHECK_MARKET_ID,
+  CHECK_OTHER_MARKET_ID,
+  CHECK_SL_PRICE18,
+  CHECK_TESTNET_CHAIN_ID,
+  CHECK_TP_PRICE18,
+} from "./constants.ts";
 
-const CHAIN_ID = 10143;
-const MARKET_ID = 0;
-const OTHER_MARKET_ID = 1;
+const CHAIN_ID = CHECK_TESTNET_CHAIN_ID;
+const MARKET_ID = CHECK_MARKET_ID;
+const OTHER_MARKET_ID = CHECK_OTHER_MARKET_ID;
 const USER = "0x00000000000000000000000000000000000000aa";
-const HASH_A = `0x${"a1".repeat(32)}` as const;
-const HASH_B = `0x${"b2".repeat(32)}` as const;
-const SL_PRICE = 4_000n * 10n ** 18n;
-const TP_PRICE = 4_400n * 10n ** 18n;
+const HASH_A = CHECK_HASH_A;
+const HASH_B = CHECK_HASH_B;
+const SL_PRICE = CHECK_SL_PRICE18;
+const TP_PRICE = CHECK_TP_PRICE18;
 
 let failures = 0;
 function expect(label: string, actual: unknown, wanted: unknown): void {
@@ -133,7 +144,7 @@ async function main(): Promise<void> {
   const journal = [
     placement(HASH_A, "submitted"),
     placement(HASH_B, "finalized"),
-    placement(`0x${"c3".repeat(32)}`, "proposed", OTHER_MARKET_ID),
+    placement(CHECK_HASH_C, "proposed", OTHER_MARKET_ID),
   ];
   expect(
     "6 only this market's unresolved placement is pending, with its level and price",
@@ -145,7 +156,11 @@ async function main(): Promise<void> {
     pendingTriggers(journal, scope, new Set([HASH_A])),
     [],
   );
-  expect("6 another chain's entries are ignored", pendingTriggers(journal, { ...scope, chainId: 143 }, new Set()), []);
+  expect(
+    "6 another chain's entries are ignored",
+    pendingTriggers(journal, { ...scope, chainId: CHECK_MAINNET_CHAIN_ID }, new Set()),
+    [],
+  );
 
   // 7. duplicate guard
   const active = [{ takeProfit: false, triggerPrice: SL_PRICE }];
