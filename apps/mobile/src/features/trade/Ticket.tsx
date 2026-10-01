@@ -26,6 +26,7 @@ import {
 } from "~/theme";
 import { useCandleStyle } from "./candle-style";
 import { AMOUNT_CHIPS_USD } from "./constants";
+import { usePlannedTriggers } from "./planned-triggers";
 import type { useTicket } from "./useTicket";
 
 type TicketModel = ReturnType<typeof useTicket>;
@@ -49,18 +50,21 @@ export function TicketEntry({
   mode,
   onMode,
   onChild,
+  planKey,
 }: {
   t: TicketModel;
   line: MarketLine;
   mode: EntryMode;
   onMode: (mode: EntryMode) => void;
   onChild: (child: TicketChild) => void;
+  /** Where SL/TP planned for this order are kept (S1b.8a). */
+  planKey: string;
 }) {
   return (
     <View style={styles.body}>
       <Amount t={t} />
       <LeverageRuler value={t.leverage} max={line.maxLeverageX} onChange={t.setLeverage} />
-      <RiskRow t={t} line={line} onChild={onChild} />
+      <RiskRow t={t} line={line} onChild={onChild} planKey={planKey} />
       <ModeToggle mode={mode} onMode={onMode} />
       {mode === "keypad" ? <KeypadRegion t={t} /> : <ChartRegion line={line} onSettings={() => onChild("candles")} />}
     </View>
@@ -102,7 +106,18 @@ function Amount({ t }: { t: TicketModel }) {
   );
 }
 
-function RiskRow({ t, line, onChild }: { t: TicketModel; line: MarketLine; onChild: (c: TicketChild) => void }) {
+function RiskRow({
+  t,
+  line,
+  onChild,
+  planKey,
+}: {
+  t: TicketModel;
+  line: MarketLine;
+  onChild: (c: TicketChild) => void;
+  planKey: string;
+}) {
+  const planned = usePlannedTriggers(planKey).levels;
   const { color } = useTheme();
   const liq = t.preview?.liqPrice18;
   const away = t.preview?.liqDistanceBps;
@@ -157,9 +172,18 @@ function RiskRow({ t, line, onChild }: { t: TicketModel; line: MarketLine; onChi
         </Text>
         <Text
           maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-          style={[TYPE.rowStrong, { color: t.amountText === "" && !t.held ? color.text3 : color.link }]}
+          style={[
+            TYPE.rowStrong,
+            { color: planned.length > 0 ? color.up : t.amountText === "" && !t.held ? color.text3 : color.link },
+          ]}
         >
-          {t.held ? "Protect current position" : "SL/TP after opening"}
+          {t.held
+            ? "Protect current position"
+            : planned.length === 2
+              ? "SL and TP set"
+              : planned.length === 1
+                ? `${planned[0]?.kind === "sl" ? "Stop loss" : "Take profit"} set`
+                : "Add to this order"}
         </Text>
       </Pressable>
     </View>

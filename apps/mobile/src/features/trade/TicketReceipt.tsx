@@ -2,6 +2,7 @@ import { explorerTxUrl, NETWORKS } from "@senryo/config";
 import { DECIMALS, formatUnits } from "@senryo/core";
 import type { TraceEvent } from "@senryo/query";
 import { CircleCheck } from "lucide-react-native";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { Linking, Share, StyleSheet, Switch, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -45,12 +46,15 @@ export function TicketReceipt({
   onDone,
   onViewPosition,
   onShare,
+  protection,
 }: {
   order: SubmittedOrder;
   events: readonly TraceEvent[];
   onDone: () => void;
   onViewPosition: () => void;
   onShare: () => void;
+  /** The stop loss / take profit placed after the open (S1b.8a), each with its outcome. */
+  protection?: ReactNode;
 }) {
   const { color } = useTheme();
   const network = NETWORKS[order.network];
@@ -87,6 +91,7 @@ export function TicketReceipt({
         {hash ? <KeyValue label="Transaction" value={shortAddress(hash)} /> : null}
       </Panel>
       <Text style={[TYPE.meta, { color: color.text3 }]}>Quoted at your hold; the position shows the filled entry.</Text>
+      {protection}
       {hash ? (
         <Button
           label="View on explorer"

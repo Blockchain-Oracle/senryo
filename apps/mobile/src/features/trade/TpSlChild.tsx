@@ -15,6 +15,7 @@ import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { QUANTITY_DECIMALS, TRIGGER_SUGGESTIONS_BPS } from "./constants";
+import { PlannedTriggers } from "./PlannedTriggers";
 import { TriggerInput } from "./TriggerInput";
 import {
   bpsFromPrice,
@@ -33,54 +34,42 @@ import { type TriggerLevel, useTriggerLegs } from "./useTriggerLegs";
 
 const TITLE = "Stop loss and take profit";
 const SUBTITLE = "Auto close the position you hold when it hits your price target.";
+const PLANNED_SUBTITLE = "Auto close the new position when it hits your price target.";
 const KINDS: readonly TriggerKind[] = ["sl", "tp"];
 
 /**
- * The TP/SL child (FT110–FT112, C42, F44/F45/M15; Codex S1b.7 consult #2). It works on the position already held in
- * this market, and says so before any field (review R05): the order being entered opens without SL/TP. With no
- * position it explains that and returns to the order; it never offers a pretend Save. Each level is its own
- * transaction with its own outcome (review R01, `useTriggerLegs`). Blocks are separated by spacing; the only outlines
- * are the two input fields (F44).
+ * The TP/SL child (FT110–FT112, C42, F44/F45/M15; Codex S1b.7 consult #2). With a position held in this market it
+ * works on that position and says so before any field (review R05). With none it plans levels for the order being
+ * entered (S1b.8a, `PlannedTriggers`): nothing is signed until the order opens, then each level is its own
+ * transaction with its own outcome on the receipt (review R01, `useTriggerLegs`). Blocks are separated by spacing; the
+ * only outlines are the two input fields (F44).
  */
 export function TpSlChild({
   open,
   onClose,
   market,
   held,
+  isLong,
+  previewLiq,
+  planKey,
 }: {
   open: boolean;
   onClose: () => void;
   market: LiveMarket;
   held: PositionView | undefined;
+  /** The side being entered, for levels planned before the order opens. */
+  isLong: boolean;
+  previewLiq: bigint | null | undefined;
+  planKey: string;
 }) {
-  const { color } = useTheme();
   return (
-    <ChildSheet open={open} onClose={onClose} title={TITLE} subtitle={SUBTITLE}>
+    <ChildSheet open={open} onClose={onClose} title={TITLE} subtitle={held ? SUBTITLE : PLANNED_SUBTITLE}>
       {held ? (
         <HeldTriggers market={market} position={held} onDone={onClose} />
       ) : (
-        <>
-          <Text style={[TYPE.rowStrong, { color: color.ink }]}>Open your position first</Text>
-          <Text style={[TYPE.body, { color: color.text2 }]}>
-            This order opens without SL/TP. After it opens, add stop loss or take profit here or from your position
-            details.
-          </Text>
-          <Explainer kind="Stop loss" body="Closes the position if the price moves against you to your level." />
-          <Explainer kind="Take profit" body="Closes the position when the price reaches your target." />
-          <Button label="Back to order" variant="secondary" onPress={onClose} />
-        </>
+        <PlannedTriggers market={market} isLong={isLong} liq18={previewLiq} planKey={planKey} onDone={onClose} />
       )}
     </ChildSheet>
-  );
-}
-
-function Explainer({ kind, body }: { kind: string; body: string }) {
-  const { color } = useTheme();
-  return (
-    <View style={styles.explainer}>
-      <Text style={[TYPE.rowStrong, { color: color.ink }]}>{kind}</Text>
-      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{body}</Text>
-    </View>
   );
 }
 
@@ -317,7 +306,6 @@ function problemText(problem: NonNullable<ReturnType<typeof triggerProblem>>, is
 const styles = StyleSheet.create({
   identity: { gap: SPACE.xxs },
   note: { paddingLeft: SIZE.avatarXl + SPACE.lg + SPACE.sm },
-  explainer: { gap: SPACE.xxs },
   active: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   flex: { flex: 1 },
   group: { gap: SPACE.xs },

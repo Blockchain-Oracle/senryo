@@ -87,8 +87,8 @@ function RootStack() {
           headerTitleStyle: { fontFamily: FONT.sansStrong },
           headerShadowVisible: false,
           headerBackButtonDisplayMode: "minimal",
-        // The back button shows no text, but VoiceOver reads its title: never a route name like "(tabs)".
-        headerBackTitle: "Back",
+          // The back button shows no text, but VoiceOver reads its title: never a route name like "(tabs)".
+          headerBackTitle: "Back",
           contentStyle: { backgroundColor: color.ground },
         }}
       >

@@ -2,7 +2,7 @@ import { engineMarket } from "@senryo/config";
 import { useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { EmptyState, ErrorState, LoadingState } from "~/components/kit/states";
 import { TransactionSheet, useTransactionClose } from "~/components/sheet/TransactionSheet";
@@ -15,6 +15,8 @@ import { positionRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE } from "~/theme";
+import { ProtectAfterOpen } from "./ProtectAfterOpen";
+import { planKey } from "./planned-triggers";
 import { useSettledOutcome } from "./send-outcome";
 import { type EntryMode, type TicketChild, TicketEntry } from "./Ticket";
 import { CandleSettings, LiquidationInfo, ReviewOrder } from "./TicketChildren";
@@ -84,6 +86,7 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
   const [note, setNote] = useState<string | undefined>();
   const [order, setOrder] = useState<SubmittedOrder | undefined>();
   const sided = useRef(false);
+  const plan = planKey(env.chainId, account.hint?.address, line.marketId);
 
   // Short / Long on market detail picks the side once; the draft keeps everything else (amount, leverage).
   useEffect(() => {
@@ -166,13 +169,19 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
       >
         {inFlight ? (
           settled && order ? (
-            <Receipt order={order} t={t} onShare={() => setChild("share")} marketId={line.marketId} />
+            <Receipt
+              order={order}
+              t={t}
+              onShare={() => setChild("share")}
+              marketId={line.marketId}
+              protection={<ProtectAfterOpen market={line.market} position={t.held} planKey={plan} />}
+            />
           ) : (
             <PendingTrace t={t} />
           )
         ) : (
           <>
-            <TicketEntry t={t} line={line} mode={mode} onMode={setMode} onChild={setChild} />
+            <TicketEntry t={t} line={line} mode={mode} onMode={setMode} onChild={setChild} planKey={plan} />
             <TicketFooter
               t={t}
               line={line}
@@ -187,7 +196,15 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
         )}
       </TransactionSheet>
       <LiquidationInfo open={child === "liquidation"} onClose={() => setChild(undefined)} t={t} line={line} />
-      <TpSlChild open={child === "tpsl"} onClose={() => setChild(undefined)} market={line.market} held={t.held} />
+      <TpSlChild
+        open={child === "tpsl"}
+        onClose={() => setChild(undefined)}
+        market={line.market}
+        held={t.held}
+        isLong={t.side === "long"}
+        previewLiq={t.preview ? t.preview.liqPrice18 : undefined}
+        planKey={plan}
+      />
       <ReviewOrder
         open={child === "review"}
         onClose={() => setChild(undefined)}
@@ -235,11 +252,13 @@ function Receipt({
   t,
   onShare,
   marketId,
+  protection,
 }: {
   order: SubmittedOrder;
   t: ReturnType<typeof useTicket>;
   onShare: () => void;
   marketId: number;
+  protection: ReactNode;
 }) {
   const close = useTransactionClose();
   return (
@@ -247,6 +266,7 @@ function Receipt({
       order={order}
       events={t.trace.events}
       onShare={onShare}
+      protection={protection}
       onDone={() =>
         close(() => {
           t.trace.reset();

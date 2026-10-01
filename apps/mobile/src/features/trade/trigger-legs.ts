@@ -75,6 +75,41 @@ export function skippedMessage(skipped: TriggerKind, blocker: TriggerKind): LegM
   };
 }
 
+const DIDNT_LAND: Readonly<Partial<Record<LegState, string>>> = {
+  "not-sent": "wasn’t sent",
+  reverted: "was rejected onchain",
+  dropped: "never reached a block",
+};
+const OPEN_WITHOUT = "The position is open without it; add it from the position.";
+
+/**
+ * One planned level's line on the order receipt (S1b.8a). `label` names the level and its price ("Stop loss at
+ * $4,047.97"), so the state words don't repeat it; a level that didn't land says the position is open without it.
+ */
+export function receiptMessage(label: string, state: LegState, skippedFor?: TriggerKind): LegMessage {
+  if (skippedFor) {
+    return {
+      text: `${label} wasn’t attempted because the ${LEG_NAME[skippedFor].toLowerCase()} didn’t land. ${OPEN_WITHOUT}`,
+      tone: "warn",
+    };
+  }
+  switch (state) {
+    case "idle":
+      return { text: `${label} · waiting to be placed…`, tone: "muted" };
+    case "saving":
+      return { text: `Placing ${label.charAt(0).toLowerCase()}${label.slice(1)}…`, tone: "muted" };
+    case "saved":
+      return { text: `${label} · placed and finalized.`, tone: "up" };
+    case "unknown":
+      return {
+        text: `${label} was signed, but its result isn’t confirmed yet. Check the position before setting it again.`,
+        tone: "warn",
+      };
+    default:
+      return { text: `${label} ${DIDNT_LAND[state] ?? "didn’t land"}. ${OPEN_WITHOUT}`, tone: "down" };
+  }
+}
+
 export function removalMessage(state: LegState): LegMessage | undefined {
   switch (state) {
     case "idle":
