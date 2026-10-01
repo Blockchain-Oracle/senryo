@@ -5,7 +5,7 @@
  */
 import { contractCall, coreDomain, type Sender, type TxRequest } from "@senryo/chain";
 import { type ChainId, positionGasLimit } from "@senryo/config";
-import { type Address, fromQuery, type Reading, RISK, TRIGGER_ORDER_TYPES } from "@senryo/core";
+import { type Address, type Reading, RISK, TRIGGER_ORDER_TYPES } from "@senryo/core";
 import {
   type Liquidations,
   LiquidationsDocument,
@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ACCOUNT_REFETCH_MS } from "./constants.ts";
 import { useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
+import { readingOf } from "./reading.ts";
 
 /** Take-profit fills close to the trigger; a stop-loss must fill even through a fast move, so its bound is wider. */
 export const TP_SLIPPAGE_BPS = 100n;
@@ -97,7 +98,7 @@ export function useTriggers(address: Address | undefined): Reading<Triggers> {
     refetchInterval: ACCOUNT_REFETCH_MS,
     staleTime: ACCOUNT_REFETCH_MS,
   });
-  return fromQuery(query);
+  return readingOf(query, ACCOUNT_REFETCH_MS);
 }
 
 /** Our-engine liquidations of the user within the last `windowSec` (F12 post-mortem); stable window key. */
@@ -113,5 +114,5 @@ export function useRecentLiquidations(address: Address | undefined, windowSec: n
     refetchInterval: ACCOUNT_REFETCH_MS,
     staleTime: ACCOUNT_REFETCH_MS,
   });
-  return fromQuery(query);
+  return readingOf(query, ACCOUNT_REFETCH_MS);
 }

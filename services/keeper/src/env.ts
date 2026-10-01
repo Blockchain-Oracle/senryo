@@ -6,8 +6,6 @@ import {
   KEEPER_STALE_SEC,
   MIRROR_DEVIATION_BPS,
   MIRROR_HEARTBEAT_SEC,
-  TOPUP_AMOUNT_WEI,
-  TOPUP_FLOOR_WEI,
   WALLET_FLOOR_WEI,
 } from "./constants.ts";
 
@@ -17,7 +15,6 @@ export const KEEPER_JOBS = [
   "mirror",
   "triggers",
   "holds",
-  "topups",
   "alerts",
   "wallets",
   "retention",
@@ -35,7 +32,7 @@ const bigintEnv = (fallback: bigint) =>
 export const keeperEnvSchema = baseEnvSchema.extend({
   PORT: portSchema.default(KEEPER_PORT),
   KEEPER_STALE_SEC: z.coerce.number().int().positive().default(KEEPER_STALE_SEC),
-  /** Enabled jobs (default: everything except the relay and top-ups, which need extra roles). */
+  /** Enabled jobs (default: everything except the mirror relay, which needs MIRROR_ROLE). Gas top-ups live in the api (D-171). */
   KEEPER_JOBS: csvSchema.transform((list) =>
     (list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets", "retention"]).filter(
       (j): j is KeeperJob => (KEEPER_JOBS as readonly string[]).includes(j),
@@ -52,8 +49,6 @@ export const keeperEnvSchema = baseEnvSchema.extend({
   MIRROR_HEARTBEAT_SEC: z.coerce.number().int().positive().default(MIRROR_HEARTBEAT_SEC),
   WALLET_FLOOR_WEI: bigintEnv(WALLET_FLOOR_WEI),
   OPS_WATCH_WALLETS: csvSchema,
-  TOPUP_FLOOR_WEI: bigintEnv(TOPUP_FLOOR_WEI),
-  TOPUP_AMOUNT_WEI: bigintEnv(TOPUP_AMOUNT_WEI),
   LIQUIDATE_MS: z.coerce.number().int().positive().default(INTERVALS_MS.liquidate),
   OBSERVE_MS: z.coerce.number().int().positive().default(INTERVALS_MS.observe),
   MIRROR_MS: z.coerce.number().int().positive().default(INTERVALS_MS.mirror),

@@ -3,9 +3,10 @@
  * geo blocker on mainnet. Practice is never gated. Unknown (the API couldn't place the IP) allows, as the API does.
  */
 import { type GeoResponse, geoRoute } from "@senryo/api-client";
-import { fromQuery, type Reading } from "@senryo/core";
+import type { Reading } from "@senryo/core";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryEnv } from "./env.tsx";
+import { readingOf } from "./reading.ts";
 
 /** Region rarely changes within a session; a VPN toggle shows up on the next refetch. */
 export const GEO_STALE_MS = 300_000;
@@ -17,5 +18,5 @@ export function useGeo(): Reading<GeoResponse> {
     queryFn: () => env.api.call(geoRoute, {}),
     staleTime: GEO_STALE_MS,
   });
-  return fromQuery(query);
+  return readingOf(query);
 }

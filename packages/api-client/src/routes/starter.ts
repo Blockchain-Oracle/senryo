@@ -16,6 +16,8 @@ import { defineRoute } from "./define.ts";
  * no prompt — and the sponsor key submits it to StarterDrip:
  *  - claim   → `claimFor(user, deadline, signature)`       typed data `CLAIM_TYPES` (`@senryo/core`)
  *  - voucher → `redeemVoucher(user, code, deadline, sig)`  typed data `VOUCHER_TYPES`, codeHash = keccak256(utf8(code))
+ *  - topup   → `topUp(user, amount)` (RELAYER_ROLE; no onchain signature) authorised off-chain by `TOPUP_TYPES`
+ *              (S8.16c): practice after a claim, mainnet only with funded equity; the api clamps the amount
  * Domain: `EIP712_DOMAINS.starterDrip` + `chainId` + `verifyingContract` = StarterDrip from `@senryo/contracts`.
  * `deadline` ≤ now + RELAY_SIGNATURE_MAX_TTL_SECONDS. Practice (10143): mock AUSD + testnet MON; mainnet: gas-only
  * drip, AUSD by voucher. Rate limits per IP /24 and per device (`x-senryo-device`); web also sends a Turnstile token.
@@ -43,7 +45,17 @@ export const starterVoucherRequestSchema = z.object({
   code: z.string().regex(VOUCHER_CODE_PATTERN, "voucher codes are 6–32 of A–Z, 0–9 and -"),
 });
 
-export const relayKindSchema = z.enum(["claim", "voucher"]);
+/** Gas top-up request (S8.16c): the app's budget for its next send, signed as `TopUp` with the session. */
+export const starterTopUpRequestSchema = z.object({
+  chainId: chainIdSchema,
+  user: addressSchema,
+  /** Wei the next send needs (gas limit × the max fee it will sign); the api clamps what it sends. */
+  needWei: uintCodec,
+  deadline: uintCodec,
+  signature: signatureSchema,
+});
+
+export const relayKindSchema = z.enum(["claim", "voucher", "topup"]);
 
 /** A relayed transaction as the server tracks it; poll `starterRelayRoute` until `stage` is terminal. */
 export const relayResponseSchema = z.object({
@@ -107,6 +119,17 @@ export const starterVoucherRoute = defineRoute({
   response: relayResponseSchema,
 });
 
+/** 409 NOT_NEEDED when the balance already covers `needWei`; 403 NOT_ELIGIBLE before a claim / without equity. */
+export const starterTopUpRoute = defineRoute({
+  method: "POST",
+  path: "/v1/starter/topup",
+  auth: "none",
+  params: undefined,
+  query: undefined,
+  body: starterTopUpRequestSchema,
+  response: relayResponseSchema,
+});
+
 export const starterStatusRoute = defineRoute({
   method: "GET",
   path: "/v1/starter/status",
@@ -129,5 +152,6 @@ export const starterRelayRoute = defineRoute({
 
 export type StarterClaimRequest = z.input<typeof starterClaimRequestSchema>;
 export type StarterVoucherRequest = z.input<typeof starterVoucherRequestSchema>;
+export type StarterTopUpRequest = z.input<typeof starterTopUpRequestSchema>;
 export type RelayResponse = z.output<typeof relayResponseSchema>;
 export type StarterStatus = z.output<typeof starterStatusResponseSchema>;

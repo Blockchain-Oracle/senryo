@@ -4,12 +4,13 @@
  * in spec order; and the send — `increase` through `@senryo/chain` with the scoped signer (the session policy sees
  * market room + equity, so an in-scope open signs without a step-up; D-037 Face ID is the policy's call).
  */
-import { positionCount, positionGasLimit } from "@senryo/config";
+import { positionCount } from "@senryo/config";
 import {
   capHeadroomUsd6,
   DECIMALS,
   firstTradeBlocker,
   formatUnits,
+  type GasGate,
   type IncreasePreview,
   maxIncreaseNotional,
   nextTransition,
@@ -24,30 +25,36 @@ import {
   useAccountRisk,
   useCalendar,
   useGasBalance,
+  useGasBudget,
   useGeo,
   usePositions,
   useQueryEnv,
   useSendTrace,
 } from "@senryo/query";
-import { onlineManager, useQuery } from "@tanstack/react-query";
-import { useState, useSyncExternalStore } from "react";
+import { onlineManager } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
 import { applyKey, type KeypadKey } from "~/components/trade/Keypad";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 import { ACTIVE_NETWORK } from "~/lib/constants/auth";
+import { draftKey, type Side, useTicketDraft } from "./draft";
+import { useGasTopUp } from "./useGasTopUp";
 
-export type Side = "long" | "short";
+export type { Side };
 export const DEFAULT_LEVERAGE = 5;
-const GAS_PRICE_STALE_MS = 30_000;
 const MS_PER_SECOND = 1000n;
 
 export function useTicket(market: LiveMarket) {
   const env = useQueryEnv();
   const account = useAccount();
   const address = account.hint?.address;
-  const [side, setSide] = useState<Side>("long");
-  const [amountText, setAmountText] = useState("");
-  const [leverage, setLeverageRaw] = useState(Math.min(DEFAULT_LEVERAGE, market.maxLeverageX));
+  const key = draftKey(env.chainId, market.marketId);
+  const { draft, update } = useTicketDraft(key, {
+    side: "long",
+    amountText: "",
+    leverage: Math.min(DEFAULT_LEVERAGE, market.maxLeverageX),
+  });
+  const { side, amountText, leverage } = draft;
   const online = useSyncExternalStore(onlineManager.subscribe, () => onlineManager.isOnline());
   const risk = useAccountRisk(address, "latest");
   const positions = usePositions(address);
@@ -55,11 +62,6 @@ export function useTicket(market: LiveMarket) {
   const calendar = useCalendar(market.calendarId);
   const geo = useGeo();
   const geoValue = geo.status === "fresh" || geo.status === "stale" ? geo.value : undefined;
-  const gasPrice = useQuery({
-    queryKey: ["chain", env.chainId, "gasPrice"],
-    queryFn: () => env.read.getGasPrice(),
-    staleTime: GAS_PRICE_STALE_MS,
-  });
 
   const isLong = side === "long";
   const parsed = parseUnits(amountText === "" ? "0" : amountText, DECIMALS.usd6);
@@ -85,9 +87,25 @@ export function useTicket(market: LiveMarket) {
       : undefined;
   const gasBalance = gas.status === "fresh" || gas.status === "stale" ? gas.value : undefined;
   const openAfter = (snapshot ? positionCount(snapshot.positionBitmap) : 0) + (held ? 0 : 1);
-  const needWei = gasPrice.data === undefined ? undefined : positionGasLimit("increase", openAfter) * gasPrice.data;
-  const hasGas = gasBalance === undefined || needWei === undefined ? true : gasBalance >= needWei;
-  const trace = useSendTrace();
+  // The budget the sender will sign (limit × max fee), estimated per market/side/position count — S8.16b.
+  const openRequest = preview
+    ? increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18, openAfter)
+    : undefined;
+  const budget = useGasBudget(address, openRequest, ["increase", market.marketId, side, openAfter]);
+  const needWei = budget.data?.needWei;
+  const topUp = useGasTopUp();
+  const gasShort = gasBalance !== undefined && needWei !== undefined && gasBalance < needWei;
+  const gasGate: GasGate =
+    topUp.step.kind === "failed"
+      ? {
+          kind: "unavailable",
+          reason: topUp.step.reason,
+          ...(topUp.step.retryAfterSec !== undefined ? { retryAfterSec: topUp.step.retryAfterSec } : {}),
+        }
+      : gasShort
+        ? { kind: "topup" }
+        : { kind: "ok" };
+  const trace = useSendTrace(key);
   const simulationRevert = trace.events.find((e) => e.stage === "failed")?.error;
 
   const blocker: TradeBlocker | undefined = firstTradeBlocker({
@@ -96,7 +114,7 @@ export function useTicket(market: LiveMarket) {
     geoAllowed: geoValue?.mainnetTradingAllowed,
     country: geoValue?.country ?? null,
     hasAccount: address !== undefined,
-    hasGas,
+    gas: gasGate,
     status: market.pv.status,
     opensAt,
     leverageX: leverage,
@@ -108,6 +126,8 @@ export function useTicket(market: LiveMarket) {
   const submit = async () => {
     const client = account.client;
     if (!client || !address || !preview || !snapshot) return undefined;
+    // Short on gas → top up first, then continue this same hold (never a dead-end "Adding gas…"; S8.16c).
+    if (gasShort && needWei !== undefined && !(await topUp.run(needWei)).ok) return undefined;
     const sender = userSender(client, address, account.settings.faceId, {
       marketRoomUsd6: (id, long) =>
         id === market.marketId ? capHeadroomUsd6(market.risk, market.book, market.pv, long) : undefined,
@@ -123,14 +143,14 @@ export function useTicket(market: LiveMarket) {
 
   return {
     side,
-    setSide,
+    setSide: (s: Side) => update({ side: s }),
     amountText,
     amountUsd6,
-    onKey: (key: KeypadKey) => setAmountText((t) => applyKey(t, key)),
+    onKey: (k: KeypadKey) => update((d) => ({ amountText: applyKey(d.amountText, k) })),
     setAmountUsd6: (v: bigint) =>
-      setAmountText(v === 0n ? "" : formatUnits(v, DECIMALS.usd6, DECIMALS.cents, { grouping: false })),
+      update({ amountText: v === 0n ? "" : formatUnits(v, DECIMALS.usd6, DECIMALS.cents, { grouping: false }) }),
     leverage,
-    setLeverage: (v: number) => setLeverageRaw(Math.max(1, Math.min(v, market.maxLeverageX))),
+    setLeverage: (v: number) => update({ leverage: Math.max(1, Math.min(v, market.maxLeverageX)) }),
     notionalUsd6,
     preview,
     maxAmountUsd6,
@@ -140,6 +160,8 @@ export function useTicket(market: LiveMarket) {
     hasAccount: address !== undefined,
     ready: account.client !== undefined,
     trace,
+    gasStep: topUp.step,
+    resetGas: topUp.reset,
     submit,
     nowSec,
   };

@@ -64,15 +64,18 @@ export {
 } from "./session/manager.ts";
 export { enqueue, isBusy, type NonceSourceLike, queuedNonces } from "./session/queue.ts";
 export { UNLOCK_PROMPT } from "./session/signer.ts";
-export { signStarterClaim, signVoucher } from "./starter/sign.ts";
+export { signStarterClaim, signStarterTopUp, signVoucher } from "./starter/sign.ts";
 export {
   CLAIM_TYPES,
   canonicalVoucherCode,
   claimTypedData,
   type SignedClaim,
+  type SignedTopUp,
   type SignedVoucher,
   STARTER_DOMAIN,
   starterDeadline,
+  TOPUP_TYPES,
+  topUpTypedData,
   VOUCHER_CODE,
   VOUCHER_TYPES,
   voucherCodeBytes,

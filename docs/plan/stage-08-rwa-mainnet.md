@@ -71,17 +71,24 @@ reuses everything below `apps/`.
       swapCollateralRequest (10 bps min-out, per-position gas); portfolio CollateralPanel (mainnet only); the
       end-to-end swap runs with the S8.18 deploy (fork rehearsal first)
 - [x] S8.15 Geofence (F95, D-038): api country lookup (DB-IP Lite, D-121) + mainnet blocker; practice never gated — D-165 (DB-IP Lite in the api, ticket + mainnet starter gated)
-- [ ] S8.16a Stable readings (v2-plan W1): `packages/core` `fromQuery` stale = errored or age > per-query budget (not
+- [x] S8.16a Stable readings (v2-plan W1): `packages/core` `fromQuery` stale = errored or age > per-query budget (not
       TanStack `isStale`); `ReadingView` fixed child slots; Ticket out of the market ReadingView with a per-(mode, market)
       draft + in-flight trace store (no double submit on remount); tabs layout keeps only `hasOpenPositions`
-- [ ] S8.16b Gas budget = measured per-chain limit × the maxFee the sender signs (`gasBudgetWei`, `useGasBudget` per
+      — done: `fromQuery(query, {now, staleAfterMs})` + `readingOf` (2× each refetch interval); ReadingView keeps one
+      tree; ticket draft + keyed send trace survive remounts (no second submit while running); tabs layout reads only
+      `hasOpenPositions`, the mini-bar computes its own summary
+- [x] S8.16b Gas budget = measured per-chain limit × the maxFee the sender signs (`gasBudgetWei`, `useGasBudget` per
       market/side/positions); NO_GAS generic and evaluated last (D-171)
-- [ ] S8.16c Auto top-up: api `POST /v1/starter/topup` (EIP-712 `TopUp`, sponsor `StarterDrip.topUp`, migration
+- [x] S8.16c Auto top-up: api `POST /v1/starter/topup` (EIP-712 `TopUp`, sponsor `StarterDrip.topUp`, migration
       `0004_starter_topup`), api keeps open-position holders at close budget, keeper `topups` job removed; app tops up at
       hold time, waits 3 blocks, continues the hold
+      — done: `gasBudgetFor`/`useGasBudget`; NO_GAS last with reasons; top-up at hold time and as a trace preflight for
+      close/TP-SL/LP (replaces the api floor loop); keeper `topups` removed; `gas-topup-check` 6/6 on a 10143 fork
 - [ ] S8.16d Gas economics from data: 24 h base fee on 10143/143; consensus rule settled by one testnet send; per-sender
       fee multiplier; **[OK?]** `StarterDrip.setConfig` + drip float on 10143; Q-017
-- [ ] S8.16e Claim state authoritative: starter query in `packages/query` for mobile + web (initial `checking`, `claimed`
+      — measured + wired (D-171): user sends 1.25× (base floored at 100 gwei), services 2×; open ≈ 0.060 MON on
+      testnet. Open: **[OK?]** setConfig (drip 0.05 → 0.15 MON, top-up cap 0.2 → 0.5 MON) + drip float (0.35 tMON now)
+- [x] S8.16e Claim state authoritative: starter query in `packages/query` for mobile + web (initial `checking`, `claimed`
       wins, no Claim button on error, invalidates account/gas); `watchAccount` only with a session; api boot reconciler +
       status reconciliation; drip-scoped rate limit by `block_number`
 - [ ] S8.16 Practice gate: deposit → XAU long → partial close → TP/SL → close on 10143 from the phone; a CLOSED session

@@ -5,6 +5,10 @@ export const FRAME_FALLBACK_MS = 16;
 /** A price older than this with no tick is shown as stale ("Updated 14:02 · refreshing"). */
 export const PRICE_STALE_MS = 15_000;
 
+/** Cached data turns "stale" after this many missed refetch intervals (or on a failed refresh), never on TanStack's
+ * `isStale` timer — that flipped every cycle and remounted screens (S8.16a). */
+export const STALE_AFTER_INTERVALS = 2;
+
 /** Market params/book/oracle re-read while a screen shows them (the socket covers price ticks in between). */
 export const MARKET_REFETCH_MS = 5_000;
 /** Calendars change only by timelocked admin action or a guardian holiday. */
@@ -13,6 +17,10 @@ export const CANDLES_REFETCH_MS = 60_000;
 /** Account reads between socket-driven invalidations (fallback when the socket is down). */
 export const ACCOUNT_REFETCH_MS = 10_000;
 export const GAS_REFETCH_MS = 15_000;
+/** A trade's gas budget (limit × max fee) is re-estimated at most this often per market/side/position count. */
+export const GAS_BUDGET_STALE_MS = 60_000;
+/** Starter status changes only when the user claims (the claim flow invalidates it). */
+export const STARTER_STALE_MS = 300_000;
 /** Indexed equity curve (the socket invalidates the account on finalized changes). */
 export const EQUITY_REFETCH_MS = 60_000;
 

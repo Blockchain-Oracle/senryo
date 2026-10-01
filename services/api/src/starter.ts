@@ -32,6 +32,8 @@ const REVERT_CODES: Record<string, [number, ApiErrorCode]> = {
 export interface StarterConfig {
   dripWei: bigint;
   dailyBudgetWei: bigint;
+  /** Per-address, per-UTC-day cap on `topUp` (S8.16c). */
+  topUpCapWei: bigint;
   practiceAmount: bigint;
   voucherAmount: bigint;
   maxVouchers: bigint;
@@ -39,16 +41,19 @@ export interface StarterConfig {
 
 export async function starterConfig(chain: ChainContext): Promise<StarterConfig> {
   const drip = readContract(chain.chainId, "StarterDrip", chain.read);
-  const [dripWei, dailyBudgetWei, , , practiceAmount, , voucherAmount, maxVouchers] = await drip.read.config();
-  return { dripWei, dailyBudgetWei, practiceAmount, voucherAmount, maxVouchers };
+  const [dripWei, dailyBudgetWei, topUpCapWei, , practiceAmount, , voucherAmount, maxVouchers] =
+    await drip.read.config();
+  return { dripWei, dailyBudgetWei, topUpCapWei, practiceAmount, voucherAmount, maxVouchers };
 }
 
 interface RelayInput {
-  kind: "claim" | "voucher";
+  kind: "claim" | "voucher" | "topup";
   user: Address;
   deadline: bigint;
   signature: Hex;
   code?: string | undefined;
+  /** Top-ups only: the MON the sponsor sends (already clamped by `planTopUp`). */
+  amountWei?: bigint | undefined;
   ipPrefix: string;
   deviceHash: string | undefined;
 }
@@ -61,21 +66,23 @@ export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayIn
   if (!chain.sponsor) throw new HttpError(HTTP_STATUS.unavailable, "RELAYER_BUSY", "no sponsor key configured");
   const practice = chain.chainId === TESTNET_CHAIN_ID;
   const request =
-    input.kind === "claim"
-      ? contractCall(
-          chain.chainId,
-          "StarterDrip",
-          "claimFor",
-          [input.user, input.deadline, input.signature],
-          practice ? "claimForPractice" : "claimFor",
-        )
-      : contractCall(
-          chain.chainId,
-          "StarterDrip",
-          "redeemVoucher",
-          [input.user, voucherCodeBytes(input.code ?? ""), input.deadline, input.signature],
-          "redeemVoucher",
-        );
+    input.kind === "topup"
+      ? contractCall(chain.chainId, "StarterDrip", "topUp", [input.user, input.amountWei ?? 0n], "topUp")
+      : input.kind === "claim"
+        ? contractCall(
+            chain.chainId,
+            "StarterDrip",
+            "claimFor",
+            [input.user, input.deadline, input.signature],
+            practice ? "claimForPractice" : "claimFor",
+          )
+        : contractCall(
+            chain.chainId,
+            "StarterDrip",
+            "redeemVoucher",
+            [input.user, voucherCodeBytes(input.code ?? ""), input.deadline, input.signature],
+            "redeemVoucher",
+          );
   const config = await starterConfig(chain);
   const relayId = randomUUID();
   const createdAt = new Date();
@@ -91,8 +98,15 @@ export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayIn
     if (error instanceof GasAboveCapError) throw new HttpError(HTTP_STATUS.badGateway, "RELAY_REVERTED", error.message);
     throw new HttpError(HTTP_STATUS.unavailable, "RELAYER_BUSY", "relay broadcast failed; nothing to retry yet");
   }
-  const nativeWei = input.kind === "claim" ? config.dripWei : 0n;
-  const creditUsd6 = input.kind === "claim" ? (practice ? config.practiceAmount : 0n) : config.voucherAmount;
+  const nativeWei = input.kind === "claim" ? config.dripWei : input.kind === "topup" ? (input.amountWei ?? 0n) : 0n;
+  const creditUsd6 =
+    input.kind === "claim"
+      ? practice
+        ? config.practiceAmount
+        : 0n
+      : input.kind === "voucher"
+        ? config.voucherAmount
+        : 0n;
   await ctx.db`
     INSERT INTO starter_claims (id, kind, chain_id, user_address, code_hash, tx_hash, stage, block_number, native_wei,
                                 credit_usd6, ip_prefix, device_hash, created_at)
@@ -118,7 +132,7 @@ export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayIn
 
 interface ClaimRow {
   id: string;
-  kind: "claim" | "voucher";
+  kind: "claim" | "voucher" | "topup";
   chain_id: number;
   user_address: string;
   tx_hash: string;

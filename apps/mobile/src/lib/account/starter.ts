@@ -3,7 +3,7 @@
  * `starterClaimRoute`, `starterVoucherRoute`, `starterRelayRoute`). The user signs; the sponsor relays and pays gas.
  * Any transport failure (relay not deployed, offline) is `UNREACHABLE` — the honest "relay offline" state.
  */
-import type { Address, SignedClaim, SignedVoucher } from "@senryo/account";
+import type { Address, SignedClaim, SignedTopUp, SignedVoucher } from "@senryo/account";
 import {
   ApiError,
   type ApiErrorCode,
@@ -11,6 +11,7 @@ import {
   starterClaimRoute,
   starterRelayRoute,
   starterStatusRoute,
+  starterTopUpRoute,
   starterVoucherRoute,
 } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
@@ -22,6 +23,8 @@ export const isTerminal = (relay: RelayResult) => isTerminalStage(relay.stage);
 
 export type StarterErrorCode =
   | "ALREADY_CLAIMED"
+  | "NOT_ELIGIBLE"
+  | "NOT_NEEDED"
   | "RATE_LIMITED"
   | "BUDGET_EXHAUSTED"
   | "VOUCHER_INVALID"
@@ -38,6 +41,8 @@ export type StarterErrorCode =
 
 const PASS_THROUGH: ReadonlySet<ApiErrorCode> = new Set<ApiErrorCode>([
   "ALREADY_CLAIMED",
+  "NOT_ELIGIBLE",
+  "NOT_NEEDED",
   "RATE_LIMITED",
   "BUDGET_EXHAUSTED",
   "VOUCHER_INVALID",
@@ -98,6 +103,19 @@ export const starter = {
           deadline: signed.deadline,
           signature: signed.signature,
           code: signed.code,
+        },
+      }),
+    ),
+  /** Gas top-up (S8.16c): NOT_NEEDED is success (the balance already covers the send). */
+  topUp: (signed: SignedTopUp) =>
+    guarded(() =>
+      api().call(starterTopUpRoute, {
+        body: {
+          chainId: signed.chainId,
+          user: signed.user,
+          needWei: signed.needWei,
+          deadline: signed.deadline,
+          signature: signed.signature,
         },
       }),
     ),

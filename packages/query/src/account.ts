@@ -4,12 +4,13 @@
  * finalized change; the interval refetch is the fallback while the socket is down.
  */
 import { type AccountSnapshot, type PositionView, readAccountSnapshot, readPositions } from "@senryo/chain";
-import { type AccountRiskView, type Address, fromQuery, type Reading } from "@senryo/core";
+import type { AccountRiskView, Address, Reading } from "@senryo/core";
 import { type EquityCurve, EquityDocument, equityVars } from "@senryo/indexer-client";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { ACCOUNT_REFETCH_MS, EQUITY_REFETCH_MS, GAS_REFETCH_MS } from "./constants.ts";
 import { type QueryEnv, useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
+import { readingOf } from "./reading.ts";
 
 export const accountRiskOptions = (env: QueryEnv, address: Address, tag: "latest" | "finalized") =>
   queryOptions({
@@ -40,13 +41,13 @@ export function useAccountRisk(
     ...accountRiskOptions(env, address ?? "0x", tag),
     enabled: address !== undefined,
   });
-  return fromQuery(query);
+  return readingOf(query, ACCOUNT_REFETCH_MS);
 }
 
 export function usePositions(address: Address | undefined): Reading<PositionView[]> {
   const env = useQueryEnv();
   const query = useQuery({ ...positionsOptions(env, address ?? "0x"), enabled: address !== undefined });
-  return fromQuery(query);
+  return readingOf(query, ACCOUNT_REFETCH_MS);
 }
 
 export function useGasBalance(address: Address | undefined): Reading<bigint> {
@@ -58,7 +59,7 @@ export function useGasBalance(address: Address | undefined): Reading<bigint> {
     refetchInterval: GAS_REFETCH_MS,
     staleTime: GAS_REFETCH_MS,
   });
-  return fromQuery(query);
+  return readingOf(query, GAS_REFETCH_MS);
 }
 
 /** The preview's view of an account snapshot (`atRisk` switches the safety buffer on, as in `RiskModule._risk`). */
@@ -93,5 +94,5 @@ export function useEquityHistory(address: Address | undefined, windowSec: number
     refetchInterval: EQUITY_REFETCH_MS,
     staleTime: EQUITY_REFETCH_MS,
   });
-  return fromQuery(query);
+  return readingOf(query, EQUITY_REFETCH_MS);
 }

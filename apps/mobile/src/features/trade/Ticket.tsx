@@ -1,4 +1,4 @@
-import { blockerCopy, ONE_USD6 } from "@senryo/core";
+import { blockerCopy, type GasShortReason, ONE_USD6 } from "@senryo/core";
 import type { LiveMarket } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -16,12 +16,23 @@ import { DISABLED_OPACITY, HAIRLINE_PX, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TY
 import { AMOUNT_CHIPS_USD } from "./constants";
 import { TicketSummary } from "./TicketSummary";
 import { TradeTrace } from "./TradeTrace";
+import type { GasStep } from "./useGasTopUp";
 import { type Side, useTicket } from "./useTicket";
 
 const SIDES = [
   { value: "long", label: "Long" },
   { value: "short", label: "Short" },
 ] as const;
+
+/** The hold button narrates a top-up in progress instead of a silent spinner (S8.16c). */
+const GAS_STEP_LABEL: Partial<Record<GasStep["kind"], string>> = {
+  signing: "Adding gas · signing…",
+  sending: "Adding gas · sending…",
+  settling: "Adding gas · finalizing…",
+  waiting: "Adding gas · almost ready…",
+};
+
+const RETRIABLE_GAS: ReadonlySet<GasShortReason> = new Set<GasShortReason>(["RELAYER_BUSY", "UNREACHABLE", "UNKNOWN"]);
 
 /**
  * The F10 ticket (D2): side, margin amount (keypad + $10/$25/$50/MAX chips), leverage (slider with detents), live
@@ -38,12 +49,16 @@ export function Ticket({ market }: { market: LiveMarket }) {
   }
 
   const copy = t.blocker ? blockerCopy(t.blocker, market.name, t.nowSec) : undefined;
-  const holdLabel = `Hold · ${t.side === "long" ? "Long" : "Short"} ${market.symbol} ${t.leverage}×`;
+  const toppingUp = GAS_STEP_LABEL[t.gasStep.kind];
+  // A transient top-up failure keeps the hold live: holding again retries (S8.16c).
+  const gasRetry = t.blocker?.code === "NO_GAS" && RETRIABLE_GAS.has(t.blocker.reason);
+  const holdLabel = toppingUp ?? `Hold · ${t.side === "long" ? "Long" : "Short"} ${market.symbol} ${t.leverage}×`;
   const confirm = () => {
     if (!(storage.getBoolean(STORAGE_KEYS.riskExplained) ?? false)) {
       router.push(ROUTES.riskExplainer);
       return;
     }
+    if (gasRetry) t.resetGas();
     void t.submit();
   };
 
@@ -102,12 +117,15 @@ export function Ticket({ market }: { market: LiveMarket }) {
 
       {!t.hasAccount ? (
         <Button label="Create account to trade" onPress={() => router.push(ROUTES.accountRequired)} />
-      ) : t.blocker?.code === "INSUFFICIENT_FREE" ? (
+      ) : t.blocker?.code === "INSUFFICIENT_FREE" ||
+        (t.blocker?.code === "NO_GAS" && t.blocker.reason === "NOT_ELIGIBLE") ? (
         <Button label="Add money" onPress={() => router.push(ROUTES.addMoney)} />
       ) : (
         <HoldToConfirm
           label={holdLabel}
-          disabled={t.blocker !== undefined || t.preview === undefined || !t.ready}
+          disabled={
+            (t.blocker !== undefined && !gasRetry) || toppingUp !== undefined || t.preview === undefined || !t.ready
+          }
           onConfirm={confirm}
           accessibilityHint="Hold for half a second to place the trade"
         />

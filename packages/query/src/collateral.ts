@@ -5,9 +5,10 @@
  */
 import { contractCall, findStablePool, quoteExactIn, type TxRequest } from "@senryo/chain";
 import { type ChainId, MAINNET_CHAIN_ID, MAINNET_EXTERNAL, positionGasLimit } from "@senryo/config";
-import { type Address, fromQuery, type Reading, RISK } from "@senryo/core";
+import { type Address, type Reading, RISK } from "@senryo/core";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryEnv } from "./env.tsx";
+import { readingOf } from "./reading.ts";
 
 /** 10 bps below the quote: a 1:1 stable pool at 0.005 % fee; a larger move means the quote is stale — re-quote. */
 export const SWAP_SLIPPAGE_BPS = 10n;
@@ -36,7 +37,7 @@ export function useCollateralQuote(tokenIn: Address | undefined, amountIn: bigin
     refetchInterval: SWAP_QUOTE_REFRESH_MS,
     staleTime: SWAP_QUOTE_REFRESH_MS,
   });
-  return fromQuery(query);
+  return readingOf(query, SWAP_QUOTE_REFRESH_MS);
 }
 
 /** The two collateral tokens on mainnet, for the direction toggle. */
