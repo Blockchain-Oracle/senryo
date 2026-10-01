@@ -5,8 +5,8 @@ import { fire } from "~/feedback/fire";
 import { CHIP_TICK_MS } from "~/lib/constants/auth";
 import { useAccount } from "./provider";
 
-/** "FACE ID" on iOS, "FINGERPRINT" on Android (ux-product-feel B.11: never "passkey" on the first screens). */
-export const UNLOCK_WORD = Platform.OS === "ios" ? "FACE ID" : "FINGERPRINT";
+/** "Face ID" on iOS, "fingerprint" on Android (ux-product-feel B.11: never "passkey" on the first screens). */
+export const UNLOCK_WORD = Platform.OS === "ios" ? "Face ID" : "fingerprint";
 
 /** The session chip, re-evaluated once a second while unlocked; a `warn` haptic when it enters the last minute (F04). */
 export function useChip(): ChipState {

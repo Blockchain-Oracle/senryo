@@ -35,7 +35,7 @@ export function Panel({ children, style }: { children: ReactNode; style?: StyleP
 export function SectionLabel({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
   const { color } = useTheme();
   return (
-    <Text accessibilityRole="header" style={[TYPE.label, { color: color.inkMuted }, style]}>
+    <Text accessibilityRole="header" style={[TYPE.rowDetail, { color: color.text3 }, style]}>
       {children}
     </Text>
   );
@@ -54,8 +54,8 @@ export function KeyValue({
   const { color } = useTheme();
   return (
     <View style={styles.kv} accessible accessibilityLabel={`${label} ${value}`}>
-      <Text style={[TYPE.label, { color: color.inkMuted }]}>{label}</Text>
-      <Text style={[TYPE.numSm, { color: valueColor ?? color.ink }]}>{value}</Text>
+      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{label}</Text>
+      <Text style={[TYPE.rowAmount, { color: valueColor ?? color.ink }]}>{value}</Text>
     </View>
   );
 }
@@ -68,6 +68,12 @@ export function Rule() {
 
 const styles = StyleSheet.create({
   panel: { borderRadius: SHEET_SHAPE.rowRadius, overflow: "hidden" },
-  kv: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", paddingVertical: SPACE.xs },
+  kv: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    gap: SPACE.md,
+    paddingVertical: SPACE.xs + SPACE.xxs,
+  },
   rule: { height: HAIRLINE_PX, alignSelf: "stretch" },
 });

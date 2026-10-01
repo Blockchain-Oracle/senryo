@@ -15,5 +15,5 @@ export function useChip(): ChipState {
     const id = setInterval(() => setNow(Date.now()), CHIP_TICK_MS);
     return () => clearInterval(id);
   }, [snapshot]);
-  return chipState(snapshot, now, "PASSKEY");
+  return chipState(snapshot, now, "passkey");
 }
