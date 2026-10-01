@@ -87,6 +87,11 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - liquidation info, SL/TP child with keyboard lift;
   - mainnet eligibility;
   - 500 ms hold pill (D-177), trace, receipt + share.
+- [ ] S1b.8a **SL/TP on a new order** ("open, then protect"; lead decision 1 Oct, review R05, C42 parity): the ticket
+  takes stop-loss / take-profit levels for the order being entered; after the open finalizes, each level is placed as
+  its own transaction for the resulting position size, with its own outcome (`useTriggerLegs`). Levels are validated
+  against the previewed liquidation price. If a level fails, the position is open and unprotected at that level, and the
+  receipt says so. Until this ships the entry reads "SL/TP after opening" and C42 stays Adapted.
 - [ ] S1b.9 **J3 Markets** (C22/C25/C26, FT071/072/095–101):
   - watchlist, categories (Commodities · FX · Crypto · Equities/Indices), filters, search;
   - detail with Holders / Feed / About, history, alerts;
@@ -161,6 +166,25 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - **Licences are not a user ask.** Showing a project's mark beside its ticker to identify it is nominative use; each
     record quotes its licence or terms. The earlier "written permission" flags (Arbitrum, Uniswap, Chainlink, Solana,
     Circle, Coinbase, flags) are closed on that basis and stay documented in the records.
+- **S1b.7 + S1b.8 merged 1 Oct (583c93d), acceptance still owed.** Agent A3 left the shell and ticket uncommitted
+  when its session ended; the lead committed it (5917f97), fixed the 1 Oct review's P1s and merged. What is in:
+  five-tab dock, action fan, collapsing headers, route migration with old paths remapped, the ticket (margin, ruler,
+  presets, keypad ↔ chart, candle settings, liquidation info, hold pill, trace, receipt, share) and the child sheets.
+  - **Review P1s fixed** (R01, R02, R04, R05, R06, plus R08/R11/R14 partly): see
+    `docs/design/reviews/2026-10-01-mobile-review-response.md` for what changed, where, and what was not verified.
+  - **One outcome per transaction.** `packages/query` `traceOutcome`/`settledOutcome`: `not-sent` (nothing left the
+    device) vs `unknown` (signed, result lost: settled from the send journal, never retried). TP/SL legs:
+    `features/trade/useTriggerLegs.ts`. Check: `pnpm --filter @senryo/drive trigger-outcome-check` (24/24).
+    The LP deposit (approve, then deposit) still shares one trace: fix it the same way in J10.
+  - **Simulator workflow** (no dev-client rebuild): `cd apps/mobile && npx expo export:embed --platform ios --dev
+    false --bytecode --entry-file index.ts --bundle-output "$APP/main.jsbundle" --assets-dest "$APP"`, where `$APP`
+    is the installed `Senryo.app` on the "A3 Senryo iPhone 17" simulator; relaunch; deep links
+    (`xcrun simctl openurl <sim> senryo://markets/XAU/ticket?side=long`) and `idb ui tap` drive it.
+  - **Not done in S1b.7:** the new native modules (expo-camera, expo-notifications, sharing) and their dev-client
+    build; Gorhom sheets (J2). **Not done in S1b.8:** S1b.8a, mainnet eligibility on the ticket, and every native
+    acceptance row (S1b.17) — signed-in flows, VoiceOver, Reduce Motion, Android, motion clips.
+- **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
+  guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), partial.** First-pass masters are in `brand/art/` (koban, chōgin, five FX pair discs, venue chip).
   Still open: onboarding scenes, completion foil and the 12 avatars. B12 review stays open.
 - **S1b.4, partial:**
@@ -232,3 +256,14 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     gold-leaf ramp (S1b.3, B12).
 
 ## Handoff
+- **Resume here (1 Oct, lead):**
+  1. **Art package** — agent `art-j1` on branch `stage/S1b-art` (worktree `.claude/worktrees/art-j1`): six onboarding
+     scenes, pending-passkey art, completion foil, twelve avatars, with a Codex review loop. Look at its contact sheets
+     before merging; B12 stays open. The Kinpaku card art (still the lemon D2 PNG, review R16) and the seal's gold-leaf
+     recolour belong to the same pass.
+  2. **J4 acceptance with an account** — create a practice account on the simulator, claim, open, protect (both
+     levels), remove one, close; capture dark/light and the motion clips; fill the S1b.17 rows. Then S1b.8a.
+  3. **J1** (review R03): the new-account state machine and the six-scene story, once the art passes its gate.
+  4. Then the plan's order: J3 Markets (search, watchlist, detail sections), J6 Home + J10 LP, J5, J2.
+- **Logos:** adding a mark is one line in `packages/identity/scripts/catalog.ts`, then `pnpm --filter
+  @senryo/identity fetch` and `codegen`. Never collect one by hand.
