@@ -117,9 +117,9 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     read-only rows with live prices; each opens a read-only page (price + basis, its own history, OI/volume/funding
     or the feed's facts and disclosure, the gate in plain words). Marks (5f41fe9): Tesla, SpaceX, iShares and an oil
     barrel fetched by script; SPY and QQQ are recorded gaps (no copyable SPDR file; Invesco's terms forbid copying its
-    logo), so they draw their ticker in the gap circle. Still short: the indexer's `FeedW…X` config is
-    deployed (sha-ba4b5e2, reset 18:02 UTC) — the feed history reads rounds onchain until it has caught up; web
-    parity is S11b;
+    logo), so they draw their ticker in the gap circle. The indexer's `FeedW…X` config is deployed
+    (sha-ba4b5e2, reset 18:02 UTC, ready 18:50): the feed charts read "indexed rounds". Still short: web parity is
+    S11b; SPY/QQQ marks stay recorded gaps;
   - market history (FT097): built 1 Oct — F32's history utility now leads market detail's utilities (history ·
     alert · star · share) and opens your activity in that market (`/activity?market=XAU`, the indexer's `market_id`
     filter). The ledger row's deviation note is superseded.
