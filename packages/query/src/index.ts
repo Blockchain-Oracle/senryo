@@ -11,6 +11,7 @@ export * from "./lp.ts";
 export * from "./markets.ts";
 export * from "./orders.ts";
 export * from "./price-store.ts";
+export * from "./recipients.ts";
 export * from "./social.ts";
 export * from "./social-feed.ts";
 export * from "./social-holders.ts";

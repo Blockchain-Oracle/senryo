@@ -34,6 +34,7 @@ import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { AmountEntry } from "./AmountEntry";
 import { useAmountDraft } from "./amount-draft";
 import { type ExecutedMove, MoneyReceipt } from "./MoneyReceipt";
+import { RecentRecipients } from "./RecentRecipients";
 import { type Recipient, useRecipient } from "./useRecipient";
 import { SEND_WORDS } from "./words";
 
@@ -143,6 +144,7 @@ export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
         tone={line.tone}
         input={{ autoCapitalize: "none", maxLength: RECIPIENT_MAX, returnKeyType: "done" }}
       />
+      {input === "" && me ? <RecentRecipients address={me} onPick={setInput} /> : null}
       <Segmented options={TOKENS} value={symbol} onChange={setSymbol} label="Token" />
       <AmountEntry draft={draft} max={max} symbol={symbol} label="Amount to send" />
       <Panel style={styles.rows}>
