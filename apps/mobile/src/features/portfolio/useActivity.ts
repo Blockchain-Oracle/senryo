@@ -16,16 +16,20 @@ interface Cursor {
   id: string;
 }
 
-export function useActivity(address: Address | undefined, kinds?: readonly ActivityKind[]) {
+export function useActivity(address: Address | undefined, kinds?: readonly ActivityKind[], marketId?: string) {
   const env = useQueryEnv();
   const query = useInfiniteQuery({
-    queryKey: [...keys.activity(env.chainId, address ?? "0x"), kinds?.join(",") ?? "all"] as const,
+    queryKey: [...keys.activity(env.chainId, address ?? "0x"), kinds?.join(",") ?? "all", marketId ?? "all"] as const,
     queryFn: ({ pageParam, signal }) =>
       env.indexer.request(
         ActivityDocument,
         activityVars(
           { chainId: env.chainId, user: address ?? "0x" },
-          { ...(pageParam ? { before: pageParam } : {}), ...(kinds ? { kinds } : {}) },
+          {
+            ...(pageParam ? { before: pageParam } : {}),
+            ...(kinds ? { kinds } : {}),
+            ...(marketId ? { marketId } : {}),
+          },
         ),
         signal,
       ),

@@ -1,4 +1,5 @@
-import { router, Stack } from "expo-router";
+import { engineMarket } from "@senryo/config";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -25,11 +26,18 @@ const LOADING_ROWS = 6;
  */
 export default function ActivityScreen() {
   const address = useAccount().hint?.address;
+  const { market: symbol } = useLocalSearchParams<{ market?: string }>();
+  // `?market=XAU`: one market's history (FT097, F32's history utility on market detail).
+  const meta = symbol ? engineMarket(symbol.toUpperCase()) : undefined;
   const [filter, setFilter] = useState<ActivityFilter>("all");
-  const activity = useActivity(address, filter === "all" ? undefined : FILTER_KINDS[filter]);
+  const activity = useActivity(
+    address,
+    filter === "all" ? undefined : FILTER_KINDS[filter],
+    meta ? `ours-${meta.id}` : undefined,
+  );
   return (
     <Screen {...(address ? { onRefresh: activity.refetch } : {})} contentStyle={styles.body}>
-      <Stack.Screen options={{ title: "Activity" }} />
+      <Stack.Screen options={{ title: meta ? `${meta.name} history` : "Activity" }} />
       {address ? (
         <>
           <View style={styles.chips}>
@@ -41,7 +49,13 @@ export default function ActivityScreen() {
             <ReadingView reading={activity.reading} retry={() => void activity.refetch()}>
               {(rows) =>
                 rows.length === 0 ? (
-                  <QuietLine>{filter === "all" ? "No activity yet" : "Nothing of this kind yet"}</QuietLine>
+                  <QuietLine>
+                    {meta
+                      ? `You haven’t traded ${meta.name} on this network yet`
+                      : filter === "all"
+                        ? "No activity yet"
+                        : "Nothing of this kind yet"}
+                  </QuietLine>
                 ) : (
                   <View>
                     {rows.map((row) => (

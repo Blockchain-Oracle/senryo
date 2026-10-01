@@ -97,9 +97,12 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   kept per network, account and market until it is placed). Checked on testnet: XAG long with SL and TP, then a gold
   long at 5× with a 3% stop at $4,047.97 — each level finalized, its line inside the receipt under "Quoted at your
   hold".
-- [ ] S1b.8b **Mainnet eligibility on the ticket** (FT101, M13; split out of S1b.8 on 1 Oct): the C12 eligibility
-  checkbox sheet and pending gate before a Mainnet ticket (D-023/D-165). Not built: today a geo block only shows as
-  the hold button's reason, "Mainnet trading unavailable" (`GEO_BLOCKED` in `features/trade/ticket-commit.ts`).
+- [x] S1b.8b **Mainnet eligibility on the ticket** (FT101, M13; split out of S1b.8 on 1 Oct): the C12 eligibility
+  checkbox sheet and pending gate before a Mainnet ticket (D-023/D-165). Built 1 Oct (`14f8aef`): before an account's
+  first Mainnet ticket, `(sheets)/eligibility` names D-023's restricted regions, links the Terms and continues to the
+  ticket after a short pending state; versioned per account; Practice never asks; the server's IP check stays the
+  primary block. Wording is the lead's draft for the user's review. Acceptance on a real Mainnet ticket waits for the
+  mainnet launch (the sheet itself was checked on the simulator).
 - [x] S1b.9 **J3 Markets** (C22/C25/C26, FT071/072/095–101):
   - watchlist, categories (Commodities · FX · Crypto · Equities/Indices), filters, search;
   - detail with Holders / Feed / About, alerts;
@@ -112,9 +115,9 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - equity discovery (FT032): Equities shows only a non-interactive "Arriving" Nvidia row. Indicative discovery on the
     D-220 wrapper feeds is in progress with agent discovery-data on `stage/S1b-discovery-data` (review S03); nothing
     of it is on main yet;
-  - market history (FT097): F32's history utility is a price alert in code (`features/markets/MarketActions.tsx`).
-    No decision approves that; it is recorded as a deviation in the ledger row. Either build history or approve the
-    alert in that slot.
+  - market history (FT097): built 1 Oct — F32's history utility now leads market detail's utilities (history ·
+    alert · star · share) and opens your activity in that market (`/activity?market=XAU`, the indexer's `market_id`
+    filter). The ledger row's deviation note is superseded.
 
   The reconciliation also found perps education (FT072) and chart pan (FT096) missing; both landed on main later on
   1 Oct (185aedd, b838dc5) and have no acceptance row yet.

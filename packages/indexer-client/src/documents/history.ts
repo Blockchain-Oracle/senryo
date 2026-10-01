@@ -83,7 +83,14 @@ export const ActivityDocument = defineDocument<ActivityVars>()(
  */
 export function activityVars(
   account: AccountVars,
-  opts: { before?: { timestamp: number; id: string }; after?: number; kinds?: readonly string[]; limit?: number } = {},
+  opts: {
+    before?: { timestamp: number; id: string };
+    after?: number;
+    kinds?: readonly string[];
+    /** One market's rows only (`ours-0`), for a market's history. */
+    marketId?: string;
+    limit?: number;
+  } = {},
 ): ActivityVars {
   const b = opts.before;
   const where: Where = {
@@ -93,6 +100,7 @@ export function activityVars(
       : {}),
     ...(opts.after !== undefined ? { timestamp: { _gt: opts.after } } : {}),
     ...(opts.kinds ? { kind: { _in: opts.kinds } } : {}),
+    ...(opts.marketId ? { market_id: { _eq: opts.marketId } } : {}),
   };
   return { where, limit: opts.limit ?? PAGE_SIZE.activity };
 }
