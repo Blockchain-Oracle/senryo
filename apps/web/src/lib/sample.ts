@@ -4,6 +4,7 @@
  * (account, buckets and positions from the chain + indexer; prices from Chainlink/Perpl).
  * Money is integer base units: usd6 (6 decimals) and bps. Chart series live in `sample-series.ts`.
  */
+import { ROUTE_CHAIN_ID, routeAssetId } from "@senryo/identity";
 
 export const IS_PREVIEW_DATA = true;
 
@@ -242,11 +243,12 @@ export const CARD_HOLDS: readonly SampleHold[] = [
 /** Sample deposit address (not a real account). Real persistent addresses come from Aurora in S9. */
 export const DEPOSIT_ADDRESS = "0x7a3F9c2E41b0D5e8A6f1c93B24dE70aF5b1C8e42";
 
+/** `entity` is the canonical network id whose real mark badges each token (S1b.4). */
 export const SWAP_CHAINS = [
-  { id: "base", name: "Base", shortName: "BASE", colorVar: "--chain-base" },
-  { id: "ethereum", name: "Ethereum", shortName: "ETH", colorVar: "--chain-ethereum" },
-  { id: "solana", name: "Solana", shortName: "SOL", colorVar: "--chain-solana" },
-  { id: "monad", name: "Monad", shortName: "MON", colorVar: "--chain-monad" },
+  { id: "base", name: "Base", shortName: "BASE", colorVar: "--chain-base", entity: ROUTE_CHAIN_ID.base },
+  { id: "ethereum", name: "Ethereum", shortName: "ETH", colorVar: "--chain-ethereum", entity: ROUTE_CHAIN_ID.ethereum },
+  { id: "solana", name: "Solana", shortName: "SOL", colorVar: "--chain-solana", entity: ROUTE_CHAIN_ID.solana },
+  { id: "monad", name: "Monad", shortName: "MON", colorVar: "--chain-monad", entity: ROUTE_CHAIN_ID.monad },
 ] as const;
 
 export const SWAP_TOKENS = [
@@ -257,7 +259,7 @@ export const SWAP_TOKENS = [
     name: "USD Coin",
     balance6: 2_400_000_000n,
     usd6: 1_000_000n,
-    icon: "$",
+    entity: routeAssetId("USDC", "base"),
   },
   {
     id: "eth-eth",
@@ -266,7 +268,7 @@ export const SWAP_TOKENS = [
     name: "Ethereum",
     balance6: 740_000n,
     usd6: 3_412_800_000n,
-    icon: "Ξ",
+    entity: routeAssetId("ETH", "ethereum"),
   },
   {
     id: "sol-usdc",
@@ -275,7 +277,7 @@ export const SWAP_TOKENS = [
     name: "USD Coin",
     balance6: 860_150_000n,
     usd6: 1_000_000n,
-    icon: "$",
+    entity: routeAssetId("USDC", "solana"),
   },
   {
     id: "mon-ausd",
@@ -284,7 +286,7 @@ export const SWAP_TOKENS = [
     name: "Agora USD · Free to trade",
     balance6: 7_210_400_000n,
     usd6: 1_000_000n,
-    icon: "A",
+    entity: routeAssetId("AUSD", "monad"),
   },
 ] as const;
 

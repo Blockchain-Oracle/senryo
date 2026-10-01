@@ -1,25 +1,25 @@
 "use client";
 
 // 21st: starc007/be-ui-multi-chain-swap (#16251) — https://21st.dev/@starc007/components/be-ui-multi-chain-swap
-// Token picker sheet + token glyph. Re-tokenized for D2 (hairlines, no shadows, chain hues from CSS vars).
+// Token picker sheet + token mark. Re-tokenized for D2 (hairlines, no shadows). S1b.4: the letter disc is gone — each
+// token shows its real mark (@senryo/identity) with its network as a separate badge.
 import { Check, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { SWAP_DRAWER_EASE, SWAP_DRAWER_REDUCED_S, SWAP_DRAWER_S } from "@/lib/constants/swap";
-import { cn } from "@/lib/utils";
+import { EntityMark } from "@/components/identity/entity-mark";
+import { SWAP_DRAWER_EASE, SWAP_DRAWER_REDUCED_S, SWAP_DRAWER_S, TOKEN_MARK_SIZE } from "@/lib/constants/swap";
 import { type Chain, findById, formatAmount, type Token, type TokenSide } from "./types";
 
+/** Decorative: the symbol and network are always written next to it. */
 export function TokenIcon({ token, chain, className }: { token: Token; chain: Chain | undefined; className?: string }) {
   return (
-    <span
-      aria-hidden
-      className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-body text-white",
-        className,
-      )}
-      style={chain ? { backgroundColor: chain.color } : undefined}
-    >
-      {token.icon}
-    </span>
+    <EntityMark
+      id={token.entity}
+      label={token.symbol}
+      size={TOKEN_MARK_SIZE}
+      badge={chain?.entity}
+      decorative
+      {...(className ? { className } : {})}
+    />
   );
 }
 

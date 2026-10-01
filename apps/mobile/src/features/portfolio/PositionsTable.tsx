@@ -1,12 +1,15 @@
 import type { AccountSnapshot, PositionView } from "@senryo/chain";
 import { ENGINE_MARKETS } from "@senryo/config";
 import { notional, previewPosition } from "@senryo/core";
+import { ids } from "@senryo/identity";
 import { riskViewOf, useMarket } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { Panel } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
+import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { positionRoute } from "~/lib/constants/routes";
 import { pct, price18, signedUsd, usd } from "~/lib/money";
 import { HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -50,10 +53,16 @@ function PositionRow({
   const border = first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline };
   const sideColor = position.isLong ? color.up : color.down;
   const side = position.isLong ? "LONG" : "SHORT";
+  const mark = (
+    <EntityMark id={ids.engineMarket(ACTIVE_NETWORK.chainId, position.marketId)} size={SIZE.markCell} decorative />
+  );
   if (market.status === "unknown" || market.status === "failed") {
     return (
       <View style={[styles.row, border]}>
-        <Text style={[TYPE.numMd, styles.first, { color: color.ink }]}>{symbol}-PERP</Text>
+        <View style={[styles.first, styles.market]}>
+          {mark}
+          <Text style={[TYPE.numMd, { color: color.ink }]}>{symbol}-PERP</Text>
+        </View>
         <Skeleton width="45%" />
       </View>
     );
@@ -72,9 +81,12 @@ function PositionRow({
       accessibilityLabel={`${m.name} ${side.toLowerCase()}, size ${usd(size, 0)}, ${health.upnlUsd6 < 0n ? "loss" : "profit"} ${signedUsd(health.upnlUsd6)}${away === null ? "" : `, liquidation ${pct(away < 0n ? 0n : away)} away`}`}
       style={({ pressed }) => [styles.row, border, pressed ? { backgroundColor: color.muted } : null]}
     >
-      <View style={styles.first}>
-        <Text style={[TYPE.numMd, { color: color.ink }]}>{symbol}-PERP</Text>
-        <Text style={[TYPE.numSm, { color: sideColor }]}>{side}</Text>
+      <View style={[styles.first, styles.market]}>
+        {mark}
+        <View style={styles.marketText}>
+          <Text style={[TYPE.numMd, { color: color.ink }]}>{symbol}-PERP</Text>
+          <Text style={[TYPE.numSm, { color: sideColor }]}>{side}</Text>
+        </View>
       </View>
       <Text style={[TYPE.numSm, styles.num, { color: color.ink }]}>{usd(size, 0)}</Text>
       <Text style={[TYPE.numSm, styles.num, { color: away !== null && away < 0n ? color.down : color.inkMuted }]}>
@@ -91,5 +103,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", paddingHorizontal: SPACE.md, minHeight: SIZE.touch + SPACE.lg },
   head: { minHeight: SIZE.touch, borderBottomWidth: HAIRLINE_PX },
   first: { flex: 1.4, gap: SPACE.xxs },
+  market: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  marketText: { gap: SPACE.xxs, flexShrink: 1 },
   num: { flex: 1, textAlign: "right" },
 });

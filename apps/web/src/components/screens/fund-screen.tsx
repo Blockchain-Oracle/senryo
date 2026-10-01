@@ -18,6 +18,7 @@ const CHAINS: Chain[] = SWAP_CHAINS.map((c) => ({
   name: c.name,
   shortName: c.shortName,
   color: `var(${c.colorVar})`,
+  entity: c.entity,
 }));
 
 const TOKENS: Token[] = SWAP_TOKENS.map((t) => ({
@@ -27,7 +28,7 @@ const TOKENS: Token[] = SWAP_TOKENS.map((t) => ({
   name: t.name,
   balance: plotValue(t.balance6),
   usd: plotValue(t.usd6),
-  icon: t.icon,
+  entity: t.entity,
 }));
 
 const QUOTE: SwapQuote = {

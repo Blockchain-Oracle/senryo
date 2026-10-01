@@ -151,5 +151,11 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Coinbase: press-footer terms.
 - **S1b.3 (art), partial.** First-pass masters are in `brand/art/` (koban, chōgin, five FX pair discs, venue chip).
   Still open: onboarding scenes, completion foil and the 12 avatars. B12 review stays open.
+- **S1b.4, partial:**
+  - Done: MarketRow, TradeHeader, PositionDetail, PositionsTable, BucketRegister, CollateralPanel, LpScreen, Fund,
+    add-money, Onboarding/PrivacyPlate seal, recovery, help, CardFace, web `TokenIcon`/`SealMark`.
+  - Remaining (the lead's files): TopStrip, StarterCard, Ticket, PositionsAccessory.
+  - Remaining web: the chain dot in `swap/panel.tsx`, and the live-font 千 in `app/page.tsx` and `ui/credit-debit-card.tsx`.
+  - `CHAIN_HUE` is still read by that chain dot. `ASSET_HUE` only feeds unused `--asset-*` CSS vars; delete both after the lead's token work lands.
 
 ## Handoff

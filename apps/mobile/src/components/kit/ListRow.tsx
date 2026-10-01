@@ -4,23 +4,29 @@ import { fire } from "~/feedback/fire";
 import { HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { Icon } from "./Icon";
 
-/** A settings/list row: title, optional detail, a chevron when it navigates or a trailing control when it doesn't. */
+/**
+ * A settings/list row: an optional leading identity (real marks), title, optional detail, a chevron when it navigates
+ * or a trailing control when it doesn't.
+ */
 export function ListRow({
   title,
   detail,
   onPress,
+  leading,
   trailing,
   first = false,
 }: {
   title: string;
   detail?: string;
   onPress?: () => void;
+  leading?: ReactNode;
   trailing?: ReactNode;
   first?: boolean;
 }) {
   const { color } = useTheme();
   const body = (
     <>
+      {leading}
       <View style={styles.text}>
         <Text style={[TYPE.body, { color: color.ink }]}>{title}</Text>
         {detail ? <Text style={[TYPE.caption, { color: color.inkMuted }]}>{detail}</Text> : null}

@@ -1,5 +1,8 @@
 import { DECIMALS, formatUnits } from "@senryo/core";
+import { ids } from "@senryo/identity";
 import { StyleSheet, Text, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
+import { VenueChip } from "~/components/identity/VenueChip";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, Rule, SectionLabel } from "~/components/kit/Surface";
 import { EmptyState, LoadingState } from "~/components/kit/states";
@@ -7,8 +10,9 @@ import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { MarginGauge } from "~/components/trade/MarginGauge";
 import { STATUS_CHIP, statusTone } from "~/features/markets/session";
 import { TradeTrace } from "~/features/trade/TradeTrace";
+import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { pct, price18, signedUsd, usd } from "~/lib/money";
-import { HERO_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
+import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { BLOCK_MS_ESTIMATE, REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "./constants";
 import { TriggerPanel } from "./TriggerPanel";
 import { usePosition } from "./usePosition";
@@ -46,9 +50,15 @@ export function PositionDetail({ marketId }: { marketId: number }) {
   return (
     <View style={styles.stack}>
       <View style={styles.head}>
-        <Text style={[TYPE.numMd, { color: color.ink }]}>
-          {m.symbol}-PERP <Text style={{ color: position.isLong ? color.up : color.down }}>{side}</Text>
-        </Text>
+        <View style={styles.identity}>
+          <EntityMark id={ids.engineMarket(ACTIVE_NETWORK.chainId, marketId)} size={SIZE.markDetail} decorative />
+          <View style={styles.titles}>
+            <Text style={[TYPE.numMd, { color: color.ink }]}>
+              {m.symbol}-PERP <Text style={{ color: position.isLong ? color.up : color.down }}>{side}</Text>
+            </Text>
+            <VenueChip venue={ids.venue("senryo")} />
+          </View>
+        </View>
         <Text style={[TYPE.label, { color: statusTone(m.pv.status, color) }]}>{STATUS_CHIP[m.pv.status]}</Text>
       </View>
 
@@ -130,6 +140,8 @@ export function PositionDetail({ marketId }: { marketId: number }) {
 const styles = StyleSheet.create({
   stack: { gap: SPACE.lg },
   head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  identity: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, flexShrink: 1 },
+  titles: { gap: SPACE.xs, flexShrink: 1 },
   panel: { padding: SPACE.md, gap: SPACE.sm },
   row: { flexDirection: "row", alignItems: "flex-end", gap: SPACE.md },
   rows: { flex: 1, gap: SPACE.xs },

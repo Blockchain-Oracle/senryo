@@ -10,3 +10,6 @@ export const BRAND = {
     "Trade gold, silver, equities, FX and crypto perps on Monad from one risk-accounted balance, and spend it with the Kinpaku card.",
   network: "MONAD",
 } as const;
+
+/** Top-bar seal edge (px). brand/README.md: the full seal needs ≥ 24 px (below that, use the favicon mark). */
+export const SEAL_MARK_SIZE = 24;

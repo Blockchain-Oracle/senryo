@@ -1,17 +1,12 @@
+import { ids } from "@senryo/identity";
+import { EntityMark } from "@/components/identity/entity-mark";
+import { SEAL_MARK_SIZE } from "@/lib/constants/brand";
 import { cn } from "@/lib/utils";
 
-/** Inline 千 seal for the top bar (the full SVG mark lives in brand/ and public/brand/). */
+/** The real seal (brand/senryo-seal.svg via @senryo/identity) for the top bar — never 千 set in a live font. */
 export function SealMark({ className }: { className?: string }) {
   return (
-    <span
-      aria-hidden
-      className={cn(
-        "inline-flex size-5 items-center justify-center rounded-xs bg-gold font-bold text-caption text-background leading-none",
-        className,
-      )}
-    >
-      千
-    </span>
+    <EntityMark id={ids.brand("senryo")} size={SEAL_MARK_SIZE} variant="symbol" decorative className={cn(className)} />
   );
 }
 
