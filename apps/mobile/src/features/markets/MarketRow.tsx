@@ -10,22 +10,25 @@ import { marketRoute } from "~/lib/constants/routes";
 import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { LeverageBadge } from "./LeverageBadge";
 import { ageLabel, STATUS_LABEL, statusTone } from "./session";
+import type { ArrivingMarket } from "./universe";
 import { useMarketLine } from "./useMarketLine";
-
-const MS_PER_SECOND = 1000n;
+import { useNowSec } from "./useNowSec";
 
 /**
  * One market row (Fomo F09/F12, C22): bare on the page — no card, no divider — with a 48 pt mark (the market's own
- * art: koban / chōgin), name over ticker · session, a sparkline from hourly Chainlink rounds, and the oracle price
- * over its 24 h change with ▲▼ and a sign (never colour alone). The mark is the market's identity, so it shows while
- * the price is still loading. The press plate reaches a little past the text so it reads as a rounded row.
+ * art: koban / chōgin), name with its max-leverage badge over ticker · session, a sparkline from hourly Chainlink
+ * rounds, and the oracle price over its 24 h change with ▲▼ and a sign (never colour alone). The mark is the market's
+ * identity, so it shows while the price is still loading. The press plate reaches a little past the text so it reads
+ * as a rounded row. `onOpen` runs before the push (Search remembers what was opened).
  */
-export function EngineMarketRow({ marketId }: { marketId: number }) {
+export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen?: () => void }) {
   const network = useNetwork();
   const { color } = useTheme();
   const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
   const reading = useMarketLine(marketId, meta?.symbol ?? "");
+  const now = useNowSec();
   const mark = ids.engineMarket(network.chainId, marketId);
   if (reading.status === "unknown" || reading.status === "failed") {
     return (
@@ -44,23 +47,27 @@ export function EngineMarketRow({ marketId }: { marketId: number }) {
   const line = reading.value;
   const change = line.change24hBps;
   const tint = change === undefined ? color.inkMuted : change >= 0n ? color.up : color.down;
-  const age = ageLabel(line.updatedAt, BigInt(Date.now()) / MS_PER_SECOND);
+  const age = ageLabel(line.updatedAt, now);
   const changeText = change === undefined ? "24h —" : `${arrow(change)} ${signedPct(change)}`;
   return (
     <Pressable
       onPress={() => {
         fire("tick");
+        onOpen?.();
         router.push(marketRoute(line.symbol));
       }}
       accessibilityRole="button"
-      accessibilityLabel={`${line.name}, Senryo, ${STATUS_LABEL[line.status]}, price ${price18(line.price18, priceDecimalsOf(marketId))} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}
+      accessibilityLabel={`${line.name}, Senryo, ${line.maxLeverageX > 0 ? `up to ${line.maxLeverageX} times leverage, ` : ""}${STATUS_LABEL[line.status]}, price ${price18(line.price18, priceDecimalsOf(marketId))} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}
       style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.card } : null]}
     >
       <EntityMark id={mark} size={SIZE.markDetail} decorative />
       <View style={styles.name}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
-          {line.name}
-        </Text>
+        <View style={styles.titleLine}>
+          <Text style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]} numberOfLines={1}>
+            {line.name}
+          </Text>
+          <LeverageBadge x={line.maxLeverageX} />
+        </View>
         <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
           {line.symbol} · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text>
         </Text>
@@ -74,28 +81,23 @@ export function EngineMarketRow({ marketId }: { marketId: number }) {
   );
 }
 
-export interface UpcomingMarket {
-  /** What the row is called: a ticker ("BTC", "NVDA") or the pair as traded ("EUR/USD"). */
-  symbol: string;
-  name: string;
-  venue: "Perpl" | "Senryo";
-  note: string;
-  /** Canonical identity (`ids`): a Perpl market by its mainnet id, an FX pair by pair, an equity by its company. */
-  mark: string;
-}
-
-/** A market that isn't live yet: its mark, name and why, never a price (plan §2.5: no fabricated numbers). */
-export function UpcomingMarketRow({ market }: { market: UpcomingMarket }) {
+/**
+ * A market that isn't tradeable here yet: its real mark and name, and the one short reason at the right — never a
+ * price (plan §2.5: no fabricated numbers). Dimmed, and not a button: there is nothing to open.
+ */
+export function ArrivingMarketRow({ market }: { market: ArrivingMarket }) {
   const { color } = useTheme();
   return (
     <View
       accessible
-      accessibilityLabel={`${market.name}, ${market.venue}, ${market.note}`}
+      accessibilityLabel={`${market.name}, ${market.venue}, not tradeable yet: ${market.note}`}
       style={[styles.row, { opacity: DISABLED_OPACITY }]}
     >
       <EntityMark id={market.mark} size={SIZE.markDetail} label={market.symbol} decorative />
       <View style={styles.name}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{market.symbol}</Text>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
+          {market.symbol}
+        </Text>
         <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
           {market.name} · {market.venue}
         </Text>
@@ -117,5 +119,7 @@ const styles = StyleSheet.create({
     borderRadius: BUTTON.radius.md,
   },
   name: { flex: 1, gap: SPACE.xxs },
+  titleLine: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  shrink: { flexShrink: 1 },
   price: { alignItems: "flex-end", gap: SPACE.xxs, minWidth: SIZE.sparklineWidth + SPACE.lg },
 });

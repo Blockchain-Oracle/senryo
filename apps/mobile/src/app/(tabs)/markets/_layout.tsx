@@ -1,24 +1,28 @@
 import { Stack } from "expo-router";
 import { TabStack } from "~/components/shell/TabStack";
 
+/** Sheets on this stack are transparent modals that draw their own scrim and panel (the one-sheet pattern). */
+const sheet = {
+  presentation: "transparentModal",
+  animation: "none",
+  headerShown: false,
+  contentStyle: { backgroundColor: "transparent" },
+} as const;
+
 /**
- * The Markets stack: list → market detail (page push) → the order ticket, a full-height transaction sheet that draws
- * its own scrim over market detail (transparent modal; the dock hides while it is focused). Dismissing it restores
- * market detail with the draft kept per (mode, market) — FT112.
+ * The Markets stack: list → search (page push, F31) and market detail (page push, F32) → the order ticket, a
+ * full-height transaction sheet that draws its own scrim over market detail (transparent modal; the dock hides while
+ * it is focused), and the price-alert editor, a compact sheet over it. Search and market detail draw their own bar
+ * (the market's identity sits in it), so the native header is off for them. Dismissing the ticket restores market
+ * detail with the draft kept per (mode, market) — FT112.
  */
 export default function Layout() {
   return (
     <TabStack>
-      <Stack.Screen name="[market]/index" options={{ title: "" }} />
-      <Stack.Screen
-        name="[market]/ticket"
-        options={{
-          presentation: "transparentModal",
-          animation: "none",
-          headerShown: false,
-          contentStyle: { backgroundColor: "transparent" },
-        }}
-      />
+      <Stack.Screen name="search" options={{ headerShown: false }} />
+      <Stack.Screen name="[market]/index" options={{ headerShown: false }} />
+      <Stack.Screen name="[market]/ticket" options={sheet} />
+      <Stack.Screen name="[market]/alert" options={sheet} />
     </TabStack>
   );
 }

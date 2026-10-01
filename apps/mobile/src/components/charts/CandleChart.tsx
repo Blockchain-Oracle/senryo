@@ -1,4 +1,12 @@
-import { useFont } from "@shopify/react-native-skia";
+import {
+  DashPathEffect,
+  RoundedRect,
+  type SkFont,
+  Line as SkiaLine,
+  Text as SkiaText,
+  useFont,
+  vec,
+} from "@shopify/react-native-skia";
 import { useMemo } from "react";
 import { View } from "react-native";
 import { Candlestick, type CandlestickOptionsFn, CartesianChart } from "victory-native";
@@ -24,21 +32,39 @@ export interface ChartCandle {
   close: bigint;
 }
 
+/** The current price to mark on the chart: its value (same base units as the candles) and the text for its label. */
+export interface LastPrice {
+  value: bigint;
+  label: string;
+}
+
 /**
  * RN port of 21st Candle Chart #22250: victory-native XL `Candlestick` in the token colours, price axis on the right in
  * Inter (theme CHART_FONT), time ticks below. Candles are indexed Chainlink rounds (D-020, D-163: no fabricated ticks — gaps
  * stay gaps). `style` applies the saved candle settings (FT106): body on/off, the colour pair, colour by previous close.
+ * `last` draws the current-price line (Fomo F32): a dotted rule across the plot with a filled label on the price axis,
+ * green when the price is at or above the newest candle's open and red below it; the price scale widens to keep it in
+ * view. `axisDecimals`, `axisPrefix` and `formatTime` word the two axes (an FX pair needs five decimals; a year needs
+ * dates).
  */
 export function CandleChart({
   candles,
   decimals,
   style,
   height = SIZE.chartCandles,
+  last,
+  axisDecimals = 0,
+  axisPrefix = "",
+  formatTime = clockTime,
 }: {
   candles: ChartCandle[];
   decimals: number;
   style?: CandleStyle;
   height?: number;
+  last?: LastPrice;
+  axisDecimals?: number;
+  axisPrefix?: string;
+  formatTime?: (ms: number) => string;
 }) {
   const { color } = useTheme();
   const up = style?.palette === "cyanRose" ? color.chart3 : color.chartUp;
@@ -55,6 +81,18 @@ export function CandleChart({
       })),
     [candles, decimals],
   );
+  const lastAt = last ? toPlot(last.value, decimals) : undefined;
+  // The price scale spans the candles and the current price, so its line is never drawn outside the plot.
+  const domain = useMemo(() => {
+    if (lastAt === undefined) return undefined;
+    let lo = lastAt;
+    let hi = lastAt;
+    for (const c of data) {
+      lo = Math.min(lo, c.low);
+      hi = Math.max(hi, c.high);
+    }
+    return { y: [lo, hi] as [number, number] };
+  }, [data, lastAt]);
   // Colour by previous close compares each close with the preceding candle's (the first falls back to open/close).
   const options: CandlestickOptionsFn | undefined = style
     ? (c) => {
@@ -66,20 +104,28 @@ export function CandleChart({
       }
     : undefined;
   if (candles.length < CHART.minPoints) return null;
+  const newest = data[data.length - 1];
+  const rising = lastAt !== undefined && newest !== undefined && lastAt >= newest.open;
+  const lastTone = rising ? up : down;
   return (
-    <View style={{ height }} accessible accessibilityLabel="Price candles">
+    <View
+      style={{ height }}
+      accessible
+      accessibilityLabel={last ? `Price candles, current price ${last.label}` : "Price candles"}
+    >
       <CartesianChart
         data={data}
         xKey="t"
         yKeys={["open", "high", "low", "close"]}
         padding={{ left: CHART.padLeft, right: CHART.padRight }}
         domainPadding={{ top: CHART.padTop, bottom: CHART.padTop, left: CHART.padLeft, right: CHART.padRight }}
+        {...(domain ? { domain } : {})}
         xAxis={{
           font,
           tickCount: CHART.timeTicks,
           labelColor: color.inkMuted,
           lineColor: color.transparent,
-          formatXLabel: (ms) => clockTime(ms),
+          formatXLabel: (ms) => formatTime(ms),
         }}
         yAxis={[
           {
@@ -89,23 +135,81 @@ export function CandleChart({
             axisSide: "right",
             labelColor: color.inkMuted,
             lineColor: color.hairline,
-            formatYLabel: (v) => v.toLocaleString("en-US", { maximumFractionDigits: 0 }),
+            formatYLabel: (v) =>
+              `${axisPrefix}${v.toLocaleString("en-US", { minimumFractionDigits: axisDecimals, maximumFractionDigits: axisDecimals })}`,
           },
         ]}
         frame={{ lineColor: color.transparent }}
+        renderOutside={({ chartBounds, yScale, canvasSize }) =>
+          last && lastAt !== undefined && font ? (
+            <LastLabel
+              text={last.label}
+              font={font}
+              y={yScale(lastAt)}
+              left={chartBounds.right}
+              canvasWidth={canvasSize.width}
+              fill={lastTone}
+              ink={rising ? color.upForeground : color.downForeground}
+            />
+          ) : null
+        }
       >
-        {({ points, chartBounds }) => (
-          <Candlestick
-            openPoints={points.open}
-            highPoints={points.high}
-            lowPoints={points.low}
-            closePoints={points.close}
-            chartBounds={chartBounds}
-            candleColors={{ positive: up, negative: down, neutral: color.chartNeutral }}
-            {...(options ? { candleOptions: options } : {})}
-          />
+        {({ points, chartBounds, yScale }) => (
+          <>
+            <Candlestick
+              openPoints={points.open}
+              highPoints={points.high}
+              lowPoints={points.low}
+              closePoints={points.close}
+              chartBounds={chartBounds}
+              candleColors={{ positive: up, negative: down, neutral: color.chartNeutral }}
+              {...(options ? { candleOptions: options } : {})}
+            />
+            {lastAt !== undefined ? (
+              <SkiaLine
+                p1={vec(chartBounds.left, yScale(lastAt))}
+                p2={vec(chartBounds.right, yScale(lastAt))}
+                color={lastTone}
+                strokeWidth={CHART.lastStroke}
+              >
+                <DashPathEffect intervals={[CHART.lastDash, CHART.lastGap]} />
+              </SkiaLine>
+            ) : null}
+          </>
         )}
       </CartesianChart>
     </View>
+  );
+}
+
+/** The current price as a filled label on the price axis, centred on its line and kept inside the canvas. */
+function LastLabel({
+  text,
+  font,
+  y,
+  left,
+  canvasWidth,
+  fill,
+  ink,
+}: {
+  text: string;
+  font: SkFont;
+  y: number;
+  left: number;
+  canvasWidth: number;
+  fill: string;
+  ink: string;
+}) {
+  const metrics = font.getMetrics();
+  const textWidth = font.measureText(text).width;
+  const width = textWidth + 2 * CHART.lastPadX;
+  const plateHeight = metrics.descent - metrics.ascent + 2 * CHART.lastPadY;
+  const x = Math.max(0, Math.min(left, canvasWidth - width));
+  const top = y - plateHeight / 2;
+  return (
+    <>
+      <RoundedRect x={x} y={top} width={width} height={plateHeight} r={CHART.lastRadius} color={fill} />
+      <SkiaText x={x + CHART.lastPadX} y={top + CHART.lastPadY - metrics.ascent} text={text} font={font} color={ink} />
+    </>
   );
 }

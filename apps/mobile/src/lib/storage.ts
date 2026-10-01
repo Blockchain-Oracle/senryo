@@ -24,4 +24,6 @@ export const STORAGE_KEYS = {
   network: "senryo.network.v1",
   /** FT106: the ticket chart's candle style (body, colour pair, colour by previous close) — saved on "Save" only. */
   candles: "senryo.candles.v1",
+  /** J3 Markets: what the Markets tab keeps on this phone, per network — starred markets and recent searches. */
+  markets: "senryo.markets.v1",
 } as const;

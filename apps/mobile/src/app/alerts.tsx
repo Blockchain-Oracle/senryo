@@ -1,7 +1,6 @@
-import { ShellScreen } from "~/components/shell/ShellScreen";
+import { AlertsScreen } from "~/features/markets/AlertsScreen";
 
-export default function AlertsScreen() {
-  return (
-    <ShellScreen title="Alerts" why="No alerts" detail="Price alerts and liquidation warnings you set appear here." />
-  );
+/** `/alerts` — the account's price alerts on the selected network (J3). */
+export default function Alerts() {
+  return <AlertsScreen />;
 }
