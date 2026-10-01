@@ -4,6 +4,7 @@ import {
   ANDROID_BUILD_ARCHS,
   ANDROID_MIN_SDK,
   APP,
+  APPLE_TEAM_ID,
   ASSOCIATED_DOMAINS,
   EAS,
   FACE_ID_PERMISSION,
@@ -30,6 +31,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   backgroundColor: DARK.background,
   ios: {
     bundleIdentifier: APP.bundleId,
+    // Without a team, a local build identifies itself as FAKETEAMID.<bundle id>: the association file can't match it,
+    // so passkeys fail with "not linked to senryo.xyz" and the Keychain is unavailable.
+    appleTeamId: APPLE_TEAM_ID,
     supportsTablet: false,
     associatedDomains: [...ASSOCIATED_DOMAINS],
     config: { usesNonExemptEncryption: false },

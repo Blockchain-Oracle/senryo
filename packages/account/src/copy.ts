@@ -44,8 +44,8 @@ export function authFailureCopy(kind: AuthFailure, surface: Surface): Copy {
       };
     case "bad-configuration":
       return {
-        title: "This build isn't linked to senryo.xyz yet",
-        body: "The app couldn't reach its passkey association. Use the web app meanwhile — your account is the same there.",
+        title: "Account setup unavailable",
+        body: "This app couldn't connect to Senryo's account setup. Continue at senryo.xyz with the same account.",
       };
     case "not-supported":
       return {

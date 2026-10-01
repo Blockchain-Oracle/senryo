@@ -1,7 +1,8 @@
 /**
  * AccountProvider (native) — one `AccountClient` for the app. A returning user renders from the ungated hint with no
  * prompt (F02); the first signing action unlocks with one biometric read. Lifecycle (spec session-policy §2): AppState
- * `background` locks (zeroes the key); `inactive` raises the privacy plate over the app switcher snapshot.
+ * `background` locks (zeroes the key); `inactive` raises the privacy plate over the app switcher snapshot — except
+ * under a system sheet the app raised itself.
  */
 import {
   type AccountClient,
@@ -23,6 +24,7 @@ import { clearApiSession } from "./api";
 import { pullPrefs, pushPrefs } from "./remote";
 import { createNativeAccountClient } from "./runtime";
 import { loadSettings, saveSettings } from "./settings";
+import { systemPromptUp } from "./system-prompt";
 
 export interface AccountContextValue {
   ready: boolean;
@@ -69,7 +71,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         setReady(true);
       });
     const sub = AppState.addEventListener("change", (state) => {
-      setObscured(state !== "active");
+      // `inactive` under a sheet the app raised itself (passkey, Face ID) is not "away": no plate behind a prompt.
+      setObscured(state === "background" || (state === "inactive" && !systemPromptUp()));
       // Backgrounded: end the signing session now (Mera: "end the session when the app's session expires"); the
       // ticket and the portfolio survive, the next trade asks for Face ID once.
       if (state === "background") client.session.lock("background");
