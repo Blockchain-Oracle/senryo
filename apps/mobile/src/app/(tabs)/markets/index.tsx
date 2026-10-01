@@ -1,4 +1,5 @@
-import { engineMarketsOn } from "@senryo/config";
+import { type ChainId, ENGINE_MARKETS, engineMarketsOn, MAINNET_CHAIN_ID } from "@senryo/config";
+import { entity, ids, PERPL_MARKETS, perplMarketId } from "@senryo/identity";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { ChipRow } from "~/components/kit/ChipRow";
@@ -21,14 +22,47 @@ const FILTERS = [
 ] as const;
 type Filter = (typeof FILTERS)[number]["value"];
 
-/** Markets that aren't live yet — names and why only (Perpl crypto lands in S7; equities need a live feed, D-220). */
-const UPCOMING: ReadonlyArray<UpcomingMarket & { assetClass: Exclude<Filter, "all" | "commodities"> }> = [
-  { symbol: "BTC", name: "Bitcoin", venue: "Perpl", note: "Mainnet · arriving next", assetClass: "crypto" },
-  { symbol: "ETH", name: "Ether", venue: "Perpl", note: "Mainnet · arriving next", assetClass: "crypto" },
-  { symbol: "MON", name: "Monad", venue: "Perpl", note: "Mainnet · arriving next", assetClass: "crypto" },
-  { symbol: "EUR", name: "Euro", venue: "Senryo", note: "Listing on practice after the timelock", assetClass: "fx" },
-  { symbol: "NVDA", name: "Nvidia", venue: "Senryo", note: "Waits for a live price feed", assetClass: "equities" },
-];
+type UpcomingClass = Exclude<Filter, "all" | "commodities">;
+const FX_QUOTE = "USD";
+
+/**
+ * Markets that aren't live on this network yet — identity and why, never a price (plan §2.5). Crypto: every market
+ * Perpl lists on mainnet (S7 brings them onto this ticket). FX: the engine's pairs until they are listed here.
+ * Equities wait for a live price feed (D-220).
+ */
+function upcomingMarkets(chainId: ChainId): ReadonlyArray<UpcomingMarket & { assetClass: UpcomingClass }> {
+  const listed = engineMarketsOn(chainId);
+  const crypto = Object.keys(PERPL_MARKETS[MAINNET_CHAIN_ID] ?? {}).map((symbol) => {
+    const mark = perplMarketId(MAINNET_CHAIN_ID, symbol) ?? ids.equity(symbol);
+    return {
+      symbol,
+      name: entity(mark)?.name ?? symbol,
+      venue: "Perpl" as const,
+      note: "Mainnet · arriving next",
+      assetClass: "crypto" as const,
+      mark,
+    };
+  });
+  const fx = ENGINE_MARKETS.filter((m) => m.category === "fx" && !listed.some((l) => l.id === m.id)).map((m) => ({
+    symbol: `${m.symbol}/${FX_QUOTE}`,
+    name: m.name,
+    venue: "Senryo" as const,
+    note: chainId === MAINNET_CHAIN_ID ? "Lists with the mainnet launch" : "Listing on practice after the timelock",
+    assetClass: "fx" as const,
+    mark: ids.fxPair(m.symbol, FX_QUOTE),
+  }));
+  const equities = [
+    {
+      symbol: "NVDA",
+      name: "Nvidia",
+      venue: "Senryo" as const,
+      note: "Waits for a live price feed",
+      assetClass: "equities" as const,
+      mark: ids.equity("NVDA"),
+    },
+  ];
+  return [...crypto, ...fx, ...equities];
+}
 
 /**
  * Markets tab root (S1b.7 shell; J3 rebuilds the list in S1b.9): the title and mode stay in the fixed bar and the
@@ -69,9 +103,7 @@ function MarketsList({ filter, onShowAll }: { filter: Filter; onShowAll: () => v
       (filter === "commodities" && m.category === "metal") ||
       (filter === "fx" && m.category === "fx"),
   );
-  const upcoming = UPCOMING.filter(
-    (m) => (filter === "all" || m.assetClass === filter) && !listed.some((l) => l.symbol === m.symbol),
-  );
+  const upcoming = upcomingMarkets(network.chainId).filter((m) => filter === "all" || m.assetClass === filter);
   const count = engine.length + upcoming.length;
   return (
     <>
@@ -79,7 +111,7 @@ function MarketsList({ filter, onShowAll }: { filter: Filter; onShowAll: () => v
       {count === 0 ? (
         <EmptyState
           why="Nothing in this category yet"
-          detail="Gold and silver are live first; FX and equities follow when live price feeds are available."
+          detail="Markets appear here as they are listed on this network."
           action={{ label: "Show all markets", onPress: onShowAll }}
         />
       ) : (

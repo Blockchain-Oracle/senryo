@@ -1,5 +1,5 @@
-import { ENGINE_MARKETS, MAINNET_CHAIN_ID } from "@senryo/config";
-import { ids, perplMarketId } from "@senryo/identity";
+import { ENGINE_MARKETS } from "@senryo/config";
+import { ids } from "@senryo/identity";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Sparkline } from "~/components/charts/Sparkline";
@@ -17,7 +17,7 @@ const MS_PER_SECOND = 1000n;
 
 /**
  * One engine watchlist row (21st Market Watchlist #20110): the market's own art (koban / chōgin), name over ticker ·
- * session · max leverage (the venue is the list's own heading, or a badge on the mark when venues mix), sparkline from hourly Chainlink rounds, oracle price with its age, 24 h change with ▲▼ and
+ * session (max leverage is on the detail; the venue is the list's own heading, or a badge on the mark when venues mix), sparkline from hourly Chainlink rounds, oracle price with its age, 24 h change with ▲▼ and
  * a sign (never colour alone). The mark is the market's identity, so it shows while the price is still loading.
  */
 export function EngineMarketRow({ marketId, first }: { marketId: number; first: boolean }) {
@@ -62,8 +62,7 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
           {line.name}
         </Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]} numberOfLines={1}>
-          {line.symbol} · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text> ·{" "}
-          {line.maxLeverageX}×
+          {line.symbol} · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text>
         </Text>
       </View>
       <Sparkline values={line.spark} stroke={tint} />
@@ -78,26 +77,13 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
 }
 
 export interface UpcomingMarket {
+  /** What the row is called: a ticker ("BTC", "NVDA") or the pair as traded ("EUR/USD"). */
   symbol: string;
   name: string;
   venue: "Perpl" | "Senryo";
   note: string;
-}
-
-/** FX tickers as listed ("EURUSD") → base + quote; the pair art is keyed `fx:EURUSD`. */
-const FX_QUOTE = "USD";
-const FX_CODE_LENGTH = 3;
-
-/**
- * The identity of a market that isn't live yet: Perpl markets by their mainnet id (they arrive on mainnet first), FX
- * pairs by pair, anything else by its underlying company (a recorded art gap renders the labelled fallback).
- */
-function upcomingMark(market: UpcomingMarket): string {
-  if (market.venue === "Perpl") return perplMarketId(MAINNET_CHAIN_ID, market.symbol) ?? ids.equity(market.symbol);
-  if (market.symbol.length === FX_CODE_LENGTH * 2 && market.symbol.endsWith(FX_QUOTE)) {
-    return ids.fxPair(market.symbol.slice(0, FX_CODE_LENGTH), FX_QUOTE);
-  }
-  return ids.equity(market.symbol);
+  /** Canonical identity (`ids`): a Perpl market by its mainnet id, an FX pair by pair, an equity by its company. */
+  mark: string;
 }
 
 /** A market that isn't live yet: its mark, name and why, never a price (plan §2.5: no fabricated numbers). */
@@ -113,7 +99,7 @@ export function UpcomingMarketRow({ market, first }: { market: UpcomingMarket; f
         { opacity: DISABLED_OPACITY },
       ]}
     >
-      <EntityMark id={upcomingMark(market)} size={SIZE.markRow} label={market.symbol} decorative />
+      <EntityMark id={market.mark} size={SIZE.markRow} label={market.symbol} decorative />
       <View style={styles.name}>
         <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{market.symbol}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
