@@ -108,6 +108,16 @@ import ArtPumpDisc from "./pump-disc.tsx";
 import ArtNvidiaMonoDark from "./nvidia-monodark.tsx";
 import ArtNvidiaSymbol from "./nvidia-symbol.tsx";
 import ArtNvidiaMonoLight from "./nvidia-monolight.tsx";
+import ArtTeslaMonoDark from "./tesla-monodark.tsx";
+import ArtTeslaSymbol from "./tesla-symbol.tsx";
+import ArtTeslaMonoLight from "./tesla-monolight.tsx";
+import ArtSpacexMonoDark from "./spacex-monodark.tsx";
+import ArtSpacexSymbol from "./spacex-symbol.tsx";
+import ArtSpacexMonoLight from "./spacex-monolight.tsx";
+import ArtIsharesSymbol from "./ishares-symbol.tsx";
+import ArtIsharesMonoLight from "./ishares-monolight.tsx";
+import ArtOilBarrelSymbol from "./oil-barrel-symbol.tsx";
+import ArtOilBarrelMonoLight from "./oil-barrel-monolight.tsx";
 import ArtLibMonadMonoLight from "./lib-monad-monolight.tsx";
 import ArtLibMonadMonoDark from "./lib-monad-monodark.tsx";
 import ArtLibBitcoinSymbol from "./lib-bitcoin-symbol.tsx";
@@ -207,6 +217,10 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "venice": { disc: ArtVeniceDisc },
   "pump": { disc: ArtPumpDisc },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
+  "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
+  "spacex": { monoDark: ArtSpacexMonoDark, symbol: ArtSpacexSymbol, monoLight: ArtSpacexMonoLight },
+  "ishares": { symbol: ArtIsharesSymbol, monoLight: ArtIsharesMonoLight },
+  "oil-barrel": { symbol: ArtOilBarrelSymbol, monoLight: ArtOilBarrelMonoLight },
   "lib-monad": { monoLight: ArtLibMonadMonoLight, monoDark: ArtLibMonadMonoDark },
   "lib-bitcoin": { symbol: ArtLibBitcoinSymbol, monoLight: ArtLibBitcoinMonoLight, monoDark: ArtLibBitcoinMonoDark },
   "lib-ethereum": { monoLight: ArtLibEthereumMonoLight, monoDark: ArtLibEthereumMonoDark },

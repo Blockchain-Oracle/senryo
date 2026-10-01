@@ -9,10 +9,21 @@
  * - Hyperliquid's app icon per listed coin (app.hyperliquid.xyz/coins/<COIN>.svg): the venue's own vector for assets
  *   too new for the libraries (Lighter, Venice, Pump).
  * - Simple Icons (github.com/simple-icons/simple-icons, CC0-1.0): one-path company marks plus the brand hex, for the
- *   underlying companies of equity markets.
+ *   underlying companies of equity markets (Nvidia, Tesla, SpaceX).
  * - Monad's token list (github.com/monad-crypto/token-list, pinned by commit in `MONAD_TOKEN_LIST`): the logo each
  *   issuer submitted with its token (`mainnet/<SYMBOL>/logo.svg|png`), for the J11 spot tokens (`SPOT_TOKENS`, itself
  *   generated from that list). Native MON keeps Monad's own first-party mark.
+ * - Wikimedia Commons (commons.wikimedia.org, MediaWiki API `prop=imageinfo&iiprop=url|sha1|extmetadata`): a file whose
+ *   page records it public domain or CC0 (a {{PD-textlogo}} wordmark with {{Trademarked}}), pinned by its version's
+ *   SHA-1, with the page's licence fields read into the record — for fund brands no icon library carries (iShares).
+ * - Google's Material Symbols (github.com/google/material-design-icons, Apache-2.0, pinned by `MATERIAL_COMMIT`, the
+ *   passkey glyph's pin): neutral glyphs for an instrument no owner's mark identifies (crude oil: `oil_barrel`, a drum
+ *   with an oil drop, where Lucide's and Tabler's `barrel` read as a wooden cask).
+ * Researched and not usable (1 Oct 2026), so SPY and QQQ are recorded gaps in src/entities.ts: SPDR and Invesco have
+ * no Simple Icons or Iconify entry (every collection searched), no Commons file and no Wikidata logo (P154); Brandfetch
+ * forbids programmatic download ("Programmatic access to logo images is not permitted"); nvstly/icons has no licence
+ * and ships recoloured redraws; logo aggregators (worldvectorlogo, seeklogo, companieslogo) are uploads with no
+ * owner's grant. Never the xStocks wrapper's art for an equity feed.
  */
 import { SPOT_TOKENS } from "@senryo/config";
 import { spotArtKey } from "../src/ids.ts";
@@ -24,7 +35,10 @@ export type FetchSpec =
   | { from: "web3icons"; group: "tokens" | "networks" | "exchanges"; name: string; take: readonly Web3IconsTake[] }
   | { from: "hyperliquid"; coin: string }
   | { from: "simple-icons"; slug: string }
-  | { from: "monad-token-list"; dir: string; file: string; symbol: string };
+  | { from: "monad-token-list"; dir: string; file: string; symbol: string }
+  /** `file` is the title without "File:"; `sha1` (Commons' own hash of the version) pins one upload. */
+  | { from: "wikimedia-commons"; file: string; sha1: string }
+  | { from: "material-symbols"; name: string; style: "outlined" | "rounded" | "sharp"; filled: boolean };
 
 export interface CatalogEntry {
   /** Artwork key (`Entity.art`, or the `supplement` of a first-party record when prefixed `lib-`). */
@@ -47,6 +61,26 @@ const STANDALONE: readonly CatalogEntry[] = [
   { key: "venice", owner: "Venice", spec: { from: "hyperliquid", coin: "VVV" } },
   { key: "pump", owner: "pump.fun", spec: { from: "hyperliquid", coin: "PUMP" } },
   { key: "nvidia", owner: "NVIDIA Corporation", spec: { from: "simple-icons", slug: "nvidia" } },
+  { key: "tesla", owner: "Tesla, Inc.", spec: { from: "simple-icons", slug: "tesla" } },
+  {
+    key: "spacex",
+    owner: "Space Exploration Technologies Corp. (SpaceX)",
+    spec: { from: "simple-icons", slug: "spacex" },
+  },
+  {
+    key: "ishares",
+    owner: "BlackRock, Inc. (iShares)",
+    spec: {
+      from: "wikimedia-commons",
+      file: "Logo-ishares 2019.svg",
+      sha1: "c88e0c781deb3fb5d02d865e20341caba6cee26a",
+    },
+  },
+  {
+    key: "oil-barrel",
+    owner: "Google — Material Symbols (github.com/google/material-design-icons)",
+    spec: { from: "material-symbols", name: "oil_barrel", style: "rounded", filled: true },
+  },
 ];
 
 /**

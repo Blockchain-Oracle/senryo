@@ -43,7 +43,7 @@ const MARKS_CREDIT =
   "Asset, network, venue and provider logos are their owners' trademarks, shown only to identify them; no " +
   "endorsement is implied. All trademarks shown are the property of Circle Internet Group, Inc. and/or its " +
   "affiliates (USDC), and of their respective owners. ETH diamond: ethereum.org, CC BY 4.0. Flags: Wikimedia " +
-  "Commons, public domain. Passkey icon: Material Symbols by Google, Apache License 2.0.";
+  "Commons, public domain. Passkey and crude-oil icons: Material Symbols by Google, Apache License 2.0.";
 
 /**
  * About & sources (J9): the seal, the version and the mode at the top, bare on the page; then one filled group per

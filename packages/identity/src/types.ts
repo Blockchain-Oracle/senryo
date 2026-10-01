@@ -44,8 +44,9 @@ export type ArtShape = "disc" | "tile" | "free";
 
 /**
  * How the file came to exist: downloaded from the owner, public domain, authored by Senryo, fetched from an openly
- * licensed icon library (web3icons, Simple Icons), or fetched from the venue that lists the instrument (its own icon
- * for that market). The last two are acquired by `scripts/fetch-marks.ts` from `scripts/catalog.ts`, never by hand.
+ * licensed icon library (web3icons, Simple Icons, Material Symbols), or fetched from the venue that lists the instrument
+ * (its own icon for that market). The last two, and public-domain files from Wikimedia Commons, are acquired by
+ * `scripts/fetch-marks.ts` from `scripts/catalog.ts`, never by hand.
  */
 export type Provenance = "first-party" | "public-domain" | "senryo-original" | "open-library" | "venue-metadata";
 

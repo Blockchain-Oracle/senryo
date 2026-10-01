@@ -21,7 +21,8 @@
  */
 import type { ArtSource } from "../types.ts";
 
-const MATERIAL_COMMIT = "bd8cb85bd4bad964fe6918f79665bb40c3a8efef";
+/** google/material-design-icons, pinned; `scripts/fetch-marks.ts` fetches its other glyphs (crude oil) at the same commit. */
+export const MATERIAL_COMMIT = "bd8cb85bd4bad964fe6918f79665bb40c3a8efef";
 
 export const AUTH_ART: readonly ArtSource[] = [
   {
