@@ -31,6 +31,36 @@
       "initCodeHash": "0xdb913963c2a732d7642a6dddc615caabafff8e3d0118d0cc7a31db9afa6d8f2e",
       "startBlock": 66856078
     },
+    "MirrorCAD": {
+      "address": "0x12eA933c1BB0086bE750845a9B2590479C1A84Ec",
+      "indexed": true,
+      "initCodeHash": "0x53dbb4f5429d2958c48cc7fcde3cfbf0b9a57c03e45e66dc9f72296f5ce93cef",
+      "startBlock": 67186517
+    },
+    "MirrorCHF": {
+      "address": "0xcBA9503f66FCc4FB94c48388D906438b3ca78c73",
+      "indexed": true,
+      "initCodeHash": "0x44d9b0b8c9fa42e969d33c035d96f237c428427e4652d380164b41ca92cfb26b",
+      "startBlock": 67186517
+    },
+    "MirrorEUR": {
+      "address": "0x43B8aBD44f7449440ad40D3D78F50410F78006e4",
+      "indexed": true,
+      "initCodeHash": "0x864341e87e427f9e3b767d89c1bd2c9fccf5527f7dff6734d89173ae8f9e2904",
+      "startBlock": 67186517
+    },
+    "MirrorGBP": {
+      "address": "0x1522c08A436b81fFCaB31C1D580977acE9288c6c",
+      "indexed": true,
+      "initCodeHash": "0x6cc987f571948f01f6961531c267cbaa602de7f117a8e78b0d76ccfa0b74d2db",
+      "startBlock": 67186517
+    },
+    "MirrorJPY": {
+      "address": "0x05Eb5fa4Ad197DA61de2bfEdEAD4adf73111615a",
+      "indexed": true,
+      "initCodeHash": "0x75349d8aca42f1b2d4bf25ff3ccf5a5b13de35c3cacf174f823d5b93d938490a",
+      "startBlock": 67186517
+    },
     "MirrorXAG": {
       "address": "0x44C5397b710DCE7f666EFdAb9417DD1D9E13e360",
       "indexed": true,
