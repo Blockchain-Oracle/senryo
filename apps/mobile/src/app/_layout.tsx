@@ -38,6 +38,9 @@ const SHEETS = [
   "network",
   "receive",
   "balance-details",
+  "compose-thesis",
+  "social-actions",
+  "leaderboard-info",
 ];
 
 export default function RootLayout() {
@@ -90,6 +93,7 @@ function RootStack() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="alerts" options={{ headerShown: false }} />
         {SHEETS.map((route) => (
           <Stack.Screen key={route} name={`(sheets)/${route}`} options={sheet} />
         ))}
