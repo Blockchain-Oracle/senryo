@@ -71,6 +71,9 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         const token = options.getToken?.();
         if (!token) throw new ApiError(0, { code: "UNAUTHORIZED", message: "no API session; sign in first" });
         headers.authorization = `Bearer ${token}`;
+      } else if (route.auth === "optional") {
+        const token = options.getToken?.();
+        if (token) headers.authorization = `Bearer ${token}`;
       }
       let body: string | undefined;
       if (route.body) {

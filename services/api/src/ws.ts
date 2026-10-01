@@ -1,16 +1,36 @@
-import { WS_PATH, type WsServerMessage, wsClientMessageSchema, wsServerMessageSchema } from "@senryo/api-client";
+import {
+  feedChannel,
+  WS_PATH,
+  type WsServerMessage,
+  wsClientMessageSchema,
+  wsServerMessageSchema,
+} from "@senryo/api-client";
 import { getAddress, isAddress, type OracleView, readAccountSnapshot, readOracles } from "@senryo/chain";
 import { type ChainId, ENGINE_MARKETS, engineMarketsOn } from "@senryo/config";
 import type { HttpServer } from "@senryo/service-common";
 import type { WebSocket } from "ws";
 import { bucketsOf } from "./buckets.ts";
-import { ACCOUNT_POLL_MS, PRICE_POLL_MS, WS_BACKPRESSURE_BYTES, WS_MAX_SUBSCRIPTIONS } from "./constants.ts";
+import {
+  ACCOUNT_POLL_MS,
+  PRICE_POLL_MS,
+  WS_ABUSE_FACTOR,
+  WS_BACKPRESSURE_BYTES,
+  WS_MAX_SOCKETS_PER_IP,
+  WS_MAX_SUBSCRIPTIONS,
+  WS_MESSAGE_WINDOW_MS,
+  WS_MESSAGES_PER_WINDOW,
+  WS_POLICY_CLOSE,
+} from "./constants.ts";
 import type { ApiContext } from "./context.ts";
+import { FEED_NOTICE_MIN_MS } from "./social/constants.ts";
 
 /**
  * WS hub (specs/services.md §api): `prices:{SYMBOL}` from the oracle (`peek`, pushed on change), `account:{addr}`
- * bucket deltas on finalized account changes (session token required, own address only), `perpl:*` in S7.
- * Under backpressure intermediate ticks are dropped (the next one supersedes them).
+ * bucket deltas on finalized account changes (session token required, own address only), `feed:{chainId}` "New
+ * activity" notices (S12b.4, conflated per network), `perpl:*` in S7.
+ * Under backpressure intermediate ticks are dropped (the next one supersedes them). Caps: WS_MAX_SOCKETS_PER_IP
+ * concurrent sockets per client IP, WS_MAX_SUBSCRIPTIONS per socket, and WS_MESSAGES_PER_WINDOW client messages per
+ * socket per window (refused past it, closed past WS_ABUSE_FACTOR × it).
  */
 
 type Key = string;
@@ -20,28 +40,75 @@ export class WsHub {
   private readonly subs = new Map<Key, Set<WebSocket>>();
   private readonly lastPrice = new Map<Key, string>();
   private readonly lastNonce = new Map<Key, bigint>();
+  private readonly perIp = new Map<string, number>();
+  /** Feed notices waiting out FEED_NOTICE_MIN_MS per network (only the newest id is sent). */
+  private readonly feedPending = new Map<ChainId, { latestId: bigint; timer: ReturnType<typeof setTimeout> }>();
   private timers: ReturnType<typeof setInterval>[] = [];
+  private unsubscribeFeed: (() => void) | undefined;
 
   constructor(private readonly ctx: ApiContext) {}
 
   start(): void {
     this.timers.push(setInterval(() => void this.pushPrices(), PRICE_POLL_MS));
     this.timers.push(setInterval(() => void this.pushAccounts(), ACCOUNT_POLL_MS));
+    this.unsubscribeFeed = this.ctx.social.notifier.on((chainId, latestId) => this.queueFeed(chainId, latestId));
   }
 
   stop(): void {
     for (const t of this.timers) clearInterval(t);
+    for (const pending of this.feedPending.values()) clearTimeout(pending.timer);
+    this.unsubscribeFeed?.();
     for (const set of this.subs.values()) for (const socket of set) socket.close();
   }
 
   register(app: HttpServer): void {
-    app.get(WS_PATH, { websocket: true }, (socket) => {
+    app.get(WS_PATH, { websocket: true }, (socket, request) => {
+      const ip = request.ip;
+      const open = (this.perIp.get(ip) ?? 0) + 1;
+      if (open > WS_MAX_SOCKETS_PER_IP) {
+        this.send(socket, { type: "error", code: "RATE_LIMITED", message: "too many sockets from this address" });
+        socket.close(WS_POLICY_CLOSE, "too many sockets");
+        return;
+      }
+      this.perIp.set(ip, open);
       const mine = new Set<Key>();
-      socket.on("message", (raw) => void this.onMessage(socket, mine, raw.toString()));
+      const budget = { windowStart: Date.now(), count: 0 };
+      socket.on("message", (raw) => {
+        const now = Date.now();
+        if (now - budget.windowStart >= WS_MESSAGE_WINDOW_MS) Object.assign(budget, { windowStart: now, count: 0 });
+        budget.count += 1;
+        if (budget.count > WS_MESSAGES_PER_WINDOW * WS_ABUSE_FACTOR) return socket.close(WS_POLICY_CLOSE, "flooding");
+        if (budget.count > WS_MESSAGES_PER_WINDOW) {
+          return this.send(socket, { type: "error", code: "RATE_LIMITED", message: "too many messages" });
+        }
+        void this.onMessage(socket, mine, raw.toString());
+      });
       socket.on("close", () => {
         for (const key of mine) this.subs.get(key)?.delete(socket);
+        const left = (this.perIp.get(ip) ?? 1) - 1;
+        if (left <= 0) this.perIp.delete(ip);
+        else this.perIp.set(ip, left);
       });
     });
+  }
+
+  /** Conflate "New activity" per network: at most one notice per FEED_NOTICE_MIN_MS, carrying the newest id. */
+  private queueFeed(chainId: ChainId, latestId: bigint): void {
+    const pending = this.feedPending.get(chainId);
+    if (pending) {
+      if (latestId > pending.latestId) pending.latestId = latestId;
+      return;
+    }
+    const timer = setTimeout(() => {
+      const due = this.feedPending.get(chainId);
+      this.feedPending.delete(chainId);
+      if (!due) return;
+      const channel = feedChannel(chainId);
+      for (const socket of this.subs.get(keyOf(chainId, channel)) ?? []) {
+        this.send(socket, { type: "feed", channel, chainId, latestId: due.latestId.toString() });
+      }
+    }, FEED_NOTICE_MIN_MS);
+    this.feedPending.set(chainId, { latestId, timer });
   }
 
   private send(socket: WebSocket, message: WsServerMessage): void {
@@ -80,6 +147,10 @@ export class WsHub {
   }
 
   private async authorize(channel: string, chainId: ChainId, token: string | undefined) {
+    // The feed needs only a served network (it reads the api database, not the chain).
+    if (channel.startsWith("feed:")) {
+      return channel === feedChannel(chainId) && this.ctx.chains.has(chainId) ? undefined : ("NOT_FOUND" as const);
+    }
     const chain = this.ctx.chains.get(chainId);
     if (!chain?.deployed) return "NOT_DEPLOYED" as const;
     const [kind, target] = channel.split(":");

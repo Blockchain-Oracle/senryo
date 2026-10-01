@@ -46,6 +46,17 @@ export const socialKeys = {
     ["social", chainId, "follow", me.toLowerCase(), other.toLowerCase()] as const,
   list: (chainId: ChainId, direction: "followers" | "following", address: Address) =>
     ["social", chainId, direction, address.toLowerCase()] as const,
+  /** S12b.4–8 */
+  feed: (chainId: ChainId, scope: string, market: string | undefined) =>
+    ["social", chainId, "feed", scope, market ?? "all"] as const,
+  thread: (chainId: ChainId, id: string) => ["social", chainId, "thread", id] as const,
+  leaderboard: (chainId: ChainId, period: string, scope: string) =>
+    ["social", chainId, "leaderboard", period, scope] as const,
+  topTrades: (chainId: ChainId) => ["social", chainId, "top-trades"] as const,
+  recommendations: (chainId: ChainId) => ["social", chainId, "recommendations"] as const,
+  search: (chainId: ChainId, q: string, kind: string | undefined) =>
+    ["social", chainId, "search", q.trim().toLowerCase(), kind ?? "all"] as const,
+  relations: (kind: "blocks" | "mutes") => ["social", "relations", kind] as const,
 };
 
 /** Availability of a typed handle. Syntax problems answer locally (no request); the server decides the rest. */

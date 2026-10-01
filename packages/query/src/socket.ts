@@ -1,9 +1,10 @@
 /**
  * The engine socket (`wss://api.<rpId>/v1/ws`, specs/services.md §api): `prices:{SYMBOL}` ticks go to the
  * `PriceStore`; `account:{addr}` (session token) reports a finalized change → the app invalidates that account's
- * queries. One socket per app; reconnects with backoff and re-subscribes; messages are zod-parsed (never trusted raw).
+ * queries; `feed:{chainId}` (S12b.4) carries "New activity" while at least one screen listens (`onFeed`).
+ * One socket per app; reconnects with backoff and re-subscribes; messages are zod-parsed (never trusted raw).
  */
-import { WS_PATH, type WsClientMessage, wsServerMessageSchema } from "@senryo/api-client";
+import { feedChannel, WS_PATH, type WsClientMessage, wsServerMessageSchema } from "@senryo/api-client";
 import { type ChainId, engineMarketsOn } from "@senryo/config";
 import type { Address } from "@senryo/core";
 import { SOCKET_BACKOFF_MS, SOCKET_PING_MS } from "./constants.ts";
@@ -30,8 +31,23 @@ export class EngineSocket {
   private ping: ReturnType<typeof setInterval> | undefined;
   private retry: ReturnType<typeof setTimeout> | undefined;
   private account: { address: Address; token: string } | undefined;
+  private readonly feedListeners = new Set<(latestId: string) => void>();
 
   constructor(private readonly opts: EngineSocketOptions) {}
+
+  /** Listen for "New activity" on this network's feed; the channel is subscribed only while someone listens. */
+  onFeed(listener: (latestId: string) => void): () => void {
+    this.feedListeners.add(listener);
+    if (this.feedListeners.size === 1) this.subscribeFeed("subscribe");
+    return () => {
+      this.feedListeners.delete(listener);
+      if (this.feedListeners.size === 0) this.subscribeFeed("unsubscribe");
+    };
+  }
+
+  private subscribeFeed(op: "subscribe" | "unsubscribe"): void {
+    this.send({ op, channel: feedChannel(this.opts.chainId), chainId: this.opts.chainId });
+  }
 
   start(): void {
     if (!this.stopped) return;
@@ -65,6 +81,7 @@ export class EngineSocket {
         this.send({ op: "subscribe", channel: `prices:${m.symbol}`, chainId: this.opts.chainId });
       }
       if (this.account) this.subscribeAccount(this.account);
+      if (this.feedListeners.size > 0) this.subscribeFeed("subscribe");
       this.ping = setInterval(() => this.send({ op: "ping" }), SOCKET_PING_MS);
     };
     socket.onmessage = (event) => this.onMessage(String(event.data));
@@ -115,6 +132,8 @@ export class EngineSocket {
       });
     } else if (msg.type === "account" && msg.chainId === this.opts.chainId) {
       this.opts.onAccount?.(msg.address, msg.finalizedBlock);
+    } else if (msg.type === "feed" && msg.chainId === this.opts.chainId) {
+      for (const listener of this.feedListeners) listener(msg.latestId);
     }
   }
 }

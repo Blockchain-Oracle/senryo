@@ -12,14 +12,7 @@ import type { ChainId } from "@senryo/config";
 import { type Db, HTTP_STATUS, HttpError, MS_PER_SECOND, SECONDS_PER_DAY, type Tx } from "@senryo/service-common";
 import { HANDLE_CHANGES_PER_WINDOW, HANDLE_UNIQUE_INDEX, LOCK_NS, PG_UNIQUE_VIOLATION } from "./constants.ts";
 import { nameIsReserved, screenHandle, textHasBlockedWord } from "./moderation.ts";
-import {
-  advisoryLock,
-  listedColumn,
-  type ProfileRow,
-  pgErrorOf,
-  publicTradesColumn,
-  rethrowDeadlock,
-} from "./shared.ts";
+import { advisoryLock, type ProfileRow, pgErrorOf, publicTradesColumn, rethrowDeadlock, visibleOn } from "./shared.ts";
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
@@ -143,16 +136,41 @@ export async function saveProfile(db: Db, address: string, update: ProfileUpdate
             PROFILE_VISIBILITY_DEFAULTS.publicTradesMainnet),
         handle_changed_at: changing ? new Date() : (current?.handle_changed_at ?? null),
       };
+      const now = new Date();
+      // Sharing restarts its clock whenever it turns on: the feed never publishes a fill from before that moment.
+      const since = (on: boolean, was: boolean | undefined, at: Date | null | undefined) =>
+        on ? (was ? (at ?? now) : now) : null;
+      const sharing = {
+        ...row,
+        public_trades_practice_since: since(
+          row.public_trades_practice,
+          current?.public_trades_practice,
+          current?.public_trades_practice_since,
+        ),
+        public_trades_mainnet_since: since(
+          row.public_trades_mainnet,
+          current?.public_trades_mainnet,
+          current?.public_trades_mainnet_since,
+        ),
+      };
       const [saved] = await tx<ProfileRow[]>`
-        INSERT INTO profiles ${tx(row)}
+        INSERT INTO profiles ${tx(sharing)}
         ON CONFLICT (address) DO UPDATE SET handle = EXCLUDED.handle, display_name = EXCLUDED.display_name,
           bio = EXCLUDED.bio, avatar = EXCLUDED.avatar, listed_practice = EXCLUDED.listed_practice,
           listed_mainnet = EXCLUDED.listed_mainnet, public_trades_practice = EXCLUDED.public_trades_practice,
           public_trades_mainnet = EXCLUDED.public_trades_mainnet, handle_changed_at = EXCLUDED.handle_changed_at,
-          updated_at = now()
+          public_trades_practice_since = EXCLUDED.public_trades_practice_since,
+          public_trades_mainnet_since = EXCLUDED.public_trades_mainnet_since, updated_at = now()
         RETURNING *`;
       if (!saved) throw new HttpError(HTTP_STATUS.internal, "INTERNAL", "profile not stored");
-      return saved;
+      if (current) return saved;
+      // A new profile for an address an operator already hid (e.g. after "delete my data") stays hidden.
+      const [rehidden] = await tx<ProfileRow[]>`
+        UPDATE profiles SET hidden = true
+         WHERE address = ${address} AND EXISTS (SELECT 1 FROM moderation_reviews r
+                WHERE r.target_kind = 'profile' AND r.target_id = ${address} AND r.decision = 'hide')
+        RETURNING *`;
+      return rehidden ?? saved;
     });
   } catch (error) {
     const pg = pgErrorOf(error);
@@ -170,23 +188,22 @@ export async function readProfile(db: Db, address: string): Promise<ProfileRow |
 }
 
 /**
- * A profile as the public sees it on `chainId` — or undefined when there is none OR it isn't listed there, so the two
- * are indistinguishable. `@handle` therefore resolves on mainnet only for `listed_mainnet` profiles.
+ * A profile as the public sees it on `chainId` — or undefined when there is none OR it isn't listed there (or an
+ * operator hid it), so they are indistinguishable. `@handle` therefore resolves on mainnet only for `listed_mainnet` profiles.
  */
 export async function publicProfile(db: Db, chainId: ChainId, lookup: string): Promise<PublicProfile | undefined> {
   const byAddress = ADDRESS_RE.test(lookup);
   const key = byAddress ? lookup.toLowerCase() : normalizeHandle(lookup);
   if (!byAddress && handleSyntaxIssue(key)) return undefined;
-  const listed = db(listedColumn(chainId));
   const where = byAddress ? db`p.address = ${key}` : db`lower(p.handle) = ${key}`;
   const [row] = await db<(ProfileRow & { followers: number; following: number })[]>`
     SELECT p.*,
       (SELECT count(*)::int FROM follows f JOIN profiles q ON q.address = f.follower
-        WHERE f.followee = p.address AND q.${listed}) AS followers,
+        WHERE f.followee = p.address AND ${visibleOn(db, "q", chainId)}) AS followers,
       (SELECT count(*)::int FROM follows f JOIN profiles q ON q.address = f.followee
-        WHERE f.follower = p.address AND q.${listed}) AS following
+        WHERE f.follower = p.address AND ${visibleOn(db, "q", chainId)}) AS following
       FROM profiles p
-     WHERE ${where} AND p.${listed}`;
+     WHERE ${where} AND ${visibleOn(db, "p", chainId)}`;
   if (!row) return undefined;
   return {
     chainId,
