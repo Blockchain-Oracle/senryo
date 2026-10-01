@@ -88,6 +88,7 @@ function RootStack() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
+        <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
         {SHEETS.map((route) => (
           <Stack.Screen key={route} name={`(sheets)/${route}`} options={sheet} />
         ))}

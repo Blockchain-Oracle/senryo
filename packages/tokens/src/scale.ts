@@ -48,6 +48,10 @@ export const TYPE = {
   displayPrice: { size: 40, lineHeight: 44, tracking: DISPLAY_TRACKING, weight: 600, font: "display", numeric: true },
   pageTitle: { size: 32, lineHeight: 38, tracking: DISPLAY_TRACKING, weight: 600, font: "display", numeric: false },
   sheetTitle: { size: 24, lineHeight: 28, tracking: 0, weight: 600, font: "sans", numeric: false },
+  /** A full-page step's title (Fomo F04/F06 "Create your username"): between the sheet title and the page title. */
+  stepTitle: { size: 28, lineHeight: 34, tracking: DISPLAY_TRACKING, weight: 600, font: "sans", numeric: false },
+  /** Text typed into a field, and its placeholder (F04). */
+  field: { size: 17, lineHeight: 22, tracking: 0, weight: 500, font: "sans", numeric: false },
   sectionTitle: { size: 20, lineHeight: 24, tracking: 0, weight: 600, font: "sans", numeric: false },
   row: { size: 16, lineHeight: 20, tracking: 0, weight: 500, font: "sans", numeric: false },
   rowStrong: { size: 16, lineHeight: 20, tracking: 0, weight: 600, font: "sans", numeric: false },

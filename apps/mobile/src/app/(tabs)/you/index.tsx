@@ -50,6 +50,8 @@ const SECTIONS: { label: string; rows: { title: string; detail: string; href: Hr
       { title: "Help", detail: "FAQ and contact", href: ROUTES.accountHelp },
       { title: "Status", detail: "RPC, oracle, indexer, services", href: ROUTES.status },
       { title: "Delete my data", detail: "This device and encrypted preferences", href: ROUTES.accountDeleteData },
+      { title: "Terms of use", detail: "What Senryo is and what you take on", href: ROUTES.accountTerms as Href },
+      { title: "Privacy", detail: "What we keep and how to remove it", href: ROUTES.accountPrivacy as Href },
     ],
   },
 ];

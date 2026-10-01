@@ -35,6 +35,8 @@ export const ROUTES = {
   accountHelp: "/account/help",
   accountDeleteData: "/account/delete-data",
   accountMode: "/account/mode",
+  accountTerms: "/account/terms",
+  accountPrivacy: "/account/privacy",
   status: "/status",
   addMoney: "/add-money",
   /** The fan's Receive: compact QR sheet over the page under the fan (P21, FT057). */
@@ -48,6 +50,9 @@ export const ROUTES = {
   cardReveal: "/card-reveal",
   accountRequired: "/account-required",
 } as const;
+
+/** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
+export const setupRoute = (step: string) => `/setup/${step}` as const;
 
 export type TicketSide = "long" | "short";
 

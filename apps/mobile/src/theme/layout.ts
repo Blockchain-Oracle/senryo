@@ -20,6 +20,8 @@ export const SIZE = {
   buttonHeightSecondary: 48,
   buttonHeightSm: 44,
   inputHeight: 52,
+  /** The one large field of a full-page step (Fomo F04/F07: 66 pt, 16 pt corners). */
+  fieldHeight: 64,
   /** Chips are 32 visually (34 in a category row); their hit area stays ≥ 44 (hitSlop). */
   chipHeight: 32,
   chipRowHeight: 34,

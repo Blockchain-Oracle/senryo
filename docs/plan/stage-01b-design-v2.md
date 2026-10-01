@@ -207,6 +207,24 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - **Checked on the simulator** (iPhone 17, iOS 26.5, dark): welcome, create account with a real passkey, Home, mode
     selector, fan, add money, Markets, market detail, ticket, risk explainer, receipt, position, Card, Social, You.
     Not checked: light theme, large text, VoiceOver, Reduce Motion, Android, the auth failure states on device.
+- **S1b.13, the first-run setup after the passkey (review R03, second half) — built 1 Oct.** Creating an account now
+  continues into `app/setup`: handle → follow → voucher → terms → done → Home, each a page in the Fomo F04–F07 anatomy
+  (`features/setup/SetupScreen.tsx`, `SetupField.tsx`, `FollowRow.tsx`).
+  - Progress is versioned, bound to the account's address and resumable (`features/setup/progress.ts`; the launch gate
+    in `app/index.tsx` reopens the owed step). An account that signs in on this phone skips it.
+  - Handle: a suggestion derived from the address, checked as typed against the live API (`useHandleAvailability`),
+    claimed with `useSaveProfile` over a SIWE session (`lib/account/use-session-runner.ts`).
+  - Follow: `useFollowRecommendations`, none preselected; an empty board says so. Voucher: `useVoucher` signs
+    `Voucher` and follows the relay to finalized (practice pays P$12 per code). Terms: three plain points and one
+    checkbox; the acknowledged `LEGAL_VERSION` is stored per account.
+  - **The Terms of use and the Privacy notice are a draft the lead wrote** (`features/legal/content.ts`, in-app pages
+    `/account/terms`, `/account/privacy`; `senryo.xyz/terms` does not exist yet). They describe what the product does
+    today and must be reviewed by the user before mainnet.
+  - Checked on the simulator: all five steps; a real handle claim (`@swiftlantern86` on 10143) through to Home.
+    Not checked: a voucher redemption (no code minted), following a ranked trader (the practice board is empty),
+    resume after a kill, the keyboard-up layout (the simulator's software keyboard was off).
+  - Still open in J1: notification and Face ID primers (need `expo-notifications` and a rebuild), the completion foil
+    and the avatars (art branch), the seal's gold-leaf recolour.
 - **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
   guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), partial.** First-pass masters are in `brand/art/` (koban, chōgin, five FX pair discs, venue chip).
