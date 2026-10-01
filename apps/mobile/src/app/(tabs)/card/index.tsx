@@ -111,8 +111,8 @@ export default function Card() {
 }
 
 /**
- * Wallet and Freeze, then the onchain daily limit. Freeze revokes the allowance (in scope, D-039) and is live
- * whenever a limit is; with none, the card is already frozen and the cell offers to set one.
+ * The real control first — Freeze when a limit is live (revokes the allowance, in scope, D-039), else Set a limit —
+ * then Wallet, which opens once a card is issued and says so; then the onchain daily limit.
  */
 function CardControls() {
   const { color } = useTheme();
@@ -131,26 +131,30 @@ function CardControls() {
   const busy = card.trace.running;
   return (
     <>
+      {/* The real control leads (review: honest first action); Wallet waits for an issued card. */}
       <View style={styles.actions}>
-        <Button label="Add to Wallet" onPress={() => router.push(ROUTES.cardWallet)} style={styles.flex} />
         {live ? (
           <Button
             label={busy ? "Freezing…" : "Freeze"}
-            variant="outline"
             style={styles.flex}
             loading={busy}
             disabled={busy || !card.ready}
             onPress={() => void card.freeze()}
           />
         ) : (
-          <Button
-            label="Set a limit"
-            variant="outline"
-            style={styles.flex}
-            onPress={() => router.push(ROUTES.cardAllowance)}
-          />
+          <Button label="Set a limit" style={styles.flex} onPress={() => router.push(ROUTES.cardAllowance)} />
         )}
+        <Button
+          label="Add to Wallet"
+          variant="outline"
+          onPress={() => router.push(ROUTES.cardWallet)}
+          style={styles.flex}
+          accessibilityHint="Opens once your card is issued"
+        />
       </View>
+      <Text style={[TYPE.meta, styles.center, { color: color.text3 }]}>
+        Apple Pay and Google Pay open once your card is issued.
+      </Text>
       {card.done ? (
         <Text accessibilityLiveRegion="polite" style={[TYPE.meta, styles.center, { color: color.up }]}>
           {card.done}
