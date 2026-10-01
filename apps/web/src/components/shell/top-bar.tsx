@@ -4,18 +4,20 @@ import { Bell, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SessionChip } from "@/components/auth/session-chip";
-import { PreviewBadge } from "@/components/shell/preview-badge";
 import { Wordmark } from "@/components/shell/seal";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { Tabs as VercelTabs } from "@/components/ui/vercel-tabs";
+import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { activeTab, DESK_TABS, ROUTES } from "@/lib/constants/routes";
-import { NETWORK } from "@/lib/sample";
 import { cn } from "@/lib/utils";
 
 const ICON_BUTTON =
   "inline-flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-(--motion-fast) ease-desk hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring";
 
-/** D2 top strip: SENRYO wordmark · ● MONAD chip · bell, then the Vercel Tabs row. */
+/**
+ * D2 top strip: SENRYO wordmark · ● MONAD · PRACTICE (the active network from config) · bell, then the Vercel Tabs
+ * row. Preview badges sit on the sections still fed by sample data, not here.
+ */
 export function TopBar() {
   const pathname = usePathname();
   return (
@@ -29,15 +31,14 @@ export function TopBar() {
           <Wordmark />
         </Link>
         <div className="flex items-center gap-0.5">
-          <PreviewBadge className="hidden min-[22rem]:inline-flex" />
           <SessionChip />
           <span
             className="flex items-center gap-1 px-1 font-mono text-label text-muted-foreground"
-            title={`${NETWORK.name} · ${NETWORK.mode}`}
+            title={`${ACTIVE_NETWORK.name} · ${ACTIVE_NETWORK.modeLabel}`}
           >
             <span aria-hidden className="size-1.5 rounded-full bg-primary" />
-            {NETWORK.name}
-            <span className="hidden text-muted-foreground/70 sm:inline">· {NETWORK.mode}</span>
+            MONAD
+            <span className="hidden text-muted-foreground/70 uppercase sm:inline">· {ACTIVE_NETWORK.modeLabel}</span>
           </span>
           <span className="hidden sm:inline-flex">
             <ThemeToggle />

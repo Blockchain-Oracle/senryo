@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CardAuths } from "@/components/screens/card-auths";
+import { PreviewBadge } from "@/components/shell/preview-badge";
 import { SectionLabel } from "@/components/shell/primitives";
 import { Button } from "@/components/ui/button";
 import { FlippableCreditCard } from "@/components/ui/credit-debit-card";
@@ -19,6 +20,10 @@ export function CardScreen() {
   return (
     <div className="grid grid-cols-1 gap-x-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:pt-4">
       <section aria-label="Kinpaku card">
+        <PreviewBadge
+          className="mx-4 mt-4"
+          missing="Sample card, allowance and authorizations. The desk connects your real Kinpaku allowance and holds in a later slice."
+        />
         <div className="flex justify-center px-4 pt-5">
           <FlippableCreditCard
             cardholderName={CARD.holder}

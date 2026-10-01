@@ -17,7 +17,7 @@ export function AccountStrip() {
   if (!account.hint) {
     return (
       <div className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-sm border border-border p-3">
-        <p className="text-caption text-muted-foreground">Browsing without an account · sample figures below.</p>
+        <p className="text-caption text-muted-foreground">Browsing without an account · markets are live.</p>
         <Button asChild size="sm">
           <Link href={ROUTES.welcome}>
             <UserRoundPlus />

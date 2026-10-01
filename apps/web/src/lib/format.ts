@@ -1,20 +1,55 @@
-import { formatUnits, toPlot } from "@senryo/core";
+import { ENGINE_MARKETS, type NetworkKey } from "@senryo/config";
+import { DECIMALS, formatUnits, toPlot } from "@senryo/core";
+import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { BPS_PERCENT_DECIMALS, USD6_DECIMALS } from "@/lib/constants/money";
 
-export { formatUnits } from "@senryo/core";
-
 const TEN = 10n;
+
+/** The money glyph per network (Living Lacquer §5.6, as on mobile): paper money is never written as plain dollars. */
+const MONEY_SYMBOL: Record<NetworkKey, string> = { testnet: "P$", mainnet: "$" };
+export const MONEY = MONEY_SYMBOL[ACTIVE_NETWORK.key];
+
+/** Account money in this network's glyph: `P$12,480.52` in practice. Market prices use `price18`. */
+export function money(value6: bigint, shown: number = DECIMALS.cents): string {
+  const s = formatUnits(value6 < 0n ? -value6 : value6, USD6_DECIMALS, shown);
+  return value6 < 0n ? `−${MONEY}${s}` : `${MONEY}${s}`;
+}
+
+/** `+P$184.22` / `−P$6.40` — a sign always, so colour is never the only signal. */
+export function signedMoney(value6: bigint, shown: number = DECIMALS.cents): string {
+  return value6 < 0n ? money(value6, shown) : `+${money(value6, shown)}`;
+}
+
+/** A market's display precision (S8.23): metals in cents, FX majors to 5 places, JPY/USD to 7. */
+export function priceDecimalsOf(marketId: number): number {
+  return ENGINE_MARKETS.find((m) => m.id === marketId)?.priceDecimals ?? DECIMALS.cents;
+}
+
+/** `4,189.06` from an engine price (1e18 USD per unit); pass `priceDecimalsOf(id)` for a market. */
+export function price18(value18: bigint, shown: number = DECIMALS.cents): string {
+  return formatUnits(value18, DECIMALS.e18, shown);
+}
+
+/** `+0.82%` / `−0.82%` from basis points (true minus, as on mobile). */
+export function signedPct(bps: bigint): string {
+  const s = formatUnits(bps < 0n ? -bps : bps, BPS_PERCENT_DECIMALS, DECIMALS.cents);
+  return `${bps < 0n ? "−" : "+"}${s}%`;
+}
+
+/** `58%` from basis points, no decimals. */
+export function wholePct(bps: bigint): string {
+  return `${formatUnits(bps, BPS_PERCENT_DECIMALS, 0)}%`;
+}
+
+/** ▲ / ▼ paired with every coloured change (accessibility rule, plan §2.5). */
+export function arrow(value: bigint): string {
+  return value < 0n ? "▼" : "▲";
+}
 
 /** `$12,480.52` from usd6. */
 export function usd(value: bigint, shown = 2): string {
   const s = formatUnits(value, USD6_DECIMALS, shown);
   return s.startsWith("-") ? `-$${s.slice(1)}` : `$${s}`;
-}
-
-/** Signed amount without the currency sign: `+102.40` / `-6.40`. */
-export function signed(value: bigint, shown = 2): string {
-  const s = formatUnits(value, USD6_DECIMALS, shown);
-  return value > 0n ? `+${s}` : s;
 }
 
 /** Plain number from usd6 without a sign: `2,687.40`. */
@@ -42,17 +77,10 @@ const COMPACT_STEPS = [
   { unit: 1_000n, suffix: "K" },
 ] as const;
 
-/** Compact usd6: `$18.4M`, `$950K`, `$12.40`. One decimal, bigint only. */
-export function usdCompact(value: bigint): string {
+/** Compact account money: `P$18.4M`, `P$950K`, `P$12.40` in practice. One decimal, bigint only. */
+export function compactMoney(value: bigint): string {
   const whole = value / TEN ** BigInt(USD6_DECIMALS);
   const step = COMPACT_STEPS.find((s) => whole >= s.unit);
-  if (!step) return usd(value);
-  return `$${formatUnits((value * TEN) / (step.unit * TEN ** BigInt(USD6_DECIMALS)), 1, 1)}${step.suffix}`;
-}
-
-const SECONDS_PER_MINUTE = 60;
-
-/** Compact age: `42s`, `3m`. */
-export function age(seconds: number): string {
-  return seconds < SECONDS_PER_MINUTE ? `${seconds}s` : `${Math.floor(seconds / SECONDS_PER_MINUTE)}m`;
+  if (!step) return money(value);
+  return `${MONEY}${formatUnits((value * TEN) / (step.unit * TEN ** BigInt(USD6_DECIMALS)), 1, 1)}${step.suffix}`;
 }

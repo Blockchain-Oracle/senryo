@@ -1,21 +1,68 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { DECIMALS, notional } from "@senryo/core";
 import { useState } from "react";
-import { MarketHeatmap } from "@/components/ui/market-heatmap";
-import { MarketWatchlist } from "@/components/ui/market-watchlist";
+import { DeskWatchlist } from "@/components/screens/markets/desk-watchlist";
+import { marketTitles } from "@/components/screens/markets/market-row";
+import LoadingState from "@/components/ui/loading-state";
+import { type HeatTile, MarketHeatmap } from "@/components/ui/market-heatmap";
+import { known } from "@/components/ui/reading";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { ROUTES } from "@/lib/constants/routes";
-import { MARKET_FILTERS, type MarketFilter, toHeat, toWatchlist } from "@/lib/market-view";
-import { DEFAULT_MARKET, MARKETS } from "@/lib/sample";
+import { ACTIVE_NETWORK } from "@/lib/constants/auth";
+import { BPS_PERCENT_DECIMALS } from "@/lib/constants/money";
+import { compactMoney, plotValue, price18, priceDecimalsOf } from "@/lib/format";
+import { type MarketLines, useMarketLines } from "@/lib/markets/line";
+import { inFilter, MARKET_FILTERS, type MarketFilter } from "@/lib/markets/universe";
 
-const HEAT = MARKETS.map(toHeat);
+/** Open interest per market (both sides at the oracle price, from the engine's book); only markets that have some. */
+function heatTiles(lines: MarketLines, filter: MarketFilter): HeatTile[] {
+  return lines.flatMap(({ meta, reading }) => {
+    const line = known(reading);
+    if (!line || !inFilter(meta, filter)) return [];
+    const { book } = line.market;
+    const oi6 = notional(book.longSize + book.shortSize, line.price18);
+    if (oi6 === 0n) return [];
+    return [
+      {
+        sym: marketTitles(meta).title,
+        name: meta.name,
+        cap: plotValue(oi6),
+        chg: line.change24hBps === undefined ? 0 : plotValue(line.change24hBps, BPS_PERCENT_DECIMALS),
+        price: plotValue(line.price18, DECIMALS.e18),
+        priceText: `$${price18(line.price18, priceDecimalsOf(meta.id))}`,
+        capText: `OI ${compactMoney(oi6)}`,
+      },
+    ];
+  });
+}
 
-/** Markets (D2): asset-class filter, dense perps watchlist, open-interest heatmap. */
+function OpenInterestMap({ lines, filter }: { lines: MarketLines; filter: MarketFilter }) {
+  const tiles = heatTiles(lines, filter);
+  const reading = lines.some((l) => known(l.reading) !== undefined);
+  if (tiles.length > 0) {
+    return <MarketHeatmap title="Heat · by open interest" subtitle="sized by open interest" data={tiles} />;
+  }
+  return (
+    <div className="grid min-h-48 content-center justify-items-center gap-2 rounded-lg border border-border border-dashed p-6 text-center">
+      {reading ? (
+        <>
+          <p className="font-medium text-caption">No open interest {filter === "all" ? "" : "here "}yet</p>
+          <p className="max-w-xs text-caption text-muted-foreground">
+            The map sizes each {ACTIVE_NETWORK.modeLabel} market by the positions open in it, read from the engine's
+            book. It fills as positions open.
+          </p>
+        </>
+      ) : (
+        <LoadingState label="Reading the engine's book" />
+      )}
+    </div>
+  );
+}
+
+/** Markets (S11b): asset-class filter, the live perps watchlist with what's still to come, the open-interest map. */
 export function MarketsScreen() {
-  const router = useRouter();
   const [filter, setFilter] = useState<MarketFilter>("all");
-  const list = MARKETS.filter((m) => filter === "all" || m.kind === filter).map(toWatchlist);
+  const lines = useMarketLines();
   return (
     <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section aria-label="Watchlist">
@@ -28,16 +75,11 @@ export function MarketsScreen() {
           />
         </div>
         <div className="px-3 pt-3">
-          <MarketWatchlist
-            title="Perps · 24h"
-            initial={DEFAULT_MARKET}
-            assets={list}
-            onSelect={(symbol) => router.push(ROUTES.trade(symbol))}
-          />
+          <DeskWatchlist lines={lines} filter={filter} arriving />
         </div>
       </section>
-      <section aria-label="Heatmap" className="px-3 pt-3 lg:pt-15">
-        <MarketHeatmap title="Heat · by open interest" subtitle="sized by open interest" data={HEAT} />
+      <section aria-label="Open interest" className="px-3 pt-3 lg:pt-15">
+        <OpenInterestMap lines={lines} filter={filter} />
       </section>
     </div>
   );

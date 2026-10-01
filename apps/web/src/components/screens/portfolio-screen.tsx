@@ -1,58 +1,67 @@
 "use client";
 
-import { BucketBar } from "@/components/screens/bucket-bar";
+import { Eye, LineChart } from "lucide-react";
+import Link from "next/link";
 import { CardAuths } from "@/components/screens/card-auths";
-import { PositionsTable } from "@/components/screens/positions-table";
-import { PerplBucket, Register } from "@/components/screens/register";
-import { Direction, SectionLabel } from "@/components/shell/primitives";
-import { BalanceChart } from "@/components/ui/balance-chart";
-import { pctBps, plotValue, usd } from "@/lib/format";
-import { BALANCE, POSITIONS } from "@/lib/sample";
-import { sampleEquityFrames } from "@/lib/sample-series";
+import { AccountPortfolio } from "@/components/screens/portfolio/account-portfolio";
+import { PreviewBadge } from "@/components/shell/preview-badge";
+import { SectionLabel } from "@/components/shell/primitives";
+import { Button } from "@/components/ui/button";
+import LoadingState from "@/components/ui/loading-state";
+import { useAccount } from "@/lib/account/provider";
+import { ROUTES } from "@/lib/constants/routes";
 
-const FRAMES = sampleEquityFrames(plotValue(BALANCE.total6));
-
-function Buckets({ className }: { className?: string }) {
+/** A guest has no balance to show — so none is shown: what appears here once there is an account, and what works now. */
+function GuestPortfolio() {
   return (
-    <div className={className}>
-      <Register className="mx-4" />
-      <BucketBar className="mx-4 mt-3" />
-      <PerplBucket className="mx-4 mt-3 border-border border-t pt-2" />
+    <div className="mx-auto grid w-full max-w-2xl gap-4 px-4 pt-6">
+      <p className="text-body">
+        Your balance, its three capacities — Free to trade, Free to spend, Locked — and your open positions appear here
+        once you create an account or sign in on this device.
+      </p>
+      <p className="text-caption text-muted-foreground">
+        Markets, prices and charts are live without one. Watch any address read-only to see a real account.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline" size="sm">
+          <Link href={ROUTES.markets}>
+            <LineChart />
+            Markets
+          </Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <Link href={ROUTES.watch}>
+            <Eye />
+            Watch an address
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 }
 
 /**
- * Portfolio (D2 home). Phone: equity hero → chart → register → bar → positions (the D2 order).
- * ≥1024: chart + positions on the left; buckets and card holds in the right column.
+ * Portfolio (D2 home, S11b): the signed-in account's real balance, curve, capacities and positions; a guest sees the
+ * guest state, never sample rows. The card's authorizations are still a preview on the desk and say so.
  */
 export function PortfolioScreen() {
-  const up = BALANCE.pnl24h6 >= 0n;
+  const account = useAccount();
+  if (account.status === "loading") return <LoadingState label="Opening your account" className="mx-4 mt-6" />;
+  const address = account.hint?.address;
+  if (!address) return <GuestPortfolio />;
   return (
-    <div className="grid grid-cols-1 gap-x-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-      <section aria-labelledby="equity-label" className="min-w-0">
-        <div className="px-4 pt-4">
-          <p id="equity-label" className="font-mono text-label text-muted-foreground uppercase tracking-[0.2em]">
-            Equity · risk-adjusted
-          </p>
-          <p className="mt-1 font-mono font-semibold text-num-xl tabular-nums tracking-tight">{usd(BALANCE.total6)}</p>
-          <Direction up={up} className="text-caption">
-            {usd(BALANCE.pnl24h6)} ({pctBps(BALANCE.pnl24hBps)}) 24h
-          </Direction>
-        </div>
-        <div className="mt-3 px-2">
-          <BalanceChart frames={FRAMES} initialFrame="24H" />
-        </div>
-        <Buckets className="mt-2 lg:hidden" />
-        <SectionLabel className="lg:pt-8">Positions · {POSITIONS.length}</SectionLabel>
-        <PositionsTable className="mx-4" />
-      </section>
-      <aside aria-label="Buckets" className="hidden lg:block lg:pt-4">
-        <SectionLabel>Buckets</SectionLabel>
-        <Buckets />
-        <SectionLabel>Card · authorizations</SectionLabel>
-        <CardAuths className="mx-4" />
-      </aside>
-    </div>
+    <AccountPortfolio
+      address={address}
+      aside={
+        <>
+          <SectionLabel>Card · authorizations</SectionLabel>
+          <PreviewBadge
+            className="mx-4 mb-2"
+            missing="Sample holds. The desk connects your Kinpaku card's real authorizations in a later slice."
+          />
+          <CardAuths className="mx-4" />
+        </>
+      }
+    />
   );
 }

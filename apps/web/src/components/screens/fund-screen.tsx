@@ -1,5 +1,6 @@
 "use client";
 
+import { PreviewBadge } from "@/components/shell/preview-badge";
 import { SectionLabel } from "@/components/shell/primitives";
 import { CopyCode } from "@/components/ui/copy-code-button";
 import { QRCodeDisplay } from "@/components/ui/qr-code-generator";
@@ -41,6 +42,10 @@ export function FundScreen() {
   const qr = useQr(DEPOSIT_ADDRESS, QR_PX);
   return (
     <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-2">
+      <PreviewBadge
+        className="mx-4 mt-4 lg:col-span-2"
+        missing="Sample routes, balances and address — don't send to it. The desk connects real deposits in a later slice; nothing here moves money."
+      />
       <section aria-labelledby="fund-swap">
         <SectionLabel>
           <span id="fund-swap">Bridge + deposit · any chain → AUSD</span>

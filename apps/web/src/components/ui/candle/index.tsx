@@ -4,6 +4,8 @@
 // Re-tokenized for D2 Desk and split on install (scale · layers · volume · crosshair). Data-driven: pass `candles`
 // (history oldest → newest). Defaults are the D2 ticket look: fill mode, no header chrome, banded price axis.
 // Dropped from the source: the card-width drag handle (the desk pane owns width) and the seeded demo series.
+// S11b: `current` draws the live price line (tagged on the axis); `volume={false}` drops the volume pane for series
+// without traded volume (indexed Chainlink rounds); `dateFmt` words the date axis per candle size.
 
 import { motion, useReducedMotion } from "motion/react";
 import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -60,6 +62,11 @@ export type CandleChartProps = {
   banded?: boolean;
   ceil?: number;
   initialTimeframe?: CandleTimeframe;
+  /** The live price as a dotted line with its label on the price axis (kept inside the band). */
+  current?: { value: number; label: string } | undefined;
+  /** false: no volume pane (oracle rounds carry no traded volume). */
+  volume?: boolean;
+  dateFmt?: (t: number) => string;
   className?: string;
   /** plot height in fill mode */
   plotClassName?: string;
@@ -79,6 +86,9 @@ export default function CandleChart({
   banded = true,
   ceil = 0,
   initialTimeframe = "6M",
+  current,
+  volume = true,
+  dateFmt = fmtDay,
   className,
   plotClassName = "h-72",
 }: CandleChartProps) {
@@ -136,7 +146,8 @@ export default function CandleChart({
     vw: fill && box ? Math.max(MIN_FILL_W, box.w) : VB_W,
     vh: fill && box ? Math.max(MIN_FILL_H, box.h) : VB_H,
   };
-  const scale = makeScale(view, vbox, volH, yScale, banded, ceil);
+  const paneVol = volume ? volH : 0;
+  const scale = makeScale(view, vbox, paneVol, yScale, banded, ceil, current?.value);
   const dateLabels = useMemo(
     () => Array.from({ length: DATE_LABELS }, (_, i) => view[Math.min(vn - 1, Math.floor((i * vn) / DATE_LABELS))]),
     [view, vn],
@@ -156,7 +167,7 @@ export default function CandleChart({
     const px = ((e.clientX - r.left) / r.width) * scale.vw;
     const py = ((e.clientY - r.top) / r.height) * scale.vh;
     setHover(clamp(Math.floor(px / scale.slot), 0, vn - 1));
-    setZone(py > scale.plotH + GAP / HALF ? "volume" : "price");
+    setZone(volume && py > scale.plotH + GAP / HALF ? "volume" : "price");
   };
 
   return (
@@ -217,12 +228,12 @@ export default function CandleChart({
           onPointerMove={onMove}
           onPointerLeave={() => setHover(null)}
           role="img"
-          aria-label={`${symbol} candlestick chart, last ${priceFmt(last.c)}`}
+          aria-label={`${symbol} candlestick chart, last close ${priceFmt(last.c)}${current ? `, now ${current.label}` : ""}`}
         >
           <GridLayer scale={scale} axisFmt={axisFmt} />
-          <LastCloseGuide scale={scale} close={last.c} />
+          <LastCloseGuide scale={scale} close={current?.value ?? last.c} label={current?.label} />
           <SeriesLayer view={view} scale={scale} kind={kind} hover={hover} up={totalUp} />
-          <VolumeLayer view={view} scale={scale} volH={volH} maxVolume={maxVolume} hover={hover} />
+          {volume && <VolumeLayer view={view} scale={scale} volH={volH} maxVolume={maxVolume} hover={hover} />}
           {hover !== null && <Crosshair scale={scale} index={hover} active={active} up={up} axisFmt={axisFmt} />}
         </svg>
 
@@ -249,7 +260,7 @@ export default function CandleChart({
           }}
         />
 
-        <VolumeDivider scale={scale} volH={volH} setVolH={setVolH} svgRef={svgRef} dragging={volDrag} />
+        {volume && <VolumeDivider scale={scale} volH={volH} setVolH={setVolH} svgRef={svgRef} dragging={volDrag} />}
 
         {hover !== null && (
           <CrosshairTip
@@ -271,7 +282,7 @@ export default function CandleChart({
         {dateLabels.map((k, i) =>
           k ? (
             <span key={i} className="font-mono text-micro text-muted-foreground tabular-nums">
-              {fmtDay(k.t)}
+              {dateFmt(k.t)}
             </span>
           ) : null,
         )}
