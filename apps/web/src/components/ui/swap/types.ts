@@ -13,8 +13,6 @@ export interface Chain {
   id: string;
   name: string;
   shortName: string;
-  /** Any CSS colour; pass a token such as `var(--chain-base)`. */
-  color: string;
   /** Canonical network id (`@senryo/identity`), drawn as the token's network badge. */
   entity: string;
 }

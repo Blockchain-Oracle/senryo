@@ -179,5 +179,13 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - Radius: `sm` → 12 in step 1. Spacing names kept, plus `lgPlus`/`inset` 20.
   - Motion: press 100, selection 170, page push 320, easing (0.2, 0.8, 0.2, 1); springs per direction §4 with
     `overshootClamping` except the fan's Send.
+- **S1b.6 step 2 (D-191):**
+  - The new roles live in `palette.ts`, beside the shadcn names, so web CSS emits them as `--text-2`, `--glass-tint`, …
+  - RN takes the 8-digit scrims directly; the old `withAlpha` cannot parse `#RRGGBBAA`.
+  - Mobile springs live in `apps/mobile/src/theme/motion.ts`, which also takes over EASE/DURATION/PRESS_SCALE from
+    `layout.ts`.
+  - Retired: `CHAIN_HUE` and `ASSET_HUE`. The web swap panel's chain dot became an `EntityMark`, and the `colorVar`
+    field left `sample.ts`/`fund-screen`.
+  - Not yet using the new roles: screens (components still read the step-1 names); that changes per journey.
 
 ## Handoff

@@ -195,12 +195,161 @@
         "light": "#3643D8",
         "source": "packages/tokens/src/palette.ts"
       },
+      "--text-2": {
+        "dark": "#B8B5C4",
+        "light": "#5F5B6B",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--text-3": {
+        "dark": "#8F8B9F",
+        "light": "#716C7F",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--link": {
+        "dark": "#8B95FF",
+        "light": "#3643D8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--glass-tint": {
+        "dark": "#201E2BD9",
+        "light": "#FFFFFFD9",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--glass-rim": {
+        "dark": "#FFFFFF24",
+        "light": "#FFFFFFB3",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--glass-opaque": {
+        "dark": "#201E2B",
+        "light": "#FFFFFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-circle": {
+        "dark": "#C3B5F6",
+        "light": "#D5C8FF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-text": {
+        "dark": "#211A31",
+        "light": "#211A31",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-label": {
+        "dark": "#F5F4FA",
+        "light": "#17151F",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-circle-pressed": {
+        "dark": "#AE9BE8",
+        "light": "#C1B0F2",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-backdrop-opaque": {
+        "dark": "#191822",
+        "light": "#F5F4F8",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--sheet-scrim": {
+        "dark": "#00000066",
+        "light": "#17151F38",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--fan-scrim": {
+        "dark": "#0A091180",
+        "light": "#17151F55",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--warning-surface": {
+        "dark": "#332719",
+        "light": "#FFF0D5",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--practice-surface": {
+        "dark": "#282038",
+        "light": "#EEE7FF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--mainnet-surface": {
+        "dark": "#1B2040",
+        "light": "#E8EBFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--up-surface": {
+        "dark": "#102A1C",
+        "light": "#E4F4E9",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--down-surface": {
+        "dark": "#35201F",
+        "light": "#FBE8E5",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--destructive-surface": {
+        "dark": "#35201F",
+        "light": "#FBE8E5",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--silver": {
+        "dark": "#C9D0DD",
+        "light": "#626D7E",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--raised-2": {
+        "dark": "#201E2B",
+        "light": "#ECE9F2",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--row-pressed": {
+        "dark": "#2C2938",
+        "light": "#E5E1EE",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--selected-row": {
+        "dark": "#1B2040",
+        "light": "#E8EBFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--skeleton": {
+        "dark": "#2C2938",
+        "light": "#DEDBE6",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--primary-pressed": {
+        "dark": "#343ED3",
+        "light": "#343ED3",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--up-foreground": {
+        "dark": "#17151F",
+        "light": "#FFFFFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--down-foreground": {
+        "dark": "#17151F",
+        "light": "#FFFFFF",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--chart-neutral": {
+        "dark": "#8F8B9F",
+        "light": "#716C7F",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--sheet-handle": {
+        "dark": "#8F8B9F",
+        "light": "#716C7F",
+        "source": "packages/tokens/src/palette.ts"
+      },
       "--kinpaku-lacquer": {
         "value": "#17121B",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-lacquer-edge": {
         "value": "#29212F",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--kinpaku-lacquer-highlight": {
+        "value": "#514357",
         "source": "packages/tokens/src/marks.ts"
       },
       "--kinpaku-foil-highlight": {
@@ -223,12 +372,48 @@
         "value": "#886426",
         "source": "packages/tokens/src/marks.ts"
       },
+      "--gold-leaf-shadow": {
+        "value": "#886426",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--gold-leaf-mid": {
+        "value": "#D4AE5B",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--gold-leaf-highlight": {
+        "value": "#FFF0BC",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--silver-shadow": {
+        "value": "#697383",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--silver-mid": {
+        "value": "#C9D0DD",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--silver-highlight": {
+        "value": "#F4F6FB",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--lacquer-shadow": {
+        "value": "#17121B",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--lacquer-mid": {
+        "value": "#29212F",
+        "source": "packages/tokens/src/marks.ts"
+      },
+      "--lacquer-highlight": {
+        "value": "#514357",
+        "source": "packages/tokens/src/marks.ts"
+      },
       "--qr-ink": {
         "value": "#000000",
         "source": "packages/tokens/src/marks.ts"
       },
       "--qr-paper": {
-        "value": "#ffffff",
+        "value": "#FFFFFF",
         "source": "packages/tokens/src/marks.ts"
       }
     },

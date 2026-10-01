@@ -16,7 +16,7 @@ export function identityTheme(color: Palette, scheme: "dark" | "light", ground?:
     plateLight: LIGHT_TOKENS.card,
     plateDark: DARK_TOKENS.card,
     ground: ground ?? color.card,
-    skeleton: color.muted,
+    skeleton: color.skeleton,
     fallbackInk: color.inkMuted,
     fontFamily: FONT.sansStrong,
   };

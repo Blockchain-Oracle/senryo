@@ -2,7 +2,7 @@
 
 // 21st: starc007/be-ui-multi-chain-swap (#16251) — https://21st.dev/@starc007/components/be-ui-multi-chain-swap
 // D2 Fund: bridge + deposit any chain → AUSD. Split on install (>400 lines): panel · token-select · quote-rows · types.
-// Data comes in via props (no demo data inside); chain colours are CSS vars (`var(--chain-base)`).
+// Data comes in via props (no demo data inside); networks show their real marks (`Chain.entity`), never a colour dot.
 import { Settings } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";

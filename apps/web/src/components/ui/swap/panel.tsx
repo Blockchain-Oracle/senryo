@@ -4,7 +4,8 @@
 // The pay/receive field and the flip button. D2: mono tabular amounts, hairline boxes, no shadows.
 import { ArrowDownUp, ChevronDown, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
-import { SWAP_SPRING } from "@/lib/constants/swap";
+import { EntityMark } from "@/components/identity/entity-mark";
+import { NETWORK_MARK_SIZE, SWAP_SPRING } from "@/lib/constants/swap";
 import { TokenIcon } from "./token-select";
 import { type Chain, formatAmount, parseDecimal, type Token, type TokenSide } from "./types";
 
@@ -68,11 +69,7 @@ export function SwapField({ side, token, chain, amount, onAmount, quoting, onOpe
       </div>
 
       <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-background/70 px-2 py-1 text-caption text-muted-foreground">
-        <span
-          aria-hidden
-          className="size-2 rounded-full bg-primary"
-          style={chain ? { backgroundColor: chain.color } : undefined}
-        />
+        <EntityMark id={chain?.entity} label={chain?.name ?? token.chainId} size={NETWORK_MARK_SIZE} decorative />
         {chain?.name ?? token.chainId}
       </div>
     </div>

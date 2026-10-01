@@ -16,14 +16,10 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${(n >> RED_SHIFT) & BYTE}, ${(n >> GREEN_SHIFT) & BYTE}, ${n & BYTE}, ${alpha})`;
 }
 
-/**
- * Wash strengths (fractions of the base colour). The sheet scrim is #00000066 dark / #17151F38 light (direction §2):
- * 0x66 = 0.4 of black, 0x38 ≈ 0.22 of Text 1.
- */
-const WASH = { soft: 0.12, strong: 0.24, scrimDark: 0.4, scrimLight: 0.22, chartFill: 0.16, chartFillEnd: 0 } as const;
-const BLACK = "#000000";
+/** Directional wash strengths (fractions of the up/down colour) and the chart area fill (D-191). */
+const WASH = { soft: 0.12, strong: 0.24, chartFill: 0.16, chartFillEnd: 0 } as const;
 
-function roles(t: TokenPalette, dark: boolean) {
+function roles(t: TokenPalette) {
   return {
     ...t,
     /** Page ground, panels and hairlines under their app names. */
@@ -32,17 +28,18 @@ function roles(t: TokenPalette, dark: boolean) {
     inkMuted: t.mutedForeground,
     hairline: t.border,
     upWash: withAlpha(t.up, WASH.soft),
-    /** Mode surfaces (S8.22): the capsule and selector rows tint with their mode colour. */
-    practiceWash: withAlpha(t.practice, WASH.soft),
-    mainnetWash: withAlpha(t.mainnet, WASH.soft),
+    /** Mode and status plates are the opaque Living Lacquer surfaces (Codex consult §4), not alpha washes. */
+    practiceWash: t.practiceSurface,
+    mainnetWash: t.mainnetSurface,
     downWash: withAlpha(t.down, WASH.soft),
     upWashStrong: withAlpha(t.up, WASH.strong),
     downWashStrong: withAlpha(t.down, WASH.strong),
-    warnWash: withAlpha(t.warn, WASH.soft),
-    destructiveWash: withAlpha(t.destructive, WASH.soft),
+    warnWash: t.warningSurface,
+    destructiveWash: t.destructiveSurface,
     chartFillTop: withAlpha(t.chartUp, WASH.chartFill),
     chartFillBottom: withAlpha(t.chartUp, WASH.chartFillEnd),
-    scrim: dark ? withAlpha(BLACK, WASH.scrimDark) : withAlpha(LIGHT_TOKENS.foreground, WASH.scrimLight),
+    /** Ordinary sheets dim the parent (#00000066 / #17151F38); the fan has its own `fanScrim` over live blur. */
+    scrim: t.sheetScrim,
     /** Text on a light plate (QR card) in both themes. */
     paper: LIGHT_TOKENS.card,
     paperInk: LIGHT_TOKENS.foreground,
@@ -55,5 +52,5 @@ function roles(t: TokenPalette, dark: boolean) {
 }
 
 export type Palette = ReturnType<typeof roles>;
-export const DARK: Palette = roles(DARK_TOKENS, true);
-export const LIGHT: Palette = roles(LIGHT_TOKENS, false);
+export const DARK: Palette = roles(DARK_TOKENS);
+export const LIGHT: Palette = roles(LIGHT_TOKENS);

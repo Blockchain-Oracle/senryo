@@ -1,48 +1,39 @@
 /**
- * Theme-independent identity colours: the Kinpaku 金箔 foil, the fixed QR ink/paper (scanners need black on white),
- * and third-party chain/asset identity hues used for small glyph discs. Same in dark and light.
+ * Theme-independent colours: the authored materials (gold leaf, silver, lacquer), the Kinpaku 金箔 foil built from them,
+ * and the fixed QR ink/paper (scanners need black on white). Same in dark and light. Third-party identity never comes from
+ * a colour here: real marks live in `@senryo/identity` (the old CHAIN_HUE/ASSET_HUE maps were deleted in S1b.6).
  */
+
+/** Material ramps (direction §2): shadow / midtone / highlight for artwork, never UI semantics. */
+export const MATERIAL = {
+  goldLeaf: { shadow: "#886426", mid: "#D4AE5B", highlight: "#FFF0BC" },
+  silver: { shadow: "#697383", mid: "#C9D0DD", highlight: "#F4F6FB" },
+  lacquer: { shadow: "#17121B", mid: "#29212F", highlight: "#514357" },
+} as const;
 
 /**
- * Kinpaku card: gold leaf on lacquer, on the direction's material ramps (§2): gold leaf #886426 / #D4AE5B / #FFF0BC
- * at foil stops 0 / 50 / 100 %, with Codex's 25 % and 75 % intermediates; lacquer shadow / midtone for the body / edge.
+ * Kinpaku card: gold leaf on lacquer. Foil stops 0 / 25 / 50 / 75 / 100 % run the gold-leaf ramp with Codex's two
+ * intermediates (#AE8941, #EACF8C); the body and edge are the lacquer shadow and midtone, lit by `lacquerHighlight`.
  */
 export const KINPAKU = {
-  lacquer: "#17121B",
-  lacquerEdge: "#29212F",
-  foilHighlight: "#FFF0BC",
+  lacquer: MATERIAL.lacquer.shadow,
+  lacquerEdge: MATERIAL.lacquer.mid,
+  lacquerHighlight: MATERIAL.lacquer.highlight,
+  foilHighlight: MATERIAL.goldLeaf.highlight,
   foilLight: "#EACF8C",
-  foilMid: "#D4AE5B",
+  foilMid: MATERIAL.goldLeaf.mid,
   foilShade: "#AE8941",
-  foilDeep: "#886426",
+  foilDeep: MATERIAL.goldLeaf.shadow,
 } as const;
 
-export const QR = { ink: "#000000", paper: "#ffffff" } as const;
+export const QR = { ink: "#000000", paper: "#FFFFFF" } as const;
 
-/** Chain identity colours (chain picker dots). */
-export const CHAIN_HUE = {
-  monad: "#836ef9",
-  base: "#0052ff",
-  ethereum: "#627eea",
-  solana: "#14f195",
-  arbitrum: "#28a0f0",
+/** Solflare's onboarding scene fields: artwork backgrounds only, never trading semantics or page grounds (direction §2). */
+export const SCENE_FIELD = {
+  yellow: "#FAF543",
+  periwinkle: "#7690ED",
+  lime: "#C4DA78",
+  pink: "#F58CE1",
+  orange: "#F1803A",
+  gray: "#B7BBC6",
 } as const;
-
-/** Asset glyph discs; unknown symbols fall back to `--primary`. */
-export const ASSET_HUE = {
-  XAU: "#d4af37",
-  XAG: "#a8a9ad",
-  NVDA: "#76b900",
-  AAPL: "#8e8e93",
-  TSLA: "#e31937",
-  "EUR/USD": "#2a5bd7",
-  "GBP/USD": "#5b2ad7",
-  BTC: "#f7931a",
-  ETH: "#627eea",
-  MON: "#836ef9",
-  USDC: "#2775ca",
-  AUSD: "#836ef9",
-} as const;
-
-export type ChainKey = keyof typeof CHAIN_HUE;
-export type AssetKey = keyof typeof ASSET_HUE;

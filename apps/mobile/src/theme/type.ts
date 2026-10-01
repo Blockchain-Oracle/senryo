@@ -40,20 +40,10 @@ function toStyle(role: TypeRole): TextStyle {
   };
 }
 
-export const TYPE = {
-  micro: toStyle("micro"),
-  label: toStyle("label"),
-  caption: toStyle("caption"),
-  body: toStyle("body"),
-  bodyStrong: toStyle("bodyStrong"),
-  title: toStyle("title"),
-  numSm: toStyle("numSm"),
-  numMd: toStyle("numMd"),
-  numTicker: toStyle("numTicker"),
-  numLg: toStyle("numLg"),
-  numXl: toStyle("numXl"),
-  numHero: toStyle("numHero"),
-} satisfies Record<TypeRole, TextStyle>;
+/** Every token role as an RN text style: the step-1 names plus displayBalance/Margin/Price, row, meta, titles, controls. */
+export const TYPE = Object.fromEntries(
+  (Object.keys(TOKEN_TYPE) as TypeRole[]).map((role) => [role, toStyle(role)]),
+) as Readonly<Record<TypeRole, TextStyle>>;
 
 /** Dynamic Type cap for hero numbers so a six-digit balance never wraps. */
 export const HERO_FONT_SCALE = MAX_FONT_SCALE_HERO;
