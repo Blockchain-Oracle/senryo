@@ -43,6 +43,8 @@ export function useTokenTrade(token: SpotToken, initialSide: TradeSide) {
   const [text, setText] = useState("");
   const [gasShortWei, setGasShortWei] = useState<bigint>();
   const [step, setStep] = useState<{ index: number; count: number }>();
+  /** The swap as it went to the passkey check — frozen, so a refreshed quote never changes the receipt. */
+  const [executed, setExecuted] = useState<{ paid: string; atLeast: string; quoted: string }>();
 
   const inDecimals = side === "buy" ? USDC_DECIMALS : token.decimals;
   const parsed = parseUnits(text === "" ? "0" : text, inDecimals);
@@ -109,6 +111,11 @@ export function useTokenTrade(token: SpotToken, initialSide: TradeSide) {
       },
       () =>
         account.stepUp(async (signer) => {
+          setExecuted({
+            paid: `${text} ${inSymbol}`,
+            quoted: outText,
+            atLeast: tokenAmount(q.minOut, outDecimals, outSymbol),
+          });
           const sender = stepUpSender(signer);
           for (const [index, request] of requests.entries()) {
             setStep({ index, count: requests.length });
@@ -141,12 +148,14 @@ export function useTokenTrade(token: SpotToken, initialSide: TradeSide) {
     block,
     gasShortWei,
     step,
+    executed,
     trace,
     setShare,
     submit,
     reset: () => {
       trace.reset();
       setStep(undefined);
+      setExecuted(undefined);
       setText("");
     },
   };

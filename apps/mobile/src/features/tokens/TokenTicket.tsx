@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
+import { KeyValue, Panel } from "~/components/kit/Surface";
 import { TransactionSheet } from "~/components/sheet/TransactionSheet";
 import { Keypad, type KeypadKey } from "~/components/trade/Keypad";
 import { Preset } from "~/components/trade/Preset";
@@ -23,11 +24,23 @@ import { SwapFlip, SwapSide } from "~/features/fund/SwapTicket";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { COLLATERAL_STEPS_BPS } from "~/features/portfolio/constants";
 import { useSettledOutcome } from "~/features/trade/send-outcome";
-import { TradeTrace } from "~/features/trade/TradeTrace";
+import { type TraceWords, TradeTrace } from "~/features/trade/TradeTrace";
 import { pct } from "~/lib/money";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { finePct, tokenAmount } from "./format";
 import { type TradeBlock, type TradeSide, useTokenTrade } from "./useTokenTrade";
+
+/** The shared outcome contract's words for a swap (review S01). */
+const SWAP_WORDS: TraceWords = {
+  thing: "swap",
+  again: "swap again",
+  landed: "Confirmed: the swap went through. Your balances show it.",
+  reverted: "The swap reverted onchain (gas was paid); your tokens stayed where they were.",
+  done: "Done",
+  back: "Back to the ticket",
+  leave:
+    "You can leave this screen. The swap is on its way and can’t be cancelled; reopen this ticket to see its result.",
+};
 
 const SIDES = [
   { value: "buy", label: "Buy" },
@@ -73,7 +86,8 @@ function Ticket({ token, initialSide }: { token: SpotToken; initialSide: TradeSi
   return (
     <TransactionSheet
       onClose={() => {
-        if (!t.trace.running) t.reset();
+        // A swap still unknown stays on the ticket (its trace is kept by key): reopening shows it, never a new draft.
+        if (!t.trace.running && outcome !== "unknown") t.reset();
         router.back();
       }}
       closeLabel="Close the swap ticket"
@@ -103,7 +117,15 @@ function Ticket({ token, initialSide }: { token: SpotToken; initialSide: TradeSi
               {t.step.index + 1 < t.step.count ? " · approving the swap's input" : " · the swap"}
             </Text>
           ) : null}
+          {t.executed ? (
+            <Panel style={styles.rows}>
+              <KeyValue label="You paid" value={t.executed.paid} />
+              <KeyValue label="Quoted" value={t.executed.quoted} />
+              <KeyValue label="At least" value={t.executed.atLeast} />
+            </Panel>
+          ) : null}
           <TradeTrace
+            words={SWAP_WORDS}
             events={t.trace.events}
             running={t.trace.running}
             outcome={outcome}
@@ -220,4 +242,5 @@ const styles = StyleSheet.create({
   presets: { flexDirection: "row", gap: SPACE.sm },
   region: { flex: 1, justifyContent: "flex-end" },
   footer: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm },
+  rows: { paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm, gap: SPACE.xs },
 });
