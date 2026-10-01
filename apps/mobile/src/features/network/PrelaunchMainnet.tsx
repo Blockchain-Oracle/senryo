@@ -1,6 +1,7 @@
 /**
  * What Mainnet shows before the mainnet launch (S8.22, D-172): an honest read-only state — live Chainlink prices on
- * Monad mainnet, "trading opens at launch", and one tap back to Practice. No balances or tickets pretend to work.
+ * Monad mainnet, "trading opens at launch", and one tap back to Practice. No balances or tickets pretend to work. The
+ * notice is a mainnet wash card (no border); the prices are one filled group under their label.
  */
 import { formatUnits } from "@senryo/core";
 import { StyleSheet, Text, View } from "react-native";
@@ -9,7 +10,7 @@ import { ListRow } from "~/components/kit/ListRow";
 import { Panel, SectionLabel } from "~/components/kit/Surface";
 import { fire } from "~/feedback/fire";
 import { setActiveNetwork } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { SHEET_SHAPE, SPACE, TYPE, useTheme } from "~/theme";
 import { usePrelaunchPrices } from "./usePrelaunchPrices";
 
 const MS_PER_SECOND = 1000;
@@ -32,9 +33,9 @@ export function PrelaunchMainnet({ surface }: { surface: keyof typeof COPY }) {
   const showPrices = surface === "markets" || surface === "trade";
   return (
     <View style={styles.wrap}>
-      <View style={[styles.banner, { borderColor: color.mainnet, backgroundColor: color.mainnetWash }]}>
+      <View style={[styles.banner, { backgroundColor: color.mainnetWash }]}>
         <Text style={[TYPE.bodyStrong, { color: color.ink }]}>Mainnet · Real money opens at launch</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>{COPY[surface]}</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{COPY[surface]}</Text>
         <Button
           label="Switch to Practice"
           variant="outline"
@@ -45,22 +46,23 @@ export function PrelaunchMainnet({ surface }: { surface: keyof typeof COPY }) {
         />
       </View>
       {showPrices ? (
-        <Panel>
-          <SectionLabel>LIVE ON MONAD MAINNET · CHAINLINK</SectionLabel>
-          {prices.map((p, i) => (
-            <ListRow
-              key={p.symbol}
-              first={i === 0}
-              title={`${p.symbol} · ${p.name}`}
-              detail={p.price ? `Updated ${feedTime(p.price.updatedAt)}` : "Reading the feed…"}
-              trailing={
-                <Text style={[TYPE.numSm, { color: color.ink }]}>
-                  {p.price ? formatUnits(p.price.answer, p.price.decimals, p.price.shown) : "—"}
-                </Text>
-              }
-            />
-          ))}
-        </Panel>
+        <View style={styles.prices}>
+          <SectionLabel>Live on Monad mainnet · Chainlink</SectionLabel>
+          <Panel>
+            {prices.map((p) => (
+              <ListRow
+                key={p.symbol}
+                title={`${p.symbol} · ${p.name}`}
+                detail={p.price ? `Updated ${feedTime(p.price.updatedAt)}` : "Reading the feed…"}
+                trailing={
+                  <Text style={[TYPE.rowPrice, { color: color.ink }]}>
+                    {p.price ? formatUnits(p.price.answer, p.price.decimals, p.price.shown) : "—"}
+                  </Text>
+                }
+              />
+            ))}
+          </Panel>
+        </View>
       ) : null}
     </View>
   );
@@ -68,5 +70,6 @@ export function PrelaunchMainnet({ surface }: { surface: keyof typeof COPY }) {
 
 const styles = StyleSheet.create({
   wrap: { gap: SPACE.md },
-  banner: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md, gap: SPACE.sm },
+  banner: { borderRadius: SHEET_SHAPE.rowRadius, padding: SPACE.lg, gap: SPACE.md },
+  prices: { gap: SPACE.sm },
 });

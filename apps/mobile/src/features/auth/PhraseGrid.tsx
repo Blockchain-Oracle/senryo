@@ -1,15 +1,17 @@
 /**
  * The 24 words after a step-up (RN port of 21st Encrypted Text #18575: each word decrypts in place). Screenshots and
  * recordings are blocked while mounted (expo-screen-capture, F07); hidden again after PHRASE_VISIBLE_MS or when the
- * app leaves the foreground; never copied or stored.
+ * app leaves the foreground; never copied or stored. The warning is a borderless wash; the words sit in one filled
+ * group.
  */
 import { usePreventScreenCapture } from "expo-screen-capture";
 import { useEffect, useState } from "react";
 import { AppState, StyleSheet, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
+import { Panel } from "~/components/kit/Surface";
 import { PHRASE_VISIBLE_MS } from "~/lib/constants/auth";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, SPACE, TYPE, useTheme } from "~/theme";
 
 const CHARSET = "abcdefghijklmnopqrstuvwxyz";
 const REVEAL_MS = 18;
@@ -38,8 +40,8 @@ function Word({ word, index }: { word: string; index: number }) {
   }, [word, index, reduced]);
   return (
     <View style={styles.cell} accessible accessibilityLabel={`${index + 1}. ${word}`}>
-      <Text style={[TYPE.numSm, styles.index, { color: color.inkMuted }]}>{index + 1}</Text>
-      <Text style={[TYPE.numSm, { color: shown === word ? color.ink : color.inkMuted }]}>{shown}</Text>
+      <Text style={[TYPE.numSm, styles.index, { color: color.text3 }]}>{index + 1}</Text>
+      <Text style={[TYPE.numSm, { color: shown === word ? color.ink : color.text3 }]}>{shown}</Text>
     </View>
   );
 }
@@ -62,16 +64,18 @@ export function PhraseGrid({ phrase, onHide }: { phrase: string; onHide: () => v
   const words = phrase.split(" ");
   return (
     <View style={styles.wrap}>
-      <View style={[styles.warn, { borderColor: color.down, backgroundColor: color.downWash }]}>
-        <Text style={[TYPE.caption, { color: color.down }]}>
+      <View style={[styles.warn, { backgroundColor: color.downWash }]}>
+        <Text style={[TYPE.rowDetail, { color: color.down }]}>
           Anyone with these words controls this account. Write them down offline; never type them into a website.
         </Text>
       </View>
-      <View accessibilityRole="list" style={[styles.grid, { borderColor: color.hairline }]}>
-        {words.map((w, i) => (
-          <Word key={`${i}-${w}`} word={w} index={i} />
-        ))}
-      </View>
+      <Panel style={styles.grid}>
+        <View accessibilityRole="list" style={styles.words}>
+          {words.map((w, i) => (
+            <Word key={`${i}-${w}`} word={w} index={i} />
+          ))}
+        </View>
+      </Panel>
       <Button label="Hide" variant="outline" onPress={onHide} />
     </View>
   );
@@ -82,14 +86,9 @@ const INDEX_WIDTH = SPACE.xl;
 
 const styles = StyleSheet.create({
   wrap: { gap: SPACE.md },
-  warn: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.sm },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.sm,
-    paddingVertical: SPACE.sm,
-  },
+  warn: { borderRadius: BUTTON.radius.md, padding: SPACE.md },
+  grid: { paddingVertical: SPACE.md, paddingHorizontal: SPACE.xs },
+  words: { flexDirection: "row", flexWrap: "wrap" },
   cell: { width: HALF, flexDirection: "row", gap: SPACE.sm, paddingHorizontal: SPACE.md, paddingVertical: SPACE.xs },
   index: { width: INDEX_WIDTH, textAlign: "right" },
 });

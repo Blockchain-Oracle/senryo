@@ -1,12 +1,12 @@
 /**
- * F43 / F45 banners (D2 plates): the guardian pause with its auto-expiry countdown, settle-only mode, and a market
+ * F43 / F45 banners (borderless status washes): the guardian pause with its auto-expiry countdown, settle-only mode, and a market
  * holiday coming up within a week ("Gold closed Thu 21:00 UTC → Fri 23:00 UTC · holiday"). Closing always works;
  * the copy says so. The calendar is display only — the onchain status decides.
  */
 import { durationUntil, nextHoliday, utcSlotLabel } from "@senryo/core";
 import { useCalendar, useProtocolState } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, SPACE, TYPE, useTheme } from "~/theme";
 
 const MS_PER_SECOND = 1000n;
 /** Show a holiday this far ahead. */
@@ -17,14 +17,10 @@ function Plate({ title, body, tone }: { title: string; body: string; tone: "warn
   return (
     <View
       accessibilityLiveRegion="polite"
-      style={[
-        styles.box,
-        { borderColor: tone === "down" ? color.down : color.hairline },
-        { backgroundColor: tone === "down" ? color.downWash : color.warnWash },
-      ]}
+      style={[styles.box, { backgroundColor: tone === "down" ? color.downWash : color.warnWash }]}
     >
       <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{title}</Text>
-      <Text style={[TYPE.caption, { color: color.inkMuted }]}>{body}</Text>
+      <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{body}</Text>
     </View>
   );
 }
@@ -77,5 +73,5 @@ export function HolidayBanner({ calendarId, name }: { calendarId: number; name: 
 }
 
 const styles = StyleSheet.create({
-  box: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md, gap: SPACE.xxs },
+  box: { borderRadius: BUTTON.radius.md, padding: SPACE.md, gap: SPACE.xxs },
 });

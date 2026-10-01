@@ -1,7 +1,9 @@
 /**
  * Practice starter funds (F05, D-030): one tap; the label follows the stage (Checking → Signing → Sending → Adding
- * practice dollars → Ready); `filled` haptic + deposit sound on credit; labelled NO REAL VALUE. Every refusal says
- * why and what next. The TTFT stop fires when the claim is finalized.
+ * practice dollars → Ready); `filled` haptic + deposit sound on credit; labelled "No real value". Every refusal says
+ * why and what next. The TTFT stop fires when the claim is finalized. A practice-wash card (violet is the paper-money
+ * mode, direction §6; amber stays for warnings): filled, 20 pt corners, no border, with its one action sized to its
+ * label under the text (Fomo F16's promotion card).
  */
 import { type AuthFailure, authFailureCopy } from "@senryo/account";
 import { formatUnits } from "@senryo/core";
@@ -14,7 +16,7 @@ import { fire } from "~/feedback/fire";
 import { type StarterPhase, useStarter } from "~/lib/account/use-starter";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { MainnetStartCard } from "./MainnetStartCard";
 
 const USD_DECIMALS = 6;
@@ -77,25 +79,29 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
   if (hideWhenClaimed && (phase.kind === "claimed" || phase.kind === "checking")) return null;
   const busy = LABEL[phase.kind] !== undefined;
   return (
-    <View style={[styles.card, { borderColor: color.warn, backgroundColor: color.warnWash }]}>
-      <View style={styles.head}>
-        <View style={styles.title}>
-          <Icon name="coins" size={SIZE.iconSm} tint={color.warn} />
-          <Text style={[TYPE.label, { color: color.ink }]}>PRACTICE FUNDS</Text>
+    <View style={[styles.card, { backgroundColor: color.practiceWash }]}>
+      <View style={styles.text}>
+        <View style={styles.head}>
+          <View style={styles.title}>
+            <Icon name="coins" size={SIZE.iconSm} tint={color.practice} />
+            <Text style={[TYPE.rowTitle, { color: color.ink }]}>Practice funds</Text>
+          </View>
+          <Text style={[TYPE.label, { color: color.practice }]}>No real value</Text>
         </View>
-        <Text style={[TYPE.micro, styles.pill, { color: color.warn, borderColor: color.warn }]}>NO REAL VALUE</Text>
+        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: color.text2 }]}>
+          {message(phase)}
+        </Text>
       </View>
-      <Text accessibilityLiveRegion="polite" style={[TYPE.caption, { color: color.inkMuted }]}>
-        {message(phase)}
-      </Text>
       {phase.kind === "done" || phase.kind === "claimed" ? (
         <Button
           label={phase.kind === "done" ? "Trade gold" : "Open Fund"}
           variant="outline"
-          onPress={() => router.navigate(phase.kind === "done" ? ROUTES.markets : ROUTES.fund)}
+          size="sm"
+          block={false}
+          onPress={() => router.navigate(phase.kind === "done" ? ROUTES.markets : ROUTES.addMoney)}
         />
       ) : phase.kind === "unchecked" ? (
-        <Button label="Retry" variant="outline" onPress={recheck} />
+        <Button label="Retry" variant="outline" size="sm" block={false} onPress={recheck} />
       ) : (
         <Button
           label={
@@ -105,6 +111,8 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
                 ? `Adding practice dollars · ${phase.relay.stage}…`
                 : (LABEL[phase.kind] ?? "Claim practice funds")
           }
+          size="sm"
+          block={false}
           loading={busy}
           disabled={!ready}
           onPress={() => void claim()}
@@ -115,8 +123,8 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md, gap: SPACE.sm },
-  head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  title: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
-  pill: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, paddingHorizontal: SPACE.xs, paddingVertical: SPACE.xxs },
+  card: { borderRadius: SHEET_SHAPE.rowRadius, padding: SPACE.lg, gap: SPACE.md },
+  text: { gap: SPACE.xs },
+  head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.sm },
+  title: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, flexShrink: 1 },
 });

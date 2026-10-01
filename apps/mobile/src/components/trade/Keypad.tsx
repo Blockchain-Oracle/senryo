@@ -1,11 +1,14 @@
 /**
- * Amount keypad — RN port of 21st bankkroll/number-pad (#3711), D2: a 3 × 4 mono grid (1–9, ".", 0, delete) of
- * hairline keys, `tick` per key (F10). Pure input: the ticket owns the amount string and its rules
- * (`applyKey`: two decimals, a digit cap, no leading zeros).
+ * Amount keypad (C39/FT104, Fomo F37): a borderless 3 × 4 grid (1–9, ".", 0, delete) of large Inter figures that fill
+ * the ticket's entry region, a `tick` per key, pressed keys on the row-pressed surface. Ported from 21st
+ * bankkroll/number-pad (#3711), re-laid out in Fomo's anatomy (S1b.8). Pure input: the ticket owns the amount string
+ * and its rules (`applyKey`, unchanged: two decimals, a digit cap, no leading zeros). Distinct from the native
+ * keyboard the TP/SL child uses (03-fomo "two input systems").
  */
+import { Delete } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fire } from "~/feedback/fire";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { NUMERIC_VARIANT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 export type KeypadKey = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "." | "0" | "del";
 const KEYS: readonly KeypadKey[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"];
@@ -41,12 +44,13 @@ export function Keypad({ onKey, disabled }: { onKey: (key: KeypadKey) => void; d
               }}
               accessibilityRole="keyboardkey"
               accessibilityLabel={key === "del" ? "Delete" : key === "." ? "Decimal point" : key}
-              style={({ pressed }) => [
-                styles.key,
-                { borderColor: color.hairline, backgroundColor: pressed ? color.muted : color.ground },
-              ]}
+              style={({ pressed }) => [styles.key, pressed ? { backgroundColor: color.rowPressed } : null]}
             >
-              <Text style={[TYPE.numMd, { color: color.ink }]}>{key === "del" ? "⌫" : key}</Text>
+              {key === "del" ? (
+                <Delete size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.ink} />
+              ) : (
+                <Text style={[TYPE.sheetTitle, styles.digit, { color: color.ink }]}>{key}</Text>
+              )}
             </Pressable>
           ))}
         </View>
@@ -56,14 +60,14 @@ export function Keypad({ onKey, disabled }: { onKey: (key: KeypadKey) => void; d
 }
 
 const styles = StyleSheet.create({
-  grid: { gap: SPACE.xs },
-  row: { flexDirection: "row", gap: SPACE.xs },
+  grid: { flex: 1, gap: SPACE.xxs },
+  row: { flex: 1, flexDirection: "row", gap: SPACE.xxs },
   key: {
     flex: 1,
     minHeight: SIZE.touch,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.md,
   },
+  digit: { fontVariant: NUMERIC_VARIANT },
 });

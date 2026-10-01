@@ -35,3 +35,14 @@ export const SWAP = {
 
 /** Console table column widths. */
 export const COLS = { step: 28, stage: 9, gas: 7 } as const;
+
+/** trigger-outcome-check: synthetic hashes and levels (no chain is touched). */
+export const CHECK_HASH_A = `0x${"a1".repeat(32)}` as const;
+export const CHECK_HASH_B = `0x${"b2".repeat(32)}` as const;
+export const CHECK_HASH_C = `0x${"c3".repeat(32)}` as const;
+export const CHECK_SL_PRICE18 = 4_000n * 10n ** 18n;
+export const CHECK_TP_PRICE18 = 4_400n * 10n ** 18n;
+export const CHECK_MARKET_ID = 0;
+export const CHECK_OTHER_MARKET_ID = 1;
+export const CHECK_MAINNET_CHAIN_ID = 143;
+export const CHECK_TESTNET_CHAIN_ID = 10143;

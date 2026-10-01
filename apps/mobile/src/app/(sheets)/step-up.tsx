@@ -63,22 +63,24 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
   };
   const copy = failure ? authFailureCopy(failure, Platform.OS === "ios" ? "ios" : "android") : undefined;
   return (
-    <AuthCard glyph="passkey" tone="gold" busy={busy} title={request.intent.title} body={request.intent.detail}>
+    <AuthCard
+      glyph="passkey"
+      tone="gold"
+      title={request.intent.title}
+      body={request.intent.detail}
+      {...(copy ? {} : { footer: "Always asked, never inside a trading session." })}
+    >
       {copy ? (
-        <Text accessibilityRole="alert" style={[TYPE.caption, { color: color.down }]}>
+        <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down, textAlign: "center" }]}>
           {copy.title}. {copy.body}
         </Text>
-      ) : (
-        <Text style={[TYPE.micro, { color: color.inkMuted, textAlign: "center" }]}>
-          ALWAYS ASKED · NEVER INSIDE A TRADING SESSION
-        </Text>
-      )}
+      ) : null}
       <Button
         label={busy ? "Waiting for your passkey…" : (request.intent.confirmLabel ?? "Confirm with passkey")}
         loading={busy}
         onPress={() => void confirm()}
       />
-      <Button label="Cancel" variant="ghost" disabled={busy} onPress={() => close()} />
+      <Button label="Cancel" variant="ghost" size="sm" disabled={busy} onPress={() => close()} />
     </AuthCard>
   );
 }

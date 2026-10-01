@@ -6,6 +6,7 @@ import { Platform, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { KeyValue, Panel } from "~/components/kit/Surface";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { useChip } from "~/lib/account/use-chip";
@@ -44,24 +45,20 @@ function Body() {
   const copy = failure ? authFailureCopy(failure, Platform.OS === "ios" ? "ios" : "android") : undefined;
   return (
     <>
-      <Text accessibilityRole="header" style={[TYPE.title, { color: color.ink }]}>
-        Trading session
-      </Text>
-      <Text style={[TYPE.body, { color: color.inkMuted }]}>
-        {unlocked
-          ? `Small trades need no prompt while unlocked. Locks after ${idle} idle minutes, at the time shown, or when Senryo goes to the background.`
-          : "Locked. Your portfolio stays visible; Face ID unlocks trading."}
-      </Text>
+      <SheetHeading
+        title="Trading session"
+        body={
+          unlocked
+            ? `Small trades need no prompt while unlocked. Locks after ${idle} idle minutes, at the time shown, or when Senryo goes to the background.`
+            : "Locked. Your portfolio stays visible; Face ID unlocks trading."
+        }
+      />
       <Panel style={styles.panel}>
-        <KeyValue
-          label={network.modeLabel.toUpperCase()}
-          value={chip.label}
-          valueColor={unlocked ? color.up : color.inkMuted}
-        />
-        {address ? <KeyValue label="ACCOUNT" value={shortAddress(address)} /> : null}
+        <KeyValue label={network.modeLabel} value={chip.label} valueColor={unlocked ? color.up : color.inkMuted} />
+        {address ? <KeyValue label="Account" value={shortAddress(address)} /> : null}
       </Panel>
       {copy ? (
-        <Text accessibilityRole="alert" style={[TYPE.caption, { color: color.down }]}>
+        <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down }]}>
           {copy.title}. {copy.body}
         </Text>
       ) : null}
@@ -89,12 +86,7 @@ function Body() {
           disabled={busy}
           onPress={() => void attempt(account.signIn)}
         />
-        <Button
-          label="Account"
-          variant="ghost"
-          block={false}
-          onPress={() => close(() => router.push(ROUTES.account))}
-        />
+        <Button label="Account" variant="ghost" block={false} onPress={() => close(() => router.push(ROUTES.you))} />
         <Button
           label="Sign out"
           variant="ghost"
@@ -116,6 +108,6 @@ export default function SessionSheet() {
 }
 
 const styles = StyleSheet.create({
-  panel: { paddingHorizontal: SPACE.md, paddingVertical: SPACE.xs },
+  panel: { paddingHorizontal: SPACE.lg, paddingVertical: SPACE.md },
   row: { flexDirection: "row", justifyContent: "space-between" },
 });

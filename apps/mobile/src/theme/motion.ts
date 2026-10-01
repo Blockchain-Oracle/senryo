@@ -7,6 +7,8 @@ import { Easing, ReduceMotion, type WithSpringConfig } from "react-native-reanim
  * in MOTION are choreography targets). Reduced motion follows the device (`ReduceMotion.System`).
  */
 export const EASE = Easing.bezier(...MOTION.easing);
+/** The iOS drawer curve: sheets leave the bottom edge fast and settle long (M02/M12). */
+export const EASE_SHEET = Easing.bezier(...MOTION.sheetEasing);
 
 /** Step-1 names still read by existing components: press · selection · page push. */
 export const DURATION = { fast: MOTION.fastMs, base: MOTION.baseMs, slow: MOTION.slowMs } as const;
@@ -30,11 +32,18 @@ export const SPRING = {
   fan: spring(TOKEN_SPRING.fan),
   dockActive: spring(TOKEN_SPRING.dockActive),
   rulerSnap: spring(TOKEN_SPRING.rulerSnap),
+  sheetRelease: spring(TOKEN_SPRING.sheetRelease),
+  dockBubble: spring(TOKEN_SPRING.dockBubble),
 } as const;
 
 /** Timed families (ms) and scroll distances (pt). */
 export const TIMING = {
   press: MOTION.pressMs,
+  pressRelease: MOTION.pressReleaseMs,
+  sheetEnter: MOTION.sheetEnterMs,
+  sheetExit: MOTION.sheetExitMs,
+  stagger: MOTION.staggerMs,
+  staggerItem: MOTION.staggerItemMs,
   selection: MOTION.selectionMs,
   pagePush: MOTION.pagePushMs,
   compactSelector: MOTION.compactSelectorMs,
@@ -63,3 +72,6 @@ export const FAN_TOGGLE_DEG = MOTION.fanToggleDeg;
 export const HEADER_COLLAPSE_DISTANCE = MOTION.headerCollapseDistance;
 /** Press feedback scale on tappable plates (no bounce). */
 export const PRESS_SCALE = MOTION.pressScale;
+/** Staggered content rises this far (pt) as it fades in; the page under a sheet steps back to this scale. */
+export const STAGGER_RISE = MOTION.staggerRise;
+export const SHEET_PARENT_SCALE = MOTION.sheetParentScale;

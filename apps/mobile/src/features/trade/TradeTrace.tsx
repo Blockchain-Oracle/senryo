@@ -1,9 +1,13 @@
 /**
- * F10 step 6: the ticket becomes the execution trace after the hold — risk check (simulation) → signed (Face ID /
- * session) → proposed → voted ("Filled", `filled` + fill sound) → finalized ("Settled", buckets refetch). Timings are
- * from the hold. Failures show the decoded reason; nothing is resent (the journal reconciles on the next launch).
+ * F10 step 6 / D-163: the ticket becomes the execution trace after the hold — checking (simulation) → signed (Face ID /
+ * session) → proposed → voted → finalized. Timings are from the hold. Success is finalized only (D-114): the one
+ * confirmed-outcome haptic (and the fill sound, if enabled) fires on finalized, never on a submit or a vote. Failures
+ * show the decoded reason; nothing is resent (the journal reconciles on the next launch, D-231). A trade that was
+ * signed and then lost by the live watch is "not confirmed yet", never "failed": it may still land, so the ticket
+ * offers no retry until TxRecovery has settled it (review R06). While it runs, the user may leave: the order continues
+ * and can't be cancelled from here, and the copy says so.
  */
-import type { TraceEvent, TraceStage } from "@senryo/query";
+import type { TraceEvent, TraceOutcome, TraceStage } from "@senryo/query";
 import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -14,11 +18,11 @@ import { shortAddress } from "~/lib/format";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 const STEP_DEFS: ReadonlyArray<{ id: string; label: string; stage: TraceStage }> = [
-  { id: "risk", label: "Risk check", stage: "checking" },
+  { id: "risk", label: "Checking", stage: "checking" },
   { id: "signed", label: "Signed", stage: "signed" },
   { id: "proposed", label: "Proposed", stage: "proposed" },
-  { id: "voted", label: "Filled", stage: "voted" },
-  { id: "final", label: "Settled", stage: "finalized" },
+  { id: "voted", label: "Voted", stage: "voted" },
+  { id: "final", label: "Finalized", stage: "finalized" },
 ];
 const COMPLETES: Partial<Record<TraceStage, number>> = { signing: 1, signed: 2, proposed: 3, voted: 4, finalized: 5 };
 const MS_PER_SECOND = 1000;
@@ -43,34 +47,50 @@ export function failureWords(error: unknown): string {
   return first.length > 0 ? first : "The trade didn't go through";
 }
 
+const UNKNOWN_COPY =
+  "This order was signed, but its result isn’t confirmed yet. Don’t place it again: it settles on its own, and this screen updates when it does.";
+const LEAVE_COPY =
+  "You can leave this screen. The order is on its way and can’t be cancelled from here; its result shows on your position and when you reopen this ticket.";
+
 export function TradeTrace({
   events,
   running,
+  outcome,
   onDone,
+  onLeave,
 }: {
   events: readonly TraceEvent[];
   running: boolean;
+  /** The settled outcome (`useSettledOutcome`): `unknown` until the journal has the signed tx's result. */
+  outcome: TraceOutcome | undefined;
   onDone: () => void;
+  /** Closes the screen without touching the trace (while running, or while the result is unknown). */
+  onLeave: () => void;
 }) {
   const { color } = useTheme();
   const start = events[0]?.at ?? Date.now();
-  const failed = events.find((e) => e.stage === "failed" || e.stage === "reverted" || e.stage === "abandoned");
+  const unknown = outcome === "unknown";
+  const failed = unknown
+    ? undefined
+    : events.find((e) => e.stage === "failed" || e.stage === "reverted" || e.stage === "abandoned");
+  // The live watch lost it and the journal later settled it: say what happened, without a trace row for it.
+  const recovered = events.at(-1)?.stage === "failed" && outcome !== undefined && outcome !== "not-sent" && !unknown;
+  const landed = recovered && outcome === "finalized";
   const reached = events.reduce((n, e) => Math.max(n, COMPLETES[e.stage] ?? 0), 0);
   const hash = events.find((e) => e.hash)?.hash;
-  const filled = events.some((e) => e.stage === "voted");
   const settled = events.some((e) => e.stage === "finalized");
-  const notified = useRef({ filled: false, failed: false });
+  const notified = useRef({ settled: false, failed: false });
 
   useEffect(() => {
-    if (filled && !notified.current.filled) {
-      notified.current.filled = true;
+    if (settled && !notified.current.settled) {
+      notified.current.settled = true;
       fire("filled", { sound: "fill" });
     }
-    if (failed && !notified.current.failed) {
+    if (failed && !landed && !notified.current.failed) {
       notified.current.failed = true;
       fire("fail");
     }
-  }, [filled, failed]);
+  }, [settled, failed, landed]);
 
   const steps: TraceStep[] = STEP_DEFS.map((d) => {
     const at = events.find((e) => e.stage === d.stage)?.at;
@@ -79,9 +99,24 @@ export function TradeTrace({
 
   return (
     <Panel style={styles.panel}>
-      <ExecutionTrace steps={steps} current={reached} failed={failed !== undefined} />
-      {hash ? <Text style={[TYPE.micro, { color: color.inkMuted }]}>tx {shortAddress(hash)}</Text> : null}
-      {failed ? (
+      <ExecutionTrace steps={steps} current={reached} failed={failed !== undefined && !landed} />
+      {hash ? <Text style={[TYPE.meta, { color: color.text3 }]}>Transaction {shortAddress(hash)}</Text> : null}
+      {unknown ? (
+        <Text accessibilityLiveRegion="polite" style={[TYPE.body, { color: color.warn }]}>
+          {UNKNOWN_COPY}
+        </Text>
+      ) : recovered ? (
+        <Text
+          accessibilityLiveRegion="polite"
+          style={[TYPE.body, { color: outcome === "finalized" ? color.up : color.down }]}
+        >
+          {outcome === "finalized"
+            ? "Confirmed: the order went through. Your position shows it."
+            : outcome === "reverted"
+              ? "Confirmed: the trade reverted onchain (gas was paid). Nothing else changed."
+              : "Confirmed: the trade never reached a block. Nothing changed; you can try again."}
+        </Text>
+      ) : failed ? (
         <Text style={[TYPE.body, { color: color.down }]}>
           {failed.stage === "reverted"
             ? "The trade reverted onchain (gas was paid). Nothing else changed."
@@ -90,22 +125,29 @@ export function TradeTrace({
               : failureWords(failed.error)}
         </Text>
       ) : null}
-      {settled || failed ? (
+      {unknown ? (
+        <View style={styles.actions}>
+          <Button label="Leave this screen" variant="outline" onPress={onLeave} />
+        </View>
+      ) : settled || failed ? (
         <View style={styles.actions}>
           <Button
-            label={settled ? "Done" : "Back to ticket"}
+            label={settled || outcome === "finalized" ? "Done" : "Back to ticket"}
             variant={settled ? "primary" : "outline"}
             onPress={onDone}
           />
         </View>
       ) : running ? (
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>Don't close the app until it settles.</Text>
+        <View style={styles.actions}>
+          <Text style={[TYPE.meta, { color: color.text2 }]}>{LEAVE_COPY}</Text>
+          <Button label="Leave this screen" variant="ghost" onPress={onLeave} />
+        </View>
       ) : null}
     </Panel>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.md },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   actions: { gap: SPACE.sm },
 });

@@ -2,9 +2,9 @@
  * App identity and platform floors. The rpId host is owned by `@senryo/config` (frozen once the first account exists,
  * because the passkey rpId *is* the account); it is re-exported here for `app.config.ts`.
  */
-import { ANDROID_PACKAGE, ASSOCIATED_DOMAINS, IOS_BUNDLE_ID, RP_ID } from "@senryo/config";
+import { ANDROID_PACKAGE, APPLE_TEAM_ID, ASSOCIATED_DOMAINS, IOS_BUNDLE_ID, RP_ID } from "@senryo/config";
 
-export { ASSOCIATED_DOMAINS, RP_ID };
+export { APPLE_TEAM_ID, ASSOCIATED_DOMAINS, RP_ID };
 export const APP = {
   name: "Senryo",
   slug: "senryo",

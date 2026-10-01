@@ -36,6 +36,11 @@ const SHEETS = [
   "card-reveal",
   "account-required",
   "network",
+  "receive",
+  "balance-details",
+  "compose-thesis",
+  "social-actions",
+  "leaderboard-info",
 ];
 
 export default function RootLayout() {
@@ -65,8 +70,9 @@ export default function RootLayout() {
 }
 
 /**
- * The stack over the tabs, plus the headless hosts mounted once (ported pattern): feedback (sound pool), toasts and
- * the offline banner, the privacy plate (S6) and TxRecovery (S8.24). Later: AlertsHost.
+ * The stack over the five-tab shell (S1b.7: `(tabs)` is the Living Lacquer dock on headless tabs), plus the headless
+ * hosts mounted once (ported pattern): feedback (sound pool), toasts and the offline banner, the privacy plate (S6) and
+ * TxRecovery (S8.24). Root pages (account, positions, funding) push over the shell; sheets are transparent modals.
  */
 function RootStack() {
   const { name, color } = useTheme();
@@ -86,6 +92,8 @@ function RootStack() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
+        <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="alerts" options={{ headerShown: false }} />
         {SHEETS.map((route) => (
           <Stack.Screen key={route} name={`(sheets)/${route}`} options={sheet} />
         ))}

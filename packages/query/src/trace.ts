@@ -41,6 +41,49 @@ export interface TraceEvent {
 
 export type TrackedResult = SentTx & { final: Confirmation | undefined };
 
+/**
+ * What one request's events prove. `not-sent`: it failed before a signature left the device, so nothing changed.
+ * `unknown`: it was signed and then the watch failed — the tx may still land (TxRecovery settles it from the journal),
+ * so a caller must never report "nothing changed" or send a replacement. Undefined while the request is still running.
+ */
+export type TraceOutcome = "finalized" | "reverted" | "abandoned" | "not-sent" | "unknown";
+
+const SIGNED_STAGES: ReadonlySet<TraceStage> = new Set<TraceStage>(["signed", "proposed", "voted"]);
+
+export function traceOutcome(events: readonly TraceEvent[]): TraceOutcome | undefined {
+  const last = events.at(-1);
+  if (!last) return undefined;
+  if (last.stage === "finalized" || last.stage === "reverted" || last.stage === "abandoned") return last.stage;
+  if (last.stage !== "failed") return undefined;
+  return events.some((e) => SIGNED_STAGES.has(e.stage)) ? "unknown" : "not-sent";
+}
+
+/** The hash a trace signed, if it got that far. */
+export function signedHash(events: readonly TraceEvent[]): `0x${string}` | undefined {
+  return events.find((e) => e.hash !== undefined)?.hash;
+}
+
+const OUTCOME_OF_STAGE: Partial<Record<JournalEntry["stage"], TraceOutcome>> = {
+  finalized: "finalized",
+  reverted: "reverted",
+  abandoned: "abandoned",
+};
+
+/**
+ * The trace's own outcome, with `unknown` replaced by the journal's once TxRecovery has settled that signed tx. Until
+ * then it stays `unknown`: the only state in which a screen must neither retry nor say "nothing changed".
+ */
+export function settledOutcome(
+  events: readonly TraceEvent[],
+  journal: readonly JournalEntry[],
+): TraceOutcome | undefined {
+  const outcome = traceOutcome(events);
+  if (outcome !== "unknown") return outcome;
+  const hash = signedHash(events);
+  const entry = journal.find((j) => j.hash === hash);
+  return (entry ? OUTCOME_OF_STAGE[entry.stage] : undefined) ?? "unknown";
+}
+
 /** Fires `onPut` when chain journals a freshly signed tx (the moment between signature and broadcast). */
 function tapJournal(inner: TxJournal | undefined, onPut: (entry: JournalEntry) => void): TxJournal {
   return {
@@ -56,7 +99,7 @@ function tapJournal(inner: TxJournal | undefined, onPut: (entry: JournalEntry) =
 
 /** Work that must succeed before signing (e.g. a gas top-up, S8.16c); a throw becomes the trace's `failed` event. */
 export interface SendOptions {
-  preflight?: (() => Promise<void>) | undefined;
+  preflight?: ((request: TxRequest) => Promise<void>) | undefined;
 }
 
 export async function sendTracked(
@@ -67,7 +110,7 @@ export async function sendTracked(
 ): Promise<TrackedResult> {
   const emit = (stage: TraceStage, extra: Partial<TraceEvent> = {}) => onStage({ stage, at: Date.now(), ...extra });
   emit("checking");
-  await options.preflight?.();
+  await options.preflight?.(request);
   const gas = await planGas(sender, request);
   emit("signing");
   const tapped: Sender = { ...sender, journal: tapJournal(sender.journal, (e) => emit("signed", { hash: e.hash })) };
@@ -124,7 +167,8 @@ function subscribeTrace(key: string, listener: () => void): () => void {
 
 /**
  * Trace state for one ticket/position action; finalized → the account's queries refetch (buckets, positions). Pass a
- * stable `key` to keep the trace across remounts; without one the trace is local to this component instance.
+ * stable `key` to keep the trace across remounts; without one the trace is local to this component instance. One trace
+ * holds one request: an action made of several transactions uses one trace per transaction, so no outcome is lost.
  */
 export function useSendTrace(key?: string) {
   const env = useQueryEnv();
@@ -138,12 +182,18 @@ export function useSendTrace(key?: string) {
   );
 
   const run = useCallback(
-    async (sender: Sender, request: TxRequest, options: SendOptions = {}): Promise<TrackedResult | undefined> => {
+    async (
+      sender: Sender,
+      request: TxRequest | (() => Promise<TxRequest>),
+      options: SendOptions = {},
+    ): Promise<TrackedResult | undefined> => {
       if ((traces.get(id) ?? IDLE).running) return undefined;
       setTrace(id, () => ({ events: [], running: true }));
       const push = (event: TraceEvent) => setTrace(id, (prev) => ({ ...prev, events: [...prev.events, event] }));
       try {
-        const result = await sendTracked(sender, request, push, options);
+        // A request that has to be built first (a signed TP/SL order): a build failure is this trace's `failed` event.
+        const built = typeof request === "function" ? await request() : request;
+        const result = await sendTracked(sender, built, push, options);
         const from = sender.account.address as Address;
         void queryClient.invalidateQueries({ queryKey: keys.account(env.chainId, from) });
         void queryClient.invalidateQueries({ queryKey: ["market", env.chainId] });

@@ -11,6 +11,7 @@ import { createSessionSync } from "@senryo/account/sync";
 import { RP_ID } from "@senryo/config";
 import QuickCrypto from "react-native-quick-crypto";
 import { recordMeasure } from "./measure";
+import { countingPrompts } from "./system-prompt";
 
 const SHA512 = "sha512";
 
@@ -20,8 +21,12 @@ const pbkdf2: Pbkdf2Sha512 = (password, salt, rounds, keyLength) =>
 export function createNativeAccountClient(settings: SessionSettings, onExtraPrompt: (flow: Flow) => void) {
   return new AccountClient({
     rpId: RP_ID,
-    passkey: passkeyPlatform,
-    store: secretStore,
+    // Counted so the privacy plate stays down behind the passkey and Face ID sheets (system-prompt.ts).
+    passkey: {
+      ...passkeyPlatform,
+      webAuthnClient: passkeyPlatform.webAuthnClient && countingPrompts(passkeyPlatform.webAuthnClient),
+    },
+    store: countingPrompts(secretStore),
     sync: createSessionSync(),
     pbkdf2,
     settings,

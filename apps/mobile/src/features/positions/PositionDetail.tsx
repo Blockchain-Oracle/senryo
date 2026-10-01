@@ -1,47 +1,67 @@
-import { DECIMALS, formatUnits } from "@senryo/core";
-import { ids } from "@senryo/identity";
-import { StyleSheet, Text, View } from "react-native";
-import { EntityMark } from "~/components/identity/EntityMark";
-import { VenueChip } from "~/components/identity/VenueChip";
-import { Segmented } from "~/components/kit/Segmented";
-import { KeyValue, Panel, Rule, SectionLabel } from "~/components/kit/Surface";
-import { EmptyState, LoadingState } from "~/components/kit/states";
-import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
-import { MarginGauge } from "~/components/trade/MarginGauge";
-import { STATUS_CHIP, statusTone } from "~/features/markets/session";
+import { router } from "expo-router";
+import type { ReactNode } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { Screen } from "~/components/kit/Screen";
+import { Panel } from "~/components/kit/Surface";
+import { Skeleton } from "~/components/kit/states";
+import { QuietLine } from "~/features/portfolio/QuietLine";
+import { useSettledOutcome } from "~/features/trade/send-outcome";
 import { TradeTrace } from "~/features/trade/TradeTrace";
-import { pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
-import { useNetwork } from "~/lib/network";
-import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { BLOCK_MS_ESTIMATE, REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "./constants";
+import { pct } from "~/lib/money";
+import { SIZE, SPACE, STAGGER_RISE, TIMING } from "~/theme";
+import { CloseSummary } from "./CloseSummary";
+import { CloseBar, CloseTicket } from "./CloseTicket";
+import { BLOCK_MS_ESTIMATE } from "./constants";
+import { PnlHero } from "./PnlHero";
+import { PositionHeader } from "./PositionHeader";
+import { PositionStats } from "./PositionStats";
 import { TriggerPanel } from "./TriggerPanel";
 import { usePosition } from "./usePosition";
 
-const SIZE_DECIMALS = 4;
-const GAUGE_WIDTH = 132;
-const MS_PER_SECOND = 1000n;
-const STEP_LABEL = (bps: bigint) => (bps >= REDUCE_ALL_BPS ? "All" : pct(bps));
-
 /**
- * F11 / F12 (D2): the position — PnL at the conservative exit with the funding/borrow breakdown, size, entry, mark,
- * liquidation price and how far away, margin use — and the reduce ticket (25/50/75 % / all) behind a hold.
- * Reducing works in every session status (closed/paused use the status-matrix price, explained).
+ * F11 / F12, in the anatomy of Fomo's tall position detail (F13/F14, C25) on a pushed page: identity (mark, symbol,
+ * side, venue, session status) → the unrealised P&L as the page's one big figure with its price / funding / borrow
+ * parts → the facts as a grid of quiet cells → TP/SL → the close ticket (25/50/75 % / all with its quote) — and the
+ * hold that sends the close pinned under the scroll, above the home indicator. After the hold the page becomes the
+ * execution trace. Reducing works in every session status (closed/paused use the status-matrix price, explained).
  */
 export function PositionDetail({ marketId }: { marketId: number }) {
-  const network = useNetwork();
-  const { color } = useTheme();
   const p = usePosition(marketId);
+  const outcome = useSettledOutcome(p.trace.events);
   if (p.trace.events.length > 0) {
-    return <TradeTrace events={p.trace.events} running={p.trace.running} onDone={() => p.trace.reset()} />;
+    const finalized = p.trace.events.some((e) => e.stage === "finalized");
+    return (
+      <Screen contentStyle={styles.outcome}>
+        {finalized && p.quoted ? <CloseSummary marketId={marketId} quote={p.quoted} /> : null}
+        <TradeTrace
+          events={p.trace.events}
+          running={p.trace.running}
+          outcome={outcome}
+          onDone={() => p.trace.reset()}
+          onLeave={() => router.back()}
+        />
+      </Screen>
+    );
   }
-  if (p.loading) return <LoadingState shape="plate" label="Reading the position" />;
+  if (p.loading) {
+    return (
+      <Screen>
+        <PositionSkeleton />
+      </Screen>
+    );
+  }
   if (!p.position || !p.market || !p.health) {
-    return <EmptyState why="No open position in this market" detail="It may have just closed or been liquidated." />;
+    return (
+      <Screen>
+        <QuietLine action={{ label: "Go back", onPress: () => router.back() }}>
+          No open position in this market · it may have just closed or been liquidated.
+        </QuietLine>
+      </Screen>
+    );
   }
   const { market: m, position, health, reduce } = p;
-  const side = position.isLong ? "LONG" : "SHORT";
-  const net = health.upnlUsd6 - p.fundingUsd6 - p.borrowUsd6;
-  const away = health.liqDistanceBps;
+  const side = position.isLong ? "Long" : "Short";
   const waitMs =
     reduce?.holdReadyBlock !== undefined && p.headBlock !== undefined
       ? (reduce.holdReadyBlock - p.headBlock) * BLOCK_MS_ESTIMATE
@@ -49,101 +69,97 @@ export function PositionDetail({ marketId }: { marketId: number }) {
   const label = p.closingAll ? `Hold · Close ${m.symbol} ${side.toLowerCase()}` : `Hold · Close ${pct(p.shareBps)}`;
 
   return (
-    <View style={styles.stack}>
+    <>
+      <Screen contentStyle={styles.content}>
+        <Rise index={0}>
+          <PositionHeader market={m} position={position} />
+        </Rise>
+        <Rise index={1}>
+          <PnlHero priceUsd6={health.upnlUsd6} fundingUsd6={p.fundingUsd6} borrowUsd6={p.borrowUsd6} />
+        </Rise>
+        <Rise index={2}>
+          <PositionStats market={m} position={position} health={health} exposureUsd6={p.currentNotionalUsd6} />
+        </Rise>
+        <Rise index={3}>
+          <TriggerPanel market={m} position={position} />
+        </Rise>
+        <Rise index={4}>
+          <CloseTicket market={m} shareBps={p.shareBps} onShare={p.setShareBps} reduce={reduce} waitMs={waitMs} />
+        </Rise>
+      </Screen>
+      <CloseBar
+        label={label}
+        disabled={!reduce || !p.ready || (waitMs !== undefined && waitMs > 0n)}
+        onConfirm={() => void p.submit()}
+      />
+    </>
+  );
+}
+
+/** Sections arrive in a short stagger once the position is read (build brief §4); a refresh changes numbers in place. */
+function Rise({ index, children }: { index: number; children: ReactNode }) {
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(TIMING.staggerItem)
+        .delay(index * TIMING.stagger)
+        .withInitialValues({ transform: [{ translateY: STAGGER_RISE }] })}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+/** Line widths (pt) of the loading page's header, figure and cells. */
+const TITLE_WIDTH = 132;
+const CHIP_WIDTH = 84;
+const FIGURE_WIDTH = "60%";
+const CELL_VALUE_WIDTH = "70%";
+const CELL_LABEL_WIDTH = "40%";
+const GRID_ROWS = [0, 1, 2] as const;
+
+/** The page's final shape while the position is read: identity, the P&L plate, the grid of facts. */
+function PositionSkeleton() {
+  return (
+    <View style={styles.loading} accessibilityRole="progressbar" accessibilityLabel="Reading the position">
       <View style={styles.head}>
-        <View style={styles.identity}>
-          <EntityMark id={ids.engineMarket(network.chainId, marketId)} size={SIZE.markDetail} decorative />
-          <View style={styles.titles}>
-            <Text style={[TYPE.numMd, { color: color.ink }]}>
-              {m.symbol}-PERP <Text style={{ color: position.isLong ? color.up : color.down }}>{side}</Text>
-            </Text>
-            <VenueChip venue={ids.venue("senryo")} />
-          </View>
+        <View style={styles.mark}>
+          <Skeleton width={SIZE.markDetail} height={SIZE.markDetail} />
         </View>
-        <Text style={[TYPE.label, { color: statusTone(m.pv.status, color) }]}>{STATUS_CHIP[m.pv.status]}</Text>
+        <View style={styles.titles}>
+          <Skeleton width={TITLE_WIDTH} height={SIZE.skeletonLine + SPACE.xs} />
+          <Skeleton width={CHIP_WIDTH} />
+        </View>
       </View>
-
-      <Panel style={styles.panel}>
-        <SectionLabel>UNREALISED · NET</SectionLabel>
-        <Text
-          maxFontSizeMultiplier={HERO_FONT_SCALE}
-          style={[TYPE.numXl, { color: net < 0n ? color.down : color.up }]}
-          accessibilityLabel={`Unrealised ${net < 0n ? "loss" : "profit"} ${signedUsd(net)}`}
-        >
-          {signedUsd(net)}
-        </Text>
-        <KeyValue label="PRICE" value={signedUsd(health.upnlUsd6)} />
-        <KeyValue label="FUNDING" value={signedUsd(-p.fundingUsd6)} />
-        <KeyValue label="BORROW" value={signedUsd(-p.borrowUsd6)} />
-        <Rule />
-        <View style={styles.row}>
-          <View style={styles.rows}>
-            <KeyValue label="SIZE" value={`${formatUnits(position.size, DECIMALS.e18, SIZE_DECIMALS)} oz`} />
-            <KeyValue label="NOTIONAL" value={usd(p.currentNotionalUsd6)} />
-            <KeyValue label="ENTRY" value={price18(position.entry, priceDecimalsOf(marketId))} />
-            <KeyValue label="ORACLE" value={price18(m.pv.price18, priceDecimalsOf(marketId))} />
-            <KeyValue
-              label="LIQ"
-              value={
-                health.liqPrice18 === null
-                  ? "none above $0"
-                  : `${price18(health.liqPrice18, priceDecimalsOf(marketId))}${away === null ? "" : ` · ${away <= 0n ? "now" : `${pct(away)} away`}`}`
-              }
-              valueColor={away !== null && away <= 0n ? color.down : undefined}
-            />
+      <Panel style={styles.plate}>
+        <Skeleton width={CELL_LABEL_WIDTH} height={SIZE.skeletonSmall} />
+        <Skeleton width={FIGURE_WIDTH} height={SIZE.skeletonRow} />
+        <Skeleton height={SIZE.skeletonLine} />
+      </Panel>
+      {GRID_ROWS.map((row) => (
+        <View key={row} style={styles.gridRow}>
+          <View style={styles.cell}>
+            <Skeleton width={CELL_LABEL_WIDTH} height={SIZE.skeletonSmall} />
+            <Skeleton width={CELL_VALUE_WIDTH} />
           </View>
-          <MarginGauge usageBps={health.marginUsageBps} width={GAUGE_WIDTH} />
+          <View style={styles.cell}>
+            <Skeleton width={CELL_LABEL_WIDTH} height={SIZE.skeletonSmall} />
+            <Skeleton width={CELL_VALUE_WIDTH} />
+          </View>
         </View>
-      </Panel>
-
-      <Panel style={styles.panel}>
-        <SectionLabel>CLOSE</SectionLabel>
-        <Segmented
-          options={REDUCE_STEPS_BPS.map((b) => ({ value: String(b), label: STEP_LABEL(b) }))}
-          value={String(p.shareBps)}
-          onChange={(v) => p.setShareBps(BigInt(v))}
-          label="How much to close"
-        />
-        {reduce ? (
-          <>
-            <KeyValue label="EXIT PRICE" value={price18(reduce.execPrice18, priceDecimalsOf(marketId))} />
-            <KeyValue
-              label={reduce.profitCapped ? "REALISED · CAPPED" : "REALISED"}
-              value={signedUsd(reduce.realizedPnlUsd6)}
-            />
-            <KeyValue label="FEE" value={usd(reduce.feeUsd6)} />
-            <KeyValue label="TO YOUR BALANCE" value={signedUsd(reduce.netUsd6)} />
-          </>
-        ) : null}
-        {m.pv.status !== "OPEN" ? (
-          <Text style={[TYPE.caption, { color: color.warn }]}>
-            {m.name} is {STATUS_CHIP[m.pv.status].toLowerCase()}: closing still works, at the conservative price.
-          </Text>
-        ) : null}
-        {waitMs !== undefined && waitMs > 0n ? (
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-            Profit close available in about {(waitMs + MS_PER_SECOND - 1n) / MS_PER_SECOND}s (anti-flash wait).
-          </Text>
-        ) : null}
-        <HoldToConfirm
-          label={label}
-          disabled={!reduce || !p.ready || (waitMs !== undefined && waitMs > 0n)}
-          onConfirm={() => void p.submit()}
-          accessibilityHint="Hold for half a second to close"
-        />
-      </Panel>
-
-      <TriggerPanel market={m} position={position} />
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: SPACE.lg },
-  head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  identity: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, flexShrink: 1 },
-  titles: { gap: SPACE.xs, flexShrink: 1 },
-  panel: { padding: SPACE.md, gap: SPACE.sm },
-  row: { flexDirection: "row", alignItems: "flex-end", gap: SPACE.md },
-  rows: { flex: 1, gap: SPACE.xs },
+  // The hold is pinned under the scroll, so the content only needs to end clear of it.
+  content: { paddingBottom: SPACE.xl },
+  outcome: { gap: SPACE.xl },
+  loading: { gap: SPACE.xl },
+  head: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
+  mark: { borderRadius: SIZE.markDetail, overflow: "hidden" },
+  titles: { flex: 1, gap: SPACE.sm },
+  plate: { padding: SPACE.lgPlus, gap: SPACE.md },
+  gridRow: { flexDirection: "row", gap: SPACE.lg },
+  cell: { flex: 1, gap: SPACE.sm },
 });

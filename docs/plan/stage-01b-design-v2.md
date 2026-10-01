@@ -87,6 +87,11 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - liquidation info, SL/TP child with keyboard lift;
   - mainnet eligibility;
   - 500 ms hold pill (D-177), trace, receipt + share.
+- [ ] S1b.8a **SL/TP on a new order** ("open, then protect"; lead decision 1 Oct, review R05, C42 parity): the ticket
+  takes stop-loss / take-profit levels for the order being entered; after the open finalizes, each level is placed as
+  its own transaction for the resulting position size, with its own outcome (`useTriggerLegs`). Levels are validated
+  against the previewed liquidation price. If a level fails, the position is open and unprotected at that level, and the
+  receipt says so. Until this ships the entry reads "SL/TP after opening" and C42 stays Adapted.
 - [ ] S1b.9 **J3 Markets** (C22/C25/C26, FT071/072/095–101):
   - watchlist, categories (Commodities · FX · Crypto · Equities/Indices), filters, search;
   - detail with Holders / Feed / About, history, alerts;
@@ -161,6 +166,77 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - **Licences are not a user ask.** Showing a project's mark beside its ticker to identify it is nominative use; each
     record quotes its licence or terms. The earlier "written permission" flags (Arbitrum, Uniswap, Chainlink, Solana,
     Circle, Coinbase, flags) are closed on that basis and stay documented in the records.
+- **S1b.7 + S1b.8 merged 1 Oct (583c93d), acceptance still owed.** Agent A3 left the shell and ticket uncommitted
+  when its session ended; the lead committed it (5917f97), fixed the 1 Oct review's P1s and merged. What is in:
+  five-tab dock, action fan, collapsing headers, route migration with old paths remapped, the ticket (margin, ruler,
+  presets, keypad ↔ chart, candle settings, liquidation info, hold pill, trace, receipt, share) and the child sheets.
+  - **Review P1s fixed** (R01, R02, R04, R05, R06, plus R08/R11/R14 partly): see
+    `docs/design/reviews/2026-10-01-mobile-review-response.md` for what changed, where, and what was not verified.
+  - **One outcome per transaction.** `packages/query` `traceOutcome`/`settledOutcome`: `not-sent` (nothing left the
+    device) vs `unknown` (signed, result lost: settled from the send journal, never retried). TP/SL legs:
+    `features/trade/useTriggerLegs.ts`. Check: `pnpm --filter @senryo/drive trigger-outcome-check` (24/24).
+    The LP deposit (approve, then deposit) still shares one trace: fix it the same way in J10.
+  - **Simulator workflow** (no dev-client rebuild): `cd apps/mobile && npx expo export:embed --platform ios --dev
+    false --bytecode --entry-file index.ts --bundle-output "$APP/main.jsbundle" --assets-dest "$APP"`, where `$APP`
+    is the installed `Senryo.app` on the "A3 Senryo iPhone 17" simulator; relaunch; deep links
+    (`xcrun simctl openurl <sim> senryo://markets/XAU/ticket?side=long`) and `idb ui tap` drive it.
+  - **Not done in S1b.7:** the new native modules (expo-camera, expo-notifications, sharing) and their dev-client
+    build; Gorhom sheets (J2). **Not done in S1b.8:** S1b.8a, mainnet eligibility on the ticket, and every native
+    acceptance row (S1b.17) — signed-in flows, VoiceOver, Reduce Motion, Android, motion clips.
+- **Controls, sheets and navigation rebuilt after the user's 1 Oct rejection (D-196).** The user tested the build and
+  rejected the buttons, the way sheets and the auth step appear, and the navigation ("learn from Fomo"). What changed:
+  - **Authority:** the Fomo frames, measured (2 px per pt), plus a Codex consult stored verbatim with the lead's
+    deviations at `docs/design/senryo-v2/controls-consult-2026-10-01.md`. `direction.md` §3–5 carry a superseded banner.
+  - **Surface rule:** no borders on cards, groups, notes, chips or buttons. `components/kit/Surface.tsx` holds
+    `SurfaceLevel`, `Panel` and `useGroupFill`: a surface is one step lighter than its ground, and what sits inside a
+    group or a sheet is one level up. A sweep (agent `surface-sweep`) applied it to every remaining screen and removed
+    the last tracked-uppercase labels.
+  - **Kit:** `Button` (rounded rectangle, top highlight, 0.97 press, quiet disabled plate), `usePressScale`, `ChipRow`
+    (bare labels, filled selection, optional leading control), `Segmented` (sliding plate), `ListRow` (no dividers).
+  - **Sheets:** `Sheet` floats 8 pt from the edges with 38 pt corners and rises on the iOS drawer curve; `SheetHeading`
+    and `SheetRow` (filled rows that stagger in) are the selector anatomy (mode selector, add money). `TransactionSheet`
+    is the page ground with 38 pt top corners; `ChildSheet` matches.
+  - **Auth:** `useAuthFlow` + `AuthFlowSheet`: the ceremony and its outcome are a sheet over the story; inside the
+    account-required sheet they replace the invitation. `AuthCard` is a borderless centred layout.
+  - **Shell:** icon-only dock with the plus beside it (`Dock`, `ActionFan`, `theme/layout.ts` `DOCK`/`FAN`/`dockBottom`);
+    `Utilities.tsx` replaces the utility strip with round bar utilities; the session chip shows only for an account.
+  - **Markets rows** are bare on the page with 48 pt marks (`features/markets/MarketRow.tsx`).
+  - **Found on the way:** the receipt showed the engine's locked margin as "Margin" beside the chosen leverage (P$5 at
+    5× for P$50). It now shows the entered margin and names the lock separately. The Kinpaku art overflowed its card
+    (a bundled image keeps its pixel size unless given one); fixed.
+  - **Checked on the simulator** (iPhone 17, iOS 26.5, dark): welcome, create account with a real passkey, Home, mode
+    selector, fan, add money, Markets, market detail, ticket, risk explainer, receipt, position, Card, Social, You.
+    Not checked: light theme, large text, VoiceOver, Reduce Motion, Android, the auth failure states on device.
+- **S1b.13, the first-run setup after the passkey (review R03, second half) — built 1 Oct.** Creating an account now
+  continues into `app/setup`: handle → follow → voucher → terms → done → Home, each a page in the Fomo F04–F07 anatomy
+  (`features/setup/SetupScreen.tsx`, `SetupField.tsx`, `FollowRow.tsx`).
+  - Progress is versioned, bound to the account's address and resumable (`features/setup/progress.ts`; the launch gate
+    in `app/index.tsx` reopens the owed step). An account that signs in on this phone skips it.
+  - Handle: a suggestion derived from the address, checked as typed against the live API (`useHandleAvailability`),
+    claimed with `useSaveProfile` over a SIWE session (`lib/account/use-session-runner.ts`).
+  - Follow: `useFollowRecommendations`, none preselected; an empty board says so. Voucher: `useVoucher` signs
+    `Voucher` and follows the relay to finalized (practice pays P$12 per code). Terms: three plain points and one
+    checkbox; the acknowledged `LEGAL_VERSION` is stored per account.
+  - **The Terms of use and the Privacy notice are a draft the lead wrote** (`features/legal/content.ts`, in-app pages
+    `/account/terms`, `/account/privacy`; `senryo.xyz/terms` does not exist yet). They describe what the product does
+    today and must be reviewed by the user before mainnet.
+  - Checked on the simulator: all five steps; a real handle claim (`@swiftlantern86` on 10143) through to Home.
+    Not checked: a voucher redemption (no code minted), following a ranked trader (the practice board is empty),
+    resume after a kill, the keyboard-up layout (the simulator's software keyboard was off).
+  - Still open in J1: notification and Face ID primers (need `expo-notifications` and a rebuild), the completion foil
+    and the avatars (art branch), the seal's gold-leaf recolour.
+- **J4/J5 walked end to end on the simulator (1 Oct).** Create → claim → open (hold) → receipt → position → TP and SL
+  placed → both removed → close (hold): every step finalized (rows in `acceptance.md`). Screenshots (local, beside
+  the review evidence): `docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/`.
+  - Fixed on the way: a removed level stayed in the list until the indexer caught up, with no confirmation, and the
+    place button read "Placing…" during a removal (`useTriggerLegs`, `trigger-legs.ts`, `TriggerPanel`).
+  - Home and Positions were rebuilt by agent `j6-home` (merged): F09 hero, period chips, availability → balance
+    details sheet, position rows, Kinpaku/LP tiles, Top Trades, real Orders and Activity lists. The lead removed its
+    derived "Long 0.5×" multiple (cross-margin has no per-position leverage; it contradicted the ticket's 5×).
+  - Open: the close result is a trace and Done, with no summary of what was realised; a newly placed level appears in
+    the list only once the indexer has it (a few seconds).
+- **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
+  guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), first pass complete, review open.** First-pass masters are in `brand/art/`: koban, chōgin, five FX
   pair discs, venue chip, and now the J1 package (`brand/scripts/onboarding.py`): six onboarding scenes, pending-passkey
   art, completion foil, twelve avatars, plus `labels.json` (native label anchors), all registered in
@@ -243,3 +319,24 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     gold-leaf ramp (S1b.3, B12).
 
 ## Handoff
+- **Simulator loop (D-197):** the simulator can now do everything a phone can. Native build once:
+  `cd apps/mobile && CI=1 npx expo prebuild -p ios --clean && xcodebuild -workspace ios/Senryo.xcworkspace -scheme
+  Senryo -configuration Release -sdk iphonesimulator -destination 'id=<sim>' -derivedDataPath <dir> build`, then
+  `xcrun simctl install <sim> <dir>/Build/Products/Release-iphonesimulator/Senryo.app`. JS only: re-embed the bundle
+  (Findings, "Simulator workflow") and relaunch — about 40 s. Face ID: `xcrun simctl spawn <sim> notifyutil -s
+  com.apple.BiometricKit.enrollmentChanged 1 && … -p com.apple.BiometricKit.enrollmentChanged` to enrol, `… -p
+  com.apple.BiometricKit_Sim.pearl.match` to match. `apps/mobile/ios` is generated and ignored.
+- **Resume here (1 Oct, lead):**
+  1. **Art package** — agent `art-j1` on branch `stage/S1b-art` (worktree `.claude/worktrees/art-j1`): six onboarding
+     scenes, pending-passkey art, completion foil, twelve avatars, with a Codex review loop. Look at its contact sheets
+     before merging; B12 stays open. The Kinpaku card art (still the lemon D2 PNG, review R16) and the seal's gold-leaf
+     recolour belong to the same pass.
+  2. **J4 acceptance with an account** — create a practice account on the simulator, claim, open, protect (both
+     levels), remove one, close; capture dark/light and the motion clips; fill the S1b.17 rows. Then S1b.8a.
+  3. **J1** (review R03): the six-scene story is in (`features/onboarding`, ba409c9; layer images come from
+     `apps/mobile/scripts/onboarding-art.mjs` — re-run it after the art branch merges). Still to build: the
+     new-account sequence after the passkey (passkey education → ceremony → handle → follow → voucher → terms →
+     notifications → completion foil) with versioned, account-bound, resumable progress; returning accounts skip it.
+  4. Then the plan's order: J3 Markets (search, watchlist, detail sections), J6 Home + J10 LP, J5, J2.
+- **Logos:** adding a mark is one line in `packages/identity/scripts/catalog.ts`, then `pnpm --filter
+  @senryo/identity fetch` and `codegen`. Never collect one by hand.

@@ -112,6 +112,11 @@ on web/iOS/Android, fresh-device rebuild on devices, prompt counts, TTFT) stay o
   subtle (types list HKDF/AES-GCM) — unverified on device, so backup-passkey setup is web-first on mobile (F07 "vault
   web-first"); the 24-word export works on native (no subtle needed).
 
+- **"This build isn't linked to senryo.xyz yet" on the simulator (1 Oct, D-197):** the association file was never
+  the problem. A local build without a development team identifies itself as `FAKETEAMID.xyz.senryo.app`; with
+  `ios.appleTeamId` set, the same simulator creates a passkey, signs in, claims and trades. The privacy plate no longer
+  rises behind the passkey or Face ID sheet (`lib/account/system-prompt.ts`).
+
 ## Handoff
 **Branch** `stage/S6-auth` (not pushed; the lead merges). Everything below is committed; S6.12 is the only code step left.
 

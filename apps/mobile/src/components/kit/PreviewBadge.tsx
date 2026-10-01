@@ -1,10 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SAMPLE_NOTE } from "~/lib/sample";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
- * Marks every surface that renders `src/lib/sample.ts`: nothing on it is the user's money or a live market.
- * Removed screen by screen as S6–S8 wire real reads.
+ * Marks every surface that renders `src/lib/sample.ts`: nothing on it is the user's money or a live market. A warning
+ * wash with no border. Removed screen by screen as S6–S8 wire real reads.
  */
 export function PreviewBadge() {
   const { color } = useTheme();
@@ -12,10 +12,10 @@ export function PreviewBadge() {
     <View
       accessible
       accessibilityLabel={`Preview data. ${SAMPLE_NOTE}`}
-      style={[styles.badge, { borderColor: color.warn, backgroundColor: color.warnWash }]}
+      style={[styles.badge, { backgroundColor: color.warnWash }]}
     >
-      <Text style={[TYPE.label, { color: color.warn }]}>PREVIEW DATA</Text>
-      <Text style={[TYPE.caption, styles.note, { color: color.inkMuted }]} numberOfLines={2}>
+      <Text style={[TYPE.label, { color: color.warn }]}>Preview data</Text>
+      <Text style={[TYPE.meta, styles.note, { color: color.text2 }]} numberOfLines={2}>
         {SAMPLE_NOTE}
       </Text>
     </View>
@@ -27,10 +27,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: SPACE.sm,
-    paddingHorizontal: SPACE.md,
-    paddingVertical: SPACE.sm,
-    borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.sm,
+    padding: SPACE.md,
+    borderRadius: BUTTON.radius.md,
   },
   note: { flex: 1 },
 });

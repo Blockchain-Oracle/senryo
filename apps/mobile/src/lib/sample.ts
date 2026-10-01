@@ -294,4 +294,4 @@ export const SAMPLE_QUOTE = {
   etaSeconds: 24,
 };
 
-export const SAMPLE_NETWORK = { name: "MONAD", blockTimeLabel: "0.3s" } as const;
+export const SAMPLE_NETWORK = { name: "Monad", blockTimeLabel: "0.3s" } as const;

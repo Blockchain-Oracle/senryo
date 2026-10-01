@@ -1,12 +1,16 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
+import { Panel } from "~/components/kit/Surface";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { SPACE, TYPE, useTheme } from "~/theme";
 
-/** F10 step 2 / D-023: three facts before the first leveraged trade, accepted with a hold. Shown once (MMKV flag). */
+/**
+ * F10 step 2 / D-023: three facts before the first leveraged trade, each a borderless filled card on the sheet,
+ * accepted with a hold. Shown once (MMKV flag).
+ */
 const CARDS = [
   {
     title: "Leverage multiplies gains and losses",
@@ -35,17 +39,17 @@ function Body() {
   const close = useSheetClose();
   return (
     <View style={styles.body}>
-      <Text accessibilityRole="header" style={[TYPE.title, { color: color.ink }]}>
+      <Text accessibilityRole="header" style={[TYPE.sheetHeading, styles.center, { color: color.ink }]}>
         Before your first trade
       </Text>
       {CARDS.map((c, i) => (
-        <View key={c.title} style={[styles.card, { borderColor: color.hairline, backgroundColor: color.ground }]}>
-          <Text style={[TYPE.label, { color: color.inkMuted }]}>
+        <Panel key={c.title} style={styles.card}>
+          <Text style={[TYPE.meta, { color: color.text3 }]}>
             {i + 1} / {CARDS.length}
           </Text>
-          <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{c.title}</Text>
-          <Text style={[TYPE.body, { color: color.inkMuted }]}>{c.body}</Text>
-        </View>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>{c.title}</Text>
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{c.body}</Text>
+        </Panel>
       ))}
       <HoldToConfirm
         label="Hold · I understand"
@@ -62,5 +66,6 @@ function Body() {
 
 const styles = StyleSheet.create({
   body: { gap: SPACE.md },
-  card: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md, gap: SPACE.xs },
+  center: { textAlign: "center" },
+  card: { padding: SPACE.lg, gap: SPACE.xs },
 });

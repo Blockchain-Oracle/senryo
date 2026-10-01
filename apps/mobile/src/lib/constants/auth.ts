@@ -14,7 +14,5 @@ export const RELAY_POLL_MAX = 60;
 export const PHRASE_VISIBLE_MS = 60_000;
 /** Random bytes behind the per-install device id. */
 export const DEVICE_ID_BYTES = 16;
-/** The brand intro holds this long before the value pages (skipped under Reduce Motion; tap to skip). */
-export const INTRO_HOLD_MS = 1_200;
 /** "Copied" confirmation lifetime on inline copy actions. */
 export const COPIED_MS = 1_500;

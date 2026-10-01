@@ -460,11 +460,17 @@
         "rowAmount": "16/20 600 numeric",
         "meta": "12/16",
         "moneyMeta": "12/16 500 numeric",
-        "buttonLabel": "16/20 600",
-        "buttonCompact": "14/20 600",
+        "buttonLabel": "17/22 600",
+        "buttonCompact": "15/20 600",
+        "rowTitle": "17/22 600",
+        "rowPrice": "17/22 600 numeric",
+        "rowChange": "14/18 500 numeric",
+        "rowDetail": "14/18",
+        "sheetHeading": "22/28 600",
+        "chipCategory": "14/18 600",
         "tabLabel": "12/16 600",
         "chipLabel": "12/16 500",
-        "modeLabel": "12/16 600",
+        "modeLabel": "13/18 600",
         "fanLabel": "24/28 600",
         "legacy": "micro/label/caption 12/16 · body/bodyStrong 16/22 · title 20/24 · numSm 16/20 · numMd 20/24 · numTicker/numLg 40/44 · numXl/numHero 52/56"
       },
@@ -472,7 +478,7 @@
     },
     "radius": {
       "scale": "8 / 12 / 16 / 24 / 32 / pill",
-      "use": "chips · inputs · action rows · cards and sheet tops · onboarding hero · buttons, dock, fan, avatars",
+      "use": "D-196: buttons 12 (56 pt) / 10 (44 pt, chips, mode control) · grouped cards and selector rows 20 · sheets 38 · onboarding hero 32 · pill only for the dock, the fan, avatars and dots",
       "compat": "RADIUS.sm = 12 for components not rebuilt yet",
       "source": "packages/tokens/src/scale.ts RADIUS"
     },
@@ -486,14 +492,15 @@
     "motion": {
       "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)",
       "families": {
-        "press": "100 ms",
+        "press": "scale 0.97 in 100 ms, back in 160 ms (D-196)",
+        "sheet": "iOS drawer curve cubic-bezier(0.32, 0.72, 0, 1), 480 ms in, 240 ms out; released drag: spring 1/320/32 with the finger's velocity; rows stagger 40 ms, 10 pt rise (M02/M12)",
         "selection": "170 ms",
         "pagePush": "320 ms",
         "compactSelector": "~420 ms, spring 1/260/30 clamped (M02)",
         "tallDetail": "~450 ms, spring 1/240/30 clamped (M07/M08/M13)",
         "parentChild": "~600 ms (M16)",
         "fan": "200 ms/item, 25 ms stagger, spring 1/420/30; Send overshoots; backdrop 160; plus→× 180 (45°); exit 180 (M06)",
-        "dockActive": "260 ms, spring 1/500/36 (M10)",
+        "dockActive": "bubble: spring 1/420/30 with a small overshoot, stretches 1.14× while it travels; arriving icon pops 1.1× (M10, D-196)",
         "headerCollapse": "scroll-driven over 132 pt (M09)",
         "rulerSnap": "direct gesture, snap 1/500/40 (M14)",
         "numbers": "160 ms on real change only",
@@ -511,7 +518,8 @@
       "glass": "dock only (expo-glass-effect on iOS 26; blur + glassTint elsewhere; glassOpaque under reduced transparency)",
       "blur": "strong live blur only behind the fan (expo-blur) + fanScrim",
       "dim": "ordinary sheets dim the parent (sheetScrim); no universal sheet blur",
-      "elevation": "dock 0/8/24 #00000033; sheet 0/−4/16 #0000001F; raised content has no shadow",
+      "elevation": "dock 0/8/24 #00000033; sheet 0/−4/16 #0000001F; primary button 0/2/4 #00000029; raised content has no shadow",
+      "surfaces": "D-196: no borders on cards, groups, notes, chips or buttons — a surface is one step lighter than its ground (SurfaceLevel); 1 pt inner top highlights give buttons, sheets and the dock bubble their depth; borders only for inputs, focus and glass rims",
       "ramps": "gold leaf #886426/#D4AE5B/#FFF0BC · silver #697383/#C9D0DD/#F4F6FB · lacquer #17121B/#29212F/#514357 (artwork only)",
       "gold": "gold identifies Senryo and Kinpaku; never buy, profit, warning or mainnet"
     },
@@ -565,10 +573,11 @@
       {
         "id": "C15",
         "name": "floating glass dock",
-        "evidence": ["F12", "F16", "M09", "M10"],
+        "evidence": ["F09", "F12", "F16", "M09", "M10", "P12"],
         "journey": "SH",
         "route": "expo-router/ui headless tabs (spike D-193)",
-        "status": "spike"
+        "port": "D-196: icon-only 56 pt glass capsule 28 pt from the left, low in the home-indicator band; active bubble on a spring; the plus (P12) is a 48 pt disc beside it. Adapted: no visible labels (reference has none; accessible names kept), content scrolls behind the glass",
+        "status": "built — src/components/shell/Dock.tsx"
       },
       {
         "id": "C16",

@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fire } from "~/feedback/fire";
-import { HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { Icon } from "./Icon";
 
 /**
- * A settings/list row: an optional leading identity (real marks), title, optional detail, a chevron when it navigates
- * or a trailing control when it doesn't.
+ * A settings/list row inside a filled group: an optional leading identity (real marks), title, optional detail, a
+ * chevron when it navigates or a trailing control when it doesn't. Rows are separated by their own height, not by
+ * lines (Fomo F16/F20: no row borders).
  */
 export function ListRow({
   title,
@@ -14,28 +15,25 @@ export function ListRow({
   onPress,
   leading,
   trailing,
-  first = false,
 }: {
   title: string;
   detail?: string;
   onPress?: () => void;
   leading?: ReactNode;
   trailing?: ReactNode;
-  first?: boolean;
 }) {
   const { color } = useTheme();
   const body = (
     <>
       {leading}
       <View style={styles.text}>
-        <Text style={[TYPE.body, { color: color.ink }]}>{title}</Text>
-        {detail ? <Text style={[TYPE.caption, { color: color.inkMuted }]}>{detail}</Text> : null}
+        <Text style={[TYPE.row, { color: color.ink }]}>{title}</Text>
+        {detail ? <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{detail}</Text> : null}
       </View>
-      {trailing ?? (onPress ? <Icon name="chevron" size={SIZE.iconSm} tint={color.inkMuted} /> : null)}
+      {trailing ?? (onPress ? <Icon name="chevron" size={SIZE.iconSm} tint={color.text3} /> : null)}
     </>
   );
-  const border = first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline };
-  if (!onPress) return <View style={[styles.row, border]}>{body}</View>;
+  if (!onPress) return <View style={styles.row}>{body}</View>;
   return (
     <Pressable
       onPress={() => {
@@ -43,7 +41,7 @@ export function ListRow({
         onPress();
       }}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.row, border, pressed ? { backgroundColor: color.muted } : null]}
+      style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.rowPressed } : null]}
     >
       {body}
     </Pressable>
@@ -51,6 +49,13 @@ export function ListRow({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: SPACE.md, padding: SPACE.md, minHeight: SIZE.touch },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.md,
+    paddingHorizontal: SPACE.lg,
+    paddingVertical: SPACE.md,
+    minHeight: SIZE.rowMinHeight - SPACE.sm,
+  },
   text: { flex: 1, gap: SPACE.xxs },
 });

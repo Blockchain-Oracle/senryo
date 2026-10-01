@@ -7,7 +7,7 @@ import { GlassPlate } from "~/components/kit/GlassPlate";
 import { Icon } from "~/components/kit/Icon";
 import { fire } from "~/feedback/fire";
 import { DIAGNOSIS_COPY } from "~/lib/copy/diagnosis";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * F62 offline: a floating banner while the device has no internet. Cached data stays on screen marked stale (never
@@ -34,7 +34,7 @@ export function OfflineBanner() {
           <Icon name="offline" size={SIZE.iconSm} tint={color.warn} />
           <View style={styles.copy}>
             <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{copy.headline}</Text>
-            <Text style={[TYPE.caption, { color: color.inkMuted }]}>{copy.body}</Text>
+            <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{copy.body}</Text>
           </View>
         </View>
       </GlassPlate>
@@ -44,7 +44,7 @@ export function OfflineBanner() {
 
 const styles = StyleSheet.create({
   host: { position: "absolute", left: SIZE.gutter, right: SIZE.gutter },
-  plate: { borderRadius: RADIUS.sm, overflow: "hidden" },
+  plate: { borderRadius: SHEET_SHAPE.rowRadius, overflow: "hidden" },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.md, padding: SPACE.md },
   copy: { flex: 1, gap: SPACE.xxs },
 });

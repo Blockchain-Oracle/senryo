@@ -1,5 +1,5 @@
 /**
- * Session chip state (spec client.md): `● TRADING UNLOCKED · 24:10` / `● LOCKS IN 0:59` / `○ LOCKED · FACE ID TO TRADE`.
+ * Session chip state (spec client.md): `● Trading unlocked · 24:10` / `● Locks in 0:59` / `○ Locked · Face ID to trade` (sentence case, D-196).
  * Pure: the apps render it and tick once a second while unlocked.
  */
 import { SECONDS, SESSION_WARN_MS } from "../constants.ts";
@@ -28,14 +28,14 @@ export function clock(ms: number): string {
 export function chipState(snapshot: SessionSnapshot, now: number, unlockWord: string): ChipState {
   switch (snapshot.status) {
     case "none":
-      return { tone: "none", label: "NO ACCOUNT", remainingMs: 0 };
+      return { tone: "none", label: "No account", remainingMs: 0 };
     case "locked":
-      return { tone: "locked", label: `LOCKED · ${unlockWord} TO TRADE`, remainingMs: 0 };
+      return { tone: "locked", label: `Locked · ${unlockWord} to trade`, remainingMs: 0 };
     case "unlocked": {
       const remainingMs = Math.max(0, snapshot.expiresAt - now);
       return remainingMs <= SESSION_WARN_MS
-        ? { tone: "warning", label: `LOCKS IN ${clock(remainingMs)}`, remainingMs }
-        : { tone: "unlocked", label: `TRADING UNLOCKED · ${clock(remainingMs)}`, remainingMs };
+        ? { tone: "warning", label: `Locks in ${clock(remainingMs)}`, remainingMs }
+        : { tone: "unlocked", label: `Trading unlocked · ${clock(remainingMs)}`, remainingMs };
     }
   }
 }

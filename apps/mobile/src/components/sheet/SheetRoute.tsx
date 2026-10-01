@@ -1,26 +1,37 @@
 import { router } from "expo-router";
 import type { ReactNode } from "react";
-import { Text } from "react-native";
-import { Button } from "~/components/kit/Button";
-import { TYPE, useTheme } from "~/theme";
-import { Sheet, useSheetClose } from "./Sheet";
+import { StyleSheet, Text, View } from "react-native";
+import { SHEET_SHAPE, SPACE, TYPE, useTheme } from "~/theme";
+import { Sheet } from "./Sheet";
 
-/** A sheet route (transparent modal) with the standard title/body layout; `router.back()` once it has slid away. */
-export function SheetRoute({ title, body, children }: { title: string; body: string; children?: ReactNode }) {
+/**
+ * A sheet's heading (Fomo F20/F36): the title centred under the handle, one centred sentence under it. No close
+ * button: the handle, the scrim and Back dismiss it, and the scrim carries the accessible "Close" name.
+ */
+export function SheetHeading({ title, body }: { title: string; body?: string }) {
   const { color } = useTheme();
   return (
-    <Sheet onClose={() => router.back()} closeLabel={`Close ${title}`}>
-      <Text accessibilityRole="header" style={[TYPE.title, { color: color.ink }]}>
+    <View style={styles.heading}>
+      <Text accessibilityRole="header" style={[TYPE.sheetHeading, styles.center, { color: color.ink }]}>
         {title}
       </Text>
-      <Text style={[TYPE.body, { color: color.inkMuted }]}>{body}</Text>
-      {children}
-      <CloseButton />
+      {body ? <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{body}</Text> : null}
+    </View>
+  );
+}
+
+/** A sheet route (transparent modal) with the standard heading; `router.back()` once it has slid away. */
+export function SheetRoute({ title, body, children }: { title: string; body?: string; children?: ReactNode }) {
+  return (
+    <Sheet onClose={() => router.back()} closeLabel={`Close ${title}`}>
+      <SheetHeading title={title} {...(body ? { body } : {})} />
+      {children ? <View style={styles.rows}>{children}</View> : null}
     </Sheet>
   );
 }
 
-function CloseButton() {
-  const close = useSheetClose();
-  return <Button label="Close" variant="outline" onPress={() => close()} />;
-}
+const styles = StyleSheet.create({
+  heading: { gap: SPACE.xs, paddingHorizontal: SPACE.sm },
+  center: { textAlign: "center" },
+  rows: { gap: SHEET_SHAPE.rowGap },
+});

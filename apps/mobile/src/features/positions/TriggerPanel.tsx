@@ -1,23 +1,14 @@
-import type { PositionView, TxRequest } from "@senryo/chain";
+import type { PositionView } from "@senryo/chain";
 import { ENGINE_MARKETS } from "@senryo/config";
 import { previewDecrease, RISK } from "@senryo/core";
-import {
-  cancelTriggerRequest,
-  type LiveMarket,
-  placeTriggerRequest,
-  triggerOrder,
-  useQueryEnv,
-  useSendTrace,
-  useTriggers,
-} from "@senryo/query";
+import type { LiveMarket } from "@senryo/query";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
-import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
-import { useEnsureGas } from "~/features/trade/useGasTopUp";
-import { useAccount } from "~/lib/account/provider";
-import { userSender } from "~/lib/account/sender";
+import { KeyValue, Panel } from "~/components/kit/Surface";
+import { LEG_NAME, legMessage, removalMessage } from "~/features/trade/trigger-legs";
+import { useTriggerLegs } from "~/features/trade/useTriggerLegs";
 import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { DEFAULT_TRIGGER_STEP_BPS, TRIGGER_STEPS_BPS } from "./constants";
@@ -31,16 +22,14 @@ type Kind = (typeof KINDS)[number]["value"];
 /**
  * F14 TP/SL on a held position (TriggerOrders.sol): active orders with Cancel; a new order N % from the oracle price
  * with the realised PnL previewed at the trigger; signed in session, placed by the user (in scope), executed by any
- * keeper when the accepted oracle price crosses. Closed sessions queue until the market opens (stated).
+ * keeper when the accepted oracle price crosses. Closed sessions queue until the market opens (stated). One borderless
+ * filled group under a plain heading: the levels already set as rows (side in colour and in words, Cancel beside each),
+ * then the two selectors and the preview. Placing a level is the group's quiet plate — the page's one primary action
+ * is the close hold pinned at the bottom.
  */
 export function TriggerPanel({ market, position }: { market: LiveMarket; position: PositionView }) {
   const { color } = useTheme();
-  const env = useQueryEnv();
-  const account = useAccount();
-  const address = account.hint?.address;
-  const triggers = useTriggers(address);
-  const trace = useSendTrace();
-  const gas = useEnsureGas();
+  const legs = useTriggerLegs(market, position);
   const [kind, setKind] = useState<Kind>("tp");
   const [stepBps, setStepBps] = useState<bigint>(DEFAULT_TRIGGER_STEP_BPS);
   const takeProfit = kind === "tp";
@@ -55,29 +44,23 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
     position.size,
     position.openedBlock + RISK.MIN_HOLD_BLOCKS,
   );
-  const marketKey = `ours-${market.marketId}`;
-  const mine =
-    triggers.status === "fresh" || triggers.status === "stale"
-      ? triggers.value.filter((t) => t.market_id === marketKey)
-      : [];
-  const busy = trace.running;
-  const failed = trace.events.find((e) => e.stage === "failed" || e.stage === "reverted");
+  const mine = legs.active;
+  const busy = legs.busy;
   const symbol = ENGINE_MARKETS.find((m) => m.id === market.marketId)?.symbol ?? "";
-
-  const send = async (build: () => Promise<TxRequest>) => {
-    const client = account.client;
-    if (!client || !address) return;
-    const sender = userSender(client, address, account.settings.faceId);
-    const request = await build().catch(() => undefined);
-    if (request) await trace.run(sender, request, { preflight: gas.preflight(request) });
-  };
+  const decimals = priceDecimalsOf(market.marketId);
+  const toneColor = { up: color.up, down: color.down, warn: color.warn, muted: color.inkMuted } as const;
+  // One level per press, with its own outcome; the removal has its own too (review R01).
+  const note = legMessage(kind, legs.states[kind]);
+  const removal = removalMessage(legs.removing);
 
   return (
     <Panel style={styles.panel}>
-      <SectionLabel>TP / SL</SectionLabel>
+      <Text accessibilityRole="header" style={[TYPE.rowTitle, { color: color.ink }]}>
+        TP / SL
+      </Text>
       {mine.map((t) => (
         <View key={t.id} style={styles.row}>
-          <Text style={[TYPE.numSm, { color: t.takeProfit ? color.up : color.down, flex: 1 }]}>
+          <Text style={[TYPE.rowAmount, styles.level, { color: t.takeProfit ? color.up : color.down }]}>
             {t.takeProfit ? "TP" : "SL"} · {price18(t.triggerPrice, priceDecimalsOf(market.marketId))} ·{" "}
             {t.size >= position.size ? "all" : "part"}
           </Text>
@@ -86,10 +69,19 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
             size="sm"
             variant="outline"
             block={false}
-            disabled={busy}
-            onPress={() => void send(async () => cancelTriggerRequest(env.chainId, t.id as `0x${string}`))}
+            disabled={busy || legs.blocked}
+            onPress={() => void legs.remove(t.id)}
           />
         </View>
+      ))}
+      {removal ? <Text style={[TYPE.rowDetail, { color: toneColor[removal.tone] }]}>{removal.text}</Text> : null}
+      {legs.pending.map((t) => (
+        <Text key={t.hash} style={[TYPE.rowDetail, { color: color.warn }]}>
+          {t.action === "remove"
+            ? "A removal is still being confirmed."
+            : `${t.leg ? LEG_NAME[t.leg] : "A level"}${t.price18 === undefined ? "" : ` at ${price18(t.price18, decimals)}`} is still being confirmed.`}{" "}
+          Placing is paused until it settles, so nothing is placed twice.
+        </Text>
       ))}
       <Segmented options={KINDS} value={kind} onChange={setKind} label="Trigger kind" />
       <Segmented
@@ -98,42 +90,30 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
         onChange={(v) => setStepBps(BigInt(v))}
         label="Distance from the oracle price"
       />
-      <KeyValue label={`${symbol} AT`} value={price18(trigger18, priceDecimalsOf(market.marketId))} />
-      <KeyValue label="REALISED AT TRIGGER" value={signedUsd(atTrigger.netUsd6)} />
+      <View>
+        <KeyValue label={`${symbol} at`} value={price18(trigger18, priceDecimalsOf(market.marketId))} />
+        <KeyValue label="Realised at trigger" value={signedUsd(atTrigger.netUsd6)} />
+      </View>
       {market.pv.status !== "OPEN" ? (
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
           The market is {market.pv.status.toLowerCase()}: a crossing executes once it opens.
         </Text>
       ) : null}
-      {failed ? (
-        <Text style={[TYPE.caption, { color: color.down }]}>That didn't go through; nothing changed.</Text>
-      ) : trace.events.some((e) => e.stage === "finalized") ? (
-        <Text style={[TYPE.caption, { color: color.up }]}>Saved onchain · keepers watch the oracle.</Text>
+      {note ? (
+        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: toneColor[note.tone] }]}>
+          {note.text}
+        </Text>
       ) : null}
       <Button
         label={
-          busy
+          legs.placing
             ? "Placing…"
             : `Place ${takeProfit ? "TP" : "SL"} at ${price18(trigger18, priceDecimalsOf(market.marketId))}`
         }
-        disabled={busy || !account.client || position.size === 0n}
-        loading={busy}
-        onPress={() =>
-          void send(async () => {
-            if (!address) throw new Error("no account");
-            const client = account.client;
-            if (!client) throw new Error("locked");
-            const order = triggerOrder({
-              user: address,
-              marketId: market.marketId,
-              isLong: position.isLong,
-              takeProfit,
-              triggerPrice18: trigger18,
-              sizeDelta: position.size,
-            });
-            return placeTriggerRequest(userSender(client, address, account.settings.faceId), order);
-          })
-        }
+        variant="secondary"
+        disabled={busy || legs.blocked || !legs.ready || position.size === 0n}
+        loading={legs.placing}
+        onPress={() => void legs.save([{ kind, price18: trigger18 }])}
         accessibilityHint={`Closes the whole position when ${market.name} reaches ${price18(trigger18, priceDecimalsOf(market.marketId))}, ${pct(stepBps)} from now`}
       />
     </Panel>
@@ -141,6 +121,7 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.sm },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  level: { flex: 1 },
 });

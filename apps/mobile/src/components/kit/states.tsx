@@ -11,12 +11,14 @@ import Animated, {
 import { ELAPSED_TICK_MS, MS_PER_SECOND } from "~/lib/constants/time";
 import { DIAGNOSIS_COPY, ERROR_COPY } from "~/lib/copy/diagnosis";
 import { clockTime } from "~/lib/format";
-import { HAIRLINE_PX, RADIUS, SIZE, SKELETON, SPACE, TYPE, useTheme } from "~/theme";
+import { RADIUS, SHEET_SHAPE, SIZE, SKELETON, SPACE, TYPE, useTheme } from "~/theme";
 import { Button } from "./Button";
+import { useGroupFill } from "./Surface";
 
 /**
  * The states kit (ported): a skeleton only where nothing was ever known, never an invented number; every empty panel
- * says why and names the next action; every error says what still works.
+ * says why and names the next action; every error says what still works. No borders: loading sits bare on its ground,
+ * empty is a filled group one step lighter than it, an error is the destructive wash.
  */
 export function Skeleton({ width = "100%", height = SIZE.skeletonLine }: { width?: DimensionValue; height?: number }) {
   const { color } = useTheme();
@@ -26,7 +28,7 @@ export function Skeleton({ width = "100%", height = SIZE.skeletonLine }: { width
     if (!reduce) pulse.value = withRepeat(withTiming(SKELETON.to, { duration: SKELETON.periodMs }), -1, true);
   }, [reduce, pulse]);
   const style = useAnimatedStyle(() => ({ opacity: pulse.value }));
-  return <Animated.View style={[{ width, height, borderRadius: RADIUS.sm, backgroundColor: color.muted }, style]} />;
+  return <Animated.View style={[{ width, height, borderRadius: RADIUS.sm, backgroundColor: color.skeleton }, style]} />;
 }
 
 export type LoadingShape = "line" | "row" | "list" | "plate" | "chart";
@@ -42,7 +44,7 @@ function useElapsed(): string {
   return `${((now - start) / MS_PER_SECOND).toFixed(1)}s`;
 }
 
-/** D2's terminal loader (21st Loading State #23591): what is syncing, from where, and for how long. */
+/** The loader (21st Loading State #23591): what is syncing and for how long, over skeletons of what will arrive. */
 export function LoadingState({ shape = "row", label = "Loading" }: { shape?: LoadingShape; label?: string }) {
   const { color } = useTheme();
   const elapsed = useElapsed();
@@ -58,11 +60,11 @@ export function LoadingState({ shape = "row", label = "Loading" }: { shape?: Loa
       accessibilityRole="progressbar"
       accessibilityLabel={label}
       accessibilityState={{ busy: true }}
-      style={[styles.loading, { borderColor: color.hairline }]}
+      style={styles.loading}
     >
       <View style={styles.loadingHead}>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>{label}</Text>
-        <Text style={[TYPE.numSm, { color: color.inkMuted }]}>{elapsed}</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{label}</Text>
+        <Text style={[TYPE.rowChange, { color: color.text3 }]}>{elapsed}</Text>
       </View>
       {shape === "line" ? <Skeleton width="66%" /> : null}
       {shape === "row" ? row(0) : null}
@@ -84,10 +86,11 @@ export function EmptyState({
   action?: { label: string; onPress: () => void };
 }) {
   const { color } = useTheme();
+  const fill = useGroupFill();
   return (
-    <View style={[styles.panel, styles.dashed, { borderColor: color.hairline, backgroundColor: color.card }]}>
-      <Text style={[TYPE.title, styles.center, { color: color.ink }]}>{why}</Text>
-      {detail ? <Text style={[TYPE.body, styles.center, { color: color.inkMuted }]}>{detail}</Text> : null}
+    <View style={[styles.panel, { backgroundColor: fill }]}>
+      <Text style={[TYPE.sectionTitle, styles.center, { color: color.ink }]}>{why}</Text>
+      {detail ? <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{detail}</Text> : null}
       {action ? (
         <Button label={action.label} onPress={action.onPress} variant="outline" size="sm" block={false} />
       ) : null}
@@ -102,24 +105,21 @@ export function ErrorState({ diagnosis, retry }: { diagnosis: Diagnosis; retry?:
   const copy = DIAGNOSIS_COPY[diagnosis.kind];
   const offerRetry = retry !== undefined && diagnosis.kind !== "not-deployed";
   return (
-    <View
-      accessibilityRole="alert"
-      style={[styles.panel, { backgroundColor: color.destructiveWash, borderColor: color.destructive }]}
-    >
-      <Text style={[TYPE.title, styles.center, { color: color.ink }]}>{copy.headline}</Text>
-      <Text style={[TYPE.body, styles.center, { color: color.inkMuted }]}>{copy.body}</Text>
+    <View accessibilityRole="alert" style={[styles.panel, { backgroundColor: color.destructiveWash }]}>
+      <Text style={[TYPE.sectionTitle, styles.center, { color: color.ink }]}>{copy.headline}</Text>
+      <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{copy.body}</Text>
       {offerRetry ? (
         <Button label={ERROR_COPY.retry} onPress={retry} variant="outline" size="sm" block={false} />
       ) : null}
       {diagnosis.technical ? (
         <Pressable onPress={() => setOpen((v) => !v)} accessibilityRole="button" hitSlop={SPACE.sm}>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
             {open ? "▾" : "▸"} {ERROR_COPY.technical}
           </Text>
         </Pressable>
       ) : null}
       {open ? (
-        <Text selectable style={[TYPE.numSm, { color: color.inkMuted }]}>
+        <Text selectable style={[TYPE.meta, { color: color.text2 }]}>
           {diagnosis.kind} · {diagnosis.technical}
         </Text>
       ) : null}
@@ -132,7 +132,7 @@ export function StaleStamp({ at, refreshing, failed }: { at: number; refreshing:
   const { color } = useTheme();
   const tail = failed ? ERROR_COPY.staleFailed : refreshing ? "refreshing" : "stale";
   return (
-    <Text accessibilityLiveRegion="polite" style={[TYPE.caption, { color: failed ? color.warn : color.inkMuted }]}>
+    <Text accessibilityLiveRegion="polite" style={[TYPE.meta, { color: failed ? color.warn : color.text3 }]}>
       Updated {clockTime(at)} · {tail}
     </Text>
   );
@@ -173,16 +173,14 @@ export function ReadingView<T>({
 }
 
 const styles = StyleSheet.create({
-  loading: { gap: SPACE.sm, padding: SPACE.md, borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm },
+  loading: { gap: SPACE.sm, paddingVertical: SPACE.sm },
   loadingHead: { flexDirection: "row", justifyContent: "space-between" },
   row: { flexDirection: "row", gap: SPACE.sm },
   panel: {
-    borderRadius: RADIUS.sm,
-    borderWidth: HAIRLINE_PX,
+    borderRadius: SHEET_SHAPE.rowRadius,
     padding: SPACE.xl,
     gap: SPACE.md,
     alignItems: "center",
   },
-  dashed: { borderStyle: "dashed" },
   center: { textAlign: "center" },
 });

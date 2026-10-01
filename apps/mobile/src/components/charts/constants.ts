@@ -12,4 +12,14 @@ export const CHART = {
   yTicks: 4,
   /** Candle body width as a fraction of the slot. */
   candleWidthFraction: 0.6,
+  /**
+   * The current-price line (Fomo F32): a 1 pt dotted rule across the plot and a filled label on the price axis, with
+   * 4 × 2 pt of padding around its figure and 3 pt corners.
+   */
+  lastStroke: 1,
+  lastDash: 2,
+  lastGap: 3,
+  lastPadX: 4,
+  lastPadY: 2,
+  lastRadius: 3,
 } as const;

@@ -77,14 +77,19 @@ export async function placeTriggerRequest(sender: Sender, order: TriggerOrder): 
     message: order,
   });
   return contractCall(sender.chainId, "SenryoCore", "placeTrigger", [order, signature], "placeTrigger", {
-    meta: { kind: "placeTrigger", marketId: String(order.marketId) },
+    meta: {
+      kind: "placeTrigger",
+      marketId: String(order.marketId),
+      leg: order.takeProfit ? "tp" : "sl",
+      price: order.triggerPrice18.toString(),
+    },
   });
 }
 
 export function cancelTriggerRequest(chainId: ChainId, orderId: `0x${string}`): TxRequest {
   return contractCall(chainId, "SenryoCore", "cancelTrigger", [orderId], "placeTrigger", {
     gasCap: positionGasLimit("placeTrigger", 1),
-    meta: { kind: "cancelTrigger" },
+    meta: { kind: "cancelTrigger", orderId },
   });
 }
 

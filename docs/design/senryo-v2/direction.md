@@ -79,6 +79,11 @@ Keep Solflare’s changing onboarding colour fields as **artwork backgrounds**, 
 
 Gold identifies Senryo and Kinpaku. It does not mean “buy,” “profit,” “warning” or “mainnet.”
 
+> **SUPERSEDED IN PART by D-196 (1 Oct 2026).** The user rejected the buttons, sheets and navigation built from §3–5.
+> Where this text says pill buttons, radius-24 sheet tops, hairline surfaces, a labelled 64 pt dock or a plus above the
+> dock, follow `controls-consult-2026-10-01.md` instead. Tokens (§2), type faces, motion families for the story, fan,
+> ruler and charts, mode rules (§6) and everything from §7 on still stand.
+
 **3. Replace terminal typography and geometry**
 
 - **UI:** Inter, weights 400/500/600/700.

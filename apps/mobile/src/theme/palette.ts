@@ -18,6 +18,8 @@ function withAlpha(hex: string, alpha: number): string {
 
 /** Directional wash strengths (fractions of the up/down colour) and the chart area fill (D-191). */
 const WASH = { soft: 0.12, strong: 0.24, chartFill: 0.16, chartFillEnd: 0 } as const;
+/** Edge light (fractions): the top highlight on a filled primary, the faint edge of a raised fill, the dock bubble. */
+const RIM = { primary: 0.2, surface: 0.06, bubble: 0.12, bubbleEdge: 0.16 } as const;
 
 function roles(t: TokenPalette) {
   return {
@@ -40,9 +42,17 @@ function roles(t: TokenPalette) {
     chartFillBottom: withAlpha(t.chartUp, WASH.chartFillEnd),
     /** Ordinary sheets dim the parent (#00000066 / #17151F38); the fan has its own `fanScrim` over live blur. */
     scrim: t.sheetScrim,
+    /** Depth without borders: 1 px inner highlights (Fomo's buttons, sheets and dock bubble). */
+    primaryRim: withAlpha(t.primaryForeground, RIM.primary),
+    surfaceRim: withAlpha(t.foreground, RIM.surface),
+    glassBubble: withAlpha(t.foreground, RIM.bubble),
+    glassBubbleRim: withAlpha(t.foreground, RIM.bubbleEdge),
     /** Text on a light plate (QR card) in both themes. */
     paper: LIGHT_TOKENS.card,
     paperInk: LIGHT_TOKENS.foreground,
+    /** The mode names on the story artwork's light label plates (light-theme inks in both themes). */
+    paperPractice: LIGHT_TOKENS.practice,
+    paperMainnet: LIGHT_TOKENS.mainnet,
     /** Text on the Kinpaku card's lacquer (the art is black in both themes). */
     onLacquer: DARK_TOKENS.foreground,
     onLacquerMuted: DARK_TOKENS.mutedForeground,

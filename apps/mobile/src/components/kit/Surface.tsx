@@ -1,20 +1,41 @@
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { type StyleProp, StyleSheet, Text, type TextStyle, View, type ViewStyle } from "react-native";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { HAIRLINE_PX, type Palette, SHEET_SHAPE, SPACE, TYPE, useTheme } from "~/theme";
 
-/** A D2 panel: card ground, 1 px hairline, 4 px corners, no shadow. */
+/**
+ * How far above the page a surface sits: 0 on a page, 1 inside a sheet. A filled group is always one step lighter than
+ * what it sits on, so it reads without a border (Fomo F20: borderless rows on the sheet; F16: cards on the page).
+ */
+export const SurfaceLevel = createContext(0);
+
+/** The fill for a group or row at the current level. */
+export function useGroupFill(): string {
+  return groupFill(useTheme().color, useContext(SurfaceLevel));
+}
+
+function groupFill(color: Palette, level: number): string {
+  return level > 0 ? color.raised2 : color.card;
+}
+
+/**
+ * A filled group: one step lighter than its ground, 20 pt corners, no border and no shadow. What sits inside it is one
+ * level up, so a quiet button on a group still reads as a plate.
+ */
 export function Panel({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const level = useContext(SurfaceLevel);
   const { color } = useTheme();
   return (
-    <View style={[styles.panel, { backgroundColor: color.card, borderColor: color.hairline }, style]}>{children}</View>
+    <View style={[styles.panel, { backgroundColor: groupFill(color, level) }, style]}>
+      <SurfaceLevel.Provider value={level + 1}>{children}</SurfaceLevel.Provider>
+    </View>
   );
 }
 
-/** The tracked uppercase section label ("POSITIONS · 2", "EQUITY · RISK-ADJUSTED"). */
+/** A section's quiet label above its content. */
 export function SectionLabel({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
   const { color } = useTheme();
   return (
-    <Text accessibilityRole="header" style={[TYPE.label, { color: color.inkMuted }, style]}>
+    <Text accessibilityRole="header" style={[TYPE.rowDetail, { color: color.text3 }, style]}>
       {children}
     </Text>
   );
@@ -33,8 +54,8 @@ export function KeyValue({
   const { color } = useTheme();
   return (
     <View style={styles.kv} accessible accessibilityLabel={`${label} ${value}`}>
-      <Text style={[TYPE.label, { color: color.inkMuted }]}>{label}</Text>
-      <Text style={[TYPE.numSm, { color: valueColor ?? color.ink }]}>{value}</Text>
+      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{label}</Text>
+      <Text style={[TYPE.rowAmount, { color: valueColor ?? color.ink }]}>{value}</Text>
     </View>
   );
 }
@@ -46,7 +67,13 @@ export function Rule() {
 }
 
 const styles = StyleSheet.create({
-  panel: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, overflow: "hidden" },
-  kv: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", paddingVertical: SPACE.xs },
+  panel: { borderRadius: SHEET_SHAPE.rowRadius, overflow: "hidden" },
+  kv: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    gap: SPACE.md,
+    paddingVertical: SPACE.xs + SPACE.xxs,
+  },
   rule: { height: HAIRLINE_PX, alignSelf: "stretch" },
 });

@@ -29,18 +29,18 @@ export function CardFace({
   const { color } = useTheme();
   return (
     <View accessible accessibilityLabel={`Kinpaku card ending ${last4}, ${route}`} style={styles.card}>
-      <Image source={CARD_ART} style={StyleSheet.absoluteFill} resizeMode="contain" />
+      <Image source={CARD_ART} style={styles.art} resizeMode="contain" />
       <View style={[styles.overlay, OVERLAY]}>
         <Text style={[TYPE.numMd, { color: color.onLacquer }]}>•••• {last4}</Text>
         <View style={styles.bottom}>
           <View style={styles.flex}>
-            <Text style={[TYPE.label, { color: color.onLacquerMuted }]}>CARD HOLDER</Text>
+            <Text style={[TYPE.meta, { color: color.onLacquerMuted }]}>Card holder</Text>
             <Text style={[TYPE.numSm, { color: color.onLacquer }]} numberOfLines={1}>
               {holder}
             </Text>
           </View>
           <View style={styles.right}>
-            <Text style={[TYPE.label, { color: color.onLacquerMuted }]}>EXPIRES</Text>
+            <Text style={[TYPE.meta, { color: color.onLacquerMuted }]}>Expires</Text>
             <Text style={[TYPE.numSm, { color: color.onLacquer }]}>{expires}</Text>
           </View>
         </View>
@@ -50,7 +50,9 @@ export function CardFace({
 }
 
 const styles = StyleSheet.create({
-  card: { aspectRatio: SIZE.cardAspect },
+  card: { aspectRatio: SIZE.cardAspect, overflow: "hidden" },
+  // Explicit size: a bundled image otherwise keeps its own pixel size, however it is positioned.
+  art: { position: "absolute", width: "100%", height: "100%" },
   overlay: { position: "absolute", right: SPACE.xl, justifyContent: "space-between" },
   bottom: { flexDirection: "row", justifyContent: "space-between", gap: SPACE.sm },
   flex: { flex: 1 },

@@ -6,22 +6,26 @@
  * Mainnet request opens straight on the confirmation, which still takes the deliberate tap.
  */
 import { MAINNET, TESTNET } from "@senryo/config";
+import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { ListRow } from "~/components/kit/ListRow";
-import { Panel } from "~/components/kit/Surface";
+import { SheetRow } from "~/components/sheet/SheetRow";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { usd } from "~/lib/money";
 import { mainnetTradingLive, type NetworkKey, setActiveNetwork, useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { RADIUS, SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useNetworkBalances } from "./useNetworkBalances";
 
-function Mark({ label, tone, wash }: { label: string; tone: string; wash: string }) {
-  return (
-    <Text style={[TYPE.micro, styles.mark, { color: tone, borderColor: tone, backgroundColor: wash }]}>{label}</Text>
-  );
+/** The mode's colour as a dot at the row's leading edge: violet for paper money, blue for real money (D-172). */
+function ModeDot({ tone }: { tone: string }) {
+  return <View style={[styles.dot, { backgroundColor: tone }]} />;
+}
+
+/** The current choice: a check in the mode's colour (Fomo F21/F22 mark selection at the trailing edge). */
+function InUse({ tone }: { tone: string }) {
+  return <Check size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={tone} />;
 }
 
 export function NetworkPicker({ onDone, request }: { onDone?: () => void; request?: NetworkKey | undefined }) {
@@ -49,58 +53,56 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
 
   return (
     <View style={styles.wrap}>
-      <Panel>
-        <ListRow
-          first
-          title="Practice · Paper money"
-          detail={`${TESTNET.name} · test dollars with no real value${
-            balances.practice === undefined ? "" : ` · ${usd(balances.practice, undefined, TESTNET.key)}`
-          }`}
-          onPress={() => choose(TESTNET.key)}
-          trailing={
-            network.key === TESTNET.key ? (
-              <Mark label="IN USE" tone={color.practice} wash={color.practiceWash} />
-            ) : undefined
-          }
-        />
-        <ListRow
-          title="Mainnet · Real money"
-          detail={
-            live
-              ? `${MAINNET.name} · your real funds${
-                  balances.mainnet === undefined ? "" : ` · ${usd(balances.mainnet, undefined, MAINNET.key)}`
-                }`
-              : `${MAINNET.name} · live prices to browse · trading opens at launch`
-          }
-          onPress={() => choose(MAINNET.key)}
-          trailing={
-            network.key === MAINNET.key ? (
-              <Mark label="IN USE" tone={color.mainnet} wash={color.mainnetWash} />
-            ) : undefined
-          }
-        />
-      </Panel>
+      <SheetRow
+        index={0}
+        leading={<ModeDot tone={color.practice} />}
+        title="Practice"
+        detail={`Paper money · ${TESTNET.name}${
+          balances.practice === undefined ? "" : ` · ${usd(balances.practice, undefined, TESTNET.key)}`
+        }`}
+        selected={network.key === TESTNET.key}
+        onPress={() => choose(TESTNET.key)}
+        trailing={network.key === TESTNET.key ? <InUse tone={color.practice} /> : undefined}
+      />
+      <SheetRow
+        index={1}
+        leading={<ModeDot tone={color.mainnet} />}
+        title="Mainnet"
+        detail={
+          live
+            ? `Real money · ${MAINNET.name}${
+                balances.mainnet === undefined ? "" : ` · ${usd(balances.mainnet, undefined, MAINNET.key)}`
+              }`
+            : `Real money · ${MAINNET.name} · trading opens at launch`
+        }
+        selected={network.key === MAINNET.key}
+        onPress={() => choose(MAINNET.key)}
+        trailing={network.key === MAINNET.key ? <InUse tone={color.mainnet} /> : undefined}
+      />
       {confirming ? (
-        <View style={[styles.confirm, { borderColor: color.mainnet, backgroundColor: color.mainnetWash }]}>
+        <View style={[styles.confirm, { backgroundColor: color.mainnetWash }]}>
           <Text style={[TYPE.bodyStrong, { color: color.ink }]}>Switch to real money?</Text>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
             {live
               ? "Trades and card spends use your real funds on Monad. Face ID confirms anything above your limit; your session locks now and starts fresh."
               : "Mainnet isn't open for trading yet — you can browse live prices. Your practice positions stay where they are."}
           </Text>
           <Button label="Switch to real money" onPress={switchToReal} />
-          <Button label="Stay in practice" variant="outline" onPress={() => setConfirming(false)} />
+          <Button label="Stay in practice" variant="ghost" size="sm" onPress={() => setConfirming(false)} />
         </View>
       ) : null}
-      <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-        One passkey, one address on both networks — balances and positions stay separate.
+      <Text style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>
+        One passkey, one address on both networks. Balances and positions stay separate.
       </Text>
     </View>
   );
 }
 
+const DOT = SPACE.md;
+
 const styles = StyleSheet.create({
-  wrap: { gap: SPACE.md },
-  mark: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, paddingHorizontal: SPACE.xs, paddingVertical: SPACE.xxs },
-  confirm: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md, gap: SPACE.sm },
+  wrap: { gap: SHEET_SHAPE.rowGap },
+  dot: { width: DOT, height: DOT, borderRadius: RADIUS.pill },
+  confirm: { borderRadius: SHEET_SHAPE.rowRadius, padding: SPACE.lg, gap: SPACE.md },
+  center: { textAlign: "center" },
 });

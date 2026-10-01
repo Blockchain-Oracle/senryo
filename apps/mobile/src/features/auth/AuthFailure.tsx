@@ -1,16 +1,27 @@
 /**
- * Auth failure card (native): the shared copy table (`authFailureCopy`) — one honest title, the fix, the next action.
- * A failed *create* may have left a passkey behind: never create twice, offer "I already have an account" instead.
- * `bad-configuration` (association files) and `prf-unavailable` point to the web app, same account there.
+ * An auth failure inside its sheet (Codex consult 1 Oct): the shared copy table (`authFailureCopy`) as one title and
+ * one explanation, one primary action, at most one quiet action under it. No warning tile, no boxed note, no Back
+ * button — the handle and the scrim return to where the user was.
+ * The primary action always agrees with the explanation (review R04):
+ * - a failed *create* that may have left a passkey behind → **"I already have an account"** (signing in can never
+ *   make a second account); the explanation says why; creating again is only reachable from a sign-in that finds no
+ *   passkey;
+ * - a failure repetition can't repair (`prf-unavailable`, `not-supported`, a wrong host) → the web app, no retry;
+ * - `bad-configuration` (association files) → the web app first, "Try again" as the quiet action;
+ * - anything else → "Try again".
+ * No promise is made about passkeys syncing between devices.
  */
 import { type AuthFailure, authFailureCopy, mayHaveLeftPasskey } from "@senryo/account";
 import { WEB_ORIGIN } from "@senryo/config";
-import { Linking, Platform, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 import { AuthCard } from "./AuthCard";
 
 export type FailedFlow = "create" | "sign-in" | "unlock" | "recover";
+
+const ORPHAN_NOTE =
+  "Your passkey may already be saved on this phone. Sign in with it first, so you don’t end up with two accounts.";
+const WEB_ONLY: readonly AuthFailure[] = ["prf-unavailable", "not-supported", "host-not-allowed", "insecure-context"];
 
 export function AuthFailureCard({
   kind,
@@ -25,34 +36,24 @@ export function AuthFailureCard({
   onSignIn?: () => void;
   onCreate?: () => void;
 }) {
-  const { color } = useTheme();
   const copy = authFailureCopy(kind, Platform.OS === "ios" ? "ios" : "android");
-  const orphanRisk = flow === "create" && mayHaveLeftPasskey(kind);
-  const webFallback = kind === "bad-configuration" || kind === "prf-unavailable" || kind === "not-supported";
+  const orphanRisk = flow === "create" && mayHaveLeftPasskey(kind) && onSignIn !== undefined;
+  const webOnly = WEB_ONLY.includes(kind);
+  const webFirst = webOnly || kind === "bad-configuration";
+  const openWeb = () => void Linking.openURL(WEB_ORIGIN);
   return (
-    <AuthCard glyph="warning" tone="down" title={copy.title} body={copy.body}>
+    <AuthCard tone="down" title={copy.title} body={orphanRisk ? `${copy.body} ${ORPHAN_NOTE}` : copy.body}>
       {orphanRisk ? (
-        <View style={[styles.note, { borderColor: color.hairline, backgroundColor: color.muted }]}>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-            If the system sheet finished, your passkey is already saved — tap "I already have an account" instead of
-            creating another one.
-          </Text>
-        </View>
-      ) : null}
-      <Button label="Try again" onPress={onRetry} />
+        <Button label="I already have an account" onPress={onSignIn} />
+      ) : webFirst ? (
+        <Button label="Open senryo.xyz" onPress={openWeb} />
+      ) : (
+        <Button label="Try again" onPress={onRetry} />
+      )}
       {kind === "no-credentials" && onCreate ? (
-        <Button label="Create account" variant="outline" onPress={onCreate} />
+        <Button label="Create account" variant="ghost" size="sm" onPress={onCreate} />
       ) : null}
-      {orphanRisk && onSignIn ? (
-        <Button label="I already have an account" variant="outline" onPress={onSignIn} />
-      ) : null}
-      {webFallback ? (
-        <Button label="Open senryo.xyz" variant="ghost" onPress={() => void Linking.openURL(WEB_ORIGIN)} />
-      ) : null}
+      {webFirst && !webOnly ? <Button label="Try again" variant="ghost" size="sm" onPress={onRetry} /> : null}
     </AuthCard>
   );
 }
-
-const styles = StyleSheet.create({
-  note: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md },
-});

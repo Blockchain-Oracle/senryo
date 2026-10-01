@@ -21,7 +21,8 @@
       "!.claude",
       "!packages/tokens/src/tokens.css",
       "!packages/identity/sources",
-      "!brand/art"
+      "!brand/art",
+      "!apps/mobile/assets/onboarding/labels.json"
     ]
   },
   "formatter": {

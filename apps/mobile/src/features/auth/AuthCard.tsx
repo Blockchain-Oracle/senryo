@@ -1,28 +1,29 @@
 /**
- * RN port of 21st felipemenezes098/sign-in-4 (#19045) + verify-identity-3 (#19036) — the D2 auth card: glyph tile
- * (tone-tinted, optional spinner badge), title, one balanced line, the action stack, a trust footer. Recorded in
- * apps/mobile/.21st/design.json.
+ * The body of an auth sheet (Fomo F08/F36; Codex consult 1 Oct): no card inside the sheet — the sheet is the surface.
+ * One optional glyph in the tone's ink, a centred title, one centred explanation, a spinner while a ceremony is in
+ * flight, then the action stack. No tile, no boxed note, no border. Recorded in apps/mobile/.21st/design.json.
  */
 import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Icon } from "~/components/kit/Icon";
 import type { IconName } from "~/components/kit/icons";
-import { HAIRLINE_PX, type Palette, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { type Palette, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 export type GlyphTone = "primary" | "gold" | "down";
 
-const GLYPH_TILE = SIZE.touch + SPACE.md;
-const BADGE = SIZE.icon + SPACE.xs;
+/** One glyph, 36 pt (FIDO: the passkey icon is never below 24). */
+const GLYPH = SIZE.icon + SPACE.md;
 
-function tint(tone: GlyphTone, c: Palette) {
-  if (tone === "gold") return { ink: c.warn, wash: c.warnWash };
-  if (tone === "down") return { ink: c.down, wash: c.downWash };
-  return { ink: c.up, wash: c.upWash };
+function ink(tone: GlyphTone, c: Palette): string {
+  if (tone === "gold") return c.gold;
+  if (tone === "down") return c.down;
+  return c.link;
 }
 
 export function AuthCard({
   glyph,
+  art,
   tone = "primary",
   busy = false,
   title,
@@ -30,89 +31,47 @@ export function AuthCard({
   children,
   footer,
 }: {
-  /** A kit icon, or `passkey` for a passkey ceremony (the identity glyph, one flat colour in the tone's ink). */
-  glyph: IconName | "passkey";
+  /** A kit icon, or `passkey` for a passkey ceremony (the identity glyph, one flat colour). Omit for a plain message. */
+  glyph?: IconName | "passkey";
+  /** Authored artwork in place of the glyph (the pending-passkey art while a ceremony is in flight). */
+  art?: ReactNode;
   tone?: GlyphTone;
-  /** verify-identity-3's spinner badge on the glyph while a ceremony is in flight. */
+  /** A ceremony is in flight: the spinner sits under the explanation. */
   busy?: boolean;
   title: string;
   body?: string;
   children?: ReactNode;
+  /** One quiet line under the actions. */
   footer?: string;
 }) {
   const { color } = useTheme();
-  const t = tint(tone, color);
+  const tint = ink(tone, color);
   return (
-    <View
-      accessibilityRole={tone === "down" ? "alert" : undefined}
-      style={[styles.card, { backgroundColor: color.card, borderColor: color.hairline }]}
-    >
+    <View accessibilityRole={tone === "down" ? "alert" : undefined} style={styles.wrap}>
       <View style={styles.head}>
-        <View style={[styles.tile, { backgroundColor: t.wash, borderColor: t.ink }]}>
-          {glyph === "passkey" ? (
-            <PasskeyGlyph size={SIZE.icon + SPACE.sm} color={t.ink} />
-          ) : (
-            <Icon name={glyph} size={SIZE.icon + SPACE.sm} tint={t.ink} />
-          )}
-          {busy ? (
-            <View style={[styles.badge, { backgroundColor: color.primary, borderColor: color.card }]}>
-              <ActivityIndicator size="small" color={color.primaryForeground} />
-            </View>
-          ) : null}
-        </View>
-        <Text accessibilityRole="header" style={[TYPE.numSm, styles.center, { color: color.ink }]}>
+        {art ? (
+          art
+        ) : glyph === "passkey" ? (
+          <PasskeyGlyph size={GLYPH} color={tint} />
+        ) : glyph ? (
+          <Icon name={glyph} size={GLYPH} tint={tint} />
+        ) : null}
+        <Text accessibilityRole="header" style={[TYPE.sheetHeading, styles.center, { color: color.ink }]}>
           {title}
         </Text>
-        {body ? <Text style={[TYPE.caption, styles.center, { color: color.inkMuted }]}>{body}</Text> : null}
+        {body ? <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{body}</Text> : null}
+        {busy ? <ActivityIndicator size="small" color={color.text2} style={styles.spinner} /> : null}
       </View>
-      {children ? <View style={styles.body}>{children}</View> : null}
-      {footer ? (
-        <View style={[styles.footer, { borderTopColor: color.hairline }]}>
-          <Icon name="shield" size={SIZE.iconSm} tint={color.inkMuted} />
-          <Text style={[TYPE.micro, { color: color.inkMuted }]}>{footer}</Text>
-        </View>
-      ) : null}
+      {children ? <View style={styles.actions}>{children}</View> : null}
+      {footer ? <Text style={[TYPE.meta, styles.center, { color: color.text3 }]}>{footer}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, overflow: "hidden" },
-  head: {
-    alignItems: "center",
-    gap: SPACE.sm,
-    paddingHorizontal: SPACE.xl,
-    paddingTop: SPACE.xl,
-    paddingBottom: SPACE.md,
-  },
-  tile: {
-    width: GLYPH_TILE,
-    height: GLYPH_TILE,
-    borderRadius: RADIUS.sm,
-    borderWidth: HAIRLINE_PX,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SPACE.xs,
-  },
-  badge: {
-    position: "absolute",
-    right: -SPACE.xs,
-    bottom: -SPACE.xs,
-    width: BADGE,
-    height: BADGE,
-    borderRadius: RADIUS.pill,
-    borderWidth: SIZE.sealStroke,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  wrap: { gap: SPACE.lgPlus },
+  head: { alignItems: "center", gap: SPACE.sm, paddingHorizontal: SPACE.sm },
   center: { textAlign: "center" },
-  body: { gap: SPACE.md, paddingHorizontal: SPACE.xl, paddingBottom: SPACE.lg },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: SPACE.xs,
-    borderTopWidth: HAIRLINE_PX,
-    paddingVertical: SPACE.md,
-  },
+  spinner: { marginTop: SPACE.sm },
+  actions: { gap: SPACE.sm },
 });
