@@ -29,8 +29,8 @@ export interface EngineMarket {
   /** Testnet mirror contract name in the address book. */
   testnetMirror: MirrorName;
   /**
-   * Chains whose SenryoCore lists this market. FX is in the mainnet constructor (Deploy.s.sol); on 10143 it lists
-   * through the timelocked `AddMarkets.s.sol` — add TESTNET_CHAIN_ID here after its execute run (S8.23 [OK?]).
+   * Chains whose SenryoCore lists this market. FX is in the mainnet constructor (Deploy.s.sol); on 10143 it was listed
+   * through the timelocked `AddMarkets.s.sol` (execute run 1 Oct 12:33 UTC, `allMarketsOpen` true — S8.23).
    */
   chains: readonly ChainId[];
 }
@@ -43,7 +43,6 @@ const FX_PRICE_DECIMALS = 5;
 const JPY_PRICE_DECIMALS = 7;
 
 const BOTH_CHAINS: readonly ChainId[] = [MAINNET_CHAIN_ID, TESTNET_CHAIN_ID];
-const MAINNET_ONLY: readonly ChainId[] = [MAINNET_CHAIN_ID];
 
 function fx(
   id: number,
@@ -62,7 +61,7 @@ function fx(
     priceDecimals,
     mainnetFeed,
     testnetMirror: `Mirror${symbol}`,
-    chains: MAINNET_ONLY,
+    chains: BOTH_CHAINS,
   };
 }
 

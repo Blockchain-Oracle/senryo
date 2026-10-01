@@ -87,11 +87,14 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - liquidation info, SL/TP child with keyboard lift;
   - mainnet eligibility;
   - 500 ms hold pill (D-177), trace, receipt + share.
-- [ ] S1b.8a **SL/TP on a new order** ("open, then protect"; lead decision 1 Oct, review R05, C42 parity): the ticket
+- [x] S1b.8a **SL/TP on a new order** ("open, then protect"; lead decision 1 Oct, review R05, C42 parity): the ticket
   takes stop-loss / take-profit levels for the order being entered; after the open finalizes, each level is placed as
   its own transaction for the resulting position size, with its own outcome (`useTriggerLegs`). Levels are validated
   against the previewed liquidation price. If a level fails, the position is open and unprotected at that level, and the
-  receipt says so. Until this ships the entry reads "SL/TP after opening" and C42 stays Adapted.
+  receipt says so. Shipped 1 Oct (`52de228`: `PlannedTriggers`, `ProtectAfterOpen`, `planned-triggers.ts`; the plan is
+  kept per network, account and market until it is placed). Checked on testnet: XAG long with SL and TP, then a gold
+  long at 5× with a 3% stop at $4,047.97 — each level finalized, its line inside the receipt under "Quoted at your
+  hold".
 - [x] S1b.9 **J3 Markets** (C22/C25/C26, FT071/072/095–101):
   - watchlist, categories (Commodities · FX · Crypto · Equities/Indices), filters, search;
   - detail with Holders / Feed / About, history, alerts;
