@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext } from "react";
 import { type StyleProp, StyleSheet, Text, type TextStyle, View, type ViewStyle } from "react-native";
-import { HAIRLINE_PX, type Palette, SHEET_SHAPE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, HAIRLINE_PX, type Palette, SHEET_SHAPE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * How far above the page a surface sits: 0 on a page, 1 inside a sheet. A filled group is always one step lighter than
@@ -35,7 +35,11 @@ export function Panel({ children, style }: { children: ReactNode; style?: StyleP
 export function SectionLabel({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
   const { color } = useTheme();
   return (
-    <Text accessibilityRole="header" style={[TYPE.rowDetail, { color: color.text3 }, style]}>
+    <Text
+      maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+      accessibilityRole="header"
+      style={[TYPE.rowDetail, { color: color.text3 }, style]}
+    >
       {children}
     </Text>
   );
@@ -54,8 +58,12 @@ export function KeyValue({
   const { color } = useTheme();
   return (
     <View style={styles.kv} accessible accessibilityLabel={`${label} ${value}`}>
-      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{label}</Text>
-      <Text style={[TYPE.rowAmount, { color: valueColor ?? color.ink }]}>{value}</Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+        {label}
+      </Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowAmount, { color: valueColor ?? color.ink }]}>
+        {value}
+      </Text>
     </View>
   );
 }

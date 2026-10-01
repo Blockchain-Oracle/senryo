@@ -1,7 +1,7 @@
 import { ENGINE_MARKETS } from "@senryo/config";
 import { ids } from "@senryo/identity";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Sparkline } from "~/components/charts/Sparkline";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Skeleton } from "~/components/kit/states";
@@ -9,7 +9,7 @@ import { fire } from "~/feedback/fire";
 import { marketRoute } from "~/lib/constants/routes";
 import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { BUTTON, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { LeverageBadge } from "./LeverageBadge";
 import { ageLabel, STATUS_LABEL, statusTone } from "./session";
 import type { ArrivingMarket } from "./universe";
@@ -23,20 +23,27 @@ import { useNowSec } from "./useNowSec";
  * identity, so it shows while the price is still loading. The press plate reaches a little past the text so it reads
  * as a rounded row. `onOpen` runs before the push (Search remembers what was opened).
  */
+/** Above this Dynamic Type scale the row drops its sparkline. */
+const SPARKLINE_MAX_FONT_SCALE = 1.2;
+
 export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen?: () => void }) {
   const network = useNetwork();
   const { color } = useTheme();
   const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
   const reading = useMarketLine(marketId, meta?.symbol ?? "");
   const now = useNowSec();
+  // With large text the name needs the sparkline's width; the price and change carry the movement alone.
+  const roomy = useWindowDimensions().fontScale < SPARKLINE_MAX_FONT_SCALE;
   const mark = ids.engineMarket(network.chainId, marketId);
   if (reading.status === "unknown" || reading.status === "failed") {
     return (
       <View style={styles.row}>
         <EntityMark id={mark} size={SIZE.markDetail} decorative />
         <View style={styles.name}>
-          <Text style={[TYPE.rowTitle, { color: color.ink }]}>{meta?.symbol}</Text>
-          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowTitle, { color: color.ink }]}>
+            {meta?.symbol}
+          </Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
             {reading.status === "failed" ? "Price unavailable · retrying" : "Reading the oracle"}
           </Text>
         </View>
@@ -63,19 +70,34 @@ export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen
       <EntityMark id={mark} size={SIZE.markDetail} decorative />
       <View style={styles.name}>
         <View style={styles.titleLine}>
-          <Text style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]} numberOfLines={1}>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]}
+            numberOfLines={1}
+          >
             {line.name}
           </Text>
           <LeverageBadge x={line.maxLeverageX} />
         </View>
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
-          {line.symbol} · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.rowDetail, { color: color.text3 }]}
+          numberOfLines={1}
+        >
+          {line.symbol} ·{" "}
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
+            {STATUS_LABEL[line.status]}
+          </Text>
         </Text>
       </View>
-      <Sparkline values={line.spark} stroke={tint} />
+      {roomy ? <Sparkline values={line.spark} stroke={tint} /> : null}
       <View style={styles.price}>
-        <Text style={[TYPE.rowPrice, { color: color.ink }]}>${price18(line.price18, priceDecimalsOf(marketId))}</Text>
-        <Text style={[TYPE.rowChange, { color: tint }]}>{changeText}</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowPrice, { color: color.ink }]}>
+          ${price18(line.price18, priceDecimalsOf(marketId))}
+        </Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowChange, { color: tint }]}>
+          {changeText}
+        </Text>
       </View>
     </Pressable>
   );
@@ -95,14 +117,24 @@ export function ArrivingMarketRow({ market }: { market: ArrivingMarket }) {
     >
       <EntityMark id={market.mark} size={SIZE.markDetail} label={market.symbol} decorative />
       <View style={styles.name}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.rowTitle, { color: color.ink }]}
+          numberOfLines={1}
+        >
           {market.symbol}
         </Text>
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.rowDetail, { color: color.text3 }]}
+          numberOfLines={1}
+        >
           {market.name} · {market.venue}
         </Text>
       </View>
-      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{market.note}</Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+        {market.note}
+      </Text>
     </View>
   );
 }

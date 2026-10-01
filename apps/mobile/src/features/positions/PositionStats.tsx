@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MarginGauge } from "~/components/trade/MarginGauge";
 import { pct, price18, priceDecimalsOf, usd } from "~/lib/money";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 
 const SIZE_DECIMALS = 4;
 
@@ -64,8 +64,15 @@ function Stat({ label, value, valueColor }: { label: string; value: string; valu
   const { color } = useTheme();
   return (
     <View style={styles.cell} accessible accessibilityLabel={`${label} ${value}`}>
-      <Text style={[TYPE.meta, { color: color.text3 }]}>{label}</Text>
-      <Text style={[TYPE.rowAmount, { color: valueColor ?? color.ink }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+        {label}
+      </Text>
+      <Text
+        maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+        style={[TYPE.rowAmount, { color: valueColor ?? color.ink }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {value}
       </Text>
     </View>

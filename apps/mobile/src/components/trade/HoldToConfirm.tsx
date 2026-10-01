@@ -22,7 +22,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { fire } from "~/feedback/fire";
-import { BUTTON, DURATION, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, DURATION, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 export const HOLD_TO_CONFIRM_MS = 500;
 /** The fill is the button's ink at this opacity over the primary plate (web: primary-foreground/30). */
@@ -167,7 +167,11 @@ export function HoldToConfirm({
         style={[styles.fill, { backgroundColor: color.primaryForeground, opacity: FILL_OPACITY }, fill]}
       />
       <View style={styles.center} pointerEvents="none">
-        <Text style={[TYPE.buttonLabel, { color: disabled ? color.text3 : color.primaryForeground }]} numberOfLines={1}>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.buttonLabel, { color: disabled ? color.text3 : color.primaryForeground }]}
+          numberOfLines={1}
+        >
           {holding ? holdingLabel : label}
         </Text>
       </View>

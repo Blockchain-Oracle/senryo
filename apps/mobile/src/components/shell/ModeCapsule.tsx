@@ -6,7 +6,7 @@ import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
-import { BUTTON, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * The persistent mode control (S8.22 → Living Lacquer §5.6, FT044; Codex consult 1 Oct): "Practice · Paper money"
@@ -43,7 +43,7 @@ export function ModeCapsule({ compact = false }: { compact?: boolean }) {
         ]}
       >
         <View style={[styles.dot, { backgroundColor: tone }]} />
-        <Text style={[TYPE.modeLabel, { color: tone }]} numberOfLines={1}>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.modeLabel, { color: tone }]} numberOfLines={1}>
           {compact ? mode : `${mode} · ${money}`}
         </Text>
         <ChevronDown size={CHEVRON} strokeWidth={SIZE.iconStroke} color={tone} />

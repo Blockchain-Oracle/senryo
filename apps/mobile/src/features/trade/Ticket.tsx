@@ -13,7 +13,17 @@ import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { moneySymbol, pct, price18, priceDecimalsOf, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { BUTTON, DISABLED_OPACITY, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import {
+  BUTTON,
+  CONTROL_FONT_SCALE,
+  DISABLED_OPACITY,
+  HERO_FONT_SCALE,
+  RADIUS,
+  SIZE,
+  SPACE,
+  TYPE,
+  useTheme,
+} from "~/theme";
 import { useCandleStyle } from "./candle-style";
 import { AMOUNT_CHIPS_USD } from "./constants";
 import type { useTicket } from "./useTicket";
@@ -63,12 +73,18 @@ function Amount({ t }: { t: TicketModel }) {
   const empty = t.amountText === "";
   return (
     <View style={styles.amount}>
-      <Text style={[TYPE.meta, { color: color.text3 }]} numberOfLines={1}>
-        <Text style={{ color: color.text2 }}>Margin</Text> · {network.key === "testnet" ? "Paper money" : "Real money"}
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]} numberOfLines={1}>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.text2 }}>
+          Margin
+        </Text>{" "}
+        · {network.key === "testnet" ? "Paper money" : "Real money"}
         {empty ? null : (
           <>
             {" "}
-            · leveraged size <Text style={[TYPE.moneyMeta, { color: color.ink }]}>{usd(t.notionalUsd6)}</Text>
+            · leveraged size{" "}
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.ink }]}>
+              {usd(t.notionalUsd6)}
+            </Text>
           </>
         )}
       </Text>
@@ -100,17 +116,24 @@ function RiskRow({ t, line, onChild }: { t: TicketModel; line: MarketLine; onChi
         style={styles.riskCell}
       >
         <View style={styles.inline}>
-          <Text style={[TYPE.meta, { color: color.text3 }]}>Liquidation price</Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+            Liquidation price
+          </Text>
           <Info size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
         </View>
         {t.amountText === "" ? (
-          <Text style={[TYPE.rowStrong, { color: color.text3 }]}>Enter amount</Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: color.text3 }]}>
+            Enter amount
+          </Text>
         ) : t.preview === undefined && !t.hasAccount ? (
-          <Text style={[TYPE.rowStrong, { color: color.text3 }]}>Needs an account</Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: color.text3 }]}>
+            Needs an account
+          </Text>
         ) : t.preview === undefined ? (
           <Skeleton width={SIZE.sparklineWidth} height={SIZE.skeletonLine} />
         ) : (
           <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
             style={[
               TYPE.rowAmount,
               { color: away !== undefined && away !== null && away < 0n ? color.down : color.ink },
@@ -120,7 +143,7 @@ function RiskRow({ t, line, onChild }: { t: TicketModel; line: MarketLine; onChi
             {away === null || away === undefined ? (
               ""
             ) : (
-              <Text style={[TYPE.moneyMeta, { color: color.text3 }]}>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.text3 }]}>
                 {" "}
                 · {pct(away < 0n ? -away : away)} {away < 0n ? "past" : "away"}
               </Text>
@@ -129,8 +152,13 @@ function RiskRow({ t, line, onChild }: { t: TicketModel; line: MarketLine; onChi
         )}
       </Pressable>
       <Pressable onPress={() => onChild("tpsl")} accessibilityRole="button" style={[styles.riskCell, styles.end]}>
-        <Text style={[TYPE.meta, { color: color.text3 }]}>Stop Loss / Take Profit</Text>
-        <Text style={[TYPE.rowStrong, { color: t.amountText === "" && !t.held ? color.text3 : color.link }]}>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+          Stop Loss / Take Profit
+        </Text>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.rowStrong, { color: t.amountText === "" && !t.held ? color.text3 : color.link }]}
+        >
           {t.held ? "Protect current position" : "SL/TP after opening"}
         </Text>
       </Pressable>
@@ -209,7 +237,9 @@ function Preset({ label, onPress, disabled }: { label: string; onPress: () => vo
           disabled ? { opacity: DISABLED_OPACITY } : null,
         ]}
       >
-        <Text style={[TYPE.rowAmount, { color: color.ink }]}>{label}</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowAmount, { color: color.ink }]}>
+          {label}
+        </Text>
       </Pressable>
     </Animated.View>
   );
@@ -224,7 +254,9 @@ function ChartRegion({ line, onSettings }: { line: MarketLine; onSettings: () =>
   return (
     <View style={styles.region}>
       <View style={styles.chartBar}>
-        <Text style={[TYPE.meta, { color: color.text3 }]}>Chainlink {line.symbol}/USD · Monad · 15m</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+          Chainlink {line.symbol}/USD · Monad · 15m
+        </Text>
         <Pressable
           onPress={onSettings}
           accessibilityRole="button"

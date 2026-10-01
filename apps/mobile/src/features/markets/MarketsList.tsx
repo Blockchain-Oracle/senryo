@@ -2,7 +2,7 @@ import { engineMarketsOn } from "@senryo/config";
 import { StyleSheet, Text, View } from "react-native";
 import { SectionLabel } from "~/components/kit/Surface";
 import { useNetwork } from "~/lib/network";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 import { ProtocolBanner } from "./MarketBanners";
 import { ArrivingMarketRow, EngineMarketRow } from "./MarketRow";
 import { QuietLine } from "./QuietLine";
@@ -79,8 +79,12 @@ function ListCaption() {
   const { color } = useTheme();
   return (
     <View style={styles.caption}>
-      <Text style={[TYPE.rowDetail, { color: color.text2 }]}>Perps · 24h</Text>
-      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Oracle: Chainlink</Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text2 }]}>
+        Perps · 24h
+      </Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+        Oracle: Chainlink
+      </Text>
     </View>
   );
 }

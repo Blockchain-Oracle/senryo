@@ -1,4 +1,10 @@
-import { MAX_FONT_SCALE_HERO, TYPE as TOKEN_TYPE, type TypeFace, type TypeRole } from "@senryo/tokens";
+import {
+  MAX_FONT_SCALE_CONTROL,
+  MAX_FONT_SCALE_HERO,
+  TYPE as TOKEN_TYPE,
+  type TypeFace,
+  type TypeRole,
+} from "@senryo/tokens";
 import type { TextStyle } from "react-native";
 
 /**
@@ -53,3 +59,5 @@ export const TYPE = Object.fromEntries(
 
 /** Dynamic Type cap for hero numbers so a six-digit balance never wraps. */
 export const HERO_FONT_SCALE = MAX_FONT_SCALE_HERO;
+/** Dynamic Type cap for dense controls (buttons, chips, tabs, value and market rows, the ticket). */
+export const CONTROL_FONT_SCALE = MAX_FONT_SCALE_CONTROL;

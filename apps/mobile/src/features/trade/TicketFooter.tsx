@@ -8,7 +8,7 @@ import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { pct, usd } from "~/lib/money";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { QUANTITY_DECIMALS } from "./constants";
 import type { CommitState, Fix } from "./ticket-commit";
 import type { useTicket } from "./useTicket";
@@ -73,14 +73,21 @@ export function TicketFooter({
           hitSlop={SPACE.sm}
           style={styles.inline}
         >
-          <Text style={[TYPE.rowStrong, { color: color.ink }]}>
-            {t.snapshot ? usd(t.snapshot.freeToTrade) : "—"} <Text style={{ color: color.text2 }}>available</Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: color.ink }]}>
+            {t.snapshot ? usd(t.snapshot.freeToTrade) : "—"}{" "}
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.text2 }}>
+              available
+            </Text>
           </Text>
           <CirclePlus size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text2} />
         </Pressable>
-        <Text style={[TYPE.moneyMeta, styles.end, { color: color.text3 }]} numberOfLines={1}>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.moneyMeta, styles.end, { color: color.text3 }]}
+          numberOfLines={1}
+        >
           {qty ? (
-            <Text style={{ color: color.ink }}>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.ink }}>
               {qty} {line.symbol}
             </Text>
           ) : null}
@@ -90,6 +97,7 @@ export function TicketFooter({
       </View>
       {why ? (
         <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
           accessibilityLiveRegion="polite"
           numberOfLines={2}
           style={[TYPE.meta, { color: copy ? color.warn : color.text2 }]}

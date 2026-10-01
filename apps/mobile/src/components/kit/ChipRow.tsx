@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import Animated from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
-import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { usePressScale } from "./usePressScale";
 
 /** Hit area beyond the 34 pt chip so the target reaches 44 pt. */
@@ -66,7 +66,12 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
         onPress={onPress}
         style={[styles.chip, { backgroundColor: selected ? color.raised2 : color.transparent }]}
       >
-        <Text style={[TYPE.chipCategory, { color: selected ? color.ink : color.text3 }]}>{label}</Text>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.chipCategory, { color: selected ? color.ink : color.text3 }]}
+        >
+          {label}
+        </Text>
       </Pressable>
     </Animated.View>
   );

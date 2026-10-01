@@ -8,7 +8,7 @@
 import { Delete } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fire } from "~/feedback/fire";
-import { NUMERIC_VARIANT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, NUMERIC_VARIANT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 export type KeypadKey = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "." | "0" | "del";
 const KEYS: readonly KeypadKey[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"];
@@ -49,7 +49,12 @@ export function Keypad({ onKey, disabled }: { onKey: (key: KeypadKey) => void; d
               {key === "del" ? (
                 <Delete size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.ink} />
               ) : (
-                <Text style={[TYPE.sheetTitle, styles.digit, { color: color.ink }]}>{key}</Text>
+                <Text
+                  maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+                  style={[TYPE.sheetTitle, styles.digit, { color: color.ink }]}
+                >
+                  {key}
+                </Text>
               )}
             </Pressable>
           ))}

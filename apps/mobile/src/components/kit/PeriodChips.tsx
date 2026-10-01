@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
-import { EASE, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, EASE, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
 /** The visible plate is 28 pt high (Fomo F16, consult §D "Periods"); the target reaches 44 pt through hitSlop. */
 const CHIP_HEIGHT = 28;
@@ -79,7 +79,12 @@ export function PeriodChips<T extends string>({
             }}
             style={styles.chip}
           >
-            <Text style={[TYPE.modeLabel, { color: selected ? color.ink : color.text3 }]}>{o.label}</Text>
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              style={[TYPE.modeLabel, { color: selected ? color.ink : color.text3 }]}
+            >
+              {o.label}
+            </Text>
           </Pressable>
         );
       })}

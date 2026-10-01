@@ -10,7 +10,7 @@ import { DAY_SEC } from "~/features/portfolio/constants";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { arrow, signedPct, signedUsd, usd } from "~/lib/money";
-import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * Home's collapsing header pieces (C16/C19, FT069/FT073; Fomo F09 / F12). The bar keeps the 千 seal and — once
@@ -55,7 +55,7 @@ export function CompactBalance() {
   const { equity } = useBalance();
   if (equity === undefined) return null;
   return (
-    <Text style={[TYPE.rowAmount, { color: color.ink }]} numberOfLines={1}>
+    <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowAmount, { color: color.ink }]} numberOfLines={1}>
       {usd(equity)}
     </Text>
   );
@@ -89,15 +89,26 @@ export function ExpandedBalance() {
               style={[TYPE.displayBalance, { color: color.ink }]}
             >
               {whole}
-              <Text style={{ color: color.text3 }}>{cents}</Text>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.text3 }}>
+                {cents}
+              </Text>
             </Text>
             {change === undefined ? (
-              <Text style={[TYPE.rowChange, { color: color.text3 }]}>— 24h</Text>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowChange, { color: color.text3 }]}>
+                — 24h
+              </Text>
             ) : (
-              <Text style={[TYPE.rowChange, { color: change >= 0n ? color.up : color.down }]} numberOfLines={1}>
+              <Text
+                maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+                style={[TYPE.rowChange, { color: change >= 0n ? color.up : color.down }]}
+                numberOfLines={1}
+              >
                 {arrow(change)} {signedUsd(change)}
                 {changeBps === undefined ? "" : ` (${signedPct(changeBps)})`}
-                <Text style={{ color: color.text3 }}> 24h</Text>
+                <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.text3 }}>
+                  {" "}
+                  24h
+                </Text>
               </Text>
             )}
           </>

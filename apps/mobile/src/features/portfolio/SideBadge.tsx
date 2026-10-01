@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * A position's side as a small filled badge (Fomo F12's badge beside the ticker): "Long" on the up wash, "Short" on
@@ -12,6 +12,7 @@ export function SideBadge({ isLong }: { isLong: boolean }) {
   const side = isLong ? "Long" : "Short";
   return (
     <Text
+      maxFontSizeMultiplier={CONTROL_FONT_SCALE}
       style={[
         TYPE.label,
         styles.badge,

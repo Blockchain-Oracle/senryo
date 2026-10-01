@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
-import { BUTTON, EASE, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, EASE, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
 /**
  * Segmented control (asset filter, Long/Short, timeframe; Fomo F37's keypad/chart switch, Codex consult 1 Oct): a
@@ -63,7 +63,10 @@ export function Segmented<T extends string>({
             }}
             style={styles.cell}
           >
-            <Text style={[TYPE.chipCategory, { color: selected ? (tone?.(o.value) ?? color.ink) : color.text3 }]}>
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              style={[TYPE.chipCategory, { color: selected ? (tone?.(o.value) ?? color.ink) : color.text3 }]}
+            >
               {o.label}
             </Text>
           </Pressable>

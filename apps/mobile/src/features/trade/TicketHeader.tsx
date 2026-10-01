@@ -8,7 +8,7 @@ import { ageLabel, STATUS_LABEL, statusTone } from "~/features/markets/session";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { price18, priceDecimalsOf } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import type { Side } from "./useTicket";
 
 const MS_PER_SECOND = 1000n;
@@ -44,22 +44,36 @@ export function TicketHeader({
       <View style={styles.identity}>
         <EntityMark id={ids.engineMarket(network.chainId, line.marketId)} size={SIZE.markDetail} decorative />
         <View style={styles.titles}>
-          <Text style={[TYPE.sectionTitle, { color: color.ink }]} accessibilityLabel={`${line.name}, ${line.symbol}`}>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.sectionTitle, { color: color.ink }]}
+            accessibilityLabel={`${line.name}, ${line.symbol}`}
+          >
             {line.symbol}
           </Text>
           <VenueChip venue={ids.venue("senryo")} />
         </View>
         <View style={styles.price}>
           <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
             style={[TYPE.rowAmount, { color: color.ink }]}
             accessibilityLabel={`Oracle price ${price18(line.price18, priceDecimalsOf(line.marketId))} dollars`}
           >
             ${price18(line.price18, priceDecimalsOf(line.marketId))}
           </Text>
-          <Text style={[TYPE.meta, { color: line.market.tickStale ? color.warn : color.text3 }]} numberOfLines={1}>
-            <Text style={{ color: color.link }}>Market</Text> ·{" "}
-            <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text> ·{" "}
-            {line.market.tickStale ? "not live · " : ""}
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.meta, { color: line.market.tickStale ? color.warn : color.text3 }]}
+            numberOfLines={1}
+          >
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.link }}>
+              Market
+            </Text>{" "}
+            ·{" "}
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
+              {STATUS_LABEL[line.status]}
+            </Text>{" "}
+            · {line.market.tickStale ? "not live · " : ""}
             {ageLabel(line.updatedAt, BigInt(Date.now()) / MS_PER_SECOND)}
           </Text>
         </View>
@@ -67,7 +81,9 @@ export function TicketHeader({
       <View style={styles.row}>
         <View style={styles.sides}>
           {sideLocked ? (
-            <Text style={[TYPE.rowStrong, { color: tone(side) }]}>{side === "long" ? "Long" : "Short"}</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: tone(side) }]}>
+              {side === "long" ? "Long" : "Short"}
+            </Text>
           ) : (
             <Segmented options={SIDES} value={side} onChange={onSide} label="Side" tone={tone} />
           )}

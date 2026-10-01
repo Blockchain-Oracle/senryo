@@ -7,7 +7,7 @@ import { DARK, LIGHT, type Palette } from "./palette";
 export * from "./layout";
 export * from "./motion";
 export type { Palette } from "./palette";
-export { FONT, HERO_FONT_SCALE, NUMERIC_VARIANT, TYPE } from "./type";
+export { CONTROL_FONT_SCALE, FONT, HERO_FONT_SCALE, NUMERIC_VARIANT, TYPE } from "./type";
 
 export type ThemeName = "dark" | "light";
 

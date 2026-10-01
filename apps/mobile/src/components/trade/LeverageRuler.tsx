@@ -27,7 +27,7 @@ import {
   RULER_TICK,
 } from "~/features/trade/constants";
 import { fire } from "~/feedback/fire";
-import { HAIRLINE_PX, SIZE, SPACE, SPRING, TIMING, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, HAIRLINE_PX, SIZE, SPACE, SPRING, TIMING, TYPE, useTheme } from "~/theme";
 
 const MIN = 1;
 
@@ -126,7 +126,9 @@ export function LeverageRuler({
           </Animated.View>
         </View>
       </GestureDetector>
-      <Text style={[TYPE.meta, styles.caption, { color: color.text3 }]}>Leverage</Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, styles.caption, { color: color.text3 }]}>
+        Leverage
+      </Text>
     </View>
   );
 }

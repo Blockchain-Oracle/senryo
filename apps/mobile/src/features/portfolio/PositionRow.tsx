@@ -13,7 +13,7 @@ import { fire } from "~/feedback/fire";
 import { positionRoute } from "~/lib/constants/routes";
 import { arrow, pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { BUTTON, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
 import { SideBadge } from "./SideBadge";
 
 /** A page-wide row barely moves under the finger (the same reason as a sheet row). */
@@ -87,21 +87,34 @@ export function PositionRow({
           <EntityMark id={ids.engineMarket(network.chainId, position.marketId)} size={SIZE.markDetail} decorative />
           <View style={styles.name}>
             <View style={styles.title}>
-              <Text style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]} numberOfLines={1}>
+              <Text
+                maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+                style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]}
+                numberOfLines={1}
+              >
                 {symbol}
               </Text>
               <SideBadge isLong={position.isLong} />
             </View>
-            <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              style={[TYPE.rowDetail, { color: color.text3 }]}
+              numberOfLines={1}
+            >
               {exposure === undefined ? `Entry ${entry}` : `${usd(exposure, 0)} · entry ${entry}`}
             </Text>
           </View>
           {health ? (
             <View style={styles.result}>
-              <Text style={[TYPE.rowPrice, { color: health.upnlUsd6 < 0n ? color.down : color.up }]} numberOfLines={1}>
+              <Text
+                maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+                style={[TYPE.rowPrice, { color: health.upnlUsd6 < 0n ? color.down : color.up }]}
+                numberOfLines={1}
+              >
                 {arrow(health.upnlUsd6)} {signedUsd(health.upnlUsd6)}
               </Text>
               <Text
+                maxFontSizeMultiplier={CONTROL_FONT_SCALE}
                 style={[TYPE.rowChange, { color: away !== null && away <= 0n ? color.down : color.text3 }]}
                 numberOfLines={1}
               >
@@ -109,7 +122,9 @@ export function PositionRow({
               </Text>
             </View>
           ) : market.status === "failed" ? (
-            <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Price unavailable</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+              Price unavailable
+            </Text>
           ) : (
             <View style={styles.result}>
               <Skeleton width={PENDING_WIDTH} />

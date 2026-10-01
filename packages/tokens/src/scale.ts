@@ -185,3 +185,8 @@ export const MOTION = {
 
 /** Largest Dynamic Type multiplier for hero numbers (layout stays intact). */
 export const MAX_FONT_SCALE_HERO = 1.3;
+/**
+ * Largest Dynamic Type multiplier for dense controls — buttons, chips, tabs, value rows, market rows, the ticket —
+ * so they stay one line and keep their alignment; paragraphs and headings still scale fully.
+ */
+export const MAX_FONT_SCALE_CONTROL = 1.35;

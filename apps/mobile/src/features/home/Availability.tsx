@@ -9,7 +9,7 @@ import { lockedOf } from "~/features/portfolio/account";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /** The row is as wide as the page, so it barely moves under the finger (the same reason as a sheet row). */
 const ROW_PRESS_SCALE = 0.985;
@@ -48,7 +48,11 @@ export function Availability({ snapshot }: { snapshot: AccountSnapshot }) {
           cells.map((c, i) => (
             <View key={c.key} style={[styles.cell, { backgroundColor: pressed ? color.rowPressed : fill }]}>
               <View style={styles.label}>
-                <Text style={[TYPE.meta, styles.grow, { color: color.text3 }]} numberOfLines={1}>
+                <Text
+                  maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+                  style={[TYPE.meta, styles.grow, { color: color.text3 }]}
+                  numberOfLines={1}
+                >
                   {c.label}
                 </Text>
                 {i === cells.length - 1 ? (
@@ -56,6 +60,7 @@ export function Availability({ snapshot }: { snapshot: AccountSnapshot }) {
                 ) : null}
               </View>
               <Text
+                maxFontSizeMultiplier={CONTROL_FONT_SCALE}
                 style={[TYPE.rowPrice, { color: c.value < 0n ? color.down : color.ink }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit

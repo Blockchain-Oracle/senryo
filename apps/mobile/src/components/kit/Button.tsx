@@ -2,7 +2,17 @@ import { type ReactNode, useContext } from "react";
 import { ActivityIndicator, Pressable, type StyleProp, StyleSheet, Text, type ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
-import { BUTTON, BUTTON_LIFT, DISABLED_OPACITY, type Palette, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import {
+  BUTTON,
+  BUTTON_LIFT,
+  CONTROL_FONT_SCALE,
+  DISABLED_OPACITY,
+  type Palette,
+  SIZE,
+  SPACE,
+  TYPE,
+  useTheme,
+} from "~/theme";
 import { SurfaceLevel } from "./Surface";
 import { usePressScale } from "./usePressScale";
 
@@ -110,7 +120,11 @@ export function Button({
         ]}
       >
         {loading ? <ActivityIndicator size="small" color={tone.ink} /> : leading}
-        <Text style={[compact ? TYPE.buttonCompact : TYPE.buttonLabel, { color: tone.ink }]} numberOfLines={1}>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[compact ? TYPE.buttonCompact : TYPE.buttonLabel, { color: tone.ink }]}
+          numberOfLines={1}
+        >
           {label}
         </Text>
       </Pressable>

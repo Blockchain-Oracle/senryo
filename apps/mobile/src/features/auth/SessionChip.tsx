@@ -10,7 +10,7 @@ import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { useChip } from "~/lib/account/use-chip";
 import { ROUTES } from "~/lib/constants/routes";
-import { BUTTON, HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 function shortLabel(label: string, tone: string): string {
   if (tone === "locked") return "Locked";
@@ -41,7 +41,9 @@ export function SessionChip() {
           chip.tone === "locked" ? { borderWidth: HAIRLINE_PX, borderColor: ink } : { backgroundColor: ink },
         ]}
       />
-      <Text style={[TYPE.chipLabel, { color: ink }]}>{shortLabel(chip.label, chip.tone)}</Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.chipLabel, { color: ink }]}>
+        {shortLabel(chip.label, chip.tone)}
+      </Text>
     </Pressable>
   );
 }

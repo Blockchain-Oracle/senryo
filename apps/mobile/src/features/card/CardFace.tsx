@@ -13,7 +13,8 @@ const OVERLAY = { left: "52%", top: "30%", bottom: "30%" } as const;
 
 /**
  * Kinpaku card face (flip in S10). The PAN is always masked here; the full number shows only in the step-up
- * `card-reveal` sheet (S10), never logged.
+ * `card-reveal` sheet (S10), never logged. The printing is part of the card, sized to it, so it doesn't follow
+ * Dynamic Type (VoiceOver reads the card's label).
  */
 export function CardFace({
   last4,
@@ -31,17 +32,25 @@ export function CardFace({
     <View accessible accessibilityLabel={`Kinpaku card ending ${last4}, ${route}`} style={styles.card}>
       <Image source={CARD_ART} style={styles.art} resizeMode="contain" />
       <View style={[styles.overlay, OVERLAY]}>
-        <Text style={[TYPE.numMd, { color: color.onLacquer }]}>•••• {last4}</Text>
+        <Text allowFontScaling={false} style={[TYPE.numMd, { color: color.onLacquer }]}>
+          •••• {last4}
+        </Text>
         <View style={styles.bottom}>
           <View style={styles.flex}>
-            <Text style={[TYPE.meta, { color: color.onLacquerMuted }]}>Card holder</Text>
-            <Text style={[TYPE.numSm, { color: color.onLacquer }]} numberOfLines={1}>
+            <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
+              Card holder
+            </Text>
+            <Text allowFontScaling={false} style={[TYPE.numSm, { color: color.onLacquer }]} numberOfLines={1}>
               {holder}
             </Text>
           </View>
           <View style={styles.right}>
-            <Text style={[TYPE.meta, { color: color.onLacquerMuted }]}>Expires</Text>
-            <Text style={[TYPE.numSm, { color: color.onLacquer }]}>{expires}</Text>
+            <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
+              Expires
+            </Text>
+            <Text allowFontScaling={false} style={[TYPE.numSm, { color: color.onLacquer }]}>
+              {expires}
+            </Text>
           </View>
         </View>
       </View>

@@ -4,7 +4,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useGroupFill } from "~/components/kit/Surface";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
-import { SHEET_SHAPE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, SHEET_SHAPE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
 
 /** A rich row barely moves under the finger: it is wide, so 0.97 would read as a lurch. */
 const ROW_PRESS_SCALE = 0.985;
@@ -62,13 +62,21 @@ export function SheetRow({
           {leading}
           <View style={styles.text}>
             <View style={styles.titleLine}>
-              <Text style={[TYPE.rowTitle, { color: disabled ? color.text3 : color.ink }]} numberOfLines={1}>
+              <Text
+                maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+                style={[TYPE.rowTitle, { color: disabled ? color.text3 : color.ink }]}
+                numberOfLines={1}
+              >
                 {title}
               </Text>
               {badge}
             </View>
             {detail ? (
-              <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={2}>
+              <Text
+                maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+                style={[TYPE.rowDetail, { color: color.text3 }]}
+                numberOfLines={2}
+              >
                 {detail}
               </Text>
             ) : null}

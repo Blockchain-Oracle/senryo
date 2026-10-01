@@ -7,7 +7,7 @@ import { VenueChip } from "~/components/identity/VenueChip";
 import { STATUS_LABEL, statusTone } from "~/features/markets/session";
 import { SideBadge } from "~/features/portfolio/SideBadge";
 import { useNetwork } from "~/lib/network";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * The position's identity (Fomo F13/F14's instrument row; C25): the market's own 48 pt mark, the symbol with the side
@@ -24,6 +24,7 @@ export function PositionHeader({ market, position }: { market: LiveMarket; posit
       <View style={styles.titles}>
         <View style={styles.symbol}>
           <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
             accessibilityRole="header"
             accessibilityLabel={`${market.name} ${position.isLong ? "long" : "short"}`}
             style={[TYPE.sectionTitle, styles.shrink, { color: color.ink }]}
@@ -37,7 +38,9 @@ export function PositionHeader({ market, position }: { market: LiveMarket; posit
       </View>
       <View style={styles.status} accessible accessibilityLabel={`Market ${STATUS_LABEL[market.pv.status]}`}>
         <View style={[styles.dot, { backgroundColor: tone }]} />
-        <Text style={[TYPE.chipCategory, { color: tone }]}>{STATUS_LABEL[market.pv.status]}</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.chipCategory, { color: tone }]}>
+          {STATUS_LABEL[market.pv.status]}
+        </Text>
       </View>
     </View>
   );

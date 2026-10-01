@@ -2,7 +2,7 @@ import { type ComponentType, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
-import { EASE, HAIRLINE_PX, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, EASE, HAIRLINE_PX, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
 /** The selected tab's underline (F09/F32 measure 2 pt). */
 const UNDERLINE = 2;
@@ -69,7 +69,11 @@ export function UnderlineTabs<T extends string>({
             style={styles.cell}
           >
             {Glyph ? <Glyph size={SIZE.iconSm + SPACE.xs} color={ink} strokeWidth={SIZE.iconStroke} /> : null}
-            <Text style={[TYPE.buttonCompact, { color: ink }]} numberOfLines={1}>
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              style={[TYPE.buttonCompact, { color: ink }]}
+              numberOfLines={1}
+            >
               {o.label}
             </Text>
           </Pressable>

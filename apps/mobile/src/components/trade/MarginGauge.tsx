@@ -6,7 +6,7 @@
  */
 import { StyleSheet, Text, View } from "react-native";
 import { pct } from "~/lib/money";
-import { type Palette, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, type Palette, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 
 const BPS = 10_000n;
 /** The meter is a hairline of emphasis under the number, not a chart. */
@@ -32,8 +32,12 @@ export function MarginGauge({ usageBps, label = "Margin use" }: { usageBps: bigi
       accessibilityLabel={`${label} ${pct(clamped)}; liquidation at 100 percent`}
       style={styles.cell}
     >
-      <Text style={[TYPE.meta, { color: color.text3 }]}>{label}</Text>
-      <Text style={[TYPE.rowAmount, { color: tone }]}>{pct(clamped)}</Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+        {label}
+      </Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowAmount, { color: tone }]}>
+        {pct(clamped)}
+      </Text>
       <View style={[styles.track, { backgroundColor: color.muted }]}>
         <View style={{ flex: Number(clamped), backgroundColor: tone }} />
         <View style={{ flex: Number(BPS - clamped) }} />

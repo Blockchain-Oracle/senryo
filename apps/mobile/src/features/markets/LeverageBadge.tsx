@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 
 /** Fomo F12 / F32 measure the "20x" plate at 17 pt high with 5 pt corners — a small rounded rectangle, not a pill. */
 const BADGE_RADIUS = 5;
@@ -12,6 +12,7 @@ const BADGE_PAD_X = SPACE.xs + SPACE.xxs;
 export function TintBadge({ text, ink, fill, label }: { text: string; ink: string; fill: string; label?: string }) {
   return (
     <Text
+      maxFontSizeMultiplier={CONTROL_FONT_SCALE}
       {...(label ? { accessibilityLabel: label } : {})}
       style={[TYPE.label, styles.plate, { color: ink, backgroundColor: fill }]}
     >

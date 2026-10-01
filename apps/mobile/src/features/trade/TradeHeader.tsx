@@ -9,7 +9,7 @@ import type { MarketLine } from "~/features/markets/useMarketLine";
 import { useNowSec } from "~/features/markets/useNowSec";
 import { arrow, price18, priceDecimalsOf, signedPct, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
  * Market detail's identity, in the page's bar (Fomo F32, FT095): the market's own art (48 pt, v2-plan §5.12), its
@@ -34,12 +34,21 @@ export function MarketIdentity({
       <EntityMark id={ids.engineMarket(network.chainId, marketId)} size={SIZE.markDetail} decorative />
       <View style={styles.titles}>
         <View style={styles.symbolRow}>
-          <Text accessibilityRole="header" numberOfLines={1} style={[TYPE.sectionTitle, { color: color.ink }]}>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={[TYPE.sectionTitle, { color: color.ink }]}
+          >
             {symbol}
           </Text>
           {maxLeverageX === undefined ? null : <LeverageBadge x={maxLeverageX} />}
         </View>
-        <Text numberOfLines={1} style={[TYPE.rowDetail, { color: color.text3 }]}>
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          numberOfLines={1}
+          style={[TYPE.rowDetail, { color: color.text3 }]}
+        >
           {name} / USD
         </Text>
       </View>
@@ -50,11 +59,24 @@ export function MarketIdentity({
 /** The 24 h change with ▲▼ and a sign (never colour alone); "24h —" while the day-old candle is unknown. */
 function Change({ bps, suffix }: { bps: bigint | undefined; suffix: boolean }) {
   const { color } = useTheme();
-  if (bps === undefined) return <Text style={[TYPE.rowChange, { color: color.text3 }]}>24h —</Text>;
+  if (bps === undefined)
+    return (
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowChange, { color: color.text3 }]}>
+        24h —
+      </Text>
+    );
   return (
-    <Text style={[TYPE.rowChange, { color: bps >= 0n ? color.up : color.down }]}>
+    <Text
+      maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+      style={[TYPE.rowChange, { color: bps >= 0n ? color.up : color.down }]}
+    >
       {arrow(bps)} {signedPct(bps)}
-      {suffix ? <Text style={{ color: color.text3 }}> 24h</Text> : null}
+      {suffix ? (
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.text3 }}>
+          {" "}
+          24h
+        </Text>
+      ) : null}
     </Text>
   );
 }
@@ -85,13 +107,21 @@ export function PriceBlock({ line }: { line: MarketLine }) {
           >
             ${shown}
           </Text>
-          <Text style={[TYPE.rowPrice, { color: color.ink }]} accessibilityLabel={`Open interest ${openInterest}`}>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.rowPrice, { color: color.ink }]}
+            accessibilityLabel={`Open interest ${openInterest}`}
+          >
             {openInterest}
           </Text>
         </View>
         <View style={styles.pair}>
           <Change bps={line.change24hBps} suffix />
-          <Text style={[TYPE.rowDetail, { color: color.text3 }]} accessibilityElementsHidden>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.rowDetail, { color: color.text3 }]}
+            accessibilityElementsHidden
+          >
             Open interest
           </Text>
         </View>
@@ -100,6 +130,7 @@ export function PriceBlock({ line }: { line: MarketLine }) {
         <View style={[styles.dot, { backgroundColor: statusTone(line.status, color) }]} />
         {/* Short words so "updated N ago" is never the part the venue chip pushes out; VoiceOver hears it whole. */}
         <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
           numberOfLines={1}
           accessibilityLabel={`${STATUS_LABEL[line.status]}, oracle price updated ${age}`}
           style={[TYPE.rowDetail, styles.flex, { color: color.text3 }]}
@@ -117,7 +148,7 @@ export function CompactPrice({ line }: { line: MarketLine }) {
   const { color } = useTheme();
   return (
     <View style={styles.compact}>
-      <Text style={[TYPE.rowPrice, { color: color.ink }]} numberOfLines={1}>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowPrice, { color: color.ink }]} numberOfLines={1}>
         ${price18(line.price18, priceDecimalsOf(line.marketId))}
       </Text>
       <Change bps={line.change24hBps} suffix={false} />
