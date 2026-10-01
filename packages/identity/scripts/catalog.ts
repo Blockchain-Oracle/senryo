@@ -1,7 +1,7 @@
 /**
  * The fetch catalog: every mark that is acquired programmatically, as data. `fetch-marks.ts` downloads each entry from
  * its public source, pins the bytes (sha256) and writes the artwork records to `src/art/generated/fetched.ts`.
- * Adding a mark is one entry here plus `pnpm --filter @senryo/identity fetch` — never a manual download.
+ * Adding a mark is one entry here plus `pnpm --filter @senryo/identity run fetch` — never a manual download.
  *
  * Sources (researched 2026-10-01; docs read through Context7):
  * - web3icons (github.com/0xa3k5/web3icons, MIT): 1,800+ tokens, 250 networks, 30 exchanges, each as `branded`

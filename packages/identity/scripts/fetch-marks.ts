@@ -1,7 +1,7 @@
 /**
  * Fetches every catalogued mark (./catalog.ts) from its public source and pins it.
  *
- *   pnpm --filter @senryo/identity fetch      # download → sources/<key>/, write src/art/generated/fetched.ts
+ *   pnpm --filter @senryo/identity run fetch      # download → sources/<key>/, write src/art/generated/fetched.ts
  *   pnpm --filter @senryo/identity codegen    # then regenerate the components
  *
  * Each file is stored byte-for-byte as served, with its URL and sha256 in the generated record. Upstreams are pinned

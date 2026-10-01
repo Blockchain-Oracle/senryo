@@ -115,8 +115,9 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - equity and crypto discovery (FT032, review S03): **built and accepted on the simulator 1 Oct** (0d51e85 data,
     55f171b UI; acceptance.md 17:45Z). Perps lists Perpl's 15 crypto markets and the six D-220 calculated feeds as
     read-only rows with live prices; each opens a read-only page (price + basis, its own history, OI/volume/funding
-    or the feed's facts and disclosure, the gate in plain words). Still short: the SPY/QQQ/TSLA/SPCX/EWY and oil
-    marks draw the unidentified fallback (agent equity-marks fetching them by script); the indexer's `FeedW…X` config is
+    or the feed's facts and disclosure, the gate in plain words). Marks (5f41fe9): Tesla, SpaceX, iShares and an oil
+    barrel fetched by script; SPY and QQQ are recorded gaps (no copyable SPDR file; Invesco's terms forbid copying its
+    logo), so they draw their ticker in the gap circle. Still short: the indexer's `FeedW…X` config is
     deployed (sha-ba4b5e2, reset 18:02 UTC) — the feed history reads rounds onchain until it has caught up; web
     parity is S11b;
   - market history (FT097): built 1 Oct — F32's history utility now leads market detail's utilities (history ·
@@ -182,7 +183,7 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   collect logos by hand. Docs were read through Context7 (`ctx7` CLI: `/0xa3k5/web3icons`, `/simple-icons/simple-icons`,
   `/logo-dev/docs.logo.dev`, `/llmstxt/brandfetch_llms_txt`, `/websites/coingecko`).
   - **How it works:** `packages/identity/scripts/catalog.ts` lists each mark as data (key, owner, source);
-    `pnpm --filter @senryo/identity fetch` downloads every entry over pinned HTTPS, stores the bytes in
+    `pnpm --filter @senryo/identity run fetch` downloads every entry over pinned HTTPS, stores the bytes in
     `sources/<key>/`, and writes the records (URL, sha256, viewBox, licence) to `src/art/generated/fetched.ts`; then
     `codegen`. Adding a mark = one catalog line + those two commands. No npm dependency was added.
   - **Sources chosen:**
@@ -447,4 +448,4 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     and `depends_on`; the 16 pending rows are listed in `docs/design/reviews/2026-10-01-ledger-reconciliation.md` §4)
     and in STATUS "Next action".
 - **Logos:** adding a mark is one line in `packages/identity/scripts/catalog.ts`, then `pnpm --filter
-  @senryo/identity fetch` and `codegen`. Never collect one by hand.
+  @senryo/identity run fetch` and `codegen`. Never collect one by hand.

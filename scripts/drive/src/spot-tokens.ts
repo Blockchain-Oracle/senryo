@@ -1,7 +1,7 @@
 /**
  * J11 spot-token list generator (S1b.16) → packages/config/src/generated/spot-tokens.ts (+ spot-tokens.dropped.json).
  *
- *   pnpm --filter @senryo/drive spot-tokens          # then: pnpm --filter @senryo/identity fetch && … codegen
+ *   pnpm --filter @senryo/drive spot-tokens          # then: pnpm --filter @senryo/identity run fetch && … codegen
  *
  * 1. Candidates: every 143 token in `monad-crypto/token-list` at the pinned commit (`MONAD_TOKEN_LIST`), minus USDC and
  *    AUSD (the quote side; swapped as collateral by F26) and WMON (native MON is listed as itself).
