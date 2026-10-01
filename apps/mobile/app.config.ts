@@ -41,6 +41,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: APP.androidPackage,
+    // Firebase config for FCM (Android push through Expo): EAS injects it as the secret file variable
+    // GOOGLE_SERVICES_JSON (Firebase project senryo-app-xyz); a local prebuild without it simply has no FCM.
+    ...(process.env.GOOGLE_SERVICES_JSON ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON } : {}),
     adaptiveIcon: {
       backgroundColor: DARK.background,
       foregroundImage: "./assets/images/android-icon-foreground.png",
