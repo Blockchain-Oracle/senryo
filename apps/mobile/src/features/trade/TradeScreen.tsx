@@ -1,94 +1,186 @@
-import { engineMarket } from "@senryo/config";
-import { DECIMALS } from "@senryo/core";
-import { useCandles } from "@senryo/query";
+import { type EngineMarket, engineMarket, engineMarketsOn } from "@senryo/config";
+import { useQueryClient } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
+import { type ReactNode, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  useAnimatedReaction,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CandleChart } from "~/components/charts/CandleChart";
+import { scheduleOnRN } from "react-native-worklets";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { Screen } from "~/components/kit/Screen";
-import { EmptyState, ReadingView } from "~/components/kit/states";
+import { ReadingView } from "~/components/kit/states";
+import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { usePressScale } from "~/components/kit/usePressScale";
+import { SCROLL_THROTTLE_MS } from "~/components/shell/constants";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
+import { MarketAbout } from "~/features/markets/MarketAbout";
+import { MarketActions } from "~/features/markets/MarketActions";
 import { HolidayBanner, ProtocolBanner } from "~/features/markets/MarketBanners";
-import { useMarketLine } from "~/features/markets/useMarketLine";
+import { MarketChart } from "~/features/markets/MarketChart";
+import { MarketFeed } from "~/features/markets/MarketFeed";
+import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
+import { QuietLine } from "~/features/markets/QuietLine";
+import { type MarketLine, useMarketLine } from "~/features/markets/useMarketLine";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { fire } from "~/feedback/fire";
 import { type TicketSide, ticketRoute } from "~/lib/constants/routes";
-import { useReadOnlyNetwork } from "~/lib/network";
-import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { useCandleStyle } from "./candle-style";
-import { TradeHeader } from "./TradeHeader";
+import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
+import { BUTTON, EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { CompactPrice, MarketIdentity, PriceBlock } from "./TradeHeader";
 
-/** 15-minute candles: ~3 days of Chainlink rounds on a phone-width chart. */
-const CHART_INTERVAL = 900;
-const MS_PER_SECOND = 1000;
+const TABS = [
+  { value: "about", label: "About" },
+  { value: "feed", label: "Feed" },
+] as const;
+type DetailTab = (typeof TABS)[number]["value"];
+
+/** The bar swaps its utilities for the compact price once the big price has scrolled under it (F32 → F33). */
+const COLLAPSE_AT = SPACE.sm + (TYPE.displayPrice.lineHeight ?? 0);
 
 /**
- * Market detail (`/markets/[market]`, the old Trade tab; J3 completes it in S1b.9): identity + venue → price, change
- * and freshness → candles → sticky Short / Long (Fomo F32/F35). Like Fomo's detail it hides the dock: the bottom zone
- * belongs to Short / Long, which open the order ticket on that side over this page (M13 → C39). Dismissing the ticket
- * restores this page with its scroll (FT112).
+ * Market detail (`/markets/[market]`, J3; Fomo F32–F35, direction §8): identity and utilities in the bar → price,
+ * change, open interest and freshness → candles with the current-price line and period chips → About / Feed → sticky
+ * Short / Long. Like Fomo's detail it hides the dock: the bottom zone belongs to Short / Long, which open the order
+ * ticket on that side over this page (M13 → C39). Dismissing the ticket restores this page with its scroll (FT112).
+ * There is no Holders tab: nothing we can read lists public positions per market, and the tab is not faked.
  */
 export function TradeScreen({ marketId }: { marketId: string }) {
   const meta = engineMarket(marketId);
+  const network = useNetwork();
   const readOnly = useReadOnlyNetwork();
   useHideDockWhileFocused("market-detail");
+  const listed = meta !== undefined && engineMarketsOn(network.chainId).some((m) => m.id === meta.id);
+  if (meta && listed && !readOnly) return <EngineMarketDetail meta={meta} />;
+  return (
+    <Plain title={marketId}>
+      {readOnly ? (
+        <PrelaunchMainnet surface="trade" />
+      ) : (
+        <QuietLine>
+          {meta ? `${meta.name} isn't listed in ${network.modeLabel} yet` : `${marketId} isn't tradeable here yet`}
+        </QuietLine>
+      )}
+    </Plain>
+  );
+}
+
+/** The page without a market to show: the same bar with a plain title, and what is true instead. */
+function Plain({ title, children }: { title: string; children: ReactNode }) {
+  const { color } = useTheme();
+  return (
+    <View style={[styles.fill, { backgroundColor: color.ground }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <PageHeader>
+        <PageTitle>{title}</PageTitle>
+      </PageHeader>
+      <Screen>{children}</Screen>
+    </View>
+  );
+}
+
+function EngineMarketDetail({ meta }: { meta: EngineMarket }) {
+  const { color } = useTheme();
+  const insets = useSafeAreaInsets();
+  const client = useQueryClient();
+  const line = useMarketLine(meta.id, meta.symbol);
+  const refreshControl = usePullRefresh();
+  const [tab, setTab] = useState<DetailTab>("about");
+  const [collapsed, setCollapsed] = useState(false);
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
+  useAnimatedReaction(
+    () => scrollY.value > COLLAPSE_AT,
+    (now, was) => {
+      if (now !== was) scheduleOnRN(setCollapsed, now);
+    },
+  );
+  const known = line.status === "fresh" || line.status === "stale" ? line.value : undefined;
+  return (
+    <View style={[styles.fill, { backgroundColor: color.ground }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <PageHeader
+        right={
+          <BarRight
+            collapsed={collapsed && known !== undefined}
+            actions={<MarketActions symbol={meta.symbol} name={meta.name} />}
+            compact={known ? <CompactPrice line={known} /> : null}
+          />
+        }
+      >
+        <MarketIdentity marketId={meta.id} symbol={meta.symbol} name={meta.name} maxLeverageX={known?.maxLeverageX} />
+      </PageHeader>
+      <Animated.ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={SCROLL_THROTTLE_MS}
+        refreshControl={refreshControl}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + SPACE.xl }]}
+      >
+        <ReadingView
+          reading={line}
+          loading="line"
+          loadingLabel="Reading the oracle"
+          retry={() => void client.invalidateQueries()}
+        >
+          {(l) => <Body line={l} tab={tab} onTab={setTab} />}
+        </ReadingView>
+      </Animated.ScrollView>
+      <SideBar symbol={meta.symbol} />
+    </View>
+  );
+}
+
+function Body({ line, tab, onTab }: { line: MarketLine; tab: DetailTab; onTab: (next: DetailTab) => void }) {
   return (
     <>
-      <Stack.Screen options={{ title: "" }} />
-      <Screen>
-        {readOnly ? (
-          <PrelaunchMainnet surface="trade" />
-        ) : meta ? (
-          <EngineMarket marketId={meta.id} symbol={meta.symbol} />
-        ) : (
-          <EmptyState
-            why={`${marketId} isn't tradable here yet`}
-            detail="Gold, silver and FX trade now on Senryo's engine; crypto on Perpl arrives next."
-          />
-        )}
-      </Screen>
-      {meta && !readOnly ? <SideBar symbol={meta.symbol} /> : null}
+      <PriceBlock line={line} />
+      <ProtocolBanner />
+      <HolidayBanner calendarId={line.market.calendarId} name={line.name} />
+      <MarketChart line={line} />
+      <View style={styles.tabs}>
+        <UnderlineTabs options={TABS} value={tab} onChange={onTab} label={`${line.name} details`} />
+        <Animated.View key={tab} entering={FadeIn.duration(TIMING.selection)}>
+          {tab === "about" ? <MarketAbout line={line} /> : <MarketFeed marketId={line.marketId} name={line.name} />}
+        </Animated.View>
+      </View>
     </>
   );
 }
 
-function EngineMarket({ marketId, symbol }: { marketId: number; symbol: string }) {
-  const { color } = useTheme();
-  const line = useMarketLine(marketId, symbol);
-  const candles = useCandles(symbol, CHART_INTERVAL);
-  const style = useCandleStyle();
+/**
+ * The bar's right side (F32 → F33): the three utilities at rest; once the price block has scrolled away they fade out
+ * and the compact price fades in over them, so the price never leaves the screen. The utilities return at the top.
+ */
+function BarRight({ collapsed, actions, compact }: { collapsed: boolean; actions: ReactNode; compact: ReactNode }) {
+  const swap = useSharedValue(0);
+  useEffect(() => {
+    swap.value = withTiming(collapsed ? 1 : 0, { duration: TIMING.selection, easing: EASE });
+  }, [collapsed, swap]);
+  const actionsStyle = useAnimatedStyle(() => ({ opacity: 1 - swap.value }));
+  const compactStyle = useAnimatedStyle(() => ({ opacity: swap.value }));
   return (
-    <ReadingView reading={line} loading="line" loadingLabel="Reading the oracle">
-      {(l) => (
-        <>
-          <TradeHeader line={l} />
-          <ProtocolBanner />
-          <HolidayBanner calendarId={l.market.calendarId} name={l.name} />
-          <ReadingView reading={candles} loading="chart" loadingLabel="Loading Chainlink rounds">
-            {(rows) =>
-              rows.length === 0 ? (
-                <EmptyState why="No rounds in this window yet" detail="The chart fills as Chainlink publishes." />
-              ) : (
-                <CandleChart
-                  decimals={DECIMALS.e18}
-                  style={style}
-                  candles={rows.map((c) => ({
-                    t: c.openTime * MS_PER_SECOND,
-                    open: c.open,
-                    high: c.high,
-                    low: c.low,
-                    close: c.close,
-                  }))}
-                />
-              )
-            }
-          </ReadingView>
-          <Text style={[TYPE.meta, { color: color.text3 }]}>Chainlink {symbol}/USD · Monad · 15m candles</Text>
-        </>
-      )}
-    </ReadingView>
+    <View>
+      <Animated.View style={actionsStyle} pointerEvents={collapsed ? "none" : "auto"}>
+        {actions}
+      </Animated.View>
+      <Animated.View
+        style={[styles.compact, compactStyle]}
+        pointerEvents="none"
+        accessibilityElementsHidden={!collapsed}
+        importantForAccessibility={collapsed ? "auto" : "no-hide-descendants"}
+      >
+        {compact}
+      </Animated.View>
+    </View>
   );
 }
 
@@ -139,6 +231,10 @@ function SideButton({ side, symbol, onPress }: { side: TicketSide; symbol: strin
 const PRESSED = 0.85;
 
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  body: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm, gap: SPACE.xl },
+  tabs: { gap: SPACE.lg },
+  compact: { position: "absolute", top: 0, bottom: 0, right: 0, justifyContent: "center" },
   bar: { flexDirection: "row", gap: SPACE.md, paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm },
   flex: { flex: 1 },
   side: {

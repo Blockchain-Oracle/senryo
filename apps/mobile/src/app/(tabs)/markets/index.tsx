@@ -1,89 +1,54 @@
-import { type ChainId, ENGINE_MARKETS, engineMarketsOn, MAINNET_CHAIN_ID } from "@senryo/config";
-import { entity, ids, PERPL_MARKETS, perplMarketId } from "@senryo/identity";
+import { router } from "expo-router";
+import { Search, Star } from "lucide-react-native";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { ChipRow } from "~/components/kit/ChipRow";
-import { EmptyState } from "~/components/kit/states";
+import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
-import { AlertsButton } from "~/components/shell/Utilities";
-import { ProtocolBanner } from "~/features/markets/MarketBanners";
-import { EngineMarketRow, type UpcomingMarket, UpcomingMarketRow } from "~/features/markets/MarketRow";
+import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
+import { MarketsList, type MarketsView } from "~/features/markets/MarketsList";
+import { MARKET_FILTERS, type MarketFilter } from "~/features/markets/universe";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
-import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { ROUTES } from "~/lib/constants/routes";
+import { useReadOnlyNetwork } from "~/lib/network";
+import { SIZE, SPACE, TIMING, useTheme } from "~/theme";
 
-const FILTERS = [
+const VIEWS = [
+  { value: "watchlist", label: "Watchlist", icon: Star },
   { value: "all", label: "All" },
-  { value: "commodities", label: "Commodities" },
-  { value: "fx", label: "FX" },
-  { value: "crypto", label: "Crypto" },
-  { value: "equities", label: "Equities" },
 ] as const;
-type Filter = (typeof FILTERS)[number]["value"];
-
-type UpcomingClass = Exclude<Filter, "all" | "commodities">;
-const FX_QUOTE = "USD";
 
 /**
- * Markets that aren't live on this network yet — identity and why, never a price (plan §2.5). Crypto: every market
- * Perpl lists on mainnet (S7 brings them onto this ticket). FX: the engine's pairs until they are listed here.
- * Equities wait for a live price feed (D-220).
- */
-function upcomingMarkets(chainId: ChainId): ReadonlyArray<UpcomingMarket & { assetClass: UpcomingClass }> {
-  const listed = engineMarketsOn(chainId);
-  const crypto = Object.keys(PERPL_MARKETS[MAINNET_CHAIN_ID] ?? {}).map((symbol) => {
-    const mark = perplMarketId(MAINNET_CHAIN_ID, symbol) ?? ids.equity(symbol);
-    return {
-      symbol,
-      name: entity(mark)?.name ?? symbol,
-      venue: "Perpl" as const,
-      note: "Mainnet · arriving next",
-      assetClass: "crypto" as const,
-      mark,
-    };
-  });
-  const fx = ENGINE_MARKETS.filter((m) => m.category === "fx" && !listed.some((l) => l.id === m.id)).map((m) => ({
-    symbol: `${m.symbol}/${FX_QUOTE}`,
-    name: m.name,
-    venue: "Senryo" as const,
-    note: chainId === MAINNET_CHAIN_ID ? "Lists with the mainnet launch" : "Listing on practice after the timelock",
-    assetClass: "fx" as const,
-    mark: ids.fxPair(m.symbol, FX_QUOTE),
-  }));
-  const equities = [
-    {
-      symbol: "NVDA",
-      name: "Nvidia",
-      venue: "Senryo" as const,
-      note: "Waits for a live price feed",
-      assetClass: "equities" as const,
-      mark: ids.equity("NVDA"),
-    },
-  ];
-  return [...crypto, ...fx, ...equities];
-}
-
-/**
- * Markets tab root (S1b.7 shell; J3 rebuilds the list in S1b.9): the title and mode stay in the fixed bar and the
- * category chips pin under it (C16, direction §5). Browsable without an account (F03). Mainnet before launch shows
- * live prices read-only (S8.22). A row opens market detail on this stack; the ticket opens from there.
+ * Markets tab root (J3, S1b.9; Fomo F09–F12, direction §8): the title and mode stay in the fixed bar; under it pin the
+ * Watchlist / All tabs with their sliding underline (F09) and the category chips, led by the search control where
+ * F09 has its filter button. Search pushes its own page (F31); price alerts open from a market's header and from Home
+ * and You. Browsable without an account (F03). Mainnet before launch shows live prices read-only (S8.22). A row opens
+ * market detail on this stack; the ticket opens from there.
  */
 export default function Markets() {
   const readOnly = useReadOnlyNetwork();
-  const [filter, setFilter] = useState<Filter>("all");
+  const { color } = useTheme();
+  const [view, setView] = useState<MarketsView>("all");
+  const [filter, setFilter] = useState<MarketFilter>("all");
   return (
     <CollapsingScreen
       left={<TabTitle>Markets</TabTitle>}
       sticky={
         readOnly ? undefined : (
-          <View style={styles.chips}>
+          <View style={styles.sticky}>
+            <UnderlineTabs options={VIEWS} value={view} onChange={setView} label="Market list" />
             <ChipRow
-              options={FILTERS}
+              options={MARKET_FILTERS}
               value={filter}
               onChange={setFilter}
               label="Market category"
-              leading={<AlertsButton />}
+              leading={
+                <UtilityButton label="Search markets and traders" onPress={() => router.push(ROUTES.marketSearch)}>
+                  <Search size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+                </UtilityButton>
+              }
             />
           </View>
         )
@@ -92,57 +57,16 @@ export default function Markets() {
       {readOnly ? (
         <PrelaunchMainnet surface="markets" />
       ) : (
-        <MarketsList filter={filter} onShowAll={() => setFilter("all")} />
+        // The list of the chosen tab arrives with a short fade instead of snapping in under the moving underline.
+        <Animated.View key={view} entering={FadeIn.duration(TIMING.selection)} style={styles.list}>
+          <MarketsList view={view} filter={filter} />
+        </Animated.View>
       )}
     </CollapsingScreen>
   );
 }
 
-function MarketsList({ filter, onShowAll }: { filter: Filter; onShowAll: () => void }) {
-  const network = useNetwork();
-  const { color } = useTheme();
-  const listed = engineMarketsOn(network.chainId);
-  const engine = listed.filter(
-    (m) =>
-      filter === "all" ||
-      (filter === "commodities" && m.category === "metal") ||
-      (filter === "fx" && m.category === "fx"),
-  );
-  const upcoming = upcomingMarkets(network.chainId).filter((m) => filter === "all" || m.assetClass === filter);
-  const count = engine.length + upcoming.length;
-  return (
-    <>
-      <ProtocolBanner />
-      {count === 0 ? (
-        <EmptyState
-          why="Nothing in this category yet"
-          detail="Markets appear here as they are listed on this network."
-          action={{ label: "Show all markets", onPress: onShowAll }}
-        />
-      ) : (
-        <View>
-          <View style={styles.head}>
-            <Text style={[TYPE.rowDetail, { color: color.text2 }]}>Perps · 24h</Text>
-            <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Oracle: Chainlink</Text>
-          </View>
-          {engine.map((m) => (
-            <EngineMarketRow key={m.id} marketId={m.id} />
-          ))}
-          {upcoming.map((m) => (
-            <UpcomingMarketRow key={m.symbol} market={m} />
-          ))}
-        </View>
-      )}
-    </>
-  );
-}
-
 const styles = StyleSheet.create({
-  chips: { paddingVertical: SPACE.sm },
-  head: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingBottom: SPACE.sm,
-  },
+  sticky: { gap: SPACE.sm, paddingBottom: SPACE.sm },
+  list: { gap: SPACE.xl },
 });

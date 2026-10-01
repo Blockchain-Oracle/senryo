@@ -4,10 +4,14 @@
  * `/fund`, `/account`) still open the right place: deep links and push taps are remapped in `lib/deep-link.ts`
  * (`LEGACY_PATHS`), and the old in-app routes redirect. Deep links on the rpId host map 1:1 onto these.
  */
+import type { Href } from "expo-router";
+
 export const ROUTES = {
   welcome: "/welcome",
   home: "/home",
   markets: "/markets",
+  /** Search, pushed on the Markets stack (F31): markets and traders. */
+  marketSearch: "/markets/search",
   card: "/card",
   cardWallet: "/card/wallet",
   cardAllowance: "/card/allowance",
@@ -66,6 +70,8 @@ export type TicketSide = "long" | "short";
 export const marketRoute = (market: string) => `/markets/${market}` as const;
 /** The order ticket over market detail (full-height transaction, C39), opened on a side from the sticky Short/Long. */
 export const ticketRoute = (market: string, side: TicketSide) => `/markets/${market}/ticket?side=${side}` as const;
+/** The price-alert editor for one market: a compact sheet over market detail (J3). */
+export const alertRoute = (market: string) => `/markets/${market}/alert` as Href;
 export const positionRoute = (id: string) => `/positions/${id}` as const;
 export const cardAuthRoute = (id: string) => `/card/auth/${id}` as const;
 export const fundQrRoute = (family: string) => `/fund/qr/${family}` as const;
