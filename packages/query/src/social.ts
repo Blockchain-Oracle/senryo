@@ -49,6 +49,8 @@ export const socialKeys = {
   /** S12b.4–8 */
   feed: (chainId: ChainId, scope: string, market: string | undefined) =>
     ["social", chainId, "feed", scope, market ?? "all"] as const,
+  holders: (chainId: ChainId, marketId: number, friends: boolean) =>
+    ["social", chainId, "holders", marketId, friends ? "friends" : "everyone"] as const,
   thread: (chainId: ChainId, id: string) => ["social", chainId, "thread", id] as const,
   leaderboard: (chainId: ChainId, period: string, scope: string) =>
     ["social", chainId, "leaderboard", period, scope] as const,

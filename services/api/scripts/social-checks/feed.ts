@@ -175,8 +175,8 @@ async function searchChecks(h: Harness, checks: Checks, s: User): Promise<void> 
   );
   checks.record("search: markets by pair", (await find("XAG/usd")).markets.map((m) => m.id).join() === XAG.id);
   checks.record(
-    "search: markets per network (FX is mainnet-only until AddMarkets)",
-    (await find("eur")).markets.length === 0 &&
+    "search: markets per network (FX is on both since AddMarkets run 2, 1 Oct)",
+    (await find("eur")).markets[0]?.symbol === "EUR" &&
       (await find("eur", undefined, MAINNET_CHAIN_ID)).markets[0]?.symbol === "EUR",
   );
   const stem = `zq${randomBytes(SUFFIX_BYTES).toString("hex")}`;

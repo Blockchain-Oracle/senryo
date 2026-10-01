@@ -13,6 +13,7 @@ export * from "./orders.ts";
 export * from "./price-store.ts";
 export * from "./social.ts";
 export * from "./social-feed.ts";
+export * from "./social-holders.ts";
 export * from "./social-posts.ts";
 export * from "./socket.ts";
 export * from "./starter.ts";

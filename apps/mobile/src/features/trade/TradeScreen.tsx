@@ -25,19 +25,23 @@ import { MarketActions } from "~/features/markets/MarketActions";
 import { HolidayBanner, ProtocolBanner } from "~/features/markets/MarketBanners";
 import { MarketChart } from "~/features/markets/MarketChart";
 import { MarketFeed } from "~/features/markets/MarketFeed";
+import { MarketHolders } from "~/features/markets/MarketHolders";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { type MarketLine, useMarketLine } from "~/features/markets/useMarketLine";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { fire } from "~/feedback/fire";
 import { type TicketSide, ticketRoute } from "~/lib/constants/routes";
+import { priceDecimalsOf } from "~/lib/money";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { BUTTON, EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { CompactPrice, MarketIdentity, PriceBlock } from "./TradeHeader";
 
+/** F32's order: who holds it, what they're doing, then what it is. */
 const TABS = [
-  { value: "about", label: "About" },
+  { value: "holders", label: "Holders" },
   { value: "feed", label: "Feed" },
+  { value: "about", label: "About" },
 ] as const;
 type DetailTab = (typeof TABS)[number]["value"];
 
@@ -46,10 +50,10 @@ const COLLAPSE_AT = SPACE.sm + (TYPE.displayPrice.lineHeight ?? 0);
 
 /**
  * Market detail (`/markets/[market]`, J3; Fomo F32–F35, direction §8): identity and utilities in the bar → price,
- * change, open interest and freshness → candles with the current-price line and period chips → About / Feed → sticky
- * Short / Long. Like Fomo's detail it hides the dock: the bottom zone belongs to Short / Long, which open the order
- * ticket on that side over this page (M13 → C39). Dismissing the ticket restores this page with its scroll (FT112).
- * There is no Holders tab: nothing we can read lists public positions per market, and the tab is not faked.
+ * change, open interest and freshness → candles with the current-price line and period chips → Holders / Feed /
+ * About → sticky Short / Long. Like Fomo's detail it hides the dock: the bottom zone belongs to Short / Long, which
+ * open the order ticket on that side over this page (M13 → C39). Dismissing the ticket restores this page with its
+ * scroll and tab (FT112). Holders lists only people who share their trades on this network (`/v1/markets/:id/holders`).
  */
 export function TradeScreen({ marketId }: { marketId: string }) {
   const meta = engineMarket(marketId);
@@ -91,7 +95,7 @@ function EngineMarketDetail({ meta }: { meta: EngineMarket }) {
   const client = useQueryClient();
   const line = useMarketLine(meta.id, meta.symbol);
   const refreshControl = usePullRefresh();
-  const [tab, setTab] = useState<DetailTab>("about");
+  const [tab, setTab] = useState<DetailTab>("holders");
   const [collapsed, setCollapsed] = useState(false);
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -149,7 +153,13 @@ function Body({ line, tab, onTab }: { line: MarketLine; tab: DetailTab; onTab: (
       <View style={styles.tabs}>
         <UnderlineTabs options={TABS} value={tab} onChange={onTab} label={`${line.name} details`} />
         <Animated.View key={tab} entering={FadeIn.duration(TIMING.selection)}>
-          {tab === "about" ? <MarketAbout line={line} /> : <MarketFeed marketId={line.marketId} name={line.name} />}
+          {tab === "holders" ? (
+            <MarketHolders marketId={line.marketId} name={line.name} decimals={priceDecimalsOf(line.marketId)} />
+          ) : tab === "feed" ? (
+            <MarketFeed marketId={line.marketId} name={line.name} />
+          ) : (
+            <MarketAbout line={line} />
+          )}
         </Animated.View>
       </View>
     </>
