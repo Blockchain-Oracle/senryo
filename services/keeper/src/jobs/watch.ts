@@ -1,6 +1,6 @@
 import { type Address, getAddress, readAccountSnapshot, readBalances, readOracles } from "@senryo/chain";
 import { engineMarketsOn } from "@senryo/config";
-import { BPS, HEALTH_WARN_MARGIN_BPS, INTERVALS_MS } from "../constants.ts";
+import { BPS, HEALTH_WARN_COOLDOWN_SEC, HEALTH_WARN_MARGIN_BPS, INTERVALS_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
 import { healthWarningPush, priceAlertPush } from "../push-messages.ts";
 import type { Job } from "../runner.ts";
@@ -49,6 +49,14 @@ async function healthWatch(ctx: KeeperContext, roundKey: string): Promise<void> 
     if (snap.positionBitmap === 0 || snap.mm === 0n) continue;
     const warnBelow = snap.mm + (snap.mm * BigInt(HEALTH_WARN_MARGIN_BPS)) / BPS;
     if (snap.equityLiq >= warnBelow) continue;
+    // One warning per account per cooldown: every oracle round (FX ≈ 4 min on mainnet) would otherwise ring again.
+    const recent = await ctx.db`
+      SELECT 1 FROM push_sends
+       WHERE chain_id = ${ctx.chainId} AND user_address = ${user.toLowerCase()} AND channel = 'liquidation'
+         AND event_key LIKE ${`${ctx.chainId}:health:%`}
+         AND sent_at > now() - make_interval(secs => ${HEALTH_WARN_COOLDOWN_SEC})
+       LIMIT 1`;
+    if (recent.length > 0) continue;
     await ctx.notifier.push(
       ctx.chainId,
       `health:${user}:${roundKey}`,

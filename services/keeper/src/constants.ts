@@ -80,6 +80,8 @@ export const HOLD_RELEASABLE_AFTER_SEC = HOLD_TTL_SEC + HOLD_RELEASE_GRACE_SEC;
 
 /** Health warning when liquidation equity is within this margin above maintenance (bps of MM). */
 export const HEALTH_WARN_MARGIN_BPS = 5_000;
+/** An account near liquidation is warned at most once in this long (s), however often the oracle moves. */
+export const HEALTH_WARN_COOLDOWN_SEC = 1_800;
 
 /** Wallet floor below which an ops alert fires (testnet default 0.05 MON; mainnet set by env ≥ 10 MON rule). */
 export const WALLET_FLOOR_WEI = 50_000_000_000_000_000n;
