@@ -28,8 +28,6 @@ export const GEO_DB_TIMEOUT_MS = 60_000;
 
 /** Starter relay rate limits (per UTC day): one claim per device, a few per IPv4 /24 (or IPv6 /48). */
 export const STARTER_PER_DEVICE_PER_DAY = 1;
-/** Mainnet gas top-ups need real collateral in the account (the anti-sybil cost instead of a bot check; D-171). */
-export const MAINNET_TOPUP_MIN_EQUITY_USD6 = 10_000_000n;
 /** A relay row younger than this is still being followed by its own background check. */
 export const RELAY_RECONCILE_AFTER_MS = 30_000;
 /** No receipt after this long → the tx never landed (abandoned); it's never re-sent. */

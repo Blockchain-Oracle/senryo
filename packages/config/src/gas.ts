@@ -187,6 +187,12 @@ export function liquidateGasLimit(positions: number): bigint {
  */
 export const GAS_TOPUP_ACTIONS = 3n;
 
+/**
+ * Mainnet gas top-ups need real collateral in the account: the anti-sybil cost instead of a bot check (D-171). The api
+ * enforces it, and the app's mainnet start card names it.
+ */
+export const MAINNET_TOPUP_MIN_EQUITY_USD6 = 10_000_000n;
+
 /** Monad's `eth_maxPriorityFeePerGas` is a hard-coded 2 gwei (network-and-endpoints.md). */
 export const PRIORITY_FEE_WEI = 2_000_000_000n;
 

@@ -150,7 +150,16 @@ reuses everything below `apps/`.
         - an abandoned entry resyncs that chain's nonce; outcomes are toasted with their own mode;
         - the kv journal is capped at 50 and drops only settled entries (nothing ever removed entries before).
         - Proof: `pnpm --filter @senryo/drive recovery-check` 8/8 on a 10143 fork, through the real sender.
-      - **Open:** mainnet copy until a native bot check, web TxRecovery (S11b), and the keeper/api redeploy **[OK?]**.
+      - *Mainnet copy done (1 Oct):* on Mainnet the starter card becomes "Start with real money": deposit AUSD/USDC
+        through the inbox (no MON needed) and gas once the balance reaches `MAINNET_TOPUP_MIN_EQUITY_USD6`
+        ($10, now in `@senryo/config` and shared by the api and the app). On Portfolio it hides once the account
+        holds money.
+      - **Open:**
+        - a voucher code entry on mobile: the relay exists (`starter.voucher`), but the screen comes with the J2
+          add-money hub and the J1 code step;
+        - web TxRecovery (S11b);
+        - the keeper/api redeploy **[OK?]**;
+        - the app rebuild with 143.json after S8.18 (EAS **[OK?]**).
 
 ## Gate
 Assurance findings closed (fixed or documented) · mainnet deposit → XAU long → close from the phone (txs in

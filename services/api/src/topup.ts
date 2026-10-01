@@ -17,10 +17,16 @@ import {
   readContract,
   TransactionReceiptNotFoundError,
 } from "@senryo/chain";
-import { GAS_TOPUP_ACTIONS, positionCount, positionGasLimit, TESTNET_CHAIN_ID } from "@senryo/config";
+import {
+  GAS_TOPUP_ACTIONS,
+  MAINNET_TOPUP_MIN_EQUITY_USD6,
+  positionCount,
+  positionGasLimit,
+  TESTNET_CHAIN_ID,
+} from "@senryo/config";
 import { isTerminalStage, type TxStage } from "@senryo/core";
 import { HTTP_STATUS, HttpError, MS_PER_SECOND, SECONDS_PER_DAY } from "@senryo/service-common";
-import { MAINNET_TOPUP_MIN_EQUITY_USD6, RELAY_ABANDON_MS, RELAY_RECONCILE_AFTER_MS } from "./constants.ts";
+import { RELAY_ABANDON_MS, RELAY_RECONCILE_AFTER_MS } from "./constants.ts";
 import type { ApiContext, ChainContext } from "./context.ts";
 import type { ClaimRow } from "./starter.ts";
 
