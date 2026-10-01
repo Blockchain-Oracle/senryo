@@ -12,7 +12,6 @@ import { CardFace } from "~/features/card/CardFace";
 import { fire } from "~/feedback/fire";
 import { cardAuthRoute, ROUTES } from "~/lib/constants/routes";
 import { signedUsd, usd } from "~/lib/money";
-import { notify } from "~/lib/notify";
 import { SAMPLE_CARD } from "~/lib/sample";
 import { useSample } from "~/lib/useSample";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -44,15 +43,13 @@ export default function Card() {
               </Text>
               <View style={styles.actions}>
                 <Button label="Add to Wallet" onPress={() => router.push(ROUTES.cardWallet)} style={styles.flex} />
-                <Button
-                  label="Freeze"
-                  variant="outline"
-                  style={styles.flex}
-                  onPress={() =>
-                    notify({ title: "Freeze arrives with the card service", description: "Nothing was changed." })
-                  }
-                />
+                <Button label="Freeze" variant="outline" style={styles.flex} disabled />
               </View>
+              {/* A safety action can't look live when it isn't (review R16): disabled, with the reason beside it. */}
+              <Text style={[TYPE.meta, styles.center, { color: color.text3 }]}>
+                Freeze isn’t available in this preview: there is no issued card behind it yet. It arrives with the card
+                service.
+              </Text>
               <Pressable onPress={() => router.push(ROUTES.cardAllowance)} accessibilityRole="button">
                 <Panel style={styles.limit}>
                   <View style={styles.between}>
