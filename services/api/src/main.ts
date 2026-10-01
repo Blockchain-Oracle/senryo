@@ -3,13 +3,14 @@ import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import { createDb, createHttpServer, createLogger, listen, migrate, pingDb, SessionKeys } from "@senryo/service-common";
 import { CORS_METHODS, WS_MAX_PAYLOAD_BYTES } from "./constants.ts";
-import { type ApiContext, openChains } from "./context.ts";
+import { type ApiContext, openChains, oracleMarks } from "./context.ts";
 import { loadApiEnv } from "./env.ts";
 import { GeoDb } from "./geo-db.ts";
 import { EnvioIndexerBridge, NullIndexerBridge } from "./indexer.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerFollowRoutes } from "./routes/follow.ts";
+import { registerHolderRoutes } from "./routes/holders.ts";
 import { registerInboxRoutes } from "./routes/inbox.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
 import { registerLeaderboardRoutes } from "./routes/leaderboard.ts";
@@ -20,6 +21,7 @@ import { registerStarterRoutes } from "./routes/starter.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
 import { registerTopUpRoutes } from "./routes/topup.ts";
 import { FeedPoller } from "./social/feed-poller.ts";
+import { HoldersService } from "./social/holders.ts";
 import { EnvioSocialIndexer, type SocialIndexer, UnavailableSocialIndexer } from "./social/indexer-source.ts";
 import { LeaderboardService } from "./social/leaderboard.ts";
 import { FeedNotifier, type SocialServices } from "./social/runtime.ts";
@@ -48,6 +50,7 @@ const feedPoller = new FeedPoller({ db, indexer: socialIndexer, notifier, log, c
 const social: SocialServices = {
   indexer: socialIndexer,
   leaderboard,
+  holders: new HoldersService({ db, indexer: socialIndexer, marks: oracleMarks(chains) }),
   notifier,
   chainIds: env.CHAIN_IDS,
   adminSecret: secrets.adminSecret,
@@ -90,6 +93,7 @@ registerProfileRoutes(app, ctx);
 registerFollowRoutes(app, ctx);
 registerPostRoutes(app, ctx);
 registerLeaderboardRoutes(app, ctx);
+registerHolderRoutes(app, ctx);
 registerModerationRoutes(app, ctx);
 // Rows left non-terminal by a previous process (restart mid-claim) get their real stage; never re-sent (S8.16e).
 void reconcilePendingRelays(ctx).catch((err) => log.warn({ err: String(err) }, "relay reconcile failed"));

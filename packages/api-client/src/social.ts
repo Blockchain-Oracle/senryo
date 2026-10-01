@@ -58,6 +58,8 @@ export const LEADERBOARD_PAGE_MAX = 100;
 /** Onboarding "Follow top traders" (30d ranked floor only; none preselected). */
 export const RECOMMENDATIONS_MAX = 10;
 export const TOP_TRADES_MAX = 10;
+/** Market Holders (FT098): the largest positions shown; the rest is a count. */
+export const MARKET_HOLDERS_MAX = 50;
 
 /** Posts (S12b.6): theses and one-level replies; a reply's parent is always a thesis. */
 export const POST_KINDS = ["thesis", "reply"] as const;

@@ -20,11 +20,13 @@ import {
   SessionKeys,
 } from "@senryo/service-common";
 import { registerFollowRoutes } from "../src/routes/follow.ts";
+import { registerHolderRoutes } from "../src/routes/holders.ts";
 import { registerLeaderboardRoutes } from "../src/routes/leaderboard.ts";
 import { registerModerationRoutes } from "../src/routes/moderation.ts";
 import { registerPostRoutes } from "../src/routes/posts.ts";
 import { registerProfileRoutes } from "../src/routes/profile.ts";
 import { FeedPoller } from "../src/social/feed-poller.ts";
+import { HoldersService, type Mark } from "../src/social/holders.ts";
 import { LeaderboardService } from "../src/social/leaderboard.ts";
 import { FeedNotifier, type SocialRuntime } from "../src/social/runtime.ts";
 import { MockIndexer } from "./mock-indexer.ts";
@@ -33,7 +35,8 @@ import { MockIndexer } from "./mock-indexer.ts";
  * In-process harness for the social check: every social route on a Fastify instance, a real Postgres
  * (`DATABASE_URL`, migrated here), the real leaderboard service and feed poller over an in-memory indexer
  * (`MockIndexer`), and `@senryo/api-client` clients whose fetch is `app.inject` — the same encode / decode path the
- * apps use, with no port and no chain. Rate limits are not registered (they are per-IP config only).
+ * apps use, with no port and no chain (market Holders read their mark from `marks`). Rate limits are not registered
+ * (they are per-IP config only).
  */
 
 const ORIGIN = "http://social-check.local";
@@ -54,6 +57,10 @@ export interface Harness {
   poller: FeedPoller;
   /** Feed notices emitted (chain, newest id). */
   notices: Array<{ chainId: ChainId; latestId: bigint }>;
+  /** Accepted prices the Holders mark reader answers, by `chainId:marketId`; a missing one reads as RPC down. */
+  marks: Map<string, Mark>;
+  /** Added to the Holders service's clock, so a check can expire its cache without waiting. */
+  clock: { skewMs: number };
   /** Call an `auth: "admin"` route with `secret` (default: the right one) — the app client never sends one. */
   admin(
     route: RouteDef,
@@ -116,9 +123,21 @@ export async function openHarness(): Promise<Harness> {
   const notices: Harness["notices"] = [];
   notifier.on((chainId, latestId) => notices.push({ chainId, latestId }));
   const adminSecret = randomBytes(ADMIN_SECRET_BYTES).toString("hex");
+  const marks = new Map<string, Mark>();
+  const clock = { skewMs: 0 };
   const social: SocialRuntime["social"] = {
     indexer: mock,
     leaderboard: new LeaderboardService({ db, indexer: mock, log, chainIds }),
+    holders: new HoldersService({
+      db,
+      indexer: mock,
+      marks: async (chainId, marketId) => {
+        const mark = marks.get(`${chainId}:${marketId}`);
+        if (!mark) throw new Error("rpc down");
+        return mark;
+      },
+      nowMs: () => Date.now() + clock.skewMs,
+    }),
     notifier,
     chainIds,
     adminSecret,
@@ -130,6 +149,7 @@ export async function openHarness(): Promise<Harness> {
   registerFollowRoutes(app, ctx);
   registerPostRoutes(app, ctx);
   registerLeaderboardRoutes(app, ctx);
+  registerHolderRoutes(app, ctx);
   registerModerationRoutes(app, ctx);
   await app.ready();
   const poller = new FeedPoller({ db, indexer: mock, notifier, log, chainIds });
@@ -158,6 +178,8 @@ export async function openHarness(): Promise<Harness> {
     social,
     poller,
     notices,
+    marks,
+    clock,
     async admin(route, input, secret = adminSecret) {
       const search = input.query ? `?${new URLSearchParams(input.query).toString()}` : "";
       const res = await app.inject({

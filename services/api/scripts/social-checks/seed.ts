@@ -104,6 +104,8 @@ export function position(
     feesPaid: 0n,
     fundingPaid: 0n,
     borrowPaid: 0n,
+    size: 0n,
+    entryPrice: 0n,
     openedAt: (s.closedAt ?? nowSec()) - 1,
     closedAt: s.closedAt,
     updatedAt: s.closedAt ?? nowSec(),
@@ -112,6 +114,35 @@ export function position(
       { kind: "OPEN", notional: s.notional, txHash: `0x${"a".repeat(TX_HASH_BYTES * 2)}`, block: nextBlock },
       { kind: "CLOSE", notional: s.notional, txHash: `0x${"b".repeat(TX_HASH_BYTES * 2)}`, block: nextBlock + 1 },
     ],
+  };
+  h.mock.positions.push(row);
+  return row;
+}
+
+/** Push one open position (size and entry 1e18) into the mock — a market Holders row. */
+export function holding(
+  h: Harness,
+  s: { user: User; market: typeof XAU; side: MockPosition["side"]; size: bigint; entry: bigint; chainId?: ChainId },
+): MockPosition {
+  nextBlock += 1;
+  const row: MockPosition = {
+    chainId: s.chainId ?? TESTNET_CHAIN_ID,
+    id: `${s.market.id}-${s.user.lower}-${nextBlock}_0`,
+    user_id: s.user.lower,
+    venue: "OURS",
+    side: s.side,
+    status: "OPEN",
+    size: s.size,
+    entryPrice: s.entry,
+    realizedPnl: 0n,
+    feesPaid: 0n,
+    fundingPaid: 0n,
+    borrowPaid: 0n,
+    openedAt: nowSec(),
+    closedAt: undefined,
+    updatedAt: nowSec(),
+    market: { ...s.market, venue: "OURS" },
+    fills: [],
   };
   h.mock.positions.push(row);
   return row;

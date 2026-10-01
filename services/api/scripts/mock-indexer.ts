@@ -1,13 +1,15 @@
 import type { ChainId } from "@senryo/config";
-import type {
-  ClosedPosition,
-  DailyRow,
-  FeedFill,
-  FillKey,
-  PositionOwner,
-  RecentPositions,
-  UserTotals,
-  WindowFill,
+import {
+  type ClosedPosition,
+  type DailyRow,
+  type FeedFill,
+  type FillKey,
+  IndexerError,
+  type OpenPosition,
+  type PositionOwner,
+  type RecentPositions,
+  type UserTotals,
+  type WindowFill,
 } from "@senryo/indexer-client";
 import type { SocialIndexer } from "../src/social/indexer-source.ts";
 import { sumDays, type Totals } from "../src/social/leaderboard-math.ts";
@@ -19,7 +21,7 @@ import { sumDays, type Totals } from "../src/social/leaderboard-math.ts";
  */
 
 type OnChain<T> = T & { chainId: ChainId };
-export type MockPosition = OnChain<ClosedPosition> & { updatedAt: number };
+export type MockPosition = OnChain<ClosedPosition> & Pick<OpenPosition, "size" | "entryPrice"> & { updatedAt: number };
 
 const lower = (users: readonly string[] | null) => (users === null ? null : new Set(users.map((u) => u.toLowerCase())));
 const inUsers = (set: Set<string> | null, user: string) => set === null || set.has(user.toLowerCase());
@@ -35,6 +37,8 @@ export class MockIndexer implements SocialIndexer {
   readonly positions: MockPosition[] = [];
   /** Chains each call asked for. */
   readonly chainsAsked: ChainId[] = [];
+  /** While true, `marketHolders` fails as an unreachable indexer would. */
+  holdersDown = false;
 
   async feedFills(
     chainId: ChainId,
@@ -92,6 +96,25 @@ export class MockIndexer implements SocialIndexer {
         p.closedAt !== undefined &&
         p.closedAt >= since,
     );
+  }
+
+  async marketHolders(chainId: ChainId, marketId: string, users: readonly string[]): Promise<OpenPosition[]> {
+    this.chainsAsked.push(chainId);
+    if (this.holdersDown) throw new IndexerError("network", "MarketPositions: indexer down");
+    const set = lower(users);
+    return this.positions
+      .filter(
+        (p) => p.chainId === chainId && p.market.id === marketId && p.status === "OPEN" && inUsers(set, p.user_id),
+      )
+      .sort((a, b) => (a.size === b.size ? (a.id < b.id ? -1 : 1) : a.size > b.size ? -1 : 1))
+      .map((p) => ({
+        id: p.id,
+        user_id: p.user_id,
+        side: p.side,
+        size: p.size,
+        entryPrice: p.entryPrice,
+        openedAt: p.openedAt,
+      }));
   }
 
   async positionOwner(chainId: ChainId, positionId: string): Promise<PositionOwner> {

@@ -1,8 +1,9 @@
 /**
  * Social reads (S12b.4/5, services/api only): the feed poller's fill keyset, leaderboard windows (rolling fills,
- * UTC-day buckets, lifetime totals), asset clusters, weekly closed positions and a position's owner. Every `where`
- * carries `chainId` (D-173): rows are per chain and ids repeat across chains. Keysets page in a stable total order
- * (`block, id` for fills; `id` elsewhere) so a page boundary never skips or repeats a row.
+ * UTC-day buckets, lifetime totals), asset clusters, weekly closed positions, a market's open positions (Holders) and
+ * a position's owner. Every `where` carries `chainId` (D-173): rows are per chain and ids repeat across chains.
+ * Keysets page in a stable total order (`block, id` for fills; `size desc, id` for a market's open positions; `id`
+ * elsewhere) so a page boundary never skips or repeats a row.
  */
 import { z } from "zod";
 import { type ChainWhere, defineDocument, type ResultOf } from "../client.ts";
@@ -289,6 +290,55 @@ export function closedSinceWhere(
     status: { _eq: "CLOSED" },
     closedAt: { _gte: since },
     ...(afterId === null ? {} : { id: { _gt: afterId } }),
+  };
+}
+
+// ---------------------------------------------------------------- open positions in one market (market Holders)
+
+/** The indexer's id of our engine's market `n` (indexer/src/lib/markets.ts `ourMarketId`). */
+export const ourMarketId = (engineMarketId: number): string => `ours-${engineMarketId}`;
+
+/** `size` is unsigned (1e18 units; `side` says which way), `entryPrice` the average entry (1e18). */
+const openPosition = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  side,
+  size: bigintish,
+  entryPrice: bigintish,
+  openedAt: z.number().int(),
+});
+export type OpenPosition = z.infer<typeof openPosition>;
+
+/** A largest-first keyset position: `size` descending, then the position id. */
+export interface SizeKey {
+  size: bigint;
+  id: string;
+}
+
+export const MarketPositionsDocument = defineDocument<PageVars>()(
+  "MarketPositions",
+  `query MarketPositions($where: Position_bool_exp!, $limit: Int!) {
+    Position(where: $where, order_by: [{ size: desc }, { id: asc }], limit: $limit) {
+      id user_id side size entryPrice openedAt
+    }
+  }`,
+  z.object({ Position: z.array(openPosition) }).transform((d) => d.Position),
+);
+
+/** Open positions in `marketId` (indexer id) of `users` (null = everyone), after `after` in (size desc, id) order. */
+export function openInMarketWhere(
+  chainId: number,
+  marketId: string,
+  users: readonly string[] | null,
+  after: SizeKey | null,
+): Where {
+  const size = after?.size.toString();
+  return {
+    ...chainScope(chainId),
+    ...usersScope("user_id", users),
+    market_id: { _eq: marketId },
+    status: { _eq: "OPEN" },
+    ...(after ? { _or: [{ size: { _lt: size } }, { size: { _eq: size }, id: { _gt: after.id } }] } : {}),
   };
 }
 
