@@ -11,7 +11,6 @@ export const INTERVALS_MS = {
   mirror: 15_000,
   triggers: 2_000,
   holds: 60_000,
-  topups: 60_000,
   alerts: 10_000,
   wallets: 60_000,
   retention: 86_400_000,
@@ -26,9 +25,6 @@ export const RETENTION_DAYS = {
   outbox: 30,
   cardEvents: 90,
 } as const;
-
-/** Top-ups per run at most (S8.5b K4); the contract still caps per address, per day and by the daily budget. */
-export const TOPUP_MAX_PER_RUN = 10;
 
 /**
  * Testnet mirror relay: push when the mainnet answer moved ≥ this many bps since the last mirrored answer, or when
@@ -67,8 +63,6 @@ export const HEALTH_WARN_MARGIN_BPS = 5_000;
 export const WALLET_FLOOR_WEI = 50_000_000_000_000_000n;
 
 /** Gas top-up (D-030) when a user's MON is under the floor; StarterDrip caps it per address/day onchain. */
-export const TOPUP_FLOOR_WEI = 20_000_000_000_000_000n;
-export const TOPUP_AMOUNT_WEI = 50_000_000_000_000_000n;
 
 export const BPS = 10_000n;
 

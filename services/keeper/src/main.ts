@@ -21,7 +21,7 @@ import {
 import { type KeeperContext, RecentActions } from "./context.ts";
 import { type KeeperJob, loadKeeperEnv } from "./env.ts";
 import { liquidationJob } from "./jobs/liquidate.ts";
-import { holdExpiryJob, topUpJob, triggerJob } from "./jobs/maintenance.ts";
+import { holdExpiryJob, triggerJob } from "./jobs/maintenance.ts";
 import { mirrorJob, observeJob } from "./jobs/oracle.ts";
 import { retentionJob } from "./jobs/retention.ts";
 import { alertsJob, walletsJob } from "./jobs/watch.ts";
@@ -73,7 +73,6 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   mirror: mirrorJob,
   triggers: triggerJob,
   holds: holdExpiryJob,
-  topups: topUpJob,
   retention: retentionJob,
   alerts: alertsJob,
   wallets: walletsJob,

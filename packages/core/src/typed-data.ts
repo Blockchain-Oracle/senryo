@@ -67,5 +67,19 @@ export const OPEN_ORDER_TYPES = {
   ],
 } as const;
 
+/**
+ * `TopUp(address user,uint256 needWei,uint64 deadline)` — **off-chain only** (S8.16c, D-171): the user's session
+ * authorises the api to send them gas via `StarterDrip.topUp` (a RELAYER_ROLE call that takes no user signature).
+ * StarterDrip only ever verifies the Claim/Voucher typehashes, so a TopUp signature can't be replayed onchain.
+ * `needWei` is the app's budget for its next send; the api clamps what it actually sends.
+ */
+export const TOPUP_TYPES = {
+  TopUp: [
+    { name: "user", type: "address" },
+    { name: "needWei", type: "uint256" },
+    { name: "deadline", type: "uint64" },
+  ],
+} as const;
+
 /** How long a relayed claim/voucher signature stays valid (the API rejects longer deadlines). */
 export const RELAY_SIGNATURE_MAX_TTL_SECONDS = 600;

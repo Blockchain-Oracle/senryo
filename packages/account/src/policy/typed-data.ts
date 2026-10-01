@@ -19,6 +19,8 @@ const signs = (action: Action): Verdict => ({ kind: "sign", action, spendUsd6: 0
 const SESSION_TYPES: Record<string, { domain: { name: string; version: string }; contract: "starterDrip" | "core" }> = {
   Claim: { domain: STARTER_DOMAIN, contract: "starterDrip" },
   Voucher: { domain: STARTER_DOMAIN, contract: "starterDrip" },
+  // Off-chain gas top-up authorisation (S8.16c); the contract never accepts this type.
+  TopUp: { domain: STARTER_DOMAIN, contract: "starterDrip" },
   TriggerOrder: { domain: TRIGGER_DOMAIN, contract: "core" },
 };
 

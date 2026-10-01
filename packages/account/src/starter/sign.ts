@@ -9,8 +9,10 @@ import {
   canonicalVoucherCode,
   claimTypedData,
   type SignedClaim,
+  type SignedTopUp,
   type SignedVoucher,
   starterDeadline,
+  topUpTypedData,
   voucherCodeBytes,
   voucherTypedData,
 } from "./typed-data.ts";
@@ -35,4 +37,17 @@ export async function signVoucher(
   const bytes = voucherCodeBytes(canonical);
   const signature = await signer.signTypedData(voucherTypedData(chainId, signer.address, bytes, deadline));
   return { chainId, user: signer.address, deadline, signature, code: canonical };
+}
+
+/** Gas top-up authorisation (S8.16c): in scope for the session like Claim, so no prompt while unlocked. */
+export async function signStarterTopUp(
+  signer: LocalAccount,
+  chainId: ChainId,
+  needWei: bigint,
+  nowMs: number,
+): Promise<SignedTopUp> {
+  if (!signer.signTypedData) throw new Error("Signer cannot sign typed data");
+  const deadline = starterDeadline(nowMs);
+  const signature = await signer.signTypedData(topUpTypedData(chainId, signer.address, needWei, deadline));
+  return { chainId, user: signer.address, needWei, deadline, signature };
 }

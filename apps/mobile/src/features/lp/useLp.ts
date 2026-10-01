@@ -18,6 +18,7 @@ import {
   useQueryEnv,
   useSendTrace,
 } from "@senryo/query";
+import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 
@@ -32,6 +33,7 @@ export function useLp() {
   const apr = useLpApr(snapshot?.totalAssets);
   const markets = useMarkets();
   const trace = useSendTrace();
+  const gas = useEnsureGas();
 
   const openNotional = markets.reduce((sum, m) => {
     if (m.reading.status !== "fresh" && m.reading.status !== "stale") return sum;
@@ -44,7 +46,10 @@ export function useLp() {
   const run = async (build: (from: Address) => Parameters<typeof trace.run>[1]) => {
     const client = account.client;
     if (!client || !address) return undefined;
-    return trace.run(userSender(client, address, account.settings.faceId), build(address));
+    const request = build(address);
+    return trace.run(userSender(client, address, account.settings.faceId), request, {
+      preflight: gas.preflight(request),
+    });
   };
 
   const deposit = async (amountUsd6: bigint) => {

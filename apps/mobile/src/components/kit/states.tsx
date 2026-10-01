@@ -157,15 +157,18 @@ export function ReadingView<T>({
       return <LoadingState shape={loading} {...(loadingLabel ? { label: loadingLabel } : {})} />;
     case "failed":
       return <ErrorState diagnosis={reading.error} {...(retry ? { retry } : {})} />;
+    // fresh and stale share one tree: the stamp slot is null when fresh, so children keep their position and state
+    // across a fresh↔stale change (a moving child remounted the whole Ticket — the phone "keeps refreshing" bug, S8.16a).
     case "stale":
+    case "fresh":
       return (
         <>
-          <StaleStamp at={reading.at} refreshing={reading.refreshing} failed={reading.error !== undefined} />
+          {reading.status === "stale" ? (
+            <StaleStamp at={reading.at} refreshing={reading.refreshing} failed={reading.error !== undefined} />
+          ) : null}
           {children(reading.value)}
         </>
       );
-    case "fresh":
-      return <>{children(reading.value)}</>;
   }
 }
 

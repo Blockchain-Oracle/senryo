@@ -17,7 +17,7 @@ import {
 } from "@senryo/chain";
 import type { Address } from "@senryo/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useId, useSyncExternalStore } from "react";
 import { useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
 
@@ -54,13 +54,20 @@ function tapJournal(inner: TxJournal | undefined, onPut: (entry: JournalEntry) =
   };
 }
 
+/** Work that must succeed before signing (e.g. a gas top-up, S8.16c); a throw becomes the trace's `failed` event. */
+export interface SendOptions {
+  preflight?: (() => Promise<void>) | undefined;
+}
+
 export async function sendTracked(
   sender: Sender,
   request: TxRequest,
   onStage: (event: TraceEvent) => void,
+  options: SendOptions = {},
 ): Promise<TrackedResult> {
   const emit = (stage: TraceStage, extra: Partial<TraceEvent> = {}) => onStage({ stage, at: Date.now(), ...extra });
   emit("checking");
+  await options.preflight?.();
   const gas = await planGas(sender, request);
   emit("signing");
   const tapped: Sender = { ...sender, journal: tapJournal(sender.journal, (e) => emit("signed", { hash: e.hash })) };
@@ -84,20 +91,59 @@ export async function sendTracked(
   return { ...sent, final };
 }
 
-/** Trace state for one ticket/position action; finalized → the account's queries refetch (buckets, positions). */
-export function useSendTrace() {
+interface TraceState {
+  events: TraceEvent[];
+  running: boolean;
+}
+
+const IDLE: TraceState = { events: [], running: false };
+
+/**
+ * Trace state lives outside React, keyed by the action (e.g. `trade:<chainId>:<marketId>`), so a screen remount mid-send
+ * keeps the trace and the `running` flag — the hold can't be pressed again while a signed tx is in flight (S8.16a).
+ */
+const traces = new Map<string, TraceState>();
+const listeners = new Map<string, Set<() => void>>();
+
+function setTrace(key: string, update: (prev: TraceState) => TraceState): void {
+  traces.set(key, update(traces.get(key) ?? IDLE));
+  for (const listener of listeners.get(key) ?? []) listener();
+}
+
+function subscribeTrace(key: string, listener: () => void): () => void {
+  let set = listeners.get(key);
+  if (!set) {
+    set = new Set();
+    listeners.set(key, set);
+  }
+  set.add(listener);
+  return () => {
+    set.delete(listener);
+  };
+}
+
+/**
+ * Trace state for one ticket/position action; finalized → the account's queries refetch (buckets, positions). Pass a
+ * stable `key` to keep the trace across remounts; without one the trace is local to this component instance.
+ */
+export function useSendTrace(key?: string) {
   const env = useQueryEnv();
   const queryClient = useQueryClient();
-  const [events, setEvents] = useState<TraceEvent[]>([]);
-  const [running, setRunning] = useState(false);
+  const localKey = useId();
+  const id = key ?? `local:${localKey}`;
+  const state = useSyncExternalStore(
+    (listener) => subscribeTrace(id, listener),
+    () => traces.get(id) ?? IDLE,
+    () => traces.get(id) ?? IDLE,
+  );
 
   const run = useCallback(
-    async (sender: Sender, request: TxRequest): Promise<TrackedResult | undefined> => {
-      setEvents([]);
-      setRunning(true);
-      const push = (event: TraceEvent) => setEvents((prev) => [...prev, event]);
+    async (sender: Sender, request: TxRequest, options: SendOptions = {}): Promise<TrackedResult | undefined> => {
+      if ((traces.get(id) ?? IDLE).running) return undefined;
+      setTrace(id, () => ({ events: [], running: true }));
+      const push = (event: TraceEvent) => setTrace(id, (prev) => ({ ...prev, events: [...prev.events, event] }));
       try {
-        const result = await sendTracked(sender, request, push);
+        const result = await sendTracked(sender, request, push, options);
         const from = sender.account.address as Address;
         void queryClient.invalidateQueries({ queryKey: keys.account(env.chainId, from) });
         void queryClient.invalidateQueries({ queryKey: ["market", env.chainId] });
@@ -106,12 +152,14 @@ export function useSendTrace() {
         push({ stage: "failed", at: Date.now(), error });
         return undefined;
       } finally {
-        setRunning(false);
+        setTrace(id, (prev) => ({ ...prev, running: false }));
       }
     },
-    [env.chainId, queryClient],
+    [env.chainId, queryClient, id],
   );
 
-  const reset = useCallback(() => setEvents([]), []);
-  return { events, running, run, reset };
+  const reset = useCallback(() => {
+    if (!(traces.get(id) ?? IDLE).running) setTrace(id, () => IDLE);
+  }, [id]);
+  return { events: state.events, running: state.running, run, reset };
 }

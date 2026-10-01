@@ -38,3 +38,13 @@ export function usePositionsSummary(): PositionsSummary | undefined {
   }
   return { count: positions.value.length, upnlUsd6: upnl, nearest };
 }
+
+/**
+ * The tabs layout only needs to know WHETHER to mount the mini-bar. This reads positions alone (10 s refetch), not every
+ * market's price ticks, so the whole navigator no longer re-renders on each tick (phone test, S8.16a).
+ */
+export function useHasOpenPositions(): boolean {
+  const address = useAccount().hint?.address;
+  const positions = usePositions(address);
+  return (positions.status === "fresh" || positions.status === "stale") && positions.value.length > 0;
+}

@@ -38,8 +38,17 @@ export interface QueryLike<T> {
   dataUpdatedAt: number;
   isFetching: boolean;
   isError: boolean;
-  isStale: boolean;
   error: unknown;
+}
+
+/**
+ * When cached data counts as stale. Deliberately NOT TanStack's `isStale`: with `staleTime == refetchInterval` it flips on
+ * every refetch cycle, and a fresh↔stale flip remounted whole screens (the phone "keeps refreshing" bug, S8.16a).
+ * Stale = the last refresh failed, or the data is older than the query's own budget (`staleAfterMs`, measured at `now`).
+ */
+export interface StaleBudget {
+  now: number;
+  staleAfterMs: number;
 }
 
 function diagnose(error: unknown): Diagnosis {
@@ -48,11 +57,12 @@ function diagnose(error: unknown): Diagnosis {
 }
 
 /** Maps a query to a Reading: cached data survives a failed refresh as `stale`, never as an error or a zero. */
-export function fromQuery<T>(query: QueryLike<T>): Reading<T> {
+export function fromQuery<T>(query: QueryLike<T>, budget?: StaleBudget): Reading<T> {
   if (query.data === undefined) {
     return query.isError ? { status: "failed", error: diagnose(query.error) } : unknownReading;
   }
-  if (query.isError || query.isStale) {
+  const aged = budget !== undefined && budget.now - query.dataUpdatedAt > budget.staleAfterMs;
+  if (query.isError || aged) {
     return {
       status: "stale",
       value: query.data,

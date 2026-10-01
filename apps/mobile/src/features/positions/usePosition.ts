@@ -18,6 +18,7 @@ import {
 } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 import { REDUCE_ALL_BPS } from "./constants";
@@ -38,6 +39,7 @@ export function usePosition(marketId: number) {
   });
   const [shareBps, setShareBps] = useState<bigint>(REDUCE_ALL_BPS);
   const trace = useSendTrace();
+  const gas = useEnsureGas();
 
   const m = market.status === "fresh" || market.status === "stale" ? market.value : undefined;
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
@@ -65,7 +67,8 @@ export function usePosition(marketId: number) {
     const request = closingAll
       ? closeRequest(env.chainId, marketId, position.isLong, reduce.execPrice18, positionsNow)
       : decreaseRequest(env.chainId, marketId, position.isLong, sizeDelta, reduce.execPrice18, positionsNow);
-    return trace.run(sender, request);
+    // Closing needs gas too: top up first when short, and show why if that's impossible (S8.16c).
+    return trace.run(sender, request, { preflight: gas.preflight(request) });
   };
 
   return {

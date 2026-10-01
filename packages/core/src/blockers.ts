@@ -1,7 +1,9 @@
 /**
  * The trade blocker chain (F10, specs/flows.md): every ticket shows the **first** fixable cause and its action, in this
- * order — offline → geo (mainnet) → no account → no gas → insufficient Free to trade → market closed → price paused →
- * leverage above max → market full → below minimum → simulation revert. Pure: the apps pass what they already know.
+ * order — offline → geo (mainnet) → no account → insufficient Free to trade → market closed → price paused → leverage
+ * above max → market full → below minimum → no gas → simulation revert. Pure: the apps pass what they already know.
+ * Gas is last and is only a blocker when a top-up is impossible (S8.16b, D-171): a short balance is topped up at hold
+ * time, so it never dead-ends a trade that would otherwise go through.
  * Reduce/close never go through this chain (allowed in every status, risk-math.md status matrix).
  */
 import { formatUnits } from "./money/format.ts";
@@ -13,7 +15,7 @@ export type TradeBlocker =
   | { code: "OFFLINE" }
   | { code: "GEO_BLOCKED"; country: string | null }
   | { code: "NO_ACCOUNT" }
-  | { code: "NO_GAS" }
+  | { code: "NO_GAS"; reason: GasShortReason; retryAfterSec?: number }
   | { code: "INSUFFICIENT_FREE"; shortUsd6: bigint }
   | { code: "MARKET_CLOSED"; opensAt: bigint | undefined }
   | { code: "REOPENING"; opensAt: bigint | undefined }
@@ -24,6 +26,15 @@ export type TradeBlocker =
   | { code: "BELOW_MIN"; minUsd6: bigint }
   | { code: "SIMULATION_REVERTED"; reason: string };
 
+/** Why a gas top-up can't happen right now (the api's refusal codes; UNREACHABLE = the relay didn't answer). */
+export type GasShortReason = "NOT_ELIGIBLE" | "BUDGET_EXHAUSTED" | "RELAYER_BUSY" | "UNREACHABLE" | "UNKNOWN";
+
+/** ok = the balance covers limit × max fee · topup = short, topped up at hold time · unavailable = short, no top-up. */
+export type GasGate =
+  | { kind: "ok" }
+  | { kind: "topup" }
+  | { kind: "unavailable"; reason: GasShortReason; retryAfterSec?: number };
+
 export interface TradeGateInput {
   online: boolean;
   /** Mainnet new risk is geofenced (D-038); practice never is. */
@@ -31,8 +42,8 @@ export interface TradeGateInput {
   geoAllowed: boolean | undefined;
   country: string | null;
   hasAccount: boolean;
-  /** Enough native balance for this send's explicit gas limit × max fee. */
-  hasGas: boolean;
+  /** Native balance vs this send's gas limit × max fee (see `GasGate`). */
+  gas: GasGate;
   status: MarketStatus;
   /** Next open from the calendar (display only), for CLOSED / REOPENING copy. */
   opensAt: bigint | undefined;
@@ -48,7 +59,6 @@ export function firstTradeBlocker(input: TradeGateInput): TradeBlocker | undefin
   if (!input.online) return { code: "OFFLINE" };
   if (input.mainnet && input.geoAllowed === false) return { code: "GEO_BLOCKED", country: input.country };
   if (!input.hasAccount) return { code: "NO_ACCOUNT" };
-  if (!input.hasGas) return { code: "NO_GAS" };
   const issues = input.preview?.issues ?? [];
   const short = issues.find((i) => i.kind === "INSUFFICIENT_FREE");
   if (short) return { code: "INSUFFICIENT_FREE", shortUsd6: short.shortUsd6 };
@@ -63,6 +73,13 @@ export function firstTradeBlocker(input: TradeGateInput): TradeBlocker | undefin
   if (issues.some((i) => i.kind === "IMPACT_TOO_HIGH")) return { code: "PRICE_IMPACT" };
   const min = issues.find((i) => i.kind === "BELOW_MIN");
   if (min) return { code: "BELOW_MIN", minUsd6: min.minUsd6 };
+  if (input.gas.kind === "unavailable") {
+    return {
+      code: "NO_GAS",
+      reason: input.gas.reason,
+      ...(input.gas.retryAfterSec !== undefined ? { retryAfterSec: input.gas.retryAfterSec } : {}),
+    };
+  }
   if (input.simulationRevert) return { code: "SIMULATION_REVERTED", reason: input.simulationRevert };
   return undefined;
 }
@@ -109,7 +126,7 @@ export function blockerCopy(b: TradeBlocker, market: string, now: bigint): Block
     case "NO_ACCOUNT":
       return { title: "Create an account to trade", action: "Create account" };
     case "NO_GAS":
-      return { title: "Adding gas to your account…" };
+      return gasCopy(b.reason, b.retryAfterSec);
     case "INSUFFICIENT_FREE":
       return { title: `Add ${usd(b.shortUsd6)} to trade`, action: "Add money" };
     case "MARKET_CLOSED":
@@ -133,5 +150,29 @@ export function blockerCopy(b: TradeBlocker, market: string, now: bigint): Block
       return { title: `Minimum position is ${usd(b.minUsd6)}`, action: "Increase the amount" };
     case "SIMULATION_REVERTED":
       return { title: b.reason };
+  }
+}
+
+const SECONDS_PER_HOUR = 3_600;
+
+/** Every refusal says why and what next — never an endless "Adding gas…" (phone test, S8.16b). */
+function gasCopy(reason: GasShortReason, retryAfterSec: number | undefined): BlockerCopy {
+  switch (reason) {
+    case "NOT_ELIGIBLE":
+      return {
+        title: "Your account needs gas to trade",
+        action: "Claim practice funds or deposit — gas comes with them",
+      };
+    case "BUDGET_EXHAUSTED": {
+      const hours = retryAfterSec === undefined ? undefined : Math.max(1, Math.ceil(retryAfterSec / SECONDS_PER_HOUR));
+      return {
+        title: "Today's free gas is used up",
+        action: hours === undefined ? "Add MON to your account to keep trading" : `More in ${hours}h · or add MON`,
+      };
+    }
+    case "RELAYER_BUSY":
+    case "UNREACHABLE":
+    case "UNKNOWN":
+      return { title: "Couldn't add gas right now", action: "Hold again to retry" };
   }
 }

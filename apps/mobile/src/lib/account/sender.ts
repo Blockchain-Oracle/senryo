@@ -15,6 +15,7 @@ import {
   type ReadClient,
   type Sender,
 } from "@senryo/chain";
+import { userFeeCache } from "@senryo/query";
 import { ACTIVE_NETWORK } from "~/lib/constants/auth";
 import { storage } from "~/lib/storage";
 import { policyContext } from "./api";
@@ -55,5 +56,7 @@ export function userSender(
     read,
     nonces,
     journal: kvJournal(mmkv),
+    // The same quote the gas budget uses (D-171): what the ticket checks is exactly what gets signed.
+    fees: userFeeCache(read),
   });
 }

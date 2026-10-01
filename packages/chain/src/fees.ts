@@ -22,6 +22,8 @@ export class FeeCache {
   constructor(
     private readonly read: ReadClient,
     private readonly refreshMs: number = FEE_REFRESH_MS,
+    /** `maxFeePerGas` = base × this (bps) + priority; user sends pass USER_MAX_FEE_BASE_MULTIPLIER_BPS (D-171). */
+    private readonly multiplierBps: bigint = MAX_FEE_BASE_MULTIPLIER_BPS,
   ) {}
 
   /** Background refresh (services); clients just call `get()`. */
@@ -51,11 +53,14 @@ export class FeeCache {
 
   private async fetch(): Promise<FeeQuote> {
     const block = await this.read.getBlock({ blockTag: "latest" });
-    const base = block.baseFeePerGas ?? MIN_BASE_FEE_WEI;
+    // Monad's base fee never goes below its 100 gwei floor; a node reporting less (or none, or a local fork decaying
+    // it on empty blocks) is quoted at the floor so the signed max fee always clears a real block (D-171).
+    const reported = block.baseFeePerGas ?? MIN_BASE_FEE_WEI;
+    const base = reported > MIN_BASE_FEE_WEI ? reported : MIN_BASE_FEE_WEI;
     const quote: FeeQuote = {
       baseFeePerGas: base,
       maxPriorityFeePerGas: PRIORITY_FEE_WEI,
-      maxFeePerGas: (base * MAX_FEE_BASE_MULTIPLIER_BPS) / BPS + PRIORITY_FEE_WEI,
+      maxFeePerGas: (base * this.multiplierBps) / BPS + PRIORITY_FEE_WEI,
       at: Date.now(),
     };
     this.quote = quote;

@@ -5,7 +5,7 @@
  */
 import { addressOf, CONTRACT_ABIS, type MarketRiskSnapshot, readCalendar, readMarketRisk } from "@senryo/chain";
 import { type ChainId, ENGINE_MARKETS, engineMarketsOn, MAINNET_CHAIN_ID } from "@senryo/config";
-import { fromQuery, type Reading, type WeekCalendar } from "@senryo/core";
+import type { Reading, WeekCalendar } from "@senryo/core";
 import { type CandleInterval, type Candles, CandlesDocument, candlesVars } from "@senryo/indexer-client";
 import { queryOptions, useQueries, useQuery } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
@@ -19,6 +19,7 @@ import {
 import { type QueryEnv, useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
 import { PriceStore, type PriceTick } from "./price-store.ts";
+import { readingOf } from "./reading.ts";
 
 const MS_PER_SECOND = 1000;
 /** Pause flags change rarely; read them a sixth as often as market state. */
@@ -74,7 +75,7 @@ export function useMarket(marketId: number): Reading<LiveMarket> {
   const symbol = ENGINE_MARKETS.find((m) => m.id === marketId)?.symbol ?? "";
   const tick = usePriceTick(symbol);
   const query = useQuery(marketRiskOptions(env, marketId));
-  return mapReading(fromQuery(query), (s) => overlay(s, tick, Date.now()));
+  return mapReading(readingOf(query, MARKET_REFETCH_MS), (s) => overlay(s, tick, Date.now()));
 }
 
 /** Every engine market listed on the active chain (Markets screen), each its own Reading so one failing read never
@@ -87,7 +88,7 @@ export function useMarkets(): Array<{ symbol: string; reading: Reading<LiveMarke
   const snapshotAt = Date.now();
   return listed.map((m, i) => {
     const query = queries[i];
-    const reading = query ? fromQuery(query) : ({ status: "unknown" } as const);
+    const reading = query ? readingOf(query, MARKET_REFETCH_MS) : ({ status: "unknown" } as const);
     return {
       symbol: m.symbol,
       reading: mapReading(reading, (s) => overlay(s, ticks.get(PriceStore.key(env.chainId, m.symbol)), snapshotAt)),
@@ -103,7 +104,7 @@ export function useCalendar(calendarId: number | undefined): Reading<WeekCalenda
     enabled: calendarId !== undefined,
     staleTime: CALENDAR_STALE_MS,
   });
-  return fromQuery(query);
+  return readingOf(query);
 }
 
 /**
@@ -122,7 +123,7 @@ export function useCandles(symbol: string, interval: CandleInterval): Reading<Ca
     refetchInterval: CANDLES_REFETCH_MS,
     staleTime: CANDLES_REFETCH_MS,
   });
-  return fromQuery(query);
+  return readingOf(query, CANDLES_REFETCH_MS);
 }
 
 /** Guardian pause (auto-expires, `MAX_PAUSE_SECONDS`) and settle-only mode — F45 global banner; reduce always works. */
@@ -150,5 +151,5 @@ export function useProtocolState(): Reading<ProtocolState> {
     refetchInterval: MARKET_REFETCH_MS * PROTOCOL_REFETCH_FACTOR,
     staleTime: MARKET_REFETCH_MS * PROTOCOL_REFETCH_FACTOR,
   });
-  return fromQuery(query);
+  return readingOf(query, MARKET_REFETCH_MS * PROTOCOL_REFETCH_FACTOR);
 }

@@ -154,9 +154,10 @@ export function positionGasLimit(action: GasAction, positions: number): bigint {
 /**
  * Proposed per-account cap on open engine positions (S8.23, D-189) — NOT enforced onchain: SenryoCore (immutable)
  * has no count check, so its bound is the listed market count (7 with FX). At 4 positions every action stays
- * ≤ ~1.2M gas (increase 690k + 3 × 170k; placeHold 500k + 3 × 220k; liquidate 350k + 4 × 180k), i.e. ≤ 0.123 MON at
- * 102 gwei — inside one TOPUP_CAP (0.2 MON). Clients may block a 5th distinct market; budgets (keeper, card, top-ups)
- * must still scale with the ACTUAL count via `positionGasLimit` / `liquidateGasLimit`.
+ * ≤ ~1.2M gas (increase 690k + 3 × 170k; placeHold 500k + 3 × 220k; liquidate 350k + 4 × 180k): an increase needs
+ * 1.2M × 127 gwei (the signed user max fee at the floor) = 0.152 MON, inside the mainnet 0.2 MON per-day top-up
+ * cap; at 7 it needs 0.217 MON. Clients may block a 5th distinct market; budgets (keeper, card, top-ups) must still
+ * scale with the ACTUAL count via `positionGasLimit` / `liquidateGasLimit`.
  */
 export const MAX_OPEN_POSITIONS = 4;
 
@@ -172,6 +173,12 @@ export function liquidateGasLimit(positions: number): bigint {
   return GAS_LIMITS.liquidate + LIQUIDATE_GAS_PER_POSITION * BigInt(Math.max(positions, 1));
 }
 
+/**
+ * A gas top-up (S8.16c, D-171) funds this many of the user's next sends at their budget (limit × max fee), so a
+ * practice session isn't a top-up per trade; the api clamps it to the drip's per-day cap.
+ */
+export const GAS_TOPUP_ACTIONS = 3n;
+
 /** Monad's `eth_maxPriorityFeePerGas` is a hard-coded 2 gwei (network-and-endpoints.md). */
 export const PRIORITY_FEE_WEI = 2_000_000_000n;
 
@@ -180,6 +187,14 @@ export const PRIORITY_FEE_WEI = 2_000_000_000n;
  * gas LIMIT × effective price (base + priority), so a higher cap costs nothing unless the base fee really rises.
  */
 export const MAX_FEE_BASE_MULTIPLIER_BPS = 20_000n;
+
+/**
+ * User sends (the app's sender and its gas budget) sign a tighter max fee: Monad consensus checks the balance against
+ * gas LIMIT × max fee, so 2× doubled every user's gas reserve for nothing. Measured over the last 24 h (12 windows ×
+ * 1,024 blocks, 30 Sep 2026; D-171): testnet flat at the 100 gwei floor; mainnet ≤ 106.1 gwei, worst 10-block rise
+ * 6.1 %. 1.25× keeps 4× that headroom and cuts the reserve ~37 %. Services (card, keeper, liquidations) keep 2×.
+ */
+export const USER_MAX_FEE_BASE_MULTIPLIER_BPS = 12_500n;
 
 /** Monad minimum base fee (100 MON-gwei) — used when a node reports none. */
 export const MIN_BASE_FEE_WEI = 100_000_000_000n;

@@ -15,6 +15,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
+import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 import { pct, price18, signedUsd } from "~/lib/money";
@@ -39,6 +40,7 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
   const address = account.hint?.address;
   const triggers = useTriggers(address);
   const trace = useSendTrace();
+  const gas = useEnsureGas();
   const [kind, setKind] = useState<Kind>("tp");
   const [stepBps, setStepBps] = useState<bigint>(DEFAULT_TRIGGER_STEP_BPS);
   const takeProfit = kind === "tp";
@@ -67,7 +69,7 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
     if (!client || !address) return;
     const sender = userSender(client, address, account.settings.faceId);
     const request = await build().catch(() => undefined);
-    if (request) await trace.run(sender, request);
+    if (request) await trace.run(sender, request, { preflight: gas.preflight(request) });
   };
 
   return (

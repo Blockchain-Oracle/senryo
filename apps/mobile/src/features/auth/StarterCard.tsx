@@ -41,7 +41,8 @@ const LABEL: Partial<Record<StarterPhase["kind"], string>> = {
 function message(phase: StarterPhase): string {
   if (phase.kind === "done")
     return `On the house · $${formatUnits(phase.creditUsd6, USD_DECIMALS, CENTS)} practice dollars and gas are in.`;
-  if (phase.kind === "claimed") return "Already claimed on this account · deposit more from Fund.";
+  if (phase.kind === "claimed") return "Practice funds claimed ✓ · add more from Fund.";
+  if (phase.kind === "unchecked") return "Couldn't check your practice funds right now · retry.";
   if (phase.kind !== "failed")
     return "Test dollars on Monad testnet plus gas, sent by our sponsor. You sign once — no fee.";
   if (phase.code === "AUTH") {
@@ -55,12 +56,13 @@ function message(phase: StarterPhase): string {
 
 export function StarterCard({ hideWhenClaimed = false }: { hideWhenClaimed?: boolean }) {
   const { color } = useTheme();
-  const { phase, claim, ready } = useStarter();
+  const { phase, claim, recheck, ready } = useStarter();
   useEffect(() => {
     if (phase.kind === "done") fire("filled", { sound: "deposit" });
     if (phase.kind === "failed" && phase.code !== "AUTH") fire("fail");
   }, [phase]);
-  if (hideWhenClaimed && phase.kind === "claimed") return null;
+  // On Portfolio the card only appears once we know there is something to do (no "Checking…" flash, S8.16e).
+  if (hideWhenClaimed && (phase.kind === "claimed" || phase.kind === "checking")) return null;
   const busy = LABEL[phase.kind] !== undefined;
   return (
     <View style={[styles.card, { borderColor: color.warn, backgroundColor: color.warnWash }]}>
@@ -78,8 +80,10 @@ export function StarterCard({ hideWhenClaimed = false }: { hideWhenClaimed?: boo
         <Button
           label={phase.kind === "done" ? "Trade gold" : "Open Fund"}
           variant="outline"
-          onPress={() => router.push(phase.kind === "done" ? ROUTES.markets : ROUTES.fund)}
+          onPress={() => router.navigate(phase.kind === "done" ? ROUTES.markets : ROUTES.fund)}
         />
+      ) : phase.kind === "unchecked" ? (
+        <Button label="Retry" variant="outline" onPress={recheck} />
       ) : (
         <Button
           label={

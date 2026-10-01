@@ -13,12 +13,13 @@ import {
   type TxRequest,
 } from "@senryo/chain";
 import { type ChainId, positionGasLimit } from "@senryo/config";
-import { type Address, fromQuery, type Reading, RISK } from "@senryo/core";
+import { type Address, type Reading, RISK } from "@senryo/core";
 import { LpDaysDocument, SECONDS_PER_DAY } from "@senryo/indexer-client";
 import { useQuery } from "@tanstack/react-query";
 import { ACCOUNT_REFETCH_MS, CANDLES_REFETCH_MS } from "./constants.ts";
 import { useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
+import { readingOf } from "./reading.ts";
 
 /** APR window: the last 7 full days of pool history. */
 export const LP_APR_DAYS = 7;
@@ -34,7 +35,7 @@ export function useLpVault(address: Address | undefined): Reading<LpSnapshot> {
     refetchInterval: ACCOUNT_REFETCH_MS,
     staleTime: ACCOUNT_REFETCH_MS,
   });
-  return fromQuery(query);
+  return readingOf(query, ACCOUNT_REFETCH_MS);
 }
 
 /**
@@ -52,7 +53,7 @@ export function useLpApr(totalAssets: bigint | undefined): Reading<bigint | unde
     refetchInterval: CANDLES_REFETCH_MS,
     staleTime: CANDLES_REFETCH_MS,
   });
-  const reading = fromQuery(query);
+  const reading = readingOf(query, CANDLES_REFETCH_MS);
   if (reading.status === "unknown" || reading.status === "failed") return reading;
   const days = reading.value;
   if (!totalAssets || totalAssets <= 0n || days.length === 0) return { ...reading, value: undefined };

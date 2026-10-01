@@ -17,4 +17,6 @@ export const keys = {
   positions: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "positions"] as const,
   gas: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "gas"] as const,
   activity: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "activity"] as const,
+  /** Under the account key: one invalidation after a claim refreshes the claim state, buckets and gas together. */
+  starter: (chainId: ChainId, address: Address) => ["account", chainId, address.toLowerCase(), "starter"] as const,
 };

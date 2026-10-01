@@ -17,6 +17,8 @@ export const API_ERROR_CODES = [
   "SIGNATURE_INVALID",
   "SIGNATURE_EXPIRED",
   "ALREADY_CLAIMED",
+  "NOT_ELIGIBLE",
+  "NOT_NEEDED",
   "BUDGET_EXHAUSTED",
   "VOUCHER_INVALID",
   "VOUCHER_USED",
@@ -25,6 +27,14 @@ export const API_ERROR_CODES = [
   "RELAY_REVERTED",
   "TURNSTILE_FAILED",
   "UPSTREAM_UNAVAILABLE",
+  // S12b social: handle claims, content filter, follows.
+  "HANDLE_INVALID",
+  "HANDLE_RESERVED",
+  "HANDLE_TAKEN",
+  "HANDLE_HELD",
+  "CONTENT_BLOCKED",
+  "FOLLOW_LIMIT",
+  "BLOCKED",
   "INTERNAL",
 ] as const;
 
