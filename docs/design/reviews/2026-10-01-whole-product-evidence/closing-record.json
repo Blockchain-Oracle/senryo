@@ -1,0 +1,21 @@
+{
+  "closed_at_utc": "2026-10-01T13:59:17.938627+00:00",
+  "baseline_head": "37f3473a4aa6a74ac846d4c8652adfc79f65dbf1",
+  "closing_head": "bfa828ff2b5b8667df2d003d04839a14438a333e",
+  "snapshot_sources_changed": [
+    "docs/plan/STATUS.md"
+  ],
+  "working_tree_status": [
+    "?? docs/design/reviews/2026-10-01-expanded-evidence/",
+    "?? docs/design/reviews/2026-10-01-expanded-product-design-review.md",
+    "?? docs/design/reviews/2026-10-01-whole-product-agent-handoff.md",
+    "?? docs/design/reviews/2026-10-01-whole-product-evidence/",
+    "?? docs/design/reviews/2026-10-01-whole-product-review.md"
+  ],
+  "user_corrections": {
+    "onboarding_pictures": "approved; retain; no illustration critique",
+    "old_tamion_usdc_form_gallery_receive_images": "excluded from recommendations"
+  },
+  "concurrent_changes": "Other agent changes and the expanded review were left untouched; source findings rechecked.",
+  "verification_scope": "Recorded baseline checks plus source refresh and document link validation; no new device/live/provider acceptance."
+}

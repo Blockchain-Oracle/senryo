@@ -1,0 +1,7 @@
+{
+  "scenario": "signed then watch failed",
+  "sharedOutcome": "unknown",
+  "settledWithoutReceipt": "unknown",
+  "withdrawUiUsesLastStage": "failed",
+  "withdrawUiText": "That didn’t go through; nothing moved."
+}

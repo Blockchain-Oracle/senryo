@@ -1,0 +1,26 @@
+$ tsx src/trigger-outcome-check.ts
+ok   1 order is stop loss first
+ok   1 only the finalized level is saved
+ok   1 sl leg state
+ok   1 tp leg state
+ok   2 take profit is not sent after a failed stop loss
+ok   2 take profit is skipped, not failed
+ok   2 a revert is its own state
+ok   3 a build failure is not-sent
+ok   4 both saved
+ok   4 each saved level is reported as it lands
+ok   5 signed then lost is unknown, not failed
+ok   5 unknown while the journal is unresolved
+ok   5 unknown with no journal entry
+ok   5 journal finalized settles it as saved
+ok   5 journal reverted settles it
+ok   5 journal abandoned settles it as dropped
+ok   5 a running leg is saving
+ok   6 only this market's unresolved placement is pending, with its level and price
+ok   6 a hash this screen is already narrating is not pending
+ok   6 another chain's entries are ignored
+ok   7 an identical active level is recognised
+ok   7 the other kind at that price is not
+ok   7 the active level is not sent again
+ok   7 and counts as saved
+trigger-outcome-check: all passed

@@ -1,0 +1,2 @@
+ M apps/mobile/src/features/setup/PrimerScreen.tsx
+?? docs/design/reviews/2026-10-01-whole-product-evidence/

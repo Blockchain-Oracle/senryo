@@ -1,0 +1,314 @@
+{
+  "review_date": "2026-10-01",
+  "timezone": "Africa/Lagos",
+  "review_head": "37f3473a4aa6a74ac846d4c8652adfc79f65dbf1",
+  "review_kind": "read-only product/source review; new documentation only",
+  "sources": [
+    {
+      "path": "docs/plan/STATUS.md",
+      "sha256": "94afeb14e253b71c363e5c00d9f0554413475d34f84021a9ddbc127481b949d6",
+      "lines": 13
+    },
+    {
+      "path": "docs/plan/00-plan.md",
+      "sha256": "6d18f3a3125cffdc9d8d5a37164cf2a09dff5bb56401fa77579bee53a0e18b06",
+      "lines": 555
+    },
+    {
+      "path": "docs/plan/v2-plan.md",
+      "sha256": "5a86cfb41e05ed775a923d49645299d0f002de922b855cd9031e1450a0421936",
+      "lines": 876
+    },
+    {
+      "path": "docs/plan/parity.md",
+      "sha256": "cbd8d6215a1c1a7a953cd681d21e405e23e0c013b83e8092af2353e3e8159359",
+      "lines": 57
+    },
+    {
+      "path": "docs/plan/acceptance.md",
+      "sha256": "f242cf80e698202e59b5893de4a2acc77148a6cee69fa9947f428cc95ef5b5c9",
+      "lines": 68
+    },
+    {
+      "path": "docs/plan/stage-01b-design-v2.md",
+      "sha256": "b5f802f61ae50b317e665bf9d849e2529c5d4849b6f66f4881e7810a6e259f5a",
+      "lines": 388
+    },
+    {
+      "path": "docs/plan/stage-12b-social.md",
+      "sha256": "493cca7ea6f9c6933b29275821ad27736c80cf85014f3c3c7a9733e18c5e6ff1",
+      "lines": 140
+    },
+    {
+      "path": "docs/design/senryo-parity-ledger.json",
+      "sha256": "e2ab6bbede27e201d2756865f71c94ee6695a69be9b74f8d2ff28d6d7fcd5d02",
+      "lines": 7944
+    },
+    {
+      "path": "docs/security/assurance.md",
+      "sha256": "bd3e4ccc35a59b4564803dcbcbb0d9b1bebf8e1d383d5ac3d8585efcc377d4a5",
+      "lines": 173
+    },
+    {
+      "path": "packages/query/src/trace.ts",
+      "sha256": "09b3a0cc8aec056a7f3f2ca24ca9bd8eea845ce50374f778c3d9522607501258",
+      "lines": 215
+    },
+    {
+      "path": "apps/mobile/src/features/withdraw/SendToAddress.tsx",
+      "sha256": "c8459df1364b29c0ea2b5aaa7949642ed1185ac1ff3f022867c96ce7257266ba",
+      "lines": 188
+    },
+    {
+      "path": "apps/mobile/src/features/withdraw/WithdrawToSelf.tsx",
+      "sha256": "3ec778078152804635dd93ac20168407dcaf01aa160140a72d3aa91e19ac3b36",
+      "lines": 122
+    },
+    {
+      "path": "apps/mobile/src/features/lp/useLp.ts",
+      "sha256": "24770506479c3346767963d38943d95c88d9fca9a87f9c69a4b27a4192b49e03",
+      "lines": 80
+    },
+    {
+      "path": "apps/mobile/src/features/lp/LpScreen.tsx",
+      "sha256": "c04a9ec1668cc4f66bd9bbe65f213d5d84f23cd839b95863c2692ee5b6cb7054",
+      "lines": 227
+    },
+    {
+      "path": "apps/mobile/src/features/trade/draft.ts",
+      "sha256": "764215901b03d3c1def3c1e5ba773a15c786bfe510040671598ff5eb90c03639",
+      "lines": 53
+    },
+    {
+      "path": "apps/mobile/src/features/trade/useTicket.ts",
+      "sha256": "3bdd1a0b73e3b501ff7eb3f45e4777899e78c04e92d84f77018028a75d653e3a",
+      "lines": 183
+    },
+    {
+      "path": "apps/mobile/src/features/card/useCardAllowance.ts",
+      "sha256": "43df9a6c208c90ceb617073b215ce7924814c7b41d3f55baed3acc909393b75d",
+      "lines": 89
+    },
+    {
+      "path": "apps/mobile/src/features/trade/TradeScreen.tsx",
+      "sha256": "ae577b6aefe475d55149865f65ba27fe15619b687ea25a1a20ae810de7e29bf0",
+      "lines": 246
+    },
+    {
+      "path": "apps/mobile/src/features/markets/universe.ts",
+      "sha256": "f54b6ecce7383a1b07c8bbb85aa2ab098252b4d945df78c341f7aa58cfbc75d0",
+      "lines": 79
+    },
+    {
+      "path": "apps/mobile/src/features/markets/MarketActions.tsx",
+      "sha256": "a4f35245294400511e363067564bd9e3861fb3e75247f3807932061d9c6a22c0",
+      "lines": 52
+    },
+    {
+      "path": "apps/mobile/src/features/markets/MarketAbout.tsx",
+      "sha256": "5786b0c1dfa23c726ee1b28aeb17f059ad6d0349c1b5f18e37a406131da7eced",
+      "lines": 144
+    },
+    {
+      "path": "apps/mobile/src/features/markets/MarketFeed.tsx",
+      "sha256": "787ce35c2d027367344a770a604128bc943bfa133201a5a97652d7752dbcce4e",
+      "lines": 157
+    },
+    {
+      "path": "apps/mobile/src/features/home/TopTrades.tsx",
+      "sha256": "c7ed5c1365e1676ff15d15114efae57110e525de3ae1091540ef236e811b1a20",
+      "lines": 115
+    },
+    {
+      "path": "apps/mobile/src/features/social/TopTrades.tsx",
+      "sha256": "913bc70dc5848abca00c43dede6f63333726daf8520d0b710d91218a463f9478",
+      "lines": 103
+    },
+    {
+      "path": "apps/mobile/src/features/social/TraderStanding.tsx",
+      "sha256": "8845a2b32710b2eb2622ab33b6d4dfe2ea1631fba0c391f6cdbeae66c4fe36a8",
+      "lines": 73
+    },
+    {
+      "path": "apps/mobile/src/features/social/TraderProfile.tsx",
+      "sha256": "2ca9a3ad2a134a2922c50cfe20a3849d19898006ca649201e603013968c936d7",
+      "lines": 268
+    },
+    {
+      "path": "apps/mobile/src/features/trade/TicketReceipt.tsx",
+      "sha256": "977723a47d160fe85b540e6f30ac37d68cfdea7325efd0b9a9a52d3030ae6501",
+      "lines": 184
+    },
+    {
+      "path": "apps/mobile/src/features/search/SearchScreen.tsx",
+      "sha256": "14d935d6fd7b4fa2b7d54fc71b2757572ebaf6442a5c2059ec48dd1d955bf3d0",
+      "lines": 193
+    },
+    {
+      "path": "services/api/src/social/search.ts",
+      "sha256": "0cda32bd50651270ecb68fcda07024fd6301387571c7dff6e0df1b0a2f53c333",
+      "lines": 90
+    },
+    {
+      "path": "services/api/src/routes/info.ts",
+      "sha256": "99e7dd934dba6f83ba3fae6910a61dfc801cb85653fe261bd2e8baab7cff5d2f",
+      "lines": 155
+    },
+    {
+      "path": "apps/mobile/src/app/status.tsx",
+      "sha256": "9e55f9c9ee152dd82a2b05de96ec732e5b6430879d49f7539dbf545dc96f37f0",
+      "lines": 11
+    },
+    {
+      "path": "apps/mobile/src/components/sheet/Sheet.tsx",
+      "sha256": "89fb0abb217f62782db59e665d3be2fda9094f57c38941e107fdbadfc2121afb",
+      "lines": 203
+    },
+    {
+      "path": "apps/mobile/src/components/sheet/ChildSheet.tsx",
+      "sha256": "8ebcb29d8357a9e194622b4d21e03121bf3282556961e39e947dae95c0fc3304",
+      "lines": 163
+    },
+    {
+      "path": "apps/mobile/src/lib/deep-link.ts",
+      "sha256": "485b7507b066110814d4d9b0cd516fa02bf07a79febd77166bc825607a51c6c2",
+      "lines": 57
+    },
+    {
+      "path": "apps/mobile/src/app/(sheets)/add-money.tsx",
+      "sha256": "87f765c92a419fda55c0adf7e96017ad66c8a8481ff37b295bee53fa5361b7cb",
+      "lines": 156
+    },
+    {
+      "path": "apps/mobile/src/app/fund/qr/[family].tsx",
+      "sha256": "ba3357c7c6bd7d028c391696e7df3321ba2e15bd49d67ec303bdfa0bbadcb49e",
+      "lines": 24
+    },
+    {
+      "path": "apps/mobile/src/app/fund/wallet.tsx",
+      "sha256": "7b1eccf81787a1392e8c6291d696d024550b183964ec6ca421166a8cb2aab616",
+      "lines": 11
+    },
+    {
+      "path": "apps/mobile/src/app/fund/deposit/[id].tsx",
+      "sha256": "7aede507e1c5cc0b24e322251fd2b47cd16b29f355a6637e17df227060ce17d5",
+      "lines": 11
+    },
+    {
+      "path": "apps/mobile/src/app/withdraw/cash-out.tsx",
+      "sha256": "79bfdb6f149da7f6e177e36e7417d38d79378d9812a30b73906b2f6d7d39fdb0",
+      "lines": 11
+    },
+    {
+      "path": "apps/mobile/src/app/(tabs)/card/wallet.tsx",
+      "sha256": "132c54a33c20104887c73a5bc8d7ccf96da4b1a1ffe52a5fef6bf53e8bb72a66",
+      "lines": 11
+    },
+    {
+      "path": "apps/mobile/src/app/(sheets)/card-reveal.tsx",
+      "sha256": "d48c8d177645abba243b9a240c349d404a302df173ba9fe6b48449f6a3ec7076",
+      "lines": 10
+    },
+    {
+      "path": "apps/web/src/components/screens/trade/ticket.tsx",
+      "sha256": "f64a0d6166f46bd6de0aee784fee2534e3d1ec291fd48523ef223c740d556169",
+      "lines": 137
+    },
+    {
+      "path": "apps/web/src/components/screens/watch-screen.tsx",
+      "sha256": "235bd8f89e54b48135d6f0857c61d4d37e41666ba01d6c9184eb3f06295423b2",
+      "lines": 97
+    },
+    {
+      "path": "apps/web/src/components/shell/top-bar.tsx",
+      "sha256": "2ecde1d910b3ea9806109bf03a3a620130073a6995af74e644ea669ebc45a366",
+      "lines": 67
+    },
+    {
+      "path": "apps/web/src/components/shell/preview-badge.tsx",
+      "sha256": "b338d9497de72b0a417d3ef738267ee67586986b16993ea65e01612766b2e09e",
+      "lines": 19
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/home.png",
+      "sha256": "178f3b53337ed7d3d927f470b0400b9ab0fd2ac5338e4a22934307a9e50d47d4",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/markets.png",
+      "sha256": "fe31ac43a815c538732d0ad1931f677788415c81c1f0de1699b7e17854d724c3",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/market-detail.png",
+      "sha256": "bff49c1c6fab29862539eedc824f23b3cc99d66be5d1fc2aa21005ca2f2d6d2b",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/add-money.png",
+      "sha256": "ec28126c6a21dcf7639bc72a2c1f2eb7941782b76423cbce7828b7f4ac187c35",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/ticket.png",
+      "sha256": "042f83ffde7564f56d6483c114adde4637b840faaa84926161c368cef76b3996",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/card.png",
+      "sha256": "b63394687e8b12a023067380192e284e7aa8389b5f88c38eb43f21323c27eb8d",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/welcome.png",
+      "sha256": "16de7dc0cdbc01e53e25af46000a6e4789b6e1ac0abeca98ffca16276541ef93",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/setup-handle.png",
+      "sha256": "0cc4caf5621e2c965333c1e7e889e50e1a9848a02ef9fbf7680b06920c21dadf",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/rebuild/position.png",
+      "sha256": "80f1b83f84386db5dad1a28ccc2f11147598f776d8d6d9c4ac45a16cfb8f2d3e",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    },
+    {
+      "path": "docs/design/reference-study-2026-09-30/reviews/2026-10-01-senryo-mobile/lead-response/tour-social-you-fan.png",
+      "sha256": "264c282e41aeb1c1a7b46845caaf5d9d66249c5c5599ef00a54b76d9036ddba6",
+      "evidence_kind": "existing simulator screenshot, historical; no runtime verification in this audit"
+    }
+  ],
+  "ledger_acceptance_counts": {
+    "pending": 178,
+    "acquired (S1b.2); mono silhouette gap": 1,
+    "acquired; white diamond gap": 1,
+    "acquired; mono gap; licence flag (combining with badges needs permission)": 1,
+    "acquired; Symbol vector gap; licence flag (Circle)": 1,
+    "not acquired": 4,
+    "acquired": 2,
+    "Perpl PNG kit + HYPE acquired; Perpl colour vector gap": 1,
+    "not attempted yet": 3,
+    "acquired; licence flag (written permission)": 1,
+    "acquired; mono logomark gap": 1,
+    "route support unverified; art not acquired": 2,
+    "pattern adopted; company art per listed equity is B12": 1,
+    "pattern adopted": 2,
+    "rule enforced in registry": 1,
+    "lands with J11": 1,
+    "site icon acquired; press kit is wordmark-only": 1,
+    "site-hosted first-party file (press kit gated)": 1,
+    "binding exclusion": 2,
+    "pending S10 provider evidence": 1,
+    "brand/ seal kept, recoloured via gold ramp": 1,
+    "B12 art open": 1,
+    "brand/": 1,
+    "avatars not authored yet (B12)": 1,
+    "reserved": 3,
+    "built (S1b.1)": 1,
+    "lucide-react-native (S1b.6)": 1,
+    "first pass in brand/art (S1b.3); B12 review open": 1
+  },
+  "tamion_head": "1278f5a5af40605b1a1b0ea2e01f1333ebbad6ad"
+}

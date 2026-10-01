@@ -1,0 +1,33 @@
+[32m✓ file-length[0m
+[32m✓ pnpm-only[0m
+[32m✓ no-float-money[0m
+[32m✓ write-boundary[0m
+[32m✓ banned-evm-libs[0m
+[32m✓ viem-import-boundary[0m
+[32m✓ account-signs-only[0m
+[32m✓ no-custody-backend[0m
+[32m✓ no-raw-getlogs[0m
+[32m✓ chain-literals[0m
+[32m✓ explicit-gas[0m
+[32m✓ finalized-for-money[0m
+[32m✓ design-literals-web[0m
+[32m✓ design-literals-mobile[0m
+[32m✓ mobile-tight-leading[0m
+[32m✓ haptics-via-feedback[0m
+[32m✓ motion-import[0m
+[32m✓ session-secret-non-persisted[0m
+[32m✓ brand-identity[0m
+[32m✓ public-env-hygiene[0m
+[32m✓ sol-no-timestamp-equality[0m
+[32m✓ sol-no-magic-numbers[0m
+[32m✓ no-ui-tests[0m
+[32m✓ no-secrets-in-tree[0m
+[32m✓ indexer-isolated[0m
+[32m✓ design-json-present[0m
+[32m✓ identity-provenance[0m
+[32m✓ font-provenance[0m
+[32m✓ address-drift[0m
+[32m✓ risk-mirror-constants[0m
+[32m✓ indexer-docs-chain-filter[0m
+
+0 error(s), 0 warning(s)

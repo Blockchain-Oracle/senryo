@@ -1,0 +1,38 @@
+$ tsx --test checks/*.check.ts
+✔ BIP-39 vector: all-zero PRF → 'abandon × 23 art' (1.716917ms)
+✔ seed: native PBKDF2 path == @scure JS path (396.136125ms)
+✔ same PRF → same address on web and native paths, and == a standard wallet import of the phrase (849.517042ms)
+✔ fixed vector stays fixed (all-zero PRF) (11.399042ms)
+✔ openAccount zeroes the PRF buffer it was given (12.205792ms)
+✔ an ended session refuses to sign (Mera SESSION_ENDED) (11.737292ms)
+✔ open within caps signs; notional and leverage come from calldata (5.07725ms)
+✔ open above the per-trade / OI-room / leverage caps needs step-up (3.745833ms)
+✔ missing balance/market reads never widen scope (0.709875ms)
+✔ session total cap (3.282ms)
+✔ reduce-only is uncapped and exempt from the rate cap (1.508167ms)
+✔ withdraw to self is in scope; any other destination needs step-up (7.036167ms)
+✔ token approvals: known spender under the move cap only; transfers are sends (0.715917ms)
+✔ LP deposit capped and to self; redeem to self (3.43975ms)
+✔ card limits, admin selectors, unknown contracts, value, delegation, wrong chain (1.782542ms)
+✔ TP/SL triggers only for the signer's own position (1.826083ms)
+✔ D-037 Face ID gate: off in practice, above threshold on mainnet, every trade when chosen (3.072958ms)
+✔ prefs key: same account on every path (web PBKDF2, native PBKDF2, vault phrase) (215.749958ms)
+✔ prefs blobs authenticate: tampered or another account's blob reads as absent (35.720792ms)
+✔ queuedNonces keeps per-address order and passes a policy refusal through without counting it (0.776708ms)
+✔ in-scope trade signs with no prompt and recovers to the account (78.923375ms)
+✔ locked → one unlock prompt that doubles as the Face ID confirmation (6.333542ms)
+✔ out of scope throws before any prompt or signature (2.028416ms)
+✔ idle and TTL lock the session (the key is ended, not kept) (9.889459ms)
+✔ typed data: our Claim for self signs; other domains/users need step-up (2.7065ms)
+✔ messages: Senryo prefixes and short SIWE for our host only (20.627291ms)
+✔ source declares the types we sign (2.378083ms)
+✔ Claim digest == OZ _hashTypedDataV4(keccak256(abi.encode(CLAIM_TYPEHASH, user, deadline))) (13.757791ms)
+✔ Voucher digest matches, codes normalise before hashing (3.984875ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2788.997

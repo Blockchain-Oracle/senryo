@@ -1,0 +1,205 @@
+{
+  "captured_at": "2026-10-01T13:52:00.863747+00:00",
+  "repo": "/Users/abu/dev/hackathon/metropolis",
+  "head": "bf52c2708520d5481cc29a8ace41691838170ad0",
+  "worktree_status": "?? docs/design/reviews/2026-10-01-expanded-evidence/\n?? docs/design/reviews/2026-10-01-whole-product-evidence/\n",
+  "scope": "Existing screenshots and read-only source snapshots. No new runtime captures.",
+  "files": [
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/af2.png",
+      "saved": "images/af2.png",
+      "source_mtime": "2026-10-01T11:06:24.863824+00:00",
+      "sha256": "5844e85b4cc9c40caeaaa5166213fc9f2731c98afda6bb6c8c9cc991d291e6a8"
+    },
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/ai1.png",
+      "saved": "images/ai1.png",
+      "source_mtime": "2026-10-01T11:50:35.344150+00:00",
+      "sha256": "58e1d74d6bc5a45a98a3140f48548f5ce15239a6c1694ad72191f00e697028c5"
+    },
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/aj1.png",
+      "saved": "images/aj1.png",
+      "source_mtime": "2026-10-01T11:56:08.445253+00:00",
+      "sha256": "d0a47810e5bb3b2d96085db9525d1e3aa9e5a09bc1a8dd0fb8280c2ba5f67510"
+    },
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/lt-card.png",
+      "saved": "images/lt-card.png",
+      "source_mtime": "2026-10-01T10:43:22.551578+00:00",
+      "sha256": "4481efa2cef326a0353305ba1df7f62997e6ac0a6f7b0b1a4d97d94560ed6b9f"
+    },
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/lt-add-money.png",
+      "saved": "images/lt-add-money.png",
+      "source_mtime": "2026-10-01T10:43:25.939727+00:00",
+      "sha256": "21822e9168f20998eb895ae9dfa2a426091cfdf0c8a767eccd11a2a52640f8e9"
+    },
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/ak20.png",
+      "saved": "images/ak20.png",
+      "source_mtime": "2026-10-01T13:19:47.011832+00:00",
+      "sha256": "ac828da43e921e14dea049e836a14880a013a72de966073cdb9a6851a946d794"
+    },
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/ak23.png",
+      "saved": "images/ak23.png",
+      "source_mtime": "2026-10-01T13:41:33.524457+00:00",
+      "sha256": "9950e1cdb535ec3eacfb2c8387a6cb0c4f942b3e80b5c08af26a4a342d41c0bb"
+    },
+    {
+      "kind": "saved_screenshot",
+      "source": "/tmp/claude-501/-Users-abu-dev-hackathon-metropolis/1d96f5e7-23a8-4b78-8e51-f11c8352bad2/scratchpad/shots/ak25.png",
+      "saved": "images/ak25.png",
+      "source_mtime": "2026-10-01T13:43:52.073091+00:00",
+      "sha256": "1e7034b00ddb0c9963652393315279b52c4f297e071da5d553c2ef8ec652030b"
+    },
+    {
+      "kind": "analysis_contact_sheet",
+      "source": "/Users/abu/.codex/visualizations/2026/10/01/01a0f7a4-1241-7b92-bfe0-6a11b59f8944/senryo-saved-screen-board.jpg",
+      "saved": "images/senryo-saved-screen-board.jpg",
+      "source_mtime": "2026-10-01T13:45:10.788015+00:00",
+      "sha256": "5c80979e32ec56b3075793622ef7a41c7777d2636090997f9936c635588802e3"
+    },
+    {
+      "kind": "analysis_contact_sheet",
+      "source": "/Users/abu/.codex/visualizations/2026/10/01/01a0f7a4-1241-7b92-bfe0-6a11b59f8944/senryo-journeys-board.jpg",
+      "saved": "images/senryo-journeys-board.jpg",
+      "source_mtime": "2026-10-01T13:46:58.293934+00:00",
+      "sha256": "46335fdd452fbaf2ff49886ec679cf9c673364d84575fc1b9460c536d577fa84"
+    },
+    {
+      "kind": "analysis_contact_sheet",
+      "source": "/Users/abu/.codex/visualizations/2026/10/01/01a0f7a4-1241-7b92-bfe0-6a11b59f8944/references-board.jpg",
+      "saved": "images/references-board.jpg",
+      "source_mtime": "2026-10-01T13:46:58.485599+00:00",
+      "sha256": "e80ab70782e5687467f75f69806bc4381eeaab8817fe174fe1db79e4e8b28fed"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/mobile/src/features/withdraw/SendToAddress.tsx",
+      "saved": "sources/apps/mobile/src/features/withdraw/SendToAddress.tsx",
+      "source_mtime": "2026-10-01T11:07:47.119442+00:00",
+      "sha256": "c8459df1364b29c0ea2b5aaa7949642ed1185ac1ff3f022867c96ce7257266ba"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/mobile/src/features/withdraw/WithdrawToSelf.tsx",
+      "saved": "sources/apps/mobile/src/features/withdraw/WithdrawToSelf.tsx",
+      "source_mtime": "2026-10-01T10:42:27.657469+00:00",
+      "sha256": "3ec778078152804635dd93ac20168407dcaf01aa160140a72d3aa91e19ac3b36"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/packages/query/src/trace.ts",
+      "saved": "sources/packages/query/src/trace.ts",
+      "source_mtime": "2026-10-01T07:42:37.388500+00:00",
+      "sha256": "09b3a0cc8aec056a7f3f2ca24ca9bd8eea845ce50374f778c3d9522607501258"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/mobile/src/features/markets/MarketRow.tsx",
+      "saved": "sources/apps/mobile/src/features/markets/MarketRow.tsx",
+      "source_mtime": "2026-10-01T13:20:25.103708+00:00",
+      "sha256": "b87878d9fb6641e1233a58dd9cc1ceade82c301805a806dda79df36e2ace1576"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/mobile/src/features/markets/universe.ts",
+      "saved": "sources/apps/mobile/src/features/markets/universe.ts",
+      "source_mtime": "2026-10-01T09:57:35.417881+00:00",
+      "sha256": "f54b6ecce7383a1b07c8bbb85aa2ab098252b4d945df78c341f7aa58cfbc75d0"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/mobile/src/features/trade/TradeScreen.tsx",
+      "saved": "sources/apps/mobile/src/features/trade/TradeScreen.tsx",
+      "source_mtime": "2026-10-01T09:57:35.420484+00:00",
+      "sha256": "ae577b6aefe475d55149865f65ba27fe15619b687ea25a1a20ae810de7e29bf0"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/web/src/components/screens/trade/trade-screen.tsx",
+      "saved": "sources/apps/web/src/components/screens/trade/trade-screen.tsx",
+      "source_mtime": "2026-09-30T02:30:57.184231+00:00",
+      "sha256": "2162f82512887545bb6d7ab54311558faebd9c5f056a6ca14b05072c459f2130"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/web/src/components/screens/register.tsx",
+      "saved": "sources/apps/web/src/components/screens/register.tsx",
+      "source_mtime": "2026-09-30T02:30:57.183427+00:00",
+      "sha256": "4e0af8567f05bd88f33b1fb830f5f2de519f9f33f5c0edee0a17e291c6a450e9"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/web/src/components/screens/trade/ticket.tsx",
+      "saved": "sources/apps/web/src/components/screens/trade/ticket.tsx",
+      "source_mtime": "2026-09-30T02:30:57.183738+00:00",
+      "sha256": "f64a0d6166f46bd6de0aee784fee2534e3d1ec291fd48523ef223c740d556169"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/mobile/src/features/home/HomeHeader.tsx",
+      "saved": "sources/apps/mobile/src/features/home/HomeHeader.tsx",
+      "source_mtime": "2026-10-01T13:35:06.937996+00:00",
+      "sha256": "c8f5afd23bab96f364858d748febaf26cfcb48557aeb88c89508ecfea28612d8"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/apps/mobile/src/features/markets/device-store.ts",
+      "saved": "sources/apps/mobile/src/features/markets/device-store.ts",
+      "source_mtime": "2026-10-01T09:57:35.417582+00:00",
+      "sha256": "d393baae7ead4347800c0bb7b088ed15c9fd2e6cda2c45f6f01e5379b0c35713"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/packages/account/src/prefs.ts",
+      "saved": "sources/packages/account/src/prefs.ts",
+      "source_mtime": "2026-09-30T09:36:07.930518+00:00",
+      "sha256": "4fa8afcdda6d617f33dde3da8fd324597f810dd34740fdad5b8f7081c6610cca"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/docs/plan/STATUS.md",
+      "saved": "sources/docs/plan/STATUS.md",
+      "source_mtime": "2026-10-01T10:28:00.735624+00:00",
+      "sha256": "94afeb14e253b71c363e5c00d9f0554413475d34f84021a9ddbc127481b949d6"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/docs/plan/stage-01b-design-v2.md",
+      "saved": "sources/docs/plan/stage-01b-design-v2.md",
+      "source_mtime": "2026-10-01T13:21:52.723893+00:00",
+      "sha256": "b5f802f61ae50b317e665bf9d849e2529c5d4849b6f66f4881e7810a6e259f5a"
+    },
+    {
+      "kind": "source_snapshot",
+      "source": "/Users/abu/dev/hackathon/metropolis/docs/design/senryo-parity-ledger.json",
+      "saved": "sources/docs/design/senryo-parity-ledger.json",
+      "source_mtime": "2026-10-01T06:18:03.858334+00:00",
+      "sha256": "e2ab6bbede27e201d2756865f71c94ee6695a69be9b74f8d2ff28d6d7fcd5d02"
+    },
+    {
+      "kind": "closing_status",
+      "source": "/Users/abu/dev/hackathon/metropolis/docs/plan/STATUS.md",
+      "saved": "closing/docs/plan/STATUS.md",
+      "sha256": "1c1ef12df448520c2206d611f891dc50b35e9bb6372ab625b62886380fb98f68"
+    }
+  ],
+  "closing_check": {
+    "captured_at": "2026-10-01T13:58:29.033308+00:00",
+    "head": "bfa828ff2b5b8667df2d003d04839a14438a333e",
+    "source_priority_files_unchanged": true,
+    "status_snapshot": "closing/docs/plan/STATUS.md",
+    "status_sha256": "1c1ef12df448520c2206d611f891dc50b35e9bb6372ab625b62886380fb98f68",
+    "note": "Both builders updated status during review. Reports incorporate auto-save completion and Senryo FX/primer/push/deployment update. Static findings are pinned to source snapshots."
+  }
+}

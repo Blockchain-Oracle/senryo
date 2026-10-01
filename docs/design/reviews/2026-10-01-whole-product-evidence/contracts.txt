@@ -1,0 +1,124 @@
+No files changed, compilation skipped
+
+Ran 2 tests for test/money/AggregateSnapshots.t.sol:AggregateSnapshotsTest
+[PASS] test_aggregatesEqualSumOfPositionsOverTime() (gas: 2600776)
+[PASS] test_onlyPositionClosesAfterTimePasses() (gas: 989062)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 47.85ms (4.71ms CPU time)
+
+Ran 14 tests for test/oracle/SessionOracle.t.sol:SessionOracleTest
+[PASS] test_acceptFeedPriceClearsCircuitWithFeedAnswer() (gas: 924827)
+[PASS] test_answeredInRoundBehindIsStale() (gas: 272203)
+[PASS] test_clampTripsCircuitThenThreeRoundConfirm() (gas: 981374)
+[PASS] test_closedDailyBreakAndClosedSpread() (gas: 239748)
+[PASS] test_confirmRejectsRoundsOutsideBand() (gas: 456234)
+[PASS] test_feedDescriptionAsserted() (gas: 22620)
+[PASS] test_futureTimestampIsStale() (gas: 249172)
+[PASS] test_guardianOnlyHalts() (gas: 107593)
+[PASS] test_haltAutoExpires() (gas: 445743)
+[PASS] test_openAndAccepted() (gas: 127923)
+[PASS] test_reopenGapBeyondReopenClampTripsCircuit() (gas: 474638)
+[PASS] test_reopenWindowAndReopenClamp() (gas: 689863)
+[PASS] test_staleAfterHeartbeatPlusGrace() (gas: 468388)
+[PASS] test_unrepresentableAnswerIsStaleNeverTruncated() (gas: 872616)
+Suite result: ok. 14 passed; 0 failed; 0 skipped; finished in 50.28ms (7.08ms CPU time)
+
+Ran 7 tests for test/oracle/FxListing.t.sol:FxListingTest
+[PASS] test_eighteenDecimalFeedsAreNotRescaledOrInverted() (gas: 453225)
+[PASS] test_exposureShareHoldsAndCapsBind() (gas: 5919865)
+[PASS] test_fxCalendarIs24x5WithDstUnion() (gas: 139497)
+[PASS] test_listingIsTimelockedAndIdsAgree() (gas: 266755)
+[PASS] test_marketBeforeFeedWouldBreakPoolValue() (gas: 821707)
+[PASS] test_realisedFxProfitIsCappedAtTenPercent() (gas: 1545163)
+[PASS] test_unscheduledListingReverts() (gas: 122442)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 58.30ms (11.78ms CPU time)
+
+Ran 7 tests for test/oracle/MarketCalendar.t.sol:MarketCalendarTest
+[PASS] test_dailyBreakUnionBoundaries() (gas: 272299)
+[PASS] test_expiredHolidaysArePruned() (gas: 4318700)
+[PASS] test_holidayAddIsGuardianOnlyAndRemovalTimelocked() (gas: 336060)
+[PASS] test_holidayClosesAndExpires() (gas: 235476)
+[PASS] test_nextWeekSameBoundaries() (gas: 55809)
+[PASS] test_slotZeroIsMondayMidnight() (gas: 61737)
+[PASS] test_weekendUnionBoundaries() (gas: 115633)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 82.36ms (8.75ms CPU time)
+
+Ran 4 tests for test/money/DecreaseShortfall.t.sol:DecreaseShortfallTest
+[PASS] test_feesNetAgainstProfitBeforeAnyShortfall() (gas: 4295110)
+[PASS] test_lastPositionShortfallIsStillSocialised() (gas: 12501979)
+[PASS] test_loserFirstRevertsWhileAnotherPositionIsOpen() (gas: 13156849)
+[PASS] test_winnerFirstPaysTheLossInFull() (gas: 13349486)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 440.87ms (40.56ms CPU time)
+
+Ran 7 tests for test/fuzz/PerpMath.t.sol:PerpMathFuzzTest
+[PASS] testFuzz_averageEntryAgainstAccount(uint256,uint256,uint256,uint256,bool) (runs: 1000, μ: 2514, ~: 2444)
+[PASS] testFuzz_engineRoundTripNeverProfits(uint256,bool,uint256) (runs: 1000, μ: 1031647, ~: 1031703)
+[PASS] testFuzz_fundingNeverDrainsPool(uint256,int256,int256) (runs: 1000, μ: 4902, ~: 4954)
+[PASS] testFuzz_pnlRoundsTowardNegativeInfinity(uint256,uint256,uint256,bool) (runs: 1000, μ: 2242, ~: 2251)
+[PASS] testFuzz_roundTripSamePriceNeverProfits(uint256,uint256,uint256,bool) (runs: 1000, μ: 3730, ~: 3692)
+[PASS] testFuzz_sizeRoundsDownNotionalRoundsUp(uint256,uint256) (runs: 1000, μ: 2095, ~: 2018)
+[PASS] testFuzz_spreadBrackets(uint256,uint256) (runs: 1000, μ: 1635, ~: 1688)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 454.29ms (1.87s CPU time)
+
+Ran 1 test for test/invariant/CoreInvariants.t.sol:CoreInvariantsTest
+[PASS]
+CoreInvariantsTest invariants:
+[PASS] invariant_I1_conservation
+[PASS] invariant_I2_noDoublePledge
+[PASS] invariant_I3_holds
+[PASS] invariant_I4_reserve
+[PASS] invariant_I5_noCrossAccountMoves
+[PASS] invariant_I6_pricesFromFeedOnly
+[PASS] invariant_I7_allowance
+[PASS] invariant_aggregatesMatchPositions
+[PASS] invariant_noPanics
+ CoreInvariantsTest invariants (runs: 256, calls: 32768, reverts: 79)
+
+╭----------+-----------------+-------+---------+----------╮
+| Contract | Selector        | Calls | Reverts | Discards |
++=========================================================+
+| Handler  | capture         | 1465  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | decrease        | 1578  | 25      | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | deposit         | 1488  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | increase        | 1578  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | increaseHold    | 1532  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | liquidate       | 1537  | 28      | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | lpClaim         | 1610  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | lpDeposit       | 1590  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | lpRequestRedeem | 1541  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | oracleJump      | 1558  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | oracleMove      | 1552  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | placeHold       | 1587  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | refund          | 1644  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | release         | 1545  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | repay           | 1614  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | setAllowance    | 1527  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | setEnvelope     | 1608  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | swapCollateral  | 1535  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | trigger         | 1553  | 26      | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | warp            | 1599  | 0       | 0        |
+|----------+-----------------+-------+---------+----------|
+| Handler  | withdraw        | 1527  | 0       | 0        |
+╰----------+-----------------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 56.99s (56.94s CPU time)
+
+Ran 7 test suites in 57.02s (58.12s CPU time): 42 tests passed, 0 failed, 0 skipped (42 total tests)

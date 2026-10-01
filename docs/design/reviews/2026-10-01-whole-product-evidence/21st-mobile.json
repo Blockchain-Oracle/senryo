@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "summary": {
+    "errors": 0,
+    "warnings": 9,
+    "suggestions": 6
+  },
+  "filesReviewed": 364,
+  "findings": [
+    {
+      "ruleId": "design-hardcoded-color",
+      "severity": "info",
+      "category": "design-system",
+      "file": "apps/mobile/src/components/charts/CandleChart.tsx",
+      "line": 42,
+      "column": 33,
+      "message": "Hardcoded color may drift from project design tokens.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "design-hardcoded-color",
+      "severity": "info",
+      "category": "design-system",
+      "file": "apps/mobile/src/components/charts/EquityChart.tsx",
+      "line": 39,
+      "column": 81,
+      "message": "Hardcoded color may drift from project design tokens.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "design-hardcoded-color",
+      "severity": "info",
+      "category": "design-system",
+      "file": "apps/mobile/src/components/kit/states.tsx",
+      "line": 47,
+      "column": 36,
+      "message": "Hardcoded color may drift from project design tokens.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "design-hardcoded-color",
+      "severity": "info",
+      "category": "design-system",
+      "file": "apps/mobile/src/components/trade/ExecutionTrace.tsx",
+      "line": 2,
+      "column": 59,
+      "message": "Hardcoded color may drift from project design tokens.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "design-hardcoded-color",
+      "severity": "info",
+      "category": "design-system",
+      "file": "apps/mobile/src/components/trade/Keypad.tsx",
+      "line": 4,
+      "column": 26,
+      "message": "Hardcoded color may drift from project design tokens.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "design-hardcoded-color",
+      "severity": "info",
+      "category": "design-system",
+      "file": "apps/mobile/src/features/auth/PhraseGrid.tsx",
+      "line": 2,
+      "column": 65,
+      "message": "Hardcoded color may drift from project design tokens.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/profile/ProfileEditor.tsx",
+      "line": 138,
+      "column": 11,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/profile/ProfileEditor.tsx",
+      "line": 154,
+      "column": 11,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/profile/ProfileEditor.tsx",
+      "line": 169,
+      "column": 11,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/profile/ProfileField.tsx",
+      "line": 30,
+      "column": 3,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/profile/ProfileField.tsx",
+      "line": 49,
+      "column": 3,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/profile/ProfileField.tsx",
+      "line": 95,
+      "column": 11,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/search/SearchField.tsx",
+      "line": 48,
+      "column": 11,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/setup/SetupField.tsx",
+      "line": 52,
+      "column": 11,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    },
+    {
+      "ruleId": "a11y-autofocus",
+      "severity": "warning",
+      "category": "accessibility",
+      "file": "apps/mobile/src/features/social/ComposeThesis.tsx",
+      "line": 79,
+      "column": 13,
+      "message": "Automatic focus can disorient keyboard and screen-reader users.",
+      "confidence": 0.9,
+      "autofix": false,
+      "fixable": false
+    }
+  ],
+  "fixed": []
+}

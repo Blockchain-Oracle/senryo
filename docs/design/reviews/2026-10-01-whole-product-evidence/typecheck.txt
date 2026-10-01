@@ -1,0 +1,46 @@
+$ turbo run typecheck
+
+   • turbo 2.11.5
+   • Packages in scope: @senryo/account, @senryo/api, @senryo/api-client, @senryo/card, @senryo/chain, @senryo/config, @senryo/contracts, @senryo/core, @senryo/drive, @senryo/identity, @senryo/indexer-client, @senryo/keeper, @senryo/mobile, @senryo/query, @senryo/service-common, @senryo/tokens, @senryo/web
+   • Running typecheck in 17 packages
+   • Remote caching disabled
+
+@senryo/service-common:typecheck: cache hit, replaying logs 673d9078487ad09c
+@senryo/service-common:typecheck: $ tsc --noEmit -p .
+@senryo/core:typecheck: cache hit, replaying logs 36f7becdb05f3347
+@senryo/config:typecheck: cache hit, replaying logs bf52d22a6fb091c8
+@senryo/core:typecheck: $ tsc --noEmit -p .
+@senryo/contracts:typecheck: cache hit, replaying logs b44694828ec2f14a
+@senryo/contracts:typecheck: $ tsc --noEmit -p tsconfig.json
+@senryo/chain:typecheck: cache hit, replaying logs 74e0eae399d935a5
+@senryo/config:typecheck: $ tsc --noEmit -p .
+@senryo/account:typecheck: cache hit, replaying logs 51c464bc6d6707a9
+@senryo/api-client:typecheck: cache hit, replaying logs ac8eb4bc5c5609b5
+@senryo/account:typecheck: $ tsc --noEmit -p .
+@senryo/api-client:typecheck: $ tsc --noEmit -p .
+@senryo/indexer-client:typecheck: cache hit, replaying logs 9adda3ad6749e38d
+@senryo/identity:typecheck: cache hit, replaying logs 793bca0b1b1fe854
+@senryo/chain:typecheck: $ tsc --noEmit -p .
+@senryo/indexer-client:typecheck: $ tsc --noEmit -p .
+@senryo/identity:typecheck: $ tsc --noEmit -p . && tsc --noEmit -p tsconfig.native.json
+@senryo/tokens:typecheck: cache hit, replaying logs ca42730111a32052
+@senryo/tokens:typecheck: $ tsc --noEmit -p .
+@senryo/mobile:typecheck: cache miss, executing 280935fbfd3c6d5d
+@senryo/query:typecheck: cache hit, replaying logs d7dbd7902e782df2
+@senryo/api:typecheck: cache hit, replaying logs 739e4a19c55a544c
+@senryo/drive:typecheck: cache hit, replaying logs aff402f9f5828480
+@senryo/query:typecheck: $ tsc --noEmit -p .
+@senryo/drive:typecheck: $ tsc --noEmit -p .
+@senryo/web:typecheck: cache hit, replaying logs 38083c1beb13a18e
+@senryo/api:typecheck: $ tsc --noEmit -p .
+@senryo/card:typecheck: cache hit, replaying logs b9bcc22ba1c71e2f
+@senryo/keeper:typecheck: cache hit, replaying logs 2725844b683eae42
+@senryo/web:typecheck: $ tsc --noEmit -p .
+@senryo/card:typecheck: $ tsc --noEmit -p .
+@senryo/keeper:typecheck: $ tsc --noEmit -p .
+@senryo/mobile:typecheck: $ tsc --noEmit -p tsconfig.json
+
+ Tasks:    17 successful, 17 total
+Cached:    16 cached, 17 total
+  Time:    31.508s 
+
