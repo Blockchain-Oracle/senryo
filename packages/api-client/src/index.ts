@@ -8,6 +8,7 @@ export * from "./routes/define.ts";
 export * from "./routes/engagement.ts";
 export * from "./routes/feed.ts";
 export * from "./routes/follow.ts";
+export * from "./routes/holders.ts";
 export * from "./routes/inbox.ts";
 export * from "./routes/info.ts";
 export * from "./routes/leaderboard.ts";

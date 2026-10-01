@@ -6,6 +6,7 @@ import {
   isDeployed,
   MemoryJournal,
   type ReadClient,
+  readOracles,
   type Sender,
 } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
@@ -20,6 +21,7 @@ import {
 import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { GeoDb } from "./geo-db.ts";
 import type { IndexerBridge } from "./indexer.ts";
+import type { MarkReader } from "./social/holders.ts";
 import type { SocialServices } from "./social/runtime.ts";
 
 /** One served network: reads, commit-state heads, and the sponsor (RELAYER_ROLE) that relays starter claims. */
@@ -63,9 +65,17 @@ export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId,
   return chains;
 }
 
-export function chainOf(ctx: ApiContext, chainId: ChainId): ChainContext {
+export function chainOf(ctx: Pick<ApiContext, "chains">, chainId: ChainId): ChainContext {
   const chain = ctx.chains.get(chainId);
   if (!chain) throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", `chain ${chainId} is not served here`);
   if (!chain.deployed) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", `not deployed on ${chainId} yet`);
   return chain;
+}
+
+/** Holders' mark: the accepted oracle price at `latest`, the read `/v1/markets` serves. */
+export function oracleMarks(chains: Map<ChainId, ChainContext>): MarkReader {
+  return async (chainId, marketId) => {
+    const [view] = await readOracles(chainOf({ chains }, chainId).read, chainId, [marketId]);
+    return { price18: view?.price18 ?? 0n, updatedAt: Number(view?.updatedAt ?? 0n) };
+  };
 }

@@ -1,4 +1,5 @@
 import type { ChainId } from "@senryo/config";
+import type { HoldersService } from "./holders.ts";
 import type { SocialIndexer } from "./indexer-source.ts";
 import type { LeaderboardService } from "./leaderboard.ts";
 import type { SocialContext } from "./shared.ts";
@@ -10,6 +11,8 @@ import type { SocialContext } from "./shared.ts";
 export interface SocialServices {
   indexer: SocialIndexer;
   leaderboard: LeaderboardService;
+  /** Market Holders reads, cached per (network, market). */
+  holders: HoldersService;
   notifier: FeedNotifier;
   /** Networks this api serves (reporter weights read deposits on each). */
   chainIds: readonly ChainId[];

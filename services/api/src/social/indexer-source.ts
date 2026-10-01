@@ -15,10 +15,14 @@ import {
   fillsAfterWhere,
   type IndexerClient,
   IndexerError,
+  MarketPositionsDocument,
+  type OpenPosition,
+  openInMarketWhere,
   type PositionOwner,
   PositionOwnerDocument,
   type RecentPositions,
   RecentPositionsDocument,
+  type SizeKey,
   type UserTotals,
   UserTotalsDocument,
   usersWhere,
@@ -63,6 +67,8 @@ export interface SocialIndexer {
   recentPositions(chainId: ChainId, users: readonly string[]): Promise<RecentPositions[]>;
   /** Positions of `users` closed at or after `since`. */
   closedSince(chainId: ChainId, users: readonly string[], since: number): Promise<ClosedPosition[]>;
+  /** Open positions in one market (indexer id, `ours-0`) of `users`, largest first. */
+  marketHolders(chainId: ChainId, marketId: string, users: readonly string[]): Promise<OpenPosition[]>;
   positionOwner(chainId: ChainId, positionId: string): Promise<PositionOwner>;
   /** Accounts among `users` that deposited on any of `chainIds` (weighted reporters). */
   fundedAmong(chainIds: readonly ChainId[], users: readonly string[]): Promise<Set<string>>;
@@ -79,6 +85,7 @@ export class UnavailableSocialIndexer implements SocialIndexer {
   userTotals = async (): Promise<UserTotals[]> => this.fail();
   recentPositions = async (): Promise<RecentPositions[]> => this.fail();
   closedSince = async (): Promise<ClosedPosition[]> => this.fail();
+  marketHolders = async (): Promise<OpenPosition[]> => this.fail();
   positionOwner = async (): Promise<PositionOwner> => this.fail();
   fundedAmong = async (): Promise<Set<string>> => this.fail();
 }
@@ -190,6 +197,23 @@ export class EnvioSocialIndexer implements SocialIndexer {
       );
     }
     return out;
+  }
+
+  /** A short list filters at the indexer (`user_id _in`); a longer one pages the market's open positions and filters
+   *  here, so no request carries more than INDEXER_IN_CHUNK addresses. */
+  async marketHolders(chainId: ChainId, marketId: string, users: readonly string[]): Promise<OpenPosition[]> {
+    const listed = users.length <= INDEXER_IN_CHUNK ? users : null;
+    const rows = await pageAll<OpenPosition, SizeKey>(
+      (after) =>
+        this.client.request(MarketPositionsDocument, {
+          where: openInMarketWhere(chainId, marketId, listed, after),
+          limit: INDEXER_PAGE,
+        }),
+      (p) => ({ size: p.size, id: p.id }),
+    );
+    if (listed !== null) return rows;
+    const keep = new Set(users.map((u) => u.toLowerCase()));
+    return rows.filter((p) => keep.has(p.user_id.toLowerCase()));
   }
 
   positionOwner(chainId: ChainId, positionId: string): Promise<PositionOwner> {

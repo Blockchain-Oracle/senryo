@@ -4,12 +4,13 @@
  * database and deletes only its own rows.
  *   DATABASE_URL=postgres://127.0.0.1:5432/senryo_social_check pnpm --filter @senryo/api social-check
  * Suites: identity (handles, privacy, follows), posts + moderation (filter, reports, review, block/mute), leaderboard
- * (window math, floor, ranks, Your rank, Top Trades, recommendations), feed (poller, scopes, sharing) + search, and
- * delete-my-data coverage.
+ * (window math, floor, ranks, Your rank, Top Trades, recommendations), feed (poller, scopes, sharing) + search, market
+ * Holders (visibility, viewer filters, Friends, math, cache, 503s) and delete-my-data coverage.
  */
 
 import { deleteDataChecks } from "./social-checks/delete-data.ts";
 import { feedChecks } from "./social-checks/feed.ts";
+import { holdersChecks } from "./social-checks/holders.ts";
 import { identityChecks } from "./social-checks/identity.ts";
 import { leaderboardChecks } from "./social-checks/leaderboard.ts";
 import { moderationChecks } from "./social-checks/moderation.ts";
@@ -24,6 +25,7 @@ try {
     ["posts + moderation", moderationChecks],
     ["leaderboard", leaderboardChecks],
     ["feed + search", feedChecks],
+    ["market holders", holdersChecks],
     ["delete my data", deleteDataChecks],
   ] as const) {
     console.log(`\n── ${name}`);

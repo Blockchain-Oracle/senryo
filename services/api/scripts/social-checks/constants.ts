@@ -60,3 +60,23 @@ export const FEED_FIX = {
   after: 5,
   page: 2,
 } as const;
+
+const WAD = 10n ** 18n;
+
+/**
+ * Market Holders fixtures (1e18 sizes and prices, usd6 money) at a $2 mark: C's long is the largest and under water,
+ * A's long is up, B's short is up because the price is below its entry.
+ */
+export const HOLDERS_FIX = {
+  mark18: 2n * WAD,
+  c: { size: 500n * WAD, entry: 3n * WAD, notional: 1_000n * USD, upnl: -500n * USD },
+  a: { size: 300n * WAD, entry: (3n * WAD) / 2n, notional: 600n * USD, upnl: 150n * USD },
+  b: { size: 100n * WAD, entry: (5n * WAD) / 2n, notional: 200n * USD, upnl: 50n * USD },
+  /** Bigger than anyone shown: a holder that must never appear (not sharing, unlisted, hidden, other network). */
+  unseen: { size: 1_000n * WAD, entry: 2n * WAD },
+  /** A holder seeded after the first read (cache check). */
+  late: { size: 50n * WAD, entry: 2n * WAD },
+  /** Holders beyond the cap in the overflow market. */
+  beyondCap: 1,
+  wad: WAD,
+} as const;

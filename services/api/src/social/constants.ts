@@ -228,6 +228,11 @@ export const TOP_TRADE_MIN_NOTIONAL_USD6 = 100_000_000n;
 /** Fill kinds that add to a position (its opened notional). */
 export const OPENING_FILL_KINDS: ReadonlySet<string> = new Set(["OPEN", "INCREASE", "INVERT"]);
 
+// ---------------------------------------------------------------- FT098 market Holders
+
+/** A market's sharing holders and its accepted price are read at most this often per (network, market). */
+export const HOLDERS_CACHE_MS = 5_000;
+
 // ---------------------------------------------------------------- S12b.6 posts and moderation
 
 /** Theses + replies one account may write per rolling hour (spam budget; 429 with retry-after). */
