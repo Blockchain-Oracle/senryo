@@ -5,7 +5,7 @@
 - j1-scenes-{dark,light}.png: the six scenes, each inside a 402 × 874 phone on the app ground with mock copy and the
   fixed controls, so the composition is judged where it will live. Mock chrome is drawn here, never in the masters.
 - j1-scene-<n>-{dark,light}@2x.png: one phone at 2x.
-- j1-extras.png: pending-passkey art and completion foil on both grounds.
+- j1-extras.png: pending-passkey art, completion foil and the two primer heroes on both grounds.
 - j1-avatars.png: the twelve avatars as discs at 48 px and 96 px on both grounds.
 - brand-card-seal.png: the Kinpaku card face (with a mock of the app's overlay) and back, the seal at header sizes with
   its variants and the app icon, on both grounds.
@@ -115,7 +115,7 @@ def scenes() -> None:
 
 def extras() -> None:
     tiles = []
-    for name in ("passkey-pending", "completion-foil"):
+    for name in ("passkey-pending", "completion-foil", "primer-notifications", "primer-face-id"):
         png = os.path.join(REVIEW, f".{name}.png")
         raster(os.path.join(ART, "onboarding", f"{name}.svg"), png, 640)
         for theme, t in THEMES.items():

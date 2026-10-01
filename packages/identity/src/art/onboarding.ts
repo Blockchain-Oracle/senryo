@@ -1,6 +1,6 @@
 /**
  * The authored J1 artwork (v2-plan §5.10, S1b.3 first pass): six onboarding scenes, the pending-passkey art, the
- * completion foil and the twelve default avatars. Written by `brand/scripts/onboarding.py` (layered SVG masters: one
+ * completion foil, the notification and Face ID primer heroes (S1b.13) and the twelve default avatars. Written by `brand/scripts/onboarding.py` (layered SVG masters: one
  * top-level group per unit of motion, no <text>, no filters; `brand/art/onboarding/layers.json` lists the layers and
  * `labels.json` anchors the native labels). The user's design agent or an illustrator reviews and may replace
  * any file (B12 stays open until that review passes); a swap is one file plus `codegen --rehash`.
@@ -119,6 +119,40 @@ export const ONBOARDING_ART: readonly ArtSource[] = [
       "onboarding",
       EXTRA_BOX,
       "d592de151c0aff95520e0d6c9a465fcce0f03e1b8a4b9c920f8a865dc7bc629e",
+      "free",
+    ),
+  },
+  {
+    key: "primer-notifications",
+    owner: "Senryo",
+    provenance: "senryo-original",
+    pageUrl: "brand/scripts/primer_bell.py",
+    licence: LICENCE,
+    retrieved: AUTHORED,
+    usage:
+      "Notification primer hero: a gold fūrin, its coin clapper and indigo tanzaku caught in a breeze, arcs of light off its shoulders. It may sway and glint (the tanzaku most, about its pivot in layers.json) and the ring may spread once as the clapper strikes; never on a loop, never as if an alert had arrived. Transparent ground, both themes.",
+    variants: master(
+      "primer-notifications",
+      "onboarding",
+      EXTRA_BOX,
+      "40d54a3e8b2acd91129af5522b1063b3e550956f7f6fbb24bea97984f17d0d7b",
+      "free",
+    ),
+  },
+  {
+    key: "primer-face-id",
+    owner: "Senryo",
+    provenance: "senryo-original",
+    pageUrl: "brand/scripts/primer_lock.py",
+    licence: LICENCE,
+    retrieved: AUTHORED,
+    usage:
+      "Face ID primer hero: an ebi-jō lock opened, four corners of light round it. The shackle may lift and settle; nothing scans, counts or fills. It is not the system Face ID glyph, which stays on the control. Transparent ground, both themes.",
+    variants: master(
+      "primer-face-id",
+      "onboarding",
+      EXTRA_BOX,
+      "2791b81d7be021246333b5eefc6cf79ee15fb8711ce5ead2d683df92521b761d",
       "free",
     ),
   },
