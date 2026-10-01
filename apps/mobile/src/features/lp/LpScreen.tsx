@@ -20,7 +20,10 @@ const RISKS = [
   "The value can go down. The APR is last week's result, not a promise.",
 ] as const;
 
-/** F24/F25 (D2): pool value, cap, utilisation and historical APR, your share, risks, deposit, redeem, claims. */
+/**
+ * F24/F25: pool value, cap, utilisation and historical APR, your share, risks, deposit, redeem, claims — each a
+ * borderless filled group under a sentence-case label.
+ */
 export function LpScreen() {
   const network = useNetwork();
   const { color } = useTheme();
@@ -43,25 +46,25 @@ export function LpScreen() {
         return (
           <View style={styles.stack}>
             <Panel style={styles.panel}>
-              <SectionLabel>POOL · {network.modeLabel.toUpperCase()}</SectionLabel>
-              <KeyValue label="VALUE" value={usd(v.totalAssets)} />
-              <KeyValue label="CAP" value={usd(v.tvlCap, 0)} />
-              <KeyValue label="UTILISATION" value={lp.utilisationBps === undefined ? "—" : pct(lp.utilisationBps)} />
-              <KeyValue label="APR · LAST 7D" value={aprValue === undefined ? "not enough history" : pct(aprValue)} />
-              <KeyValue label="YOUR sLP" value={`${usd(v.sharesValue)} · ${pct(share)}`} />
+              <SectionLabel>Pool · {network.modeLabel}</SectionLabel>
+              <KeyValue label="Value" value={usd(v.totalAssets)} />
+              <KeyValue label="Cap" value={usd(v.tvlCap, 0)} />
+              <KeyValue label="Utilisation" value={lp.utilisationBps === undefined ? "—" : pct(lp.utilisationBps)} />
+              <KeyValue label="APR · last 7d" value={aprValue === undefined ? "Not enough history" : pct(aprValue)} />
+              <KeyValue label="Your sLP" value={`${usd(v.sharesValue)} · ${pct(share)}`} />
             </Panel>
 
             <Panel style={styles.panel}>
-              <SectionLabel>RISKS</SectionLabel>
+              <SectionLabel>Risks</SectionLabel>
               {RISKS.map((r) => (
-                <Text key={r} style={[TYPE.caption, { color: color.inkMuted }]}>
+                <Text key={r} style={[TYPE.rowDetail, { color: color.text2 }]}>
                   · {r}
                 </Text>
               ))}
             </Panel>
 
             <Panel style={styles.panel}>
-              <SectionLabel>DEPOSIT AUSD</SectionLabel>
+              <SectionLabel>Deposit AUSD</SectionLabel>
               <MarkedLine
                 id={collateralId(network.chainId, "AUSD")}
                 label="AUSD in your wallet"
@@ -71,7 +74,7 @@ export function LpScreen() {
               <Segmented
                 options={[
                   ...LP_DEPOSIT_CHIPS_USD.map((c) => ({ value: String(c * ONE_USD6), label: `$${c}` })),
-                  { value: "max", label: "MAX" },
+                  { value: "max", label: "Max" },
                 ]}
                 value={depositUsd6 === maxIn && maxIn > 0n ? "max" : String(depositUsd6)}
                 onChange={(val) => setDepositUsd6(val === "max" ? maxIn : BigInt(val))}
@@ -87,14 +90,14 @@ export function LpScreen() {
                 onPress={() => void lp.deposit(depositUsd6)}
               />
               {v.maxDeposit === 0n ? (
-                <Text style={[TYPE.caption, { color: color.warn }]}>
+                <Text style={[TYPE.rowDetail, { color: color.warn }]}>
                   The pool is at its cap; deposits reopen as it shrinks.
                 </Text>
               ) : null}
             </Panel>
 
             <Panel style={styles.panel}>
-              <SectionLabel>REDEEM</SectionLabel>
+              <SectionLabel>Redeem</SectionLabel>
               <Segmented
                 options={LP_REDEEM_STEPS_BPS.map((b) => ({ value: String(b), label: b >= RISK.BPS ? "All" : pct(b) }))}
                 value={String(redeemBps)}
@@ -111,7 +114,7 @@ export function LpScreen() {
                 const ready = r.claimableAt <= nowSec;
                 return (
                   <View key={String(r.requestId)} style={styles.pending}>
-                    <Text style={[TYPE.numSm, { color: color.ink, flex: 1 }]}>
+                    <Text style={[TYPE.rowAmount, { color: color.ink, flex: 1 }]}>
                       #{String(r.requestId)} · {ready ? "ready" : durationUntil(r.claimableAt, nowSec)}
                     </Text>
                     <Button
@@ -125,13 +128,13 @@ export function LpScreen() {
                 );
               })}
               {v.pending.length > 0 && !v.allMarketsOpen ? (
-                <Text style={[TYPE.caption, { color: color.warn }]}>
+                <Text style={[TYPE.rowDetail, { color: color.warn }]}>
                   Claims open when every market is open (weekend-gap protection).
                 </Text>
               ) : null}
             </Panel>
             {failed ? (
-              <Text style={[TYPE.caption, { color: color.down }]}>That didn't go through; nothing changed.</Text>
+              <Text style={[TYPE.rowDetail, { color: color.down }]}>That didn't go through; nothing changed.</Text>
             ) : null}
           </View>
         );
@@ -142,6 +145,6 @@ export function LpScreen() {
 
 const styles = StyleSheet.create({
   stack: { gap: SPACE.lg },
-  panel: { padding: SPACE.md, gap: SPACE.sm },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   pending: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
 });

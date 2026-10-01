@@ -1,6 +1,7 @@
 /**
  * The account, shown large (F08 proof: create on the phone, sign in on the web → the identical address), with copy
- * and a read-only watch link to share (D-031). No account → the way in, never a blank.
+ * and a read-only watch link to share (D-031). No account → the way in, never a blank. The mode is a small filled
+ * badge in its own colour (practice violet, mainnet blue), not an outlined pill.
  */
 import { WEB_ORIGIN } from "@senryo/config";
 import * as Clipboard from "expo-clipboard";
@@ -15,7 +16,7 @@ import { useAccount } from "~/lib/account/provider";
 import { COPIED_MS } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 
 const CREDENTIAL_SHOWN = 10;
 const watchUrl = (address: string) => `${WEB_ORIGIN}/watch/?address=${address}`;
@@ -43,8 +44,8 @@ export function IdentityPanel() {
   if (!hint) {
     return (
       <Panel style={styles.panel}>
-        <Text style={[TYPE.label, { color: color.ink }]}>NO ACCOUNT ON THIS PHONE</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>No account on this phone</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
           Create one with Face ID, or open the account you already have — the same passkey gives the same address on
           every device.
         </Text>
@@ -52,12 +53,21 @@ export function IdentityPanel() {
       </Panel>
     );
   }
+  const practice = network.key === "testnet";
   return (
     <Panel style={styles.panel}>
       <View style={styles.head}>
-        <Text style={[TYPE.label, { color: color.inkMuted }]}>YOUR ACCOUNT</Text>
-        <Text style={[TYPE.micro, styles.pill, { color: color.up, borderColor: color.up }]}>
-          {network.modeLabel.toUpperCase()}
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Your account</Text>
+        <Text
+          style={[
+            TYPE.chipLabel,
+            styles.badge,
+            practice
+              ? { color: color.practice, backgroundColor: color.practiceWash }
+              : { color: color.mainnet, backgroundColor: color.mainnetWash },
+          ]}
+        >
+          {network.modeLabel}
         </Text>
       </View>
       <Text
@@ -88,8 +98,8 @@ export function IdentityPanel() {
           onPress={() => void Share.share({ message: watchUrl(hint.address) })}
         />
       </View>
-      <Text style={[TYPE.micro, { color: color.inkMuted }]}>
-        {hint.mode === "vault" ? "BACKUP PASSKEY" : "PASSKEY"} ·{" "}
+      <Text style={[TYPE.meta, { color: color.text3 }]}>
+        {hint.mode === "vault" ? "Backup passkey" : "Passkey"} ·{" "}
         {hint.credential.credentialId.slice(0, CREDENTIAL_SHOWN)}…
       </Text>
     </Panel>
@@ -97,8 +107,8 @@ export function IdentityPanel() {
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.sm },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  pill: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, paddingHorizontal: SPACE.xs, paddingVertical: SPACE.xxs },
+  badge: { borderRadius: RADIUS.xs, paddingHorizontal: SPACE.sm, paddingVertical: SPACE.xxs, overflow: "hidden" },
   actions: { flexDirection: "row", gap: SPACE.sm, flexWrap: "wrap" },
 });

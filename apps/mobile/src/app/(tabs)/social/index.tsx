@@ -46,7 +46,6 @@ export default function Social() {
     section === "feed" ? RESERVED[scope] : people === "leaderboard" ? RESERVED.leaderboard : RESERVED.people;
   return (
     <CollapsingScreen
-      tab="social"
       left={<TabTitle>Social</TabTitle>}
       sticky={
         <View style={styles.segments}>

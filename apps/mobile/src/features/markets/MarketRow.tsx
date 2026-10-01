@@ -9,31 +9,31 @@ import { fire } from "~/feedback/fire";
 import { marketRoute } from "~/lib/constants/routes";
 import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { DISABLED_OPACITY, HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ageLabel, STATUS_LABEL, statusTone } from "./session";
 import { useMarketLine } from "./useMarketLine";
 
 const MS_PER_SECOND = 1000n;
 
 /**
- * One engine watchlist row (21st Market Watchlist #20110): the market's own art (koban / chōgin), name over ticker ·
- * session (max leverage is on the detail; the venue is the list's own heading, or a badge on the mark when venues mix), sparkline from hourly Chainlink rounds, oracle price with its age, 24 h change with ▲▼ and
- * a sign (never colour alone). The mark is the market's identity, so it shows while the price is still loading.
+ * One market row (Fomo F09/F12, C22): bare on the page — no card, no divider — with a 48 pt mark (the market's own
+ * art: koban / chōgin), name over ticker · session, a sparkline from hourly Chainlink rounds, and the oracle price
+ * over its 24 h change with ▲▼ and a sign (never colour alone). The mark is the market's identity, so it shows while
+ * the price is still loading. The press plate reaches a little past the text so it reads as a rounded row.
  */
-export function EngineMarketRow({ marketId, first }: { marketId: number; first: boolean }) {
+export function EngineMarketRow({ marketId }: { marketId: number }) {
   const network = useNetwork();
   const { color } = useTheme();
   const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
   const reading = useMarketLine(marketId, meta?.symbol ?? "");
   const mark = ids.engineMarket(network.chainId, marketId);
-  const border = first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline };
   if (reading.status === "unknown" || reading.status === "failed") {
     return (
-      <View style={[styles.row, border]}>
-        <EntityMark id={mark} size={SIZE.markRow} decorative />
+      <View style={styles.row}>
+        <EntityMark id={mark} size={SIZE.markDetail} decorative />
         <View style={styles.name}>
-          <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{meta?.symbol}</Text>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>{meta?.symbol}</Text>
+          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
             {reading.status === "failed" ? "Price unavailable · retrying" : "Reading the oracle"}
           </Text>
         </View>
@@ -54,23 +54,21 @@ export function EngineMarketRow({ marketId, first }: { marketId: number; first: 
       }}
       accessibilityRole="button"
       accessibilityLabel={`${line.name}, Senryo, ${STATUS_LABEL[line.status]}, price ${price18(line.price18, priceDecimalsOf(marketId))} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}
-      style={({ pressed }) => [styles.row, border, pressed ? { backgroundColor: color.muted } : null]}
+      style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.card } : null]}
     >
-      <EntityMark id={mark} size={SIZE.markRow} decorative />
+      <EntityMark id={mark} size={SIZE.markDetail} decorative />
       <View style={styles.name}>
-        <Text style={[TYPE.bodyStrong, { color: color.ink }]} numberOfLines={1}>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
           {line.name}
         </Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]} numberOfLines={1}>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
           {line.symbol} · <Text style={{ color: statusTone(line.status, color) }}>{STATUS_LABEL[line.status]}</Text>
         </Text>
       </View>
       <Sparkline values={line.spark} stroke={tint} />
       <View style={styles.price}>
-        <Text style={[TYPE.numSm, { color: color.ink }]}>${price18(line.price18, priceDecimalsOf(marketId))}</Text>
-        <Text style={[TYPE.micro, { color: tint }]}>
-          {changeText} · {age}
-        </Text>
+        <Text style={[TYPE.rowPrice, { color: color.ink }]}>${price18(line.price18, priceDecimalsOf(marketId))}</Text>
+        <Text style={[TYPE.rowChange, { color: tint }]}>{changeText}</Text>
       </View>
     </Pressable>
   );
@@ -87,26 +85,22 @@ export interface UpcomingMarket {
 }
 
 /** A market that isn't live yet: its mark, name and why, never a price (plan §2.5: no fabricated numbers). */
-export function UpcomingMarketRow({ market, first }: { market: UpcomingMarket; first: boolean }) {
+export function UpcomingMarketRow({ market }: { market: UpcomingMarket }) {
   const { color } = useTheme();
   return (
     <View
       accessible
       accessibilityLabel={`${market.name}, ${market.venue}, ${market.note}`}
-      style={[
-        styles.row,
-        first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline },
-        { opacity: DISABLED_OPACITY },
-      ]}
+      style={[styles.row, { opacity: DISABLED_OPACITY }]}
     >
-      <EntityMark id={market.mark} size={SIZE.markRow} label={market.symbol} decorative />
+      <EntityMark id={market.mark} size={SIZE.markDetail} label={market.symbol} decorative />
       <View style={styles.name}>
-        <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{market.symbol}</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          {market.venue} · {market.note}
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{market.symbol}</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={1}>
+          {market.name} · {market.venue}
         </Text>
       </View>
-      <Text style={[TYPE.label, { color: color.inkMuted }]}>{market.name}</Text>
+      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{market.note}</Text>
     </View>
   );
 }
@@ -116,8 +110,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: SPACE.md,
-    paddingHorizontal: SPACE.md,
-    minHeight: SIZE.touch + SPACE.xl,
+    minHeight: SIZE.rowMinHeight,
+    paddingVertical: SPACE.sm,
+    paddingHorizontal: SPACE.sm,
+    marginHorizontal: -SPACE.sm,
+    borderRadius: BUTTON.radius.md,
   },
   name: { flex: 1, gap: SPACE.xxs },
   price: { alignItems: "flex-end", gap: SPACE.xxs, minWidth: SIZE.sparklineWidth + SPACE.lg },

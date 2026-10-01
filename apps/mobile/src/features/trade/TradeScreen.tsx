@@ -3,10 +3,12 @@ import { DECIMALS } from "@senryo/core";
 import { useCandles } from "@senryo/query";
 import { router, Stack } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CandleChart } from "~/components/charts/CandleChart";
 import { Screen } from "~/components/kit/Screen";
 import { EmptyState, ReadingView } from "~/components/kit/states";
+import { usePressScale } from "~/components/kit/usePressScale";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import { HolidayBanner, ProtocolBanner } from "~/features/markets/MarketBanners";
 import { useMarketLine } from "~/features/markets/useMarketLine";
@@ -14,7 +16,7 @@ import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { fire } from "~/feedback/fire";
 import { type TicketSide, ticketRoute } from "~/lib/constants/routes";
 import { useReadOnlyNetwork } from "~/lib/network";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useCandleStyle } from "./candle-style";
 import { TradeHeader } from "./TradeHeader";
 
@@ -90,7 +92,10 @@ function EngineMarket({ marketId, symbol }: { marketId: number; symbol: string }
   );
 }
 
-/** Sticky Short / Long (F32/F35): each opens the ticket on its side; the ticket names any blocker in place. */
+/**
+ * Sticky Short / Long (F32/F35): two rounded rectangles in the direction fills (12 pt corners, never pills); each
+ * opens the ticket on its side, and the ticket names any blocker in place.
+ */
 function SideBar({ symbol }: { symbol: string }) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
@@ -100,25 +105,34 @@ function SideBar({ symbol }: { symbol: string }) {
   };
   return (
     <View style={[styles.bar, { paddingBottom: insets.bottom + SPACE.sm, backgroundColor: color.ground }]}>
-      <Pressable
-        onPress={() => open("short")}
-        accessibilityRole="button"
-        accessibilityLabel={`Short ${symbol}`}
-        accessibilityHint="Opens the order ticket"
-        style={({ pressed }) => [styles.side, { backgroundColor: color.down, opacity: pressed ? PRESSED : 1 }]}
-      >
-        <Text style={[TYPE.buttonLabel, { color: color.downForeground }]}>Short</Text>
-      </Pressable>
-      <Pressable
-        onPress={() => open("long")}
-        accessibilityRole="button"
-        accessibilityLabel={`Long ${symbol}`}
-        accessibilityHint="Opens the order ticket"
-        style={({ pressed }) => [styles.side, { backgroundColor: color.up, opacity: pressed ? PRESSED : 1 }]}
-      >
-        <Text style={[TYPE.buttonLabel, { color: color.upForeground }]}>Long</Text>
-      </Pressable>
+      <SideButton side="short" symbol={symbol} onPress={() => open("short")} />
+      <SideButton side="long" symbol={symbol} onPress={() => open("long")} />
     </View>
+  );
+}
+
+function SideButton({ side, symbol, onPress }: { side: TicketSide; symbol: string; onPress: () => void }) {
+  const { color } = useTheme();
+  const press = usePressScale();
+  const long = side === "long";
+  const word = long ? "Long" : "Short";
+  return (
+    <Animated.View style={[styles.flex, press.style]}>
+      <Pressable
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${word} ${symbol}`}
+        accessibilityHint="Opens the order ticket"
+        style={({ pressed }) => [
+          styles.side,
+          { backgroundColor: long ? color.up : color.down, opacity: pressed ? PRESSED : 1 },
+        ]}
+      >
+        <Text style={[TYPE.buttonLabel, { color: long ? color.upForeground : color.downForeground }]}>{word}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -126,10 +140,10 @@ const PRESSED = 0.85;
 
 const styles = StyleSheet.create({
   bar: { flexDirection: "row", gap: SPACE.md, paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm },
+  flex: { flex: 1 },
   side: {
-    flex: 1,
     height: SIZE.buttonHeight,
-    borderRadius: RADIUS.pill,
+    borderRadius: BUTTON.radius.md,
     alignItems: "center",
     justifyContent: "center",
   },

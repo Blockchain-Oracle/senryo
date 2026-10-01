@@ -3,15 +3,17 @@ import { useCandles } from "@senryo/query";
 import { ChartCandlestick, Grid3x3, Info, SlidersHorizontal } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { CandleChart } from "~/components/charts/CandleChart";
 import { EmptyState, ReadingView, Skeleton } from "~/components/kit/states";
+import { usePressScale } from "~/components/kit/usePressScale";
 import { Keypad } from "~/components/trade/Keypad";
 import { LeverageRuler } from "~/components/trade/LeverageRuler";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { moneySymbol, pct, price18, priceDecimalsOf, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { DISABLED_OPACITY, HAIRLINE_PX, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, DISABLED_OPACITY, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useCandleStyle } from "./candle-style";
 import { AMOUNT_CHIPS_USD } from "./constants";
 import type { useTicket } from "./useTicket";
@@ -136,7 +138,10 @@ function RiskRow({ t, line, onChild }: { t: TicketModel; line: MarketLine; onChi
   );
 }
 
-/** Keypad ↔ chart (C41): two icons on the divider; the rest of the ticket stays put. */
+/**
+ * Keypad ↔ chart (C41): two icons in a small borderless track, the chosen one on a lighter plate (the segmented
+ * control's grammar, without F37's divider line); the rest of the ticket stays put.
+ */
 function ModeToggle({ mode, onMode }: { mode: EntryMode; onMode: (m: EntryMode) => void }) {
   const { color } = useTheme();
   const option = (m: EntryMode, label: string, Icon: typeof Grid3x3) => {
@@ -152,7 +157,7 @@ function ModeToggle({ mode, onMode }: { mode: EntryMode; onMode: (m: EntryMode) 
         accessibilityLabel={label}
         accessibilityState={{ selected: on }}
         hitSlop={SPACE.sm}
-        style={[styles.toggleCell, on ? { backgroundColor: color.raised2 } : null]}
+        style={[styles.toggleCell, on ? { backgroundColor: color.rowPressed } : null]}
       >
         <Icon size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={on ? color.ink : color.text3} />
       </Pressable>
@@ -160,12 +165,10 @@ function ModeToggle({ mode, onMode }: { mode: EntryMode; onMode: (m: EntryMode) 
   };
   return (
     <View style={styles.toggleRow} accessibilityRole="tablist" accessibilityLabel="Entry mode">
-      <View style={[styles.rule, { backgroundColor: color.border }]} />
-      <View style={[styles.toggle, { borderColor: color.border, backgroundColor: color.popover }]}>
+      <View style={[styles.toggle, { backgroundColor: color.muted }]}>
         {option("keypad", "Keypad", Grid3x3)}
         {option("chart", "Chart", ChartCandlestick)}
       </View>
-      <View style={[styles.rule, { backgroundColor: color.border }]} />
     </View>
   );
 }
@@ -184,25 +187,31 @@ function KeypadRegion({ t }: { t: TicketModel }) {
   );
 }
 
+/** An amount preset (F37's $10 / $50 / $100 row): a borderless filled plate that shrinks under the finger. */
 function Preset({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
   const { color } = useTheme();
+  const press = usePressScale();
   return (
-    <Pressable
-      disabled={disabled}
-      onPress={() => {
-        fire("tick");
-        onPress();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={label === "Max" ? "Max: everything Free to trade allows" : `Set margin to ${label}`}
-      style={({ pressed }) => [
-        styles.preset,
-        { backgroundColor: pressed ? color.rowPressed : color.raised2 },
-        disabled ? { opacity: DISABLED_OPACITY } : null,
-      ]}
-    >
-      <Text style={[TYPE.rowAmount, { color: color.ink }]}>{label}</Text>
-    </Pressable>
+    <Animated.View style={[styles.presetSlot, press.style]}>
+      <Pressable
+        disabled={disabled}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={() => {
+          fire("tick");
+          onPress();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={label === "Max" ? "Max: everything Free to trade allows" : `Set margin to ${label}`}
+        style={({ pressed }) => [
+          styles.preset,
+          { backgroundColor: pressed ? color.rowPressed : color.raised2 },
+          disabled ? { opacity: DISABLED_OPACITY } : null,
+        ]}
+      >
+        <Text style={[TYPE.rowAmount, { color: color.ink }]}>{label}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -259,22 +268,15 @@ const styles = StyleSheet.create({
   riskCell: { gap: SPACE.xxs, minHeight: SIZE.touch, justifyContent: "center" },
   end: { alignItems: "flex-end" },
   inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
-  toggleRow: { flexDirection: "row", alignItems: "center", marginHorizontal: -SIZE.gutter },
-  rule: { flex: 1, height: HAIRLINE_PX },
-  toggle: {
-    flexDirection: "row",
-    borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.sm,
-    padding: SPACE.xxs,
-    gap: SPACE.xxs,
-  },
+  toggleRow: { flexDirection: "row", justifyContent: "center" },
+  toggle: { flexDirection: "row", borderRadius: BUTTON.radius.sm, padding: SPACE.xxs, gap: SPACE.xxs },
   toggleCell: { paddingHorizontal: SPACE.md, paddingVertical: SPACE.xs, borderRadius: RADIUS.xs },
   region: { flex: 1, gap: SPACE.sm },
   presets: { flexDirection: "row", gap: SPACE.sm },
+  presetSlot: { flex: 1 },
   preset: {
-    flex: 1,
     minHeight: SIZE.touch,
-    borderRadius: RADIUS.sm,
+    borderRadius: BUTTON.radius.sm,
     alignItems: "center",
     justifyContent: "center",
   },

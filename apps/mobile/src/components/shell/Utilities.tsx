@@ -1,32 +1,22 @@
 import { router } from "expo-router";
 import { Bell } from "lucide-react-native";
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { SessionChip } from "~/features/auth/SessionChip";
+import { Pressable, StyleSheet } from "react-native";
+import Animated from "react-native-reanimated";
+import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
-import { SIZE, SPACE, useTheme } from "~/theme";
+import { BUTTON, RADIUS, SIZE, useTheme } from "~/theme";
+
+/** A round utility shrinks a little more than a button: it is small, so 0.97 would not be felt. */
+const UTILITY_PRESS_SCALE = 0.94;
+/** Lucide glyph inside the 36 pt disc. */
+export const UTILITY_ICON = 20;
 
 /**
- * The pinned utility row under every tab root's header (Codex S1b.7 consult #6): the trading-session chip on the
- * left (S6: lock state and the way to unlock), alerts on the right, plus any tab-specific utility (You: settings).
- * It keeps the retired D2 TopStrip's functions; the account icon became the You destination in the dock.
+ * A round utility control (Fomo F16's share / history / settings): a 36 pt filled disc with a 20 pt icon and a 44 pt
+ * target. Utilities sit in a tab root's bar beside the mode control — there is no utility strip under the header.
  */
-export function UtilityRow({ children }: { children?: ReactNode }) {
-  const { color } = useTheme();
-  return (
-    <View style={styles.row}>
-      <SessionChip />
-      <View style={styles.end}>
-        {children}
-        <UtilityButton label="Alerts" onPress={() => router.push(ROUTES.alerts)}>
-          <Bell size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.text2} />
-        </UtilityButton>
-      </View>
-    </View>
-  );
-}
-
 export function UtilityButton({
   label,
   onPress,
@@ -36,29 +26,44 @@ export function UtilityButton({
   onPress: () => void;
   children: ReactNode;
 }) {
+  const { color } = useTheme();
+  const press = usePressScale(UTILITY_PRESS_SCALE);
   return (
-    <Pressable
-      onPress={() => {
-        fire("tick");
-        onPress();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={styles.tap}
-    >
-      {children}
-    </Pressable>
+    <Animated.View style={press.style}>
+      <Pressable
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={() => {
+          fire("tick");
+          onPress();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        hitSlop={(SIZE.touch - BUTTON.utility) / 2}
+        style={({ pressed }) => [styles.disc, { backgroundColor: pressed ? color.rowPressed : color.raised2 }]}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/** Price alerts, wherever a tab offers them. */
+export function AlertsButton() {
+  const { color } = useTheme();
+  return (
+    <UtilityButton label="Alerts" onPress={() => router.push(ROUTES.alerts)}>
+      <Bell size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+    </UtilityButton>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    minHeight: SIZE.touch,
-    paddingHorizontal: SIZE.gutter,
-    paddingBottom: SPACE.xs,
-    flexDirection: "row",
+  disc: {
+    width: BUTTON.utility,
+    height: BUTTON.utility,
+    borderRadius: RADIUS.pill,
     alignItems: "center",
+    justifyContent: "center",
   },
-  end: { marginLeft: "auto", flexDirection: "row", alignItems: "center" },
-  tap: { width: SIZE.touch, height: SIZE.touch, alignItems: "center", justifyContent: "center" },
 });

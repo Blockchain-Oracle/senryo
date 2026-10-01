@@ -5,12 +5,12 @@ import { CircleCheck } from "lucide-react-native";
 import { useState } from "react";
 import { Linking, Share, StyleSheet, Switch, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { KeyValue } from "~/components/kit/Surface";
+import { KeyValue, Panel } from "~/components/kit/Surface";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { shortAddress } from "~/lib/format";
 import { price18, priceDecimalsOf, usd } from "~/lib/money";
 import type { NetworkKey } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { QUANTITY_DECIMALS } from "./constants";
 import type { Side } from "./useTicket";
 
@@ -22,7 +22,10 @@ export interface SubmittedOrder {
   symbol: string;
   side: Side;
   leverage: number;
+  /** The margin the user entered: margin × leverage = exposure, exactly as the ticket showed it. */
   marginUsd6: bigint;
+  /** What the engine locks against the position at the hold (its initial-margin requirement), quoted. */
+  lockedUsd6: bigint;
   notionalUsd6: bigint;
   execPrice18: bigint;
   feeUsd6: bigint;
@@ -33,6 +36,7 @@ export interface SubmittedOrder {
  * The receipt (inventory #21; D-114/D-163): shown only once the trace reached **finalized** — never on a submit or a
  * vote. Quoted values are labelled as quoted at the hold; the transaction links to the network's explorer. Share
  * opens a compact preview (inventory #22) before the native share sheet; amounts are opt-in, no identity is attached.
+ * The figures sit in one borderless filled group.
  * The completed-outcome claim stays Blocked B1 until our own finalized lifecycles are recorded in acceptance.md.
  */
 export function TicketReceipt({
@@ -64,15 +68,16 @@ export function TicketReceipt({
         <Text accessibilityRole="header" style={[TYPE.sheetTitle, { color: color.ink }]}>
           {side} {order.symbol} opened
         </Text>
-        <Text style={[TYPE.meta, { color: tone }]}>
+        <Text style={[TYPE.rowDetail, { color: tone }]}>
           {practice ? "Practice · Paper money" : "Mainnet · Real money"} · {network.name} · Finalized
           {finalizedAt ? ` ${new Date(finalizedAt).toLocaleTimeString()}` : ""}
         </Text>
       </View>
-      <View style={[styles.card, { borderColor: color.border, backgroundColor: color.card }]}>
+      <Panel style={styles.card}>
         <KeyValue label="Margin" value={money(order.marginUsd6)} />
         <KeyValue label="Leverage" value={`${order.leverage}×`} />
         <KeyValue label="Exposure" value={money(order.notionalUsd6)} />
+        <KeyValue label="Locked as margin (quoted)" value={money(order.lockedUsd6)} />
         <KeyValue
           label="Quantity (quoted)"
           value={`${formatUnits(order.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS)} ${order.symbol}`}
@@ -80,7 +85,7 @@ export function TicketReceipt({
         <KeyValue label="Fill price (quoted)" value={`$${price18(order.execPrice18, decimals)}`} />
         <KeyValue label="Fee (quoted)" value={money(order.feeUsd6)} />
         {hash ? <KeyValue label="Transaction" value={shortAddress(hash)} /> : null}
-      </View>
+      </Panel>
       <Text style={[TYPE.meta, { color: color.text3 }]}>Quoted at your hold; the position shows the filled entry.</Text>
       {hash ? (
         <Button
@@ -130,15 +135,15 @@ export function SharePreview({
   const message = lines.join("\n");
   return (
     <ChildSheet open={open} onClose={onClose} title="Share">
-      <View style={[styles.preview, { borderColor: color.border, backgroundColor: color.card }]}>
+      <Panel style={styles.preview}>
         <Text style={[TYPE.rowStrong, { color: color.ink }]}>{lines[0]}</Text>
         {lines.slice(1).map((l) => (
-          <Text key={l} style={[TYPE.meta, { color: color.text2 }]} numberOfLines={2}>
+          <Text key={l} style={[TYPE.rowDetail, { color: color.text2 }]} numberOfLines={2}>
             {l}
           </Text>
         ))}
-      </View>
-      <View style={[styles.option, { borderColor: color.border }]}>
+      </Panel>
+      <View style={styles.option}>
         <Text style={[TYPE.row, { color: color.ink }]}>Include margin and exposure</Text>
         <Switch value={amounts} onValueChange={setAmounts} accessibilityLabel="Include margin and exposure" />
       </View>
@@ -160,15 +165,15 @@ export function SharePreview({
 const styles = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: SIZE.gutter, gap: SPACE.md },
   head: { alignItems: "center", gap: SPACE.xs, paddingVertical: SPACE.md },
-  card: { padding: SPACE.md, borderRadius: RADIUS.md, borderWidth: HAIRLINE_PX },
+  card: { paddingHorizontal: SPACE.lg, paddingVertical: SPACE.md },
   actions: { flexDirection: "row", gap: SPACE.md },
   flex: { flex: 1 },
-  preview: { padding: SPACE.md, gap: SPACE.xs, borderRadius: RADIUS.md, borderWidth: HAIRLINE_PX },
+  preview: { padding: SPACE.lg, gap: SPACE.xs },
   option: {
     minHeight: SIZE.touch,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: HAIRLINE_PX,
+    gap: SPACE.md,
   },
 });

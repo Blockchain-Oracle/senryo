@@ -44,11 +44,11 @@ export function GuestHome() {
             </Text>
             <Text style={[TYPE.meta, { color: color.text3 }]}>Oracle prices</Text>
           </View>
-          <Panel>
-            {markets.map((m, i) => (
-              <EngineMarketRow key={m.id} marketId={m.id} first={i === 0} />
+          <View>
+            {markets.map((m) => (
+              <EngineMarketRow key={m.id} marketId={m.id} />
             ))}
-          </Panel>
+          </View>
           <Button label="See all markets" variant="ghost" onPress={() => router.navigate(ROUTES.markets)} />
         </View>
       ) : null}

@@ -22,7 +22,8 @@ type Kind = (typeof KINDS)[number]["value"];
 /**
  * F14 TP/SL on a held position (TriggerOrders.sol): active orders with Cancel; a new order N % from the oracle price
  * with the realised PnL previewed at the trigger; signed in session, placed by the user (in scope), executed by any
- * keeper when the accepted oracle price crosses. Closed sessions queue until the market opens (stated).
+ * keeper when the accepted oracle price crosses. Closed sessions queue until the market opens (stated). One borderless
+ * filled group.
  */
 export function TriggerPanel({ market, position }: { market: LiveMarket; position: PositionView }) {
   const { color } = useTheme();
@@ -55,7 +56,7 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
       <SectionLabel>TP / SL</SectionLabel>
       {mine.map((t) => (
         <View key={t.id} style={styles.row}>
-          <Text style={[TYPE.numSm, { color: t.takeProfit ? color.up : color.down, flex: 1 }]}>
+          <Text style={[TYPE.rowAmount, { color: t.takeProfit ? color.up : color.down, flex: 1 }]}>
             {t.takeProfit ? "TP" : "SL"} · {price18(t.triggerPrice, priceDecimalsOf(market.marketId))} ·{" "}
             {t.size >= position.size ? "all" : "part"}
           </Text>
@@ -69,9 +70,9 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
           />
         </View>
       ))}
-      {removal ? <Text style={[TYPE.caption, { color: toneColor[removal.tone] }]}>{removal.text}</Text> : null}
+      {removal ? <Text style={[TYPE.rowDetail, { color: toneColor[removal.tone] }]}>{removal.text}</Text> : null}
       {legs.pending.map((t) => (
-        <Text key={t.hash} style={[TYPE.caption, { color: color.warn }]}>
+        <Text key={t.hash} style={[TYPE.rowDetail, { color: color.warn }]}>
           {t.action === "remove"
             ? "A removal is still being confirmed."
             : `${t.leg ? LEG_NAME[t.leg] : "A level"}${t.price18 === undefined ? "" : ` at ${price18(t.price18, decimals)}`} is still being confirmed.`}{" "}
@@ -85,15 +86,15 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
         onChange={(v) => setStepBps(BigInt(v))}
         label="Distance from the oracle price"
       />
-      <KeyValue label={`${symbol} AT`} value={price18(trigger18, priceDecimalsOf(market.marketId))} />
-      <KeyValue label="REALISED AT TRIGGER" value={signedUsd(atTrigger.netUsd6)} />
+      <KeyValue label={`${symbol} at`} value={price18(trigger18, priceDecimalsOf(market.marketId))} />
+      <KeyValue label="Realised at trigger" value={signedUsd(atTrigger.netUsd6)} />
       {market.pv.status !== "OPEN" ? (
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
           The market is {market.pv.status.toLowerCase()}: a crossing executes once it opens.
         </Text>
       ) : null}
       {note ? (
-        <Text accessibilityLiveRegion="polite" style={[TYPE.caption, { color: toneColor[note.tone] }]}>
+        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: toneColor[note.tone] }]}>
           {note.text}
         </Text>
       ) : null}
@@ -113,6 +114,6 @@ export function TriggerPanel({ market, position }: { market: LiveMarket; positio
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.sm },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
 });

@@ -1,21 +1,27 @@
 /**
- * Auth failure card (native): the shared copy table (`authFailureCopy`) — one honest title, the fix, the next action.
- * The most prominent action always agrees with the warning (review R04):
- * - a failed *create* that may have left a passkey behind → **"I already have an account"** is primary (signing in can
- *   never make a second account); creating again is only reachable from a sign-in that finds no passkey;
- * - a failure repetition can't repair (`prf-unavailable`, `not-supported`) → the web app is primary, no retry;
- * - `bad-configuration` (association files) → the web app first, retry kept as the secondary;
+ * An auth failure inside its sheet (Codex consult 1 Oct): the shared copy table (`authFailureCopy`) as one title and
+ * one explanation, one primary action, at most one quiet action under it. No warning tile, no boxed note, no Back
+ * button — the handle and the scrim return to where the user was.
+ * The primary action always agrees with the explanation (review R04):
+ * - a failed *create* that may have left a passkey behind → **"I already have an account"** (signing in can never
+ *   make a second account); the explanation says why; creating again is only reachable from a sign-in that finds no
+ *   passkey;
+ * - a failure repetition can't repair (`prf-unavailable`, `not-supported`, a wrong host) → the web app, no retry;
+ * - `bad-configuration` (association files) → the web app first, "Try again" as the quiet action;
  * - anything else → "Try again".
- * `onBack` always returns to where the user was. No promise is made about passkeys syncing between devices.
+ * No promise is made about passkeys syncing between devices.
  */
 import { type AuthFailure, authFailureCopy, mayHaveLeftPasskey } from "@senryo/account";
 import { WEB_ORIGIN } from "@senryo/config";
-import { Linking, Platform, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { HAIRLINE_PX, RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 import { AuthCard } from "./AuthCard";
 
 export type FailedFlow = "create" | "sign-in" | "unlock" | "recover";
+
+const ORPHAN_NOTE =
+  "Your passkey may already be saved on this phone. Sign in with it first, so you don’t end up with two accounts.";
+const WEB_ONLY: readonly AuthFailure[] = ["prf-unavailable", "not-supported", "host-not-allowed", "insecure-context"];
 
 export function AuthFailureCard({
   kind,
@@ -23,40 +29,20 @@ export function AuthFailureCard({
   onRetry,
   onSignIn,
   onCreate,
-  onBack,
 }: {
   kind: AuthFailure;
   flow: FailedFlow;
   onRetry: () => void;
   onSignIn?: () => void;
   onCreate?: () => void;
-  onBack?: () => void;
 }) {
-  const { color } = useTheme();
   const copy = authFailureCopy(kind, Platform.OS === "ios" ? "ios" : "android");
   const orphanRisk = flow === "create" && mayHaveLeftPasskey(kind) && onSignIn !== undefined;
-  const webOnly = kind === "prf-unavailable" || kind === "not-supported";
+  const webOnly = WEB_ONLY.includes(kind);
   const webFirst = webOnly || kind === "bad-configuration";
   const openWeb = () => void Linking.openURL(WEB_ORIGIN);
   return (
-    <AuthCard glyph="warning" tone="down" title={copy.title} body={copy.body}>
-      {orphanRisk ? (
-        <View style={[styles.note, { borderColor: color.hairline, backgroundColor: color.muted }]}>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-            Your passkey may already be saved on this device. Sign in with it first, so you don’t end up with two
-            accounts. If no passkey is found, you can create the account again from there.
-          </Text>
-        </View>
-      ) : null}
-      {webFirst ? (
-        <View style={[styles.note, { borderColor: color.hairline, backgroundColor: color.muted }]}>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-            {webOnly
-              ? "Trying again here won’t change this. The web app at senryo.xyz uses the same account."
-              : "This is a setup problem on our side, not something you did. The web app at senryo.xyz uses the same account meanwhile."}
-          </Text>
-        </View>
-      ) : null}
+    <AuthCard tone="down" title={copy.title} body={orphanRisk ? `${copy.body} ${ORPHAN_NOTE}` : copy.body}>
       {orphanRisk ? (
         <Button label="I already have an account" onPress={onSignIn} />
       ) : webFirst ? (
@@ -65,14 +51,9 @@ export function AuthFailureCard({
         <Button label="Try again" onPress={onRetry} />
       )}
       {kind === "no-credentials" && onCreate ? (
-        <Button label="Create account" variant="outline" onPress={onCreate} />
+        <Button label="Create account" variant="ghost" size="sm" onPress={onCreate} />
       ) : null}
-      {webFirst && !webOnly ? <Button label="Try again" variant="outline" onPress={onRetry} /> : null}
-      {onBack ? <Button label="Back" variant="ghost" onPress={onBack} /> : null}
+      {webFirst && !webOnly ? <Button label="Try again" variant="ghost" size="sm" onPress={onRetry} /> : null}
     </AuthCard>
   );
 }
-
-const styles = StyleSheet.create({
-  note: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md },
-});

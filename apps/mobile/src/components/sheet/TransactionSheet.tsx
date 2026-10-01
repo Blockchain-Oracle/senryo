@@ -11,7 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
-import { EASE, ELEVATION, RADIUS, SIZE, SPACE, SPRING, TIMING, useTheme } from "~/theme";
+import { EASE, EASE_SHEET, ELEVATION, RADIUS, SHEET_SHAPE, SIZE, SPACE, SPRING, TIMING, useTheme } from "~/theme";
 import { SHEET } from "./constants";
 
 const CloseContext = createContext<(after?: () => void) => void>(() => undefined);
@@ -23,9 +23,10 @@ export function useTransactionClose(): (after?: () => void) => void {
 
 /**
  * The full-height transaction sheet (sheet grammar §5.5, C39/M13; Codex S1b.7 consult #1 — an in-house Reanimated
- * reconstruction, Gorhom deferred to J2): an opaque panel that rises over its dimmed parent on the tall-detail spring
- * (1/240/30, M07/M08/M13) to just below the status bar, with a handle and fixed identity / entry / action zones laid
- * out by its children. Only the handle and identity zone drag (the keypad and the ruler keep their gestures); a drag past a
+ * reconstruction, Gorhom deferred to J2): an opaque panel in the page's own ground (Fomo F37: the ticket is the dark
+ * page colour, not a lighter card) with 38 pt top corners, that rises over its dimmed parent on the iOS drawer curve
+ * (M07/M08/M13) to just below the status bar, with a handle and fixed identity / entry / action zones laid out by its
+ * children. Only the handle and identity zone drag (the keypad and the ruler keep their gestures); a drag past a
  * quarter of the height or a flick dismisses, as do the visible close button beside the handle (review R06: the sheet
  * is nearly full height, so the scrim and the drag are not discoverable enough on their own), the scrim, Android back
  * and `useTransactionClose`. Reduce Motion: a ~100 ms crossfade. `locked` holds it open while a transaction is in
@@ -57,8 +58,8 @@ export function TransactionSheet({
   const closing = useRef(false);
 
   useEffect(() => {
-    scrim.value = withTiming(1, { duration: reduce ? TIMING.reducedMotion : TIMING.tallDetail, easing: EASE });
-    if (!reduce) drag.value = withSpring(0, SPRING.tallDetail);
+    scrim.value = withTiming(1, { duration: reduce ? TIMING.reducedMotion : TIMING.selection, easing: EASE });
+    if (!reduce) drag.value = withTiming(0, { duration: TIMING.sheetEnter, easing: EASE_SHEET });
   }, [drag, scrim, reduce]);
 
   const finish = useCallback(
@@ -73,7 +74,7 @@ export function TransactionSheet({
     (after?: () => void) => {
       if (closing.current) return;
       closing.current = true;
-      const out = { duration: reduce ? TIMING.reducedMotion : TIMING.pagePush, easing: EASE };
+      const out = { duration: reduce ? TIMING.reducedMotion : TIMING.sheetExit, easing: EASE };
       scrim.value = withTiming(0, out);
       drag.value = withTiming(reduce ? 0 : height, out, (done) => {
         if (done) scheduleOnRN(finish, after);
@@ -98,7 +99,7 @@ export function TransactionSheet({
     })
     .onEnd((e) => {
       if (drag.value > height * SHEET.closeFraction || e.velocityY > SHEET.closeVelocity) scheduleOnRN(close);
-      else drag.value = withSpring(0, SPRING.tallDetail);
+      else drag.value = withSpring(0, { ...SPRING.sheetRelease, velocity: e.velocityY });
     });
 
   const panel = useAnimatedStyle(() => ({
@@ -127,7 +128,7 @@ export function TransactionSheet({
           style={[
             styles.panel,
             ELEVATION.sheet,
-            { top, backgroundColor: color.popover, paddingBottom: insets.bottom },
+            { top, backgroundColor: color.ground, paddingBottom: insets.bottom },
             panel,
           ]}
         >
@@ -152,7 +153,7 @@ export function TransactionSheet({
                   accessibilityElementsHidden
                   importantForAccessibility="no-hide-descendants"
                 >
-                  <View style={[styles.handle, { backgroundColor: color.sheetHandle }]} />
+                  <View style={[styles.handle, { backgroundColor: color.border }]} />
                 </View>
                 <View style={styles.close} />
               </View>
@@ -173,8 +174,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopLeftRadius: RADIUS.lg,
-    borderTopRightRadius: RADIUS.lg,
+    borderTopLeftRadius: SHEET_SHAPE.radius,
+    borderTopRightRadius: SHEET_SHAPE.radius,
     overflow: "hidden",
   },
   handleZone: { flexDirection: "row", alignItems: "center", paddingHorizontal: SPACE.sm },

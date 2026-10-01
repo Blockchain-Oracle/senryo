@@ -45,22 +45,22 @@ export default function HelpScreen() {
     <Screen>
       <Stack.Screen options={{ title: "About & sources" }} />
       <Panel style={styles.panel}>
-        <SectionLabel>SENRYO · {network.modeLabel.toUpperCase()}</SectionLabel>
-        <Text style={[TYPE.body, { color: color.inkMuted }]}>
+        <SectionLabel>Senryo · {network.modeLabel}</SectionLabel>
+        <Text style={[TYPE.body, { color: color.text2 }]}>
           Cash-settled gold and silver perps on Monad. You never own the metal; leverage multiplies gains and losses.
         </Text>
       </Panel>
       {SOURCES.map((s) => (
         <Panel key={s.title} style={styles.panel}>
-          <SectionLabel>{s.title.toUpperCase()}</SectionLabel>
+          <SectionLabel>{s.title}</SectionLabel>
           <MarkedLine id={s.provider.id} label={s.provider.name} value={s.provider.role} variant={s.provider.variant} />
-          <Text style={[TYPE.body, { color: color.ink }]}>{s.body}</Text>
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{s.body}</Text>
           {"link" in s ? (
             <View>
               <Text
                 accessibilityRole="link"
                 onPress={() => void Linking.openURL(s.link.url)}
-                style={[TYPE.bodyStrong, { color: color.primary }]}
+                style={[TYPE.bodyStrong, { color: color.link }]}
               >
                 {s.link.label}
               </Text>
@@ -69,11 +69,11 @@ export default function HelpScreen() {
         </Panel>
       ))}
       <Panel style={styles.panel}>
-        <SectionLabel>LOGOS</SectionLabel>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>{MARKS_CREDIT}</Text>
+        <SectionLabel>Logos</SectionLabel>
+        <Text style={[TYPE.meta, { color: color.text3 }]}>{MARKS_CREDIT}</Text>
       </Panel>
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({ panel: { padding: SPACE.md, gap: SPACE.xs } });
+const styles = StyleSheet.create({ panel: { padding: SPACE.lg, gap: SPACE.sm } });

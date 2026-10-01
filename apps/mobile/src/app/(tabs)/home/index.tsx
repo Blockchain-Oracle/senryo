@@ -7,7 +7,9 @@ import { EquityChart } from "~/components/charts/EquityChart";
 import { Segmented } from "~/components/kit/Segmented";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
+import { AlertsButton } from "~/components/shell/Utilities";
 import { AccountStrip } from "~/features/auth/AccountStrip";
+import { SessionChip } from "~/features/auth/SessionChip";
 import { Availability } from "~/features/home/Availability";
 import { GuestHome } from "~/features/home/GuestHome";
 import { CompactBalance, ExpandedBalance, HomeSeal } from "~/features/home/HomeHeader";
@@ -48,9 +50,10 @@ export default function Home() {
   }, [open]);
   return (
     <CollapsingScreen
-      tab="home"
       left={<HomeSeal />}
       compact={<CompactBalance />}
+      utilities={<AlertsButton />}
+      status={<SessionChip />}
       expanded={readOnly ? null : <ExpandedBalance />}
     >
       {readOnly ? <PrelaunchMainnet surface="portfolio" /> : <HomeBody />}

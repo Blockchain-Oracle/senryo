@@ -15,7 +15,7 @@ import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 /**
  * Home's collapsing header pieces (C16/C19, FT069/FT073; Codex S1b.7 consult #9). The bar keeps the 千 seal and — once
  * collapsed — the compact balance; the expanded block is the "Risk-adjusted balance" with its sourced 24 h change
- * ("24h —" when unknown) and the primary Add money pill (Fomo's Deposit, F09). Unknown balances are skeletons, never
+ * ("24h —" when unknown) and the primary Add money button (Fomo's Deposit, F09: a rounded rectangle). Unknown balances are skeletons, never
  * $0.00 (D-020).
  */
 const SEAL = ids.brand("senryo");

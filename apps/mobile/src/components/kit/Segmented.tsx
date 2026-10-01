@@ -1,10 +1,13 @@
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, EASE, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
 /**
- * RN port of 21st Segmented Control #23552 (asset filter, Long/Short, timeframe): a `tick` on every change. Living
- * Lacquer (S1b.7): pill track and cells, sentence-case labels, the raised cell marks the selection.
+ * Segmented control (asset filter, Long/Short, timeframe; Fomo F37's keypad/chart switch, Codex consult 1 Oct): a
+ * 44 pt borderless track with a raised plate that slides to the selection in 170 ms while the labels change colour.
+ * A `tick` on every change.
  */
 export function Segmented<T extends string>({
   options,
@@ -18,16 +21,34 @@ export function Segmented<T extends string>({
   onChange: (next: T) => void;
   /** Group name for VoiceOver ("Asset class"). */
   label: string;
-  /** Colour of the selected cell's text (Long green / Short red); defaults to the ground. */
+  /** Colour of the selected cell's text (Long green / Short red); defaults to the ink. */
   tone?: (value: T) => string;
 }) {
   const { color } = useTheme();
+  const index = Math.max(
+    0,
+    options.findIndex((o) => o.value === value),
+  );
+  const cell = useSharedValue(0);
+  const at = useSharedValue(index);
+  useEffect(() => {
+    at.value = withTiming(index, { duration: TIMING.selection, easing: EASE });
+  }, [index, at]);
+  const plate = useAnimatedStyle(() => ({
+    width: cell.value,
+    transform: [{ translateX: at.value * (cell.value + SPACE.xs) }],
+  }));
   return (
     <View
       accessibilityRole="tablist"
       accessibilityLabel={label}
-      style={[styles.track, { backgroundColor: color.muted, borderColor: color.hairline }]}
+      onLayout={(e) => {
+        const inner = e.nativeEvent.layout.width - 2 * SPACE.xs - (options.length - 1) * SPACE.xs;
+        cell.value = inner / options.length;
+      }}
+      style={[styles.track, { backgroundColor: color.muted }]}
     >
+      <Animated.View style={[styles.plate, { backgroundColor: color.rowPressed }, plate]} />
       {options.map((o) => {
         const selected = o.value === value;
         return (
@@ -40,9 +61,9 @@ export function Segmented<T extends string>({
               fire("tick");
               onChange(o.value);
             }}
-            style={[styles.cell, selected ? { backgroundColor: color.raised2 } : null]}
+            style={styles.cell}
           >
-            <Text style={[TYPE.chipLabel, { color: selected ? (tone?.(o.value) ?? color.ink) : color.text3 }]}>
+            <Text style={[TYPE.chipCategory, { color: selected ? (tone?.(o.value) ?? color.ink) : color.text3 }]}>
               {o.label}
             </Text>
           </Pressable>
@@ -57,14 +78,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: SPACE.xs,
     gap: SPACE.xs,
-    borderRadius: RADIUS.pill,
-    borderWidth: HAIRLINE_PX,
+    borderRadius: BUTTON.radius.md,
+    minHeight: SIZE.touch,
   },
-  cell: {
-    flex: 1,
-    minHeight: SIZE.chipHeight,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: RADIUS.pill,
+  plate: {
+    position: "absolute",
+    top: SPACE.xs,
+    bottom: SPACE.xs,
+    left: SPACE.xs,
+    borderRadius: RADIUS.xs,
   },
+  cell: { flex: 1, alignItems: "center", justifyContent: "center", borderRadius: RADIUS.xs },
 });

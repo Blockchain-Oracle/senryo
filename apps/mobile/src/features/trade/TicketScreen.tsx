@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { SurfaceLevel } from "~/components/kit/Surface";
 import { EmptyState, ErrorState, LoadingState } from "~/components/kit/states";
 import { TransactionSheet, useTransactionClose } from "~/components/sheet/TransactionSheet";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
@@ -28,6 +29,8 @@ import { type Side, useTicket } from "./useTicket";
 
 const PRICE_UPDATED = "Price updated. Review and hold again.";
 const UPDATES_PAUSED = "Live updates paused. Review the latest oracle price.";
+/** The ticket and its children are sheets: groups and quiet buttons inside take the fill one step above a sheet. */
+const SHEET_LEVEL = 1;
 
 /**
  * J4, the order ticket (C39–C43, M14, FT102–FT111): a full-height transaction sheet over market detail, opened on a
@@ -40,23 +43,26 @@ export function TicketScreen({ marketId, side }: { marketId: string; side: Side 
   useHideDockWhileFocused("ticket");
   const meta = engineMarket(marketId);
   const readOnly = useReadOnlyNetwork();
-  if (readOnly || !meta) {
-    return (
-      <TransactionSheet onClose={() => router.back()} closeLabel="Close the order ticket">
-        <View style={styles.pad}>
-          {readOnly ? (
-            <PrelaunchMainnet surface="trade" />
-          ) : (
-            <EmptyState
-              why={`${marketId} isn't tradable here yet`}
-              detail="This market isn't listed on this network."
-            />
-          )}
-        </View>
-      </TransactionSheet>
-    );
-  }
-  return <LoadedTicket marketId={meta.id} symbol={meta.symbol} side={side} />;
+  return (
+    <SurfaceLevel.Provider value={SHEET_LEVEL}>
+      {readOnly || !meta ? (
+        <TransactionSheet onClose={() => router.back()} closeLabel="Close the order ticket">
+          <View style={styles.pad}>
+            {readOnly ? (
+              <PrelaunchMainnet surface="trade" />
+            ) : (
+              <EmptyState
+                why={`${marketId} isn't tradable here yet`}
+                detail="This market isn't listed on this network."
+              />
+            )}
+          </View>
+        </TransactionSheet>
+      ) : (
+        <LoadedTicket marketId={meta.id} symbol={meta.symbol} side={side} />
+      )}
+    </SurfaceLevel.Provider>
+  );
 }
 
 function LoadedTicket({ marketId, symbol, side }: { marketId: number; symbol: string; side: Side | undefined }) {
@@ -134,7 +140,8 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
         symbol: line.symbol,
         side: t.side,
         leverage: t.leverage,
-        marginUsd6: t.preview.marginUsd6,
+        marginUsd6: t.amountUsd6,
+        lockedUsd6: t.preview.marginUsd6,
         notionalUsd6: t.notionalUsd6,
         execPrice18: t.preview.execPrice18,
         feeUsd6: t.preview.feeUsd6,

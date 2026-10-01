@@ -5,7 +5,7 @@ import { Linking, Platform, StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
-import { Panel, Rule, SectionLabel } from "~/components/kit/Surface";
+import { Panel, SectionLabel } from "~/components/kit/Surface";
 import { EmptyState } from "~/components/kit/states";
 import { PhraseGrid } from "~/features/auth/PhraseGrid";
 import { useAccount } from "~/lib/account/provider";
@@ -19,7 +19,8 @@ import { SPACE, TYPE, useTheme } from "~/theme";
 const SYNC = Platform.OS === "ios" ? "iCloud Keychain" : "Google Password Manager";
 /**
  * F07 recovery (D-034): passkey sync first; a backup passkey (web-first — the vault needs WebCrypto and a file, and S6.12
- * adds the server copy); the 24-word export only under Advanced, behind a step-up, screenshot-blocked.
+ * adds the server copy); the 24-word export only under Advanced, behind a step-up, screenshot-blocked. Each section is
+ * a quiet label over one borderless filled group.
  */
 export default function RecoveryScreen() {
   const { color } = useTheme();
@@ -55,20 +56,20 @@ export default function RecoveryScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: "Recovery" }} />
-      <SectionLabel>PASSKEY SYNC</SectionLabel>
+      <SectionLabel>Passkey sync</SectionLabel>
       <Panel style={styles.panel}>
         <View style={styles.row}>
           <PasskeyGlyph color={color.ink} />
-          <Text style={[TYPE.body, { color: color.ink }]}>Your passkey is your account.</Text>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>Your passkey is your account.</Text>
         </View>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
           {SYNC} (or 1Password) syncs it to your other devices — open Senryo there, tap "I already have an account", and
           the same address appears. Nothing to write down.
         </Text>
       </Panel>
-      <SectionLabel>BACKUP PASSKEY</SectionLabel>
+      <SectionLabel>Backup passkey</SectionLabel>
       <Panel style={styles.panel}>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
           Moving between Apple and Google, or using a provider that doesn't sync? Add a second passkey and keep the
           encrypted recovery file it produces. Set it up on senryo.xyz — same account.
         </Text>
@@ -78,27 +79,23 @@ export default function RecoveryScreen() {
           onPress={() => void Linking.openURL(`${WEB_ORIGIN}/account/`)}
         />
       </Panel>
-      <SectionLabel>ADVANCED · EXPORT TO ANOTHER WALLET</SectionLabel>
-      <Panel style={styles.panel}>
-        {phrase ? (
-          <PhraseGrid phrase={phrase} onHide={hide} />
-        ) : (
-          <View style={styles.gap}>
-            <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-              The 24 words behind your passkey import into any standard wallet at the same address. Only for moving out
-              — Senryo never needs them.
-            </Text>
-            <Rule />
-            <Button label="Show recovery phrase" variant="outline" disabled={!client} onPress={() => void reveal()} />
-          </View>
-        )}
-      </Panel>
+      <SectionLabel>Advanced · export to another wallet</SectionLabel>
+      {phrase ? (
+        <PhraseGrid phrase={phrase} onHide={hide} />
+      ) : (
+        <Panel style={styles.panel}>
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
+            The 24 words behind your passkey import into any standard wallet at the same address. Only for moving out —
+            Senryo never needs them.
+          </Text>
+          <Button label="Show recovery phrase" variant="outline" disabled={!client} onPress={() => void reveal()} />
+        </Panel>
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.sm },
-  gap: { gap: SPACE.sm },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
 });

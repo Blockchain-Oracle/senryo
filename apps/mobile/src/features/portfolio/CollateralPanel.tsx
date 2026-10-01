@@ -49,8 +49,8 @@ export function CollateralPanel({ snapshot }: { snapshot: AccountSnapshot }) {
     await trace.run(sender, swapCollateralRequest(env.chainId, q, positionCount(snapshot.positionBitmap)));
   };
   return (
-    <Panel style={{ padding: SPACE.md, gap: SPACE.sm }}>
-      <SectionLabel>COLLATERAL</SectionLabel>
+    <Panel style={{ padding: SPACE.lg, gap: SPACE.md }}>
+      <SectionLabel>Collateral</SectionLabel>
       <MarkedLine
         id={collateralId(env.chainId, "AUSD")}
         label="AUSD"
@@ -70,15 +70,17 @@ export function CollateralPanel({ snapshot }: { snapshot: AccountSnapshot }) {
         onChange={(v) => setShareBps(BigInt(v))}
         label="How much to swap"
       />
-      <KeyValue label="YOU SWAP" value={usd(amountIn)} />
-      <KeyValue label="YOU RECEIVE ≈" value={q ? usd(q.amountOut) : "—"} />
-      <KeyValue label="AT LEAST" value={q ? usd(q.minOut) : "—"} />
+      <KeyValue label="You swap" value={usd(amountIn)} />
+      <KeyValue label="You receive ≈" value={q ? usd(q.amountOut) : "—"} />
+      <KeyValue label="At least" value={q ? usd(q.minOut) : "—"} />
       <MarkedLine id={ids.provider("uniswap")} label="Routed through Uniswap v4" variant="symbol" />
       {quote.status === "failed" ? (
-        <Text style={[TYPE.caption, { color: color.down }]}>No quote right now — the pool may be busy; try again.</Text>
+        <Text style={[TYPE.rowDetail, { color: color.down }]}>
+          No quote right now — the pool may be busy; try again.
+        </Text>
       ) : null}
       {trace.events.some((e) => e.stage === "finalized") ? (
-        <Text style={[TYPE.caption, { color: color.up }]}>Swapped · your buckets update at finalization.</Text>
+        <Text style={[TYPE.rowDetail, { color: color.up }]}>Swapped · your buckets update at finalization.</Text>
       ) : null}
       <Button
         label={busy ? "Swapping…" : "Swap in account"}

@@ -6,18 +6,19 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
+import { SurfaceLevel } from "~/components/kit/Surface";
 import { fire } from "~/feedback/fire";
-import { EASE, ELEVATION, RADIUS, SIZE, SPACE, SPRING, TIMING, TYPE, useTheme } from "~/theme";
+import { EASE, EASE_SHEET, ELEVATION, RADIUS, SHEET_SHAPE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
 /**
  * A nested child over a transaction sheet (sheet grammar §5.5: "nested child — explicit back, keyboard-aware"; C42,
- * F43–F45, M15): the parent stays mounted and dimmed behind it with every value kept (FT112), the child rises on the
- * compact-selector spring (1/260/30) to its content height and lifts with the native keyboard. It never grows past
+ * F43–F45, M15): the parent stays mounted and dimmed behind it with every value kept (FT112), the child — a raised
+ * panel with 38 pt top corners (F44) — rises on the iOS drawer curve to its content height and lifts with the native
+ * keyboard. It never grows past
  * the space between the status bar and the keyboard: beyond that its body scrolls, so a long list of levels, large
  * text or a small phone can't push the title or the action off screen (review R08). Back, the scrim and Android back
  * all close it; Reduce Motion crossfades. Render it inside the screen that owns the parent sheet.
@@ -49,12 +50,12 @@ export function ChildSheet({
       setMounted(true);
       progress.value = reduce
         ? withTiming(1, { duration: TIMING.reducedMotion })
-        : withSpring(1, SPRING.compactSelector);
+        : withTiming(1, { duration: TIMING.sheetEnter, easing: EASE_SHEET });
       return;
     }
     progress.value = withTiming(
       0,
-      { duration: reduce ? TIMING.reducedMotion : TIMING.selection, easing: EASE },
+      { duration: reduce ? TIMING.reducedMotion : TIMING.sheetExit, easing: EASE },
       (done) => {
         if (done) scheduleOnRN(setMounted, false);
       },
@@ -101,10 +102,10 @@ export function ChildSheet({
         onLayout={(e) => {
           height.value = e.nativeEvent.layout.height;
         }}
-        style={[styles.panel, ELEVATION.sheet, { backgroundColor: color.popover }, panel, bound]}
+        style={[styles.panel, ELEVATION.sheet, { backgroundColor: color.card }, panel, bound]}
       >
         <View style={styles.handleZone} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <View style={[styles.handle, { backgroundColor: color.sheetHandle }]} />
+          <View style={[styles.handle, { backgroundColor: color.border }]} />
         </View>
         <View style={styles.head}>
           <Pressable
@@ -120,10 +121,10 @@ export function ChildSheet({
             <ChevronLeft size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.ink} />
           </Pressable>
           <View style={styles.titles}>
-            <Text accessibilityRole="header" style={[TYPE.sectionTitle, styles.center, { color: color.ink }]}>
+            <Text accessibilityRole="header" style={[TYPE.sheetHeading, styles.center, { color: color.ink }]}>
               {title}
             </Text>
-            {subtitle ? <Text style={[TYPE.meta, styles.center, { color: color.text2 }]}>{subtitle}</Text> : null}
+            {subtitle ? <Text style={[TYPE.rowDetail, styles.center, { color: color.text2 }]}>{subtitle}</Text> : null}
           </View>
           <View style={styles.back} />
         </View>
@@ -134,7 +135,7 @@ export function ChildSheet({
             showsVerticalScrollIndicator={false}
             bounces={false}
           >
-            {children}
+            <SurfaceLevel.Provider value={1}>{children}</SurfaceLevel.Provider>
           </ScrollView>
         </Animated.View>
       </Animated.View>
@@ -148,10 +149,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopLeftRadius: RADIUS.lg,
-    borderTopRightRadius: RADIUS.lg,
+    borderTopLeftRadius: SHEET_SHAPE.radius,
+    borderTopRightRadius: SHEET_SHAPE.radius,
   },
-  handleZone: { alignItems: "center", paddingTop: SPACE.sm, paddingBottom: SPACE.xs },
+  handleZone: { alignItems: "center", paddingTop: SHEET_SHAPE.handleTop, paddingBottom: SPACE.xs },
   handle: { width: SIZE.handleWidth, height: SIZE.handleHeight, borderRadius: RADIUS.pill },
   head: { flexDirection: "row", alignItems: "center", paddingHorizontal: SPACE.md, gap: SPACE.sm },
   back: { width: SIZE.touch, height: SIZE.touch, alignItems: "center", justifyContent: "center" },

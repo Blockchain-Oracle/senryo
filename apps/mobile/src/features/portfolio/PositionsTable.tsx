@@ -12,55 +12,48 @@ import { fire } from "~/feedback/fire";
 import { positionRoute } from "~/lib/constants/routes";
 import { pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const LIQ_DECIMALS = 1;
+const HEADS = ["Market", "Size", "Liq.", "P&L"] as const;
 
 /**
- * D2 positions table: MKT · SIZE · LIQ · PNL. Each row prices itself from its market's live oracle view through the
+ * The positions table — Market · Size · Liq. · P&L — in one borderless filled group: a quiet header line, then rows
+ * separated by their own height (no dividers). Each row prices itself from its market's live oracle view through the
  * core preview (PnL at the conservative exit, liquidation price with the account's other positions held fixed).
  */
 export function PositionsTable({ positions, account }: { positions: PositionView[]; account: AccountSnapshot }) {
   const { color } = useTheme();
   return (
     <Panel>
-      <View style={[styles.row, styles.head, { borderBottomColor: color.hairline }]}>
-        {["MKT", "SIZE", "LIQ", "PNL"].map((h, i) => (
-          <Text key={h} style={[TYPE.label, i === 0 ? styles.first : styles.num, { color: color.inkMuted }]}>
+      <View style={[styles.row, styles.head]}>
+        {HEADS.map((h, i) => (
+          <Text key={h} style={[TYPE.meta, i === 0 ? styles.first : styles.num, { color: color.text3 }]}>
             {h}
           </Text>
         ))}
       </View>
-      {positions.map((p, i) => (
-        <PositionRow key={p.marketId} position={p} account={account} first={i === 0} />
+      {positions.map((p) => (
+        <PositionRow key={p.marketId} position={p} account={account} />
       ))}
     </Panel>
   );
 }
 
-function PositionRow({
-  position,
-  account,
-  first,
-}: {
-  position: PositionView;
-  account: AccountSnapshot;
-  first: boolean;
-}) {
+function PositionRow({ position, account }: { position: PositionView; account: AccountSnapshot }) {
   const network = useNetwork();
   const { color } = useTheme();
   const market = useMarket(position.marketId);
   const symbol = ENGINE_MARKETS.find((m) => m.id === position.marketId)?.symbol ?? `#${position.marketId}`;
-  const border = first ? null : { borderTopWidth: HAIRLINE_PX, borderTopColor: color.hairline };
   const sideColor = position.isLong ? color.up : color.down;
-  const side = position.isLong ? "LONG" : "SHORT";
+  const side = position.isLong ? "Long" : "Short";
   const mark = <EntityMark id={ids.engineMarket(network.chainId, position.marketId)} size={SIZE.markCell} decorative />;
   if (market.status === "unknown" || market.status === "failed") {
     return (
-      <View style={[styles.row, border]}>
+      <View style={styles.row}>
         <View style={[styles.first, styles.market]}>
           {mark}
-          <Text style={[TYPE.numMd, { color: color.ink }]}>{symbol}-PERP</Text>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>{symbol}-PERP</Text>
         </View>
         <Skeleton width="45%" />
       </View>
@@ -78,22 +71,24 @@ function PositionRow({
       }}
       accessibilityRole="button"
       accessibilityLabel={`${m.name} ${side.toLowerCase()}, size ${usd(size, 0)}, ${health.upnlUsd6 < 0n ? "loss" : "profit"} ${signedUsd(health.upnlUsd6)}${away === null ? "" : `, liquidation ${pct(away < 0n ? 0n : away)} away`}`}
-      style={({ pressed }) => [styles.row, border, pressed ? { backgroundColor: color.muted } : null]}
+      style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.rowPressed } : null]}
     >
       <View style={[styles.first, styles.market]}>
         {mark}
         <View style={styles.marketText}>
-          <Text style={[TYPE.numMd, { color: color.ink }]}>{symbol}-PERP</Text>
-          <Text style={[TYPE.numSm, { color: sideColor }]}>{side}</Text>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
+            {symbol}-PERP
+          </Text>
+          <Text style={[TYPE.rowChange, { color: sideColor }]}>{side}</Text>
         </View>
       </View>
-      <Text style={[TYPE.numSm, styles.num, { color: color.ink }]}>{usd(size, 0)}</Text>
-      <Text style={[TYPE.numSm, styles.num, { color: away !== null && away < 0n ? color.down : color.inkMuted }]}>
+      <Text style={[TYPE.rowChange, styles.num, { color: color.ink }]}>{usd(size, 0)}</Text>
+      <Text style={[TYPE.rowChange, styles.num, { color: away !== null && away < 0n ? color.down : color.text3 }]}>
         {health.liqPrice18 === null
           ? "—"
           : price18(health.liqPrice18, Math.max(LIQ_DECIMALS, priceDecimalsOf(position.marketId) - 1))}
       </Text>
-      <Text style={[TYPE.numSm, styles.num, { color: health.upnlUsd6 < 0n ? color.down : color.up }]}>
+      <Text style={[TYPE.rowChange, styles.num, { color: health.upnlUsd6 < 0n ? color.down : color.up }]}>
         {signedUsd(health.upnlUsd6)}
       </Text>
     </Pressable>
@@ -101,8 +96,8 @@ function PositionRow({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", paddingHorizontal: SPACE.md, minHeight: SIZE.touch + SPACE.lg },
-  head: { minHeight: SIZE.touch, borderBottomWidth: HAIRLINE_PX },
+  row: { flexDirection: "row", alignItems: "center", paddingHorizontal: SPACE.lg, minHeight: SIZE.rowMinHeight },
+  head: { minHeight: SIZE.touch },
   first: { flex: 1.4, gap: SPACE.xxs },
   market: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   marketText: { gap: SPACE.xxs, flexShrink: 1 },

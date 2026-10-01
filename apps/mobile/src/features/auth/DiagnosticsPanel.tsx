@@ -6,7 +6,7 @@ import { type MeasureEvent, ttftMs } from "@senryo/account";
 import { useSyncExternalStore } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { Panel, Rule } from "~/components/kit/Surface";
+import { Panel } from "~/components/kit/Surface";
 import { measureStore } from "~/lib/account/measure";
 import { MS_PER_SECOND } from "~/lib/constants/time";
 import { SPACE, TYPE, useTheme } from "~/theme";
@@ -28,19 +28,18 @@ export function DiagnosticsPanel() {
   return (
     <Panel style={styles.panel}>
       <View style={styles.row}>
-        <Text style={[TYPE.label, { color: color.ink }]}>TIME TO FIRST TX</Text>
-        <Text style={[TYPE.numSm, { color: color.ink }]}>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Time to first transaction</Text>
+        <Text style={[TYPE.rowPrice, { color: color.ink }]}>
           {ttft === undefined ? "—" : `${seconds(ttft)} · ${stop?.taps ?? 0} taps`}
         </Text>
       </View>
-      <Rule />
       {flows.length === 0 ? (
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>No passkey ceremonies recorded on this phone yet.</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>No passkey ceremonies recorded on this phone yet.</Text>
       ) : (
         flows.map((f) => (
           <View key={`${f.flow}-${f.at}`} style={styles.row} accessible>
-            <Text style={[TYPE.numSm, { color: color.ink }]}>{f.flow.toUpperCase()}</Text>
-            <Text style={[TYPE.numSm, { color: f.outcome === "ok" ? color.up : color.down }]}>
+            <Text style={[TYPE.row, { color: color.ink }]}>{f.flow}</Text>
+            <Text style={[TYPE.rowChange, { color: f.outcome === "ok" ? color.up : color.down }]}>
               {f.outcome === "ok" ? `${f.prompts} prompt${f.prompts === 1 ? "" : "s"}` : (f.failure ?? f.outcome)} ·{" "}
               {seconds(f.ms)}
             </Text>
@@ -60,6 +59,6 @@ export function DiagnosticsPanel() {
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.sm },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: SPACE.sm },
 });

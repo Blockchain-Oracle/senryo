@@ -52,13 +52,21 @@ export const TYPE = {
   row: { size: 16, lineHeight: 20, tracking: 0, weight: 500, font: "sans", numeric: false },
   rowStrong: { size: 16, lineHeight: 20, tracking: 0, weight: 600, font: "sans", numeric: false },
   rowAmount: { size: 16, lineHeight: 20, tracking: 0, weight: 600, font: "sans", numeric: true },
+  /** A market or selector row's first line and its price (Fomo F09/F12: symbol and price carry equal weight). */
+  rowTitle: { size: 17, lineHeight: 22, tracking: 0, weight: 600, font: "sans", numeric: false },
+  rowPrice: { size: 17, lineHeight: 22, tracking: 0, weight: 600, font: "sans", numeric: true },
+  rowChange: { size: 14, lineHeight: 18, tracking: 0, weight: 500, font: "sans", numeric: true },
+  /** The second line of a rich row (Fomo F20: "Receive USDC from a crypto wallet"). */
+  rowDetail: { size: 14, lineHeight: 18, tracking: 0, weight: 400, font: "sans", numeric: false },
   meta: { size: 12, lineHeight: 16, tracking: 0, weight: 400, font: "sans", numeric: false },
   moneyMeta: { size: 12, lineHeight: 16, tracking: 0, weight: 500, font: "sans", numeric: true },
-  buttonLabel: { size: 16, lineHeight: 20, tracking: 0, weight: 600, font: "sans", numeric: false },
-  buttonCompact: { size: 14, lineHeight: 20, tracking: 0, weight: 600, font: "sans", numeric: false },
+  buttonLabel: { size: 17, lineHeight: 22, tracking: 0, weight: 600, font: "sans", numeric: false },
+  buttonCompact: { size: 15, lineHeight: 20, tracking: 0, weight: 600, font: "sans", numeric: false },
   tabLabel: { size: 12, lineHeight: 16, tracking: 0, weight: 600, font: "sans", numeric: false },
   chipLabel: { size: 12, lineHeight: 16, tracking: 0, weight: 500, font: "sans", numeric: false },
-  modeLabel: { size: 12, lineHeight: 16, tracking: 0, weight: 600, font: "sans", numeric: false },
+  modeLabel: { size: 13, lineHeight: 18, tracking: 0, weight: 600, font: "sans", numeric: false },
+  chipCategory: { size: 14, lineHeight: 18, tracking: 0, weight: 600, font: "sans", numeric: false },
+  sheetHeading: { size: 22, lineHeight: 28, tracking: 0, weight: 600, font: "sans", numeric: false },
   fanLabel: { size: 24, lineHeight: 28, tracking: 0, weight: 600, font: "sans", numeric: false },
 } as const satisfies Record<string, TypeSpec>;
 export type TypeRole = keyof typeof TYPE;
@@ -91,6 +99,8 @@ export const HAIRLINE_PX = 1;
 
 /** Shadows: only the dock and sheets are elevated; raised content surfaces carry none (direction §3). */
 export const ELEVATION = {
+  /** The filled primary button sits a hair above the page (Fomo F09's Deposit). */
+  button: { x: 0, y: 2, blur: 4, spread: 0, color: "#00000029" },
   dock: { x: 0, y: 8, blur: 24, spread: 0, color: "#00000033" },
   sheet: { x: 0, y: -4, blur: 16, spread: 0, color: "#0000001F" },
 } as const;
@@ -112,6 +122,10 @@ export const SPRING = {
   fan: { mass: 1, stiffness: 420, damping: 30, overshoot: false },
   dockActive: { mass: 1, stiffness: 500, damping: 36, overshoot: false },
   rulerSnap: { mass: 1, stiffness: 500, damping: 40, overshoot: false },
+  /** A released drag returns to rest, carrying the finger's velocity (sheets; a hair of overshoot reads as weight). */
+  sheetRelease: { mass: 1, stiffness: 320, damping: 32, overshoot: true },
+  /** The dock's active bubble: quick, with the small overshoot that makes it read as liquid (M10). */
+  dockBubble: { mass: 1, stiffness: 420, damping: 30, overshoot: true },
 } as const satisfies Record<string, SpringSpec>;
 
 /** Common spring rest threshold (Reanimated 4 `energyThreshold`). */
@@ -142,7 +156,21 @@ export const MOTION = {
   ambientLoopMs: 8000,
   completionFoilMs: 800,
   reducedMotionMs: 100,
-  pressScale: 0.98,
+  /** Press: down in `pressMs`, back in `pressReleaseMs` — the control answers the finger before anything else moves. */
+  pressScale: 0.97,
+  pressReleaseMs: 160,
+  /**
+   * Sheets rise on the iOS drawer curve (M02/M12: major rise ≈ 0.4–0.5 s, fast start, long settle) and leave faster
+   * than they came. Their content follows in a short stagger.
+   */
+  sheetEnterMs: 480,
+  sheetExitMs: 240,
+  sheetEasing: [0.32, 0.72, 0, 1] as const,
+  staggerMs: 40,
+  staggerItemMs: 320,
+  staggerRise: 10,
+  /** The page under a sheet steps back by this scale (depth, not blur). */
+  sheetParentScale: 0.96,
   fastMs: 100,
   baseMs: 170,
   slowMs: 320,

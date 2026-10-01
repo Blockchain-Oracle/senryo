@@ -23,7 +23,7 @@ export function PrivacyPlate() {
       style={[StyleSheet.absoluteFill, styles.plate, { backgroundColor: color.ground }]}
     >
       <EntityMark id={SEAL} size={SIZE.seal} variant="symbol" decorative ground={color.ground} />
-      <Text style={[TYPE.label, { color: color.inkMuted }]}>SENRYO · LOCKED WHILE AWAY</Text>
+      <Text style={[TYPE.label, { color: color.inkMuted }]}>Senryo · locked while away</Text>
     </View>
   );
 }

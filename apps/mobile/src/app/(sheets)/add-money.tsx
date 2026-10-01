@@ -1,17 +1,17 @@
 import { collateralId, ids, ROUTE_CHAIN_ID } from "@senryo/identity";
 import { type Href, router } from "expo-router";
 import { MarkCluster } from "~/components/identity/MarkCluster";
-import { ListRow } from "~/components/kit/ListRow";
-import { Panel } from "~/components/kit/Surface";
 import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetRoute } from "~/components/sheet/SheetRoute";
+import { SheetRow } from "~/components/sheet/SheetRow";
 import { fundQrRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SIZE } from "~/theme";
 
 /**
- * F20 Add-money hub: always one tap away; also the empty state of Portfolio. Each route shows the real marks of what
- * it moves through: source networks, the Monad network, Aurora for the intent route, the two collateral tokens.
+ * F20 Add-money hub: always one tap away; also the empty state of Portfolio. Each route is a filled row with the real
+ * marks of what it moves through at its trailing edge (F20's "Exchanges and apps"): source networks, the Monad
+ * network, Aurora for the intent route, the two collateral tokens.
  */
 const optionsOn = (chainId: number): { title: string; detail: string; href: Href; marks: readonly string[] }[] => [
   {
@@ -54,18 +54,14 @@ export default function AddMoneySheet() {
 function Options() {
   const close = useSheetClose();
   const network = useNetwork();
-  return (
-    <Panel>
-      {optionsOn(network.chainId).map((o, i) => (
-        <ListRow
-          key={o.title}
-          first={i === 0}
-          leading={<MarkCluster ids={o.marks} size={SIZE.markToken} />}
-          title={o.title}
-          detail={o.detail}
-          onPress={() => close(() => router.push(o.href))}
-        />
-      ))}
-    </Panel>
-  );
+  return optionsOn(network.chainId).map((o, i) => (
+    <SheetRow
+      key={o.title}
+      index={i}
+      title={o.title}
+      detail={o.detail}
+      trailing={<MarkCluster ids={o.marks} size={SIZE.markCell} />}
+      onPress={() => close(() => router.push(o.href))}
+    />
+  ));
 }

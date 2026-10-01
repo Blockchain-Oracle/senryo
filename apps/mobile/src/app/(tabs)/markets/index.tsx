@@ -3,15 +3,15 @@ import { entity, ids, PERPL_MARKETS, perplMarketId } from "@senryo/identity";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { ChipRow } from "~/components/kit/ChipRow";
-import { Panel } from "~/components/kit/Surface";
 import { EmptyState } from "~/components/kit/states";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
+import { AlertsButton } from "~/components/shell/Utilities";
 import { ProtocolBanner } from "~/features/markets/MarketBanners";
 import { EngineMarketRow, type UpcomingMarket, UpcomingMarketRow } from "~/features/markets/MarketRow";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
-import { HAIRLINE_PX, SPACE, TYPE, useTheme } from "~/theme";
+import { SPACE, TYPE, useTheme } from "~/theme";
 
 const FILTERS = [
   { value: "all", label: "All" },
@@ -74,12 +74,17 @@ export default function Markets() {
   const [filter, setFilter] = useState<Filter>("all");
   return (
     <CollapsingScreen
-      tab="markets"
       left={<TabTitle>Markets</TabTitle>}
       sticky={
         readOnly ? undefined : (
           <View style={styles.chips}>
-            <ChipRow options={FILTERS} value={filter} onChange={setFilter} label="Market category" />
+            <ChipRow
+              options={FILTERS}
+              value={filter}
+              onChange={setFilter}
+              label="Market category"
+              leading={<AlertsButton />}
+            />
           </View>
         )
       }
@@ -115,18 +120,18 @@ function MarketsList({ filter, onShowAll }: { filter: Filter; onShowAll: () => v
           action={{ label: "Show all markets", onPress: onShowAll }}
         />
       ) : (
-        <Panel>
-          <View style={[styles.head, { borderBottomColor: color.hairline }]}>
-            <Text style={[TYPE.rowStrong, { color: color.ink }]}>Perps · 24h</Text>
-            <Text style={[TYPE.meta, { color: color.text3 }]}>Oracle: Chainlink</Text>
+        <View>
+          <View style={styles.head}>
+            <Text style={[TYPE.rowDetail, { color: color.text2 }]}>Perps · 24h</Text>
+            <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Oracle: Chainlink</Text>
           </View>
-          {engine.map((m, i) => (
-            <EngineMarketRow key={m.id} marketId={m.id} first={i === 0} />
+          {engine.map((m) => (
+            <EngineMarketRow key={m.id} marketId={m.id} />
           ))}
-          {upcoming.map((m, i) => (
-            <UpcomingMarketRow key={m.symbol} market={m} first={engine.length === 0 && i === 0} />
+          {upcoming.map((m) => (
+            <UpcomingMarketRow key={m.symbol} market={m} />
           ))}
-        </Panel>
+        </View>
       )}
     </>
   );
@@ -138,7 +143,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: SPACE.md,
-    borderBottomWidth: HAIRLINE_PX,
+    paddingBottom: SPACE.sm,
   },
 });

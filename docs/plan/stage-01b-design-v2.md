@@ -183,6 +183,30 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - **Not done in S1b.7:** the new native modules (expo-camera, expo-notifications, sharing) and their dev-client
     build; Gorhom sheets (J2). **Not done in S1b.8:** S1b.8a, mainnet eligibility on the ticket, and every native
     acceptance row (S1b.17) — signed-in flows, VoiceOver, Reduce Motion, Android, motion clips.
+- **Controls, sheets and navigation rebuilt after the user's 1 Oct rejection (D-196).** The user tested the build and
+  rejected the buttons, the way sheets and the auth step appear, and the navigation ("learn from Fomo"). What changed:
+  - **Authority:** the Fomo frames, measured (2 px per pt), plus a Codex consult stored verbatim with the lead's
+    deviations at `docs/design/senryo-v2/controls-consult-2026-10-01.md`. `direction.md` §3–5 carry a superseded banner.
+  - **Surface rule:** no borders on cards, groups, notes, chips or buttons. `components/kit/Surface.tsx` holds
+    `SurfaceLevel`, `Panel` and `useGroupFill`: a surface is one step lighter than its ground, and what sits inside a
+    group or a sheet is one level up. A sweep (agent `surface-sweep`) applied it to every remaining screen and removed
+    the last tracked-uppercase labels.
+  - **Kit:** `Button` (rounded rectangle, top highlight, 0.97 press, quiet disabled plate), `usePressScale`, `ChipRow`
+    (bare labels, filled selection, optional leading control), `Segmented` (sliding plate), `ListRow` (no dividers).
+  - **Sheets:** `Sheet` floats 8 pt from the edges with 38 pt corners and rises on the iOS drawer curve; `SheetHeading`
+    and `SheetRow` (filled rows that stagger in) are the selector anatomy (mode selector, add money). `TransactionSheet`
+    is the page ground with 38 pt top corners; `ChildSheet` matches.
+  - **Auth:** `useAuthFlow` + `AuthFlowSheet`: the ceremony and its outcome are a sheet over the story; inside the
+    account-required sheet they replace the invitation. `AuthCard` is a borderless centred layout.
+  - **Shell:** icon-only dock with the plus beside it (`Dock`, `ActionFan`, `theme/layout.ts` `DOCK`/`FAN`/`dockBottom`);
+    `Utilities.tsx` replaces the utility strip with round bar utilities; the session chip shows only for an account.
+  - **Markets rows** are bare on the page with 48 pt marks (`features/markets/MarketRow.tsx`).
+  - **Found on the way:** the receipt showed the engine's locked margin as "Margin" beside the chosen leverage (P$5 at
+    5× for P$50). It now shows the entered margin and names the lock separately. The Kinpaku art overflowed its card
+    (a bundled image keeps its pixel size unless given one); fixed.
+  - **Checked on the simulator** (iPhone 17, iOS 26.5, dark): welcome, create account with a real passkey, Home, mode
+    selector, fan, add money, Markets, market detail, ticket, risk explainer, receipt, position, Card, Social, You.
+    Not checked: light theme, large text, VoiceOver, Reduce Motion, Android, the auth failure states on device.
 - **S1b.9/S1b.10, first pieces:** every market row has its real identity (Perpl's nine markets, FX as pairs, Nvidia);
   guest Home shows the listed markets and one invitation.
 - **S1b.3 (art), partial.** First-pass masters are in `brand/art/` (koban, chōgin, five FX pair discs, venue chip).
@@ -256,6 +280,13 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
     gold-leaf ramp (S1b.3, B12).
 
 ## Handoff
+- **Simulator loop (D-197):** the simulator can now do everything a phone can. Native build once:
+  `cd apps/mobile && CI=1 npx expo prebuild -p ios --clean && xcodebuild -workspace ios/Senryo.xcworkspace -scheme
+  Senryo -configuration Release -sdk iphonesimulator -destination 'id=<sim>' -derivedDataPath <dir> build`, then
+  `xcrun simctl install <sim> <dir>/Build/Products/Release-iphonesimulator/Senryo.app`. JS only: re-embed the bundle
+  (Findings, "Simulator workflow") and relaunch — about 40 s. Face ID: `xcrun simctl spawn <sim> notifyutil -s
+  com.apple.BiometricKit.enrollmentChanged 1 && … -p com.apple.BiometricKit.enrollmentChanged` to enrol, `… -p
+  com.apple.BiometricKit_Sim.pearl.match` to match. `apps/mobile/ios` is generated and ignored.
 - **Resume here (1 Oct, lead):**
   1. **Art package** — agent `art-j1` on branch `stage/S1b-art` (worktree `.claude/worktrees/art-j1`): six onboarding
      scenes, pending-passkey art, completion foil, twelve avatars, with a Codex review loop. Look at its contact sheets

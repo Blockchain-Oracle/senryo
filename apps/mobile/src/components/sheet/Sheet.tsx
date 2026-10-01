@@ -2,7 +2,6 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useR
 import { BackHandler, type LayoutChangeEvent, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import Animated, {
-  runOnJS,
   useAnimatedKeyboard,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -12,11 +11,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { scheduleOnRN } from "react-native-worklets";
+import { SurfaceLevel } from "~/components/kit/Surface";
 import { fire } from "~/feedback/fire";
-import { DURATION, EASE, HAIRLINE_PX, RADIUS, SIZE, SPACE, SPRING, useTheme } from "~/theme";
+import { EASE, EASE_SHEET, ELEVATION, HAIRLINE_PX, RADIUS, SHEET_SHAPE, SIZE, SPRING, TIMING, useTheme } from "~/theme";
 import { SHEET } from "./constants";
 
-const OUT = { duration: DURATION.slow, easing: EASE };
 const DrawerScroll = Animated.createAnimatedComponent(ScrollView);
 const SheetContext = createContext<(after?: () => void) => void>(() => undefined);
 
@@ -33,16 +33,20 @@ interface SheetProps {
   closeLabel: string;
   /** Tallest the panel grows before its content scrolls, as a fraction of the window. */
   maxHeight?: number;
+  /** False while something is in flight that the sheet must stay attached to: no drag, scrim, back or handle. */
+  dismissible?: boolean;
 }
 
 /**
- * The app's compact selector (ported BottomDrawer; sheet grammar §5.5): a dimming scrim that fades in — no blur: only
- * the fan blurs (direction §3, S1b.7) — and a content-sized panel with 24 pt top corners that springs up on the
- * compact-selector spring (1/260/30, M02), drag-down to dismiss past 25 % of its height or
- * 900 pt/s that hands over to the content's own scroll, the safe area under it, and the keyboard pushing it up.
- * Reduce Motion swaps the spring for a fade. Rendered by a transparent-modal route.
+ * The compact sheet (Fomo F08 / F20 / F36, M12; Codex consult 1 Oct): a content-sized panel that floats 8 pt from the
+ * left, right and bottom edges with 38 pt corners all round, no border, over a scrim that dims the page (no blur: only
+ * the fan blurs). It leaves the bottom edge fast and settles long on the iOS drawer curve, and leaves quicker than it
+ * came. A drag follows the finger, resists upward, hands over to the content's own scroll, and closes past a quarter
+ * of the height (120 pt at most) or on a flick; otherwise it returns on a spring that keeps the finger's velocity.
+ * The keyboard pushes it up. Reduce Motion swaps the travel for a fade. Rendered by a transparent-modal route, or
+ * inline over a screen.
  */
-export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeight }: SheetProps) {
+export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeight, dismissible = true }: SheetProps) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -67,32 +71,33 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
     (after?: () => void) => {
       if (closing.current) return;
       closing.current = true;
-      scrim.value = withTiming(0, OUT);
-      drag.value = withTiming(reduce ? drag.value : height.value + insets.bottom, OUT, (done) => {
-        if (done) runOnJS(finish)(after);
+      const out = { duration: reduce ? TIMING.reducedMotion : TIMING.sheetExit, easing: EASE };
+      scrim.value = withTiming(0, out);
+      drag.value = withTiming(reduce ? drag.value : height.value + SHEET_SHAPE.inset, out, (done) => {
+        if (done) scheduleOnRN(finish, after);
       });
     },
-    [drag, finish, height, insets.bottom, reduce, scrim],
+    [drag, finish, height, reduce, scrim],
   );
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      close();
+      if (dismissible) close();
       return true;
     });
     return () => sub.remove();
-  }, [close]);
+  }, [close, dismissible]);
 
   const onLayout = (e: LayoutChangeEvent) => {
     height.value = e.nativeEvent.layout.height;
     if (opened.current) return;
     opened.current = true;
     fire("snap");
-    scrim.value = withTiming(1, { duration: DURATION.slow, easing: EASE });
+    scrim.value = withTiming(1, { duration: reduce ? TIMING.reducedMotion : TIMING.selection, easing: EASE });
     if (reduce) drag.value = 0;
     else {
-      drag.value = e.nativeEvent.layout.height;
-      drag.value = withSpring(0, SPRING.compactSelector);
+      drag.value = e.nativeEvent.layout.height + SHEET_SHAPE.inset;
+      drag.value = withTiming(0, { duration: TIMING.sheetEnter, easing: EASE_SHEET });
     }
   };
 
@@ -101,6 +106,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
   });
   const native = Gesture.Native();
   const pan = Gesture.Pan()
+    .enabled(dismissible)
     .activeOffsetY(SHEET.activeOffsetY)
     .failOffsetX([-SHEET.failOffsetX, SHEET.failOffsetX])
     .simultaneousWithExternalGesture(native)
@@ -110,8 +116,9 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
     })
     .onEnd((e) => {
       if (scrollY.value > 0 && drag.value <= 0) return;
-      if (drag.value > height.value * SHEET.closeFraction || e.velocityY > SHEET.closeVelocity) runOnJS(close)();
-      else drag.value = withSpring(0, SPRING.compactSelector);
+      const past = drag.value > Math.min(SHEET.closeDistance, height.value * SHEET.closeFraction);
+      if (past || e.velocityY > SHEET.closeVelocity) scheduleOnRN(close);
+      else drag.value = withSpring(0, { ...SPRING.sheetRelease, velocity: e.velocityY });
     });
 
   const panelStyle = useAnimatedStyle(() => ({
@@ -119,8 +126,9 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
     transform: [{ translateY: drag.value - keyboard.height.value }],
   }));
   const scrimStyle = useAnimatedStyle(() => ({ opacity: scrim.value }));
+  // The panel reaches into the home-indicator band; its content stops above it (and above the keyboard's top edge).
   const keyboardPad = useAnimatedStyle(() => ({
-    paddingBottom: Math.max(SPACE.lg, insets.bottom - keyboard.height.value),
+    paddingBottom: Math.max(SHEET_SHAPE.padding, insets.bottom - SHEET_SHAPE.inset - keyboard.height.value),
   }));
 
   return (
@@ -129,6 +137,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
         <Animated.View style={[StyleSheet.absoluteFill, scrimStyle]}>
           <Pressable
             style={[StyleSheet.absoluteFill, { backgroundColor: color.scrim }]}
+            disabled={!dismissible}
             onPress={() => close()}
             accessibilityRole="button"
             accessibilityLabel={closeLabel}
@@ -138,14 +147,26 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
           <Animated.View
             onLayout={onLayout}
             accessibilityViewIsModal
+            onAccessibilityEscape={() => {
+              if (dismissible) close();
+            }}
             style={[
               styles.panel,
-              { maxHeight: windowHeight * maxHeight, backgroundColor: color.popover, borderColor: color.hairline },
+              ELEVATION.sheet,
+              { maxHeight: windowHeight * maxHeight, backgroundColor: color.card },
               panelStyle,
             ]}
           >
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                styles.edge,
+                { boxShadow: `inset 0px ${HAIRLINE_PX}px 0px 0px ${color.surfaceRim}` },
+              ]}
+            />
             <View style={styles.handleZone} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <View style={[styles.handle, { backgroundColor: color.border }]} />
+              <View style={[styles.handle, { backgroundColor: dismissible ? color.border : color.transparent }]} />
             </View>
             <GestureDetector gesture={native}>
               <DrawerScroll
@@ -155,7 +176,9 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
               >
-                <Animated.View style={[styles.content, keyboardPad]}>{children}</Animated.View>
+                <SurfaceLevel.Provider value={1}>
+                  <Animated.View style={[styles.content, keyboardPad]}>{children}</Animated.View>
+                </SurfaceLevel.Provider>
               </DrawerScroll>
             </GestureDetector>
           </Animated.View>
@@ -168,14 +191,13 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: "flex-end" },
   panel: {
-    width: "100%",
-    borderTopLeftRadius: RADIUS.lg,
-    borderTopRightRadius: RADIUS.lg,
-    borderWidth: HAIRLINE_PX,
-    borderBottomWidth: 0,
+    marginHorizontal: SHEET_SHAPE.inset,
+    marginBottom: SHEET_SHAPE.inset,
+    borderRadius: SHEET_SHAPE.radius,
     overflow: "hidden",
   },
-  handleZone: { alignItems: "center", paddingTop: SPACE.sm, paddingBottom: SPACE.xs },
+  edge: { borderRadius: SHEET_SHAPE.radius },
+  handleZone: { alignItems: "center", paddingTop: SHEET_SHAPE.handleTop, paddingBottom: SHEET_SHAPE.handleBottom },
   handle: { width: SIZE.handleWidth, height: SIZE.handleHeight, borderRadius: RADIUS.pill },
-  content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm, gap: SPACE.lg },
+  content: { paddingHorizontal: SHEET_SHAPE.padding, gap: SHEET_SHAPE.padding },
 });

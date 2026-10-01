@@ -46,8 +46,8 @@ export const FAN_BLUR_INTENSITY = 90;
 /** The fan items start this far below their slot and this small (M06 onset: rise + scale from the plus). */
 export const FAN_ITEM_RISE = 24;
 export const FAN_ITEM_FROM_SCALE = 0.6;
-/** The dock's active region is inset this much inside each slot (pt). */
-export const DOCK_REGION_INSET = 4;
+/** A dock icon shrinks to this under the finger. */
+export const DOCK_PRESS_SCALE = 0.88;
 /** The collapsed header's compact balance fades in over the last part of the collapse (fraction of the distance). */
 export const HEADER_COMPACT_FROM = 0.55;
 /** The expanded header content fades out over the first part of the collapse. */

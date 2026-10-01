@@ -13,17 +13,33 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
+import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
-import { EASE, FAN, FAN_TOGGLE_DEG, HAIRLINE_PX, RADIUS, SIZE, SPACE, SPRING, TIMING, TYPE, useTheme } from "~/theme";
+import {
+  DOCK,
+  dockBottom,
+  EASE,
+  ELEVATION,
+  FAN,
+  FAN_TOGGLE_DEG,
+  HAIRLINE_PX,
+  RADIUS,
+  SIZE,
+  SPACE,
+  SPRING,
+  TIMING,
+  TYPE,
+  useTheme,
+} from "~/theme";
 import { FAN_ACTIONS, FAN_BLUR_INTENSITY, FAN_ITEM_FROM_SCALE, FAN_LABEL, type FanAction } from "./constants";
 import { useDock } from "./dock-context";
 import { useReduceTransparency } from "./useReduceTransparency";
 
 /**
- * The Phantom action fan (C18/FT055, P19/M06; direction §5): a lower-right plus 16 pt above the dock opens a strong
+ * The Phantom action fan (C18/FT055, P19/M06; direction §5): the plus beside the dock (P12) opens a strong
  * live blur (expo-blur + the fan scrim) and four lavender circles that rise and scale from the plus into a right
  * column — Send · Receive · Add money · Swap, 72 pt apart, labels to their left — while the plus turns into ×.
- * The plus shows on the five tab roots only (Codex S1b.7 consult #5). Motion (§5.4): 200 ms per item, 25 ms stagger, spring 1/420/30 with Send's small overshoot; backdrop 160 ms;
+ * The plus shows wherever the dock does. Motion (§5.4): 200 ms per item, 25 ms stagger, spring 1/420/30 with Send's small overshoot; backdrop 160 ms;
  * plus→× 180 ms; exit ~180 ms in reverse (Swap first). Reduce Motion: a ~100 ms crossfade, no travel. Reduce
  * Transparency: an opaque backdrop. Dismissal (×, backdrop, Android back) restores the page under it untouched
  * (FT061); choosing an action closes the fan and opens its destination over the same page (M07).
@@ -35,14 +51,17 @@ export function ActionFan({ onAction }: { onAction: (action: FanAction) => void 
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const dock = useDock();
-  // The plus lives on the tab roots only, and leaves with the dock during transaction entry.
-  const hidden = dock.hidden || !dock.fan;
+  // The plus shares the dock's row, and leaves with it during transaction entry.
+  const hidden = dock.hidden;
+  const press = usePressScale();
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const progress = useSharedValue(0);
   const items = [useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)] as const;
-  const drop = insets.bottom + FAN.triggerBottom + FAN.trigger + SPACE.lg;
+  // The plus is centred on the dock's height.
+  const bottom = dockBottom(insets.bottom) + (DOCK.height - FAN.trigger) / 2;
+  const drop = bottom + FAN.trigger + SPACE.lg;
   const away = useSharedValue(hidden ? drop : 0);
 
   useEffect(() => {
@@ -100,7 +119,6 @@ export function ActionFan({ onAction }: { onAction: (action: FanAction) => void 
   const plusTone = useAnimatedStyle(() => ({ opacity: 1 - progress.value }));
   const closeTone = useAnimatedStyle(() => ({ opacity: progress.value }));
   const lift = useAnimatedStyle(() => ({ transform: [{ translateY: away.value }] }));
-  const bottom = insets.bottom + FAN.triggerBottom;
 
   return (
     <>
@@ -126,29 +144,33 @@ export function ActionFan({ onAction }: { onAction: (action: FanAction) => void 
       ) : null}
       <Animated.View
         pointerEvents={hidden ? "none" : "box-none"}
-        style={[styles.trigger, { bottom, right: FAN.triggerRight }, lift]}
+        style={[styles.trigger, ELEVATION.dock, { bottom, right: FAN.triggerRight }, lift]}
       >
-        <Pressable
-          onPress={() => (open ? hide() : show())}
-          accessibilityRole="button"
-          accessibilityLabel={open ? "Close quick actions" : "Quick actions"}
-          accessibilityHint={open ? undefined : "Send, receive, add money or swap"}
-          accessibilityState={{ expanded: open }}
-          style={styles.hit}
-        >
-          <Animated.View style={[styles.disc, { backgroundColor: color.fanCircle }, plusTone]} />
-          <Animated.View
-            style={[
-              styles.disc,
-              { backgroundColor: color.raised2, borderColor: color.glassRim },
-              styles.rim,
-              closeTone,
-            ]}
-          />
-          <Animated.View style={toggle}>
-            <Plus size={FAN.triggerIcon} strokeWidth={SIZE.iconStroke} color={open ? color.ink : color.fanText} />
-          </Animated.View>
-        </Pressable>
+        <Animated.View style={[styles.hit, press.style]}>
+          <Pressable
+            onPressIn={press.onPressIn}
+            onPressOut={press.onPressOut}
+            onPress={() => (open ? hide() : show())}
+            accessibilityRole="button"
+            accessibilityLabel={open ? "Close quick actions" : "Quick actions"}
+            accessibilityHint={open ? undefined : "Send, receive, add money or swap"}
+            accessibilityState={{ expanded: open }}
+            style={[styles.hit, styles.centered]}
+          >
+            <Animated.View style={[styles.disc, { backgroundColor: color.fanCircle }, plusTone]} />
+            <Animated.View
+              style={[
+                styles.disc,
+                { backgroundColor: color.raised2, borderColor: color.glassRim },
+                styles.rim,
+                closeTone,
+              ]}
+            />
+            <Animated.View style={toggle}>
+              <Plus size={FAN.triggerIcon} strokeWidth={SIZE.iconStroke} color={open ? color.ink : color.fanText} />
+            </Animated.View>
+          </Pressable>
+        </Animated.View>
       </Animated.View>
     </>
   );
@@ -230,11 +252,13 @@ function FanItem({
 const PRESSED_SCALE = 0.96;
 
 const styles = StyleSheet.create({
-  trigger: { position: "absolute", width: FAN.trigger, height: FAN.trigger },
-  hit: { flex: 1, alignItems: "center", justifyContent: "center" },
+  trigger: { position: "absolute", width: FAN.trigger, height: FAN.trigger, borderRadius: RADIUS.pill },
+  hit: { flex: 1 },
+  centered: { alignItems: "center", justifyContent: "center" },
   disc: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: RADIUS.pill },
   rim: { borderWidth: HAIRLINE_PX },
-  column: { position: "absolute", right: FAN.triggerRight, alignItems: "flex-end" },
+  // Centred on the plus: the circles are narrower than the trigger disc.
+  column: { position: "absolute", right: FAN.triggerRight + (FAN.trigger - FAN.circle) / 2, alignItems: "flex-end" },
   item: { height: FAN.spacing, justifyContent: "center" },
   itemHit: { flexDirection: "row", alignItems: "center", gap: FAN.labelGap, minHeight: SIZE.touch },
   pressed: { transform: [{ scale: PRESSED_SCALE }] },

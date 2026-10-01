@@ -24,10 +24,9 @@ export default function Preferences() {
     <Screen>
       <Stack.Screen options={{ title: "Preferences" }} />
       <View style={{ gap: SPACE.sm }}>
-        <SectionLabel>FEEDBACK</SectionLabel>
+        <SectionLabel>Feedback</SectionLabel>
         <Panel>
           <ListRow
-            first
             title="Sounds"
             detail="Fill, deposit, send and unlock sounds. Follows the silent switch."
             trailing={
@@ -57,7 +56,7 @@ export default function Preferences() {
         </Panel>
       </View>
       <View style={{ gap: SPACE.sm }}>
-        <SectionLabel>THEME</SectionLabel>
+        <SectionLabel>Theme</SectionLabel>
         <Segmented options={THEMES} value={name} onChange={(v) => setTheme(v)} label="Theme" />
       </View>
     </Screen>

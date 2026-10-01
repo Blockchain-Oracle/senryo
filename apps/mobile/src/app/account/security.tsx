@@ -15,7 +15,7 @@ import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { Segmented } from "~/components/kit/Segmented";
-import { Panel, Rule, SectionLabel } from "~/components/kit/Surface";
+import { Panel, SectionLabel } from "~/components/kit/Surface";
 import { EmptyState } from "~/components/kit/states";
 import { useAccount } from "~/lib/account/provider";
 import { requestStepUp } from "~/lib/account/step-up";
@@ -24,27 +24,32 @@ import { SPACE, TYPE, useTheme } from "~/theme";
 
 const MS_PER_MINUTE = 60_000;
 const USD_DECIMALS = 6;
-const minutes = (ms: number) => `${ms / MS_PER_MINUTE} MIN`;
+const minutes = (ms: number) => `${ms / MS_PER_MINUTE} min`;
 const threshold = `$${formatUnits(FACE_ID_TRADE_THRESHOLD_USD6, USD_DECIMALS, 0)}`;
-const GATE = Platform.OS === "ios" ? "FACE ID" : "FINGERPRINT";
+const GATE = Platform.OS === "ios" ? "Face ID" : "Fingerprint";
 const FACE_ID_OPTIONS = [
-  { value: "off", label: "OFF" },
+  { value: "off", label: "Off" },
   { value: "above-threshold", label: `≥ ${threshold}` },
-  { value: "every-trade", label: "EVERY" },
+  { value: "every-trade", label: "Every" },
 ] as const;
 
 function Row({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
   const { color } = useTheme();
   return (
     <View style={styles.row}>
-      <Text style={[TYPE.label, { color: color.ink }]}>{title}</Text>
-      <Text style={[TYPE.caption, { color: color.inkMuted }]}>{hint}</Text>
+      <View style={styles.text}>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{title}</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{hint}</Text>
+      </View>
       {children}
     </View>
   );
 }
 
-/** F60 / F04 security (D-037): tighten instantly; loosening asks for a fresh passkey first (session-policy §2). */
+/**
+ * F60 / F04 security (D-037): tighten instantly; loosening asks for a fresh passkey first (session-policy §2). The three
+ * settings share one filled group and are separated by their own spacing, not by lines.
+ */
 export default function SecurityScreen() {
   const network = useNetwork();
   const { color } = useTheme();
@@ -86,9 +91,9 @@ export default function SecurityScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: "Security" }} />
-      <SectionLabel>TRADING SESSION</SectionLabel>
+      <SectionLabel>Trading session</SectionLabel>
       <Panel style={styles.panel}>
-        <Row title="SESSION LENGTH" hint="Trading locks after this long, however active you are.">
+        <Row title="Session length" hint="Trading locks after this long, however active you are.">
           <Segmented
             label="Session length"
             value={String(s.ttlMs)}
@@ -96,8 +101,7 @@ export default function SecurityScreen() {
             onChange={(v) => void apply({ ...s, ttlMs: Number(v) })}
           />
         </Row>
-        <Rule />
-        <Row title="IDLE LOCK" hint="…or after this long without a signature. Leaving the app always locks.">
+        <Row title="Idle lock" hint="…or after this long without a signature. Leaving the app always locks.">
           <Segmented
             label="Idle lock"
             value={String(s.idleMs)}
@@ -105,9 +109,8 @@ export default function SecurityScreen() {
             onChange={(v) => void apply({ ...s, idleMs: Number(v) })}
           />
         </Row>
-        <Rule />
         <Row
-          title={`${GATE} PER TRADE`}
+          title={`${GATE} per trade`}
           hint={`Practice default: off (the prompt-free session). Mainnet default: trades of ${threshold} or more.`}
         >
           <Segmented
@@ -120,7 +123,7 @@ export default function SecurityScreen() {
       </Panel>
       <View style={styles.passkey}>
         <PasskeyGlyph color={color.inkMuted} />
-        <Text accessibilityLiveRegion="polite" style={[TYPE.caption, styles.note, { color: color.inkMuted }]}>
+        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, styles.note, { color: color.text3 }]}>
           {note ?? "Withdrawals, sends, card limits and your recovery phrase always ask for a fresh passkey."}
         </Text>
       </View>
@@ -135,8 +138,9 @@ export default function SecurityScreen() {
 }
 
 const styles = StyleSheet.create({
-  panel: { paddingHorizontal: SPACE.md },
-  row: { gap: SPACE.sm, paddingVertical: SPACE.md },
+  panel: { padding: SPACE.lg, gap: SPACE.xl },
+  row: { gap: SPACE.md },
+  text: { gap: SPACE.xxs },
   passkey: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   note: { flex: 1 },
 });

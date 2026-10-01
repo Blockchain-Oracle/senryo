@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /** Glyph size inside the send illustration disc. */
 const PLANE = 40;
@@ -12,8 +12,8 @@ const PLANE = 40;
 /**
  * Send (the fan's first action; FT058/C38, P22 anatomy; Codex S1b.7 consult #8). The recipient flow (recents, @handle
  * or address search, scan, contacts, review with resolved address) is J8 (S1b.14) and not in this build, so this is a
- * labelled reserved surface — never a fake flow: the recipient row is shown and marked unavailable. Back restores the
- * page under the fan (FT061).
+ * labelled reserved surface — never a fake flow: the recipient row is shown as a quiet filled plate and marked
+ * unavailable. Back restores the page under the fan (FT061).
  */
 export default function SendScreen() {
   const { color } = useTheme();
@@ -36,11 +36,11 @@ export default function SendScreen() {
         accessible
         accessibilityLabel="Address or @handle. Unavailable in this version"
         accessibilityState={{ disabled: true }}
-        style={[styles.recipient, { borderColor: color.border, backgroundColor: color.card }]}
+        style={[styles.recipient, { backgroundColor: color.card }]}
       >
         <Search size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.text3} />
         <Text style={[TYPE.row, styles.flex, { color: color.text3 }]}>Address or @handle</Text>
-        <Text style={[TYPE.meta, { color: color.text3 }]}>Unavailable</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Unavailable</Text>
       </View>
       <Button label="Back" variant="outline" onPress={() => router.back()} />
     </View>
@@ -64,8 +64,7 @@ const styles = StyleSheet.create({
     gap: SPACE.sm,
     minHeight: SIZE.inputHeight,
     paddingHorizontal: SPACE.lg,
-    borderRadius: RADIUS.pill,
-    borderWidth: HAIRLINE_PX,
+    borderRadius: BUTTON.radius.md,
   },
   flex: { flex: 1 },
 });

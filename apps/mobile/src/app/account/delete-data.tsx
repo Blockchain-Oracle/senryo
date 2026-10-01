@@ -55,15 +55,15 @@ export default function DeleteDataScreen() {
     <Screen>
       <Stack.Screen options={{ title: "Delete my data" }} />
       <Panel style={styles.panel}>
-        <Text style={[TYPE.label, { color: color.ink }]}>SIGN OUT</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Sign out</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
           Forget this phone. Your passkey signs you back in — same address, everything rebuilt.
         </Text>
         <Button label="Sign out" variant="outline" disabled={!account.hint} onPress={() => void signOut()} />
       </Panel>
       <Panel style={styles.panel}>
-        <Text style={[TYPE.label, { color: color.ink }]}>DELETE MY DATA</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Delete my data</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
           Clears everything Senryo keeps on this phone, your encrypted settings, and your profile, posts, likes and
           follows on Senryo. Your handle stays reserved for 30 days so nobody can pose as you. Onchain history is public
           and permanent — it can't be deleted by anyone.
@@ -81,4 +81,4 @@ export default function DeleteDataScreen() {
   );
 }
 
-const styles = StyleSheet.create({ panel: { padding: SPACE.md, gap: SPACE.sm } });
+const styles = StyleSheet.create({ panel: { padding: SPACE.lg, gap: SPACE.md } });

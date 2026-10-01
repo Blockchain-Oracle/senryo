@@ -148,6 +148,6 @@ export function TradeTrace({
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.md },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   actions: { gap: SPACE.sm },
 });

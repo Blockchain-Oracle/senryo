@@ -6,7 +6,7 @@ import { ageLabel, STATUS_LABEL, statusTone } from "~/features/markets/session";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const MS_PER_SECOND = 1000n;
 
@@ -14,7 +14,7 @@ const MS_PER_SECOND = 1000n;
  * Market detail's identity + price block (Fomo F32/F35 anatomy, FT095; J3 completes the page in S1b.9): the market's
  * own art (~48 pt, v2-plan §5.12), symbol with its max-leverage chip and name, the explicit venue chip; then the
  * oracle price (Inter Display 40/44) with the 24 h change, and the session + oracle freshness line ("Oracle price ·
- * updated 3m ago", D-020).
+ * updated 3m ago", D-020) as plain text behind its status dot — no plate, no outline.
  */
 export function TradeHeader({ line }: { line: MarketLine }) {
   const network = useNetwork();
@@ -36,7 +36,7 @@ export function TradeHeader({ line }: { line: MarketLine }) {
               {line.maxLeverageX}×
             </Text>
           </View>
-          <Text style={[TYPE.meta, { color: color.text3 }]}>{line.name} / USD</Text>
+          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{line.name} / USD</Text>
         </View>
         <VenueChip venue={ids.venue("senryo")} />
       </View>
@@ -56,9 +56,9 @@ export function TradeHeader({ line }: { line: MarketLine }) {
           </Text>
         )}
       </View>
-      <View style={[styles.fresh, { borderColor: color.border }]}>
+      <View style={styles.fresh}>
         <View style={[styles.dot, { backgroundColor: statusTone(line.status, color) }]} />
-        <Text style={[TYPE.meta, { color: color.text2 }]}>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
           {STATUS_LABEL[line.status]} · Oracle price · updated {age}
         </Text>
       </View>
@@ -72,15 +72,6 @@ const styles = StyleSheet.create({
   titles: { flex: 1, gap: SPACE.xxs },
   symbolRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   lev: { paddingHorizontal: SPACE.xs, borderRadius: RADIUS.xs, overflow: "hidden" },
-  fresh: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACE.xs,
-    alignSelf: "flex-start",
-    paddingHorizontal: SPACE.sm,
-    paddingVertical: SPACE.xxs,
-    borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.pill,
-  },
+  fresh: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   dot: { width: SIZE.dot, height: SIZE.dot, borderRadius: RADIUS.pill },
 });

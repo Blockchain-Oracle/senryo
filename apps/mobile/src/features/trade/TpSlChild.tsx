@@ -5,13 +5,15 @@ import type { LiveMarket } from "@senryo/query";
 import { X } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
+import { usePressScale } from "~/components/kit/usePressScale";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { usePosition } from "~/features/positions/usePosition";
 import { fire } from "~/feedback/fire";
 import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { QUANTITY_DECIMALS, TRIGGER_SUGGESTIONS_BPS } from "./constants";
 import { TriggerInput } from "./TriggerInput";
 import {
@@ -37,7 +39,8 @@ const KINDS: readonly TriggerKind[] = ["sl", "tp"];
  * The TP/SL child (FT110–FT112, C42, F44/F45/M15; Codex S1b.7 consult #2). It works on the position already held in
  * this market, and says so before any field (review R05): the order being entered opens without SL/TP. With no
  * position it explains that and returns to the order; it never offers a pretend Save. Each level is its own
- * transaction with its own outcome (review R01, `useTriggerLegs`).
+ * transaction with its own outcome (review R01, `useTriggerLegs`). Blocks are separated by spacing; the only outlines
+ * are the two input fields (F44).
  */
 export function TpSlChild({
   open,
@@ -74,9 +77,9 @@ export function TpSlChild({
 function Explainer({ kind, body }: { kind: string; body: string }) {
   const { color } = useTheme();
   return (
-    <View style={[styles.explainer, { borderColor: color.border }]}>
+    <View style={styles.explainer}>
       <Text style={[TYPE.rowStrong, { color: color.ink }]}>{kind}</Text>
-      <Text style={[TYPE.meta, { color: color.text2 }]}>{body}</Text>
+      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{body}</Text>
     </View>
   );
 }
@@ -164,11 +167,11 @@ function HeldTriggers({
 
   return (
     <>
-      <View style={[styles.identity, { borderColor: color.border }]} accessible accessibilityRole="text">
+      <View style={styles.identity} accessible accessibilityRole="text">
         <Text style={[TYPE.rowStrong, { color: color.ink }]}>
           {market.name} · {side} · {formatUnits(position.size, DECIMALS.e18, QUANTITY_DECIMALS)} {symbol}
         </Text>
-        <Text style={[TYPE.meta, { color: color.text2 }]}>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
           {network.modeLabel} · your current position only. The size is fixed when you save; an order you are still
           entering is not covered. Oracle price ${price18(mark, decimals)}.
         </Text>
@@ -182,7 +185,7 @@ function HeldTriggers({
         </Text>
       ))}
       {legs.active.map((t) => (
-        <View key={t.id} style={[styles.active, { borderColor: color.border }]}>
+        <View key={t.id} style={styles.active}>
           <Text style={[TYPE.rowAmount, styles.flex, { color: t.takeProfit ? color.up : color.down }]}>
             {t.takeProfit ? "Take profit" : "Stop loss"} · ${price18(t.triggerPrice, decimals)}
           </Text>
@@ -265,24 +268,37 @@ function HeldTriggers({
       {suggestions.length > 0 ? (
         <View style={styles.suggestions} accessibilityLabel="Suggested levels">
           {suggestions.map((bps) => (
-            <Pressable
+            <Suggestion
               key={String(bps)}
+              label={`${focus && isAbove(focus, position.isLong) ? "+" : "−"}${pct(bps)}`}
               onPress={() => {
                 fire("tick");
                 if (focus) setPercent(focus, percentText(bps));
               }}
-              accessibilityRole="button"
-              style={[styles.suggestion, { backgroundColor: color.raised2 }]}
-            >
-              <Text style={[TYPE.chipLabel, { color: color.ink }]}>
-                {focus && isAbove(focus, position.isLong) ? "+" : "−"}
-                {pct(bps)}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
       ) : null}
     </>
+  );
+}
+
+/** A suggested distance for the focused field: a borderless filled chip that shrinks under the finger. */
+function Suggestion({ label, onPress }: { label: string; onPress: () => void }) {
+  const { color } = useTheme();
+  const press = usePressScale();
+  return (
+    <Animated.View style={[styles.flex, press.style]}>
+      <Pressable
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={onPress}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.suggestion, { backgroundColor: pressed ? color.rowPressed : color.raised2 }]}
+      >
+        <Text style={[TYPE.chipCategory, { color: color.ink }]}>{label}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -299,16 +315,10 @@ function problemText(problem: NonNullable<ReturnType<typeof triggerProblem>>, is
 }
 
 const styles = StyleSheet.create({
-  identity: { gap: SPACE.xxs, paddingBottom: SPACE.sm, borderBottomWidth: HAIRLINE_PX },
+  identity: { gap: SPACE.xxs },
   note: { paddingLeft: SIZE.avatarXl + SPACE.lg + SPACE.sm },
-  explainer: { gap: SPACE.xxs, paddingVertical: SPACE.sm, borderBottomWidth: HAIRLINE_PX },
-  active: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACE.sm,
-    paddingVertical: SPACE.xs,
-    borderBottomWidth: HAIRLINE_PX,
-  },
+  explainer: { gap: SPACE.xxs },
+  active: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   flex: { flex: 1 },
   group: { gap: SPACE.xs },
   fieldRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
@@ -317,9 +327,8 @@ const styles = StyleSheet.create({
   clear: { flexDirection: "row", alignItems: "center", gap: SPACE.xxs, minHeight: SIZE.touch },
   suggestions: { flexDirection: "row", gap: SPACE.sm },
   suggestion: {
-    flex: 1,
     minHeight: SIZE.touch,
-    borderRadius: RADIUS.sm,
+    borderRadius: BUTTON.radius.sm,
     alignItems: "center",
     justifyContent: "center",
   },

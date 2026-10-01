@@ -1,7 +1,8 @@
 /**
  * Practice starter funds (F05, D-030): one tap; the label follows the stage (Checking → Signing → Sending → Adding
- * practice dollars → Ready); `filled` haptic + deposit sound on credit; labelled NO REAL VALUE. Every refusal says
- * why and what next. The TTFT stop fires when the claim is finalized.
+ * practice dollars → Ready); `filled` haptic + deposit sound on credit; labelled "No real value". Every refusal says
+ * why and what next. The TTFT stop fires when the claim is finalized. A warning wash card: filled, 20 pt corners, no
+ * border.
  */
 import { type AuthFailure, authFailureCopy } from "@senryo/account";
 import { formatUnits } from "@senryo/core";
@@ -14,7 +15,7 @@ import { fire } from "~/feedback/fire";
 import { type StarterPhase, useStarter } from "~/lib/account/use-starter";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { MainnetStartCard } from "./MainnetStartCard";
 
 const USD_DECIMALS = 6;
@@ -77,15 +78,15 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
   if (hideWhenClaimed && (phase.kind === "claimed" || phase.kind === "checking")) return null;
   const busy = LABEL[phase.kind] !== undefined;
   return (
-    <View style={[styles.card, { borderColor: color.warn, backgroundColor: color.warnWash }]}>
+    <View style={[styles.card, { backgroundColor: color.warnWash }]}>
       <View style={styles.head}>
         <View style={styles.title}>
           <Icon name="coins" size={SIZE.iconSm} tint={color.warn} />
-          <Text style={[TYPE.label, { color: color.ink }]}>PRACTICE FUNDS</Text>
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>Practice funds</Text>
         </View>
-        <Text style={[TYPE.micro, styles.pill, { color: color.warn, borderColor: color.warn }]}>NO REAL VALUE</Text>
+        <Text style={[TYPE.label, { color: color.warn }]}>No real value</Text>
       </View>
-      <Text accessibilityLiveRegion="polite" style={[TYPE.caption, { color: color.inkMuted }]}>
+      <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, { color: color.text2 }]}>
         {message(phase)}
       </Text>
       {phase.kind === "done" || phase.kind === "claimed" ? (
@@ -115,8 +116,7 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, padding: SPACE.md, gap: SPACE.sm },
-  head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  title: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
-  pill: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, paddingHorizontal: SPACE.xs, paddingVertical: SPACE.xxs },
+  card: { borderRadius: SHEET_SHAPE.rowRadius, padding: SPACE.lg, gap: SPACE.md },
+  head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.sm },
+  title: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, flexShrink: 1 },
 });

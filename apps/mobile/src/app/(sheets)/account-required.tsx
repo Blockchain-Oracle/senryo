@@ -1,74 +1,45 @@
-import { type AuthFailure, classifyAuthError, isSilent } from "@senryo/account";
 import { router } from "expo-router";
-import { useState } from "react";
-import { Text } from "react-native";
+import { useEffect } from "react";
+import { View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
-import { AuthFailureCard } from "~/features/auth/AuthFailure";
-import { CeremonyCard, type CeremonyKind } from "~/features/auth/CeremonyCard";
-import { fire } from "~/feedback/fire";
+import { SheetHeading } from "~/components/sheet/SheetRoute";
+import { AuthFlowBody } from "~/features/auth/AuthFlowSheet";
+import { useAuthFlow } from "~/features/auth/useAuthFlow";
 import { useAccount } from "~/lib/account/provider";
-import { TYPE, useTheme } from "~/theme";
+import { SPACE, useTheme } from "~/theme";
 
-type Phase =
-  | { kind: "idle" }
-  | { kind: "running"; flow: CeremonyKind }
-  | { kind: "failed"; flow: CeremonyKind; failure: AuthFailure };
-
-/** F03 → F01: any action a guest takes lands here — create or sign in without leaving the screen they were on. */
+/**
+ * F03 → F01: any action a guest takes lands here — create or sign in without leaving the screen they were on. The
+ * ceremony and a failure replace the invitation inside this same sheet; a cancel returns to the invitation.
+ */
 function Body() {
   const { color } = useTheme();
   const account = useAccount();
   const close = useSheetClose();
-  const [phase, setPhase] = useState<Phase>({ kind: "idle" });
-  const run = async (flow: CeremonyKind, action: () => Promise<unknown>) => {
-    setPhase({ kind: "running", flow });
-    try {
-      await action();
-      fire("confirm", { sound: "unlock" });
-      close();
-    } catch (error) {
-      const failure = classifyAuthError(error);
-      setPhase(isSilent(failure) ? { kind: "idle" } : { kind: "failed", flow, failure });
-    }
-  };
-  if (phase.kind === "running")
-    return <CeremonyCard kind={phase.flow} extraPrompt={account.extraPrompt !== undefined} />;
-  if (phase.kind === "failed") {
-    return (
-      <AuthFailureCard
-        kind={phase.failure}
-        flow={phase.flow}
-        onRetry={() => void run(phase.flow, phase.flow === "create" ? account.create : account.signIn)}
-        onSignIn={() => void run("sign-in", account.signIn)}
-        onCreate={() => void run("create", account.create)}
-        onBack={() => setPhase({ kind: "idle" })}
-      />
-    );
-  }
+  const flow = useAuthFlow({ onDone: () => close() });
+  const { phase, reset } = flow;
+  useEffect(() => {
+    if (phase.kind === "closing") reset();
+  }, [phase.kind, reset]);
+  if (phase.kind === "running" || phase.kind === "failed") return <AuthFlowBody flow={flow} />;
   return (
     <>
-      <Text accessibilityRole="header" style={[TYPE.title, { color: color.ink }]}>
-        Create an account to trade
-      </Text>
-      <Text style={[TYPE.body, { color: color.inkMuted }]}>
-        Your account is a passkey — Face ID, no seed phrase. Practice mode gives you test dollars to start.
-      </Text>
-      <Button
-        label="Create account"
-        leading={<PasskeyGlyph color={color.primaryForeground} />}
-        disabled={!account.ready}
-        onPress={() => void run("create", account.create)}
+      <SheetHeading
+        title="Create an account to trade"
+        body="Your account is a passkey: Face ID, no seed phrase. Practice mode gives you test dollars to start."
       />
-      <Button
-        label="I already have an account"
-        variant="outline"
-        leading={<PasskeyGlyph color={color.foreground} />}
-        disabled={!account.ready}
-        onPress={() => void run("sign-in", account.signIn)}
-      />
-      <Button label="Keep browsing" variant="ghost" onPress={() => close()} />
+      <View style={{ gap: SPACE.sm }}>
+        <Button
+          label="Create account"
+          leading={<PasskeyGlyph color={color.primaryForeground} />}
+          disabled={!account.ready}
+          onPress={flow.create}
+        />
+        <Button label="I already have an account" variant="outline" disabled={!account.ready} onPress={flow.signIn} />
+        <Button label="Keep browsing" variant="ghost" size="sm" onPress={() => close()} />
+      </View>
     </>
   );
 }

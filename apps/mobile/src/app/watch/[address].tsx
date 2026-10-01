@@ -23,6 +23,7 @@ export default function WatchScreen() {
   const params = useLocalSearchParams<{ address: string }>();
   const raw = typeof params.address === "string" ? params.address : "";
   const [value, setValue] = useState(ADDRESS.test(raw) ? "" : raw);
+  const [focused, setFocused] = useState(false);
   const valid = ADDRESS.test(value.trim());
 
   if (!ADDRESS.test(raw)) {
@@ -30,7 +31,7 @@ export default function WatchScreen() {
       <Screen>
         <Stack.Screen options={{ title: "Watch an account" }} />
         <Panel style={styles.panel}>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
             Paste any Senryo address or open a shared watch link. Read-only: nothing here can move money.
           </Text>
           <TextInput
@@ -41,14 +42,16 @@ export default function WatchScreen() {
             autoCapitalize="none"
             autoCorrect={false}
             accessibilityLabel="Address to watch"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             style={[
               TYPE.numSm,
               styles.input,
-              { color: color.ink, borderColor: valid || !value ? color.hairline : color.down },
+              { color: color.ink, borderColor: value && !valid ? color.down : focused ? color.ring : color.hairline },
             ]}
           />
           {value && !valid ? (
-            <Text style={[TYPE.caption, { color: color.down }]}>
+            <Text style={[TYPE.rowDetail, { color: color.down }]}>
               That isn't an address — it starts with 0x and has 40 hex characters.
             </Text>
           ) : null}
@@ -60,7 +63,7 @@ export default function WatchScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: `Watching ${shortAddress(raw)}` }} />
-      <SectionLabel>READ-ONLY</SectionLabel>
+      <SectionLabel>Read-only</SectionLabel>
       <Panel style={styles.panel}>
         <Text selectable style={[TYPE.numSm, { color: color.ink }]}>
           {raw}
@@ -73,7 +76,7 @@ export default function WatchScreen() {
           onPress={() => void Linking.openURL(explorerAddressUrl(network.chainId, raw))}
         />
       </Panel>
-      <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
         This address's live balances, positions and history appear here once the indexer is connected. The explorer
         shows its onchain activity now.
       </Text>
@@ -82,6 +85,7 @@ export default function WatchScreen() {
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.md, gap: SPACE.sm },
-  input: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, paddingHorizontal: SPACE.md, height: SIZE.buttonHeight },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
+  /** A text input keeps its hairline boundary (the surface rule's one allowed border); focus turns it to the ring. */
+  input: { borderWidth: HAIRLINE_PX, borderRadius: RADIUS.sm, paddingHorizontal: SPACE.md, height: SIZE.inputHeight },
 });

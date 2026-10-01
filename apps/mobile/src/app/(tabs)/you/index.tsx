@@ -5,9 +5,10 @@ import { ListRow } from "~/components/kit/ListRow";
 import { Panel, SectionLabel } from "~/components/kit/Surface";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
-import { UtilityButton } from "~/components/shell/UtilityRow";
+import { AlertsButton, UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { DiagnosticsPanel } from "~/features/auth/DiagnosticsPanel";
 import { IdentityPanel } from "~/features/auth/IdentityPanel";
+import { SessionChip } from "~/features/auth/SessionChip";
 import { StarterCard } from "~/features/auth/StarterCard";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
@@ -58,13 +59,16 @@ export default function You() {
   const { color } = useTheme();
   return (
     <CollapsingScreen
-      tab="you"
       left={<TabTitle>You</TabTitle>}
       utilities={
-        <UtilityButton label="Account and settings" onPress={() => router.push(ROUTES.accountPreferences)}>
-          <Settings size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.text2} />
-        </UtilityButton>
+        <>
+          <AlertsButton />
+          <UtilityButton label="Account and settings" onPress={() => router.push(ROUTES.accountPreferences)}>
+            <Settings size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+          </UtilityButton>
+        </>
       }
+      status={<SessionChip />}
     >
       <IdentityPanel />
       {account.hint ? <StarterCard /> : null}
@@ -72,14 +76,8 @@ export default function You() {
         <View key={section.label} style={{ gap: SPACE.sm }}>
           <SectionLabel>{section.label}</SectionLabel>
           <Panel>
-            {section.rows.map((row, i) => (
-              <ListRow
-                key={row.title}
-                title={row.title}
-                detail={row.detail}
-                first={i === 0}
-                onPress={() => router.push(row.href)}
-              />
+            {section.rows.map((row) => (
+              <ListRow key={row.title} title={row.title} detail={row.detail} onPress={() => router.push(row.href)} />
             ))}
           </Panel>
         </View>

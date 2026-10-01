@@ -1,15 +1,17 @@
 import { DECIMALS, formatUnits } from "@senryo/core";
-import { Info } from "lucide-react-native";
+import { Check, Info } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
 import { KeyValue } from "~/components/kit/Surface";
+import { usePressScale } from "~/components/kit/usePressScale";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { pct, price18, priceDecimalsOf, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { type CandlePalette, type CandleStyle, saveCandleStyle, useCandleStyle } from "./candle-style";
 import { QUANTITY_DECIMALS } from "./constants";
 import type { useTicket } from "./useTicket";
@@ -49,7 +51,7 @@ export function LiquidationInfo({
         margin.
       </Text>
       {liq !== undefined && liq !== null && away !== undefined && away !== null ? (
-        <Text style={[TYPE.meta, styles.centerText, { color: color.text3 }]}>
+        <Text style={[TYPE.rowDetail, styles.centerText, { color: color.text3 }]}>
           This order: {line.symbol} {side} at {t.leverage}× would liquidate at $
           {price18(liq, priceDecimalsOf(line.marketId))}, {pct(away < 0n ? -away : away)} {away < 0n ? "past" : "from"}{" "}
           the oracle price.
@@ -116,7 +118,8 @@ const PALETTES: ReadonlyArray<{ value: CandlePalette; label: string }> = [
 
 /**
  * Candle settings (FT106/C41, F40; Codex S1b.7 consult #10): body on/off, the colour pair, colour by previous close —
- * Cancel discards, Save persists. Borders are listed as unavailable rather than offered and ignored.
+ * Cancel discards, Save persists. Candle borders are listed as unavailable rather than offered and ignored. Options are
+ * rows separated by their own height; the colour pair is two borderless plates, the chosen one filled and checked.
  */
 export function CandleSettings({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { color } = useTheme();
@@ -140,27 +143,22 @@ export function CandleSettings({ open, onClose }: { open: boolean; onClose: () =
         onChange={(v) => set({ previousClose: v })}
       />
       <Toggle label="Body" value={draft.body} onChange={(v) => set({ body: v })} />
-      <View style={[styles.optionRow, { borderColor: color.border }]}>
+      <View style={styles.optionRow}>
         <Text style={[TYPE.row, { color: color.text3 }]}>Borders</Text>
-        <Text style={[TYPE.meta, { color: color.text3 }]}>Unavailable</Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Unavailable</Text>
       </View>
       <View style={styles.palettes} accessibilityRole="radiogroup" accessibilityLabel="Up and down colours">
         {PALETTES.map((p) => {
-          const on = draft.palette === p.value;
           const [up, down] = swatch(p.value);
           return (
-            <Pressable
+            <PaletteOption
               key={p.value}
+              label={p.label}
+              up={up}
+              down={down}
+              on={draft.palette === p.value}
               onPress={() => set({ palette: p.value })}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
-              accessibilityLabel={p.label}
-              style={[styles.palette, { borderColor: on ? color.link : color.border }]}
-            >
-              <View style={[styles.swatch, { backgroundColor: up }]} />
-              <View style={[styles.swatch, { backgroundColor: down }]} />
-              <Text style={[TYPE.meta, { color: color.ink }]}>{p.label}</Text>
-            </Pressable>
+            />
           );
         })}
       </View>
@@ -179,10 +177,48 @@ export function CandleSettings({ open, onClose }: { open: boolean; onClose: () =
   );
 }
 
+/** One colour pair: the chosen one is a filled plate with a check (never fill alone), the other a bare label. */
+function PaletteOption({
+  label,
+  up,
+  down,
+  on,
+  onPress,
+}: {
+  label: string;
+  up: string | undefined;
+  down: string | undefined;
+  on: boolean;
+  onPress: () => void;
+}) {
+  const { color } = useTheme();
+  const press = usePressScale();
+  return (
+    <Animated.View style={[styles.flex, press.style]}>
+      <Pressable
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={onPress}
+        accessibilityRole="radio"
+        accessibilityState={{ checked: on }}
+        accessibilityLabel={label}
+        style={[styles.palette, { backgroundColor: on ? color.raised2 : color.transparent }]}
+      >
+        <View style={[styles.swatch, { backgroundColor: up }]} />
+        <View style={[styles.swatch, { backgroundColor: down }]} />
+        <Text style={[TYPE.chipCategory, styles.flex, { color: on ? color.ink : color.text3 }]} numberOfLines={1}>
+          {label}
+        </Text>
+        {on ? <Check size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.link} /> : null}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   const { color } = useTheme();
   return (
-    <View style={[styles.optionRow, { borderColor: color.border }]}>
+    <View style={styles.optionRow}>
       <Text style={[TYPE.row, { color: color.ink }]}>{label}</Text>
       <Switch
         value={value}
@@ -202,18 +238,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: HAIRLINE_PX,
+    gap: SPACE.md,
   },
   palettes: { flexDirection: "row", gap: SPACE.sm },
   palette: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: SPACE.xs,
     minHeight: SIZE.touch,
     paddingHorizontal: SPACE.md,
-    borderWidth: HAIRLINE_PX,
-    borderRadius: RADIUS.sm,
+    borderRadius: BUTTON.radius.sm,
   },
   swatch: { width: SIZE.markChip, height: SIZE.markChip, borderRadius: RADIUS.xs },
   actions: { flexDirection: "row", gap: SPACE.md },

@@ -1,8 +1,9 @@
 /**
- * Hold to confirm (D-177; C43 → the 500 ms hold pill that replaces Fomo's slider, which is only ever shown disabled).
- * RN port of 21st kokonutd/hold-and-release-button (#8), Living Lacquer: a primary pill; holding for 500 ms sweeps a
+ * Hold to confirm (D-177; C43 → the 500 ms hold button that replaces Fomo's slider, which is only ever shown disabled).
+ * RN port of 21st kokonutd/hold-and-release-button (#8), Living Lacquer: a primary rounded rectangle with the button's
+ * 12 pt corners and top highlight (the shape of Fomo F37's commit rail, never a pill); holding for 500 ms sweeps a
  * lighter fill left→right (linear) and fires `onConfirm` once. `press` haptic at press-in, `confirm` on completion.
- * Disabled, the pill shows its reason on the quiet surface ("Enter an amount", "Insufficient funds").
+ * Disabled, it shows its reason on the quiet surface ("Enter an amount", "Insufficient funds").
  * Resets (Codex S1b.7 consult #3): an early release, a change of `resetKey` mid-hold (the order's identity — price,
  * amount, side, leverage, account, mode), the app going to the background, or the control being disabled mid-hold
  * all cancel the hold and invalidate any queued completion; a fresh press is required. Reduce Motion keeps the timer,
@@ -21,7 +22,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { fire } from "~/feedback/fire";
-import { DURATION, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, DURATION, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 export const HOLD_TO_CONFIRM_MS = 500;
 /** The fill is the button's ink at this opacity over the primary plate (web: primary-foreground/30). */
@@ -155,7 +156,11 @@ export function HoldToConfirm({
         if (onAccessibleActivate) onAccessibleActivate();
         else complete(attempt.current);
       }}
-      style={[styles.button, { backgroundColor: disabled ? color.raised2 : color.primary }]}
+      style={[
+        styles.button,
+        { backgroundColor: disabled ? color.raised2 : color.primary },
+        { boxShadow: `inset 0px ${BUTTON.rim}px 0px 0px ${disabled ? color.surfaceRim : color.primaryRim}` },
+      ]}
     >
       <Animated.View
         pointerEvents="none"
@@ -173,7 +178,7 @@ export function HoldToConfirm({
 const styles = StyleSheet.create({
   button: {
     minHeight: SIZE.buttonHeight,
-    borderRadius: RADIUS.pill,
+    borderRadius: BUTTON.radius.md,
     overflow: "hidden",
     justifyContent: "center",
   },

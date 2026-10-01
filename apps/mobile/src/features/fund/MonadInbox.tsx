@@ -3,7 +3,8 @@
  * (`InboxFactory.inboxOf`, read from the chain), registered with the api so the keeper credits it. The user needs
  * no MON. The status reads the inbox itself: waiting → arrived (below the minimum, or crediting) → credited.
  * `compact` is the fan's Receive sheet (P21/FT057, Codex S1b.7 consult #8): mode + full network, the accepted assets,
- * the QR and address with Copy/Share, the warning and the status line; the full page keeps "How it works".
+ * the QR and address with Copy/Share, the warning and the status line; the full page keeps "How it works". Every
+ * block is a borderless filled group.
  */
 
 import { INBOX_SWEEP_MIN_USD6 } from "@senryo/config";
@@ -63,7 +64,7 @@ function InboxPanel({ user, compact }: { user: `0x${string}`; compact: boolean }
       {({ inbox: address, waitingUsd6 }) => (
         <View style={styles.stack}>
           <Panel style={styles.panel}>
-            <Text style={[TYPE.caption, { color: practice ? color.practice : color.mainnet }]}>
+            <Text style={[TYPE.rowDetail, { color: practice ? color.practice : color.mainnet }]}>
               {practice ? "Practice · Paper money" : "Mainnet · Real money"} · {network.name} · AUSD or USDC
             </Text>
             <View style={styles.qr}>
@@ -79,7 +80,7 @@ function InboxPanel({ user, compact }: { user: `0x${string}`; compact: boolean }
             <AddressActions address={address} />
             {compact ? (
               <>
-                <Text style={[TYPE.caption, { color: color.warn }]}>
+                <Text style={[TYPE.rowDetail, { color: color.warn }]}>
                   Send only AUSD or USDC on the {network.name} network. Other tokens, or any other network, can't be
                   recovered from this address.
                 </Text>
@@ -93,27 +94,27 @@ function InboxPanel({ user, compact }: { user: `0x${string}`; compact: boolean }
           {compact ? null : (
             <>
               <Panel style={styles.panel}>
-                <SectionLabel>STATUS</SectionLabel>
+                <SectionLabel>Status</SectionLabel>
                 <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{statusLine(waitingUsd6, credited)}</Text>
                 {watch.isError ? (
                   <View style={styles.stack}>
-                    <Text style={[TYPE.caption, { color: color.warn }]}>
+                    <Text style={[TYPE.rowDetail, { color: color.warn }]}>
                       Couldn't register this address with Senryo. A deposit sent now waits in it until this works.
                     </Text>
                     <Button label="Try again" variant="outline" size="sm" onPress={() => void watch.refetch()} />
                   </View>
                 ) : watch.isPending ? (
-                  <Text style={[TYPE.caption, { color: color.inkMuted }]}>Getting your address ready…</Text>
+                  <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Getting your address ready…</Text>
                 ) : null}
               </Panel>
               <Panel style={styles.panel}>
-                <SectionLabel>HOW IT WORKS</SectionLabel>
+                <SectionLabel>How it works</SectionLabel>
                 <MarkedLine id={collateralId(network.chainId, "AUSD")} label="AUSD on Monad" size={SIZE.markToken} />
                 <MarkedLine id={collateralId(network.chainId, "USDC")} label="USDC on Monad" size={SIZE.markToken} />
-                <KeyValue label="MINIMUM" value={usd(INBOX_SWEEP_MIN_USD6)} />
-                <KeyValue label="ARRIVES" value="About a minute after your transfer confirms" />
-                <KeyValue label="GAS" value="None — Senryo credits it for you" />
-                <Text style={[TYPE.caption, { color: color.warn }]}>
+                <KeyValue label="Minimum" value={usd(INBOX_SWEEP_MIN_USD6)} />
+                <KeyValue label="Arrives" value="About a minute after your transfer confirms" />
+                <KeyValue label="Gas" value="None — Senryo credits it for you" />
+                <Text style={[TYPE.rowDetail, { color: color.warn }]}>
                   Send only AUSD or USDC on the {network.name} network. Other tokens, or any other network, can't be
                   recovered from this address.
                 </Text>
@@ -189,7 +190,7 @@ function AddressActions({ address }: { address: string }) {
 
 const styles = StyleSheet.create({
   stack: { gap: SPACE.md },
-  panel: { padding: SPACE.md, gap: SPACE.sm },
+  panel: { padding: SPACE.lg, gap: SPACE.md },
   qr: { alignItems: "center", paddingVertical: SPACE.sm },
   actions: { flexDirection: "row", gap: SPACE.sm },
 });
