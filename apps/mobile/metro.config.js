@@ -3,11 +3,20 @@
 // dev copies of React / React Query, and React Native refuses two Reacts, so every import of these singletons
 // resolves from the app's own node_modules. S6: `@senryo/account` carries dev copies of its native peers
 // (react-native-passkey 3.6.1, expo-secure-store) for its own typecheck — the app's autolinked copies must win.
+// S1b.1: `@senryo/identity` carries a dev copy of react-native-svg for the same reason (two copies would register
+// the native SVG views twice).
 const path = require("node:path");
 const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
-const SINGLETONS = ["react", "react-native", "@tanstack/react-query", "react-native-passkey", "expo-secure-store"];
+const SINGLETONS = [
+  "react",
+  "react-native",
+  "@tanstack/react-query",
+  "react-native-passkey",
+  "expo-secure-store",
+  "react-native-svg",
+];
 const appEntry = path.join(__dirname, "node_modules", "index.js");
 
 const upstream = config.resolver.resolveRequest;

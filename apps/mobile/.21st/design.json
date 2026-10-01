@@ -13,7 +13,7 @@
   "sources": {
     "tokens": ["packages/tokens/src/palette.ts", "packages/tokens/src/scale.ts", "packages/tokens/src/marks.ts"],
     "components": ["apps/mobile/src/components"],
-    "assets": ["brand/"],
+    "assets": ["brand/", "brand/art/", "packages/identity/sources/"],
     "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
   },
   "design": {
@@ -512,6 +512,29 @@
         "url": "https://21st.dev/@originui/components/slider",
         "port": "same as slider port (GH Pan + detents 1/2/5/10)",
         "status": "planned (S5)"
+      },
+      {
+        "name": "entity-mark",
+        "source": "reference-native reconstruction (no 21st source)",
+        "evidence": ["LG01-LG38", "F21", "F22", "F32", "S24", "S27", "reference-study 08 Asset-delivery contract"],
+        "port": "@senryo/identity EntityMark: first-party mark from the provenance registry, contextual badge as a separate cut-out layer, labelled dashed fallback for loading/failed/gap/unidentified (never a letter disc)",
+        "deviations": "Senryo-original koban/chōgin/FX-pair art for XAU/XAG/FX (LG38; never Tether Gold, LG19)",
+        "status": "built (S1b.1) — packages/identity/src/native/EntityMark.tsx, app wrapper src/components/identity/EntityMark.tsx"
+      },
+      {
+        "name": "venue-chip",
+        "source": "reference-native reconstruction (no 21st source)",
+        "evidence": ["F32", "LG06", "LG07"],
+        "port": "pill: venue's own mark + name on ticket/position/receipt, separate from asset, network and status",
+        "deviations": "Senryo / Perpl only; never Fomo's Hyperliquid badge (v2-plan §5.12)",
+        "status": "built (S1b.4) — src/components/identity/VenueChip.tsx"
+      },
+      {
+        "name": "mark-cluster",
+        "source": "reference-native reconstruction (no 21st source)",
+        "evidence": ["F29", "LG32", "S24"],
+        "port": "overlapping real marks with ground-colour cut-out rings (route source networks, swap pairs)",
+        "status": "built (S1b.4) — src/components/identity/MarkCluster.tsx"
       }
     ],
     "built": [

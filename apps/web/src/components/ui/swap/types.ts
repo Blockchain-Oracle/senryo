@@ -15,6 +15,8 @@ export interface Chain {
   shortName: string;
   /** Any CSS colour; pass a token such as `var(--chain-base)`. */
   color: string;
+  /** Canonical network id (`@senryo/identity`), drawn as the token's network badge. */
+  entity: string;
 }
 
 export interface Token {
@@ -25,7 +27,8 @@ export interface Token {
   /** Display-only sample balance (real balances are bigint base units, wired in S8). */
   balance: number;
   usd: number;
-  icon: string;
+  /** Canonical asset id (`@senryo/identity`): its real mark, or a labelled fallback when the pair isn't keyed. */
+  entity: string | undefined;
 }
 
 /** Quote rows shown under the fields; the real quote comes from the Aurora client in S8. */

@@ -3,6 +3,7 @@
  * in a paging row with an "N / 3" progress rule. Port of the pre-existing onboarding mechanics (plan §2.4), D2 look;
  * the pages are static plates (no invented prices — the live XAU card joins with real market data in S8).
  */
+import { ids } from "@senryo/identity";
 import { useEffect, useState } from "react";
 import {
   type NativeScrollEvent,
@@ -15,9 +16,13 @@ import {
   View,
 } from "react-native";
 import Animated, { FadeIn, FadeOut, useReducedMotion, ZoomIn } from "react-native-reanimated";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { fire } from "~/feedback/fire";
 import { INTRO_HOLD_MS } from "~/lib/constants/auth";
 import { DURATION, FONT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+
+/** The real seal (brand/senryo-seal.svg via @senryo/identity) — never 千 set in a live font (brand/README.md). */
+const SEAL = ids.brand("senryo");
 
 const PAGES = [
   {
@@ -46,8 +51,8 @@ function Intro({ onDone }: { onDone: () => void }) {
   }, [onDone]);
   return (
     <Pressable onPress={onDone} accessibilityLabel="Skip intro" style={styles.intro}>
-      <Animated.View entering={ZoomIn.duration(DURATION.slow)} style={[styles.seal, { borderColor: color.primary }]}>
-        <Text style={[styles.sealGlyph, { color: color.primary }]}>千</Text>
+      <Animated.View entering={ZoomIn.duration(DURATION.slow)}>
+        <EntityMark id={SEAL} size={SIZE.seal} variant="symbol" decorative />
       </Animated.View>
       <Animated.Text entering={FadeIn.delay(DURATION.base)} style={[styles.word, { color: color.ink }]}>
         SENRYO<Text style={{ color: color.primary }}>/</Text>
@@ -117,15 +122,6 @@ const PROGRESS_WIDTH = SIZE.touch + SPACE.xl;
 
 const styles = StyleSheet.create({
   intro: { flex: 1, alignItems: "center", justifyContent: "center", gap: SPACE.lg },
-  seal: {
-    width: SIZE.seal,
-    height: SIZE.seal,
-    borderWidth: SIZE.sealStroke,
-    borderRadius: RADIUS.sm,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sealGlyph: { fontSize: SIZE.sealGlyph, lineHeight: SIZE.seal, fontFamily: FONT.sansBold },
   word: { ...TYPE.numLg, fontFamily: FONT.monoStrong },
   pagesWrap: { flex: 1, justifyContent: "center" },
   page: { paddingHorizontal: SIZE.gutter, gap: SPACE.md, justifyContent: "center" },

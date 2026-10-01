@@ -19,7 +19,9 @@
       "!contracts",
       "!indexer/generated",
       "!.claude",
-      "!packages/tokens/src/tokens.css"
+      "!packages/tokens/src/tokens.css",
+      "!packages/identity/sources",
+      "!brand/art"
     ]
   },
   "formatter": {

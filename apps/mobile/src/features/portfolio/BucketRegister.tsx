@@ -1,8 +1,13 @@
 import { BPS_DENOMINATOR } from "@senryo/core";
+import { ids } from "@senryo/identity";
 import { StyleSheet, Text, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { Panel } from "~/components/kit/Surface";
 import { pct, usd } from "~/lib/money";
 import { HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+
+/** The fourth bucket is Perpl's: its own venue mark, not a colour swatch. */
+const PERPL = ids.venue("perpl");
 
 export interface Buckets {
   freeToTrade6: bigint;
@@ -42,7 +47,10 @@ export function BucketRegister({ buckets }: { buckets: Buckets }) {
               i >= 2 ? { borderTopWidth: HAIRLINE_PX, borderColor: color.hairline } : null,
             ]}
           >
-            <Text style={[TYPE.label, { color: color.inkMuted }]}>{c.label}</Text>
+            <View style={styles.label}>
+              {c.key === "perpl" ? <EntityMark id={PERPL} size={SIZE.markChip} variant="symbol" decorative /> : null}
+              <Text style={[TYPE.label, { color: color.inkMuted }]}>{c.label}</Text>
+            </View>
             <Text style={[TYPE.numMd, { color: c.value === undefined ? color.inkMuted : c.tint }]}>
               {c.value === undefined ? "—" : usd(c.value, 0)}
             </Text>
@@ -56,10 +64,14 @@ export function BucketRegister({ buckets }: { buckets: Buckets }) {
       </View>
       <View style={styles.legend}>
         {cells.map((c) => (
-          <Text key={c.key} style={[TYPE.caption, { color: color.inkMuted }]}>
-            <Text style={{ color: c.tint }}>■ </Text>
-            {pct(share(c.value))}
-          </Text>
+          <View key={c.key} style={styles.label}>
+            {c.key === "perpl" ? (
+              <EntityMark id={PERPL} size={SIZE.markChip} variant="symbol" decorative />
+            ) : (
+              <Text style={[TYPE.caption, { color: c.tint }]}>■</Text>
+            )}
+            <Text style={[TYPE.caption, { color: color.inkMuted }]}>{pct(share(c.value))}</Text>
+          </View>
         ))}
       </View>
     </View>
@@ -70,6 +82,7 @@ const styles = StyleSheet.create({
   wrap: { gap: SPACE.md },
   grid: { flexDirection: "row", flexWrap: "wrap" },
   cell: { width: "50%", padding: SPACE.md, gap: SPACE.xs },
+  label: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   bar: { flexDirection: "row", height: SIZE.partitionBar, gap: SPACE.xs },
   segment: { borderRadius: RADIUS.sm },
   legend: { flexDirection: "row", justifyContent: "space-between" },

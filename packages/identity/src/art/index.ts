@@ -1,0 +1,17 @@
+/** Every artwork record — first-party, public-domain and Senryo original — by key. */
+import type { ArtSource } from "../types.ts";
+import { EXCHANGE_ART } from "./exchanges.ts";
+import { FLAG_ART } from "./flags.ts";
+import { NETWORK_ART } from "./networks.ts";
+import { ORIGINAL_ART } from "./originals.ts";
+import { PROVIDER_ART } from "./providers.ts";
+
+export const ART_SOURCES: readonly ArtSource[] = [
+  ...NETWORK_ART,
+  ...PROVIDER_ART,
+  ...EXCHANGE_ART,
+  ...FLAG_ART,
+  ...ORIGINAL_ART,
+];
+
+export const ART: Readonly<Record<string, ArtSource>> = Object.fromEntries(ART_SOURCES.map((a) => [a.key, a]));

@@ -11,6 +11,9 @@ export const SWAP_DRAWER_REDUCED_S = 0.12;
 
 /** Simulated quote refresh while inputs settle (the real quote comes from the Aurora client in S8). */
 export const SWAP_QUOTE_DEBOUNCE_MS = 450;
+
+/** Token mark edge in the picker and field (px): a ≥ 32 px disc (Circle's USDC minimum, v2-plan §5.12). */
+export const TOKEN_MARK_SIZE = 32;
 export const SWAP_FLIP_DEG = 180;
 
 /** Display-only amount formatting thresholds. */

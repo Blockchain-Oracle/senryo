@@ -42,6 +42,9 @@ function roles(t: TokenPalette, dark: boolean) {
     /** Text on a light plate (QR card) in both themes. */
     paper: LIGHT_TOKENS.card,
     paperInk: LIGHT_TOKENS.foreground,
+    /** Text on the Kinpaku card's lacquer (the art is black in both themes). */
+    onLacquer: DARK_TOKENS.foreground,
+    onLacquerMuted: DARK_TOKENS.mutedForeground,
     /** Shadows are off in D2; the toast needs one colour for its plate border only. */
     transparent: "transparent",
   };

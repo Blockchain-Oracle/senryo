@@ -32,8 +32,15 @@ export const SIZE = {
   cardChipWidth: 36,
   cardChipHeight: 28,
   seal: 88,
-  sealGlyph: 48,
   sealStroke: 2,
+  /** Identity marks (v2-plan §5.12): market rows 32–40, market detail ~48, table cells, inline chips and badges. */
+  markRow: 36,
+  markDetail: 48,
+  markCell: 24,
+  /** Token discs: USDC's owner minimum is 32 px (Circle brand guide). */
+  markToken: 32,
+  markInline: 20,
+  markChip: 16,
 } as const;
 
 /** Motion: 120–200 ms on `bezier(0.2, 0, 0, 1)`; nothing bounces except the sheet's clamped spring (D-004). */

@@ -19,6 +19,7 @@
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/identity": "workspace:*",
     "@senryo/indexer-client": "workspace:*",
     "@senryo/query": "workspace:*",
     "@senryo/tokens": "workspace:*",

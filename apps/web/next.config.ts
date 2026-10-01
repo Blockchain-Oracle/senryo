@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     "@senryo/config",
     "@senryo/contracts",
     "@senryo/core",
+    "@senryo/identity",
     "@senryo/tokens",
   ],
   reactStrictMode: true,

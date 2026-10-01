@@ -1,13 +1,15 @@
 import { durationUntil, ONE_USD6, RISK } from "@senryo/core";
+import { collateralId } from "@senryo/identity";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { MarkedLine } from "~/components/identity/MarkedLine";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, SectionLabel } from "~/components/kit/Surface";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { pct, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { LP_DEPOSIT_CHIPS_USD, LP_REDEEM_STEPS_BPS } from "./constants";
 import { useLp } from "./useLp";
 
@@ -60,7 +62,12 @@ export function LpScreen() {
 
             <Panel style={styles.panel}>
               <SectionLabel>DEPOSIT AUSD</SectionLabel>
-              <KeyValue label="IN YOUR WALLET" value={usd(v.walletAusd)} />
+              <MarkedLine
+                id={collateralId(network.chainId, "AUSD")}
+                label="AUSD in your wallet"
+                size={SIZE.markToken}
+                value={usd(v.walletAusd)}
+              />
               <Segmented
                 options={[
                   ...LP_DEPOSIT_CHIPS_USD.map((c) => ({ value: String(c * ONE_USD6), label: `$${c}` })),

@@ -22,6 +22,7 @@
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/identity": "workspace:*",
     "@senryo/tokens": "workspace:*",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
