@@ -793,6 +793,14 @@ Blocked and reserved until the user says "exclude" or "build":
 travel/borrow/cashback, the tracking prompt, and PIN/password, since each is a separate product. Keep fiat (B3) and referrals
 (B5) Blocked-with-path, because both serve the "fund your account" and growth promises.
 
+**Decided 1 Oct 2026 (D-194, D-195):**
+- The user **excluded** predictions and sports, NFTs, the dApp browser, travel/borrowing/virtual accounts/cashback, and the
+  tracking prompt. They get no screens and no reserved placeholders.
+- A separate PIN or password is **excluded** after research (D-195). Phones without Face ID or a fingerprint use the passkey
+  with the phone's own PIN, pattern or passcode.
+- Kept for later (Blocked with a path): buying with a card or Apple Pay, invite rewards, competitions and clans, news and
+  chat, X linking, and hardware/private-key import.
+
 ## 8. D-entries to record (lead range D-168…D-179)
 | D | Decision |
 |---|---|

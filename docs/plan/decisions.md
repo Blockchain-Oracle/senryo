@@ -193,6 +193,17 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 
     These belong to S1b.7 acceptance. The fallback stays documented for that case (NativeTabs on iOS 26 styled as an Adapted C15, a custom capsule elsewhere).
   - · S1b agent A2 (lead merges; the shell build stays the lead's `(tabs)/_layout.tsx`).
+- **D-194** 2026-10-01 · **User exclusions.** The user removed these from Senryo: predictions and sports, NFTs and collectibles, the in-app dApp browser, travel/borrowing/virtual accounts/cashback, and the tracking prompt. They are reference-app features that are separate products ("we didn't say we wanted any of this").
+  - Ledger rows are now Excluded: FT025, FT027, FT028, FT030, FT049–FT054, C24, plus the C07/C12/C20/C37 and FT063 branches. They get no screens and no reserved placeholders.
+  - Kept for later (Blocked with a path): buying with a card or Apple Pay (B3), invite rewards and campaigns (B5), competitions and clans, news and chat, X linking (B6), hardware/private-key import (B4).
+  - Source: user, 1 Oct · closes Q-020.
+- **D-195** 2026-10-01 · **No separate Senryo PIN or password.**
+  - Research: a passkey is verified by the phone's own lock. On Android, a PIN, pattern or password works when there's no fingerprint (Android 9+, screen lock required). On iPhone, the device passcode backs Face ID / Touch ID (iCloud Keychain).
+  - The app already falls back: without biometrics no fast-unlock item is saved (`canPersistUnlock` = `canUseBiometricAuthentication`), and unlock, trade confirm and step-up run a pinned passkey ceremony, which the OS verifies with that lock.
+  - A phone with no screen lock can't hold a passkey at all, so the failure copy now says "set a screen lock".
+  - Ledger rows FT004, FT005, FT113 and C05 are Excluded.
+  - Reversible if the user wants an extra in-app PIN.
+  - Sources: support.google.com/android/answer/14124480, support.apple.com/en-us/102195 · lead (user asked for the research), 1 Oct.
 - **D-210** 2026-09-30 · **Social identity rules beyond the plan, adopted** (S12b agent, reviewed by lead): a fifth handle state `held` (a released handle is tombstoned 30 days with `heldUntil`; its previous owner may reclaim it); at most 5 released handles per account per 30 days (429) so renaming can't squat; blocked-word/impersonation filter on handles, display names and bios; a DB CHECK that a network's public trades require its listing; `GET /v1/profile` for the owner's settings; unlisted and absent profiles answer the same 404; follows capped at 1,000 per account (exact under concurrency) · `services/api/scripts/social-check.ts` 39/39 on local Postgres, re-run after the merge with migrations 0001–0005 · S12b agent + lead. Open: whether the handle tombstone survives "delete my data" (anti-impersonation vs unlinking) — Q-022.
 - **D-211** 2026-10-01 · **Feed model.** One `feed_events` table holds fills (as `position` or `fill`) and theses; visibility is decided at read time. Turning trade sharing on stamps `public_trades_<network>_since`: only fills after it appear, and toggling sharing off and on never republishes earlier trades · `services/api/src/social/feed.ts`, migration 0007 · S12b agent B (adopted by lead).
 - **D-212** 2026-10-01 · **Leaderboard metric includes borrow already.**
@@ -258,6 +269,6 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 | Q-017 | Monad devrel | Builder testnet-MON grant for the practice drip/top-ups (faucets are small) | practice scale | user faucet claims | open (message [OK?]) |
 | Q-018 | **user** | Fiat on-ramp provider supporting Monad USDC (Coinbase Onramp / Transak / MoonPay) — unblocks B3 | FT020/021/089–093 | Blocked, QR/voucher only (D-041) | open |
 | Q-019 | FIDO Alliance | Passkey icon download (form at fidoalliance.org/get-the-passkey-icon) | identity W3 | — | open |
-| Q-020 | **user** | Codex's proposed exclusions (fiat, predictions, clans/competitions, NFTs, dApp browser, benefits/cashback, rewards/referral payouts, news/chat, X link, PIN/password, tracking): exclude or build? | parity ledger | Blocked + reserved | open |
+| Q-020 | **user** | Codex's proposed exclusions: exclude or build? | parity ledger | Blocked + reserved | **closed 2026-10-01: D-194 (user excluded predictions, NFTs, dApp browser, travel/borrow/cashback, tracking) + D-195 (no separate PIN)** |
 | Q-021 | **user** | Commit the reference study to the public repo? | repo hygiene | untracked | **closed 2026-10-01 (user): the study never goes into git** (gitignored; tracked copies live in `docs/design/senryo-v2/`). The accidental 1137f57 blobs in history: purge = force-push of main, waits for the user's go-ahead |
 | Q-022 | lead | On "delete my data", keep the 30-day handle tombstone? | S12b.8 | keep, then expire | **closed 2026-10-01: lead decides (user: not a user question) — keep the 30-day hold** (anti-impersonation; the copy says so) |

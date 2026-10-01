@@ -6,6 +6,9 @@
 > decides Q-021) and the tracked `docs/design/senryo-v2/PROJECT-HANDOFF.md`. Paths below are repo-root relative, written as
 > code so they resolve from either copy. The machine ledger is `docs/design/senryo-parity-ledger.json` (216 rows).
 
+
+> **Decisions 1 Oct 2026:** predictions/sports, NFTs, the dApp browser, travel/borrowing/virtual accounts/cashback and the tracking prompt are **Excluded by the user (D-194)**; a separate PIN/password is **Excluded (D-195)** — the passkey falls back to the phone's own lock. These get no screens and no reserved placeholders.
+
 ## 1. Authority record (reference-product-fidelity §1, v2-plan §1)
 
 | Field | Value |
@@ -85,7 +88,7 @@ and reserved until the user answers Q-020.
 | FT036 | Blocked | recovery-phrase import | Excluded (D-029/D-169 binding) |
 | FT041 | Adapted | referral reward/incentive | Blocked (B5) |
 | FT060 | Adapted | fiat 'Add Cash' branch | Blocked (B3) |
-| FT063 | Adapted | tracking prompt | Blocked (B9) |
+| FT063 | Adapted | tracking prompt | Excluded (D-194) |
 | FT067 | Adapted | referral reward/incentive | Blocked (B5) |
 | FT080 | Adapted | Google connected account | Excluded (D-029) |
 | FT080 | Adapted | Link X | Blocked (B6) |
@@ -97,10 +100,10 @@ and reserved until the user answers Q-020.
 | C03 | Adapted | OAuth rows | Excluded (D-029) |
 | C03 | Adapted | Shield/hardware/private-key rows | Blocked (B4) |
 | C04 | Adapted | OAuth browser boundary | Excluded (D-029) |
-| C07 | Adapted | tracking prompt | Blocked (B9) |
+| C07 | Adapted | tracking prompt | Excluded (D-194) |
 | C10 | Adapted | referral reward | Blocked (B5) |
-| C12 | Adapted | prediction insider attestation | Blocked (B8) |
-| C20 | Adapted | benefit tiles (travel/borrow/cashback) | Blocked (B5) |
+| C12 | Adapted | prediction insider attestation | Excluded (D-194) |
+| C20 | Adapted | benefit tiles (travel/borrow/cashback) | Excluded (D-194) |
 | C23 | Adapted | live presence/chat on cards | Blocked (B6) |
 | C28 | Adapted | rewards utility | Blocked (B5) |
 | C29 | Adapted | Google connected account | Excluded (D-029) |
@@ -108,7 +111,7 @@ and reserved until the user answers Q-020.
 | C30 | Adapted | clans | Blocked (B6) |
 | C31 | Adapted | Clans tab | Blocked (B6) |
 | C33 | Adapted | fiat row | Blocked (B3) |
-| C37 | Adapted | prediction Buy Up ticket | Blocked (B8) |
+| C37 | Adapted | prediction Buy Up ticket | Excluded (D-194) |
 
 **Blocked rows by blocker:**
 
@@ -117,12 +120,12 @@ and reserved until the user answers Q-020.
 | B1 | FT115 completed lifecycles | FT115 | Our own finalized deposits/orders/TP-SL/close/send/spend, with receipts and recovery (acceptance.md) |
 | B2 | Equities/oil execution | FT032·branch | W6 feed research passes (D-220), or Data Streams (Q-008) / Pyth (Q-014, paid → [OK?]) |
 | B3 | Fiat purchase | FT020, FT021, FT089, FT090, C36, LG22, LG27, LG35, FT060·branch, FT091·branch, FT092·branch, FT093·branch, C33·branch | User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?] |
-| B4 | PIN/password/hardware/private-key | FT003, FT004, FT005, FT036, FT113, C05, FT002·branch, C03·branch | An explicit security model beside passkeys |
+| B4 | hardware/private-key import | FT003, FT036, FT002·branch, C03·branch | An explicit security model beside passkeys (PIN/password FT004, FT005, FT113, C05: Excluded, D-195) |
 | B5 | Rewards, referrals, competitions, benefits | FT025, FT029, FT030, LG33, FT032·branch, FT041·branch, FT067·branch, FT082·branch, C10·branch, C20·branch, C28·branch | A defined programme (eligibility, accounting, payout) |
 | B6 | News, chat, X link, clans | FT031, FT040, FT047, FT084, LG34, FT080·branch, FT086·branch, C23·branch, C29·branch, C30·branch, C31·branch | Real sources/services and moderation |
-| B7 | NFTs, dApp browser | FT027, FT028 | Ownership/connect contracts |
-| B8 | Predictions | FT049, FT050, FT051, FT052, FT053, FT054, C24, C12·branch, C37·branch | Market/settlement authority and policy |
-| B9 | Tracking prompt | FT063·branch, C07·branch | A demonstrated purpose |
+| ~~B7~~ | NFTs, dApp browser | FT027, FT028 | **Excluded (D-194, user 1 Oct)** |
+| ~~B8~~ | Predictions | FT049, FT050, FT051, FT052, FT053, FT054, C24, C12·branch, C37·branch | **Excluded (D-194, user 1 Oct)** |
+| ~~B9~~ | Tracking prompt | FT063·branch, C07·branch | **Excluded (D-194, user 1 Oct)** |
 | B10 | Perpl practice + Perpl TP/SL | — | A funded testnet flow (Q-002) or a labelled paper adapter; Q-003 prerequisites |
 | B11 | Real Kinpaku issuance/spend | LG28 | S10 provider evidence |
 | B12 | Production logos + authored art | LG05, LG08, LG11, LG12, LG14, LG15, LG18 | First-party provenance plus material review (W3, v2-plan §5.10) |
@@ -301,17 +304,17 @@ every asynchronous route has loading, empty where applicable, failure, retry/can
 | Fiat asset / amount / payment | B3 | C34/C36, search, keypad, minimum, quote, fee and method |
 | Fiat verification / return / receipt | B3 | native/provider boundary, retained amount, decline/retry/refund/credit |
 | Referral setup / redemption | B5 | C10, optional skip, valid/invalid code, terms, actual reward status |
-| Rewards / campaigns / cashback | B5 | eligibility, provider identity, participation, redemption and payout |
-| Travel / borrowing / virtual accounts | B5 | real provider, limits, terms, authorization and lifecycle |
+| Rewards / campaigns | B5 | eligibility, provider identity, participation, redemption and payout (cashback: Excluded, D-194) |
+| ~~Travel / borrowing / virtual accounts~~ | Excluded (D-194) | not built, no reserved screen |
 | Competition | B5 | entry, period/scoring, rank, results and payout |
 | Organization/news / live market chat | B6 | authentic sources/people, content, interactions, presence definitions |
 | Clans list/detail/create/join | B6 | group identity, membership/permissions, scoring, leave/recovery |
-| Prediction discovery/detail/ticket | B8 | C24/C25/C37, expiry/outcome/target, policy, purchase and settlement |
-| NFT collection/detail/transfer | B7 | actual item identity/ownership, network, transfer review and receipt |
-| dApp discovery/browser/connect | B7 | destination identity, permissions/session, transaction review, disconnect |
+| ~~Prediction discovery/detail/ticket~~ | Excluded (D-194) | not built, no reserved screen |
+| ~~NFT collection/detail/transfer~~ | Excluded (D-194) | not built, no reserved screen |
+| ~~dApp discovery/browser/connect~~ | Excluded (D-194) | not built, no reserved screen |
 | X link/import | B6 | genuine authorization, cancel/error, confirmed account linkage |
 | Shield/hardware/private-key setup | B4 | supported security model, native/device boundary, recovery/error |
-| PIN/password setup/recovery | B4 | C05 or documented password ceremony, mismatch/forgotten/reset |
+| ~~PIN/password setup/recovery~~ | Excluded (D-195) | not built: phones without biometrics use the passkey with their own PIN/pattern/passcode |
 | Protected export (beyond the existing 24-word export) | B4 | step-up, exact export capability, secure presentation and confirmation |
 
 "Protected export": the 24-word export already ships under You › Advanced behind step-up (FT081, lead correction); the
