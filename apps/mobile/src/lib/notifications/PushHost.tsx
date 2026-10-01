@@ -7,13 +7,23 @@
  */
 import { type Href, router } from "expo-router";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { useAccount } from "~/lib/account/provider";
 import { linkTarget } from "~/lib/deep-link";
 import { notificationsModule } from "~/lib/native-modules";
 import { activeNetwork } from "~/lib/network";
-import { readPushPermission, registerPush, registrationOwed } from "./push";
+import { type PushChannel, readPushPermission, registerPush, registrationOwed } from "./push";
 
 type NotificationResponse = import("expo-notifications").NotificationResponse;
+
+/** One Android channel per kind of news, named as You → Notifications names them. */
+const ANDROID_CHANNELS: ReadonlyArray<{ id: PushChannel; name: string }> = [
+  { id: "fills", name: "Trades and stop losses" },
+  { id: "liquidation", name: "Liquidation warnings" },
+  { id: "priceAlerts", name: "Price alerts" },
+  { id: "deposits", name: "Deposits" },
+  { id: "card", name: "Kinpaku card" },
+];
 
 /** Where a tapped push goes, or undefined when it names nowhere this app knows. */
 export function tapTarget(data: Record<string, unknown> | undefined): string | undefined {
@@ -43,6 +53,18 @@ export function PushHost() {
         shouldSetBadge: false,
       }),
     });
+    // Android shows a push only on a channel the app created; the keeper sends each kind on its own (same ids).
+    if (Platform.OS === "android") {
+      for (const channel of ANDROID_CHANNELS) {
+        void notifications.setNotificationChannelAsync(channel.id, {
+          name: channel.name,
+          importance:
+            channel.id === "liquidation"
+              ? notifications.AndroidImportance.HIGH
+              : notifications.AndroidImportance.DEFAULT,
+        });
+      }
+    }
     const handled = new Set<string>();
     const open = (response: NotificationResponse) => {
       const id = response.notification.request.identifier;
