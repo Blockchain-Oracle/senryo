@@ -13,6 +13,7 @@ export * from "./keeper-reads.ts";
 export * from "./lp-reads.ts";
 export * from "./market-reads.ts";
 export * from "./nonce.ts";
+export * from "./perpl/index.ts";
 export * from "./pinned-read.ts";
 export * from "./portfolio.ts";
 export * from "./reads.ts";
