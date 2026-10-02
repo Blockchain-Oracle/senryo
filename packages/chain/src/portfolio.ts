@@ -4,6 +4,7 @@ import { type Address, erc20Abi, zeroAddress } from "viem";
 import type { ReadClient } from "./clients.ts";
 import { addressOf, isDeployed } from "./contracts.ts";
 import { readLpVault } from "./lp-reads.ts";
+import { readPerplAccount, readPerplPositions } from "./perpl/reads.ts";
 import { pinRead } from "./pinned-read.ts";
 import { readAccountSnapshot } from "./reads.ts";
 import { readSpotHoldings, readSpotPrices } from "./spot.ts";
@@ -170,6 +171,25 @@ export async function readPortfolio(
         valueUsd6: pool.sharesValue + pool.pendingValue,
         missing: complete ? [] : ["Pending pool requests updating"],
       };
+    }),
+    // Perpl (D1, mainnet): AUSD the wallet moved to its own Perpl account — the free balance plus each position's
+    // collateral and the Exchange's own PnL at the mark. It left the wallet, so nothing above counts it.
+    part("Perpl", async () => {
+      if (chainId !== MAINNET_CHAIN_ID) return { valueUsd6: 0n, missing: [], supported: false };
+      const account = await readPerplAccount(read, chainId, user, block.number);
+      if (!account) return { valueUsd6: 0n, missing: [] };
+      const positions = await readPerplPositions(
+        read,
+        chainId,
+        account.accountId,
+        account.marketsWithPositions,
+        block.number,
+      );
+      const equity = positions.reduce((sum, p) => sum + p.depositCNS + p.pnlCNS, account.balanceCNS);
+      const value = valueStable(equity > 0n ? equity : 0n, 0);
+      return value === undefined
+        ? { valueUsd6: undefined, missing: ["AUSD price"] }
+        : { valueUsd6: value, missing: [] };
     }),
     part("Deposit inbox", async () => {
       if (!isDeployed(chainId, "InboxFactory")) return { valueUsd6: 0n, missing: [], supported: false };

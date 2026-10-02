@@ -26,7 +26,8 @@ const OWN_IT: Readonly<Record<string, { title: string; symbol: string; mark: str
   XAU: { title: "Own real gold", symbol: XAUT0.symbol, mark: ids.token(MAINNET_CHAIN_ID, XAUT0.address) },
 };
 
-function LinkRow({
+/** One cross-link row: mark, title, one short subtitle, chevron (shared with Perpl's market page). */
+export function LinkRow({
   mark,
   label,
   title,

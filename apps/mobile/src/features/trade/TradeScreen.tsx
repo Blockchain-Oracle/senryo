@@ -31,6 +31,8 @@ import { MarketHolders } from "~/features/markets/MarketHolders";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { type MarketLine, useMarketLine } from "~/features/markets/useMarketLine";
+import { perplMarketBySymbol } from "~/features/perpl/market";
+import { PerplDetail } from "~/features/perpl/PerplDetail";
 import { ROUTES } from "~/lib/constants/routes";
 import { priceDecimalsOf } from "~/lib/money";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
@@ -55,8 +57,8 @@ const COLLAPSE_AT = SPACE.sm + (TYPE.displayPrice.lineHeight ?? 0);
  * Market detail (`/markets/[market]`; Fomo F32–F35; flow book C2; plan §0.9 Market detail): mark, ticker, badge and
  * venue in the bar with Alert · Watch · Share · History → price, 24 h change and open interest → candles with period
  * chips → "Own real gold ›" on XAU and "Your position ›" when one is open → Holders · Feed · About → a state banner
- * when the market isn't open → sticky Short / Long. A crypto ticker (`/markets/BTC`) opens its read-only page; on
- * Mainnet before the deploy the page shows the live Chainlink price with "Opening soon".
+ * when the market isn't open → sticky Short / Long. A Perpl ticker (`/markets/BTC`) opens Perpl's market page (C4);
+ * on Mainnet before the engine deploy an engine market shows the live Chainlink price with "Opening soon".
  */
 export function TradeScreen({ marketId }: { marketId: string }) {
   const meta = engineMarket(marketId);
@@ -64,6 +66,9 @@ export function TradeScreen({ marketId }: { marketId: string }) {
   const readOnly = useReadOnlyNetwork();
   useHideDockWhileFocused("market-detail");
   if (!meta) {
+    // Perpl's crypto markets (`/markets/BTC`): their own page, with Short / Long into the Perpl ticket on Mainnet.
+    const perpl = perplMarketBySymbol(marketId);
+    if (perpl) return <PerplDetail meta={perpl} />;
     const discovery = DISCOVERY_INSTRUMENTS.find((i) => i.symbol.toUpperCase() === marketId.toUpperCase());
     if (discovery) return <DiscoveryDetail id={discovery.id} />;
     return <NotListed title={marketId} />;

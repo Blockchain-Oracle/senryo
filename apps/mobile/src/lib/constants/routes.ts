@@ -192,3 +192,7 @@ export const withdrawRoute = (asset?: string, to?: "monad" | "chain" | "bank") =
 export const receiveRoute = (asset?: string) => (asset ? `/receive?asset=${asset.toLowerCase()}` : "/receive") as Href;
 /** B12: the receipt of one operation from this phone's journal. */
 export const receiptRoute = (operationId: string) => `/receipt?op=${encodeURIComponent(operationId)}` as Href;
+/** D1 / C4: a Perpl position (`/positions/perpl-1`) shares the positions route under the indexer's market id. */
+export const perplPositionRoute = (marketId: number) => `/positions/perpl-${marketId}` as const;
+/** D1 / C5: move free AUSD from Perpl back to the wallet (`withdrawCollateral`). */
+export const perplWithdrawRoute = "/perpl/withdraw" as const;

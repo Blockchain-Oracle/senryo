@@ -42,10 +42,19 @@ const FILL_VERB: Record<FeedTrade["fillKind"], string> = {
  * how long ago; then the size in this network's money at the fill price. A closed position adds its net result.
  * Nothing is listed that the api did not return; an empty feed is one quiet line. A row opens the trader.
  */
-export function MarketFeed({ marketId, name }: { marketId: number; name: string }) {
+/** How a market that isn't ours names and sizes its fills (Perpl: `perpl-1`, its tick, the base asset). */
+export interface FeedMarketFormat {
+  /** The indexer's market id. */
+  id: string;
+  priceDecimals: number;
+  /** A 1e18 size in the market's own unit ("0.0002 BTC"). */
+  size: (size18: bigint) => string;
+}
+
+export function MarketFeed({ marketId, name, format }: { marketId: number; name: string; format?: FeedMarketFormat }) {
   const env = useQueryEnv();
   const client = useQueryClient();
-  const market = feedMarketId(marketId);
+  const market = format?.id ?? feedMarketId(marketId);
   const feed = useFeed(FEED_SCOPE, market);
   const now = useNowSec();
   const retry = () => void client.resetQueries({ queryKey: socialKeys.feed(env.chainId, FEED_SCOPE, market) });
@@ -57,7 +66,7 @@ export function MarketFeed({ marketId, name }: { marketId: number; name: string 
         ) : (
           <View>
             {items.map((item) => (
-              <FeedRow key={item.id} item={item} marketId={marketId} now={now} />
+              <FeedRow key={item.id} item={item} marketId={marketId} now={now} format={format} />
             ))}
             {feed.hasMore ? (
               <Button
@@ -76,7 +85,17 @@ export function MarketFeed({ marketId, name }: { marketId: number; name: string 
   );
 }
 
-function FeedRow({ item, marketId, now }: { item: FeedItem; marketId: number; now: bigint }) {
+function FeedRow({
+  item,
+  marketId,
+  now,
+  format,
+}: {
+  item: FeedItem;
+  marketId: number;
+  now: bigint;
+  format: FeedMarketFormat | undefined;
+}) {
   const { color } = useTheme();
   const who = traderName(item.actor);
   // The api sends ISO times; one it can't parse shows no age rather than a wrong one.
@@ -103,7 +122,7 @@ function FeedRow({ item, marketId, now }: { item: FeedItem; marketId: number; no
           {trade ? <SideBadge side={trade.side} /> : null}
           {age ? <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{age}</Text> : null}
         </View>
-        {trade ? <TradeLine trade={trade} marketId={marketId} /> : null}
+        {trade ? <TradeLine trade={trade} marketId={marketId} format={format} /> : null}
         {item.post ? (
           <>
             <Text numberOfLines={THESIS_LINES} style={[TYPE.body, { color: color.ink }]}>
@@ -121,14 +140,23 @@ function FeedRow({ item, marketId, now }: { item: FeedItem; marketId: number; no
 }
 
 /** "P$5,800.00 at $1,416.40 (4.1100 oz)", and a closed position's net result after fees, funding and borrow. */
-function TradeLine({ trade, marketId }: { trade: FeedTrade; marketId: number }) {
+function TradeLine({
+  trade,
+  marketId,
+  format,
+}: {
+  trade: FeedTrade;
+  marketId: number;
+  format: FeedMarketFormat | undefined;
+}) {
   const { color } = useTheme();
-  const decimals = priceDecimalsOf(marketId);
+  const decimals = format?.priceDecimals ?? priceDecimalsOf(marketId);
+  const size = format ? format.size(trade.size) : quantityText(marketId, trade.size);
   const net = trade.positionNetPnl;
   return (
     <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
       <Text style={[TYPE.rowChange, { color: color.ink }]}>{usd(trade.notional)}</Text>
-      {trade.price === null ? "" : ` at $${price18(trade.price, decimals)}`} ({quantityText(marketId, trade.size)})
+      {trade.price === null ? "" : ` at $${price18(trade.price, decimals)}`} ({size})
       {net === null ? null : (
         <Text style={[TYPE.rowChange, { color: net >= 0n ? color.up : color.down }]}> · net {signedUsd(net)}</Text>
       )}

@@ -19,6 +19,8 @@ import { KeyValue } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
+import { perplMarketBySymbol } from "~/features/perpl/market";
+import { PerplDetail } from "~/features/perpl/PerplDetail";
 import { compactUsd6, finePct, tokenPrice } from "~/features/tokens/format";
 import { LockedBar } from "~/features/trade/SideBar";
 import { MarketIdentity } from "~/features/trade/TradeHeader";
@@ -60,6 +62,9 @@ export function DiscoveryDetail({ id }: { id: string }) {
   const instrument = discoveryInstrument(id);
   const unpriced = UNPRICED_INSTRUMENTS.find((u) => u.id === id);
   const { color } = useTheme();
+  // Perpl's crypto markets have their own page with the ticket (C4); old `/markets/discover/perpl:BTC` links land there.
+  const perpl = instrument?.class === "crypto" ? perplMarketBySymbol(instrument.symbol) : undefined;
+  if (perpl) return <PerplDetail meta={perpl} />;
   if (unpriced) {
     return (
       <View style={[styles.fill, { backgroundColor: color.ground }]}>

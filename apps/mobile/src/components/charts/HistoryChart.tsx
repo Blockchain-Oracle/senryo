@@ -37,6 +37,7 @@ export function HistoryChart({
   caption,
   loadingLabel,
   retry,
+  entry,
 }: {
   reading: HistoryReading;
   period: PeriodKey;
@@ -46,6 +47,8 @@ export function HistoryChart({
   caption: string;
   loadingLabel: string;
   retry: () => void;
+  /** A fixed level to mark (a position's entry, USD × 1e18): a solid line and its label. */
+  entry?: { value: bigint; label: string } | undefined;
 }) {
   const { color } = useTheme();
   const chosen = periodOf(period);
@@ -76,6 +79,7 @@ export function HistoryChart({
                   axisPrefix="$"
                   formatTime={(ms) => axisTimeLabel(chosen.axis, ms)}
                   {...(priceUsd18 ? { last: { value: priceUsd18, label: tokenPrice(priceUsd18) } } : {})}
+                  {...(entry ? { reference: entry } : {})}
                   candles={plotted}
                   pannable
                 />
