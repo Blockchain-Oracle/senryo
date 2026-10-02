@@ -3,7 +3,12 @@
   "project": {
     "name": "@senryo/web",
     "productType": "fintech trading app (Senryo 千両 + Kinpaku 金箔 card, Monad)",
-    "stack": ["nextjs-16-static-export", "react-19", "tailwind-v4", "shadcn"]
+    "stack": [
+      "nextjs-16-static-export",
+      "react-19",
+      "tailwind-v4",
+      "shadcn"
+    ]
   },
   "direction": {
     "name": "Living Lacquer",
@@ -22,9 +27,18 @@
       "apps/web/src/app/globals.css",
       "apps/web/src/app/fonts.ts"
     ],
-    "components": ["src/components/ui"],
-    "assets": ["brand/", "apps/web/src/app/fonts/", "packages/identity/sources/"],
-    "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
+    "components": [
+      "src/components/ui"
+    ],
+    "assets": [
+      "brand/",
+      "apps/web/src/app/fonts/",
+      "packages/identity/sources/"
+    ],
+    "instructions": [
+      "docs/plan/00-plan.md",
+      "docs/plan/specs/client.md"
+    ]
   },
   "design": {
     "colorMode": "dark-default-with-light",
@@ -527,15 +541,6 @@
         "retokenized": true
       },
       {
-        "name": "balance-chart",
-        "source": "21st:ssychui/balance-chart",
-        "id": 30538,
-        "url": "https://21st.dev/@ssychui/components/balance-chart",
-        "use": "equity chart + timeframe pill",
-        "path": "src/components/ui/balance-chart.tsx",
-        "retokenized": true
-      },
-      {
         "name": "number-flow",
         "source": "21st:barvian/number-flow",
         "id": 1444,
@@ -599,15 +604,6 @@
         "retokenized": true
       },
       {
-        "name": "gauge",
-        "source": "21st:designali-in/gauge-1",
-        "id": 3719,
-        "url": "https://21st.dev/@designali-in/components/gauge-1",
-        "use": "margin-use half gauge (split arc/value)",
-        "path": "src/components/ui/gauge/",
-        "retokenized": true
-      },
-      {
         "name": "task-steps",
         "source": "21st:ddoemonn/task-steps",
         "id": 23569,
@@ -617,39 +613,12 @@
         "retokenized": true
       },
       {
-        "name": "hold-and-release-button",
-        "source": "21st:kokonutd/hold-and-release-button",
-        "id": 8,
-        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
-        "use": "500 ms hold-to-confirm",
-        "path": "src/components/ui/hold-and-release-button.tsx",
-        "retokenized": true
-      },
-      {
-        "name": "credit-debit-card",
-        "source": "21st:ravikatiyar162/credit-debit-card",
-        "id": 5276,
-        "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card",
-        "use": "Kinpaku card flip",
-        "path": "src/components/ui/credit-debit-card.tsx",
-        "retokenized": true
-      },
-      {
         "name": "upstash-ratelimit",
         "source": "21st:elements-/upstash-ratelimit",
         "id": 29280,
         "url": "https://21st.dev/@elements-/components/upstash-ratelimit",
         "use": "FREE·SPEND meter",
         "path": "src/components/ui/upstash-ratelimit.tsx",
-        "retokenized": true
-      },
-      {
-        "name": "multi-chain-swap",
-        "source": "21st:starc007/be-ui-multi-chain-swap",
-        "id": 16251,
-        "url": "https://21st.dev/@starc007/components/be-ui-multi-chain-swap",
-        "use": "bridge + deposit (split panel/token-select/quote-rows)",
-        "path": "src/components/ui/swap/",
         "retokenized": true
       },
       {
@@ -778,6 +747,42 @@
         "use": "watch-address field, recovery-file field",
         "path": "src/components/ui/{input,label}.tsx",
         "retokenized": true
+      },
+      {
+        "name": "slide-action-button",
+        "source": "21st:starc007/slide-action-button",
+        "id": 29304,
+        "url": "https://21st.dev/@starc007/components/slide-action-button",
+        "use": "slide to confirm (ticket, close, send, risk explainer); Enter confirms; side tone, busy, resetKey",
+        "path": "src/components/kit/slide-to-confirm.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "grid-button",
+        "source": "21st:radiumcoders/grid-button",
+        "id": 13564,
+        "url": "https://21st.dev/@radiumcoders/components/grid-button",
+        "use": "56 px action circles with labels and named locks (Receive, asset page)",
+        "path": "src/components/kit/action-circle.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "qr-code",
+        "source": "21st:tom_ui/qr-code",
+        "id": 12248,
+        "url": "https://21st.dev/@tom_ui/components/qr-code",
+        "use": "dotted receive QR with round finder eyes and the Monad badge",
+        "path": "src/components/kit/dotted-qr.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "pill",
+        "source": "21st:haydenbleasel/pill",
+        "id": 1600,
+        "url": "https://21st.dev/@haydenbleasel/components/pill",
+        "use": "network pill (Monad mark + name) on Receive",
+        "path": "src/components/money/receive-screen.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -805,6 +810,58 @@
         "id": 25058,
         "name": "Account Settings Fieldset",
         "verdict": "rejected: profile fields; security uses the installed Segmented Control"
+      }
+    ],
+    "removed": [
+      {
+        "name": "balance-chart",
+        "source": "21st:ssychui/balance-chart",
+        "id": 30538,
+        "url": "https://21st.dev/@ssychui/components/balance-chart",
+        "use": "equity chart + timeframe pill",
+        "path": "src/components/ui/balance-chart.tsx",
+        "retokenized": true,
+        "removedIn": "web parity (claude/web): sample-data desk previews replaced by the phone's surfaces"
+      },
+      {
+        "name": "gauge",
+        "source": "21st:designali-in/gauge-1",
+        "id": 3719,
+        "url": "https://21st.dev/@designali-in/components/gauge-1",
+        "use": "margin-use half gauge (split arc/value)",
+        "path": "src/components/ui/gauge/",
+        "retokenized": true,
+        "removedIn": "web parity (claude/web): sample-data desk previews replaced by the phone's surfaces"
+      },
+      {
+        "name": "hold-and-release-button",
+        "source": "21st:kokonutd/hold-and-release-button",
+        "id": 8,
+        "url": "https://21st.dev/@kokonutd/components/hold-and-release-button",
+        "use": "500 ms hold-to-confirm",
+        "path": "src/components/ui/hold-and-release-button.tsx",
+        "retokenized": true,
+        "removedIn": "web parity (claude/web): sample-data desk previews replaced by the phone's surfaces"
+      },
+      {
+        "name": "credit-debit-card",
+        "source": "21st:ravikatiyar162/credit-debit-card",
+        "id": 5276,
+        "url": "https://21st.dev/@ravikatiyar162/components/credit-debit-card",
+        "use": "Kinpaku card flip",
+        "path": "src/components/ui/credit-debit-card.tsx",
+        "retokenized": true,
+        "removedIn": "web parity (claude/web): sample-data desk previews replaced by the phone's surfaces"
+      },
+      {
+        "name": "multi-chain-swap",
+        "source": "21st:starc007/be-ui-multi-chain-swap",
+        "id": 16251,
+        "url": "https://21st.dev/@starc007/components/be-ui-multi-chain-swap",
+        "use": "bridge + deposit (split panel/token-select/quote-rows)",
+        "path": "src/components/ui/swap/",
+        "retokenized": true,
+        "removedIn": "web parity (claude/web): sample-data desk previews replaced by the phone's surfaces"
       }
     ]
   },
