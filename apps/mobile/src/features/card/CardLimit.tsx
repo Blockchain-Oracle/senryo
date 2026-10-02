@@ -83,6 +83,8 @@ function LimitFlow({
   const open = useUnfreezeCard();
   const [pick, setPick] = useState(() => initialLimit(snapshot.allowanceDailyLimit || undefined));
   const [started, setStarted] = useState(false);
+  /** Bumped when the passkey sheet is dismissed, so the slide springs back for another try. */
+  const [attempt, setAttempt] = useState(0);
   const outcome = useSettledOutcome(allowance.trace.events);
   const intent = [network.chainId, address, pick, unfreeze ? "unfreeze" : "limit"].join(":");
   const guard = useReviewGuard(intent);
@@ -92,6 +94,7 @@ function LimitFlow({
   const confirm = async () => {
     setStarted(true);
     const result = await allowance.setLimit(pick * ONE_USD6, guard);
+    if (result === undefined) setAttempt((n) => n + 1);
     if (result?.final?.stage === "finalized" && unfreeze && card) open.mutate(card.cardToken);
   };
 
@@ -134,7 +137,7 @@ function LimitFlow({
         value={pick}
         onChange={setPick}
         slideLabel={unfreeze ? "Slide to unfreeze" : "Slide to set"}
-        resetKey={intent}
+        resetKey={`${intent}:${attempt}`}
         busy={busy}
         disabled={!allowance.ready || (unfreeze && !card)}
         onConfirm={() => void confirm()}
