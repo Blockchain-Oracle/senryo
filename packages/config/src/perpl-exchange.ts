@@ -58,9 +58,9 @@ export const PERPL_SLIPPAGE_BPS = 50n;
 export const PERPL_MAX_SLIPPAGE_BPS = 100n;
 
 /**
- * `lastExecutionBlock` = head + this, or 0 (no deadline). Simulated on mainnet: head + 2 / + 5 revert
- * `ExceedsLastExecutionBlock` (Monad executes ahead of the reported head), + 20 / + 50 / 0 pass; the API's
- * `order_ttl_blocks` is 20 on every market.
+ * `lastExecutionBlock` = head + this, or 0 (no deadline); the API's `order_ttl_blocks` is 20 on every market. A block
+ * the transaction doesn't execute by reverts `ExceedsLastExecutionBlock` — at ~0.4 s blocks, head + 2…5 is already
+ * past by the time an `eth_call` a second later lands (cast, 2 Oct 2026); head + 20 (~8 s) executes (perpl-check).
  */
 export const PERPL_ORDER_TTL_BLOCKS = 20n;
 
