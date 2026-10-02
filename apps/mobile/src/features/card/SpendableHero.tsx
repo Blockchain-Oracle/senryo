@@ -39,10 +39,13 @@ function limitLine(snapshot: AccountSnapshot, frozen: boolean): string {
 
 export function SpendableHero({
   snapshot,
+  unavailable = false,
   frozen,
   onOpen,
 }: {
   snapshot: AccountSnapshot | undefined;
+  /** The account can't be read here (core not deployed on this network, or the read failed): "—", never $0. */
+  unavailable?: boolean;
   frozen: boolean;
   /** Opens the breakdown (`SpendableBreakdown`, rendered by the screen as a sheet over the dock). */
   onOpen: () => void;
@@ -64,6 +67,11 @@ export function SpendableHero({
         <>
           <AmountHero text={usd(snapshot.freeToSpend > 0n ? snapshot.freeToSpend : 0n)} />
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{limitLine(snapshot, frozen)}</Text>
+        </>
+      ) : unavailable ? (
+        <>
+          <Text style={[TYPE.displayBalance, { color: color.text3 }]}>—</Text>
+          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Balance unavailable</Text>
         </>
       ) : (
         <>

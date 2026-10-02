@@ -43,7 +43,8 @@ export function CardTab() {
   const practice = network.key === "testnet";
   const address = account.hint?.address;
   const summary = useCardSummary();
-  const risk = useAccountRisk(isDeployed(network.chainId, "SenryoCore") ? address : undefined, "latest");
+  const deployed = isDeployed(network.chainId, "SenryoCore");
+  const risk = useAccountRisk(deployed ? address : undefined, "latest");
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
   const card = summary.data?.cards.find((c) => c.state !== "CLOSED");
   const allowance = snapshot ? allowanceNow(snapshot) : undefined;
@@ -79,6 +80,7 @@ export function CardTab() {
             card={card}
             summary={summary.data}
             snapshot={snapshot}
+            spendableUnavailable={!deployed || risk.status === "failed"}
             allowance={allowance}
             freeze={freeze}
             practice={practice}

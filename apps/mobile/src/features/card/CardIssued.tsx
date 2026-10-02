@@ -28,6 +28,7 @@ export function CardIssued({
   card,
   summary,
   snapshot,
+  spendableUnavailable,
   allowance,
   freeze,
   practice,
@@ -38,6 +39,7 @@ export function CardIssued({
   card: CardSummaryCard;
   summary: CardSummary;
   snapshot: AccountSnapshot | undefined;
+  spendableUnavailable: boolean;
   allowance: AllowanceState | undefined;
   freeze: ReturnType<typeof useCardFreeze>;
   practice: boolean;
@@ -59,7 +61,7 @@ export function CardIssued({
           <Text style={[TYPE.meta, styles.center, { color: color.text3 }]}>Test card · no charge</Text>
         ) : null}
       </View>
-      <SpendableHero snapshot={snapshot} frozen={frozen} onOpen={onBreakdown} />
+      <SpendableHero snapshot={snapshot} unavailable={spendableUnavailable} frozen={frozen} onOpen={onBreakdown} />
       <View style={styles.circles}>
         {frozen ? (
           <ActionCircle
