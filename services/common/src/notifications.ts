@@ -101,15 +101,22 @@ export const CARD_DECLINE_REASONS = ["overLimit", "notEnoughSpendable", "frozen"
 export type CardDeclineReason = (typeof CARD_DECLINE_REASONS)[number];
 
 /**
- * A card event worth a notification. `ref` makes it idempotent (the card_auth id for a decision, the Lithic event
- * token for a refund); `authId`, when known, opens that payment's page.
+ * A card event worth a notification. `ref` makes it idempotent (the card_auth id for a decision, the hold id for a
+ * capture, the Lithic event token for a refund); `authId`, when known, opens that payment's page; `txn` (the issuer's
+ * transaction token) makes each stage of one payment replace the previous push on screen (E-D5).
  */
 export type CardNotice = {
   ref: string;
   authId?: string | undefined;
+  txn?: string | undefined;
   merchant: string | null;
   amountUsd6: bigint;
-} & ({ kind: "approved" } | { kind: "refunded" } | { kind: "declined"; reason: CardDeclineReason });
+} & (
+  | { kind: "approved" }
+  | { kind: "captured" }
+  | { kind: "refunded" }
+  | { kind: "declined"; reason: CardDeclineReason }
+);
 
 const DECLINE_BODY: Record<CardDeclineReason, string> = {
   overLimit: "It's over your card's daily limit.",
@@ -124,6 +131,7 @@ export function cardMessage(chainId: ChainId, notice: CardNotice): NotificationM
   const at = notice.merchant ?? "a merchant";
   const url = appLink(chainId, notice.authId ? `card/auth/${notice.authId}` : "card");
   const subject: NotificationSubject = { kind: "card" };
+  const collapseKey = notice.txn ? `card:${notice.txn}` : undefined;
   switch (notice.kind) {
     case "approved":
       return {
@@ -131,6 +139,15 @@ export function cardMessage(chainId: ChainId, notice: CardNotice): NotificationM
         body: "It's held from your spendable money until the merchant settles it.",
         url,
         subject,
+        collapseKey,
+      };
+    case "captured":
+      return {
+        title: pushTitle(chainId, `${amount} settled at ${at}`),
+        body: "The merchant settled it from your spendable money.",
+        url,
+        subject,
+        collapseKey,
       };
     case "refunded":
       return {
@@ -138,6 +155,7 @@ export function cardMessage(chainId: ChainId, notice: CardNotice): NotificationM
         body: "It's back in your spendable money.",
         url,
         subject,
+        collapseKey,
       };
     case "declined":
       return {
@@ -145,14 +163,15 @@ export function cardMessage(chainId: ChainId, notice: CardNotice): NotificationM
         body: `${amount}: ${DECLINE_BODY[notice.reason]}`,
         url,
         subject,
+        collapseKey,
       };
   }
 }
 
 /**
- * The card channel's sender (E4: "the card push has no sender"). Call it from services/card once a decision or a
- * refund is final — after the ASA answer is stored, or the refund is queued. Idempotent per `kind:ref`; false when it
- * was already recorded. The card service needs no Expo access: the keeper of `chainId` delivers it.
+ * The card channel's sender (E4: "the card push has no sender"). services/card calls it once a stage is final — after
+ * the ASA answer is sent, and once a capture or a refund is finalized onchain. Idempotent per `kind:ref`; false when
+ * it was already recorded. The card service needs no Expo access: the keeper of `chainId` delivers it.
  */
 export async function notifyCardEvent(
   db: Db | Tx,

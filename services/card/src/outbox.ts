@@ -11,6 +11,7 @@ import { type Db, MS_PER_SECOND } from "@senryo/service-common";
 import { OUTBOX } from "./constants.ts";
 import { type CardContext, operatorFor } from "./context.ts";
 import { books, post } from "./ledger.ts";
+import { notifyCaptured, notifyRefunded } from "./notify.ts";
 
 /**
  * Outbox (specs/services.md §card 6): card lifecycle writes are rows first, sends second, so a crash never loses one
@@ -24,6 +25,9 @@ export interface OutboxPayload {
   account: Address | string;
   amountUsd6?: string;
   refId?: Hex;
+  /** Refunds: the issuer transaction and merchant, so the push can name them. */
+  txnToken?: string;
+  merchant?: string;
 }
 
 export async function enqueue(db: Db, chainId: number, kind: OutboxKind, dedupeKey: string, payload: OutboxPayload) {
@@ -98,6 +102,7 @@ async function execute(ctx: CardContext, row: Row): Promise<Outcome> {
     );
     if (sent.final.stage !== "finalized") return { status: "RETRY", error: `refund ${sent.final.stage}` };
     await post(ctx.db, ctx.chainId, "refund", payload.refId, [[books.cardFloat, books.free(account), amount]]);
+    await notifyRefunded(ctx, payload.refId, account, amount, payload);
     return { status: "DONE", tx: sent.hash };
   }
   if (!payload.holdId) return { status: "SKIPPED" };
@@ -142,4 +147,6 @@ async function settleLedger(
     [books.held(account), books.cardFloat, captured],
     [books.held(account), books.free(account), held - captured],
   ]);
+  // The charge as settled (an over-capture above the hold is charged too, up to +20 %; the push says the amount).
+  if (kind === "captureHold" && !releaseOnly) await notifyCaptured(ctx, holdId, account, amount);
 }

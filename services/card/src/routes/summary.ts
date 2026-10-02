@@ -1,4 +1,11 @@
-import { type CardSummary, cardRepayQuoteRoute, cardSummaryRoute } from "@senryo/api-client";
+import {
+  type CardAuthSummary,
+  type CardSummary,
+  cardAuthDetailRoute,
+  cardRepayQuoteRoute,
+  cardSummaryRoute,
+  type HoldStatus,
+} from "@senryo/api-client";
 import { contractCall, describeError, getAddress } from "@senryo/chain";
 import { positionGasLimit } from "@senryo/config";
 import { HTTP_STATUS, HttpError, type HttpServer, parseRoute, sendRoute } from "@senryo/service-common";
@@ -23,6 +30,9 @@ interface AuthRow {
   mcc: string | null;
   merchant_descriptor: string | null;
   received_at: Date;
+  txn_token: string;
+  hold_status: HoldStatus | null;
+  captured_usd6: bigint | null;
 }
 
 /** Cards issued before `last4` was stored: fill it once from the issuer (never the PAN; rows without it retry). */
@@ -38,6 +48,33 @@ async function backfillLast4(ctx: CardContext, card: CardRow): Promise<string | 
     ctx.log.warn({ err: describeError(error), card: card.card_token }, "last4 backfill failed");
     return null;
   }
+}
+
+/** One authorisation with its hold (E-D8: the row shows the purchase lifecycle, not raw ASA statuses). */
+function authSelect(ctx: CardContext) {
+  return ctx.db`
+    SELECT a.id, a.kind, a.status, a.result, a.reason, a.deadline_at, a.amount_cents, a.hold_usd6, a.mcc,
+           a.received_at, a.txn_token, a.request->'merchant'->>'descriptor' AS merchant_descriptor,
+           h.status AS hold_status, h.captured_usd6
+      FROM card_auth a LEFT JOIN holds h ON h.hold_id = a.hold_id`;
+}
+
+function authOf(r: AuthRow, now: number): CardAuthSummary {
+  return {
+    id: r.id,
+    kind: r.kind,
+    status: effectiveStatus(r, now),
+    result: r.result,
+    declineReason: declineReasonOf(r, now),
+    amountCents: r.amount_cents,
+    holdUsd6: r.hold_usd6,
+    mcc: r.mcc,
+    merchantDescriptor: r.merchant_descriptor,
+    receivedAt: r.received_at.toISOString(),
+    transactionToken: r.txn_token,
+    holdStatus: r.hold_status,
+    capturedUsd6: r.hold_status === "CAPTURED" ? r.captured_usd6 : null,
+  };
 }
 
 /**
@@ -59,11 +96,8 @@ export async function buildSummary(
     ctx.db<{ total: bigint }[]>`
       SELECT COALESCE(SUM(amount_usd6), 0)::bigint AS total FROM holds
        WHERE account = ${account} AND chain_id = ${ctx.chainId} AND status IN ${ctx.db(OPEN_HOLD_STATUSES)}`,
-    ctx.db<AuthRow[]>`
-      SELECT id, kind, status, result, reason, deadline_at, amount_cents, hold_usd6, mcc, received_at,
-             request->'merchant'->>'descriptor' AS merchant_descriptor
-        FROM card_auth WHERE account = ${account} AND chain_id = ${ctx.chainId}
-       ORDER BY received_at DESC LIMIT ${RECENT_AUTHS}`,
+    ctx.db<AuthRow[]>`${authSelect(ctx)} WHERE a.account = ${account} AND a.chain_id = ${ctx.chainId}
+       AND a.kind <> 'BALANCE_INQUIRY' ORDER BY a.received_at DESC LIMIT ${RECENT_AUTHS}`,
     readChainView(ctx, address),
   ]);
   const now = Date.now();
@@ -83,18 +117,7 @@ export async function buildSummary(
     issuer: { name: ISSUER_NAME, sandbox, status: ctx.lithic ? "ready" : "issuer_unavailable" },
     openHoldsUsd6: held?.total ?? 0n,
     debtUsd6: chain?.debtUsd6 ?? null,
-    recent: recent.map((r) => ({
-      id: r.id,
-      kind: r.kind,
-      status: effectiveStatus(r, now),
-      result: r.result,
-      declineReason: declineReasonOf(r, now),
-      amountCents: r.amount_cents,
-      holdUsd6: r.hold_usd6,
-      mcc: r.mcc,
-      merchantDescriptor: r.merchant_descriptor,
-      receivedAt: r.received_at.toISOString(),
-    })),
+    recent: recent.map((r) => authOf(r, now)),
   };
   return { summary, chain };
 }
@@ -104,6 +127,16 @@ export function registerSummaryRoutes(app: HttpServer, ctx: CardContext, kit: Ap
     const s = await kit.session(request);
     const { summary } = await buildSummary(ctx, s.address);
     return sendRoute(reply, cardSummaryRoute, summary);
+  });
+
+  /** E6: any of the account's payments by id (push taps and links reach past the summary's last 20). */
+  app.get(cardAuthDetailRoute.path, async (request, reply) => {
+    const s = await kit.session(request);
+    const { params } = parseRoute(cardAuthDetailRoute, request);
+    const [row] = await ctx.db<AuthRow[]>`${authSelect(ctx)} WHERE a.id = ${params.id}
+      AND a.account = ${s.address.toLowerCase()} AND a.chain_id = ${ctx.chainId}`;
+    if (!row) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such card payment");
+    return sendRoute(reply, cardAuthDetailRoute, authOf(row, Date.now()));
   });
 
   /**

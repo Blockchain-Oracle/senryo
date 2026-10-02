@@ -20,12 +20,17 @@ export const alertSchema = z.object({
   triggeredAt: isoTimeSchema.nullable(),
 });
 
-export const alertCreateRequestSchema = alertSchema.pick({
-  chainId: true,
-  marketId: true,
-  direction: true,
-  price18: true,
-});
+export const alertCreateRequestSchema = alertSchema
+  .pick({
+    chainId: true,
+    marketId: true,
+    direction: true,
+    price18: true,
+  })
+  .extend({
+    /** Edit (C9): the alert this one replaces — cancelled in the same transaction, so an edit never leaves two. */
+    replaces: z.uuid().optional(),
+  });
 export const alertListResponseSchema = z.object({ alerts: z.array(alertSchema) });
 export const alertParamsSchema = z.object({ id: z.uuid() });
 

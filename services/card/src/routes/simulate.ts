@@ -9,6 +9,7 @@ import { SIMULATE_POLL_MS, SIMULATE_WAIT_MS } from "../constants.ts";
 import type { CardContext } from "../context.ts";
 import { type AuthOutcomeRow, declineReasonOf, effectiveStatus, issuerResultCode } from "../decline.ts";
 import type { LithicApi } from "../lithic/api.ts";
+import { notifyIssuerDecline } from "../notify.ts";
 import { type AppKit, viaIssuer } from "./kit.ts";
 
 /**
@@ -77,6 +78,16 @@ export function registerSimulateRoutes(app: HttpServer, ctx: CardContext, kit: A
     if (!sim.token) throw new HttpError(HTTP_STATUS.badGateway, "ISSUER_UNAVAILABLE", "simulate returned no token");
     // A card we hold paused is declined by the issuer itself — no ASA request comes, so don't wait for one.
     const decision = await awaitDecision(ctx, api, sim.token, card.state === "ACTIVE");
+    // The issuer declined on its own (no ASA request, so no decision push was recorded): name it here.
+    if (decision.authId === null && decision.status === "DECLINED")
+      void notifyIssuerDecline(
+        ctx,
+        card.account,
+        sim.token,
+        descriptor,
+        amountCents,
+        decision.declineReason ?? "frozen",
+      );
     return sendRoute(reply, cardSimulateRoute, {
       transactionToken: sim.token,
       ...decision,

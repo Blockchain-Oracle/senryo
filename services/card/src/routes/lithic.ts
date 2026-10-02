@@ -5,6 +5,7 @@ import type { CardContext } from "../context.ts";
 import { handleTransactionWebhook } from "../events.ts";
 import { asaRequestSchema, cardTransactionWebhookSchema } from "../lithic/schemas.ts";
 import { SIGNATURE_HEADERS, verifySignature } from "../lithic/signature.ts";
+import { notifyDecision } from "../notify.ts";
 
 /**
  * Issuer webhooks. JSON is parsed from the raw bytes inside this encapsulated plugin so the HMAC is computed over
@@ -67,12 +68,14 @@ export function registerLithicRoutes(app: HttpServer, ctx: CardContext): void {
         failure = error;
       }
       await reply.code(HTTP_STATUS.ok).send(response);
-      if (failure !== undefined) {
-        // After the reply: the decision is already sent; the row only has to say so.
-        void recordFailedDecision(ctx, parsed.data, failure).catch((error: unknown) =>
-          request.log.warn({ err: error, token: parsed.data.token }, "could not record the failed decision"),
-        );
-      }
+      // After the reply: the decision is already sent; the row only has to say so, then the push names it (E-D5).
+      const recorded =
+        failure === undefined
+          ? Promise.resolve()
+          : recordFailedDecision(ctx, parsed.data, failure).catch((error: unknown) =>
+              request.log.warn({ err: error, token: parsed.data.token }, "could not record the failed decision"),
+            );
+      void recorded.then(() => notifyDecision(ctx, parsed.data.token));
       timer.mark("respond");
       request.log.info({ token: parsed.data.token, result: response.result, ms: timer.summary() }, "asa decided");
       void timer.flush(ctx.db, ctx.log);
