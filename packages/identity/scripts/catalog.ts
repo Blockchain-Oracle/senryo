@@ -36,6 +36,8 @@ export type FetchSpec =
   | { from: "hyperliquid"; coin: string }
   | { from: "simple-icons"; slug: string }
   | { from: "monad-token-list"; dir: string; file: string; symbol: string }
+  /** A mark served by its owner's own site (no library carries it), pinned by sha256 so a silent change fails. */
+  | { from: "first-party"; url: string; page: string; sha256: string }
   /** LI.FI's open icon set (lifinance/types, Apache-2.0, pinned by commit): the bridges and aggregators it routes. */
   | { from: "lifi-types"; group: "bridges" | "exchanges"; file: string; brand: string }
   /** `file` is the title without "File:"; `sha1` (Commons' own hash of the version) pins one upload. */
@@ -195,6 +197,18 @@ const ROUTE_LOGOS: readonly CatalogEntry[] = [
     key: "monorail",
     owner: "Monorail",
     spec: { from: "lifi-types", group: "exchanges", file: "monorail.svg", brand: "Monorail" },
+  },
+  // Ramp Network is in no open library (researched 2 Oct 2026: web3icons, Simple Icons, lifinance/types, its MIT SDK
+  // repos); the sign mark its own site serves.
+  {
+    key: "ramp",
+    owner: "Ramp Network (Ramp Swaps Ltd)",
+    spec: {
+      from: "first-party",
+      url: "https://cdn.prod.website-files.com/63fe1b7ead2cd2d5e0af02e7/6a4bbd700ee30b63d3ba9652_Logo%20sign.svg",
+      page: "https://rampnetwork.com",
+      sha256: "a1ab5313f6758d9d77c5027d6b2a406d3d681ac30b6b3c0a4c1267d65c4fc9b0",
+    },
   },
 ];
 

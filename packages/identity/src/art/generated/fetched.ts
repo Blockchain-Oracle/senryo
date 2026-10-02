@@ -1373,5 +1373,25 @@ export const FETCHED_ART: readonly ArtSource[] = [
         "shape": "disc"
       }
     }
+  },
+  {
+    "key": "ramp",
+    "owner": "Ramp Network (Ramp Swaps Ltd)",
+    "provenance": "first-party",
+    "pageUrl": "https://rampnetwork.com",
+    "licence": "Served by its owner at https://rampnetwork.com (asset https://cdn.prod.website-files.com/63fe1b7ead2cd2d5e0af02e7/6a4bbd700ee30b63d3ba9652_Logo%20sign.svg, sha256 a1ab5313…). The owner's trademark, used nominatively to name its service beside its name; no endorsement implied.",
+    "retrieved": "2026-10-02",
+    "usage": "Beside the provider's name on the route that uses it (buy, cash-out), never as an asset or network.",
+    "variants": {
+      "symbol": {
+        "path": "packages/identity/sources/ramp/ramp-first-party.svg",
+        "url": "https://cdn.prod.website-files.com/63fe1b7ead2cd2d5e0af02e7/6a4bbd700ee30b63d3ba9652_Logo%20sign.svg",
+        "sha256": "a1ab5313f6758d9d77c5027d6b2a406d3d681ac30b6b3c0a4c1267d65c4fc9b0",
+        "viewBox": "0 0 200 161",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      }
+    }
   }
 ];

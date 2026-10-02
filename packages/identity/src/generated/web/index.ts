@@ -169,6 +169,7 @@ import ArtLifiDisc from "./lifi-disc.tsx";
 import ArtCircleCctpDisc from "./circle-cctp-disc.tsx";
 import ArtKyberswapDisc from "./kyberswap-disc.tsx";
 import ArtMonorailDisc from "./monorail-disc.tsx";
+import ArtRampSymbol from "./ramp-symbol.tsx";
 
 export type ArtComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -270,4 +271,5 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "circle-cctp": { disc: ArtCircleCctpDisc },
   "kyberswap": { disc: ArtKyberswapDisc },
   "monorail": { disc: ArtMonorailDisc },
+  "ramp": { symbol: ArtRampSymbol },
 };

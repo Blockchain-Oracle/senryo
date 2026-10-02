@@ -165,5 +165,6 @@
   "lifi/disc": "11fd39eba94bd4534c53ffec6fc131ffec9924e7933f63da1aea882b3ee36fea",
   "circle-cctp/disc": "402540eeb47b316bed0a9fc5f6129c442a8430995705dc727938ca712a8447f3",
   "kyberswap/disc": "d014bf4781c9ad334c291fb171e45b9533aa8ad3d9f68994791ec06b3e1ce223",
-  "monorail/disc": "8ce9f6abf9fd484604f88fae6f8f399d34300d3be5f9e813dd5b3aacfc73a547"
+  "monorail/disc": "8ce9f6abf9fd484604f88fae6f8f399d34300d3be5f9e813dd5b3aacfc73a547",
+  "ramp/symbol": "a1ab5313f6758d9d77c5027d6b2a406d3d681ac30b6b3c0a4c1267d65c4fc9b0"
 }

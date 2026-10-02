@@ -302,12 +302,35 @@ async function fromLifiTypes(spec: Extract<FetchSpec, { from: "lifi-types" }>): 
   };
 }
 
+/** A mark from its owner's own site, refused unless its bytes still match the pinned sha256. */
+async function fromFirstParty(key: string, spec: Extract<FetchSpec, { from: "first-party" }>): Promise<Fetched> {
+  const body = await getSvg(spec.url);
+  const digest = createHash("sha256").update(body).digest("hex");
+  if (digest !== spec.sha256) throw new Error(`${key}: ${spec.url} changed (sha256 ${digest}, pinned ${spec.sha256})`);
+  return {
+    provenance: "first-party",
+    pageUrl: spec.page,
+    licence: `Served by its owner at ${spec.page} (asset ${spec.url}, sha256 ${spec.sha256.slice(0, SHORT_SHA_CHARS)}…). The owner's trademark, used nominatively to name its service beside its name; no endorsement implied.`,
+    usage: "Beside the provider's name on the route that uses it (buy, cash-out), never as an asset or network.",
+    pieces: [
+      {
+        variant: "symbol",
+        name: `${key}-first-party.svg`,
+        url: spec.url,
+        body,
+        present: { insetPermille: 0, surface: "any", shape: "free" },
+      },
+    ],
+  };
+}
+
 function fetchEntry(entry: CatalogEntry): Promise<Fetched> {
   const { spec } = entry;
   if (spec.from === "web3icons") return fromWeb3Icons(entry.key, spec);
   if (spec.from === "hyperliquid") return fromHyperliquid(spec);
   if (spec.from === "monad-token-list") return fromMonadTokenList(spec);
   if (spec.from === "lifi-types") return fromLifiTypes(spec);
+  if (spec.from === "first-party") return fromFirstParty(entry.key, spec);
   if (spec.from === "wikimedia-commons") return fromCommons(entry.key, spec);
   if (spec.from === "material-symbols") return fromMaterialSymbols(entry.key, spec);
   return fromSimpleIcons(entry.key, spec);

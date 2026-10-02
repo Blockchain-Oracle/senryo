@@ -266,6 +266,7 @@ const orgRows = (): Entity[] => [
   org(ids.provider("across"), "Across", "route-provider", "across"),
   org(ids.provider("lifi"), "LI.FI", "route-provider", "lifi"),
   org(ids.provider("cctp"), "Circle CCTP", "route-provider", "circle-cctp"),
+  org(ids.provider("ramp"), "Ramp Network", "route-provider", "ramp"),
   // Card wallets (E5): named on the Add to Wallet row.
   org(ids.provider("apple-wallet"), "Apple Wallet", "wallet", "apple-pay"),
   org(ids.provider("google-wallet"), "Google Wallet", "wallet", "google-pay"),
