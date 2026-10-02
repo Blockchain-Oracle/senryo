@@ -136,8 +136,10 @@ export function perplLiquidationPrice(input: PerplLiquidationInput): bigint | nu
 }
 
 /**
- * The liquidation price an open would start with: Perpl books `notional ÷ leverage` as the position's deposit and no
- * funding yet — so P_liq = P_entry · (1 ± (1/MMF − 1/leverage)), the docs' "(IM − MM) ÷ (1 − MM)" distance.
+ * The liquidation price an open would start with, at most this close to the entry: Perpl books `notional ÷ leverage`
+ * as the position's deposit plus whatever the fill loses against the mark (simulated 2 Oct 2026, perpl-plan-check), and
+ * no funding yet — so with the lower bound P_liq = P_entry · (1 ± (1/MMF − 1/leverage)), the docs' "(IM − MM) ÷ (1 −
+ * MM)" distance. Sized at the IOC's bound, the estimate never sits further from the mark than the real level.
  */
 export function perplOpenLiquidationPrice(
   input: Omit<PerplLiquidationInput, "depositCNS" | "premiumPnlCNS"> & { leverageHdths: bigint },
