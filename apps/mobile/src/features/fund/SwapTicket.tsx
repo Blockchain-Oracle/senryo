@@ -13,10 +13,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { MarkedLine } from "~/components/identity/MarkedLine";
-import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel, useGroupFill } from "~/components/kit/Surface";
 import { usePressScale } from "~/components/kit/usePressScale";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { COLLATERAL_STEPS_BPS } from "~/features/portfolio/constants";
 import { OutcomeNote, useOutcome } from "~/features/trade/OutcomeNote";
 import { fire } from "~/feedback/fire";
@@ -73,11 +73,11 @@ export function SwapTicket({ snapshot }: { snapshot: AccountSnapshot }) {
       {s.busy ? null : (
         <OutcomeNote outcome={outcome} thing="swap" success="Swapped · finalized. Your balances update in a moment." />
       )}
-      <Button
+      <HoldToConfirm
         label={s.busy ? "Swapping…" : `Swap ${SYMBOL[s.from]} for ${SYMBOL[to]}`}
-        loading={s.busy}
         disabled={s.busy || unresolved || !s.q || s.amountIn === 0n || !s.ready}
-        onPress={() => void s.swap()}
+        resetKey={[env.chainId, s.from, s.amountIn, s.q?.minOut].join(":")}
+        onConfirm={() => void s.swap()}
       />
     </View>
   );

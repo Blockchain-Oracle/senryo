@@ -4,7 +4,9 @@
  * string); any edit makes it a typed amount again. The amount is integer base units throughout (usd6).
  */
 import { RISK } from "@senryo/core";
-import { useState } from "react";
+import { useId } from "react";
+import { useMMKVBoolean, useMMKVString } from "react-native-mmkv";
+import { storage } from "~/lib/storage";
 
 const USD6_PER_CENT = 10_000n;
 const CENTS_PER_UNIT = 100n;
@@ -25,9 +27,12 @@ function parseCents(text: string): bigint | undefined {
   return (BigInt(whole || "0") * CENTS_PER_UNIT + BigInt(frac.padEnd(CENT_DIGITS, "0"))) * USD6_PER_CENT;
 }
 
-export function useAmountDraft(max: bigint) {
-  const [text, setTextRaw] = useState("");
-  const [all, setAll] = useState(false);
+export function useAmountDraft(max: bigint, scope?: string) {
+  const local = useId();
+  const key = `senryo.amount-draft.v1:${scope ?? local}`;
+  const [saved, setTextRaw] = useMMKVString(key, storage);
+  const [all, setAll] = useMMKVBoolean(`${key}:max`, storage);
+  const text = saved ?? "";
   const typed = parseCents(text) ?? 0n;
   const amount = all ? max : typed;
   return {

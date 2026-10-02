@@ -24,10 +24,10 @@ const CENTS = 2;
 
 /** The hold button narrates a top-up in progress instead of a silent spinner (S8.16c). */
 const GAS_STEP_LABEL: Partial<Record<GasStep["kind"], string>> = {
-  signing: "Adding gas · signing…",
-  sending: "Adding gas · sending…",
-  settling: "Adding gas · finalizing…",
-  waiting: "Adding gas · almost ready…",
+  signing: "Preparing…",
+  sending: "Preparing…",
+  settling: "Preparing…",
+  waiting: "Preparing…",
 };
 
 function blockerLabel(b: TradeBlocker): { label: string; fix?: Fix } {
@@ -59,7 +59,7 @@ function blockerLabel(b: TradeBlocker): { label: string; fix?: Fix } {
     case "NO_GAS":
       if (b.reason === "NOT_ELIGIBLE") return { label: "Your account needs gas to trade", fix: "addMoney" };
       if (b.reason === "BUDGET_EXHAUSTED") return { label: "Today’s free gas is used up" };
-      return { label: "Hold to retry gas" };
+      return { label: "Slide to retry preparation" };
   }
 }
 
@@ -85,5 +85,5 @@ export function commitState(input: {
     return { label: "Create an account to trade", holdable: false, retryGas: false, fix: "createAccount" };
   // `ready` is the account client being loaded (not the session lock: a locked session signs after Face ID).
   if (!input.ready || !input.previewReady) return { label: "Preparing order…", holdable: false, retryGas: false };
-  return { label: `Hold to open ${input.side === "long" ? "Long" : "Short"}`, holdable: true, retryGas: false };
+  return { label: `Slide to open ${input.side === "long" ? "Long" : "Short"}`, holdable: true, retryGas: false };
 }

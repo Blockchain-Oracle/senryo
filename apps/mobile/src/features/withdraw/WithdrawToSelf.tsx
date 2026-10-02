@@ -9,24 +9,33 @@
 import type { AccountSnapshot } from "@senryo/chain";
 import { positionCount } from "@senryo/config";
 import { collateralId } from "@senryo/identity";
-import { type CollateralSymbol, maxWithdrawable, useQueryEnv, useSendTrace, withdrawRequest } from "@senryo/query";
+import {
+  type CollateralSymbol,
+  maxWithdrawable,
+  operationKey,
+  useQueryEnv,
+  useSendTrace,
+  withdrawRequest,
+} from "@senryo/query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MarkedLine } from "~/components/identity/MarkedLine";
-import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel } from "~/components/kit/Surface";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 import { shortAddress } from "~/lib/format";
 import { usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
+import { useReviewGuard } from "~/lib/review-guard";
+import { validateMoney } from "~/lib/validate-money";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { AmountEntry } from "./AmountEntry";
 import { useAmountDraft } from "./amount-draft";
-import { type ExecutedMove, MoneyReceipt } from "./MoneyReceipt";
+import { type ExecutedMove, MoneyReceipt, restoredMove } from "./MoneyReceipt";
 import { WITHDRAW_WORDS } from "./words";
 
 const TOKENS = [
@@ -39,18 +48,19 @@ export function WithdrawToSelf({ snapshot }: { snapshot: AccountSnapshot }) {
   const env = useQueryEnv();
   const network = useNetwork();
   const account = useAccount();
-  const trace = useSendTrace();
+  const trace = useSendTrace(operationKey(env.chainId, account.hint?.address, "withdraw-self"));
   const gas = useEnsureGas();
   const address = account.hint?.address;
   const [symbol, setSymbol] = useState<CollateralSymbol>(snapshot.ausd >= snapshot.usdc ? "AUSD" : "USDC");
   const max = maxWithdrawable(snapshot, symbol);
-  const draft = useAmountDraft(max);
+  const draft = useAmountDraft(max, `withdraw:${env.chainId}:${address}:${symbol}`);
   /** The withdrawal as it was signed — frozen, so a balance refresh never changes what the receipt says. */
   const [executed, setExecuted] = useState<ExecutedMove>();
   const amount = draft.amount;
   const held = symbol === "AUSD" ? snapshot.ausd : snapshot.usdc;
   const practice = network.key === "testnet";
   const ready = amount > 0n && !draft.over && account.client !== undefined;
+  const guard = useReviewGuard([env.chainId, account.hint?.address, symbol, amount, "self"].join(":"));
   const send = async () => {
     const client = account.client;
     if (!client || !address || !ready) return;
@@ -62,17 +72,25 @@ export function WithdrawToSelf({ snapshot }: { snapshot: AccountSnapshot }) {
       to: `Your wallet · ${shortAddress(address)}`,
       network: network.name,
       practice,
+      source: "trading",
     });
     await trace.run(userSender(client, address, account.settings.faceId), request, {
       preflight: gas.preflight(request),
+      revalidate: async () => {
+        guard();
+        await validateMoney(env, address, "trading", symbol, amount);
+        guard();
+      },
     });
   };
 
   // Once it is out, the screen is its receipt until it settles: no second withdrawal beside an unresolved one.
-  if (executed && (trace.running || trace.events.length > 0)) {
+  const receiptMove = executed ?? restoredMove(trace.record);
+  if (receiptMove && (trace.running || trace.events.length > 0)) {
     return (
       <MoneyReceipt
-        move={executed}
+        move={receiptMove}
+        record={trace.record}
         events={trace.events}
         running={trace.running}
         words={WITHDRAW_WORDS}
@@ -106,10 +124,11 @@ export function WithdrawToSelf({ snapshot }: { snapshot: AccountSnapshot }) {
           The rest backs your open positions and holds; it can leave once they close.
         </Text>
       ) : null}
-      <Button
-        label={amount > 0n ? `Withdraw ${usd(amount)} to your wallet` : "Withdraw to your wallet"}
+      <HoldToConfirm
+        resetKey={[env.chainId, address, symbol, amount].join(":")}
+        label={amount > 0n ? `Withdraw ${usd(amount)}` : "Withdraw"}
         disabled={!ready}
-        onPress={() => void send()}
+        onConfirm={() => void send()}
       />
     </View>
   );

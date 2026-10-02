@@ -14,11 +14,12 @@ import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel } from "~/components/kit/Surface";
 import { TransactionSheet } from "~/components/sheet/TransactionSheet";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { Keypad, type KeypadKey } from "~/components/trade/Keypad";
+import { OperationSummary } from "~/components/trade/OperationSummary";
 import { Preset } from "~/components/trade/Preset";
 import { SwapFlip, SwapSide } from "~/features/fund/SwapTicket";
 import { QuietLine } from "~/features/markets/QuietLine";
@@ -119,13 +120,20 @@ function Ticket({ token, initialSide }: { token: SpotToken; initialSide: TradeSi
           ) : null}
           {t.executed ? (
             <Panel style={styles.rows}>
-              <KeyValue label="You paid" value={t.executed.paid} />
-              <KeyValue label="Quoted" value={t.executed.quoted} />
+              <KeyValue label="Reviewed payment" value={t.executed.paid} />
+              <KeyValue label="Receive (estimated)" value={t.executed.quoted} />
               <KeyValue label="At least" value={t.executed.atLeast} />
             </Panel>
           ) : null}
+          <OperationSummary record={t.trace.record} />
           <TradeTrace
-            words={SWAP_WORDS}
+            words={{
+              ...SWAP_WORDS,
+              ...(t.trace.record?.steps.some((s) => s.outcome === "completed") && outcome !== "finalized"
+                ? { reverted: "A later swap step reverted. Earlier completed approvals remain in place." }
+                : {}),
+            }}
+            record={t.trace.record}
             events={t.trace.events}
             running={t.trace.running}
             outcome={outcome}
@@ -191,10 +199,11 @@ function Ticket({ token, initialSide }: { token: SpotToken; initialSide: TradeSi
             </View>
           </View>
           <View style={[styles.footer, { paddingBottom: insets.bottom + SPACE.sm }]}>
-            <Button
+            <HoldToConfirm
+              resetKey={[t.side, t.amountIn, t.q?.minOut, token.address].join(":")}
               label={actionLabel(t.block, verb, token.symbol, t.inSymbol, t.gasShortWei, t.quote.status)}
               disabled={t.block !== undefined && t.block !== "short-gas"}
-              onPress={() => void t.submit()}
+              onConfirm={() => void t.submit()}
             />
           </View>
         </>

@@ -9,6 +9,7 @@ import { ReadingView } from "~/components/kit/states";
 import { PositionRowsSkeleton } from "~/features/home/HomeParts";
 import { ActivityRow } from "~/features/portfolio/ActivityRow";
 import { ACTIVITY_FILTERS, type ActivityFilter, FILTER_KINDS } from "~/features/portfolio/activity-copy";
+import { PendingOperations } from "~/features/portfolio/PendingOperations";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { useActivity } from "~/features/portfolio/useActivity";
 import { useAccount } from "~/lib/account/provider";
@@ -40,6 +41,7 @@ export default function ActivityScreen() {
       <Stack.Screen options={{ title: meta ? `${meta.name} history` : "Activity" }} />
       {address ? (
         <>
+          {!meta && filter === "all" ? <PendingOperations /> : null}
           <View style={styles.chips}>
             <ChipRow options={ACTIVITY_FILTERS} value={filter} onChange={setFilter} label="Activity kind" />
           </View>

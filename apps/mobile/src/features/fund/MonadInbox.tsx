@@ -9,12 +9,11 @@
 
 import { INBOX_SWEEP_MIN_USD6 } from "@senryo/config";
 import { collateralId, ids } from "@senryo/identity";
-import { keys, useInbox, useInboxWatch } from "@senryo/query";
-import { useQueryClient } from "@tanstack/react-query";
+import { useInbox, useInboxWatch } from "@senryo/query";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { Share, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { MarkedLine } from "~/components/identity/MarkedLine";
 import { Button } from "~/components/kit/Button";
@@ -25,9 +24,11 @@ import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { COPIED_MS } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
+import { shortAddress } from "~/lib/format";
 import { usd } from "~/lib/money";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { useInboxCredit } from "./useInboxCredit";
 
 /** The full receive page's code (S21 fills most of the width); the compact sheet keeps the kit size. */
 const RECEIVE_QR = 236;
@@ -63,15 +64,23 @@ function InboxPanel({ user, compact }: { user: `0x${string}`; compact: boolean }
   const reading = useInbox(user);
   const inbox = reading.status === "fresh" || reading.status === "stale" ? reading.value.inbox : undefined;
   const watch = useInboxWatch(user, inbox);
-  const credited = useCreditedAfterArrival(user, reading.status === "fresh" ? reading.value.waitingUsd6 : undefined);
+  const credited = useInboxCredit(
+    user,
+    inbox,
+    reading.status === "fresh" ? reading.value.waitingUsd6 : undefined,
+    reading.status === "fresh" ? reading.value.blockNumber : undefined,
+  );
+  const [fullAddress, setFullAddress] = useState(false);
+  const [help, setHelp] = useState(false);
   const practice = network.modeLabel === "Practice";
   return (
     <ReadingView reading={reading} loading="plate" loadingLabel="Reading your deposit address">
       {({ inbox: address, waitingUsd6 }) => (
         <View style={styles.stack}>
           <Panel style={styles.panel}>
+            <Text style={[TYPE.rowTitle, { color: color.ink }]}>Trading account</Text>
             <Text style={[TYPE.rowDetail, { color: practice ? color.practice : color.mainnet }]}>
-              {practice ? "Practice · Paper money" : "Mainnet · Real money"} · {network.name} · AUSD or USDC
+              {practice ? "Practice" : "Mainnet · Real money"} · {network.name} · AUSD or USDC
             </Text>
             <View style={styles.qr}>
               <QrCode
@@ -88,19 +97,24 @@ function InboxPanel({ user, compact }: { user: `0x${string}`; compact: boolean }
                 }
               />
             </View>
-            <Text
-              selectable
-              accessibilityLabel={`Deposit address ${address}`}
-              style={[TYPE.numSm, { color: color.ink }]}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Show full trading deposit address"
+              onPress={() => setFullAddress(!fullAddress)}
             >
-              {address}
-            </Text>
+              <Text
+                selectable
+                accessibilityLabel={`Deposit address ${address}`}
+                style={[TYPE.numSm, { color: color.ink }]}
+              >
+                {fullAddress ? address : shortAddress(address)}
+              </Text>
+            </Pressable>
             <AddressActions address={address} />
             {compact ? (
               <>
                 <Text style={[TYPE.rowDetail, { color: color.warn }]}>
-                  Send only AUSD or USDC on the {network.name} network. Other tokens, or any other network, can't be
-                  recovered from this address.
+                  Trading deposits accept AUSD and USDC on {network.name} only.
                 </Text>
                 <Text style={[TYPE.bodyStrong, { color: color.ink }]}>{statusLine(waitingUsd6, credited)}</Text>
                 {watch.isError ? (
@@ -125,18 +139,23 @@ function InboxPanel({ user, compact }: { user: `0x${string}`; compact: boolean }
                   <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Getting your address ready…</Text>
                 ) : null}
               </Panel>
-              <Panel style={styles.panel}>
-                <SectionLabel>How it works</SectionLabel>
-                <MarkedLine id={collateralId(network.chainId, "AUSD")} label="AUSD on Monad" size={SIZE.markToken} />
-                <MarkedLine id={collateralId(network.chainId, "USDC")} label="USDC on Monad" size={SIZE.markToken} />
-                <KeyValue label="Minimum" value={usd(INBOX_SWEEP_MIN_USD6)} />
-                <KeyValue label="Arrives" value="About a minute after your transfer confirms" />
-                <KeyValue label="Gas" value="None — Senryo credits it for you" />
-                <Text style={[TYPE.rowDetail, { color: color.warn }]}>
-                  Send only AUSD or USDC on the {network.name} network. Other tokens, or any other network, can't be
-                  recovered from this address.
-                </Text>
-              </Panel>
+              <Button
+                label={help ? "Hide deposit details" : "Deposit details"}
+                variant="ghost"
+                onPress={() => setHelp(!help)}
+              />
+              {help ? (
+                <Panel style={styles.panel}>
+                  <MarkedLine id={collateralId(network.chainId, "AUSD")} label="AUSD on Monad" size={SIZE.markToken} />
+                  <MarkedLine id={collateralId(network.chainId, "USDC")} label="USDC on Monad" size={SIZE.markToken} />
+                  <KeyValue label="Minimum" value={usd(INBOX_SWEEP_MIN_USD6)} />
+                  <KeyValue label="Credit" value="After a finalized sweep" />
+                  <KeyValue label="Gas" value="None — Senryo credits it for you" />
+                  <Text style={[TYPE.rowDetail, { color: color.warn }]}>
+                    Trading deposits accept AUSD and USDC on {network.name} only.
+                  </Text>
+                </Panel>
+              ) : null}
             </>
           )}
         </View>
@@ -153,27 +172,6 @@ function statusLine(waitingUsd6: bigint, credited: boolean): string {
   return `${usd(waitingUsd6)} arrived · crediting to your account`;
 }
 
-/** True once money seen in the inbox has left it (swept into the core); refreshes the account's balances then. */
-function useCreditedAfterArrival(user: `0x${string}`, waitingUsd6: bigint | undefined): boolean {
-  const network = useNetwork();
-  const queryClient = useQueryClient();
-  const seen = useRef(false);
-  const [credited, setCredited] = useState(false);
-  useEffect(() => {
-    if (waitingUsd6 === undefined) return;
-    if (waitingUsd6 >= INBOX_SWEEP_MIN_USD6) {
-      seen.current = true;
-      setCredited(false);
-    } else if (waitingUsd6 === 0n && seen.current) {
-      seen.current = false;
-      setCredited(true);
-      fire("filled", { sound: "deposit" });
-      void queryClient.invalidateQueries({ queryKey: keys.account(network.chainId, user) });
-    }
-  }, [waitingUsd6, network.chainId, user, queryClient]);
-  return credited;
-}
-
 function AddressActions({ address }: { address: string }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -186,8 +184,7 @@ function AddressActions({ address }: { address: string }) {
       <Button
         label={copied ? "Copied" : "Copy address"}
         variant="outline"
-        size="sm"
-        block={false}
+        style={{ flex: 1 }}
         onPress={() => {
           void Clipboard.setStringAsync(address).then(() => {
             fire("tick");
@@ -198,8 +195,7 @@ function AddressActions({ address }: { address: string }) {
       <Button
         label="Share"
         variant="outline"
-        size="sm"
-        block={false}
+        style={{ flex: 1 }}
         onPress={() => void Share.share({ message: address })}
       />
     </View>

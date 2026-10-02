@@ -11,6 +11,7 @@ import { fire } from "~/feedback/fire";
 import type { StarterErrorCode } from "~/lib/account/starter";
 import { readClipboard } from "~/lib/clipboard";
 import { usd } from "~/lib/money";
+import { useReviewGuard } from "~/lib/review-guard";
 import { SPACE } from "~/theme";
 
 const VOUCHER_MAX = 32;
@@ -29,6 +30,7 @@ const FAILED: Partial<Record<StarterErrorCode | "AUTH", string>> = {
 };
 
 function messageOf(phase: VoucherPhase): string | undefined {
+  if (phase.kind === "pending") return "Pending · Check status before submitting another voucher.";
   if (phase.kind === "done") return `${usd(phase.creditUsd6)} added to your account`;
   if (phase.kind === "failed") return FAILED[phase.code] ?? "Couldn’t redeem that code. Try again.";
   return undefined;
@@ -43,10 +45,10 @@ function Body() {
   const close = useSheetClose();
   const voucher = useVoucher();
   const [code, setCode] = useState("");
+  const guard = useReviewGuard(code);
   const { phase } = voucher;
   useEffect(() => {
     if (phase.kind === "done") {
-      fire("filled", { sound: "deposit" });
       const id = setTimeout(() => close(), CREDITED_HOLD_MS);
       return () => clearTimeout(id);
     }
@@ -74,10 +76,10 @@ function Body() {
       />
       <View style={{ gap: SPACE.sm }}>
         <Button
-          label="Redeem"
-          disabled={canonicalVoucherCode(code) === undefined || phase.kind === "done"}
+          label={phase.kind === "pending" ? "Check status" : "Redeem"}
+          disabled={(phase.kind !== "pending" && canonicalVoucherCode(code) === undefined) || phase.kind === "done"}
           loading={phase.kind === "working"}
-          onPress={() => void voucher.redeem(code)}
+          onPress={() => void voucher.redeem(code, guard)}
         />
       </View>
     </>

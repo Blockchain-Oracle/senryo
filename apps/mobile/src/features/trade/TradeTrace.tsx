@@ -7,13 +7,12 @@
  * offers no retry until TxRecovery has settled it (review R06). While it runs, the user may leave: the order continues
  * and can't be cancelled from here, and the copy says so.
  */
-import type { TraceEvent, TraceOutcome, TraceStage } from "@senryo/query";
-import { useEffect, useRef } from "react";
+import type { OperationRecord, TraceEvent, TraceOutcome, TraceStage } from "@senryo/query";
+import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Panel } from "~/components/kit/Surface";
 import { ExecutionTrace, type TraceStep } from "~/components/trade/ExecutionTrace";
-import { fire } from "~/feedback/fire";
 import { shortAddress } from "~/lib/format";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
@@ -80,6 +79,7 @@ export const ORDER_WORDS: TraceWords = {
 
 export function TradeTrace({
   events,
+  record,
   running,
   outcome,
   onDone,
@@ -87,6 +87,7 @@ export function TradeTrace({
   words = ORDER_WORDS,
 }: {
   events: readonly TraceEvent[];
+  record?: OperationRecord | undefined;
   running: boolean;
   /** The settled outcome (`useSettledOutcome`): `unknown` until the journal has the signed tx's result. */
   outcome: TraceOutcome | undefined;
@@ -97,6 +98,10 @@ export function TradeTrace({
   words?: TraceWords;
 }) {
   const { color } = useTheme();
+  const [details, setDetails] = useState(false);
+  const partial =
+    record?.steps.some((s) => s.outcome === "completed") &&
+    (record.steps.some((s) => s.outcome !== "completed") || record.steps.length < record.plannedActions.length);
   const start = events[0]?.at ?? Date.now();
   const unknown = outcome === "unknown";
   const failed = unknown
@@ -108,18 +113,6 @@ export function TradeTrace({
   const reached = events.reduce((n, e) => Math.max(n, COMPLETES[e.stage] ?? 0), 0);
   const hash = events.find((e) => e.hash)?.hash;
   const settled = events.some((e) => e.stage === "finalized");
-  const notified = useRef({ settled: false, failed: false });
-
-  useEffect(() => {
-    if (settled && !notified.current.settled) {
-      notified.current.settled = true;
-      fire("filled", { sound: "fill" });
-    }
-    if (failed && !landed && !notified.current.failed) {
-      notified.current.failed = true;
-      fire("fail");
-    }
-  }, [settled, failed, landed]);
 
   const steps: TraceStep[] = STEP_DEFS.map((d) => {
     const at = events.find((e) => e.stage === d.stage)?.at;
@@ -128,12 +121,43 @@ export function TradeTrace({
 
   return (
     <Panel style={styles.panel}>
-      <ExecutionTrace steps={steps} current={reached} failed={failed !== undefined && !landed} />
-      {hash ? <Text style={[TYPE.meta, { color: color.text3 }]}>Transaction {shortAddress(hash)}</Text> : null}
+      <Text
+        accessibilityLiveRegion="polite"
+        style={[TYPE.rowTitle, { color: settled || landed ? color.up : color.ink }]}
+      >
+        {unknown
+          ? "Pending"
+          : settled || landed
+            ? "Completed"
+            : failed
+              ? "Action needs attention"
+              : reached <= 1
+                ? "Preparing"
+                : reached === 2
+                  ? "Confirming"
+                  : "Pending"}
+      </Text>
+      <Button
+        label={details ? "Hide transaction details" : "Transaction details"}
+        variant="ghost"
+        size="sm"
+        onPress={() => setDetails(!details)}
+      />
+      {details ? (
+        <>
+          <ExecutionTrace steps={steps} current={reached} failed={failed !== undefined && !landed} />
+          {hash ? <Text style={[TYPE.meta, { color: color.text3 }]}>Transaction {shortAddress(hash)}</Text> : null}
+        </>
+      ) : null}
+      {partial ? (
+        <Text style={[TYPE.rowDetail, { color: color.warn }]}>
+          Some steps completed. Review the unfinished steps below.
+        </Text>
+      ) : null}
       {unknown ? (
         <Text accessibilityLiveRegion="polite" style={[TYPE.body, { color: color.warn }]}>
-          This {words.thing} was signed, but its result isn’t confirmed yet. Don’t {words.again}: it settles on its own,
-          and this screen updates when it does.
+          This {words.thing} was signed, but its result isn’t confirmed yet. Don’t {words.again}: we’ll check the chain,
+          and this screen updates when its chain result is known.
         </Text>
       ) : recovered ? (
         <Text
@@ -144,15 +168,23 @@ export function TradeTrace({
             ? words.landed
             : outcome === "reverted"
               ? `Confirmed: ${words.reverted.charAt(0).toLowerCase()}${words.reverted.slice(1)}`
-              : `Confirmed: the ${words.thing} never reached a block. Nothing changed; you can try again.`}
+              : partial
+                ? "This step was not included. Earlier completed steps remain."
+                : `Confirmed: this transaction was not included; you can review it again.`}
         </Text>
       ) : failed ? (
         <Text style={[TYPE.body, { color: color.down }]}>
           {failed.stage === "reverted"
-            ? words.reverted
+            ? partial
+              ? "This step reverted; earlier completed steps remain."
+              : words.reverted
             : failed.stage === "abandoned"
-              ? `The block carrying the ${words.thing} was dropped. Nothing changed; you can try again.`
-              : failureWords(failed.error, words.thing)}
+              ? partial
+                ? "This step was not included. Earlier completed steps remain."
+                : `This transaction was not included. Review it before trying again.`
+              : partial
+                ? "This step did not complete. Review the earlier completed steps before continuing."
+                : failureWords(failed.error, words.thing)}
         </Text>
       ) : null}
       {unknown ? (

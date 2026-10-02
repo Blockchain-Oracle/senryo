@@ -1,6 +1,6 @@
 /**
  * The amount of a send or withdrawal (review S02, F23): the exact figure typed in its own field, in this network's
- * money, with 25 % / 50 % / All of what can leave as presets that fill it. The line under the field says what can
+ * money, with 25 % / 50 % / All of the available amount as presets that fill it. The line under the field says what can
  * leave now, or that the typed amount is more than that. The presets never become the only control.
  */
 import { RISK } from "@senryo/core";
@@ -35,22 +35,22 @@ export function AmountEntry({
         {...(draft.text ? { action: { label: "Clear", onPress: draft.reset } } : {})}
         message={
           draft.over
-            ? `Only ${usd(max)} ${symbol} can leave now`
+            ? `Only ${usd(max)} ${symbol} available`
             : draft.all
               ? `All of it: ${usd(max)} ${symbol}`
-              : `Up to ${usd(max)} ${symbol} can leave now`
+              : `Up to ${usd(max)} ${symbol} available`
         }
         tone={draft.over ? "bad" : "quiet"}
         input={{ keyboardType: "decimal-pad", returnKeyType: "done" }}
       />
       <View style={styles.presets}>
         {SHARES_BPS.map((b) => {
-          const name = b >= RISK.BPS ? "All" : pct(b);
+          const name = b >= RISK.BPS ? "Max" : pct(b);
           return (
             <Preset
               key={String(b)}
               label={name}
-              accessibilityLabel={`${name} of what can leave`}
+              accessibilityLabel={`${name} of the available amount`}
               disabled={max === 0n}
               onPress={() => draft.setShare(b)}
             />

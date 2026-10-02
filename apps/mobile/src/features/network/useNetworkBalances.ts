@@ -1,29 +1,36 @@
-/**
- * Each network's equity for the selector (S8.22): read directly per chain (not through the active QueryEnv, which
- * only serves the selected network), with the same query keys as `useAccountRisk` so the cache is shared. Mainnet
- * before launch has no account to read — it reports `undefined` and the row says when it opens.
- */
-import { readAccountSnapshot } from "@senryo/chain";
+/** Selector balances share Home's estimated portfolio basis, including the Mainnet wallet before core deployment. */
+import { readPortfolio } from "@senryo/chain";
 import { type ChainId, MAINNET, TESTNET } from "@senryo/config";
-import { keys } from "@senryo/query";
+import { keys, ownLpRequests, useQueryEnv } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "~/lib/account/provider";
 import { sharedRead } from "~/lib/account/sender";
-import { mainnetTradingLive } from "~/lib/network";
 import { BALANCE_STALE_MS } from "./constants";
 
-function useEquity(chainId: ChainId, enabled: boolean) {
+function useValue(chainId: ChainId) {
   const address = useAccount().hint?.address;
+  const env = useQueryEnv();
   return useQuery({
-    queryKey: keys.accountRisk(chainId, address ?? "0x", "finalized"),
-    queryFn: () => readAccountSnapshot(sharedRead(chainId), chainId, address ?? "0x", "finalized"),
-    enabled: enabled && address !== undefined,
+    queryKey: [...keys.account(chainId, address ?? "0x"), "portfolio"],
+    queryFn: () =>
+      readPortfolio(sharedRead(chainId), chainId, address ?? "0x", (block) =>
+        ownLpRequests(env.indexer, chainId, address ?? "0x", block),
+      ),
+    enabled: address !== undefined,
     staleTime: BALANCE_STALE_MS,
   });
 }
-
 export function useNetworkBalances() {
-  const practice = useEquity(TESTNET.chainId, true);
-  const mainnet = useEquity(MAINNET.chainId, mainnetTradingLive());
-  return { practice: practice.data?.equityInit, mainnet: mainnet.data?.equityInit };
+  const practice = useValue(TESTNET.chainId);
+  const mainnet = useValue(MAINNET.chainId);
+  const value = (reading: ReturnType<typeof useValue>) =>
+    reading.data?.components.some((c) => c.supported !== false && c.valueUsd6 !== undefined)
+      ? reading.data.totalUsd6
+      : undefined;
+  return {
+    practice: value(practice),
+    mainnet: value(mainnet),
+    practicePartial: practice.data?.quality === "partial",
+    mainnetPartial: mainnet.data?.quality === "partial",
+  };
 }

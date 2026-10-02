@@ -6,23 +6,21 @@
  * Mainnet request opens straight on the confirmation, which still takes the deliberate tap.
  */
 import { MAINNET, TESTNET } from "@senryo/config";
+import { ids } from "@senryo/identity";
 import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
 import { SheetRow } from "~/components/sheet/SheetRow";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { usd } from "~/lib/money";
-import { mainnetTradingLive, type NetworkKey, setActiveNetwork, useNetwork } from "~/lib/network";
-import { RADIUS, SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { type NetworkKey, setActiveNetwork, useNetwork } from "~/lib/network";
+import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useNetworkBalances } from "./useNetworkBalances";
 
 /** The mode's colour as a dot at the row's leading edge: violet for paper money, blue for real money (D-172). */
-function ModeDot({ tone }: { tone: string }) {
-  return <View style={[styles.dot, { backgroundColor: tone }]} />;
-}
-
 /** The current choice: a check in the mode's colour (Fomo F21/F22 mark selection at the trailing edge). */
 function InUse({ tone }: { tone: string }) {
   return <Check size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={tone} />;
@@ -34,7 +32,6 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
   const account = useAccount();
   const balances = useNetworkBalances();
   const [confirming, setConfirming] = useState(request === MAINNET.key && network.key !== MAINNET.key);
-  const live = mainnetTradingLive();
 
   const choose = (key: NetworkKey) => {
     fire("tick");
@@ -55,10 +52,12 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
     <View style={styles.wrap}>
       <SheetRow
         index={0}
-        leading={<ModeDot tone={color.practice} />}
+        leading={<EntityMark id={ids.evmChain(TESTNET.chainId)} size={SIZE.markToken} decorative />}
         title="Practice"
-        detail={`Paper money · ${TESTNET.name}${
-          balances.practice === undefined ? "" : ` · ${usd(balances.practice, undefined, TESTNET.key)}`
+        detail={`Paper money${
+          balances.practice === undefined
+            ? ""
+            : ` · ${balances.practicePartial ? "≈ " : ""}${usd(balances.practice, undefined, TESTNET.key)}`
         }`}
         selected={network.key === TESTNET.key}
         onPress={() => choose(TESTNET.key)}
@@ -66,15 +65,9 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
       />
       <SheetRow
         index={1}
-        leading={<ModeDot tone={color.mainnet} />}
+        leading={<EntityMark id={ids.evmChain(MAINNET.chainId)} size={SIZE.markToken} decorative />}
         title="Mainnet"
-        detail={
-          live
-            ? `Real money · ${MAINNET.name}${
-                balances.mainnet === undefined ? "" : ` · ${usd(balances.mainnet, undefined, MAINNET.key)}`
-              }`
-            : `Real money · ${MAINNET.name} · spot tokens now, perps at launch`
-        }
+        detail={`Real money${balances.mainnet === undefined ? " · Monad" : ` · ${balances.mainnetPartial ? "≈ " : ""}${usd(balances.mainnet, undefined, MAINNET.key)}`}`}
         selected={network.key === MAINNET.key}
         onPress={() => choose(MAINNET.key)}
         trailing={network.key === MAINNET.key ? <InUse tone={color.mainnet} /> : undefined}
@@ -83,26 +76,18 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
         <View style={[styles.confirm, { backgroundColor: color.mainnetWash }]}>
           <Text style={[TYPE.bodyStrong, { color: color.ink }]}>Switch to real money?</Text>
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-            {live
-              ? "Trades and card spends use your real funds on Monad. Face ID confirms anything above your limit; your session locks now and starts fresh."
-              : "Spot tokens trade on Mainnet now, with your real funds; perps open at launch, and until then their prices are live to browse. Your practice positions stay where they are."}
+            Your next transaction uses real funds. Your session will lock.
           </Text>
           <Button label="Switch to real money" onPress={switchToReal} />
           <Button label="Stay in practice" variant="ghost" size="sm" onPress={() => setConfirming(false)} />
         </View>
       ) : null}
-      <Text style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>
-        One passkey, one address on both networks. Balances and positions stay separate.
-      </Text>
     </View>
   );
 }
 
-const DOT = SPACE.md;
-
 const styles = StyleSheet.create({
   wrap: { gap: SHEET_SHAPE.rowGap },
-  dot: { width: DOT, height: DOT, borderRadius: RADIUS.pill },
   confirm: { borderRadius: SHEET_SHAPE.rowRadius, padding: SPACE.lg, gap: SPACE.md },
   center: { textAlign: "center" },
 });

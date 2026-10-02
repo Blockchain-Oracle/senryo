@@ -1,6 +1,6 @@
 import { explorerTxUrl, NETWORKS } from "@senryo/config";
 import { DECIMALS, formatUnits } from "@senryo/core";
-import type { TraceEvent } from "@senryo/query";
+import type { OperationRecord, TraceEvent } from "@senryo/query";
 import { CircleCheck } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -33,6 +33,35 @@ export interface SubmittedOrder {
   sizeDelta: bigint;
 }
 
+export function restoredOrder(record: OperationRecord | undefined): SubmittedOrder | undefined {
+  const i = record?.reviewedIntent;
+  if (
+    !record ||
+    !i?.symbol ||
+    (i.network !== "mainnet" && i.network !== "testnet") ||
+    (i.side !== "long" && i.side !== "short")
+  )
+    return undefined;
+  try {
+    return {
+      network: i.network,
+      chainId: record.chainId,
+      marketId: Number(i.marketId),
+      symbol: i.symbol,
+      side: i.side,
+      leverage: Number(i.leverage),
+      marginUsd6: BigInt(i.marginUsd6 ?? ""),
+      lockedUsd6: BigInt(i.lockedUsd6 ?? ""),
+      notionalUsd6: BigInt(i.notionalUsd6 ?? ""),
+      execPrice18: BigInt(i.execPrice18 ?? ""),
+      feeUsd6: BigInt(i.feeUsd6 ?? ""),
+      sizeDelta: BigInt(i.sizeDelta ?? ""),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * The receipt (inventory #21; D-114/D-163): shown only once the trace reached **finalized** — never on a submit or a
  * vote. Quoted values are labelled as quoted at the hold; the transaction links to the network's explorer. Share
@@ -47,7 +76,9 @@ export function TicketReceipt({
   onViewPosition,
   onShare,
   protection,
+  record,
 }: {
+  record?: OperationRecord | undefined;
   order: SubmittedOrder;
   events: readonly TraceEvent[];
   onDone: () => void;
@@ -57,6 +88,10 @@ export function TicketReceipt({
   protection?: ReactNode;
 }) {
   const { color } = useTheme();
+  const [details, setDetails] = useState(false);
+  const fill = record?.steps
+    .flatMap((s) => s.facts ?? [])
+    .find((f) => f.event === "PositionUpdated" && f.values.marketId === String(order.marketId))?.values;
   const network = NETWORKS[order.network];
   const practice = order.network === "testnet";
   const tone = practice ? color.practice : color.mainnet;
@@ -78,19 +113,33 @@ export function TicketReceipt({
         </Text>
       </View>
       <Panel style={styles.card}>
-        <KeyValue label="Margin" value={money(order.marginUsd6)} />
-        <KeyValue label="Leverage" value={`${order.leverage}×`} />
-        <KeyValue label="Exposure" value={money(order.notionalUsd6)} />
-        <KeyValue label="Locked as margin (quoted)" value={money(order.lockedUsd6)} />
+        <KeyValue label="Amount" value={money(order.marginUsd6)} />
         <KeyValue
-          label="Quantity (quoted)"
-          value={`${formatUnits(order.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS)} ${order.symbol}`}
+          label={fill ? "Fill price" : "Fill price (estimated)"}
+          value={`$${price18(fill?.execPrice ? BigInt(fill.execPrice) : order.execPrice18, decimals)}`}
         />
-        <KeyValue label="Fill price (quoted)" value={`$${price18(order.execPrice18, decimals)}`} />
-        <KeyValue label="Fee (quoted)" value={money(order.feeUsd6)} />
-        {hash ? <KeyValue label="Transaction" value={shortAddress(hash)} /> : null}
+        <KeyValue
+          label={fill ? "Fee" : "Fee (estimated)"}
+          value={money(fill?.fee ? BigInt(fill.fee) : order.feeUsd6)}
+        />
+        {details ? (
+          <>
+            <KeyValue label="Leverage requested" value={`${order.leverage}×`} />
+            <KeyValue label="Exposure requested" value={money(order.notionalUsd6)} />
+            <KeyValue
+              label={fill ? "Quantity" : "Quantity (estimated)"}
+              value={`${formatUnits(fill?.sizeDelta ? BigInt(fill.sizeDelta) : order.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS)} ${order.symbol}`}
+            />
+            {hash ? <KeyValue label="Transaction" value={shortAddress(hash)} /> : null}
+          </>
+        ) : null}
       </Panel>
-      <Text style={[TYPE.meta, { color: color.text3 }]}>Quoted at your hold; the position shows the filled entry.</Text>
+      <Button
+        label={details ? "Hide details" : "Details"}
+        variant="ghost"
+        size="sm"
+        onPress={() => setDetails(!details)}
+      />
       {protection}
       {hash ? (
         <Button

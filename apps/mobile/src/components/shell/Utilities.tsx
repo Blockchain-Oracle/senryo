@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Bell } from "lucide-react-native";
+import { Bell, History } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
@@ -54,6 +54,15 @@ export function AlertsButton() {
   return (
     <UtilityButton label="Alerts" onPress={() => router.push(ROUTES.alerts)}>
       <Bell size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+    </UtilityButton>
+  );
+}
+
+export function ActivityButton() {
+  const { color } = useTheme();
+  return (
+    <UtilityButton label="Activity" onPress={() => router.push(ROUTES.activity)}>
+      <History size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
     </UtilityButton>
   );
 }

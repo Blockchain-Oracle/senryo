@@ -1,7 +1,9 @@
+import { ids } from "@senryo/identity";
 import { router } from "expo-router";
 import { ChevronDown } from "lucide-react-native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 import Animated from "react-native-reanimated";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
@@ -42,9 +44,9 @@ export function ModeCapsule({ compact = false }: { compact?: boolean }) {
           { backgroundColor: practice ? color.practiceSurface : color.mainnetSurface },
         ]}
       >
-        <View style={[styles.dot, { backgroundColor: tone }]} />
+        <EntityMark id={ids.evmChain(network.chainId)} size={SIZE.iconSm} decorative />
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.modeLabel, { color: tone }]} numberOfLines={1}>
-          {compact ? mode : `${mode} · ${money}`}
+          {mode}
         </Text>
         <ChevronDown size={CHEVRON} strokeWidth={SIZE.iconStroke} color={tone} />
       </Pressable>

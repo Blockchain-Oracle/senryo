@@ -1,19 +1,21 @@
-import { durationUntil, ONE_USD6, RISK } from "@senryo/core";
+import { durationUntil, RISK } from "@senryo/core";
 import { collateralId } from "@senryo/identity";
 import { router } from "expo-router";
-import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MarkedLine } from "~/components/identity/MarkedLine";
 import { Button } from "~/components/kit/Button";
-import { Segmented } from "~/components/kit/Segmented";
 import { Panel } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
-import { OutcomeNote, useOutcome } from "~/features/trade/OutcomeNote";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
+import { OperationSummary } from "~/components/trade/OperationSummary";
+import { useOutcome } from "~/features/trade/OutcomeNote";
+import { AmountEntry } from "~/features/withdraw/AmountEntry";
+import { useAmountDraft } from "~/features/withdraw/amount-draft";
 import { ROUTES } from "~/lib/constants/routes";
 import { pct, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
+import { useReviewGuard } from "~/lib/review-guard";
 import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { LP_DEPOSIT_CHIPS_USD, LP_REDEEM_STEPS_BPS } from "./constants";
 import { useLp } from "./useLp";
 
 const MS_PER_SECOND = 1000n;
@@ -30,9 +32,18 @@ export function LpScreen() {
   const network = useNetwork();
   const { color } = useTheme();
   const lp = useLp();
-  const [depositUsd6, setDepositUsd6] = useState<bigint>(LP_DEPOSIT_CHIPS_USD[1] * ONE_USD6);
-  const [redeemBps, setRedeemBps] = useState<bigint>(LP_REDEEM_STEPS_BPS[2]);
-  const { outcome, unresolved } = useOutcome(lp.trace.events);
+  const maxDeposit = lp.snapshot
+    ? lp.snapshot.walletAusd < lp.snapshot.maxDeposit
+      ? lp.snapshot.walletAusd
+      : lp.snapshot.maxDeposit
+    : 0n;
+  const depositDraft = useAmountDraft(maxDeposit, `pool-deposit:${network.chainId}:${lp.address}`);
+  const depositUsd6 = depositDraft.amount;
+  const redeemDraft = useAmountDraft(lp.snapshot?.sharesValue ?? 0n, `pool-redeem:${network.chainId}:${lp.address}`);
+
+  const depositGuard = useReviewGuard([network.chainId, lp.address, depositUsd6].join(":"));
+  const redeemGuard = useReviewGuard([network.chainId, lp.address, redeemDraft.amount, redeemDraft.all].join(":"));
+  const { unresolved } = useOutcome(lp.trace.events);
   // A signed LP send that isn't confirmed yet locks the page's actions too: repeating it could deposit twice.
   const busy = lp.trace.running || unresolved;
   const nowSec = BigInt(Date.now()) / MS_PER_SECOND;
@@ -54,22 +65,23 @@ export function LpScreen() {
         const share = v.totalAssets > 0n ? (v.sharesValue * RISK.BPS) / v.totalAssets : 0n;
         const aprValue = lp.apr.status === "fresh" || lp.apr.status === "stale" ? lp.apr.value : undefined;
         const holds = v.shares > 0n;
+        const invested = v.sharesValue + v.pendingValue;
         return (
           <View style={styles.stack}>
             <View style={styles.hero}>
               <Text style={[TYPE.rowDetail, { color: practice ? color.practice : color.mainnet }]}>
                 {practice ? "Practice · Paper money" : "Mainnet · Real money"} · {network.name}
               </Text>
-              {holds ? (
+              {invested > 0n ? (
                 <>
-                  <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Your share</Text>
+                  <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Your investment</Text>
                   <Text
                     maxFontSizeMultiplier={HERO_FONT_SCALE}
                     adjustsFontSizeToFit
                     numberOfLines={1}
                     style={[TYPE.displayBalance, { color: color.ink }]}
                   >
-                    {usd(v.sharesValue)}
+                    {usd(invested)}
                   </Text>
                   <Text style={[TYPE.rowDetail, { color: color.text2 }]}>{pct(share)} of the pool</Text>
                 </>
@@ -83,6 +95,36 @@ export function LpScreen() {
               )}
             </View>
 
+            {v.pending.length ? (
+              <View style={styles.panel}>
+                <Text style={[TYPE.rowTitle, { color: color.ink }]}>Pending redemptions</Text>{" "}
+                {v.pending.map((r) => {
+                  const ready = r.claimableAt <= nowSec;
+                  return (
+                    <View key={String(r.requestId)} style={styles.pending}>
+                      <View style={styles.flex}>
+                        <Text style={[TYPE.row, { color: color.ink }]}>Request {String(r.requestId)}</Text>
+                        <Text style={[TYPE.rowDetail, { color: ready ? color.up : color.text3 }]}>
+                          {ready ? "Ready to claim" : `Claimable in ${durationUntil(r.claimableAt, nowSec)}`}
+                        </Text>
+                      </View>
+                      <HoldToConfirm
+                        label="Claim redemption"
+                        resetKey={[network.chainId, lp.address, r.requestId].join(":")}
+                        disabled={busy || !ready || !v.allMarketsOpen}
+                        onConfirm={() => void lp.claim(r.requestId)}
+                      />
+                    </View>
+                  );
+                })}
+                {v.pending.length > 0 && !v.allMarketsOpen ? (
+                  <Text style={[TYPE.rowDetail, { color: color.warn }]}>
+                    Claims open when every market is open (weekend-gap protection).
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+
             <View style={styles.grid}>
               <Cell label="Pool value" value={usd(v.totalAssets)} />
               <Cell label="Cap" value={usd(v.tvlCap, 0)} />
@@ -90,7 +132,9 @@ export function LpScreen() {
               <Cell label="APR · last 7 days" value={aprValue === undefined ? "Not enough history" : pct(aprValue)} />
             </View>
 
-            <Text style={[TYPE.body, { color: color.text2 }]}>{RISK_COPY}</Text>
+            <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
+              Capital at risk · Redemptions wait 24 hours, then require all markets open. Redemption value can change.
+            </Text>
 
             <Panel style={styles.panel}>
               <Text accessibilityRole="header" style={[TYPE.rowTitle, { color: color.ink }]}>
@@ -102,15 +146,7 @@ export function LpScreen() {
                 size={SIZE.markToken}
                 value={`${usd(v.walletAusd)} available`}
               />
-              <Segmented
-                options={[
-                  ...LP_DEPOSIT_CHIPS_USD.map((c) => ({ value: String(c * ONE_USD6), label: usd(c * ONE_USD6, 0) })),
-                  { value: "max", label: "Max" },
-                ]}
-                value={depositUsd6 === maxIn && maxIn > 0n ? "max" : String(depositUsd6)}
-                onChange={(val) => setDepositUsd6(val === "max" ? maxIn : BigInt(val))}
-                label="Deposit amount"
-              />
+              <AmountEntry draft={depositDraft} max={maxIn} symbol="AUSD" label="Deposit amount" />
               {v.walletAusd === 0n && practice ? (
                 <Button
                   label="Get practice AUSD"
@@ -119,11 +155,11 @@ export function LpScreen() {
                   onPress={() => void lp.faucet()}
                 />
               ) : null}
-              <Button
-                label={busy ? "Working…" : `Deposit ${usd(depositUsd6)}`}
-                loading={busy}
+              <HoldToConfirm
+                resetKey={[network.chainId, lp.address, depositUsd6].join(":")}
+                label={busy ? "Preparing…" : `Deposit ${usd(depositUsd6)}`}
                 disabled={busy || depositUsd6 <= 0n || depositUsd6 > maxIn || !lp.ready}
-                onPress={() => void lp.deposit(depositUsd6)}
+                onConfirm={() => void lp.deposit(depositUsd6, depositGuard)}
               />
               {v.maxDeposit === 0n ? (
                 <Text style={[TYPE.rowDetail, { color: color.warn }]}>
@@ -139,57 +175,41 @@ export function LpScreen() {
                 </Text>
                 {holds ? (
                   <>
-                    <Segmented
-                      options={LP_REDEEM_STEPS_BPS.map((b) => ({
-                        value: String(b),
-                        label: b >= RISK.BPS ? "All" : pct(b),
-                      }))}
-                      value={String(redeemBps)}
-                      onChange={(val) => setRedeemBps(BigInt(val))}
-                      label="How much to redeem"
+                    <AmountEntry
+                      draft={redeemDraft}
+                      max={v.sharesValue}
+                      symbol="AUSD"
+                      label="Redemption value (estimated)"
                     />
-                    <Button
-                      label="Request · claim in 24 h"
-                      variant="secondary"
-                      disabled={busy || !lp.ready}
-                      onPress={() => void lp.requestRedeem(redeemBps)}
+                    <HoldToConfirm
+                      label="Request redemption"
+                      resetKey={[network.chainId, lp.address, redeemDraft.amount].join(":")}
+                      disabled={busy || !lp.ready || redeemDraft.amount <= 0n || redeemDraft.over}
+                      onConfirm={() =>
+                        void lp.requestRedeem(
+                          v.sharesValue > 0n
+                            ? redeemDraft.all
+                              ? v.shares
+                              : (redeemDraft.amount * v.shares) / v.sharesValue
+                            : 0n,
+                          redeemGuard,
+                        )
+                      }
                     />
+                    <Text style={[TYPE.meta, { color: color.text3 }]}>
+                      Shares move into escrow. Claim after 24 hours while every market is open; the amount received may
+                      differ.
+                    </Text>
                   </>
-                ) : null}
-                {v.pending.map((r) => {
-                  const ready = r.claimableAt <= nowSec;
-                  return (
-                    <View key={String(r.requestId)} style={styles.pending}>
-                      <View style={styles.flex}>
-                        <Text style={[TYPE.row, { color: color.ink }]}>Request {String(r.requestId)}</Text>
-                        <Text style={[TYPE.rowDetail, { color: ready ? color.up : color.text3 }]}>
-                          {ready ? "Ready to claim" : `Claimable in ${durationUntil(r.claimableAt, nowSec)}`}
-                        </Text>
-                      </View>
-                      <Button
-                        label="Claim"
-                        size="sm"
-                        block={false}
-                        disabled={busy || !ready || !v.allMarketsOpen}
-                        onPress={() => void lp.claim(r.requestId)}
-                      />
-                    </View>
-                  );
-                })}
-                {v.pending.length > 0 && !v.allMarketsOpen ? (
-                  <Text style={[TYPE.rowDetail, { color: color.warn }]}>
-                    Claims open when every market is open (weekend-gap protection).
-                  </Text>
                 ) : null}
               </Panel>
             ) : null}
-            {lp.trace.running ? null : (
-              <OutcomeNote
-                outcome={outcome}
-                thing="transaction"
-                success="Done · finalized. The pool updates in a moment."
-              />
-            )}
+            <OperationSummary record={lp.trace.record} />
+            {!v.requestsComplete ? (
+              <Text style={[TYPE.meta, { color: color.warn }]}>
+                Pending requests are updating. Your investment may be partial until the indexer catches up.
+              </Text>
+            ) : null}
           </View>
         );
       }}
@@ -220,6 +240,6 @@ const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", rowGap: SPACE.lg, columnGap: SPACE.lg },
   cell: { width: CELL_SHARE, gap: SPACE.xxs },
   panel: { padding: SPACE.lg, gap: SPACE.md },
-  pending: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
+  pending: { gap: SPACE.md },
   flex: { flex: 1, gap: SPACE.xxs },
 });

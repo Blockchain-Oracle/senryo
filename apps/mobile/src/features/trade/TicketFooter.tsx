@@ -135,7 +135,7 @@ export function TicketFooter({
               resetKey={resetKey}
               onReset={onReset}
               onAccessibleActivate={onReview}
-              accessibilityHint="Hold for half a second to open the position, or use Review"
+              accessibilityHint="Slide to open the position, or use Review"
             />
           </View>
         </View>

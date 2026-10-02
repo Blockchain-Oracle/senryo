@@ -4,6 +4,7 @@
  * in spec order; and the send — `increase` through `@senryo/chain` with the scoped signer (the session policy sees
  * market room + equity, so an in-scope open signs without a step-up; D-037 Face ID is the policy's call).
  */
+import { pinRead, readAccountSnapshot, readMarketRisk, readPositions } from "@senryo/chain";
 import { MAINNET_CHAIN_ID, positionCount } from "@senryo/config";
 import {
   capHeadroomUsd6,
@@ -16,12 +17,14 @@ import {
   nextTransition,
   parseUnits,
   previewIncrease,
+  RISK,
   type TradeBlocker,
 } from "@senryo/core";
 import {
   increaseRequest,
   type LiveMarket,
   riskViewOf,
+  TRADE_SLIPPAGE_BPS,
   useAccountRisk,
   useCalendar,
   useGasBalance,
@@ -37,7 +40,9 @@ import { applyKey, type KeypadKey } from "~/components/trade/Keypad";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
 import { activeNetwork } from "~/lib/network";
+import { useReviewGuard } from "~/lib/review-guard";
 import { draftKey, type Side, useTicketDraft } from "./draft";
+import { planKey, usePlannedTriggers } from "./planned-triggers";
 import { useGasTopUp } from "./useGasTopUp";
 
 export type { Side };
@@ -48,7 +53,7 @@ export function useTicket(market: LiveMarket) {
   const env = useQueryEnv();
   const account = useAccount();
   const address = account.hint?.address;
-  const key = draftKey(env.chainId, market.marketId);
+  const key = draftKey(env.chainId, market.marketId, address);
   const { draft, update } = useTicketDraft(key, {
     side: "long",
     amountText: "",
@@ -108,6 +113,7 @@ export function useTicket(market: LiveMarket) {
         ? { kind: "topup" }
         : { kind: "ok" };
   const trace = useSendTrace(key);
+  const protection = usePlannedTriggers(planKey(env.chainId, address, market.marketId));
   const simulationRevert = trace.events.find((e) => e.stage === "failed")?.error;
 
   const blocker: TradeBlocker | undefined = firstTradeBlocker({
@@ -136,6 +142,7 @@ export function useTicket(market: LiveMarket) {
     };
   }, []);
 
+  const guard = useReviewGuard([env.chainId, address, market.marketId, side, amountText, leverage].join(":"));
   const submit = async () => {
     const client = account.client;
     if (!client || !address || !preview || !snapshot) return undefined;
@@ -145,16 +152,73 @@ export function useTicket(market: LiveMarket) {
     // intent is gone: nothing is signed, and a fresh hold is required.
     const now = live.current;
     if (!now.mounted || now.address !== address || activeNetwork().chainId !== env.chainId) return undefined;
+    let signingRisk = snapshot;
+    let signingMarket = market;
+    const revalidate = async () => {
+      guard();
+      const block = await env.read.getBlock({ blockTag: "latest" });
+      const read = pinRead(env.read, block.number);
+      const [freshRisk, freshMarket] = await Promise.all([
+        readAccountSnapshot(read, env.chainId, address, "latest"),
+        readMarketRisk(read, env.chainId, market.marketId),
+      ]);
+      const freshPositions = await readPositions(read, env.chainId, address, freshRisk.positionBitmap);
+      const freshPreview = previewIncrease({
+        market: freshMarket.risk,
+        book: freshMarket.book,
+        pv: freshMarket.pv,
+        account: riskViewOf(freshRisk),
+        position: freshPositions.find((p) => p.marketId === market.marketId),
+        isLong,
+        notionalUsd6,
+      });
+      const moved =
+        freshPreview.execPrice18 > preview.execPrice18
+          ? freshPreview.execPrice18 - preview.execPrice18
+          : preview.execPrice18 - freshPreview.execPrice18;
+      if (
+        !freshMarket.enabled ||
+        freshMarket.pv.status !== "OPEN" ||
+        leverage > freshMarket.maxLeverageX ||
+        moved * RISK.BPS > preview.execPrice18 * TRADE_SLIPPAGE_BPS ||
+        freshPreview.issues.length > 0
+      ) {
+        throw new Error("Market or quote changed. Review this order again.");
+      }
+      guard();
+      signingRisk = freshRisk;
+      signingMarket = { ...market, ...freshMarket };
+    };
     const sender = userSender(client, address, account.settings.faceId, {
       marketRoomUsd6: (id, long) =>
-        id === market.marketId ? capHeadroomUsd6(market.risk, market.book, market.pv, long) : undefined,
-      equityUsd6: () => snapshot.equityInit,
+        id === market.marketId
+          ? capHeadroomUsd6(signingMarket.risk, signingMarket.book, signingMarket.pv, long)
+          : undefined,
+      equityUsd6: () => signingRisk.equityInit,
       marketLabel: (id) => (id === market.marketId ? market.name : undefined),
     });
     const open = positionCount(snapshot.positionBitmap) + (held ? 0 : 1);
     return trace.run(
       sender,
       increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18, open),
+      {
+        revalidate,
+        plannedActions: ["increase", ...protection.levels.map(() => "placeTrigger")],
+        reviewedIntent: {
+          network: env.chainId === MAINNET_CHAIN_ID ? "mainnet" : "testnet",
+          marketId: String(market.marketId),
+          symbol: market.symbol,
+          side,
+          leverage: String(leverage),
+          marginUsd6: amountUsd6.toString(),
+          lockedUsd6: preview.marginUsd6.toString(),
+          notionalUsd6: notionalUsd6.toString(),
+          execPrice18: preview.execPrice18.toString(),
+          feeUsd6: preview.feeUsd6.toString(),
+          sizeDelta: preview.sizeDelta.toString(),
+          protection: protection.levels.map((level) => `${level.kind}:${level.price18}`).join(","),
+        },
+      },
     );
   };
 

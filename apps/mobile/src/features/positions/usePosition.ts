@@ -4,12 +4,14 @@
  * share of the size (25/50/75/100 %) previewed by `previewDecrease` (max-profit cap, `MIN_HOLD_BLOCKS` for a
  * profitable reduce) and sent as `decrease`/`close` through the scoped signer (reduce is always in scope).
  */
+import { pinRead, readMarketRisk, readPositions } from "@senryo/chain";
 import { positionCount } from "@senryo/config";
 import { borrowOwed, fundingOwed, notional, previewDecrease, previewPosition, RISK } from "@senryo/core";
 import {
   closeRequest,
   decreaseRequest,
   riskViewOf,
+  TRADE_SLIPPAGE_BPS,
   useAccountRisk,
   useMarket,
   usePositions,
@@ -21,6 +23,7 @@ import { useState } from "react";
 import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
+import { useReviewGuard } from "~/lib/review-guard";
 import { REDUCE_ALL_BPS } from "./constants";
 
 const HEAD_REFETCH_MS = 2_000;
@@ -49,7 +52,7 @@ export function usePosition(marketId: number) {
     refetchInterval: HEAD_REFETCH_MS,
   });
   const [shareBps, setShareBps] = useState<bigint>(REDUCE_ALL_BPS);
-  const trace = useSendTrace();
+  const trace = useSendTrace(`position:${env.chainId}:${address ?? "guest"}:${marketId}`);
   const gas = useEnsureGas();
   const [quoted, setQuoted] = useState<ReduceQuote | undefined>();
 
@@ -71,6 +74,7 @@ export function usePosition(marketId: number) {
       ? previewDecrease(m.risk, m.pv, position, sizeDelta, head.data)
       : undefined;
 
+  const guard = useReviewGuard([env.chainId, address, marketId, shareBps, position?.size].join(":"));
   const submit = async () => {
     const client = account.client;
     if (!client || !address || !m || !position || !reduce || !snapshot) return undefined;
@@ -89,7 +93,45 @@ export function usePosition(marketId: number) {
       netUsd6: reduce.netUsd6,
     });
     // Closing needs gas too: top up first when short, and show why if that's impossible (S8.16c).
-    return trace.run(sender, request, { preflight: gas.preflight(request) });
+    return trace.run(sender, request, {
+      preflight: gas.preflight(request),
+      reviewedIntent: {
+        isLong: String(position.isLong),
+        closingAll: String(closingAll),
+        shareBps: shareBps.toString(),
+        execPrice18: reduce.execPrice18.toString(),
+        realizedPnlUsd6: reduce.realizedPnlUsd6.toString(),
+        feeUsd6: reduce.feeUsd6.toString(),
+        netUsd6: reduce.netUsd6.toString(),
+        sizeDelta: sizeDelta.toString(),
+        marketId: String(marketId),
+      },
+      revalidate: async () => {
+        guard();
+        const block = await env.read.getBlock({ blockTag: "latest" });
+        const read = pinRead(env.read, block.number);
+        const [fresh, held] = await Promise.all([
+          readMarketRisk(read, env.chainId, marketId),
+          readPositions(read, env.chainId, address, snapshot.positionBitmap),
+        ]);
+        const current = held.find((p) => p.marketId === marketId);
+        if (
+          !current ||
+          current.isLong !== position.isLong ||
+          current.size !== position.size ||
+          fresh.pv.status !== m.pv.status
+        )
+          throw new Error("The position or market changed. Review again.");
+        const quote = previewDecrease(fresh.risk, fresh.pv, current, sizeDelta, block.number);
+        const moved =
+          quote.execPrice18 > reduce.execPrice18
+            ? quote.execPrice18 - reduce.execPrice18
+            : reduce.execPrice18 - quote.execPrice18;
+        if (moved * RISK.BPS > reduce.execPrice18 * TRADE_SLIPPAGE_BPS || quote.holdReadyBlock !== undefined)
+          throw new Error("The close quote changed. Review again.");
+        guard();
+      },
+    });
   };
 
   return {
@@ -107,8 +149,25 @@ export function usePosition(marketId: number) {
     reduce,
     headBlock: head.data,
     trace,
-    quoted,
+    quoted: quoted ?? restoredReduce(trace.record?.reviewedIntent),
     submit,
     ready: account.client !== undefined,
   };
+}
+
+function restoredReduce(intent: Record<string, string> | undefined): ReduceQuote | undefined {
+  if (!intent?.shareBps) return undefined;
+  try {
+    return {
+      isLong: intent.isLong === "true",
+      closingAll: intent.closingAll === "true",
+      shareBps: BigInt(intent.shareBps),
+      execPrice18: BigInt(intent.execPrice18 ?? ""),
+      realizedPnlUsd6: BigInt(intent.realizedPnlUsd6 ?? ""),
+      feeUsd6: BigInt(intent.feeUsd6 ?? ""),
+      netUsd6: BigInt(intent.netUsd6 ?? ""),
+    };
+  } catch {
+    return undefined;
+  }
 }

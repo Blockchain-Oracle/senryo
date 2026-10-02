@@ -58,12 +58,26 @@ export const cardAuthSummarySchema = z.object({
   amountCents: uintCodec,
   holdUsd6: uintCodec.nullable(),
   mcc: z.string().nullable(),
+  merchantDescriptor: z.string().nullable().optional(),
   receivedAt: isoTimeSchema,
 });
 
 export const cardSummaryResponseSchema = z.object({
   account: addressSchema,
-  cards: z.array(z.object({ cardToken: cardTokenSchema, state: z.string(), label: z.string().nullable() })),
+  cards: z.array(
+    z.object({
+      cardToken: cardTokenSchema,
+      state: z.string(),
+      label: z.string().nullable(),
+      last4: z
+        .string()
+        .regex(/^\d{4}$/)
+        .nullable()
+        .optional(),
+      sandbox: z.boolean().optional(),
+      capabilities: z.object({ reveal: z.boolean(), walletProvisioning: z.boolean() }).optional(),
+    }),
+  ),
   openHoldsUsd6: uintCodec,
   recent: z.array(cardAuthSummarySchema),
 });

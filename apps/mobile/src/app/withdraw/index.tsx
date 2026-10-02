@@ -49,7 +49,7 @@ export default function WithdrawScreen() {
         />
       )}
       <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-        Sending to someone else asks for a fresh passkey check. Cash-out to another chain arrives with intents.
+        From your trading account to your own wallet. Bank withdrawal is unavailable.
       </Text>
     </Screen>
   );

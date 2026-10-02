@@ -49,7 +49,7 @@ export function MarketHolders({ marketId, name, decimals }: { marketId: number; 
               accessibilityLabel="Only people you follow"
             />
             <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.row, { color: color.text2 }]}>
-              Friends
+              Following
             </Text>
           </View>
         ) : (

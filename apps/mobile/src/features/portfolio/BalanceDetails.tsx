@@ -135,11 +135,11 @@ function LpAllocation() {
   return (
     <Panel>
       <ListRow
-        title={`In the LP vault · ${usd(v.sharesValue)}`}
+        title={`In the LP vault · ${usd(v.sharesValue + v.pendingValue)}`}
         detail={
           waiting > 0
-            ? `Not part of your balance · ${waiting} ${waiting === 1 ? "redeem" : "redeems"} waiting to be claimed`
-            : "Not part of your balance · it returns through a redeem (24 h), then a claim"
+            ? `Included in your portfolio · ${waiting} ${waiting === 1 ? "redeem" : "redeems"} waiting to be claimed`
+            : "Included in your portfolio · it returns through a redeem (24 h), then a claim"
         }
         onPress={() => close(() => router.push(ROUTES.lp))}
       />

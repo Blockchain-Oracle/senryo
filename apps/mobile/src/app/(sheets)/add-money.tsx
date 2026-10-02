@@ -1,9 +1,10 @@
+import { isDeployed } from "@senryo/chain";
+import type { ChainId } from "@senryo/config";
 import { collateralId, ids, ROUTE_CHAIN_ID } from "@senryo/identity";
 import { type Href, router } from "expo-router";
 import { Check, Gift } from "lucide-react-native";
 import { ActivityIndicator } from "react-native";
 import { MarkCluster } from "~/components/identity/MarkCluster";
-import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetRoute } from "~/components/sheet/SheetRoute";
 import { SheetRow } from "~/components/sheet/SheetRow";
 import { TintBadge } from "~/features/markets/LeverageBadge";
@@ -24,10 +25,10 @@ interface Route {
 }
 
 /** Where money comes from, per network (direction §6: Practice has paper money; Mainnet real routes only). */
-function routesOn(chainId: number, practice: boolean): Route[] {
+function routesOn(chainId: ChainId, practice: boolean): Route[] {
   const monad: Route = {
     title: "Receive on Monad",
-    detail: "AUSD or USDC to your own address",
+    detail: practice ? "AUSD or USDC into your trading account" : "AUSD, USDC or MON into your wallet",
     href: fundQrRoute("monad"),
     marks: [ids.evmChain(chainId)],
   };
@@ -39,11 +40,13 @@ function routesOn(chainId: number, practice: boolean): Route[] {
     soon: { badge: "Soon", line: "Not open yet · arrives with cross-chain intents" },
   };
   const wallet: Route = {
-    title: "From a wallet",
-    detail: "Approve an intent with Face ID",
+    title: "Move wallet funds into trading",
+    detail: "Transfer AUSD or USDC from your wallet",
     href: ROUTES.fundWallet,
-    marks: [ids.provider("aurora")],
-    soon: { badge: "Soon", line: "Not open yet · arrives with cross-chain intents" },
+    marks: [collateralId(chainId, "AUSD"), collateralId(chainId, "USDC")],
+    ...(!isDeployed(chainId, "SenryoCore")
+      ? { soon: { badge: "Soon", line: "Trading deposits open after Mainnet deployment" } }
+      : {}),
   };
   const swap: Route = {
     title: "Swap USDC ↔ AUSD",
@@ -52,7 +55,7 @@ function routesOn(chainId: number, practice: boolean): Route[] {
     marks: [collateralId(chainId, "USDC"), collateralId(chainId, "AUSD")],
     ...(practice ? { soon: { badge: "Mainnet", line: "Mainnet only · the test network has no pool" } } : {}),
   };
-  return practice ? [monad, otherChain, swap] : [monad, otherChain, wallet, swap];
+  return [monad, wallet, otherChain, swap];
 }
 
 /** The claim row's second line follows the claim itself. */
@@ -66,6 +69,8 @@ function claimDetail(phase: StarterPhase): string | undefined {
       return "Sending…";
     case "settling":
       return "Adding practice dollars…";
+    case "pending":
+      return "Request pending · check its status";
     case "done":
       return `${usd(phase.creditUsd6)} practice dollars are in`;
     case "failed":
@@ -80,7 +85,7 @@ function claimDetail(phase: StarterPhase): string | undefined {
  * what each route moves through at the trailing edge. Practice leads with the free claim — it runs right here, its
  * second line following the claim — then a voucher (a child sheet, F21), receiving on Monad, other chains and the
  * swap. Mainnet has no claim. A route not open on this network says so in its row ("Soon" and why) before it is tapped.
- * A route that opens a page closes the sheet first; back returns to the page under it.
+ * Child routes keep this hub beneath them so Back restores the selected funding journey.
  */
 export default function AddMoneySheet() {
   const network = useNetwork();
@@ -96,11 +101,10 @@ export default function AddMoneySheet() {
 }
 
 function Options({ practice }: { practice: boolean }) {
-  const close = useSheetClose();
   const network = useNetwork();
   const account = useAccount();
   const signedIn = account.hint !== undefined;
-  const open = (href: Href) => close(() => router.push(signedIn ? href : ROUTES.accountRequired));
+  const open = (href: Href) => router.push(signedIn ? href : ROUTES.accountRequired);
   const rows = routesOn(network.chainId, practice);
   let index = 0;
   return (
@@ -152,7 +156,7 @@ function ClaimRow({ index }: { index: number }) {
   return (
     <SheetRow
       index={index}
-      title={done ? "Practice funds added" : "Claim practice funds"}
+      title={done ? "Practice funds added" : phase.kind === "pending" ? "Check funding status" : "Claim practice funds"}
       {...(detail ? { detail } : {})}
       trailing={
         working ? (
@@ -164,7 +168,7 @@ function ClaimRow({ index }: { index: number }) {
         )
       }
       disabled={working || done || !starter.ready}
-      onPress={() => void starter.claim()}
+      onPress={() => (phase.kind === "pending" ? starter.recheck() : void starter.claim())}
     />
   );
 }

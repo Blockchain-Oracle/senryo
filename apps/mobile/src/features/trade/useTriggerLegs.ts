@@ -1,8 +1,9 @@
-import type { PositionView } from "@senryo/chain";
+import { type PositionView, pinRead, readAccountSnapshot, readPositions } from "@senryo/chain";
 import {
   cancelTriggerRequest,
   type LiveMarket,
   placeTriggerRequest,
+  readOperation,
   signedHash,
   triggerOrder,
   useQueryEnv,
@@ -12,6 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAccount } from "~/lib/account/provider";
 import { userSender } from "~/lib/account/sender";
+import { useReviewGuard } from "~/lib/review-guard";
 import { useSendJournal } from "./send-outcome";
 import type { TriggerKind } from "./tpsl";
 import {
@@ -40,6 +42,9 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
   const account = useAccount();
   const address = account.hint?.address;
   const gas = useEnsureGas();
+  const guard = useReviewGuard(
+    [env.chainId, address, market.marketId, position.size, position.isLong, position.entry].join(":"),
+  );
   const triggers = useTriggers(address);
   const scope = `trigger:${env.chainId}:${address ?? "none"}:${market.marketId}`;
   const sl = useSendTrace(`${scope}:sl`);
@@ -79,15 +84,35 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
   }, [account.client, account.settings.faceId, address]);
 
   const save = useCallback(
-    async (levels: readonly TriggerLevel[], onSaved?: (kind: TriggerKind) => void): Promise<TriggerKind[]> => {
+    async (
+      levels: readonly TriggerLevel[],
+      onSaved?: (kind: TriggerKind) => void,
+      parentId?: string,
+    ): Promise<TriggerKind[]> => {
       const from = sender();
       if (!from || !address || busy || unresolved) return [];
+      if (parentId) {
+        const intended = readOperation(parentId)?.reviewedIntent.protection?.split(",") ?? [];
+        if (levels.some((level) => !intended.includes(`${level.kind}:${level.price18}`)))
+          throw new Error("Protection differs from the reviewed order.");
+      }
+      let operationId = parentId;
       const traces = { sl, tp };
       for (const kind of ORDER) if (!levels.some((l) => l.kind === kind)) traces[kind].reset();
       setSkipped(undefined);
       const run = await saveInOrder(
         levels,
-        (level) => alreadyActive(active, level.kind, level.price18),
+        (level) =>
+          alreadyActive(active, level.kind, level.price18) ||
+          Boolean(
+            operationId &&
+              readOperation(operationId)?.steps.some(
+                (step) =>
+                  step.outcome === "completed" &&
+                  step.request?.leg === level.kind &&
+                  step.request.price === level.price18.toString(),
+              ),
+          ),
         async (level) => {
           const result = await traces[level.kind].run(
             from,
@@ -103,8 +128,25 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
                   sizeDelta: position.size,
                 }),
               ),
-            { preflight: (request) => gas.preflight(request)() },
+            {
+              preflight: (request) => gas.preflight(request)(),
+              operationId,
+              plannedActions: ["placeTrigger"],
+              revalidate: async () => {
+                guard();
+                const block = await env.read.getBlock({ blockTag: "latest" });
+                const pinned = pinRead(env.read, block.number);
+                const snapshot = await readAccountSnapshot(pinned, env.chainId, address);
+                const positions = await readPositions(pinned, env.chainId, address, snapshot.positionBitmap);
+                const current = positions.find((p) => p.marketId === market.marketId);
+                if (!current || current.size !== position.size || current.isLong !== position.isLong)
+                  throw new Error("The position changed. Review protection again.");
+                guard();
+              },
+              reviewedIntent: { marketId: String(market.marketId), leg: level.kind, price: level.price18.toString() },
+            },
           );
+          if (parentId) operationId = result?.operationId ?? operationId;
           return result?.final?.stage === "finalized";
         },
         onSaved,
@@ -112,7 +154,21 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
       setSkipped(run.skipped);
       return run.saved;
     },
-    [sender, address, busy, unresolved, sl, tp, active, market.marketId, position.isLong, position.size, gas],
+    [
+      sender,
+      address,
+      busy,
+      unresolved,
+      sl,
+      tp,
+      active,
+      market.marketId,
+      position.isLong,
+      position.size,
+      gas,
+      guard,
+      env,
+    ],
   );
 
   const remove = useCallback(

@@ -8,20 +8,31 @@
  * shared outcome contract, never "nothing moved" for a signed send that is still unknown (S01) — until a fresh draft
  * starts with "Send another" (S06).
  */
+
+import { profileGetRoute } from "@senryo/api-client";
 import type { AccountSnapshot } from "@senryo/chain";
 import { positionCount } from "@senryo/config";
 import { collateralId } from "@senryo/identity";
-import { type CollateralSymbol, maxWithdrawable, useQueryEnv, useSendTrace, withdrawRequest } from "@senryo/query";
+import {
+  type CollateralSymbol,
+  maxWithdrawable,
+  operationKey,
+  useQueryEnv,
+  useSendTrace,
+  walletTransferRequest,
+  withdrawRequest,
+} from "@senryo/query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useMMKVString } from "react-native-mmkv";
 import { MarkedLine } from "~/components/identity/MarkedLine";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel } from "~/components/kit/Surface";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { type FieldTone, SetupField } from "~/features/setup/SetupField";
 import { useEnsureGas } from "~/features/trade/useGasTopUp";
-import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { stepUpSender } from "~/lib/account/sender";
 import { requestStepUp } from "~/lib/account/step-up";
@@ -30,10 +41,13 @@ import { ROUTES } from "~/lib/constants/routes";
 import { shortAddress } from "~/lib/format";
 import { usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
+import { useReviewGuard } from "~/lib/review-guard";
+import { storage } from "~/lib/storage";
+import { validateMoney } from "~/lib/validate-money";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { AmountEntry } from "./AmountEntry";
 import { useAmountDraft } from "./amount-draft";
-import { type ExecutedMove, MoneyReceipt } from "./MoneyReceipt";
+import { type ExecutedMove, MoneyReceipt, restoredMove } from "./MoneyReceipt";
 import { RecentRecipients } from "./RecentRecipients";
 import { type Recipient, useRecipient } from "./useRecipient";
 import { SEND_WORDS } from "./words";
@@ -63,19 +77,34 @@ function recipientLine(r: Recipient, self: boolean): { message?: string; tone: F
   }
 }
 
-export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
+export function SendToAddress({
+  snapshot,
+  wallet,
+  source = "trading",
+}: {
+  snapshot?: AccountSnapshot;
+  wallet?: Record<CollateralSymbol, bigint>;
+  source?: "wallet" | "trading";
+}) {
   const { color } = useTheme();
   const env = useQueryEnv();
   const network = useNetwork();
   const account = useAccount();
-  const trace = useSendTrace();
+  const trace = useSendTrace(operationKey(env.chainId, account.hint?.address, `send-${source}`));
   const gas = useEnsureGas();
   const me = account.hint?.address;
-  const [input, setInput] = useState("");
+  const [savedRecipient, setSavedRecipient] = useMMKVString(
+    `senryo.recipient.v1:${env.chainId}:${me}:${source}`,
+    storage,
+  );
+  const input = savedRecipient ?? "";
+  const setInput = (next: string) => setSavedRecipient(next);
   const recipient = useRecipient(input);
-  const [symbol, setSymbol] = useState<CollateralSymbol>(snapshot.ausd >= snapshot.usdc ? "AUSD" : "USDC");
-  const max = maxWithdrawable(snapshot, symbol);
-  const draft = useAmountDraft(max);
+  const [symbol, setSymbol] = useState<CollateralSymbol>(
+    (snapshot?.ausd ?? wallet?.AUSD ?? 0n) >= (snapshot?.usdc ?? wallet?.USDC ?? 0n) ? "AUSD" : "USDC",
+  );
+  const max = source === "wallet" ? (wallet?.[symbol] ?? 0n) : snapshot ? maxWithdrawable(snapshot, symbol) : 0n;
+  const draft = useAmountDraft(max, `send:${env.chainId}:${me}:${source}:${symbol}`);
   /** The request as it went to the passkey check — frozen, so a balance refresh never changes what was sent. */
   const [executed, setExecuted] = useState<ExecutedMove>();
   const amount = draft.amount;
@@ -84,12 +113,25 @@ export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
   const ready = recipient.status === "ready" && !self && amount > 0n && !draft.over;
   const practice = network.key === "testnet";
 
+  const guard = useReviewGuard(
+    [
+      env.chainId,
+      account.hint?.address,
+      source,
+      symbol,
+      amount,
+      input,
+      recipient.status === "ready" ? recipient.address : "",
+    ].join(":"),
+  );
   const send = async () => {
-    if (recipient.status !== "ready" || !account.client || !ready) return;
+    if (recipient.status !== "ready" || !account.client || !me || !ready) return;
     const to = recipient.address;
-    const name = recipient.handle ? `@${recipient.handle}` : shortAddress(to);
-    const request = withdrawRequest(env.chainId, symbol, amount, to, positionCount(snapshot.positionBitmap));
-    const move: ExecutedMove = { amount, symbol, chainId: env.chainId, to: name, network: network.name, practice };
+    const request =
+      source === "wallet"
+        ? walletTransferRequest(env.chainId, symbol, amount, to)
+        : withdrawRequest(env.chainId, symbol, amount, to, positionCount(snapshot?.positionBitmap ?? 0));
+    const move: ExecutedMove = { amount, symbol, chainId: env.chainId, to, network: network.name, practice, source };
     await requestStepUp(
       {
         title: `Send ${usd(amount)} ${symbol}`,
@@ -99,16 +141,33 @@ export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
       () =>
         account.stepUp((signer) => {
           setExecuted(move);
-          return trace.run(stepUpSender(signer), request, { preflight: gas.preflight(request) });
+          return trace.run(stepUpSender(signer), request, {
+            preflight: gas.preflight(request),
+            revalidate: async () => {
+              guard();
+              await validateMoney(env, me, source, symbol, amount);
+              if (recipient.handle) {
+                const current = await env.api.call(profileGetRoute, {
+                  params: { handleOrAddress: recipient.handle },
+                  query: { chainId: env.chainId },
+                });
+                if (current.address.toLowerCase() !== to.toLowerCase())
+                  throw new Error("The recipient changed. Review again.");
+              }
+              guard();
+            },
+          });
         }),
     );
   };
 
   // Once it is out, the screen is its receipt until it settles: no second send can start beside an unresolved one.
-  if (executed && (trace.running || trace.events.length > 0)) {
+  const receiptMove = executed ?? restoredMove(trace.record);
+  if (receiptMove && (trace.running || trace.events.length > 0)) {
     return (
       <MoneyReceipt
-        move={executed}
+        move={receiptMove}
+        record={trace.record}
         events={trace.events}
         running={trace.running}
         words={SEND_WORDS}
@@ -160,19 +219,25 @@ export function SendToAddress({ snapshot }: { snapshot: AccountSnapshot }) {
           }
         />
         <KeyValue label="Network" value={network.name} />
-        <KeyValue label="Money" value={practice ? "Practice · paper money" : "Mainnet · real money"} />
+        <KeyValue label="From" value={source === "wallet" ? "Your wallet" : "Trading account"} />
       </Panel>
       <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
         {symbol}
         {practice ? " · test token" : ""}. The amount above is what the passkey check signs.
       </Text>
-      <Button
-        label={amount > 0n ? `Review and send ${usd(amount)}` : "Review and send"}
+      <HoldToConfirm
+        resetKey={[
+          env.chainId,
+          me,
+          source,
+          symbol,
+          amount,
+          input,
+          recipient.status === "ready" ? recipient.address : "",
+        ].join(":")}
+        label={amount > 0n ? `Send ${usd(amount)}` : "Send"}
         disabled={!ready}
-        onPress={() => {
-          fire("press");
-          void send();
-        }}
+        onConfirm={() => void send()}
       />
       {self ? (
         <Button

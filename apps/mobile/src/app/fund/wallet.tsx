@@ -1,11 +1,15 @@
-import { ShellScreen } from "~/components/shell/ShellScreen";
-
-export default function FromawalletScreen() {
+import { isDeployed } from "@senryo/chain";
+import { Stack } from "expo-router";
+import { Screen } from "~/components/kit/Screen";
+import { WalletFunding } from "~/features/fund/WalletFunding";
+import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
+import { useNetwork } from "~/lib/network";
+export default function WalletFundingScreen() {
+  const network = useNetwork();
   return (
-    <ShellScreen
-      title="From a wallet"
-      why="Connect-from-wallet deposits arrive with funding"
-      detail="You'll pick an asset and amount, approve the intent with Face ID, and follow a timeline until it's credited."
-    />
+    <Screen>
+      <Stack.Screen options={{ title: "Move into trading" }} />
+      {isDeployed(network.chainId, "SenryoCore") ? <WalletFunding /> : <PrelaunchMainnet surface="portfolio" />}
+    </Screen>
   );
 }

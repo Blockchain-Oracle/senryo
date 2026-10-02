@@ -22,13 +22,13 @@ import { type EntryMode, type TicketChild, TicketEntry } from "./Ticket";
 import { CandleSettings, LiquidationInfo, ReviewOrder } from "./TicketChildren";
 import { TicketFooter } from "./TicketFooter";
 import { TicketHeader } from "./TicketHeader";
-import { SharePreview, type SubmittedOrder, TicketReceipt } from "./TicketReceipt";
+import { restoredOrder, SharePreview, type SubmittedOrder, TicketReceipt } from "./TicketReceipt";
 import { TpSlChild } from "./TpSlChild";
 import { TradeTrace } from "./TradeTrace";
 import { commitState } from "./ticket-commit";
 import { type Side, useTicket } from "./useTicket";
 
-const PRICE_UPDATED = "Price updated. Review and hold again.";
+const PRICE_UPDATED = "Price updated. Review and slide again.";
 const UPDATES_PAUSED = "Live updates paused. Review the latest oracle price.";
 
 /**
@@ -84,7 +84,8 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
   const [mode, setMode] = useState<EntryMode>("keypad");
   const [child, setChild] = useState<TicketChild | "share" | undefined>();
   const [note, setNote] = useState<string | undefined>();
-  const [order, setOrder] = useState<SubmittedOrder | undefined>();
+  const [submitted, setOrder] = useState<SubmittedOrder | undefined>();
+  const order = submitted ?? restoredOrder(t.trace.record);
   const sided = useRef(false);
   const plan = planKey(env.chainId, account.hint?.address, line.marketId);
 
@@ -174,7 +175,15 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
               t={t}
               onShare={() => setChild("share")}
               marketId={line.marketId}
-              protection={<ProtectAfterOpen market={line.market} position={t.held} planKey={plan} />}
+              protection={
+                <ProtectAfterOpen
+                  market={line.market}
+                  position={t.held}
+                  planKey={plan}
+                  operationId={t.trace.record?.id}
+                  auto={!t.trace.restored}
+                />
+              }
             />
           ) : (
             <PendingTrace t={t} />
@@ -236,6 +245,7 @@ function PendingTrace({ t }: { t: ReturnType<typeof useTicket> }) {
   return (
     <View style={styles.pad}>
       <TradeTrace
+        record={t.trace.record}
         events={t.trace.events}
         running={t.trace.running}
         outcome={outcome}
@@ -265,6 +275,7 @@ function Receipt({
     <TicketReceipt
       order={order}
       events={t.trace.events}
+      record={t.trace.record}
       onShare={onShare}
       protection={protection}
       onDone={() =>

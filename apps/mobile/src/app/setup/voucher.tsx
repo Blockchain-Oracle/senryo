@@ -9,6 +9,7 @@ import { fire } from "~/feedback/fire";
 import type { StarterErrorCode } from "~/lib/account/starter";
 import { readClipboard } from "~/lib/clipboard";
 import { usd } from "~/lib/money";
+import { useReviewGuard } from "~/lib/review-guard";
 
 const VOUCHER_MAX = 32;
 /** The credited amount stays on screen this long before the step moves on. */
@@ -33,6 +34,7 @@ export default function VoucherStep() {
   const { next, back } = useSetupNav("voucher");
   const voucher = useVoucher();
   const [code, setCode] = useState("");
+  const guard = useReviewGuard(code);
   const canonical = canonicalVoucherCode(code);
   const { phase } = voucher;
 
@@ -47,11 +49,13 @@ export default function VoucherStep() {
   }, [phase.kind]);
 
   const message =
-    phase.kind === "done"
-      ? `${usd(phase.creditUsd6)} added to your account`
-      : phase.kind === "failed"
-        ? (FAILED[phase.code] ?? "Couldn’t redeem that code. Try again.")
-        : undefined;
+    phase.kind === "pending"
+      ? "Pending · Check status before submitting another voucher."
+      : phase.kind === "done"
+        ? `${usd(phase.creditUsd6)} added to your account`
+        : phase.kind === "failed"
+          ? (FAILED[phase.code] ?? "Couldn’t redeem that code. Try again.")
+          : undefined;
   return (
     <SetupScreen
       title="Have a voucher code?"
@@ -68,10 +72,10 @@ export default function VoucherStep() {
             onPress={next}
           />
           <Button
-            label="Redeem"
-            disabled={canonical === undefined || phase.kind === "done"}
+            label={phase.kind === "pending" ? "Check status" : "Redeem"}
+            disabled={(phase.kind !== "pending" && canonical === undefined) || phase.kind === "done"}
             loading={phase.kind === "working"}
-            onPress={() => void voucher.redeem(code)}
+            onPress={() => void voucher.redeem(code, guard)}
           />
         </>
       }

@@ -33,8 +33,9 @@ export function PositionDetail({ marketId }: { marketId: number }) {
     const finalized = p.trace.events.some((e) => e.stage === "finalized");
     return (
       <Screen contentStyle={styles.outcome}>
-        {finalized && p.quoted ? <CloseSummary marketId={marketId} quote={p.quoted} /> : null}
+        {finalized && p.quoted ? <CloseSummary marketId={marketId} quote={p.quoted} record={p.trace.record} /> : null}
         <TradeTrace
+          record={p.trace.record}
           events={p.trace.events}
           running={p.trace.running}
           outcome={outcome}

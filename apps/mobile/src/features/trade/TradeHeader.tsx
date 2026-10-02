@@ -97,33 +97,19 @@ export function PriceBlock({ line }: { line: MarketLine }) {
   return (
     <View style={styles.block}>
       <View>
+        <Text
+          maxFontSizeMultiplier={HERO_FONT_SCALE}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          style={[TYPE.displayPrice, { color: color.ink }]}
+          accessibilityLabel={`Price ${shown} dollars, updated ${age}`}
+        >
+          ${shown}
+        </Text>
+        <Change bps={line.change24hBps} suffix />
         <View style={styles.pair}>
-          <Text
-            maxFontSizeMultiplier={HERO_FONT_SCALE}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            style={[TYPE.displayPrice, styles.shrink, { color: color.ink }]}
-            accessibilityLabel={`Oracle price ${shown} dollars, updated ${age}`}
-          >
-            ${shown}
-          </Text>
-          <Text
-            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.rowPrice, { color: color.ink }]}
-            accessibilityLabel={`Open interest ${openInterest}`}
-          >
-            {openInterest}
-          </Text>
-        </View>
-        <View style={styles.pair}>
-          <Change bps={line.change24hBps} suffix />
-          <Text
-            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.rowDetail, { color: color.text3 }]}
-            accessibilityElementsHidden
-          >
-            Open interest
-          </Text>
+          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Open interest</Text>
+          <Text style={[TYPE.rowPrice, { color: color.ink }]}>{openInterest}</Text>
         </View>
       </View>
       <View style={styles.fresh}>
@@ -135,7 +121,7 @@ export function PriceBlock({ line }: { line: MarketLine }) {
           accessibilityLabel={`${STATUS_LABEL[line.status]}, oracle price updated ${age}`}
           style={[TYPE.rowDetail, styles.flex, { color: color.text3 }]}
         >
-          {STATUS_LABEL[line.status]} · Oracle · updated {age}
+          {STATUS_LABEL[line.status]} · {age}
         </Text>
         <VenueChip venue={ids.venue("senryo")} />
       </View>

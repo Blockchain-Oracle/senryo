@@ -12,9 +12,9 @@ import { collateralId, ids } from "@senryo/identity";
 import { useQueryEnv } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
 import { MarkedLine } from "~/components/identity/MarkedLine";
-import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { KeyValue, Panel } from "~/components/kit/Surface";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { type SwapFrom, useCollateralSwap } from "~/features/fund/useCollateralSwap";
 import { pct, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
@@ -77,11 +77,11 @@ export function CollateralPanel({ snapshot }: { snapshot: AccountSnapshot }) {
           {swapped ? (
             <Text style={[TYPE.rowDetail, { color: color.up }]}>Swapped · your buckets update at finalization.</Text>
           ) : null}
-          <Button
+          <HoldToConfirm
             label={busy ? "Swapping…" : "Swap in account"}
-            loading={busy}
             disabled={busy || !q || amountIn === 0n || !swapping.ready}
-            onPress={() => void swapping.swap()}
+            resetKey={[env.chainId, from, amountIn, q?.minOut].join(":")}
+            onConfirm={() => void swapping.swap()}
           />
         </>
       ) : null}

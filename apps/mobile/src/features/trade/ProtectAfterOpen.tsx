@@ -18,15 +18,25 @@ export function ProtectAfterOpen({
   market,
   position,
   planKey,
+  auto = false,
+  operationId,
 }: {
   market: LiveMarket;
   position: PositionView | undefined;
   planKey: string;
+  auto?: boolean;
+  operationId?: string | undefined;
 }) {
   const { color } = useTheme();
   const plan = usePlannedTriggers(planKey);
   const levels = useRef(plan.levels).current;
   if (levels.length === 0) return null;
+  if (!auto)
+    return (
+      <Text style={[TYPE.rowDetail, { color: color.warn }]}>
+        Your position is open. Review any unfinished protection from the position screen.
+      </Text>
+    );
   if (!position) {
     return (
       <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
@@ -34,10 +44,20 @@ export function ProtectAfterOpen({
       </Text>
     );
   }
-  return <Place market={market} position={position} planKey={planKey} />;
+  return <Place market={market} position={position} planKey={planKey} operationId={operationId} />;
 }
 
-function Place({ market, position, planKey }: { market: LiveMarket; position: PositionView; planKey: string }) {
+function Place({
+  market,
+  position,
+  planKey,
+  operationId,
+}: {
+  market: LiveMarket;
+  position: PositionView;
+  planKey: string;
+  operationId?: string | undefined;
+}) {
   const { color } = useTheme();
   const plan = usePlannedTriggers(planKey);
   const legs = useTriggerLegs(market, position);
@@ -47,8 +67,8 @@ function Place({ market, position, planKey }: { market: LiveMarket; position: Po
   useEffect(() => {
     if (started.current || !legs.ready || levels.length === 0) return;
     started.current = true;
-    void legs.save(levels, (kind) => plan.clear(kind));
-  }, [legs, levels, plan]);
+    void legs.save(levels, (kind) => plan.clear(kind), operationId);
+  }, [legs, levels, plan, operationId]);
   const tone = { up: color.up, down: color.down, warn: color.warn, muted: color.text3 } as const;
   return (
     <View style={styles.stack}>

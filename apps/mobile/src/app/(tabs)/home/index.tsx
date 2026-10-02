@@ -1,14 +1,12 @@
 import type { Address } from "@senryo/core";
 import { isTerminalStage } from "@senryo/core";
-import { useAccountRisk, useEquityHistory, useNetFlows, useStarterStatus } from "@senryo/query";
+import { useAccountRisk, useStarterStatus } from "@senryo/query";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { EquityChart } from "~/components/charts/EquityChart";
-import { PeriodChips } from "~/components/kit/PeriodChips";
-import { ReadingView, Skeleton } from "~/components/kit/states";
+import { ReadingView } from "~/components/kit/states";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
-import { AlertsButton } from "~/components/shell/Utilities";
+import { ActivityButton, AlertsButton } from "~/components/shell/Utilities";
 import { AccountStrip } from "~/features/auth/AccountStrip";
 import { SessionChip } from "~/features/auth/SessionChip";
 import { Availability } from "~/features/home/Availability";
@@ -18,25 +16,14 @@ import { AvailabilitySkeleton } from "~/features/home/HomeParts";
 import { HomeTiles } from "~/features/home/HomeTiles";
 import { PositionsSection } from "~/features/home/PositionsSection";
 import { TopTrades } from "~/features/home/TopTrades";
-import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { useAccountRetry } from "~/features/portfolio/account";
-import { MS_PER_SECOND, WINDOW_SEC } from "~/features/portfolio/constants";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { RiskBanner } from "~/features/portfolio/RiskBanner";
 import { TokenHoldings } from "~/features/tokens/TokenHoldings";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { useReadOnlyNetwork } from "~/lib/network";
-import { SIZE, SPACE } from "~/theme";
-
-const TIMEFRAMES = [
-  { value: "1H", label: "1H" },
-  { value: "24H", label: "24H" },
-  { value: "1W", label: "1W" },
-  { value: "1M", label: "1M" },
-  { value: "ALL", label: "All" },
-] as const;
-type Timeframe = (typeof TIMEFRAMES)[number]["value"];
+import { SPACE } from "~/theme";
 
 /**
  * Home (J6, S1b.10; Fomo F09 / F12 / F16, direction §7): the collapsing header — seal, the balance with its 24 h
@@ -47,7 +34,6 @@ type Timeframe = (typeof TIMEFRAMES)[number]["value"];
  * `?open=add-money` (an old `/fund` link) opens the add-money hub over Home.
  */
 export default function Home() {
-  const readOnly = useReadOnlyNetwork();
   const { open } = useLocalSearchParams<{ open?: string }>();
   useEffect(() => {
     if (open !== "add-money") return;
@@ -58,32 +44,36 @@ export default function Home() {
     <CollapsingScreen
       left={<HomeSeal />}
       compact={<CompactBalance />}
-      utilities={<AlertsButton />}
+      utilities={
+        <View style={{ flexDirection: "row", gap: SPACE.sm }}>
+          <ActivityButton />
+          <AlertsButton />
+        </View>
+      }
       status={<SessionChip />}
-      expanded={readOnly ? null : <ExpandedBalance />}
+      expanded={<ExpandedBalance />}
     >
-      {readOnly ? (
-        <>
-          <TokenHoldings />
-          <PrelaunchMainnet surface="portfolio" />
-        </>
-      ) : (
-        <HomeBody />
-      )}
+      <HomeBody />
     </CollapsingScreen>
   );
 }
 
 function HomeBody() {
   const address = useAccount().hint?.address;
+  const readOnly = useReadOnlyNetwork();
   if (!address) return <GuestHome />;
   return (
     <>
       <AccountStrip />
-      <RiskBanner />
-      <BalanceCurve address={address} />
-      <AvailabilitySection address={address} />
-      <PositionsSection />
+      {readOnly ? (
+        <QuietLine>Mainnet trading is not available yet. Wallet actions are available from Add money.</QuietLine>
+      ) : (
+        <>
+          <RiskBanner />
+          <AvailabilitySection address={address} />
+          <PositionsSection />
+        </>
+      )}
       <TokenHoldings />
       <HomeTiles />
       <TopTrades />
@@ -96,43 +86,6 @@ function HomeBody() {
  * it. The chips stay put while a window loads, so switching period never moves them. The curve's colour is how the
  * window went net of money moved in or out (the header's rule): a send or a withdrawal draws a drop, not a red loss.
  */
-function BalanceCurve({ address }: { address: Address }) {
-  const [frame, setFrame] = useState<Timeframe>("24H");
-  const curve = useEquityHistory(address, WINDOW_SEC[frame]);
-  const retry = useAccountRetry();
-  const known = curve.status === "fresh" || curve.status === "stale" ? curve.value : undefined;
-  const flows = useNetFlows(address, known?.[0]?.timestamp);
-  const moved = flows.status === "fresh" || flows.status === "stale" ? flows.value.net : undefined;
-  const first = known?.[0]?.equityInit;
-  const last = known?.at(-1)?.equityInit;
-  const tone =
-    first !== undefined && last !== undefined && moved !== undefined && last - first - moved < 0n ? "down" : "up";
-  return (
-    <View style={styles.stack}>
-      {curve.status === "unknown" ? (
-        <View accessibilityRole="progressbar" accessibilityLabel="Loading balance history">
-          <Skeleton height={SIZE.chartEquity} />
-        </View>
-      ) : (
-        <ReadingView reading={curve} retry={retry}>
-          {(points) =>
-            points.length < 2 ? (
-              <QuietLine>The chart starts with your first deposit or trade.</QuietLine>
-            ) : (
-              <EquityChart
-                points={points.map((p) => ({ t: p.timestamp * MS_PER_SECOND, equity6: p.equityInit }))}
-                tone={tone}
-              />
-            )
-          }
-        </ReadingView>
-      )}
-      <View style={styles.periods}>
-        <PeriodChips options={TIMEFRAMES} value={frame} onChange={setFrame} label="Chart period" />
-      </View>
-    </View>
-  );
-}
 
 /**
  * The three capacities, or — for an account that holds nothing yet — one quiet line saying what happens next. A

@@ -5,7 +5,7 @@
  * unknown), so every spot trade runs behind a step-up — one fresh passkey check signs its approvals and the swap —
  * and each send is traced to finalized. Mainnet only: the pools don't exist on the test network.
  */
-import { sellableNative } from "@senryo/chain";
+import { quoteSpot, readSpotHoldings, readWalletUsdc, sellableNative } from "@senryo/chain";
 import { SPOT_TOKENS, type SpotToken } from "@senryo/config";
 import { parseUnits } from "@senryo/core";
 import {
@@ -23,6 +23,7 @@ import { useAccount } from "~/lib/account/provider";
 import { stepUpSender } from "~/lib/account/sender";
 import { requestStepUp } from "~/lib/account/step-up";
 import { useNetwork } from "~/lib/network";
+import { useReviewGuard } from "~/lib/review-guard";
 import { tokenAmount } from "./format";
 
 export type TradeSide = "buy" | "sell";
@@ -38,7 +39,7 @@ export function useTokenTrade(token: SpotToken, initialSide: TradeSide) {
   const network = useNetwork();
   const account = useAccount();
   const address = account.hint?.address;
-  const trace = useSendTrace(`spot:${token.symbol}`);
+  const trace = useSendTrace(`spot:${env.chainId}:${address ?? "guest"}:${token.symbol}`);
   const [side, setSide] = useState<TradeSide>(initialSide);
   const [text, setText] = useState("");
   const [gasShortWei, setGasShortWei] = useState<bigint>();
@@ -88,9 +89,22 @@ export function useTokenTrade(token: SpotToken, initialSide: TradeSide) {
     setText(tokenAmount(amount, inDecimals).replace(/,/g, ""));
   };
 
+  const guard = useReviewGuard([env.chainId, address, token.address, side, amountIn].join(":"));
   const submit = async () => {
     const client = account.client;
     if (!q || !address || !client || block) return;
+    const revalidate = async () => {
+      guard();
+      const read = mainnetReadOf(env);
+      const fresh = await quoteSpot(read, token, side, amountIn);
+      const input =
+        side === "buy"
+          ? await readWalletUsdc(read, address)
+          : (await readSpotHoldings(read, address, [token]))[0]?.balance;
+      if (fresh.amountOut < q.minOut || input === undefined || input < amountIn)
+        throw new Error("The swap quote or balance changed. Review again.");
+      guard();
+    };
     const requests = await tokenSwapRequests(env, address, q);
     // Gas is the account's own MON on mainnet (no drip there): check every send's budget before asking for a passkey.
     const budgets = await Promise.all(requests.map((r) => gasBudgetFor(mainnetReadOf(env), address, r)));
@@ -117,9 +131,28 @@ export function useTokenTrade(token: SpotToken, initialSide: TradeSide) {
             atLeast: tokenAmount(q.minOut, outDecimals, outSymbol),
           });
           const sender = stepUpSender(signer);
+          let operationId: string | undefined;
           for (const [index, request] of requests.entries()) {
             setStep({ index, count: requests.length });
-            const result = await trace.run(sender, request);
+            const result = await trace.run(sender, request, {
+              operationId,
+              plannedActions: requests.map((r) => r.action),
+              revalidate,
+              reviewedIntent: {
+                source: "wallet",
+                destination: "wallet",
+                recipient: address,
+                symbol: inSymbol,
+                amount: amountIn.toString(),
+                outSymbol,
+                minOut: q.minOut.toString(),
+                quotedOut: q.amountOut.toString(),
+                paid: `${text} ${inSymbol}`,
+                atLeast: tokenAmount(q.minOut, outDecimals, outSymbol),
+                quoted: outText,
+              },
+            });
+            operationId = result?.operationId;
             if (result?.final?.stage !== "finalized") return result;
           }
           return undefined;
@@ -148,7 +181,15 @@ export function useTokenTrade(token: SpotToken, initialSide: TradeSide) {
     block,
     gasShortWei,
     step,
-    executed,
+    executed:
+      executed ??
+      (trace.record?.reviewedIntent.paid
+        ? {
+            paid: trace.record.reviewedIntent.paid,
+            atLeast: trace.record.reviewedIntent.atLeast ?? "",
+            quoted: trace.record.reviewedIntent.quoted ?? "",
+          }
+        : undefined),
     trace,
     setShare,
     submit,

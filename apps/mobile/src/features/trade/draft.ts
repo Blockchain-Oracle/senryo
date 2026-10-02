@@ -28,8 +28,8 @@ function subscribe(key: string, listener: () => void): () => void {
   };
 }
 
-export function draftKey(chainId: number, marketId: number): string {
-  return `trade:${chainId}:${marketId}`;
+export function draftKey(chainId: number, marketId: number, address: string = "guest"): string {
+  return `trade:${chainId}:${address.toLowerCase()}:${marketId}`;
 }
 
 /** The draft for one ticket, created from `initial` on first use; `update` merges and notifies every mounted reader. */
