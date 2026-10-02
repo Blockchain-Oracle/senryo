@@ -12,6 +12,7 @@ import { ACTIVITY_FILTERS, type ActivityFilter, FILTER_KINDS } from "~/features/
 import { PendingOperations } from "~/features/portfolio/PendingOperations";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { useActivity } from "~/features/portfolio/useActivity";
+import { OrdersLink } from "~/features/positions/OrdersLink";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE } from "~/theme";
@@ -42,6 +43,7 @@ export default function ActivityScreen() {
       {address ? (
         <>
           {!meta && filter === "all" ? <PendingOperations /> : null}
+          {!meta && filter === "all" ? <OrdersLink /> : null}
           <View style={styles.chips}>
             <ChipRow options={ACTIVITY_FILTERS} value={filter} onChange={setFilter} label="Activity kind" />
           </View>
