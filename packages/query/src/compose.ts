@@ -2,11 +2,11 @@
  * Composed operations (flow book B0.4, B11; routes.md §7; plan §0.5 rule 4): one reviewed intent, one slide, one
  * journalled operation whose steps run in a fixed order — [network fee] → [pull from trades] → [swap] → [move to the
  * trading account] → act — every approval right before the call it serves.
- *  - Network fee (B11, Mainnet): MON pays fees. When the account's MON doesn't cover Σ (gas limit × signed max fee)
- *    of every step plus any MON value, "swap ~$0.50 of a dollar asset to MON" is prepended as steps of the SAME
- *    operation (Details: "Network fee"). The top-up pays its own fee in MON, so a balance below even that is "short"
- *    (the caller offers Buy / Receive MON). After it lands the next step waits FUNDING_SETTLE_BLOCKS (Monad spends a
- *    new balance only after 3 blocks).
+ *  - Network fee (B11, Mainnet): MON pays fees. When the account's MON, after Σ (gas limit × signed max fee) of every
+ *    step plus any MON value, would fall below the fee reserve (what one top-up costs), "swap ~$0.50 of a dollar
+ *    asset to MON" is prepended as steps of the SAME operation (Details: "Network fee"). The top-up pays its own fee
+ *    in MON, so an account below even that can't buy MON by itself (a zero-MON wallet needs MON sent in or bought).
+ *    After it lands the next step waits FUNDING_SETTLE_BLOCKS (Monad spends a new balance only after 3 blocks).
  *  - MON value-dip rule (context/02-monad/differences-from-ethereum.md §2): a step that spends MON value goes first,
  *    or leaves at least the reserve after it. App accounts are plain passkey EOAs (no EIP-7702 delegation is ever
  *    signed by the app), so the 10 MON floor binds only a second value spend within 3 blocks — which a composed
@@ -15,10 +15,12 @@
  *    impact rule (block > 5 %) again — anything else stops the operation at that step ("Price moved · review again").
  */
 import { type SwapQuoteOk, swapQuoteRoute } from "@senryo/api-client";
-import { erc20Abi, externalCall, type ReadClient, type TxRequest } from "@senryo/chain";
+import { addressOf, contractCall, erc20Abi, externalCall, type ReadClient, type TxRequest } from "@senryo/chain";
 import {
+  aggregatorSwapGasLimit,
   type ChainId,
   FUNDING_SETTLE_BLOCKS,
+  GAS_LIMITS,
   type GasAction,
   MAINNET_CHAIN_ID,
   NATIVE_TOKEN,
@@ -28,7 +30,7 @@ import {
 import { type Address, ONE_E18 } from "@senryo/core";
 import { aggregatorSwapRequests } from "./anyasset.ts";
 import type { QueryEnv } from "./env.tsx";
-import { gasBudgetFor } from "./gas.ts";
+import { gasBudgetFor, userFeeCache } from "./gas.ts";
 import { type CollateralSymbol, collateralTokenOf } from "./withdraw.ts";
 
 export type StepRole = "fee" | "pull" | "swap" | "move" | "act";
@@ -221,8 +223,20 @@ async function feeQuote(env: QueryEnv, owner: Address, source: FeeSource, amount
 }
 
 /**
- * B11 on Mainnet: is the operation's network fee covered by the account's MON, or which "~$0.50 → MON" steps make it
- * so, or why neither works. `sources` in preference order; their `spare` excludes what the operation spends.
+ * The network-fee reserve (B11; B1's "Keeps … for fees"): what one "~$0.50 → MON" top-up costs at today's max fee
+ * (approve + the aggregator swap's flat budget). An operation that would leave less MON than this tops up first, so
+ * the account never runs so dry that it can't buy MON again.
+ */
+export async function feeReserveWei(read: ReadClient): Promise<bigint> {
+  const fees = await userFeeCache(read).get();
+  return (GAS_LIMITS.approve + aggregatorSwapGasLimit()) * fees.maxFeePerGas;
+}
+
+/**
+ * B11 on Mainnet: does the account's MON cover the operation AND keep the fee reserve, or which "~$0.50 → MON" steps
+ * go first in the same operation, or why neither works. An operation the MON pays for is never blocked: when the top-up
+ * isn't possible (no dollars, no route, MON below the top-up's own fee) it runs as is. `sources` in preference order;
+ * their `spare` excludes what the operation spends.
  */
 export async function planNetworkFee(
   env: QueryEnv,
@@ -230,44 +244,55 @@ export async function planNetworkFee(
   steps: readonly ComposedStep[],
   sources: readonly FeeSource[],
 ): Promise<FeePlan> {
-  const [{ needWei, budgetsWei }, haveWei] = await Promise.all([
+  const [{ needWei, budgetsWei }, haveWei, reserveWei] = await Promise.all([
     operationFeeNeed(env.read, owner, steps),
     env.read.getBalance({ address: owner, blockTag: "latest" }),
+    feeReserveWei(env.read),
   ]);
-  if (haveWei >= needWei || env.chainId !== MAINNET_CHAIN_ID) return { kind: "covered", needWei, haveWei, budgetsWei };
+  const covered: FeePlan = { kind: "covered", needWei, haveWei, budgetsWei };
+  const short = (reason: "no-dollars" | "no-route" | "too-low", need = needWei): FeePlan =>
+    haveWei >= needWei ? covered : { kind: "short", needWei: need, haveWei, reason };
+  if (haveWei >= needWei + reserveWei || env.chainId !== MAINNET_CHAIN_ID) return covered;
   const source = sources.find((s) => s.spare >= usd6ToUnits(FEE_TOP_UP_USD6, s.decimals));
-  if (!source) return { kind: "short", needWei, haveWei, reason: "no-dollars" };
+  if (!source) return short("no-dollars");
   let amountIn = usd6ToUnits(FEE_TOP_UP_USD6, source.decimals);
   let quote = await feeQuote(env, owner, source, amountIn);
-  if (!quote) return { kind: "short", needWei, haveWei, reason: "no-route" };
-  const shortfall = needWei - haveWei;
-  // MON this dear is unlikely, but the top-up must cover the shortfall plus its own fee: scale once, then give up.
+  if (!quote) return short("no-route");
   const ownFee = (await operationFeeNeed(env.read, owner, await swapLeg(env, owner, quote, LABELS, "fee"))).needWei;
-  if (quote.quote.minOut < shortfall + ownFee) {
-    const scaled = (amountIn * (shortfall + ownFee)) / quote.quote.minOut + 1n;
+  if (haveWei < ownFee) return short("too-low", ownFee);
+  // What the top-up must bring: the operation's fees and the reserve back, after paying for itself.
+  const floor = needWei + reserveWei + ownFee - haveWei;
+  if (quote.quote.minOut < floor) {
+    // MON this dear is unlikely: scale the top-up once, then give up.
+    const scaled = (amountIn * floor) / quote.quote.minOut + 1n;
     quote = scaled <= source.spare ? await feeQuote(env, owner, source, scaled) : undefined;
-    if (!quote || quote.quote.minOut < shortfall + ownFee)
-      return { kind: "short", needWei, haveWei, reason: "no-route" };
+    if (!quote || quote.quote.minOut < floor) return short("no-route");
     amountIn = scaled;
   }
-  if (haveWei < ownFee) return { kind: "short", needWei: ownFee, haveWei, reason: "too-low" };
-  // The fee leg's own floor: what the operation needs, not the quote's minimum (a fee top-up isn't a trade).
-  const feeSteps = await swapLeg(env, owner, quote, LABELS, "fee", shortfall + ownFee);
+  // The fee leg's own floor is what the operation needs, not the quote's minimum (a fee top-up isn't a trade).
+  const feeSteps = await swapLeg(env, owner, quote, LABELS, "fee", floor);
   return { kind: "top-up", needWei: needWei + ownFee, haveWei, source, amountIn, quote, steps: feeSteps };
 }
 
 const LABELS = { approve: "Network fee", swap: "Network fee" } as const;
 
-/** ERC-20 approve(SenryoCore, exact) + `SenryoCore.deposit(token, amount)` — the "move to the trading account" leg. */
+/** `SenryoCore.deposit(token, amount)`: the account's own dollars into its trading account (own funds, uncapped). */
+export function coreDepositRequest(chainId: ChainId, symbol: CollateralSymbol, amount: bigint): TxRequest {
+  return contractCall(chainId, "SenryoCore", "deposit", [collateralTokenOf(chainId, symbol), amount], "deposit", {
+    // Not `symbol` / `amount`: the journal matches those against the operation's reviewed intent (the act's facts).
+    meta: { kind: "deposit", collateral: symbol, units: amount.toString() },
+  });
+}
+
+/** ERC-20 approve(SenryoCore, exact)? + `SenryoCore.deposit` — the "move to the trading account" leg. */
 export function moveToTradingSteps(
   chainId: ChainId,
   symbol: CollateralSymbol,
   amount: bigint,
-  core: Address,
   allowance: bigint,
-  depositRequest: (token: Address, amount: bigint) => TxRequest,
 ): ComposedStep[] {
   const token = collateralTokenOf(chainId, symbol);
+  const core = addressOf(chainId, "SenryoCore");
   const steps: ComposedStep[] = [];
   if (allowance < amount) {
     steps.push({
@@ -277,7 +302,12 @@ export function moveToTradingSteps(
       request: externalCall(token, erc20Abi, "approve", [core, amount], "approve"),
     });
   }
-  steps.push({ role: "move", action: "deposit", label: "Move to trading", request: depositRequest(token, amount) });
+  steps.push({
+    role: "move",
+    action: "deposit",
+    label: "Move to trading",
+    request: coreDepositRequest(chainId, symbol, amount),
+  });
   return steps;
 }
 
