@@ -52,6 +52,10 @@ const CRYPTO: Readonly<Record<string, { art?: string; gap?: string }>> = {
   NEAR: { art: "near" },
 };
 
+/** Chains the any-asset bridges reach that no Senryo config needs elsewhere (EIP-155 ids). */
+const OPTIMISM_CHAIN_ID = 10;
+const AVALANCHE_CHAIN_ID = 43114;
+
 const network = (id: string, name: string, art: string, practice = false): Entity => ({
   id,
   name,
@@ -151,6 +155,8 @@ function externalRows(): Entity[] {
     network(ids.caipChain(CAIP2.bitcoin), "Bitcoin", "bitcoin"),
     network(ids.evmChain(bnb), "BNB Smart Chain", "bnb"),
     network(ids.evmChain(polygon), "Polygon", "polygon"),
+    network(ids.evmChain(OPTIMISM_CHAIN_ID), "Optimism", "optimism"),
+    network(ids.evmChain(AVALANCHE_CHAIN_ID), "Avalanche C-Chain", "avalanche"),
     network(ids.caipChain(CAIP2.tron), "TRON", "tron"),
     network(ids.caipChain(CAIP2.near), "NEAR", "near"),
     {
@@ -253,6 +259,16 @@ const orgRows = (): Entity[] => [
   org(ids.provider("db-ip"), "DB-IP", "data-provider", "db-ip"),
   org(ids.provider("aurora"), "Aurora", "route-provider", "aurora"),
   org(ids.provider("uniswap"), "Uniswap", "route-provider", "uniswap"),
+  // Any-asset routes (D-239): the swap aggregators and bridges a quote can take.
+  org(ids.provider("monorail"), "Monorail", "route-provider", "monorail"),
+  org(ids.provider("kyberswap"), "KyberSwap", "route-provider", "kyberswap"),
+  org(ids.provider("relay"), "Relay", "route-provider", "relay"),
+  org(ids.provider("across"), "Across", "route-provider", "across"),
+  org(ids.provider("lifi"), "LI.FI", "route-provider", "lifi"),
+  org(ids.provider("cctp"), "Circle CCTP", "route-provider", "circle-cctp"),
+  // Card wallets (E5): named on the Add to Wallet row.
+  org(ids.provider("apple-wallet"), "Apple Wallet", "wallet", "apple-pay"),
+  org(ids.provider("google-wallet"), "Google Wallet", "wallet", "google-pay"),
   org(ids.provider("passkey"), "Passkey", "auth-provider", "passkey"),
   org(ids.exchange("coinbase"), "Coinbase", "exchange", "coinbase"),
   org(ids.exchange("binance"), "Binance", "exchange", "binance"),

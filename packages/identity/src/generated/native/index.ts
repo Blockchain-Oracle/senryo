@@ -102,6 +102,20 @@ import ArtPolygonDisc from "./polygon-disc.tsx";
 import ArtPolygonSymbol from "./polygon-symbol.tsx";
 import ArtPolygonMonoLight from "./polygon-monolight.tsx";
 import ArtPolygonMonoDark from "./polygon-monodark.tsx";
+import ArtOptimismDisc from "./optimism-disc.tsx";
+import ArtOptimismSymbol from "./optimism-symbol.tsx";
+import ArtOptimismMonoLight from "./optimism-monolight.tsx";
+import ArtOptimismMonoDark from "./optimism-monodark.tsx";
+import ArtAvalancheDisc from "./avalanche-disc.tsx";
+import ArtAvalancheSymbol from "./avalanche-symbol.tsx";
+import ArtAvalancheMonoLight from "./avalanche-monolight.tsx";
+import ArtAvalancheMonoDark from "./avalanche-monodark.tsx";
+import ArtApplePayMonoDark from "./apple-pay-monodark.tsx";
+import ArtApplePaySymbol from "./apple-pay-symbol.tsx";
+import ArtApplePayMonoLight from "./apple-pay-monolight.tsx";
+import ArtGooglePayMonoDark from "./google-pay-monodark.tsx";
+import ArtGooglePaySymbol from "./google-pay-symbol.tsx";
+import ArtGooglePayMonoLight from "./google-pay-monolight.tsx";
 import ArtLighterDisc from "./lighter-disc.tsx";
 import ArtVeniceDisc from "./venice-disc.tsx";
 import ArtPumpDisc from "./pump-disc.tsx";
@@ -149,6 +163,12 @@ import ArtTokenlistMusdDisc from "./tokenlist-musd-disc.tsx";
 import ArtTokenlistShmonDisc from "./tokenlist-shmon-disc.tsx";
 import ArtTokenlistSyrupusdcDisc from "./tokenlist-syrupusdc-disc.tsx";
 import ArtTokenlistXaut0Disc from "./tokenlist-xaut0-disc.tsx";
+import ArtRelayDisc from "./relay-disc.tsx";
+import ArtAcrossDisc from "./across-disc.tsx";
+import ArtLifiDisc from "./lifi-disc.tsx";
+import ArtCircleCctpDisc from "./circle-cctp-disc.tsx";
+import ArtKyberswapDisc from "./kyberswap-disc.tsx";
+import ArtMonorailDisc from "./monorail-disc.tsx";
 
 export type ArtComponent = ComponentType<SvgProps>;
 
@@ -214,6 +234,10 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "bnb": { disc: ArtBnbDisc, symbol: ArtBnbSymbol, monoLight: ArtBnbMonoLight, monoDark: ArtBnbMonoDark },
   "tron": { disc: ArtTronDisc, symbol: ArtTronSymbol, monoLight: ArtTronMonoLight, monoDark: ArtTronMonoDark },
   "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
+  "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },
+  "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
+  "apple-pay": { monoDark: ArtApplePayMonoDark, symbol: ArtApplePaySymbol, monoLight: ArtApplePayMonoLight },
+  "google-pay": { monoDark: ArtGooglePayMonoDark, symbol: ArtGooglePaySymbol, monoLight: ArtGooglePayMonoLight },
   "lighter": { disc: ArtLighterDisc },
   "venice": { disc: ArtVeniceDisc },
   "pump": { disc: ArtPumpDisc },
@@ -240,4 +264,10 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "tokenlist-shmon": { disc: ArtTokenlistShmonDisc },
   "tokenlist-syrupusdc": { disc: ArtTokenlistSyrupusdcDisc },
   "tokenlist-xaut0": { disc: ArtTokenlistXaut0Disc },
+  "relay": { disc: ArtRelayDisc },
+  "across": { disc: ArtAcrossDisc },
+  "lifi": { disc: ArtLifiDisc },
+  "circle-cctp": { disc: ArtCircleCctpDisc },
+  "kyberswap": { disc: ArtKyberswapDisc },
+  "monorail": { disc: ArtMonorailDisc },
 };

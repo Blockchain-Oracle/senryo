@@ -223,6 +223,216 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "optimism",
+    "owner": "Optimism Foundation",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-02",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/optimism/web3icons-networks-background-optimism.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/background/optimism.svg",
+        "sha256": "62f4b8ee052a22e85accdb71b416af1a769cd39197f79563ff7207ace174c66d",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/optimism/web3icons-networks-branded-optimism.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/branded/optimism.svg",
+        "sha256": "f1eed2a1c2fa7adad2312fb2f73f86a7e1a18a2446ffb21ed116a426bce77f5e",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/optimism/web3icons-networks-mono-optimism.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/mono/optimism.svg",
+        "sha256": "3a0097203f809fbd26ac5c0e69f0d03b2118f57a8646134fb2c6c6fb1a9775f9",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/optimism/web3icons-networks-mono-optimism-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/mono/optimism.svg",
+        "sha256": "0ef021d19ce66da9fe2fe6143635224404f6205fbc453c29456db9b7e9d47908",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/optimism/web3icons-networks-mono-optimism.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "avalanche",
+    "owner": "Ava Labs",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-02",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/avalanche/web3icons-networks-background-avalanche.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/background/avalanche.svg",
+        "sha256": "ec1ff90f7c2149a7604719474f749c3e5113911370f8997aac4c97fcb579d991",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/avalanche/web3icons-networks-branded-avalanche.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/branded/avalanche.svg",
+        "sha256": "b7c881bb46ab24136e8544cdc04bc3114ab3693229033b305352362654755dfc",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/avalanche/web3icons-networks-mono-avalanche.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/mono/avalanche.svg",
+        "sha256": "1a54b1245f5d61c4dd8aba9774da83618a4fd88711bd22de77a3d69f79d96ed0",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/avalanche/web3icons-networks-mono-avalanche-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/networks/mono/avalanche.svg",
+        "sha256": "a6536bc90543dc7095cd6ebd6ed5e86fb3608bec526dfe4019f1a7a1d07a5cf7",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/avalanche/web3icons-networks-mono-avalanche.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "apple-pay",
+    "owner": "Apple Inc.",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=applepay",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #000000 is the value in the library's data file.",
+    "retrieved": "2026-10-02",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #000000.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/apple-pay/simple-icons-applepay.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/applepay.svg",
+        "sha256": "52e5e55305141d21eb560e0d217da9f5bf99de8cbaf456710e1e07e683a464a1",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/apple-pay/simple-icons-applepay-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/applepay.svg",
+        "sha256": "bac46e66310cb2eb4a87c921f7a75c588afdb87d7d1c508c73691b4033c012f5",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/apple-pay/simple-icons-applepay.svg",
+          "recolour": {},
+          "rootFill": "#000000",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/apple-pay/simple-icons-applepay-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/applepay.svg",
+        "sha256": "a176b14a87e8148a5bc7ed39f2d6fc31ca0d2ccb5626d71742aa5256c5017b94",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/apple-pay/simple-icons-applepay.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "google-pay",
+    "owner": "Google LLC",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=googlepay",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #4285F4 is the value in the library's data file.",
+    "retrieved": "2026-10-02",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #4285F4.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/google-pay/simple-icons-googlepay.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/googlepay.svg",
+        "sha256": "62774711bd85d51873076f48183ebcb4062c4cd43551c319f9429aea55cd75e8",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/google-pay/simple-icons-googlepay-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/googlepay.svg",
+        "sha256": "d0614f4fa8974370b52e47656adc9fbbdca1249cf9190869d76644509b525ba4",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "any",
+        "derived": {
+          "from": "packages/identity/sources/google-pay/simple-icons-googlepay.svg",
+          "recolour": {},
+          "rootFill": "#4285F4",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/google-pay/simple-icons-googlepay-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/googlepay.svg",
+        "sha256": "e197887e5feee05231bba27bed024a0e9775c48eea95ab1a499e3e886f25120f",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/google-pay/simple-icons-googlepay.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
     "key": "lighter",
     "owner": "Lighter",
     "provenance": "venue-metadata",
@@ -1038,6 +1248,126 @@ export const FETCHED_ART: readonly ArtSource[] = [
         "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/XAUt0/logo.svg",
         "sha256": "641c32da2941179f3b5c369c377abb53587b74b8788b96cba1ed088ec79393e7",
         "viewBox": "0 0 256 256",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "relay",
+    "owner": "Relay Protocol",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/lifinance/types/blob/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/relay.svg",
+    "licence": "lifinance/types at commit b554730b, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for Relay. The mark stays Relay's trademark, used nominatively to name the route a quote takes.",
+    "retrieved": "2026-10-02",
+    "usage": "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/relay/lifi-bridges-relay.svg",
+        "url": "https://raw.githubusercontent.com/lifinance/types/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/relay.svg",
+        "sha256": "c1b6235e18bb78fc6f08237b3fd42c15358575c26b0886930052ac929c3b1ca9",
+        "viewBox": "0 0 32 32",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "across",
+    "owner": "Risk Labs (Across Protocol)",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/lifinance/types/blob/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/across.svg",
+    "licence": "lifinance/types at commit b554730b, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for Across. The mark stays Across's trademark, used nominatively to name the route a quote takes.",
+    "retrieved": "2026-10-02",
+    "usage": "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/across/lifi-bridges-across.svg",
+        "url": "https://raw.githubusercontent.com/lifinance/types/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/across.svg",
+        "sha256": "84c2c1d141cd7d898f4a3548e5d361bb0b292dc159e67b057f3d556314de186f",
+        "viewBox": "0 0 32 32",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "lifi",
+    "owner": "LI.FI",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/lifinance/types/blob/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/lifi.svg",
+    "licence": "lifinance/types at commit b554730b, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for LI.FI. The mark stays LI.FI's trademark, used nominatively to name the route a quote takes.",
+    "retrieved": "2026-10-02",
+    "usage": "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/lifi/lifi-bridges-lifi.svg",
+        "url": "https://raw.githubusercontent.com/lifinance/types/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/lifi.svg",
+        "sha256": "11fd39eba94bd4534c53ffec6fc131ffec9924e7933f63da1aea882b3ee36fea",
+        "viewBox": "0 0 32 32",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "circle-cctp",
+    "owner": "Circle Internet Group",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/lifinance/types/blob/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/circle.svg",
+    "licence": "lifinance/types at commit b554730b, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for Circle CCTP. The mark stays Circle CCTP's trademark, used nominatively to name the route a quote takes.",
+    "retrieved": "2026-10-02",
+    "usage": "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/circle-cctp/lifi-bridges-circle.svg",
+        "url": "https://raw.githubusercontent.com/lifinance/types/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/bridges/circle.svg",
+        "sha256": "402540eeb47b316bed0a9fc5f6129c442a8430995705dc727938ca712a8447f3",
+        "viewBox": "0 0 32 32",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "kyberswap",
+    "owner": "KyberSwap",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/lifinance/types/blob/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/exchanges/kyberswap.svg",
+    "licence": "lifinance/types at commit b554730b, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for KyberSwap. The mark stays KyberSwap's trademark, used nominatively to name the route a quote takes.",
+    "retrieved": "2026-10-02",
+    "usage": "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/kyberswap/lifi-exchanges-kyberswap.svg",
+        "url": "https://raw.githubusercontent.com/lifinance/types/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/exchanges/kyberswap.svg",
+        "sha256": "d014bf4781c9ad334c291fb171e45b9533aa8ad3d9f68994791ec06b3e1ce223",
+        "viewBox": "0 0 32 32",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
+  },
+  {
+    "key": "monorail",
+    "owner": "Monorail",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/lifinance/types/blob/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/exchanges/monorail.svg",
+    "licence": "lifinance/types at commit b554730b, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for Monorail. The mark stays Monorail's trademark, used nominatively to name the route a quote takes.",
+    "retrieved": "2026-10-02",
+    "usage": "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/monorail/lifi-exchanges-monorail.svg",
+        "url": "https://raw.githubusercontent.com/lifinance/types/b554730b3918534c91591743e83c427a4f50cbd1/src/assets/icons/exchanges/monorail.svg",
+        "sha256": "8ce9f6abf9fd484604f88fae6f8f399d34300d3be5f9e813dd5b3aacfc73a547",
+        "viewBox": "0 0 32 32",
         "insetPermille": 0,
         "surface": "any",
         "shape": "disc"

@@ -47,6 +47,10 @@ const WEB3ICONS_RAW = `https://raw.githubusercontent.com/0xa3k5/web3icons/${WEB3
 const WEB3ICONS_LICENCE_URL = `${WEB3ICONS_REPO}/blob/${WEB3ICONS_COMMIT}/LICENCE`;
 /** The library draws every mark on a 24-unit grid with 3 units of clear space: 3/24 of the edge. */
 const WEB3ICONS_INSET_PERMILLE = 125;
+/** lifinance/types (Apache-2.0) at a pinned commit (2 Oct 2026): LI.FI's icons for the bridges and DEXs it routes. */
+const LIFI_TYPES_COMMIT = "b554730b3918534c91591743e83c427a4f50cbd1";
+const LIFI_TYPES_REPO = "https://github.com/lifinance/types";
+const LIFI_TYPES_RAW = `https://raw.githubusercontent.com/lifinance/types/${LIFI_TYPES_COMMIT}`;
 const SIMPLE_ICONS_VERSION = "16.33.0";
 const SIMPLE_ICONS_CDN = `https://cdn.jsdelivr.net/npm/simple-icons@${SIMPLE_ICONS_VERSION}`;
 const SIMPLE_ICONS_LICENCE_URL = `https://github.com/simple-icons/simple-icons/blob/${SIMPLE_ICONS_VERSION}/LICENSE.md`;
@@ -278,11 +282,32 @@ async function fromMonadTokenList(spec: Extract<FetchSpec, { from: "monad-token-
   };
 }
 
+/**
+ * A route provider's mark from LI.FI's open icon set at the pinned commit, kept as delivered (a full-bleed square
+ * or disc as LI.FI draws it). The Apache-2.0 notice ships next to it.
+ */
+async function fromLifiTypes(spec: Extract<FetchSpec, { from: "lifi-types" }>): Promise<Fetched> {
+  const folder = `src/assets/icons/${spec.group}`;
+  const url = `${LIFI_TYPES_RAW}/${folder}/${spec.file}`;
+  const licenceRaw = `${LIFI_TYPES_RAW}/LICENSE.md`;
+  const present: Presentation = { insetPermille: 0, surface: "any", shape: "disc" };
+  return {
+    provenance: "open-library",
+    pageUrl: `${LIFI_TYPES_REPO}/blob/${LIFI_TYPES_COMMIT}/${folder}/${spec.file}`,
+    licence: `lifinance/types at commit ${LIFI_TYPES_COMMIT.slice(0, SHORT_SHA_CHARS)}, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for ${spec.brand}. The mark stays ${spec.brand}'s trademark, used nominatively to name the route a quote takes.`,
+    usage:
+      "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
+    pieces: [{ variant: "disc", name: `lifi-${spec.group}-${spec.file}`, url, body: await getSvg(url), present }],
+    notices: [{ name: "LICENSE-lifinance-types.txt", url: licenceRaw, body: await get(licenceRaw) }],
+  };
+}
+
 function fetchEntry(entry: CatalogEntry): Promise<Fetched> {
   const { spec } = entry;
   if (spec.from === "web3icons") return fromWeb3Icons(entry.key, spec);
   if (spec.from === "hyperliquid") return fromHyperliquid(spec);
   if (spec.from === "monad-token-list") return fromMonadTokenList(spec);
+  if (spec.from === "lifi-types") return fromLifiTypes(spec);
   if (spec.from === "wikimedia-commons") return fromCommons(entry.key, spec);
   if (spec.from === "material-symbols") return fromMaterialSymbols(entry.key, spec);
   return fromSimpleIcons(entry.key, spec);

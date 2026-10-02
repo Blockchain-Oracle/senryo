@@ -15,6 +15,8 @@ export type EntityRole =
   | "route-provider"
   | "exchange"
   | "auth-provider"
+  /** A phone wallet a card is added to (Apple Wallet, Google Wallet; flow book E5). */
+  | "wallet"
   | "brand";
 
 /** `token`: an ERC-20 held and traded spot on Monad (J11), whatever it tracks. */

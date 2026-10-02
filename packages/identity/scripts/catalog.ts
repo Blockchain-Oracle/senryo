@@ -36,6 +36,8 @@ export type FetchSpec =
   | { from: "hyperliquid"; coin: string }
   | { from: "simple-icons"; slug: string }
   | { from: "monad-token-list"; dir: string; file: string; symbol: string }
+  /** LI.FI's open icon set (lifinance/types, Apache-2.0, pinned by commit): the bridges and aggregators it routes. */
+  | { from: "lifi-types"; group: "bridges" | "exchanges"; file: string; brand: string }
   /** `file` is the title without "File:"; `sha1` (Commons' own hash of the version) pins one upload. */
   | { from: "wikimedia-commons"; file: string; sha1: string }
   | { from: "material-symbols"; name: string; style: "outlined" | "rounded" | "sharp"; filled: boolean };
@@ -57,6 +59,14 @@ const STANDALONE: readonly CatalogEntry[] = [
   { key: "bnb", owner: "BNB Chain", spec: { from: "web3icons", group: "tokens", name: "BNB", take: ALL } },
   { key: "tron", owner: "TRON DAO", spec: { from: "web3icons", group: "networks", name: "tron", take: ALL } },
   { key: "polygon", owner: "Polygon Labs", spec: { from: "web3icons", group: "networks", name: "polygon", take: ALL } },
+  {
+    key: "optimism",
+    owner: "Optimism Foundation",
+    spec: { from: "web3icons", group: "networks", name: "optimism", take: ALL },
+  },
+  { key: "avalanche", owner: "Ava Labs", spec: { from: "web3icons", group: "networks", name: "avalanche", take: ALL } },
+  { key: "apple-pay", owner: "Apple Inc.", spec: { from: "simple-icons", slug: "applepay" } },
+  { key: "google-pay", owner: "Google LLC", spec: { from: "simple-icons", slug: "googlepay" } },
   { key: "lighter", owner: "Lighter", spec: { from: "hyperliquid", coin: "LIT" } },
   { key: "venice", owner: "Venice", spec: { from: "hyperliquid", coin: "VVV" } },
   { key: "pump", owner: "pump.fun", spec: { from: "hyperliquid", coin: "PUMP" } },
@@ -154,4 +164,44 @@ const OWNED_LOGOS: readonly CatalogEntry[] = [
   },
 ];
 
-export const CATALOG: readonly CatalogEntry[] = [...STANDALONE, ...SUPPLEMENTS, ...SPOT_LOGOS, ...OWNED_LOGOS];
+/**
+ * The routes behind any-asset swaps and bridges (D-239, flow book routes.md), as LI.FI's own icon set draws them —
+ * researched 2 Oct 2026: none of web3icons, Simple Icons or the token list carries Relay, LI.FI or Monorail
+ * (Simple Icons' "Relay" is relay.dev, a different product).
+ */
+const ROUTE_LOGOS: readonly CatalogEntry[] = [
+  {
+    key: "relay",
+    owner: "Relay Protocol",
+    spec: { from: "lifi-types", group: "bridges", file: "relay.svg", brand: "Relay" },
+  },
+  {
+    key: "across",
+    owner: "Risk Labs (Across Protocol)",
+    spec: { from: "lifi-types", group: "bridges", file: "across.svg", brand: "Across" },
+  },
+  { key: "lifi", owner: "LI.FI", spec: { from: "lifi-types", group: "bridges", file: "lifi.svg", brand: "LI.FI" } },
+  {
+    key: "circle-cctp",
+    owner: "Circle Internet Group",
+    spec: { from: "lifi-types", group: "bridges", file: "circle.svg", brand: "Circle CCTP" },
+  },
+  {
+    key: "kyberswap",
+    owner: "KyberSwap",
+    spec: { from: "lifi-types", group: "exchanges", file: "kyberswap.svg", brand: "KyberSwap" },
+  },
+  {
+    key: "monorail",
+    owner: "Monorail",
+    spec: { from: "lifi-types", group: "exchanges", file: "monorail.svg", brand: "Monorail" },
+  },
+];
+
+export const CATALOG: readonly CatalogEntry[] = [
+  ...STANDALONE,
+  ...SUPPLEMENTS,
+  ...SPOT_LOGOS,
+  ...OWNED_LOGOS,
+  ...ROUTE_LOGOS,
+];
