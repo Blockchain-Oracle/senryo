@@ -4,7 +4,7 @@ import type { IndexedActivity } from "@senryo/indexer-client";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { ArrowLeftRight, ChartCandlestick, CreditCard, Crosshair } from "~/components/kit/symbols";
+import { ArrowLeftRight, ChartCandlestick, CreditCard } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { useNetwork } from "~/lib/network";
@@ -15,7 +15,7 @@ import { indexedMarketMark } from "./market-id";
 /** A page-wide row barely moves under the finger (the same reason as a sheet row). */
 const ROW_PRESS_SCALE = 0.985;
 
-const GROUP_ICON = { trades: ChartCandlestick, money: ArrowLeftRight, card: CreditCard, orders: Crosshair } as const;
+const GROUP_ICON = { trades: ChartCandlestick, money: ArrowLeftRight, card: CreditCard } as const;
 
 /** The row's 48 pt lead: the market's or the token's own mark when the event names one, else its kind's glyph on a quiet disc. */
 function Lead({ row }: { row: IndexedActivity }) {

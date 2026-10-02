@@ -1,93 +1,128 @@
 import { engineMarket } from "@senryo/config";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { ChipRow } from "~/components/kit/ChipRow";
-import { Screen } from "~/components/kit/Screen";
-import { ReadingView } from "~/components/kit/states";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
+import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
+import { ChildSheet } from "~/components/sheet/ChildSheet";
+import { useDockInset } from "~/components/shell/dock-context";
+import { FeedRow, type LogoOf } from "~/features/activity/FeedRow";
+import type { FeedItem } from "~/features/activity/feed";
+import { ReceiptBody } from "~/features/activity/Receipt";
+import { type FeedFilter, useFeed } from "~/features/activity/useFeed";
 import { PositionRowsSkeleton } from "~/features/home/HomeParts";
-import { ActivityRow } from "~/features/portfolio/ActivityRow";
-import { ACTIVITY_FILTERS, type ActivityFilter, FILTER_KINDS } from "~/features/portfolio/activity-copy";
-import { PendingOperations } from "~/features/portfolio/PendingOperations";
+import { useMoneyAssets } from "~/features/money/useMoneyAssets";
 import { QuietLine } from "~/features/portfolio/QuietLine";
-import { useActivity } from "~/features/portfolio/useActivity";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
-import { SIZE, SPACE } from "~/theme";
+import { DIAGNOSIS_COPY } from "~/lib/copy/diagnosis";
+import { useNetwork } from "~/lib/network";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
-/** Rows the loading list holds the place of. */
+/** Rows the loading list holds the place of (B12: 6 row skeletons). */
 const LOADING_ROWS = 6;
+const TABS: readonly { value: FeedFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "trades", label: "Trades" },
+  { value: "money", label: "Money" },
+  { value: "card", label: "Card" },
+];
 
 /**
- * Activity history (direction's screen inventory): every indexed event of this account on this network — trades,
- * money in and out, card holds, TP/SL — newest first, bare rows on the page under filter chips, a page at a time.
- * Each row is an onchain event and opens its transaction. A guest and an account with no events each get one quiet
- * line; nothing is sampled or invented.
+ * Activity (flow book B12; plan §0.9): every movement of this account on this network — trades, money in and out,
+ * card events — under All · Trades · Money · Card. This phone's own operations (sends, withdrawals, swaps, bridges,
+ * purchases) join the indexer's events, and the ones still settling sit on top with a spinner; nothing is ever
+ * resent from here. A row opens its receipt (Share, Explorer). `?market=XAU` is one market's history.
  */
 export default function ActivityScreen() {
+  const { color } = useTheme();
+  const network = useNetwork();
   const address = useAccount().hint?.address;
   const { market: symbol } = useLocalSearchParams<{ market?: string }>();
-  // `?market=XAU`: one market's history (FT097, F32's history utility on market detail).
   const meta = symbol ? engineMarket(symbol.toUpperCase()) : undefined;
-  const [filter, setFilter] = useState<ActivityFilter>("all");
-  const activity = useActivity(
-    address,
-    filter === "all" ? undefined : FILTER_KINDS[filter],
-    meta ? `ours-${meta.id}` : undefined,
+  const [filter, setFilter] = useState<FeedFilter>("all");
+  // The receipt keeps its item while it slides away, so the sheet never empties mid-exit.
+  const [open, setOpen] = useState(false);
+  const [receipt, setReceipt] = useState<FeedItem>();
+  const feed = useFeed(address, meta ? "trades" : filter, meta ? `ours-${meta.id}` : undefined);
+  const money = useMoneyAssets();
+  const logoOf: LogoOf = useCallback(
+    (markId) => [...money.assets, ...money.other].find((a) => a.mark === markId)?.logoUrl ?? null,
+    [money.assets, money.other],
   );
+  const refresh = usePullRefresh(address ? feed.refetch : undefined);
+  const bottom = useDockInset();
+  const title = meta ? `${meta.name} history` : "Activity";
   return (
-    <Screen {...(address ? { onRefresh: activity.refetch } : {})} contentStyle={styles.body}>
-      <Stack.Screen options={{ title: meta ? `${meta.name} history` : "Activity" }} />
-      {address ? (
-        <>
-          {!meta && filter === "all" ? <PendingOperations /> : null}
-          <View style={styles.chips}>
-            <ChipRow options={ACTIVITY_FILTERS} value={filter} onChange={setFilter} label="Activity kind" />
-          </View>
-          {activity.reading.status === "unknown" ? (
-            <PositionRowsSkeleton rows={LOADING_ROWS} />
-          ) : (
-            <ReadingView reading={activity.reading} retry={() => void activity.refetch()}>
-              {(rows) =>
-                rows.length === 0 ? (
-                  <QuietLine>
-                    {meta
-                      ? `You haven’t traded ${meta.name} on this network yet`
-                      : filter === "all"
-                        ? "No activity yet"
-                        : "Nothing of this kind yet"}
-                  </QuietLine>
-                ) : (
-                  <View>
-                    {rows.map((row) => (
-                      <ActivityRow key={row.id} row={row} />
-                    ))}
-                    {activity.hasMore ? (
-                      <Button
-                        label="Show earlier"
-                        variant="ghost"
-                        loading={activity.loadingMore}
-                        onPress={activity.loadMore}
-                      />
-                    ) : null}
-                  </View>
-                )
-              }
-            </ReadingView>
-          )}
-        </>
-      ) : (
-        <QuietLine action={{ label: "Create account", onPress: () => router.push(ROUTES.accountRequired) }}>
-          Your trades, deposits and card activity appear here once you have an account.
-        </QuietLine>
-      )}
-    </Screen>
+    <View style={[styles.fill, { backgroundColor: color.ground }]}>
+      <Stack.Screen options={{ title }} />
+      <ScrollView
+        style={styles.fill}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={[styles.body, { paddingBottom: Math.max(bottom, SPACE.xxxl) }]}
+        refreshControl={refresh}
+      >
+        {!address ? (
+          <QuietLine action={{ label: "Create account", onPress: () => router.push(ROUTES.accountRequired) }}>
+            Your money and trades show here
+          </QuietLine>
+        ) : (
+          <>
+            {meta ? null : <UnderlineTabs options={TABS} value={filter} onChange={setFilter} label="Activity kind" />}
+            {feed.error ? (
+              <View style={styles.error}>
+                <Text style={[TYPE.rowDetail, { color: color.warn }]}>{DIAGNOSIS_COPY[feed.error.kind].headline}</Text>
+                <Button label="Retry" variant="ghost" size="sm" block={false} onPress={() => void feed.refetch()} />
+              </View>
+            ) : null}
+            {feed.items === undefined ? (
+              <PositionRowsSkeleton rows={LOADING_ROWS} />
+            ) : feed.items.length === 0 ? (
+              feed.error ? null : (
+                <QuietLine
+                  {...(meta || filter === "trades" || filter === "card"
+                    ? {}
+                    : { action: { label: "Add money", onPress: () => router.push(ROUTES.addMoney) } })}
+                >
+                  {meta ? `No ${meta.name} trades yet` : filter === "all" ? "No activity yet" : "Nothing here yet"}
+                </QuietLine>
+              )
+            ) : (
+              <View>
+                {feed.items.map((item, i) => (
+                  <FeedRow
+                    key={item.id}
+                    item={item}
+                    index={i}
+                    logoOf={logoOf}
+                    onPress={() => {
+                      setReceipt(item);
+                      setOpen(true);
+                    }}
+                  />
+                ))}
+                {feed.hasMore ? (
+                  <Button label="Show earlier" variant="ghost" loading={feed.loadingMore} onPress={feed.loadMore} />
+                ) : null}
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
+      <ChildSheet open={open} onClose={() => setOpen(false)} title={receipt?.title ?? "Receipt"}>
+        {receipt && address ? (
+          <ReceiptBody item={receipt} me={address} chainId={network.chainId} logoOf={logoOf} />
+        ) : (
+          <View style={{ height: SIZE.touch }} />
+        )}
+      </ChildSheet>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { gap: SPACE.md },
-  // The chips run to both screen edges; `ChipRow` keeps its own gutter.
-  chips: { marginHorizontal: -SIZE.gutter },
+  fill: { flex: 1 },
+  body: { padding: SIZE.gutter, gap: SPACE.lg },
+  error: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.sm },
 });

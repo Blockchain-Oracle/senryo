@@ -1,19 +1,15 @@
-import { isDeployed } from "@senryo/chain";
-import { SheetRoute } from "~/components/sheet/SheetRoute";
+import { router } from "expo-router";
+import { Sheet } from "~/components/sheet/Sheet";
 import { BalanceDetails } from "~/features/portfolio/BalanceDetails";
-import { PortfolioDetails } from "~/features/portfolio/PortfolioDetails";
-import { useNetwork } from "~/lib/network";
 
 /**
- * Balance details (direction §7): a compact sheet over Home, opened from the availability row. Its heading carries
- * the one thing the three cells cannot say for themselves — that they overlap.
+ * The Balance sheet (flow book B16): a compact sheet over Home, opened from the hero — the Total and the parts that
+ * make it up, each opening its surface.
  */
 export default function BalanceDetailsSheet() {
-  const network = useNetwork();
   return (
-    <SheetRoute title="Portfolio details">
-      <PortfolioDetails />
-      {isDeployed(network.chainId, "SenryoCore") ? <BalanceDetails /> : null}
-    </SheetRoute>
+    <Sheet onClose={() => router.back()} closeLabel="Close balance">
+      <BalanceDetails />
+    </Sheet>
   );
 }
