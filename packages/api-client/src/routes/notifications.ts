@@ -106,3 +106,4 @@ export type NotificationSubject = z.output<typeof notificationSubjectSchema>;
 export type AppNotification = z.output<typeof notificationSchema>;
 export type NotificationPage = z.output<typeof notificationPageSchema>;
 export type NotificationsRead = z.input<typeof notificationsReadRequestSchema>;
+export type NotificationsReadResult = z.output<typeof notificationsReadResponseSchema>;

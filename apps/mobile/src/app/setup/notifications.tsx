@@ -6,8 +6,8 @@ import { useSetupNav } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import {
-  ALL_CHANNELS_ON,
   askPushPermission,
+  DEFAULT_CHANNELS,
   type PushPermission,
   readPushPermission,
   registerPush,
@@ -59,7 +59,7 @@ export default function NotificationsStep() {
     }
     let sent = false;
     if (account.client && address) {
-      sent = await registerPush(account.client, address, account.settings.faceId, ALL_CHANNELS_ON)
+      sent = await registerPush(account.client, address, account.settings.faceId, DEFAULT_CHANNELS)
         .then(() => true)
         .catch(() => false);
     }

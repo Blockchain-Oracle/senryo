@@ -5,7 +5,7 @@
  * opens on the real choices and a registration that failed is retried at the next unlock (`usePushSync`).
  */
 import type { AccountClient, Address, FaceIdMode } from "@senryo/account";
-import { PUSH_CHANNELS, pushTokenDeleteRoute, pushTokenRoute } from "@senryo/api-client";
+import { PUSH_CHANNEL_DEFAULTS, type PUSH_CHANNELS, pushTokenDeleteRoute, pushTokenRoute } from "@senryo/api-client";
 import { Platform } from "react-native";
 import { api, withSession } from "~/lib/account/api";
 import { countingPrompts } from "~/lib/account/system-prompt";
@@ -18,7 +18,8 @@ export type PushChannels = Record<PushChannel, boolean>;
 /** `unavailable`: this build has no notifications module (a dev client from before it was added). */
 export type PushPermission = "granted" | "denied" | "undetermined" | "unavailable";
 
-export const ALL_CHANNELS_ON: PushChannels = Object.fromEntries(PUSH_CHANNELS.map((c) => [c, true])) as PushChannels;
+/** Every channel at its default: on, except "a trader you follow opened a position" (opt-in, G1). */
+export const DEFAULT_CHANNELS: PushChannels = { ...PUSH_CHANNEL_DEFAULTS };
 
 interface Registration {
   token: string;
@@ -33,7 +34,7 @@ export function savedRegistration(): Registration | undefined {
   if (!raw) return undefined;
   try {
     const parsed = JSON.parse(raw) as Registration;
-    return { ...parsed, channels: { ...ALL_CHANNELS_ON, ...parsed.channels } };
+    return { ...parsed, channels: { ...DEFAULT_CHANNELS, ...parsed.channels } };
   } catch {
     return undefined;
   }
@@ -117,7 +118,7 @@ export async function unregisterPush(
  */
 export function registrationOwed(address: Address): PushChannels | undefined {
   const saved = savedRegistration();
-  if (!saved) return ALL_CHANNELS_ON;
+  if (!saved) return DEFAULT_CHANNELS;
   if (saved.address === address.toLowerCase() && saved.confirmed) return undefined;
-  return saved.address === address.toLowerCase() ? saved.channels : ALL_CHANNELS_ON;
+  return saved.address === address.toLowerCase() ? saved.channels : DEFAULT_CHANNELS;
 }
