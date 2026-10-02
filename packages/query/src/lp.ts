@@ -58,9 +58,16 @@ export function useLpVault(address: Address | undefined): Reading<LpSnapshot> {
 
 /**
  * Historical APR in bps over the last `LP_APR_DAYS`: (fees the pool kept + trader losses − trader gains) ÷ current
- * value, annualised. Undefined with no history or an empty pool. Scoped to the active network.
+ * value, annualised, with the window it really covers (`days`, ≤ LP_APR_DAYS — flow book D "label the chip with its
+ * real window"). Undefined with no history or an empty pool. Scoped to the active network.
  */
-export function useLpApr(totalAssets: bigint | undefined): Reading<bigint | undefined> {
+export interface LpApr {
+  bps: bigint;
+  /** Indexed days the figure covers. */
+  days: number;
+}
+
+export function useLpApr(totalAssets: bigint | undefined): Reading<LpApr | undefined> {
   const env = useQueryEnv();
   const query = useQuery({
     queryKey: ["lp", env.chainId, "apr", LP_APR_DAYS] as const,
@@ -80,7 +87,10 @@ export function useLpApr(totalAssets: bigint | undefined): Reading<bigint | unde
     0n,
   );
   const span = BigInt(Math.max(days.length, 1));
-  return { ...reading, value: (earned * RISK.BPS * DAYS_PER_YEAR) / (totalAssets * span) };
+  return {
+    ...reading,
+    value: { bps: (earned * RISK.BPS * DAYS_PER_YEAR) / (totalAssets * span), days: days.length },
+  };
 }
 
 /** Approve the vault to pull AUSD (mainnet AUSD or practice MockAUSD — same ERC-20 `approve`). */
