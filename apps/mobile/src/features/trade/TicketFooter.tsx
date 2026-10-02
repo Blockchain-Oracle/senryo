@@ -6,6 +6,7 @@ import { ChevronDown, CirclePlus } from "~/components/kit/symbols";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
+import { useTermsGate } from "~/lib/account/terms-gate";
 import { positionRoute, ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -48,6 +49,9 @@ export function TicketFooter({
   onDetails: () => void;
 }) {
   const { color } = useTheme();
+  const gate = useTermsGate();
+  // Adding money is a money action: the terms gate runs first (A11).
+  const addMoney = () => gate(() => router.push(ROUTES.addMoney), { verb: "add money", next: ROUTES.addMoney });
   const copy = t.blocker ? blockerCopy(t.blocker, line.symbol, t.nowSec, (v) => usd(v)) : undefined;
   // C3 #5 names the amount held on the other side: "You're long P$300".
   const title =
@@ -63,7 +67,7 @@ export function TicketFooter({
         <Pressable
           onPress={() => {
             fire("tick");
-            router.push(ROUTES.addMoney);
+            addMoney();
           }}
           accessibilityRole="button"
           accessibilityLabel={`Buying power ${t.snapshot ? usd(t.snapshot.freeToTrade) : "unknown"}. Add money`}
@@ -105,7 +109,9 @@ export function TicketFooter({
           >
             {why}
           </Text>
-          {fix ? <FixLink fix={fix} t={t} max={line.maxLeverageX} marketId={line.marketId} /> : null}
+          {fix ? (
+            <FixLink fix={fix} t={t} max={line.maxLeverageX} marketId={line.marketId} onAddMoney={addMoney} />
+          ) : null}
         </View>
       ) : null}
       {guest ? (
@@ -135,15 +141,17 @@ function FixLink({
   t,
   max,
   marketId,
+  onAddMoney,
 }: {
   fix: Exclude<Fix, "createAccount">;
   t: TicketModel;
   max: number;
   marketId: number;
+  onAddMoney: () => void;
 }) {
   const { color } = useTheme();
   const act = () => {
-    if (fix === "addMoney") router.push(ROUTES.addMoney);
+    if (fix === "addMoney") onAddMoney();
     else if (fix === "maxLeverage") t.setLeverage(max);
     else router.push(positionRoute(String(marketId)));
   };

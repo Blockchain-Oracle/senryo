@@ -20,6 +20,7 @@ import { ReadingView } from "~/components/kit/states";
 import { ChevronRight, Info } from "~/components/kit/symbols";
 import { Facts } from "~/features/trade/TicketReceipt";
 import { fire } from "~/feedback/fire";
+import { useTermsGate } from "~/lib/account/terms-gate";
 import { ROUTES } from "~/lib/constants/routes";
 import { pct, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
@@ -51,6 +52,7 @@ export function LpScreen() {
   const network = useNetwork();
   const lp = useLp();
   const window = useClaimWindow();
+  const gate = useTermsGate();
   const [sheet, setSheet] = useState<"deposit" | "redeem" | undefined>();
   const [claim, setClaim] = useState<LpRedeemView | undefined>();
   const [info, setInfo] = useState<{ title: string; body: string } | undefined>();
@@ -113,7 +115,12 @@ export function LpScreen() {
                     ]}
                   />
                   <View style={styles.actions}>
-                    <Button label="Deposit" style={styles.flex} onPress={() => setSheet("deposit")} />
+                    <Button
+                      label="Deposit"
+                      style={styles.flex}
+                      // A pool deposit is a money action: the terms sheet once per account first (A11).
+                      onPress={() => gate(() => setSheet("deposit"), { verb: "add money", next: ROUTES.lp })}
+                    />
                     {v.shares > 0n ? (
                       <Button
                         label="Redeem"

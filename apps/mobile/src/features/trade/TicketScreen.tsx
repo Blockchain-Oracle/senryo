@@ -38,7 +38,16 @@ const UPDATES_PAUSED = "Live updates paused. Review the latest oracle price.";
  * TP/SL, Details, candle settings, share) rise over the ticket and return with every value kept (FT112). The first
  * trade passes the risk explainer; the first short also passes its short-specific card (C3a).
  */
-export function TicketScreen({ marketId, side }: { marketId: string; side: Side | undefined }) {
+export function TicketScreen({
+  marketId,
+  side,
+  leverage,
+}: {
+  marketId: string;
+  side: Side | undefined;
+  /** "Trade this" (C11): the source's leverage, clamped to the market max by the ticket. */
+  leverage?: number | undefined;
+}) {
   useHideDockWhileFocused("ticket");
   const meta = engineMarket(marketId);
   const readOnly = useReadOnlyNetwork();
@@ -53,11 +62,21 @@ export function TicketScreen({ marketId, side }: { marketId: string; side: Side 
       </View>
     </TransactionSheet>
   ) : (
-    <LoadedTicket marketId={meta.id} symbol={meta.symbol} side={side} />
+    <LoadedTicket marketId={meta.id} symbol={meta.symbol} side={side} leverage={leverage} />
   );
 }
 
-function LoadedTicket({ marketId, symbol, side }: { marketId: number; symbol: string; side: Side | undefined }) {
+function LoadedTicket({
+  marketId,
+  symbol,
+  side,
+  leverage,
+}: {
+  marketId: number;
+  symbol: string;
+  side: Side | undefined;
+  leverage: number | undefined;
+}) {
   const line = useMarketLine(marketId, symbol);
   const client = useQueryClient();
   if (line.status === "unknown" || line.status === "failed") {
@@ -73,10 +92,18 @@ function LoadedTicket({ marketId, symbol, side }: { marketId: number; symbol: st
       </TransactionSheet>
     );
   }
-  return <TicketBody line={line.value} initialSide={side} />;
+  return <TicketBody line={line.value} initialSide={side} initialLeverage={leverage} />;
 }
 
-function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side | undefined }) {
+function TicketBody({
+  line,
+  initialSide,
+  initialLeverage,
+}: {
+  line: MarketLine;
+  initialSide: Side | undefined;
+  initialLeverage: number | undefined;
+}) {
   const t = useTicket(line.market);
   const env = useQueryEnv();
   const network = useNetwork();
@@ -89,12 +116,14 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
   const sided = useRef(false);
   const plan = planKey(env.chainId, account.hint?.address, line.marketId);
 
-  // Short / Long on market detail picks the side once; the draft keeps everything else (amount, leverage).
+  // Short / Long (or "Trade this") picks the side — and the leverage when the source knows it — once; the draft keeps
+  // everything else. `setLeverage` clamps to 1…the market's max. The amount is never prefilled (C11).
   useEffect(() => {
-    if (sided.current || !initialSide) return;
+    if (sided.current || (!initialSide && initialLeverage === undefined)) return;
     sided.current = true;
-    if (initialSide !== t.side) t.setSide(initialSide);
-  }, [initialSide, t]);
+    if (initialSide && initialSide !== t.side) t.setSide(initialSide);
+    if (initialLeverage !== undefined && initialLeverage !== t.leverage) t.setLeverage(initialLeverage);
+  }, [initialSide, initialLeverage, t]);
 
   const inFlight = t.trace.events.length > 0;
   const settled = t.trace.events.some((e) => e.stage === "finalized");

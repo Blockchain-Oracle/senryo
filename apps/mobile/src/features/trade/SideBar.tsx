@@ -2,7 +2,8 @@
  * Market detail's sticky bottom (Fomo F32/F35; flow book C2 step 5): when the market isn't open, or the engine is
  * paused, a one-line state banner sits above the buttons; then Short (red, left) and Long (green, right), 54 pt with
  * 12 pt corners, each opening the ticket on its side — the buttons stay live and the ticket names any blocker. The
- * first Mainnet ticket per account passes eligibility first. A market that can't trade here gets one disabled row
+ * terms gate runs first (A11: terms sheet once per account; a guest gets the account sheet carrying the ticket), then
+ * the first Mainnet ticket per account passes eligibility. A market that can't trade here gets one disabled row
  * with a lock and its word instead.
  */
 import type { MarketStatus } from "@senryo/core";
@@ -17,6 +18,7 @@ import { hasConfirmedEligibility } from "~/features/legal/eligibility";
 import { ProtocolBanner, SessionBanner } from "~/features/markets/MarketBanners";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
+import { useTermsGate } from "~/lib/account/terms-gate";
 import { ROUTES, type TicketSide, ticketRoute } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -46,15 +48,21 @@ export function SideBar({
 }) {
   const network = useNetwork();
   const address = useAccount().hint?.address;
+  const gate = useTermsGate();
   const open = (side: TicketSide) => {
     fire("press");
     const ticket = ticketRoute(symbol, side);
-    // FT101 / M13: real money asks once per account, before its first ticket; Practice never does.
-    if (network.key === "mainnet" && address && !hasConfirmedEligibility(address)) {
-      router.push(`${ROUTES.eligibility}?next=${encodeURIComponent(ticket)}` as Href);
-      return;
-    }
-    router.push(ticket);
+    gate(
+      () => {
+        // FT101 / M13: real money asks once per account, before its first ticket; Practice never does.
+        if (network.key === "mainnet" && address && !hasConfirmedEligibility(address)) {
+          router.push(`${ROUTES.eligibility}?next=${encodeURIComponent(ticket)}` as Href);
+          return;
+        }
+        router.push(ticket);
+      },
+      { verb: "trade", next: ticket },
+    );
   };
   return (
     <Bottom>
