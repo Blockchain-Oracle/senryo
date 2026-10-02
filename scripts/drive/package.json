@@ -24,7 +24,9 @@
     "discovery-check": "tsx src/discovery-check.ts",
     "perpl-check": "tsx src/perpl-check.ts",
     "anyasset-check": "tsx src/anyasset-check.ts",
-    "perpl-plan-check": "tsx src/perpl-plan-check.ts"
+    "perpl-plan-check": "tsx src/perpl-plan-check.ts",
+    "deposit-address-check": "tsx src/deposit-address-check.ts",
+    "compose-fork-check": "tsx src/compose-fork-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",

@@ -1,8 +1,8 @@
 /**
  * Swap any ↔ any (B6, routes.md §2): what is paid (any holding — an unverified token sells only, warned), what is
  * received (any verified token), the exact amount, the live best-of quote (Monorail · KyberSwap, pinned routers) and
- * what stops it, in the order checked. "Review" freezes the quote and builds the sends ([pull from trades]? →
- * [approve exact]? → swap) with the fee preflight (B11; defect 12); the slide signs them under one step-up, and the
+ * what stops it, in the order checked. "Review" freezes the quote and builds the sends ([network fee]? → [pull from
+ * trades]? → [approve exact]? → swap) with the fee planned (B11; defect 12: MON short → "~$0.50 → MON" first); the slide signs them under one step-up, and the
  * swap's calldata is re-quoted the moment before signing — accepted only if it still gives the reviewed minimum
  * through the same router (order-book routes go stale within blocks).
  */
@@ -29,7 +29,7 @@ import { useTokenList } from "~/features/money/useTokenList";
 import { useAccount } from "~/lib/account/provider";
 import { useReviewGuard } from "~/lib/review-guard";
 import { nativeMon, receiveCandidates } from "./swap-assets";
-import { monFee, swapProviderName } from "./swap-format";
+import { swapProviderName } from "./swap-format";
 
 /** The quote follows the typing once it pauses this long. */
 const QUOTE_DEBOUNCE_MS = 350;
@@ -169,18 +169,27 @@ export function useSwap(initialPay?: string, initialReceive?: string) {
       const swapSteps: PlannedStep[] = requests.map((request, i) => {
         const last = i === requests.length - 1;
         return {
+          role: "swap" as const,
           action: request.action,
           label: last ? "Swap" : `Approve ${pay.symbol}`,
           request,
           ...(last ? { build: () => requote(ok) } : {}),
         };
       });
-      const steps = pull ? [pull, ...swapSteps] : swapSteps;
-      const fee = await runner.checkFees({ steps });
-      if (!fee.ok) {
-        setProblem(`Add MON for fees · ${monFee(fee.shortWei)} short`);
+      const own = pull ? [pull, ...swapSteps] : swapSteps;
+      // B11: MON short for the fee → "swap ~$0.50 to MON" goes first in the same operation (Details: "Network fee").
+      const walletPart = input.amount < pay.wallet ? input.amount : pay.wallet;
+      const prepared = await runner.prepare({
+        steps: own,
+        reviewedIntent: {},
+        revalidate: async () => undefined,
+        spends: { [pay.key]: walletPart },
+      });
+      if (!prepared.ok) {
+        setProblem(prepared.block);
         return;
       }
+      const steps = prepared.op.steps;
       setReviewed({ pay, receive, amount: input.amount, quote: ok, steps, feeWei: swapGas * maxFee });
     } catch (error) {
       setProblem(
@@ -252,12 +261,6 @@ export function useSwap(initialPay?: string, initialReceive?: string) {
         confirmLabel: "Swap with passkey",
       },
     };
-    const fee = await runner.checkFees(op);
-    if (!fee.ok) {
-      setProblem(`Add MON for fees · ${monFee(fee.shortWei)} short`);
-      setReviewed(undefined);
-      return;
-    }
     await runner.run(op);
   };
 

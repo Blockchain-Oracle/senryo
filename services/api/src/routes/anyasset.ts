@@ -1,9 +1,12 @@
 /**
  * The any-asset routes (public, rate-limited per IP): `GET /v1/holdings`, `GET /v1/swap/quote` (D6) and
- * `GET /v1/bridge/{routes,quote,status}` (D2). A provider that can't answer is 503 UPSTREAM_UNAVAILABLE with a fixed
+ * `GET /v1/bridge/{routes,quote,status}` (D2) and the B4 deposit address (`POST /v1/bridge/deposit-address`,
+ * `GET /v1/bridge/deposit-status`). A provider that can't answer is 503 UPSTREAM_UNAVAILABLE with a fixed
  * line; the full error (which may carry a provider's message) goes to the log only.
  */
 import {
+  bridgeDepositAddressRoute,
+  bridgeDepositStatusRoute,
   bridgeQuoteRoute,
   bridgeRoutesRoute,
   bridgeStatusRoute,
@@ -60,6 +63,22 @@ export function registerAnyAssetRoutes(app: HttpServer, log: Logger, services: A
       .quote({ ...query, sender: getAddress(query.sender) })
       .catch(upstream(log, "bridge quote"));
     return sendRoute(reply, bridgeQuoteRoute, quote);
+  });
+
+  app.post(bridgeDepositAddressRoute.path, { config: BRIDGE_QUOTE_RATE }, async (request, reply) => {
+    const { body } = parseRoute(bridgeDepositAddressRoute, request);
+    const address = await services.bridges
+      .depositAddress({ ...body, recipient: getAddress(body.recipient) })
+      .catch(upstream(log, "deposit address"));
+    return sendRoute(reply, bridgeDepositAddressRoute, address);
+  });
+
+  app.get(bridgeDepositStatusRoute.path, { config: BRIDGE_READ_RATE }, async (request, reply) => {
+    const { query } = parseRoute(bridgeDepositStatusRoute, request);
+    const status = await services.bridges
+      .depositStatus(query.fromChain, query.depositAddress)
+      .catch(upstream(log, "deposit status"));
+    return sendRoute(reply, bridgeDepositStatusRoute, status);
   });
 
   app.get(bridgeStatusRoute.path, { config: BRIDGE_READ_RATE }, async (request, reply) => {

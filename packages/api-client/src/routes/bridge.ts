@@ -208,6 +208,115 @@ export const bridgeStatusRoute = defineRoute({
   response: bridgeStatusSchema,
 });
 
+// ---------------------------------------------------------------- deposit address (B4 without a wallet there)
+
+/**
+ * A deposit address on the other chain for a transfer into the user's Monad wallet (B4 step 4): send the asset there
+ * from any wallet or exchange and it arrives on Monad. Relay's open mode — the address takes later and different-sized
+ * deposits of the same route too (each is re-quoted and filled as its own request), so the address is kept per route
+ * and reused. Nothing is signed by the app. A deposit the route can't fill is refunded to the address it came from.
+ */
+export const bridgeDepositAddressRequestSchema = z.object({
+  /** The other chain (an EVM chain from `/v1/bridge/routes` direction `in`). */
+  fromChain: z.int(),
+  /** The Monad network (Relay serves 143 only). */
+  toChain: chainIdSchema,
+  /** The Monad-side asset. */
+  asset: z.enum(BRIDGE_ASSETS),
+  /** The other chain's asset (default: the route's first). */
+  remote: z.enum(REMOTE_ASSETS).optional(),
+  /** What the user means to send, in the source asset's base units (the quote; the address accepts other amounts). */
+  amount: uintCodec,
+  /** The user's own Monad wallet — the only recipient a deposit address is ever made for. */
+  recipient: addressSchema,
+});
+
+const depositFacts = {
+  fromChain: z.int(),
+  toChain: z.int(),
+  asset: z.enum(BRIDGE_ASSETS),
+};
+
+export const bridgeDepositAddressSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("ok"),
+    at: isoTimeSchema,
+    ...depositFacts,
+    provider: z.literal("relay"),
+    mode: z.literal("open"),
+    remote: remoteTokenSchema,
+    /** Where to send the source asset on `fromChain` (a plain transfer from any wallet or exchange). */
+    depositAddress: z.string(),
+    recipient: addressSchema,
+    amountIn: uintCodec,
+    amountOut: uintCodec,
+    minReceived: uintCodec,
+    out: z.object({ symbol: z.string(), decimals: z.int().nonnegative() }),
+    fees: z.array(bridgeFeeSchema),
+    etaSec: z.int().nonnegative(),
+    /** The quote-time request; a deposit of another amount gets its own (track by `depositAddress`). */
+    requestId: z.string().nullable(),
+    /** The shown rate is refreshed after this; the address itself keeps working. */
+    quoteExpiresAt: unixSecondsSchema,
+    /** The order's own deadline on Relay (refunds included); null when Relay didn't say. */
+    addressExpiresAt: unixSecondsSchema.nullable(),
+    /** `GET` this to follow every deposit made to the address. */
+    statusUrl: z.string(),
+  }),
+  z.object({ status: z.literal("unsupported"), at: isoTimeSchema, ...depositFacts, reason: z.string() }),
+]);
+
+export const bridgeDepositAddressRoute = defineRoute({
+  method: "POST",
+  path: "/v1/bridge/deposit-address",
+  auth: "none",
+  params: undefined,
+  query: undefined,
+  body: bridgeDepositAddressRequestSchema,
+  response: bridgeDepositAddressSchema,
+});
+
+export const bridgeDepositStatusQuerySchema = z.object({
+  fromChain: z.coerce.number().int(),
+  depositAddress: z.string().min(1).max(RECIPIENT_MAX_CHARS),
+});
+
+export const bridgeDepositSchema = z.object({
+  requestId: z.string(),
+  state: z.enum(BRIDGE_STATES),
+  providerStatus: z.string(),
+  /** Source units received at the address, and destination units delivered (null until known). */
+  amountIn: uintCodec.nullable(),
+  amountOut: uintCodec.nullable(),
+  sourceTxHash: z.string().nullable(),
+  destinationTxHash: z.string().nullable(),
+  /** The refund reason or failure, when there is one. */
+  detail: z.string().nullable(),
+  updatedAt: isoTimeSchema.nullable(),
+});
+
+export const bridgeDepositStatusSchema = z.object({
+  depositAddress: z.string(),
+  at: isoTimeSchema,
+  /** Newest first; empty until a deposit is seen. */
+  deposits: z.array(bridgeDepositSchema),
+});
+
+export const bridgeDepositStatusRoute = defineRoute({
+  method: "GET",
+  path: "/v1/bridge/deposit-status",
+  auth: "none",
+  params: undefined,
+  query: bridgeDepositStatusQuerySchema,
+  body: undefined,
+  response: bridgeDepositStatusSchema,
+});
+
+export type BridgeDepositAddressResponse = z.output<typeof bridgeDepositAddressSchema>;
+export type BridgeDepositAddressOk = Extract<BridgeDepositAddressResponse, { status: "ok" }>;
+export type BridgeDeposit = z.output<typeof bridgeDepositSchema>;
+export type BridgeDepositStatus = z.output<typeof bridgeDepositStatusSchema>;
+
 export type BridgeRoutes = z.output<typeof bridgeRoutesSchema>;
 export type BridgeRouteChain = z.output<typeof bridgeRouteChainSchema>;
 export type BridgeQuoteResponse = z.output<typeof bridgeQuoteSchema>;

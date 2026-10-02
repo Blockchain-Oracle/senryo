@@ -216,7 +216,9 @@ Session defaults: 30 min TTL, 5 min idle (`constants.ts:27-28`).
 - **States:** "Enter an amount" · "Preparing order…" · "Slide to long" / "Slide to short · passkey" · one blocker label · "Opening…" · "Not opened · Review again" (never resubmits, Part F1) · "Checking…".
 - **After:** The position appears in Home → Positions · Activity → Trades: "Opened long XAU" · A feed post if public (F4) · The receipt can be shared or opened on the explorer. No push (the trade is synchronous).
 - **Today → gap:**
-  - "Pay with" is missing. The footer shows "$x available ⊕", which leads to Add money (`TicketFooter.tsx:65-83`).
+  - ~~"Pay with" is missing.~~ Built (claude/compose, 2 Oct): "Buying power $x · Pay with AUSD ⌄" over every holding;
+    the shortfall comes from the chosen asset in the same operation — wallet AUSD/USDC moved in, or (Mainnet, gated on
+    the deployed core) a swap to AUSD first (`features/trade/ticket-pay.ts`, `useTicket.ts`); Practice "dollars only".
   - The rail is always `color.primary` (`components/trade/HoldToConfirm.tsx:142`), with no `tone` or `busy` (Part F2).
   - Funding and borrow rates are never shown before a trade; only the liquidation child mentions them (`TicketChildren.tsx:50`).
   - There's no risk card specific to shorts. The accept control reads "Hold · I understand" on a slide (`risk-explainer.tsx:55`).

@@ -6,6 +6,8 @@
  */
 import type {
   BridgeAlternative,
+  BridgeDepositAddressResponse,
+  BridgeDepositStatus,
   BridgeQuoteResponse,
   BridgeRoutes,
   BridgeStatus,
@@ -33,6 +35,7 @@ import { errorText, settleAll } from "../upstream.ts";
 import { acrossQuote, acrossStatus } from "./across.ts";
 import type { AuroraWatcher } from "./aurora.ts";
 import { cctpQuote, cctpStatus } from "./cctp.ts";
+import { relayDepositAddress, relayDeposits } from "./deposit-address.ts";
 import { lifiQuote, lifiStatus } from "./lifi.ts";
 import { relayQuote, relayStatus } from "./relay.ts";
 import type { ProviderQuote, QuoteContext, StatusInput, StatusResult } from "./types.ts";
@@ -69,6 +72,15 @@ export interface BridgeQuoteInput {
   provider?: BridgeProvider | undefined;
 }
 
+export interface DepositAddressInput {
+  fromChain: number;
+  toChain: ChainId;
+  asset: BridgeAsset;
+  remote?: RemoteAsset | undefined;
+  amount: bigint;
+  recipient: Address;
+}
+
 const bad = (message: string) => new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", message);
 
 /** Why a provider's steps can't be signed as given, or null. Monad steps must target pinned contracts only. */
@@ -87,6 +99,7 @@ export class BridgeService {
   constructor(
     private readonly log: Logger,
     private readonly aurora: AuroraWatcher,
+    private readonly relayKey?: string | undefined,
   ) {}
 
   async routes(chainId: ChainId, asset: BridgeAsset, direction: BridgeDirection): Promise<BridgeRoutes> {
@@ -202,6 +215,79 @@ export class BridgeService {
       expiresAt: best.expiresAt,
       alternatives,
     };
+  }
+
+  /**
+   * A Relay deposit address on `fromChain` for the user's own Monad wallet (B4 step 4, open mode). The route must be a
+   * listed inbound route; Relay is asked whatever providers the route lists (its solvers fill the deposit address even
+   * where another bridge quotes the wallet-signed transfer best). Mainnet only: Relay doesn't serve 10143.
+   */
+  async depositAddress(input: DepositAddressInput): Promise<BridgeDepositAddressResponse> {
+    const at = new Date().toISOString();
+    const base = { at, fromChain: input.fromChain, toChain: input.toChain, asset: input.asset };
+    const unsupported = (reason: string): BridgeDepositAddressResponse => ({ status: "unsupported", ...base, reason });
+    if (input.toChain !== MAINNET_CHAIN_ID) return unsupported("Mainnet only");
+    const route = bridgeRoute(input.toChain, input.asset, "in", input.fromChain);
+    const chain = bridgeChain(input.fromChain);
+    if (!route || !chain) return unsupported(`No route for ${input.asset} from this chain`);
+    if (chain.vm !== "evm" && !this.relayKey) return unsupported("Deposit address needs a Relay key");
+    const remoteAsset = input.remote ?? route.remote[0];
+    if (!remoteAsset || !route.remote.includes(remoteAsset)) return unsupported(`${input.remote} is not served here`);
+    const remoteToken = chain.tokens[remoteAsset];
+    const monadToken = MONAD_BRIDGE_ASSETS[input.toChain][input.asset];
+    if (!remoteToken || !monadToken) return unsupported("asset not listed on this chain");
+    if (input.amount <= 0n) throw bad("amount must be positive");
+    const ctx: QuoteContext = {
+      monadChainId: input.toChain,
+      direction: "in",
+      asset: input.asset,
+      remoteAsset,
+      remoteChain: chain,
+      from: { chainId: input.fromChain, token: remoteToken },
+      to: { chainId: input.toChain, token: monadToken },
+      amount: input.amount,
+      sender: input.recipient,
+      recipient: input.recipient,
+    };
+    let q: Awaited<ReturnType<typeof relayDepositAddress>>;
+    try {
+      q = await relayDepositAddress(ctx, input.recipient, this.relayKey);
+    } catch (error) {
+      const text = errorText(error);
+      this.log.warn({ err: text, fromChain: input.fromChain, asset: input.asset }, "deposit address failed");
+      // Relay: "Amount must be greater than 50000 for deposit address quotes" (AMOUNT_TOO_LOW) — B4's below-minimum
+      // state, named before any address is shown.
+      const low = /amount must be greater|amount_too_low/i.test(text);
+      return unsupported(low ? "Below minimum" : "No deposit address for this route");
+    }
+    return {
+      status: "ok",
+      ...base,
+      provider: "relay",
+      mode: "open",
+      remote: { asset: remoteAsset, ...remoteToken },
+      depositAddress: q.depositAddress,
+      recipient: input.recipient,
+      amountIn: input.amount,
+      amountOut: q.amountOut,
+      minReceived: q.minReceived,
+      out: q.out,
+      fees: q.fees,
+      etaSec: q.etaSec,
+      requestId: q.requestId,
+      quoteExpiresAt: q.quoteExpiresAt,
+      addressExpiresAt: q.addressExpiresAt,
+      statusUrl: `/v1/bridge/deposit-status?fromChain=${input.fromChain}&depositAddress=${q.depositAddress}`,
+    };
+  }
+
+  /** Every deposit Relay has seen at a deposit address (newest first). */
+  async depositStatus(fromChain: number, depositAddress: string): Promise<BridgeDepositStatus> {
+    const chain = bridgeChain(fromChain);
+    if (!chain) throw bad("unknown chain");
+    if (!RECIPIENT[chain.vm].test(depositAddress)) throw bad(`not a ${chain.vm} address`);
+    const deposits = await relayDeposits(depositAddress, this.relayKey);
+    return { depositAddress, at: new Date().toISOString(), deposits };
   }
 
   async status(route: BridgeProvider, id: string, fromChain: number, toChain?: number): Promise<BridgeStatus> {

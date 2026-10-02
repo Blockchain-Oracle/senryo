@@ -1,0 +1,123 @@
+/**
+ * The ticket's "Pay with" (flow book C3 step 4; plan §0.9 Ticket "Buying power P$x · Pay with AUSD ⌄"): buying power
+ * is Free to trade plus what the chosen asset brings. Whatever Free to trade doesn't cover (margin + fee) comes from
+ * the chosen asset inside the same operation — wallet AUSD / USDC moved to the trading account ([approve] → deposit),
+ * or, on Mainnet once the core is deployed, any other verified holding swapped to AUSD first (its minimum covers the
+ * shortfall; impact rule; re-quoted before it signs) — then the open. Practice has no aggregator: dollars only, and the
+ * chip says so. A swap leg always asks for the passkey (rule 11), which signs every leg.
+ */
+import { addressOf, erc20Abi, isDeployed } from "@senryo/chain";
+import { type ChainId, MAINNET_CHAIN_ID } from "@senryo/config";
+import { type ComposedStep, collateralTokenOf, moveToTradingSteps, type QueryEnv } from "@senryo/query";
+import { useState } from "react";
+import type { MoneyAsset } from "~/features/money/assets";
+import {
+  type PaySwap,
+  payIntent,
+  paySwapSteps,
+  paysDirectly,
+  payWithReason,
+  practiceNote,
+  swappableUsd6,
+  usePaySwap,
+} from "~/features/money/pay-with";
+import { useMoneyAssets } from "~/features/money/useMoneyAssets";
+
+/** One cent over the shortfall: the core's own rounding never leaves the open a hair short. */
+const CENT_USD6 = 10_000n;
+
+export interface TicketPay {
+  /** The chosen asset (default: AUSD — the trading balance, then wallet AUSD). */
+  payWith: MoneyAsset | undefined;
+  choose: (key: string) => void;
+  /** Free to trade + what the chosen asset can bring (usd6), when known. */
+  buyingPowerUsd6: bigint | undefined;
+  /** AUSD (or USDC) the composed steps add to Free to trade before the open (usd6). */
+  incomingUsd6: bigint;
+  /** What Free to trade doesn't cover (usd6, 0 when it does). */
+  shortfallUsd6: bigint;
+  swap: PaySwap;
+  /** A swap leg is composed (passkey). */
+  swapping: boolean;
+  /** Why the chosen asset can't pay for this order right now (one line), when it can't. */
+  block: string | undefined;
+  /** Practice's ≤ 4 words on the chip. */
+  note: string | undefined;
+  reasonFor: (asset: MoneyAsset) => string | undefined;
+  assets: readonly MoneyAsset[];
+  other: readonly MoneyAsset[];
+  /** The facts the reviewed intent adds about the payment. */
+  intent: Record<string, string>;
+  /** The composed steps that come before the open ([swap] → [approve] → deposit), read fresh. */
+  steps: (env: QueryEnv, owner: `0x${string}`) => Promise<ComposedStep[]>;
+}
+
+export function useTicketPay(
+  chainId: ChainId,
+  owner: `0x${string}` | undefined,
+  freeToTradeUsd6: bigint | undefined,
+  needUsd6: bigint,
+): TicketPay {
+  const money = useMoneyAssets();
+  const [payKey, setPayKey] = useState<string>();
+  const coreReady = isDeployed(chainId, "SenryoCore");
+  const ausd = money.assets.find((a) => a.collateral === "AUSD");
+  const payWith = (payKey ? money.find(payKey) : undefined) ?? ausd;
+  const shortfall =
+    freeToTradeUsd6 !== undefined && needUsd6 > freeToTradeUsd6 ? needUsd6 - freeToTradeUsd6 + CENT_USD6 : 0n;
+  const direct = payWith !== undefined && paysDirectly(payWith, "trade");
+  const swap = usePaySwap(chainId, payWith && !direct && coreReady ? payWith : undefined, shortfall, owner);
+  const swapping = !direct && shortfall > 0n && payWith !== undefined;
+  const brings = !payWith ? 0n : direct ? payWith.wallet : swappableUsd6(payWith);
+  const incoming =
+    shortfall === 0n || !payWith
+      ? 0n
+      : direct
+        ? payWith.wallet >= shortfall
+          ? shortfall
+          : 0n
+        : swap.status === "ok"
+          ? swap.quote.quote.minOut
+          : 0n;
+  const block =
+    shortfall === 0n || !payWith
+      ? undefined
+      : direct
+        ? payWith.wallet >= shortfall
+          ? undefined
+          : `Not enough ${payWith.symbol}`
+        : swap.status === "blocked"
+          ? swap.reason
+          : swap.status === "ok"
+            ? undefined
+            : "Getting a quote";
+  return {
+    payWith,
+    choose: setPayKey,
+    buyingPowerUsd6: freeToTradeUsd6 === undefined ? undefined : freeToTradeUsd6 + brings,
+    incomingUsd6: incoming,
+    shortfallUsd6: shortfall,
+    swap,
+    swapping,
+    block,
+    note: chainId === MAINNET_CHAIN_ID ? undefined : practiceNote("trade"),
+    reasonFor: (a) => payWithReason(a, "trade", chainId),
+    assets: money.assets,
+    other: money.other,
+    intent: payWith && shortfall > 0n ? { ...payIntent(payWith, swap), movedUsd6: incoming.toString() } : {},
+    steps: async (env, me) => {
+      if (!payWith || shortfall === 0n || incoming === 0n) return [];
+      const symbol = direct && payWith.collateral ? payWith.collateral : "AUSD";
+      const allowance = await env.read.readContract({
+        address: collateralTokenOf(chainId, symbol),
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [me, addressOf(chainId, "SenryoCore")],
+        blockTag: "latest",
+      });
+      const move = moveToTradingSteps(chainId, symbol, incoming, allowance);
+      if (direct || swap.status !== "ok") return move;
+      return [...(await paySwapSteps(env, me, payWith, swap.quote)), ...move];
+    },
+  };
+}

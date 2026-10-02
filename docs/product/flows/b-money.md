@@ -192,9 +192,14 @@ use the same pickers, sheets and receipts as AUSD.
   - Failed: reason + source and destination hashes.
   - Pending after kill: Activity row with a spinner.
 - **After:** timeline → success (3 facts: received, route, time) → Activity "Bridged 50 USDC from Base" → push on arrival.
-- **Today → gap:**
-  - Placeholder screens (`m/app/fund/qr/[family].tsx:31-36`, `m/app/fund/deposit/[id].tsx:3-10`). The Add money row says "Soon" (`m/app/(sheets)/add-money.tsx:35-41`).
-  - Only the `aurora_deposits` table exists (`services/common/migrations/0002_api.ts:111-124`). No quote proxy yet (D2).
+- **Built (claude/compose, 2 Oct):** step 4 is a Relay open-mode deposit address (`POST /v1/bridge/deposit-address`,
+  `GET /v1/bridge/deposit-status`; `m/features/fund/BridgeIn.tsx`, `DepositAddress.tsx`): issued only for the user's own
+  wallet (Relay's order must pay exactly that wallet, asset and chain or it is refused), refunds go back to the depositor
+  (`refundTo` = the origin's native placeholder, `recoveryAddress` = the same key), the address is kept per route and
+  reused (open mode takes later deposits), the timeline is polled by address, issuing records an Arriving row.
+  (P): "Mainnet only" (Relay has no test network). Solana / Bitcoin / Tron / TON origins: Relay with `RELAY_API_KEY`, or
+  Aurora's persistent addresses once its Monad incident clears (routes.md §5).
+- **Still open:** XAUt0 has no deposit address (no Relay solver for XAUT) — its row keeps the wallet-signed quote only.
 - **Acceptance:**
   - [ ] (M) A live 10 USDC run from Base via Relay arrives in Assets, with Activity and push. A resumed kill mid-bridge shows the same row.
   - [ ] A below-minimum amount is blocked before the deposit address is shown.
@@ -404,7 +409,15 @@ use the same pickers, sheets and receipts as AUSD.
   - Top-up refused: "Fee top-up unavailable · add MON".
   - Daily cap reached: "Fee limit reached · try tomorrow".
 - **After:** the fee is in the receipt. The top-up is its own Activity row ("Network fee top-up").
-- **Today → gap:**
+- **Built (claude/compose, 2 Oct):** `planNetworkFee` (`q/compose.ts`) keeps a self-sustaining reserve — what one
+  top-up costs (approve + aggregator swap × today's max fee). An operation that would leave less MON prepends
+  "~$0.50 of a dollar asset → MON" as steps of the SAME operation (Details "Network fee"), waits 3 blocks for the new
+  MON, then runs; an operation the MON already pays for is never blocked; below the top-up's own fee (a zero-MON wallet)
+  it names the MON it needs. Send, withdraw, swap, pool deposit and the ticket (Mainnet) all plan it with the review.
+  Fork-checked: `scripts/drive` `compose-fork-check`.
+- **Still open:** the zero-MON bootstrap needs the sponsor (BD-4: `StarterDrip` on 143 + `topup.ts` eligibility on wallet
+  value) — an EOA can't pay for its own first swap.
+- **Was (before claude/compose):**
   - The (M) top-up can't work: it needs equity ≥ $10 (`services/api/src/topup.ts:41`, `cfg/gas.ts:236`) and there is no 143 address book (`packages/contracts/src/addresses/index.ts`) (#4).
   - `SwapTicket` has no preflight (`useCollateralSwap.ts:34`) (#12).
   - "Gas" in user copy (`m/app/(sheets)/add-money.tsx:65`, `m/features/fund/MonadInbox.tsx:153`, `m/features/withdraw/words.ts:8`).
@@ -563,9 +576,16 @@ use the same pickers, sheets and receipts as AUSD.
 ## UNDEFINED (research tasks, not user questions)
 
 1. **Holdings endpoint shape:** `/v1/holdings` response, cache TTL, HyperSync token scope. The Envio token is assumed to cover 143/10143 HyperSync.
-2. **Are user EOAs 7702-delegated on Mainnet?** This decides whether the 10 MON floor applies to every MON send (D-145/D-155, `docs/plan/decisions.md:84,94`).
+2. ~~**Are user EOAs 7702-delegated on Mainnet?**~~ **Settled 2 Oct (claude/compose):** no. The app never signs an
+   EIP-7702 delegation for a user account (`signDelegation` has no caller in `apps/`; D-145/D-155 were the sponsor spike),
+   so accounts are plain passkey EOAs: the 10 MON floor binds only a second MON value spend within 3 blocks — which a
+   composed operation is. The existing reserve on every native send is kept, and the composer puts MON-spending steps
+   first (`packages/query/src/compose.ts` `assertMonOrder`).
 3. **Wrong-chain recovery:** the same key controls the address on other EVM chains, but the user has no gas there. Candidates: a gasless permit route or phrase export (A6).
-4. **"Send from a connected wallet"** for B4 (WalletConnect or none) vs deposit-address-only. Relay deposit-address mode is unverified.
+4. ~~**"Send from a connected wallet"** for B4~~ **Settled 2 Oct:** deposit address. Relay's open-mode deposit
+   addresses work into Monad for USDC, AUSD, MON and USDT0 from every EVM chain in the route table without a key (live,
+   `scripts/drive` `deposit-address-check`); Solana / Bitcoin origins need `RELAY_API_KEY`. A connected wallet stays out
+   of scope.
 5. **Ramp purchase status** with the keyless hosted page (what `finalUrl` returns). The React Native embed: `WebView` vs browser.
 6. **Practice swap:** no AUSD/USDC pool on 10143 (`m/app/fund/swap.tsx:47-49`). Deploy a practice pool or keep the lock.
 7. **Exchange Monad support list** beyond Coinbase USDC, and the exchange tips per asset.

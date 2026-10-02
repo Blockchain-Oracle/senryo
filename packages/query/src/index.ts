@@ -3,6 +3,7 @@ export * from "./anyasset.ts";
 export { type Capability, type CapabilityFacts, capabilitiesOf } from "./capabilities.ts";
 export * from "./card.ts";
 export * from "./collateral.ts";
+export * from "./compose.ts";
 export * from "./constants.ts";
 export * from "./discovery.ts";
 export * from "./discovery-feeds.ts";

@@ -5,6 +5,7 @@
  * `resetKey` is the reviewed intent (minimum included), so a changed quote can never ride a slide in progress.
  */
 import { ids } from "@senryo/identity";
+import { stepsLine } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
@@ -43,7 +44,7 @@ export function SwapReview({ s, busy, onConfirm }: { s: SwapState; busy: boolean
           mark={<EntityMark id={ids.provider(q.quote.provider)} label={provider} size={SIZE.markChip} decorative />}
         />
         <ReviewRow label="Network fee" value={`≈ ${monFee(r.feeWei)}`} />
-        <ReviewRow label="Steps" value={r.steps.map((x) => x.label).join(" · ")} />
+        <ReviewRow label="Steps" value={stepsLine(r.steps)} />
       </ReviewRows>
       {!r.pay.verified ? (
         <Text style={[TYPE.rowDetail, { color: color.warn }]}>Unverified token · sell only</Text>

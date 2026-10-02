@@ -2,7 +2,7 @@ import { blockerCopy, notional } from "@senryo/core";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { ChevronDown, CirclePlus } from "~/components/kit/symbols";
+import { ChevronDown } from "~/components/kit/symbols";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
@@ -22,8 +22,8 @@ const FIX_LABEL: Record<Exclude<Fix, "createAccount">, string> = {
 };
 
 /**
- * The ticket's fixed action zone (Fomo F37/F41/F42; flow book C3 steps 4–7): "Buying power P$212 ⊕" with Details at
- * the right; one line naming the first blocker (core chain order, unchanged) with its fix as a link, or why a slide
+ * The ticket's fixed action zone (Fomo F37/F41/F42; flow book C3 steps 4–7): "Buying power P$212 · Pay with AUSD ⌄"
+ * (any holding; Practice says "dollars only") with Details at the right; one line naming the first blocker (core chain order, unchanged) with its fix as a link, or why a slide
  * was just reset; then the slide in the side's colour ("Slide to short", "… · passkey" above the session's limits),
  * busy while network fees are prepared. A guest gets one "Create an account to trade" button and the typed order is
  * kept through sign-up. VoiceOver confirms through Details, which has an explicit Open button.
@@ -37,6 +37,7 @@ export function TicketFooter({
   onReset,
   onConfirm,
   onDetails,
+  onPayWith,
 }: {
   t: TicketModel;
   line: MarketLine;
@@ -47,6 +48,8 @@ export function TicketFooter({
   onReset: () => void;
   onConfirm: () => void;
   onDetails: () => void;
+  /** Opens the "Pay with" picker (any holding; Practice: dollars only). */
+  onPayWith: () => void;
 }) {
   const { color } = useTheme();
   const gate = useTermsGate();
@@ -59,28 +62,45 @@ export function TicketFooter({
       ? `You're ${t.held.isLong ? "long" : "short"} ${usd(notional(t.held.size, line.price18))}`
       : copy?.title;
   const guest = commit.fix === "createAccount";
+  const power = t.pay.buyingPowerUsd6 !== undefined ? usd(t.pay.buyingPowerUsd6) : "—";
+  // Paying with another asset that can't cover the shortfall right now names why, ahead of "Insufficient funds".
+  const payWhy = t.blocker?.code === "INSUFFICIENT_FREE" && t.pay.shortfallUsd6 > 0n ? t.pay.block : undefined;
   const fix = commit.fix && commit.fix !== "createAccount" ? commit.fix : undefined;
-  const why = guest ? undefined : copy ? (fix ? title : [title, copy.action].filter(Boolean).join(" · ")) : note;
+  const why = guest
+    ? undefined
+    : (payWhy ?? (copy ? (fix ? title : [title, copy.action].filter(Boolean).join(" · ")) : note));
   return (
     <View style={styles.zone}>
       <View style={styles.row}>
         <Pressable
           onPress={() => {
             fire("tick");
-            addMoney();
+            onPayWith();
           }}
           accessibilityRole="button"
-          accessibilityLabel={`Buying power ${t.snapshot ? usd(t.snapshot.freeToTrade) : "unknown"}. Add money`}
+          accessibilityLabel={`Buying power ${power}. Pay with ${t.pay.payWith?.symbol ?? "AUSD"}. Change`}
           hitSlop={SPACE.sm}
-          style={styles.inline}
+          style={[styles.inline, styles.flex]}
         >
-          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text2 }]}>
-            Buying power{" "}
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.ink }]}>
-              {t.snapshot ? usd(t.snapshot.freeToTrade) : "—"}
+          <View style={styles.flex}>
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              numberOfLines={1}
+              style={[TYPE.rowDetail, { color: color.text2 }]}
+            >
+              Buying power{" "}
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.ink }]}>
+                {power}
+              </Text>
+              {" · "}Pay with {t.pay.payWith?.symbol ?? "AUSD"}
             </Text>
-          </Text>
-          <CirclePlus size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text2} />
+            {t.pay.note ? (
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+                {t.pay.note}
+              </Text>
+            ) : null}
+          </View>
+          <ChevronDown size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text2} />
         </Pressable>
         <Pressable
           onPress={() => {

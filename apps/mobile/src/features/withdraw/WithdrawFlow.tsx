@@ -6,7 +6,7 @@
  * and withdraw" as one operation), the quote, one passkey, the timeline. Bank: pending Ramp's off-ramp key.
  */
 import { isDeployed } from "@senryo/chain";
-import { useAccountRisk, useQueryEnv } from "@senryo/query";
+import { stepsLine, useAccountRisk, useQueryEnv } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -20,7 +20,7 @@ import { amountOf } from "~/features/money/format";
 import { RECIPIENT_WORDS, useRecipientCheck } from "~/features/money/recipient";
 import { Scanner } from "~/features/money/Scanner";
 import { useMoneyAssets } from "~/features/money/useMoneyAssets";
-import { useMoneyOperation } from "~/features/money/useMoneyOperation";
+import { useMoneyOperation, usePreparedOperation } from "~/features/money/useMoneyOperation";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { AmountStep } from "~/features/send/AmountStep";
 import { MoveReview } from "~/features/send/MoveReview";
@@ -74,10 +74,21 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
   const plan = useChainPlan(sheet === "chain" ? target : undefined, me);
   const targetKey = target ? [target.asset.key, target.amount, target.chain.chainId, target.recipient].join(":") : "";
   const guard = useReviewGuard(sheet === "chain" ? targetKey : (reviewed?.key ?? ""));
+  // B11: each review plans its network fee — MON on hand, or a "~$0.50 → MON" step first in Details.
+  const preparedMove = usePreparedOperation(monad, reviewed?.key, () =>
+    reviewed ? moveOperation(env, me, reviewed, network.name, known, guard) : undefined,
+  );
+  const chainReady = sheet === "chain" && typeof plan === "object" ? plan : undefined;
+  const preparedChain = usePreparedOperation(
+    bridge,
+    chainReady ? `${targetKey}:${chainReady.bridge.minReceived}:${chainReady.swap?.quote.minOut ?? ""}` : undefined,
+    async () => (chainReady ? chainOp(chainReady) : undefined),
+  );
+  const moveSteps = preparedMove.data?.ok ? preparedMove.data.op.steps : reviewed?.steps;
   const fee = useQuery({
-    queryKey: ["withdraw-fee", reviewed?.key ?? ""],
-    queryFn: () => feeEstimate(env, me, reviewed as ReviewedMove),
-    enabled: reviewed !== undefined && !practice,
+    queryKey: ["withdraw-fee", reviewed?.key ?? "", moveSteps?.length ?? 0],
+    queryFn: () => feeEstimate(env, me, moveSteps ?? []),
+    enabled: moveSteps !== undefined && !practice,
     staleTime: FEE_STALE_MS,
   });
 
@@ -108,6 +119,17 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
       setSheet("chain");
     }
   };
+  /** The reviewed withdrawal to another chain as one operation (the source re-checked before its first step). */
+  async function chainOp(p: ChainPlan) {
+    const steps = await chainSteps(env, me, p, bitmap);
+    const op = chainOperation(p, steps, network.name, async (step) => {
+      guard();
+      if (step === 0) await checkSource(env, me, p.asset, p.amount);
+      guard();
+    });
+    const split = p.asset.wallet < p.amount ? p.asset.wallet : p.amount;
+    return { ...op, spends: { [p.asset.key]: split } };
+  }
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
     try {
@@ -123,22 +145,15 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
   const confirmMonad = () =>
     run(async () => {
       if (!reviewed) return;
-      const op = moveOperation(env, me, reviewed, network.name, known, guard);
-      const fees = await monad.checkFees(op);
-      if (!fees.ok) return setBlock("Add MON for fees");
-      await monad.run(op);
+      const ready = preparedMove.data ?? (await preparedMove.refetch()).data;
+      if (!ready?.ok) return setBlock(ready?.block ?? "Couldn’t prepare it");
+      await monad.run(ready.op);
     });
   const confirmChain = (p: ChainPlan) =>
     run(async () => {
-      const steps = await chainSteps(env, me, p, bitmap);
-      const op = chainOperation(p, steps, network.name, async (step) => {
-        guard();
-        if (step === 0) await checkSource(env, me, p.asset, p.amount);
-        guard();
-      });
-      const fees = await bridge.checkFees(op);
-      if (!fees.ok) return setBlock("Add MON for fees");
-      await bridge.run(op);
+      const ready = preparedChain.data ?? (await bridge.prepare(await chainOp(p)));
+      if (!ready.ok) return setBlock(ready.block);
+      await bridge.run(ready.op);
     });
   const done = () => {
     monad.reset();
@@ -227,14 +242,15 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
       >
         <MoveReview
           move={reviewed}
+          steps={moveSteps}
           runner={monad}
           avatar={null}
           fee={fee.data}
           practice={practice}
           network={network.name}
           warnings={warnings}
-          block={block}
-          busy={busy}
+          block={block ?? (preparedMove.data && !preparedMove.data.ok ? preparedMove.data.block : undefined)}
+          busy={busy || (preparedMove.isFetching && !practice)}
           words={WITHDRAW_WORDS}
           onConfirm={() => void confirmMonad()}
           onDone={done}
@@ -253,7 +269,12 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
           target={target}
           plan={plan}
           runner={bridge}
-          block={block}
+          steps={
+            preparedChain.data?.ok && preparedChain.data.op.steps.length > 1
+              ? stepsLine(preparedChain.data.op.steps)
+              : undefined
+          }
+          block={block ?? (preparedChain.data && !preparedChain.data.ok ? preparedChain.data.block : undefined)}
           busy={busy}
           onConfirm={(p) => void confirmChain(p)}
           onDone={done}

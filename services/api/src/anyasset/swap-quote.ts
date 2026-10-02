@@ -31,6 +31,8 @@ export interface SwapQuoteDeps {
   read: (chainId: ChainId) => ReadClient;
   tokenList: TokenListService;
   reference: ReferencePrices;
+  /** Ask only these aggregators (default: every one). The fork checks quote AMM-only routes through KyberSwap. */
+  providers?: readonly SwapProvider[] | undefined;
 }
 
 export interface SwapQuoteInput {
@@ -83,7 +85,8 @@ export class SwapQuoteService {
     if (input.amount <= 0n) throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "amount must be positive");
     const [from, to] = await Promise.all([this.token(chainId, input.from), this.token(chainId, input.to)]);
     const request: QuoteRequest = { ...input, amountIn: input.amount, decimalsIn: from.decimals };
-    const settled = await settleAll(PROVIDERS.map(([name, run]) => [name, () => run(request)] as const));
+    const asked = PROVIDERS.filter(([name]) => !this.deps.providers || this.deps.providers.includes(name));
+    const settled = await settleAll(asked.map(([name, run]) => [name, () => run(request)] as const));
     const alternatives: SwapAlternative[] = [];
     const usable: Candidate[] = [];
     for (const result of settled) {

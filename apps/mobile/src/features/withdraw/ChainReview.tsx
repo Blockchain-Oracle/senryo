@@ -73,6 +73,7 @@ export function ChainReview({
   target,
   plan,
   runner,
+  steps,
   block,
   busy,
   onConfirm,
@@ -82,6 +83,8 @@ export function ChainReview({
   target: ChainTarget | undefined;
   plan: ChainPlan | "quoting" | string;
   runner: MoneyOperationRunner;
+  /** The prepared steps line ("Network fee · Swap to USDC · Send to Base"), when it has more than one step. */
+  steps?: string | undefined;
   block: string | undefined;
   busy: boolean;
   onConfirm: (plan: ChainPlan) => void;
@@ -161,7 +164,11 @@ export function ChainReview({
                 />
               }
             />
-            {ok.swap ? <ReviewRow label="Steps" value={`Swap to USDC · Send to ${target.chain.name}`} /> : null}
+            {steps ? (
+              <ReviewRow label="Steps" value={steps} />
+            ) : ok.swap ? (
+              <ReviewRow label="Steps" value={`Swap to USDC · Send to ${target.chain.name}`} />
+            ) : null}
           </>
         ) : (
           <ReviewRow label="Quote" value={reason ?? "Getting a quote"} tone={plan === "quoting" ? undefined : "warn"} />

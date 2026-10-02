@@ -50,6 +50,8 @@ export interface ApiSecrets {
   alchemyKey: string | undefined;
   /** Aurora (NEAR Intents) Studio key — incident feed and, later, quotes; unset → Aurora reports `no_key`. */
   auroraKey: string | undefined;
+  /** Relay API key — deposit addresses from Solana/Bitcoin origins and the `/requests/v3` read; unset → EVM origins only. */
+  relayKey: string | undefined;
 }
 
 export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
@@ -64,6 +66,7 @@ export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
       hypersyncToken: readSecret("HYPERSYNC_API_TOKEN"),
       alchemyKey: readSecret("ALCHEMY_API_KEY"),
       auroraKey: readSecret("AURORA_API_KEY"),
+      relayKey: readSecret("RELAY_API_KEY"),
     },
   };
 }

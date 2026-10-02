@@ -20,7 +20,7 @@ import { type MoneyAsset, spendableOf } from "~/features/money/assets";
 import { amountOf } from "~/features/money/format";
 import { RECIPIENT_WORDS, useRecipientCheck } from "~/features/money/recipient";
 import { useMoneyAssets } from "~/features/money/useMoneyAssets";
-import { useMoneyOperation } from "~/features/money/useMoneyOperation";
+import { useMoneyOperation, usePreparedOperation } from "~/features/money/useMoneyOperation";
 import { SEND_WORDS } from "~/features/withdraw/words";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES, withdrawRoute } from "~/lib/constants/routes";
@@ -59,10 +59,16 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
     (assetKey ? money.find(assetKey) : undefined) ??
     (recipient?.payment?.token ? money.find(recipient.payment.token) : undefined) ??
     money.assets[0];
+  // B11: the network fee is planned with the review — MON on hand, or a "~$0.50 → MON" step first in Details.
+  const prepared = usePreparedOperation(runner, reviewed?.key, () =>
+    reviewed ? moveOperation(env, me, reviewed, network.name, known, guard) : undefined,
+  );
+  const plan = prepared.data;
+  const steps = plan?.ok ? plan.op.steps : reviewed?.steps;
   const fee = useQuery({
-    queryKey: ["send-fee", reviewed?.key ?? ""],
-    queryFn: () => feeEstimate(env, me, reviewed as ReviewedMove),
-    enabled: reviewed !== undefined && !practice,
+    queryKey: ["send-fee", reviewed?.key ?? "", steps?.length ?? 0],
+    queryFn: () => feeEstimate(env, me, steps ?? []),
+    enabled: steps !== undefined && !practice,
     staleTime: FEE_STALE_MS,
   });
 
@@ -96,13 +102,12 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
     if (!reviewed) return;
     setBusy(true);
     try {
-      const op = moveOperation(env, me, reviewed, network.name, known, guard);
-      const fees = await runner.checkFees(op);
-      if (!fees.ok) {
-        setBlock("Add MON for fees");
+      const ready = prepared.data ?? (await prepared.refetch()).data;
+      if (!ready?.ok) {
+        setBlock(ready?.block ?? "Couldn’t prepare the send");
         return;
       }
-      await runner.run(op);
+      await runner.run(ready.op);
     } catch (error) {
       setBlock(error instanceof Error ? error.message.split("\n")[0] : "Couldn’t prepare the send");
     } finally {
@@ -172,14 +177,15 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
       >
         <MoveReview
           move={reviewed}
+          steps={steps}
           runner={runner}
           avatar={recipient?.avatar ?? null}
           fee={fee.data}
           practice={practice}
           network={network.name}
           warnings={warnings}
-          block={block}
-          busy={busy}
+          block={block ?? (plan && !plan.ok ? plan.block : undefined)}
+          busy={busy || (prepared.isFetching && !practice)}
           words={SEND_WORDS}
           onConfirm={() => void confirm()}
           onDone={done}

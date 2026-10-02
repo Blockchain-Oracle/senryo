@@ -4,7 +4,7 @@
  * in spec order; and the send — `increase` through `@senryo/chain` with the scoped signer (the session policy sees
  * market room + equity, so an in-scope open signs without a step-up; D-037 Face ID is the policy's call).
  */
-import { authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
+import { authFailureCopy, classifyAuthError, isSilent, SESSION_MOVE_CAP_USD6 } from "@senryo/account";
 import { pinRead, readAccountSnapshot, readMarketRisk, readPositions, type Sender } from "@senryo/chain";
 import { MAINNET_CHAIN_ID, positionCount } from "@senryo/config";
 import {
@@ -22,10 +22,13 @@ import {
   type TradeBlocker,
 } from "@senryo/core";
 import {
+  type ComposedStep,
   increaseRequest,
   type LiveMarket,
   riskViewOf,
+  runOperationSteps,
   TRADE_SLIPPAGE_BPS,
+  type TrackedResult,
   useAccountRisk,
   useCalendar,
   useGasBalance,
@@ -40,6 +43,7 @@ import { onlineManager } from "@tanstack/react-query";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 import { applyKey, type KeypadKey } from "~/components/trade/Keypad";
+import { type MoneyOperation, useMoneyOperation } from "~/features/money/useMoneyOperation";
 import { useAccount } from "~/lib/account/provider";
 import { stepUpSender, userSender } from "~/lib/account/sender";
 import { activeNetwork } from "~/lib/network";
@@ -48,7 +52,8 @@ import { useReviewGuard } from "~/lib/review-guard";
 import { openConfirmLevel } from "./confirm-level";
 import { draftKey, type Side, useTicketDraft } from "./draft";
 import { planKey, usePlannedTriggers } from "./planned-triggers";
-import { useGasTopUp } from "./useGasTopUp";
+import { useTicketPay } from "./ticket-pay";
+import { useEnsureGas, useGasTopUp } from "./useGasTopUp";
 
 export type { Side };
 export const DEFAULT_LEVERAGE = 5;
@@ -88,9 +93,20 @@ export function useTicket(market: LiveMarket) {
   const base = snapshot
     ? { market: market.risk, book: market.book, pv: market.pv, account: riskViewOf(snapshot), position: held, isLong }
     : undefined;
-  const preview: IncreasePreview | undefined =
+  const own: IncreasePreview | undefined =
     base && notionalUsd6 > 0n ? previewIncrease({ ...base, notionalUsd6 }) : undefined;
-  const maxAmountUsd6 = base ? maxIncreaseNotional(base) / BigInt(leverage) : 0n;
+  // "Pay with" (C3 step 4): what Free to trade doesn't cover comes from the chosen asset inside the same operation.
+  const pay = useTicketPay(env.chainId, address, snapshot?.freeToTrade, own ? own.marginUsd6 + own.feeUsd6 : 0n);
+  const funded = (extra: bigint) =>
+    base && extra > 0n
+      ? { ...base, account: { ...base.account, freeToTrade: base.account.freeToTrade + extra } }
+      : base;
+  const paid = funded(pay.incomingUsd6);
+  const preview: IncreasePreview | undefined =
+    paid && notionalUsd6 > 0n && pay.incomingUsd6 > 0n ? previewIncrease({ ...paid, notionalUsd6 }) : own;
+  const reach = funded(pay.buyingPowerUsd6 !== undefined && snapshot ? pay.buyingPowerUsd6 - snapshot.freeToTrade : 0n);
+  const maxAmountUsd6 = reach ? maxIncreaseNotional(reach) / BigInt(leverage) : 0n;
+  const mainnet = env.chainId === MAINNET_CHAIN_ID;
 
   const nowSec = BigInt(Date.now()) / MS_PER_SECOND;
   const opensAt =
@@ -109,8 +125,10 @@ export function useTicket(market: LiveMarket) {
   const gasShort = gasBalance !== undefined && needWei !== undefined && gasBalance < needWei;
   // A refused top-up blocks only while the balance is still short: MON added another way ("or add MON") clears it.
   const topUpRefused = topUp.step.kind === "failed" && (gasShort || gasBalance === undefined);
-  const gasGate: GasGate =
-    topUp.step.kind === "failed" && topUpRefused
+  // Mainnet pays its own fees in MON: the composed operation plans them (B11), never the practice sponsor.
+  const gasGate: GasGate = mainnet
+    ? { kind: "ok" }
+    : topUp.step.kind === "failed" && topUpRefused
       ? {
           kind: "unavailable",
           reason: topUp.step.reason,
@@ -121,7 +139,7 @@ export function useTicket(market: LiveMarket) {
         : { kind: "ok" };
   const trace = useSendTrace(key);
   // Above the session's limits the reviewed order is signed with one passkey step-up instead of failing (Part 1 #1).
-  const confirmWith = openConfirmLevel({
+  const sessionLevel = openConfirmLevel({
     client: account.client,
     address,
     faceId: account.settings.faceId,
@@ -131,6 +149,11 @@ export function useTicket(market: LiveMarket) {
     equityUsd6: snapshot?.equityInit,
     roomUsd6: capHeadroomUsd6(market.risk, market.book, market.pv, isLong),
   });
+  // A swap leg always asks for the passkey (rule 11); so does a move whose approval is over the session's move cap.
+  // Either way one passkey signs every leg.
+  const confirmWith = pay.swapping || pay.incomingUsd6 > SESSION_MOVE_CAP_USD6 ? "passkey" : sessionLevel;
+  const fees = useMoneyOperation(key);
+  const ensureGas = useEnsureGas();
   const protection = usePlannedTriggers(planKey(env.chainId, address, market.marketId));
   const simulationRevert = trace.events.find((e) => e.stage === "failed")?.error;
 
@@ -163,12 +186,22 @@ export function useTicket(market: LiveMarket) {
     };
   }, []);
 
-  const guard = useReviewGuard([env.chainId, address, market.marketId, side, amountText, leverage].join(":"));
+  const payKey = [
+    pay.payWith?.key ?? "",
+    pay.incomingUsd6,
+    pay.swap.status === "ok" ? pay.swap.quote.quote.minOut : "",
+  ];
+  const guard = useReviewGuard(
+    [env.chainId, address, market.marketId, side, amountText, leverage, ...payKey].join(":"),
+  );
   const submit = async () => {
     const client = account.client;
     if (!client || !address || !preview || !snapshot) return undefined;
+    // Pay with another asset: [swap] → [approve] → deposit go first in the same operation (C3 step 4).
+    const prefix = await pay.steps(env, address);
+    const composed = mainnet || prefix.length > 0;
     // Short on gas → top up first, then continue this same hold (never a dead-end "Adding gas…"; S8.16c).
-    if (gasShort && needWei !== undefined && !(await topUp.run(needWei)).ok) return undefined;
+    if (!composed && gasShort && needWei !== undefined && !(await topUp.run(needWei)).ok) return undefined;
     // The top-up can take seconds. If the ticket closed, or the mode or account changed meanwhile, the reviewed
     // intent is gone: nothing is signed, and a fresh hold is required.
     const now = live.current;
@@ -211,31 +244,65 @@ export function useTicket(market: LiveMarket) {
       signingMarket = { ...market, ...freshMarket };
     };
     const open = positionCount(snapshot.positionBitmap) + (held ? 0 : 1);
-    const send = (sender: Sender) =>
-      trace.run(
-        sender,
-        increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18, open),
-        {
-          revalidate,
-          plannedActions: ["increase", ...protection.levels.map(() => "placeTrigger")],
-          reviewedIntent: {
-            network: env.chainId === MAINNET_CHAIN_ID ? "mainnet" : "testnet",
-            marketId: String(market.marketId),
-            symbol: market.symbol,
-            side,
-            leverage: String(leverage),
-            marginUsd6: amountUsd6.toString(),
-            lockedUsd6: preview.marginUsd6.toString(),
-            notionalUsd6: notionalUsd6.toString(),
-            execPrice18: preview.execPrice18.toString(),
-            feeUsd6: preview.feeUsd6.toString(),
-            sizeDelta: preview.sizeDelta.toString(),
-            // The outcome's "Liq." fact comes from the reviewed intent ("" = none above $0).
-            liqPrice18: preview.liqPrice18 === null ? "" : preview.liqPrice18.toString(),
-            protection: protection.levels.map((level) => `${level.kind}:${level.price18}`).join(","),
-          },
-        },
-      );
+    const reviewedIntent = {
+      network: env.chainId === MAINNET_CHAIN_ID ? "mainnet" : "testnet",
+      marketId: String(market.marketId),
+      symbol: market.symbol,
+      side,
+      leverage: String(leverage),
+      marginUsd6: amountUsd6.toString(),
+      lockedUsd6: preview.marginUsd6.toString(),
+      notionalUsd6: notionalUsd6.toString(),
+      execPrice18: preview.execPrice18.toString(),
+      feeUsd6: preview.feeUsd6.toString(),
+      sizeDelta: preview.sizeDelta.toString(),
+      // The outcome's "Liq." fact comes from the reviewed intent ("" = none above $0).
+      liqPrice18: preview.liqPrice18 === null ? "" : preview.liqPrice18.toString(),
+      protection: protection.levels.map((level) => `${level.kind}:${level.price18}`).join(","),
+      ...pay.intent,
+    };
+    const openRequest = () =>
+      increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18, open);
+    const triggers = protection.levels.map(() => "placeTrigger");
+    let send = (sender: Sender): Promise<TrackedResult | undefined> =>
+      trace.run(sender, openRequest(), { revalidate, plannedActions: ["increase", ...triggers], reviewedIntent });
+    if (composed) {
+      // One operation: [network fee] → [swap] → [move to trading] → open; the open's deadline is set as it signs.
+      const openStep: ComposedStep = {
+        role: "act",
+        action: "increase",
+        label: "Open",
+        request: openRequest(),
+        build: async () => openRequest(),
+      };
+      const steps = [...prefix, openStep];
+      const op: MoneyOperation = {
+        steps,
+        reviewedIntent,
+        revalidate: async (index) => (index === steps.length - 1 ? revalidate() : guard()),
+        spends: pay.payWith
+          ? { [pay.payWith.key]: pay.swap.status === "ok" ? pay.swap.amountIn : pay.incomingUsd6 }
+          : {},
+      };
+      const ready = mainnet ? await fees.prepare(op) : { ok: true as const, op };
+      if (!ready.ok) {
+        notify({ title: ready.block, tone: "warning" });
+        return undefined;
+      }
+      send = (sender) =>
+        runOperationSteps<TrackedResult>(
+          ready.op.steps,
+          ready.op.reviewedIntent,
+          (step, index, options) =>
+            trace.run(sender, step.build ?? step.request, {
+              ...options,
+              revalidate: () => ready.op.revalidate(index),
+              ...(mainnet ? {} : { preflight: ensureGas.preflight(step.request) }),
+            }),
+          { read: env.read },
+          triggers,
+        );
+    }
     // The same reviewed order either way; only the signer differs. A cancelled passkey is silent (nothing signed).
     if (confirmWith === "passkey") {
       try {
@@ -276,6 +343,7 @@ export function useTicket(market: LiveMarket) {
     maxAmountUsd6,
     snapshot,
     held,
+    pay,
     blocker,
     hasAccount: address !== undefined,
     ready: account.client !== undefined,
