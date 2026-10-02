@@ -1,4 +1,4 @@
-import { ENGINE_MARKETS, type NetworkKey } from "@senryo/config";
+import { ENGINE_MARKETS, MAINNET_CHAIN_ID, type NetworkKey } from "@senryo/config";
 import { DECIMALS, formatUnits, toPlot } from "@senryo/core";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { BPS_PERCENT_DECIMALS, USD6_DECIMALS } from "@/lib/constants/money";
@@ -83,4 +83,16 @@ export function compactMoney(value: bigint): string {
   const step = COMPACT_STEPS.find((s) => whole >= s.unit);
   if (!step) return money(value);
   return `${MONEY}${formatUnits((value * TEN) / (step.unit * TEN ** BigInt(USD6_DECIMALS)), 1, 1)}${step.suffix}`;
+}
+
+/** Money in a given network's glyph (watch mode can show the other network): `$12.40` on Mainnet, `P$12.40` in Practice. */
+export function moneyOn(chainId: number, value6: bigint, shown: number = DECIMALS.cents): string {
+  const glyph = chainId === MAINNET_CHAIN_ID ? MONEY_SYMBOL.mainnet : MONEY_SYMBOL.testnet;
+  const s = formatUnits(value6 < 0n ? -value6 : value6, USD6_DECIMALS, shown);
+  return value6 < 0n ? `−${glyph}${s}` : `${glyph}${s}`;
+}
+
+/** Signed `moneyOn`: a sign always. */
+export function signedMoneyOn(chainId: number, value6: bigint, shown: number = DECIMALS.cents): string {
+  return value6 < 0n ? moneyOn(chainId, value6, shown) : `+${moneyOn(chainId, value6, shown)}`;
 }
