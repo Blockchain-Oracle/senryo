@@ -8,7 +8,7 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 
 ## Part 1 — Defects (correctness first)
 - [x] 1 Over-cap opens step up with a passkey (built 924bd93)
-- [ ] 2 Orphan TP/SL — keeper guard + touch rule built (924bd93, 2602ae2); close cancels leftovers (trading area); contract epoch (`claude/contracts`)
+- [ ] 2 Orphan TP/SL — keeper guard + touch rule built and **deployed** (924bd93, 2602ae2; api/keeper `sha-294f8a2`); contract epoch in the signed order built on `claude/contracts` (D-251, 52 forge tests) — **held** until the mainnet deploy / a testnet core redeploy (merging it breaks Practice TP/SL signatures on the current testnet core); close cancels leftovers (trading area)
 - [x] 3 Opposite-side pre-slide blocker (built 924bd93)
 - [ ] 4 Inbox removed from Receive; Mainnet dead ends routed; fee reserve
 - [ ] 5 Send any asset; scanner; recipient checks; copy
@@ -23,27 +23,32 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 
 ## Foundation
 - [x] Native icons (2602ae2)
+- [x] SlideToConfirm from 21st slide-action-button, toned by side, busy state (ed4b6b4)
+- [x] One outcome surface (TradeTrace as OperationStatus) + AmountHero rolling digits (8127cba)
+- [x] Sounds: ElevenLabs palette, by-ear picker, unlock/liquidation/error now sound (8e42c8e)
+- [x] Runtime 0.2.0 natives (expo-image, expo-camera, expo-web-browser, expo-sharing, view-shot); welcome swipe ±2 window; preview builds on production APNs (294f8a2)
 - [ ] Primitives sourced from 21st.dev: Text roles, Row, StatStrip, ActionCircle, AmountHero, GlassIconButton, InfoSheet, OperationStatus, SlideToConfirm (tone + busy), AssetPicker, ChainPicker, RecipientSearch, Keypad amount entry
-- [ ] Runtime 0.2.0 with native additions (expo-image, expo-camera, expo-web-browser, share/snapshot)
+- [x] Runtime 0.2.0 with native additions (294f8a2)
 
 ## Areas (each = its flow-book cards + §0.9 surfaces)
-- [ ] Home + asset model + balance sheet + mode + profile/settings (lead)
-- [ ] Card / Social / Notifications
-- [ ] Money (B1–B16)
-- [ ] Trading (C1–C12) + Pool (D1–D2)
+- [x] Home: Total hero, Positions · Assets · Earn tabs (bb76518) — Assets moves to any-asset holdings in `claude/ui-money`
+- [ ] Money (B1–B16) — `claude/ui-money` (agent)
+- [ ] Identity / profile / settings / mode — `claude/ui-identity` (agent)
+- [ ] Card + Notifications — `claude/ui-card` (agent) · Social — `claude/ui-social` (agent)
+- [ ] Trading (C1–C12) + Pool (D1–D2) — `claude/ui-trading` (agent)
 - [ ] Welcome + setup (A1–A3) smoothness and sounds
 
 ## Integrations
 - [ ] D0 keeper testnet gas — 0.1 tMON sent 2 Oct (tx 0x921e…5838); faucet claim pending (browser); StarterDrip float is 0
-- [ ] D1 Perpl chain layer (`claude/perpl`) → UI → live trade (needs funds)
-- [ ] D2 Bridges (Relay/CCTP/Across in `claude/anyasset`) → UI → live runs; Aurora behind incident watch (needs Studio key)
-- [ ] D3 Lithic sandbox card (`claude/card`) → deploy → live sandbox issue (needs key)
+- [ ] D1 Perpl chain layer built + merged (77e0133; simulated open/close on mainnet state) → UI → live trade (needs ≥10 AUSD + ~0.5 MON)
+- [ ] D2 Bridges built + merged (8752f3f: Relay/CCTP/Across/LI.FI quotes, status, pinned targets) → UI (`claude/ui-money`) → live runs; Aurora behind incident watch (needs Studio key)
+- [ ] D3 card service built + merged (38183de: issue, unfreeze, simulate, repay quote, decline reasons) → `senryo-card` resource + Lithic sandbox key → live sandbox issue
 - [ ] D4 Mainnet core (needs funding + Safe owners) — includes the TP/SL epoch contract fix
 - [ ] D5 Ramp buy (no key) / sell (support key)
-- [ ] D6 Holdings + any↔any swap (`claude/anyasset`) — dedicated HyperSync token needed
-- [ ] D7 Notifications inbox (`claude/notify`)
+- [ ] D6 holdings + any↔any swap built + merged (8752f3f) — dedicated HyperSync token needed (shared one is rate-limited by the indexer)
+- [x] D7 notifications inbox built + merged (27123af) + **deployed** (api/keeper `sha-294f8a2`, KEEPER_JOBS += pushes)
 - [ ] D8 Wallet activity indexing
-- [ ] D9 Deploy api/card/keeper changes before the first OTA
+- [ ] D9 api/keeper deployed `sha-294f8a2` (2 Oct 14:20 UTC); any-asset routes redeploy in progress; card service resource not created yet (needs Lithic key)
 - [ ] D10 Web parity · D11 Submission (external TestFlight by ~9 Oct) · D12 Meme coins
 
 ## Handoff
