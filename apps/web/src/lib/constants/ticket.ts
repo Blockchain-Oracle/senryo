@@ -18,3 +18,8 @@ export const TRADE_STORAGE = {
   riskExplained: "senryo.risk-explained.v1",
   shortRiskExplained: "senryo.short-risk-explained.v1",
 } as const;
+/** Reduce a position by a share of its size (flow book C5: 25 / 50 / 75 / 100 %), in bps. */
+export const REDUCE_STEPS_BPS = [2_500n, 5_000n, 7_500n, 10_000n] as const;
+export const REDUCE_ALL_BPS = 10_000n;
+/** The chain head is re-read this often on the position page (a profitable reduce waits out MIN_HOLD blocks). */
+export const HEAD_REFETCH_MS = 2_000;
