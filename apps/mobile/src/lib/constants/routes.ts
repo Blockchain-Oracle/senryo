@@ -42,6 +42,7 @@ export const ROUTES = {
   accountSecurity: "/account/security",
   accountRecovery: "/account/recovery",
   accountPreferences: "/account/preferences",
+  accountSounds: "/account/sounds",
   accountNotifications: "/account/notifications",
   accountHelp: "/account/help",
   accountDeleteData: "/account/delete-data",
