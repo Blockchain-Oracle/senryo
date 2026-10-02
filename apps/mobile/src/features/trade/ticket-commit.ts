@@ -16,6 +16,8 @@ export interface CommitState {
   holdable: boolean;
   /** A transient top-up refusal: holding again retries (S8.16c). */
   retryGas: boolean;
+  /** Network fees are being prepared: the rail holds still with a spinner. */
+  busy?: boolean;
   fix?: Fix;
 }
 
@@ -84,7 +86,7 @@ export function commitState(input: {
   confirmWith?: ConfirmLevel;
 }): CommitState {
   const toppingUp = GAS_STEP_LABEL[input.gasStep.kind];
-  if (toppingUp) return { label: toppingUp, holdable: false, retryGas: false };
+  if (toppingUp) return { label: toppingUp, holdable: false, retryGas: false, busy: true };
   const b = input.blocker;
   if (b) {
     const retryGas = b.code === "NO_GAS" && RETRIABLE_GAS.has(b.reason);

@@ -35,6 +35,9 @@ function roles(t: TokenPalette) {
     mainnetWash: t.mainnetSurface,
     downWash: withAlpha(t.down, WASH.soft),
     upWashStrong: withAlpha(t.up, WASH.strong),
+    /** The slide rail's track and travelled fill in the brand colour (side-neutral confirmations). */
+    primaryWash: withAlpha(t.primary, WASH.soft),
+    primaryWashStrong: withAlpha(t.primary, WASH.strong),
     downWashStrong: withAlpha(t.down, WASH.strong),
     warnWash: t.warningSurface,
     destructiveWash: t.destructiveSurface,

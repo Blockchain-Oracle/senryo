@@ -131,6 +131,8 @@ export function TicketFooter({
             <HoldToConfirm
               label={commit.label}
               disabled={!commit.holdable}
+              busy={commit.busy === true}
+              tone={t.side === "long" ? "up" : "down"}
               onConfirm={onConfirm}
               resetKey={resetKey}
               onReset={onReset}

@@ -42,7 +42,7 @@
     ],
     "components": ["apps/mobile/src/components", "apps/mobile/src/features"],
     "assets": ["brand/", "brand/art/", "packages/identity/sources/", "apps/mobile/assets/fonts/"],
-    "icons": "lucide-react-native (actions only; SVG via react-native-svg, no native module)",
+    "icons": "native symbols: SF Symbols (iOS, expo-symbols) and vendored Material Symbols (Android) via src/components/kit/symbols.tsx (D-237)",
     "instructions": ["docs/plan/00-plan.md §0", "docs/plan/stage-01b-design-v2.md"]
   },
   "design": {
@@ -567,6 +567,22 @@
         "evidence": ["F29", "LG32", "S24"],
         "port": "overlapping real marks with ground-colour cut-out rings (route source networks, swap pairs)",
         "status": "built (S1b.4) — src/components/identity/MarkCluster.tsx"
+      },
+      {
+        "name": "slide-to-confirm",
+        "source": "21st.dev starc007/slide-action-button (id 29304), retrieved 2026-10-02 via `21st get 29304`",
+        "evidence": ["D-235", "F37 (Fomo commit rail)", "flow book C3/C3a, B5–B10"],
+        "port": "React Native SlideToConfirm: Reanimated travel on the UI thread (Gesture Handler pan), travelled fill behind the thumb, label fade 35%→65%, chevron→check path morph via animated SVG path, press scale 0.94, haptic detent when release would commit; tone primary/up/down; busy spinner state",
+        "deviations": "commit on release past 90% (D-235) instead of 82% auto-complete; no auto-reset timer (the reviewed intent's resetKey resets it); explicit VoiceOver review action; reduced motion removes decorative travel",
+        "status": "built — apps/mobile/src/components/trade/SlideToConfirm.tsx (HoldToConfirm is a legacy alias)"
+      },
+      {
+        "name": "native-symbols",
+        "source": "platform icon sets (SF Symbols via expo-symbols on iOS; Google Material Symbols, vendored face, on Android) — no 21st source: utility icons must be the platform's own (D-237 rule 4)",
+        "evidence": ["D-237", "user feedback 2 Oct: web icon set reads as vibe-coded"],
+        "port": "components/kit/symbols.tsx: same component names/props the screens used; Android glyph drawn as text in the preloaded face (no per-mount load)",
+        "deviations": "Android filled variants unavailable (outlined face)",
+        "status": "built — 2602ae2"
       }
     ],
     "planned": [
