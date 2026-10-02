@@ -13,3 +13,5 @@ export const MONEY_STORAGE = {
   hiddenTokens: "senryo.hidden-tokens.v1",
   homeTab: "senryo.home-tab.v1",
 } as const;
+/** "Copied" stays on a Copy circle this long. */
+export const COPIED_MS = 1_600;

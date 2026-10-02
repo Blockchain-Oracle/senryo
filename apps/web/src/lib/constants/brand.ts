@@ -22,3 +22,5 @@ export const MODE_MARK_SIZE = 20;
 export const MARK_ROW = 40;
 export const MARK_SMALL = 24;
 export const MARK_HERO = 56;
+/** The chain badge in the middle of a receive QR (the phone's BADGE). */
+export const MARK_QR_BADGE = 34;

@@ -29,7 +29,7 @@ export function ListRow({
   href?: string | undefined;
   onClick?: (() => void) | undefined;
   trailing?: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   const body = (
     <>
