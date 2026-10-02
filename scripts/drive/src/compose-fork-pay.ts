@@ -7,7 +7,7 @@
  * steps in order (swap → [move to trading] → act), every later step built when it signs.
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync, rmSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
 import type { SwapQuoteOk } from "@senryo/api-client";
 import { readAccountSnapshot, readLpVault, readMarketRisk, type TxRequest } from "@senryo/chain";
 import { MAINNET_CHAIN_ID, MAINNET_EXTERNAL, MAINNET_TOKENS } from "@senryo/config";
@@ -82,8 +82,12 @@ function deployStack(fork: string): void {
   // The fork's deployment never stays in the worktree.
   rmSync(bookPath, { force: true });
   for (const script of ["Deploy.s.sol", "SeedMainnet.s.sol"]) {
-    for (const dir of ["broadcast", "cache"])
+    for (const dir of ["broadcast", "cache"]) {
       rmSync(`${ROOT}contracts/${dir}/${script}/143`, { recursive: true, force: true });
+      // A script folder that only held the fork's run (SeedMainnet: no Practice run is committed) goes too.
+      if (readdirSync(`${ROOT}contracts/${dir}/${script}`, { withFileTypes: true }).length === 0)
+        rmSync(`${ROOT}contracts/${dir}/${script}`, { recursive: true, force: true });
+    }
   }
 }
 
@@ -169,14 +173,25 @@ export async function payWithAnyAsset(fork: string, env: QueryEnv, kit: Kit) {
     await lend(MAINNET_EXTERNAL.uniswapV4.poolManager, MAINNET_TOKENS.ausd, DEPLOYER, SEED_AUSD);
     deployStack(fork);
   });
+  let swapLane: Promise<void> = Promise.resolve();
   const gated =
     (inner: ReturnType<typeof journalled>) =>
     async (...args: Parameters<ReturnType<typeof journalled>>) => {
       const [step] = args;
       if (step.role !== "swap") await deployed;
+      // One swap step at a time: the fork loads each pool's state from the live chain on first touch.
+      const turn = swapLane;
+      let done: () => void = () => undefined;
+      if (step.role === "swap") {
+        swapLane = new Promise<void>((resolve) => {
+          done = resolve;
+        });
+        await turn;
+      }
       try {
         return await inner(...args);
       } finally {
+        done();
         if (step.role === "swap" && step.action === "aggregatorSwap") {
           swapsLeft -= 1;
           if (swapsLeft === 0) release();

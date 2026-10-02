@@ -229,12 +229,17 @@ const monFirstScenario = async () => {
 };
 
 // Start the fork right before the run: quotes price the live chain.
-console.log(`\n# 1. network fee on ${FORK}`);
-await withDrift("network fee", feeScenario, false);
-console.log("\n# 2. MON reserve");
-await reserveRules();
-await withDrift("pay with MON → send", monFirstScenario, false);
-if (process.env.DEPLOY_STACK) await payWithAnyAsset(FORK, env, kit);
+const parts = (process.env.PARTS ?? "1,2,3").split(",");
+if (parts.includes("1")) {
+  console.log(`\n# 1. network fee on ${FORK}`);
+  await withDrift("network fee", feeScenario, false);
+}
+if (parts.includes("2")) {
+  console.log("\n# 2. MON reserve");
+  await reserveRules();
+  await withDrift("pay with MON → send", monFirstScenario, false);
+}
+if (process.env.DEPLOY_STACK && parts.includes("3")) await payWithAnyAsset(FORK, env, kit);
 else
   console.log(
     "\n~ DEPLOY_STACK unset: pay-with-any-asset (part 3) skipped — it deploys the stack on the fork with forge",

@@ -18,7 +18,7 @@ const FINALITY_BLOCKS = "0x3";
 const SAME_TIMESTAMP = "0x0";
 const MINE_EVERY_MS = 1_500;
 /** The fork loads remote state on first touch: a cold estimate can time out, a retry finds it warm. */
-const WARM_ATTEMPTS = 4;
+const WARM_ATTEMPTS = 6;
 const HEX = 16;
 const HOLDER_GAS = "0xde0b6b3a7640000";
 
@@ -168,6 +168,7 @@ export function forkKit(FORK: string, fork: ReadClient, api: ApiClient) {
  */
 const DRIFT_SELECTORS = ["0xbb55fd27", "0xe397952c"] as const;
 const DRIFT_ATTEMPTS = 3;
+const PRICE_MOVED = "Price moved";
 
 /** Retries a fork scenario on drift with a fresh quote, re-forking at the live head first when `reset`. */
 export function driftRetry(FORK: string, upstream: string) {
@@ -178,9 +179,12 @@ export function driftRetry(FORK: string, upstream: string) {
         return await scenario();
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        const drift = DRIFT_SELECTORS.find((selector) => message.includes(selector));
+        // The app's own refusal too: a re-quote under the reviewed minimum stops before signing → review again.
+        const drift = [...DRIFT_SELECTORS, PRICE_MOVED].find((sign) => message.includes(sign));
         if (!drift || attempt >= DRIFT_ATTEMPTS) throw error;
-        console.log(`~ ${label}: fork drift (${drift}) — ${reset ? "re-fork, " : ""}fresh quote`);
+        console.log(
+          `~ ${label}: ${drift} — nothing signed; ${reset ? "re-fork, " : ""}review again with a fresh quote`,
+        );
         if (reset) await refork();
       }
     }
