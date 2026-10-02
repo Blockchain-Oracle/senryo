@@ -155,7 +155,9 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
           assets={money.assets}
           other={money.other}
           selectedKey={asset?.key}
-          reasonFor={(a) => (spendableOf(a) === 0n ? "None to send" : undefined)}
+          reasonFor={(a) =>
+            spendableOf(a) > 0n ? undefined : a.native && a.wallet > 0n ? "Keeps 10 MON for fees" : "None to send"
+          }
           detailFor={(a) => `Available ${amountOf(a, spendableOf(a))}`}
           onPick={(a) => {
             setAssetKey(a.key);

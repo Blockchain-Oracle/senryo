@@ -173,8 +173,12 @@ export function byValue(a: MoneyAsset, b: MoneyAsset): number {
 /** MON kept on the account by a value send (Monad's 10 MON floor for delegated accounts, B11). */
 export const MON_RESERVE_WEI = SENDER_RESERVE_MON * ONE_E18;
 
-/** What a send of this asset can move: the wallet (MON less the reserve) plus the trading part that is free. */
-export function spendableOf(asset: MoneyAsset, feeWei = 0n): bigint {
+/** Room left for the send's own network fee on top of the reserve (Monad fees run ~0.002 MON a transfer). */
+const MON_FEE_ALLOWANCE_DECIMALS = 16n;
+export const MON_FEE_ALLOWANCE_WEI = TEN ** MON_FEE_ALLOWANCE_DECIMALS;
+
+/** What a send of this asset can move: the wallet (MON less the reserve and its fee) plus the free trading part. */
+export function spendableOf(asset: MoneyAsset, feeWei = MON_FEE_ALLOWANCE_WEI): bigint {
   if (asset.native) {
     const free = asset.wallet - MON_RESERVE_WEI - feeWei;
     return free > 0n ? free : 0n;

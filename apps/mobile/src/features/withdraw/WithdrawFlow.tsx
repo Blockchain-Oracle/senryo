@@ -169,7 +169,13 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
               key={a.key}
               asset={a}
               index={i}
-              disabledReason={spendableOf(a) === 0n ? "None to withdraw" : undefined}
+              disabledReason={
+                spendableOf(a) > 0n
+                  ? undefined
+                  : a.native && a.wallet > 0n
+                    ? "Keeps 10 MON for fees"
+                    : "None to withdraw"
+              }
               onPress={() => {
                 setAssetKey(a.key);
                 setSheet("to");
