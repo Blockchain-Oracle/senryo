@@ -13,3 +13,8 @@ export const FUNDING_WAIT_POLLS = 15;
 export const JOURNAL_POLL_MS = 3_000;
 /** Quick margin presets in the ticket (flow book C3: $10 / $50 / $100 / Max), in whole money units. */
 export const MARGIN_PRESETS = [10n, 50n, 100n] as const;
+/** Per-browser flags: the risk explainer was accepted (general, and for a first short). */
+export const TRADE_STORAGE = {
+  riskExplained: "senryo.risk-explained.v1",
+  shortRiskExplained: "senryo.short-risk-explained.v1",
+} as const;
