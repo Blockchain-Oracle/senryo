@@ -6,5 +6,3 @@ export const TOAST_LIFETIME_MS = 5_000;
 /** Every query is fresh for 5 s and retried once (ported defaults; S6+ tunes per key). */
 export const QUERY_STALE_MS = 5_000;
 export const QUERY_RETRIES = 1;
-/** Sample "reads" resolve after this delay so the loading state is visible in the preview build. */
-export const SAMPLE_LATENCY_MS = 600;
