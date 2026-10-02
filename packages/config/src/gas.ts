@@ -134,6 +134,20 @@ export const GAS_LIMITS = {
    * (cbBTC buy) → 350k. More hops and larger trades: `spotSwapGasLimit`.
    */
   spotSwap: 350_000n,
+  /**
+   * (D6) Monorail / KyberSwap router call. Routes vary from one pool to 3+ hops and splits (Monorail metered a 3-hop
+   * USDC → XAUt0 at 894k), so the budget for a given quote is `aggregatorSwapGasLimit(quote.gasEstimate)`; this flat
+   * value is the floor.
+   */
+  aggregatorSwap: 600_000n,
+  /** (D2) Relay `deposit` into its depository / router (native or ERC-20). */
+  relayDeposit: 250_000n,
+  /** (D2) CCTP v2 `TokenMessengerV2.depositForBurnWithHook` (Forwarding Service). */
+  cctpBurn: 300_000n,
+  /** (D2) Across spoke deposit (swap/approval API `swapTx`). */
+  acrossDeposit: 350_000n,
+  /** (D2) LI.FI diamond call; LI.FI's own limit for XAUt0 → Ethereum (glacis) was 2,515,556 on 2 Oct. */
+  lifiBridge: 2_800_000n,
   /** Perpl IOC order (S7). */
   perplIoc: 700_000n,
   /** (S6.12, D-155) sponsor-sent type-4 tx, one authorization: fork-measured 46.0k used, 50.7k sent. */
@@ -163,6 +177,20 @@ export function spotSwapGasLimit(hops: number, quotedSwapGas?: bigint): bigint {
   const flat = GAS_LIMITS.spotSwap + SPOT_SWAP_GAS_PER_HOP * BigInt(Math.max(hops - 1, 0));
   if (quotedSwapGas === undefined) return flat;
   const sized = ((SPOT_SWAP_OVERHEAD_GAS + quotedSwapGas) * (GAS_BPS + GAS_HEADROOM_BPS)) / GAS_BPS;
+  return sized > flat ? sized : flat;
+}
+
+/**
+ * (D6) What an aggregator swap spends beyond the aggregator's own gas metering (router entry, token pulls, the
+ * native wrap/unwrap): `eth_estimateGas` − the quote's `gas_estimate` / `gas`, measured on a 143 fork.
+ */
+export const AGGREGATOR_SWAP_OVERHEAD_GAS = 150_000n;
+
+/** Budget for an aggregator swap: the flat floor, or the quote's metering + overhead with headroom when larger. */
+export function aggregatorSwapGasLimit(quotedSwapGas?: bigint): bigint {
+  const flat = GAS_LIMITS.aggregatorSwap;
+  if (quotedSwapGas === undefined) return flat;
+  const sized = ((AGGREGATOR_SWAP_OVERHEAD_GAS + quotedSwapGas) * (GAS_BPS + GAS_HEADROOM_BPS)) / GAS_BPS;
   return sized > flat ? sized : flat;
 }
 
