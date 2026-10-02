@@ -1,18 +1,22 @@
 import type { ReactNode } from "react";
+import { BottomDock } from "@/components/shell/bottom-dock";
 import { TopBar } from "@/components/shell/top-bar";
+import { TxRecovery } from "@/components/shell/tx-recovery";
 import { DeskDataProvider } from "@/lib/market-data";
 
 /**
- * The desk: D2 top strip + tabs over every signed-in surface, with the query layer's clients (chain reads, indexer,
- * engine socket) mounted here only. Phone widths render the D2 column 1:1; tablets centre that column; ≥1024 each
- * screen spreads into its desk columns.
+ * The app shell: the top strip with the five destinations over every surface, with the query layer's clients (chain
+ * reads, indexer, engine socket) mounted here only. Each page reads as the phone's column (`Column`); the trade page
+ * spreads into two columns at ≥1024.
  */
 export default function DeskLayout({ children }: { children: ReactNode }) {
   return (
     <DeskDataProvider>
       <div className="flex min-h-dvh flex-col">
         <TopBar />
-        <main className="mx-auto w-full max-w-2xl flex-1 pb-10 lg:max-w-screen-2xl lg:px-4">{children}</main>
+        <main className="w-full flex-1 pb-20 sm:pb-0">{children}</main>
+        <BottomDock />
+        <TxRecovery />
       </div>
     </DeskDataProvider>
   );

@@ -20,6 +20,8 @@ const buttonVariants = cva(
         default: "h-10 px-4 py-2",
         sm: "h-9 px-3",
         lg: "h-12 px-8",
+        /** D-196: 56 px tall, 12 px radius — the primary actions of a page (Add money, Withdraw, Review). */
+        xl: "h-14 rounded-sm px-6 font-sans text-button",
         icon: "size-10",
       },
     },

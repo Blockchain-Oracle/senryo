@@ -1,32 +1,56 @@
-/** The market the Trade tab opens on (gold, our first engine market). */
+/** The market a bare Trade link opens on (gold, the first engine market). */
 export const DEFAULT_MARKET = "XAU";
 
-/** Same paths on web and mobile (plan §2.4 Screens). */
+/**
+ * Same paths as the phone where the static export allows (flow book G2): per-address and per-id pages take a query
+ * parameter, because the export cannot pre-render every address. Legacy desk paths (`/portfolio/`, `/fund/`) remap.
+ */
 export const ROUTES = {
   welcome: "/",
+  home: "/home/",
   portfolio: "/portfolio/",
+  addMoney: "/add-money/",
+  receive: "/receive/",
+  send: "/send/",
+  withdraw: "/withdraw/",
   markets: "/markets/",
   trade: (market: string) => `/trade/${market.replace("/", "")}/`,
   card: "/card/",
   fund: "/fund/",
+  social: "/social/",
+  profile: "/profile/",
   account: "/account/",
+  setup: "/setup/",
   watch: "/watch/",
 } as const;
 
-export type DeskTab = { id: string; label: string; href: string; match: string };
+/** A position's page (one net position per engine market). */
+export const positionHref = (market: string) => `/position/?market=${market}` as const;
+/** An asset's page on this network (any token; `0x000…000` is MON). */
+export const assetHref = (address: string) => `/asset/?address=${address.toLowerCase()}` as const;
+/** Send prefilled with a recipient (a profile's Send). */
+export const sendToHref = (address: string) => `/send/?to=${address}` as const;
+/**
+ * The shared watch / profile link (flow book G2 decision): the static form with the network, so the profile opens in
+ * the right mode on any device. Without `chainId` the current network is used.
+ */
+export const watchHref = (address: string, chainId?: number) =>
+  chainId === undefined ? `/watch/?address=${address}` : `/watch/?address=${address}&chainId=${chainId}`;
 
-/** D2 top tabs (Vercel Tabs #1597). `match` is the pathname prefix that marks the tab active. */
-export const DESK_TABS: readonly DeskTab[] = [
-  { id: "portfolio", label: "Portfolio", href: ROUTES.portfolio, match: "/portfolio" },
-  { id: "markets", label: "Markets", href: ROUTES.markets, match: "/markets" },
-  { id: "trade", label: "Trade", href: ROUTES.trade(DEFAULT_MARKET), match: "/trade" },
-  { id: "card", label: "Card", href: ROUTES.card, match: "/card" },
-  { id: "fund", label: "Fund", href: ROUTES.fund, match: "/fund" },
+export type AppTab = { id: string; label: string; href: string; match: readonly string[] };
+
+/** The five destinations, as on the phone's dock: Home · Markets · Card · Social · You. */
+export const APP_TABS: readonly AppTab[] = [
+  { id: "home", label: "Home", href: ROUTES.home, match: ["/home", "/portfolio", "/add-money", "/receive", "/asset"] },
+  { id: "markets", label: "Markets", href: ROUTES.markets, match: ["/markets", "/trade", "/position"] },
+  { id: "card", label: "Card", href: ROUTES.card, match: ["/card"] },
+  { id: "social", label: "Social", href: ROUTES.social, match: ["/social", "/watch"] },
+  { id: "you", label: "You", href: ROUTES.profile, match: ["/profile", "/account", "/setup"] },
 ];
 
 export function activeTab(pathname: string): string | undefined {
-  return DESK_TABS.find((t) => pathname.startsWith(t.match))?.id;
+  return APP_TABS.find((t) => t.match.some((m) => pathname.startsWith(m)))?.id;
 }
 
-/** Read-only watch link (D-031). A query param, because the static export cannot pre-render every address. */
-export const watchHref = (address: string) => `/watch/?address=${address}` as const;
+/** Setup's terms step, then back to `next` (flow book A11: terms before the first money action). */
+export const setupHref = (next: string) => `/setup/?next=${encodeURIComponent(next)}`;

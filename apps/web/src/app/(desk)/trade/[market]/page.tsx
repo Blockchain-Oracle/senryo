@@ -21,5 +21,9 @@ export default async function TradePage({ params }: { params: Promise<Params> })
   const { market } = await params;
   const found = engineMarket(market.toUpperCase());
   if (!found) notFound();
-  return <TradeScreen marketId={found.id} />;
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 pb-16">
+      <TradeScreen marketId={found.id} />
+    </div>
+  );
 }

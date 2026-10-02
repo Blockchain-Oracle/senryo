@@ -1,14 +1,7 @@
-import type { Metadata } from "next";
-import { AccountStrip } from "@/components/auth/account-strip";
-import { PortfolioScreen } from "@/components/screens/portfolio-screen";
+import { Redirect } from "@/components/shell/redirect";
+import { ROUTES } from "@/lib/constants/routes";
 
-export const metadata: Metadata = { title: "Portfolio" };
-
+/** Legacy desk path → Home (as the phone remaps `/portfolio`). */
 export default function PortfolioPage() {
-  return (
-    <>
-      <AccountStrip />
-      <PortfolioScreen />
-    </>
-  );
+  return <Redirect to={ROUTES.home} />;
 }

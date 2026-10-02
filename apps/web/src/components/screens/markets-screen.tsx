@@ -2,8 +2,10 @@
 
 import { DECIMALS, notional } from "@senryo/core";
 import { useState } from "react";
+import { TabTitle } from "@/components/kit/page-header";
 import { DeskWatchlist } from "@/components/screens/markets/desk-watchlist";
 import { marketTitles } from "@/components/screens/markets/market-row";
+import { Column } from "@/components/shell/column";
 import LoadingState from "@/components/ui/loading-state";
 import { type HeatTile, MarketHeatmap } from "@/components/ui/market-heatmap";
 import { known } from "@/components/ui/reading";
@@ -61,14 +63,18 @@ function OpenInterestMap({ lines, filter }: { lines: MarketLines; filter: Market
   );
 }
 
-/** Markets (S11b): asset-class filter, the live perps watchlist with what's still to come, the open-interest map. */
+/**
+ * Markets (flow book C1): the asset-class chips, the live perps watchlist with what's still to come (each with its
+ * reason, never a price), and the open-interest map under it. Rows open the market's detail.
+ */
 export function MarketsScreen() {
   const [filter, setFilter] = useState<MarketFilter>("all");
   const lines = useMarketLines();
   return (
-    <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <Column className="grid gap-4">
+      <TabTitle>Markets</TabTitle>
       <section aria-label="Watchlist">
-        <div className="px-3 pt-3">
+        <div>
           <SegmentedControl
             label="Asset class"
             value={filter}
@@ -76,13 +82,13 @@ export function MarketsScreen() {
             options={MARKET_FILTERS}
           />
         </div>
-        <div className="px-3 pt-3">
+        <div className="pt-3">
           <DeskWatchlist lines={lines} filter={filter} arriving />
         </div>
       </section>
-      <section aria-label="Open interest" className="px-3 pt-3 lg:pt-15">
+      <section aria-label="Open interest">
         <OpenInterestMap lines={lines} filter={filter} />
       </section>
-    </div>
+    </Column>
   );
 }

@@ -87,9 +87,9 @@ export function StarterPanel({ className, hideWhenClaimed }: { className?: strin
       </p>
       {finished ? (
         <Button asChild variant="outline">
-          <Link href={phase.kind === "done" ? ROUTES.markets : ROUTES.fund}>
+          <Link href={phase.kind === "done" ? ROUTES.markets : ROUTES.addMoney}>
             <Check />
-            {phase.kind === "done" ? "Trade gold" : "Open Fund"}
+            {phase.kind === "done" ? "Trade gold" : "Add money"}
           </Link>
         </Button>
       ) : (

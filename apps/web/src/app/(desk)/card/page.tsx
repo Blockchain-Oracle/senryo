@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CardScreen } from "@/components/screens/card-screen";
+import { CardScreen } from "@/components/card/card-screen";
 
 export const metadata: Metadata = { title: "Card" };
 

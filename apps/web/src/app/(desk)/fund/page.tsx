@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
-import { FundScreen } from "@/components/screens/fund-screen";
+import { Redirect } from "@/components/shell/redirect";
+import { ROUTES } from "@/lib/constants/routes";
 
-export const metadata: Metadata = { title: "Fund" };
-
+/** Legacy desk path → Add money (as the phone remaps `/fund`). */
 export default function FundPage() {
-  return <FundScreen />;
+  return <Redirect to={ROUTES.addMoney} />;
 }
