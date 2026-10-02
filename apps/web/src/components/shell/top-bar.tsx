@@ -29,7 +29,7 @@ export function TopBar() {
         >
           <SealMark />
         </Link>
-        <div className="min-w-0 flex-1 overflow-x-auto py-1 [scrollbar-width:none]">
+        <div className="hidden min-w-0 flex-1 overflow-x-auto py-1 [scrollbar-width:none] sm:block">
           <VercelTabs
             tabs={APP_TABS}
             activeTab={activeTab(pathname) ?? ""}
@@ -41,9 +41,10 @@ export function TopBar() {
             )}
           />
         </div>
+        <span className="flex-1 sm:hidden" />
         <SessionChip />
         <span
-          className="hidden shrink-0 items-center gap-1.5 rounded-full bg-raised-2 py-1 pr-3 pl-1 text-meta sm:inline-flex"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-raised-2 py-1 pr-3 pl-1 text-meta"
           title={`${ACTIVE_NETWORK.name} · ${ACTIVE_NETWORK.modeLabel}`}
         >
           <EntityMark id={ids.evmChain(ACTIVE_NETWORK.chainId)} size={MODE_MARK_SIZE} decorative />

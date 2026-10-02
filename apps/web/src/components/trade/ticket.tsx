@@ -11,7 +11,7 @@ import { DECIMALS, formatUnits } from "@senryo/core";
 import type { LiveMarket } from "@senryo/query";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { DetailRow } from "@/components/kit/list-row";
 import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
 import { Slider } from "@/components/ui/slider";
@@ -68,6 +68,12 @@ export function Ticket({ market }: { market: LiveMarket }) {
   const [rearm, setRearm] = useState(0);
   const primer = useRiskPrimer();
   const accepted = useTermsAccepted(useAccount().hint?.address);
+  const { setSide } = t;
+  // "Trade this" (C11) opens the ticket on the trader's side; the amount is never prefilled.
+  useEffect(() => {
+    const side = new URLSearchParams(window.location.search).get("side");
+    if (side === "long" || side === "short") setSide(side);
+  }, [setSide]);
   const decimals = priceDecimalsOf(market.marketId);
   const p = t.preview;
   const detents = LEVERAGE_DETENTS.filter((d) => d <= market.maxLeverageX);

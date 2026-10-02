@@ -112,7 +112,16 @@ export function ProfileView({ lookup, missing }: { lookup: string; missing?: Rea
   if (reading.status === "failed") {
     const error = client.getQueryState(socialKeys.profile(env.chainId, lookup))?.error;
     if (isNotFound(error)) return missing ?? <NotPublic address={lookup.startsWith("0x") ? lookup : undefined} />;
-    return <QuietLine>Couldn’t load this profile</QuietLine>;
+    return (
+      <QuietLine
+        action={{
+          label: "Retry",
+          onClick: () => void client.invalidateQueries({ queryKey: socialKeys.profile(env.chainId, lookup) }),
+        }}
+      >
+        Couldn’t load this profile
+      </QuietLine>
+    );
   }
   return (
     <div className="grid gap-3 pt-4">

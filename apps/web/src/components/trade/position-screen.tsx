@@ -21,6 +21,7 @@ import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
 import { CLOSE_WORDS } from "@/components/kit/trace-words";
 import { Column } from "@/components/shell/column";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccount } from "@/lib/account/provider";
 import { MARK_ROW } from "@/lib/constants/brand";
 import { DEFAULT_MARKET, ROUTES } from "@/lib/constants/routes";
 import { REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "@/lib/constants/ticket";
@@ -194,6 +195,16 @@ function Detail({ marketId }: { marketId: number }) {
 export function PositionScreen() {
   const symbol = (useSearchParams().get("market") ?? DEFAULT_MARKET).toUpperCase();
   const meta = engineMarket(symbol);
+  const account = useAccount();
+  if (account.status === "ready" && !account.hint)
+    return (
+      <Column>
+        <PageHeader title={`${symbol} position`} back={ROUTES.markets} />
+        <QuietLine action={{ label: `Trade ${symbol}`, href: ROUTES.trade(meta?.symbol ?? DEFAULT_MARKET) }}>
+          No open position
+        </QuietLine>
+      </Column>
+    );
   return (
     <Column>
       <PageHeader title={meta ? `${meta.symbol} position` : "Position"} back={ROUTES.home} />

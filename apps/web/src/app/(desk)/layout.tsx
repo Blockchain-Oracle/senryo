@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BottomDock } from "@/components/shell/bottom-dock";
 import { TopBar } from "@/components/shell/top-bar";
 import { DeskDataProvider } from "@/lib/market-data";
 
@@ -12,7 +13,8 @@ export default function DeskLayout({ children }: { children: ReactNode }) {
     <DeskDataProvider>
       <div className="flex min-h-dvh flex-col">
         <TopBar />
-        <main className="w-full flex-1">{children}</main>
+        <main className="w-full flex-1 pb-20 sm:pb-0">{children}</main>
+        <BottomDock />
       </div>
     </DeskDataProvider>
   );
