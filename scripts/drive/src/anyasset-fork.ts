@@ -5,6 +5,8 @@
  * the source of the `aggregatorSwap` / bridge budgets in `@senryo/config` gas.ts.
  *   anvil --fork-url https://rpc.monad.xyz --network monad --port 18746
  *   MAINNET_FORK_RPC=http://127.0.0.1:18746 HYPERSYNC_API_TOKEN=… pnpm --filter @senryo/drive anyasset-check
+ * Quotes price the LIVE chain, so start the fork right before the pass: a fork a few minutes behind can lack the
+ * liquidity a multi-hop route uses (Monorail reverts `InsufficientLiquidity()`). FORK_CASES=label,… runs a subset.
  */
 import { type ApiClient, bridgeQuoteRoute, swapQuoteRoute } from "@senryo/api-client";
 import {
@@ -40,8 +42,15 @@ const USDC_FUNDING = 30_000_000n;
 const XAUT0_AMOUNT = 10_000n; // 0.01 XAUt0
 const SLIPPAGE_BPS = 100;
 const ATTEMPTS = 3;
+/** Monorail's `InsufficientLiquidity()` selector. */
+const INSUFFICIENT_LIQUIDITY = "0xbb55fd27";
+/** Any valid Solana address (only the Monad-side steps run on the fork). */
+const SOLANA_RECIPIENT = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM";
 
 type Check = (ok: boolean, what: string) => void;
+
+const only = process.env.FORK_CASES?.split(",").map((c) => c.trim().toLowerCase()) ?? [];
+const selected = (label: string) => only.length === 0 || only.some((c) => label.toLowerCase().startsWith(c));
 
 interface Row {
   case: string;
@@ -110,7 +119,7 @@ export async function forkGasPass(forkUrl: string, api: ApiClient, check: Check)
     { label: "USDT0 → XAUt0", from: MAINNET_TOKENS.usdt0, to: MAINNET_TOKENS.xaut0, amount: TEN_USD6 },
     { label: "AUSD → MON", from: MAINNET_TOKENS.ausd, to: NATIVE_TOKEN, amount: TEN_USD6 },
   ] as const;
-  for (const s of swaps) {
+  for (const s of swaps.filter((x) => selected(x.label))) {
     const q = await api.call(swapQuoteRoute, {
       query: {
         chainId: MAINNET_CHAIN_ID,
@@ -131,9 +140,12 @@ export async function forkGasPass(forkUrl: string, api: ApiClient, check: Check)
       amountIn: q.amountIn,
       gasEstimate: q.quote.gasEstimate ?? undefined,
     });
-    await run(`${s.label} (${q.quote.provider})`, requests, q.quote.gasEstimate).catch((error: unknown) =>
-      check(false, `fork ${s.label}: ${error instanceof Error ? error.message.split("\n")[0] : String(error)}`),
-    );
+    await run(`${s.label} (${q.quote.provider})`, requests, q.quote.gasEstimate).catch((error: unknown) => {
+      const message = (error instanceof Error ? error.message.split("\n")[0] : undefined) ?? String(error);
+      // An order-book hop (Kuru) priced on the live chain can't fill on a fork even seconds behind it.
+      if (message.includes(INSUFFICIENT_LIQUIDITY)) console.log(`~ fork ${s.label}: skipped — ${message} (fork drift)`);
+      else check(false, `fork ${s.label}: ${message}`);
+    });
   }
 
   const bridges = [
@@ -179,8 +191,17 @@ export async function forkGasPass(forkUrl: string, api: ApiClient, check: Check)
       provider: "relay",
       amount: HUNDRED_MON,
     },
+    // Relay's router (USDT0 swaps in before bridging), to a Solana wallet.
+    {
+      label: "USDT0 → Solana (relay)",
+      asset: "USDT0",
+      toChain: CHAIN_IDS_ELSEWHERE.solana,
+      provider: "relay",
+      amount: TEN_USD6,
+      recipient: SOLANA_RECIPIENT,
+    },
   ] as const;
-  for (const b of bridges) {
+  for (const b of bridges.filter((x) => selected(x.label))) {
     const q = await api.call(bridgeQuoteRoute, {
       query: {
         fromChain: MAINNET_CHAIN_ID,
@@ -188,7 +209,7 @@ export async function forkGasPass(forkUrl: string, api: ApiClient, check: Check)
         asset: b.asset,
         amount: b.amount,
         sender: user.address,
-        recipient: user.address,
+        recipient: "recipient" in b ? b.recipient : user.address,
         provider: b.provider,
       },
     });

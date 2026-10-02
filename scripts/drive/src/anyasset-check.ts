@@ -9,6 +9,7 @@
  *     send lists, and a status read;
  *  4. with MAINNET_FORK_RPC, the gas pass on a local anvil fork (anyasset-fork.ts).
  *   HYPERSYNC_API_TOKEN=… pnpm --filter @senryo/drive anyasset-check     (ADDRESS=0x… picks another holder)
+ *   FORK_ONLY=1 MAINNET_FORK_RPC=… [FORK_CASES=label,…] runs only the fork gas pass.
  */
 import {
   type BridgeQuoteOk,
@@ -62,6 +63,15 @@ const live = await openAnyAssetHarness({
 });
 // Practice without a HyperSync token: the token-list path, and no second query against the shared budget.
 const practice = await openAnyAssetHarness({});
+
+// FORK_ONLY=1 with MAINNET_FORK_RPC: just the gas pass (run it right after starting the fork).
+if (process.env.FORK_ONLY && process.env.MAINNET_FORK_RPC) {
+  await forkGasPass(process.env.MAINNET_FORK_RPC, live.api, check);
+  await live.close();
+  await practice.close();
+  console.log(failures.length === 0 ? "\nfork pass ok" : `\n${failures.length} fork check(s) failed`);
+  process.exit(failures.length === 0 ? 0 : 1);
+}
 
 // ---------------------------------------------------------------- 1. holdings
 console.log(`\n# holdings ${ADDRESS} on ${MAINNET_CHAIN_ID}`);
