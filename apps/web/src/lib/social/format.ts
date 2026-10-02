@@ -94,6 +94,12 @@ export const isNotFound = (error: unknown) => error instanceof ApiError && error
 export function socialErrorCopy(error: unknown, fallback: string): string {
   if (!(error instanceof ApiError)) return fallback;
   switch (error.code) {
+    case "NOT_LISTED":
+      return "Make your profile public to post";
+    case "CONTENT_BLOCKED":
+      return "That text can’t be posted";
+    case "RATE_LIMITED":
+      return "Posting limit · try again soon";
     case "BLOCKED":
       return "Blocked · you can’t interact";
     case "FOLLOW_LIMIT":

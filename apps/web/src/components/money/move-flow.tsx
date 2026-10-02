@@ -27,6 +27,7 @@ import { useTermsAccepted } from "@/lib/account/terms";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { ROUTES, setupHref } from "@/lib/constants/routes";
 import { type MoneyAsset, spendableOf } from "@/lib/money/assets";
+import { destinationMark, useDestinations } from "@/lib/money/destinations";
 import { amountOf, valueText } from "@/lib/money/format";
 import { moveOperation, type ReviewedMove, reviewMove } from "@/lib/money/move";
 import { usePeople } from "@/lib/money/people";
@@ -134,6 +135,7 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const params = useSearchParams();
   const money = useMoneyAssets(me);
   const { people, known: knownAddresses } = usePeople(me);
+  const destinations = useDestinations(env.chainId, me);
   const runner = useMoneyOperation(`${kind}:${env.chainId}:${me.toLowerCase()}`);
   const risk = known(useAccountRisk(isDeployed(env.chainId, "SenryoCore") ? me : undefined, "latest"));
   const bitmap = risk?.positionBitmap ?? 0;
@@ -223,6 +225,13 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
       ) : step === "to" ? (
         <RecipientStep
           people={kind === "send" ? people : []}
+          saved={
+            kind === "withdraw"
+              ? destinations.list
+                  .filter((d) => d.chainId === env.chainId)
+                  .map((d) => ({ name: d.name, address: d.address, mark: destinationMark(d) }))
+              : []
+          }
           initial={params.get("to") ?? ""}
           placeholder={kind === "send" ? "Name, @handle or address" : "Your Monad address or exchange deposit"}
           onPick={(r) => {
@@ -300,6 +309,9 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
           block={block}
           busy={busy}
           words={words}
+          {...(kind === "withdraw" && !destinations.find(reviewed.to, env.chainId)
+            ? { onSave: (name: string) => destinations.save({ name, address: reviewed.to, chainId: env.chainId }) }
+            : {})}
           onConfirm={() => void confirm()}
           onDone={() => {
             runner.reset();

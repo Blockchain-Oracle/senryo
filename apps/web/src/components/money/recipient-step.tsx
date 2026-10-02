@@ -6,10 +6,12 @@
  * address is taken as typed (its checksum and the chain checks run on the next step). The web has no camera scan in
  * this step: Paste is the named alternative (flow book G6).
  */
+import { shortAddress } from "@senryo/core";
 import { useProfile } from "@senryo/query";
 import { ClipboardPaste } from "lucide-react";
 import { useState } from "react";
 import { Avatar, personDetail, personName } from "@/components/identity/avatar";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { ListRow, QuietLine } from "@/components/kit/list-row";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +32,14 @@ export interface PickedRecipient {
 
 export function RecipientStep({
   people,
+  saved = [],
   initial,
   placeholder,
   onPick,
 }: {
   people: readonly Person[];
+  /** Saved destinations (Withdraw, B13), each with its exchange or chain mark. */
+  saved?: readonly { name: string; address: string; mark: string }[];
   initial: string;
   placeholder: string;
   onPick: (r: PickedRecipient) => void;
@@ -102,6 +107,20 @@ export function RecipientStep({
         )
       ) : value.length > 0 ? (
         <QuietLine>An @handle or a 0x address</QuietLine>
+      ) : null}
+      {saved.length > 0 && value.length === 0 ? (
+        <section className="grid gap-1">
+          <h2 className="text-meta text-text-2">Saved</h2>
+          {saved.map((d) => (
+            <ListRow
+              key={d.address}
+              leading={<EntityMark id={d.mark} label={d.name} size={MARK_ROW} decorative />}
+              title={d.name}
+              subtitle={shortAddress(d.address)}
+              onClick={() => onPick({ address: d.address as `0x${string}`, handle: null, label: d.name, avatar: null })}
+            />
+          ))}
+        </section>
       ) : null}
       {people.length > 0 && value.length === 0 ? (
         <section className="grid gap-1">

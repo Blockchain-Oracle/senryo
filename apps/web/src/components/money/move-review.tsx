@@ -22,6 +22,7 @@ import { splitSource } from "@/lib/money/requests";
 import type { useMoneyOperation } from "@/lib/money/use-money-operation";
 import { useSettledOutcome } from "@/lib/trade/send-outcome";
 import { AssetMark } from "./asset-mark";
+import { SaveDestination } from "./save-destination";
 
 export function MoveReview({
   move,
@@ -34,6 +35,7 @@ export function MoveReview({
   onConfirm,
   onDone,
   onLeave,
+  onSave,
 }: {
   move: ReviewedMove;
   runner: ReturnType<typeof useMoneyOperation>;
@@ -45,6 +47,8 @@ export function MoveReview({
   onConfirm: () => void;
   onDone: () => void;
   onLeave: () => void;
+  /** Withdraw to a new address: offer "Save as…" once it went through (B13). */
+  onSave?: ((name: string) => void) | undefined;
 }) {
   const outcome = useSettledOutcome(runner.trace.events);
   const split = splitSource(move.asset, move.amount);
@@ -77,6 +81,7 @@ export function MoveReview({
         }
         onDone={onDone}
         onLeave={onLeave}
+        next={onSave ? <SaveDestination onSave={onSave} /> : undefined}
       />
     );
   return (

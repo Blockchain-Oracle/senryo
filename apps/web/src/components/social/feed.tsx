@@ -15,6 +15,7 @@ import { known } from "@/components/ui/reading";
 import { Tabs } from "@/components/ui/vercel-tabs";
 import { ROUTES } from "@/lib/constants/routes";
 import { useSessionGate } from "@/lib/social/session-gate";
+import { ComposeThesis } from "./compose";
 import { FeedRow } from "./feed-row";
 
 function FeedList({ scope, actor }: { scope: FeedScope; actor?: string | undefined }) {
@@ -69,7 +70,16 @@ export function Feed() {
         label="Feed"
         onTabChange={(id) => setTab(id === "friends" ? "friends" : "global")}
       />
-      <div className="pt-2">{tab === "global" ? <FeedList scope="global" /> : <FollowingFeed />}</div>
+      <div className="pt-2">
+        {tab === "global" ? (
+          <>
+            <ComposeThesis />
+            <FeedList scope="global" />
+          </>
+        ) : (
+          <FollowingFeed />
+        )}
+      </div>
     </section>
   );
 }
