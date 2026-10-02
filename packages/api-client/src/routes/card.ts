@@ -170,8 +170,10 @@ export const cardAuthSummarySchema = z.object({
   transactionToken: z.string().max(TXN_TOKEN_MAX).optional(),
   /** The hold's lifecycle (E-D8): open (RESERVED…FINALIZED), CAPTURED, RELEASED or FAILED; null without a hold. */
   holdStatus: z.enum(HOLD_STATUSES).nullable().optional(),
-  /** What the merchant settled (CAPTURED holds). */
+  /** What the merchant settled (CAPTURED holds) — the full capture, an over-capture above the hold included. */
   capturedUsd6: uintCodec.nullable().optional(),
+  /** The part of that capture the collateral couldn't pay: card debt it created (CAPTURED holds; 0 when none). */
+  debtCreatedUsd6: uintCodec.nullable().optional(),
 });
 
 export const cardSummaryCardSchema = z.object({

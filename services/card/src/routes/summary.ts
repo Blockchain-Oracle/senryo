@@ -33,6 +33,7 @@ interface AuthRow {
   txn_token: string;
   hold_status: HoldStatus | null;
   captured_usd6: bigint | null;
+  debt_usd6: bigint | null;
 }
 
 /** Cards issued before `last4` was stored: fill it once from the issuer (never the PAN; rows without it retry). */
@@ -55,7 +56,7 @@ function authSelect(ctx: CardContext) {
   return ctx.db`
     SELECT a.id, a.kind, a.status, a.result, a.reason, a.deadline_at, a.amount_cents, a.hold_usd6, a.mcc,
            a.received_at, a.txn_token, a.request->'merchant'->>'descriptor' AS merchant_descriptor,
-           h.status AS hold_status, h.captured_usd6
+           h.status AS hold_status, h.captured_usd6, h.debt_usd6
       FROM card_auth a LEFT JOIN holds h ON h.hold_id = a.hold_id`;
 }
 
@@ -74,6 +75,7 @@ function authOf(r: AuthRow, now: number): CardAuthSummary {
     transactionToken: r.txn_token,
     holdStatus: r.hold_status,
     capturedUsd6: r.hold_status === "CAPTURED" ? r.captured_usd6 : null,
+    debtCreatedUsd6: r.hold_status === "CAPTURED" ? r.debt_usd6 : null,
   };
 }
 
