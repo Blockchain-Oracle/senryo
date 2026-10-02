@@ -9,17 +9,14 @@ import { activeNetwork, type NetworkKey } from "~/lib/network";
 const inApp = (path: string | undefined): path is string => path?.startsWith("/") === true && !path.startsWith("//");
 
 /**
- * The mode capsule's selector (S8.22): Practice · Paper money / Mainnet · Real money. A deep link for the other
- * network lands here (`to`, `next` from `+native-intent`): it continues to `next` only after the user switches.
+ * The mode sheet (A8): two rows, Practice and Mainnet. A deep link or push for the other network lands here (`to`,
+ * `next` from `+native-intent`) with one line saying so, and continues to `next` only after a deliberate switch.
  */
 export default function NetworkSheet() {
   const { to, next } = useLocalSearchParams<{ to?: string; next?: string }>();
   const request = to === MAINNET.key || to === TESTNET.key ? (to as NetworkKey) : undefined;
-  const body = request
-    ? `This link is for ${NETWORKS[request].modeLabel}. Switch to open it, or stay where you are.`
-    : "Practice with paper money, or trade real funds on Monad.";
   return (
-    <SheetRoute title="Choose your money" body={body}>
+    <SheetRoute title="Mode" {...(request ? { body: `This link is for ${NETWORKS[request].modeLabel}` } : {})}>
       <Picker request={request} next={inApp(next) ? next : undefined} />
     </SheetRoute>
   );
