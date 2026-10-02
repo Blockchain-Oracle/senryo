@@ -65,6 +65,8 @@ export const MARKET_HOLDERS_MAX = 50;
 
 /** Posts (S12b.6): theses and one-level replies; a reply's parent is always a thesis. */
 export const POST_KINDS = ["thesis", "reply"] as const;
+/** What a read can return: also `trade`, a feed trade row's post (F-D1), which is never written directly. */
+export const POST_VIEW_KINDS = [...POST_KINDS, "trade"] as const;
 /** Reasons a report can carry (App Store 1.2); `note` adds free text. */
 export const REPORT_REASONS = [
   "spam",

@@ -18,6 +18,7 @@ import {
   type ReportRequest,
   socialDeleteRoute,
   threadRoute,
+  tradeAnchorRoute,
   unblockRoute,
   unlikeRoute,
   unmuteRoute,
@@ -74,13 +75,30 @@ export function useDeletePost(session: SessionRunner | undefined) {
   });
 }
 
-/** Like / unlike; the answer carries the new count for an optimistic row update. */
+/** What a like, reply, report or share acts on: a post, or a feed trade row whose post may not exist yet (F-D1). */
+export type PostTarget = { post: string } | { tradeRow: string };
+
+/** F-D1: a trade row's post, created on first use (idempotent); its id is what likes, replies and links use. */
+export function useTradePost() {
+  const env = useQueryEnv();
+  return useMutation({
+    mutationFn: (tradeRow: string) => env.api.call(tradeAnchorRoute, { params: { id: tradeRow } }),
+  });
+}
+
+/** Like / unlike; the answer carries the new count for an optimistic row update. A trade row gets its post first. */
 export function useLikeToggle(session: SessionRunner | undefined) {
   const env = useQueryEnv();
   const refresh = useSocialRefresh();
   return useMutation({
-    mutationFn: ({ id, like }: { id: string; like: boolean }) =>
-      run(session, () => env.api.call(like ? likeRoute : unlikeRoute, { params: { id } })),
+    mutationFn: ({ target, like }: { target: PostTarget; like: boolean }) =>
+      run(session, async () => {
+        const id =
+          "post" in target
+            ? target.post
+            : (await env.api.call(tradeAnchorRoute, { params: { id: target.tradeRow } })).id;
+        return env.api.call(like ? likeRoute : unlikeRoute, { params: { id } });
+      }),
     onSuccess: refresh,
   });
 }

@@ -68,10 +68,28 @@ export async function notifyFollowed(db: Db, chainId: ChainId, follower: string,
   });
 }
 
-/** "@kai liked your thesis" — to the post's author, opening the thread. */
+interface LikedRow {
+  author: string;
+  kind: "thesis" | "reply" | "trade";
+  parent_id: string | null;
+  text: string;
+  /** A trade post's fill: "XAU" and "LONG" (null for a thesis or reply). */
+  symbol: string | null;
+  side: string | null;
+}
+
+/** What a liked post says in the push: its first line, or for a trade post the trade ("XAU long"). */
+function likedBody(post: LikedRow): string {
+  if (post.kind !== "trade") return excerpt(post.text);
+  return [post.symbol, post.side?.toLowerCase()].filter(Boolean).join(" ") || "Your trade";
+}
+
+/** "@kai liked your thesis" (or trade, or reply) — to the post's author, opening the thread. */
 export async function notifyLiked(db: Db, chainId: ChainId, liker: string, postId: string) {
-  const [post] = await db<{ author: string; kind: "thesis" | "reply"; parent_id: string | null; text: string }[]>`
-    SELECT author, kind, parent_id, text FROM posts WHERE id = ${postId} AND chain_id = ${chainId}`;
+  const [post] = await db<LikedRow[]>`
+    SELECT po.author, po.kind, po.parent_id, po.text, e.payload->>'symbol' AS symbol, e.payload->>'side' AS side
+      FROM posts po LEFT JOIN feed_events e ON e.id = po.feed_event_id
+     WHERE po.id = ${postId} AND po.chain_id = ${chainId}`;
   if (!post) return false;
   const who = await visibleActor(db, chainId, post.author, liker);
   if (!who) return false;
@@ -81,16 +99,18 @@ export async function notifyLiked(db: Db, chainId: ChainId, liker: string, postI
     user: post.author,
     channel: "social",
     title: pushTitle(chainId, `${who} liked your ${post.kind}`),
-    body: excerpt(post.text),
+    body: likedBody(post),
     url: threadLink(chainId, post.parent_id ?? postId),
     subject: { kind: "person", address: getAddress(liker) as Address },
   });
 }
 
-/** "@kai replied to your thesis" — to the thesis' author, with the reply's first line. */
+/** "@kai replied to your thesis" (or trade) — to the parent post's author, with the reply's first line. */
 export async function notifyReplied(db: Db, chainId: ChainId, replyId: string) {
-  const [reply] = await db<{ author: string; text: string; parent_id: string; thesis_author: string }[]>`
-    SELECT r.author, r.text, r.parent_id, t.author AS thesis_author
+  const [reply] = await db<
+    { author: string; text: string; parent_id: string; thesis_author: string; parent_kind: "thesis" | "trade" }[]
+  >`
+    SELECT r.author, r.text, r.parent_id, t.author AS thesis_author, t.kind AS parent_kind
       FROM posts r JOIN posts t ON t.id = r.parent_id
      WHERE r.id = ${replyId} AND r.chain_id = ${chainId}`;
   if (!reply) return false;
@@ -101,7 +121,7 @@ export async function notifyReplied(db: Db, chainId: ChainId, replyId: string) {
     eventKey: `reply:${replyId}`,
     user: reply.thesis_author,
     channel: "social",
-    title: pushTitle(chainId, `${who} replied to your thesis`),
+    title: pushTitle(chainId, `${who} replied to your ${reply.parent_kind}`),
     body: excerpt(reply.text),
     url: threadLink(chainId, reply.parent_id),
     subject: { kind: "person", address: getAddress(reply.author) as Address },

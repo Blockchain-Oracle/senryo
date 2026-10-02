@@ -10,9 +10,9 @@ import {
 } from "../primitives.ts";
 import { LEADERBOARD_PAGE_MAX, LEADERBOARD_PERIODS, LEADERBOARD_SCOPES, STANDINGS_MAX } from "../social.ts";
 import { defineRoute } from "./define.ts";
-import { TRADE_SIDES, TRADE_VENUES } from "./feed.ts";
-import { marketIdSchema, positionIdSchema, socialIdentitySchema } from "./posts.ts";
+import { marketIdSchema, socialIdentitySchema } from "./posts.ts";
 import { chainQuerySchema } from "./profile.ts";
+import { positionIdSchema, TRADE_SIDES, TRADE_VENUES } from "./trade.ts";
 
 /**
  * Leaderboard (S12b.5, D-174, §5.9). Metric: **realized PnL after fees, funding and borrow** (usd6), per network,

@@ -50,7 +50,7 @@ function useLike(post: Post): LikeView & { toggle: () => void } {
     const next = { liked: !shown.liked, likes: Math.max(0, shown.likes + (shown.liked ? -1 : 1)) };
     setMine({ ...next, ...over });
     write.mutate(
-      { id: post.id, like: next.liked },
+      { target: { post: post.id }, like: next.liked },
       {
         onSuccess: (state) => setMine({ liked: state.liked, likes: state.likes, ...over }),
         onError: (error) => {
