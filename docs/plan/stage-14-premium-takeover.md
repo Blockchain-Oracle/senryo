@@ -50,12 +50,13 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [x] D7 notifications inbox built + merged (27123af) + **deployed** (api/keeper `sha-294f8a2`, KEEPER_JOBS += pushes)
 - [ ] D8 Wallet activity indexing
 - [ ] D9 api/keeper deployed `sha-294f8a2` (2 Oct 14:20 UTC); any-asset routes redeploy in progress; card service resource not created yet (needs Lithic key)
-- [ ] D10 Web parity · D11 Submission (external TestFlight by ~9 Oct) · D12 Meme coins
+- [ ] D10 Web parity round 1 merged (3c9dba7: Home, Add money/Receive/voucher, any-asset Send/Withdraw on Monad, asset page, markets, ticket with step-up, position reduce/close/TP-SL, social, watch by chainId, setup + terms, card locks; provenance docs/product/provenance/web.md). Round 2 (pool, inbox + activity, swaps, TP/SL edit, settings, scan, landing bundle, signed acceptance) in progress
+- [ ] D11 Submission (external TestFlight by ~9 Oct) · D12 Meme coins
 
 ## Builds and updates (2 Oct)
 - iOS preview (ad hoc, runtime 0.2.0) build 141ef955 FINISHED — install from https://expo.dev/accounts/0xabu/projects/senryo/builds/141ef955-01b6-4245-be59-67b509c4f9e9 (the user's iPhone UDID 00008150-000E31212142401C is provisioned).
 - EAS Update `preview` group 9b7caf82 (runtime 0.2.0) carries every merged area through 10a24c2. Rollback target: republish an earlier group or the embedded bundle.
-- Android preview APK 1f595b80 queued; iOS simulator build 07d63644 queued (launch smoke test).
+- Android preview APK 1f595b80 FINISHED (runtime 0.2.0): https://expo.dev/artifacts/eas/QT0s9Zj8MY0RFhJeKx3zPn8m6709ABJLrXj0oNvcNvo.apk. iOS simulator build 07d63644 passed the launch smoke test.
 - api/keeper on Coolify at the latest pushed sha (holdings, swap/bridge quotes, notifications, standings, trade-post likes, card summary, delete-data completeness).
 
 ## Handoff
