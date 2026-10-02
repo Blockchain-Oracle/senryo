@@ -280,13 +280,13 @@ export const BRIDGE_ROUTES: readonly BridgeRoute[] = [
   ...routes(M, "MON", "out", [C.base, C.solana], ["USDC", "NATIVE"], ["relay"]),
   ...routes(M, "MON", "out", [C.ethereum, C.arbitrum, C.optimism, C.polygon, C.bnb, C.avalanche], ["USDC"], ["relay"]),
   ...routes(M, "MON", "out", [C.tron], ["NATIVE"], ["relay"]),
-  // ---- into Monad (signed on the other chain by the sender's own wallet)
+  // ---- into Monad (EVM sources: steps are EVM txs signed on the other chain by the sender's own wallet; Solana
+  // sources need Relay's instruction steps or a deposit address — not served yet)
   ...routes(M, "USDC", "in", CCTP_EVM, ["USDC"], ["relay", "cctp", "across"]),
-  ...routes(M, "USDC", "in", [C.bnb, C.solana], ["USDC"], ["relay"]),
+  ...routes(M, "USDC", "in", [C.bnb], ["USDC"], ["relay"]),
   ...routes(M, "AUSD", "in", [C.ethereum], ["AUSD", "USDC"], ["relay"]),
   ...routes(M, "AUSD", "in", [C.base, C.arbitrum], ["USDC"], ["relay"]),
   ...routes(M, "MON", "in", RELAY_EVM, ["NATIVE", "USDC"], ["relay"]),
-  ...routes(M, "MON", "in", [C.solana], ["USDC", "NATIVE"], ["relay"]),
   ...routes(M, "USDT0", "in", USDT_EVM, ["USDT"], ["across"]),
   ...routes(M, "XAUt0", "in", [C.ethereum], ["XAUT"], ["lifi"]),
   // ---- Practice: CCTP v2 is the only bridge serving 10143 (Circle sandbox)
