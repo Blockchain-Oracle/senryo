@@ -5,10 +5,11 @@
  * locked session is not a blocker: holding signs through Face ID, as before.
  */
 import { formatUnits, type GasShortReason, type TradeBlocker } from "@senryo/core";
+import type { ConfirmLevel } from "./confirm-level";
 import type { GasStep } from "./useGasTopUp";
 import type { Side } from "./useTicket";
 
-export type Fix = "addMoney" | "createAccount" | "maxLeverage";
+export type Fix = "addMoney" | "createAccount" | "maxLeverage" | "closePosition";
 
 export interface CommitState {
   label: string;
@@ -38,6 +39,8 @@ function blockerLabel(b: TradeBlocker): { label: string; fix?: Fix } {
       return { label: "Mainnet trading unavailable" };
     case "NO_ACCOUNT":
       return { label: "Create an account to trade", fix: "createAccount" };
+    case "OPPOSITE_SIDE":
+      return { label: `You're ${b.heldLong ? "long" : "short"} · close it first`, fix: "closePosition" };
     case "INSUFFICIENT_FREE":
       return { label: "Insufficient funds", fix: "addMoney" };
     case "MARKET_CLOSED":
@@ -57,10 +60,17 @@ function blockerLabel(b: TradeBlocker): { label: string; fix?: Fix } {
     case "SIMULATION_REVERTED":
       return { label: "Order check failed" };
     case "NO_GAS":
-      if (b.reason === "NOT_ELIGIBLE") return { label: "Your account needs gas to trade", fix: "addMoney" };
-      if (b.reason === "BUDGET_EXHAUSTED") return { label: "Today’s free gas is used up" };
-      return { label: "Slide to retry preparation" };
+      // Never the word "gas" on screen (flow book B11): it is the network fee.
+      if (b.reason === "NOT_ELIGIBLE") return { label: "Add MON for network fees", fix: "addMoney" };
+      if (b.reason === "BUDGET_EXHAUSTED") return { label: "Free network fees used today" };
+      return { label: "Slide to try again" };
   }
+}
+
+/** "Slide to long" / "Slide to short" (flow book C3a); above the session's limits the passkey is named up front. */
+function readyLabel(side: Side, confirmWith: ConfirmLevel): string {
+  const verb = `Slide to ${side}`;
+  return confirmWith === "passkey" ? `${verb} · passkey` : verb;
 }
 
 export function commitState(input: {
@@ -71,6 +81,7 @@ export function commitState(input: {
   hasAccount: boolean;
   ready: boolean;
   previewReady: boolean;
+  confirmWith?: ConfirmLevel;
 }): CommitState {
   const toppingUp = GAS_STEP_LABEL[input.gasStep.kind];
   if (toppingUp) return { label: toppingUp, holdable: false, retryGas: false };
@@ -85,5 +96,5 @@ export function commitState(input: {
     return { label: "Create an account to trade", holdable: false, retryGas: false, fix: "createAccount" };
   // `ready` is the account client being loaded (not the session lock: a locked session signs after Face ID).
   if (!input.ready || !input.previewReady) return { label: "Preparing order…", holdable: false, retryGas: false };
-  return { label: `Slide to open ${input.side === "long" ? "Long" : "Short"}`, holdable: true, retryGas: false };
+  return { label: readyLabel(input.side, input.confirmWith ?? "session"), holdable: true, retryGas: false };
 }

@@ -15,6 +15,8 @@ export type TradeBlocker =
   | { code: "OFFLINE" }
   | { code: "GEO_BLOCKED"; country: string | null }
   | { code: "NO_ACCOUNT" }
+  /** One net position per market (`PerpModule.sol` SideMismatch): the other side must be closed first (flow C3a). */
+  | { code: "OPPOSITE_SIDE"; heldLong: boolean }
   | { code: "NO_GAS"; reason: GasShortReason; retryAfterSec?: number }
   | { code: "INSUFFICIENT_FREE"; shortUsd6: bigint }
   | { code: "MARKET_CLOSED"; opensAt: bigint | undefined }
@@ -53,6 +55,8 @@ export interface TradeGateInput {
   preview: IncreasePreview | undefined;
   /** Decoded revert from the pre-send simulation, when it ran and failed. */
   simulationRevert: string | undefined;
+  /** The side of the position already open in this market, if any. */
+  heldLong?: boolean;
 }
 
 export function firstTradeBlocker(input: TradeGateInput): TradeBlocker | undefined {
@@ -60,6 +64,8 @@ export function firstTradeBlocker(input: TradeGateInput): TradeBlocker | undefin
   if (input.mainnet && input.geoAllowed === false) return { code: "GEO_BLOCKED", country: input.country };
   if (!input.hasAccount) return { code: "NO_ACCOUNT" };
   const issues = input.preview?.issues ?? [];
+  if (issues.some((i) => i.kind === "SIDE_MISMATCH") && input.heldLong !== undefined)
+    return { code: "OPPOSITE_SIDE", heldLong: input.heldLong };
   const short = issues.find((i) => i.kind === "INSUFFICIENT_FREE");
   if (short) return { code: "INSUFFICIENT_FREE", shortUsd6: short.shortUsd6 };
   if (input.status === "CLOSED") return { code: "MARKET_CLOSED", opensAt: input.opensAt };
@@ -134,6 +140,8 @@ export function blockerCopy(
       return { title: "Mainnet trading isn't available in your region", action: "Practice mode is open to everyone" };
     case "NO_ACCOUNT":
       return { title: "Create an account to trade", action: "Create account" };
+    case "OPPOSITE_SIDE":
+      return { title: `You're ${b.heldLong ? "long" : "short"} ${market}`, action: "Close it first" };
     case "NO_GAS":
       return gasCopy(b.reason, b.retryAfterSec);
     case "INSUFFICIENT_FREE":
@@ -169,19 +177,19 @@ function gasCopy(reason: GasShortReason, retryAfterSec: number | undefined): Blo
   switch (reason) {
     case "NOT_ELIGIBLE":
       return {
-        title: "Your account needs gas to trade",
-        action: "Claim practice funds or deposit — gas comes with them",
+        title: "Add MON for network fees",
+        action: "Practice money and deposits include them",
       };
     case "BUDGET_EXHAUSTED": {
       const hours = retryAfterSec === undefined ? undefined : Math.max(1, Math.ceil(retryAfterSec / SECONDS_PER_HOUR));
       return {
-        title: "Today's free gas is used up",
+        title: "Free network fees used today",
         action: hours === undefined ? "Add MON to your account to keep trading" : `More in ${hours}h · or add MON`,
       };
     }
     case "RELAYER_BUSY":
     case "UNREACHABLE":
     case "UNKNOWN":
-      return { title: "Couldn't add gas right now", action: "Hold again to retry" };
+      return { title: "Couldn't prepare network fees", action: "Slide again to retry" };
   }
 }

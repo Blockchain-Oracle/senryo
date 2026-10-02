@@ -37,10 +37,45 @@ export const PlacedTriggersDocument = defineDocument<ScanVars>()(
       limit: $limit
       offset: $offset
     ) {
-      id expiry
+      id expiry placedAt user_id market_id
     }
   }`,
-  z.object({ Trigger: z.array(z.object({ id: z.string(), expiry: z.number().int() })) }).transform((d) => d.Trigger),
+  z
+    .object({
+      Trigger: z.array(
+        z.object({
+          id: z.string(),
+          expiry: z.number().int(),
+          placedAt: z.number().int(),
+          user_id: z.string(),
+          market_id: z.string(),
+        }),
+      ),
+    })
+    .transform((d) => d.Trigger),
+);
+
+/**
+ * When each open position began (unix seconds). A TP/SL belongs to the position it was placed for: one placed before
+ * the current position opened is a leftover of a closed or liquidated one and must not fire (flow book C6).
+ */
+export const OpenPositionStartsDocument = defineDocument<ScanVars>()(
+  "KeeperOpenPositionStarts",
+  `query KeeperOpenPositionStarts($chainId: Int!, $limit: Int!, $offset: Int!) {
+    Position(
+      where: { chainId: { _eq: $chainId }, status: { _eq: "OPEN" } }
+      order_by: { id: asc }
+      limit: $limit
+      offset: $offset
+    ) {
+      user_id market_id openedAt
+    }
+  }`,
+  z
+    .object({
+      Position: z.array(z.object({ user_id: z.string(), market_id: z.string(), openedAt: z.number().int() })),
+    })
+    .transform((d) => d.Position),
 );
 
 /**

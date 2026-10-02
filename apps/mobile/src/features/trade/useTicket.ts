@@ -4,7 +4,8 @@
  * in spec order; and the send — `increase` through `@senryo/chain` with the scoped signer (the session policy sees
  * market room + equity, so an in-scope open signs without a step-up; D-037 Face ID is the policy's call).
  */
-import { pinRead, readAccountSnapshot, readMarketRisk, readPositions } from "@senryo/chain";
+import { authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
+import { pinRead, readAccountSnapshot, readMarketRisk, readPositions, type Sender } from "@senryo/chain";
 import { MAINNET_CHAIN_ID, positionCount } from "@senryo/config";
 import {
   capHeadroomUsd6,
@@ -36,11 +37,14 @@ import {
 } from "@senryo/query";
 import { onlineManager } from "@tanstack/react-query";
 import { useEffect, useRef, useSyncExternalStore } from "react";
+import { Platform } from "react-native";
 import { applyKey, type KeypadKey } from "~/components/trade/Keypad";
 import { useAccount } from "~/lib/account/provider";
-import { userSender } from "~/lib/account/sender";
+import { stepUpSender, userSender } from "~/lib/account/sender";
 import { activeNetwork } from "~/lib/network";
+import { notify } from "~/lib/notify";
 import { useReviewGuard } from "~/lib/review-guard";
+import { openConfirmLevel } from "./confirm-level";
 import { draftKey, type Side, useTicketDraft } from "./draft";
 import { planKey, usePlannedTriggers } from "./planned-triggers";
 import { useGasTopUp } from "./useGasTopUp";
@@ -113,6 +117,17 @@ export function useTicket(market: LiveMarket) {
         ? { kind: "topup" }
         : { kind: "ok" };
   const trace = useSendTrace(key);
+  // Above the session's limits the reviewed order is signed with one passkey step-up instead of failing (Part 1 #1).
+  const confirmWith = openConfirmLevel({
+    client: account.client,
+    address,
+    faceId: account.settings.faceId,
+    marketId: market.marketId,
+    isLong,
+    notionalUsd6,
+    equityUsd6: snapshot?.equityInit,
+    roomUsd6: capHeadroomUsd6(market.risk, market.book, market.pv, isLong),
+  });
   const protection = usePlannedTriggers(planKey(env.chainId, address, market.marketId));
   const simulationRevert = trace.events.find((e) => e.stage === "failed")?.error;
 
@@ -129,6 +144,7 @@ export function useTicket(market: LiveMarket) {
     maxLeverageX: market.maxLeverageX,
     preview,
     simulationRevert: simulationRevert instanceof Error ? simulationRevert.message.split("\n")[0] : undefined,
+    ...(held ? { heldLong: held.isLong } : {}),
   });
 
   // What the ticket is showing right now, readable after an await (review R02): a confirmed order may only be sent
@@ -189,36 +205,52 @@ export function useTicket(market: LiveMarket) {
       signingRisk = freshRisk;
       signingMarket = { ...market, ...freshMarket };
     };
-    const sender = userSender(client, address, account.settings.faceId, {
-      marketRoomUsd6: (id, long) =>
-        id === market.marketId
-          ? capHeadroomUsd6(signingMarket.risk, signingMarket.book, signingMarket.pv, long)
-          : undefined,
-      equityUsd6: () => signingRisk.equityInit,
-      marketLabel: (id) => (id === market.marketId ? market.name : undefined),
-    });
     const open = positionCount(snapshot.positionBitmap) + (held ? 0 : 1);
-    return trace.run(
-      sender,
-      increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18, open),
-      {
-        revalidate,
-        plannedActions: ["increase", ...protection.levels.map(() => "placeTrigger")],
-        reviewedIntent: {
-          network: env.chainId === MAINNET_CHAIN_ID ? "mainnet" : "testnet",
-          marketId: String(market.marketId),
-          symbol: market.symbol,
-          side,
-          leverage: String(leverage),
-          marginUsd6: amountUsd6.toString(),
-          lockedUsd6: preview.marginUsd6.toString(),
-          notionalUsd6: notionalUsd6.toString(),
-          execPrice18: preview.execPrice18.toString(),
-          feeUsd6: preview.feeUsd6.toString(),
-          sizeDelta: preview.sizeDelta.toString(),
-          protection: protection.levels.map((level) => `${level.kind}:${level.price18}`).join(","),
+    const send = (sender: Sender) =>
+      trace.run(
+        sender,
+        increaseRequest(env.chainId, market.marketId, isLong, notionalUsd6, preview.execPrice18, open),
+        {
+          revalidate,
+          plannedActions: ["increase", ...protection.levels.map(() => "placeTrigger")],
+          reviewedIntent: {
+            network: env.chainId === MAINNET_CHAIN_ID ? "mainnet" : "testnet",
+            marketId: String(market.marketId),
+            symbol: market.symbol,
+            side,
+            leverage: String(leverage),
+            marginUsd6: amountUsd6.toString(),
+            lockedUsd6: preview.marginUsd6.toString(),
+            notionalUsd6: notionalUsd6.toString(),
+            execPrice18: preview.execPrice18.toString(),
+            feeUsd6: preview.feeUsd6.toString(),
+            sizeDelta: preview.sizeDelta.toString(),
+            protection: protection.levels.map((level) => `${level.kind}:${level.price18}`).join(","),
+          },
         },
-      },
+      );
+    // The same reviewed order either way; only the signer differs. A cancelled passkey is silent (nothing signed).
+    if (confirmWith === "passkey") {
+      try {
+        return await account.stepUp((signer) => send(stepUpSender(signer)));
+      } catch (error) {
+        const kind = classifyAuthError(error);
+        if (isSilent(kind)) return undefined;
+        if (kind === "unknown" && !(error instanceof Error && error.name === "AuthError")) throw error;
+        const copy = authFailureCopy(kind, Platform.OS === "ios" ? "ios" : "android");
+        notify({ title: copy.title, description: copy.body, tone: "warning" });
+        return undefined;
+      }
+    }
+    return send(
+      userSender(client, address, account.settings.faceId, {
+        marketRoomUsd6: (id, long) =>
+          id === market.marketId
+            ? capHeadroomUsd6(signingMarket.risk, signingMarket.book, signingMarket.pv, long)
+            : undefined,
+        equityUsd6: () => signingRisk.equityInit,
+        marketLabel: (id) => (id === market.marketId ? market.name : undefined),
+      }),
     );
   };
 
@@ -241,6 +273,7 @@ export function useTicket(market: LiveMarket) {
     hasAccount: address !== undefined,
     ready: account.client !== undefined,
     trace,
+    confirmWith,
     gasStep: topUp.step,
     resetGas: topUp.reset,
     submit,

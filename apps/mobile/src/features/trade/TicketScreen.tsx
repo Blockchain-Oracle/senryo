@@ -106,6 +106,7 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
     hasAccount: t.hasAccount,
     ready: t.ready,
     previewReady: t.preview !== undefined,
+    confirmWith: t.confirmWith,
   });
   // The order's identity at the hold: any change while holding resets it (Codex S1b.7 consult #3).
   const resetKey = [
@@ -113,6 +114,7 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
     line.marketId,
     account.hint?.address ?? "",
     t.side,
+    t.confirmWith,
     t.amountText,
     t.leverage,
     t.preview?.execPrice18 ?? "",

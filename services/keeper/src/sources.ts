@@ -3,7 +3,15 @@ import type { ChainId } from "@senryo/config";
 import { createIndexerClient, type IndexerClient, IndexerError } from "@senryo/indexer-client";
 import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
 import { INDEXER_TIMEOUT_MS, MAX_SCAN_PAGES, SCAN_LIMIT } from "./constants.ts";
-import { OpenPositionUsersDocument, PendingInboxesDocument, PlacedTriggersDocument } from "./indexer-documents.ts";
+import {
+  OpenPositionStartsDocument,
+  OpenPositionUsersDocument,
+  PendingInboxesDocument,
+  PlacedTriggersDocument,
+} from "./indexer-documents.ts";
+
+/** One open position per user per market on our engine (one net position, `PerpModule`). */
+const positionKey = (user: string, market: string) => `${user.toLowerCase()}:${market}`;
 
 /**
  * Where the keeper learns which accounts / trigger orders to watch. The indexer (S4, Envio) is the real source —
@@ -101,10 +109,24 @@ export class IndexerSource implements KeeperSource {
   async triggerOrders(): Promise<Hex[]> {
     try {
       const nowSec = Math.floor(Date.now() / MS_PER_SECOND);
-      const triggers = await this.all((offset) =>
-        this.client.request(PlacedTriggersDocument, { chainId: this.chainId, limit: SCAN_LIMIT, offset }),
-      );
-      return triggers.filter((t) => t.expiry > nowSec).map((t) => t.id as Hex);
+      const [triggers, positions] = await Promise.all([
+        this.all((offset) =>
+          this.client.request(PlacedTriggersDocument, { chainId: this.chainId, limit: SCAN_LIMIT, offset }),
+        ),
+        this.all((offset) =>
+          this.client.request(OpenPositionStartsDocument, { chainId: this.chainId, limit: SCAN_LIMIT, offset }),
+        ),
+      ]);
+      const openedAt = new Map(positions.map((p) => [positionKey(p.user_id, p.market_id), p.openedAt]));
+      // A trigger fires only for the position it was placed for (flow book C6): none open, or one opened after the
+      // trigger was placed, means it is a leftover of a closed or liquidated position.
+      const live = triggers.filter((t) => {
+        const since = openedAt.get(positionKey(t.user_id, t.market_id));
+        return t.expiry > nowSec && since !== undefined && t.placedAt >= since;
+      });
+      const skipped = triggers.length - live.length;
+      if (skipped > 0) this.log.info({ skipped }, "triggers skipped: expired or not for the open position");
+      return live.map((t) => t.id as Hex);
     } catch (error) {
       this.log.warn({ err: describeIndexerError(error) }, "indexer triggers unavailable");
       return [];

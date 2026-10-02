@@ -6,7 +6,7 @@ import { Button } from "~/components/kit/Button";
 import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
-import { ROUTES } from "~/lib/constants/routes";
+import { positionRoute, ROUTES } from "~/lib/constants/routes";
 import { pct, usd } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { QUANTITY_DECIMALS } from "./constants";
@@ -115,7 +115,7 @@ export function TicketFooter({
         <View style={styles.actions}>
           <View style={styles.side}>
             {commit.fix ? (
-              <FixButton fix={commit.fix} t={t} max={line.maxLeverageX} />
+              <FixButton fix={commit.fix} t={t} max={line.maxLeverageX} marketId={line.marketId} />
             ) : (
               <Button
                 label="Review"
@@ -144,7 +144,7 @@ export function TicketFooter({
   );
 }
 
-function FixButton({ fix, t, max }: { fix: Fix; t: TicketModel; max: number }) {
+function FixButton({ fix, t, max, marketId }: { fix: Fix; t: TicketModel; max: number; marketId: number }) {
   const props = { size: "sm" as const, variant: "secondary" as const };
   switch (fix) {
     case "addMoney":
@@ -154,6 +154,8 @@ function FixButton({ fix, t, max }: { fix: Fix; t: TicketModel; max: number }) {
       return null;
     case "maxLeverage":
       return <Button {...props} label={`Set ${max}×`} onPress={() => t.setLeverage(max)} />;
+    case "closePosition":
+      return <Button {...props} label="Close it" onPress={() => router.push(positionRoute(String(marketId)))} />;
   }
 }
 
