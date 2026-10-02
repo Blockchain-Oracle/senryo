@@ -7,6 +7,7 @@ import {
   type CardSimulatePreset,
   type CardSimulateResult,
   type CardSummary,
+  cardEmbedRoute,
   cardFreezeRoute,
   cardIssueRoute,
   cardSimulateRoute,
@@ -32,6 +33,9 @@ function useRunner() {
   const refresh = () => cache.invalidateQueries({ queryKey: key });
   return { env, run, refresh, cache, key };
 }
+
+/** How long the issuer's details link stays valid (the sheet also hides itself after this). */
+export const EMBED_TTL_SEC = 60;
 
 export function useIssueCard() {
   const { env, run, cache, key } = useRunner();
@@ -76,5 +80,14 @@ export function useSimulateStep() {
       run(() => env.api.call(cardSimulateStepRoute, { body: input })),
     // The webhook lands after the response; the lifecycle row follows on the next reads.
     onSettled: refresh,
+  });
+}
+
+/** The issuer's card-details page for one card: a short-lived URL (E5), fetched only after a passkey step-up. */
+export function useCardEmbed() {
+  const { env, run } = useRunner();
+  return useMutation({
+    mutationFn: (cardToken: string) =>
+      run(() => env.api.call(cardEmbedRoute, { query: { cardToken, ttlSec: EMBED_TTL_SEC } })),
   });
 }
