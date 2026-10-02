@@ -1,6 +1,6 @@
 # Rebuild status — 2026-10-02, Codex
 
-Current work: [approved mobile rebuild](mobile-rebuild-2026-10-02.md), branch `codex/mobile-quality-rebuild`, baseline `6e2be72`. Foundation and journey source changes are in progress; current physical-phone acceptance and release runtime/channel verification are pending. No new production deployment is claimed. Retained Mainnet/Perpl/issuer/other-chain/programme dependencies remain in the contract. Previous status below is historical and has not been reverified for this rebuild.
+Current work: [approved mobile rebuild](mobile-rebuild-2026-10-02.md), branch `codex/mobile-quality-rebuild`, baseline `6e2be72`. Foundation and journey source are committed through `1c0ad7d`; source checks, iOS Release and iOS/Android export passed. Current physical-phone acceptance and release runtime/channel verification are pending. Continue from [Claude Code handoff](../design/reviews/2026-10-02-claude-code-handoff.md) and [validation](../design/reviews/2026-10-02-rebuild-validation.md). No new production deployment is claimed. Retained Mainnet/Perpl/issuer/other-chain/programme dependencies remain in the contract. Previous status below is historical and has not been reverified for this rebuild.
 
 # STATUS — updated 2026-10-01 18:10 UTC by claude (lead, Opus 5.5; expanded-review fixes S01/S02/S03/S05/S06, J11, Holders)
 
