@@ -3,15 +3,14 @@ import { usePortfolio } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { AmountHero } from "~/components/kit/AmountHero";
 import { Button } from "~/components/kit/Button";
 import { Skeleton } from "~/components/kit/states";
+import { Info } from "~/components/kit/symbols";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
-import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-
-const MS_PER_SECOND = 1000;
-const UPDATED_THRESHOLD_SEC = 5;
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 export function HomeSeal() {
   const { color } = useTheme();
@@ -39,45 +38,32 @@ export function ExpandedBalance() {
   const portfolio = usePortfolio(address);
   if (!address) return null;
   const known = portfolio.status === "fresh" || portfolio.status === "stale" ? portfolio.value : undefined;
-  const age = known ? Math.max(0, Math.floor(Date.now() / MS_PER_SECOND) - Number(known.timestamp)) : 0;
   const available = known?.components.some((c) => c.supported !== false && c.valueUsd6 !== undefined);
+  const partial = known?.quality === "partial";
   return (
     <View style={styles.hero}>
       <Pressable
         onPress={() => router.push(ROUTES.balanceDetails)}
         accessibilityRole="button"
-        accessibilityLabel="Total portfolio. Open valuation details."
+        accessibilityHint="Opens what makes up your total"
         style={styles.amounts}
       >
-        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>Total portfolio</Text>
         {known && available ? (
-          <Text
-            maxFontSizeMultiplier={HERO_FONT_SCALE}
-            adjustsFontSizeToFit
-            minimumFontScale={0.65}
-            numberOfLines={1}
-            style={[TYPE.displayBalance, { color: color.ink }]}
-          >
-            {usd(known.totalUsd6)}
-          </Text>
+          <View style={styles.line}>
+            <AmountHero text={usd(known.totalUsd6)} partial={partial} />
+            {partial ? (
+              <Info size={SIZE.iconSm} color={color.text3} accessibilityLabel="Some values are missing" />
+            ) : null}
+          </View>
         ) : portfolio.status === "failed" || (known && !available) ? (
           <Text style={[TYPE.row, { color: color.text3 }]}>Balance unavailable</Text>
         ) : (
           <Skeleton width={200} height={SIZE.skeletonRow} />
         )}
-        <Text style={[TYPE.meta, { color: color.text3 }]}>
-          {known?.quality === "partial"
-            ? "Partial · View details"
-            : portfolio.status === "stale"
-              ? "Updated earlier · View details"
-              : age > UPDATED_THRESHOLD_SEC
-                ? `Updated ${age}s ago · View details`
-                : "Estimated value · View details"}
-        </Text>
       </Pressable>
       <View style={styles.actions}>
         <Button label="Add money" style={styles.grow} onPress={() => router.push(ROUTES.addMoney)} />
-        <Button label="Withdraw" variant="outline" style={styles.grow} onPress={() => router.push(ROUTES.withdraw)} />
+        <Button label="Withdraw" variant="secondary" style={styles.grow} onPress={() => router.push(ROUTES.withdraw)} />
       </View>
     </View>
   );
@@ -85,6 +71,7 @@ export function ExpandedBalance() {
 const styles = StyleSheet.create({
   hero: { gap: SPACE.lg, paddingTop: SPACE.sm, paddingBottom: SPACE.lg },
   amounts: { gap: SPACE.xs },
+  line: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   actions: { flexDirection: "row", gap: SPACE.sm },
   grow: { flex: 1 },
 });

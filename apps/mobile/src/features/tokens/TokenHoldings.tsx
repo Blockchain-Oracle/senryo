@@ -14,7 +14,8 @@ import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { TokenRow } from "./TokenRow";
 
-export function TokenHoldings() {
+/** `bare`: rows only, for Home → Assets (the tab is the heading). */
+export function TokenHoldings({ bare = false }: { bare?: boolean } = {}) {
   const { color } = useTheme();
   const network = useNetwork();
   const address = useAccount().hint?.address;
@@ -34,10 +35,12 @@ export function TokenHoldings() {
   const total = rows.reduce((sum, r) => sum + (r.valueUsd6 ?? 0n), 0n);
   return (
     <View>
-      <View style={styles.heading}>
-        <SectionLabel>Tokens</SectionLabel>
-        <Text style={[TYPE.rowAmount, { color: color.ink }]}>{usd(total, undefined, "mainnet")}</Text>
-      </View>
+      {bare ? null : (
+        <View style={styles.heading}>
+          <SectionLabel>Tokens</SectionLabel>
+          <Text style={[TYPE.rowAmount, { color: color.ink }]}>{usd(total, undefined, "mainnet")}</Text>
+        </View>
+      )}
       {rows.map((r) => (
         <TokenRow
           key={r.token.symbol}

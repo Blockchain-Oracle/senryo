@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useGroupFill } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -23,28 +22,10 @@ export function SectionHeading({ title, count, trailing }: { title: string; coun
   );
 }
 
-const CELLS = ["trade", "spend", "locked"] as const;
-/** Skeleton line widths inside a loading cell (share of the cell) and a loading row (pt). */
-const CELL_LABEL_WIDTH = "70%";
-const CELL_VALUE_WIDTH = "90%";
+/** Skeleton line widths inside a loading row (pt). */
 const ROW_TITLE_WIDTH = 96;
 const ROW_DETAIL_WIDTH = 148;
 const ROW_RESULT_WIDTH = 88;
-
-/** The three availability cells while the balance is still being read. */
-export function AvailabilitySkeleton() {
-  const fill = useGroupFill();
-  return (
-    <View style={styles.cells} accessibilityRole="progressbar" accessibilityLabel="Reading your balance">
-      {CELLS.map((key) => (
-        <View key={key} style={[styles.cell, { backgroundColor: fill }]}>
-          <Skeleton width={CELL_LABEL_WIDTH} height={SIZE.skeletonSmall} />
-          <Skeleton width={CELL_VALUE_WIDTH} />
-        </View>
-      ))}
-    </View>
-  );
-}
 
 /** Rows in the position-row anatomy while positions are still being read. */
 export function PositionRowsSkeleton({ rows = 2 }: { rows?: number }) {
@@ -71,8 +52,6 @@ export function PositionRowsSkeleton({ rows = 2 }: { rows?: number }) {
 
 const styles = StyleSheet.create({
   heading: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: SPACE.sm },
-  cells: { flexDirection: "row", gap: SPACE.sm },
-  cell: { flex: 1, gap: SPACE.sm, paddingVertical: SPACE.md, paddingHorizontal: SPACE.md, borderRadius: RADIUS.md },
   row: {
     flexDirection: "row",
     alignItems: "center",

@@ -18,7 +18,8 @@ import { PositionRowsSkeleton, SectionHeading } from "./HomeParts";
  * The heading's right side carries what the retired mini-bar showed: total unrealised P&L at the conservative exit
  * and the position closest to liquidation. Loading holds the rows' shape; empty is one quiet line and one action.
  */
-export function PositionsSection() {
+/** `bare`: inside Home's tabs — the tab names the section, the summary line stays. */
+export function PositionsSection({ bare = false }: { bare?: boolean } = {}) {
   const address = useAccount().hint?.address;
   const positions = usePositions(address);
   const live = useAccountRisk(address, "latest");
@@ -27,7 +28,7 @@ export function PositionsSection() {
   if (positions.status === "unknown") {
     return (
       <View style={styles.section}>
-        <SectionHeading title="Positions" />
+        {bare ? null : <SectionHeading title="Positions" />}
         <PositionRowsSkeleton />
       </View>
     );
@@ -37,9 +38,15 @@ export function PositionsSection() {
       <ReadingView reading={positions} retry={retry}>
         {(list) => (
           <>
-            <SectionHeading title="Positions" count={list.length} trailing={<Summary />} />
+            {bare ? (
+              list.length > 0 ? (
+                <Summary />
+              ) : null
+            ) : (
+              <SectionHeading title="Positions" count={list.length} trailing={<Summary />} />
+            )}
             {list.length === 0 ? (
-              <QuietLine action={{ label: "Browse markets", onPress: () => router.navigate(ROUTES.markets) }}>
+              <QuietLine action={{ label: "Explore markets", onPress: () => router.navigate(ROUTES.markets) }}>
                 No positions yet
               </QuietLine>
             ) : (

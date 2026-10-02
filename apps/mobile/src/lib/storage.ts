@@ -6,6 +6,8 @@ export const storage = createMMKV({ id: "senryo" });
 /** Every persisted key, versioned so a shape change never reads stale data. */
 export const STORAGE_KEYS = {
   theme: "senryo.theme.v1",
+  /** Home's last tab (Positions / Assets / Earn) — a per-viewer convenience. */
+  homeTab: "senryo.home-tab.v1",
   sounds: "senryo.sounds.v1",
   haptics: "senryo.haptics.v1",
   welcomed: "senryo.welcomed.v1",
