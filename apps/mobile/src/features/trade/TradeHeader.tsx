@@ -1,44 +1,48 @@
 import { notional } from "@senryo/core";
-import { ids } from "@senryo/identity";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { VenueChip } from "~/components/identity/VenueChip";
+import { ArrowLeftRight } from "~/components/kit/symbols";
 import { LeverageBadge } from "~/features/markets/LeverageBadge";
-import { ageLabel, STATUS_LABEL, statusTone } from "~/features/markets/session";
 import type { MarketLine } from "~/features/markets/useMarketLine";
-import { useNowSec } from "~/features/markets/useNowSec";
 import { arrow, price18, priceDecimalsOf, signedPct, usd } from "~/lib/money";
-import { useNetwork } from "~/lib/network";
-import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+
+/** The header mark: 40 pt, so four utility circles still fit beside the ticker on a 375 pt phone. */
+const HEADER_MARK = SIZE.avatarMd;
 
 /**
- * Market detail's identity, in the page's bar (Fomo F32, FT095): the market's own art (48 pt, v2-plan §5.12), its
- * symbol with the max-leverage badge, and its name under it. Mark, symbol and name are the market's configuration, so
- * they show before the oracle answers; the badge waits for the engine's margin parameter.
+ * Market detail's identity, in the page's bar (Fomo F32; flow book C2 step 1): the market's own art, the ticker with
+ * the max-leverage badge, and its short name with the venue under it. Mark, ticker and name are configuration, so
+ * they show before the oracle answers; the badge waits for the engine's margin parameter. `venue` names a venue that
+ * isn't Senryo with its badge on the mark.
  */
 export function MarketIdentity({
-  marketId,
+  mark,
   symbol,
   name,
   maxLeverageX,
+  venue = "Senryo",
+  venueMark,
 }: {
-  marketId: number;
+  mark: string;
   symbol: string;
   name: string;
   maxLeverageX: number | undefined;
+  venue?: string;
+  venueMark?: string | undefined;
 }) {
-  const network = useNetwork();
   const { color } = useTheme();
   return (
     <View style={styles.identity}>
-      <EntityMark id={ids.engineMarket(network.chainId, marketId)} size={SIZE.markDetail} decorative />
+      <EntityMark id={mark} badge={venueMark} size={HEADER_MARK} label={symbol} decorative />
       <View style={styles.titles}>
         <View style={styles.symbolRow}>
           <Text
             maxFontSizeMultiplier={CONTROL_FONT_SCALE}
             accessibilityRole="header"
+            accessibilityLabel={`${name}, ${symbol}, ${venue}`}
             numberOfLines={1}
-            style={[TYPE.sectionTitle, { color: color.ink }]}
+            style={[TYPE.sectionTitle, styles.shrink, { color: color.ink }]}
           >
             {symbol}
           </Text>
@@ -49,15 +53,15 @@ export function MarketIdentity({
           numberOfLines={1}
           style={[TYPE.rowDetail, { color: color.text3 }]}
         >
-          {name} / USD
+          {name} · {venue}
         </Text>
       </View>
     </View>
   );
 }
 
-/** The 24 h change with ▲▼ and a sign (never colour alone); "24h —" while the day-old candle is unknown. */
-function Change({ bps, suffix }: { bps: bigint | undefined; suffix: boolean }) {
+/** The 24 h change with ▲▼ and a sign (never colour alone); "—" while the day-old candle is unknown. */
+export function Change({ bps, suffix }: { bps: bigint | undefined; suffix: boolean }) {
   const { color } = useTheme();
   if (bps === undefined)
     return (
@@ -82,48 +86,38 @@ function Change({ bps, suffix }: { bps: bigint | undefined; suffix: boolean }) {
 }
 
 /**
- * The price block under the bar (F32/F35; direction §8 "price / change / freshness"): the oracle price as the page's
- * one dominant figure (Inter Display 40/44) with the 24 h change under it; at the right, open interest — both sides'
- * size at the oracle price, read from the engine's book, in this network's money; then one quiet freshness line
- * (session state · oracle · updated N ago, D-020) behind its status dot, with the explicit venue chip closing the row.
- * No plate, no outline.
+ * The price block under the bar (Fomo F32): the oracle price as the page's one figure with its 24 h change under it,
+ * and at the right open interest — both sides at the oracle price, in this network's money. The oracle's age and
+ * session state live in About → Technical details and the state banner, not on a dot line here.
  */
 export function PriceBlock({ line }: { line: MarketLine }) {
   const { color } = useTheme();
-  const now = useNowSec();
-  const age = ageLabel(line.updatedAt, now);
   const shown = price18(line.price18, priceDecimalsOf(line.marketId));
   const openInterest = usd(notional(line.market.book.longSize + line.market.book.shortSize, line.price18), 0);
   return (
     <View style={styles.block}>
-      <View>
+      <View style={styles.flex}>
         <Text
           maxFontSizeMultiplier={HERO_FONT_SCALE}
           numberOfLines={1}
           adjustsFontSizeToFit
           style={[TYPE.displayPrice, { color: color.ink }]}
-          accessibilityLabel={`Price ${shown} dollars, updated ${age}`}
+          accessibilityLabel={`Price ${shown} dollars`}
         >
           ${shown}
         </Text>
         <Change bps={line.change24hBps} suffix />
-        <View style={styles.pair}>
-          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Open interest</Text>
-          <Text style={[TYPE.rowPrice, { color: color.ink }]}>{openInterest}</Text>
-        </View>
       </View>
-      <View style={styles.fresh}>
-        <View style={[styles.dot, { backgroundColor: statusTone(line.status, color) }]} />
-        {/* Short words so "updated N ago" is never the part the venue chip pushes out; VoiceOver hears it whole. */}
-        <Text
-          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-          numberOfLines={1}
-          accessibilityLabel={`${STATUS_LABEL[line.status]}, oracle price updated ${age}`}
-          style={[TYPE.rowDetail, styles.flex, { color: color.text3 }]}
-        >
-          {STATUS_LABEL[line.status]} · {age}
+      <View style={styles.oi} accessible accessibilityLabel={`Open interest ${openInterest}`}>
+        <View style={styles.inline}>
+          <ArrowLeftRight size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowPrice, { color: color.ink }]}>
+            {openInterest}
+          </Text>
+        </View>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+          Open interest
         </Text>
-        <VenueChip venue={ids.venue("senryo")} />
       </View>
     </View>
   );
@@ -146,11 +140,10 @@ const styles = StyleSheet.create({
   identity: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
   titles: { flex: 1, gap: SPACE.xxs },
   symbolRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  block: { gap: SPACE.md },
-  pair: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.md },
   shrink: { flexShrink: 1 },
-  flex: { flex: 1 },
-  fresh: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  dot: { width: SIZE.dot, height: SIZE.dot, borderRadius: RADIUS.pill },
+  block: { flexDirection: "row", alignItems: "flex-start", gap: SPACE.md },
+  flex: { flex: 1, gap: SPACE.xxs },
+  oi: { alignItems: "flex-end", gap: SPACE.xxs, paddingTop: SPACE.sm },
+  inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   compact: { alignItems: "flex-end", gap: SPACE.xxs },
 });

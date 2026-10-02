@@ -22,6 +22,14 @@ export interface MarketRiskSnapshot {
   /** Accrual indexes (1e18) as of the market's last accrual — funding/borrow owed ≈ Δ × entry notional (F11). */
   fundingIndex: bigint;
   borrowIndex: bigint;
+  /** The accrual inputs (`MarketParams`, `MarketState`): per-second WAD factors and each side's entry notional. */
+  rates: {
+    fundingFactor: bigint;
+    borrowBase: bigint;
+    borrowSlope: bigint;
+    longNotionalUsd6: bigint;
+    shortNotionalUsd6: bigint;
+  };
 }
 
 export async function readMarketRisk(
@@ -71,6 +79,13 @@ export async function readMarketRisk(
     calendarId: feed[1],
     fundingIndex: BigInt(state.fundingIndex),
     borrowIndex: BigInt(state.borrowIndex),
+    rates: {
+      fundingFactor: BigInt(params.fundingFactor),
+      borrowBase: BigInt(params.borrowBase),
+      borrowSlope: BigInt(params.borrowSlope),
+      longNotionalUsd6: BigInt(state.longNotional),
+      shortNotionalUsd6: BigInt(state.shortNotional),
+    },
     maxLeverageX: imBps > 0n ? Number(RISK.BPS / imBps) : 0,
   };
 }

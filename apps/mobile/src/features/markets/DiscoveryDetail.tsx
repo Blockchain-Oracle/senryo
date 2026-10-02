@@ -2,10 +2,12 @@
  * A read-only instrument's page (review S03; market detail's anatomy, F32): identity and venue in the bar → the
  * authoritative price (Perpl's mark, or a calculated wrapper feed's price) with what its change compares → the chart
  * from its own history → the facts it has (open interest, volume, funding — or why not) → for a calculated feed, the
- * wrapper disclosure → and, where Short / Long would be, why it doesn't trade on this network and what opens it.
- * No ticket, no invented number.
+ * wrapper disclosure → and, where Short / Long would be, one disabled row: a lock and its word ("Mainnet", "Soon",
+ * "Read-only", "No feed"), with the reason one tap away (ⓘ). Watch and Share sit in the bar (flow book C2 rule
+ * "symmetry"; C10). No ticket, no invented number. Crude oil (no feed on Monad) gets the same page with no price.
  */
-import { type DiscoveryInstrument, discoveryInstrument } from "@senryo/config";
+import { type DiscoveryInstrument, discoveryInstrument, UNPRICED_INSTRUMENTS, WEB_ORIGIN } from "@senryo/config";
+import { ids } from "@senryo/identity";
 import { type DiscoveryFunding, type DiscoveryQuote, useDiscoveryCandles, useDiscoveryQuote } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack } from "expo-router";
@@ -13,17 +15,19 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HistoryChart } from "~/components/charts/HistoryChart";
-import { EntityMark } from "~/components/identity/EntityMark";
 import { KeyValue } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import { compactUsd6, finePct, tokenPrice } from "~/features/tokens/format";
+import { LockedBar } from "~/features/trade/SideBar";
+import { MarketIdentity } from "~/features/trade/TradeHeader";
 import { clockTime } from "~/lib/format";
 import { arrow, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { discoveryMark } from "./discovery-marks";
-import { gateTitle } from "./discovery-words";
+import { gateTitle, lockWord, NO_FEED } from "./discovery-words";
+import { MarketActions } from "./MarketActions";
 import { PageHeader, PageTitle } from "./PageHeader";
 import { DEFAULT_PERIOD, type PeriodKey, periodOf } from "./periods";
 import { QuietLine } from "./QuietLine";
@@ -53,7 +57,29 @@ function fundingText(f: DiscoveryFunding): string {
 export function DiscoveryDetail({ id }: { id: string }) {
   useHideDockWhileFocused("discovery-detail");
   const instrument = discoveryInstrument(id);
+  const unpriced = UNPRICED_INSTRUMENTS.find((u) => u.id === id);
   const { color } = useTheme();
+  if (unpriced) {
+    return (
+      <View style={[styles.fill, { backgroundColor: color.ground }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <PageHeader>
+          <MarketIdentity
+            mark={ids.equity(unpriced.symbol)}
+            symbol={unpriced.symbol}
+            name={unpriced.name}
+            maxLeverageX={undefined}
+            venue="No venue yet"
+          />
+        </PageHeader>
+        <View style={styles.body}>
+          <Text style={[TYPE.body, { color: color.text2 }]}>{unpriced.data.reason}.</Text>
+        </View>
+        <View style={styles.spacer} />
+        <LockedBar word={NO_FEED} />
+      </View>
+    );
+  }
   if (!instrument) {
     return (
       <View style={[styles.fill, { backgroundColor: color.ground }]}>
@@ -78,20 +104,27 @@ function Detail({ instrument }: { instrument: DiscoveryInstrument }) {
   const candles = useDiscoveryCandles(instrument.id, periodOf(period).interval);
   const gate = instrument.execution[network.chainId];
   const known = quote.status === "fresh" || quote.status === "stale" ? quote.value : undefined;
-  const subtitle = instrument.class === "crypto" ? `${instrument.name} · Perpl` : instrument.displayName;
+  const crypto = instrument.class === "crypto";
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <PageHeader>
-        <View style={styles.identity}>
-          <EntityMark id={discoveryMark(instrument)} size={SIZE.markDetail} decorative />
-          <View style={styles.flex}>
-            <Text style={[TYPE.rowTitle, { color: color.ink }]}>{instrument.symbol}</Text>
-            <Text numberOfLines={1} style={[TYPE.rowDetail, { color: color.text3 }]}>
-              {subtitle}
-            </Text>
-          </View>
-        </View>
+      <PageHeader
+        right={
+          <MarketActions
+            name={instrument.symbol}
+            watchKey={instrument.id}
+            shareUrl={`${WEB_ORIGIN}/markets/${instrument.symbol}`}
+          />
+        }
+      >
+        <MarketIdentity
+          mark={discoveryMark(instrument)}
+          venueMark={crypto ? ids.venue("perpl") : undefined}
+          symbol={instrument.symbol}
+          name={crypto ? instrument.name : instrument.underlying.name}
+          maxLeverageX={undefined}
+          venue={crypto ? "Perpl" : "Chainlink feed"}
+        />
       </PageHeader>
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + SPACE.xl }]}>
         <ReadingView
@@ -134,13 +167,12 @@ function Detail({ instrument }: { instrument: DiscoveryInstrument }) {
         />
         {known ? <Facts instrument={instrument} quote={known} /> : null}
       </ScrollView>
-      <View style={[styles.bar, { paddingBottom: insets.bottom + SPACE.sm, backgroundColor: color.ground }]}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{gateTitle(gate)}</Text>
-        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-          {gate?.reason ?? "This network doesn’t list it"}.
-          {gate?.state === "blocked" ? ` It opens with ${gate.unblocks}.` : ""}
+      <View style={styles.gate}>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={2}>
+          {gateTitle(gate)} · {gate?.reason ?? "This network doesn’t list it"}
         </Text>
       </View>
+      <LockedBar word={lockWord(instrument, network.chainId)} />
     </View>
   );
 }
@@ -190,9 +222,8 @@ function Facts({ instrument, quote }: { instrument: DiscoveryInstrument; quote: 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   body: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm, gap: SPACE.xl },
-  identity: { flexDirection: "row", alignItems: "center", gap: SPACE.md, flex: 1 },
-  flex: { flex: 1 },
+  spacer: { flex: 1 },
+  gate: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm },
   price: { gap: SPACE.xs },
   facts: { gap: SPACE.sm },
-  bar: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.xxs },
 });

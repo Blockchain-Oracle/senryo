@@ -1,7 +1,8 @@
 /**
  * Market detail's Holders tab (FT098; Fomo F32/F33 adapted): the open positions in this market of people who share
  * their trades on this network, largest first — portrait, name and side; the average entry under it; the leveraged
- * size (position × the accepted price) and its unrealised P&L at the right. Friends narrows it to people you follow.
+ * size (position × the accepted price) and its unrealised P&L at the right. The "Following" chip (never a Switch,
+ * Part A6; hidden for guests) narrows it to people you follow.
  * Senryo is cross-margin, so there is no per-position leverage to show — the side alone, never an invented "4×".
  * Only what the api returned is listed; an empty market is one quiet line; failures offer Retry.
  */
@@ -9,9 +10,11 @@ import type { MarketHolder } from "@senryo/api-client";
 import { useMarketHolders } from "@senryo/query";
 import { router } from "expo-router";
 import { type ReactNode, useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
 import { ReadingView, Skeleton } from "~/components/kit/states";
+import { usePressScale } from "~/components/kit/usePressScale";
 import { TraderAvatar, traderName } from "~/features/search/TraderAvatar";
 import { useSessionGate } from "~/features/social/useSocialAccount";
 import { fire } from "~/feedback/fire";
@@ -36,22 +39,14 @@ export function MarketHolders({ marketId, name, decimals }: { marketId: number; 
     <View style={styles.wrap}>
       <View style={styles.bar}>
         {canFilter ? (
-          <View style={styles.friends}>
-            <Switch
-              value={friends}
-              onValueChange={(on) => {
-                fire("tick");
-                setFriends(on);
-                if (on && gate.status === "locked") gate.open();
-              }}
-              trackColor={{ true: color.primary, false: color.muted }}
-              thumbColor={color.foreground}
-              accessibilityLabel="Only people you follow"
-            />
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.row, { color: color.text2 }]}>
-              Following
-            </Text>
-          </View>
+          <FollowingChip
+            on={friends}
+            onToggle={() => {
+              const on = !friends;
+              setFriends(on);
+              if (on && gate.status === "locked") gate.open();
+            }}
+          />
         ) : (
           <View />
         )}
@@ -65,9 +60,7 @@ export function MarketHolders({ marketId, name, decimals }: { marketId: number; 
         <ReadingView reading={holders.reading} loading="list" loadingLabel="Loading holders" retry={holders.retry}>
           {(data) =>
             data.holders.length === 0 ? (
-              <QuietLine>
-                {friends ? `Nobody you follow holds ${name} right now` : `Nobody shares a position in ${name} yet`}
-              </QuietLine>
+              <QuietLine>{friends ? `No one you follow holds ${name}` : "No holders yet"}</QuietLine>
             ) : (
               <View>
                 {data.holders.map((h) => (
@@ -75,7 +68,7 @@ export function MarketHolders({ marketId, name, decimals }: { marketId: number; 
                 ))}
                 {data.more > 0 ? (
                   <Text style={[TYPE.rowDetail, styles.more, { color: color.text3 }]}>
-                    {data.more} more {data.more === 1 ? "person shares" : "people share"} a smaller position
+                    +{data.more} smaller {data.more === 1 ? "position" : "positions"}
                   </Text>
                 ) : null}
               </View>
@@ -84,6 +77,36 @@ export function MarketHolders({ marketId, name, decimals }: { marketId: number; 
         </ReadingView>
       )}
     </View>
+  );
+}
+
+/** The "Following" filter: a chip — filled with full ink when on, a bare quiet label when off (ChipRow's grammar). */
+function FollowingChip({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  const { color } = useTheme();
+  const press = usePressScale();
+  return (
+    <Animated.View style={press.style}>
+      <Pressable
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={() => {
+          fire("tick");
+          onToggle();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Only people you follow"
+        accessibilityState={{ selected: on }}
+        hitSlop={(SIZE.touch - SIZE.chipRowHeight) / 2}
+        style={[styles.chip, { backgroundColor: on ? color.raised2 : color.transparent }]}
+      >
+        <Text
+          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+          style={[TYPE.chipCategory, { color: on ? color.ink : color.text3 }]}
+        >
+          Following
+        </Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -98,10 +121,7 @@ function FriendsGate({ status, onOpen }: { status: string; onOpen: () => void })
       </View>
     );
   }
-  const line: ReactNode =
-    status === "failed"
-      ? "Couldn’t confirm it’s you, so the people you follow stayed hidden"
-      : "Unlock to see what the people you follow hold";
+  const line: ReactNode = status === "failed" ? "Couldn’t confirm it’s you" : "Unlock to see who you follow";
   return (
     <View style={styles.gate}>
       <QuietLine>{line}</QuietLine>
@@ -150,7 +170,12 @@ function HolderRow({ holder, decimals }: { holder: MarketHolder; decimals: numbe
 const styles = StyleSheet.create({
   wrap: { gap: SPACE.sm },
   bar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: SIZE.touch },
-  friends: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  chip: {
+    height: SIZE.chipRowHeight,
+    paddingHorizontal: SPACE.md,
+    borderRadius: BUTTON.radius.sm,
+    justifyContent: "center",
+  },
   // The feed's row geometry, so the two tabs read as one list style.
   row: {
     flexDirection: "row",

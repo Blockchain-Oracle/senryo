@@ -44,7 +44,8 @@ export interface LastPrice {
  * stay gaps). `style` applies the saved candle settings (FT106): body on/off, the colour pair, colour by previous close.
  * `last` draws the current-price line (Fomo F32): a dotted rule across the plot with a filled label on the price axis,
  * green when the price is at or above the newest candle's open and red below it; the price scale widens to keep it in
- * view. `axisDecimals`, `axisPrefix` and `formatTime` word the two axes (an FX pair needs five decimals; a year needs
+ * view. `reference` draws a second, solid line with a quiet label at the plot's left (a position's entry, flow book
+ * C5 step 2), also kept in view. `axisDecimals`, `axisPrefix` and `formatTime` word the two axes (an FX pair needs five decimals; a year needs
  * dates).
  */
 export function CandleChart({
@@ -53,6 +54,7 @@ export function CandleChart({
   style,
   height = SIZE.chartCandles,
   last,
+  reference,
   axisDecimals = 0,
   axisPrefix = "",
   formatTime = clockTime,
@@ -63,6 +65,8 @@ export function CandleChart({
   style?: CandleStyle;
   height?: number;
   last?: LastPrice;
+  /** A fixed level to mark (an entry price): a solid line and its label. */
+  reference?: LastPrice;
   axisDecimals?: number;
   axisPrefix?: string;
   formatTime?: (ms: number) => string;
@@ -88,17 +92,19 @@ export function CandleChart({
     [candles, decimals],
   );
   const lastAt = last ? toPlot(last.value, decimals) : undefined;
-  // The price scale spans the candles and the current price, so its line is never drawn outside the plot.
+  const refAt = reference ? toPlot(reference.value, decimals) : undefined;
+  // The price scale spans the candles, the current price and the reference, so no line is drawn outside the plot.
   const domain = useMemo(() => {
-    if (lastAt === undefined) return undefined;
-    let lo = lastAt;
-    let hi = lastAt;
+    const marks = [lastAt, refAt].filter((v): v is number => v !== undefined);
+    if (marks.length === 0) return undefined;
+    let lo = Math.min(...marks);
+    let hi = Math.max(...marks);
     for (const c of data) {
       lo = Math.min(lo, c.low);
       hi = Math.max(hi, c.high);
     }
     return { y: [lo, hi] as [number, number] };
-  }, [data, lastAt]);
+  }, [data, lastAt, refAt]);
   // Colour by previous close compares each close with the preceding candle's (the first falls back to open/close).
   const options: CandlestickOptionsFn | undefined = style
     ? (c) => {
@@ -189,6 +195,25 @@ export function CandleChart({
               candleColors={{ positive: up, negative: down, neutral: color.chartNeutral }}
               {...(options ? { candleOptions: options } : {})}
             />
+            {refAt !== undefined ? (
+              <>
+                <SkiaLine
+                  p1={vec(chartBounds.left, yScale(refAt))}
+                  p2={vec(chartBounds.right, yScale(refAt))}
+                  color={color.text2}
+                  strokeWidth={CHART.lastStroke}
+                />
+                {reference && font ? (
+                  <SkiaText
+                    x={chartBounds.left + CHART.lastPadX}
+                    y={yScale(refAt) - CHART.lastPadY}
+                    text={reference.label}
+                    font={font}
+                    color={color.text2}
+                  />
+                ) : null}
+              </>
+            ) : null}
             {lastAt !== undefined ? (
               <SkiaLine
                 p1={vec(chartBounds.left, yScale(lastAt))}

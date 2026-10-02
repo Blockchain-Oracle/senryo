@@ -24,7 +24,14 @@ const MS_PER_SECOND = 1000;
  * fades in once when a period's data arrives — never on a price tick — and the block keeps its height while the next
  * period loads, so the page under it does not jump.
  */
-export function MarketChart({ line }: { line: MarketLine }) {
+export function MarketChart({
+  line,
+  entry,
+}: {
+  line: Pick<MarketLine, "symbol" | "marketId" | "price18">;
+  /** A held position's entry, drawn as a second line (flow book C5 step 2). */
+  entry?: bigint | undefined;
+}) {
   const { color } = useTheme();
   const client = useQueryClient();
   const [period, setPeriod] = useState<PeriodKey>(DEFAULT_PERIOD);
@@ -67,6 +74,9 @@ export function MarketChart({ line }: { line: MarketLine }) {
                   axisPrefix="$"
                   formatTime={(ms) => axisTimeLabel(chosen.axis, ms)}
                   last={{ value: line.price18, label: `$${price18(line.price18, decimals)}` }}
+                  {...(entry === undefined
+                    ? {}
+                    : { reference: { value: entry, label: `Entry $${price18(entry, decimals)}` } })}
                   candles={plotted}
                   pannable
                 />
@@ -77,8 +87,7 @@ export function MarketChart({ line }: { line: MarketLine }) {
       </View>
       <PeriodChips options={CHART_PERIODS} value={period} onChange={setPeriod} label="Chart period" />
       <Text style={[TYPE.meta, { color: color.text3 }]}>
-        Chainlink {line.symbol}/USD · Monad · {chosen.candle} candles
-        {first ? ` since ${dayLabel(first.openTime * MS_PER_SECOND)}` : ""}
+        Chainlink · {chosen.candle} candles{first ? ` · since ${dayLabel(first.openTime * MS_PER_SECOND)}` : ""}
       </Text>
     </View>
   );

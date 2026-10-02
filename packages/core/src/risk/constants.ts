@@ -35,6 +35,10 @@ export const RISK = {
   SLOTS_PER_WEEK: 672n,
   SLOTS_PER_WORD: 256n,
   LP_REDEEM_DELAY: 86_400n,
+
+  /** Funding is clamped to ±this per second (WAD, ≈ 0.1 %/h); OI below MIN_OI_USD6 counts as that floor. */
+  MAX_FUNDING_RATE: 277_777_777_777n,
+  MIN_OI_USD6: 100_000_000n,
 } as const;
 
 /** `MarketStatus` enum order in `Types.sol`. */
