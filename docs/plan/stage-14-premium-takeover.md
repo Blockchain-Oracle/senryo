@@ -41,7 +41,7 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 
 ## Integrations
 - [ ] D0 keeper testnet gas — 0.1 tMON sent 2 Oct (tx 0x921e…5838); faucet claim pending (browser); StarterDrip float is 0
-- [ ] D1 Perpl chain layer built + merged (77e0133; simulated open/close on mainnet state) → UI → live trade (needs ≥10 AUSD + ~0.5 MON)
+- [ ] D1 Perpl: chain layer (77e0133) + app UI (a925a0f: markets, detail, ticket, outcome from decoded fills, positions, move back) built + merged + OTA; **live acceptance waits for mainnet funds: 25 AUSD + 1.5 MON on the account** — script in the Perpl agent report (docs/product/provenance/perpl.md has provenance; acceptance steps recorded in stage notes when run)
 - [ ] D2 Bridges built + merged (8752f3f: Relay/CCTP/Across/LI.FI quotes, status, pinned targets) → UI (`claude/ui-money`) → live runs; Aurora behind incident watch (needs Studio key)
 - [ ] D3 card service built + merged (38183de: issue, unfreeze, simulate, repay quote, decline reasons) → `senryo-card` resource + Lithic sandbox key → live sandbox issue
 - [ ] D4 Mainnet core (needs funding + Safe owners) — includes the TP/SL epoch contract fix
