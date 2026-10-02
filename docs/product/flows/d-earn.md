@@ -93,7 +93,10 @@ Capability cards D1–D2. Sources: plan §0.4 "Pool", §0.6 D and §0.9 "Pool". 
   - **Gas caps:** deposit 1,150,000, claim 1,160,000 (`packages/config/src/gas.ts:73,80`). (P) is sponsored; (M) pays in MON (B11).
 - **States:** skeleton, never $0 (`LpScreen.tsx:62`) · "Earn from the pool" + Deposit · "Pool full" · "Swap ~$0.31 · 0.2%" · "Confirm with passkey" · "Depositing…" · "Deposited $50" · "Not deposited · Review again" (never resubmits) · "Checking…" · guest: "Create account" (`LpScreen.tsx:52-59`).
 - **After:** A pool row under Home → Earn · Activity → Money: "LP vault deposit" (`apps/mobile/src/features/portfolio/activity-copy.ts:30,88`) · Receipt with the steps and txs. No push.
-- **Today → gap:** deposits come from wallet AUSD only (`LpScreen.tsx:143-149`; `useLp.ts:73`), so P$ in trades can't be used; the faucet sits on the pool screen (`LpScreen.tsx:150-157`); the disclosures are paragraphs (`:22-23,135-137`); with an allowance in place, a deposit over $250 hits `over-move-cap` with no step-up route (`useLp.ts:56`; `apps/mobile/src/lib/account/sender.ts:81-99`), the same class as defect 1; the presets constant is unused; there's no pool mark (Part A3) and no Earn tab; the APR leaves out borrow and funding.
+- **Built (claude/compose, 2 Oct):** "Pay with ⌄" over every holding — AUSD from the wallet then the trading balance
+  (withdrawn to self), any other verified holding swapped to AUSD on Mainnet, one operation (`features/lp/deposit-op.ts`,
+  `DepositSheet.tsx`); Practice "AUSD only".
+- **Was:** deposits came from wallet AUSD only (`LpScreen.tsx:143-149`; `useLp.ts:73`), so P$ in trades couldn't be used; the faucet sits on the pool screen (`LpScreen.tsx:150-157`); the disclosures are paragraphs (`:22-23,135-137`); with an allowance in place, a deposit over $250 hits `over-move-cap` with no step-up route (`useLp.ts:56`; `apps/mobile/src/lib/account/sender.ts:81-99`), the same class as defect 1; the presets constant is unused; there's no pool mark (Part A3) and no Earn tab; the APR leaves out borrow and funding.
 - **Acceptance:**
   - [ ] (P) With P$ only in trades, deposit P$20: one slide; the status shows withdraw → approve → deposit; "Deposited P$20".
   - [ ] (P) Deposit P$300: exactly one passkey prompt.

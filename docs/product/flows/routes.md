@@ -100,7 +100,12 @@ The destination is always the user's Monad wallet (Part F9).
 | Memes, unverified | ✗ "No bridge · buy here" | — |
 
 **Persistent deposit addresses:** Aurora / NEAR Intents for BTC, TON and Tron (§5).
-- UNVERIFIED: Relay deposit-address mode for EVM sources.
+- **Relay deposit addresses (RECHECKED 2 Oct, claude/compose):** `POST api.relay.link/quote/v2` with
+  `useDepositAddress: true` (open mode) answers an address on the origin chain for Base/Arbitrum/Ethereum/… → Monad
+  USDC, AUSD (from USDC), MON (from ETH) and USDT0 (from USDT) without a key; XAUT isn't a Relay solver currency (no
+  address). Solana / Bitcoin origins answer "missing an api key". Track by address: `/requests/v2?depositAddress=`
+  (keyless, retired 24 Nov 2026) or `/requests/v3` with a key. The order's own deadline is ~180 days; each later or
+  different-sized deposit is re-quoted and filled under its own request id.
 
 ## 5. Aurora (NEAR Intents) and the incident watcher
 
@@ -184,7 +189,7 @@ The destination is always the user's Monad wallet (Part F9).
 ## 9. Still to test (UNVERIFIED register)
 
 1. LayerZero OFT addresses on Monad. deBridge and Mayan quotes (plan).
-2. Relay delivery to Bitcoin and TON. Relay deposit-address mode.
+2. Relay delivery to Bitcoin and TON. (Relay deposit-address mode: verified for EVM origins, §4.)
 3. Across and LI.FI quotes for USDT0 and XAUt0 from and to Monad.
 4. CCTP `TokenMessengerV2` and `MessageTransmitterV2` addresses on 143 and 10143.
 5. The canonical Monorail and Kyber routers, and whether they are upgradeable. The meaning of `compound_impact`.
