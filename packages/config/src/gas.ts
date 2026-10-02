@@ -158,6 +158,7 @@ export const GAS_LIMITS = {
   perplOrder: 1_900_000n,
   /** `withdrawCollateral(amount)`: 135.0k (0, 1 or 3 open positions alike); 151.9k when it resets the rate window. */
   perplWithdraw: 170_000n,
+  /**
    * (D6) Monorail / KyberSwap router call, floor. Routes vary from one pool to 3+ hops, splits and order books, so a
    * quote's budget is `aggregatorSwapGasLimit(quote.gasEstimate)`. 143 fork, 2 Oct: Monorail USDT0 → XAUt0 (one
    * PancakeSwap v3 pool) 435.9k; KyberSwap 100 MON → AUSD 1,221.1k (its own metering 1,243.9k).
