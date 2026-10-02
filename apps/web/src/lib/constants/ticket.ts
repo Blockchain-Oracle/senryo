@@ -6,3 +6,10 @@ export const LEVERAGE_DETENTS = [1, 2, 5, 10, 20, 50] as const;
 export const GAUGE_WARN_AT = 60;
 export const GAUGE_DANGER_AT = 85;
 export const GAUGE_PX = 120;
+/** Funding settle wait after a sponsored network-fee top-up (as on the phone): poll the head this often, this many times. */
+export const BLOCK_POLL_MS = 400;
+export const FUNDING_WAIT_POLLS = 15;
+/** While a signed send's result is unknown, the journal is re-read this often until recovery settles it. */
+export const JOURNAL_POLL_MS = 3_000;
+/** Quick margin presets in the ticket (flow book C3: $10 / $50 / $100 / Max), in whole money units. */
+export const MARGIN_PRESETS = [10n, 50n, 100n] as const;
