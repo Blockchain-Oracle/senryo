@@ -12,6 +12,7 @@ import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { ErrorState } from "~/components/kit/states";
+import { useNetwork } from "~/lib/network";
 import { FollowButton } from "./FollowButton";
 import { isNotFound, nameOf } from "./format";
 import { PersonRow } from "./PersonRow";
@@ -22,6 +23,7 @@ export type FollowDirection = "followers" | "following";
 
 export function FollowListScreen({ address, direction }: { address: Address; direction: FollowDirection }) {
   const env = useQueryEnv();
+  const network = useNetwork();
   const client = useQueryClient();
   const profile = useProfile(address);
   const list = useFollowList(address, direction);
@@ -37,19 +39,13 @@ export function FollowListScreen({ address, direction }: { address: Address; dir
       {reading.status === "unknown" ? <PeopleSkeleton /> : null}
       {reading.status === "failed" ? (
         isNotFound(error) ? (
-          <QuietLine text="This profile isn’t public on this network" />
+          <QuietLine text={`Not public on ${network.modeLabel}`} />
         ) : (
           <ErrorState diagnosis={reading.error} retry={() => void client.invalidateQueries({ queryKey: key })} />
         )
       ) : null}
       {items && items.length === 0 ? (
-        <QuietLine
-          text={
-            direction === "followers"
-              ? "Nobody on this network follows this trader yet"
-              : "This trader doesn’t follow anyone on this network yet"
-          }
-        />
+        <QuietLine text={direction === "followers" ? "No followers yet" : "Not following anyone yet"} />
       ) : null}
       {items && items.length > 0 ? (
         <View>

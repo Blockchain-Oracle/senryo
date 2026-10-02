@@ -33,10 +33,6 @@ export function WatchEntry({ initial }: { initial: string }) {
     <Screen>
       <Stack.Screen options={{ title: "Find a trader" }} />
       <Panel style={styles.panel}>
-        <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-          Paste a Senryo address or type a @handle to open that trader’s public profile. Read-only: nothing here can
-          move money.
-        </Text>
         <TextInput
           value={value}
           onChangeText={setValue}
@@ -56,7 +52,7 @@ export function WatchEntry({ initial }: { initial: string }) {
         />
         {wrong ? (
           <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down }]}>
-            That is neither an address (0x and 40 hex characters) nor a handle (4 to 20 letters, digits or underscores).
+            Not an address or @handle
           </Text>
         ) : null}
         <Button
