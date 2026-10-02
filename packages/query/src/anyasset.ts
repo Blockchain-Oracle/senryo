@@ -1,14 +1,18 @@
 /**
  * The any-asset hooks (D6/D2): holdings of any token, any ↔ any swap quotes, and cross-chain routes / quotes /
  * status — all served by services/api (`/v1/holdings`, `/v1/swap/quote`, `/v1/bridge/*`). Each returns a `Reading<T>`
- * (never a fake zero); the send helpers turn a reviewed quote into the account's `TxRequest`s through `@senryo/chain`,
+ * (never a fake zero), plus the B4 deposit address (`/v1/bridge/deposit-address`, `/deposit-status`); the send helpers turn a reviewed quote into the account's `TxRequest`s through `@senryo/chain`,
  * which refuses any router or bridge contract that isn't pinned in `@senryo/config`.
  */
 import {
+  type BridgeDepositAddressResponse,
+  type BridgeDepositStatus,
   type BridgeQuoteOk,
   type BridgeQuoteResponse,
   type BridgeRoutes,
   type BridgeStatus,
+  bridgeDepositAddressRoute,
+  bridgeDepositStatusRoute,
   bridgeQuoteRoute,
   bridgeRoutesRoute,
   bridgeStatusRoute,
@@ -77,6 +81,7 @@ export const anyAssetKeys = {
       p.provider ?? "",
     ] as const,
   bridgeStatus: (r: BridgeStatusRef) => ["bridge", "status", r.route, r.id, r.fromChain, r.toChain ?? ""] as const,
+  depositStatus: (r: DepositAddressRef) => ["bridge", "deposit-status", r.fromChain, r.depositAddress] as const,
 };
 
 /**
@@ -270,6 +275,58 @@ export function useBridgeStatus(ref: BridgeStatusRef | undefined): Reading<Bridg
     },
     enabled: ref !== undefined,
     refetchInterval: (q) => (q.state.data && TERMINAL.has(q.state.data.state) ? false : BRIDGE_STATUS_REFETCH_MS),
+  });
+  return readingOf(query, BRIDGE_STATUS_REFETCH_MS);
+}
+
+export interface DepositAddressParams {
+  fromChain: number;
+  asset: BridgeAsset;
+  remote?: RemoteAsset | undefined;
+  /** What the user means to send (source base units). */
+  amount: bigint;
+  /** The user's own Monad wallet. */
+  recipient: Address;
+}
+
+/**
+ * Opens a Relay deposit address on `fromChain` for a transfer into the user's Monad wallet (B4 step 4). Not a polled
+ * query: every call opens a new address, so the caller keeps the one it got (open mode takes later deposits of the
+ * same route) and asks again only for another route.
+ */
+export function requestDepositAddress(env: QueryEnv, p: DepositAddressParams): Promise<BridgeDepositAddressResponse> {
+  return env.api.call(bridgeDepositAddressRoute, {
+    body: {
+      fromChain: p.fromChain,
+      toChain: env.chainId,
+      asset: p.asset,
+      amount: p.amount,
+      recipient: p.recipient,
+      ...(p.remote ? { remote: p.remote } : {}),
+    },
+  });
+}
+
+export interface DepositAddressRef {
+  fromChain: number;
+  depositAddress: string;
+}
+
+/** Every deposit seen at an open deposit address, polled while the screen is open (the address stays usable). */
+export function useDepositStatus(ref: DepositAddressRef | undefined): Reading<BridgeDepositStatus> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: ref ? anyAssetKeys.depositStatus(ref) : ["bridge", "deposit-status", "none"],
+    queryFn: ({ signal }) => {
+      const r = ref as DepositAddressRef;
+      return env.api.call(
+        bridgeDepositStatusRoute,
+        { query: { fromChain: r.fromChain, depositAddress: r.depositAddress } },
+        { signal },
+      );
+    },
+    enabled: ref !== undefined,
+    refetchInterval: BRIDGE_STATUS_REFETCH_MS,
   });
   return readingOf(query, BRIDGE_STATUS_REFETCH_MS);
 }

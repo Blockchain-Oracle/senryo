@@ -66,4 +66,6 @@ export const STORAGE_KEYS = {
   savedDestinations: "senryo.saved-destinations.v1",
   /** B5/B4: purchases and bridges this phone started that have not landed yet ("Arriving"). */
   arrivals: "senryo.arrivals.v1",
+  /** B4: the open deposit address issued per route (other chain + asset), per network and account — reused on reopen. */
+  depositAddresses: "senryo.deposit-addresses.v1",
 } as const;

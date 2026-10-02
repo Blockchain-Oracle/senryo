@@ -12,7 +12,7 @@ import { CONTROL_FONT_SCALE, HAIRLINE_PX, RADIUS, SIZE, SPACE, TYPE, useTheme } 
 const DOT = 24;
 const LINE = 2;
 
-type StepState = "done" | "live" | "waiting" | "failed";
+export type StepState = "done" | "live" | "waiting" | "failed";
 
 export function BridgeTimeline({
   tracking,
@@ -52,7 +52,8 @@ export function BridgeTimeline({
   );
 }
 
-function TimelineStep({
+/** One numbered step of a timeline (shared with the B4 deposit-address timeline). */
+export function TimelineStep({
   title,
   detail,
   state,
