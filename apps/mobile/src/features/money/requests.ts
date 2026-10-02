@@ -38,6 +38,7 @@ export function moveSteps(
   const steps: PlannedStep[] = [];
   if (trading > 0n && asset.collateral) {
     steps.push({
+      role: "pull",
       action: "withdraw",
       label: "Pull from trades",
       request: withdrawRequest(chainId, asset.collateral, trading, to, positionCount(positionBitmap)),
@@ -45,6 +46,7 @@ export function moveSteps(
   }
   if (wallet > 0n) {
     steps.push({
+      role: "act",
       action: asset.native ? "transfer" : "erc20Transfer",
       label: kind === "send" ? "Send" : "Withdraw",
       request: transferRequest(asset, wallet, to, kind),
@@ -64,6 +66,7 @@ export function pullToSelfStep(
   const { trading } = splitSource(asset, amount);
   if (trading === 0n || !asset.collateral) return undefined;
   return {
+    role: "pull",
     action: "withdraw",
     label: "Pull from trades",
     request: withdrawRequest(chainId, asset.collateral, trading, self, positionCount(positionBitmap)),

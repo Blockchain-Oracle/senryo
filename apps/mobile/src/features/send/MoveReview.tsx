@@ -1,11 +1,11 @@
 /**
  * Review → slide → outcome for a move on Monad (B7 step 3–4, B8 step 4; rules 5, 11): the asset's mark → the
  * recipient, the full address in groups, the exact amount, the network fee (sponsored in Practice), the steps when the
- * trading part is pulled, any warning as a row; then the slide (one passkey step-up follows). Once signed the same
+ * trading part is pulled or MON for the fee is swapped in first ("Network fee · Send"), any warning as a row; then the slide (one passkey step-up follows). Once signed the same
  * sheet is the outcome — facts from the reviewed intent, never the latest balance — and while it's unknown nothing
  * new can start.
  */
-import type { OperationRecord } from "@senryo/query";
+import { type OperationRecord, stepsLine } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
 import { Avatar } from "~/components/identity/Avatar";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
@@ -13,7 +13,7 @@ import { groupedAddress } from "~/features/fund/ReceiveCard";
 import { AssetMark } from "~/features/money/AssetMark";
 import { exactAmount } from "~/features/money/format";
 import { MoneyOutcome, MoveLine, ReviewRow, ReviewRows } from "~/features/money/Review";
-import type { MoneyOperationRunner } from "~/features/money/useMoneyOperation";
+import type { MoneyOperationRunner, PlannedStep } from "~/features/money/useMoneyOperation";
 import { tokenAmount } from "~/features/tokens/format";
 import type { TraceWords } from "~/features/trade/TradeTrace";
 import { shortAddress } from "~/lib/format";
@@ -37,6 +37,7 @@ export function IntentFacts({ record }: { record: OperationRecord | undefined })
 
 export function MoveReview({
   move,
+  steps,
   runner,
   avatar,
   fee,
@@ -51,6 +52,8 @@ export function MoveReview({
   onLeave,
 }: {
   move: ReviewedMove | undefined;
+  /** The prepared steps (a network-fee swap first when MON is short, B11); default: the move's own. */
+  steps?: readonly PlannedStep[] | undefined;
   runner: MoneyOperationRunner;
   avatar: string | null;
   fee: string | undefined;
@@ -90,7 +93,7 @@ export function MoveReview({
         <ReviewRow label="To" value={`${line1}\n${line2}`} />
         <ReviewRow label="Amount" value={exact} />
         <ReviewRow label="Network fee" value={practice ? "Sponsored" : (fee ?? "Estimating")} />
-        {move.steps.length > 1 ? <ReviewRow label="Steps" value={move.steps.map((s) => s.label).join(" · ")} /> : null}
+        {(steps ?? move.steps).length > 1 ? <ReviewRow label="Steps" value={stepsLine(steps ?? move.steps)} /> : null}
         <ReviewRow label="Network" value={network} />
         {warnings.map((w) => (
           <ReviewRow key={w} label="Check" value={w} tone="warn" />
