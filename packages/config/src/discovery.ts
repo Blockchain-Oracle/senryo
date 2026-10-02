@@ -16,8 +16,12 @@ export type DiscoveryClass = "crypto" | "equity-calculated";
 export type DiscoveryVenue = "Perpl" | "Chainlink calculated feed";
 export type DiscoveryId = `perpl:${string}` | `chainlink:${string}`;
 
-/** Why an instrument doesn't trade on a network: a named stage that brings it, or a named blocker (v2-plan §7). */
+/**
+ * Whether an instrument trades on a network: open (and where), a named stage that brings it, or a named blocker
+ * (v2-plan §7).
+ */
 export type ExecutionGate =
+  | { state: "open"; reason: string; source: string }
   | { state: "unavailable"; reason: string; source: string }
   | { state: "blocked"; blocker: "B2" | "B10"; reason: string; unblocks: string; source: string };
 
@@ -107,9 +111,9 @@ const both = (gate: ExecutionGate): Readonly<Record<ChainId, ExecutionGate>> => 
 
 const PERPL_EXECUTION: Readonly<Record<ChainId, ExecutionGate>> = {
   [MAINNET_CHAIN_ID]: {
-    state: "unavailable",
-    reason: "Trading opens when Senryo connects to Perpl",
-    source: "00-plan S7 (the Perpl adapter) · v2-plan W6",
+    state: "open",
+    reason: "Trades on Perpl from your Senryo account",
+    source: "flow book C4 · D1 (packages/chain perpl, features/perpl)",
   },
   [TESTNET_CHAIN_ID]: {
     state: "blocked",

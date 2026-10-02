@@ -1,5 +1,4 @@
 import { ids } from "@senryo/identity";
-import { usePortfolio } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
@@ -7,6 +6,7 @@ import { AmountHero } from "~/components/kit/AmountHero";
 import { Button } from "~/components/kit/Button";
 import { Skeleton } from "~/components/kit/states";
 import { Info } from "~/components/kit/symbols";
+import { type BalanceSheet, useBalanceSheet } from "~/features/portfolio/useBalanceSheet";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { useTermsGate } from "~/lib/account/terms-gate";
@@ -23,15 +23,21 @@ export function HomeSeal() {
     </View>
   );
 }
+/** The sheet has a number to show: it finished reading and at least one part was read and valued. */
+function readable(sheet: BalanceSheet): boolean {
+  return sheet.status === "ready" && sheet.rows.some((r) => r.valueUsd6 !== undefined);
+}
+
 export function CompactBalance() {
   const { color } = useTheme();
-  const portfolio = usePortfolio(useAccount().hint?.address);
-  if (portfolio.status !== "fresh" && portfolio.status !== "stale") return null;
-  if (!portfolio.value.components.some((c) => c.supported !== false && c.valueUsd6 !== undefined)) return null;
+  const address = useAccount().hint?.address;
+  const sheet = useBalanceSheet();
+  const [hidden] = useHideBalances();
+  if (!address || !readable(sheet)) return null;
   return (
     <Text style={[TYPE.rowAmount, { color: color.ink }]} numberOfLines={1}>
-      {portfolio.value.quality === "partial" ? "≈ " : ""}
-      {usd(portfolio.value.totalUsd6)}
+      {sheet.partial && !hidden ? "≈ " : ""}
+      {masked(usd(sheet.totalUsd6), hidden)}
     </Text>
   );
 }
@@ -40,11 +46,10 @@ export function ExpandedBalance() {
   const address = useAccount().hint?.address;
   const gate = useTermsGate();
   const [hidden, setHidden] = useHideBalances();
-  const portfolio = usePortfolio(address);
+  // The hero reads the balance sheet's own total, so tapping it never shows a different number (B16).
+  const sheet = useBalanceSheet();
   if (!address) return null;
-  const known = portfolio.status === "fresh" || portfolio.status === "stale" ? portfolio.value : undefined;
-  const available = known?.components.some((c) => c.supported !== false && c.valueUsd6 !== undefined);
-  const partial = known?.quality === "partial";
+  const partial = sheet.partial;
   return (
     <View style={styles.hero}>
       <Pressable
@@ -58,14 +63,14 @@ export function ExpandedBalance() {
         accessibilityHint="Opens what makes up your total. Long-press to hide or show balances"
         style={styles.amounts}
       >
-        {known && available ? (
+        {readable(sheet) ? (
           <View style={styles.line}>
-            <AmountHero text={masked(usd(known.totalUsd6), hidden)} partial={partial && !hidden} />
-            {partial ? (
+            <AmountHero text={masked(usd(sheet.totalUsd6), hidden)} partial={partial && !hidden} />
+            {partial && !hidden ? (
               <Info size={SIZE.iconSm} color={color.text3} accessibilityLabel="Some values are missing" />
             ) : null}
           </View>
-        ) : portfolio.status === "failed" || (known && !available) ? (
+        ) : sheet.status === "ready" ? (
           <Text style={[TYPE.row, { color: color.text3 }]}>Balance unavailable</Text>
         ) : (
           <Skeleton width={200} height={SIZE.skeletonRow} />

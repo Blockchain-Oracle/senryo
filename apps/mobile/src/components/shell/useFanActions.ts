@@ -5,10 +5,9 @@ import { ROUTES } from "~/lib/constants/routes";
 import type { FanAction } from "./constants";
 
 /**
- * Where each fan action goes (direction §5; FT055/FT057/FT060; Codex S1b.7 consult #8): Send → the send surface
- * (reserved until J8 builds the recipient flow), Receive → the compact QR sheet on the account's Monad deposit inbox,
- * Add money → the add-money hub, Swap → the existing swap.
- * Each opens over the page under the fan, so dismissing it restores that page (FT061).
+ * Where each fan action goes (flow book B3/B6/B7; FT055/FT057/FT060): Send → recipient search, then any holding (B7);
+ * Receive → the wallet's one QR for every asset on Monad (B3, D-241); Add money → the add-money hub; Swap → any ↔ any
+ * (B6). Each opens over the page under the fan, so dismissing it restores that page (FT061).
  */
 export function useFanActions(): (action: FanAction) => void {
   const gate = useTermsGate();

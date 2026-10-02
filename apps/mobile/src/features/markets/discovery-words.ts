@@ -15,6 +15,7 @@ export const NO_FEED = "No feed";
 
 /** The page's gate title: what the lock means, in a few words. */
 export function gateTitle(gate: ExecutionGate | undefined): string {
+  if (gate?.state === "open") return "Trades here";
   if (gate?.state === "blocked") return gate.blocker === "B10" ? "Mainnet only" : "Read-only · price too jumpy";
   return "Read-only for now";
 }
