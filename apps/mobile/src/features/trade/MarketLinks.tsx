@@ -14,7 +14,7 @@ import { ChevronRight } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
-import { positionRoute, tokenRoute } from "~/lib/constants/routes";
+import { assetRoute, positionRoute } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { quantityText } from "./quantity";
@@ -22,8 +22,13 @@ import { quantityText } from "./quantity";
 /** Tether Gold on Monad (XAUt0, 6 decimals; flow book routes.md, rechecked 2 Oct). */
 const XAUT0 = { symbol: "XAUt0", address: "0x01bFF41798a0BcF287b996046Ca68b395DbC1071" } as const;
 /** Which engine markets have a real asset to own on Monad. */
-const OWN_IT: Readonly<Record<string, { title: string; symbol: string; mark: string }>> = {
-  XAU: { title: "Own real gold", symbol: XAUT0.symbol, mark: ids.token(MAINNET_CHAIN_ID, XAUT0.address) },
+const OWN_IT: Readonly<Record<string, { title: string; symbol: string; address: string; mark: string }>> = {
+  XAU: {
+    title: "Own real gold",
+    symbol: XAUT0.symbol,
+    address: XAUT0.address,
+    mark: ids.token(MAINNET_CHAIN_ID, XAUT0.address),
+  },
 };
 
 /** One cross-link row: mark, title, one short subtitle, chevron (shared with Perpl's market page). */
@@ -70,7 +75,11 @@ export function LinkRow({
   );
 }
 
-/** "Own real gold ›" — only where a real asset exists to hold. */
+/**
+ * "Own real gold ›" — only where a real asset exists to hold. Routed by chain + address (B2): XAUt0 is on Monad's
+ * token list but not the J11 spot list, so the symbol route would fall back to Markets. In Practice the asset page
+ * names that it is on Mainnet and offers the mode switch.
+ */
 export function OwnItRow({ symbol }: { symbol: string }) {
   const own = OWN_IT[symbol];
   if (!own) return null;
@@ -80,7 +89,7 @@ export function OwnItRow({ symbol }: { symbol: string }) {
       label={own.symbol}
       title={own.title}
       subtitle={`${own.symbol} on Monad`}
-      onPress={() => router.push(tokenRoute(own.symbol))}
+      onPress={() => router.push(assetRoute(MAINNET_CHAIN_ID, own.address))}
     />
   );
 }
