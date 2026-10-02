@@ -28,25 +28,21 @@ export function DiagnosticsPanel() {
     (e): e is Extract<MeasureEvent, { type: "ttft" }> => e.type === "ttft" && e.phase === "stop",
   );
   return (
-    <Panel className="mx-4">
+    <Panel>
       <div className="flex items-center justify-between border-border border-b px-3 py-3">
         <div>
-          <p className="font-mono text-caption">TIME TO FIRST TRANSACTION</p>
-          <p className="text-caption text-muted-foreground">
-            Landing → first confirmed, user-signed claim on this device.
-          </p>
+          <p className="text-row">Time to first transaction</p>
+          <p className="text-meta text-text-2">Landing → first confirmed, user-signed claim on this device.</p>
         </div>
         <span className="font-mono text-num-sm tnum">
           {ttft === undefined ? "—" : `${seconds(ttft)} · ${stop?.taps ?? 0} taps`}
         </span>
       </div>
       {flows.length === 0 ? (
-        <p className="px-3 py-3 text-caption text-muted-foreground">
-          No passkey ceremonies recorded on this device yet.
-        </p>
+        <p className="px-3 py-3 text-meta text-text-2">No passkey ceremonies recorded on this device yet.</p>
       ) : (
-        <table className="w-full font-mono text-micro">
-          <thead className="text-muted-foreground uppercase">
+        <table className="w-full text-meta tnum">
+          <thead className="text-text-3">
             <tr className="border-border border-b">
               <th className="px-3 py-2 text-left font-normal">Flow</th>
               <th className="px-3 py-2 text-right font-normal">Prompts</th>
@@ -57,7 +53,7 @@ export function DiagnosticsPanel() {
           <tbody>
             {flows.map((f) => (
               <tr key={`${f.flow}-${f.at}`} className="border-border border-b last:border-0">
-                <td className="px-3 py-1.5 uppercase">{f.flow}</td>
+                <td className="px-3 py-1.5">{f.flow}</td>
                 <td className="px-3 py-1.5 text-right tnum">{f.outcome === "ok" ? f.prompts : "—"}</td>
                 <td className="px-3 py-1.5 text-right tnum">{seconds(f.ms)}</td>
                 <td

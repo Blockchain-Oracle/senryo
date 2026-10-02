@@ -88,7 +88,10 @@ export function ProfileActions({ other, name }: { other: Address; name: string }
                 }}
               />
               <ListRow title="Report" onClick={() => setReporting(true)} />
-              <Link href={`${ROUTES.account}#blocked`} className="px-2 py-1 text-meta text-link hover:underline">
+              <Link
+                href={`${ROUTES.account}?section=blocked`}
+                className="px-2 py-1 text-meta text-link hover:underline"
+              >
                 Blocked & muted ›
               </Link>
             </>
