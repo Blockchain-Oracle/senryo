@@ -3,12 +3,7 @@
   "project": {
     "name": "@senryo/web",
     "productType": "fintech trading app (Senryo 千両 + Kinpaku 金箔 card, Monad)",
-    "stack": [
-      "nextjs-16-static-export",
-      "react-19",
-      "tailwind-v4",
-      "shadcn"
-    ]
+    "stack": ["nextjs-16-static-export", "react-19", "tailwind-v4", "shadcn"]
   },
   "direction": {
     "name": "Living Lacquer",
@@ -27,18 +22,9 @@
       "apps/web/src/app/globals.css",
       "apps/web/src/app/fonts.ts"
     ],
-    "components": [
-      "src/components/ui"
-    ],
-    "assets": [
-      "brand/",
-      "apps/web/src/app/fonts/",
-      "packages/identity/sources/"
-    ],
-    "instructions": [
-      "docs/plan/00-plan.md",
-      "docs/plan/specs/client.md"
-    ]
+    "components": ["src/components/ui"],
+    "assets": ["brand/", "apps/web/src/app/fonts/", "packages/identity/sources/"],
+    "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
   },
   "design": {
     "colorMode": "dark-default-with-light",
