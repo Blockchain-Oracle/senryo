@@ -27,6 +27,7 @@ import { REDUCE_ALL_BPS } from "~/features/positions/constants";
 import { useAccount } from "~/lib/account/provider";
 import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
+import { perplFeeShortWei } from "./fees";
 import { PERPL_CHAIN, type PerplMarketMeta } from "./market";
 import { usePerplRun } from "./usePerplRun";
 
@@ -71,15 +72,18 @@ export function usePerplPosition(meta: PerplMarketMeta) {
     enabled: address !== undefined && position !== undefined && network.chainId === PERPL_CHAIN,
     refetchInterval: PERPL_TERMS_REFETCH_MS,
     staleTime: PERPL_TERMS_REFETCH_MS,
-    queryFn: () =>
-      perplCloseOperation(mainnetReadOf(env), address as NonNullable<typeof address>, {
-        marketId: meta.marketId,
-        shareBps,
-      }),
+    queryFn: async () => {
+      const read = mainnetReadOf(env);
+      const owner = address as NonNullable<typeof address>;
+      const closing = await perplCloseOperation(read, owner, { marketId: meta.marketId, shareBps });
+      return { plan: closing, feeShortWei: await perplFeeShortWei(read, owner, closing.plannedActions) };
+    },
   });
   // The plan answers for the share on screen only: a full close sends the exact size, a share rounds down to lots.
   const expectedLots = position ? (closingAll ? position.lots : (position.lots * shareBps) / BPS_DENOMINATOR) : 0n;
-  const reviewed = plan.data && plan.data.lots === expectedLots ? plan.data : undefined;
+  const reviewed = plan.data && plan.data.plan.lots === expectedLots ? plan.data.plan : undefined;
+  /** MON missing for the close's network fee (closing never needs a passkey, but it does need MON). */
+  const feeShortWei = reviewed ? (plan.data?.feeShortWei ?? 0n) : 0n;
   // The quote for this share: exit bound, its fee, and the share of the Exchange's own unrealized PnL it realises.
   const lots = reviewed?.lots ?? 0n;
   const exitNotional = reviewed && terms ? perplNotional(lots, reviewed.limitPricePNS, meta) : 0n;
@@ -138,6 +142,7 @@ export function usePerplPosition(meta: PerplMarketMeta) {
     setShareBps,
     closingAll,
     plan: reviewed,
+    feeShortWei,
     planning: position !== undefined && reviewed === undefined && !plan.isError,
     lots,
     feeUsd6,

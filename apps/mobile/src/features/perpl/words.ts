@@ -6,10 +6,8 @@ import type { PerplPosition } from "@senryo/chain";
 import type { GasAction } from "@senryo/config";
 import { formatUnits } from "@senryo/core";
 import type { TraceWords } from "~/features/trade/TradeTrace";
-import { perplUsd } from "./format";
+import { monText, perplUsd } from "./format";
 
-const MON_DECIMALS = 18;
-const MON_SHOWN = 3;
 /** Millionths read as a percent: 345 ppm → 0.0345 %. */
 const PPM_AS_PCT_DECIMALS = 4;
 
@@ -36,8 +34,6 @@ export interface PerplBlockCopy {
   line?: string;
   fix?: PerplFix;
 }
-
-const mon = (wei: bigint) => `${formatUnits(wei, MON_DECIMALS, MON_SHOWN)} MON`;
 
 export function blockCopy(block: PerplBlock, symbol: string): PerplBlockCopy {
   switch (block.code) {
@@ -68,7 +64,7 @@ export function blockCopy(block: PerplBlock, symbol: string): PerplBlockCopy {
         fix: "addMoney",
       };
     case "fees":
-      return { label: "Add MON for network fees", line: `${mon(block.shortWei)} short`, fix: "addMoney" };
+      return { label: "Add MON for network fees", line: `${monText(block.shortWei)} short`, fix: "addMoney" };
   }
 }
 

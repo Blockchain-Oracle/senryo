@@ -8,6 +8,10 @@ import { signedUsd, usd } from "~/lib/money";
 import { PERPL_MONEY, type PerplMarketMeta } from "./market";
 
 const E18 = 18;
+const MON_SHOWN = 3;
+
+/** "0.120 MON" from wei (network fees). */
+export const monText = (wei: bigint) => `${formatUnits(wei, E18, MON_SHOWN)} MON`;
 const LEVERAGE_UNIT = oneUnit(PERPL_LEVERAGE_DECIMALS);
 
 /** "$85,163.2" — a Perpl price at its market's own tick. */

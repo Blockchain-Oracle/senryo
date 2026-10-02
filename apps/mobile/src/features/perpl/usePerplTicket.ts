@@ -18,7 +18,7 @@ import {
   readPerplWalletCollateral,
   type TxRequest,
 } from "@senryo/chain";
-import { GAS_LIMITS, PERPL_FEE_DENOMINATOR, PERPL_SLIPPAGE_BPS } from "@senryo/config";
+import { PERPL_FEE_DENOMINATOR, PERPL_SLIPPAGE_BPS } from "@senryo/config";
 import { DECIMALS, formatUnits, parseUnits } from "@senryo/core";
 import {
   mainnetReadOf,
@@ -29,7 +29,6 @@ import {
   usePerplExchange,
   usePerplMarketTerms,
   useQueryEnv,
-  userFeeCache,
 } from "@senryo/query";
 import { onlineManager, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -39,6 +38,7 @@ import { useAccount } from "~/lib/account/provider";
 import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
 import { perplConfirmLevel } from "./confirm";
+import { perplFeeShortWei } from "./fees";
 import { leverageHdths, leverageX } from "./format";
 import { PERPL_CHAIN, type PerplMarketMeta } from "./market";
 import { usePerplRun } from "./usePerplRun";
@@ -156,13 +156,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
         notionalCNS: planned.notional,
         leverageHdths: planned.hdths,
       });
-      // Monad charges the gas limit: every step's budget at today's max fee must be on the wallet in MON.
-      const [fees, monWei] = await Promise.all([
-        userFeeCache(read).get(),
-        read.getBalance({ address: owner, blockTag: "latest" }),
-      ]);
-      const gas = plan.plannedActions.reduce((sum, action) => sum + GAS_LIMITS[action], 0n);
-      return { plan, needWei: gas * fees.maxFeePerGas, monWei };
+      return { plan, feeShortWei: await perplFeeShortWei(read, owner, plan.plannedActions) };
     },
   });
   const settledPlan =
@@ -196,8 +190,8 @@ export function usePerplTicket(meta: PerplMarketMeta) {
                       ? { code: "size", minUsd6: ceilDiv(oneLotUsd6, BigInt(leverage)) }
                       : plan?.blocker === "wallet-short"
                         ? { code: "wallet-short", shortCNS: plan.walletShortCNS }
-                        : settledPlan && settledPlan.monWei < settledPlan.needWei
-                          ? { code: "fees", shortWei: settledPlan.needWei - settledPlan.monWei }
+                        : settledPlan && settledPlan.feeShortWei > 0n
+                          ? { code: "fees", shortWei: settledPlan.feeShortWei }
                           : undefined;
 
   // The requests the session would be asked to sign, the order built provisionally (the policy reads calldata).

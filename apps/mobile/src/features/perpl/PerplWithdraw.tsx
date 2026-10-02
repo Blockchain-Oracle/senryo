@@ -21,7 +21,8 @@ import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
 import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
-import { perplUsd } from "./format";
+import { perplFeeShortWei } from "./fees";
+import { monText, perplUsd } from "./format";
 import { PERPL_CHAIN } from "./market";
 import { usePerplRun } from "./usePerplRun";
 import { WITHDRAW_WORDS } from "./words";
@@ -93,9 +94,15 @@ export function PerplWithdraw() {
   const confirm = async () => {
     if (!address) return;
     setProblem(undefined);
-    const plan = await perplWithdrawOperation(mainnetReadOf(env), address, amount);
+    const read = mainnetReadOf(env);
+    const plan = await perplWithdrawOperation(read, address, amount);
     if (plan.blocker) {
       setProblem(plan.blocker === "over-available" ? "Less is free on Perpl now · review" : "Review the amount");
+      return;
+    }
+    const short = await perplFeeShortWei(read, address, plan.plannedActions);
+    if (short > 0n) {
+      setProblem(`Add MON for network fees · ${monText(short)} short`);
       return;
     }
     await runner.run({

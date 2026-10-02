@@ -26,7 +26,7 @@ import { fire } from "~/feedback/fire";
 import { marketRoute, perplWithdrawRoute, ticketRoute } from "~/lib/constants/routes";
 import { pct } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
-import { perplPrice, perplPrice18, perplSignedUsd, perplSize, perplUsd } from "./format";
+import { monText, perplPrice, perplPrice18, perplSignedUsd, perplSize, perplUsd } from "./format";
 import { type PerplMarketMeta, perplWatchKey } from "./market";
 import { PerplCloseOutcome } from "./PerplCloseOutcome";
 import { LinkLine } from "./PerplOutcome";
@@ -217,10 +217,16 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
         </Rise>
       </Screen>
       <CloseBar
-        label={p.closingAll ? "Slide to close" : `Slide to reduce ${pct(p.shareBps)}`}
+        label={
+          p.feeShortWei > 0n
+            ? `Add ${monText(p.feeShortWei)} for fees`
+            : p.closingAll
+              ? "Slide to close"
+              : `Slide to reduce ${pct(p.shareBps)}`
+        }
         isLong={long}
         resetKey={[meta.marketId, p.shareBps, position.lots, p.plan?.limitPricePNS ?? ""].join("|")}
-        disabled={!p.plan || Boolean(p.plan.blocker) || !p.ready}
+        disabled={!p.plan || Boolean(p.plan.blocker) || !p.ready || p.feeShortWei > 0n}
         onConfirm={() => void p.submit()}
       />
       <ChildSheet open={pnl} onClose={() => setPnl(false)} title="Unrealised P&L">
