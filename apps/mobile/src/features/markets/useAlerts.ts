@@ -29,6 +29,8 @@ export interface AlertDraft {
   marketId: number;
   direction: Alert["direction"];
   price18: bigint;
+  /** Edit (C9): the alert this one replaces, cancelled in the same server transaction. */
+  replaces?: string;
 }
 
 export function useAlerts(): { access: AlertsAccess; reading: Reading<Alert[]>; refetch: () => void } {
@@ -53,7 +55,7 @@ export function useAlerts(): { access: AlertsAccess; reading: Reading<Alert[]>; 
   return { access, reading: fromQuery(query), refetch: () => void query.refetch() };
 }
 
-/** Saves a new alert on the active network and adds it to the cached list. */
+/** Saves a new alert on the active network (or replaces one) and updates the cached list. */
 export function useCreateAlert() {
   const account = useAccount();
   const network = useNetwork();
@@ -68,12 +70,14 @@ export function useCreateAlert() {
         api().call(alertsCreateRoute, { body: { chainId: network.chainId, ...draft } }),
       );
     },
-    onSuccess: async (alert) => {
+    onSuccess: async (alert, draft) => {
       if (!address) return;
       const key = alertsKey(network.chainId, address);
       // Shown at once in a list that was loaded; a list never loaded is not seeded with one alert (it would read as
       // the whole list). Either way the server's list is read again.
-      cache.setQueryData<Alert[]>(key, (prev) => (prev ? [alert, ...prev] : prev));
+      cache.setQueryData<Alert[]>(key, (prev) =>
+        prev ? [alert, ...prev.filter((a) => a.id !== draft.replaces)] : prev,
+      );
       await cache.invalidateQueries({ queryKey: key });
     },
   });
@@ -104,9 +108,7 @@ export function useRemoveAlert() {
 /** Why a save or removal failed, in the user's words; nothing when they cancelled Face ID (a cancel is not an error). */
 export function alertErrorCopy(error: unknown): string | undefined {
   if (!(error instanceof ApiError) && isSilent(classifyAuthError(error))) return undefined;
-  if (error instanceof ApiError && error.code === "CONFLICT") {
-    return "You already have the most alerts an account can hold. Remove one first.";
-  }
-  if (error instanceof ApiError && error.code === "NOT_FOUND") return "That alert was already removed.";
-  return "That didn't go through. Check your connection and try again.";
+  if (error instanceof ApiError && error.code === "CONFLICT") return "50 alerts max · remove one";
+  if (error instanceof ApiError && error.code === "NOT_FOUND") return "Alert already removed";
+  return "Not saved · Retry";
 }

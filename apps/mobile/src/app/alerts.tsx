@@ -1,6 +1,6 @@
-import { AlertsScreen } from "~/features/markets/AlertsScreen";
+import { NotificationsScreen } from "~/features/notifications/NotificationsScreen";
 
-/** `/alerts` — the account's price alerts on the selected network (J3). */
+/** `/alerts` — kept for links and the market page's "All alerts": the inbox on its Alerts tab (C9). */
 export default function Alerts() {
-  return <AlertsScreen />;
+  return <NotificationsScreen initialTab="alerts" />;
 }

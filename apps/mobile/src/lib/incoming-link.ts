@@ -6,9 +6,9 @@ export const PENDING_LINK = "senryo.pending-link.v1";
 export function incomingNeedsAccount(path: string) {
   const base = inAppPath(path.split("?")[0] ?? "/");
   return (
-    /^\/(receive|withdraw|send|swap|lp|voucher|balance-details)(\/|$)/.test(base) ||
+    /^\/(receive|withdraw|send|swap|lp|voucher|balance-details|notifications)(\/|$)/.test(base) ||
     /^\/account\/(identity|recovery|security|delete|profile)(\/|$)/.test(base) ||
-    /^\/card\/(allowance|reveal|auth|wallet)(\/|$)/.test(base)
+    /^\/card\/(allowance|reveal|auth|wallet|get|repay)(\/|$)/.test(base)
   );
 }
 export function incomingLink(path: string): string {
