@@ -1,11 +1,7 @@
-import { ShellScreen } from "~/components/shell/ShellScreen";
+import { Redirect } from "expo-router";
+import { withdrawRoute } from "~/lib/constants/routes";
 
-export default function CashoutScreen() {
-  return (
-    <ShellScreen
-      title="Cash out"
-      why="Cash-out to another chain arrives with funding"
-      detail="Quotes and ETA come from the intents route before you confirm."
-    />
-  );
+/** Old cash-out links: Withdraw → Another chain (B9). */
+export default function CashOutRedirect() {
+  return <Redirect href={withdrawRoute(undefined, "chain")} />;
 }
