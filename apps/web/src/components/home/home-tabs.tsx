@@ -191,10 +191,12 @@ function EarnTab({ address }: { address: Address }) {
     return <RowsSkeleton />;
   }
   const invested = value.sharesValue + value.pendingValue;
-  if (invested === 0n) return <QuietLine>Nothing in the pool</QuietLine>;
+  if (invested === 0n)
+    return <QuietLine action={{ label: "Deposit", href: ROUTES.pool }}>Earn from the pool</QuietLine>;
   return (
     <ListRow
-      leading={<EntityMark id={ids.brand("senryo")} size={MARK_ROW} variant="symbol" decorative />}
+      href={ROUTES.pool}
+      leading={<EntityMark id={ids.venue("senryo")} size={MARK_ROW} decorative />}
       title="Senryo pool"
       subtitle={value.pending.length > 0 ? "Redemption pending" : "Earns from trading"}
       value={money(invested)}

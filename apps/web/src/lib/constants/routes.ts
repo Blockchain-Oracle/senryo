@@ -22,6 +22,10 @@ export const ROUTES = {
   account: "/account/",
   setup: "/setup/",
   watch: "/watch/",
+  pool: "/pool/",
+  activity: "/activity/",
+  notifications: "/notifications/",
+  swap: "/swap/",
 } as const;
 
 /** A position's page (one net position per engine market). */
@@ -41,7 +45,24 @@ export type AppTab = { id: string; label: string; href: string; match: readonly 
 
 /** The five destinations, as on the phone's dock: Home · Markets · Card · Social · You. */
 export const APP_TABS: readonly AppTab[] = [
-  { id: "home", label: "Home", href: ROUTES.home, match: ["/home", "/portfolio", "/add-money", "/receive", "/asset"] },
+  {
+    id: "home",
+    label: "Home",
+    href: ROUTES.home,
+    match: [
+      "/home",
+      "/portfolio",
+      "/add-money",
+      "/receive",
+      "/asset",
+      "/pool",
+      "/activity",
+      "/notifications",
+      "/swap",
+      "/send",
+      "/withdraw",
+    ],
+  },
   { id: "markets", label: "Markets", href: ROUTES.markets, match: ["/markets", "/trade", "/position"] },
   { id: "card", label: "Card", href: ROUTES.card, match: ["/card"] },
   { id: "social", label: "Social", href: ROUTES.social, match: ["/social", "/watch"] },
