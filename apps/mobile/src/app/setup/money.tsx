@@ -11,6 +11,7 @@ import { useSetupNav } from "~/features/setup/useSetupNav";
 import { VoucherField } from "~/features/setup/VoucherField";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
+import { useTermsGate } from "~/lib/account/terms-gate";
 import { useStarter } from "~/lib/account/use-starter";
 import { ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
@@ -84,8 +85,10 @@ function PracticeMoney() {
 function MainnetMoney() {
   const { color } = useTheme();
   const { next, back } = useSetupNav("money");
+  const gate = useTermsGate();
   const chevron = <ChevronRight size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />;
-  const open = (href: string) => router.push(href as Href);
+  // A11: adding real money is a money action — the terms come first if this account hasn't agreed yet.
+  const open = (href: string) => gate(() => router.push(href as Href), { verb: "add money", next: href });
   const icon = (Glyph: typeof Coins) => <Glyph size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.ink} />;
   return (
     <SetupScreen

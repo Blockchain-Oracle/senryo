@@ -12,7 +12,7 @@ import { PersonRow } from "~/features/profile/PersonRow";
 import { QuietState } from "~/features/profile/QuietState";
 import { useOwnProfile } from "~/features/profile/useOwnProfile";
 import { useAccount } from "~/lib/account/provider";
-import { type FollowDirection, ROUTES, watchRoute } from "~/lib/constants/routes";
+import { accountRequiredRoute, type FollowDirection, ROUTES, watchRoute } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -53,7 +53,11 @@ export default function Follows() {
       {guest ? (
         <QuietState
           line="Create an account to follow people"
-          action={{ label: "Create account", variant: "primary", onPress: () => router.push(ROUTES.accountRequired) }}
+          action={{
+            label: "Create account",
+            variant: "primary",
+            onPress: () => router.push(accountRequiredRoute("follow")),
+          }}
         />
       ) : unlisted ? (
         <QuietState

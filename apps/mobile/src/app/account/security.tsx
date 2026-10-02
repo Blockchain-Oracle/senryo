@@ -23,7 +23,7 @@ import { SectionHeading } from "~/features/profile/SectionHeading";
 import { InfoTip } from "~/features/setup/InfoTip";
 import { useAccount } from "~/lib/account/provider";
 import { requestStepUp } from "~/lib/account/step-up";
-import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
+import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
@@ -98,7 +98,7 @@ export default function SecurityScreen() {
           action={{
             label: "Create account",
             variant: "primary",
-            onPress: () => router.push(accountRequiredRoute("trade")),
+            onPress: () => router.push(ROUTES.accountRequired),
           }}
         />
       </Screen>

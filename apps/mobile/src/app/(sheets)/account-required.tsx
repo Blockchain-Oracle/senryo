@@ -34,7 +34,7 @@ function Body() {
   const close = useSheetClose();
   const params = useLocalSearchParams<{ verb?: string; next?: string }>();
   const next = inApp(params.next) ? params.next : undefined;
-  const verb = params.verb ?? "trade";
+  const title = params.verb ? `Create an account to ${params.verb}` : "Create an account";
   const flow = useAuthFlow({
     onDone: () => {
       storage.set(STORAGE_KEYS.welcomed, true);
@@ -60,7 +60,7 @@ function Body() {
           <Art width={ART_SIZE} height={ART_SIZE} />
         </View>
       ) : null}
-      <SheetHeading title={`Create an account to ${verb}`} />
+      <SheetHeading title={title} />
       <View style={styles.actions}>
         <Button
           label="Create account"
