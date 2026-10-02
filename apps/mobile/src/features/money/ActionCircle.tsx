@@ -18,12 +18,15 @@ export function ActionCircle({
   label,
   onPress,
   reason,
+  note,
 }: {
   icon: SymbolIcon;
   label: string;
   onPress: () => void;
   /** Why it can't be used here ("Mainnet only"); the circle stays, inert. */
   reason?: string | undefined;
+  /** A caveat that doesn't stop it ("Sell only"). */
+  note?: string | undefined;
 }) {
   const { color } = useTheme();
   const press = usePressScale();
@@ -50,13 +53,13 @@ export function ActionCircle({
       <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.label, styles.center, { color: color.ink }]}>
         {label}
       </Text>
-      {reason ? (
+      {reason || note ? (
         <Text
           maxFontSizeMultiplier={CONTROL_FONT_SCALE}
           numberOfLines={2}
           style={[TYPE.meta, styles.center, { color: color.text3 }]}
         >
-          {reason}
+          {reason ?? note}
         </Text>
       ) : null}
     </View>

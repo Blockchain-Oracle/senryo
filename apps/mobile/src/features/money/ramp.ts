@@ -8,6 +8,9 @@
  */
 import { MAINNET_CHAIN_ID, MAINNET_TOKENS, NATIVE_TOKEN, WEB_ORIGIN } from "@senryo/config";
 import { APP } from "~/lib/constants/app";
+import { notify } from "~/lib/notify";
+import { recordArrival } from "./arrivals";
+import type { MoneyAsset } from "./assets";
 import { webBrowserModule } from "./native";
 
 const RAMP_HOSTED = "https://app.rampnetwork.com/";
@@ -51,4 +54,28 @@ export async function openRampBuy(userAddress: string, outAsset?: string): Promi
   if (!browser) return "unavailable";
   const result = await browser.openAuthSessionAsync(rampBuyUrl(userAddress, outAsset), RAMP_RETURN);
   return result.type === "success" ? "returned" : "closed";
+}
+
+/** After the hosted page: a return through `finalUrl` starts an "Arriving" row; a missing browser module says so. */
+export function recordRampReturn(
+  result: RampResult,
+  chainId: number,
+  account: string,
+  asset: Pick<MoneyAsset, "key" | "symbol" | "wallet">,
+): void {
+  if (result === "unavailable") {
+    notify({ title: "Update the app to buy", tone: "warning" });
+    return;
+  }
+  if (result !== "returned") return;
+  recordArrival({
+    kind: "ramp",
+    chainId,
+    account: account.toLowerCase(),
+    asset: asset.key,
+    symbol: asset.symbol,
+    baseline: asset.wallet.toString(),
+    via: "Ramp",
+  });
+  notify({ title: `${asset.symbol} arriving`, description: "From Ramp" });
 }
