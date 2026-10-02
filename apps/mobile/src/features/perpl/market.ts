@@ -66,7 +66,6 @@ export const perplWatchKey = (symbol: string) => `perpl:${symbol}` as const;
 
 /** The position page id of a Perpl market (`perpl-1`, the indexer's market id). */
 export const PERPL_POSITION_PREFIX = "perpl-";
-export const perplPositionId = (marketId: number) => `${PERPL_POSITION_PREFIX}${marketId}`;
 
 export function perplMarketOfPositionId(id: string): PerplMarketMeta | undefined {
   if (!id.startsWith(PERPL_POSITION_PREFIX)) return undefined;

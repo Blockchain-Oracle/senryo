@@ -5,10 +5,9 @@ import { ChevronDown, CirclePlus, Info } from "~/components/kit/symbols";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import { fire } from "~/feedback/fire";
 import { useTermsGate } from "~/lib/account/terms-gate";
-import { accountRequiredRoute, positionRoute, ROUTES, ticketRoute } from "~/lib/constants/routes";
+import { accountRequiredRoute, perplPositionRoute, ROUTES, ticketRoute } from "~/lib/constants/routes";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { perplUsd } from "./format";
-import { perplPositionId } from "./market";
 import type { PerplTicketModel } from "./usePerplTicket";
 import { blockCopy, type PerplFix } from "./words";
 
@@ -25,6 +24,8 @@ export function perplCommit(t: PerplTicketModel): { label: string; holdable: boo
   if (t.amountUsd6 === 0n) return { label: "Enter an amount", holdable: false };
   if (t.planFailed) return { label: "Perpl didn’t answer · retrying", holdable: false };
   if (!t.ready || t.planning || !t.plan) return { label: "Preparing order…", holdable: false };
+  // A planner refusal the blocker chain hasn't named yet (its reads are a moment apart): never holdable.
+  if (t.plan.blocker) return { label: "Preparing order…", holdable: false };
   const verb = `Slide to ${t.side}`;
   return { label: t.confirmWith === "passkey" ? `${verb} · passkey` : verb, holdable: true };
 }
@@ -71,7 +72,7 @@ export function PerplTicketFooter({
     fire("tick");
     if (fix === "addMoney") addMoney();
     else if (fix === "maxLeverage" && t.maxX !== undefined) t.setLeverage(t.maxX);
-    else if (fix === "closePosition") router.push(positionRoute(perplPositionId(t.meta.marketId)));
+    else if (fix === "closePosition") router.push(perplPositionRoute(t.meta.marketId));
     else if (fix === "why") onWhy();
   };
   return (
