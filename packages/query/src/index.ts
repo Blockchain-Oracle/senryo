@@ -1,4 +1,5 @@
 export * from "./account.ts";
+export * from "./anyasset.ts";
 export { type Capability, type CapabilityFacts, capabilitiesOf } from "./capabilities.ts";
 export * from "./card.ts";
 export * from "./collateral.ts";
