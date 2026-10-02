@@ -18,6 +18,9 @@ export const PERPL_MONEY = "mainnet" as const;
 /** The smallest top-up Perpl takes after the account exists (and a withdrawal's floor is 0.01). */
 export const PERPL_TOP_UP_FLOOR = PERPL_MIN_DEPOSIT_CNS;
 
+/** Perpl's own mark (the venue), for rows that are about the venue rather than one market. */
+export const PERPL_VENUE_MARK = ids.venue("perpl");
+
 export interface PerplMarketMeta {
   marketId: number;
   symbol: string;
@@ -40,7 +43,7 @@ const LISTED: readonly PerplMarketMeta[] = Object.entries(PERPL_MARKETS[PERPL_CH
         name: PERPL_ASSET_NAMES[symbol] ?? symbol,
         ...scale,
         mark: ids.perplMarket(PERPL_CHAIN, marketId),
-        venueMark: ids.venue("perpl"),
+        venueMark: PERPL_VENUE_MARK,
       },
     ];
   },
