@@ -97,6 +97,7 @@ export function usePerplPosition(meta: PerplMarketMeta) {
     const frozen = reviewed;
     if (!frozen || frozen.blocker || !address || !position) return undefined;
     const read = mainnetReadOf(env);
+    let checked = false;
     return runner.run({
       plan: frozen,
       labels: [closingAll ? "Close" : "Reduce"],
@@ -114,17 +115,22 @@ export function usePerplPosition(meta: PerplMarketMeta) {
       // Reduce-only orders are never capped by the session (policy §3): the session signs them.
       confirmWith: "session",
       marketLabel: meta.name,
+      // The chain is re-read once, before the first signature; later calls (around the signature, right before
+      // the order's window is checked) only re-check that the reviewed screen is still the one on show.
       revalidate: async () => {
         guard();
+        if (checked) return;
         const [acct, market] = await Promise.all([
           readPerplAccount(read, PERPL_CHAIN, address),
           readPerplMarketTerms(read, PERPL_CHAIN, meta.marketId),
         ]);
         const [now] = acct ? await readPerplPositions(read, PERPL_CHAIN, acct.accountId, [meta.marketId]) : [];
-        if (!now || now.side !== position.side || now.lots < frozen.lots)
-          throw new Error("The position changed. Review it again.");
+        // A full close must close exactly what was reviewed: a grown position would leave exposure open.
+        const changed = closingAll ? now?.lots !== frozen.lots : (now?.lots ?? 0n) < frozen.lots;
+        if (!now || now.side !== position.side || changed) throw new Error("The position changed. Review it again.");
         if (market.paused) throw new Error(`${meta.symbol} is paused on Perpl. Nothing was sent.`);
         guard();
+        checked = true;
       },
     });
   };

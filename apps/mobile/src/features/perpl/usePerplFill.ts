@@ -26,5 +26,5 @@ export function usePerplFill(record: OperationRecord | undefined) {
       return decodePerplOrder(receipt.logs, PERPL_CHAIN);
     },
   });
-  return { hash, fill: query.data, failed: query.isError };
+  return { hash, fill: query.data, failed: query.isError, retry: () => void query.refetch() };
 }

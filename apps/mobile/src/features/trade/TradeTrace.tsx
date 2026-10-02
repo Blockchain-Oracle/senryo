@@ -95,10 +95,11 @@ type Phase = "running" | "success" | "failed" | "unknown";
 
 /**
  * What a finalized operation actually did, when the receipt status alone can't say (a Perpl IOC succeeds onchain even
- * when it matches no one): `reading` while the screen decodes the receipt — no success is claimed yet — and `nothing`
- * when it changed nothing ("Price moved — nothing opened."). Undefined: finalized means done.
+ * when it matches no one): `reading` while the screen decodes the receipt — no success is claimed yet — `nothing`
+ * when it changed nothing ("Price moved — nothing opened."), and `unread` when the receipt couldn't be decoded (it may
+ * have done something: no success, no "nothing"). Undefined: finalized means done.
  */
-export type SettledVerdict = "reading" | "nothing";
+export type SettledVerdict = "reading" | "nothing" | "unread";
 
 export function TradeTrace({
   events,
@@ -199,15 +200,17 @@ export function TradeTrace({
 
   const reading = phase === "success" && verdict === "reading";
   const nothing = phase === "success" && verdict === "nothing";
-  const tone = nothing
-    ? color.warn
-    : phase === "success"
-      ? color.up
-      : phase === "failed"
-        ? color.down
-        : phase === "unknown"
-          ? color.warn
-          : color.ink;
+  const unread = phase === "success" && verdict === "unread";
+  const tone =
+    nothing || unread
+      ? color.warn
+      : phase === "success"
+        ? color.up
+        : phase === "failed"
+          ? color.down
+          : phase === "unknown"
+            ? color.warn
+            : color.ink;
 
   return (
     <View style={styles.wrap}>
@@ -218,6 +221,8 @@ export function TradeTrace({
           <Animated.View entering={ZoomIn.springify().damping(SPRING_IN)}>
             {nothing ? (
               <Ban size={GLYPH} color={tone} />
+            ) : unread ? (
+              <History size={GLYPH} color={tone} />
             ) : phase === "success" ? (
               <CircleCheck size={GLYPH} color={tone} />
             ) : phase === "failed" ? (
@@ -273,7 +278,7 @@ export function TradeTrace({
         ) : phase === "running" ? null : (
           <Button
             label={phase === "success" || outcome === "finalized" ? words.done : words.back}
-            variant={phase === "success" && !nothing ? "primary" : "outline"}
+            variant={phase === "success" && !nothing && !unread ? "primary" : "outline"}
             onPress={onDone}
           />
         )}

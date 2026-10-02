@@ -94,26 +94,12 @@ export function usePerplTicket(meta: PerplMarketMeta) {
   const notionalUsd6 = amountUsd6 * BigInt(leverage);
   const hdths = leverageHdths(leverage);
 
-  // The order as it would be sent now: whole lots at the IOC's bound, the fee and the starting liquidation price.
-  const limitPricePNS = terms
+  // A preview from the live terms while the plan is read: whole lots at the IOC's bound.
+  const previewLimit = terms
     ? perplLimitPrice(terms.markPNS, perplTakerSide("open", side), PERPL_SLIPPAGE_BPS)
     : undefined;
-  const lots = terms && limitPricePNS ? perplLotsFor(notionalUsd6, limitPricePNS, terms) : 0n;
-  const sizedUsd6 = terms && limitPricePNS ? perplNotional(lots, limitPricePNS, terms) : 0n;
-  const feeUsd6 = terms ? ceilDiv(sizedUsd6 * terms.takerFeePpm, PERPL_FEE_DENOMINATOR) : 0n;
-  const oneLotUsd6 = terms && limitPricePNS ? perplNotional(1n, limitPricePNS, terms) : 0n;
-  const liqPricePNS =
-    terms && limitPricePNS && lots > 0n
-      ? perplOpenLiquidationPrice({
-          side,
-          entryPricePNS: limitPricePNS,
-          lots,
-          leverageHdths: hdths,
-          maintMarginFracHdths: terms.maintMarginFracHdths,
-          priceDecimals: terms.priceDecimals,
-          lotDecimals: terms.lotDecimals,
-        })
-      : null;
+  const previewLots = terms && previewLimit ? perplLotsFor(notionalUsd6, previewLimit, terms) : 0n;
+  const oneLotUsd6 = terms && previewLimit ? perplNotional(1n, previewLimit, terms) : 0n;
   const held = snapshot?.positions.find((p) => p.marketId === meta.marketId);
   const buyingPowerUsd6 = snapshot ? (snapshot.account?.availableCNS ?? 0n) + snapshot.wallet.balance : undefined;
   // Max: the margin whose order still fits what's on Perpl plus the wallet's AUSD after the fee and the slippage cushion.
@@ -164,6 +150,25 @@ export function usePerplTicket(meta: PerplMarketMeta) {
       ? planQuery.data
       : undefined;
   const plan = settledPlan?.plan;
+  // What the slide signs is the plan's own read (its terms, bound and lots); every number shown and recorded comes from
+  // it once it's there, so the reviewed size, fee and liquidation describe exactly the order that is sent.
+  const shownTerms = plan?.terms ?? terms;
+  const limitPricePNS = plan ? plan.limitPricePNS : previewLimit;
+  const lots = plan ? plan.lots : previewLots;
+  const sizedUsd6 = shownTerms && limitPricePNS ? perplNotional(lots, limitPricePNS, shownTerms) : 0n;
+  const feeUsd6 = shownTerms ? ceilDiv(sizedUsd6 * shownTerms.takerFeePpm, PERPL_FEE_DENOMINATOR) : 0n;
+  const liqPricePNS =
+    shownTerms && limitPricePNS && lots > 0n
+      ? perplOpenLiquidationPrice({
+          side,
+          entryPricePNS: limitPricePNS,
+          lots,
+          leverageHdths: hdths,
+          maintMarginFracHdths: shownTerms.maintMarginFracHdths,
+          priceDecimals: shownTerms.priceDecimals,
+          lotDecimals: shownTerms.lotDecimals,
+        })
+      : null;
 
   const opposite = held && held.side !== side ? held : undefined;
   const block: PerplBlock | undefined = !online

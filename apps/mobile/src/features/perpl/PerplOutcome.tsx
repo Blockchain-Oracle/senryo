@@ -81,7 +81,7 @@ export function PerplOpenOutcome({
   const outcome = useSettledOutcome(trace.events);
   const terms = usePerplMarketTerms(meta.marketId);
   const mmf = terms.status === "fresh" || terms.status === "stale" ? terms.value.maintMarginFracHdths : undefined;
-  const { fill, failed, hash } = usePerplFill(record);
+  const { fill, failed, hash, retry } = usePerplFill(record);
   const finalized = trace.events.some((e) => e.stage === "finalized");
   const allDone = record?.outcome === "completed";
   const moved = record?.steps.some(
@@ -100,8 +100,9 @@ export function PerplOpenOutcome({
       title = "Reading the fill";
       verdict = "reading";
     } else if (fill === undefined || fill.kind === "no-order") {
-      title = "Couldn’t read the fill";
-      verdict = "nothing";
+      // Finalized but unread: it may have filled. Say so, offer to read again — never "nothing" or "move it back".
+      title = "Couldn’t read the fill yet";
+      verdict = "unread";
     } else if (fill.kind === "unfilled") {
       title = NOTHING_OPENED;
       verdict = "nothing";
@@ -112,12 +113,15 @@ export function PerplOpenOutcome({
   const filled = fill && (fill.kind === "filled" || fill.kind === "partial") ? fill : undefined;
 
   const unfilled = allDone && fill?.kind === "unfilled";
+  const unread = allDone && (fill === undefined || fill.kind === "no-order") && (failed || fill?.kind === "no-order");
   const failedStep = outcome !== undefined && outcome !== "finalized" && outcome !== "unknown";
-  // The AUSD is on Perpl whenever the IOC missed, or an earlier step of this operation moved it there.
-  const moveBack =
-    unfilled || (moved && (failedStep || verdict === "nothing")) ? (
-      <LinkLine label="Your AUSD stays on Perpl" action="Move it back" onPress={onMoveBack} />
-    ) : null;
+  const stoppedEarly = finalized && !allDone && !active;
+  // The AUSD is on Perpl when the IOC provably missed, or an earlier step moved it there and the order never ran.
+  const moveBack = unread ? (
+    <LinkLine label="It may have filled" action="Read again" onPress={retry} />
+  ) : unfilled || (moved && (failedStep || stoppedEarly)) ? (
+    <LinkLine label="Your AUSD stays on Perpl" action="Move it back" onPress={onMoveBack} />
+  ) : null;
   return (
     <TradeTrace
       events={trace.events}
@@ -135,6 +139,8 @@ export function PerplOpenOutcome({
             <Button label="Share" variant="outline" style={styles.flex} onPress={onShare} />
             <Button label="View position" variant="secondary" style={styles.flex} onPress={onViewPosition} />
           </View>
+        ) : unread ? (
+          <Button label="View position" variant="secondary" onPress={onViewPosition} />
         ) : null
       }
       details={

@@ -42,7 +42,7 @@ export function PerplCloseOutcome({
   const closingAll = intent?.closingAll === "true";
   const share = BigInt(intent?.shareBps ?? "0");
   const outcome = useSettledOutcome(trace.events);
-  const { fill, failed, hash } = usePerplFill(record);
+  const { fill, failed, hash, retry } = usePerplFill(record);
   const allDone = record?.outcome === "completed";
   const words = {
     ...CLOSE_WORDS,
@@ -56,8 +56,8 @@ export function PerplCloseOutcome({
       title = "Reading the fill";
       verdict = "reading";
     } else if (fill === undefined || fill.kind === "no-order") {
-      title = "Couldn’t read the fill";
-      verdict = "nothing";
+      title = "Couldn’t read the fill yet";
+      verdict = "unread";
     } else if (fill.kind === "unfilled") {
       title = "Price moved — nothing closed.";
       verdict = "nothing";
@@ -116,6 +116,8 @@ export function PerplCloseOutcome({
           ) : null}
           <LinkLine label="Freed AUSD stays on Perpl" action="Move it back" onPress={onMoveBack} />
         </>
+      ) : allDone && (failed || fill?.kind === "no-order") ? (
+        <LinkLine label="It may have filled" action="Read again" onPress={retry} />
       ) : null}
     </TradeTrace>
   );
