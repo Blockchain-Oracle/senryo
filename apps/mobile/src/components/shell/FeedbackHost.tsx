@@ -5,6 +5,9 @@ import { fire } from "~/feedback/fire";
 import { prepareSounds, releaseSounds } from "~/feedback/sound";
 import { storage } from "~/lib/storage";
 
+/** The event a filled Perpl taker order emits (packages/chain/src/perpl/fills.ts). */
+const PERPL_FILL_EVENT = "TakerOrderFilledV2";
+
 /** Operation outcomes own feedback; mounting a historical receipt never replays it. */
 export function FeedbackHost() {
   useEffect(() => {
@@ -20,6 +23,8 @@ export function FeedbackHost() {
       storage.set(key, true);
       if (!live || AppState.currentState !== "active") return;
       if (/approve|permit|allowance|trigger|cancel/i.test(step.action)) return;
+      // An IOC order on Perpl can finalize without matching anyone: only a decoded fill earns the fill sound.
+      if (/^perplOrder$/i.test(step.action) && !step.facts?.some((f) => f.event === PERPL_FILL_EVENT)) return;
       const sound = /deposit|claim|faucet/i.test(step.action)
         ? "deposit"
         : /withdraw|transfer|swap/i.test(step.action)
