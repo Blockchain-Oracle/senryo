@@ -1023,5 +1023,25 @@ export const FETCHED_ART: readonly ArtSource[] = [
         "shape": "disc"
       }
     }
+  },
+  {
+    "key": "tokenlist-xaut0",
+    "owner": "Tether Gold (XAUt0) — its issuer's token art, as submitted to Monad's token list",
+    "provenance": "first-party",
+    "pageUrl": "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/XAUt0",
+    "licence": "monad-crypto/token-list (Monad's official token list), mainnet/XAUt0/logo.svg at commit 20779d2c: the logo the issuer submitted with its token (CONTRIBUTING.md: \"must provide a logo in SVG or PNG format\"). The repo has no LICENSE and says inclusion \"does not imply endorsement\". XAUt0 is its issuer's mark, used nominatively beside its ticker.",
+    "retrieved": "2026-10-02",
+    "usage": "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/tokenlist-xaut0/xaut0-token-monad-tokenlist.svg",
+        "url": "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/XAUt0/logo.svg",
+        "sha256": "641c32da2941179f3b5c369c377abb53587b74b8788b96cba1ed088ec79393e7",
+        "viewBox": "0 0 256 256",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      }
+    }
   }
 ];

@@ -148,6 +148,7 @@ import ArtTokenlistCbbtcDisc from "./tokenlist-cbbtc-disc.tsx";
 import ArtTokenlistMusdDisc from "./tokenlist-musd-disc.tsx";
 import ArtTokenlistShmonDisc from "./tokenlist-shmon-disc.tsx";
 import ArtTokenlistSyrupusdcDisc from "./tokenlist-syrupusdc-disc.tsx";
+import ArtTokenlistXaut0Disc from "./tokenlist-xaut0-disc.tsx";
 
 export type ArtComponent = ComponentType<SvgProps>;
 
@@ -238,4 +239,5 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "tokenlist-musd": { disc: ArtTokenlistMusdDisc },
   "tokenlist-shmon": { disc: ArtTokenlistShmonDisc },
   "tokenlist-syrupusdc": { disc: ArtTokenlistSyrupusdcDisc },
+  "tokenlist-xaut0": { disc: ArtTokenlistXaut0Disc },
 };

@@ -202,6 +202,20 @@ const spotRows = (): Entity[] =>
     art: spotArtKey(t.list.dir),
   }));
 
+/** Owned assets beyond the spot list (D-248): Tether Gold on Monad, bought and held as a token (not the XAU perp). */
+const XAUT0_ADDRESS = "0x01bFF41798a0BcF287b996046Ca68b395DbC1071";
+const ownedRows = (): Entity[] => [
+  {
+    id: ids.token(MAINNET_CHAIN_ID, XAUT0_ADDRESS),
+    name: "Tether Gold",
+    symbol: "XAUt0",
+    role: "asset",
+    instrument: "token",
+    network: ids.evmChain(MAINNET_CHAIN_ID),
+    art: spotArtKey("XAUt0"),
+  },
+];
+
 const FX_PAIRS = [
   { base: "EUR", name: "Euro / US Dollar", art: "fx-eur-usd" },
   { base: "GBP", name: "British Pound / US Dollar", art: "fx-gbp-usd" },
@@ -293,6 +307,7 @@ const commodityRows = (): Entity[] => [
 export const ENTITIES: readonly Entity[] = [
   ...monadRows(),
   ...spotRows(),
+  ...ownedRows(),
   ...perplRows(),
   ...externalRows(),
   ...fxRows(),

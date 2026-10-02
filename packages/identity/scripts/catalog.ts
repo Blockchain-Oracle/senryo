@@ -142,4 +142,16 @@ const SPOT_LOGOS: readonly CatalogEntry[] = SPOT_TOKENS.filter((t) => !t.native)
   spec: { from: "monad-token-list", dir: t.list.dir, file: t.list.logo, symbol: t.symbol },
 }));
 
-export const CATALOG: readonly CatalogEntry[] = [...STANDALONE, ...SUPPLEMENTS, ...SPOT_LOGOS];
+/**
+ * Owned assets beyond the J11 spot list (D-248): Tether Gold's omnichain XAUt0 on Monad — the token a user owns when
+ * they buy real gold (the XAU perp keeps Senryo's own koban art, never this mark: LG19/LG38).
+ */
+const OWNED_LOGOS: readonly CatalogEntry[] = [
+  {
+    key: spotArtKey("XAUt0"),
+    owner: "Tether Gold (XAUt0) — its issuer's token art, as submitted to Monad's token list",
+    spec: { from: "monad-token-list", dir: "XAUt0", file: "logo.svg", symbol: "XAUt0" },
+  },
+];
+
+export const CATALOG: readonly CatalogEntry[] = [...STANDALONE, ...SUPPLEMENTS, ...SPOT_LOGOS, ...OWNED_LOGOS];
