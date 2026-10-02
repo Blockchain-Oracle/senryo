@@ -41,6 +41,8 @@ export function failureWords(error: unknown, thing = "trade"): string {
   if (/SlippageExceeded/.test(first)) return "The price moved past your limit. Nothing was sent.";
   if (/InsufficientFreeCollateral/.test(first)) return "Not enough free at the new price. Nothing was sent.";
   if (/MarketNotOpen/.test(first)) return "The market just closed. Nothing was sent.";
+  if (/\bPaused\b/.test(first)) return "Trading is paused. Closing still works. Nothing was sent.";
+  if (/SettleOnly/.test(first)) return "Closing only: new positions are off. Nothing was sent.";
   if (/LossExceedsBalance/.test(first)) return "Close the profitable position first, or add money. Nothing was sent.";
   if (/MinHoldNotElapsed/.test(first)) return "Profit can be taken a few seconds after opening. Nothing was sent.";
   if (/Cancel|cancel/.test(first)) return "Cancelled — nothing was signed.";
@@ -95,6 +97,8 @@ export function TradeTrace({
   words = ORDER_WORDS,
   title,
   children,
+  details: extra,
+  next,
 }: {
   events: readonly TraceEvent[];
   record?: OperationRecord | undefined;
@@ -110,6 +114,10 @@ export function TradeTrace({
   title?: string;
   /** The key facts for this operation (≤ 3 rows), shown under the headline. */
   children?: ReactNode;
+  /** More rows under Details, above the stages (fee, fill, the transaction link). */
+  details?: ReactNode;
+  /** The next actions once it succeeded ("View position", "Share"), above Done. */
+  next?: ReactNode;
 }) {
   const { color } = useTheme();
   const [details, setDetails] = useState(false);
@@ -226,11 +234,13 @@ export function TradeTrace({
       </Pressable>
       {details ? (
         <Animated.View entering={FadeIn} style={styles.details}>
+          {extra}
           <ExecutionTrace steps={steps} current={reached} failed={failed !== undefined && !landed} />
           {hash ? <Text style={[TYPE.meta, { color: color.text3 }]}>Transaction {shortAddress(hash)}</Text> : null}
         </Animated.View>
       ) : null}
       <View style={styles.actions}>
+        {phase === "success" ? next : null}
         {phase === "unknown" || (phase === "running" && running) ? (
           <Button label="Leave this screen" variant={phase === "unknown" ? "outline" : "ghost"} onPress={onLeave} />
         ) : phase === "running" ? null : (

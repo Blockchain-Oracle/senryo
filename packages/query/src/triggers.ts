@@ -10,6 +10,8 @@ import {
   type Liquidations,
   LiquidationsDocument,
   liquidationsVars,
+  type TriggerHistory,
+  TriggerHistoryDocument,
   type Triggers,
   TriggersDocument,
   triggersVars,
@@ -99,6 +101,20 @@ export function useTriggers(address: Address | undefined): Reading<Triggers> {
   const query = useQuery({
     queryKey: [...keys.account(env.chainId, address ?? "0x"), "triggers"] as const,
     queryFn: ({ signal }) => env.indexer.request(TriggersDocument, triggersVars(env.chainId, address ?? "0x"), signal),
+    enabled: address !== undefined,
+    refetchInterval: ACCOUNT_REFETCH_MS,
+    staleTime: ACCOUNT_REFETCH_MS,
+  });
+  return readingOf(query, ACCOUNT_REFETCH_MS);
+}
+
+/** Every TP/SL the user placed on this network, any status (Orders → History, flow book C8). */
+export function useTriggerHistory(address: Address | undefined): Reading<TriggerHistory> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: [...keys.account(env.chainId, address ?? "0x"), "trigger-history"] as const,
+    queryFn: ({ signal }) =>
+      env.indexer.request(TriggerHistoryDocument, triggersVars(env.chainId, address ?? "0x"), signal),
     enabled: address !== undefined,
     refetchInterval: ACCOUNT_REFETCH_MS,
     staleTime: ACCOUNT_REFETCH_MS,

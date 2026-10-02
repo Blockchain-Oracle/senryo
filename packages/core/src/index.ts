@@ -10,4 +10,5 @@ export * from "./risk/calendar.ts";
 export * from "./risk/constants.ts";
 export * from "./risk/math.ts";
 export * from "./risk/preview.ts";
+export * from "./risk/rates.ts";
 export * from "./typed-data.ts";

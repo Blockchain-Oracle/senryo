@@ -1,6 +1,5 @@
 import type { PositionView } from "@senryo/chain";
-import { ENGINE_MARKETS } from "@senryo/config";
-import { DECIMALS, formatUnits, previewDecrease, RISK } from "@senryo/core";
+import { previewDecrease, RISK } from "@senryo/core";
 import type { LiveMarket } from "@senryo/query";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -14,8 +13,9 @@ import { fire } from "~/feedback/fire";
 import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { QUANTITY_DECIMALS, TRIGGER_SUGGESTIONS_BPS } from "./constants";
+import { TRIGGER_SUGGESTIONS_BPS } from "./constants";
 import { PlannedTriggers } from "./PlannedTriggers";
+import { quantityText } from "./quantity";
 import { TriggerInput } from "./TriggerInput";
 import {
   bpsFromPrice,
@@ -33,16 +33,16 @@ import { LEG_NAME, type LegMessage, legMessage, removalMessage, skippedMessage }
 import { type TriggerLevel, useTriggerLegs } from "./useTriggerLegs";
 
 const TITLE = "Stop loss and take profit";
-const SUBTITLE = "Auto close the position you hold when it hits your price target.";
-const PLANNED_SUBTITLE = "Auto close the new position when it hits your price target.";
+const SUBTITLE = "Closes your position at your price";
+const PLANNED_SUBTITLE = "Closes the new position at your price";
 const KINDS: readonly TriggerKind[] = ["sl", "tp"];
 
 /**
- * The TP/SL child (FT110–FT112, C42, F44/F45/M15; Codex S1b.7 consult #2). With a position held in this market it
- * works on that position and says so before any field (review R05). With none it plans levels for the order being
- * entered (S1b.8a, `PlannedTriggers`): nothing is signed until the order opens, then each level is its own
- * transaction with its own outcome on the receipt (review R01, `useTriggerLegs`). Blocks are separated by spacing; the
- * only outlines are the two input fields (F44).
+ * The TP/SL sheet (Fomo F44/F45/M15; flow book C6): price or % for each level, the potential P/L, Clear, and Save —
+ * which **replaces** the level of the same kind (`useTriggerLegs`: new first, then the old one is cancelled in the same
+ * operation) and closes the whole position whatever its size then. With a position held it works on that position
+ * and says so before any field (review R05); with none it plans levels for the order being entered (S1b.8a): nothing
+ * is signed until the order opens, then each level is its own transaction with its own outcome (review R01).
  */
 export function TpSlChild({
   open,
@@ -94,7 +94,6 @@ function HeldTriggers({
   const decimals = priceDecimalsOf(market.marketId);
   const liq = p.health?.liqPrice18;
   const side = position.isLong ? "Long" : "Short";
-  const symbol = ENGINE_MARKETS.find((m) => m.id === market.marketId)?.symbol ?? "";
   const toneColor = { up: color.up, down: color.down, warn: color.warn, muted: color.text3 } as const;
 
   const priceOf = (kind: TriggerKind) => parsePrice(fields[kind].price);
@@ -158,11 +157,10 @@ function HeldTriggers({
     <>
       <View style={styles.identity} accessible accessibilityRole="text">
         <Text style={[TYPE.rowStrong, { color: color.ink }]}>
-          {market.name} · {side} · {formatUnits(position.size, DECIMALS.e18, QUANTITY_DECIMALS)} {symbol}
+          {market.name} · {side} · {quantityText(market.marketId, position.size)}
         </Text>
         <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-          {network.modeLabel} · your current position only. The size is fixed when you save; an order you are still
-          entering is not covered. Oracle price ${price18(mark, decimals)}.
+          {network.modeLabel} · whole position · mark ${price18(mark, decimals)}
         </Text>
       </View>
       {legs.pending.map((t) => (
@@ -170,7 +168,7 @@ function HeldTriggers({
           {t.action === "remove"
             ? "A removal is still being confirmed."
             : `${t.leg ? LEG_NAME[t.leg] : "A level"}${t.price18 === undefined ? "" : ` at $${price18(t.price18, decimals)}`} is still being confirmed.`}{" "}
-          Saving is paused until it settles, so nothing is placed twice.
+          Saving waits for it.
         </Text>
       ))}
       {legs.active.map((t) => (
@@ -240,19 +238,16 @@ function HeldTriggers({
       {liq === undefined || liq === null ? (
         <Text style={[TYPE.meta, { color: color.warn }]}>Liquidation check unavailable.</Text>
       ) : null}
-      {saved ? (
-        <Text style={[TYPE.meta, { color: color.up }]}>Saved onchain · finalized. Keepers watch the oracle.</Text>
-      ) : null}
+      {saved ? <Text style={[TYPE.meta, { color: color.up }]}>Saved</Text> : null}
       <Button
         label={busy ? "Saving…" : "Save changes"}
         loading={busy}
         disabled={!valid || busy || legs.blocked || !legs.ready}
         onPress={() => void save()}
       />
-      {saved ? <Button label="Back to order" variant="ghost" onPress={onDone} /> : null}
-      <Text style={[TYPE.meta, { color: color.text3 }]}>
-        Keepers close the position when the oracle price crosses your level. In fast markets the fill can be worse than
-        your price, and a closed market waits for the open.
+      {saved ? <Button label="Done" variant="ghost" onPress={onDone} /> : null}
+      <Text style={[TYPE.meta, styles.footnote, { color: color.text3 }]}>
+        In fast markets a level can fill worse than its price.
       </Text>
       {suggestions.length > 0 ? (
         <View style={styles.suggestions} accessibilityLabel="Suggested levels">
@@ -305,6 +300,7 @@ function problemText(problem: NonNullable<ReturnType<typeof triggerProblem>>, is
 
 const styles = StyleSheet.create({
   identity: { gap: SPACE.xxs },
+  footnote: { textAlign: "center" },
   note: { paddingLeft: SIZE.avatarXl + SPACE.lg + SPACE.sm },
   active: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   flex: { flex: 1 },

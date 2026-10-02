@@ -30,12 +30,20 @@ export type { TriggerLevel };
 import { useEnsureGas } from "./useGasTopUp";
 
 const ORDER: readonly TriggerKind[] = ["sl", "tp"];
+/**
+ * A level closes the whole position, whatever its size when it fires (flow book C6 "size follows the position"): the
+ * contract fills `min(sizeDelta, size)` (`TriggerOrders.sol` executeTrigger), so the largest uint128 means "all".
+ */
+const UINT128_BITS = 128n;
+export const WHOLE_POSITION = (1n << UINT128_BITS) - 1n;
 
 /**
  * TP/SL on a held position, one outcome per transaction (review R01). Each level and the removal have their own
  * trace, keyed by chain, account and market, so a remount keeps them; an app kill is covered by the journal
  * (`pending`). Levels are saved one at a time, stop loss first, and the first one that doesn't finalize stops the rest:
- * the caller keeps the unsaved inputs and clears only the levels `onSaved` names (also returned).
+ * the caller keeps the unsaved inputs and clears only the levels `onSaved` names (also returned). Saving **replaces**
+ * (flow book C6 step 3): once the new level finalizes, the level of the same kind it replaces is cancelled as a later
+ * step of the same operation — new first, so the position is never left without the level in between.
  */
 export function useTriggerLegs(market: LiveMarket, position: PositionView) {
   const env = useQueryEnv();
@@ -83,6 +91,23 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
     return client && address ? userSender(client, address, account.settings.faceId) : undefined;
   }, [account.client, account.settings.faceId, address]);
 
+  /** Cancels the levels a save replaced, on the save's own operation; each finalized one leaves the list at once. */
+  const retire = useCallback(
+    async (levels: readonly { id: string }[], operationId: string | undefined): Promise<void> => {
+      const from = sender();
+      if (!from) return;
+      for (const level of levels) {
+        const request = cancelTriggerRequest(env.chainId, level.id as `0x${string}`);
+        const result = await removal.run(from, request, {
+          preflight: (r) => gas.preflight(r)(),
+          ...(operationId ? { operationId } : {}),
+        });
+        if (result?.final?.stage === "finalized") setRemoved((prev) => new Set(prev).add(level.id));
+      }
+    },
+    [sender, env.chainId, removal, gas],
+  );
+
   const save = useCallback(
     async (
       levels: readonly TriggerLevel[],
@@ -114,6 +139,7 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
               ),
           ),
         async (level) => {
+          const replaced = active.filter((t) => t.takeProfit === (level.kind === "tp"));
           const result = await traces[level.kind].run(
             from,
             () =>
@@ -125,13 +151,14 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
                   isLong: position.isLong,
                   takeProfit: level.kind === "tp",
                   triggerPrice18: level.price18,
-                  sizeDelta: position.size,
+                  sizeDelta: WHOLE_POSITION,
                 }),
               ),
             {
               preflight: (request) => gas.preflight(request)(),
               operationId,
-              plannedActions: ["placeTrigger"],
+              // Each cancel of a replaced level is recorded as a "placeTrigger"-class step (`cancelTriggerRequest`).
+              plannedActions: ["placeTrigger", ...replaced.map(() => "placeTrigger")],
               revalidate: async () => {
                 guard();
                 const block = await env.read.getBlock({ blockTag: "latest" });
@@ -143,11 +170,18 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
                   throw new Error("The position changed. Review protection again.");
                 guard();
               },
-              reviewedIntent: { marketId: String(market.marketId), leg: level.kind, price: level.price18.toString() },
+              reviewedIntent: {
+                marketId: String(market.marketId),
+                leg: level.kind,
+                price: level.price18.toString(),
+                ...(replaced.length > 0 ? { replaces: replaced.map((t) => t.id).join(",") } : {}),
+              },
             },
           );
           if (parentId) operationId = result?.operationId ?? operationId;
-          return result?.final?.stage === "finalized";
+          const placed = result?.final?.stage === "finalized";
+          if (placed) await retire(replaced, result?.operationId);
+          return placed;
         },
         onSaved,
       );
@@ -168,6 +202,7 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
       gas,
       guard,
       env,
+      retire,
     ],
   );
 

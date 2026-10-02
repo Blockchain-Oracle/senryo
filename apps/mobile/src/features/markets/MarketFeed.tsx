@@ -1,5 +1,4 @@
 import type { FeedItem, FeedTrade } from "@senryo/api-client";
-import { DECIMALS, formatUnits } from "@senryo/core";
 import { socialKeys, useFeed, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -7,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ReadingView } from "~/components/kit/states";
 import { TraderAvatar, traderName } from "~/features/social/TraderAvatar";
+import { quantityText } from "~/features/trade/quantity";
 import { fire } from "~/feedback/fire";
 import { watchRoute } from "~/lib/constants/routes";
 import { price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
@@ -17,8 +17,6 @@ import { ageLabel } from "./session";
 import { useNowSec } from "./useNowSec";
 
 const MS_PER_SECOND = 1000;
-/** A fill's size is shown to four decimals of the base unit, as the ticket shows quantity. */
-const SIZE_DECIMALS = 4;
 /** A thesis shows its first lines in the feed; the thread has the rest. */
 const THESIS_LINES = 4;
 const FEED_SCOPE = "global";
@@ -59,7 +57,7 @@ export function MarketFeed({ marketId, name }: { marketId: number; name: string 
         ) : (
           <View>
             {items.map((item) => (
-              <FeedRow key={item.id} item={item} decimals={priceDecimalsOf(marketId)} now={now} />
+              <FeedRow key={item.id} item={item} marketId={marketId} now={now} />
             ))}
             {feed.hasMore ? (
               <Button
@@ -78,8 +76,7 @@ export function MarketFeed({ marketId, name }: { marketId: number; name: string 
   );
 }
 
-/** `decimals` is this market's display precision for the fill price. */
-function FeedRow({ item, decimals, now }: { item: FeedItem; decimals: number; now: bigint }) {
+function FeedRow({ item, marketId, now }: { item: FeedItem; marketId: number; now: bigint }) {
   const { color } = useTheme();
   const who = traderName(item.actor);
   // The api sends ISO times; one it can't parse shows no age rather than a wrong one.
@@ -106,7 +103,7 @@ function FeedRow({ item, decimals, now }: { item: FeedItem; decimals: number; no
           {trade ? <SideBadge side={trade.side} /> : null}
           {age ? <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{age}</Text> : null}
         </View>
-        {trade ? <TradeLine trade={trade} decimals={decimals} /> : null}
+        {trade ? <TradeLine trade={trade} marketId={marketId} /> : null}
         {item.post ? (
           <>
             <Text numberOfLines={THESIS_LINES} style={[TYPE.body, { color: color.ink }]}>
@@ -123,15 +120,15 @@ function FeedRow({ item, decimals, now }: { item: FeedItem; decimals: number; no
   );
 }
 
-/** "P$5,800.00 at $1,416.40 (4.1100 XAU)", and a closed position's net result after fees, funding and borrow. */
-function TradeLine({ trade, decimals }: { trade: FeedTrade; decimals: number }) {
+/** "P$5,800.00 at $1,416.40 (4.1100 oz)", and a closed position's net result after fees, funding and borrow. */
+function TradeLine({ trade, marketId }: { trade: FeedTrade; marketId: number }) {
   const { color } = useTheme();
+  const decimals = priceDecimalsOf(marketId);
   const net = trade.positionNetPnl;
   return (
     <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
       <Text style={[TYPE.rowChange, { color: color.ink }]}>{usd(trade.notional)}</Text>
-      {trade.price === null ? "" : ` at $${price18(trade.price, decimals)}`} (
-      {formatUnits(trade.size, DECIMALS.e18, SIZE_DECIMALS)} {trade.symbol})
+      {trade.price === null ? "" : ` at $${price18(trade.price, decimals)}`} ({quantityText(marketId, trade.size)})
       {net === null ? null : (
         <Text style={[TYPE.rowChange, { color: net >= 0n ? color.up : color.down }]}> · net {signedUsd(net)}</Text>
       )}

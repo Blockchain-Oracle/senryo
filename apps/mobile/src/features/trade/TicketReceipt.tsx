@@ -1,21 +1,22 @@
-import { explorerTxUrl, NETWORKS } from "@senryo/config";
-import { DECIMALS, formatUnits } from "@senryo/core";
-import type { OperationRecord, TraceEvent } from "@senryo/query";
+import { explorerTxUrl } from "@senryo/config";
+import { DECIMALS } from "@senryo/core";
+import type { OperationRecord, TraceEvent, TraceOutcome } from "@senryo/query";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Linking, Share, StyleSheet, Switch, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { KeyValue, Panel } from "~/components/kit/Surface";
-import { CircleCheck } from "~/components/kit/symbols";
+import { Panel } from "~/components/kit/Surface";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
+import { DetailRow } from "~/features/markets/Disclosure";
 import { shortAddress } from "~/lib/format";
 import { price18, priceDecimalsOf, usd } from "~/lib/money";
 import type { NetworkKey } from "~/lib/network";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { QUANTITY_DECIMALS } from "./constants";
+import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { quantityText } from "./quantity";
+import { ORDER_WORDS, TradeTrace } from "./TradeTrace";
 import type { Side } from "./useTicket";
 
-/** What the order was at the moment of the hold — the receipt carries its own mode, never the app's current one. */
+/** What the order was at the moment of the slide — the outcome carries its own mode, never the app's current one. */
 export interface SubmittedOrder {
   network: NetworkKey;
   chainId: number;
@@ -25,12 +26,14 @@ export interface SubmittedOrder {
   leverage: number;
   /** The margin the user entered: margin × leverage = exposure, exactly as the ticket showed it. */
   marginUsd6: bigint;
-  /** What the engine locks against the position at the hold (its initial-margin requirement), quoted. */
+  /** What the engine locks against the position at the slide (its initial-margin requirement), quoted. */
   lockedUsd6: bigint;
   notionalUsd6: bigint;
   execPrice18: bigint;
   feeUsd6: bigint;
   sizeDelta: bigint;
+  /** The liquidation price quoted at review; null when there is none above $0, undefined on older records. */
+  liqPrice18: bigint | null | undefined;
 }
 
 export function restoredOrder(record: OperationRecord | undefined): SubmittedOrder | undefined {
@@ -56,6 +59,7 @@ export function restoredOrder(record: OperationRecord | undefined): SubmittedOrd
       execPrice18: BigInt(i.execPrice18 ?? ""),
       feeUsd6: BigInt(i.feeUsd6 ?? ""),
       sizeDelta: BigInt(i.sizeDelta ?? ""),
+      liqPrice18: i.liqPrice18 === undefined ? undefined : i.liqPrice18 === "" ? null : BigInt(i.liqPrice18),
     };
   } catch {
     return undefined;
@@ -63,104 +67,144 @@ export function restoredOrder(record: OperationRecord | undefined): SubmittedOrd
 }
 
 /**
- * The receipt (inventory #21; D-114/D-163): shown only once the trace reached **finalized** — never on a submit or a
- * vote. Quoted values are labelled as quoted at the hold; the transaction links to the network's explorer. Share
- * opens a compact preview (inventory #22) before the native share sheet; amounts are opt-in, no identity is attached.
- * The figures sit in one borderless filled group.
- * The completed-outcome claim stays Blocked B1 until our own finalized lifecycles are recorded in acceptance.md.
+ * The order's outcome (plan §0.9 Order status; Part A8): the one outcome surface, `TradeTrace`, in the order's words —
+ * "Opening short" with a spinner while it runs, then the check, "Short XAU opened" and three facts (Size · Entry ·
+ * Liq.) taken from the reviewed intent and, once read, the fill event; View position and Share; and under Details the
+ * margin, leverage, fee, fill and the transaction. A failure hands back to review and never resends; an unknown
+ * result offers no new action. Protection placed after the fill (`protection`) shows its own lines under the facts.
  */
-export function TicketReceipt({
+export function OrderOutcome({
   order,
   events,
+  record,
+  running,
+  outcome,
+  protection,
   onDone,
+  onLeave,
   onViewPosition,
   onShare,
-  protection,
-  record,
 }: {
-  record?: OperationRecord | undefined;
-  order: SubmittedOrder;
+  order: SubmittedOrder | undefined;
   events: readonly TraceEvent[];
+  record: OperationRecord | undefined;
+  running: boolean;
+  outcome: TraceOutcome | undefined;
+  protection?: ReactNode;
   onDone: () => void;
+  onLeave: () => void;
   onViewPosition: () => void;
   onShare: () => void;
-  /** The stop loss / take profit placed after the open (S1b.8a), each with its outcome. */
-  protection?: ReactNode;
 }) {
-  const { color } = useTheme();
-  const [details, setDetails] = useState(false);
-  const fill = record?.steps
-    .flatMap((s) => s.facts ?? [])
-    .find((f) => f.event === "PositionUpdated" && f.values.marketId === String(order.marketId))?.values;
-  const network = NETWORKS[order.network];
-  const practice = order.network === "testnet";
-  const tone = practice ? color.practice : color.mainnet;
+  const settled = events.some((e) => e.stage === "finalized");
+  const sideWord = order ? (order.side === "long" ? "Long" : "Short") : undefined;
+  const fill = order
+    ? record?.steps
+        .flatMap((s) => s.facts ?? [])
+        .find((f) => f.event === "PositionUpdated" && f.values.marketId === String(order.marketId))?.values
+    : undefined;
   const hash = events.find((e) => e.hash)?.hash;
-  const finalizedAt = events.find((e) => e.stage === "finalized")?.at;
-  const decimals = priceDecimalsOf(order.marketId);
-  const side = order.side === "long" ? "Long" : "Short";
-  const money = (v: bigint) => usd(v, DECIMALS.cents, order.network);
+  const words = order
+    ? {
+        ...ORDER_WORDS,
+        pending: `Opening ${order.side}`,
+        success: `${sideWord} ${order.symbol} opened`,
+        done: "Done",
+      }
+    : ORDER_WORDS;
+  const decimals = order ? priceDecimalsOf(order.marketId) : undefined;
+  const money = (v: bigint) => usd(v, DECIMALS.cents, order?.network);
+  const entry = order ? (fill?.execPrice ? BigInt(fill.execPrice) : order.execPrice18) : undefined;
   return (
-    <View style={styles.wrap}>
-      <View style={styles.head}>
-        <CircleCheck size={SIZE.avatarSm} strokeWidth={SIZE.iconStroke} color={color.up} />
-        <Text accessibilityRole="header" style={[TYPE.sheetTitle, { color: color.ink }]}>
-          {side} {order.symbol} opened
-        </Text>
-        <Text style={[TYPE.rowDetail, { color: tone }]}>
-          {practice ? "Practice · Paper money" : "Mainnet · Real money"} · {network.name} · Finalized
-          {finalizedAt ? ` ${new Date(finalizedAt).toLocaleTimeString()}` : ""}
-        </Text>
-      </View>
-      <Panel style={styles.card}>
-        <KeyValue label="Amount" value={money(order.marginUsd6)} />
-        <KeyValue
-          label={fill ? "Fill price" : "Fill price (estimated)"}
-          value={`$${price18(fill?.execPrice ? BigInt(fill.execPrice) : order.execPrice18, decimals)}`}
-        />
-        <KeyValue
-          label={fill ? "Fee" : "Fee (estimated)"}
-          value={money(fill?.fee ? BigInt(fill.fee) : order.feeUsd6)}
-        />
-        {details ? (
-          <>
-            <KeyValue label="Leverage requested" value={`${order.leverage}×`} />
-            <KeyValue label="Exposure requested" value={money(order.notionalUsd6)} />
-            <KeyValue
-              label={fill ? "Quantity" : "Quantity (estimated)"}
-              value={`${formatUnits(fill?.sizeDelta ? BigInt(fill.sizeDelta) : order.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS)} ${order.symbol}`}
+    <TradeTrace
+      events={events}
+      record={record}
+      running={running}
+      outcome={outcome}
+      onDone={onDone}
+      onLeave={onLeave}
+      words={words}
+      next={
+        <View style={styles.next}>
+          <Button label="Share" variant="outline" style={styles.flex} onPress={onShare} />
+          <Button label="View position" variant="secondary" style={styles.flex} onPress={onViewPosition} />
+        </View>
+      }
+      details={
+        order ? (
+          <View>
+            <DetailRow label="Margin" value={money(order.marginUsd6)} />
+            <DetailRow label="Leverage" value={`${order.leverage}×`} />
+            <DetailRow
+              label={fill ? "Fee" : "Fee (estimated)"}
+              value={money(fill?.fee ? BigInt(fill.fee) : order.feeUsd6)}
             />
-            {hash ? <KeyValue label="Transaction" value={shortAddress(hash)} /> : null}
-          </>
-        ) : null}
-      </Panel>
-      <Button
-        label={details ? "Hide details" : "Details"}
-        variant="ghost"
-        size="sm"
-        onPress={() => setDetails(!details)}
-      />
-      {protection}
-      {hash ? (
-        <Button
-          label="View on explorer"
-          variant="ghost"
-          size="sm"
-          onPress={() =>
-            void Linking.openURL(explorerTxUrl(order.chainId as Parameters<typeof explorerTxUrl>[0], hash))
-          }
-        />
+            {hash ? (
+              <Button
+                label={`Transaction ${shortAddress(hash)}`}
+                variant="ghost"
+                size="sm"
+                onPress={() =>
+                  void Linking.openURL(explorerTxUrl(order.chainId as Parameters<typeof explorerTxUrl>[0], hash))
+                }
+              />
+            ) : null}
+          </View>
+        ) : null
+      }
+    >
+      {settled && order && entry !== undefined ? (
+        <>
+          <Facts
+            facts={[
+              {
+                label: "Size",
+                value: quantityText(order.marketId, fill?.sizeDelta ? BigInt(fill.sizeDelta) : order.sizeDelta),
+              },
+              { label: fill ? "Entry" : "Entry (est.)", value: `$${price18(entry, decimals)}` },
+              {
+                label: "Liq.",
+                value:
+                  order.liqPrice18 === undefined
+                    ? "—"
+                    : order.liqPrice18 === null
+                      ? "None"
+                      : `$${price18(order.liqPrice18, decimals)}`,
+              },
+            ]}
+          />
+          {protection}
+        </>
       ) : null}
-      <View style={styles.actions}>
-        <Button label="Share" variant="outline" style={styles.flex} onPress={onShare} />
-        <Button label="View position" variant="secondary" style={styles.flex} onPress={onViewPosition} />
-      </View>
-      <Button label="Done" onPress={onDone} />
+    </TradeTrace>
+  );
+}
+
+/** Three value-over-label facts in one strip (Fomo F13's "Invested / Avg. entry" pairs). */
+export function Facts({ facts }: { facts: ReadonlyArray<{ label: string; value: string }> }) {
+  const { color } = useTheme();
+  return (
+    <View style={styles.facts}>
+      {facts.map((f) => (
+        <View key={f.label} style={styles.fact} accessible accessibilityLabel={`${f.label} ${f.value}`}>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            style={[TYPE.rowAmount, { color: color.ink }]}
+          >
+            {f.value}
+          </Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+            {f.label}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 }
 
-/** The share preview (inventory #22): a compact child over the ticket, then the native share sheet. */
+/** The share preview: a compact child over the ticket, then the native share sheet. Amounts are opt-in. */
 export function SharePreview({
   open,
   onClose,
@@ -217,11 +261,10 @@ export function SharePreview({
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, paddingHorizontal: SIZE.gutter, gap: SPACE.md },
-  head: { alignItems: "center", gap: SPACE.xs, paddingVertical: SPACE.md },
-  card: { paddingHorizontal: SPACE.lg, paddingVertical: SPACE.md },
-  actions: { flexDirection: "row", gap: SPACE.md },
+  next: { flexDirection: "row", gap: SPACE.md },
   flex: { flex: 1 },
+  facts: { flexDirection: "row", gap: SPACE.md, paddingVertical: SPACE.sm },
+  fact: { flex: 1, alignItems: "center", gap: SPACE.xxs },
   preview: { padding: SPACE.lg, gap: SPACE.xs },
   option: {
     minHeight: SIZE.touch,

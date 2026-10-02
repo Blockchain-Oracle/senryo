@@ -1,7 +1,8 @@
 /**
- * The Perps list's intro (FT072, Fomo F11): one filled plate — a small long/short drawing, "Go long or short", what
- * can be traded here and the highest leverage the listed markets allow (read from them, never a fixed number) — that
- * opens the risk explainer, and an × that dismisses it on this phone for good.
+ * The Perps list's one dismissible card (FT072, Fomo F11; flow book C1 step 1): a small long/short drawing, "Go long
+ * or short" and one short line — the kinds of market and the highest leverage the listed markets allow (read from
+ * them, never a fixed number). It opens the risk explainer; the × dismisses it on this phone for good (MMKV), so it
+ * stays gone after a relaunch.
  */
 import { useMarkets } from "@senryo/query";
 import { router } from "expo-router";
@@ -49,9 +50,8 @@ export function PerpsIntro() {
         </Svg>
         <View style={styles.text}>
           <Text style={[TYPE.rowTitle, { color: color.ink }]}>Go long or short</Text>
-          <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-            Trade gold, silver and the major currencies{max > 0 ? ` with up to ${max}× leverage` : ""}. A position can
-            be liquidated; see how it works.
+          <Text style={[TYPE.rowDetail, { color: color.text2 }]} numberOfLines={1}>
+            Gold, silver and FX{max > 0 ? ` · up to ${max}×` : ""}
           </Text>
         </View>
       </Pressable>
@@ -72,8 +72,8 @@ export function PerpsIntro() {
 }
 
 const styles = StyleSheet.create({
-  plate: { flexDirection: "row", alignItems: "flex-start", padding: SPACE.md, gap: SPACE.sm },
+  plate: { flexDirection: "row", alignItems: "center", padding: SPACE.md, gap: SPACE.sm },
   body: { flex: 1, flexDirection: "row", alignItems: "center", gap: SPACE.md },
   text: { flex: 1, gap: SPACE.xxs },
-  close: { paddingTop: SPACE.xxs },
+  close: { padding: SPACE.xxs },
 });

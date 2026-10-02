@@ -44,6 +44,36 @@ export function triggersVars(chainId: number, user: string, limit: number = PAGE
 
 export type Triggers = ResultOf<typeof TriggersDocument>;
 
+// ---------------------------------------------------------------- trigger history (flow book C8)
+
+const triggerHistory = trigger.extend({
+  status: z.enum(["PLACED", "CANCELLED", "EXECUTED"]),
+  closedAt: z.number().int().nullable(),
+  executedSize: bigintish.nullable(),
+  txHash: z.string(),
+});
+
+/**
+ * Every TP/SL the user placed on this network, newest first, whatever became of it (flow book C8 History): the app
+ * derives Expired (PLACED past expiry) and Ended with position (PLACED with no matching open position) itself, since
+ * the indexer has no such statuses.
+ */
+export const TriggerHistoryDocument = defineDocument<TriggerVars>()(
+  "TriggerHistory",
+  `query TriggerHistory($chainId: Int!, $user: String!, $limit: Int!) {
+    Trigger(
+      where: { chainId: { _eq: $chainId }, user_id: { _eq: $user } }
+      order_by: { placedAt: desc }
+      limit: $limit
+    ) {
+      id market_id takeProfit triggerPrice size expiry placedAt status closedAt executedSize txHash
+    }
+  }`,
+  z.object({ Trigger: z.array(triggerHistory) }).transform((d) => d.Trigger),
+);
+
+export type TriggerHistory = ResultOf<typeof TriggerHistoryDocument>;
+
 // ---------------------------------------------------------------- liquidations (F12 post-mortem)
 
 interface LiquidationVars {

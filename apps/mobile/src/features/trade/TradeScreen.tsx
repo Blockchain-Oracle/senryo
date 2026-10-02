@@ -1,8 +1,9 @@
-import { type EngineMarket, engineMarket, engineMarketsOn } from "@senryo/config";
+import { DISCOVERY_INSTRUMENTS, type EngineMarket, engineMarket, engineMarketsOn } from "@senryo/config";
+import { ids } from "@senryo/identity";
 import { useQueryClient } from "@tanstack/react-query";
-import { type Href, router, Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   FadeIn,
   useAnimatedReaction,
@@ -13,30 +14,30 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
+import { Button } from "~/components/kit/Button";
 import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { Screen } from "~/components/kit/Screen";
 import { ReadingView } from "~/components/kit/states";
 import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
-import { usePressScale } from "~/components/kit/usePressScale";
 import { SCROLL_THROTTLE_MS } from "~/components/shell/constants";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
-import { hasConfirmedEligibility } from "~/features/legal/eligibility";
+import { DiscoveryDetail } from "~/features/markets/DiscoveryDetail";
 import { MarketAbout } from "~/features/markets/MarketAbout";
-import { MarketActions } from "~/features/markets/MarketActions";
-import { HolidayBanner, ProtocolBanner } from "~/features/markets/MarketBanners";
+import { MarketActions, marketShareUrl } from "~/features/markets/MarketActions";
+import { HolidayBanner } from "~/features/markets/MarketBanners";
 import { MarketChart } from "~/features/markets/MarketChart";
 import { MarketFeed } from "~/features/markets/MarketFeed";
 import { MarketHolders } from "~/features/markets/MarketHolders";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { type MarketLine, useMarketLine } from "~/features/markets/useMarketLine";
-import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
-import { fire } from "~/feedback/fire";
-import { useAccount } from "~/lib/account/provider";
-import { ROUTES, type TicketSide, ticketRoute } from "~/lib/constants/routes";
+import { ROUTES } from "~/lib/constants/routes";
 import { priceDecimalsOf } from "~/lib/money";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
-import { BUTTON, EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { HeldRow, OwnItRow } from "./MarketLinks";
+import { PrelaunchDetail } from "./PrelaunchDetail";
+import { SideBar } from "./SideBar";
 import { CompactPrice, MarketIdentity, PriceBlock } from "./TradeHeader";
 
 /** F32's order: who holds it, what they're doing, then what it is. */
@@ -47,38 +48,33 @@ const TABS = [
 ] as const;
 type DetailTab = (typeof TABS)[number]["value"];
 
-/** The bar swaps its utilities for the compact price once the big price has scrolled under it (F32 → F33). */
+/** The bar swaps its circles for the compact price once the big price has scrolled under it (F32 → F33). */
 const COLLAPSE_AT = SPACE.sm + (TYPE.displayPrice.lineHeight ?? 0);
 
 /**
- * Market detail (`/markets/[market]`, J3; Fomo F32–F35, direction §8): identity and utilities in the bar → price,
- * change, open interest and freshness → candles with the current-price line and period chips → Holders / Feed /
- * About → sticky Short / Long. Like Fomo's detail it hides the dock: the bottom zone belongs to Short / Long, which
- * open the order ticket on that side over this page (M13 → C39). Dismissing the ticket restores this page with its
- * scroll and tab (FT112). Holders lists only people who share their trades on this network (`/v1/markets/:id/holders`).
+ * Market detail (`/markets/[market]`; Fomo F32–F35; flow book C2; plan §0.9 Market detail): mark, ticker, badge and
+ * venue in the bar with Alert · Watch · Share · History → price, 24 h change and open interest → candles with period
+ * chips → "Own real gold ›" on XAU and "Your position ›" when one is open → Holders · Feed · About → a state banner
+ * when the market isn't open → sticky Short / Long. A crypto ticker (`/markets/BTC`) opens its read-only page; on
+ * Mainnet before the deploy the page shows the live Chainlink price with "Opening soon".
  */
 export function TradeScreen({ marketId }: { marketId: string }) {
   const meta = engineMarket(marketId);
   const network = useNetwork();
   const readOnly = useReadOnlyNetwork();
   useHideDockWhileFocused("market-detail");
-  const listed = meta !== undefined && engineMarketsOn(network.chainId).some((m) => m.id === meta.id);
-  if (meta && listed && !readOnly) return <EngineMarketDetail meta={meta} />;
-  return (
-    <Plain title={marketId}>
-      {readOnly ? (
-        <PrelaunchMainnet surface="trade" />
-      ) : (
-        <QuietLine>
-          {meta ? `${meta.name} isn't listed in ${network.modeLabel} yet` : `${marketId} isn't tradeable here yet`}
-        </QuietLine>
-      )}
-    </Plain>
-  );
+  if (!meta) {
+    const discovery = DISCOVERY_INSTRUMENTS.find((i) => i.symbol.toUpperCase() === marketId.toUpperCase());
+    if (discovery) return <DiscoveryDetail id={discovery.id} />;
+    return <NotListed title={marketId} />;
+  }
+  if (readOnly) return <PrelaunchDetail meta={meta} />;
+  if (!engineMarketsOn(network.chainId).some((m) => m.id === meta.id)) return <NotListed title={meta.symbol} />;
+  return <EngineMarketDetail meta={meta} />;
 }
 
-/** The page without a market to show: the same bar with a plain title, and what is true instead. */
-function Plain({ title, children }: { title: string; children: ReactNode }) {
+/** A market this network doesn't list: the same bar with a plain title, one line, and the way back to the list. */
+function NotListed({ title }: { title: string }) {
   const { color } = useTheme();
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
@@ -86,13 +82,17 @@ function Plain({ title, children }: { title: string; children: ReactNode }) {
       <PageHeader>
         <PageTitle>{title}</PageTitle>
       </PageHeader>
-      <Screen>{children}</Screen>
+      <Screen>
+        <QuietLine>Not listed here</QuietLine>
+        <Button label="See all markets" variant="secondary" onPress={() => router.navigate(ROUTES.markets)} />
+      </Screen>
     </View>
   );
 }
 
 function EngineMarketDetail({ meta }: { meta: EngineMarket }) {
   const { color } = useTheme();
+  const network = useNetwork();
   const insets = useSafeAreaInsets();
   const client = useQueryClient();
   const line = useMarketLine(meta.id, meta.symbol);
@@ -117,12 +117,25 @@ function EngineMarketDetail({ meta }: { meta: EngineMarket }) {
         right={
           <BarRight
             collapsed={collapsed && known !== undefined}
-            actions={<MarketActions symbol={meta.symbol} name={meta.name} />}
+            actions={
+              <MarketActions
+                name={meta.name}
+                watchKey={meta.symbol}
+                shareUrl={marketShareUrl(meta.symbol)}
+                alertFor={meta.symbol}
+                historyFor={meta.symbol}
+              />
+            }
             compact={known ? <CompactPrice line={known} /> : null}
           />
         }
       >
-        <MarketIdentity marketId={meta.id} symbol={meta.symbol} name={meta.name} maxLeverageX={known?.maxLeverageX} />
+        <MarketIdentity
+          mark={ids.engineMarket(network.chainId, meta.id)}
+          symbol={meta.symbol}
+          name={meta.name}
+          maxLeverageX={known?.maxLeverageX}
+        />
       </PageHeader>
       <Animated.ScrollView
         onScroll={onScroll}
@@ -140,7 +153,7 @@ function EngineMarketDetail({ meta }: { meta: EngineMarket }) {
           {(l) => <Body line={l} tab={tab} onTab={setTab} />}
         </ReadingView>
       </Animated.ScrollView>
-      <SideBar symbol={meta.symbol} />
+      <SideBar symbol={meta.symbol} status={known?.status} calendarId={known?.market.calendarId ?? 0} />
     </View>
   );
 }
@@ -149,9 +162,12 @@ function Body({ line, tab, onTab }: { line: MarketLine; tab: DetailTab; onTab: (
   return (
     <>
       <PriceBlock line={line} />
-      <ProtocolBanner />
       <HolidayBanner calendarId={line.market.calendarId} name={line.name} />
       <MarketChart line={line} />
+      <View style={styles.links}>
+        <HeldRow marketId={line.marketId} />
+        <OwnItRow symbol={line.symbol} />
+      </View>
       <View style={styles.tabs}>
         <UnderlineTabs options={TABS} value={tab} onChange={onTab} label={`${line.name} details`} />
         <Animated.View key={tab} entering={FadeIn.duration(TIMING.selection)}>
@@ -169,8 +185,8 @@ function Body({ line, tab, onTab }: { line: MarketLine; tab: DetailTab; onTab: (
 }
 
 /**
- * The bar's right side (F32 → F33): the three utilities at rest; once the price block has scrolled away they fade out
- * and the compact price fades in over them, so the price never leaves the screen. The utilities return at the top.
+ * The bar's right side (F32 → F33): the circles at rest; once the price block has scrolled away they fade out and
+ * the compact price fades in over them, so the price never leaves the screen. The circles return at the top.
  */
 function BarRight({ collapsed, actions, compact }: { collapsed: boolean; actions: ReactNode; compact: ReactNode }) {
   const swap = useSharedValue(0);
@@ -196,71 +212,10 @@ function BarRight({ collapsed, actions, compact }: { collapsed: boolean; actions
   );
 }
 
-/**
- * Sticky Short / Long (F32/F35): two rounded rectangles in the direction fills (12 pt corners, never pills); each
- * opens the ticket on its side, and the ticket names any blocker in place.
- */
-function SideBar({ symbol }: { symbol: string }) {
-  const { color } = useTheme();
-  const insets = useSafeAreaInsets();
-  const network = useNetwork();
-  const address = useAccount().hint?.address;
-  const open = (side: TicketSide) => {
-    fire("press");
-    const ticket = ticketRoute(symbol, side);
-    // FT101 / M13: real money asks once per account, before its first ticket; Practice never does.
-    if (network.key === "mainnet" && address && !hasConfirmedEligibility(address)) {
-      router.push(`${ROUTES.eligibility}?next=${encodeURIComponent(ticket)}` as Href);
-      return;
-    }
-    router.push(ticket);
-  };
-  return (
-    <View style={[styles.bar, { paddingBottom: insets.bottom + SPACE.sm, backgroundColor: color.ground }]}>
-      <SideButton side="short" symbol={symbol} onPress={() => open("short")} />
-      <SideButton side="long" symbol={symbol} onPress={() => open("long")} />
-    </View>
-  );
-}
-
-function SideButton({ side, symbol, onPress }: { side: TicketSide; symbol: string; onPress: () => void }) {
-  const { color } = useTheme();
-  const press = usePressScale();
-  const long = side === "long";
-  const word = long ? "Long" : "Short";
-  return (
-    <Animated.View style={[styles.flex, press.style]}>
-      <Pressable
-        onPressIn={press.onPressIn}
-        onPressOut={press.onPressOut}
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={`${word} ${symbol}`}
-        accessibilityHint="Opens the order ticket"
-        style={({ pressed }) => [
-          styles.side,
-          { backgroundColor: long ? color.up : color.down, opacity: pressed ? PRESSED : 1 },
-        ]}
-      >
-        <Text style={[TYPE.buttonLabel, { color: long ? color.upForeground : color.downForeground }]}>{word}</Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-const PRESSED = 0.85;
-
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   body: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm, gap: SPACE.xl },
+  links: { gap: SPACE.xxs },
   tabs: { gap: SPACE.lg },
   compact: { position: "absolute", top: 0, bottom: 0, right: 0, justifyContent: "center" },
-  bar: { flexDirection: "row", gap: SPACE.md, paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm },
-  flex: { flex: 1 },
-  side: {
-    height: SIZE.buttonHeight,
-    borderRadius: BUTTON.radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 });

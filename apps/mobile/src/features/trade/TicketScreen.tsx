@@ -1,7 +1,7 @@
 import { engineMarket } from "@senryo/config";
 import { useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { EmptyState, ErrorState, LoadingState } from "~/components/kit/states";
@@ -19,12 +19,11 @@ import { ProtectAfterOpen } from "./ProtectAfterOpen";
 import { planKey } from "./planned-triggers";
 import { useSettledOutcome } from "./send-outcome";
 import { type EntryMode, type TicketChild, TicketEntry } from "./Ticket";
-import { CandleSettings, LiquidationInfo, ReviewOrder } from "./TicketChildren";
+import { CandleSettings, LiquidationInfo, TicketDetails } from "./TicketChildren";
 import { TicketFooter } from "./TicketFooter";
 import { TicketHeader } from "./TicketHeader";
-import { restoredOrder, SharePreview, type SubmittedOrder, TicketReceipt } from "./TicketReceipt";
+import { OrderOutcome, restoredOrder, SharePreview, type SubmittedOrder } from "./TicketReceipt";
 import { TpSlChild } from "./TpSlChild";
-import { TradeTrace } from "./TradeTrace";
 import { commitState } from "./ticket-commit";
 import { type Side, useTicket } from "./useTicket";
 
@@ -32,13 +31,23 @@ const PRICE_UPDATED = "Price updated. Review and slide again.";
 const UPDATES_PAUSED = "Live updates paused. Review the latest oracle price.";
 
 /**
- * J4, the order ticket (C39–C43, M14, FT102–FT111): a full-height transaction sheet over market detail, opened on a
- * side from the sticky Short / Long. The dock hides while it is focused. Money logic is the existing `useTicket`
- * (draft per (mode, market), core preview, blocker chain, gas top-up, send trace) — unchanged; this lays it out in
- * Fomo's anatomy. Children (liquidation info, TP/SL, review, candle settings, share) rise over the ticket and return to
- * it with every value kept (FT112); dismissing the ticket restores market detail.
+ * The order ticket (Fomo F37–F45; flow book C3/C3a; plan §0.9 Ticket + Order status): a full-height transaction sheet
+ * over market detail, opened on the tapped side. The dock hides while it is focused. Money logic is `useTicket`
+ * (draft per (mode, market), core preview, blocker chain, gas top-up, revalidation, over-cap passkey, send trace) —
+ * unchanged; this lays it out in Fomo's anatomy and ends in the one outcome surface. Children (liquidation info,
+ * TP/SL, Details, candle settings, share) rise over the ticket and return with every value kept (FT112). The first
+ * trade passes the risk explainer; the first short also passes its short-specific card (C3a).
  */
-export function TicketScreen({ marketId, side }: { marketId: string; side: Side | undefined }) {
+export function TicketScreen({
+  marketId,
+  side,
+  leverage,
+}: {
+  marketId: string;
+  side: Side | undefined;
+  /** "Trade this" (C11): the source's leverage, clamped to the market max by the ticket. */
+  leverage?: number | undefined;
+}) {
   useHideDockWhileFocused("ticket");
   const meta = engineMarket(marketId);
   const readOnly = useReadOnlyNetwork();
@@ -53,11 +62,21 @@ export function TicketScreen({ marketId, side }: { marketId: string; side: Side 
       </View>
     </TransactionSheet>
   ) : (
-    <LoadedTicket marketId={meta.id} symbol={meta.symbol} side={side} />
+    <LoadedTicket marketId={meta.id} symbol={meta.symbol} side={side} leverage={leverage} />
   );
 }
 
-function LoadedTicket({ marketId, symbol, side }: { marketId: number; symbol: string; side: Side | undefined }) {
+function LoadedTicket({
+  marketId,
+  symbol,
+  side,
+  leverage,
+}: {
+  marketId: number;
+  symbol: string;
+  side: Side | undefined;
+  leverage: number | undefined;
+}) {
   const line = useMarketLine(marketId, symbol);
   const client = useQueryClient();
   if (line.status === "unknown" || line.status === "failed") {
@@ -73,28 +92,38 @@ function LoadedTicket({ marketId, symbol, side }: { marketId: number; symbol: st
       </TransactionSheet>
     );
   }
-  return <TicketBody line={line.value} initialSide={side} />;
+  return <TicketBody line={line.value} initialSide={side} initialLeverage={leverage} />;
 }
 
-function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side | undefined }) {
+function TicketBody({
+  line,
+  initialSide,
+  initialLeverage,
+}: {
+  line: MarketLine;
+  initialSide: Side | undefined;
+  initialLeverage: number | undefined;
+}) {
   const t = useTicket(line.market);
   const env = useQueryEnv();
   const network = useNetwork();
   const account = useAccount();
   const [mode, setMode] = useState<EntryMode>("keypad");
-  const [child, setChild] = useState<TicketChild | "share" | undefined>();
+  const [child, setChild] = useState<TicketChild | "details" | "share" | undefined>();
   const [note, setNote] = useState<string | undefined>();
   const [submitted, setOrder] = useState<SubmittedOrder | undefined>();
   const order = submitted ?? restoredOrder(t.trace.record);
   const sided = useRef(false);
   const plan = planKey(env.chainId, account.hint?.address, line.marketId);
 
-  // Short / Long on market detail picks the side once; the draft keeps everything else (amount, leverage).
+  // Short / Long (or "Trade this") picks the side — and the leverage when the source knows it — once; the draft keeps
+  // everything else. `setLeverage` clamps to 1…the market's max. The amount is never prefilled (C11).
   useEffect(() => {
-    if (sided.current || !initialSide) return;
+    if (sided.current || (!initialSide && initialLeverage === undefined)) return;
     sided.current = true;
-    if (initialSide !== t.side) t.setSide(initialSide);
-  }, [initialSide, t]);
+    if (initialSide && initialSide !== t.side) t.setSide(initialSide);
+    if (initialLeverage !== undefined && initialLeverage !== t.leverage) t.setLeverage(initialLeverage);
+  }, [initialSide, initialLeverage, t]);
 
   const inFlight = t.trace.events.length > 0;
   const settled = t.trace.events.some((e) => e.stage === "finalized");
@@ -124,8 +153,10 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
   const confirm = () => {
     setChild(undefined);
     setNote(undefined);
-    if (!(storage.getBoolean(STORAGE_KEYS.riskExplained) ?? false)) {
-      router.push(ROUTES.riskExplainer);
+    const explained = storage.getBoolean(STORAGE_KEYS.riskExplained) ?? false;
+    const shortExplained = storage.getBoolean(STORAGE_KEYS.shortRiskExplained) ?? false;
+    if (!explained || (t.side === "short" && !shortExplained)) {
+      router.push(`${ROUTES.riskExplainer}?side=${t.side}` as Href);
       return;
     }
     if (t.preview) {
@@ -142,6 +173,7 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
         execPrice18: t.preview.execPrice18,
         feeUsd6: t.preview.feeUsd6,
         sizeDelta: t.preview.sizeDelta,
+        liqPrice18: t.preview.liqPrice18,
       });
     }
     if (commit.retryGas) t.resetGas();
@@ -171,13 +203,13 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
         }
       >
         {inFlight ? (
-          settled && order ? (
-            <Receipt
-              order={order}
-              t={t}
-              onShare={() => setChild("share")}
-              marketId={line.marketId}
-              protection={
+          <Outcome
+            t={t}
+            order={order}
+            marketId={line.marketId}
+            onShare={() => setChild("share")}
+            protection={
+              settled ? (
                 <ProtectAfterOpen
                   market={line.market}
                   position={t.held}
@@ -185,11 +217,9 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
                   operationId={t.trace.record?.id}
                   auto={!t.trace.restored}
                 />
-              }
-            />
-          ) : (
-            <PendingTrace t={t} />
-          )
+              ) : null
+            }
+          />
         ) : (
           <>
             <TicketEntry t={t} line={line} mode={mode} onMode={setMode} onChild={setChild} planKey={plan} />
@@ -201,7 +231,7 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
               resetKey={resetKey}
               onReset={() => setNote(line.market.tickStale ? UPDATES_PAUSED : PRICE_UPDATED)}
               onConfirm={confirm}
-              onReview={() => setChild("review")}
+              onDetails={() => setChild("details")}
             />
           </>
         )}
@@ -216,8 +246,8 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
         previewLiq={t.preview ? t.preview.liqPrice18 : undefined}
         planKey={plan}
       />
-      <ReviewOrder
-        open={child === "review"}
+      <TicketDetails
+        open={child === "details"}
         onClose={() => setChild(undefined)}
         t={t}
         line={line}
@@ -238,60 +268,50 @@ function TicketBody({ line, initialSide }: { line: MarketLine; initialSide: Side
 }
 
 /**
- * The trace while the order runs or after it failed. Leaving closes the sheet and keeps the trace (it is keyed outside
- * React), so the order continues and reopening the ticket shows where it got to; nothing is cancelled or resent.
+ * While the order runs, after it failed, and once it finalized: the one outcome surface. Leaving closes the sheet and
+ * keeps the trace (it is keyed outside React), so the order continues and reopening the ticket shows where it got to;
+ * nothing is cancelled or resent. Done (after a fill) resets the trace and closes; "Back to ticket" (after a failure)
+ * resets it so the order can be reviewed again; View position closes, then opens the position.
  */
-function PendingTrace({ t }: { t: ReturnType<typeof useTicket> }) {
+function Outcome({
+  t,
+  order,
+  marketId,
+  onShare,
+  protection,
+}: {
+  t: ReturnType<typeof useTicket>;
+  order: SubmittedOrder | undefined;
+  marketId: number;
+  onShare: () => void;
+  protection: ReactNode;
+}) {
   const close = useTransactionClose();
   const outcome = useSettledOutcome(t.trace.events);
   return (
     <View style={styles.pad}>
-      <TradeTrace
-        record={t.trace.record}
+      <OrderOutcome
+        order={order}
         events={t.trace.events}
+        record={t.trace.record}
         running={t.trace.running}
         outcome={outcome}
-        onDone={() => t.trace.reset()}
+        protection={protection}
+        onShare={onShare}
         onLeave={() => close()}
+        onDone={() => {
+          // Done after a fill closes the sheet; "Back to ticket" after a failure returns to the reviewed order.
+          if (t.trace.events.some((e) => e.stage === "finalized")) close(() => t.trace.reset());
+          else t.trace.reset();
+        }}
+        onViewPosition={() =>
+          close(() => {
+            t.trace.reset();
+            router.push(positionRoute(String(marketId)));
+          })
+        }
       />
     </View>
-  );
-}
-
-/** After finalized: the receipt; Done resets the trace and closes; View position closes, then opens the position. */
-function Receipt({
-  order,
-  t,
-  onShare,
-  marketId,
-  protection,
-}: {
-  order: SubmittedOrder;
-  t: ReturnType<typeof useTicket>;
-  onShare: () => void;
-  marketId: number;
-  protection: ReactNode;
-}) {
-  const close = useTransactionClose();
-  return (
-    <TicketReceipt
-      order={order}
-      events={t.trace.events}
-      record={t.trace.record}
-      onShare={onShare}
-      protection={protection}
-      onDone={() =>
-        close(() => {
-          t.trace.reset();
-        })
-      }
-      onViewPosition={() =>
-        close(() => {
-          t.trace.reset();
-          router.push(positionRoute(String(marketId)));
-        })
-      }
-    />
   );
 }
 

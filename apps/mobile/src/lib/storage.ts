@@ -58,4 +58,6 @@ export const STORAGE_KEYS = {
   pendingDelete: "senryo.pending-delete.v1",
   /** A10: show "••••" for amounts on Home, Assets and Card. */
   hideBalances: "senryo.hide-balances.v1",
+  /** Flow book C3a: the short-specific risk card was accepted (shown before the first short, after the general three). */
+  shortRiskExplained: "senryo.short-risk-explained.v1",
 } as const;

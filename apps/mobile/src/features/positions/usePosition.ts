@@ -2,14 +2,18 @@
  * F11 position management: the held position in one market, its health (PnL at the conservative exit, liquidation
  * price + distance, margin use), funding and borrow owed since the last settle (F11 breakdown), and a reduce — a
  * share of the size (25/50/75/100 %) previewed by `previewDecrease` (max-profit cap, `MIN_HOLD_BLOCKS` for a
- * profitable reduce) and sent as `decrease`/`close` through the scoped signer (reduce is always in scope).
+ * profitable reduce) and sent as `decrease`/`close` through the scoped signer (reduce is always in scope). Closing
+ * the whole position also cancels that market's leftover TP/SL as later steps of the same operation (flow book C6
+ * rule b, Part 1 defect 2): `cancelTrigger` is reduce-class, so it signs in session without another prompt.
  */
 import { pinRead, readMarketRisk, readPositions } from "@senryo/chain";
 import { positionCount } from "@senryo/config";
 import { borrowOwed, fundingOwed, notional, previewDecrease, previewPosition, RISK } from "@senryo/core";
 import {
+  cancelTriggerRequest,
   closeRequest,
   decreaseRequest,
+  readOperation,
   riskViewOf,
   TRADE_SLIPPAGE_BPS,
   useAccountRisk,
@@ -17,6 +21,7 @@ import {
   usePositions,
   useQueryEnv,
   useSendTrace,
+  useTriggers,
 } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -55,6 +60,13 @@ export function usePosition(marketId: number) {
   const trace = useSendTrace(`position:${env.chainId}:${address ?? "guest"}:${marketId}`);
   const gas = useEnsureGas();
   const [quoted, setQuoted] = useState<ReduceQuote | undefined>();
+  // The leftover levels a full close cancels: every placed TP/SL on this market, orphans of earlier positions included.
+  const cleanup = useSendTrace(`position:${env.chainId}:${address ?? "guest"}:${marketId}:cleanup`);
+  const triggers = useTriggers(address);
+  const leftovers =
+    triggers.status === "fresh" || triggers.status === "stale"
+      ? triggers.value.filter((t) => t.market_id === `ours-${marketId}`)
+      : [];
 
   const m = market.status === "fresh" || market.status === "stale" ? market.value : undefined;
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
@@ -92,9 +104,13 @@ export function usePosition(marketId: number) {
       feeUsd6: reduce.feeUsd6,
       netUsd6: reduce.netUsd6,
     });
+    // Closing the whole position cancels its leftover levels in the same operation, after the close finalizes.
+    const cancels = closingAll ? leftovers.map((t) => t.id as `0x${string}`) : [];
     // Closing needs gas too: top up first when short, and show why if that's impossible (S8.16c).
-    return trace.run(sender, request, {
+    const closed = await trace.run(sender, request, {
       preflight: gas.preflight(request),
+      // The cancel request's gas class is "placeTrigger" (`cancelTriggerRequest`), so that is the step it records.
+      plannedActions: [request.action, ...cancels.map(() => "placeTrigger")],
       reviewedIntent: {
         isLong: String(position.isLong),
         closingAll: String(closingAll),
@@ -105,6 +121,7 @@ export function usePosition(marketId: number) {
         netUsd6: reduce.netUsd6.toString(),
         sizeDelta: sizeDelta.toString(),
         marketId: String(marketId),
+        ...(cancels.length > 0 ? { cancels: cancels.join(",") } : {}),
       },
       revalidate: async () => {
         guard();
@@ -132,7 +149,24 @@ export function usePosition(marketId: number) {
         guard();
       },
     });
+    if (closed?.final?.stage === "finalized" && cancels.length > 0) await cancelLeftovers(cancels, closed.operationId);
+    return closed;
   };
+
+  /** One cancel per leftover level, in session, recorded on the close's own operation; a failure is counted, not retried. */
+  const cancelLeftovers = async (ids: readonly `0x${string}`[], operationId: string | undefined) => {
+    const client = account.client;
+    if (!client || !address) return;
+    const sender = userSender(client, address, account.settings.faceId);
+    for (const id of ids) {
+      const request = cancelTriggerRequest(env.chainId, id);
+      await cleanup.run(sender, request, { preflight: gas.preflight(request), operationId });
+    }
+  };
+  // The cleanup's progress is read from the close's own operation, so it survives a remount.
+  const operation = trace.record ? readOperation(trace.record.id) : undefined;
+  const cancelSteps = (operation?.steps ?? []).filter((step) => step.request?.kind === "cancelTrigger");
+  const planned = trace.record?.reviewedIntent.cancels;
 
   return {
     loading,
@@ -150,6 +184,14 @@ export function usePosition(marketId: number) {
     headBlock: head.data,
     trace,
     quoted: quoted ?? restoredReduce(trace.record?.reviewedIntent),
+    /** Leftover TP/SL on this market, cancelled by a full close. */
+    leftovers,
+    cleanup: {
+      running: cleanup.running,
+      cancels: planned ? planned.split(",").length : 0,
+      failed: cancelSteps.filter((step) => ["reverted", "abandoned", "not-sent"].includes(step.outcome)).length,
+      reset: cleanup.reset,
+    },
     submit,
     ready: account.client !== undefined,
   };

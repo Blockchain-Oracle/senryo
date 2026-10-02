@@ -32,6 +32,7 @@ import {
   useGasBudget,
   useGeo,
   usePositions,
+  useProtocolState,
   useQueryEnv,
   useSendTrace,
 } from "@senryo/query";
@@ -70,6 +71,8 @@ export function useTicket(market: LiveMarket) {
   const gas = useGasBalance(address);
   const calendar = useCalendar(market.calendarId);
   const geo = useGeo();
+  const protocol = useProtocolState();
+  const guardian = protocol.status === "fresh" || protocol.status === "stale" ? protocol.value : undefined;
   const geoValue = geo.status === "fresh" || geo.status === "stale" ? geo.value : undefined;
 
   const isLong = side === "long";
@@ -145,6 +148,8 @@ export function useTicket(market: LiveMarket) {
     preview,
     simulationRevert: simulationRevert instanceof Error ? simulationRevert.message.split("\n")[0] : undefined,
     ...(held ? { heldLong: held.isLong } : {}),
+    // A guardian pause or settle-only is named before the slide, never left to a raw simulation revert (C3 #9).
+    ...(guardian ? { protocol: { ...guardian, now: nowSec } } : {}),
   });
 
   // What the ticket is showing right now, readable after an await (review R02): a confirmed order may only be sent
@@ -225,6 +230,8 @@ export function useTicket(market: LiveMarket) {
             execPrice18: preview.execPrice18.toString(),
             feeUsd6: preview.feeUsd6.toString(),
             sizeDelta: preview.sizeDelta.toString(),
+            // The outcome's "Liq." fact comes from the reviewed intent ("" = none above $0).
+            liqPrice18: preview.liqPrice18 === null ? "" : preview.liqPrice18.toString(),
             protection: protection.levels.map((level) => `${level.kind}:${level.price18}`).join(","),
           },
         },

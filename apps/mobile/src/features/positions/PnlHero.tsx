@@ -1,63 +1,94 @@
-import { StyleSheet, Text, View } from "react-native";
-import { Panel } from "~/components/kit/Surface";
-import { arrow, signedUsd } from "~/lib/money";
-import { HERO_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AmountHero } from "~/components/kit/AmountHero";
+import { Info } from "~/components/kit/symbols";
+import { ChildSheet } from "~/components/sheet/ChildSheet";
+import { DetailRow } from "~/features/markets/Disclosure";
+import { fire } from "~/feedback/fire";
+import { signedUsd } from "~/lib/money";
+import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+
+/** Unrealised P&L net of funding and borrow: positive means the position is up. */
+export const netPnl = (priceUsd6: bigint, fundingUsd6: bigint, borrowUsd6: bigint) =>
+  priceUsd6 - fundingUsd6 - borrowUsd6;
 
 /**
- * The position's result (Fomo F13/F14's P&L card; C25): one filled plate whose dominant figure is the unrealised P&L
- * net of funding and borrow, signed and coloured with its ▲▼ — and under it, as three quiet label-over-value cells,
- * what it is made of: the price move at the conservative exit, funding and borrow owed since the last settle. The
- * parts are separated from the figure by space, not a rule.
+ * The position's one hero (flow book C5 step 1; plan §0.9 Position): the unrealised P&L net of funding and borrow,
+ * signed and coloured by **profit** (≥ 0 green, < 0 red — never by side, C3a colour rule), with rolling digits. The
+ * ⓘ opens what it is made of.
  */
 export function PnlHero({
   priceUsd6,
   fundingUsd6,
   borrowUsd6,
+  onInfo,
 }: {
   /** Unrealised P&L from the price alone, at the conservative exit. */
   priceUsd6: bigint;
   /** Funding and borrow owed (positive = the position pays). */
   fundingUsd6: bigint;
   borrowUsd6: bigint;
+  onInfo: () => void;
 }) {
   const { color } = useTheme();
-  const net = priceUsd6 - fundingUsd6 - borrowUsd6;
-  const parts = [
-    { label: "Price", value: signedUsd(priceUsd6) },
-    { label: "Funding", value: signedUsd(-fundingUsd6) },
-    { label: "Borrow", value: signedUsd(-borrowUsd6) },
-  ] as const;
+  const net = netPnl(priceUsd6, fundingUsd6, borrowUsd6);
   return (
-    <Panel style={styles.panel}>
-      <View style={styles.figure}>
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Unrealised · net</Text>
-        <Text
-          maxFontSizeMultiplier={HERO_FONT_SCALE}
-          adjustsFontSizeToFit
-          numberOfLines={1}
-          style={[TYPE.displayPrice, { color: net < 0n ? color.down : color.up }]}
-          accessibilityLabel={`Unrealised ${net < 0n ? "loss" : "profit"} ${signedUsd(net)}`}
-        >
-          {arrow(net)} {signedUsd(net)}
+    <View style={styles.hero}>
+      <Pressable
+        onPress={() => {
+          fire("tick");
+          onInfo();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="What the P&L is made of"
+        hitSlop={SPACE.sm}
+        style={styles.label}
+      >
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+          Unrealised P&L
         </Text>
+        <Info size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
+      </Pressable>
+      <AmountHero
+        text={signedUsd(net)}
+        role={TYPE.displayPrice}
+        color={net < 0n ? color.down : color.up}
+        dimDecimals={false}
+        accessibilityLabel={`Unrealised ${net < 0n ? "loss" : "profit"} ${signedUsd(net)}`}
+      />
+    </View>
+  );
+}
+
+/** The P&L's parts (ⓘ): the price move at the conservative exit, funding and borrow since the last settle. */
+export function PnlParts({
+  open,
+  onClose,
+  priceUsd6,
+  fundingUsd6,
+  borrowUsd6,
+}: {
+  open: boolean;
+  onClose: () => void;
+  priceUsd6: bigint;
+  fundingUsd6: bigint;
+  borrowUsd6: bigint;
+}) {
+  const { color } = useTheme();
+  const net = netPnl(priceUsd6, fundingUsd6, borrowUsd6);
+  return (
+    <ChildSheet open={open} onClose={onClose} title="Unrealised P&L">
+      <View>
+        <DetailRow label="Price" value={signedUsd(priceUsd6)} />
+        <DetailRow label="Funding" value={signedUsd(-fundingUsd6)} />
+        <DetailRow label="Borrow" value={signedUsd(-borrowUsd6)} />
+        <DetailRow label="Net" value={signedUsd(net)} tone={net < 0n ? color.down : color.up} />
       </View>
-      <View style={styles.parts}>
-        {parts.map((p) => (
-          <View key={p.label} style={styles.part} accessible accessibilityLabel={`${p.label} ${p.value}`}>
-            <Text style={[TYPE.meta, { color: color.text3 }]}>{p.label}</Text>
-            <Text style={[TYPE.rowChange, { color: color.ink }]} numberOfLines={1} adjustsFontSizeToFit>
-              {p.value}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </Panel>
+      <Text style={[TYPE.meta, { color: color.text3 }]}>At the price you would close at now.</Text>
+    </ChildSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { padding: SPACE.lgPlus, gap: SPACE.lg },
-  figure: { gap: SPACE.xs },
-  parts: { flexDirection: "row", gap: SPACE.md },
-  part: { flex: 1, gap: SPACE.xxs },
+  hero: { gap: SPACE.xs },
+  label: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, alignSelf: "flex-start" },
 });

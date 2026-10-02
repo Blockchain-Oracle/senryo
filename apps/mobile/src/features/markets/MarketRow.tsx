@@ -1,210 +1,128 @@
-import { ENGINE_MARKETS, marketPair } from "@senryo/config";
+/**
+ * Our engine's market rows (Fomo F11; flow book C1): the `RowShell` grammar with the market's own art, the ticker and
+ * its max-leverage badge, the short name — plus the session word when the market isn't open — and the oracle price
+ * over its 24 h change. The mark and ticker are configuration, so they show while the price loads; a failed read says
+ * so with a Retry. Before the Mainnet engine deploy the same row shows the live Chainlink price with a lock and "Soon".
+ * Long-press stars the market (C10).
+ */
+import { ENGINE_MARKETS, MAINNET_CHAIN_ID } from "@senryo/config";
+import { formatUnits } from "@senryo/core";
 import { ids } from "@senryo/identity";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { Sparkline } from "~/components/charts/Sparkline";
-import { EntityMark } from "~/components/identity/EntityMark";
-import { Skeleton } from "~/components/kit/states";
+import { Pressable, StyleSheet, Text } from "react-native";
+import { usePrelaunchPrices } from "~/features/network/usePrelaunchPrices";
 import { fire } from "~/feedback/fire";
 import { marketRoute } from "~/lib/constants/routes";
-import { arrow, price18, priceDecimalsOf, signedPct } from "~/lib/money";
+import { price18, priceDecimalsOf, signedPct } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { BUTTON, CONTROL_FONT_SCALE, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { LeverageBadge } from "./LeverageBadge";
-import { ageLabel, STATUS_LABEL, statusTone } from "./session";
-import type { ArrivingMarket } from "./universe";
+import { LockTag, RowShell } from "./RowShell";
+import { STATUS_LABEL, statusTone } from "./session";
 import { useMarketLine } from "./useMarketLine";
-import { useNowSec } from "./useNowSec";
-
-/**
- * One market row (Fomo F09/F12, C22): bare on the page — no card, no divider — with a 48 pt mark (the market's own
- * art: koban / chōgin), name with its max-leverage badge over ticker · session, a sparkline from hourly Chainlink
- * rounds, and the oracle price over its 24 h change with ▲▼ and a sign (never colour alone). The mark is the market's
- * identity, so it shows while the price is still loading. The press plate reaches a little past the text so it reads
- * as a rounded row. `onOpen` runs before the push (Search remembers what was opened).
- */
-/** Above this Dynamic Type scale the row drops its sparkline. */
-const SPARKLINE_MAX_FONT_SCALE = 1.2;
+import { useWatchlist } from "./useWatchlist";
 
 export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen?: () => void }) {
   const network = useNetwork();
   const { color } = useTheme();
+  const watchlist = useWatchlist();
   const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
+  const symbol = meta?.symbol ?? String(marketId);
   const reading = useMarketLine(marketId, meta?.symbol ?? "");
-  const now = useNowSec();
-  // With large text the name needs the sparkline's width; the price and change carry the movement alone.
-  const roomy = useWindowDimensions().fontScale < SPARKLINE_MAX_FONT_SCALE;
-  const mark = ids.engineMarket(network.chainId, marketId);
   const client = useQueryClient();
   const retrying = useIsFetching({ queryKey: ["market", network.chainId] }) > 0;
+  const open = () => {
+    onOpen?.();
+    router.push(marketRoute(symbol));
+  };
+  const star = () => watchlist.toggle(symbol);
+  const shared = {
+    mark: ids.engineMarket(network.chainId, marketId),
+    title: symbol,
+    onPress: open,
+    onLongPress: star,
+    accessibilityHint: "Opens the market. Long-press to star it",
+  };
   if (reading.status === "unknown" || reading.status === "failed") {
     const failed = reading.status === "failed";
-    // Loading and failed are different states (review S05): both still open the market (its page has its own
-    // states), and a failed read says so, with a Retry that shows when it is working.
     return (
-      <Pressable
-        onPress={() => {
-          fire("tick");
-          onOpen?.();
-          router.push(marketRoute(meta?.symbol ?? String(marketId)));
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={`${meta?.name ?? meta?.symbol}, ${failed ? "price unavailable" : "reading the price"}`}
-        style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.card } : null]}
-      >
-        <EntityMark id={mark} size={SIZE.markDetail} decorative />
-        <View style={styles.name}>
-          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowTitle, { color: color.ink }]}>
-            {meta?.category === "fx" ? meta.symbol : (meta?.name ?? meta?.symbol)}
-          </Text>
-          <Text
-            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.rowDetail, { color: failed ? color.warn : color.text3 }]}
-          >
-            {failed ? "Price unavailable" : "Reading the oracle"}
-          </Text>
-        </View>
-        {failed ? (
-          <Pressable
-            onPress={() => {
-              fire("tick");
-              void client.invalidateQueries({ queryKey: ["market", network.chainId] });
-            }}
-            disabled={retrying}
-            accessibilityRole="button"
-            accessibilityLabel={`Retry reading ${meta?.name ?? "the price"}`}
-            accessibilityState={{ busy: retrying }}
-            hitSlop={SPACE.sm}
-            style={[styles.retry, { backgroundColor: color.raised2 }]}
-          >
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.ink }]}>
-              {retrying ? "Retrying…" : "Retry"}
-            </Text>
-          </Pressable>
-        ) : (
-          <Skeleton width={SIZE.sparklineWidth} height={SIZE.skeletonLine} />
-        )}
-      </Pressable>
+      <RowShell
+        {...shared}
+        subtitle={failed ? "Price unavailable" : (meta?.name ?? "")}
+        subtitleTone={failed ? color.warn : undefined}
+        price={failed ? null : undefined}
+        changeBps={undefined}
+        trailing={
+          failed ? (
+            <Pressable
+              onPress={() => {
+                fire("tick");
+                void client.invalidateQueries({ queryKey: ["market", network.chainId] });
+              }}
+              disabled={retrying}
+              accessibilityRole="button"
+              accessibilityLabel={`Retry reading ${meta?.name ?? "the price"}`}
+              accessibilityState={{ busy: retrying }}
+              hitSlop={SPACE.sm}
+              style={[styles.retry, { backgroundColor: color.raised2 }]}
+            >
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.ink }]}>
+                {retrying ? "Retrying…" : "Retry"}
+              </Text>
+            </Pressable>
+          ) : undefined
+        }
+        accessibilityLabel={`${meta?.name ?? symbol}, ${failed ? "price unavailable" : "reading the price"}`}
+      />
     );
   }
   const line = reading.value;
   const change = line.change24hBps;
-  const tint = change === undefined ? color.inkMuted : change >= 0n ? color.up : color.down;
-  const age = ageLabel(line.updatedAt, now);
-  const changeText = change === undefined ? "24h —" : `${arrow(change)} ${signedPct(change)}`;
-  // A currency reads as its code over its pair ("GBP" over "GBP/USD"); "British pound" would truncate beside the
-  // sparkline, and the full name is on the market page.
-  const fx = meta?.category === "fx";
+  const price = `$${price18(line.price18, priceDecimalsOf(marketId))}`;
+  const open24 = line.status === "OPEN";
   return (
-    <Pressable
-      onPress={() => {
-        fire("tick");
-        onOpen?.();
-        router.push(marketRoute(line.symbol));
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`${line.name}, Senryo, ${line.maxLeverageX > 0 ? `up to ${line.maxLeverageX} times leverage, ` : ""}${STATUS_LABEL[line.status]}, price ${price18(line.price18, priceDecimalsOf(marketId))} dollars, updated ${age}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}`}
-      style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.card } : null]}
-    >
-      <EntityMark id={mark} size={SIZE.markDetail} decorative />
-      <View style={styles.name}>
-        <View style={styles.titleLine}>
-          <Text
-            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.rowTitle, styles.shrink, { color: color.ink }]}
-            numberOfLines={1}
-          >
-            {fx ? line.symbol : line.name}
-          </Text>
-          <LeverageBadge x={line.maxLeverageX} />
-        </View>
-        <View style={styles.detailLine}>
-          <Text
-            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.rowDetail, styles.shrink, { color: color.text3 }]}
-            numberOfLines={1}
-          >
-            {fx && meta ? marketPair(meta) : line.symbol}
-          </Text>
-          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
-            ·{" "}
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
-              {STATUS_LABEL[line.status]}
-            </Text>
-          </Text>
-        </View>
-      </View>
-      {roomy ? <Sparkline values={line.spark} stroke={tint} /> : null}
-      <View style={styles.price}>
-        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowPrice, { color: color.ink }]}>
-          ${price18(line.price18, priceDecimalsOf(marketId))}
-        </Text>
-        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowChange, { color: tint }]}>
-          {changeText}
-        </Text>
-      </View>
-    </Pressable>
+    <RowShell
+      {...shared}
+      tag={<LeverageBadge x={line.maxLeverageX} />}
+      subtitle={open24 ? line.name : `${line.name} · ${STATUS_LABEL[line.status]}`}
+      subtitleTone={open24 ? undefined : statusTone(line.status, color)}
+      price={price}
+      changeBps={change}
+      accessibilityLabel={`${line.name}, ${symbol}${line.maxLeverageX > 0 ? `, up to ${line.maxLeverageX} times leverage` : ""}, ${STATUS_LABEL[line.status]}, ${price}${change === undefined ? "" : `, ${change >= 0n ? "up" : "down"} ${signedPct(change)}`}${watchlist.has(symbol) ? ", starred" : ""}`}
+    />
   );
 }
 
 /**
- * A market that isn't tradeable here yet: its real mark and name, and the one short reason at the right — never a
- * price (plan §2.5: no fabricated numbers). Dimmed, and not a button: there is nothing to open.
+ * Mainnet before the engine deploy (C1 step 6): the market stays listed with its live Chainlink price and a lock
+ * that says "Soon" — no full-screen prelaunch page. It opens market detail, which says the same.
  */
-export function ArrivingMarketRow({ market }: { market: ArrivingMarket }) {
-  const { color } = useTheme();
+export function PrelaunchMarketRow({ marketId }: { marketId: number }) {
+  const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
+  // One shared query per feed (react-query dedups by key), read only when this row is on screen.
+  const price = usePrelaunchPrices().find((p) => p.symbol === meta?.symbol)?.price;
+  const symbol = meta?.symbol ?? String(marketId);
+  const shown = price ? `$${formatUnits(price.answer, price.decimals, price.shown)}` : undefined;
   return (
-    <View
-      accessible
-      accessibilityLabel={`${market.name}, ${market.venue}, not tradeable yet: ${market.note}`}
-      style={[styles.row, { opacity: DISABLED_OPACITY }]}
-    >
-      <EntityMark id={market.mark} size={SIZE.markDetail} label={market.symbol} decorative />
-      <View style={styles.name}>
-        <Text
-          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-          style={[TYPE.rowTitle, { color: color.ink }]}
-          numberOfLines={1}
-        >
-          {market.symbol}
-        </Text>
-        <Text
-          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-          style={[TYPE.rowDetail, { color: color.text3 }]}
-          numberOfLines={1}
-        >
-          {market.name} · {market.venue}
-        </Text>
-      </View>
-      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
-        {market.note}
-      </Text>
-    </View>
+    <RowShell
+      mark={ids.engineMarket(MAINNET_CHAIN_ID, marketId)}
+      title={symbol}
+      tag={<LockTag word="Soon" />}
+      subtitle={meta?.name ?? ""}
+      price={shown}
+      changeBps={undefined}
+      onPress={() => router.push(marketRoute(symbol))}
+      accessibilityLabel={`${meta?.name ?? symbol}, opening soon${shown ? `, ${shown}` : ""}`}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACE.md,
-    minHeight: SIZE.rowMinHeight,
-    paddingVertical: SPACE.sm,
-    paddingHorizontal: SPACE.sm,
-    marginHorizontal: -SPACE.sm,
-    borderRadius: BUTTON.radius.md,
-  },
-  name: { flex: 1, gap: SPACE.xxs },
-  titleLine: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   retry: {
     paddingHorizontal: SPACE.md,
     minHeight: SIZE.touch - SPACE.md,
     borderRadius: BUTTON.radius.sm,
     justifyContent: "center",
   },
-  // The name gives way before the session word: "British pound · Open", never "British pound · O…".
-  detailLine: { flexDirection: "row", gap: SPACE.xs },
-  shrink: { flexShrink: 1 },
-  price: { alignItems: "flex-end", gap: SPACE.xxs, minWidth: SIZE.sparklineWidth + SPACE.lg },
 });

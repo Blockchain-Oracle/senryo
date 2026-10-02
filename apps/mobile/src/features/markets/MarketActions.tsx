@@ -11,26 +11,38 @@ import { useWatchlist } from "./useWatchlist";
 export const marketShareUrl = (symbol: string) => `${WEB_ORIGIN}${marketRoute(symbol)}`;
 
 /**
- * Market detail's utilities (Fomo F32: history / favourite / share, plus our price alert): history opens your activity
- * in this market (FT097), the alert opens this market's alert editor, the star adds it to the watchlist (filled when
- * on, as the dock fills its active icon), and share hands the market's link to the system share sheet.
+ * Market detail's glass circles (Fomo F32; flow book C2 step 1): Alert · Watch · Share · History. The alert opens this
+ * market's alert editor, the star adds it to the watchlist (filled when on), share hands its link to the system sheet,
+ * and history opens your activity in this market. A read-only instrument passes no `alertFor` / `historyFor` (the
+ * keeper has no price source for it yet, and it has no trades of yours), and keeps Watch and Share.
  */
-export function MarketActions({ symbol, name }: { symbol: string; name: string }) {
+export function MarketActions({
+  name,
+  watchKey,
+  shareUrl,
+  alertFor,
+  historyFor,
+}: {
+  name: string;
+  /** What the watchlist stores: an engine symbol ("XAU") or a read-only instrument id ("perpl:BTC"). */
+  watchKey: string;
+  shareUrl: string;
+  alertFor?: string;
+  historyFor?: string;
+}) {
   const { color } = useTheme();
   const watchlist = useWatchlist();
-  const starred = watchlist.has(symbol);
-  const url = marketShareUrl(symbol);
+  const starred = watchlist.has(watchKey);
   return (
     <View style={styles.row}>
-      <UtilityButton label={`Your ${name} history`} onPress={() => router.push(`/activity?market=${symbol}` as Href)}>
-        <History size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
-      </UtilityButton>
-      <UtilityButton label={`Set a price alert for ${name}`} onPress={() => router.push(alertRoute(symbol))}>
-        <BellPlus size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
-      </UtilityButton>
+      {alertFor ? (
+        <UtilityButton label={`Set a price alert for ${name}`} onPress={() => router.push(alertRoute(alertFor))}>
+          <BellPlus size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+        </UtilityButton>
+      ) : null}
       <UtilityButton
         label={starred ? `Remove ${name} from your watchlist` : `Add ${name} to your watchlist`}
-        onPress={() => watchlist.toggle(symbol)}
+        onPress={() => watchlist.toggle(watchKey)}
       >
         <Star
           size={UTILITY_ICON}
@@ -42,10 +54,18 @@ export function MarketActions({ symbol, name }: { symbol: string; name: string }
       <UtilityButton
         label={`Share ${name}`}
         // iOS shares a link as a link (preview, "Copy"); Android's share sheet takes it as the message.
-        onPress={() => void Share.share(Platform.OS === "ios" ? { url } : { message: url })}
+        onPress={() => void Share.share(Platform.OS === "ios" ? { url: shareUrl } : { message: shareUrl })}
       >
         <ShareIcon size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
       </UtilityButton>
+      {historyFor ? (
+        <UtilityButton
+          label={`Your ${name} history`}
+          onPress={() => router.push(`/activity?market=${historyFor}` as Href)}
+        >
+          <History size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+        </UtilityButton>
+      ) : null}
     </View>
   );
 }
