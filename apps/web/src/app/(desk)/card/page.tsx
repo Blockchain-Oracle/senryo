@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { CardScreen } from "@/components/screens/card-screen";
-import { Column } from "@/components/shell/column";
+import { CardScreen } from "@/components/card/card-screen";
 
 export const metadata: Metadata = { title: "Card" };
 
 export default function CardPage() {
-  return (
-    <Column>
-      <CardScreen />
-    </Column>
-  );
+  return <CardScreen />;
 }

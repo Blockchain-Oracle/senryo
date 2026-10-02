@@ -2,10 +2,6 @@
 export const LEVERAGE_MIN = 1;
 /** Quick-set stops under the leverage track; only those at or below the market's own maximum are drawn. */
 export const LEVERAGE_DETENTS = [1, 2, 5, 10, 20, 50] as const;
-/** Gauge colour stops (% margin use: maintenance margin ÷ liquidation equity after the trade). */
-export const GAUGE_WARN_AT = 60;
-export const GAUGE_DANGER_AT = 85;
-export const GAUGE_PX = 120;
 /** Funding settle wait after a sponsored network-fee top-up (as on the phone): poll the head this often, this many times. */
 export const BLOCK_POLL_MS = 400;
 export const FUNDING_WAIT_POLLS = 15;
