@@ -1,6 +1,6 @@
 import { HTTP_STATUS, type HttpServer, LatencyTimer } from "@senryo/service-common";
 import type { FastifyRequest } from "fastify";
-import { handleAsa } from "../asa.ts";
+import { handleAsa, recordFailedDecision } from "../asa.ts";
 import type { CardContext } from "../context.ts";
 import { handleTransactionWebhook } from "../events.ts";
 import { asaRequestSchema, cardTransactionWebhookSchema } from "../lithic/schemas.ts";
@@ -58,13 +58,21 @@ export function registerLithicRoutes(app: HttpServer, ctx: CardContext): void {
       const parsed = asaRequestSchema.safeParse(request.body);
       if (!parsed.success) return reply.code(HTTP_STATUS.badRequest).send({ result: "UNAUTHORIZED_MERCHANT" });
       let response: Awaited<ReturnType<typeof handleAsa>>;
+      let failure: unknown;
       try {
         response = await handleAsa(ctx, parsed.data, timer);
       } catch (error) {
         request.log.error({ err: error, token: parsed.data.token }, "ASA handler failed — declining");
         response = { result: "INSUFFICIENT_FUNDS" };
+        failure = error;
       }
       await reply.code(HTTP_STATUS.ok).send(response);
+      if (failure !== undefined) {
+        // After the reply: the decision is already sent; the row only has to say so.
+        void recordFailedDecision(ctx, parsed.data, failure).catch((error: unknown) =>
+          request.log.warn({ err: error, token: parsed.data.token }, "could not record the failed decision"),
+        );
+      }
       timer.mark("respond");
       request.log.info({ token: parsed.data.token, result: response.result, ms: timer.summary() }, "asa decided");
       void timer.flush(ctx.db, ctx.log);

@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
+import type { CardDeclineReason } from "@senryo/api-client";
 import { getAddress, type Hex } from "@senryo/chain";
 import { positionCount } from "@senryo/config";
 import type { LatencyTimer } from "@senryo/service-common";
 import { bytes32Of, holdAmount, holdIdOf, usd6ToCents } from "./amounts.ts";
 import { DUPLICATE_POLL_MS, RESPOND_MARGIN_MS } from "./constants.ts";
 import type { CardContext } from "./context.ts";
+import { coded, failureCode } from "./decline.ts";
 import type { AsaRequest, AsaResponse, AsaResult } from "./lithic/schemas.ts";
 import { enqueue } from "./outbox.ts";
 import { reserveHold, spendable } from "./reserve.ts";
@@ -26,6 +28,12 @@ const KIND_OF: Record<AsaRequest["status"], Kind> = {
   CREDIT_AUTHORIZATION: "CREDIT_AUTH",
   FINANCIAL_CREDIT_AUTHORIZATION: "CREDIT_AUTH",
 };
+
+const RESERVE_CODES = {
+  allowance: "over_limit",
+  insufficient: "not_enough_spendable",
+  prices_paused: "prices_paused",
+} as const satisfies Record<string, CardDeclineReason>;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -68,7 +76,7 @@ export async function handleAsa(ctx: CardContext, req: AsaRequest, timer: Latenc
   if (inserted.length === 0) return awaitOriginal(ctx, issuer, req.token, kind);
 
   if (card?.state !== "ACTIVE") {
-    await decide(ctx, authId, "CARD_PAUSED", card ? `card ${card.state}` : "unknown card");
+    await decide(ctx, authId, "CARD_PAUSED", card ? coded("frozen", `card ${card.state}`) : "unknown card");
     return { result: "CARD_PAUSED" };
   }
   const account = getAddress(card.account);
@@ -89,8 +97,9 @@ export async function handleAsa(ctx: CardContext, req: AsaRequest, timer: Latenc
 
   const amount = holdAmount(req, { fxBps: ctx.env.FX_BUFFER_BPS, tipBps: ctx.env.TIP_BUFFER_BPS });
   if ("rejected" in amount) {
-    const result: AsaResult = amount.rejected === "too-large" ? "VELOCITY_EXCEEDED" : "UNAUTHORIZED_MERCHANT";
-    await decide(ctx, authId, result, `amount ${amount.rejected}`);
+    const tooLarge = amount.rejected === "too-large";
+    const result: AsaResult = tooLarge ? "VELOCITY_EXCEEDED" : "UNAUTHORIZED_MERCHANT";
+    await decide(ctx, authId, result, coded(tooLarge ? "over_limit" : "issuer_error", `amount ${amount.rejected}`));
     return { result };
   }
   const txnToken = bytes32Of(req.token);
@@ -101,7 +110,11 @@ export async function handleAsa(ctx: CardContext, req: AsaRequest, timer: Latenc
   timer.mark("reserve");
   if (!reserve.ok) {
     const result: AsaResult = reserve.reason === "allowance" ? "VELOCITY_EXCEEDED" : "INSUFFICIENT_FUNDS";
-    await decide(ctx, authId, result, `${reserve.reason}: available ${reserve.available} < ${amount.usd6}`);
+    const detail =
+      reserve.reason === "prices_paused"
+        ? "a held market is STALE/CIRCUIT/HALTED and the envelope does not cover"
+        : `${reserve.reason}: available ${reserve.available} < ${amount.usd6}`;
+    await decide(ctx, authId, result, coded(RESERVE_CODES[reserve.reason], detail));
     return { result };
   }
 
@@ -119,6 +132,21 @@ export async function handleAsa(ctx: CardContext, req: AsaRequest, timer: Latenc
   }
   // Declined: if the hold lands anyway, release it (outbox re-checks the chain before sending).
   await enqueue(ctx.db, ctx.chainId, "releaseIfLanded", `release-declined:${holdId}`, { holdId, account });
-  await decide(ctx, authId, "INSUFFICIENT_FUNDS", outcome ? outcome.reason : "deadline before finality", holdId);
+  const why = outcome
+    ? coded(failureCode(outcome.reason), outcome.reason)
+    : coded("issuer_error", "deadline before finality");
+  await decide(ctx, authId, "INSUFFICIENT_FUNDS", why, holdId);
   return { result: "INSUFFICIENT_FUNDS" };
+}
+
+/**
+ * The route answered a decline because the handler threw: record it on the row (still PENDING), so the summary and
+ * a retried request see the decision that was actually sent.
+ */
+export async function recordFailedDecision(ctx: CardContext, req: AsaRequest, error: unknown): Promise<void> {
+  const detail = error instanceof Error ? error.message : String(error);
+  await ctx.db`UPDATE card_auth SET status = 'DECLINED', result = 'INSUFFICIENT_FUNDS', decided_at = now(),
+                 reason = ${coded("issuer_error", `handler failed: ${detail}`)}
+                WHERE issuer = ${ctx.env.CARD_ISSUER_LABEL} AND txn_token = ${req.token}
+                  AND kind = ${KIND_OF[req.status]} AND status = 'PENDING'`;
 }

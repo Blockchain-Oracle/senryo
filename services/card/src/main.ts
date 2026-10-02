@@ -58,6 +58,8 @@ const ctx: CardContext = {
   sessions: secrets.sessionSecret ? new SessionKeys(secrets.sessionSecret) : undefined,
 };
 if (!secrets.asaSecret) log.warn("LITHIC_ASA_SECRET unset — every ASA request is rejected (401)");
+if (!secrets.webhookSecret) log.warn("LITHIC_WEBHOOK_SECRET unset — lifecycle events are rejected (401)");
+if (!ctx.lithic) log.warn("LITHIC_API_KEY unset — issue/freeze/unfreeze/simulate/embed answer ISSUER_UNAVAILABLE");
 
 const stopOutbox = startOutbox(ctx);
 const app = createHttpServer({
