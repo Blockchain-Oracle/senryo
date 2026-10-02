@@ -7,6 +7,7 @@ import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { Segmented } from "~/components/kit/Segmented";
 import { ReadingView } from "~/components/kit/states";
+import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import { CARD_LIMIT_CHIPS_USD } from "~/features/card/constants";
 import { SpendLimit } from "~/features/card/SpendLimit";
 import { ALLOWANCE_DAYS, useCardAllowance } from "~/features/card/useCardAllowance";
@@ -14,6 +15,8 @@ import { OutcomeNote, useOutcome } from "~/features/trade/OutcomeNote";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
+import { useReviewGuard } from "~/lib/review-guard";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 const MS_PER_SECOND = 1000n;
@@ -30,6 +33,8 @@ export default function AllowanceScreen() {
   const [pick, setPick] = useState<bigint>(CARD_LIMIT_CHIPS_USD[1]);
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
   const card = useCardAllowance(snapshot);
+  const network = useNetwork();
+  const guard = useReviewGuard([network.chainId, address, pick].join(":"));
   const { outcome, unresolved } = useOutcome(card.trace.events);
   // An unconfirmed signed change keeps both actions locked: a second one could race the first.
   const busy = card.trace.running || unresolved;
@@ -67,11 +72,11 @@ export default function AllowanceScreen() {
                 onChange={(v) => setPick(BigInt(v))}
                 label="Daily limit"
               />
-              <Button
+              <HoldToConfirm
+                resetKey={[network.chainId, address, pick].join(":")}
                 label={busy ? "Working…" : `Set ${usd(pick * ONE_USD6, 0)} a day`}
-                loading={busy}
                 disabled={busy || !card.ready}
-                onPress={() => void card.setLimit(pick * ONE_USD6)}
+                onConfirm={() => void card.setLimit(pick * ONE_USD6, guard)}
               />
               {live ? (
                 <Button

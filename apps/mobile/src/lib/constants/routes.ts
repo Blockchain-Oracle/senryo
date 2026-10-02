@@ -35,6 +35,7 @@ export const ROUTES = {
   /** Compatibility: `/account` is the You tab. */
   account: "/account",
   /** J9: the profile editor, the address page, and diagnostics (moved off the You tab). */
+  accountSettings: "/account/settings",
   accountProfile: "/account/profile",
   accountIdentity: "/account/identity",
   accountDiagnostics: "/account/diagnostics",

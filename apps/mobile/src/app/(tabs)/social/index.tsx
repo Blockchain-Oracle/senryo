@@ -24,10 +24,10 @@ const SECTIONS = [
 ] as const;
 const FEED_SCOPES = [
   { value: "global", label: "Global" },
-  { value: "friends", label: "Friends" },
+  { value: "friends", label: "Following" },
 ] as const satisfies readonly { value: FeedScope; label: string }[];
 const PEOPLE_VIEWS = [
-  { value: "friends", label: "Friends" },
+  { value: "friends", label: "Following" },
   { value: "leaderboard", label: "Leaderboard" },
 ] as const;
 type Section = (typeof SECTIONS)[number]["value"];

@@ -36,14 +36,19 @@ const allowanceInflight = new Set<string>();
 export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
   const session = async (request: FastifyRequest): Promise<Session> => {
     if (!ctx.sessions) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", "sessions not configured");
-    return ctx.sessions.require(request);
+    const current = await ctx.sessions.require(request);
+    if (current.chainId !== ctx.chainId)
+      throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "wrong network for this card service");
+    return current;
   };
   const lithic = () => {
     if (!ctx.lithic) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", "card issuer not configured");
     return ctx.lithic;
   };
   const ownCard = async (cardToken: string, s: Session) => {
-    const [card] = await ctx.db<{ account: string }[]>`SELECT account FROM cards WHERE card_token = ${cardToken}`;
+    const [card] = await ctx.db<
+      { account: string }[]
+    >`SELECT account FROM cards WHERE card_token = ${cardToken} AND chain_id = ${ctx.chainId}`;
     if (!card || card.account !== s.address.toLowerCase())
       throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such card");
   };
@@ -142,7 +147,7 @@ export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
     const s = await session(request);
     const account = s.address.toLowerCase();
     const cards = await ctx.db<{ card_token: string; state: string; label: string | null }[]>`
-      SELECT card_token, state, label FROM cards WHERE account = ${account} ORDER BY created_at`;
+      SELECT card_token, state, label FROM cards WHERE account = ${account} AND chain_id = ${ctx.chainId} ORDER BY created_at`;
     const [held] = await ctx.db<{ total: bigint }[]>`
       SELECT COALESCE(SUM(amount_usd6), 0)::bigint AS total FROM holds
        WHERE account = ${account} AND chain_id = ${ctx.chainId} AND status IN ${ctx.db(OPEN_HOLD_STATUSES)}`;
@@ -155,13 +160,26 @@ export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
         amount_cents: bigint;
         hold_usd6: bigint | null;
         mcc: string | null;
+        merchant_descriptor: string | null;
         received_at: Date;
       }[]
-    >`SELECT id, kind, status, result, amount_cents, hold_usd6, mcc, received_at FROM card_auth
-       WHERE account = ${account} ORDER BY received_at DESC LIMIT ${RECENT_AUTHS}`;
+    >`SELECT id, kind, status, result, amount_cents, hold_usd6, mcc, received_at, request->'merchant'->>'descriptor' AS merchant_descriptor FROM card_auth
+       WHERE account = ${account} AND chain_id = ${ctx.chainId} ORDER BY received_at DESC LIMIT ${RECENT_AUTHS}`;
     return sendRoute(reply, cardSummaryRoute, {
       account: s.address,
-      cards: cards.map((c) => ({ cardToken: c.card_token, state: c.state, label: c.label })),
+      cards: await Promise.all(
+        cards.map(async (c) => {
+          const issued = await ctx.lithic?.card(c.card_token).catch(() => undefined);
+          return {
+            cardToken: c.card_token,
+            state: c.state,
+            label: c.label,
+            last4: issued?.last_four && /^\d{4}$/.test(issued.last_four) ? issued.last_four : null,
+            sandbox: ctx.lithic?.isSandbox ?? false,
+            capabilities: { reveal: issued !== undefined, walletProvisioning: false },
+          };
+        }),
+      ),
       openHoldsUsd6: held?.total ?? 0n,
       recent: recent.map((r) => ({
         id: r.id,
@@ -171,6 +189,7 @@ export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
         amountCents: r.amount_cents,
         holdUsd6: r.hold_usd6,
         mcc: r.mcc,
+        merchantDescriptor: r.merchant_descriptor,
         receivedAt: r.received_at.toISOString(),
       })),
     });

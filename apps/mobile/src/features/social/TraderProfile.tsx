@@ -62,7 +62,7 @@ export function TraderProfile({ lookup }: { lookup: string }) {
           <Identity profile={profile} />
           <TraderStanding address={profile.address} />
           <TraderPositions address={profile.address} shared={profile.publicTrades} />
-          <Activity address={profile.address} />
+          <ProfileActivity address={profile.address} />
         </>
       ) : null}
     </Screen>
@@ -72,13 +72,16 @@ export function TraderProfile({ lookup }: { lookup: string }) {
 /** Round utilities in the header (F16): share the read-only link, and the overflow for someone else's profile. */
 function HeaderActions({ profile }: { profile: PublicProfile }) {
   const { color } = useTheme();
+  const network = useNetwork();
   const gate = useSessionGate();
   const own = sameAddress(profile.address, gate.address);
   return (
     <View style={styles.utilities}>
       <UtilityButton
         label="Share this profile"
-        onPress={() => void Share.share({ message: `${WEB_ORIGIN}/watch/?address=${profile.address}` })}
+        onPress={() =>
+          void Share.share({ message: `${WEB_ORIGIN}/watch/?address=${profile.address}&chainId=${network.chainId}` })
+        }
       >
         <ShareIcon size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
       </UtilityButton>
@@ -191,13 +194,10 @@ function Count({
 }
 
 /** What the feed last showed of this trader: their rows in the latest page of this network's public activity. */
-function Activity({ address }: { address: Address }) {
-  const feed = useFeed("global");
+export function ProfileActivity({ address }: { address: Address }) {
+  const feed = useFeed("global", undefined, address);
   const { reading } = feed;
-  const rows =
-    reading.status === "fresh" || reading.status === "stale"
-      ? reading.value.filter((item) => sameAddress(item.actor.address, address))
-      : undefined;
+  const rows = reading.status === "fresh" || reading.status === "stale" ? reading.value : undefined;
   return (
     <View style={styles.section}>
       <SectionHeading title="Recent activity" />
@@ -205,10 +205,13 @@ function Activity({ address }: { address: Address }) {
       {reading.status === "failed" ? (
         <QuietLine tight text="The feed couldn’t be loaded. Pull down to try again." />
       ) : null}
-      {rows && rows.length === 0 ? <QuietLine tight text="Nothing from this trader in the latest activity" /> : null}
+      {rows && rows.length === 0 ? <QuietLine tight text="No shared activity yet" /> : null}
       {rows?.map((item, i) => (
         <FeedRow key={item.id} item={item} index={i} />
       ))}
+      {feed.hasMore ? (
+        <Button label="More activity" variant="ghost" loading={feed.loadingMore} onPress={feed.loadMore} />
+      ) : null}
     </View>
   );
 }

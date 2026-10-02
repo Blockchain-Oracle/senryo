@@ -24,45 +24,59 @@ export function CardFace({
   expires,
   route,
 }: {
-  last4: string;
-  holder: string;
-  expires: string;
-  route: string;
+  last4?: string | undefined;
+  holder?: string | undefined;
+  expires?: string | undefined;
+  route?: string | undefined;
 }) {
   const { color } = useTheme();
   return (
-    <View accessible accessibilityLabel={`Kinpaku card ending ${last4}, ${route}`} style={styles.card}>
+    <View
+      accessible
+      accessibilityLabel={
+        last4
+          ? `Kinpaku card ending ${last4}${route ? `, ${route}` : ""}`
+          : "Kinpaku card artwork. No card number shown."
+      }
+      style={styles.card}
+    >
       <Image source={CARD_ART} style={styles.art} resizeMode="contain" />
-      <View style={[styles.overlay, OVERLAY]}>
-        <View style={styles.top}>
-          <Text allowFontScaling={false} style={[TYPE.numMd, { color: color.onLacquer }]}>
-            •••• {last4}
-          </Text>
-          <View style={styles.right}>
-            <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
-              Expires
+      {last4 ? (
+        <View style={[styles.overlay, OVERLAY]}>
+          <View style={styles.top}>
+            <Text allowFontScaling={false} style={[TYPE.numMd, { color: color.onLacquer }]}>
+              •••• {last4}
             </Text>
-            <Text allowFontScaling={false} style={[TYPE.numSm, { color: color.onLacquer }]}>
-              {expires}
-            </Text>
+            {expires ? (
+              <View style={styles.right}>
+                <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
+                  Expires
+                </Text>
+                <Text allowFontScaling={false} style={[TYPE.numSm, { color: color.onLacquer }]}>
+                  {expires}
+                </Text>
+              </View>
+            ) : null}
           </View>
+          {/* The holder has the lacquer's full width; a long name shrinks a little before it is cut. */}
+          {holder ? (
+            <View>
+              <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
+                Card holder
+              </Text>
+              <Text
+                allowFontScaling={false}
+                style={[TYPE.numSm, { color: color.onLacquer }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={HOLDER_MIN_SCALE}
+              >
+                {holder}
+              </Text>
+            </View>
+          ) : null}
         </View>
-        {/* The holder has the lacquer's full width; a long name shrinks a little before it is cut. */}
-        <View>
-          <Text allowFontScaling={false} style={[TYPE.meta, { color: color.onLacquerMuted }]}>
-            Card holder
-          </Text>
-          <Text
-            allowFontScaling={false}
-            style={[TYPE.numSm, { color: color.onLacquer }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={HOLDER_MIN_SCALE}
-          >
-            {holder}
-          </Text>
-        </View>
-      </View>
+      ) : null}
     </View>
   );
 }

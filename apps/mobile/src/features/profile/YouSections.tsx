@@ -7,12 +7,8 @@
 import { shortAddress } from "@senryo/core";
 import { type Href, router } from "expo-router";
 import {
-  Activity,
   ArrowLeftRight,
-  ArrowUpFromLine,
   Bell,
-  ClipboardList,
-  Droplets,
   Gauge,
   IdCard,
   Info,
@@ -51,8 +47,8 @@ function sections(mode: string, money: string, address: string | undefined): { l
       label: "Account",
       rows: [
         {
-          title: "Account identity",
-          detail: address ? `${address} · copy or share a watch link` : "Your address, copy and watch link",
+          title: "Wallet address",
+          detail: address ? `${address} · copy or share` : "Your address, copy and watch link",
           href: ROUTES.accountIdentity,
           icon: IdCard,
           account: true,
@@ -72,39 +68,12 @@ function sections(mode: string, money: string, address: string | undefined): { l
           account: true,
         },
         {
-          title: "Practice or real",
+          title: "Trading mode",
           detail: `Now in ${mode} · ${money}`,
           href: ROUTES.accountMode,
           icon: ArrowLeftRight,
           account: true,
         },
-      ],
-    },
-    {
-      label: "Money",
-      rows: [
-        {
-          title: "Activity",
-          detail: "Fills, deposits, card and funding",
-          href: ROUTES.activity,
-          icon: Activity,
-          account: true,
-        },
-        {
-          title: "Orders",
-          detail: "Open take-profit and stop-loss orders",
-          href: ROUTES.orders,
-          icon: ClipboardList,
-          account: true,
-        },
-        {
-          title: "Withdraw",
-          detail: "Send to an address or cash out",
-          href: ROUTES.withdraw,
-          icon: ArrowUpFromLine,
-          account: true,
-        },
-        { title: "Liquidity pool", detail: "Deposit and redeem", href: ROUTES.lp, icon: Droplets, account: true },
       ],
     },
     {
@@ -118,7 +87,7 @@ function sections(mode: string, money: string, address: string | undefined): { l
         },
         {
           title: "Notifications",
-          detail: "Arrive with a later build",
+          detail: "Price alerts, activity and delivery preferences",
           href: ROUTES.accountNotifications,
           icon: Bell,
         },

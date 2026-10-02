@@ -32,7 +32,7 @@ const MS_PER_SECOND = 1000n;
 export function useCardAllowance(snapshot: AccountSnapshot | undefined) {
   const env = useQueryEnv();
   const account = useAccount();
-  const trace = useSendTrace("card-allowance");
+  const trace = useSendTrace(`card-allowance:${env.chainId}:${account.hint?.address ?? "guest"}`);
   const gas = useEnsureGas();
   const queryClient = useQueryClient();
   const address = account.hint?.address;
@@ -51,9 +51,10 @@ export function useCardAllowance(snapshot: AccountSnapshot | undefined) {
       preflight: gas.preflight(request),
     });
     if (result?.final?.stage === "finalized") await refresh();
+    return result;
   };
 
-  const setLimit = async (dailyUsd6: bigint) => {
+  const setLimit = async (dailyUsd6: bigint, guard: () => void) => {
     if (!account.client || !address) return;
     const expiry = BigInt(Date.now()) / MS_PER_SECOND + ALLOWANCE_DAYS * SECONDS_PER_DAY;
     setLast({ kind: "limit", dailyUsd6 });
@@ -65,13 +66,24 @@ export function useCardAllowance(snapshot: AccountSnapshot | undefined) {
       },
       () =>
         account.stepUp(async (signer) => {
-          if (!signer.signTypedData) throw new Error("Signer cannot sign typed data");
-          const nonce = await readAllowanceNonce(sharedRead(env.chainId), env.chainId, address);
-          const signature = await signer.signTypedData(
-            spendAllowanceTypedData(env.chainId, address, dailyUsd6, expiry, nonce),
+          return trace.run(
+            stepUpSender(signer),
+            async () => {
+              if (!signer.signTypedData) throw new Error("Signer cannot sign typed data");
+              guard();
+              const nonce = await readAllowanceNonce(sharedRead(env.chainId), env.chainId, address);
+              const signature = await signer.signTypedData(
+                spendAllowanceTypedData(env.chainId, address, dailyUsd6, expiry, nonce),
+              );
+              return setSpendAllowanceRequest(env.chainId, address, dailyUsd6, expiry, signature, positions);
+            },
+            {
+              builderAction: "setSpendAllowance",
+              preflight: (request) => gas.preflight(request)(),
+              revalidate: guard,
+              reviewedIntent: { dailyUsd6: dailyUsd6.toString(), expiry: expiry.toString(), account: address },
+            },
           );
-          const request = setSpendAllowanceRequest(env.chainId, address, dailyUsd6, expiry, signature, positions);
-          return trace.run(stepUpSender(signer), request, { preflight: gas.preflight(request) });
         }),
     );
     if (result?.final?.stage === "finalized") await refresh();

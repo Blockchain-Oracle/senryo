@@ -8,7 +8,6 @@ import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import { CardFace } from "~/features/card/CardFace";
 import { CardHero } from "~/features/card/CardHero";
 import { fire } from "~/feedback/fire";
-import { SAMPLE_CARD } from "~/lib/sample";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
@@ -23,7 +22,7 @@ const STEPS = [
   },
   {
     title: "In preview",
-    body: "No card has been issued yet. What you see here is sample data, and the sandbox card never charges anyone.",
+    body: "Card issuance and identity verification depend on the issuer. Your actual status and activity appear on the Card tab.",
   },
 ] as const;
 const LAST = STEPS.length - 1;
@@ -55,12 +54,7 @@ export default function CardIntro() {
       />
       <View style={styles.art}>
         <CardHero>
-          <CardFace
-            last4={SAMPLE_CARD.last4}
-            holder={SAMPLE_CARD.holder}
-            expires={SAMPLE_CARD.expires}
-            route={SAMPLE_CARD.route}
-          />
+          <CardFace />
         </CardHero>
       </View>
       <Animated.View

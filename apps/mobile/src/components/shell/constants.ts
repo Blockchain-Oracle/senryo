@@ -13,7 +13,7 @@ export const TAB_LABEL: Record<TabName, string> = {
   markets: "Markets",
   card: "Card",
   social: "Social",
-  you: "You",
+  you: "Profile",
 };
 
 /** Each tab's root path (expo-router strips the `(tabs)` group from URLs). */

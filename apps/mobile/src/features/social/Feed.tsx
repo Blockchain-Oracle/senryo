@@ -49,7 +49,7 @@ function FriendsFeed({ onFindPeople }: { onFindPeople: () => void }) {
     case "failed":
       return (
         <QuietLine
-          text="Couldn’t confirm it’s you, so your friends’ feed stayed closed"
+          text="Couldn’t confirm it’s you, so your following feed stayed closed"
           action={{ label: "Try again", onPress: gate.open }}
         />
       );

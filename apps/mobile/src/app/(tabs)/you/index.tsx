@@ -1,17 +1,21 @@
+import { WEB_ORIGIN } from "@senryo/config";
 import { router } from "expo-router";
-import { Settings } from "lucide-react-native";
-import { StyleSheet, Text, View } from "react-native";
+import { Settings, Share2 } from "lucide-react-native";
+import { Share, StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
-import { AlertsButton, UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
+import { ActivityButton, UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { SessionChip } from "~/features/auth/SessionChip";
 import { StarterCard } from "~/features/auth/StarterCard";
+import { PositionsSection } from "~/features/home/PositionsSection";
+import { TradingPerformance } from "~/features/portfolio/TradingPerformance";
 import { CompactAvatar, ProfileHeader } from "~/features/profile/ProfileHeader";
-import { YouSections } from "~/features/profile/YouSections";
+import { RecentActivity } from "~/features/profile/RecentActivity";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
@@ -24,11 +28,12 @@ import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
  */
 export default function You() {
   const account = useAccount();
+  const network = useNetwork();
   const { color } = useTheme();
   const guest = account.ready && !account.hint;
   return (
     <CollapsingScreen
-      left={guest ? <TabTitle>You</TabTitle> : null}
+      left={guest ? <TabTitle>Profile</TabTitle> : null}
       compact={
         guest ? undefined : (
           <View style={styles.compact}>
@@ -38,8 +43,20 @@ export default function You() {
       }
       utilities={
         <>
-          <AlertsButton />
-          <UtilityButton label="Preferences" onPress={() => router.push(ROUTES.accountPreferences)}>
+          {account.hint ? (
+            <UtilityButton
+              label="Share profile"
+              onPress={() =>
+                void Share.share({
+                  message: `${WEB_ORIGIN}/watch/?address=${account.hint?.address}&chainId=${network.chainId}`,
+                })
+              }
+            >
+              <Share2 size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+            </UtilityButton>
+          ) : null}
+          <ActivityButton />
+          <UtilityButton label="Settings" onPress={() => router.push(ROUTES.accountSettings)}>
             <Settings size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
           </UtilityButton>
         </>
@@ -59,7 +76,13 @@ export default function You() {
         <ProfileHeader />
       )}
       {account.hint ? <StarterCard hideWhenClaimed /> : null}
-      <YouSections guest={guest} />
+      {account.hint ? (
+        <>
+          <TradingPerformance address={account.hint.address} />
+          <PositionsSection />
+          <RecentActivity address={account.hint.address} />
+        </>
+      ) : null}
     </CollapsingScreen>
   );
 }
