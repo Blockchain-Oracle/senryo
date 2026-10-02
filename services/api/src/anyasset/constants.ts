@@ -16,6 +16,8 @@ export const SCAN_STATES_MAX = 20_000;
 
 /** Monad token lists are refreshed this often; a failed refresh keeps the last good copy. */
 export const TOKEN_LIST_TTL_MS = 21_600_000;
+/** The list is ~100 KB from raw.githubusercontent.com; a slow edge can take several seconds. */
+export const TOKEN_LIST_TIMEOUT_MS = 20_000;
 /** Verified-token prices (GeckoTerminal allows ~10–30 calls a minute per IP). */
 export const PRICE_TTL_MS = 60_000;
 /** A price older than this is no longer served when GeckoTerminal is unreachable. */

@@ -37,7 +37,7 @@ export interface AggregatorSwapQuote {
   tokenIn: Address;
   amountIn: bigint;
   /** The aggregator's own gas metering, sizing the call's budget. */
-  gasEstimate?: bigint | undefined;
+  gasEstimate?: bigint | null | undefined;
 }
 
 export class UnpinnedTargetError extends Error {
@@ -105,7 +105,7 @@ export function buildAggregatorSwap({ quote, allowance }: AggregatorSwapParams):
     data: quote.data,
     value: quote.value,
     action: "aggregatorSwap",
-    gasCap: aggregatorSwapGasLimit(quote.gasEstimate),
+    gasCap: aggregatorSwapGasLimit(quote.gasEstimate ?? undefined),
     meta: { ...meta, step: "swap" },
   });
   return requests;

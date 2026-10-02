@@ -28,6 +28,7 @@ export function createAnyAsset(
   log: Logger,
   chains: ReadonlyMap<ChainId, ChainContext>,
   secrets: Pick<ApiSecrets, "hypersyncToken" | "alchemyKey" | "auroraKey">,
+  options: { hypersyncPagesPerScan?: number } = {},
 ): AnyAssetServices {
   const own = new Map<ChainId, ReadClient>();
   const read = (chainId: ChainId): ReadClient => {
@@ -50,7 +51,7 @@ export function createAnyAsset(
       log,
       read,
       tokenList,
-      hypersync: new HyperSyncScanner(secrets.hypersyncToken),
+      hypersync: new HyperSyncScanner(secrets.hypersyncToken, options.hypersyncPagesPerScan),
       gecko,
       alchemyKey: secrets.alchemyKey,
     }),

@@ -15,7 +15,7 @@ import {
 } from "@senryo/config";
 import type { Logger } from "@senryo/service-common";
 import { z } from "zod";
-import { TOKEN_LIST_TTL_MS } from "./constants.ts";
+import { TOKEN_LIST_TIMEOUT_MS, TOKEN_LIST_TTL_MS } from "./constants.ts";
 import { errorText, fetchJson, TtlCache } from "./upstream.ts";
 
 export interface ListedToken {
@@ -108,7 +108,7 @@ export class TokenListService {
   }
 
   private async fetchList(chainId: ChainId): Promise<TokenList> {
-    const res = await fetchJson("token-list", TOKEN_LIST_URL[chainId]);
+    const res = await fetchJson("token-list", TOKEN_LIST_URL[chainId], { timeoutMs: TOKEN_LIST_TIMEOUT_MS });
     const parsed = listSchema.parse(res?.json);
     const listed = parsed.tokens
       .filter((t) => t.chainId === chainId && /^0x[0-9a-fA-F]{40}$/.test(t.address))

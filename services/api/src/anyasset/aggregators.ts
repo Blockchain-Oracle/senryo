@@ -181,17 +181,18 @@ export async function kyberQuote(req: QuoteRequest): Promise<Candidate> {
     tokenOut: kyberToken(req.to),
     amountIn: req.amountIn.toString(),
   });
-  const routes = kyberRouteSchema.parse(
-    (await fetchJson("kyberswap", `${KYBERSWAP_API}/routes?${params}`, { headers }))?.json,
-  );
+  const raw = (await fetchJson("kyberswap", `${KYBERSWAP_API}/routes?${params}`, { headers }))?.json;
+  const routes = kyberRouteSchema.parse(raw);
   if (routes.code !== 0 || !routes.data) throw new NoRouteError("kyberswap", routes.message ?? "no route");
+  // `/route/build` needs the summary exactly as `/routes` sent it (pool data, checksum): never the parsed subset.
+  const routeSummary = (raw as { data: { routeSummary: unknown } }).data.routeSummary;
   const build = kyberBuildSchema.parse(
     (
       await fetchJson("kyberswap", `${KYBERSWAP_API}/route/build`, {
         method: "POST",
         headers,
         body: {
-          routeSummary: routes.data.routeSummary,
+          routeSummary,
           sender: req.sender,
           recipient: req.sender,
           slippageTolerance: req.slippageBps,

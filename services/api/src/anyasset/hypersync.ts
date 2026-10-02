@@ -49,7 +49,11 @@ export class HyperSyncScanner {
   private readonly running = new Map<string, Promise<Discovery>>();
   private backoffUntil = 0;
 
-  constructor(private readonly token: string | undefined) {}
+  constructor(
+    private readonly token: string | undefined,
+    /** Queries one scan may spend (checks pass 1 to stay inside the shared budget). */
+    private readonly pagesPerScan: number = HYPERSYNC_PAGES_PER_SCAN,
+  ) {}
 
   get configured(): boolean {
     return this.token !== undefined;
@@ -81,7 +85,7 @@ export class HyperSyncScanner {
     }
     let note: string | null = null;
     try {
-      for (let page = 0; page < HYPERSYNC_PAGES_PER_SCAN; page += 1) {
+      for (let page = 0; page < this.pagesPerScan; page += 1) {
         const done = await this.page(chainId, address, state);
         if (done) break;
       }
