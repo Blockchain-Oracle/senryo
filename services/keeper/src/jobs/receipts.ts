@@ -1,4 +1,11 @@
 import {
+  DEVICE_NOT_REGISTERED,
+  disableToken,
+  type ExpoReceipt,
+  expoClient,
+  redactTokens,
+} from "@senryo/service-common";
+import {
   INTERVALS_MS,
   PUSH_RECEIPT_DELAY_SEC,
   PUSH_RECEIPT_TTL_SEC,
@@ -6,8 +13,6 @@ import {
   RETENTION_DAYS,
 } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
-import { DEVICE_NOT_REGISTERED, type ExpoReceipt, expoClient, redactTokens } from "../expo.ts";
-import { disableToken } from "../notify.ts";
 import type { Job } from "../runner.ts";
 
 interface DueTicket {

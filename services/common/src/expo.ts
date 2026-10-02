@@ -1,7 +1,6 @@
-import { readSecret } from "@senryo/service-common";
 import { z } from "zod";
 import { EXPO_PUSH } from "./constants.ts";
-import type { KeeperEnv } from "./env.ts";
+import { readSecret } from "./env.ts";
 
 /**
  * Expo Push Service over plain `fetch` (docs.expo.dev/push-notifications/sending-notifications, read 2026-10-01).
@@ -111,6 +110,6 @@ export class ExpoPush {
 }
 
 /** The Expo client, or undefined when `PUSH_DELIVERY=off` (record and log only). */
-export function expoClient(env: Pick<KeeperEnv, "PUSH_DELIVERY">): ExpoPush | undefined {
+export function expoClient(env: { PUSH_DELIVERY: "on" | "off" }): ExpoPush | undefined {
   return env.PUSH_DELIVERY === "on" ? new ExpoPush(readSecret("EXPO_ACCESS_TOKEN")) : undefined;
 }

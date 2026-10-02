@@ -46,7 +46,31 @@ export const eventsRequestSchema = z.object({
 });
 export const eventsResponseSchema = z.object({ accepted: z.int().nonnegative() });
 
-export const PUSH_CHANNELS = ["fills", "liquidation", "deposits", "card", "priceAlerts"] as const;
+/**
+ * Kinds of news a device can turn on or off (one `push_tokens` column each). `deposits` is "money arrived" (inbox
+ * credits, starter money, any asset arriving); `social` is new followers, likes and replies; `followedTrades` is "a
+ * trader you follow opened a position".
+ */
+export const PUSH_CHANNELS = [
+  "fills",
+  "liquidation",
+  "deposits",
+  "card",
+  "priceAlerts",
+  "social",
+  "followedTrades",
+] as const;
+
+/** What a device gets when it doesn't say (G1): everything on except followed traders' new positions. */
+export const PUSH_CHANNEL_DEFAULTS: Readonly<Record<(typeof PUSH_CHANNELS)[number], boolean>> = {
+  fills: true,
+  liquidation: true,
+  deposits: true,
+  card: true,
+  priceAlerts: true,
+  social: true,
+  followedTrades: false,
+};
 
 export const pushTokenRequestSchema = z.object({
   token: z.string().min(1).max(PUSH_TOKEN_MAX),

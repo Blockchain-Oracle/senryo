@@ -12,18 +12,20 @@ import {
   createDb,
   createHttpServer,
   createLogger,
+  expoClient,
   listen,
   loadSigner,
   MS_PER_SECOND,
   migrate,
+  PushDelivery,
   pingDb,
 } from "@senryo/service-common";
 import { type KeeperContext, RecentActions } from "./context.ts";
 import { type KeeperJob, loadKeeperEnv } from "./env.ts";
-import { expoClient } from "./expo.ts";
 import { liquidationJob } from "./jobs/liquidate.ts";
 import { holdExpiryJob, triggerJob } from "./jobs/maintenance.ts";
 import { mirrorJob, observeJob } from "./jobs/oracle.ts";
+import { pushOutboxJob } from "./jobs/pushes.ts";
 import { pushReceiptsJob } from "./jobs/receipts.ts";
 import { retentionJob } from "./jobs/retention.ts";
 import { sweepJob } from "./jobs/sweeps.ts";
@@ -54,6 +56,7 @@ const sender = createSender({
   nonces: new LocalNonceSource(read),
   journal: new MemoryJournal(),
 });
+const expo = expoClient(env);
 const ledgerSource = new LedgerSource(db, env.CHAIN_ID, env.KEEPER_WATCH_ACCOUNTS ?? []);
 const ctx: KeeperContext = {
   env,
@@ -65,7 +68,7 @@ const ctx: KeeperContext = {
   source: env.INDEXER_GRAPHQL_URL
     ? new IndexerSource(env.INDEXER_GRAPHQL_URL, env.CHAIN_ID, ledgerSource, log)
     : ledgerSource,
-  notifier: new LedgerNotifier(db, log, expoClient(env)),
+  notifier: new LedgerNotifier(db, log, expo ? new PushDelivery(db, log, expo) : undefined),
   mainnet: createReadClient(MAINNET_CHAIN_ID, { http: env.SOURCE_RPC_HTTP }),
   recent: new RecentActions(),
 };
@@ -81,6 +84,7 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   wallets: walletsJob,
   sweeps: sweepJob,
   receipts: pushReceiptsJob,
+  pushes: pushOutboxJob,
 };
 const runner = new Runner(log);
 runner.start(env.KEEPER_JOBS.map((name) => factories[name](ctx)));

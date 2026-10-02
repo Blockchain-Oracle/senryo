@@ -23,6 +23,7 @@ export const KEEPER_JOBS = [
   "retention",
   "sweeps",
   "receipts",
+  "pushes",
 ] as const;
 export type KeeperJob = (typeof KEEPER_JOBS)[number];
 
@@ -43,10 +44,24 @@ export const keeperEnvSchema = baseEnvSchema.extend({
   /** Enabled jobs (default: everything except the mirror relay, which needs MIRROR_ROLE). Gas top-ups live in the api (D-171). */
   KEEPER_JOBS: csvSchema.transform((list) =>
     (
-      list ?? ["liquidate", "observe", "triggers", "holds", "alerts", "wallets", "retention", "sweeps", "receipts"]
+      list ?? [
+        "liquidate",
+        "observe",
+        "triggers",
+        "holds",
+        "alerts",
+        "wallets",
+        "retention",
+        "sweeps",
+        "receipts",
+        "pushes",
+      ]
     ).filter((j): j is KeeperJob => (KEEPER_JOBS as readonly string[]).includes(j)),
   ),
-  /** User push delivery through Expo; `off` only records the `push_sends` row and logs (local runs, checks). */
+  /**
+   * User push delivery through Expo; `off` only records the `push_sends` row (the inbox still lists it) and logs
+   * (local runs, checks).
+   */
   PUSH_DELIVERY: z.enum(["on", "off"]).default("on"),
   /** Extra accounts to scan for liquidation until the indexer source is live (S4). */
   KEEPER_WATCH_ACCOUNTS: csvSchema,
