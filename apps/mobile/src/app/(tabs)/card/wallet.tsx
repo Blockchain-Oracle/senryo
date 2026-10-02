@@ -1,11 +1,13 @@
-import { ShellScreen } from "~/components/shell/ShellScreen";
+import { Stack } from "expo-router";
+import { Screen } from "~/components/kit/Screen";
+import { WALLET_TITLE, WalletSheetBody } from "~/features/card/WalletRow";
 
-export default function AddtoWalletScreen() {
+/** `/card/wallet` — Add to Wallet (E5): locked on its named dependency, the same content as the Card tab's sheet. */
+export default function AddToWalletScreen() {
   return (
-    <ShellScreen
-      title="Add to Wallet"
-      why="No card has been issued yet"
-      detail="Apple Pay and Google Pay provisioning require issuer support. This integration is not available yet."
-    />
+    <Screen>
+      <Stack.Screen options={{ title: WALLET_TITLE }} />
+      <WalletSheetBody />
+    </Screen>
   );
 }

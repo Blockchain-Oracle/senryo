@@ -71,6 +71,18 @@ export const ROUTES = {
   leaderboardInfo: "/leaderboard-info",
   /** Where a profile's listing and handle are edited. The You tab holds it until it has its own page (J9). */
   profileSettings: "/you",
+  /** E1: limit → issue → ready, pushed on the Card stack. */
+  cardGet: "/card/get",
+  /** E1: the first-use explainer, continuing into Get card when it is finished. */
+  cardIntroThenGet: "/card/intro?then=get",
+  /** E3: the limit page in unfreeze mode (a new signed limit, then the issuer opens the card). */
+  cardUnfreeze: "/card/allowance?unfreeze=1",
+  /** E4: repay card debt from the trading account. */
+  cardRepay: "/card/repay",
+  /** G1: the inbox (bell), with All · Alerts. */
+  notifications: "/notifications",
+  /** G1 / C9: the inbox opened on its Alerts tab. */
+  notificationAlerts: "/notifications?tab=alerts",
 } as const;
 
 /** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
