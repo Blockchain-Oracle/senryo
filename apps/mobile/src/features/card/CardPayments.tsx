@@ -8,7 +8,18 @@ import type { AllowanceState } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { ArrowDownUp, Ban, CreditCard } from "~/components/kit/symbols";
+import {
+  ArrowDownUp,
+  Ban,
+  Books,
+  CreditCard,
+  Electronics,
+  Food,
+  Groceries,
+  Shopping,
+  type SymbolIcon,
+  Transport,
+} from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { cardAuthRoute } from "~/lib/constants/routes";
@@ -47,9 +58,24 @@ export function paymentDetail(view: PaymentView): string {
   return view.stage === "pending" && view.holdUsd6 ? `${view.status} · Hold ${usd(view.holdUsd6)}` : view.status;
 }
 
+/** ISO 18245 merchant category ranges → the row's glyph (card payments read like a bank statement, not a ledger). */
+const CATEGORY_GLYPHS: readonly { from: number; to: number; glyph: SymbolIcon }[] = [
+  { from: 5811, to: 5814, glyph: Food },
+  { from: 5411, to: 5499, glyph: Groceries },
+  { from: 4111, to: 4131, glyph: Transport },
+  { from: 5942, to: 5942, glyph: Books },
+  { from: 5732, to: 5734, glyph: Electronics },
+  { from: 5300, to: 5399, glyph: Shopping },
+];
+
+function categoryGlyph(mcc: string | null | undefined): SymbolIcon {
+  const code = mcc ? Number(mcc) : Number.NaN;
+  return CATEGORY_GLYPHS.find((c) => code >= c.from && code <= c.to)?.glyph ?? CreditCard;
+}
+
 export function PaymentGlyph({ view, size = SIZE.markRow }: { view: PaymentView; size?: number }) {
   const { color } = useTheme();
-  const Glyph = view.stage === "declined" ? Ban : view.stage === "refund" ? ArrowDownUp : CreditCard;
+  const Glyph = view.stage === "declined" ? Ban : view.stage === "refund" ? ArrowDownUp : categoryGlyph(view.mcc);
   return (
     <View style={[styles.disc, { width: size, height: size, backgroundColor: color.raised2 }]}>
       <Glyph size={GLYPH} color={view.stage === "declined" ? color.text3 : color.ink} />

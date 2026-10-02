@@ -56,6 +56,7 @@ export function SimulateSheet({ cardToken, allowance }: { cardToken: string; all
               <PaymentGlyph
                 view={{
                   merchant: p.descriptor,
+                  mcc: p.mcc,
                   stage: "pending",
                   status: "",
                   amountUsd6: 0n,

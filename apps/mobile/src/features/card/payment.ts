@@ -20,6 +20,8 @@ export interface PaymentView {
   amountUsd6: bigint;
   /** The hold when it is above the amount (tip and FX buffers): "may settle lower". */
   holdUsd6: bigint | null;
+  /** Merchant category code (ISO 18245) when the issuer sent one: picks the row's glyph. */
+  mcc?: string | null;
 }
 
 const OPEN_HOLDS = new Set(["RESERVED", "SUBMITTED", "ONCHAIN", "FINALIZED"]);
@@ -53,19 +55,23 @@ export function declineWords(reason: CardDeclineReason | null, allowance?: Allow
 
 export function paymentView(row: CardAuthSummary, allowance?: AllowanceState): PaymentView {
   const merchant = merchantName(row.merchantDescriptor);
+  const mcc = row.mcc ?? null;
   const amountUsd6 = row.amountCents * USD6_PER_CENT;
   const holdUsd6 = row.holdUsd6 !== null && row.holdUsd6 > amountUsd6 ? row.holdUsd6 : null;
-  if (row.kind === "CREDIT_AUTH") return { merchant, stage: "refund", status: "Refunded", amountUsd6, holdUsd6: null };
+  if (row.kind === "CREDIT_AUTH")
+    return { merchant, mcc, stage: "refund", status: "Refunded", amountUsd6, holdUsd6: null };
   if (row.status === "DECLINED") {
     const status = `Declined · ${declineWords(row.declineReason, allowance)}`;
-    return { merchant, stage: "declined", status, amountUsd6, holdUsd6: null };
+    return { merchant, mcc, stage: "declined", status, amountUsd6, holdUsd6: null };
   }
   if (row.holdStatus === "CAPTURED") {
     const paid = row.capturedUsd6 ?? amountUsd6;
-    return { merchant, stage: "paid", status: "Paid", amountUsd6: paid, holdUsd6: null };
+    return { merchant, mcc, stage: "paid", status: "Paid", amountUsd6: paid, holdUsd6: null };
   }
-  if (row.holdStatus === "RELEASED") return { merchant, stage: "released", status: "Released", amountUsd6, holdUsd6 };
-  if (row.holdStatus === "FAILED") return { merchant, stage: "settling", status: "Settling", amountUsd6, holdUsd6 };
+  if (row.holdStatus === "RELEASED")
+    return { merchant, mcc, stage: "released", status: "Released", amountUsd6, holdUsd6 };
+  if (row.holdStatus === "FAILED")
+    return { merchant, mcc, stage: "settling", status: "Settling", amountUsd6, holdUsd6 };
   const open = row.holdStatus === undefined || row.holdStatus === null || OPEN_HOLDS.has(row.holdStatus);
-  return { merchant, stage: open ? "pending" : "settling", status: "Pending", amountUsd6, holdUsd6 };
+  return { merchant, mcc, stage: open ? "pending" : "settling", status: "Pending", amountUsd6, holdUsd6 };
 }

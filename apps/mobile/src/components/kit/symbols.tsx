@@ -160,6 +160,15 @@ export const ListRect = symbol({ ios: "list.bullet.rectangle", android: "view_li
 export const SignOut = symbol({ ios: "rectangle.portrait.and.arrow.right", android: "logout" }, "SignOut");
 export const TriangleAlert = symbol({ ios: "exclamationmark.triangle", android: "warning" }, "TriangleAlert");
 export const WifiOff = symbol({ ios: "wifi.slash", android: "wifi_off" }, "WifiOff");
+export const Snowflake = symbol({ ios: "snowflake", android: "ac_unit" }, "Snowflake");
+export const Wallet = symbol({ ios: "wallet.pass", android: "account_balance_wallet" }, "Wallet");
+// Merchant categories (card payments).
+export const Food = symbol({ ios: "fork.knife", android: "restaurant" }, "Food");
+export const Groceries = symbol({ ios: "cart", android: "shopping_cart" }, "Groceries");
+export const Transport = symbol({ ios: "car", android: "directions_car" }, "Transport");
+export const Books = symbol({ ios: "book", android: "menu_book" }, "Books");
+export const Electronics = symbol({ ios: "laptopcomputer", android: "laptop" }, "Electronics");
+export const Shopping = symbol({ ios: "bag", android: "shopping_bag" }, "Shopping");
 export const X = symbol({ ios: "xmark", android: "close" }, "X");
 
 const styles = StyleSheet.create({

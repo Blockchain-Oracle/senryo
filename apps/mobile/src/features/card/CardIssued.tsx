@@ -10,7 +10,7 @@ import type { AllowanceState } from "@senryo/query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { Eye, Gauge, Lock, Plus } from "~/components/kit/symbols";
+import { Eye, Gauge, Plus, Snowflake } from "~/components/kit/symbols";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
@@ -70,7 +70,7 @@ export function CardIssued({
             disabled={freeze.unresolved}
             onPress={() => router.push(ROUTES.cardUnfreeze)}
           >
-            <Lock size={ACTION_GLYPH} color={color.ink} fill={color.ink} />
+            <Snowflake size={ACTION_GLYPH} color={color.primary} />
           </ActionCircle>
         ) : (
           <ActionCircle
@@ -80,7 +80,7 @@ export function CardIssued({
             hint="Stops the card at once"
             onPress={() => void freeze.freeze()}
           >
-            <Lock size={ACTION_GLYPH} color={color.ink} />
+            <Snowflake size={ACTION_GLYPH} color={color.ink} />
           </ActionCircle>
         )}
         <ActionCircle label="Limit" disabled={freeze.unresolved} onPress={() => router.push(ROUTES.cardAllowance)}>

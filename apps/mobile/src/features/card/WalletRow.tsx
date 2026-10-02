@@ -8,7 +8,7 @@
 import { hasArt, ids } from "@senryo/identity";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { CreditCard, Info, Lock } from "~/components/kit/symbols";
+import { Info, Lock, Wallet } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -26,7 +26,7 @@ export function WalletMark({ size = SIZE.markRow }: { size?: number }) {
   if (hasArt(WALLET_ID)) return <EntityMark id={WALLET_ID} size={size} decorative />;
   return (
     <View style={[styles.disc, { width: size, height: size, backgroundColor: color.raised2 }]}>
-      <CreditCard size={GLYPH} color={color.ink} />
+      <Wallet size={GLYPH} color={color.ink} />
     </View>
   );
 }
