@@ -24,3 +24,5 @@ export const MARK_SMALL = 24;
 export const MARK_HERO = 56;
 /** The chain badge in the middle of a receive QR (the phone's BADGE). */
 export const MARK_QR_BADGE = 34;
+/** The welcome page's seal (CSS px). */
+export const WELCOME_SEAL_SIZE = 96;

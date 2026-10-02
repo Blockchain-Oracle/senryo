@@ -87,48 +87,42 @@ export function WelcomeActions() {
     <div className="space-y-3">
       {hint ? (
         <>
-          <Button size="lg" className="w-full" onClick={() => void unlock()}>
+          <Button size="xl" className="w-full" onClick={() => void unlock()}>
             <PasskeyGlyph />
             Continue · {shortAddress(hint.address)}
           </Button>
-          <Button asChild variant="outline" size="lg" className="w-full">
+          <Button asChild variant="secondary" size="xl" className="w-full">
             <Link href={ROUTES.home}>
-              Open portfolio · locked
+              Open Home
               <ArrowRight />
             </Link>
           </Button>
-          <Button variant="ghost" className="w-full" onClick={() => void signIn()}>
-            <PasskeyGlyph />
-            Use a different account
+          <Button variant="ghost" className="w-full font-sans" onClick={() => void signIn()}>
+            Use another account
           </Button>
         </>
       ) : (
         <>
-          <Button size="lg" className="w-full" onClick={() => void create()}>
+          <Button size="xl" className="w-full" onClick={() => void create()}>
             <PasskeyGlyph />
             Create account
           </Button>
-          <Button variant="outline" size="lg" className="w-full" onClick={() => void signIn()}>
-            <PasskeyGlyph />I already have an account
+          <Button variant="secondary" size="xl" className="w-full" onClick={() => void signIn()}>
+            I have an account
           </Button>
-          <Button asChild variant="ghost" className="w-full">
-            <Link href={ROUTES.markets}>
-              Look around first
-              <ArrowRight />
-            </Link>
+          <Button asChild variant="ghost" className="w-full font-sans">
+            <Link href={ROUTES.home}>Look around</Link>
           </Button>
         </>
       )}
-      <p className="text-center font-mono text-micro text-muted-foreground uppercase tracking-[0.12em]">
-        A passkey is your account · no seed phrase
-      </p>
+      <p className="text-center text-meta text-text-3">Passkey · no seed phrase</p>
       <button
         type="button"
         onClick={() => setRecoverOpen(true)}
-        className="mx-auto flex items-center gap-1.5 rounded-xs font-mono text-micro text-muted-foreground uppercase tracking-[0.12em] transition-colors duration-(--motion-fast) ease-desk hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        className="mx-auto flex items-center gap-1.5 rounded-xs text-meta text-text-3 transition-colors duration-(--motion-fast) ease-lacquer hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
       >
         <LifeBuoy className="size-3.5" aria-hidden />
-        Recover with a backup passkey
+        Recover with a backup
       </button>
       {recoverOpen ? (
         <RecoverSheet open onOpenChange={setRecoverOpen} onRecovered={() => router.push(ROUTES.home)} />

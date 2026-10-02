@@ -1,45 +1,33 @@
+import { ids } from "@senryo/identity";
 import { WelcomeActions } from "@/components/auth/welcome-actions";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
-import { BRAND } from "@/lib/constants/brand";
+import { BRAND, WELCOME_SEAL_SIZE } from "@/lib/constants/brand";
 
-const POINTS = [
-  ["ONE BALANCE", "Free to trade · Free to spend · Locked — risk-accounted, never double-counted."],
-  ["GOLD · SILVER · CRYPTO", "Perps at the oracle price on Monad; crypto via Perpl."],
-  ["KINPAKU 金箔", "A card that spends what's free, never your margin."],
-] as const;
+const POINTS = ["Gold, FX and crypto · long or short", "Any token on Monad", "Practice money to start"] as const;
 
-/** Welcome (F01/F02/F03): the static brand block pre-renders; the passkey actions hydrate on the client (S6). */
+/**
+ * Welcome (flow book A1–A3; the phone's first launch without the story): the real seal, the name, three short lines
+ * and the fixed actions — Create account (primary), I have an account, Look around. The brand block pre-renders; the
+ * passkey actions hydrate on the client.
+ */
 export default function Welcome() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-6 pb-10">
-      <div className="flex items-center justify-between">
-        <span className="font-bold font-mono text-num-sm tracking-tight">{BRAND.wordmark}</span>
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-4 pb-10">
+      <div className="flex justify-end">
         <ThemeToggle />
       </div>
-
-      <div className="flex flex-1 flex-col justify-center gap-8 py-12">
-        <div
-          aria-hidden
-          className="flex size-24 items-center justify-center rounded-lg bg-gold font-bold text-background text-num-hero"
-        >
-          千
-        </div>
-        <div className="space-y-3">
-          <h1 className="font-mono font-semibold text-num-lg tracking-tight">
-            {BRAND.name} <span className="text-muted-foreground">{BRAND.kanji}</span>
-          </h1>
-          <p className="max-w-sm text-body text-muted-foreground">{BRAND.description}</p>
-        </div>
-        <dl className="divide-y divide-border border-border border-y">
-          {POINTS.map(([k, v]) => (
-            <div key={k} className="py-3">
-              <dt className="font-mono text-label text-primary tracking-[0.14em]">{k}</dt>
-              <dd className="mt-1 text-caption text-muted-foreground">{v}</dd>
-            </div>
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 py-10 text-center">
+        <EntityMark id={ids.brand("senryo")} size={WELCOME_SEAL_SIZE} variant="symbol" decorative />
+        <h1 className="font-display text-page-title">
+          {BRAND.name} <span className="text-text-3">{BRAND.kanji}</span>
+        </h1>
+        <ul className="grid gap-1 text-row text-text-2">
+          {POINTS.map((p) => (
+            <li key={p}>{p}</li>
           ))}
-        </dl>
+        </ul>
       </div>
-
       <WelcomeActions />
     </main>
   );
