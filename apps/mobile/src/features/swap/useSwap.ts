@@ -135,10 +135,11 @@ export function useSwap(initialPay?: string, initialReceive?: string) {
     [env.chainId, address, pay.key, receive?.key, input.amount, reviewed?.quote.quote.minOut ?? ""].join(":"),
   );
 
-  /** Re-read what pays for it: the wallet (MON less its reserve) plus the free trading part. */
-  const revalidate = async () => {
+  /** Re-read what pays for it before the first step signs: the wallet (MON less its reserve) plus the free trading part. */
+  const revalidate = async (step: number) => {
     guard();
     if (!address || !reviewed) throw new Error("Review again.");
+    if (step > 0) return;
     const { pay: p, amount: a } = reviewed;
     const wallet = p.native
       ? await env.read.getBalance({ address, blockTag: "latest" })

@@ -62,6 +62,25 @@ export async function feeEstimate(env: QueryEnv, me: `0x${string}`, move: Review
   return `~${formatUnits(wei, MON_DECIMALS, FEE_SHOWN_DECIMALS)} MON`;
 }
 
+/** The reviewed amount is still at its source: the wallet part (MON keeping its floor) and the free trading part. */
+export async function checkSource(env: QueryEnv, me: `0x${string}`, asset: MoneyAsset, amount: bigint): Promise<void> {
+  const split = splitSource(asset, amount);
+  if (split.wallet > 0n) {
+    const balance = asset.native
+      ? await env.read.getBalance({ address: me, blockTag: "latest" })
+      : await env.read.readContract({
+          address: asset.address,
+          abi: erc20Abi,
+          functionName: "balanceOf",
+          args: [me],
+          blockTag: "latest",
+        });
+    if (balance < split.wallet) throw new Error("The balance changed. Review again.");
+    if (asset.native && balance - split.wallet < MON_RESERVE_WEI) throw new Error("Keep 10 MON for fees.");
+  }
+  if (split.trading > 0n && asset.collateral) await validateMoney(env, me, "trading", asset.collateral, split.trading);
+}
+
 export function moveOperation(
   env: QueryEnv,
   me: `0x${string}`,
@@ -91,24 +110,9 @@ export function moveOperation(
       detail: `To ${move.label === to ? "" : `${move.label} · `}${to} on ${network}. Money leaving your account always asks for a fresh passkey check.`,
       confirmLabel: move.kind === "send" ? "Send with passkey" : "Withdraw with passkey",
     },
-    revalidate: async () => {
+    revalidate: async (step) => {
       guard();
-      if (split.wallet > 0n) {
-        const balance = asset.native
-          ? await env.read.getBalance({ address: me, blockTag: "latest" })
-          : await env.read.readContract({
-              address: asset.address,
-              abi: erc20Abi,
-              functionName: "balanceOf",
-              args: [me],
-              blockTag: "latest",
-            });
-        if (balance < split.wallet) throw new Error("The balance changed. Review again.");
-        if (asset.native && balance - split.wallet < MON_RESERVE_WEI) throw new Error("Keep 10 MON for fees.");
-      }
-      if (split.trading > 0n && asset.collateral) {
-        await validateMoney(env, me, "trading", asset.collateral, split.trading);
-      }
+      if (step === 0) await checkSource(env, me, asset, amount);
       if (move.handle) {
         const current = await env.api.call(profileGetRoute, {
           params: { handleOrAddress: move.handle },

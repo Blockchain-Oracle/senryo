@@ -31,8 +31,12 @@ export interface MoneyOperation {
   steps: PlannedStep[];
   /** The facts the receipt and Activity show, frozen at review (strings only). */
   reviewedIntent: Record<string, string>;
-  /** Re-checks reviewed scope, balances and quotes right before each signature; throws to stop. */
-  revalidate: () => Promise<void>;
+  /**
+   * Re-checks reviewed scope, balances and quotes right before each step's signature; throws to stop. `stepIndex`
+   * tells which step is about to sign: source balances are checked before the first only, because the operation's
+   * own earlier steps (a pull from trades, a swap) legitimately move them.
+   */
+  revalidate: (stepIndex: number) => Promise<void>;
   /** Present → outside the session's scope: one passkey step-up signs every step. */
   stepUp?: StepUpIntent | undefined;
 }
@@ -81,7 +85,7 @@ export function useMoneyOperation(traceKey: string) {
             plannedActions,
             builderAction: s.action,
             reviewedIntent: { ...op.reviewedIntent, steps: op.steps.map((x) => x.label).join(" · ") },
-            revalidate: op.revalidate,
+            revalidate: () => op.revalidate(index),
             // Practice fees are sponsored: top up before each step when the balance is short.
             ...(practice ? { preflight: gas.preflight(s.request) } : {}),
           });
