@@ -42,4 +42,6 @@ export const STORAGE_KEYS = {
   watchlistAt: "senryo.watchlist-at.v1",
   /** S1b.13: this phone's push registration — the Expo token, the account it was sent for, and the chosen channels. */
   push: "senryo.push.v1",
+  /** Flow book C3a: the short-specific risk card was accepted (shown before the first short, after the general three). */
+  shortRiskExplained: "senryo.short-risk-explained.v1",
 } as const;

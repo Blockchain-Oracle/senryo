@@ -1,29 +1,27 @@
+import { notional } from "@senryo/core";
 import { ids } from "@senryo/identity";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { VenueChip } from "~/components/identity/VenueChip";
-import { Segmented } from "~/components/kit/Segmented";
-import { ModeCapsule } from "~/components/shell/ModeCapsule";
 import { ageLabel, STATUS_LABEL, statusTone } from "~/features/markets/session";
 import type { MarketLine } from "~/features/markets/useMarketLine";
-import { price18, priceDecimalsOf } from "~/lib/money";
+import { fire } from "~/feedback/fire";
+import { price18, priceDecimalsOf, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import type { Side } from "./useTicket";
 
 const MS_PER_SECOND = 1000n;
-const SIDES = [
-  { value: "long", label: "Long" },
-  { value: "short", label: "Short" },
-] as const;
+const SIDES: readonly Side[] = ["long", "short"];
+/** The side toggle is small (F37 has none; ours replaces the old full-width segmented control). */
+const TOGGLE_HEIGHT = SIZE.chipHeight;
 
 /**
- * The ticket's fixed identity zone (C39, Fomo F37): the market's own art, the symbol over the explicit venue chip,
- * the live oracle price and the order type on the right ("Market" — Senryo's engine fills at the oracle price;
- * there is no order-type choice to make, so it is a label, not Fomo's selector) with the session and the price's
- * freshness ("Open · 2m ago", "not live" when the socket is quiet — D-020). Under it the compact Long / Short
- * selector (a declared adaptation, Codex S1b.7 consult #11; fixed while a trade is in flight) beside the mode capsule
- * (direction §5.6: mode in the ticket header). Drags with the sheet's handle.
+ * The ticket's identity zone (Fomo F37; flow book C3 step 2; plan §0.9 Ticket): the market's art, its ticker over its
+ * open interest, the live oracle price over "Market" — Senryo fills at the oracle price, so the order type is a label,
+ * not a selector — with the session word when it isn't open and the price's age, warned when the socket is quiet
+ * ("not live", D-020). Under it: a small Long / Short toggle that recolours the ticket (locked while a trade is in
+ * flight), and the venue chip with the mode as plain words — neither is tappable here (Part F2).
  */
 export function TicketHeader({
   line,
@@ -38,7 +36,10 @@ export function TicketHeader({
 }) {
   const network = useNetwork();
   const { color } = useTheme();
-  const tone = (s: Side) => (s === "long" ? color.up : color.down);
+  const shown = price18(line.price18, priceDecimalsOf(line.marketId));
+  const openInterest = usd(notional(line.market.book.longSize + line.market.book.shortSize, line.price18), 0);
+  const stale = line.market.tickStale;
+  const practice = network.key === "testnet";
   return (
     <View style={styles.wrap}>
       <View style={styles.identity}>
@@ -51,45 +52,96 @@ export function TicketHeader({
           >
             {line.symbol}
           </Text>
-          <VenueChip venue={ids.venue("senryo")} />
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
+            {openInterest} OI
+          </Text>
         </View>
         <View style={styles.price}>
           <Text
             maxFontSizeMultiplier={CONTROL_FONT_SCALE}
             style={[TYPE.rowAmount, { color: color.ink }]}
-            accessibilityLabel={`Oracle price ${price18(line.price18, priceDecimalsOf(line.marketId))} dollars`}
+            accessibilityLabel={`Oracle price ${shown} dollars`}
           >
-            ${price18(line.price18, priceDecimalsOf(line.marketId))}
+            ${shown}
           </Text>
           <Text
             maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.meta, styles.right, { color: line.market.tickStale ? color.warn : color.text3 }]}
-            numberOfLines={2}
+            style={[TYPE.meta, styles.right, { color: stale ? color.warn : color.text3 }]}
+            numberOfLines={1}
           >
             <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.link }}>
               Market
-            </Text>{" "}
-            ·{" "}
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
-              {STATUS_LABEL[line.status]}
-            </Text>{" "}
-            · {line.market.tickStale ? "not live · " : ""}
+            </Text>
+            {line.status === "OPEN" ? null : (
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
+                {" "}
+                · {STATUS_LABEL[line.status]}
+              </Text>
+            )}{" "}
+            · {stale ? "not live · " : ""}
             {ageLabel(line.updatedAt, BigInt(Date.now()) / MS_PER_SECOND)}
           </Text>
         </View>
       </View>
       <View style={styles.row}>
-        <View style={styles.sides}>
-          {sideLocked ? (
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: tone(side) }]}>
-              {side === "long" ? "Long" : "Short"}
-            </Text>
-          ) : (
-            <Segmented options={SIDES} value={side} onChange={onSide} label="Side" tone={tone} />
-          )}
+        <SideToggle side={side} onSide={onSide} locked={sideLocked} />
+        <View style={styles.venue} accessible accessibilityLabel={`Senryo, ${practice ? "Practice" : "Mainnet"}`}>
+          <VenueChip venue={ids.venue("senryo")} />
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            style={[TYPE.chipLabel, { color: practice ? color.practice : color.mainnet }]}
+          >
+            {practice ? "Practice" : "Mainnet"}
+          </Text>
         </View>
-        <ModeCapsule compact />
       </View>
+    </View>
+  );
+}
+
+/** Long / Short in a small track; the chosen side fills with its wash and ink (C3a colours). */
+function SideToggle({ side, onSide, locked }: { side: Side; onSide: (side: Side) => void; locked: boolean }) {
+  const { color } = useTheme();
+  const tone = (s: Side) => (s === "long" ? color.up : color.down);
+  const wash = (s: Side) => (s === "long" ? color.upWash : color.downWash);
+  if (locked) {
+    return (
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: tone(side) }]}>
+        {side === "long" ? "Long" : "Short"}
+      </Text>
+    );
+  }
+  return (
+    <View
+      style={[styles.toggle, { backgroundColor: color.muted }]}
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Side"
+    >
+      {SIDES.map((s) => {
+        const on = s === side;
+        return (
+          <Pressable
+            key={s}
+            onPress={() => {
+              if (on) return;
+              fire("tick");
+              onSide(s);
+            }}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on }}
+            accessibilityLabel={s === "long" ? "Long" : "Short"}
+            hitSlop={(SIZE.touch - TOGGLE_HEIGHT) / 2}
+            style={[styles.cell, on ? { backgroundColor: wash(s) } : null]}
+          >
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              style={[TYPE.chipCategory, { color: on ? tone(s) : color.text3 }]}
+            >
+              {s === "long" ? "Long" : "Short"}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -97,10 +149,16 @@ export function TicketHeader({
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: SIZE.gutter, gap: SPACE.sm, paddingBottom: SPACE.xs },
   identity: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
-  // The symbol and venue keep their width; the price column takes the rest and its status line wraps at large text.
   titles: { flexGrow: 1, flexShrink: 0, gap: SPACE.xxs },
   price: { flexShrink: 1, alignItems: "flex-end", gap: SPACE.xxs },
   right: { textAlign: "right" },
-  row: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
-  sides: { flex: 1 },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.md },
+  venue: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  toggle: { flexDirection: "row", borderRadius: BUTTON.radius.sm, padding: SPACE.xxs, gap: SPACE.xxs },
+  cell: {
+    height: TOGGLE_HEIGHT - SPACE.xs,
+    paddingHorizontal: SPACE.md,
+    borderRadius: BUTTON.radius.sm - SPACE.xxs,
+    justifyContent: "center",
+  },
 });

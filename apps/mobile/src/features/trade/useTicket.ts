@@ -230,6 +230,8 @@ export function useTicket(market: LiveMarket) {
             execPrice18: preview.execPrice18.toString(),
             feeUsd6: preview.feeUsd6.toString(),
             sizeDelta: preview.sizeDelta.toString(),
+            // The outcome's "Liq." fact comes from the reviewed intent ("" = none above $0).
+            liqPrice18: preview.liqPrice18 === null ? "" : preview.liqPrice18.toString(),
             protection: protection.levels.map((level) => `${level.kind}:${level.price18}`).join(","),
           },
         },

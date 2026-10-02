@@ -1,25 +1,28 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { DECIMALS, formatUnits, RISK } from "@senryo/core";
+import { TRADE_SLIPPAGE_BPS } from "@senryo/query";
+import { useEffect, useState } from "react";
+import { AccessibilityInfo, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
-import { KeyValue } from "~/components/kit/Surface";
-import { Check, Info } from "~/components/kit/symbols";
+import { Check } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
+import { DetailRow } from "~/features/markets/Disclosure";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { pct, price18, priceDecimalsOf, usd } from "~/lib/money";
-import { useNetwork } from "~/lib/network";
 import { BUTTON, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { type CandlePalette, type CandleStyle, saveCandleStyle, useCandleStyle } from "./candle-style";
 import { quantityText } from "./quantity";
+import { borrowApr, fundingForSide, marketRates } from "./rates";
 import type { useTicket } from "./useTicket";
 
 type TicketModel = ReturnType<typeof useTicket>;
 
 /**
- * Liquidation info (FT109/C42, F43): what the liquidation price means on Senryo's engine, with this order's own numbers
- * when there are some. The parent ticket stays behind it, values kept (FT112).
+ * Liquidation info (F43; flow book C3a): what the liquidation price means, said for the side being entered — below
+ * the entry for a long, above it for a short — with this order's own level when there is one. The parent ticket stays
+ * behind it, values kept (FT112).
  */
 export function LiquidationInfo({
   open,
@@ -35,26 +38,18 @@ export function LiquidationInfo({
   const { color } = useTheme();
   const liq = t.preview?.liqPrice18;
   const away = t.preview?.liqDistanceBps;
-  const side = t.side === "long" ? "long" : "short";
+  const long = t.side === "long";
   return (
     <ChildSheet open={open} onClose={onClose} title="Liquidation price">
-      <View style={styles.center}>
-        <Info size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.text2} />
-      </View>
       <Text style={[TYPE.body, styles.centerText, { color: color.text2 }]}>
-        If the oracle price reaches this level, your position closes automatically and you lose the margin backing it,
-        plus a liquidation fee.
-      </Text>
-      <Text style={[TYPE.body, styles.centerText, { color: color.text2 }]}>
-        The level moves after you open: funding and borrow accrue over time, and your other positions share the same
-        margin.
+        If {line.symbol} {long ? "falls" : "rises"} to this price, the position closes and its margin is lost, plus a 1%
+        fee. It moves as funding and borrow accrue.
       </Text>
       {liq !== undefined && liq !== null && away !== undefined && away !== null ? (
-        <Text style={[TYPE.rowDetail, styles.centerText, { color: color.text3 }]}>
-          This order: {line.symbol} {side} at {t.leverage}× would liquidate at $
-          {price18(liq, priceDecimalsOf(line.marketId))}, {pct(away < 0n ? -away : away)} {away < 0n ? "past" : "from"}{" "}
-          the oracle price.
-        </Text>
+        <DetailRow
+          label={`${long ? "Long" : "Short"} ${t.leverage}×`}
+          value={`$${price18(liq, priceDecimalsOf(line.marketId))} · ${pct(away < 0n ? -away : away)} ${away < 0n ? "past" : "away"}`}
+        />
       ) : null}
       <Button label="Close" variant="secondary" onPress={onClose} />
     </ChildSheet>
@@ -62,10 +57,12 @@ export function LiquidationInfo({
 }
 
 /**
- * The explicit review (D-177's accessible alternative, Codex S1b.7 consult #4): every number of the order and an
- * "Open Long/Short" button that runs the same confirm path as the hold (risk introduction and gas handling included).
+ * Details (flow book C3 step 5; plan §0.9 Ticket "Details"): the order's every number as quiet rows — fee, spread,
+ * impact and the estimated fill; funding ("You pay / receive …") and borrow; the acceptable price (fill ± 0.5 %,
+ * a 120 s quote); liquidation, what stays locked and the buying power after. With a screen reader on it also carries
+ * an explicit "Open long" button that runs the same confirm path as the slide (risk explainer and fees included).
  */
-export function ReviewOrder({
+export function TicketDetails({
   open,
   onClose,
   t,
@@ -80,33 +77,68 @@ export function ReviewOrder({
   canOpen: boolean;
   onOpen: () => void;
 }) {
-  const network = useNetwork();
+  const { color } = useTheme();
+  const screenReader = useScreenReader();
   const p = t.preview;
   const decimals = priceDecimalsOf(line.marketId);
-  const sideWord = t.side === "long" ? "Long" : "Short";
+  const long = t.side === "long";
+  const rates = marketRates(line.market);
+  const acceptable = p
+    ? long
+      ? (p.execPrice18 * (RISK.BPS + TRADE_SLIPPAGE_BPS)) / RISK.BPS
+      : (p.execPrice18 * (RISK.BPS - TRADE_SLIPPAGE_BPS)) / RISK.BPS
+    : undefined;
+  const price = (v: bigint) => `$${price18(v, decimals)}`;
   return (
-    <ChildSheet open={open} onClose={onClose} title="Review order" subtitle={`${network.modeLabel} · ${network.name}`}>
+    <ChildSheet
+      open={open}
+      onClose={onClose}
+      title="Details"
+      subtitle={`${long ? "Long" : "Short"} ${line.symbol} · ${t.leverage}×`}
+    >
       <View>
-        <KeyValue label="Market" value={`${line.symbol} · ${line.name} · Senryo`} />
-        <KeyValue label="Side" value={sideWord} />
-        <KeyValue label="Margin" value={usd(t.amountUsd6)} />
-        <KeyValue label="Leverage" value={`${t.leverage}×`} />
-        <KeyValue label="Exposure" value={usd(t.notionalUsd6)} />
-        {/* What the engine holds at its own initial-margin rate — less than the margin above below max leverage. */}
-        <KeyValue label="Locked while open" value={p ? usd(p.marginUsd6) : "—"} />
-        <KeyValue label="Quantity" value={p ? quantityText(line.marketId, p.sizeDelta) : "—"} />
-        <KeyValue label="Estimated fill" value={p ? `$${price18(p.execPrice18, decimals)}` : "—"} />
-        <KeyValue label="Fee" value={p ? usd(p.feeUsd6) : "—"} />
-        <KeyValue
-          label="Liquidation"
-          value={p?.liqPrice18 === null ? "None above $0" : p ? `$${price18(p.liqPrice18, decimals)}` : "—"}
+        <DetailRow label="Margin" value={usd(t.amountUsd6)} />
+        <DetailRow label="Leveraged size" value={usd(t.notionalUsd6)} />
+        {p ? <DetailRow label="Quantity" value={quantityText(line.marketId, p.sizeDelta)} /> : null}
+        {p ? <DetailRow label="Estimated fill" value={price(p.execPrice18)} /> : null}
+        {acceptable !== undefined ? (
+          <DetailRow label="Acceptable price" value={`${long ? "≤" : "≥"} ${price(acceptable)} · 120 s`} />
+        ) : null}
+        {p ? <DetailRow label="Fee" value={`${usd(p.feeUsd6)} · ${bpsPct(line.market.risk.feeBps)}`} /> : null}
+        <DetailRow label="Spread now" value={bpsPct(line.market.pv.spreadBps)} />
+        {p ? <DetailRow label="Impact" value={pct(p.impactBps)} /> : null}
+        <DetailRow
+          label="Funding now"
+          value={line.status === "OPEN" ? fundingForSide(rates, long) : "Paused while closed"}
         />
-        <KeyValue label="Free to trade after" value={p ? usd(p.freeToTradeAfter) : "—"} />
+        <DetailRow label="Borrow" value={borrowApr(rates)} />
+        {p ? (
+          <DetailRow
+            label="Liquidation"
+            value={p.liqPrice18 === null ? "None" : price(p.liqPrice18)}
+            tone={color.ink}
+          />
+        ) : null}
+        {p ? <DetailRow label="Locked while open" value={usd(p.marginUsd6)} /> : null}
+        {p ? <DetailRow label="Buying power after" value={usd(p.freeToTradeAfter)} /> : null}
       </View>
-      <Button label={`Open ${sideWord}`} disabled={!canOpen} onPress={onOpen} />
+      {screenReader ? <Button label={`Open ${long ? "long" : "short"}`} disabled={!canOpen} onPress={onOpen} /> : null}
       <Button label="Back to order" variant="ghost" onPress={onClose} />
     </ChildSheet>
   );
+}
+
+/** 5 bps → "0.05%". */
+const bpsPct = (bps: bigint) => `${formatUnits(bps, DECIMALS.bpsAsPct, DECIMALS.cents)}%`;
+
+function useScreenReader(): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    void AccessibilityInfo.isScreenReaderEnabled().then(setOn);
+    const sub = AccessibilityInfo.addEventListener("screenReaderChanged", setOn);
+    return () => sub.remove();
+  }, []);
+  return on;
 }
 
 const PALETTES: ReadonlyArray<{ value: CandlePalette; label: string }> = [
@@ -229,7 +261,6 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
 }
 
 const styles = StyleSheet.create({
-  center: { alignItems: "center" },
   centerText: { textAlign: "center" },
   optionRow: {
     minHeight: SIZE.touch,

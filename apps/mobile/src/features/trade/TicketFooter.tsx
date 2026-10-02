@@ -1,29 +1,31 @@
-import { blockerCopy } from "@senryo/core";
+import { blockerCopy, notional } from "@senryo/core";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { CirclePlus } from "~/components/kit/symbols";
-import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
+import { ChevronDown, CirclePlus } from "~/components/kit/symbols";
+import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { positionRoute, ROUTES } from "~/lib/constants/routes";
-import { pct, usd } from "~/lib/money";
+import { usd } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { quantityText } from "./quantity";
 import type { CommitState, Fix } from "./ticket-commit";
 import type { useTicket } from "./useTicket";
 
 type TicketModel = ReturnType<typeof useTicket>;
 
-/** The secondary control beside the hold button (Review order / a blocker's fix). */
-const SIDE_ACTION_WIDTH = 116;
+const FIX_LABEL: Record<Exclude<Fix, "createAccount">, string> = {
+  addMoney: "Add money",
+  maxLeverage: "Set max",
+  closePosition: "Close it",
+};
 
 /**
- * The ticket's fixed action zone (C39/C43, F37/F41/F42; Codex S1b.7 consult #4/#11), kept as compact as Fomo's so the
- * keypad keeps its room: "{amount} available ⊕" with the quantity, impact and fee on the right; one line saying why
- * the order can't go (the full blocker copy) or why a hold was reset; then one row — the explicit "Review order"
- * alternative (or the blocker's fix) beside the single 500 ms hold button (D-177), which carries the state's label
- * ("Enter an amount", "Insufficient funds", "Hold to open Long"). The zone is set off by spacing, not a line.
+ * The ticket's fixed action zone (Fomo F37/F41/F42; flow book C3 steps 4–7): "Buying power P$212 ⊕" with Details at
+ * the right; one line naming the first blocker (core chain order, unchanged) with its fix as a link, or why a slide
+ * was just reset; then the slide in the side's colour ("Slide to short", "… · passkey" above the session's limits),
+ * busy while network fees are prepared. A guest gets one "Create an account to trade" button and the typed order is
+ * kept through sign-up. VoiceOver confirms through Details, which has an explicit Open button.
  */
 export function TicketFooter({
   t,
@@ -33,33 +35,28 @@ export function TicketFooter({
   resetKey,
   onReset,
   onConfirm,
-  onReview,
+  onDetails,
 }: {
   t: TicketModel;
   line: MarketLine;
   commit: CommitState;
-  /** Why a hold was just reset ("Price updated. Review and hold again."). */
+  /** Why a slide was just reset ("Price updated. Review and slide again."). */
   note: string | undefined;
   resetKey: string;
   onReset: () => void;
   onConfirm: () => void;
-  onReview: () => void;
+  onDetails: () => void;
 }) {
   const { color } = useTheme();
-  const copy = t.blocker ? blockerCopy(t.blocker, line.name, t.nowSec, (v) => usd(v)) : undefined;
-  const qty = t.preview ? quantityText(line.marketId, t.preview.sizeDelta) : undefined;
-  const fee = t.preview ? `fee ${usd(t.preview.feeUsd6)}` : `fee ${line.market.risk.feeBps} bps`;
-  // A guest gets exactly one account action: the hold's place becomes "Create an account to trade" (review: one
-  // CTA, not a side button plus a disabled hold plus a warning line). The typed order is kept through sign-up.
+  const copy = t.blocker ? blockerCopy(t.blocker, line.symbol, t.nowSec, (v) => usd(v)) : undefined;
+  // C3 #5 names the amount held on the other side: "You're long P$300".
+  const title =
+    t.blocker?.code === "OPPOSITE_SIDE" && t.held
+      ? `You're ${t.held.isLong ? "long" : "short"} ${usd(notional(t.held.size, line.price18))}`
+      : copy?.title;
   const guest = commit.fix === "createAccount";
-  // The fix button carries the blocker's action, so the line keeps only its title then.
-  const why = guest
-    ? undefined
-    : copy
-      ? commit.fix
-        ? copy.title
-        : [copy.title, copy.action].filter(Boolean).join(" · ")
-      : note;
+  const fix = commit.fix && commit.fix !== "createAccount" ? commit.fix : undefined;
+  const why = guest ? undefined : copy ? (fix ? title : [title, copy.action].filter(Boolean).join(" · ")) : note;
   return (
     <View style={styles.zone}>
       <View style={styles.row}>
@@ -69,41 +66,47 @@ export function TicketFooter({
             router.push(ROUTES.addMoney);
           }}
           accessibilityRole="button"
-          accessibilityLabel={`${t.snapshot ? usd(t.snapshot.freeToTrade) : "Balance unknown"} available to trade. Add money`}
+          accessibilityLabel={`Buying power ${t.snapshot ? usd(t.snapshot.freeToTrade) : "unknown"}. Add money`}
           hitSlop={SPACE.sm}
           style={styles.inline}
         >
-          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: color.ink }]}>
-            {t.snapshot ? usd(t.snapshot.freeToTrade) : "—"}{" "}
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.text2 }}>
-              available
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text2 }]}>
+            Buying power{" "}
+            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.ink }]}>
+              {t.snapshot ? usd(t.snapshot.freeToTrade) : "—"}
             </Text>
           </Text>
           <CirclePlus size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text2} />
         </Pressable>
-        <Text
-          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-          style={[TYPE.moneyMeta, styles.end, { color: color.text3 }]}
-          numberOfLines={1}
+        <Pressable
+          onPress={() => {
+            fire("tick");
+            onDetails();
+          }}
+          disabled={t.preview === undefined}
+          accessibilityRole="button"
+          accessibilityLabel="Details: fee, spread, funding, borrow and acceptable price"
+          hitSlop={SPACE.sm}
+          style={[styles.inline, { opacity: t.preview === undefined ? DIM : 1 }]}
         >
-          {qty ? (
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.ink }}>
-              {qty}
-            </Text>
-          ) : null}
-          {qty ? ` · impact ${pct(t.preview?.impactBps ?? 0n)} · ` : ""}
-          {fee}
-        </Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text2 }]}>
+            Details
+          </Text>
+          <ChevronDown size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text2} />
+        </Pressable>
       </View>
       {why ? (
-        <Text
-          maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-          accessibilityLiveRegion="polite"
-          numberOfLines={2}
-          style={[TYPE.meta, { color: copy ? color.warn : color.text2 }]}
-        >
-          {why}
-        </Text>
+        <View style={styles.row}>
+          <Text
+            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+            accessibilityLiveRegion="polite"
+            numberOfLines={2}
+            style={[TYPE.meta, styles.flex, { color: copy ? color.warn : color.text2 }]}
+          >
+            {why}
+          </Text>
+          {fix ? <FixLink fix={fix} t={t} max={line.maxLeverageX} marketId={line.marketId} /> : null}
+        </View>
       ) : null}
       {guest ? (
         <Button
@@ -112,61 +115,59 @@ export function TicketFooter({
           accessibilityHint="Your order stays as you typed it"
         />
       ) : (
-        <View style={styles.actions}>
-          <View style={styles.side}>
-            {commit.fix ? (
-              <FixButton fix={commit.fix} t={t} max={line.maxLeverageX} marketId={line.marketId} />
-            ) : (
-              <Button
-                label="Review"
-                variant="outline"
-                size="sm"
-                disabled={!commit.holdable}
-                onPress={onReview}
-                accessibilityHint="Review the order: every number and an explicit Open button"
-              />
-            )}
-          </View>
-          <View style={styles.hold}>
-            <HoldToConfirm
-              label={commit.label}
-              disabled={!commit.holdable}
-              busy={commit.busy === true}
-              tone={t.side === "long" ? "up" : "down"}
-              onConfirm={onConfirm}
-              resetKey={resetKey}
-              onReset={onReset}
-              onAccessibleActivate={onReview}
-              accessibilityHint="Slide to open the position, or use Review"
-            />
-          </View>
-        </View>
+        <SlideToConfirm
+          label={commit.label}
+          disabled={!commit.holdable}
+          busy={commit.busy === true}
+          tone={t.side === "long" ? "up" : "down"}
+          onConfirm={onConfirm}
+          resetKey={resetKey}
+          onReset={onReset}
+          onAccessibleActivate={onDetails}
+        />
       )}
     </View>
   );
 }
 
-function FixButton({ fix, t, max, marketId }: { fix: Fix; t: TicketModel; max: number; marketId: number }) {
-  const props = { size: "sm" as const, variant: "secondary" as const };
-  switch (fix) {
-    case "addMoney":
-      return <Button {...props} label="Add money" onPress={() => router.push(ROUTES.addMoney)} />;
-    case "createAccount":
-      // Not reached: a guest's footer is the single "Create an account to trade" button.
-      return null;
-    case "maxLeverage":
-      return <Button {...props} label={`Set ${max}×`} onPress={() => t.setLeverage(max)} />;
-    case "closePosition":
-      return <Button {...props} label="Close it" onPress={() => router.push(positionRoute(String(marketId)))} />;
-  }
+function FixLink({
+  fix,
+  t,
+  max,
+  marketId,
+}: {
+  fix: Exclude<Fix, "createAccount">;
+  t: TicketModel;
+  max: number;
+  marketId: number;
+}) {
+  const { color } = useTheme();
+  const act = () => {
+    if (fix === "addMoney") router.push(ROUTES.addMoney);
+    else if (fix === "maxLeverage") t.setLeverage(max);
+    else router.push(positionRoute(String(marketId)));
+  };
+  return (
+    <Pressable
+      onPress={() => {
+        fire("tick");
+        act();
+      }}
+      accessibilityRole="button"
+      hitSlop={SPACE.sm}
+    >
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: color.link }]}>
+        {fix === "maxLeverage" ? `Set ${max}×` : FIX_LABEL[fix]} ›
+      </Text>
+    </Pressable>
+  );
 }
+
+const DIM = 0.4;
 
 const styles = StyleSheet.create({
   zone: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm, gap: SPACE.sm },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.sm },
-  inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, flexShrink: 0 },
-  end: { flexShrink: 1, textAlign: "right" },
-  actions: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  side: { width: SIDE_ACTION_WIDTH },
-  hold: { flex: 1 },
+  inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
+  flex: { flex: 1 },
 });

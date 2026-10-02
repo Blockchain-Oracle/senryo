@@ -11,7 +11,6 @@ import { Preset } from "~/components/trade/Preset";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { moneySymbol, pct, price18, priceDecimalsOf, usd } from "~/lib/money";
-import { useNetwork } from "~/lib/network";
 import {
   BUTTON,
   CONTROL_FONT_SCALE,
@@ -36,10 +35,9 @@ const CHART_INTERVAL = 900;
 const MS_PER_SECOND = 1000;
 
 /**
- * The ticket's entry body in Fomo's anatomy (C39–C41, F37–F42; direction §5.8): the margin is the dominant number
- * (Inter Display 64/68), named "Margin" with its money word ("Paper money" / "Real money") right above it, and the
- * leveraged size joins that line once there is an amount (FT102: $10 at 2× reads "leveraged size $20" while the
- * margin stays $10); the centred leverage ruler; liquidation price ⓘ and Stop Loss / Take Profit;
+ * The ticket's entry body in Fomo's anatomy (F37–F42; flow book C3 step 3): the margin is the dominant number (Inter
+ * Display 64/68) with the leveraged-size line above it once there is an amount (F41: $10 at 2× reads "Leveraged size
+ * $20" while the margin stays $10); the centred leverage ruler; liquidation price ⓘ and "Add SL/TP";
  * the keypad ↔ chart toggle; then presets + keypad, or the embedded candle chart with its settings — the amount and
  * leverage are kept across the toggle (FT105). Unknown values are placeholders or skeletons, never $0.00. At large
  * text sizes the body scrolls instead of squeezing: keys keep their full touch height and the chart its own.
@@ -84,24 +82,20 @@ export function TicketEntry({
 
 function Amount({ t }: { t: TicketModel }) {
   const { color } = useTheme();
-  const network = useNetwork();
   const empty = t.amountText === "";
   return (
     <View style={styles.amount}>
-      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]} numberOfLines={1}>
-        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.text2 }}>
-          Margin
-        </Text>{" "}
-        · {network.key === "testnet" ? "Paper money" : "Real money"}
-        {empty ? null : (
-          <>
-            {" "}
-            · leveraged size{" "}
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.ink }]}>
-              {usd(t.notionalUsd6)}
-            </Text>
-          </>
-        )}
+      {/* Above the hero, never in place of it: the margin stays the figure the user typed. */}
+      <Text
+        maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+        style={[TYPE.meta, { color: empty ? color.transparent : color.text3 }]}
+        numberOfLines={1}
+        accessibilityElementsHidden={empty}
+      >
+        Leveraged size{" "}
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.ink }]}>
+          {empty ? "" : usd(t.notionalUsd6)}
+        </Text>
       </Text>
       <Text
         maxFontSizeMultiplier={HERO_FONT_SCALE}
@@ -153,7 +147,7 @@ function RiskRow({
           </Text>
         ) : t.preview === undefined && !t.hasAccount ? (
           <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: color.text3 }]}>
-            Needs an account
+            —
           </Text>
         ) : t.preview === undefined ? (
           <Skeleton width={SIZE.sparklineWidth} height={SIZE.skeletonLine} />
@@ -165,7 +159,7 @@ function RiskRow({
               { color: away !== undefined && away !== null && away < 0n ? color.down : color.ink },
             ]}
           >
-            {liq === null || liq === undefined ? "None above $0" : `$${price18(liq, decimals)}`}
+            {liq === null || liq === undefined ? "None" : `$${price18(liq, decimals)}`}
             {away === null || away === undefined ? (
               ""
             ) : (
@@ -179,23 +173,21 @@ function RiskRow({
       </Pressable>
       <Pressable onPress={() => onChild("tpsl")} accessibilityRole="button" style={[styles.riskCell, styles.end]}>
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, styles.right, { color: color.text3 }]}>
-          Stop Loss / Take Profit
+          Stop loss / Take profit
         </Text>
         <Text
           maxFontSizeMultiplier={CONTROL_FONT_SCALE}
           style={[
             TYPE.rowStrong,
             styles.right,
-            { color: planned.length > 0 ? color.up : t.amountText === "" && !t.held ? color.text3 : color.link },
+            { color: planned.length > 0 ? color.ink : t.amountText === "" && !t.held ? color.text3 : color.link },
           ]}
         >
           {t.held
-            ? "Protect current position"
-            : planned.length === 2
-              ? "SL and TP set"
-              : planned.length === 1
-                ? `${planned[0]?.kind === "sl" ? "Stop loss" : "Take profit"} set`
-                : "Add to this order"}
+            ? "Edit SL/TP"
+            : planned.length > 0
+              ? planned.map((l) => `${l.kind === "sl" ? "SL" : "TP"} $${price18(l.price18, decimals)}`).join(" · ")
+              : "Add SL/TP"}
         </Text>
       </Pressable>
     </View>
@@ -271,7 +263,7 @@ function ChartRegion({ line, onSettings, fixed }: { line: MarketLine; onSettings
     <View style={styles.region}>
       <View style={styles.chartBar}>
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
-          Chainlink {line.symbol}/USD · Monad · 15m
+          15m · Chainlink
         </Text>
         <Pressable
           onPress={onSettings}
@@ -287,7 +279,7 @@ function ChartRegion({ line, onSettings, fixed }: { line: MarketLine; onSettings
         <ReadingView reading={candles} loading="chart" loadingLabel="Loading Chainlink rounds">
           {(rows) =>
             rows.length === 0 ? (
-              <EmptyState why="No rounds in this window yet" detail="The chart fills as Chainlink publishes." />
+              <EmptyState why="No rounds in this window yet" />
             ) : height > 0 ? (
               <CandleChart
                 decimals={DECIMALS.e18}

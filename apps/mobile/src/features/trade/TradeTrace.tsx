@@ -97,6 +97,8 @@ export function TradeTrace({
   words = ORDER_WORDS,
   title,
   children,
+  details: extra,
+  next,
 }: {
   events: readonly TraceEvent[];
   record?: OperationRecord | undefined;
@@ -112,6 +114,10 @@ export function TradeTrace({
   title?: string;
   /** The key facts for this operation (≤ 3 rows), shown under the headline. */
   children?: ReactNode;
+  /** More rows under Details, above the stages (fee, fill, the transaction link). */
+  details?: ReactNode;
+  /** The next actions once it succeeded ("View position", "Share"), above Done. */
+  next?: ReactNode;
 }) {
   const { color } = useTheme();
   const [details, setDetails] = useState(false);
@@ -228,11 +234,13 @@ export function TradeTrace({
       </Pressable>
       {details ? (
         <Animated.View entering={FadeIn} style={styles.details}>
+          {extra}
           <ExecutionTrace steps={steps} current={reached} failed={failed !== undefined && !landed} />
           {hash ? <Text style={[TYPE.meta, { color: color.text3 }]}>Transaction {shortAddress(hash)}</Text> : null}
         </Animated.View>
       ) : null}
       <View style={styles.actions}>
+        {phase === "success" ? next : null}
         {phase === "unknown" || (phase === "running" && running) ? (
           <Button label="Leave this screen" variant={phase === "unknown" ? "outline" : "ghost"} onPress={onLeave} />
         ) : phase === "running" ? null : (
