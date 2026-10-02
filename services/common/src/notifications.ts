@@ -113,7 +113,8 @@ export type CardNotice = {
   amountUsd6: bigint;
 } & (
   | { kind: "approved" }
-  | { kind: "captured" }
+  /** `amountUsd6` is everything the merchant settled; `debtUsd6` the part the collateral couldn't pay (card debt). */
+  | { kind: "captured"; debtUsd6?: bigint | undefined }
   | { kind: "refunded" }
   | { kind: "declined"; reason: CardDeclineReason }
 );
@@ -144,7 +145,11 @@ export function cardMessage(chainId: ChainId, notice: CardNotice): NotificationM
     case "captured":
       return {
         title: pushTitle(chainId, `${amount} settled at ${at}`),
-        body: "The merchant settled it from your spendable money.",
+        body:
+          notice.debtUsd6 && notice.debtUsd6 > 0n
+            ? `${dollarsText(chainId, notice.amountUsd6 - notice.debtUsd6)} came from your spendable money and ` +
+              `${dollarsText(chainId, notice.debtUsd6)} is card debt. Repay it on the Card tab.`
+            : "The merchant settled it from your spendable money.",
         url,
         subject,
         collapseKey,
