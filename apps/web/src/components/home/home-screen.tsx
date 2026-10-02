@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { known } from "@/components/ui/reading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccount } from "@/lib/account/provider";
-import { ROUTES } from "@/lib/constants/routes";
+import { useTermsAccepted } from "@/lib/account/terms";
+import { ROUTES, setupHref } from "@/lib/constants/routes";
 import { money } from "@/lib/format";
 import { GuestHome } from "./guest-home";
 import { HomeTabs } from "./home-tabs";
@@ -33,23 +34,26 @@ function Total({ address }: { address: `0x${string}` }) {
 
 export function HomeScreen() {
   const account = useAccount();
+  const address = account.hint?.address;
+  const accepted = useTermsAccepted(address);
   if (account.status === "loading")
     return (
       <Column>
         <Skeleton className="mt-8 h-12 w-52" />
       </Column>
     );
-  const address = account.hint?.address;
   if (!address) return <GuestHome />;
+  // Terms come before the first money action (A11): until agreed, the money buttons open setup's terms step first.
+  const gate = (href: string) => (accepted ? href : setupHref(href));
   return (
     <Column>
       <Total address={address} />
       <div className="mt-5 grid grid-cols-2 gap-2">
         <Button asChild size="xl">
-          <Link href={ROUTES.addMoney}>Add money</Link>
+          <Link href={gate(ROUTES.addMoney)}>Add money</Link>
         </Button>
         <Button asChild size="xl" variant="secondary">
-          <Link href={ROUTES.withdraw}>Withdraw</Link>
+          <Link href={gate(ROUTES.withdraw)}>Withdraw</Link>
         </Button>
       </div>
       <PracticeMoneyCard />

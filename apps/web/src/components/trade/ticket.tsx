@@ -15,11 +15,13 @@ import { useId, useState } from "react";
 import { DetailRow } from "@/components/kit/list-row";
 import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
 import { Slider } from "@/components/ui/slider";
+import { useAccount } from "@/lib/account/provider";
+import { useTermsAccepted } from "@/lib/account/terms";
 import { USD6_ONE } from "@/lib/constants/money";
-import { positionHref, ROUTES } from "@/lib/constants/routes";
+import { positionHref, ROUTES, setupHref } from "@/lib/constants/routes";
 import { LEVERAGE_DETENTS, LEVERAGE_MIN, MARGIN_PRESETS } from "@/lib/constants/ticket";
 import { MONEY, money, pctBps, price18, priceDecimalsOf } from "@/lib/format";
-import { commitState, type Side } from "@/lib/trade/commit";
+import { type CommitState, commitState, type Side } from "@/lib/trade/commit";
 import { borrowApr, fundingForSide, marketRates } from "@/lib/trade/rates";
 import { useTicket } from "@/lib/trade/use-ticket";
 import { cn } from "@/lib/utils";
@@ -65,6 +67,7 @@ export function Ticket({ market }: { market: LiveMarket }) {
   const [details, setDetails] = useState(false);
   const [rearm, setRearm] = useState(0);
   const primer = useRiskPrimer();
+  const accepted = useTermsAccepted(useAccount().hint?.address);
   const decimals = priceDecimalsOf(market.marketId);
   const p = t.preview;
   const detents = LEVERAGE_DETENTS.filter((d) => d <= market.maxLeverageX);
@@ -84,21 +87,24 @@ export function Ticket({ market }: { market: LiveMarket }) {
       />
     );
 
-  const commit = commitState({
-    side: t.side,
-    amountUsd6: t.amountUsd6,
-    blocker: t.blocker,
-    gasStep: t.gasStep,
-    hasAccount: t.hasAccount,
-    clientReady: t.clientReady,
-    previewReady: p !== undefined,
-    confirmWith: t.confirmWith,
-  });
-  const fixHref = commit.fix
-    ? commit.fix === "closePosition"
-      ? positionHref(market.symbol)
-      : FIX_HREF[commit.fix]
-    : undefined;
+  // Terms before the first trade (A11): an account that hasn't agreed is sent to setup's terms step and back here.
+  const commit: CommitState =
+    t.hasAccount && !accepted
+      ? { label: "Agree to the terms first", ready: false }
+      : commitState({
+          side: t.side,
+          amountUsd6: t.amountUsd6,
+          blocker: t.blocker,
+          gasStep: t.gasStep,
+          hasAccount: t.hasAccount,
+          clientReady: t.clientReady,
+          previewReady: p !== undefined,
+          confirmWith: t.confirmWith,
+        });
+  const termsHref = t.hasAccount && !accepted ? setupHref(ROUTES.trade(market.symbol)) : undefined;
+  const fixHref =
+    termsHref ??
+    (commit.fix ? (commit.fix === "closePosition" ? positionHref(market.symbol) : FIX_HREF[commit.fix]) : undefined);
   // The order's identity at the slide: any change re-arms it; so does a confirmation that sent nothing.
   const resetKey = [
     t.intent,
@@ -210,18 +216,20 @@ export function Ticket({ market }: { market: LiveMarket }) {
           </div>
         ) : null}
       </div>
-      {t.blocker || commit.fix ? (
+      {t.blocker || commit.fix || termsHref ? (
         <p role="status" className="text-center text-meta text-warn">
           {commit.label}
           {fixHref ? (
             <>
               {" · "}
               <Link href={fixHref} className="text-link hover:underline">
-                {commit.fix === "addMoney"
-                  ? "Add money"
-                  : commit.fix === "createAccount"
-                    ? "Create account"
-                    : "Open it"}
+                {termsHref
+                  ? "Terms"
+                  : commit.fix === "addMoney"
+                    ? "Add money"
+                    : commit.fix === "createAccount"
+                      ? "Create account"
+                      : "Open it"}
               </Link>
             </>
           ) : null}

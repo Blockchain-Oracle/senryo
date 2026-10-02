@@ -51,3 +51,6 @@ export const APP_TABS: readonly AppTab[] = [
 export function activeTab(pathname: string): string | undefined {
   return APP_TABS.find((t) => t.match.some((m) => pathname.startsWith(m)))?.id;
 }
+
+/** Setup's terms step, then back to `next` (flow book A11: terms before the first money action). */
+export const setupHref = (next: string) => `/setup/?next=${encodeURIComponent(next)}`;

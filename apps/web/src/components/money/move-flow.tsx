@@ -22,8 +22,9 @@ import { Button } from "@/components/ui/button";
 import { known } from "@/components/ui/reading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccount } from "@/lib/account/provider";
+import { useTermsAccepted } from "@/lib/account/terms";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
-import { ROUTES } from "@/lib/constants/routes";
+import { ROUTES, setupHref } from "@/lib/constants/routes";
 import { type MoneyAsset, spendableOf } from "@/lib/money/assets";
 import { amountOf, valueText } from "@/lib/money/format";
 import { moveOperation, type ReviewedMove, reviewMove } from "@/lib/money/move";
@@ -290,10 +291,21 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
 export function MoveFlow({ kind }: { kind: Kind }) {
   const account = useAccount();
   const me = account.hint?.address;
+  const accepted = useTermsAccepted(me);
   return (
     <Column>
       {account.status === "loading" ? (
         <Skeleton className="mt-6 h-48 w-full" />
+      ) : me && !accepted ? (
+        <>
+          <PageHeader title={kind === "send" ? "Send" : "Withdraw"} back={ROUTES.home} />
+          <div className="grid gap-3 py-8 text-center">
+            <p className="text-row">Agree to the terms first</p>
+            <Button asChild size="xl">
+              <Link href={setupHref(kind === "send" ? ROUTES.send : ROUTES.withdraw)}>Terms</Link>
+            </Button>
+          </div>
+        </>
       ) : me ? (
         <Flow kind={kind} me={me} />
       ) : (

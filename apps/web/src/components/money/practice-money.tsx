@@ -8,12 +8,16 @@
 import { type AuthFailure, authFailureCopy } from "@senryo/account";
 import { collateralId } from "@senryo/identity";
 import { Check, Gift, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ListRow } from "@/components/kit/list-row";
 import { Button } from "@/components/ui/button";
+import { useAccount } from "@/lib/account/provider";
+import { useTermsAccepted } from "@/lib/account/terms";
 import { type StarterPhase, useStarter } from "@/lib/account/use-starter";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { MARK_ROW } from "@/lib/constants/brand";
+import { ROUTES, setupHref } from "@/lib/constants/routes";
 import { money } from "@/lib/format";
 
 const SECONDS_PER_HOUR = 3_600;
@@ -61,6 +65,7 @@ export function claimLine(phase: StarterPhase): { title: string; detail: string;
 /** Home's first-action card: shown until the claim is done (then the money is in Assets and the card goes). */
 export function PracticeMoneyCard() {
   const { phase, claim, ready } = useStarter();
+  const accepted = useTermsAccepted(useAccount().hint?.address);
   // Nothing to do (claimed) or not known yet (checking): no card, so a claimed account never sees it flash.
   if (phase.kind === "claimed" || phase.kind === "checking") return null;
   const line = claimLine(phase);
@@ -80,10 +85,25 @@ export function PracticeMoneyCard() {
           {line.detail}
         </p>
       </div>
-      <Button size="sm" disabled={!ready || line.busy} onClick={() => void claim()} className="rounded-full font-sans">
-        {line.busy ? <Loader2 className="animate-spin" /> : <Gift />}
-        {phase.kind === "failed" ? "Try again" : "Claim"}
-      </Button>
+      {accepted ? (
+        <Button
+          size="sm"
+          disabled={!ready || line.busy}
+          onClick={() => void claim()}
+          className="rounded-full font-sans"
+        >
+          {line.busy ? <Loader2 className="animate-spin" /> : <Gift />}
+          {phase.kind === "failed" ? "Try again" : "Claim"}
+        </Button>
+      ) : (
+        // Terms before the first money action (A11): the claim waits for setup's terms step.
+        <Button asChild size="sm" className="rounded-full font-sans">
+          <Link href={setupHref(ROUTES.home)}>
+            <Gift />
+            Claim
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }
@@ -91,6 +111,7 @@ export function PracticeMoneyCard() {
 /** The Add money row (the phone's PracticePanel first row). */
 export function PracticeMoneyRow() {
   const { phase, claim, ready } = useStarter();
+  const accepted = useTermsAccepted(useAccount().hint?.address);
   const line = claimLine(phase);
   const finished = phase.kind === "done" || phase.kind === "claimed";
   return (
@@ -98,7 +119,11 @@ export function PracticeMoneyRow() {
       leading={<EntityMark id={collateralId(ACTIVE_NETWORK.chainId, "AUSD")} size={MARK_ROW} decorative />}
       title={line.title}
       subtitle={line.detail}
-      {...(finished || line.busy || !ready ? {} : { onClick: () => void claim() })}
+      {...(finished || line.busy || !ready
+        ? {}
+        : accepted
+          ? { onClick: () => void claim() }
+          : { href: setupHref(ROUTES.addMoney) })}
       trailing={
         line.busy ? (
           <Loader2 className="size-4 animate-spin text-text-2" aria-hidden />

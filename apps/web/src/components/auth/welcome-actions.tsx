@@ -46,7 +46,8 @@ export function WelcomeActions() {
     setPhase({ kind: "running", flow });
     try {
       await action();
-      router.push(ROUTES.home);
+      // A new account owes setup (handle, terms) from the passkey on (A2); a returning one goes Home.
+      router.push(flow === "create" ? ROUTES.setup : ROUTES.home);
     } catch (error) {
       const failure = classifyAuthError(error);
       setPhase(isSilent(failure) ? { kind: "idle" } : { kind: "failed", flow, failure });
