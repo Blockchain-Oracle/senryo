@@ -43,7 +43,10 @@ export function WelcomeActions({ flow }: { flow: AuthFlow }) {
             label={`Continue · ${shortAddress(hint.address)}`}
             leading={<PasskeyGlyph color={color.primaryForeground} />}
             loading={busy}
-            onPress={flow.unlock}
+            onPress={() => {
+              storage.set(STORAGE_KEYS.welcomed, true);
+              flow.unlock();
+            }}
           />
           <View style={styles.row}>
             <Button
@@ -52,7 +55,10 @@ export function WelcomeActions({ flow }: { flow: AuthFlow }) {
               size="sm"
               style={styles.flex}
               disabled={busy}
-              onPress={() => router.replace(ROUTES.home)}
+              onPress={() => {
+                storage.set(STORAGE_KEYS.welcomed, true);
+                router.replace(ROUTES.home);
+              }}
             />
             <Button
               label="Another account"
@@ -60,7 +66,10 @@ export function WelcomeActions({ flow }: { flow: AuthFlow }) {
               size="sm"
               style={styles.flex}
               disabled={busy}
-              onPress={flow.signIn}
+              onPress={() => {
+                storage.set(STORAGE_KEYS.welcomed, true);
+                flow.signIn();
+              }}
             />
           </View>
         </>
@@ -71,6 +80,7 @@ export function WelcomeActions({ flow }: { flow: AuthFlow }) {
             leading={<PasskeyGlyph color={color.primaryForeground} />}
             loading={busy}
             onPress={() => {
+              storage.set(STORAGE_KEYS.welcomed, true);
               ttftTap();
               flow.create();
             }}
@@ -82,7 +92,10 @@ export function WelcomeActions({ flow }: { flow: AuthFlow }) {
               size="sm"
               style={styles.flex}
               disabled={busy}
-              onPress={flow.signIn}
+              onPress={() => {
+                storage.set(STORAGE_KEYS.welcomed, true);
+                flow.signIn();
+              }}
             />
             <Button
               label="Browse markets"

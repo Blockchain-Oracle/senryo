@@ -16,8 +16,19 @@ const LABEL_FONT_RATIO = 0.44;
  * plates blank (pair names, mode names): the app draws them as text on the plate's own layer, placed by the same
  * cover fit as the images. `position` is the scene index as a float. Reduce Motion: nothing travels, scenes crossfade.
  */
-export function StoryHero({ position, reduce }: { position: SharedValue<number>; reduce: boolean }) {
+export function StoryHero({
+  position,
+  reduce,
+  activeIndex,
+}: {
+  position: SharedValue<number>;
+  reduce: boolean;
+  activeIndex: number;
+}) {
   const [stage, setStage] = useState({ width: 0, height: 0 });
+  const scenes = SCENES.map((scene, index) => ({ scene, index })).filter(
+    ({ index }) => Math.abs(index - activeIndex) <= 1,
+  );
   const travelOf = (depth: number) => (reduce ? 0 : stage.width * depth);
   return (
     <View
@@ -26,10 +37,10 @@ export function StoryHero({ position, reduce }: { position: SharedValue<number>;
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      {SCENES.map((scene, index) => (
+      {scenes.map(({ scene, index }) => (
         <Layer key={scene.key} source={scene.field} index={index} position={position} travel={0} />
       ))}
-      {SCENES.flatMap((scene, index) =>
+      {scenes.flatMap(({ scene, index }) =>
         LAYER_ORDER.map((name) => {
           const source = scene.layers[name];
           return source === undefined ? null : (
@@ -44,7 +55,7 @@ export function StoryHero({ position, reduce }: { position: SharedValue<number>;
         }),
       )}
       {stage.width > 0
-        ? SCENES.flatMap((scene, index) =>
+        ? scenes.flatMap(({ scene, index }) =>
             (scene.labels ?? []).map((label) => (
               <Label
                 key={`${scene.key}-${label.text}`}

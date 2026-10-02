@@ -1,8 +1,10 @@
 /** Per-sound gain, levelled so the palette sits together (ported volumes). */
 export const SOUND_VOLUME = {
-  fill: 0.6,
-  deposit: 0.55,
-  send: 0.4,
+  scene: 0.18,
+  onboarding: 0.28,
+  fill: 0.3,
+  deposit: 0.3,
+  send: 0.28,
   unlock: 0.35,
   liquidation: 0.7,
   error: 0.4,

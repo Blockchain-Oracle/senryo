@@ -9,9 +9,8 @@ import { type Href, router } from "expo-router";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { useAccount } from "~/lib/account/provider";
-import { linkTarget } from "~/lib/deep-link";
+import { incomingLink } from "~/lib/incoming-link";
 import { notificationsModule } from "~/lib/native-modules";
-import { activeNetwork } from "~/lib/network";
 import { type PushChannel, readPushPermission, registerPush, registrationOwed } from "./push";
 
 type NotificationResponse = import("expo-notifications").NotificationResponse;
@@ -33,7 +32,7 @@ export function tapTarget(data: Record<string, unknown> | undefined): string | u
   // The keeper's links already name their network; `data.chainId` covers any that don't.
   const named = /[?&]chainId=/.test(url) || !Number.isFinite(chainId);
   const withChain = named ? url : `${url}${url.includes("?") ? "&" : "?"}chainId=${chainId}`;
-  return linkTarget(withChain, activeNetwork().chainId);
+  return incomingLink(withChain);
 }
 
 export function PushHost() {

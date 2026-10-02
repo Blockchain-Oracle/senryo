@@ -5,7 +5,7 @@ const SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
 const WEB = /^https?:\/\/[^/]+/i;
 
 /** The in-app path of a system URL: `https://senryo.xyz/a/b` → `/a/b`, `senryo://a/b` → `/a/b`, `/a/b` as is. */
-function inAppPath(base: string): string {
+export function inAppPath(base: string): string {
   if (WEB.test(base)) return base.replace(WEB, "") || "/";
   if (SCHEME.test(base)) return `/${base.replace(SCHEME, "")}`;
   return base.startsWith("/") ? base : `/${base}`;

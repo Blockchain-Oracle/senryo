@@ -1,11 +1,13 @@
+import { Asset } from "expo-asset";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, AppState, Pressable, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  cancelAnimation,
   FadeIn,
-  useAnimatedReaction,
   useReducedMotion,
   useSharedValue,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -33,22 +35,41 @@ export function Story() {
   const start = useSharedValue(0);
   const [index, setIndex] = useState(0);
   const touched = useRef(false);
+  const committed = useRef(0);
+  const ended = useSharedValue(false);
+  useEffect(() => {
+    const artwork = SCENES.flatMap((scene) => [scene.field, ...Object.values(scene.layers)]).filter(
+      (source): source is number => typeof source === "number",
+    );
+    void Asset.loadAsync(artwork).catch(() => {});
+  }, []);
   const scene = SCENES[index] ?? FIRST;
 
-  useAnimatedReaction(
-    () => Math.round(position.value),
-    (now, before) => {
-      if (now !== before) scheduleOnRN(setIndex, now);
-    },
-  );
-
+  const settled = (to: number) => {
+    if (committed.current === to) return;
+    committed.current = to;
+    setIndex(to);
+    AccessibilityInfo.announceForAccessibility(SCENES[to]?.title ?? "");
+    fire("snap", { sound: "scene" });
+  };
   const go = useCallback(
     (target: number) => {
       const to = Math.max(0, Math.min(LAST, target));
-      position.value = withTiming(to, {
-        duration: reduce ? TIMING.reducedMotion : TIMING.onboardingScene,
-        easing: EASE,
-      });
+      if (Math.abs(to - position.value) > 1) {
+        position.value = to;
+        settled(to);
+        return;
+      }
+      position.value = withTiming(
+        to,
+        {
+          duration: reduce ? TIMING.reducedMotion : TIMING.onboardingScene,
+          easing: EASE,
+        },
+        (finished) => {
+          if (finished) scheduleOnRN(settled, to);
+        },
+      );
     },
     [position, reduce],
   );
@@ -92,6 +113,8 @@ export function Story() {
   const pan = Gesture.Pan()
     .activeOffsetX([-STORY.panActivate, STORY.panActivate])
     .onStart(() => {
+      ended.value = false;
+      cancelAnimation(position);
       start.value = position.value;
       scheduleOnRN(hold);
     })
@@ -100,9 +123,32 @@ export function Story() {
       position.value = Math.max(0, Math.min(LAST, start.value - e.translationX / width.value));
     })
     .onEnd((e) => {
+      ended.value = true;
       const flick = Math.abs(e.velocityX) > STORY.flickVelocity ? -Math.sign(e.velocityX) : 0;
       const dragged = Math.round(start.value - e.translationX / width.value);
-      scheduleOnRN(go, flick === 0 ? dragged : Math.round(start.value) + flick);
+      const to = Math.max(0, Math.min(LAST, flick === 0 ? dragged : Math.round(start.value) + flick));
+      if (reduce) {
+        position.value = to;
+        scheduleOnRN(settled, to);
+        return;
+      }
+      position.value = withSpring(
+        to,
+        { damping: 30, stiffness: 250, mass: 0.8, velocity: -e.velocityX / width.value, overshootClamping: true },
+        (finished) => {
+          if (finished) scheduleOnRN(settled, to);
+        },
+      );
+    })
+    .onFinalize(() => {
+      if (ended.value) return;
+      const to = Math.round(position.value);
+      position.value = reduce
+        ? to
+        : withSpring(to, { damping: 30, stiffness: 250, mass: 0.8, overshootClamping: true }, (finished) => {
+            if (finished) scheduleOnRN(settled, to);
+          });
+      if (reduce) scheduleOnRN(settled, to);
     });
   const tap = Gesture.Tap().onEnd((e) => {
     scheduleOnRN(step, e.x < width.value * STORY.backZone ? -1 : 1);
@@ -137,7 +183,7 @@ export function Story() {
           accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
           onAccessibilityAction={(e) => step(e.nativeEvent.actionName === "increment" ? 1 : -1)}
         >
-          <StoryHero position={position} reduce={reduce} />
+          <StoryHero position={position} reduce={reduce} activeIndex={index} />
         </View>
       </GestureDetector>
       <Animated.View

@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { StyleSheet, Switch, View } from "react-native";
 import { useMMKVBoolean } from "react-native-mmkv";
 import { ListRow } from "~/components/kit/ListRow";
@@ -7,6 +7,7 @@ import { Segmented } from "~/components/kit/Segmented";
 import { Panel } from "~/components/kit/Surface";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { fire } from "~/feedback/fire";
+import { ROUTES } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SPACE, useTheme } from "~/theme";
 
@@ -32,7 +33,7 @@ export default function Preferences() {
         <Panel>
           <ListRow
             title="Sounds"
-            detail="Fill, deposit, send and unlock sounds. Follows the silent switch."
+            detail="Onboarding and completed trades/transfers. Follows the silent switch."
             trailing={
               <Switch
                 {...switchColors}
@@ -63,6 +64,7 @@ export default function Preferences() {
         <SectionHeading detail="Applies across the app and stays on this phone.">Theme</SectionHeading>
         <Segmented options={THEMES} value={name} onChange={(v) => setTheme(v)} label="Theme" />
       </View>
+      <ListRow title="Replay onboarding" onPress={() => router.push(ROUTES.welcome)} />
     </Screen>
   );
 }

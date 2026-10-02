@@ -4,12 +4,13 @@
  * app leaves the foreground; never copied or stored. The warning is a borderless wash; the words sit in one filled
  * group.
  */
-import { usePreventScreenCapture } from "expo-screen-capture";
+
 import { useEffect, useState } from "react";
 import { AppState, StyleSheet, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
 import { Panel } from "~/components/kit/Surface";
+import { useCaptureProtection } from "~/lib/capture-protection";
 import { PHRASE_VISIBLE_MS } from "~/lib/constants/auth";
 import { BUTTON, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -46,11 +47,9 @@ function Word({ word, index }: { word: string; index: number }) {
   );
 }
 
-const CAPTURE_KEY = "senryo.recovery-phrase";
-
 export function PhraseGrid({ phrase, onHide }: { phrase: string; onHide: () => void }) {
   const { color } = useTheme();
-  usePreventScreenCapture(CAPTURE_KEY);
+  const protection = useCaptureProtection();
   useEffect(() => {
     const timer = setTimeout(onHide, PHRASE_VISIBLE_MS);
     const sub = AppState.addEventListener("change", (s) => {
@@ -61,6 +60,17 @@ export function PhraseGrid({ phrase, onHide }: { phrase: string; onHide: () => v
       sub.remove();
     };
   }, [onHide]);
+  if (!protection.ready)
+    return (
+      <View style={styles.wrap}>
+        <Text style={[TYPE.body, { color: color.text3 }]}>
+          {protection.failed
+            ? "Couldn’t protect this screen. Your recovery words remain hidden."
+            : "Protecting this screen…"}
+        </Text>
+        <Button label="Hide" onPress={onHide} />
+      </View>
+    );
   const words = phrase.split(" ");
   return (
     <View style={styles.wrap}>

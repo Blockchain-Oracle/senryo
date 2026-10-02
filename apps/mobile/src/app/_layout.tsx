@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { DeferredLinkHost } from "~/components/shell/DeferredLinkHost";
 import { FeedbackHost } from "~/components/shell/FeedbackHost";
 import { OfflineBanner } from "~/components/shell/OfflineBanner";
 import { TxRecoveryHost } from "~/components/shell/TxRecoveryHost";
@@ -106,6 +107,7 @@ function RootStack() {
         ))}
       </Stack>
       <FeedbackHost />
+      <DeferredLinkHost />
       <OfflineBanner />
       <ToastHost />
       <TxRecoveryHost />

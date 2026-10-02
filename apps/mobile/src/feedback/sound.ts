@@ -1,4 +1,5 @@
 import { type AudioPlayer, type AudioSource, createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import { AppState } from "react-native";
 import { SOUND_VOLUME } from "./constants";
 
 /**
@@ -7,13 +8,16 @@ import { SOUND_VOLUME } from "./constants";
  * errors swallowed. Sounds follow the ringer switch (`playsInSilentMode: false`) and mix with other audio.
  * No sound for ticks or navigation — haptics own those.
  */
-export type SoundName = "fill" | "deposit" | "send" | "unlock" | "liquidation" | "error";
+export type SoundName = "scene" | "onboarding" | "fill" | "deposit" | "send" | "unlock" | "liquidation" | "error";
 
-/**
- * Sources land with the S1 sound pass (ElevenLabs, [OK?] credits); until then every name is a silent no-op.
- * Add a file as `fill: require("../../assets/sounds/fill.mp3")`.
- */
-const SOURCES: Partial<Record<SoundName, AudioSource>> = {};
+/** Original short, soft chimes. Source recipe and provenance live in assets/sounds/README.md. */
+const SOURCES: Partial<Record<SoundName, AudioSource>> = {
+  scene: require("../../assets/sounds/scene.wav"),
+  onboarding: require("../../assets/sounds/onboarding.wav"),
+  fill: require("../../assets/sounds/fill.wav"),
+  deposit: require("../../assets/sounds/deposit.wav"),
+  send: require("../../assets/sounds/send.wav"),
+};
 
 const players = new Map<SoundName, AudioPlayer>();
 let prepared = false;
@@ -21,25 +25,34 @@ let prepared = false;
 /** Once at launch (the root layout's FeedbackHost): audio mode, then one player per available sound. */
 export async function prepareSounds(): Promise<void> {
   if (prepared) return;
-  prepared = true;
   try {
-    await setAudioModeAsync({ playsInSilentMode: false, interruptionMode: "mixWithOthers" });
+    await setAudioModeAsync({
+      playsInSilentMode: false,
+      interruptionMode: "mixWithOthers",
+      shouldPlayInBackground: false,
+    });
   } catch {
-    // Audio session refused (another app holds it exclusively): sounds stay silent, haptics still play.
+    // Sound failure cannot affect the financial action. A later mount can retry.
+    return;
   }
+  prepared = true;
   for (const [name, source] of Object.entries(SOURCES) as [SoundName, AudioSource][]) {
-    const player = createAudioPlayer(source);
-    player.volume = SOUND_VOLUME[name];
-    players.set(name, player);
+    try {
+      const player = createAudioPlayer(source);
+      player.volume = SOUND_VOLUME[name];
+      players.set(name, player);
+    } catch {
+      /* Audio is optional; a failed player cannot break app launch. */
+    }
   }
 }
 
-export function playSound(name: SoundName): void {
+export async function playSound(name: SoundName): Promise<void> {
   const player = players.get(name);
-  if (!player) return;
+  if (!player || AppState.currentState !== "active") return;
   try {
-    void player.seekTo(0);
-    player.play();
+    await player.seekTo(0);
+    if (AppState.currentState === "active") player.play();
   } catch {
     // A failed UI sound never interrupts the action it decorates.
   }

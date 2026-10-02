@@ -10,6 +10,7 @@ import { useSetupNav } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
 import { useNetwork } from "~/lib/network";
+import { storage } from "~/lib/storage";
 import { SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
 const Foil = NATIVE_ART["completion-foil"]?.symbol;
@@ -35,8 +36,12 @@ export default function DoneStep() {
   const profile = useMyProfile(address, useSessionRunner());
   const handle = profile.status === "fresh" || profile.status === "stale" ? profile.value?.handle : undefined;
   useEffect(() => {
-    fire("confirm", { sound: "unlock" });
-  }, []);
+    if (!address) return;
+    const key = `senryo.welcome-complete:${address.toLowerCase()}`;
+    if (storage.getBoolean(key)) return;
+    storage.set(key, true);
+    fire("confirm", { sound: "onboarding" });
+  }, [address]);
   const practice = network.key === "testnet";
   return (
     <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top }]}>

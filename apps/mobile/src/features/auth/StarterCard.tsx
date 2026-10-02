@@ -47,6 +47,7 @@ function message(phase: StarterPhase): string {
     return `On the house · $${formatUnits(phase.creditUsd6, USD_DECIMALS, CENTS)} practice dollars and gas are in.`;
   if (phase.kind === "claimed") return "Practice funds claimed ✓ · add more from Fund.";
   if (phase.kind === "unchecked") return "Couldn't check your practice funds right now · retry.";
+  if (phase.kind === "pending") return "Your request is pending. Check its status before making another request.";
   if (phase.kind !== "failed")
     return "Test dollars on Monad testnet plus gas, sent by our sponsor. You sign once — no fee.";
   if (phase.code === "AUTH") {
@@ -72,7 +73,6 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
   const { color } = useTheme();
   const { phase, claim, recheck, ready } = useStarter();
   useEffect(() => {
-    if (phase.kind === "done") fire("filled", { sound: "deposit" });
     if (phase.kind === "failed" && phase.code !== "AUTH") fire("fail");
   }, [phase]);
   // On Portfolio the card only appears once we know there is something to do (no "Checking…" flash, S8.16e).
@@ -100,8 +100,14 @@ function PracticeStarterCard({ hideWhenClaimed }: { hideWhenClaimed: boolean }) 
           block={false}
           onPress={() => router.navigate(phase.kind === "done" ? ROUTES.markets : ROUTES.addMoney)}
         />
-      ) : phase.kind === "unchecked" ? (
-        <Button label="Retry" variant="outline" size="sm" block={false} onPress={recheck} />
+      ) : phase.kind === "unchecked" || phase.kind === "pending" ? (
+        <Button
+          label={phase.kind === "pending" ? "Check status" : "Retry"}
+          variant="outline"
+          size="sm"
+          block={false}
+          onPress={recheck}
+        />
       ) : (
         <Button
           label={

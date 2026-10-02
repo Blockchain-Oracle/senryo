@@ -23,12 +23,13 @@ import {
   type NonceSource,
   type ReadClient,
   type Reconciled,
+  receiptFacts,
   reconcileEntry,
   type Sender,
 } from "@senryo/chain";
 import { type ChainId, isChainId } from "@senryo/config";
 import { isTerminalStage } from "@senryo/core";
-import { userFeeCache } from "@senryo/query";
+import { operationOutcome, readOperation, userFeeCache, writeOperation } from "@senryo/query";
 import { activeNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
 import { policyContext } from "./api";
@@ -168,6 +169,29 @@ export async function recoverJournal(now = Date.now()): Promise<{ recovered: Rec
     } else {
       await journal.update(entry.hash, { stage: "abandoned", error: outcome.reason });
       sharedNonces(chainId).resync(entry.from);
+    }
+    const operationLookup = entry.meta?.operationId ?? entry.meta?.operationKey;
+    const operation = operationLookup ? readOperation(operationLookup) : undefined;
+    if (operation && operation.chainId === chainId && operation.account === entry.from.toLowerCase()) {
+      const steps = operation.steps.map((step, index) =>
+        step.hash !== entry.hash &&
+        !(step.hash === undefined && index === Number(entry.meta?.step) && step.action === entry.action)
+          ? step
+          : outcome.kind === "settled"
+            ? {
+                ...step,
+                hash: entry.hash,
+                outcome: outcome.stage === "finalized" ? ("completed" as const) : ("reverted" as const),
+                blockNumber: outcome.receipt.blockNumber.toString(),
+                blockHash: outcome.receipt.blockHash,
+                facts: receiptFacts(outcome.receipt, chainId, entry.to),
+              }
+            : { ...step, outcome: "abandoned" as const },
+      );
+      writeOperation(
+        { ...operation, updatedAt: now, steps, outcome: operationOutcome(steps, operation.plannedActions) },
+        false,
+      );
     }
     recovered.push({ chainId, from: entry.from, action: String(entry.action), outcome });
   }

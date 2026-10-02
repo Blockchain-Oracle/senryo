@@ -20,7 +20,6 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 import { AppState } from "react-native";
 import { activeNetwork } from "~/lib/network";
 import { unregisterPush } from "~/lib/notifications/push";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { clearApiSession } from "./api";
 import { pullPrefs, pushPrefs } from "./remote";
 import { createNativeAccountClient } from "./runtime";
@@ -89,7 +88,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     try {
       const out = await run(c);
       // Any account on the device skips the first-run welcome next launch (no-flash gate in app/index.tsx).
-      if (c.hint) storage.set(STORAGE_KEYS.welcomed, true);
+
       return out;
     } finally {
       setExtraPrompt(undefined);
