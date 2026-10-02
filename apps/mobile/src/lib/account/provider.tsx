@@ -23,8 +23,9 @@ import { beginCreate, endCreate, oweSetup, reconcileCreate } from "~/features/se
 import { activeNetwork } from "~/lib/network";
 import { unregisterPush } from "~/lib/notifications/push";
 import { clearApiSession } from "./api";
+import { serverDeleteDone, serverDeleteOwed } from "./delete-data";
 import { rememberAccount } from "./identity-cache";
-import { pullPrefs, pushPrefs } from "./remote";
+import { deleteRemoteData, pullPrefs, pushPrefs } from "./remote";
 import { createNativeAccountClient } from "./runtime";
 import { loadSettings, saveSettings } from "./settings";
 import { systemPromptUp } from "./system-prompt";
@@ -115,6 +116,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const c = clientRef.current;
     if (!unlockedAs) return;
+    // A9: a "Delete my data" whose server part couldn't reach Senryo completes at this account's next unlock.
+    if (serverDeleteOwed(unlockedAs)) {
+      deleteRemoteData(c, c.session.settings.faceId)
+        .then(() => serverDeleteDone(unlockedAs))
+        .catch(() => undefined);
+      return;
+    }
     pullPrefs(c, c.session.settings)
       .then((synced) => synced && adopt(synced))
       // Offline or no API: this phone's settings stand; the next unlock tries again.
