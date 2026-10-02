@@ -147,19 +147,11 @@ export function LpScreen() {
                 value={`${usd(v.walletAusd)} available`}
               />
               <AmountEntry draft={depositDraft} max={maxIn} symbol="AUSD" label="Deposit amount" />
-              {v.walletAusd === 0n && practice ? (
-                <Button
-                  label="Get practice AUSD"
-                  variant="secondary"
-                  disabled={busy}
-                  onPress={() => void lp.faucet()}
-                />
-              ) : null}
               <HoldToConfirm
                 resetKey={[network.chainId, lp.address, depositUsd6].join(":")}
                 label={busy ? "Preparing…" : `Deposit ${usd(depositUsd6)}`}
                 disabled={busy || depositUsd6 <= 0n || depositUsd6 > maxIn || !lp.ready}
-                onConfirm={() => void lp.deposit(depositUsd6, depositGuard)}
+                onConfirm={() => void lp.deposit(depositUsd6, "wallet", depositGuard)}
               />
               {v.maxDeposit === 0n ? (
                 <Text style={[TYPE.rowDetail, { color: color.warn }]}>

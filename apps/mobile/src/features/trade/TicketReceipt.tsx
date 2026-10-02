@@ -1,5 +1,5 @@
 import { explorerTxUrl, NETWORKS } from "@senryo/config";
-import { DECIMALS, formatUnits } from "@senryo/core";
+import { DECIMALS } from "@senryo/core";
 import type { OperationRecord, TraceEvent } from "@senryo/query";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -12,7 +12,7 @@ import { shortAddress } from "~/lib/format";
 import { price18, priceDecimalsOf, usd } from "~/lib/money";
 import type { NetworkKey } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { QUANTITY_DECIMALS } from "./constants";
+import { quantityText } from "./quantity";
 import type { Side } from "./useTicket";
 
 /** What the order was at the moment of the hold — the receipt carries its own mode, never the app's current one. */
@@ -128,7 +128,7 @@ export function TicketReceipt({
             <KeyValue label="Exposure requested" value={money(order.notionalUsd6)} />
             <KeyValue
               label={fill ? "Quantity" : "Quantity (estimated)"}
-              value={`${formatUnits(fill?.sizeDelta ? BigInt(fill.sizeDelta) : order.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS)} ${order.symbol}`}
+              value={quantityText(order.marketId, fill?.sizeDelta ? BigInt(fill.sizeDelta) : order.sizeDelta)}
             />
             {hash ? <KeyValue label="Transaction" value={shortAddress(hash)} /> : null}
           </>

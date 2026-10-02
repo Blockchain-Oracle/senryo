@@ -32,6 +32,7 @@ import {
   useGasBudget,
   useGeo,
   usePositions,
+  useProtocolState,
   useQueryEnv,
   useSendTrace,
 } from "@senryo/query";
@@ -70,6 +71,8 @@ export function useTicket(market: LiveMarket) {
   const gas = useGasBalance(address);
   const calendar = useCalendar(market.calendarId);
   const geo = useGeo();
+  const protocol = useProtocolState();
+  const guardian = protocol.status === "fresh" || protocol.status === "stale" ? protocol.value : undefined;
   const geoValue = geo.status === "fresh" || geo.status === "stale" ? geo.value : undefined;
 
   const isLong = side === "long";
@@ -145,6 +148,8 @@ export function useTicket(market: LiveMarket) {
     preview,
     simulationRevert: simulationRevert instanceof Error ? simulationRevert.message.split("\n")[0] : undefined,
     ...(held ? { heldLong: held.isLong } : {}),
+    // A guardian pause or settle-only is named before the slide, never left to a raw simulation revert (C3 #9).
+    ...(guardian ? { protocol: { ...guardian, now: nowSec } } : {}),
   });
 
   // What the ticket is showing right now, readable after an await (review R02): a confirmed order may only be sent

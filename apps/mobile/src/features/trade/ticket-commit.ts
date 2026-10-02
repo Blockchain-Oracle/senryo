@@ -51,6 +51,10 @@ function blockerLabel(b: TradeBlocker): { label: string; fix?: Fix } {
       return { label: "Market reopening" };
     case "PRICE_PAUSED":
       return { label: "Price paused" };
+    case "ENGINE_PAUSED":
+      return { label: "Trading paused" };
+    case "SETTLE_ONLY":
+      return { label: "Closing only" };
     case "LEVERAGE_ABOVE_MAX":
       return { label: `Max leverage is ${b.maxLeverageX}×`, fix: "maxLeverage" };
     case "MARKET_FULL":

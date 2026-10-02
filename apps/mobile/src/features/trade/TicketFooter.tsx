@@ -1,4 +1,4 @@
-import { blockerCopy, DECIMALS, formatUnits } from "@senryo/core";
+import { blockerCopy } from "@senryo/core";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -9,7 +9,7 @@ import { fire } from "~/feedback/fire";
 import { positionRoute, ROUTES } from "~/lib/constants/routes";
 import { pct, usd } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { QUANTITY_DECIMALS } from "./constants";
+import { quantityText } from "./quantity";
 import type { CommitState, Fix } from "./ticket-commit";
 import type { useTicket } from "./useTicket";
 
@@ -47,7 +47,7 @@ export function TicketFooter({
 }) {
   const { color } = useTheme();
   const copy = t.blocker ? blockerCopy(t.blocker, line.name, t.nowSec, (v) => usd(v)) : undefined;
-  const qty = t.preview ? formatUnits(t.preview.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS) : undefined;
+  const qty = t.preview ? quantityText(line.marketId, t.preview.sizeDelta) : undefined;
   const fee = t.preview ? `fee ${usd(t.preview.feeUsd6)}` : `fee ${line.market.risk.feeBps} bps`;
   // A guest gets exactly one account action: the hold's place becomes "Create an account to trade" (review: one
   // CTA, not a side button plus a disabled hold plus a warning line). The typed order is kept through sign-up.
@@ -88,7 +88,7 @@ export function TicketFooter({
         >
           {qty ? (
             <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.ink }}>
-              {qty} {line.symbol}
+              {qty}
             </Text>
           ) : null}
           {qty ? ` · impact ${pct(t.preview?.impactBps ?? 0n)} · ` : ""}

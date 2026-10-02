@@ -1,7 +1,8 @@
 /**
  * The trade blocker chain (F10, specs/flows.md): every ticket shows the **first** fixable cause and its action, in this
- * order — offline → geo (mainnet) → no account → insufficient Free to trade → market closed → price paused → leverage
- * above max → market full → below minimum → no gas → simulation revert. Pure: the apps pass what they already know.
+ * order — offline → geo (mainnet) → no account → opposite side → insufficient Free to trade → market closed → price
+ * paused → engine paused / settle-only (flow book C3 #9) → leverage above max → market full → below minimum → no gas →
+ * simulation revert. Pure: the apps pass what they already know.
  * Gas is last and is only a blocker when a top-up is impossible (S8.16b, D-171): a short balance is topped up at hold
  * time, so it never dead-ends a trade that would otherwise go through.
  * Reduce/close never go through this chain (allowed in every status, risk-math.md status matrix).
@@ -22,6 +23,10 @@ export type TradeBlocker =
   | { code: "MARKET_CLOSED"; opensAt: bigint | undefined }
   | { code: "REOPENING"; opensAt: bigint | undefined }
   | { code: "PRICE_PAUSED"; status: Extract<MarketStatus, "STALE" | "CIRCUIT" | "HALTED"> }
+  /** The guardian paused new risk (`AdminModule.sol`, ≤ 72 h, auto-expires); closing still works. */
+  | { code: "ENGINE_PAUSED"; until: bigint }
+  /** Settle-only: the engine is winding down — new positions are off for good; closing still works. */
+  | { code: "SETTLE_ONLY" }
   | { code: "LEVERAGE_ABOVE_MAX"; maxLeverageX: number }
   | { code: "MARKET_FULL"; maxNotionalUsd6: bigint }
   | { code: "PRICE_IMPACT" }
@@ -57,6 +62,8 @@ export interface TradeGateInput {
   simulationRevert: string | undefined;
   /** The side of the position already open in this market, if any. */
   heldLong?: boolean;
+  /** The engine's guardian state (`pausedUntil` unix s, `settleOnly`) and the clock it is compared with. */
+  protocol?: { pausedUntil: bigint; settleOnly: boolean; now: bigint };
 }
 
 export function firstTradeBlocker(input: TradeGateInput): TradeBlocker | undefined {
@@ -72,6 +79,10 @@ export function firstTradeBlocker(input: TradeGateInput): TradeBlocker | undefin
   if (input.status === "REOPENING") return { code: "REOPENING", opensAt: input.opensAt };
   if (input.status === "STALE" || input.status === "CIRCUIT" || input.status === "HALTED") {
     return { code: "PRICE_PAUSED", status: input.status };
+  }
+  if (input.protocol?.settleOnly) return { code: "SETTLE_ONLY" };
+  if (input.protocol && input.protocol.pausedUntil > input.protocol.now) {
+    return { code: "ENGINE_PAUSED", until: input.protocol.pausedUntil };
   }
   if (input.leverageX > input.maxLeverageX) return { code: "LEVERAGE_ABOVE_MAX", maxLeverageX: input.maxLeverageX };
   const full = issues.find((i) => i.kind === "MARKET_FULL");
@@ -157,6 +168,10 @@ export function blockerCopy(
       return { title: `${market} is reopening`, action: "New positions open in a few minutes; closing works now" };
     case "PRICE_PAUSED":
       return { title: `${market} price paused`, action: "Closing still works; opens resume when the price confirms" };
+    case "ENGINE_PAUSED":
+      return { title: `Trading paused · resumes ${durationUntil(b.until, now)}`, action: "Closing still works" };
+    case "SETTLE_ONLY":
+      return { title: "Closing only", action: "New positions are off; closing and withdrawing work" };
     case "LEVERAGE_ABOVE_MAX":
       return { title: `Max leverage is ${b.maxLeverageX}×`, action: `Set to ${b.maxLeverageX}×` };
     case "MARKET_FULL":

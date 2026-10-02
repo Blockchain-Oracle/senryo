@@ -1,4 +1,3 @@
-import { DECIMALS, formatUnits } from "@senryo/core";
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -13,7 +12,7 @@ import { pct, price18, priceDecimalsOf, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { type CandlePalette, type CandleStyle, saveCandleStyle, useCandleStyle } from "./candle-style";
-import { QUANTITY_DECIMALS } from "./constants";
+import { quantityText } from "./quantity";
 import type { useTicket } from "./useTicket";
 
 type TicketModel = ReturnType<typeof useTicket>;
@@ -95,10 +94,7 @@ export function ReviewOrder({
         <KeyValue label="Exposure" value={usd(t.notionalUsd6)} />
         {/* What the engine holds at its own initial-margin rate — less than the margin above below max leverage. */}
         <KeyValue label="Locked while open" value={p ? usd(p.marginUsd6) : "—"} />
-        <KeyValue
-          label="Quantity"
-          value={p ? `${formatUnits(p.sizeDelta, DECIMALS.e18, QUANTITY_DECIMALS)} ${line.symbol}` : "—"}
-        />
+        <KeyValue label="Quantity" value={p ? quantityText(line.marketId, p.sizeDelta) : "—"} />
         <KeyValue label="Estimated fill" value={p ? `$${price18(p.execPrice18, decimals)}` : "—"} />
         <KeyValue label="Fee" value={p ? usd(p.feeUsd6) : "—"} />
         <KeyValue

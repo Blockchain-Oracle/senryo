@@ -1,13 +1,12 @@
 import type { PositionView } from "@senryo/chain";
-import { DECIMALS, formatUnits, type PositionHealth } from "@senryo/core";
+import type { PositionHealth } from "@senryo/core";
 import type { LiveMarket } from "@senryo/query";
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MarginGauge } from "~/components/trade/MarginGauge";
+import { quantityText } from "~/features/trade/quantity";
 import { pct, price18, priceDecimalsOf, usd } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
-
-const SIZE_DECIMALS = 4;
 
 /**
  * The position's facts as a grid of quiet label-over-value cells, bare on the page (Fomo F13's "Invested / Avg.
@@ -31,7 +30,7 @@ export function PositionStats({
   return (
     <View style={styles.grid}>
       <View style={styles.row}>
-        <Stat label="Size" value={`${formatUnits(position.size, DECIMALS.e18, SIZE_DECIMALS)} oz`} />
+        <Stat label="Size" value={quantityText(market.marketId, position.size)} />
         <Stat label="Exposure" value={usd(exposureUsd6)} />
       </View>
       <View style={styles.row}>

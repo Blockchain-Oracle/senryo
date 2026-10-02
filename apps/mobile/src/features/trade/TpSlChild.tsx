@@ -1,6 +1,5 @@
 import type { PositionView } from "@senryo/chain";
-import { ENGINE_MARKETS } from "@senryo/config";
-import { DECIMALS, formatUnits, previewDecrease, RISK } from "@senryo/core";
+import { previewDecrease, RISK } from "@senryo/core";
 import type { LiveMarket } from "@senryo/query";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -14,8 +13,9 @@ import { fire } from "~/feedback/fire";
 import { pct, price18, priceDecimalsOf, signedUsd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { QUANTITY_DECIMALS, TRIGGER_SUGGESTIONS_BPS } from "./constants";
+import { TRIGGER_SUGGESTIONS_BPS } from "./constants";
 import { PlannedTriggers } from "./PlannedTriggers";
+import { quantityText } from "./quantity";
 import { TriggerInput } from "./TriggerInput";
 import {
   bpsFromPrice,
@@ -94,7 +94,6 @@ function HeldTriggers({
   const decimals = priceDecimalsOf(market.marketId);
   const liq = p.health?.liqPrice18;
   const side = position.isLong ? "Long" : "Short";
-  const symbol = ENGINE_MARKETS.find((m) => m.id === market.marketId)?.symbol ?? "";
   const toneColor = { up: color.up, down: color.down, warn: color.warn, muted: color.text3 } as const;
 
   const priceOf = (kind: TriggerKind) => parsePrice(fields[kind].price);
@@ -158,7 +157,7 @@ function HeldTriggers({
     <>
       <View style={styles.identity} accessible accessibilityRole="text">
         <Text style={[TYPE.rowStrong, { color: color.ink }]}>
-          {market.name} · {side} · {formatUnits(position.size, DECIMALS.e18, QUANTITY_DECIMALS)} {symbol}
+          {market.name} · {side} · {quantityText(market.marketId, position.size)}
         </Text>
         <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
           {network.modeLabel} · your current position only. The size is fixed when you save; an order you are still
