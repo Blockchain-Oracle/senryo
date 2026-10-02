@@ -12,7 +12,7 @@ import { type ReactNode, useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ReadingView, Skeleton } from "~/components/kit/states";
-import { TraderAvatar, traderName } from "~/features/search/TraderAvatar";
+import { TraderAvatar, traderName } from "~/features/social/TraderAvatar";
 import { useSessionGate } from "~/features/social/useSocialAccount";
 import { fire } from "~/feedback/fire";
 import { watchRoute } from "~/lib/constants/routes";

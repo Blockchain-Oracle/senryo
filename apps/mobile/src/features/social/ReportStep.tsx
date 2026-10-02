@@ -43,7 +43,7 @@ export function ReportStep({
   const { color } = useTheme();
   return (
     <>
-      <SheetHeading title={`Report this ${what}`} body="What’s wrong with it? A person reviews every report." />
+      <SheetHeading title={`Report this ${what}`} body="A person reviews every report" />
       <Panel>
         {REPORT_REASONS.map((value) => (
           <ListRow

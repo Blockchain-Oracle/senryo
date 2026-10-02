@@ -1,7 +1,8 @@
 /**
- * The overflow of a post or a profile (S12b.6, App Store 1.2): Report, Mute, Block — and Delete on your own post. One
- * compact sheet that walks menu → confirmation → result, so every action is confirmed before it happens and says what
- * it did after. Mute and block are private to you; a block also removes follows both ways (the api's rule).
+ * The overflow of a post or a profile (F5, S12b.6, App Store 1.2): Report, Mute, Block — and Delete on your own thesis
+ * or reply (a trade post is onchain, so it never offers Delete). One compact sheet that walks menu → confirmation
+ * (title + one line + button) → result ("@kai muted"). Blocked & muted opens it straight on an un-mute or un-block.
+ * Mute and block are private to you; a block also removes follows both ways (the api's rule).
  */
 import type { Address } from "@senryo/account";
 import { type ReportReason, SUPPORT_EMAIL } from "@senryo/api-client";
@@ -23,11 +24,13 @@ export interface ActionTarget {
   author: Address;
   /** The post acted on; without one the target is the profile. */
   post: string | undefined;
-  /** The post is the thread's own thesis (deleting or reporting it ends the thread for you). */
+  /** The post is the thread's own post (deleting or reporting it ends the thread for you). */
   thesis: boolean;
+  /** The post is a trade post: reportable, never deletable. */
+  trade: boolean;
 }
 
-type Act = "mute" | "unmute" | "block" | "unblock" | "delete";
+export type Act = "mute" | "unmute" | "block" | "unblock" | "delete";
 type Step =
   | { at: "menu" }
   | { at: "report"; reason: ReportReason | undefined }
@@ -44,10 +47,13 @@ interface ConfirmCopy {
 
 export function SocialActions({
   target,
+  direct,
   onBusy,
   onLeave,
 }: {
   target: ActionTarget;
+  /** Open on this act's confirmation; Cancel then closes the sheet. */
+  direct?: Act | undefined;
   /** The sheet stays attached while a write is in flight. */
   onBusy: (busy: boolean) => void;
   /** What was shown under the sheet no longer exists for this person: the page under it should go too. */
@@ -66,7 +72,7 @@ export function SocialActions({
   const mute = useRelationToggle("mutes", session);
   const block = useRelationToggle("blocks", session);
   const remove = useDeletePost(session);
-  const [step, setStep] = useState<Step>({ at: "menu" });
+  const [step, setStep] = useState<Step>(direct ? { at: "confirm", act: direct } : { at: "menu" });
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string>();
 
@@ -77,7 +83,7 @@ export function SocialActions({
       : { address: target.author, handle: null, displayName: null },
   );
   const mine = sameAddress(target.author, me);
-  const what = target.post ? (target.thesis ? "post" : "reply") : "profile";
+  const what = target.post ? (target.trade ? "trade" : target.thesis ? "post" : "reply") : "profile";
   const has = (reading: typeof mutes) =>
     (reading.status === "fresh" || reading.status === "stale") &&
     reading.value.some((entry) => sameAddress(entry.address, target.author));
@@ -95,7 +101,7 @@ export function SocialActions({
       setStep({ at: "done", ...done });
     } catch (error) {
       fire("fail");
-      setFailure(socialErrorCopy(error, "That didn’t go through. Check your connection and try again."));
+      setFailure(socialErrorCopy(error, "That didn’t go through · try again"));
     } finally {
       setBusy(false);
       onBusy(false);
@@ -107,42 +113,42 @@ export function SocialActions({
       case "mute":
         return {
           title: `Mute ${who}?`,
-          body: "Their posts and trades leave your feed. They aren’t told, and you can still open their profile.",
+          body: "Their posts and trades leave your feed",
           action: "Mute",
           variant: "primary",
-          done: { title: `${who} is muted`, body: "Unmute from the same menu on their profile or posts." },
+          done: { title: `${who} muted`, body: "They aren’t told" },
         };
       case "unmute":
         return {
           title: `Unmute ${who}?`,
-          body: "Their posts and trades return to your feed.",
+          body: "Their posts and trades return to your feed",
           action: "Unmute",
           variant: "primary",
-          done: { title: `${who} is unmuted`, body: "Their activity shows in your feed again." },
+          done: { title: `${who} unmuted`, body: "Back in your feed" },
         };
       case "block":
         return {
           title: `Block ${who}?`,
-          body: "Neither of you can follow, reply to or like the other, and each of you leaves the other’s feed. Follows between you are removed.",
+          body: "No follows, replies or likes, both ways",
           action: "Block",
           variant: "destructive",
-          done: { title: `${who} is blocked`, body: "Unblock from the same menu on their profile." },
+          done: { title: `${who} blocked`, body: "Follows between you are removed" },
         };
       case "unblock":
         return {
           title: `Unblock ${who}?`,
-          body: "You can follow and reply to each other again. Follows that were removed don’t come back by themselves.",
+          body: "Removed follows don’t come back",
           action: "Unblock",
           variant: "primary",
-          done: { title: `${who} is unblocked`, body: "You can follow them again from their profile." },
+          done: { title: `${who} unblocked`, body: "You can follow each other again" },
         };
       case "delete":
         return {
           title: `Delete this ${what}?`,
-          body: target.thesis ? "Its replies and likes go with it. This can’t be undone." : "This can’t be undone.",
+          body: target.thesis ? "Its replies and likes go too" : "This can’t be undone",
           action: "Delete",
           variant: "destructive",
-          done: { title: "Deleted", body: `Your ${what} is gone from this network.` },
+          done: { title: "Deleted", body: `Your ${what} is gone` },
         };
     }
   };
@@ -179,7 +185,7 @@ export function SocialActions({
             () => report.mutateAsync(post ? { post, reason } : { profile: target.author, reason }),
             {
               title: "Report sent",
-              body: `Thank you. We review every report and act on what breaks the rules${post ? "; this is now hidden for you" : ""}. Urgent? Write to ${SUPPORT_EMAIL}.`,
+              body: `${post ? "Hidden for you · " : ""}urgent? ${SUPPORT_EMAIL}`,
             },
             post !== undefined && target.thesis,
           );
@@ -207,7 +213,8 @@ export function SocialActions({
             disabled={busy}
             onPress={() => {
               setFailure(undefined);
-              setStep({ at: "menu" });
+              if (direct) close();
+              else setStep({ at: "menu" });
             }}
           />
         </View>
@@ -230,10 +237,10 @@ export function SocialActions({
       <SheetHeading title={target.post ? `This ${what}` : who} />
       <View style={styles.rows}>
         {mine ? (
-          target.post ? (
+          target.post && !target.trade ? (
             <SheetRow
               title={`Delete ${what}`}
-              detail={target.thesis ? "Its replies and likes go with it" : "Remove your reply from the thread"}
+              detail={target.thesis ? "Its replies and likes go too" : "Remove it from the thread"}
               leading={<Trash2 {...icon} color={color.destructive} />}
               onPress={() => setStep({ at: "confirm", act: "delete" })}
             />
@@ -243,21 +250,21 @@ export function SocialActions({
             <SheetRow
               index={0}
               title={`Report ${what}`}
-              detail="Spam, scams, harassment and more"
+              detail="Spam, scams, harassment, more"
               leading={<Flag {...icon} color={color.ink} />}
               onPress={() => setStep({ at: "report", reason: undefined })}
             />
             <SheetRow
               index={1}
               title={muted ? `Unmute ${who}` : `Mute ${who}`}
-              detail={muted ? "Show their activity in your feed again" : "Hide their posts and trades from your feed"}
+              detail={muted ? "Back in your feed" : "Hide them from your feed"}
               leading={<VolumeX {...icon} color={color.ink} />}
               onPress={() => setStep({ at: "confirm", act: muted ? "unmute" : "mute" })}
             />
             <SheetRow
               index={2}
               title={blocked ? `Unblock ${who}` : `Block ${who}`}
-              detail={blocked ? "Let you follow and reply to each other again" : "Stop all contact, both ways"}
+              detail={blocked ? "Allow contact again" : "No contact, both ways"}
               leading={<Ban {...icon} color={color.destructive} />}
               onPress={() => setStep({ at: "confirm", act: blocked ? "unblock" : "block" })}
             />

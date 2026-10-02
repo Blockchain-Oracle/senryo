@@ -1,40 +1,47 @@
 /**
- * A trader's public profile (Fomo F16/F19 adapted, with F13's Follow beside the identity; screen inventory "Trader
- * profile / public watch"): avatar, name, @handle, bio, following / followers that open their lists, when they joined,
- * their result on the board per period, their open positions when they share this network's trades, and what the
- * feed last showed of them. A profile is served per network: unlisted and unknown both answer 404, and the page says
- * exactly that. Nothing here signs or moves money.
+ * Another trader's profile (F2 for others; Fomo F16's layout, the same grammar as the own profile): Share and ⋯
+ * (report / mute / block) as round utilities in the bar; who they are with Follow · Send; the period hero (realized
+ * P&L, 24h · 7d · 30d · All, rank or "Not ranked"); then underline tabs Positions · Trades — positions when they share
+ * this network's trades, each with Trade this, and their trades and theses as feed rows. A profile is served per
+ * network: unlisted and unknown both answer 404, and the page says "Not public on Mainnet" with the explorer. Nothing
+ * here signs or moves money.
  */
-import type { Address } from "@senryo/account";
 import type { PublicProfile } from "@senryo/api-client";
-import { explorerAddressUrl, WEB_ORIGIN } from "@senryo/config";
-import { socialKeys, useFeed, useFollowState, useProfile, useQueryEnv } from "@senryo/query";
+import { explorerAddressUrl } from "@senryo/config";
+import { socialKeys, useFeed, useProfile, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router, Stack } from "expo-router";
-import { Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Linking, StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { ErrorState, Skeleton } from "~/components/kit/states";
-import { Ellipsis, Share as ShareIcon } from "~/components/kit/symbols";
+import { Ellipsis, Share2 } from "~/components/kit/symbols";
+import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
-import { fire } from "~/feedback/fire";
-import { followListRoute, profileActionsRoute, ROUTES } from "~/lib/constants/routes";
+import { profileActionsRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { FeedSkeleton } from "./Feed";
 import { FeedRow } from "./FeedRow";
-import { FollowButton } from "./FollowButton";
-import { handleOf, isNotFound, monthYear, nameOf, sameAddress } from "./format";
-import { ModeBadge, QuietLine, SectionHeading } from "./Quiet";
-import { TraderAvatar } from "./TraderAvatar";
+import { isNotFound, sameAddress } from "./format";
+import { QuietLine } from "./Quiet";
+import { profileLink, shareLink } from "./share-links";
+import { TraderIdentity } from "./TraderIdentity";
 import { TraderPositions } from "./TraderPositions";
 import { TraderStanding } from "./TraderStanding";
 import { useQueryError } from "./useQueryError";
 import { useSessionGate } from "./useSocialAccount";
 
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
-/** Rows of the feed skeleton under "Recent activity". */
-const ACTIVITY_LOADING_ROWS = 2;
+/** Rows of the feed skeleton under Trades. */
+const TRADES_LOADING_ROWS = 2;
+
+const TABS = [
+  { value: "positions", label: "Positions" },
+  { value: "trades", label: "Trades" },
+] as const;
+type Tab = (typeof TABS)[number]["value"];
 
 /** `lookup` is an address or a handle; the api resolves either on the active network. */
 export function TraderProfile({ lookup }: { lookup: string }) {
@@ -45,7 +52,7 @@ export function TraderProfile({ lookup }: { lookup: string }) {
   const error = useQueryError(key);
   const profile = reading.status === "fresh" || reading.status === "stale" ? reading.value : undefined;
   return (
-    <Screen>
+    <Screen onRefresh={() => client.invalidateQueries({ queryKey: socialKeys.chain(env.chainId) })}>
       <Stack.Screen
         options={{ title: "", ...(profile ? { headerRight: () => <HeaderActions profile={profile} /> } : {}) }}
       />
@@ -57,19 +64,30 @@ export function TraderProfile({ lookup }: { lookup: string }) {
           <ErrorState diagnosis={reading.error} retry={() => void client.invalidateQueries({ queryKey: key })} />
         )
       ) : null}
-      {profile ? (
-        <>
-          <Identity profile={profile} />
-          <TraderStanding address={profile.address} />
-          <TraderPositions address={profile.address} shared={profile.publicTrades} />
-          <ProfileActivity address={profile.address} />
-        </>
-      ) : null}
+      {profile ? <Loaded profile={profile} /> : null}
     </Screen>
   );
 }
 
-/** Round utilities in the header (F16): share the read-only link, and the overflow for someone else's profile. */
+function Loaded({ profile }: { profile: PublicProfile }) {
+  const [tab, setTab] = useState<Tab>("positions");
+  return (
+    <>
+      <TraderIdentity profile={profile} />
+      <TraderStanding address={profile.address} />
+      <View style={styles.section}>
+        <UnderlineTabs options={TABS} value={tab} onChange={setTab} label="Their activity" />
+        {tab === "positions" ? (
+          <TraderPositions address={profile.address} shared={profile.publicTrades} />
+        ) : (
+          <TraderTrades profile={profile} />
+        )}
+      </View>
+    </>
+  );
+}
+
+/** Round utilities in the header (F16): Share the profile link, and ⋯ for someone else's profile. */
 function HeaderActions({ profile }: { profile: PublicProfile }) {
   const { color } = useTheme();
   const network = useNetwork();
@@ -79,11 +97,9 @@ function HeaderActions({ profile }: { profile: PublicProfile }) {
     <View style={styles.utilities}>
       <UtilityButton
         label="Share this profile"
-        onPress={() =>
-          void Share.share({ message: `${WEB_ORIGIN}/watch/?address=${profile.address}&chainId=${network.chainId}` })
-        }
+        onPress={() => shareLink(profileLink(profile.address, network.chainId))}
       >
-        <ShareIcon size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+        <Share2 size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
       </UtilityButton>
       {own ? null : (
         <UtilityButton
@@ -101,116 +117,32 @@ function HeaderActions({ profile }: { profile: PublicProfile }) {
   );
 }
 
-function Identity({ profile }: { profile: PublicProfile }) {
-  const { color } = useTheme();
-  const gate = useSessionGate();
-  const own = sameAddress(profile.address, gate.address);
-  const relation = useFollowState(
-    gate.address,
-    gate.status === "ready" && !own ? profile.address : undefined,
-    gate.session,
-  );
-  const followsYou = (relation.status === "fresh" || relation.status === "stale") && relation.value.followsYou;
-  const name = nameOf(profile);
-  const joined = monthYear(profile.createdAt);
-  return (
-    <View style={styles.identity}>
-      <View style={styles.top}>
-        <TraderAvatar avatar={profile.avatar} address={profile.address} size={SIZE.avatarLg} />
-        {own ? (
-          <Button
-            label="Edit profile"
-            variant="outline"
-            size="sm"
-            block={false}
-            onPress={() => router.navigate(ROUTES.profileSettings as Href)}
-            style={styles.centered}
-          />
-        ) : (
-          <FollowButton other={profile.address} name={name} />
-        )}
-      </View>
-      <View style={styles.names}>
-        <Text accessibilityRole="header" style={[TYPE.sheetTitle, { color: color.ink }]}>
-          {name}
-        </Text>
-        <View style={styles.handle}>
-          <Text selectable style={[TYPE.row, { color: color.text3 }]}>
-            {handleOf(profile)}
-          </Text>
-          {followsYou ? (
-            <Text style={[TYPE.chipLabel, styles.tag, { color: color.text2, backgroundColor: color.raised2 }]}>
-              Follows you
-            </Text>
-          ) : null}
-        </View>
-      </View>
-      {profile.bio ? <Text style={[TYPE.body, { color: color.text2 }]}>{profile.bio}</Text> : null}
-      <View style={styles.counts}>
-        <Count value={profile.following} label="Following" address={profile.address} list="following" />
-        <Count
-          value={profile.followers}
-          label={profile.followers === 1 ? "Follower" : "Followers"}
-          address={profile.address}
-          list="followers"
-        />
-      </View>
-      <View style={styles.meta}>
-        <ModeBadge />
-        {joined ? <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Joined {joined}</Text> : null}
-      </View>
-    </View>
-  );
-}
-
-/** "3 Following": the figure in full ink, the word quiet (F16); opens the list. */
-function Count({
-  value,
-  label,
-  address,
-  list,
-}: {
-  value: number;
-  label: string;
-  address: Address;
-  list: "followers" | "following";
-}) {
-  const { color } = useTheme();
-  return (
-    <Pressable
-      onPress={() => {
-        fire("tick");
-        router.push(followListRoute(address, list) as Href);
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`${value} ${label}`}
-      hitSlop={SPACE.md}
-    >
-      <Text style={[TYPE.row, { color: color.text2 }]}>
-        <Text style={[TYPE.rowStrong, { color: color.ink }]}>{value}</Text> {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-/** What the feed last showed of this trader: their rows in the latest page of this network's public activity. */
-export function ProfileActivity({ address }: { address: Address }) {
-  const feed = useFeed("global", undefined, address);
+/** Their trades and theses as feed rows (the public feed by actor); private trades leave only their theses. */
+function TraderTrades({ profile }: { profile: PublicProfile }) {
+  const network = useNetwork();
+  const feed = useFeed("global", undefined, profile.address);
   const { reading } = feed;
-  const rows = reading.status === "fresh" || reading.status === "stale" ? reading.value : undefined;
+  if (reading.status === "unknown") return <FeedSkeleton rows={TRADES_LOADING_ROWS} />;
+  if (reading.status === "failed") return <ErrorState diagnosis={reading.error} />;
+  const rows = reading.value;
+  if (rows.length === 0) {
+    return <QuietLine tight text={profile.publicTrades ? "No trades yet" : `Trades private on ${network.modeLabel}`} />;
+  }
   return (
-    <View style={styles.section}>
-      <SectionHeading title="Recent activity" />
-      {reading.status === "unknown" ? <FeedSkeleton rows={ACTIVITY_LOADING_ROWS} /> : null}
-      {reading.status === "failed" ? (
-        <QuietLine tight text="The feed couldn’t be loaded. Pull down to try again." />
-      ) : null}
-      {rows && rows.length === 0 ? <QuietLine tight text="No shared activity yet" /> : null}
-      {rows?.map((item, i) => (
+    <View>
+      {rows.map((item, i) => (
         <FeedRow key={item.id} item={item} index={i} />
       ))}
       {feed.hasMore ? (
-        <Button label="More activity" variant="ghost" loading={feed.loadingMore} onPress={feed.loadMore} />
+        <Button
+          label="Show more"
+          variant="ghost"
+          size="sm"
+          block={false}
+          loading={feed.loadingMore}
+          onPress={feed.loadMore}
+          style={styles.center}
+        />
       ) : null}
     </View>
   );
@@ -222,11 +154,11 @@ function NotPublic({ lookup }: { lookup: string }) {
   const address = ADDRESS.test(lookup) ? lookup : undefined;
   return (
     <QuietLine
-      text="This profile isn’t public on this network"
+      text={`Not public on ${network.modeLabel}`}
       {...(address
         ? {
             action: {
-              label: `Open in the ${network.modeLabel} explorer`,
+              label: "Explorer",
               onPress: () => void Linking.openURL(explorerAddressUrl(network.chainId, address)),
             },
           }
@@ -238,7 +170,9 @@ function NotPublic({ lookup }: { lookup: string }) {
 const NAME_WIDTH = "50%";
 const HANDLE_WIDTH = "32%";
 const BIO_WIDTH = "86%";
+const AVATAR = 64;
 
+/** The avatar disc and three lines while the profile loads (F2 states). */
 function ProfileSkeleton() {
   const { color } = useTheme();
   return (
@@ -246,7 +180,7 @@ function ProfileSkeleton() {
       accessibilityRole="progressbar"
       accessibilityLabel="Loading the profile"
       accessibilityState={{ busy: true }}
-      style={styles.identity}
+      style={styles.skeleton}
     >
       <View style={[styles.disc, { backgroundColor: color.skeleton }]} />
       <Skeleton width={NAME_WIDTH} height={TYPE.sheetTitle.lineHeight ?? SIZE.skeletonLine} />
@@ -258,14 +192,8 @@ function ProfileSkeleton() {
 
 const styles = StyleSheet.create({
   utilities: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  identity: { gap: SPACE.md },
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  centered: { alignSelf: "center" },
-  names: { gap: SPACE.xxs },
-  handle: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  tag: { borderRadius: RADIUS.xs, paddingHorizontal: SPACE.sm, paddingVertical: SPACE.xxs, overflow: "hidden" },
-  counts: { flexDirection: "row", alignItems: "center", gap: SPACE.xl },
-  meta: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  section: { gap: SPACE.sm },
-  disc: { width: SIZE.avatarLg, height: SIZE.avatarLg, borderRadius: RADIUS.pill },
+  section: { gap: SPACE.md },
+  center: { alignSelf: "center" },
+  skeleton: { gap: SPACE.md },
+  disc: { width: AVATAR, height: AVATAR, borderRadius: RADIUS.pill },
 });

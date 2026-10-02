@@ -1,57 +1,85 @@
+/**
+ * The search field (Fomo F31; behaviour ported from 21st.dev arunachalam/expandable-search-bar, id 7904, with the
+ * focus-to-expand of moumensoliman/expanding-search-dock, id 10571 — Framer Motion on the web): a filled pill floating
+ * low on the page, narrower than the dock at rest (F31 measures 44 pt in from each edge), that springs out to the
+ * dock's width when focused (stiffness 260, damping 26 — the source's spring) and back when it is left empty. A search
+ * glyph leads; "Paste" sits inside while it is empty, and a clear control scales in once there is text. It rides
+ * above the keyboard. F31 is the one place the reference uses a full pill, so this field does too.
+ */
 import { SEARCH_QUERY_MAX_CHARS } from "@senryo/api-client";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import Animated, { useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
-import { X } from "~/components/kit/symbols";
+import Animated, {
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  ZoomIn,
+} from "react-native-reanimated";
+import { Search, X } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { readClipboard } from "~/lib/clipboard";
-import { DOCK, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { DOCK, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 
 /** The field's height: the app's input height (F31 measures 49 pt). */
 export const SEARCH_FIELD_HEIGHT = SIZE.inputHeight;
+/** At rest the field sits this much further in than the dock on each side (F31: 44 pt vs the dock's edge). */
+const REST_EXTRA_INSET = 32;
+/** The source's spring (expandable-search-bar: stiffness 260, damping 26). */
+const EXPAND_SPRING = { stiffness: 260, damping: 26 } as const;
 
-/** iOS asks before a paste; counted as the app's own prompt, the privacy plate stays down behind it. */
-
-/**
- * The search field (Fomo F31): a pill-shaped filled field floating low on the page — above the dock, and above the
- * keyboard once it is up — with "Paste" inside it while it is empty and a clear control once there is text. It lines
- * up with the dock row's edges. F31 is the one place the reference uses a full pill, so this field does too.
- */
 export function SearchField({
   value,
   onChange,
   bottom,
+  placeholder,
 }: {
   value: string;
   onChange: (text: string) => void;
   /** Distance from the screen's bottom edge at rest (the dock's footprint). */
   bottom: number;
+  placeholder: string;
 }) {
   const { color } = useTheme();
+  const reduce = useReducedMotion();
   const keyboard = useAnimatedKeyboard();
-  const lift = useAnimatedStyle(() => ({
-    transform: [{ translateY: -Math.max(0, keyboard.height.value + SPACE.sm - bottom) }],
-  }));
+  const [focused, setFocused] = useState(false);
+  const open = focused || value !== "";
+  const expand = useSharedValue(open ? 1 : 0);
+  useEffect(() => {
+    expand.value = reduce ? (open ? 1 : 0) : withSpring(open ? 1 : 0, EXPAND_SPRING);
+  }, [open, reduce, expand]);
+  const frame = useAnimatedStyle(() => {
+    const side = DOCK.inset + REST_EXTRA_INSET * (1 - expand.value);
+    return {
+      left: side,
+      right: side,
+      transform: [{ translateY: -Math.max(0, keyboard.height.value + SPACE.sm - bottom) }],
+    };
+  });
   const paste = async () => {
     const text = (await readClipboard()).trim();
     if (text) onChange(text.slice(0, SEARCH_QUERY_MAX_CHARS));
   };
   return (
-    <Animated.View style={[styles.wrap, { bottom }, lift]}>
+    <Animated.View style={[styles.wrap, { bottom }, frame]}>
       <View style={[styles.field, { backgroundColor: color.raised2 }]}>
+        <Search size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
         <TextInput
           value={value}
           onChangeText={onChange}
-          placeholder="Search markets and traders"
+          placeholder={placeholder}
           placeholderTextColor={color.text3}
-          autoFocus
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
           maxLength={SEARCH_QUERY_MAX_CHARS}
-          accessibilityLabel="Search markets and traders"
+          accessibilityLabel={placeholder}
           selectionColor={color.primary}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           style={[TYPE.body, styles.input, { color: color.ink }]}
         />
         {value === "" ? (
@@ -59,9 +87,11 @@ export function SearchField({
             <Text style={[TYPE.modeLabel, { color: color.ink }]}>Paste</Text>
           </FieldControl>
         ) : (
-          <FieldControl label="Clear search" onPress={() => onChange("")}>
-            <X size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.ink} />
-          </FieldControl>
+          <Animated.View {...(reduce ? {} : { entering: ZoomIn.duration(TIMING.press) })}>
+            <FieldControl label="Clear search" onPress={() => onChange("")}>
+              <X size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.ink} />
+            </FieldControl>
+          </Animated.View>
         )}
       </View>
     </Animated.View>
@@ -93,13 +123,13 @@ function FieldControl({ label, onPress, children }: { label: string; onPress: ()
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: "absolute", left: DOCK.inset, right: DOCK.inset },
+  wrap: { position: "absolute" },
   field: {
     flexDirection: "row",
     alignItems: "center",
     gap: SPACE.sm,
     height: SEARCH_FIELD_HEIGHT,
-    paddingLeft: SPACE.lgPlus,
+    paddingLeft: SPACE.lg,
     paddingRight: SPACE.sm + SPACE.xxs,
     borderRadius: RADIUS.pill,
   },

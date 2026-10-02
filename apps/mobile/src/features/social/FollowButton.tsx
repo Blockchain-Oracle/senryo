@@ -1,12 +1,14 @@
 /**
- * Follow / Following (Fomo F13/F30): the filled primary invites, the quiet plate says it is done; a tap toggles and the
- * button holds its width while the write is in flight. Following is not copy trading and moves no money. A guest's tap
- * opens the account invitation; a block in either direction is said on the button, not discovered on tap.
+ * Follow / Following (Fomo F13/F30, F3): the filled blue invites, the quiet plate says it is done; a tap toggles at once
+ * (no confirm) and the button holds its width while the write is in flight. Following is not copy trading and moves no
+ * money. A guest's tap opens the account invitation; a block in either direction is said on the button ("Blocked"),
+ * not discovered on tap; the 1,000 cap reads "Limit reached".
  *
  * What it shows before a tap: the caller's `hint` when the list already knows (a row in your own Following), else the
  * session's answer once a session exists, else your public Following list. It never raises a prompt by being on screen.
  */
 import type { Address } from "@senryo/account";
+import { ApiError } from "@senryo/api-client";
 import { useFollowList, useFollowState, useFollowToggle } from "@senryo/query";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -30,6 +32,7 @@ export function FollowButton({ other, name, hint }: { other: Address; name: stri
   const mine = useFollowList(hint === undefined && !asked ? me : undefined, "following");
   const write = useFollowToggle(me, session);
   const [answer, setAnswer] = useState<boolean>();
+  const [capped, setCapped] = useState(false);
   if (sameAddress(me, other)) return null;
 
   const known = state.status === "fresh" || state.status === "stale" ? state.value : undefined;
@@ -40,6 +43,9 @@ export function FollowButton({ other, name, hint }: { other: Address; name: stri
   const following = answer ?? known?.following ?? hint ?? listed ?? false;
   if (known?.blocked)
     return <Button label="Blocked" variant="secondary" size="sm" block={false} disabled style={styles.button} />;
+  if (capped && !following) {
+    return <Button label="Limit reached" variant="secondary" size="sm" block={false} disabled style={styles.button} />;
+  }
 
   const toggle = () => {
     if (gate.status === "guest" || !session) {
@@ -55,9 +61,13 @@ export function FollowButton({ other, name, hint }: { other: Address; name: stri
         },
         onError: (error) => {
           fire("fail");
+          if (error instanceof ApiError && error.code === "FOLLOW_LIMIT") {
+            setCapped(true);
+            return;
+          }
           notify({
-            title: following ? `Couldn’t unfollow ${name}` : `Couldn’t follow ${name}`,
-            description: socialErrorCopy(error, "Check your connection and try again."),
+            title: following ? "Couldn’t unfollow" : "Couldn’t follow",
+            description: socialErrorCopy(error, "Tap to retry"),
             tone: "warning",
           });
         },

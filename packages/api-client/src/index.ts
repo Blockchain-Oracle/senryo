@@ -21,5 +21,6 @@ export * from "./routes/profile.ts";
 export * from "./routes/starter.ts";
 export * from "./routes/storage.ts";
 export * from "./routes/swap.ts";
+export * from "./routes/trade.ts";
 export * from "./social.ts";
 export * from "./ws.ts";

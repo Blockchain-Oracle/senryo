@@ -1,5 +1,5 @@
 import { capabilitiesOf, useAccountRisk, useWalletCollateral } from "@senryo/query";
-import { router, Stack } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -13,8 +13,12 @@ import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
-/** Send (the fan's first action; FT058/C38): to an address or @handle, behind a fresh passkey check. */
+/**
+ * Send (the fan's first action; FT058/C38): to an address or @handle, behind a fresh passkey check. `?to=` fills the
+ * recipient (a profile's Send, F6); it is resolved and shown in full before the passkey check, as typed ones are.
+ */
 export default function SendScreen() {
+  const { to } = useLocalSearchParams<{ to?: string }>();
   const { color } = useTheme();
   const network = useNetwork();
   const address = useAccount().hint?.address;
@@ -42,7 +46,12 @@ export default function SendScreen() {
       {source === "wallet" && address ? (
         <ReadingView reading={wallet} loading="plate" loadingLabel="Reading wallet funds">
           {(balances) => (
-            <SendToAddress key={`${network.chainId}:${address}:wallet`} wallet={balances} source="wallet" />
+            <SendToAddress
+              key={`${network.chainId}:${address}:wallet`}
+              wallet={balances}
+              source="wallet"
+              prefill={to}
+            />
           )}
         </ReadingView>
       ) : readOnly ? (
@@ -54,7 +63,9 @@ export default function SendScreen() {
         </View>
       ) : (
         <ReadingView reading={risk} loading="plate" loadingLabel="Reading what can leave">
-          {(snapshot) => <SendToAddress key={`${network.chainId}:${address}:trading`} snapshot={snapshot} />}
+          {(snapshot) => (
+            <SendToAddress key={`${network.chainId}:${address}:trading`} snapshot={snapshot} prefill={to} />
+          )}
         </ReadingView>
       )}
     </Screen>

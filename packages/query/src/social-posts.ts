@@ -18,11 +18,13 @@ import {
   type ReportRequest,
   socialDeleteRoute,
   threadRoute,
+  tradeAnchorRoute,
   unblockRoute,
   unlikeRoute,
   unmuteRoute,
 } from "@senryo/api-client";
 import { fromQuery } from "@senryo/core";
+import { PositionsDocument, positionsVars } from "@senryo/indexer-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useQueryEnv } from "./env.tsx";
 import { type SessionRunner, socialKeys } from "./social.ts";
@@ -38,6 +40,29 @@ function useSocialRefresh() {
   const env = useQueryEnv();
   const client = useQueryClient();
   return () => client.invalidateQueries({ queryKey: socialKeys.chain(env.chainId) });
+}
+
+/** Open positions a thesis may attach (F4 step 5): their indexer ids are what `positionId` names. */
+const ATTACHABLE_POSITIONS = 20;
+
+/** The account's indexed open positions on the active network, newest first (compose's "attach my position"). */
+export function useAttachablePositions(address: Address | undefined) {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: ["social", env.chainId, "attachable", (address ?? "0x").toLowerCase()] as const,
+    queryFn: ({ signal }) =>
+      env.indexer.request(
+        PositionsDocument,
+        positionsVars(
+          { chainId: env.chainId, user: address ?? "0x" },
+          { status: ["OPEN"], limit: ATTACHABLE_POSITIONS },
+        ),
+        signal,
+      ),
+    enabled: address !== undefined,
+    staleTime: THREAD_STALE_MS,
+  });
+  return fromQuery(query);
 }
 
 /** A thesis with its replies (oldest first). A hidden / deleted post or an unlisted author reads as `failed` (404). */
@@ -74,13 +99,30 @@ export function useDeletePost(session: SessionRunner | undefined) {
   });
 }
 
-/** Like / unlike; the answer carries the new count for an optimistic row update. */
+/** What a like, reply, report or share acts on: a post, or a feed trade row whose post may not exist yet (F-D1). */
+export type PostTarget = { post: string } | { tradeRow: string };
+
+/** F-D1: a trade row's post, created on first use (idempotent); its id is what likes, replies and links use. */
+export function useTradePost() {
+  const env = useQueryEnv();
+  return useMutation({
+    mutationFn: (tradeRow: string) => env.api.call(tradeAnchorRoute, { params: { id: tradeRow } }),
+  });
+}
+
+/** Like / unlike; the answer carries the new count for an optimistic row update. A trade row gets its post first. */
 export function useLikeToggle(session: SessionRunner | undefined) {
   const env = useQueryEnv();
   const refresh = useSocialRefresh();
   return useMutation({
-    mutationFn: ({ id, like }: { id: string; like: boolean }) =>
-      run(session, () => env.api.call(like ? likeRoute : unlikeRoute, { params: { id } })),
+    mutationFn: ({ target, like }: { target: PostTarget; like: boolean }) =>
+      run(session, async () => {
+        const id =
+          "post" in target
+            ? target.post
+            : (await env.api.call(tradeAnchorRoute, { params: { id: target.tradeRow } })).id;
+        return env.api.call(like ? likeRoute : unlikeRoute, { params: { id } });
+      }),
     onSuccess: refresh,
   });
 }

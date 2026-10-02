@@ -18,10 +18,7 @@ export default function ComposeThesisSheet() {
     <Sheet onClose={() => router.back()} closeLabel="Close new thesis" dismissible={!create.isPending}>
       {guest || !session ? (
         <>
-          <SheetHeading
-            title="New thesis"
-            body="Posting needs an account. Create one with a passkey, then come back."
-          />
+          <SheetHeading title="New thesis" body="Posting needs an account" />
           <Button label="Create account" onPress={() => router.replace(ROUTES.accountRequired)} />
         </>
       ) : (

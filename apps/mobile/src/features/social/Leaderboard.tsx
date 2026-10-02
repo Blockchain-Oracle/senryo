@@ -1,51 +1,54 @@
 /**
- * People → Leaderboard (Fomo F29, C30; direction §9): period chips, one line saying what is ranked (with the full
- * definition a tap away), the "Your rank" plate, then the ranked rows — medal for the first three, avatar, name,
- * signed realized P&L in the mode's money and the markets traded. Practice and Mainnet are separate boards. An
- * account under the floor or without activity is "Not ranked": a rank is never shown as 0.
+ * People → Leaderboard (Fomo F29, F1): scope chips All · Following at the leading edge and the period chips 24h · 7d
+ * · 30d · All at the trailing edge (7d first, the api's default), what is ranked with its ⓘ sheet, the "Your rank"
+ * plate, then the ranked rows — medal or place, avatar, name over @handle, signed realized P&L in the mode's money and
+ * the markets traded. Following ranks you among the people you follow (it needs a session). Practice and Mainnet are
+ * separate boards. A rank is never 0: under the floor it is "Not ranked".
  */
-import type { Leaderboard as Board, LeaderboardEntry, LeaderboardPeriod } from "@senryo/api-client";
+import type { Leaderboard as Board, LeaderboardEntry, LeaderboardPeriod, LeaderboardScope } from "@senryo/api-client";
 import { socialKeys, useLeaderboard, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { MarkCluster } from "~/components/identity/MarkCluster";
-import { ChipRow } from "~/components/kit/ChipRow";
+import { PeriodChips } from "~/components/kit/PeriodChips";
 import { ErrorState, StaleStamp } from "~/components/kit/states";
 import { Info } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
-import { leaderboardInfoRoute } from "~/lib/constants/routes";
+import { leaderboardInfoRoute, ROUTES } from "~/lib/constants/routes";
 import { clockTime } from "~/lib/format";
 import { signedUsd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { RADIUS, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
 import { isNotComputed, marketOfSymbol, sameAddress } from "./format";
-import { DEFAULT_PERIOD, METRIC_COPY, PERIOD_OPTIONS, PERIOD_WORDS } from "./leaderboard-copy";
+import { DEFAULT_PERIOD, PERIOD_OPTIONS } from "./leaderboard-copy";
 import { PersonRow } from "./PersonRow";
 import { PeopleSkeleton, QuietLine } from "./Quiet";
 import { useQueryError } from "./useQueryError";
-import { useSocialAccount } from "./useSocialAccount";
+import { useSessionGate, useSocialAccount } from "./useSocialAccount";
 import { YourRank } from "./YourRank";
+
+const SCOPE_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "following", label: "Following" },
+] as const satisfies readonly { value: LeaderboardScope; label: string }[];
 
 /** The rank column: wide enough for a medal, and for three digits beside it. */
 const RANK_WIDTH = 28;
+/** Rows past this one arrive together (30 ms stagger, once per mount). */
+const STAGGER_ROWS = 8;
 
 export function Leaderboard() {
   const [period, setPeriod] = useState<LeaderboardPeriod>(DEFAULT_PERIOD);
+  const [scope, setScope] = useState<LeaderboardScope>("all");
   const { color } = useTheme();
-  const env = useQueryEnv();
-  const network = useNetwork();
-  const client = useQueryClient();
-  const reading = useLeaderboard(period, "all");
-  const key = socialKeys.leaderboard(env.chainId, period, "all");
-  const error = useQueryError(key);
-  const retry = () => void client.invalidateQueries({ queryKey: key });
-  const board = reading.status === "fresh" || reading.status === "stale" ? reading.value : undefined;
   return (
     <View style={styles.page}>
-      <View style={styles.bleed}>
-        <ChipRow options={PERIOD_OPTIONS} value={period} onChange={setPeriod} label="Ranking period" />
+      <View style={styles.controls}>
+        <PeriodChips options={SCOPE_OPTIONS} value={scope} onChange={setScope} label="Who is ranked" />
+        <PeriodChips options={PERIOD_OPTIONS} value={period} onChange={setPeriod} label="Ranking period" />
       </View>
       <Pressable
         onPress={() => {
@@ -53,32 +56,60 @@ export function Leaderboard() {
           router.push(leaderboardInfoRoute(period) as Href);
         }}
         accessibilityRole="button"
-        accessibilityLabel={`Ranked by ${METRIC_COPY.realized_pnl_after_fees_funding_borrow.line}, ${PERIOD_WORDS[period]}. How ranking works`}
+        accessibilityLabel="Ranked by realized P&L after fees. How ranking works"
         hitSlop={SPACE.sm}
         style={styles.definition}
       >
-        <Text style={[TYPE.rowDetail, styles.definitionText, { color: color.text3 }]}>
-          {board ? METRIC_COPY[board.metric].line : METRIC_COPY.realized_pnl_after_fees_funding_borrow.line} ·{" "}
-          {PERIOD_WORDS[period]}
-        </Text>
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Realized P&L after fees</Text>
         <Info size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
       </Pressable>
+      {scope === "following" ? <FollowingBoard period={period} /> : <BoardReading period={period} scope="all" />}
+    </View>
+  );
+}
+
+/** Following ranks among the people you follow: it waits for a session, never prompting by being on screen. */
+function FollowingBoard({ period }: { period: LeaderboardPeriod }) {
+  const gate = useSessionGate();
+  if (gate.status === "guest") {
+    return (
+      <QuietLine
+        text="Follow traders"
+        action={{ label: "Create account", onPress: () => router.push(ROUTES.accountRequired) }}
+      />
+    );
+  }
+  if (gate.status === "locked")
+    return <QuietLine text="Unlock to rank" action={{ label: "Unlock", onPress: gate.open }} />;
+  if (gate.status === "failed") {
+    return <QuietLine text="Couldn’t confirm it’s you" action={{ label: "Try again", onPress: gate.open }} />;
+  }
+  if (gate.status === "pending") return <PeopleSkeleton />;
+  return <BoardReading period={period} scope="following" />;
+}
+
+function BoardReading({ period, scope }: { period: LeaderboardPeriod; scope: LeaderboardScope }) {
+  const env = useQueryEnv();
+  const client = useQueryClient();
+  const reading = useLeaderboard(period, scope);
+  const key = socialKeys.leaderboard(env.chainId, period, scope);
+  const error = useQueryError(key);
+  const retry = () => void client.invalidateQueries({ queryKey: key });
+  if (reading.status === "unknown") return <PeopleSkeleton />;
+  if (reading.status === "failed") {
+    return isNotComputed(error) ? (
+      <QuietLine text="Board updating" action={{ label: "Retry", onPress: retry }} />
+    ) : (
+      <ErrorState diagnosis={reading.error} retry={retry} />
+    );
+  }
+  return (
+    <>
       {reading.status === "stale" ? (
         <StaleStamp at={reading.at} refreshing={reading.refreshing} failed={reading.error !== undefined} />
       ) : null}
-      {reading.status === "unknown" ? <PeopleSkeleton /> : null}
-      {reading.status === "failed" ? (
-        isNotComputed(error) ? (
-          <QuietLine
-            text={`The ${network.modeLabel} board isn’t computed yet. It is rebuilt every minute.`}
-            action={{ label: "Try again", onPress: retry }}
-          />
-        ) : (
-          <ErrorState diagnosis={reading.error} retry={retry} />
-        )
-      ) : null}
-      {board ? <Ranked board={board} /> : null}
-    </View>
+      <Ranked board={reading.value} />
+    </>
   );
 }
 
@@ -89,16 +120,23 @@ function Ranked({ board }: { board: Board }) {
     <>
       <YourRank board={board} />
       {board.entries.length === 0 ? (
-        <QuietLine text="Nobody is ranked for this period yet" />
+        <QuietLine text="No ranked traders yet" />
       ) : (
         <View>
-          {board.entries.map((entry) => (
-            <LeaderRow key={entry.address} entry={entry} you={sameAddress(entry.address, me)} />
+          {board.entries.map((entry, i) => (
+            <Animated.View
+              key={entry.address}
+              entering={FadeInDown.duration(TIMING.staggerItem)
+                .delay(Math.min(i, STAGGER_ROWS) * TIMING.stagger)
+                .withInitialValues({ transform: [{ translateY: STAGGER_RISE }] })}
+            >
+              <LeaderRow entry={entry} you={sameAddress(entry.address, me)} />
+            </Animated.View>
           ))}
         </View>
       )}
       <Text style={[TYPE.meta, styles.updated, { color: color.text3 }]}>
-        Updated {clockTime(Date.parse(board.computedAt))} · rebuilt every minute
+        Updated {clockTime(Date.parse(board.computedAt))}
       </Text>
     </>
   );
@@ -134,7 +172,8 @@ const PODIUM = 3;
 
 /**
  * The first three wear a medal — a filled disc in gold, silver, then the neutral raised plate (the palette has no
- * third metal) — with the place inside it; from fourth on the place is a quiet number (F29).
+ * third metal) with the place inside it (medal size after 21st.dev arihantcodes_1f7b8c4d/leaderboard-table, id 30672);
+ * from fourth on the place is a quiet number (F29).
  */
 function Rank({ rank }: { rank: number }) {
   const { color } = useTheme();
@@ -152,10 +191,14 @@ function Rank({ rank }: { rank: number }) {
 
 const styles = StyleSheet.create({
   page: { gap: SPACE.lg },
-  /** The chip row carries its own gutter (it is built to run edge to edge under a header). */
-  bleed: { marginHorizontal: -SIZE.gutter },
-  definition: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  definitionText: { flexShrink: 1 },
+  controls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    rowGap: SPACE.sm,
+  },
+  definition: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, alignSelf: "flex-start" },
   result: { alignItems: "flex-end", gap: SPACE.xs },
   rank: { width: RANK_WIDTH, textAlign: "center" },
   medal: {

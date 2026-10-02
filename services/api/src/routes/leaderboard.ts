@@ -7,6 +7,7 @@ import {
   recommendationsRoute,
   type SocialIdentity,
   type Standing,
+  standingsRoute,
   topTradesRoute,
 } from "@senryo/api-client";
 import { type Address, getAddress } from "@senryo/chain";
@@ -32,6 +33,15 @@ import { optionalSession, requireSession } from "../social/shared.ts";
  */
 
 const isoOf = (sec: number): string => new Date(sec * MS_PER_SECOND).toISOString();
+
+/** The published window of a period board (the board and the standings route say the same thing). */
+function windowOf(board: PeriodBoard): Leaderboard["window"] {
+  return {
+    kind: board.window.kind,
+    from: board.window.fromSec === null ? null : isoOf(board.window.fromSec),
+    to: isoOf(board.window.toSec),
+  };
+}
 
 function snapshotOf(ctx: SocialRuntime, chainId: ChainId): ChainSnapshot {
   const snap = ctx.social.leaderboard.snapshot(chainId);
@@ -118,17 +128,33 @@ export function registerLeaderboardRoutes(app: HttpServer, ctx: SocialRuntime): 
       period: query.period,
       scope: query.scope,
       metric: LEADERBOARD_METRIC,
-      window: {
-        kind: board.window.kind,
-        from: board.window.fromSec === null ? null : isoOf(board.window.fromSec),
-        to: isoOf(board.window.toSec),
-      },
+      window: windowOf(board),
       floor: board.floor,
       computedAt: snap.computedAt.toISOString(),
       entries,
       you: me ? standingOf(snap, board, me, mine) : null,
     };
     return sendRoute(reply, leaderboardRoute, body);
+  });
+
+  /** F-D4: any accounts' standings on the full board for one period (profiles, search rows). */
+  app.get(standingsRoute.path, { config: { rateLimit: SOCIAL_READ_RATE } }, async (request, reply) => {
+    const { query } = parseRoute(standingsRoute, request);
+    const snap = snapshotOf(ctx, query.chainId);
+    const board = snap.boards[query.period];
+    const addresses = [...new Set(query.addresses.map((a) => a.toLowerCase()))];
+    return sendRoute(reply, standingsRoute, {
+      chainId: query.chainId,
+      period: query.period,
+      metric: LEADERBOARD_METRIC,
+      window: windowOf(board),
+      floor: board.floor,
+      computedAt: snap.computedAt.toISOString(),
+      items: addresses.map((address) => ({
+        address: getAddress(address) as Address,
+        ...standingOf(snap, board, address, board.standings.get(address)?.rank ?? null),
+      })),
+    });
   });
 
   app.get(topTradesRoute.path, { config: { rateLimit: SOCIAL_READ_RATE } }, async (request, reply) => {

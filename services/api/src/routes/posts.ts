@@ -6,6 +6,7 @@ import {
   postReportRoute,
   searchRoute,
   threadRoute,
+  tradeAnchorRoute,
   unlikeRoute,
 } from "@senryo/api-client";
 import { HTTP_STATUS, HttpError, type HttpServer, parseRoute, sendRoute } from "@senryo/service-common";
@@ -13,16 +14,18 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { POST_WRITE_RATE, REPORT_RATE, SEARCH_RATE, SOCIAL_READ_RATE } from "../social/constants.ts";
 import { feedPage } from "../social/feed.ts";
 import { bestEffort, notifyLiked, notifyReplied } from "../social/notify.ts";
-import { createPost, deletePost, readThread, setLike } from "../social/posts.ts";
+import { createPost, deletePost, readPost, readThread, setLike } from "../social/posts.ts";
 import { fileReport, reporterWeight } from "../social/reports.ts";
 import type { SocialRuntime } from "../social/runtime.ts";
 import { search } from "../social/search.ts";
 import { optionalSession, requireSession } from "../social/shared.ts";
+import { tradePost } from "../social/trade-posts.ts";
 
 /**
  * Feed, theses/replies, likes, post reports and search (S12b.4/6/7, D-174). Reads take an optional session (viewer
  * filtering: blocks, mutes, reports, likes); writes need one. A new thesis emits a `feed:{chainId}` notice; a reply
- * and a like notify the author (channel `social`).
+ * and a like notify the author (channel `social`). A trade row's post (F-D1) is created on first use by anyone who can
+ * see the row — a guest's share link needs it too — and is idempotent, so it is rate-limited like a write.
  */
 export function registerPostRoutes(app: HttpServer, ctx: SocialRuntime): void {
   const viewerOf = async (request: FastifyRequest) =>
@@ -47,6 +50,13 @@ export function registerPostRoutes(app: HttpServer, ctx: SocialRuntime): void {
     if (post.kind === "reply")
       await bestEffort(request.log, "reply", () => notifyReplied(ctx.db, post.chainId, post.id));
     return sendRoute(reply, postCreateRoute, post);
+  });
+
+  app.post(tradeAnchorRoute.path, { config: { rateLimit: POST_WRITE_RATE } }, async (request, reply) => {
+    const { params } = parseRoute(tradeAnchorRoute, request);
+    const viewer = await viewerOf(request);
+    const post = await tradePost(ctx.db, BigInt(params.id), (chainId, id) => readPost(ctx.db, chainId, id, viewer));
+    return sendRoute(reply, tradeAnchorRoute, post);
   });
 
   app.get(threadRoute.path, { config: { rateLimit: SOCIAL_READ_RATE } }, async (request, reply) => {
