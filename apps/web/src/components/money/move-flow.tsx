@@ -168,7 +168,14 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
     setBusy(true);
     setBlock(undefined);
     try {
-      await runner.run(moveOperation(env, me, reviewed, ACTIVE_NETWORK.name, knownAddresses, guard));
+      const op = moveOperation(env, me, reviewed, ACTIVE_NETWORK.name, knownAddresses, guard);
+      // Mainnet pays its own fees: say so before the passkey is asked for (B11).
+      const fees = await runner.checkFees(op);
+      if (!fees.ok) {
+        setBlock("Add MON for network fees");
+        return;
+      }
+      await runner.run(op);
     } catch (error) {
       setBlock(error instanceof Error ? (error.message.split("\n")[0] ?? "") : "Couldn’t prepare it");
     } finally {
