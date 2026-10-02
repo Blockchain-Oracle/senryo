@@ -1,7 +1,7 @@
-import type { SpotToken } from "@senryo/config";
+import { MAINNET_CHAIN_ID, type SpotToken } from "@senryo/config";
 import { router } from "expo-router";
 import { RowShell } from "~/features/markets/RowShell";
-import { tokenRoute } from "~/lib/constants/routes";
+import { assetRoute } from "~/lib/constants/routes";
 import { signedPct, usd } from "~/lib/money";
 import { tokenAmount, tokenPrice } from "./format";
 
@@ -35,7 +35,7 @@ export function TokenRow({
       subtitle={detail}
       price={price}
       changeBps={change24hBps}
-      onPress={() => router.push(tokenRoute(token.symbol))}
+      onPress={() => router.push(assetRoute(MAINNET_CHAIN_ID, token.address))}
       accessibilityLabel={`${token.name}, ${token.symbol}${price ? `, ${price}` : ""}${change24hBps === undefined ? "" : `, ${change24hBps >= 0n ? "up" : "down"} ${signedPct(change24hBps)} in 24 hours`}${held ? `, you hold ${detail}` : ""}`}
     />
   );

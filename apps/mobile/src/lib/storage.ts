@@ -60,4 +60,10 @@ export const STORAGE_KEYS = {
   hideBalances: "senryo.hide-balances.v1",
   /** Flow book C3a: the short-specific risk card was accepted (shown before the first short, after the general three). */
   shortRiskExplained: "senryo.short-risk-explained.v1",
+  /** B14: tokens this account hid, per network and account (server-side storage arrives with BD-5). */
+  hiddenTokens: "senryo.hidden-tokens.v1",
+  /** B13: saved destinations (name, address, chain, mark) per network and account, until BD-5's server copy. */
+  savedDestinations: "senryo.saved-destinations.v1",
+  /** B5/B4: purchases and bridges this phone started that have not landed yet ("Arriving"). */
+  arrivals: "senryo.arrivals.v1",
 } as const;

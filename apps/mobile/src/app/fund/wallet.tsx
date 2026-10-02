@@ -1,15 +1,10 @@
-import { isDeployed } from "@senryo/chain";
-import { Stack } from "expo-router";
-import { Screen } from "~/components/kit/Screen";
-import { WalletFunding } from "~/features/fund/WalletFunding";
-import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
-import { useNetwork } from "~/lib/network";
-export default function WalletFundingScreen() {
-  const network = useNetwork();
-  return (
-    <Screen>
-      <Stack.Screen options={{ title: "Move into trading" }} />
-      {isDeployed(network.chainId, "SenryoCore") ? <WalletFunding /> : <PrelaunchMainnet surface="portfolio" />}
-    </Screen>
-  );
+import { Redirect } from "expo-router";
+import { ROUTES } from "~/lib/constants/routes";
+
+/**
+ * Old "move wallet funds into trading" links: the split is gone from user flows (BD-3) — a dollar asset is one row in
+ * Assets and every action pulls from wherever it sits — so this lands on Home.
+ */
+export default function WalletFundingRedirect() {
+  return <Redirect href={ROUTES.home} />;
 }

@@ -14,13 +14,21 @@ export const ACTIVITY_FILTERS = [
   { value: "trades", label: "Trades" },
   { value: "money", label: "Money" },
   { value: "card", label: "Card" },
-  { value: "orders", label: "Orders" },
 ] as const;
 export type ActivityFilter = (typeof ACTIVITY_FILTERS)[number]["value"];
 
 /** The indexer kinds behind each filter chip; "all" sends no filter. */
 export const FILTER_KINDS: Record<Exclude<ActivityFilter, "all">, readonly ActivityKind[]> = {
-  trades: ["TRADE", "LIQUIDATION", "INTENT_EXECUTED", "INTENT_SKIPPED"],
+  // TP/SL legs are part of trading (flow book B12: All · Trades · Money · Card; no Orders chip).
+  trades: [
+    "TRADE",
+    "LIQUIDATION",
+    "INTENT_EXECUTED",
+    "INTENT_SKIPPED",
+    "TRIGGER_PLACED",
+    "TRIGGER_CANCELLED",
+    "TRIGGER_EXECUTED",
+  ],
   money: [
     "DEPOSIT",
     "WITHDRAW",
@@ -44,13 +52,11 @@ export const FILTER_KINDS: Record<Exclude<ActivityFilter, "all">, readonly Activ
     "CARD_ALLOWANCE",
     "CARD_ENVELOPE",
   ],
-  orders: ["TRIGGER_PLACED", "TRIGGER_CANCELLED", "TRIGGER_EXECUTED"],
 };
 
 /** Which group a row belongs to (its icon when it has no entity of its own). */
 export function groupOf(kind: ActivityKind): Exclude<ActivityFilter, "all"> {
   if (FILTER_KINDS.card.includes(kind)) return "card";
-  if (FILTER_KINDS.orders.includes(kind)) return "orders";
   if (FILTER_KINDS.money.includes(kind)) return "money";
   return "trades";
 }
@@ -74,7 +80,7 @@ const PLAIN_TITLE: Record<
 > = {
   DEPOSIT: "Deposit",
   WITHDRAW: "Withdrawal",
-  SWAP: "Collateral swap",
+  SWAP: "Swapped AUSD ↔ USDC",
   INBOX_ARRIVED: "Deposit received",
   CARD_HOLD: "Card hold",
   CARD_HOLD_INCREASED: "Card hold increased",
@@ -85,9 +91,9 @@ const PLAIN_TITLE: Record<
   CARD_ALLOWANCE: "Daily spend limit set",
   CARD_ENVELOPE: "Spending envelope set",
   LIQUIDATION: "Liquidation",
-  LP_DEPOSIT: "LP vault deposit",
-  LP_REDEEM_REQUESTED: "LP redeem requested",
-  LP_REDEEMED: "LP redeem claimed",
+  LP_DEPOSIT: "Pool deposit",
+  LP_REDEEM_REQUESTED: "Pool redemption requested",
+  LP_REDEEMED: "Pool redemption claimed",
   VOUCHER: "Voucher redeemed",
   STARTER: "Practice funds claimed",
   INTENT_EXECUTED: "Deposit-and-open order filled",
@@ -110,7 +116,7 @@ export function activityTitle(row: IndexedActivity): string {
     return `${leg} ${TRIGGER_WORD[row.kind]}`;
   }
   const title = PLAIN_TITLE[row.kind];
-  return row.symbol && groupOf(row.kind) === "money" ? `${title} · ${row.symbol}` : title;
+  return row.symbol && groupOf(row.kind) === "money" && row.kind !== "SWAP" ? `${title} · ${row.symbol}` : title;
 }
 
 /** Kinds whose amount is the signed change they made to the balance. */

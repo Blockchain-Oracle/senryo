@@ -175,3 +175,20 @@ export const tradeThisRoute = (market: string, side: TicketSide, leverage?: numb
   `${ticketRoute(market, side)}${leverage === undefined ? "" : `&leverage=${leverage}`}` as Href;
 /** F6: Send with the recipient filled in (an @handle or an address); the send flow re-resolves it before signing. */
 export const sendToRoute = (to: string) => `/withdraw/send?to=${encodeURIComponent(to)}` as Href;
+/** B2: one page per asset, by chain and address (native MON = `0x000…000`). */
+export const assetRoute = (chainId: number, address: string) => `/asset/${chainId}/${address.toLowerCase()}` as const;
+/** B4: deposit from another chain — amount, quote and timeline for one asset and source chain. */
+export const bridgeInRoute = (asset: string, chain: number) => `/fund/bridge?asset=${asset}&chain=${chain}` as const;
+/** B6: the swap with a pay (and optionally receive) asset preselected, by address. */
+export const swapRoute = (pay?: string, receive?: string) =>
+  `/fund/swap${pay ? `?pay=${pay.toLowerCase()}${receive ? `&receive=${receive.toLowerCase()}` : ""}` : ""}` as Href;
+/** B7: send with an asset (by address) and/or a recipient preselected. */
+export const sendRoute = (asset?: string, to?: string) =>
+  `/withdraw/send${asset || to ? `?${[asset ? `asset=${asset.toLowerCase()}` : "", to ? `to=${to}` : ""].filter(Boolean).join("&")}` : ""}` as Href;
+/** B8–B10: withdraw with an asset preselected and the destination tab (monad · chain · bank). */
+export const withdrawRoute = (asset?: string, to?: "monad" | "chain" | "bank") =>
+  `/withdraw${asset || to ? `?${[asset ? `asset=${asset.toLowerCase()}` : "", to ? `to=${to}` : ""].filter(Boolean).join("&")}` : ""}` as Href;
+/** B3: the receive sheet with an asset chip preselected (the address never changes). */
+export const receiveRoute = (asset?: string) => (asset ? `/receive?asset=${asset.toLowerCase()}` : "/receive") as Href;
+/** B12: the receipt of one operation from this phone's journal. */
+export const receiptRoute = (operationId: string) => `/receipt?op=${encodeURIComponent(operationId)}` as Href;

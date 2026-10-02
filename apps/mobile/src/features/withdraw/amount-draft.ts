@@ -6,12 +6,14 @@
 import { RISK } from "@senryo/core";
 import { useId } from "react";
 import { useMMKVBoolean, useMMKVString } from "react-native-mmkv";
+import { AMOUNT_MAX_WHOLE_DIGITS } from "~/components/trade/Keypad";
 import { storage } from "~/lib/storage";
 
 const USD6_PER_CENT = 10_000n;
 const CENTS_PER_UNIT = 100n;
 const CENT_DIGITS = 2;
-const WHOLE_DIGITS_MAX = 9;
+/** One digit cap for every amount in the app (plan Part F3): the keypad's. */
+const WHOLE_DIGITS_MAX = AMOUNT_MAX_WHOLE_DIGITS;
 const AMOUNT_TEXT = /^\d*(\.\d{0,2})?$/;
 
 /** usd6 → "12.34", rounded down to the cent so a share never asks for more than it can. */
