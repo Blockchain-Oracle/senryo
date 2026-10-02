@@ -158,6 +158,25 @@ export const GAS_LIMITS = {
   perplOrder: 1_900_000n,
   /** `withdrawCollateral(amount)`: 135.0k (0, 1 or 3 open positions alike); 151.9k when it resets the rate window. */
   perplWithdraw: 170_000n,
+   * (D6) Monorail / KyberSwap router call, floor. Routes vary from one pool to 3+ hops, splits and order books, so a
+   * quote's budget is `aggregatorSwapGasLimit(quote.gasEstimate)`. 143 fork, 2 Oct: Monorail USDT0 → XAUt0 (one
+   * PancakeSwap v3 pool) 435.9k; KyberSwap 100 MON → AUSD 1,221.1k (its own metering 1,243.9k).
+   */
+  aggregatorSwap: 600_000n,
+  /**
+   * (D2) Relay deposit. 143 fork, 2 Oct: depository — native MON 24.8k, AUSD 81.6k, USDC 109.5k; Relay's router
+   * (USDT0 swapped in before bridging) 714.8k → 800k.
+   */
+  relayDeposit: 800_000n,
+  /** (D2) CCTP v2 `depositForBurnWithHook` (Forwarding Service): 273.8k on a 143 fork (USDC → Base). */
+  cctpBurn: 330_000n,
+  /** (D2) Across spoke deposit (swap/approval `swapTx`): 170.3k on a 143 fork (USDT0 → Arbitrum). */
+  acrossDeposit: 250_000n,
+  /**
+   * (D2) LI.FI diamond call: XAUt0 → Ethereum over glacis (LayerZero OFT) 1,274.0k on a 143 fork; LI.FI's own limit
+   * for it was 2,515.6k.
+   */
+  lifiBridge: 1_500_000n,
   /** (S6.12, D-155) sponsor-sent type-4 tx, one authorization: fork-measured 46.0k used, 50.7k sent. */
   delegate: 100_000n,
 } as const;
@@ -185,6 +204,21 @@ export function spotSwapGasLimit(hops: number, quotedSwapGas?: bigint): bigint {
   const flat = GAS_LIMITS.spotSwap + SPOT_SWAP_GAS_PER_HOP * BigInt(Math.max(hops - 1, 0));
   if (quotedSwapGas === undefined) return flat;
   const sized = ((SPOT_SWAP_OVERHEAD_GAS + quotedSwapGas) * (GAS_BPS + GAS_HEADROOM_BPS)) / GAS_BPS;
+  return sized > flat ? sized : flat;
+}
+
+/**
+ * (D6) What an aggregator swap spends beyond the aggregator's own gas metering (router entry, token pulls, the
+ * native wrap/unwrap): `eth_estimateGas` − the quote's gas. 143 fork, 2 Oct: Monorail 435.9k − 205.5k = 230.4k;
+ * KyberSwap's metering already covers its overhead (1,221.1k estimated vs 1,243.9k metered).
+ */
+export const AGGREGATOR_SWAP_OVERHEAD_GAS = 250_000n;
+
+/** Budget for an aggregator swap: the flat floor, or the quote's metering + overhead with headroom when larger. */
+export function aggregatorSwapGasLimit(quotedSwapGas?: bigint): bigint {
+  const flat = GAS_LIMITS.aggregatorSwap;
+  if (quotedSwapGas === undefined) return flat;
+  const sized = ((AGGREGATOR_SWAP_OVERHEAD_GAS + quotedSwapGas) * (GAS_BPS + GAS_HEADROOM_BPS)) / GAS_BPS;
   return sized > flat ? sized : flat;
 }
 

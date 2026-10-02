@@ -1,5 +1,6 @@
 export * from "./address.ts";
 export * from "./blockers.ts";
+export * from "./impact.ts";
 export * from "./lifecycle.ts";
 export * from "./money/format.ts";
 export * from "./money/parse.ts";
