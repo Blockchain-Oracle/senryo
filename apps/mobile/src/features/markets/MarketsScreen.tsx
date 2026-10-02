@@ -25,7 +25,7 @@ import { SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { DiscoveryRow, UnpricedRow } from "./DiscoveryRow";
 import { ProtocolBanner } from "./MarketBanners";
 import { EngineMarketRow, PrelaunchMarketRow } from "./MarketRow";
-import { type MarketItem, type MarketsView, useMarketItems } from "./market-items";
+import { type MarketItem, type MarketsView, usePerpsItems, useTokenItems, useWatchlistItems } from "./market-items";
 import { PerpsIntro } from "./PerpsIntro";
 import { QuietLine } from "./QuietLine";
 import { MARKET_FILTERS, type MarketFilter } from "./universe";
@@ -45,7 +45,6 @@ export function MarketsScreen() {
   const [view, setView] = useState<MarketsView>("perps");
   const [filter, setFilter] = useState<MarketFilter>("all");
   const [tokenSort, setTokenSort] = useState<TokenSort>("all");
-  const items = useMarketItems(view, filter, tokenSort);
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
       <View style={{ paddingTop: insets.top }}>
@@ -69,18 +68,45 @@ export function MarketsScreen() {
           <ChipRow options={MARKET_FILTERS} value={filter} onChange={setFilter} label="Market category" />
         )}
       </View>
+      {/* Each tab reads only what it shows: tokens never poll Perpl, perps never poll the token pools. */}
       <Animated.View key={view} entering={FadeIn.duration(TIMING.selection)} style={styles.fill}>
-        <FlashList
-          data={items}
-          keyExtractor={(item) => item.key}
-          getItemType={(item) => item.kind}
-          renderItem={({ item }) => <Row item={item} />}
-          refreshControl={refreshControl}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, paddingBottom: bottom }}
-        />
+        {view === "tokens" ? (
+          <TokensView sort={tokenSort} bottom={bottom} refreshControl={refreshControl} />
+        ) : view === "watchlist" ? (
+          <WatchlistView filter={filter} bottom={bottom} refreshControl={refreshControl} />
+        ) : (
+          <PerpsView filter={filter} bottom={bottom} refreshControl={refreshControl} />
+        )}
       </Animated.View>
     </View>
+  );
+}
+
+type ListProps = { bottom: number; refreshControl: ReturnType<typeof usePullRefresh> };
+
+function TokensView({ sort, ...rest }: ListProps & { sort: TokenSort }) {
+  return <List items={useTokenItems(sort)} {...rest} />;
+}
+
+function WatchlistView({ filter, ...rest }: ListProps & { filter: MarketFilter }) {
+  return <List items={useWatchlistItems(filter)} {...rest} />;
+}
+
+function PerpsView({ filter, ...rest }: ListProps & { filter: MarketFilter }) {
+  return <List items={usePerpsItems(filter)} {...rest} />;
+}
+
+function List({ items, bottom, refreshControl }: ListProps & { items: MarketItem[] }) {
+  return (
+    <FlashList
+      data={items}
+      keyExtractor={(item) => item.key}
+      getItemType={(item) => item.kind}
+      renderItem={({ item }) => <Row item={item} />}
+      refreshControl={refreshControl}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, paddingBottom: bottom }}
+    />
   );
 }
 
@@ -102,7 +128,7 @@ function Row({ item }: { item: MarketItem }) {
     case "engine":
       return <EngineMarketRow marketId={item.marketId} />;
     case "prelaunch":
-      return <PrelaunchMarketRow marketId={item.marketId} price={item.price} />;
+      return <PrelaunchMarketRow marketId={item.marketId} />;
     case "discovery":
       return <DiscoveryRow instrument={item.instrument} reading={item.reading} />;
     case "unpriced":

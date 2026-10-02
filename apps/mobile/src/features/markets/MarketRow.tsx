@@ -11,7 +11,7 @@ import { ids } from "@senryo/identity";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text } from "react-native";
-import type { PrelaunchPrice } from "~/features/network/usePrelaunchPrices";
+import { usePrelaunchPrices } from "~/features/network/usePrelaunchPrices";
 import { fire } from "~/feedback/fire";
 import { marketRoute } from "~/lib/constants/routes";
 import { price18, priceDecimalsOf, signedPct } from "~/lib/money";
@@ -98,8 +98,10 @@ export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen
  * Mainnet before the engine deploy (C1 step 6): the market stays listed with its live Chainlink price and a lock
  * that says "Soon" — no full-screen prelaunch page. It opens market detail, which says the same.
  */
-export function PrelaunchMarketRow({ marketId, price }: { marketId: number; price: PrelaunchPrice | undefined }) {
+export function PrelaunchMarketRow({ marketId }: { marketId: number }) {
   const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
+  // One shared query per feed (react-query dedups by key), read only when this row is on screen.
+  const price = usePrelaunchPrices().find((p) => p.symbol === meta?.symbol)?.price;
   const symbol = meta?.symbol ?? String(marketId);
   const shown = price ? `$${formatUnits(price.answer, price.decimals, price.shown)}` : undefined;
   return (
