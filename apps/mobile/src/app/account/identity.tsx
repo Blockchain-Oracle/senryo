@@ -2,11 +2,11 @@ import { Stack } from "expo-router";
 import { Screen } from "~/components/kit/Screen";
 import { IdentityPanel } from "~/features/auth/IdentityPanel";
 
-/** Account identity (J9): the address with Copy and the watch link, its two networks, and the passkey behind it. */
+/** Wallet & address (A10): the Receive grammar for the account address, its two networks, and the passkey behind it. */
 export default function AccountIdentity() {
   return (
     <Screen>
-      <Stack.Screen options={{ title: "Account identity" }} />
+      <Stack.Screen options={{ title: "Wallet & address" }} />
       <IdentityPanel />
     </Screen>
   );

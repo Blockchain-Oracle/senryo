@@ -1,19 +1,15 @@
 import { engineMarketsOn, marketPair } from "@senryo/config";
 import { ids } from "@senryo/identity";
-import { router, Stack } from "expo-router";
-import { type ReactNode, useState } from "react";
+import { router } from "expo-router";
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
-import { Screen } from "~/components/kit/Screen";
-import { SectionLabel } from "~/components/kit/Surface";
 import { LoadingState, ReadingView } from "~/components/kit/states";
-import { Plus } from "~/components/kit/symbols";
 import { Sheet } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { SheetRow } from "~/components/sheet/SheetRow";
-import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
@@ -21,68 +17,20 @@ import { SHEET_SHAPE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { AlertEditor } from "./AlertEditor";
 import { AlertRow } from "./AlertRow";
 import { ALERT_SHEET_MAX_HEIGHT } from "./constants";
-import { PageHeader, PageTitle } from "./PageHeader";
 import { QuietLine } from "./QuietLine";
 import { type Alert, alertErrorCopy, useAlerts, useRemoveAlert } from "./useAlerts";
 
-/** The sheet over the list: choosing a market for a new alert, then that market's editor. */
-type Open = "pick" | number | undefined;
+/** The sheet over the alerts list: choosing a market for a new alert, then its editor — or editing one alert. */
+export type AlertSheetState = "pick" | { marketId: number; editing?: Alert } | undefined;
 
 /**
- * Alerts (`/alerts`; direction "Alerts list": instrument, condition, active / triggered state, edit / remove): the
- * account's price alerts on the selected network, read from the Senryo api (`useAlerts`). A guest, a locked session,
- * loading, an empty list and a failed read each say what is true and offer the one next step. The plus opens a compact
- * sheet — pick a market, then its editor — and a saved alert appears in the list behind it. The api has no "edit":
- * an alert is changed by removing it and saving a new one.
+ * The inbox's Alerts tab (G1 step 5, C9): the account's price alerts on this network, read from the Senryo api.
+ * A row opens its editor (Save replaces it — one alert, never two) and × deletes it. A guest, a locked session,
+ * loading, an empty list and a failed read each say what is true and offer the one next step.
  */
-export function AlertsScreen() {
+export function AlertsList({ onNew, onEdit }: { onNew: () => void; onEdit: (alert: Alert) => void }) {
   const { color } = useTheme();
   const account = useAccount();
-  const [open, setOpen] = useState<Open>();
-  const hasAccount = account.hint !== undefined;
-  return (
-    <View style={[styles.fill, { backgroundColor: color.ground }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <PageHeader
-        right={
-          hasAccount ? (
-            <UtilityButton label="New alert" onPress={() => setOpen("pick")}>
-              <Plus size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
-            </UtilityButton>
-          ) : undefined
-        }
-      >
-        <PageTitle>Alerts</PageTitle>
-      </PageHeader>
-      <Screen>
-        <List onNew={() => setOpen("pick")} />
-      </Screen>
-      {open === undefined ? null : (
-        <View style={StyleSheet.absoluteFill}>
-          <Sheet
-            onClose={() => setOpen(undefined)}
-            closeLabel="Close new alert"
-            {...(open === "pick" ? {} : { maxHeight: ALERT_SHEET_MAX_HEIGHT })}
-          >
-            {/* Picker → editor crossfades in place instead of snapping to the new height. */}
-            <Animated.View
-              key={open === "pick" ? "pick" : "edit"}
-              entering={FadeIn.duration(TIMING.selection)}
-              style={styles.swap}
-            >
-              {open === "pick" ? <MarketPicker onPick={setOpen} /> : <AlertEditor marketId={open} />}
-            </Animated.View>
-          </Sheet>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function List({ onNew }: { onNew: () => void }) {
-  const { color } = useTheme();
-  const account = useAccount();
-  const network = useNetwork();
   const alerts = useAlerts();
   const remove = useRemoveAlert();
   const known = alerts.reading.status === "fresh" || alerts.reading.status === "stale";
@@ -90,14 +38,8 @@ function List({ onNew }: { onNew: () => void }) {
   if (!account.ready) return <LoadingState shape="list" label="Loading your alerts" />;
   if (alerts.access === "guest") {
     return (
-      <Quiet line="Price alerts belong to an account">
-        <Button
-          label="Create an account"
-          variant="outline"
-          size="sm"
-          block={false}
-          onPress={() => router.push(ROUTES.accountRequired)}
-        />
+      <Quiet line="Alerts need an account">
+        <Button label="Create account" size="sm" block={false} onPress={() => router.push(ROUTES.accountRequired)} />
       </Quiet>
     );
   }
@@ -106,7 +48,6 @@ function List({ onNew }: { onNew: () => void }) {
       <Quiet line="Unlock to see your alerts">
         <Button
           label="Unlock"
-          variant="outline"
           size="sm"
           block={false}
           // A cancelled Face ID leaves the page as it is: locked, with the same button.
@@ -118,36 +59,67 @@ function List({ onNew }: { onNew: () => void }) {
   const failure = remove.isError ? alertErrorCopy(remove.error) : undefined;
   return (
     <ReadingView reading={alerts.reading} loading="list" loadingLabel="Loading your alerts" retry={alerts.refetch}>
-      {(items: Alert[]) =>
-        items.length === 0 ? (
-          <Quiet line="No alerts yet">
-            <Button label="Set an alert" variant="outline" size="sm" block={false} onPress={onNew} />
-          </Quiet>
-        ) : (
-          <View>
-            <SectionLabel>{network.modeLabel} alerts</SectionLabel>
-            {items.map((alert) => (
+      {(items: Alert[]) => (
+        <View style={styles.list}>
+          {items.length === 0 ? (
+            <Quiet line="No alerts yet">
+              <Button label="New alert" size="sm" block={false} onPress={onNew} />
+            </Quiet>
+          ) : (
+            items.map((alert) => (
               <AlertRow
                 key={alert.id}
                 alert={alert}
                 showMarket
                 busy={remove.isPending && remove.variables === alert.id}
                 onRemove={() => remove.mutate(alert.id)}
+                onEdit={() => onEdit(alert)}
               />
-            ))}
-            {failure ? (
-              <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.note, { color: color.down }]}>
-                {failure}
-              </Text>
-            ) : null}
-            <Text style={[TYPE.rowDetail, styles.note, { color: color.text3 }]}>
-              Checked against the oracle price. Push notifications aren’t set up on this phone yet, so an alert that
-              fires shows here as Triggered.
+            ))
+          )}
+          {failure ? (
+            <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.note, { color: color.down }]}>
+              {failure}
             </Text>
-          </View>
-        )
-      }
+          ) : null}
+        </View>
+      )}
     </ReadingView>
+  );
+}
+
+/** The compact sheet for a new or edited alert, rendered at the page's root. */
+export function AlertSheet({
+  open,
+  onClose,
+  onPick,
+}: {
+  open: AlertSheetState;
+  onClose: () => void;
+  onPick: (marketId: number) => void;
+}) {
+  if (open === undefined) return null;
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <Sheet
+        onClose={onClose}
+        closeLabel={open !== "pick" && open.editing ? "Close alert" : "Close new alert"}
+        {...(open === "pick" ? {} : { maxHeight: ALERT_SHEET_MAX_HEIGHT })}
+      >
+        {/* Picker → editor crossfades in place instead of snapping to the new height. */}
+        <Animated.View
+          key={open === "pick" ? "pick" : "edit"}
+          entering={FadeIn.duration(TIMING.selection)}
+          style={styles.swap}
+        >
+          {open === "pick" ? (
+            <MarketPicker onPick={onPick} />
+          ) : (
+            <AlertEditor marketId={open.marketId} {...(open.editing ? { editing: open.editing } : {})} />
+          )}
+        </Animated.View>
+      </Sheet>
+    </View>
   );
 }
 
@@ -167,7 +139,7 @@ function MarketPicker({ onPick }: { onPick: (marketId: number) => void }) {
   const markets = engineMarketsOn(network.chainId);
   return (
     <>
-      <SheetHeading title="New alert" body="Choose the market to watch." />
+      <SheetHeading title="New alert" />
       <View style={styles.rows}>
         {markets.map((m, index) => (
           <SheetRow
@@ -185,7 +157,7 @@ function MarketPicker({ onPick }: { onPick: (marketId: number) => void }) {
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
+  list: { gap: SPACE.xxs },
   quiet: { alignItems: "center" },
   note: { paddingTop: SPACE.md },
   rows: { gap: SHEET_SHAPE.rowGap },

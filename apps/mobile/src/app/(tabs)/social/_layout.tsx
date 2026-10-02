@@ -1,11 +1,16 @@
 import { Stack } from "expo-router";
 import { TabStack } from "~/components/shell/TabStack";
 
-/** The Social stack: the tab root (feed, people, leaderboard) → a thesis with its replies (page push). */
+/**
+ * The Social stack: the tab root (the feed) → a post with its replies, People (leaderboard and friends) and Search
+ * (page pushes). Search draws its own bar.
+ */
 export default function Layout() {
   return (
     <TabStack>
-      <Stack.Screen name="post/[id]" options={{ title: "Thesis" }} />
+      <Stack.Screen name="post/[id]" options={{ title: "Post" }} />
+      <Stack.Screen name="people" options={{ title: "People" }} />
+      <Stack.Screen name="search" options={{ headerShown: false }} />
     </TabStack>
   );
 }

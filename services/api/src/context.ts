@@ -18,6 +18,7 @@ import {
   loadOptionalSigner,
   type SessionKeys,
 } from "@senryo/service-common";
+import type { AuroraWatcher } from "./anyasset/bridge/aurora.ts";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { GeoDb } from "./geo-db.ts";
 import type { IndexerBridge } from "./indexer.ts";
@@ -45,6 +46,8 @@ export interface ApiContext {
   geo: GeoDb;
   /** S12b social services: indexer reads, leaderboard snapshots, feed notices. */
   social: SocialServices;
+  /** Aurora incident watcher (D2) for `/v1/status`; absent → `aurora` reads unknown. */
+  aurora?: AuroraWatcher | undefined;
 }
 
 export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId, ChainContext>> {

@@ -1,6 +1,8 @@
-import type { ChainId } from "@senryo/config";
+import { type ChainId, PERPL_EXCHANGE } from "@senryo/config";
 import { decodeEventLog, erc20Abi, type TransactionReceipt } from "viem";
 import { addressOf, CONTRACT_ABIS, isDeployed } from "./contracts.ts";
+import { perplReceiptFacts } from "./perpl/fills.ts";
+
 export interface ReceiptFact {
   event: string;
   contract: string;
@@ -9,7 +11,10 @@ export interface ReceiptFact {
 /** Decode only the actual call target and deployed financial contracts, never a lookalike event from another address. */
 export function receiptFacts(receipt: TransactionReceipt, chainId: ChainId, target: string): ReceiptFact[] {
   const facts: ReceiptFact[] = [];
+  const perpl = PERPL_EXCHANGE[chainId].toLowerCase();
   for (const log of receipt.logs) {
+    // Perpl's Exchange logs are decoded below with its own ABI (the wallet's account only).
+    if (log.address.toLowerCase() === perpl) continue;
     const name = (["SenryoCore", "LpVault"] as const).find(
       (name) => isDeployed(chainId, name) && addressOf(chainId, name).toLowerCase() === log.address.toLowerCase(),
     );
@@ -25,5 +30,5 @@ export function receiptFacts(receipt: TransactionReceipt, chainId: ChainId, targ
       /* Non-financial or unsupported logs remain on the explorer. */
     }
   }
-  return facts;
+  return [...facts, ...perplReceiptFacts(receipt.logs, chainId)];
 }

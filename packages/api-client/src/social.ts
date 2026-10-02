@@ -55,6 +55,8 @@ export const REPLIES_PAGE_DEFAULT = 50;
 export const LEADERBOARD_PERIODS = ["24h", "7d", "30d", "all"] as const;
 export const LEADERBOARD_SCOPES = ["all", "following"] as const;
 export const LEADERBOARD_PAGE_MAX = 100;
+/** Addresses per standings read: a profile asks for one, a page of search results for up to this many. */
+export const STANDINGS_MAX = 20;
 /** Onboarding "Follow top traders" (30d ranked floor only; none preselected). */
 export const RECOMMENDATIONS_MAX = 10;
 export const TOP_TRADES_MAX = 10;
@@ -63,6 +65,8 @@ export const MARKET_HOLDERS_MAX = 50;
 
 /** Posts (S12b.6): theses and one-level replies; a reply's parent is always a thesis. */
 export const POST_KINDS = ["thesis", "reply"] as const;
+/** What a read can return: also `trade`, a feed trade row's post (F-D1), which is never written directly. */
+export const POST_VIEW_KINDS = [...POST_KINDS, "trade"] as const;
 /** Reasons a report can carry (App Store 1.2); `note` adds free text. */
 export const REPORT_REASONS = [
   "spam",

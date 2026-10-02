@@ -2,7 +2,7 @@
  * The session allowlist per network, read from the generated address book (`@senryo/contracts`) — never typed in by
  * hand, so a redeploy moves the scope with it (the `address-drift` invariant keeps the book honest).
  */
-import type { ChainId } from "@senryo/config";
+import { type ChainId, PERPL_COLLATERAL, PERPL_EXCHANGE, PERPL_MARKET_SCALES } from "@senryo/config";
 import { addressBooks } from "@senryo/contracts";
 import { type Address, getAddress } from "viem";
 
@@ -18,8 +18,13 @@ export interface ScopeTargets {
   intentRouter: Address | undefined;
   stables: readonly Address[];
   faucets: readonly Address[];
-  /** Spenders a session may approve (the core and the LP vault; Perpl's exchange joins in S7). */
+  /** Spenders a session may approve: the core, the LP vault and Perpl's Exchange (D1). */
   spenders: readonly Address[];
+  /** Perpl's Exchange and its collateral (AUSD) on this network, from `@senryo/config` (not our address book). */
+  perplExchange: Address | undefined;
+  perplCollateral: Address | undefined;
+  /** Price/lot decimals per Perpl market: an order is valued from calldata with these; an unlisted market is unknown. */
+  perplScales: Readonly<Record<number, { priceDecimals: number; lotDecimals: number }>>;
 }
 
 function entry(chainId: ChainId, name: string): Address | undefined {
@@ -38,6 +43,7 @@ export function scopeTargets(chainId: ChainId): ScopeTargets {
   if (hit) return hit;
   const core = entry(chainId, "SenryoCore");
   const lpVault = entry(chainId, "LpVault");
+  const perplExchange = PERPL_EXCHANGE[chainId] ? getAddress(PERPL_EXCHANGE[chainId]) : undefined;
   const targets: ScopeTargets = {
     core,
     lpVault,
@@ -45,7 +51,10 @@ export function scopeTargets(chainId: ChainId): ScopeTargets {
     intentRouter: entry(chainId, "IntentRouter"),
     stables: entries(chainId, STABLE_ENTRIES),
     faucets: entries(chainId, FAUCET_ENTRIES),
-    spenders: [core, lpVault].filter((a): a is Address => a !== undefined),
+    spenders: [core, lpVault, perplExchange].filter((a): a is Address => a !== undefined),
+    perplExchange,
+    perplCollateral: PERPL_COLLATERAL[chainId] ? getAddress(PERPL_COLLATERAL[chainId]) : undefined,
+    perplScales: PERPL_MARKET_SCALES[chainId] ?? {},
   };
   cache.set(chainId, targets);
   return targets;

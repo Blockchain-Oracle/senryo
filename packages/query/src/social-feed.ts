@@ -13,7 +13,9 @@ import {
   leaderboardRoute,
   recommendationsRoute,
   type SearchKind,
+  STANDINGS_MAX,
   searchRoute,
+  standingsRoute,
   topTradesRoute,
 } from "@senryo/api-client";
 import { fromQuery } from "@senryo/core";
@@ -88,6 +90,28 @@ export function useLeaderboard(period: LeaderboardPeriod, scope: LeaderboardScop
     queryKey: socialKeys.leaderboard(env.chainId, period, scope),
     queryFn: ({ signal }) =>
       env.api.call(leaderboardRoute, { query: { chainId: env.chainId, period, scope } }, { signal }),
+    staleTime: LEADERBOARD_STALE_MS,
+    refetchInterval: LEADERBOARD_STALE_MS,
+  });
+  return fromQuery(query);
+}
+
+/**
+ * F-D4: these accounts' standings on the full board for one period (a profile's hero, a search row's 7d result), from
+ * the same snapshot as the leaderboard. Up to STANDINGS_MAX addresses; none = no request.
+ */
+export function useStandings(addresses: readonly string[], period: LeaderboardPeriod) {
+  const env = useQueryEnv();
+  const list = [...new Set(addresses.map((a) => a.toLowerCase()))].slice(0, STANDINGS_MAX);
+  const query = useQuery({
+    queryKey: socialKeys.standings(env.chainId, period, list.join(",")),
+    queryFn: ({ signal }) =>
+      env.api.call(
+        standingsRoute,
+        { query: { chainId: env.chainId, period, addresses: list as `0x${string}`[] } },
+        { signal },
+      ),
+    enabled: list.length > 0,
     staleTime: LEADERBOARD_STALE_MS,
     refetchInterval: LEADERBOARD_STALE_MS,
   });

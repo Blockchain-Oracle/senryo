@@ -9,6 +9,8 @@ export const STORAGE_KEYS = {
   /** Home's last tab (Positions / Assets / Earn) — a per-viewer convenience. */
   homeTab: "senryo.home-tab.v1",
   sounds: "senryo.sounds.v1",
+  /** The ElevenLabs cue variant chosen per sound in Preferences (by ear); absent = the bundled default. */
+  soundChoice: "senryo.sound-choice.v1",
   haptics: "senryo.haptics.v1",
   welcomed: "senryo.welcomed.v1",
   /** Session settings (TTL, idle, Face ID per trade) — non-secret; loosening needs a step-up (S6). */
@@ -42,6 +44,20 @@ export const STORAGE_KEYS = {
   watchlistAt: "senryo.watchlist-at.v1",
   /** S1b.13: this phone's push registration — the Expo token, the account it was sent for, and the chosen channels. */
   push: "senryo.push.v1",
+  /**
+   * A2 (defect 6): set just before a create ceremony, holding the address the phone had before it ("" for none). A
+   * kill after the passkey succeeded but before setup was recorded is caught on the next launch: a hint that differs
+   * from the one stored here is a new account that still owes its setup.
+   */
+  setupCreating: "senryo.setup-creating.v1",
+  /** A3: each account's @handle and avatar as last seen on this phone, by address, so Welcome can name it offline. */
+  identityCache: "senryo.identity-cache.v1",
+  /** A3: the address this phone last had signed in (kept after sign-out) — a different, empty account is warned. */
+  lastAccount: "senryo.last-account.v1",
+  /** A9: an account whose server-side delete didn't reach Senryo; retried at its next unlock on this phone. */
+  pendingDelete: "senryo.pending-delete.v1",
+  /** A10: show "••••" for amounts on Home, Assets and Card. */
+  hideBalances: "senryo.hide-balances.v1",
   /** Flow book C3a: the short-specific risk card was accepted (shown before the first short, after the general three). */
   shortRiskExplained: "senryo.short-risk-explained.v1",
 } as const;

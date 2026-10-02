@@ -1,6 +1,7 @@
 import { type AudioPlayer, type AudioSource, createAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { AppState } from "react-native";
 import { SOUND_VOLUME } from "./constants";
+import { chosenVariant, SOUND_VARIANTS } from "./sound-variants";
 
 /**
  * The UI sound palette (plan §2.4): fill, deposit, send, unlock, liquidation; error is optional and off by default.
@@ -10,14 +11,23 @@ import { SOUND_VOLUME } from "./constants";
  */
 export type SoundName = "scene" | "onboarding" | "fill" | "deposit" | "send" | "unlock" | "liquidation" | "error";
 
-/** Original short, soft chimes. Source recipe and provenance live in assets/sounds/README.md. */
-const SOURCES: Partial<Record<SoundName, AudioSource>> = {
+/** Original cues generated with ElevenLabs, trimmed and level-matched (assets/sounds/README.md). */
+const SOURCES: Record<SoundName, AudioSource> = {
   scene: require("../../assets/sounds/scene.wav"),
   onboarding: require("../../assets/sounds/onboarding.wav"),
   fill: require("../../assets/sounds/fill.wav"),
   deposit: require("../../assets/sounds/deposit.wav"),
   send: require("../../assets/sounds/send.wav"),
+  unlock: require("../../assets/sounds/unlock.wav"),
+  liquidation: require("../../assets/sounds/liquidation.wav"),
+  error: require("../../assets/sounds/error.wav"),
 };
+
+/** The cue's source: the variant chosen in Preferences, else the default file. */
+function sourceOf(name: SoundName): AudioSource {
+  const chosen = chosenVariant(name);
+  return chosen === undefined ? SOURCES[name] : (SOUND_VARIANTS[name][chosen] ?? SOURCES[name]);
+}
 
 const players = new Map<SoundName, AudioPlayer>();
 let prepared = false;
@@ -36,9 +46,9 @@ export async function prepareSounds(): Promise<void> {
     return;
   }
   prepared = true;
-  for (const [name, source] of Object.entries(SOURCES) as [SoundName, AudioSource][]) {
+  for (const name of Object.keys(SOURCES) as SoundName[]) {
     try {
-      const player = createAudioPlayer(source);
+      const player = createAudioPlayer(sourceOf(name));
       player.volume = SOUND_VOLUME[name];
       players.set(name, player);
     } catch {
@@ -55,6 +65,36 @@ export async function playSound(name: SoundName): Promise<void> {
     if (AppState.currentState === "active") player.play();
   } catch {
     // A failed UI sound never interrupts the action it decorates.
+  }
+}
+
+/** Swap one cue to a newly chosen variant without restarting the app. */
+export function reloadSound(name: SoundName): void {
+  if (!prepared) return;
+  players.get(name)?.remove();
+  try {
+    const player = createAudioPlayer(sourceOf(name));
+    player.volume = SOUND_VOLUME[name];
+    players.set(name, player);
+  } catch {
+    players.delete(name);
+  }
+}
+
+/** Plays a candidate once at its cue's level (Preferences preview); the player is released when it finishes. */
+export function previewSound(name: SoundName, source: AudioSource): void {
+  try {
+    const player = createAudioPlayer(source);
+    player.volume = SOUND_VOLUME[name];
+    const done = player.addListener("playbackStatusUpdate", (status) => {
+      if (status.didJustFinish) {
+        done.remove();
+        player.remove();
+      }
+    });
+    player.play();
+  } catch {
+    // A preview that can't play is silent; nothing else depends on it.
   }
 }
 

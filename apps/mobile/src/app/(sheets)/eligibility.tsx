@@ -9,6 +9,7 @@ import { usePressScale } from "~/components/kit/usePressScale";
 import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetRoute } from "~/components/sheet/SheetRoute";
 import { confirmEligibility, RESTRICTED_REGIONS } from "~/features/legal/eligibility";
+import { InfoTip } from "~/features/setup/InfoTip";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
@@ -21,16 +22,13 @@ const BOX_CHECK = 16;
 const PENDING_MS = TIMING.selection;
 
 /**
- * FT101 / M13 (Fomo F36 adapted): before the first real-money trade, one question — outside the regions Mainnet
- * trading is closed to? — one checkbox that says exactly what is being confirmed, the Terms one tap away, and
- * Continue: the quiet plate until the box is checked, then a short spinner, then the order ticket (`next`).
+ * A11 region check (FT101 / M13; Fomo F36 adapted): before the first real-money trade, one checkbox row — "I'm not in
+ * a restricted region" — with the exact statement and the list behind its ⓘ, the Terms one tap away, and Continue:
+ * the quiet plate until the box is checked, then a short spinner, then the order ticket (`next`).
  */
 export default function EligibilitySheet() {
   return (
-    <SheetRoute
-      title="Trading with real money"
-      body="Mainnet trading isn’t available to people in some places. Practice is open to everyone."
-    >
+    <SheetRoute title="Trading with real money">
       <Confirm />
     </SheetRoute>
   );
@@ -59,6 +57,7 @@ function Confirm() {
           }}
           accessibilityRole="checkbox"
           accessibilityState={{ checked }}
+          accessibilityLabel="I’m not in a restricted region"
           style={[styles.row, { backgroundColor: fill }]}
         >
           <View
@@ -73,13 +72,11 @@ function Confirm() {
               <Check size={BOX_CHECK} strokeWidth={SIZE.iconStroke + 1} color={color.primaryForeground} />
             ) : null}
           </View>
-          <View style={styles.text}>
-            <Text style={[TYPE.rowTitle, { color: color.ink }]}>I’m allowed to trade here</Text>
-            <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-              I confirm I am not located in, a citizen or resident of, or otherwise subject to the laws of {regions},
-              nor of a sanctioned jurisdiction.
-            </Text>
-          </View>
+          <Text style={[TYPE.rowTitle, styles.text, { color: color.ink }]}>I’m not in a restricted region</Text>
+          <InfoTip
+            title="Restricted regions"
+            body={`I confirm I am not located in, a citizen or resident of, or otherwise subject to the laws of ${regions}, nor of a sanctioned jurisdiction. Practice is open to everyone.`}
+          />
         </Pressable>
       </Animated.View>
       <Text
@@ -109,7 +106,7 @@ const styles = StyleSheet.create({
   stack: { gap: SPACE.md },
   row: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: SPACE.md,
     padding: SPACE.lg,
     borderRadius: BUTTON.radius.md + SPACE.xs,
@@ -123,6 +120,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  text: { flex: 1, gap: SPACE.xxs },
+  text: { flex: 1 },
   center: { textAlign: "center" },
 });

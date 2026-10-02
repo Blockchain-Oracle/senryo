@@ -6,17 +6,19 @@ import { LOCK_NS, POST_BUDGET_WINDOW_SEC, POSTS_PER_HOUR } from "./constants.ts"
 import type { SocialIndexer } from "./indexer-source.ts";
 import { textHasBlockedWord } from "./moderation.ts";
 import { advisoryLock, identityOf, visibleOn } from "./shared.ts";
+import { tradeOfPost, tradePostShown } from "./trade-posts.ts";
 
 /**
- * Posts (S12b.6): theses and one-level replies per network. Readers only ever see a post whose author is visible on
- * that network and that no operator hid; with a session they also stop seeing accounts blocked either way, accounts
- * they muted and posts they reported.
+ * Posts (S12b.6): theses, trade posts (F-D1, `trade-posts.ts`) and one-level replies per network. Readers only ever
+ * see a post whose author is visible on that network and that no operator hid — and a trade post only while its trade
+ * is public; with a session they also stop seeing accounts blocked either way, accounts they muted and posts they
+ * reported.
  */
 
 export interface PostRow {
   id: string;
   chain_id: number;
-  kind: "thesis" | "reply";
+  kind: "thesis" | "reply" | "trade";
   parent_id: string | null;
   author: string;
   market_id: string | null;
@@ -81,7 +83,7 @@ export function postOf(row: PostRow): Post {
     positionId: row.position_id,
     text: row.text,
     likes: row.likes,
-    replies: row.kind === "thesis" ? row.replies : 0,
+    replies: row.kind === "reply" ? 0 : row.replies,
     likedByMe: row.liked,
     createdAt: row.created_at.toISOString(),
   };
@@ -92,8 +94,15 @@ async function visiblePost(db: Db, chainId: ChainId, id: string, viewer: string 
     SELECT ${postColumns(db, chainId, viewer)}
       FROM posts po JOIN profiles a ON a.address = po.author
      WHERE po.id = ${id} AND po.chain_id = ${chainId} AND NOT po.hidden AND ${visibleOn(db, "a", chainId)}
+       AND ${tradePostShown(db, chainId, "po", "a")}
        ${viewerAccountFilter(db, viewer, "po", "author")} ${viewerPostFilter(db, viewer, "po", "id")}`;
   return row;
+}
+
+/** A post as `viewer` sees it, or undefined when they can't (the trade-post route's read-back). */
+export async function readPost(db: Db, chainId: ChainId, id: string, viewer: string | null) {
+  const row = await visiblePost(db, chainId, id, viewer);
+  return row ? postOf(row) : undefined;
 }
 
 function blockedBetween(tx: Tx, a: string, b: string) {
@@ -102,23 +111,30 @@ function blockedBetween(tx: Tx, a: string, b: string) {
                                          OR (blocker = ${b} AND blocked = ${a})) AS blocked`;
 }
 
-/** The thesis a reply answers: visible, a thesis, same network, and no block between the two authors. */
+/** The post a reply answers: visible, a thesis or trade post, same network, and no block between the two authors. */
 async function checkParent(tx: Tx, chainId: ChainId, author: string, parentId: string): Promise<void> {
   const [parent] = await tx<{ kind: string; author: string }[]>`
     SELECT po.kind, po.author FROM posts po JOIN profiles a ON a.address = po.author
-     WHERE po.id = ${parentId} AND po.chain_id = ${chainId} AND NOT po.hidden AND ${visibleOn(tx, "a", chainId)}`;
-  if (!parent) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such thesis on this network");
-  if (parent.kind !== "thesis") throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "reply to the thesis");
+     WHERE po.id = ${parentId} AND po.chain_id = ${chainId} AND NOT po.hidden AND ${visibleOn(tx, "a", chainId)}
+       AND ${tradePostShown(tx, chainId, "po", "a")}`;
+  if (!parent) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such post on this network");
+  if (parent.kind === "reply") {
+    throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "reply to the thesis or trade, not to a reply");
+  }
   const [state] = await blockedBetween(tx, author, parent.author);
   if (state?.blocked)
     throw new HttpError(HTTP_STATUS.forbidden, "BLOCKED", "a block is in place between these accounts");
 }
 
-/** At most POSTS_PER_HOUR posts per account per rolling hour (exact: the caller holds the author's post lock). */
+/**
+ * At most POSTS_PER_HOUR posts per account per rolling hour (exact: the caller holds the author's post lock). Trade
+ * posts don't count: other people's first likes create them, and the trader wrote nothing.
+ */
 async function checkBudget(tx: Tx, author: string): Promise<void> {
   const [row] = await tx<{ n: number; oldest: Date | null }[]>`
     SELECT count(*)::int AS n, min(created_at) AS oldest FROM posts
-     WHERE author = ${author} AND created_at > now() - make_interval(secs => ${POST_BUDGET_WINDOW_SEC})`;
+     WHERE author = ${author} AND kind <> 'trade'
+       AND created_at > now() - make_interval(secs => ${POST_BUDGET_WINDOW_SEC})`;
   if (!row || row.n < POSTS_PER_HOUR || !row.oldest) return;
   const wait = Math.ceil((row.oldest.getTime() + POST_BUDGET_WINDOW_SEC * MS_PER_SECOND - Date.now()) / MS_PER_SECOND);
   throw new HttpError(HTTP_STATUS.tooMany, "RATE_LIMITED", "posting too fast; try later", Math.max(wait, 0));
@@ -183,7 +199,10 @@ export async function createPost(
   });
 }
 
-/** A post and, for a thesis, one page of its visible replies (oldest first). Undefined when not visible. */
+/**
+ * A post and, for a thesis or trade post, one page of its visible replies (oldest first) — a trade post's thread also
+ * carries its trade. Undefined when not visible.
+ */
 export async function readThread(
   db: Db,
   chainId: ChainId,
@@ -194,7 +213,8 @@ export async function readThread(
 ): Promise<Thread | undefined> {
   const post = await visiblePost(db, chainId, id, viewer);
   if (!post) return undefined;
-  if (post.kind !== "thesis") return { post: postOf(post), replies: [], nextCursor: null };
+  if (post.kind === "reply") return { post: postOf(post), replies: [], nextCursor: null, trade: null };
+  const trade = post.kind === "trade" ? await tradeOfPost(db, id) : null;
   // Keyset on creation time in whole microseconds (Postgres' own precision, so no float rounding).
   const micros = db`(extract(epoch FROM po.created_at) * 1000000)::bigint`;
   const after = cursor === undefined ? db`` : db`AND ${micros} > ${cursor}::bigint`;
@@ -210,12 +230,16 @@ export async function readThread(
     post: postOf(post),
     replies: page.map(postOf),
     nextCursor: rows.length > limit ? (page.at(-1)?.at_us ?? null) : null,
+    trade,
   };
 }
 
-/** The author deletes their own post; a thesis takes its replies, likes and feed row with it (FK cascades). */
+/**
+ * The author deletes their own post; a thesis takes its replies, likes and feed row with it (FK cascades). A trade
+ * post can't be deleted: the trade is onchain (turning sharing off hides it).
+ */
 export async function deletePost(db: Db, author: string, id: string): Promise<boolean> {
-  const rows = await db`DELETE FROM posts WHERE id = ${id} AND author = ${author} RETURNING id`;
+  const rows = await db`DELETE FROM posts WHERE id = ${id} AND author = ${author} AND kind <> 'trade' RETURNING id`;
   return rows.length > 0;
 }
 
@@ -224,7 +248,8 @@ export async function setLike(db: Db, chainId: ChainId, me: string, id: string, 
   return db.begin(async (tx) => {
     const [post] = await tx<{ author: string }[]>`
       SELECT po.author FROM posts po JOIN profiles a ON a.address = po.author
-       WHERE po.id = ${id} AND NOT po.hidden AND ${visibleOn(tx, "a", chainId)} AND po.chain_id = ${chainId}`;
+       WHERE po.id = ${id} AND NOT po.hidden AND ${visibleOn(tx, "a", chainId)} AND po.chain_id = ${chainId}
+         AND ${tradePostShown(tx, chainId, "po", "a")}`;
     if (!post) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such post on this network");
     if (liked) {
       const [state] = await blockedBetween(tx, me, post.author);

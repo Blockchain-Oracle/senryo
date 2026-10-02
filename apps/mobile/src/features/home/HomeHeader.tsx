@@ -7,8 +7,11 @@ import { AmountHero } from "~/components/kit/AmountHero";
 import { Button } from "~/components/kit/Button";
 import { Skeleton } from "~/components/kit/states";
 import { Info } from "~/components/kit/symbols";
+import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
+import { useTermsGate } from "~/lib/account/terms-gate";
 import { ROUTES } from "~/lib/constants/routes";
+import { masked, useHideBalances } from "~/lib/hide-balances";
 import { usd } from "~/lib/money";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -35,6 +38,8 @@ export function CompactBalance() {
 export function ExpandedBalance() {
   const { color } = useTheme();
   const address = useAccount().hint?.address;
+  const gate = useTermsGate();
+  const [hidden, setHidden] = useHideBalances();
   const portfolio = usePortfolio(address);
   if (!address) return null;
   const known = portfolio.status === "fresh" || portfolio.status === "stale" ? portfolio.value : undefined;
@@ -44,13 +49,18 @@ export function ExpandedBalance() {
     <View style={styles.hero}>
       <Pressable
         onPress={() => router.push(ROUTES.balanceDetails)}
+        // Long-press hides or shows balances (Settings → Hide balances is the same switch).
+        onLongPress={() => {
+          fire("tick");
+          setHidden(!hidden);
+        }}
         accessibilityRole="button"
-        accessibilityHint="Opens what makes up your total"
+        accessibilityHint="Opens what makes up your total. Long-press to hide or show balances"
         style={styles.amounts}
       >
         {known && available ? (
           <View style={styles.line}>
-            <AmountHero text={usd(known.totalUsd6)} partial={partial} />
+            <AmountHero text={masked(usd(known.totalUsd6), hidden)} partial={partial && !hidden} />
             {partial ? (
               <Info size={SIZE.iconSm} color={color.text3} accessibilityLabel="Some values are missing" />
             ) : null}
@@ -62,8 +72,17 @@ export function ExpandedBalance() {
         )}
       </Pressable>
       <View style={styles.actions}>
-        <Button label="Add money" style={styles.grow} onPress={() => router.push(ROUTES.addMoney)} />
-        <Button label="Withdraw" variant="secondary" style={styles.grow} onPress={() => router.push(ROUTES.withdraw)} />
+        <Button
+          label="Add money"
+          style={styles.grow}
+          onPress={() => gate(() => router.push(ROUTES.addMoney), { verb: "add money", next: ROUTES.addMoney })}
+        />
+        <Button
+          label="Withdraw"
+          variant="secondary"
+          style={styles.grow}
+          onPress={() => gate(() => router.push(ROUTES.withdraw), { verb: "send", next: ROUTES.withdraw })}
+        />
       </View>
     </View>
   );

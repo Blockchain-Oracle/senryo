@@ -84,7 +84,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
       chains,
       card,
       perpl: unknown,
-      aurora: unknown,
+      aurora: ctx.aurora ? await ctx.aurora.component() : unknown,
     });
   });
 

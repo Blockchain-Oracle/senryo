@@ -7,7 +7,7 @@
 import { POST_MAX_CHARS, type Post } from "@senryo/api-client";
 import { useCreatePost } from "@senryo/query";
 import { type Href, router } from "expo-router";
-import { useState } from "react";
+import { type RefObject, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
@@ -27,7 +27,17 @@ const FIELD_MAX_HEIGHT = (TYPE.body.lineHeight ?? 0) * FIELD_MAX_LINES + 2 * SPA
 /** A round control shrinks a little more than a button (as the shell's utilities do). */
 const SEND_PRESS_SCALE = 0.94;
 
-export function ReplyComposer({ thesis, onPosted }: { thesis: Post; onPosted: () => void }) {
+export function ReplyComposer({
+  thesis,
+  onPosted,
+  inputRef,
+}: {
+  /** The thread's head post: a thesis or a trade post. */
+  thesis: Post;
+  onPosted: () => void;
+  /** Lets the head post's reply control focus the field. */
+  inputRef?: RefObject<TextInput | null>;
+}) {
   const { color } = useTheme();
   const { guest, session } = useSocialAccount();
   const create = useCreatePost(session);
@@ -76,7 +86,7 @@ export function ReplyComposer({ thesis, onPosted }: { thesis: Post; onPosted: ()
       {error === undefined ? null : (
         <View style={styles.notice}>
           <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.noticeText, { color: color.down }]}>
-            {socialErrorCopy(error, "Couldn’t post that reply. Try again.")}
+            {socialErrorCopy(error, "Couldn’t post that reply")}
           </Text>
           {isNotListed(error) ? (
             <Text
@@ -84,7 +94,7 @@ export function ReplyComposer({ thesis, onPosted }: { thesis: Post; onPosted: ()
               accessibilityRole="link"
               style={[TYPE.rowDetail, { color: color.link }]}
             >
-              Profile settings
+              Settings
             </Text>
           ) : null}
         </View>
@@ -92,6 +102,7 @@ export function ReplyComposer({ thesis, onPosted }: { thesis: Post; onPosted: ()
       <View style={styles.line}>
         <View style={[styles.field, { backgroundColor: color.card, borderColor: focused ? color.ring : color.border }]}>
           <TextInput
+            ref={inputRef}
             value={text}
             onChangeText={(next) => {
               setText(next);

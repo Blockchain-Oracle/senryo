@@ -37,6 +37,7 @@ export default function EditProfile() {
           base={profile.own}
           address={address}
           focus={FOCUSABLE.find((field) => field === params.focus)}
+          toVisibility={params.focus === "visibility"}
         />
       </>
     );

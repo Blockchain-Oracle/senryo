@@ -1,8 +1,9 @@
 /**
- * The market line of a feed row (Fomo F15: mark, linked ticker, amount, change in brackets). A thesis names its market
- * with the live oracle price and 24 h change; a trade names what the fill itself did — side, size in the mode's
- * money, the fill price, and the position's net result when the fill closed it. The ticker opens market detail when
- * the market trades on this network. Leverage isn't in the feed's data, so it isn't shown.
+ * The market line of a feed row (Fomo F15: mark, linked ticker, amount, change in brackets) — one line, never a box.
+ * A thesis names its market with the live oracle price and 24 h change; a trade is its position chip: side, size in
+ * the mode's money, and the position's net result (after fees, funding and borrow) when the fill closed it. The
+ * ticker opens market detail when the market trades on this network. Leverage isn't in the feed's data, so it isn't
+ * shown.
  */
 import type { FeedTrade } from "@senryo/api-client";
 import { engineMarketsOn } from "@senryo/config";
@@ -83,34 +84,28 @@ function LivePrice({ engineId, symbol }: { engineId: number; symbol: string }) {
   );
 }
 
-/** A trade's market: ticker, side, size, and the closed position's net result when this fill ended it. */
+/** A trade's position chip: ticker, side, size, and the closed position's net result when this fill ended it. */
 export function TradeMarket({ market, trade }: { market: MarketRef; trade: FeedTrade }) {
   const { color } = useTheme();
   const long = trade.side === "LONG";
   const net = trade.positionNetPnl;
   return (
-    <View style={styles.block}>
-      <Ticker market={market}>
-        <Text style={[TYPE.rowChange, { color: long ? color.up : color.down }]}>{SIDE_WORD[trade.side]}</Text>
-        <Text style={[TYPE.numSm, { color: color.ink }]}>{usd(trade.notional)}</Text>
-        {net === null ? null : (
-          <Text style={[TYPE.rowChange, { color: net >= 0n ? color.up : color.down }]}>
-            ({arrow(net)} {signedUsd(net)})
-          </Text>
-        )}
-      </Ticker>
-      {trade.price === null ? null : (
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-          at ${price18(trade.price, market.engineId === undefined ? undefined : priceDecimalsOf(market.engineId))}
-          {net === null ? "" : " · net after fees and funding"}
+    <Ticker market={market}>
+      <Text style={[TYPE.rowChange, { color: long ? color.up : color.down }]}>{SIDE_WORD[trade.side]}</Text>
+      <Text style={[TYPE.numSm, { color: color.ink }]}>{usd(trade.notional)}</Text>
+      {net === null ? null : (
+        <Text
+          accessibilityLabel={`net ${signedUsd(net)} after fees and funding`}
+          style={[TYPE.rowChange, { color: net >= 0n ? color.up : color.down }]}
+        >
+          ({arrow(net)} {signedUsd(net)})
         </Text>
       )}
-    </View>
+    </Ticker>
   );
 }
 
 const styles = StyleSheet.create({
-  block: { gap: SPACE.xxs },
   line: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", columnGap: SPACE.sm, rowGap: SPACE.xxs },
   ticker: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   link: { textDecorationLine: "underline", textDecorationStyle: "dotted" },

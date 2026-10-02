@@ -16,9 +16,10 @@ const FIRST_PAGE = 5;
 const LOADING_KEYS = ["a", "b", "c"] as const;
 
 /**
- * Setup step 2 — follow top traders (C11; Fomo F06, adapted per direction §9): the network's 30-day ranked traders,
- * **none preselected**, each with why it is suggested. Following is not copy trading and moves no money; it fills the
- * Friends feed and leaderboard. Skip, or Continue with none, is always possible.
+ * Setup step 2 — follow top traders (A2, F3; Fomo F06): the network's 30-day ranked traders — rank, avatar, name over
+ * @handle, 30-day PnL, a check when picked — **none preselected**. Following is not copy trading and moves no money.
+ * Skip, or Continue with none, is always possible. Loading → skeleton rows; none ranked → "No ranked traders yet";
+ * failed → "Couldn't load · Skip".
  */
 export default function FollowStep() {
   const { color } = useTheme();
@@ -59,15 +60,16 @@ export default function FollowStep() {
   const shown = items ? (all ? items : items.slice(0, FIRST_PAGE)) : [];
   return (
     <SetupScreen
+      step="follow"
       title="Follow top traders"
-      body="See what the best performers of the last 30 days open and close. Following never copies a trade."
+      body="Highest 30-day PnL"
       onBack={back}
       onSkip={next}
       footer={
         <>
           {failed ? (
             <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.center, { color: color.down }]}>
-              Couldn’t follow everyone. Try again, or skip for now.
+              Couldn’t follow everyone · try again
             </Text>
           ) : null}
           <Button
@@ -83,14 +85,10 @@ export default function FollowStep() {
           ? LOADING_KEYS.map((key) => <Skeleton key={key} height={SIZE.rowMinHeight + SPACE.sm} />)
           : null}
         {suggestions.status === "failed" ? (
-          <Text style={[TYPE.body, styles.center, { color: color.text3 }]}>
-            Couldn’t load suggestions. You can follow people later from Social.
-          </Text>
+          <Text style={[TYPE.body, styles.center, { color: color.text3 }]}>Couldn’t load · Skip</Text>
         ) : null}
         {items && items.length === 0 ? (
-          <Text style={[TYPE.body, styles.center, { color: color.text3 }]}>
-            Nobody is ranked on this network yet. The list fills as people trade.
-          </Text>
+          <Text style={[TYPE.body, styles.center, { color: color.text3 }]}>No ranked traders yet</Text>
         ) : null}
         {shown.map((t) => (
           <FollowRow key={t.address} trader={t} selected={picked.has(t.address)} onToggle={() => toggle(t.address)} />

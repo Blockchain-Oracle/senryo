@@ -63,6 +63,7 @@ export const cardTransactionWebhookSchema = z.looseObject({
   event_type: z.string(),
   token: z.string().min(1),
   card_token: z.string().optional(),
+  merchant: z.looseObject({ descriptor: z.string().optional() }).optional(),
   events: z.array(transactionEventSchema).default([]),
 });
 

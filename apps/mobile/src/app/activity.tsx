@@ -28,10 +28,13 @@ const LOADING_ROWS = 6;
  */
 export default function ActivityScreen() {
   const address = useAccount().hint?.address;
-  const { market: symbol } = useLocalSearchParams<{ market?: string }>();
+  const { market: symbol, filter: linked } = useLocalSearchParams<{ market?: string; filter?: string }>();
   // `?market=XAU`: one market's history (FT097, F32's history utility on market detail).
   const meta = symbol ? engineMarket(symbol.toUpperCase()) : undefined;
-  const [filter, setFilter] = useState<ActivityFilter>("all");
+  // `?filter=card`: the Card tab's "See all" opens the card's own rows (E6).
+  const [filter, setFilter] = useState<ActivityFilter>(
+    () => ACTIVITY_FILTERS.find((f) => f.value === linked)?.value ?? "all",
+  );
   const activity = useActivity(
     address,
     filter === "all" ? undefined : FILTER_KINDS[filter],

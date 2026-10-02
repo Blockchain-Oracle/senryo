@@ -1,8 +1,9 @@
 /**
- * The Social feed (Fomo F15, C27; direction §9): Global is every public trade and thesis on the active network,
- * Friends is the same from the accounts you follow. Rows sit bare on the page. Every state is designed: skeleton rows
- * of the row's own shape, an empty line that differs per audience (Friends offers the one way to fill it), a failure
- * with a retry, and "Show more" at the end of a page. Practice and Mainnet are separate feeds.
+ * The Social feed (Fomo F15, F4): Global is every public trade and thesis on the active network, led by the Weekly
+ * Top Trades strip; Following is the same from the accounts you follow. Rows sit bare on the page. Every state is
+ * designed and short: skeleton rows of the row's own shape, an empty line that differs per audience with the one way
+ * to fill it, a failure with its reason and Retry, a stale stamp, and "Show more" at the end of a page. Practice and
+ * Mainnet are separate feeds.
  */
 import type { FeedScope } from "@senryo/api-client";
 import { socialKeys, useFeed, useQueryEnv } from "@senryo/query";
@@ -12,58 +13,41 @@ import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ErrorState, Skeleton, StaleStamp } from "~/components/kit/states";
+import { TopTrades } from "~/features/home/TopTrades";
 import { ROUTES } from "~/lib/constants/routes";
 import { RADIUS, SIZE, SPACE, useTheme } from "~/theme";
 import { FeedRow } from "./FeedRow";
 import { QuietLine } from "./Quiet";
-import { TopTrades } from "./TopTrades";
 import { useSessionGate } from "./useSocialAccount";
 
 export function Feed({ scope, onFindPeople }: { scope: FeedScope; onFindPeople: () => void }) {
-  if (scope === "friends") return <FriendsFeed onFindPeople={onFindPeople} />;
-  return (
-    <FeedList scope="global" pinned={<TopTrades />} empty={<QuietLine text="No public trades yet on this network" />} />
-  );
+  if (scope === "friends") return <FollowingFeed onFindPeople={onFindPeople} />;
+  return <FeedList scope="global" pinned={<TopTrades />} empty={<QuietLine text="No public trades yet" />} />;
 }
 
-/** Friends needs to know who is asking: the gate says so in the feed's own place, never with a prompt on arrival. */
-function FriendsFeed({ onFindPeople }: { onFindPeople: () => void }) {
+/** Following needs to know who is asking: the gate says so in the feed's own place, never with a prompt on arrival. */
+function FollowingFeed({ onFindPeople }: { onFindPeople: () => void }) {
   const gate = useSessionGate();
   switch (gate.status) {
     case "guest":
       return (
         <QuietLine
-          text="Follow traders to see what they do"
+          text="Follow traders"
           action={{ label: "Create account", onPress: () => router.push(ROUTES.accountRequired) }}
         />
       );
     case "locked":
-      return (
-        <QuietLine
-          text="Unlock to see what the traders you follow do"
-          action={{ label: "Unlock", onPress: gate.open }}
-        />
-      );
+      return <QuietLine text="Unlock to see Following" action={{ label: "Unlock", onPress: gate.open }} />;
     case "pending":
       return <FeedSkeleton />;
     case "failed":
-      return (
-        <QuietLine
-          text="Couldn’t confirm it’s you, so your following feed stayed closed"
-          action={{ label: "Try again", onPress: gate.open }}
-        />
-      );
+      return <QuietLine text="Couldn’t confirm it’s you" action={{ label: "Try again", onPress: gate.open }} />;
     case "ready":
       return (
         <FeedList
           scope="friends"
           onRetry={gate.open}
-          empty={
-            <QuietLine
-              text="Follow traders to see what they do"
-              action={{ label: "Find people", onPress: onFindPeople }}
-            />
-          }
+          empty={<QuietLine text="Follow traders" action={{ label: "Find people", onPress: onFindPeople }} />}
         />
       );
   }
@@ -77,9 +61,9 @@ function FeedList({
 }: {
   scope: FeedScope;
   empty: ReactNode;
-  /** What leads the list when it has something to show (Global's pinned card). */
+  /** What leads the list when it has something to show (Global's Top Trades strip). */
   pinned?: ReactNode;
-  /** Runs before a retry (Friends re-checks the session, which is what usually failed). */
+  /** Runs before a retry (Following re-checks the session, which is what usually failed). */
   onRetry?: () => void;
 }) {
   const env = useQueryEnv();
@@ -105,19 +89,25 @@ function FeedList({
         <StaleStamp at={reading.at} refreshing={reading.refreshing} failed={reading.error !== undefined} />
       ) : null}
       {pinned}
-      {items.length === 0 ? empty : items.map((item, i) => <FeedRow key={item.id} item={item} index={i} />)}
-      {feed.hasMore ? (
-        <View style={styles.more}>
-          <Button
-            label="Show more"
-            variant="secondary"
-            size="sm"
-            block={false}
-            loading={feed.loadingMore}
-            onPress={feed.loadMore}
-            style={styles.center}
-          />
+      {items.length === 0 ? (
+        empty
+      ) : (
+        <View>
+          {items.map((item, i) => (
+            <FeedRow key={item.id} item={item} index={i} />
+          ))}
         </View>
+      )}
+      {feed.hasMore ? (
+        <Button
+          label="Show more"
+          variant="ghost"
+          size="sm"
+          block={false}
+          loading={feed.loadingMore}
+          onPress={feed.loadMore}
+          style={styles.center}
+        />
       ) : null}
     </View>
   );
@@ -125,7 +115,7 @@ function FeedList({
 
 /** Four rows fill a phone's first screen of feed. */
 const SKELETON_ROWS = ["a", "b", "c", "d"] as const;
-/** Skeleton line widths: name and plate, the market line, then two lines of text. */
+/** Skeleton line widths: name and tag, the position chip, then two lines of text. */
 const LINE_WIDTHS = ["42%", "58%", "92%", "70%"] as const;
 
 /** Rows of the feed's own shape while the first page loads. */
@@ -148,10 +138,9 @@ export function FeedSkeleton({ rows = SKELETON_ROWS.length }: { rows?: number })
 }
 
 const styles = StyleSheet.create({
-  list: { gap: SPACE.sm },
-  more: { paddingTop: SPACE.sm },
+  list: { gap: SPACE.lg },
   center: { alignSelf: "center" },
   skeletonRow: { flexDirection: "row", gap: SPACE.md, paddingVertical: SPACE.md },
-  disc: { width: SIZE.avatarSm, height: SIZE.avatarSm, borderRadius: RADIUS.pill },
+  disc: { width: SIZE.avatarMd, height: SIZE.avatarMd, borderRadius: RADIUS.pill },
   lines: { flex: 1, gap: SPACE.sm },
 });

@@ -51,7 +51,7 @@ export function FollowRow({
         accessibilityLabel={`${name}, rank ${trader.rank}, ${gain ? "up" : "down"} ${signedUsd(trader.netPnlUsd6)} over 30 days`}
         style={[styles.row, { backgroundColor: color.card, borderColor: selected ? color.ring : color.transparent }]}
       >
-        <Text style={[TYPE.rowChange, styles.rank, { color: color.text3 }]}>{trader.rank}</Text>
+        <Rank rank={trader.rank} />
         <Avatar avatar={trader.avatar} address={trader.address} />
         <View style={styles.text}>
           <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
@@ -76,7 +76,23 @@ export function FollowRow({
   );
 }
 
+/** Fomo F06: medals for the top three (gold, silver, bronze-toned warn), a plain number after. */
+const MEDALS = 3;
+const MEDAL = SIZE.icon;
+
+function Rank({ rank }: { rank: number }) {
+  const { color } = useTheme();
+  if (rank > MEDALS) return <Text style={[TYPE.rowChange, styles.rank, { color: color.text3 }]}>{rank}</Text>;
+  const tone = [color.gold, color.silver, color.warn][rank - 1] ?? color.text3;
+  return (
+    <View style={[styles.medal, { backgroundColor: tone }]}>
+      <Text style={[TYPE.label, { color: color.primaryForeground }]}>{rank}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  medal: { width: MEDAL, height: MEDAL, borderRadius: MEDAL / 2, alignItems: "center", justifyContent: "center" },
   row: {
     flexDirection: "row",
     alignItems: "center",

@@ -15,6 +15,7 @@ import {
   starterDripAbi,
 } from "@senryo/contracts/abis";
 import { addressBooks } from "@senryo/contracts/addresses";
+import { perplExchangeAbi } from "@senryo/contracts/external";
 import { type Abi, type Address, getAddress, getContract } from "viem";
 import type { ReadClient } from "./clients.ts";
 
@@ -45,10 +46,13 @@ export type ContractName = keyof typeof CONTRACT_ABIS;
 
 export { aggregatorV3InterfaceAbi };
 
-/** Every custom error any of our contracts can revert with (for decoding reverts from raw calls). */
-export const ALL_ERRORS_ABI: Abi = Object.values(CONTRACT_ABIS)
-  .flat()
-  .filter((item) => item.type === "error");
+/**
+ * Every custom error any of our contracts — or the external venue the app sends to directly (Perpl's Exchange) — can
+ * revert with, for decoding reverts from raw calls.
+ */
+export const ALL_ERRORS_ABI: Abi = [...Object.values(CONTRACT_ABIS).flat(), ...perplExchangeAbi].filter(
+  (item) => item.type === "error",
+);
 
 export class NotDeployedError extends Error {
   constructor(

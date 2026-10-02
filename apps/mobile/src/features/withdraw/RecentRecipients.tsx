@@ -10,7 +10,7 @@ import { SectionLabel } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
 import { ageLabel } from "~/features/markets/session";
 import { useNowSec } from "~/features/markets/useNowSec";
-import { TraderAvatar } from "~/features/search/TraderAvatar";
+import { TraderAvatar } from "~/features/social/TraderAvatar";
 import { fire } from "~/feedback/fire";
 import { shortAddress } from "~/lib/format";
 import { usd } from "~/lib/money";

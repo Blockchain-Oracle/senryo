@@ -4,9 +4,9 @@ import {
   HANDLE_MAX_CHARS,
   ID_CURSOR_PATTERN,
   MARKET_ID_PATTERN,
-  POSITION_ID_PATTERN,
   POST_KINDS,
   POST_MAX_CHARS,
+  POST_VIEW_KINDS,
   REPLIES_PAGE_DEFAULT,
   REPORT_NOTE_MAX_CHARS,
   REPORT_REASONS,
@@ -14,9 +14,12 @@ import {
 import { defineRoute } from "./define.ts";
 import { avatarIdSchema, chainQuerySchema } from "./profile.ts";
 import { deletedResponseSchema } from "./storage.ts";
+import { feedTradeSchema, positionIdSchema } from "./trade.ts";
 
 /**
- * Posts (S12b.6, D-174): theses and one-level replies (a reply's parent is a thesis), likes and reports.
+ * Posts (S12b.6, D-174): theses and one-level replies (a reply's parent is a thesis or a trade post), likes and reports.
+ * A trade post (`kind: "trade"`, F-D1) is a feed trade row's anchor: no text, created on first use by
+ * `POST /v1/feed/:id/anchor`, never written or deleted through these routes; its author is the trader.
  * - Writing needs a session AND the author's profile listed on that network (403 NOT_LISTED otherwise), runs the
  *   content filter (400 CONTENT_BLOCKED) and a per-account hourly budget (429 RATE_LIMITED).
  * - A block in either direction stops replies and likes (403 BLOCKED).
@@ -38,14 +41,13 @@ export const socialIdentitySchema = z.object({
 });
 
 export const marketIdSchema = z.string().regex(MARKET_ID_PATTERN, "expected an indexer market id (ours-0, perpl-16)");
-export const positionIdSchema = z.string().regex(POSITION_ID_PATTERN, "expected an indexer position id");
 export const idCursorSchema = z.string().regex(ID_CURSOR_PATTERN, "expected a page cursor");
 
 export const postSchema = z.object({
   id: z.uuid(),
   chainId: chainIdSchema,
-  kind: z.enum(POST_KINDS),
-  /** The thesis a reply answers; null for a thesis. */
+  kind: z.enum(POST_VIEW_KINDS),
+  /** The thesis or trade post a reply answers; null otherwise. */
   parentId: z.uuid().nullable(),
   author: socialIdentitySchema,
   marketId: marketIdSchema.nullable(),
@@ -53,7 +55,7 @@ export const postSchema = z.object({
   positionId: positionIdSchema.nullable(),
   text: z.string(),
   likes: z.int().nonnegative(),
-  /** Visible replies (thesis only; 0 for a reply). */
+  /** Visible replies (thesis and trade posts; 0 for a reply). */
   replies: z.int().nonnegative(),
   /** The session account liked it (false without a session). */
   likedByMe: z.boolean(),
@@ -83,11 +85,13 @@ export const threadQuerySchema = chainQuerySchema.extend({
   limit: z.coerce.number().int().positive().max(REPLIES_PAGE_DEFAULT).optional(),
 });
 
-/** A thesis with its replies, oldest reply first. */
+/** A thesis or a trade post with its replies, oldest reply first; a trade post's thread carries its trade. */
 export const threadSchema = z.object({
   post: postSchema,
   replies: z.array(postSchema),
   nextCursor: idCursorSchema.nullable(),
+  /** The fill a trade post is about (null for a thesis or reply). */
+  trade: feedTradeSchema.nullable().default(null),
 });
 
 export const likeStateSchema = z.object({ postId: z.uuid(), liked: z.boolean(), likes: z.int().nonnegative() });

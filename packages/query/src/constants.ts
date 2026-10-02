@@ -48,6 +48,10 @@ export const SPOT_STATS_REFETCH_MS = 60_000;
  */
 export const DISCOVERY_QUOTES_REFETCH_MS = 10_000;
 export const DISCOVERY_CANDLES_REFETCH_MS = 60_000;
+/** The wallet's Perpl account/positions (direct onchain reads) between send-driven invalidations. */
+export const PERPL_ACCOUNT_REFETCH_MS = 10_000;
+/** A Perpl market's order terms (mark, max leverage, fee) and the Exchange's halt flag while a ticket is open. */
+export const PERPL_TERMS_REFETCH_MS = 5_000;
 /** Perpl's `/v1/pub/context` (funding intervals) is re-read at most this often. */
 export const PERPL_CONTEXT_TTL_MS = 600_000;
 /** A Perpl REST call that takes longer is "didn't answer" (the onchain price beside it still shows). */
@@ -57,6 +61,15 @@ export const PERPL_HTTP_TIMEOUT_MS = 6_000;
  * ≈ 13 days of the busiest feed (wEWYx ≈ 450 rounds/day, D-220), the whole of SPY's ≈ 80/day life so far.
  */
 export const FEED_HISTORY_MAX_ROUNDS = 6_000;
+
+/** Any-asset (D6/D2): holdings match the api's ~20 s cache; quotes re-fetch while a ticket or review is open. */
+export const HOLDINGS_REFETCH_MS = 20_000;
+export const SWAP_QUOTE_REFETCH_MS = 10_000;
+/** The route table changes only with a release (Aurora's incident state rides along). */
+export const BRIDGE_ROUTES_STALE_MS = 300_000;
+export const BRIDGE_QUOTE_REFETCH_MS = 15_000;
+/** A sent transfer's status is polled at this pace until it is delivered, refunded or failed. */
+export const BRIDGE_STATUS_REFETCH_MS = 5_000;
 
 /** Engine socket: keep-alive and reconnect backoff. */
 export const SOCKET_PING_MS = 25_000;

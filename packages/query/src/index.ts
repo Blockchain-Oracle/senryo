@@ -1,4 +1,5 @@
 export * from "./account.ts";
+export * from "./anyasset.ts";
 export { type Capability, type CapabilityFacts, capabilitiesOf } from "./capabilities.ts";
 export * from "./card.ts";
 export * from "./collateral.ts";
@@ -18,6 +19,8 @@ export * from "./markets.ts";
 export * from "./notifications.ts";
 export * from "./operations.ts";
 export * from "./orders.ts";
+export * from "./perpl.ts";
+export * from "./perpl-plan.ts";
 export * from "./portfolio.ts";
 export * from "./price-store.ts";
 export * from "./recipients.ts";

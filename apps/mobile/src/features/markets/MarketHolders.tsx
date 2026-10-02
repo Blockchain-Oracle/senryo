@@ -15,7 +15,7 @@ import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
 import { ReadingView, Skeleton } from "~/components/kit/states";
 import { usePressScale } from "~/components/kit/usePressScale";
-import { TraderAvatar, traderName } from "~/features/search/TraderAvatar";
+import { TraderAvatar, traderName } from "~/features/social/TraderAvatar";
 import { useSessionGate } from "~/features/social/useSocialAccount";
 import { fire } from "~/feedback/fire";
 import { watchRoute } from "~/lib/constants/routes";

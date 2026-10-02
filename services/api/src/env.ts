@@ -44,6 +44,12 @@ export interface ApiSecrets {
   turnstileSecret: string | undefined;
   /** Operator bearer secret for the moderation review queue (S12b.6); unset → those routes answer 503. */
   adminSecret: string | undefined;
+  /** Envio HyperSync token for holdings discovery (D6); its own variable so it needn't share the indexer's budget. */
+  hypersyncToken: string | undefined;
+  /** Alchemy Portfolio API key — the holdings discovery fallback; unset → skipped. */
+  alchemyKey: string | undefined;
+  /** Aurora (NEAR Intents) Studio key — incident feed and, later, quotes; unset → Aurora reports `no_key`. */
+  auroraKey: string | undefined;
 }
 
 export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
@@ -55,6 +61,9 @@ export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
       sessionSecret: readSecret("API_SESSION_SECRET"),
       turnstileSecret: readSecret("TURNSTILE_SECRET"),
       adminSecret: readSecret("API_ADMIN_SECRET"),
+      hypersyncToken: readSecret("HYPERSYNC_API_TOKEN"),
+      alchemyKey: readSecret("ALCHEMY_API_KEY"),
+      auroraKey: readSecret("AURORA_API_KEY"),
     },
   };
 }

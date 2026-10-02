@@ -45,7 +45,7 @@ Targets come from the generated address book (`@senryo/contracts`), per network.
 | `withdraw(token, amount, to == self)` | sign (D-039) | uncapped — the key that signs keeps the funds |
 | `withdraw(…, to != self)` | step-up (`destination`) | — |
 | `swapCollateral` | sign | ≤ $250 per action, counts to the session total |
-| stable `approve(spender ∈ {SenryoCore, LpVault}; Perpl exchange joins in S7)` | sign | ≤ $250 per action |
+| stable `approve(spender ∈ {SenryoCore, LpVault, Perpl Exchange})` (Perpl's AUSD decoded like a stable) | sign | ≤ $250 per action |
 | stable `approve(other spender)` | step-up (`unknown-spender`) | — |
 | stable `transfer` | step-up (`send`) | — |
 | testnet `faucet()` | sign | — |
@@ -53,10 +53,17 @@ Targets come from the generated address book (`@senryo/contracts`), per network.
 | `LpVault.requestRedeem / claimRedeem` (to self) | sign | — |
 | `repayCardDebt`, `revokeSpendAllowance` | sign | uncapped (risk-reducing) |
 | `setCardEnvelope`, `setSpendAllowance` | step-up (`card-setting`) | — |
+| Perpl `execOrder` OpenLong / OpenShort (market decimals known) | sign | notional at the order's limit price ≤ $250; `leverageHdths` 1…1000 (≤ 10x; 0 = market max is refused); counts to the session total; Face ID gate as opens |
+| Perpl `execOrder` CloseLong / CloseShort | sign | **uncapped**, rate-exempt (reduce-only by contract) |
+| Perpl `createAccount` / `depositCollateral` | sign | ≤ $250 per action, counts to the session total (funds leave the Senryo account for a third-party venue) |
+| Perpl `withdrawCollateral` | sign | uncapped — the contract pays `msg.sender` |
+| any other Perpl selector (cancel, change, forwarding, …) or an open on a market with unknown decimals | never (`out-of-scope`) | — |
 
 Missing live reads (equity, market room) never widen the scope: `increase` becomes `context-unavailable` (step-up or
-wait). Vault ↔ Perpl moves (S7) are withdraw-to-self (in scope) + `approve` (capped) + Perpl `depositCollateral`
-(added to the allowlist with its own cap in S7).
+wait). Perpl (D1) is traded from the wallet: `approve` (capped) + `createAccount`/`depositCollateral` (capped, counted)
++ `execOrder`; Perpl's own margin applies, so a Perpl open is bounded by calldata (notional, leverage), not by the
+engine's equity/OI reads. Targets come from `@senryo/config` (`PERPL_EXCHANGE`, `PERPL_COLLATERAL`,
+`PERPL_MARKET_SCALES`), not the address book.
 
 ### Typed data and messages
 - In session: EIP-712 `Claim` / `Voucher` (domain `SenryoStarterDrip` v1, this chain, the book's StarterDrip) and

@@ -23,7 +23,7 @@ const COPY_ORDER = 2;
 const ACTION_ORDER = 4;
 
 /**
- * Setup step 5 — completion (C08; Solflare S13/M18 adapted): the gold-leaf foil with the pressed seal arrives, one
+ * Setup — completion (A2 step 7; the terms sheet rises over Home after it) (C08; Solflare S13/M18 adapted): the gold-leaf foil with the pressed seal arrives, one
  * line says what now exists (the account, and the @handle when one was claimed), and one action opens Home. The foil
  * is the first-pass master (S1b.3, review B12 open) and is still: its flex is a material effect that needs a shader,
  * and a flat wobble would only pretend. Shown only after the account really exists and the earlier steps are recorded.
@@ -60,9 +60,7 @@ export default function DoneStep() {
             {handle ? `You’re in, @${handle}` : "You’re in"}
           </Text>
           <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>
-            {practice
-              ? "Your account is ready in Practice mode. Claim your paper money on Home and open your first position."
-              : "Your account is ready. Add money on Home to open your first position."}
+            {practice ? "Open your first trade" : "Add money to start"}
           </Text>
         </Animated.View>
       </View>

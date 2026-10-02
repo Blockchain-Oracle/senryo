@@ -124,5 +124,15 @@ export const MAINNET_EXTERNAL = {
     /** `poolKeys(bytes25)` recovers a pool's key from its id (docs.uniswap.org v4 deployments, Monad: 143). */
     positionManager: "0x5b7ec4a94ff9bedb700fb82ab09d5846972f4016",
   },
+  /**
+   * Any↔any swap routers (plan §0.8 B6): the `transaction.to` / `routerAddress` of live Monorail and KyberSwap quotes
+   * (2 Oct 2026, MON→AUSD and USDT0→XAUt0). Calldata aimed anywhere else is refused before signing. Monorail's router
+   * is an ERC-1967 proxy (implementation 0x63be…0676 on 2 Oct), so its code can change under this address; KyberSwap's
+   * MetaAggregationRouterV2 is not a proxy.
+   */
+  aggregators: {
+    monorail: "0xa68a7f0601effdc65c64d9c47ca1b18d96b4352c",
+    kyberswap: "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5",
+  },
   perplExchange: "0x34B6552d57a35a1D042CcAe1951BD1C370112a6F",
 } as const;

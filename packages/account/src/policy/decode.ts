@@ -2,7 +2,9 @@
  * Calldata → `Action`, decoded against the real ABIs in `@senryo/contracts` (`decodeFunctionData`). Notional,
  * amounts, destinations and receivers come from the calldata itself; nothing the caller claims is trusted.
  */
-import { lpVaultAbi, mockAUSDAbi, senryoCoreAbi } from "@senryo/contracts";
+import { PERPL_COLLATERAL_DECIMALS, PERPL_ORDER_TYPE } from "@senryo/config";
+import { lpVaultAbi, mockAUSDAbi, perplExchangeAbi, senryoCoreAbi } from "@senryo/contracts";
+import { oneUnit } from "@senryo/core";
 import { type Abi, type Address, decodeFunctionData, type Hex, isHex, size, slice } from "viem";
 import { includesAddress, type ScopeTargets, sameAddress } from "./targets.ts";
 import type { Action } from "./types.ts";
@@ -98,6 +100,52 @@ function decodeVault(call: CallInput, data: Hex, self: Address): Action {
   }
 }
 
+/**
+ * Perpl's Exchange (D1). The account is `msg.sender`, so nothing here can act for someone else; amounts and the
+ * order's size, limit price and leverage are read from calldata. Only the four position order types are in scope —
+ * cancel / change / increase-collateral and every other selector stay unknown (this app never signs them in session).
+ */
+function decodePerpl(call: CallInput, data: Hex, t: ScopeTargets): Action {
+  const fn = decode(perplExchangeAbi, data);
+  if (!fn) return unknown(call);
+  const a = fn.args;
+  switch (fn.functionName) {
+    case "createAccount":
+    case "depositCollateral":
+      return { kind: "perpl-deposit", fn: fn.functionName, amountUsd6: a[0] as bigint };
+    case "withdrawCollateral":
+      return { kind: "perpl-withdraw", amountUsd6: a[0] as bigint };
+    case "execOrder": {
+      const order = a[0] as {
+        perpId: bigint;
+        orderType: number;
+        pricePNS: bigint;
+        lotLNS: bigint;
+        leverageHdths: bigint;
+      };
+      const marketId = Number(order.perpId);
+      if (order.orderType === PERPL_ORDER_TYPE.closeLong || order.orderType === PERPL_ORDER_TYPE.closeShort)
+        return { kind: "perpl-reduce", marketId };
+      const isOpen = order.orderType === PERPL_ORDER_TYPE.openLong || order.orderType === PERPL_ORDER_TYPE.openShort;
+      const scale = t.perplScales[marketId];
+      // An open on a market whose decimals aren't known can't be valued from calldata: never in session.
+      if (!isOpen || !scale) return unknown(call);
+      const exp = scale.priceDecimals + scale.lotDecimals - PERPL_COLLATERAL_DECIMALS;
+      const product = order.pricePNS * order.lotLNS;
+      const notionalUsd6 = exp >= 0 ? product / oneUnit(exp) : product * oneUnit(-exp);
+      return {
+        kind: "perpl-open",
+        marketId,
+        isLong: order.orderType === PERPL_ORDER_TYPE.openLong,
+        notionalUsd6,
+        leverageHdths: order.leverageHdths,
+      };
+    }
+    default:
+      return unknown(call);
+  }
+}
+
 function decodeToken(call: CallInput, data: Hex, token: Address, t: ScopeTargets): Action {
   const fn = decode(mockAUSDAbi, data);
   if (!fn) return unknown(call);
@@ -131,6 +179,9 @@ export function decodeCall(call: CallInput, self: Address, targets: ScopeTargets
   if (!call.to || !call.data || selectorOf(call.data) === "0x") return unknown(call);
   if (sameAddress(call.to, targets.core)) return decodeCore(call, call.data, self, targets);
   if (sameAddress(call.to, targets.lpVault)) return decodeVault(call, call.data, self);
-  if (includesAddress(targets.stables, call.to)) return decodeToken(call, call.data, call.to, targets);
+  if (sameAddress(call.to, targets.perplExchange)) return decodePerpl(call, call.data, targets);
+  // Perpl's AUSD is decoded like our stables (approve / transfer only — `faucet` stays limited to the mocks).
+  if (includesAddress(targets.stables, call.to) || sameAddress(call.to, targets.perplCollateral))
+    return decodeToken(call, call.data, call.to, targets);
   return unknown(call);
 }

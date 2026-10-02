@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { addressSchema, chainIdSchema, intCodec, isoTimeSchema, txHashSchema, uintCodec } from "../primitives.ts";
+import { addressSchema, chainIdSchema, isoTimeSchema } from "../primitives.ts";
 import { FEED_PAGE_MAX, SEARCH_KINDS, SEARCH_QUERY_MAX_CHARS } from "../social.ts";
 import { defineRoute } from "./define.ts";
-import { idCursorSchema, marketIdSchema, positionIdSchema, postSchema, socialIdentitySchema } from "./posts.ts";
+import { idCursorSchema, marketIdSchema, postSchema, socialIdentitySchema } from "./posts.ts";
+import { feedTradeSchema } from "./trade.ts";
 
 /**
  * Trade feed (S12b.4, D-174, §5.9): indexed fills of accounts that share that network's trades, merged with theses.
@@ -11,24 +12,12 @@ import { idCursorSchema, marketIdSchema, positionIdSchema, postSchema, socialIde
  * turned sharing on. With a session, accounts blocked either way, muted accounts and posts you reported are left out.
  * Kinds stay separate: `position` (opened / closed / liquidated / flipped), `fill` (size added or reduced) and
  * `thesis` (authored; replies live in the thread). Following is not copy trading.
+ * Every row takes every post verb (F-D1): a trade row is liked, replied to, shared and reported through its trade
+ * post, an anchor created on first use (`POST /v1/feed/:id/anchor`); `engagement` carries its counts meanwhile.
  */
 
 export const FEED_SCOPES = ["global", "friends"] as const;
 export const FEED_KINDS = ["fill", "position", "thesis"] as const;
-/** Mirrors indexer `FillKind` / `Side` / `Venue` / `PositionStatus` (indexer/schema.graphql). */
-export const TRADE_FILL_KINDS = [
-  "OPEN",
-  "INCREASE",
-  "DECREASE",
-  "CLOSE",
-  "LIQUIDATE",
-  "TRIGGER",
-  "INVERT",
-  "DELEVERAGE",
-] as const;
-export const TRADE_SIDES = ["LONG", "SHORT"] as const;
-export const TRADE_VENUES = ["OURS", "PERPL"] as const;
-export const POSITION_STATUSES = ["OPEN", "CLOSED", "LIQUIDATED"] as const;
 
 export const feedQuerySchema = z.object({
   chainId: z.coerce.number().pipe(chainIdSchema),
@@ -40,25 +29,11 @@ export const feedQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(FEED_PAGE_MAX).optional(),
 });
 
-/** One indexed fill (usd6 money, 1e18 size/price). `realizedPnl` is before fees, funding and borrow. */
-export const feedTradeSchema = z.object({
-  venue: z.enum(TRADE_VENUES),
-  fillKind: z.enum(TRADE_FILL_KINDS),
-  side: z.enum(TRADE_SIDES),
-  symbol: z.string(),
-  size: uintCodec,
-  price: uintCodec.nullable(),
-  notional: uintCodec,
-  fee: uintCodec,
-  realizedPnl: intCodec,
-  funding: intCodec,
-  borrow: uintCodec,
-  positionId: positionIdSchema,
-  positionStatus: z.enum(POSITION_STATUSES).nullable(),
-  /** A closed / liquidated position's lifetime realized PnL after fees, funding and borrow; null while open. */
-  positionNetPnl: intCodec.nullable(),
-  txHash: txHashSchema,
-  block: z.int().nonnegative(),
+export const tradeEngagementSchema = z.object({
+  postId: z.uuid().nullable(),
+  likes: z.int().nonnegative(),
+  replies: z.int().nonnegative(),
+  likedByMe: z.boolean(),
 });
 
 export const feedItemSchema = z.object({
@@ -72,6 +47,11 @@ export const feedItemSchema = z.object({
   marketId: marketIdSchema.nullable(),
   trade: feedTradeSchema.nullable(),
   post: postSchema.nullable(),
+  /**
+   * A trade row's likes and replies, through its trade post (null on a thesis row, whose `post` carries them).
+   * `postId` is null until someone first engages; then it is the thread and the like target.
+   */
+  engagement: tradeEngagementSchema.nullable().default(null),
 });
 
 export const feedPageSchema = z.object({
@@ -87,6 +67,23 @@ export const feedRoute = defineRoute({
   query: feedQuerySchema,
   body: undefined,
   response: feedPageSchema,
+});
+
+export const feedEventParamsSchema = z.object({ id: idCursorSchema });
+
+/**
+ * F-D1: a trade row's post, created on first use and the same one ever after (one per feed row). Its id is what likes,
+ * replies (`parentId`), reports and share links use; its thread carries the trade. 404 when the row isn't visible on
+ * its network (the trader unlisted, stopped sharing, or it is a thesis row, which is its own post).
+ */
+export const tradeAnchorRoute = defineRoute({
+  method: "POST",
+  path: "/v1/feed/:id/anchor",
+  auth: "optional",
+  params: feedEventParamsSchema,
+  query: undefined,
+  body: undefined,
+  response: postSchema,
 });
 
 /**
@@ -137,8 +134,8 @@ export const searchRoute = defineRoute({
 export type FeedScope = (typeof FEED_SCOPES)[number];
 export type FeedKind = (typeof FEED_KINDS)[number];
 export type FeedQuery = z.output<typeof feedQuerySchema>;
-export type FeedTrade = z.output<typeof feedTradeSchema>;
 export type FeedItem = z.output<typeof feedItemSchema>;
+export type TradeEngagement = z.output<typeof tradeEngagementSchema>;
 export type FeedPage = z.output<typeof feedPageSchema>;
 export type SearchKind = (typeof SEARCH_KINDS)[number];
 export type SearchResult = z.output<typeof searchResultSchema>;

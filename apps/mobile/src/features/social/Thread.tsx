@@ -1,14 +1,14 @@
 /**
- * A thesis and its replies (screen inventory "Post/thesis detail and replies"; Fomo F13's thesis block and F15's
- * connectors): the post with its market, the replies oldest first, and the reply composer pinned above the keyboard.
- * A post that was deleted, hidden or whose author left this network answers 404 — said plainly, with the way back.
- * Like Fomo's detail pages the bottom zone belongs to the page's own action, so the route hides the dock.
+ * A thread (F4 step 4; Fomo F13's thesis block and F15's connectors): the thesis or trade post, its replies oldest
+ * first, and the reply composer pinned above the keyboard (the head post's reply control focuses it). A post that was
+ * deleted, hidden or whose author left this network answers 404 — said plainly, with the way back. Like Fomo's
+ * detail pages the bottom zone belongs to the page's own action, so the route hides the dock.
  */
 import { socialKeys, useQueryEnv, useThread } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useRef } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, type TextInput, View } from "react-native";
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePullRefresh } from "~/components/kit/PullRefresh";
@@ -17,7 +17,7 @@ import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { isNotFound } from "./format";
 import { QuietLine } from "./Quiet";
 import { ReplyComposer } from "./ReplyComposer";
-import { ReplyRow, ThesisBlock } from "./ThreadPost";
+import { HeadPost, ReplyRow } from "./ThreadPost";
 import { useQueryError } from "./useQueryError";
 
 export function Thread({ id }: { id: string }) {
@@ -33,6 +33,7 @@ export function Thread({ id }: { id: string }) {
   const scroll = useRef<ScrollView>(null);
   /** Set when a reply was just sent: the list follows it to the end once it has arrived. */
   const follow = useRef(false);
+  const input = useRef<TextInput>(null);
   const keyboard = useAnimatedKeyboard();
   const bottomInset = insets.bottom;
   const lift = useAnimatedStyle(() => ({ paddingBottom: Math.max(bottomInset, keyboard.height.value) }));
@@ -55,10 +56,7 @@ export function Thread({ id }: { id: string }) {
         {reading.status === "unknown" ? <ThreadSkeleton /> : null}
         {reading.status === "failed" ? (
           isNotFound(error) ? (
-            <QuietLine
-              text="This post isn’t available. It may have been deleted, or its author isn’t public on this network."
-              action={{ label: "Go back", onPress: () => router.back() }}
-            />
+            <QuietLine text="This post isn’t available" action={{ label: "Go back", onPress: () => router.back() }} />
           ) : (
             <ErrorState diagnosis={reading.error} retry={() => void refresh()} />
           )
@@ -68,7 +66,12 @@ export function Thread({ id }: { id: string }) {
         ) : null}
         {thread ? (
           <View>
-            <ThesisBlock post={thread.post} replies={thread.replies.length} />
+            <HeadPost
+              post={thread.post}
+              trade={thread.trade}
+              replies={thread.post.replies}
+              onReply={() => input.current?.focus()}
+            />
             {thread.replies.map((reply, i) => (
               <ReplyRow key={reply.id} post={reply} last={i === thread.replies.length - 1} />
             ))}
@@ -83,6 +86,7 @@ export function Thread({ id }: { id: string }) {
       </ScrollView>
       {thread ? (
         <ReplyComposer
+          inputRef={input}
           thesis={thread.post}
           onPosted={() => {
             follow.current = true;

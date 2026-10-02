@@ -25,7 +25,7 @@ const SUFFIX_BYTES = 4;
 const SHARED_FILLS = 3;
 
 /** The first whole second at or after `u`'s sharing start on that network (block times are whole seconds). */
-async function sharingStart(h: Harness, u: User, chainId: ChainId = TESTNET_CHAIN_ID): Promise<number> {
+export async function sharingStart(h: Harness, u: User, chainId: ChainId = TESTNET_CHAIN_ID): Promise<number> {
   const column = chainId === MAINNET_CHAIN_ID ? "public_trades_mainnet_since" : "public_trades_practice_since";
   const [row] = await h.db<{ since: Date }[]>`SELECT ${h.db(column)} AS since FROM profiles WHERE address = ${u.lower}`;
   return Math.ceil((row?.since.getTime() ?? 0) / MS_PER_SECOND);

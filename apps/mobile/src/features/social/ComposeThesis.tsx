@@ -1,14 +1,14 @@
 /**
- * Compose a thesis (screen inventory "Compose thesis"; direction §9: an authored opinion, distinct from a fill): the
- * text with a live count against the api's limit, an optional market picked from the engine's listings by their real
- * marks and oracle prices, the mode it will be public on, and Post with its pending and refused states said in place.
- * `NOT_LISTED` explains that posting needs a listed profile and links to where that is set. Success closes the sheet;
- * the new thesis is then the first row of the feed.
+ * Compose a thesis (F4 step 5): the text with a count against the api's 280, "About a market" chips over every market
+ * this network lists — our engine's and Perpl's — by their real marks, and "Attach my position" chips over the
+ * account's own open positions (the api checks the position is theirs). The mode it will be public on sits under the
+ * field. Post answers in place: pending, or the api's refusal in one line (`NOT_LISTED` adds the way to Settings).
+ * Success closes the sheet; the new thesis is the feed's first row.
  */
 import { POST_MAX_CHARS } from "@senryo/api-client";
-import { engineMarketsOn } from "@senryo/config";
+import { engineMarketsOn, PERPL_MARKETS } from "@senryo/config";
 import { ids } from "@senryo/identity";
-import { type useCreatePost, useMarket } from "@senryo/query";
+import { useAttachablePositions, type useCreatePost } from "@senryo/query";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -19,11 +19,11 @@ import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
-import { price18, priceDecimalsOf } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, HAIRLINE_PX, SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { engineMarketId, isNotListed, socialErrorCopy } from "./format";
+import { engineMarketId, isNotListed, marketOfId, SIDE_WORD, socialErrorCopy } from "./format";
 import { ModeBadge } from "./Quiet";
+import { useSocialAccount } from "./useSocialAccount";
 
 /** The field shows four lines of body text before it scrolls: a thesis is short, and the sheet stays compact. */
 const FIELD_LINES = 4;
@@ -31,23 +31,72 @@ const FIELD_HEIGHT = (TYPE.body.lineHeight ?? 0) * FIELD_LINES + 2 * SPACE.md;
 /** The count turns to the warning ink when this few characters are left. */
 const NEAR_LIMIT = 20;
 
+interface Pick {
+  key: string;
+  marketId: string;
+  mark: string | undefined;
+  label: string;
+  detail?: string;
+  detailTone?: "up" | "down";
+}
+
+/** Every market this network lists: our engine's first, then Perpl's (`perpl-<id>`). */
+function useMarketPicks(): Pick[] {
+  const network = useNetwork();
+  const engine = engineMarketsOn(network.chainId).map((m) => ({
+    key: engineMarketId(m.id),
+    marketId: engineMarketId(m.id),
+    mark: ids.engineMarket(network.chainId, m.id),
+    label: m.symbol,
+  }));
+  const perpl = Object.entries(PERPL_MARKETS[network.chainId] ?? {}).map(([symbol, perplId]) => ({
+    key: `perpl-${perplId}`,
+    marketId: `perpl-${perplId}`,
+    mark: ids.perplMarket(network.chainId, perplId),
+    label: symbol,
+  }));
+  return [...engine, ...perpl];
+}
+
 export function ComposeThesis({ create }: { create: ReturnType<typeof useCreatePost> }) {
   const { color } = useTheme();
   const fill = useGroupFill();
   const network = useNetwork();
   const close = useSheetClose();
+  const { address } = useSocialAccount();
   const [text, setText] = useState("");
-  const [market, setMarket] = useState<number>();
+  const [market, setMarket] = useState<string>();
+  const [position, setPosition] = useState<{ id: string; marketId: string }>();
   const [focused, setFocused] = useState(false);
   const [error, setError] = useState<unknown>();
-  const markets = engineMarketsOn(network.chainId);
+  const markets = useMarketPicks();
+  const owned = useAttachablePositions(address);
+  const positions: Pick[] =
+    owned.status === "fresh" || owned.status === "stale"
+      ? owned.value.map((p) => {
+          const ref = marketOfId(network.chainId, p.market.id, p.market.symbol);
+          return {
+            key: p.id,
+            marketId: p.market.id,
+            mark: ref?.mark,
+            label: p.market.symbol,
+            detail: SIDE_WORD[p.side],
+            detailTone: p.side === "LONG" ? "up" : "down",
+          };
+        })
+      : [];
   const body = text.trim();
   const left = POST_MAX_CHARS - text.length;
 
   const publish = () => {
     setError(undefined);
+    const about = position
+      ? { marketId: position.marketId, positionId: position.id }
+      : market
+        ? { marketId: market }
+        : {};
     create.mutate(
-      { kind: "thesis", text: body, ...(market === undefined ? {} : { marketId: engineMarketId(market) }) },
+      { kind: "thesis", text: body, ...about },
       {
         onSuccess: () => {
           fire("confirm");
@@ -63,7 +112,7 @@ export function ComposeThesis({ create }: { create: ReturnType<typeof useCreateP
 
   return (
     <>
-      <SheetHeading title="New thesis" body="Your view on a market. An opinion, never an order." />
+      <SheetHeading title="New thesis" />
       <View style={styles.block}>
         <View style={[styles.field, { backgroundColor: fill, borderColor: focused ? color.ring : color.transparent }]}>
           <TextInput
@@ -72,7 +121,7 @@ export function ComposeThesis({ create }: { create: ReturnType<typeof useCreateP
               setText(next);
               if (error !== undefined) setError(undefined);
             }}
-            placeholder="What do you think happens next, and why?"
+            placeholder="What happens next, and why?"
             placeholderTextColor={color.text3}
             selectionColor={color.primary}
             multiline
@@ -100,42 +149,40 @@ export function ComposeThesis({ create }: { create: ReturnType<typeof useCreateP
           </Text>
         </View>
       </View>
-      {markets.length > 0 ? (
-        <View style={styles.block}>
-          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>About a market (optional)</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            accessibilityRole="radiogroup"
-            accessibilityLabel="Market"
-            contentContainerStyle={styles.picks}
-          >
-            {markets.map((m) => (
-              <MarketPick
-                key={m.id}
-                marketId={m.id}
-                symbol={m.symbol}
-                name={m.name}
-                selected={market === m.id}
-                onPress={() => setMarket((current) => (current === m.id ? undefined : m.id))}
-              />
-            ))}
-          </ScrollView>
-        </View>
+      {positions.length > 0 ? (
+        <PickRow
+          title="Attach my position"
+          picks={positions}
+          selected={position?.id}
+          onPick={(pick) => {
+            setPosition((current) =>
+              current?.id === pick.key ? undefined : { id: pick.key, marketId: pick.marketId },
+            );
+            setMarket(undefined);
+          }}
+        />
+      ) : null}
+      {markets.length > 0 && !position ? (
+        <PickRow
+          title="About a market"
+          picks={markets}
+          selected={market}
+          onPick={(pick) => setMarket((current) => (current === pick.marketId ? undefined : pick.marketId))}
+        />
       ) : null}
       {error === undefined ? null : (
-        <View style={styles.block}>
-          <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.center, { color: color.down }]}>
-            {socialErrorCopy(error, "Couldn’t post your thesis. Check your connection and try again.")}
+        <View style={styles.refusal}>
+          <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.grow, { color: color.down }]}>
+            {socialErrorCopy(error, "Couldn’t post · try again")}
           </Text>
           {isNotListed(error) ? (
-            <Button
-              label="Open profile settings"
-              variant="ghost"
-              size="sm"
-              onPress={() => close(() => router.navigate(ROUTES.profileSettings as Href))}
-            />
+            <Text
+              accessibilityRole="link"
+              onPress={() => close(() => router.navigate(ROUTES.accountSettings as Href))}
+              style={[TYPE.rowDetail, { color: color.link }]}
+            >
+              Settings
+            </Text>
           ) : null}
         </View>
       )}
@@ -144,25 +191,46 @@ export function ComposeThesis({ create }: { create: ReturnType<typeof useCreateP
   );
 }
 
-/** One market to attach: its real mark, ticker and oracle price. A second tap takes it off again. */
-function MarketPick({
-  marketId,
-  symbol,
-  name,
+function PickRow({
+  title,
+  picks,
   selected,
-  onPress,
+  onPick,
 }: {
-  marketId: number;
-  symbol: string;
-  name: string;
-  selected: boolean;
-  onPress: () => void;
+  title: string;
+  picks: Pick[];
+  selected: string | undefined;
+  onPick: (pick: Pick) => void;
 }) {
   const { color } = useTheme();
+  return (
+    <View style={styles.block}>
+      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{title}</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        accessibilityRole="radiogroup"
+        accessibilityLabel={title}
+        contentContainerStyle={styles.picks}
+      >
+        {picks.map((pick) => (
+          <PickChip
+            key={pick.key}
+            pick={pick}
+            selected={selected === pick.key || selected === pick.marketId}
+            onPress={() => onPick(pick)}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+/** One market or position to attach: its real mark and ticker (and side). A second tap takes it off again. */
+function PickChip({ pick, selected, onPress }: { pick: Pick; selected: boolean; onPress: () => void }) {
+  const { color } = useTheme();
   const fill = useGroupFill();
-  const network = useNetwork();
-  const reading = useMarket(marketId);
-  const price = reading.status === "fresh" || reading.status === "stale" ? reading.value.pv.price18 : undefined;
   return (
     <Pressable
       onPress={() => {
@@ -171,19 +239,19 @@ function MarketPick({
       }}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
-      accessibilityLabel={name}
+      accessibilityLabel={pick.detail ? `${pick.label} ${pick.detail}` : pick.label}
       style={({ pressed }) => [
         styles.pick,
         { backgroundColor: pressed ? color.rowPressed : fill, borderColor: selected ? color.ring : color.transparent },
       ]}
     >
-      <EntityMark id={ids.engineMarket(network.chainId, marketId)} size={SIZE.markCell} decorative ground={fill} />
-      <View>
-        <Text style={[TYPE.chipCategory, { color: color.ink }]}>{symbol}</Text>
-        {price === undefined ? null : (
-          <Text style={[TYPE.moneyMeta, { color: color.text3 }]}>${price18(price, priceDecimalsOf(marketId))}</Text>
-        )}
-      </View>
+      <EntityMark id={pick.mark} size={SIZE.markCell} label={pick.label} decorative ground={fill} />
+      <Text style={[TYPE.chipCategory, { color: color.ink }]}>{pick.label}</Text>
+      {pick.detail ? (
+        <Text style={[TYPE.chipCategory, { color: pick.detailTone === "down" ? color.down : color.up }]}>
+          {pick.detail}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -209,9 +277,9 @@ const styles = StyleSheet.create({
     gap: SPACE.sm,
     minHeight: SIZE.touch,
     paddingHorizontal: SPACE.md,
-    paddingVertical: SPACE.xs,
     borderRadius: BUTTON.radius.md,
     borderWidth: HAIRLINE_PX,
   },
-  center: { textAlign: "center" },
+  refusal: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
+  grow: { flex: 1 },
 });

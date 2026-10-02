@@ -5,14 +5,17 @@
  * `undefined` and says plainly that this build can't do it yet.
  */
 import { requireOptionalNativeModule } from "expo";
+import type * as ExpoImage from "expo-image";
 import type * as LocalAuthentication from "expo-local-authentication";
 import type * as Notifications from "expo-notifications";
 
 export type NotificationsModule = typeof Notifications;
 export type LocalAuthModule = typeof LocalAuthentication;
+export type ImageModule = typeof ExpoImage;
 
 let notifications: NotificationsModule | null | undefined;
 let localAuth: LocalAuthModule | null | undefined;
+let image: ImageModule | null | undefined;
 
 export function notificationsModule(): NotificationsModule | undefined {
   if (notifications === undefined) {
@@ -30,4 +33,12 @@ export function localAuthModule(): LocalAuthModule | undefined {
       : null;
   }
   return localAuth ?? undefined;
+}
+
+/** expo-image (runtime 0.2.0): decoded-bitmap memory cache for the welcome story; React Native's Image without it. */
+export function imageModule(): ImageModule | undefined {
+  if (image === undefined) {
+    image = requireOptionalNativeModule("ExpoImage") ? (require("expo-image") as ImageModule) : null;
+  }
+  return image ?? undefined;
 }

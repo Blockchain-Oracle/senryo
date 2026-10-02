@@ -142,6 +142,18 @@ export const cardAllowanceRequestSchema = z.object({
 });
 export const cardAllowanceResponseSchema = z.object({ txHash: txHashSchema, stage: z.string() });
 
+/** `holds.status`: the first four are an open hold (still reserved against Spendable). */
+export const HOLD_STATUSES = [
+  "RESERVED",
+  "SUBMITTED",
+  "ONCHAIN",
+  "FINALIZED",
+  "CAPTURED",
+  "RELEASED",
+  "FAILED",
+] as const;
+export type HoldStatus = (typeof HOLD_STATUSES)[number];
+
 export const cardAuthSummarySchema = z.object({
   id: z.uuid(),
   kind: z.string(),
@@ -154,6 +166,12 @@ export const cardAuthSummarySchema = z.object({
   mcc: z.string().nullable(),
   merchantDescriptor: z.string().nullable().optional(),
   receivedAt: isoTimeSchema,
+  /** The issuer's transaction token (drives the sandbox Settle / Void / Refund on this payment). */
+  transactionToken: z.string().max(TXN_TOKEN_MAX).optional(),
+  /** The hold's lifecycle (E-D8): open (RESERVED…FINALIZED), CAPTURED, RELEASED or FAILED; null without a hold. */
+  holdStatus: z.enum(HOLD_STATUSES).nullable().optional(),
+  /** What the merchant settled (CAPTURED holds). */
+  capturedUsd6: uintCodec.nullable().optional(),
 });
 
 export const cardSummaryCardSchema = z.object({
@@ -293,6 +311,17 @@ export const cardSummaryRoute = defineRoute({
   query: undefined,
   body: undefined,
   response: cardSummaryResponseSchema,
+});
+
+/** One of the account's card payments by id (E6: deep links and push taps beyond the summary's recent list). */
+export const cardAuthDetailRoute = defineRoute({
+  method: "GET",
+  path: "/v1/card/auth/:id",
+  auth: "session",
+  params: z.object({ id: z.uuid() }),
+  query: undefined,
+  body: undefined,
+  response: cardAuthSummarySchema,
 });
 
 export const cardRepayQuoteRoute = defineRoute({

@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { type ImageSourcePropType, StyleSheet, View } from "react-native";
 import Animated, { type SharedValue, useAnimatedStyle } from "react-native-reanimated";
+import { imageModule } from "~/lib/native-modules";
 import { FONT, RADIUS, useTheme } from "~/theme";
 import { ART_SIZE, LAYER_DEPTH, LAYER_ORDER, SCENES, type SceneLabel } from "./scenes";
 
 /** A layer starts fading once the scene is this far from centre and is gone when the next scene is centred. */
 const FADE_FROM = 0.5;
+/**
+ * Scenes kept mounted either side of the current one. ±1 decoded the next scene's five layers on every settle — the
+ * hitch the user felt mid-swipe — and a fast swipe could outrun it; ±2 keeps the next scene decoded before it is
+ * needed (all six would hold ~180 MB of bitmaps).
+ */
+const MOUNT_WINDOW = 2;
 /** A label's cap height against its plate's height (the masters' plates are drawn for this). */
 const LABEL_FONT_RATIO = 0.44;
 
@@ -27,7 +34,7 @@ export function StoryHero({
 }) {
   const [stage, setStage] = useState({ width: 0, height: 0 });
   const scenes = SCENES.map((scene, index) => ({ scene, index })).filter(
-    ({ index }) => Math.abs(index - activeIndex) <= 1,
+    ({ index }) => Math.abs(index - activeIndex) <= MOUNT_WINDOW,
   );
   const travelOf = (depth: number) => (reduce ? 0 : stage.width * depth);
   return (
@@ -97,7 +104,19 @@ function Layer({
   travel: number;
 }) {
   const style = useLayerStyle(index, position, travel);
-  return <Animated.Image source={source} resizeMode="cover" style={[StyleSheet.absoluteFill, styles.image, style]} />;
+  const expoImage = imageModule();
+  // Scene art is always a bundled require (a module number); anything else stays on React Native's Image.
+  if (!expoImage || typeof source !== "number") {
+    return <Animated.Image source={source} resizeMode="cover" style={[StyleSheet.absoluteFill, styles.image, style]} />;
+  }
+  const { Image } = expoImage;
+  // The layer moves as one native view; expo-image keeps the decoded bitmap in memory, so re-entering a scene never
+  // decodes again.
+  return (
+    <Animated.View style={[StyleSheet.absoluteFill, style]}>
+      <Image source={source} contentFit="cover" cachePolicy="memory" transition={0} style={styles.image} />
+    </Animated.View>
+  );
 }
 
 /** One label, centred in its plate. The box is mapped from the master's units by the images' cover fit. */

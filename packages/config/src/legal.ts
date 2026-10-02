@@ -5,7 +5,7 @@
  * it must be reviewed before real money (mainnet) opens.** `LEGAL_VERSION` is stored with each acknowledgment, so a
  * change here asks again.
  */
-export const LEGAL_VERSION = "2026-10-01";
+export const LEGAL_VERSION = "2026-10-02";
 
 export interface LegalSection {
   heading: string;
@@ -62,7 +62,7 @@ export const TERMS: LegalDocument = {
 
 export const PRIVACY: LegalDocument = {
   title: "Privacy",
-  updated: "1 October 2026",
+  updated: "2 October 2026",
   intro:
     "Senryo is built to need very little about you. This is what we keep, what we never see, and how to remove it.",
   sections: [
@@ -76,7 +76,7 @@ export const PRIVACY: LegalDocument = {
     },
     {
       heading: "What we store",
-      body: "If you set them: your username, display name, bio and avatar choice, who you follow, your posts, likes and reports, and whether you chose to list your profile or share your trades on each network. To run the service: a random id for this installation and your IP address, used for rate limits, abuse prevention and to know which country a request comes from. Your app preferences are stored encrypted with a key only your account has.",
+      body: "If you set them: your username, display name, bio and avatar choice, who you follow, who you blocked or muted, your posts, likes and reports, your price alerts, and whether you chose to list your profile or share your trades on each network. To deliver notifications: this phone’s push token and the notifications sent to you. To recover your account: your backup passkey’s recovery copy, encrypted so only that passkey can open it. To credit deposits: which deposit address the app showed you. To run the service: a random id for this installation and your IP address, used for rate limits, abuse prevention and to know which country a request comes from, and app usage events. Your app preferences are stored encrypted with a key only your account has.",
     },
     {
       heading: "What we do not do",
@@ -84,7 +84,7 @@ export const PRIVACY: LegalDocument = {
     },
     {
       heading: "Deleting your data",
-      body: "You → Delete my data removes your profile, username, follows, posts, likes and reports from our servers. A released username is held for 30 days so nobody can pose as you. Onchain history stays, because it is not ours to remove.",
+      body: "Settings → Delete my data removes from our servers your profile, username, follows, blocks and mutes, posts, likes and reports, your price alerts, your push tokens, your backup passkey’s recovery copy, your deposit-address watches and your encrypted preferences; your notifications lose their content and your usage events lose your address. It also clears what this phone keeps about the account. A released username is held for 30 days so nobody can pose as you. If our servers can’t be reached, this phone is cleared at once and the server part is retried the next time you sign in with that passkey. Onchain history stays, because it is not ours to remove.",
     },
     {
       heading: "Contact",

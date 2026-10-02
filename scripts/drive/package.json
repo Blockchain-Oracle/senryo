@@ -20,7 +20,9 @@
     "trigger-outcome-check": "tsx src/trigger-outcome-check.ts",
     "spot-tokens": "tsx src/spot-tokens.ts",
     "spot-check": "tsx src/spot-check.ts",
-    "discovery-check": "tsx src/discovery-check.ts"
+    "discovery-check": "tsx src/discovery-check.ts",
+    "perpl-check": "tsx src/perpl-check.ts",
+    "anyasset-check": "tsx src/anyasset-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",

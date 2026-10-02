@@ -18,6 +18,8 @@ import { includesAddress, scopeTargets } from "./targets.ts";
 import type { Action, PolicyContext, PolicyUsage, RejectReason, Verdict } from "./types.ts";
 
 const USD_DECIMALS = 6;
+/** Perpl leverage is in hundredths (500 = 5x); the session's cap is in bps of equity (100,000 = 10x). */
+const PERPL_HDTHS_TO_BPS = 100n;
 const USD_SHOWN = 2;
 
 export interface TxInput {
@@ -41,20 +43,26 @@ function recentCount(usage: PolicyUsage, now: number): number {
   return usage.signedAt.filter((t) => now - t < MINUTES).length;
 }
 
-function tradePrompt(action: Extract<Action, { kind: "open" }>, ctx: PolicyContext): string {
-  const label = ctx.marketLabel?.(action.marketId) ?? `market #${action.marketId}`;
+function tradePrompt(action: Extract<Action, { kind: "open" | "perpl-open" }>, ctx: PolicyContext): string {
+  const label =
+    action.kind === "open"
+      ? (ctx.marketLabel?.(action.marketId) ?? `market #${action.marketId}`)
+      : `${ctx.perplMarketLabel?.(action.marketId) ?? `market #${action.marketId}`} on Perpl`;
   return `Confirm ${action.isLong ? "long" : "short"} ${usd(action.notionalUsd6)} ${label}`;
 }
 
 /** D-037 gate for trades: every trade, or opens at/above the threshold; never in practice by default. */
 function gate(action: Action, ctx: PolicyContext): string | undefined {
   if (ctx.faceId === "off") return undefined;
-  if (action.kind === "open") {
+  if (action.kind === "open" || action.kind === "perpl-open") {
     if (ctx.faceId === "every-trade" || action.notionalUsd6 >= FACE_ID_TRADE_THRESHOLD_USD6)
       return tradePrompt(action, ctx);
     return undefined;
   }
-  if (ctx.faceId === "every-trade" && (action.kind === "reduce" || action.kind === "swap")) {
+  if (
+    ctx.faceId === "every-trade" &&
+    (action.kind === "reduce" || action.kind === "perpl-reduce" || action.kind === "swap")
+  ) {
     return action.kind === "swap" ? `Confirm swap ${usd(action.amountUsd6)}` : "Confirm closing trade";
   }
   return undefined;
@@ -78,6 +86,23 @@ function judgeOpen(action: Extract<Action, { kind: "open" }>, ctx: PolicyContext
   if (n > cap) return reject(action, "over-trade-cap");
   if (usage.spentUsd6 + n > SESSION_TOTAL_CAP_USD6) return reject(action, "over-session-total");
   return allow(action, n, true, ctx);
+}
+
+/**
+ * A Perpl open (D1). Perpl enforces its own margin, so the engine's equity/OI-room reads don't apply; the session
+ * still bounds what a live key can do on its own: leverage from calldata ≤ the session maximum (0 = "market maximum"
+ * is refused), notional at the order's own limit price ≤ the per-trade cap, and it counts to the session total.
+ */
+function judgePerplOpen(
+  action: Extract<Action, { kind: "perpl-open" }>,
+  ctx: PolicyContext,
+  usage: PolicyUsage,
+): Verdict {
+  const leverageBps = action.leverageHdths * PERPL_HDTHS_TO_BPS;
+  if (action.leverageHdths <= 0n || leverageBps > SESSION_MAX_LEVERAGE_BPS) return reject(action, "over-leverage");
+  if (action.notionalUsd6 > SESSION_TRADE_CAP_USD6) return reject(action, "over-trade-cap");
+  if (usage.spentUsd6 + action.notionalUsd6 > SESSION_TOTAL_CAP_USD6) return reject(action, "over-session-total");
+  return allow(action, action.notionalUsd6, true, ctx);
 }
 
 function judgeMove(action: Action, amount: bigint, ctx: PolicyContext, usage: PolicyUsage, counts: boolean): Verdict {
@@ -114,6 +139,19 @@ export function judgeAction(action: Action, ctx: PolicyContext, usage: PolicyUsa
     case "lp-redeem":
       return action.receiverSelf ? allow(action, 0n, true, ctx) : reject(action, "destination");
     case "faucet":
+      return allow(action, 0n, true, ctx);
+    // Perpl (D1, session-policy.md §3). Conservative by design: money leaving the Senryo account for a third-party
+    // venue is a move, not a deposit — `createAccount` / `depositCollateral` are capped per action
+    // (SESSION_MOVE_CAP_USD6, like LP deposits) and count to the session total, so a live key can't drain the wallet
+    // into Perpl; larger top-ups take a step-up. The AUSD approve before them is a known spender under the same cap.
+    // Closing is reduce-only and must always work (uncapped); a withdrawal is paid to the signer by the contract.
+    case "perpl-open":
+      return judgePerplOpen(action, ctx, usage);
+    case "perpl-reduce":
+      return allow(action, 0n, false, ctx);
+    case "perpl-deposit":
+      return judgeMove(action, action.amountUsd6, ctx, usage, true);
+    case "perpl-withdraw":
       return allow(action, 0n, true, ctx);
     case "card-setting":
       return reject(action, "card-setting");

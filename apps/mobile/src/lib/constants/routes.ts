@@ -42,6 +42,7 @@ export const ROUTES = {
   accountSecurity: "/account/security",
   accountRecovery: "/account/recovery",
   accountPreferences: "/account/preferences",
+  accountSounds: "/account/sounds",
   accountNotifications: "/account/notifications",
   accountHelp: "/account/help",
   accountDeleteData: "/account/delete-data",
@@ -71,6 +72,24 @@ export const ROUTES = {
   leaderboardInfo: "/leaderboard-info",
   /** Where a profile's listing and handle are edited. The You tab holds it until it has its own page (J9). */
   profileSettings: "/you",
+  /** E1: limit → issue → ready, pushed on the Card stack. */
+  cardGet: "/card/get",
+  /** E1: the first-use explainer, continuing into Get card when it is finished. */
+  cardIntroThenGet: "/card/intro?then=get",
+  /** E3: the limit page in unfreeze mode (a new signed limit, then the issuer opens the card). */
+  cardUnfreeze: "/card/allowance?unfreeze=1",
+  /** E4: repay card debt from the trading account. */
+  cardRepay: "/card/repay",
+  /** G1: the inbox (bell), with All · Alerts. */
+  notifications: "/notifications",
+  /** G1 / C9: the inbox opened on its Alerts tab. */
+  notificationAlerts: "/notifications?tab=alerts",
+  /** E6: Activity filtered to the card's own rows (the Card tab's "See all"). */
+  activityCard: "/activity?filter=card",
+  /** A11: the terms sheet — setup's last step over Home, and the gate before the first money action. */
+  termsSheet: "/terms",
+  /** A10 / F5: who you muted and blocked, with Unmute / Unblock. */
+  accountBlocked: "/account/blocked",
 } as const;
 
 /** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
@@ -119,3 +138,40 @@ export const profileEditRoute = (focus: ProfileFocus) => `/account/profile?focus
 
 /** The market the old Trade tab opened on (gold first, D-005); `/trade` links land on its detail. */
 export const DEFAULT_MARKET = "XAU";
+
+/**
+ * A1: the account sheet for a guest's action — "Create an account to {verb}" — carrying the in-app path that resumes
+ * it (the ticket on the same market and side, say) once the account exists and its setup is done or skipped.
+ */
+export type AccountVerb =
+  | "trade"
+  | "add money"
+  | "follow"
+  | "like"
+  | "reply"
+  | "post"
+  | "set alerts"
+  | "get a card"
+  | "send";
+export const accountRequiredRoute = (verb: AccountVerb, next?: string) =>
+  `/account-required?verb=${encodeURIComponent(verb)}${next ? `&next=${encodeURIComponent(next)}` : ""}` as const;
+/** Social (F1–F7, ui-social): People (leaderboard first), and Search inside the Social stack. */
+export const socialPeopleRoute = "/social/people" as const;
+export const socialSearchRoute = (kind?: "traders") =>
+  (kind ? `/social/search?kind=${kind}` : "/social/search") as Href;
+/** F5: Settings → Blocked & muted (two underline tabs, Muted · Blocked). */
+export const blockedMutedRoute = "/account/blocked" as const;
+/** F4: a trade post's overflow (report, mute, block); it is never deletable (the trade is onchain). */
+export const tradePostActionsRoute = (post: { id: string; author: string }) =>
+  `/social-actions?post=${post.id}&author=${post.author}&thesis=1&trade=1` as const;
+/** F5: un-mute or un-block straight from the Blocked & muted list (the sheet opens on its confirmation). */
+export const relationActionRoute = (address: string, act: "unmute" | "unblock") =>
+  `/social-actions?author=${address}&act=${act}` as const;
+/**
+ * C11 "Trade this" (F-D3): the ticket over that market on the trader's side; the amount is never prefilled.
+ * `leverage` is passed when the source knows it (the feed payload doesn't yet), for the ticket to read.
+ */
+export const tradeThisRoute = (market: string, side: TicketSide, leverage?: number) =>
+  `${ticketRoute(market, side)}${leverage === undefined ? "" : `&leverage=${leverage}`}` as Href;
+/** F6: Send with the recipient filled in (an @handle or an address); the send flow re-resolves it before signing. */
+export const sendToRoute = (to: string) => `/withdraw/send?to=${encodeURIComponent(to)}` as Href;

@@ -18,7 +18,8 @@ import type { FastifyRequest } from "fastify";
 import { EVENT_CLOCK_SKEW_MS, EVENT_PROPS_MAX_CHARS } from "../constants.ts";
 import type { ApiContext } from "../context.ts";
 
-const ALERTS_PER_ACCOUNT_MAX = 50;
+/** Active alerts per account per network (C9: 50 Practice alerts never block a Mainnet one). */
+const ALERTS_PER_MODE_MAX = 50;
 const EVENTS_RATE = { max: 60, timeWindow: "1 minute" } as const;
 
 interface AlertRow {
@@ -67,14 +68,26 @@ export function registerEngagementRoutes(app: HttpServer, ctx: ApiContext): void
       throw new HttpError(HTTP_STATUS.forbidden, "FORBIDDEN", "this session belongs to the other network");
     }
     const user = s.address.toLowerCase();
-    const [count] = await ctx.db<{ n: bigint }[]>`SELECT count(*)::bigint AS n FROM price_alerts
-                                                 WHERE user_address = ${user} AND status = 'active'`;
-    if ((count?.n ?? 0n) >= BigInt(ALERTS_PER_ACCOUNT_MAX))
-      throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", "too many alerts");
-    const [row] = await ctx.db<AlertRow[]>`
-      INSERT INTO price_alerts (id, user_address, chain_id, market_id, direction, price18)
-      VALUES (${randomUUID()}, ${user}, ${body.chainId}, ${body.marketId}, ${body.direction}, ${body.price18.toString()})
-      RETURNING *`;
+    // One transaction: an edit cancels the alert it replaces and stores the new one together, or neither.
+    const row = await ctx.db.begin(async (tx) => {
+      // One writer per account and network: two parallel creates can't both pass the cap.
+      await tx`SELECT pg_advisory_xact_lock(hashtextextended(${`alerts:${user}:${s.chainId}`}, 0))`;
+      if (body.replaces) {
+        const [replaced] = await tx<{ id: string }[]>`UPDATE price_alerts SET status = 'cancelled'
+                                     WHERE id = ${body.replaces} AND user_address = ${user} AND chain_id = ${s.chainId}
+                                       AND status <> 'cancelled' RETURNING id`;
+        if (!replaced) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such alert");
+      }
+      const [count] = await tx<{ n: bigint }[]>`SELECT count(*)::bigint AS n FROM price_alerts
+                                     WHERE user_address = ${user} AND chain_id = ${s.chainId} AND status = 'active'`;
+      if ((count?.n ?? 0n) >= BigInt(ALERTS_PER_MODE_MAX))
+        throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", "too many alerts");
+      const [stored] = await tx<AlertRow[]>`
+        INSERT INTO price_alerts (id, user_address, chain_id, market_id, direction, price18)
+        VALUES (${randomUUID()}, ${user}, ${body.chainId}, ${body.marketId}, ${body.direction}, ${body.price18.toString()})
+        RETURNING *`;
+      return stored;
+    });
     if (!row) throw new HttpError(HTTP_STATUS.internal, "INTERNAL", "alert not stored");
     return sendRoute(reply, alertsCreateRoute, alertOf(row));
   });
