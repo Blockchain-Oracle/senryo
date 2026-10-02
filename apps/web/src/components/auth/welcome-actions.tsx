@@ -46,7 +46,7 @@ export function WelcomeActions() {
     setPhase({ kind: "running", flow });
     try {
       await action();
-      router.push(ROUTES.portfolio);
+      router.push(ROUTES.home);
     } catch (error) {
       const failure = classifyAuthError(error);
       setPhase(isSilent(failure) ? { kind: "idle" } : { kind: "failed", flow, failure });
@@ -91,7 +91,7 @@ export function WelcomeActions() {
             Continue · {shortAddress(hint.address)}
           </Button>
           <Button asChild variant="outline" size="lg" className="w-full">
-            <Link href={ROUTES.portfolio}>
+            <Link href={ROUTES.home}>
               Open portfolio · locked
               <ArrowRight />
             </Link>
@@ -130,7 +130,7 @@ export function WelcomeActions() {
         Recover with a backup passkey
       </button>
       {recoverOpen ? (
-        <RecoverSheet open onOpenChange={setRecoverOpen} onRecovered={() => router.push(ROUTES.portfolio)} />
+        <RecoverSheet open onOpenChange={setRecoverOpen} onRecovered={() => router.push(ROUTES.home)} />
       ) : null}
     </div>
   );

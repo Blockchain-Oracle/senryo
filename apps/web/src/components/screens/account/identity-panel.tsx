@@ -46,7 +46,7 @@ export function IdentityPanel() {
       </Panel>
     );
   }
-  const shareUrl = `${WEB_ORIGIN}${watchHref(hint.address)}`;
+  const shareUrl = `${WEB_ORIGIN}${watchHref(hint.address, ACTIVE_NETWORK.chainId)}`;
   return (
     <Panel className="mx-4 grid gap-3 p-4">
       <div className="flex items-center justify-between gap-2">

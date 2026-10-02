@@ -16,3 +16,9 @@ export const BRAND = {
  * so the bar draws it at 32 and a 1× screen still gets the whole carving.
  */
 export const SEAL_MARK_SIZE = 32;
+/** The mode label's network mark (the phone's mode capsule). */
+export const MODE_MARK_SIZE = 20;
+/** Mark edges (CSS px; the phone's SIZE.markDetail / markToken / markHero). */
+export const MARK_ROW = 40;
+export const MARK_SMALL = 24;
+export const MARK_HERO = 56;
