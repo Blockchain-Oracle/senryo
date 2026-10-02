@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Lock } from "~/components/kit/symbols";
+import { Info, Lock } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { hasConfirmedEligibility } from "~/features/legal/eligibility";
 import { ProtocolBanner, SessionBanner } from "~/features/markets/MarketBanners";
@@ -93,20 +93,29 @@ function SideButton({ side, symbol, onPress }: { side: TicketSide; symbol: strin
   );
 }
 
-/** The bar of a market that can't trade here: one disabled row, a lock and its word ("Opening soon", "Mainnet"). */
-export function LockedBar({ word }: { word: string }) {
+/**
+ * The bar of a market that can't trade here (flow book C2 step 6): one disabled row — a lock and its word ("Opening
+ * soon", "Mainnet", "No feed") — and, when `onInfo` is given, an ⓘ that opens the reason.
+ */
+export function LockedBar({ word, onInfo }: { word: string; onInfo?: () => void }) {
   const { color } = useTheme();
   return (
     <Bottom>
-      <View
-        accessible
-        accessibilityRole="text"
+      <Pressable
+        disabled={!onInfo}
+        onPress={() => {
+          fire("tick");
+          onInfo?.();
+        }}
+        accessibilityRole={onInfo ? "button" : "text"}
         accessibilityLabel={`Trading locked: ${word}`}
+        {...(onInfo ? { accessibilityHint: "Says why" } : {})}
         style={[styles.locked, { backgroundColor: color.card }]}
       >
         <Lock size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
         <Text style={[TYPE.buttonLabel, { color: color.text3 }]}>{word}</Text>
-      </View>
+        {onInfo ? <Info size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} /> : null}
+      </Pressable>
     </Bottom>
   );
 }

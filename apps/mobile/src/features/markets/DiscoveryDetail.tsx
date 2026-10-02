@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HistoryChart } from "~/components/charts/HistoryChart";
 import { KeyValue } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
+import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import { compactUsd6, finePct, tokenPrice } from "~/features/tokens/format";
 import { LockedBar } from "~/features/trade/SideBar";
@@ -101,6 +102,7 @@ function Detail({ instrument }: { instrument: DiscoveryInstrument }) {
   const client = useQueryClient();
   const quote = useDiscoveryQuote(instrument.id);
   const [period, setPeriod] = useState<PeriodKey>(DEFAULT_PERIOD);
+  const [why, setWhy] = useState(false);
   const candles = useDiscoveryCandles(instrument.id, periodOf(period).interval);
   const gate = instrument.execution[network.chainId];
   const known = quote.status === "fresh" || quote.status === "stale" ? quote.value : undefined;
@@ -167,12 +169,13 @@ function Detail({ instrument }: { instrument: DiscoveryInstrument }) {
         />
         {known ? <Facts instrument={instrument} quote={known} /> : null}
       </ScrollView>
-      <View style={styles.gate}>
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]} numberOfLines={2}>
-          {gateTitle(gate)} · {gate?.reason ?? "This network doesn’t list it"}
+      <LockedBar word={lockWord(instrument, network.chainId)} onInfo={() => setWhy(true)} />
+      <ChildSheet open={why} onClose={() => setWhy(false)} title={gateTitle(gate)}>
+        <Text style={[TYPE.body, { color: color.text2 }]}>
+          {gate?.reason ?? "This network doesn’t list it"}.
+          {gate?.state === "blocked" ? ` It opens with ${gate.unblocks}.` : ""}
         </Text>
-      </View>
-      <LockedBar word={lockWord(instrument, network.chainId)} />
+      </ChildSheet>
     </View>
   );
 }
@@ -223,7 +226,6 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   body: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm, gap: SPACE.xl },
   spacer: { flex: 1 },
-  gate: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.sm },
   price: { gap: SPACE.xs },
   facts: { gap: SPACE.sm },
 });
