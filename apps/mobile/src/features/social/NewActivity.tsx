@@ -1,6 +1,6 @@
 /**
- * The "New activity" pill (Fomo F15, C27): shown once the socket reports a feed row newer than the first one loaded.
- * It sits at the end of the audience chips, pinned under the bar, so it is reachable from anywhere in the list and
+ * The "New activity" pill (Fomo F15/F31, C27): shown once the socket reports a feed row newer than the first one
+ * loaded. It floats over the top of the list, under the pinned tabs, so it is reachable from anywhere in the list and
  * nothing moves when it appears. A tap reloads the feed from the top.
  */
 import type { FeedScope } from "@senryo/api-client";

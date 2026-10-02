@@ -119,3 +119,24 @@ export const profileEditRoute = (focus: ProfileFocus) => `/account/profile?focus
 
 /** The market the old Trade tab opened on (gold first, D-005); `/trade` links land on its detail. */
 export const DEFAULT_MARKET = "XAU";
+
+/** Social (F1–F7, ui-social): People (leaderboard first), and Search inside the Social stack. */
+export const socialPeopleRoute = "/social/people" as const;
+export const socialSearchRoute = (kind?: "traders") =>
+  (kind ? `/social/search?kind=${kind}` : "/social/search") as Href;
+/** F5: Settings → Blocked & muted (two underline tabs, Muted · Blocked). */
+export const blockedMutedRoute = "/account/blocked" as const;
+/** F4: a trade post's overflow (report, mute, block); it is never deletable (the trade is onchain). */
+export const tradePostActionsRoute = (post: { id: string; author: string }) =>
+  `/social-actions?post=${post.id}&author=${post.author}&thesis=1&trade=1` as const;
+/** F5: un-mute or un-block straight from the Blocked & muted list (the sheet opens on its confirmation). */
+export const relationActionRoute = (address: string, act: "unmute" | "unblock") =>
+  `/social-actions?author=${address}&act=${act}` as const;
+/**
+ * C11 "Trade this" (F-D3): the ticket over that market on the trader's side; the amount is never prefilled.
+ * `leverage` is passed when the source knows it (the feed payload doesn't yet), for the ticket to read.
+ */
+export const tradeThisRoute = (market: string, side: TicketSide, leverage?: number) =>
+  `${ticketRoute(market, side)}${leverage === undefined ? "" : `&leverage=${leverage}`}` as Href;
+/** F6: Send with the recipient filled in (an @handle or an address); the send flow re-resolves it before signing. */
+export const sendToRoute = (to: string) => `/withdraw/send?to=${encodeURIComponent(to)}` as Href;

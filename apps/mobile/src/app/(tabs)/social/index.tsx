@@ -4,101 +4,80 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { ChipRow } from "~/components/kit/ChipRow";
-import { Segmented } from "~/components/kit/Segmented";
-import { SquarePen } from "~/components/kit/symbols";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SquarePen, UsersRound } from "~/components/kit/symbols";
+import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { Feed } from "~/features/social/Feed";
-import { Friends } from "~/features/social/Friends";
-import { Leaderboard } from "~/features/social/Leaderboard";
 import { NewActivity } from "~/features/social/NewActivity";
 import { useSessionGate } from "~/features/social/useSocialAccount";
-import { ROUTES } from "~/lib/constants/routes";
-import { SIZE, SPACE, useTheme } from "~/theme";
+import { ROUTES, socialPeopleRoute } from "~/lib/constants/routes";
+import { HAIRLINE_PX, SIZE, SPACE, useTheme } from "~/theme";
 
-const SECTIONS = [
-  { value: "feed", label: "Feed" },
-  { value: "people", label: "People" },
-] as const;
-const FEED_SCOPES = [
+const SCOPES = [
   { value: "global", label: "Global" },
   { value: "friends", label: "Following" },
 ] as const satisfies readonly { value: FeedScope; label: string }[];
-const PEOPLE_VIEWS = [
-  { value: "friends", label: "Following" },
-  { value: "leaderboard", label: "Leaderboard" },
-] as const;
-type Section = (typeof SECTIONS)[number]["value"];
-type PeopleView = (typeof PEOPLE_VIEWS)[number]["value"];
+
+/** Where the pill floats: under the fixed bar (touch row + its padding + hairline) and the pinned tabs. */
+const PILL_TOP = SIZE.touch + SPACE.md + HAIRLINE_PX + SIZE.touch + SPACE.sm;
 
 /**
- * Social (J8, S1b.14 on the S12b api; Fomo F15/F29/F30, C27/C30): Feed (Global / Friends) and People (Friends /
- * Leaderboard) on the live api. The selectors pin under the bar; "New activity" joins the audience chips when the
- * socket reports a newer row; the round utility composes a thesis. Pull to refresh reloads this network's social
+ * Social (F4, Fomo F15): the feed, with Global · Following underline tabs pinned under the bar. Round utilities open
+ * People (F1: the leaderboard first, Fomo F29/F30) and compose a thesis. "New activity" floats over the top of the
+ * list when the socket reports a newer row; a tap reloads from the top. Pull to refresh reloads this network's social
  * reads. Selection survives tab switches (the tab stays mounted); Practice and Mainnet are separate datasets.
  */
 export default function Social() {
   const { color } = useTheme();
+  const insets = useSafeAreaInsets();
   const env = useQueryEnv();
   const client = useQueryClient();
   const gate = useSessionGate();
-  const [section, setSection] = useState<Section>("feed");
   const [scope, setScope] = useState<FeedScope>("global");
-  const [people, setPeople] = useState<PeopleView>("friends");
-  // The Friends feed is only read once the api knows who is asking; until then there is nothing to be newer than.
+  // The Following feed is only read once the api knows who is asking; until then there is nothing to be newer than.
   const watching = scope === "global" || gate.status === "ready";
   return (
-    <CollapsingScreen
-      left={<TabTitle>Social</TabTitle>}
-      utilities={
-        <UtilityButton
-          label="Write a thesis"
-          onPress={() => router.push((gate.status === "guest" ? ROUTES.accountRequired : ROUTES.composeThesis) as Href)}
-        >
-          <SquarePen size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
-        </UtilityButton>
-      }
-      sticky={
-        <View style={styles.segments}>
-          <View style={styles.gutter}>
-            <Segmented options={SECTIONS} value={section} onChange={setSection} label="Social section" />
+    <View style={styles.fill}>
+      <CollapsingScreen
+        left={<TabTitle>Social</TabTitle>}
+        utilities={
+          <>
+            <UtilityButton label="People and leaderboard" onPress={() => router.push(socialPeopleRoute as Href)}>
+              <UsersRound size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+            </UtilityButton>
+            <UtilityButton
+              label="Write a thesis"
+              onPress={() =>
+                router.push((gate.status === "guest" ? ROUTES.accountRequired : ROUTES.composeThesis) as Href)
+              }
+            >
+              <SquarePen size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+            </UtilityButton>
+          </>
+        }
+        sticky={
+          <View style={styles.tabs}>
+            <UnderlineTabs options={SCOPES} value={scope} onChange={setScope} label="Feed" />
           </View>
-          {section === "feed" ? (
-            <View style={styles.audience}>
-              <View style={styles.chips}>
-                <ChipRow options={FEED_SCOPES} value={scope} onChange={setScope} label="Feed audience" />
-              </View>
-              {watching ? <NewActivity scope={scope} /> : null}
-            </View>
-          ) : (
-            <ChipRow options={PEOPLE_VIEWS} value={people} onChange={setPeople} label="People view" />
-          )}
+        }
+        onRefresh={() => client.invalidateQueries({ queryKey: socialKeys.chain(env.chainId) })}
+      >
+        <Feed scope={scope} onFindPeople={() => router.push(socialPeopleRoute as Href)} />
+      </CollapsingScreen>
+      {watching ? (
+        <View pointerEvents="box-none" style={[styles.pill, { top: insets.top + PILL_TOP }]}>
+          <NewActivity scope={scope} />
         </View>
-      }
-      onRefresh={() => client.invalidateQueries({ queryKey: socialKeys.chain(env.chainId) })}
-    >
-      {section === "feed" ? (
-        <Feed
-          scope={scope}
-          onFindPeople={() => {
-            setPeople("friends");
-            setSection("people");
-          }}
-        />
-      ) : people === "friends" ? (
-        <Friends />
-      ) : (
-        <Leaderboard />
-      )}
-    </CollapsingScreen>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  segments: { paddingVertical: SPACE.sm, gap: SPACE.sm },
-  gutter: { paddingHorizontal: SIZE.gutter },
-  audience: { flexDirection: "row", alignItems: "center", paddingRight: SIZE.gutter },
-  chips: { flex: 1 },
+  fill: { flex: 1 },
+  tabs: { paddingHorizontal: SIZE.gutter },
+  pill: { position: "absolute", left: 0, right: 0, alignItems: "center" },
 });

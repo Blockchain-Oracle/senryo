@@ -1,5 +1,5 @@
 import { isChainId, networkOf } from "@senryo/config";
-import { DEFAULT_MARKET, marketRoute, ROUTES } from "~/lib/constants/routes";
+import { DEFAULT_MARKET, marketRoute, ROUTES, traderPostRoute, watchRoute } from "~/lib/constants/routes";
 
 const SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
 const WEB = /^https?:\/\/[^/]+/i;
@@ -24,10 +24,30 @@ const LEGACY_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) =>
   [/^\/account\/?$/, () => ROUTES.you],
 ];
 
+const WATCH = /^\/watch\/?$/;
+
+/**
+ * The web's watch link (F-D6; a static export keeps the query form): `/watch?address=X[&post=Y]` → the app's
+ * `/watch/X[/post/Y]`, other query kept. Undefined when the path isn't one.
+ */
+function watchPath(local: string, query: string | undefined): string | undefined {
+  if (!WATCH.test(local)) return undefined;
+  const params = new URLSearchParams(query ?? "");
+  const address = params.get("address");
+  if (!address) return undefined;
+  const post = params.get("post");
+  params.delete("address");
+  params.delete("post");
+  const rest = params.toString();
+  return `${post ? traderPostRoute(address, post) : watchRoute(address)}${rest ? `?${rest}` : ""}`;
+}
+
 /** The current in-app path for an old one (any URL form, query kept); anything else is returned unchanged. */
 export function currentPath(path: string): string {
   const [base = "/", query] = path.split("?", 2);
   const local = inAppPath(base);
+  const watch = watchPath(local, query);
+  if (watch) return watch;
   for (const [pattern, to] of LEGACY_PATHS) {
     const match = local.match(pattern);
     if (match) return `${to(match)}${query ? `?${query}` : ""}`;

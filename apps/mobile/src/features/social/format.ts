@@ -116,24 +116,24 @@ export const SIDE_WORD: Record<FeedTrade["side"], string> = { LONG: "Long", SHOR
 
 const SECONDS_PER_MINUTE = 60;
 
-/** Copy per API error code for a social write; `fallback` says what failed when the code says nothing useful. */
+/** Copy per API error code for a social write (one short line, F4/F3 states); `fallback` when the code says nothing. */
 export function socialErrorCopy(error: unknown, fallback: string): string {
   if (!(error instanceof ApiError)) return fallback;
   switch (error.code) {
     case "NOT_LISTED":
-      return "Posting needs a profile that is listed on this network.";
+      return "Make your profile public to post";
     case "CONTENT_BLOCKED":
-      return "That text can’t be posted. Change it and try again.";
+      return "That text can’t be posted";
     case "RATE_LIMITED": {
       const minutes = error.retryAfterSec ? Math.ceil(error.retryAfterSec / SECONDS_PER_MINUTE) : undefined;
-      return minutes ? `You’re going too fast. Try again in ${minutes} min.` : "You’re going too fast. Try again soon.";
+      return minutes ? `Posting limit · try in ${minutes} min` : "Posting limit · try again soon";
     }
     case "BLOCKED":
-      return "You and this account can’t interact: one of you blocked the other.";
+      return "Blocked · you can’t interact";
     case "FOLLOW_LIMIT":
-      return "You follow the most accounts an account can. Unfollow someone first.";
+      return "Limit reached · 1,000 follows";
     case "NOT_FOUND":
-      return "That isn’t available any more.";
+      return "Not available any more";
     default:
       return fallback;
   }
