@@ -44,4 +44,10 @@ export const STORAGE_KEYS = {
   watchlistAt: "senryo.watchlist-at.v1",
   /** S1b.13: this phone's push registration — the Expo token, the account it was sent for, and the chosen channels. */
   push: "senryo.push.v1",
+  /** B14: tokens this account hid, per network and account (server-side storage arrives with BD-5). */
+  hiddenTokens: "senryo.hidden-tokens.v1",
+  /** B13: saved destinations (name, address, chain, mark) per network and account, until BD-5's server copy. */
+  savedDestinations: "senryo.saved-destinations.v1",
+  /** B5/B4: purchases and bridges this phone started that have not landed yet ("Arriving"). */
+  arrivals: "senryo.arrivals.v1",
 } as const;
