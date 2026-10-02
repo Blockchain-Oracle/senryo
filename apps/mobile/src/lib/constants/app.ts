@@ -9,7 +9,9 @@ export const APP = {
   name: "Senryo",
   slug: "senryo",
   scheme: "senryo",
-  version: "0.1.0",
+  // Runtime version (appVersion policy): 0.2.0 adds expo-image, expo-camera, expo-web-browser, expo-sharing and
+  // react-native-view-shot, so OTA updates for it never reach 0.1.0 binaries that lack those modules.
+  version: "0.2.0",
   bundleId: IOS_BUNDLE_ID,
   androidPackage: ANDROID_PACKAGE,
 } as const;

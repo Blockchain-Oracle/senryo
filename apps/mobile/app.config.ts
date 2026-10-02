@@ -18,6 +18,11 @@ import {
  * EAS project id / owner come from `eas init` on the user's account (S5 user step); `eas init` can't write a dynamic
  * config, so they live in `src/lib/constants/app.ts`.
  */
+/** EAS profiles whose iOS builds are distribution-signed and therefore use production APNs. */
+const APNS_PRODUCTION_PROFILES = new Set(["production", "preview"]);
+/** Shown by iOS when Send opens the scanner. */
+const CAMERA_PERMISSION = "Senryo uses the camera to scan wallet and payment QR codes.";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: APP.name,
@@ -69,8 +74,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     ["expo-secure-store", { faceIDPermission: FACE_ID_PERMISSION }],
     ["expo-local-authentication", { faceIDPermission: FACE_ID_PERMISSION }],
-    // APNs environment: EAS production builds use production APNs; dev clients and local builds use the sandbox.
-    ["expo-notifications", { mode: process.env.EAS_BUILD_PROFILE === "production" ? "production" : "development" }],
+    // APNs environment: store and ad-hoc (preview) builds are signed for production APNs; dev clients and local
+    // builds use the sandbox. A preview build on the sandbox environment would silently never receive a push.
+    [
+      "expo-notifications",
+      { mode: APNS_PRODUCTION_PROFILES.has(process.env.EAS_BUILD_PROFILE ?? "") ? "production" : "development" },
+    ],
     [
       "expo-build-properties",
       {
@@ -80,6 +89,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     ["expo-audio", { microphonePermission: false }],
     "react-native-quick-crypto",
+    // Runtime 0.2.0 natives (Part E5): image prefetch for the welcome story, QR scanning in Send, hosted provider pages
+    // (Ramp, Lithic), and sharing trade / receipt cards.
+    "expo-image",
+    "expo-web-browser",
+    "expo-sharing",
+    ["expo-camera", { cameraPermission: CAMERA_PERMISSION, microphonePermission: false, recordAudioAndroid: false }],
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
   runtimeVersion: { policy: "appVersion" },
