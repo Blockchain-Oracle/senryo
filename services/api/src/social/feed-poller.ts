@@ -8,9 +8,11 @@ import {
   FEED_PAGES_PER_TICK,
   FEED_POLL_MS,
   FEED_SOURCE_FILL,
+  OPEN_FILL_KIND,
   POSITION_CHANGE_KINDS,
 } from "./constants.ts";
 import type { SocialIndexer } from "./indexer-source.ts";
+import { notifyFollowersOpened, type OpenedEvent } from "./notify.ts";
 import type { FeedNotifier } from "./runtime.ts";
 import { sharingOn, sharingSinceColumn } from "./shared.ts";
 
@@ -19,7 +21,8 @@ import { sharingOn, sharingSinceColumn } from "./shared.ts";
  * into `feed_events`. The api database and the indexer are separate, so it reads GraphQL after a per-network cursor
  * (`feed_cursors`, `<block>:<fillId>`) with a `chainId` filter. Only fills by an account that shares trades on that
  * network AND happened after it turned sharing on are written; the cursor advances past everything else. Each page
- * and its cursor commit together, and `(chain_id, source_id)` makes a replay a no-op.
+ * and its cursor commit together, and `(chain_id, source_id)` makes a replay a no-op. A newly written opening fill
+ * then notifies the trader's followers who opted in (`followedTrades`, G1) — after the commit, best effort.
  */
 
 export interface FeedPollerDeps {
@@ -34,6 +37,16 @@ export interface FeedPollerDeps {
 interface Sharer {
   address: string;
   since: Date;
+}
+
+interface WrittenRow {
+  id: bigint;
+  actor: string;
+  market_id: string;
+  occurred_at: Date;
+  fill_kind: string | null;
+  side: string | null;
+  symbol: string | null;
 }
 
 const CURSOR_SEPARATOR = ":";
@@ -133,6 +146,7 @@ export class FeedPoller {
     let cursor = decodeCursor(stored?.cursor);
     let written = 0;
     let latest = 0n;
+    const opened: OpenedEvent[] = [];
     for (let page = 0; page < FEED_PAGES_PER_TICK; page += 1) {
       const fills = await indexer.feedFills(chainId, cursor, users, floor, FEED_PAGE);
       const last = fills.at(-1);
@@ -144,24 +158,42 @@ export class FeedPoller {
         })
         .map((f) => feedRowOf(chainId, f));
       const next: FillKey = { block: last.block, id: last.id };
-      const ids = await db.begin(async (tx) => {
-        const inserted =
+      const inserted: WrittenRow[] = await db.begin(async (tx) => {
+        const out: WrittenRow[] =
           rows.length === 0
             ? []
-            : await tx<{ id: bigint }[]>`
+            : await tx<WrittenRow[]>`
                 INSERT INTO feed_events ${tx(rows.map((r) => ({ ...r, payload: tx.json(r.payload) })))}
-                ON CONFLICT (chain_id, source_id) DO NOTHING RETURNING id`;
+                ON CONFLICT (chain_id, source_id) DO NOTHING
+                RETURNING id, actor, market_id, occurred_at, payload->>'fillKind' AS fill_kind,
+                          payload->>'side' AS side, payload->>'symbol' AS symbol`;
         await tx`
           INSERT INTO feed_cursors (chain_id, source, cursor) VALUES (${chainId}, ${FEED_SOURCE_FILL}, ${encodeCursor(next)})
           ON CONFLICT (chain_id, source) DO UPDATE SET cursor = EXCLUDED.cursor, updated_at = now()`;
-        return inserted.map((r) => r.id);
+        return out;
       });
-      written += ids.length;
-      for (const id of ids) if (id > latest) latest = id;
+      written += inserted.length;
+      for (const row of inserted) {
+        if (row.id > latest) latest = row.id;
+        if (row.fill_kind === OPEN_FILL_KIND && row.side && row.symbol)
+          opened.push({
+            id: row.id,
+            actor: row.actor,
+            marketId: row.market_id,
+            side: row.side,
+            symbol: row.symbol,
+            occurredAt: row.occurred_at,
+          });
+      }
       cursor = next;
       if (fills.length < FEED_PAGE) break;
     }
     if (latest > 0n) this.deps.notifier.emit(chainId, latest);
+    if (opened.length > 0) {
+      await notifyFollowersOpened(db, chainId, opened).catch((error) =>
+        this.deps.log.warn({ chainId, err: String(error) }, "followed-trade notifications not recorded"),
+      );
+    }
     return written;
   }
 }

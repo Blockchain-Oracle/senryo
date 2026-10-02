@@ -262,3 +262,12 @@ export const REPORT_RATE = { max: 20, timeWindow: "1 minute" } as const;
 export const SEARCH_RATE = { max: 60, timeWindow: "1 minute" } as const;
 export const ADMIN_RATE = { max: 30, timeWindow: "1 minute" } as const;
 export const DELETE_DATA_RATE = { max: 5, timeWindow: "1 minute" } as const;
+
+// ---------------------------------------------------------------- G1 social notifications
+
+/** A liked post or a reply is quoted in the notification up to this many characters. */
+export const NOTIFY_EXCERPT_MAX_CHARS = 80;
+/** "A trader you follow opened a position" only for fills this recent (a feed backfill notifies nobody). */
+export const FOLLOWED_OPEN_FRESH_SEC = 600;
+/** Fill kind that opens a position (the `followedTrades` notification). */
+export const OPEN_FILL_KIND = "OPEN";

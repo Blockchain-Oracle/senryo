@@ -28,7 +28,7 @@ import { isTerminalStage, type TxStage } from "@senryo/core";
 import { HTTP_STATUS, HttpError, MS_PER_SECOND, SECONDS_PER_DAY } from "@senryo/service-common";
 import { RELAY_ABANDON_MS, RELAY_RECONCILE_AFTER_MS } from "./constants.ts";
 import type { ApiContext, ChainContext } from "./context.ts";
-import type { ClaimRow } from "./starter.ts";
+import { type ClaimRow, notifyStarterCredit } from "./starter.ts";
 
 export async function planTopUp(chain: ChainContext, user: Address, needWei: bigint): Promise<bigint> {
   const practice = chain.chainId === TESTNET_CHAIN_ID;
@@ -84,6 +84,18 @@ export async function reconcileRelay(ctx: ApiContext, chain: ChainContext, row: 
   }
   await ctx.db`UPDATE starter_claims SET stage = ${stage}, updated_at = now() WHERE id = ${row.id}`;
   ctx.log.info({ relayId: row.id, stage }, "relay reconciled");
+  if (stage === "finalized") {
+    const claim = {
+      id: row.id,
+      kind: row.kind,
+      chainId: chain.chainId,
+      user: row.user_address,
+      creditUsd6: row.credit_usd6,
+    };
+    await notifyStarterCredit(ctx.db, claim).catch((err) =>
+      ctx.log.warn({ relayId: row.id, err: String(err) }, "starter notification not recorded"),
+    );
+  }
   return { ...row, stage };
 }
 

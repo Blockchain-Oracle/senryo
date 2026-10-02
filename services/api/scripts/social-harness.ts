@@ -232,6 +232,10 @@ export async function cleanup(db: Db, addresses: string[]): Promise<void> {
   await db`DELETE FROM follows WHERE follower IN ${list} OR followee IN ${list}`;
   await db`DELETE FROM blocks WHERE blocker IN ${list} OR blocked IN ${list}`;
   await db`DELETE FROM starter_claims WHERE user_address IN ${list}`;
+  // Social actions now record notifications (G1); the notify check also registers device tokens.
+  await db`DELETE FROM push_tickets WHERE event_key IN (SELECT event_key FROM push_sends WHERE user_address IN ${list})`;
+  await db`DELETE FROM push_sends WHERE user_address IN ${list}`;
+  await db`DELETE FROM push_tokens WHERE user_address IN ${list}`;
   await db`DELETE FROM handle_tombstones WHERE address IN ${list}`;
   await db`DELETE FROM profiles WHERE address IN ${list}`;
 }

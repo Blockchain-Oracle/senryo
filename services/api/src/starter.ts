@@ -13,8 +13,16 @@ import {
   voucherCodeBytes,
   voucherCodeHash,
 } from "@senryo/chain";
-import { TESTNET_CHAIN_ID } from "@senryo/config";
-import { HTTP_STATUS, HttpError } from "@senryo/service-common";
+import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
+import {
+  appLink,
+  type Db,
+  dollarsText,
+  HTTP_STATUS,
+  HttpError,
+  pushTitle,
+  recordNotification,
+} from "@senryo/service-common";
 import type { ApiContext, ChainContext } from "./context.ts";
 
 /** Revert → client error (flows.md F05 failure copy keys off these codes). */
@@ -114,7 +122,13 @@ export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayIn
             ${sent.stage}, ${sent.receipt.blockNumber}, ${nativeWei.toString()}, ${creditUsd6}, ${input.ipPrefix},
             ${input.deviceHash ?? null}, ${createdAt})`;
   void confirmFinalized({ read: chain.read, heads: chain.heads }, sent.receipt)
-    .then((final) => ctx.db`UPDATE starter_claims SET stage = ${final.stage}, updated_at = now() WHERE id = ${relayId}`)
+    .then(async (final) => {
+      await ctx.db`UPDATE starter_claims SET stage = ${final.stage}, updated_at = now() WHERE id = ${relayId}`;
+      if (final.stage === "finalized") {
+        const claim = { id: relayId, kind: input.kind, chainId: chain.chainId, user: input.user, creditUsd6 };
+        await notifyStarterCredit(ctx.db, claim);
+      }
+    })
     .catch((error) => ctx.log.warn({ relayId, err: String(error) }, "relay finality unknown"));
   return {
     relayId,
@@ -128,6 +142,28 @@ export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayIn
     creditUsd6,
     createdAt: createdAt.toISOString(),
   };
+}
+
+/**
+ * "Money arrived" (G1, channel `deposits`) once a starter claim or voucher credit is final. Gas top-ups and the
+ * mainnet claim (MON for fees, no dollars) aren't news. Idempotent per relay, so the boot reconcile may call it too.
+ */
+export async function notifyStarterCredit(
+  db: Db,
+  claim: { id: string; kind: "claim" | "voucher" | "topup"; chainId: ChainId; user: string; creditUsd6: bigint },
+): Promise<boolean> {
+  if (claim.kind === "topup" || claim.creditUsd6 <= 0n) return false;
+  return recordNotification(db, {
+    chainId: claim.chainId,
+    eventKey: `starter:${claim.id}`,
+    user: claim.user,
+    channel: "deposits",
+    title: pushTitle(claim.chainId, `${dollarsText(claim.chainId, claim.creditUsd6)} has arrived`),
+    body:
+      claim.kind === "voucher" ? "Your voucher's money is in your account." : "Your starter money is in your account.",
+    url: appLink(claim.chainId, "activity"),
+    subject: { kind: "account" },
+  });
 }
 
 interface ClaimRow {
