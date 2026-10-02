@@ -23,6 +23,7 @@ import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, useTheme } from "~/theme";
 import { InboxList, openNotification } from "./InboxList";
+import { PushBanner } from "./PushBanner";
 import { useInbox } from "./useInbox";
 
 export type InboxTab = "all" | "alerts";
@@ -110,26 +111,29 @@ function Inbox() {
     openNotification(n, network.chainId);
   };
   return (
-    <ReadingView reading={inbox.reading} loading="list" loadingLabel="Loading notifications" retry={inbox.retry}>
-      {(page) =>
-        page.items.length === 0 ? (
-          <QuietLine>No notifications yet</QuietLine>
-        ) : (
-          <View style={styles.list}>
-            <InboxList items={page.items} unread={seen} onOpen={open} />
-            {inbox.hasMore ? (
-              <Button
-                label="Load more"
-                variant="ghost"
-                size="sm"
-                loading={inbox.loadingMore}
-                onPress={inbox.loadMore}
-              />
-            ) : null}
-          </View>
-        )
-      }
-    </ReadingView>
+    <View style={styles.list}>
+      <PushBanner />
+      <ReadingView reading={inbox.reading} loading="list" loadingLabel="Loading notifications" retry={inbox.retry}>
+        {(page) =>
+          page.items.length === 0 ? (
+            <QuietLine>No notifications yet</QuietLine>
+          ) : (
+            <View style={styles.list}>
+              <InboxList items={page.items} unread={seen} onOpen={open} />
+              {inbox.hasMore ? (
+                <Button
+                  label="Load more"
+                  variant="ghost"
+                  size="sm"
+                  loading={inbox.loadingMore}
+                  onPress={inbox.loadMore}
+                />
+              ) : null}
+            </View>
+          )
+        }
+      </ReadingView>
+    </View>
   );
 }
 

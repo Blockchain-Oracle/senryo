@@ -70,6 +70,8 @@ export function registerEngagementRoutes(app: HttpServer, ctx: ApiContext): void
     const user = s.address.toLowerCase();
     // One transaction: an edit cancels the alert it replaces and stores the new one together, or neither.
     const row = await ctx.db.begin(async (tx) => {
+      // One writer per account and network: two parallel creates can't both pass the cap.
+      await tx`SELECT pg_advisory_xact_lock(hashtextextended(${`alerts:${user}:${s.chainId}`}, 0))`;
       if (body.replaces) {
         const [replaced] = await tx<{ id: string }[]>`UPDATE price_alerts SET status = 'cancelled'
                                      WHERE id = ${body.replaces} AND user_address = ${user} AND chain_id = ${s.chainId}

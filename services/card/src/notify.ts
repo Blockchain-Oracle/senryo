@@ -50,8 +50,10 @@ export async function notifyDecision(ctx: CardContext, txnToken: string): Promis
        ORDER BY received_at DESC LIMIT 1`;
     if (!row?.account) return;
     const status = effectiveStatus(row);
+    // Keyed by the issuer transaction (not our row id), so an issuer-side decline of the same payment
+    // (`notifyIssuerDecline`) is the same notification, recorded once.
     const base = {
-      ref: row.id,
+      ref: row.txn_token,
       authId: row.id,
       txn: row.txn_token,
       merchant: row.merchant,

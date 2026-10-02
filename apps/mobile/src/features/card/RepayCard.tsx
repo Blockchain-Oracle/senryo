@@ -54,12 +54,15 @@ export function RepayCard() {
       return session(() => env.api.call(cardRepayQuoteRoute, { body: amountUsd6 === undefined ? {} : { amountUsd6 } }));
     },
   });
-  const wanted = share === "half" && debt !== undefined ? debt / HALF : undefined;
-  // A new quote whenever the share (or the debt it halves) changes — never once a repayment is out.
+  /** The amount to quote: undefined = the whole debt; null = Half, waiting for the debt to be read. */
+  const wanted = share === "half" ? (debt === undefined ? null : debt / HALF) : undefined;
+  /** A repayment is out: the receipt shows until it is done with (a run that recorded nothing doesn't count). */
+  const sending = reviewed !== undefined && (trace.running || trace.events.length > 0);
+  // A new quote whenever the share (or the debt it halves) changes — never while a repayment is out.
   useEffect(() => {
-    if (!reviewed) quote.mutate(wanted);
-  }, [wanted, reviewed, quote.mutate]);
-  if (reviewed && (trace.running || trace.events.length > 0)) {
+    if (!sending && wanted !== null) quote.mutate(wanted);
+  }, [wanted, sending, quote.mutate]);
+  if (reviewed && sending) {
     return (
       <Screen contentStyle={styles.page}>
         <Stack.Screen options={{ title: "Repay card debt" }} />
@@ -71,6 +74,8 @@ export function RepayCard() {
           words={REPAY_WORDS}
           onDone={() => {
             if (outcome === "finalized") return router.back();
+            // Only a settled failure goes back to review; an unknown outcome offers nothing new.
+            if (outcome === "unknown") return;
             trace.reset();
             setReviewed(undefined);
           }}
@@ -86,7 +91,7 @@ export function RepayCard() {
   return (
     <Screen contentStyle={styles.page}>
       <Stack.Screen options={{ title: "Repay card debt" }} />
-      {quote.data ? (
+      {quote.data && wanted !== null ? (
         <Review
           quote={quote.data}
           share={share}
@@ -96,7 +101,7 @@ export function RepayCard() {
           onSend={setReviewed}
         />
       ) : quote.isError ? (
-        <QuoteProblem error={quote.error} retry={() => quote.mutate(wanted)} />
+        <QuoteProblem error={quote.error} retry={() => (wanted === null ? undefined : quote.mutate(wanted))} />
       ) : (
         <LoadingState shape="plate" label="Quoting the repayment" />
       )}
