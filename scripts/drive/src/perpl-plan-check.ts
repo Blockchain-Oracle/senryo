@@ -78,8 +78,8 @@ const EXAMPLE_SHORT_LIQ = 1_060_000n;
 const EXAMPLE_FUNDED_LIQ = 939_000n;
 /** One BTC in lots (5 lot decimals). */
 const ONE_BTC = 100_000n;
-/** Head reads race block production: allow this many blocks between the two reads. */
-const HEAD_SLACK_BLOCKS = 5n;
+/** Head reads race block production (~0.4 s blocks, RPC latency): allow ~10 s between the two reads. */
+const HEAD_SLACK_BLOCKS = 25n;
 
 let failures = 0;
 function expect(ok: boolean, what: string): void {
