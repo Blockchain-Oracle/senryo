@@ -13,15 +13,19 @@ import {
   type Flow,
   isLoosening,
   type LocalAccount,
+  type PendingSignIn,
   type SessionSettings,
   type SessionSnapshot,
 } from "@senryo/account";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
+import { beginCreate, endCreate, oweSetup, reconcileCreate } from "~/features/setup/progress";
 import { activeNetwork } from "~/lib/network";
 import { unregisterPush } from "~/lib/notifications/push";
 import { clearApiSession } from "./api";
-import { pullPrefs, pushPrefs } from "./remote";
+import { serverDeleteDone, serverDeleteOwed } from "./delete-data";
+import { rememberAccount } from "./identity-cache";
+import { deleteRemoteData, pullPrefs, pushPrefs } from "./remote";
 import { createNativeAccountClient } from "./runtime";
 import { loadSettings, saveSettings } from "./settings";
 import { systemPromptUp } from "./system-prompt";
@@ -36,8 +40,11 @@ export interface AccountContextValue {
   /** The app is not in the foreground: cover it (app-switcher privacy plate). */
   obscured: boolean;
   client: AccountClient | undefined;
+  /** A2: one passkey makes the account; its setup is owed from the moment the passkey succeeds. */
   create(): Promise<Address>;
   signIn(): Promise<Address>;
+  /** A3: the passkey picker, without adopting what it opened yet (check it, then adopt or discard). */
+  openSignIn(): Promise<PendingSignIn>;
   unlock(): Promise<void>;
   lock(): void;
   signOut(): Promise<void>;
@@ -66,6 +73,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       .load()
       .catch(() => undefined)
       .then((h) => {
+        // A create killed after its passkey succeeded still owes its setup (defect 6).
+        reconcileCreate(h?.address);
         setHint(h);
         setSnapshot(client.session.snapshot());
         setReady(true);
@@ -107,6 +116,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const c = clientRef.current;
     if (!unlockedAs) return;
+    // A9: a "Delete my data" whose server part couldn't reach Senryo completes at this account's next unlock.
+    if (serverDeleteOwed(unlockedAs)) {
+      deleteRemoteData(c, c.session.settings.faceId)
+        .then(() => serverDeleteDone(unlockedAs))
+        .catch(() => undefined);
+      return;
+    }
     pullPrefs(c, c.session.settings)
       .then((synced) => synced && adopt(synced))
       // Offline or no API: this phone's settings stand; the next unlock tries again.
@@ -134,8 +150,41 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       settings,
       obscured,
       client: ready ? client : undefined,
-      create: () => flow((c) => c.create()),
-      signIn: () => flow((c) => c.signIn()),
+      create: () =>
+        flow(async (c) => {
+          beginCreate(c.hint?.address);
+          try {
+            const address = await c.create();
+            oweSetup(address);
+            rememberAccount(address);
+            return address;
+          } finally {
+            endCreate();
+          }
+        }),
+      signIn: () =>
+        flow(async (c) => {
+          const address = await c.signIn();
+          rememberAccount(address);
+          return address;
+        }),
+      openSignIn: () =>
+        flow(async (c) => {
+          const pending = await c.openDiscoverable();
+          return {
+            address: pending.address,
+            adopt: async () => {
+              try {
+                const address = await pending.adopt();
+                rememberAccount(address);
+                return address;
+              } finally {
+                setHint(c.hint);
+              }
+            },
+            discard: pending.discard,
+          };
+        }),
       unlock: () => flow((c) => c.unlock()),
       lock: () => client.lock(),
       signOut: () =>

@@ -1,37 +1,35 @@
+/**
+ * "Have a code?" on setup step 3 (A2; Fomo F07's code · Paste anatomy): the voucher field in place of the practice
+ * card. Redeem signs in-session and the sponsor relays it; a pending redeem says so and offers only "Check status",
+ * never a second send. "Use the free money" goes back to the card.
+ */
 import { canonicalVoucherCode } from "@senryo/account";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/kit/Button";
-import { SetupField } from "~/features/setup/SetupField";
-import { SetupScreen } from "~/features/setup/SetupScreen";
-import { useSetupNav } from "~/features/setup/useSetupNav";
-import { useVoucher } from "~/features/setup/useVoucher";
 import { fire } from "~/feedback/fire";
 import type { StarterErrorCode } from "~/lib/account/starter";
 import { readClipboard } from "~/lib/clipboard";
 import { usd } from "~/lib/money";
 import { useReviewGuard } from "~/lib/review-guard";
+import { SetupField } from "./SetupField";
+import { SetupScreen } from "./SetupScreen";
+import { useVoucher } from "./useVoucher";
 
 const VOUCHER_MAX = 32;
 /** The credited amount stays on screen this long before the step moves on. */
 const CREDITED_HOLD_MS = 1_200;
 
 const FAILED: Partial<Record<StarterErrorCode | "AUTH", string>> = {
-  VOUCHER_INVALID: "That code isn’t valid",
-  VOUCHER_USED: "That code has already been used",
-  VOUCHER_CAP_REACHED: "All vouchers for this round have been used",
-  RATE_LIMITED: "Too many tries. Wait a moment, then try again.",
-  UNREACHABLE: "Couldn’t reach Senryo. Check your connection.",
-  GEO_BLOCKED: "Vouchers aren’t available where you are",
-  AUTH: "Face ID didn’t confirm. Try again.",
+  VOUCHER_INVALID: "Not a valid code",
+  VOUCHER_USED: "Already used",
+  VOUCHER_CAP_REACHED: "This round is used up",
+  RATE_LIMITED: "Too many tries · wait a moment",
+  UNREACHABLE: "Couldn’t reach Senryo",
+  GEO_BLOCKED: "Not available in your region",
+  AUTH: "Face ID didn’t confirm · try again",
 };
 
-/**
- * Setup step 3 — a voucher code (C10 adapted, FT041/FT067; Fomo F07's code · Paste · "I don't have one" anatomy):
- * a Senryo voucher adds starting funds; the sponsor pays the gas. Optional — "I don't have one" and Skip both move on.
- * A redeemed voucher shows what was credited before the step advances.
- */
-export default function VoucherStep() {
-  const { next, back } = useSetupNav("voucher");
+export function VoucherField({ onBack, onDone, back }: { onBack: () => void; onDone: () => void; back: () => void }) {
   const voucher = useVoucher();
   const [code, setCode] = useState("");
   const guard = useReviewGuard(code);
@@ -41,35 +39,36 @@ export default function VoucherStep() {
   useEffect(() => {
     if (phase.kind !== "done") return;
     fire("confirm");
-    const id = setTimeout(next, CREDITED_HOLD_MS);
+    const id = setTimeout(onDone, CREDITED_HOLD_MS);
     return () => clearTimeout(id);
-  }, [phase.kind, next]);
+  }, [phase.kind, onDone]);
   useEffect(() => {
     if (phase.kind === "failed") fire("fail");
   }, [phase.kind]);
 
   const message =
     phase.kind === "pending"
-      ? "Pending · Check status before submitting another voucher."
+      ? "Pending · check status"
       : phase.kind === "done"
-        ? `${usd(phase.creditUsd6)} added to your account`
+        ? `${usd(phase.creditUsd6)} added`
         : phase.kind === "failed"
-          ? (FAILED[phase.code] ?? "Couldn’t redeem that code. Try again.")
+          ? (FAILED[phase.code] ?? "Couldn’t redeem · try again")
           : undefined;
   return (
     <SetupScreen
-      title="Have a voucher code?"
-      body="A voucher adds starting funds to your account. We pay the network fee."
+      step="money"
+      title="Have a code?"
+      body="We pay the network fee"
       onBack={back}
-      onSkip={next}
+      onSkip={onDone}
       footer={
         <>
           <Button
-            label="I don’t have one"
+            label="Use the free money"
             variant="ghost"
             size="sm"
-            disabled={phase.kind === "working"}
-            onPress={next}
+            disabled={phase.kind === "working" || phase.kind === "pending"}
+            onPress={onBack}
           />
           <Button
             label={phase.kind === "pending" ? "Check status" : "Redeem"}

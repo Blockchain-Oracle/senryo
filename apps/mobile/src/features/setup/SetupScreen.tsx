@@ -1,8 +1,8 @@
 /**
- * A first-run setup step (J1; Fomo F04–F07): back and Skip in the corners with the seal between them, one centred
- * title and one sentence, the step's content, and the primary action pinned to the bottom — above the keyboard when
- * a field is focused, so it is never covered (F04/F07). A quiet text action can sit above the primary ("I don't have
- * one"). Content arrives in a short stagger behind the page push.
+ * A first-run setup step (A2; Fomo F04–F07): the progress bar on top, back and Skip in the corners with the seal
+ * between them, one centred title and one short line, the step's content, and the primary action pinned to the
+ * bottom — above the keyboard when a field is focused, so it is never covered (F04/F07). A quiet text action can sit
+ * above the primary ("Have a code?"). Content arrives in a short stagger behind the page push.
  */
 import { ids } from "@senryo/identity";
 import type { ReactNode } from "react";
@@ -13,6 +13,8 @@ import { EntityMark } from "~/components/identity/EntityMark";
 import { ChevronLeft } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
+import type { SetupStep } from "./progress";
+import { SetupProgress } from "./SetupProgress";
 
 const SEAL = ids.brand("senryo");
 
@@ -24,6 +26,7 @@ export function arriving(i: number) {
 }
 
 export function SetupScreen({
+  step,
   title,
   body,
   onBack,
@@ -31,7 +34,9 @@ export function SetupScreen({
   children,
   footer,
 }: {
+  step: SetupStep;
   title: string;
+  /** One short line under the title (no sentences on setup pages, D-237). */
   body: string;
   /** Omit on the first step: there is nothing to go back to once the account exists. */
   onBack?: () => void;
@@ -47,7 +52,8 @@ export function SetupScreen({
     paddingBottom: Math.max(insets.bottom, keyboard.height.value) + SPACE.md,
   }));
   return (
-    <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top }]}>
+    <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top + SPACE.sm }]}>
+      <SetupProgress step={step} />
       <SetupBar onBack={onBack} onSkip={onSkip} />
       <Animated.View entering={arriving(0)} style={styles.heading}>
         <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.center, { color: color.ink }]}>

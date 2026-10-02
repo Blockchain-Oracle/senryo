@@ -21,13 +21,13 @@ const GRANTED_BEAT_MS = TIMING.onboardingScene;
 type Outcome = "on" | "on-unsent" | "declined";
 
 const SAID: Record<Outcome, { text: string; tone: PrimerTone }> = {
-  on: { text: "Notifications are on.", tone: "up" },
-  "on-unsent": { text: "On. Senryo finishes connecting this phone the next time you unlock.", tone: "up" },
-  declined: { text: "No notifications. You can turn them on any time in Settings.", tone: "muted" },
+  on: { text: "Notifications are on", tone: "up" },
+  "on-unsent": { text: "On · connects at your next unlock", tone: "up" },
+  declined: { text: "Off · turn on any time in Settings", tone: "muted" },
 };
 
 /**
- * Setup step 6 — the notification primer (FT008, C07; Solflare S14 adapted): what Senryo will tell you — fills, stop
+ * Setup — the notification primer (A2: art, one title, one line, Turn on / Not now) (FT008, C07; Solflare S14 adapted): what Senryo will tell you — fills, stop
  * losses, liquidation warnings, deposits and your own price alerts — before iOS asks. "Turn on" raises the OS prompt
  * and, when allowed, registers this phone for every kind (each can be switched off in You → Notifications). A phone
  * that already answered is told what it chose, with Settings one tap away; a build without the module says so.
@@ -70,16 +70,17 @@ export default function NotificationsStep() {
 
   const art = BellArt ? <BellArt width={PRIMER_ART} height={PRIMER_ART} /> : null;
   const title = "Don’t miss a move";
-  const body =
-    "Fills, stop losses, liquidation warnings, deposits and the price alerts you set. Only news about your money, never marketing.";
+  const body = "Fills, warnings and money arriving";
 
   if (permission === "unavailable") {
     return (
       <PrimerScreen
+        step="notifications"
+        onSkip={next}
         art={art}
         motion="sway"
         title={title}
-        body="This build of Senryo can’t receive notifications yet. Update the app, then turn them on in You → Notifications."
+        body="Needs a newer build of Senryo"
         granted={false}
         primary={{ label: "Continue", onPress: next }}
         onBack={back}
@@ -92,14 +93,14 @@ export default function NotificationsStep() {
     const on = permission === "granted";
     return (
       <PrimerScreen
+        step="notifications"
+        onSkip={next}
         art={art}
         motion="sway"
         title={title}
         body={body}
         status={
-          on
-            ? { text: "Notifications are already on for Senryo.", tone: "up" }
-            : { text: "Notifications are off for Senryo in Settings.", tone: "warn" }
+          on ? { text: "Already on for Senryo", tone: "up" } : { text: "Off for Senryo in Settings", tone: "warn" }
         }
         granted={on}
         primary={{ label: "Continue", onPress: next }}
@@ -110,6 +111,8 @@ export default function NotificationsStep() {
   }
   return (
     <PrimerScreen
+      step="notifications"
+      onSkip={next}
       art={art}
       motion="sway"
       title={title}
@@ -119,7 +122,7 @@ export default function NotificationsStep() {
       primary={
         outcome
           ? { label: "Continue", onPress: next }
-          : { label: "Turn on notifications", onPress: () => void turnOn(), loading: busy, disabled: !permission }
+          : { label: "Turn on", onPress: () => void turnOn(), loading: busy, disabled: !permission }
       }
       secondary={outcome ? undefined : { label: "Not now", onPress: next, disabled: busy }}
       onBack={back}

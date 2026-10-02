@@ -30,6 +30,15 @@ export interface AccountClientOptions {
   onExtraPrompt?: (flow: Flow) => void;
 }
 
+/** An account a discoverable ceremony opened, not yet adopted on this device (`AccountClient.openDiscoverable`). */
+export interface PendingSignIn {
+  readonly address: Address;
+  /** Make it this device's account (hint, unlock item, session) and return its address. */
+  adopt(): Promise<Address>;
+  /** Forget it; the device keeps the account it had. */
+  discard(): void;
+}
+
 export class AccountClient {
   readonly session: SessionManager;
   readonly #o: AccountClientOptions;
@@ -82,15 +91,52 @@ export class AccountClient {
   }
 
   /** F02/F08 "I already have an account": discoverable ceremony → same passkey, same address, on any device. */
-  signIn(): Promise<Address> {
+  async signIn(): Promise<Address> {
+    const pending = await this.openDiscoverable();
+    return pending.adopt();
+  }
+
+  /**
+   * A3 (the backup-passkey trap): the discoverable ceremony without adopting what it opened. The caller can look at
+   * the address — is it the account this phone knew, is it empty? — before anything on the phone changes: `adopt()`
+   * stores the hint and the unlock item and starts the session; `discard()` forgets the opened keys and leaves the
+   * previous account exactly as it was. Exactly one of the two must be called.
+   */
+  openDiscoverable(): Promise<PendingSignIn> {
     return this.#flow("sign-in", async (onPrompt) => {
       const { result, prompts } = await getPasskey(this.#o.passkey, this.#o.rpId, undefined, onPrompt);
-      await this.#persistUnlock(result.credentialId, result.prfOutput);
       const opened = this.#open(result.prfOutput);
-      const known = this.#hint && isAddressEqual(this.#hint.address, opened.address) ? this.#hint : undefined;
-      const credential = known?.credential ?? { credentialId: result.credentialId };
-      await this.#adopt({ address: opened.address, credential, mode: "passkey", savedAt: this.#clock.now() }, opened);
-      return { value: opened.address, prompts };
+      const prf = result.prfOutput;
+      let settled = false;
+      const forget = () => {
+        settled = true;
+        prf.fill(0);
+      };
+      const pending: PendingSignIn = {
+        address: opened.address,
+        adopt: async () => {
+          if (settled) throw new AuthError("unknown");
+          try {
+            await this.#persistUnlock(result.credentialId, prf);
+            const known = this.#hint && isAddressEqual(this.#hint.address, opened.address) ? this.#hint : undefined;
+            const credential = known?.credential ?? { credentialId: result.credentialId };
+            await this.#adopt(
+              { address: opened.address, credential, mode: "passkey", savedAt: this.#clock.now() },
+              opened,
+            );
+            return opened.address;
+          } finally {
+            forget();
+          }
+        },
+        discard: () => {
+          if (settled) return;
+          forget();
+          opened.session.end();
+          opened.prefsKey.fill(0);
+        },
+      };
+      return { value: pending, prompts };
     });
   }
 

@@ -16,7 +16,14 @@ import {
   type SessionSettings,
   type SyncedWatchlist,
 } from "@senryo/account";
-import { ApiError, prefsDeleteRoute, prefsGetRoute, prefsPutRoute, socialDeleteRoute } from "@senryo/api-client";
+import {
+  ApiError,
+  prefsDeleteRoute,
+  prefsGetRoute,
+  prefsPutRoute,
+  type SocialDelete,
+  socialDeleteRoute,
+} from "@senryo/api-client";
 import { activeNetwork } from "~/lib/network";
 import { api, withSession } from "./api";
 import { parseSettings } from "./settings";
@@ -91,15 +98,20 @@ export async function pullPrefs(client: AccountClient, local: SessionSettings): 
 }
 
 /**
- * F09: remove what Senryo keeps for this account (needs the live session to authenticate, one unlock at most): the
- * encrypted prefs, then the social data (S12b, D-217). The profile, posts, likes, follows, blocks, mutes and own
- * reports are deleted; the handle stays held 30 days so nobody can take it over.
+ * A9: remove what Senryo keeps for this account (needs the live session to authenticate, one unlock at most). One
+ * server call deletes the social data, price alerts, push tokens, backup vaults, inbox watches and encrypted prefs,
+ * and strips notification content and analytics links (defect 10); the prefs route is asked too, for an api from
+ * before that. The handle stays held 30 days so nobody can take it over.
  */
-export async function deleteRemoteData(client: AccountClient, faceId: FaceId): Promise<void> {
+export async function deleteRemoteData(client: AccountClient, faceId: FaceId): Promise<SocialDelete> {
   const address = client.session.live()?.address;
-  await withSession(client, faceId, async () => {
-    await api().call(prefsDeleteRoute, {});
-    await api().call(socialDeleteRoute, {});
+  const outcome = await withSession(client, faceId, async () => {
+    const deleted = await api().call(socialDeleteRoute, {});
+    await api()
+      .call(prefsDeleteRoute, {})
+      .catch(() => undefined);
+    return deleted;
   });
   if (address) versions.delete(address.toLowerCase());
+  return outcome;
 }

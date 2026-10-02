@@ -1,14 +1,13 @@
 import { Stack } from "expo-router";
 import { Screen } from "~/components/kit/Screen";
-import { YouSections } from "~/features/profile/YouSections";
-import { useAccount } from "~/lib/account/provider";
-/** Browsing preferences never unlocks an account. Sensitive changes retain their own authentication. */
+import { SettingsList } from "~/features/profile/SettingsList";
+
+/** Settings (A10), from the profile's gear. Browsing never unlocks the account; sensitive changes keep their step-up. */
 export default function Settings() {
-  const account = useAccount();
   return (
     <Screen>
       <Stack.Screen options={{ title: "Settings" }} />
-      <YouSections guest={!account.hint} />
+      <SettingsList />
     </Screen>
   );
 }

@@ -1,0 +1,16 @@
+# Provenance — Identity, setup, profile, settings, mode (ui-identity)
+
+21st.dev catalog searches for every new component in this area (`npx -y @21st-dev/cli search "<what>" --type c`, 2 Oct 2026), what was ported to React Native, and the deviations. Visual grammar is from the Fomo frames F04 (username), F06 (follow), F08 (terms over Home), F16 (profile) in `docs/design/reference-study-2026-09-30/evidence/R3/screens/`.
+
+| Component (file) | Search | Source | Ported | Deviations |
+|---|---|---|---|---|
+| Setup progress bar (`features/setup/SetupProgress.tsx`) | "onboarding progress bar steps" | sean0205 Multi-Step Progress, id 29469 (also seen: shadcnspace 19143, ephraimduncan 29458, ssychui 30552) | The bar: `completed / total` as a filled track | Its step checklist dropped (the steps are pages); 3 pt track in `raised2`, fill in `primary`, travels from the previous share on arrival (Reanimated), Reduce Motion places it. |
+| Settings row (`features/profile/SettingsRow.tsx`) | "settings list grouped icon" | uiable List Group Badge, id 29345 (also: sean0205 28284, uiable 29346) | Icon + title + trailing value per row in a grouped list | No dividers or border (Panel fill instead); the icon sits in a coloured rounded square (iOS Settings grammar, A10); badge replaced by a quiet value; chevron or a control (Switch) at the trailing edge. |
+| Terms checkbox row (`features/legal/AgreeRow.tsx`) | "checkbox accept terms" | originui Checkbox "Terms of service checkbox", id 661 (also: clevision 8999, cnippet-dev 24913/24989) | Box with primary fill + check when checked, outline when not | Radix primitive replaced by a Pressable row (accessibilityRole checkbox); the whole filled row is the target; Terms / Privacy as inline links. |
+| Show-my-trades chips (`features/profile/ShowTrades.tsx`) | "segmented chip toggle visibility" | preetsuthar17 Chip 3259, halaska-studio Segmented Control 34763 (searched) | — (searched, none fit: they are single-select) | Hand-written two independent toggle chips (role switch), mode wash + mode ink when on, kit chip height. |
+| Own profile header (`features/profile/ProfileHeader.tsx`) | "profile header avatar stats" | serafimcloud Telegram Profile Header, id 781 (also avatar components 34162, 31572, 13800) | — (searched, none fit: 781 is an expanding-avatar header) | Laid out from Fomo F16 directly: avatar with pencil badge, name, @handle, bio, counts, meta line with symbols. |
+| Wallet & address QR (`features/auth/IdentityPanel.tsx`) | "receive crypto qr code address copy share" | designali-in 1706, anubra266 6170, user_xn1cklas 6838, tom_ui 12248 | — (the kit `QrCode` already ports the reveal; reused) | Copy · Share as 56 pt action circles (`features/profile/ActionCircle.tsx`, hand-written to D-196). |
+| Mode sheet slide | — | kit `SlideToConfirm` (21st starc007/slide-action-button, id 29304, ported by the foundation) | Reused | — |
+| Info tips, sign-in outcome, switch / sign-out confirms, relation rows | — | Kit `Sheet` / `SheetHeading` / `Button` compositions | — | No catalog search needed: compositions of foundation parts. |
+
+Art: the guest sheet uses `scene-passkey`, the practice money card `xau-koban`, the signed-in moment the person's own avatar (all existing authored art; no new marks).

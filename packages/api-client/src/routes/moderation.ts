@@ -108,6 +108,13 @@ export const socialDeleteSchema = z.object({
     likes: z.int().nonnegative(),
     reports: z.int().nonnegative(),
     feedEvents: z.int().nonnegative(),
+    /** A9 / defect 10 — defaulted so an api from before them still parses. */
+    alerts: z.int().nonnegative().default(0),
+    pushTokens: z.int().nonnegative().default(0),
+    vaults: z.int().nonnegative().default(0),
+    inboxWatches: z.int().nonnegative().default(0),
+    prefs: z.boolean().default(false),
+    notifications: z.int().nonnegative().default(0),
   }),
   /** The released handle stays held this long (Q-022 default); null when there was no handle. */
   handleHeldUntil: isoTimeSchema.nullable(),

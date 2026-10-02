@@ -3,7 +3,7 @@
  * a trailing text action (Paste, Clear), and a reserved line under it for the field's state so nothing jumps when a
  * message appears (C09). An input is one of the few places a hairline is allowed; it turns to the ring colour on focus.
  */
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, type TextInputProps, View } from "react-native";
 import { fire } from "~/feedback/fire";
 import { BUTTON, HAIRLINE_PX, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -20,6 +20,8 @@ export function SetupField({
   tone = "quiet",
   label,
   input,
+  onMessagePress,
+  messageAccessory,
 }: {
   value: string;
   onChangeText: (next: string) => void;
@@ -33,6 +35,10 @@ export function SetupField({
   /** The field's accessible name. */
   label: string;
   input?: Pick<TextInputProps, "autoCapitalize" | "maxLength" | "keyboardType" | "returnKeyType" | "onSubmitEditing">;
+  /** The state line is an action ("Couldn’t check · Retry"). */
+  onMessagePress?: () => void;
+  /** Sits after the state line (an ⓘ behind "On hold"). */
+  messageAccessory?: ReactNode;
 }) {
   const { color } = useTheme();
   const [focused, setFocused] = useState(false);
@@ -70,13 +76,18 @@ export function SetupField({
           </Pressable>
         ) : null}
       </View>
-      <Text
-        accessibilityLiveRegion="polite"
-        accessibilityRole={tone === "bad" ? "alert" : undefined}
-        style={[TYPE.rowDetail, styles.message, { color: ink }]}
-      >
-        {message ?? " "}
-      </Text>
+      <View style={styles.line}>
+        <Text
+          accessibilityLiveRegion="polite"
+          accessibilityRole={onMessagePress ? "button" : tone === "bad" ? "alert" : undefined}
+          onPress={onMessagePress}
+          suppressHighlighting
+          style={[TYPE.rowDetail, styles.message, { color: ink }]}
+        >
+          {message ?? " "}
+        </Text>
+        {messageAccessory}
+      </View>
     </View>
   );
 }
@@ -95,5 +106,6 @@ const styles = StyleSheet.create({
   },
   // lineHeight is dropped: iOS centres a single-line input's text only when the line box is its own.
   input: { flex: 1, height: SIZE.fieldHeight, lineHeight: undefined, paddingVertical: 0 },
+  line: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: SPACE.xs },
   message: { textAlign: "center" },
 });
