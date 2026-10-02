@@ -83,5 +83,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
   runtimeVersion: { policy: "appVersion" },
+  // EAS Update: a store or TestFlight build on channel `production` / `preview` (eas.json) takes JS-only fixes over
+  // the air for the same app version; a native change still needs a new build.
+  updates: { url: `https://u.expo.dev/${EAS.projectId}` },
   extra: { rpId: RP_ID, eas: { projectId: EAS.projectId } },
 });

@@ -46,6 +46,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
+    "expo-updates": "~57.0.24",
     "lucide-react-native": "^1.49.0",
     "qrcode": "1.5.4",
     "react": "catalog:mobile",
