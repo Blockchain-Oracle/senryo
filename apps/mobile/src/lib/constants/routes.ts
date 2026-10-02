@@ -83,6 +83,8 @@ export const ROUTES = {
   notifications: "/notifications",
   /** G1 / C9: the inbox opened on its Alerts tab. */
   notificationAlerts: "/notifications?tab=alerts",
+  /** E6: Activity filtered to the card's own rows (the Card tab's "See all"). */
+  activityCard: "/activity?filter=card",
 } as const;
 
 /** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */

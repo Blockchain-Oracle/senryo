@@ -102,7 +102,7 @@ export function CardIssued({
             Payments
           </Text>
           {summary.recent.length > 0 ? (
-            <Pressable onPress={() => router.push(ROUTES.activity)} accessibilityRole="link" hitSlop={SPACE.sm}>
+            <Pressable onPress={() => router.push(ROUTES.activityCard)} accessibilityRole="link" hitSlop={SPACE.sm}>
               <Text style={[TYPE.rowDetail, { color: color.link }]}>See all</Text>
             </Pressable>
           ) : null}
