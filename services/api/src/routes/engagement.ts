@@ -7,6 +7,9 @@ import {
   DEVICE_HASH_MAX_CHARS,
   DEVICE_HEADER,
   eventsRoute,
+  PUSH_CHANNEL_DEFAULTS,
+  PUSH_CHANNELS,
+  type PushChannel,
   pushTokenDeleteRoute,
   pushTokenRoute,
 } from "@senryo/api-client";
@@ -117,25 +120,23 @@ export function registerEngagementRoutes(app: HttpServer, ctx: ApiContext): void
   app.put(pushTokenRoute.path, async (request, reply) => {
     const s = await session(request);
     const { body } = parseRoute(pushTokenRoute, request);
-    const ch = body.channels;
+    // A channel the app didn't send takes its default (older builds don't know the social ones).
+    const ch = Object.fromEntries(
+      PUSH_CHANNELS.map((c) => [c, body.channels[c] ?? PUSH_CHANNEL_DEFAULTS[c]]),
+    ) as Record<PushChannel, boolean>;
     // Re-binding on conflict is intended: one phone, several accounts share an Expo token (S8.5b #10, accepted —
     // tokens aren't public and the worst case is a missed notification).
     await ctx.db`
-      INSERT INTO push_tokens (token, user_address, platform, kind, ch_fills, ch_liquidation, ch_deposits, ch_card, ch_price_alerts)
-      VALUES (${body.token}, ${s.address.toLowerCase()}, ${body.platform}, ${body.kind}, ${ch.fills ?? true},
-              ${ch.liquidation ?? true}, ${ch.deposits ?? true}, ${ch.card ?? true}, ${ch.priceAlerts ?? true})
+      INSERT INTO push_tokens (token, user_address, platform, kind, ch_fills, ch_liquidation, ch_deposits, ch_card,
+                               ch_price_alerts, ch_social, ch_followed_trades)
+      VALUES (${body.token}, ${s.address.toLowerCase()}, ${body.platform}, ${body.kind}, ${ch.fills},
+              ${ch.liquidation}, ${ch.deposits}, ${ch.card}, ${ch.priceAlerts}, ${ch.social}, ${ch.followedTrades})
       ON CONFLICT (token) DO UPDATE SET user_address = EXCLUDED.user_address, platform = EXCLUDED.platform,
         kind = EXCLUDED.kind, ch_fills = EXCLUDED.ch_fills, ch_liquidation = EXCLUDED.ch_liquidation,
         ch_deposits = EXCLUDED.ch_deposits, ch_card = EXCLUDED.ch_card, ch_price_alerts = EXCLUDED.ch_price_alerts,
+        ch_social = EXCLUDED.ch_social, ch_followed_trades = EXCLUDED.ch_followed_trades,
         disabled_at = NULL, updated_at = now()`;
-    const channels = {
-      fills: ch.fills ?? true,
-      liquidation: ch.liquidation ?? true,
-      deposits: ch.deposits ?? true,
-      card: ch.card ?? true,
-      priceAlerts: ch.priceAlerts ?? true,
-    };
-    return sendRoute(reply, pushTokenRoute, { token: body.token, channels });
+    return sendRoute(reply, pushTokenRoute, { token: body.token, channels: ch });
   });
 
   app.post(pushTokenDeleteRoute.path, async (request, reply) => {

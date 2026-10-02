@@ -12,8 +12,8 @@ import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import {
-  ALL_CHANNELS_ON,
   askPushPermission,
+  DEFAULT_CHANNELS,
   type PushChannel,
   type PushChannels,
   type PushPermission,
@@ -37,6 +37,12 @@ const CHANNELS: ReadonlyArray<{ key: PushChannel; title: string; detail: string 
   { key: "priceAlerts", title: "Price alerts", detail: "When a market crosses a price you set." },
   { key: "deposits", title: "Deposits", detail: "When money you sent arrives." },
   { key: "card", title: "Kinpaku card", detail: "Payments and declines on your card." },
+  { key: "social", title: "Followers and replies", detail: "New followers, and likes and replies on your theses." },
+  {
+    key: "followedTrades",
+    title: "Traders you follow",
+    detail: "When someone you follow opens a position. Off unless you turn it on.",
+  },
 ];
 
 /**
@@ -50,7 +56,7 @@ export default function NotificationsScreen() {
   const account = useAccount();
   const address = account.hint?.address;
   const [permission, setPermission] = useState<PushPermission>();
-  const [channels, setChannels] = useState<PushChannels>(() => savedRegistration()?.channels ?? ALL_CHANNELS_ON);
+  const [channels, setChannels] = useState<PushChannels>(() => savedRegistration()?.channels ?? DEFAULT_CHANNELS);
   const [note, setNote] = useState<string>();
   const [saving, setSaving] = useState<PushChannel | "all">();
 

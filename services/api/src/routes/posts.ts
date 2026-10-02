@@ -12,6 +12,7 @@ import { HTTP_STATUS, HttpError, type HttpServer, parseRoute, sendRoute } from "
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { POST_WRITE_RATE, REPORT_RATE, SEARCH_RATE, SOCIAL_READ_RATE } from "../social/constants.ts";
 import { feedPage } from "../social/feed.ts";
+import { bestEffort, notifyLiked, notifyReplied } from "../social/notify.ts";
 import { createPost, deletePost, readThread, setLike } from "../social/posts.ts";
 import { fileReport, reporterWeight } from "../social/reports.ts";
 import type { SocialRuntime } from "../social/runtime.ts";
@@ -20,7 +21,8 @@ import { optionalSession, requireSession } from "../social/shared.ts";
 
 /**
  * Feed, theses/replies, likes, post reports and search (S12b.4/6/7, D-174). Reads take an optional session (viewer
- * filtering: blocks, mutes, reports, likes); writes need one. A new thesis emits a `feed:{chainId}` notice.
+ * filtering: blocks, mutes, reports, likes); writes need one. A new thesis emits a `feed:{chainId}` notice; a reply
+ * and a like notify the author (channel `social`).
  */
 export function registerPostRoutes(app: HttpServer, ctx: SocialRuntime): void {
   const viewerOf = async (request: FastifyRequest) =>
@@ -42,6 +44,8 @@ export function registerPostRoutes(app: HttpServer, ctx: SocialRuntime): void {
     const { body } = parseRoute(postCreateRoute, request);
     const { post, feedId } = await createPost(ctx.db, ctx.social.indexer, s.address.toLowerCase(), body);
     if (feedId !== null) ctx.social.notifier.emit(body.chainId, feedId);
+    if (post.kind === "reply")
+      await bestEffort(request.log, "reply", () => notifyReplied(ctx.db, post.chainId, post.id));
     return sendRoute(reply, postCreateRoute, post);
   });
 
@@ -71,7 +75,9 @@ export function registerPostRoutes(app: HttpServer, ctx: SocialRuntime): void {
       const s = await requireSession(ctx, request);
       const { params } = parseRoute(route, request);
       // Likes act on the session's network (the app's active mode).
-      const state = await setLike(ctx.db, s.chainId, s.address.toLowerCase(), params.id, liked);
+      const me = s.address.toLowerCase();
+      const state = await setLike(ctx.db, s.chainId, me, params.id, liked);
+      if (liked) await bestEffort(request.log, "like", () => notifyLiked(ctx.db, s.chainId, me, params.id));
       return sendRoute(reply, route, state);
     };
   app.post(likeRoute.path, { config: { rateLimit: POST_WRITE_RATE } }, like(likeRoute, true));

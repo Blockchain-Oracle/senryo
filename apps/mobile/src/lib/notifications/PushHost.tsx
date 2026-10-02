@@ -22,6 +22,8 @@ const ANDROID_CHANNELS: ReadonlyArray<{ id: PushChannel; name: string }> = [
   { id: "priceAlerts", name: "Price alerts" },
   { id: "deposits", name: "Deposits" },
   { id: "card", name: "Kinpaku card" },
+  { id: "social", name: "Followers and replies" },
+  { id: "followedTrades", name: "Traders you follow" },
 ];
 
 /** Where a tapped push goes, or undefined when it names nowhere this app knows. */

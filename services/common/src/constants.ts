@@ -25,3 +25,26 @@ export const MS_PER_SECOND = 1_000;
 export const SECONDS_PER_MINUTE = 60;
 export const SECONDS_PER_HOUR = 3_600;
 export const SECONDS_PER_DAY = 86_400;
+
+/**
+ * Expo Push Service (docs.expo.dev/push-notifications/sending-notifications, read 2026-10-01): at most 100 messages
+ * per send and 1,000 ids per getReceipts request (PUSH_TOO_MANY_NOTIFICATIONS / PUSH_TOO_MANY_RECEIPTS otherwise).
+ */
+export const EXPO_PUSH = {
+  sendUrl: "https://exp.host/--/api/v2/push/send",
+  receiptsUrl: "https://exp.host/--/api/v2/push/getReceipts",
+  sendBatch: 100,
+  receiptsBatch: 1_000,
+  timeoutMs: 10_000,
+} as const;
+
+/**
+ * Push delivery from the `push_sends` outbox (G1, D7): one retry after a failed attempt, never a push older than
+ * `freshSec` (a backlog after an outage or a delivery switch-on is closed, not sent), `batch` rows per claim.
+ */
+export const PUSH_DELIVERY = {
+  maxAttempts: 2,
+  retryDelaySec: 30,
+  freshSec: 600,
+  batch: 50,
+} as const;

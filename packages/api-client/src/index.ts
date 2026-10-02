@@ -13,6 +13,7 @@ export * from "./routes/inbox.ts";
 export * from "./routes/info.ts";
 export * from "./routes/leaderboard.ts";
 export * from "./routes/moderation.ts";
+export * from "./routes/notifications.ts";
 export * from "./routes/posts.ts";
 export * from "./routes/profile.ts";
 export * from "./routes/starter.ts";

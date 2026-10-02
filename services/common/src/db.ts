@@ -7,6 +7,7 @@ import * as m0005 from "../migrations/0005_social.ts";
 import * as m0006 from "../migrations/0006_inbox_watches.ts";
 import * as m0007 from "../migrations/0007_social_feed.ts";
 import * as m0008 from "../migrations/0008_push_tickets.ts";
+import * as m0009 from "../migrations/0009_notification_inbox.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -43,6 +44,7 @@ export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [
   m0006,
   m0007,
   m0008,
+  m0009,
 ];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */

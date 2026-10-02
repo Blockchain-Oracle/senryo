@@ -23,6 +23,7 @@ import { registerFollowRoutes } from "../src/routes/follow.ts";
 import { registerHolderRoutes } from "../src/routes/holders.ts";
 import { registerLeaderboardRoutes } from "../src/routes/leaderboard.ts";
 import { registerModerationRoutes } from "../src/routes/moderation.ts";
+import { registerNotificationRoutes } from "../src/routes/notifications.ts";
 import { registerPostRoutes } from "../src/routes/posts.ts";
 import { registerProfileRoutes } from "../src/routes/profile.ts";
 import { FeedPoller } from "../src/social/feed-poller.ts";
@@ -151,6 +152,7 @@ export async function openHarness(): Promise<Harness> {
   registerLeaderboardRoutes(app, ctx);
   registerHolderRoutes(app, ctx);
   registerModerationRoutes(app, ctx);
+  registerNotificationRoutes(app, ctx);
   await app.ready();
   const poller = new FeedPoller({ db, indexer: mock, notifier, log, chainIds });
   const fetchImpl = injectFetch(app);
@@ -232,6 +234,10 @@ export async function cleanup(db: Db, addresses: string[]): Promise<void> {
   await db`DELETE FROM follows WHERE follower IN ${list} OR followee IN ${list}`;
   await db`DELETE FROM blocks WHERE blocker IN ${list} OR blocked IN ${list}`;
   await db`DELETE FROM starter_claims WHERE user_address IN ${list}`;
+  // Social actions now record notifications (G1); the notify check also registers device tokens.
+  await db`DELETE FROM push_tickets WHERE event_key IN (SELECT event_key FROM push_sends WHERE user_address IN ${list})`;
+  await db`DELETE FROM push_sends WHERE user_address IN ${list}`;
+  await db`DELETE FROM push_tokens WHERE user_address IN ${list}`;
   await db`DELETE FROM handle_tombstones WHERE address IN ${list}`;
   await db`DELETE FROM profiles WHERE address IN ${list}`;
 }

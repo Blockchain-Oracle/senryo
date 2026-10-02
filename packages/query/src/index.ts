@@ -15,6 +15,7 @@ export * from "./keys.ts";
 export * from "./lp.ts";
 export * from "./lp-requests.ts";
 export * from "./markets.ts";
+export * from "./notifications.ts";
 export * from "./operations.ts";
 export * from "./orders.ts";
 export * from "./portfolio.ts";
