@@ -5,6 +5,7 @@
  * per scan here (its token's budget is shared with the indexer). Rate limits are not registered.
  */
 import { type ApiClient, createApiClient } from "@senryo/api-client";
+import type { SwapProvider } from "@senryo/config";
 import { createHttpServer, createLogger, type HttpServer } from "@senryo/service-common";
 import { type AnyAssetServices, createAnyAsset } from "../src/anyasset/runtime.ts";
 import { registerAnyAssetRoutes } from "../src/routes/anyasset.ts";
@@ -33,17 +34,21 @@ function injectFetch(app: HttpServer): typeof fetch {
   }) as typeof fetch;
 }
 
-export async function openAnyAssetHarness(secrets: {
-  hypersyncToken?: string | undefined;
-  alchemyKey?: string | undefined;
-  auroraKey?: string | undefined;
-}): Promise<AnyAssetHarness> {
+export async function openAnyAssetHarness(
+  secrets: {
+    hypersyncToken?: string | undefined;
+    alchemyKey?: string | undefined;
+    auroraKey?: string | undefined;
+  },
+  /** Fork checks: quote only these aggregators (KyberSwap's AMM routes replay on a fork; Kuru's order book doesn't). */
+  swapProviders?: readonly SwapProvider[],
+): Promise<AnyAssetHarness> {
   const log = createLogger("anyasset-check", process.env.LOG_LEVEL ?? "error");
   const services = createAnyAsset(
     log,
     new Map(),
     { hypersyncToken: secrets.hypersyncToken, alchemyKey: secrets.alchemyKey, auroraKey: secrets.auroraKey },
-    { hypersyncPagesPerScan: 1 },
+    { hypersyncPagesPerScan: 1, ...(swapProviders ? { swapProviders } : {}) },
   );
   const app = createHttpServer({ service: "anyasset-check", logger: log });
   registerAnyAssetRoutes(app, log, services);

@@ -4,7 +4,7 @@
  * whether or not SenryoCore is deployed there).
  */
 import { createReadClient, type ReadClient } from "@senryo/chain";
-import type { ChainId } from "@senryo/config";
+import type { ChainId, SwapProvider } from "@senryo/config";
 import type { Logger } from "@senryo/service-common";
 import type { ChainContext } from "../context.ts";
 import type { ApiSecrets } from "../env.ts";
@@ -28,7 +28,7 @@ export function createAnyAsset(
   log: Logger,
   chains: ReadonlyMap<ChainId, ChainContext>,
   secrets: Pick<ApiSecrets, "hypersyncToken" | "alchemyKey" | "auroraKey"> & Partial<Pick<ApiSecrets, "relayKey">>,
-  options: { hypersyncPagesPerScan?: number } = {},
+  options: { hypersyncPagesPerScan?: number; swapProviders?: readonly SwapProvider[] } = {},
 ): AnyAssetServices {
   const own = new Map<ChainId, ReadClient>();
   const read = (chainId: ChainId): ReadClient => {
@@ -55,7 +55,13 @@ export function createAnyAsset(
       gecko,
       alchemyKey: secrets.alchemyKey,
     }),
-    swaps: new SwapQuoteService({ log, read, tokenList, reference: new ReferencePrices(read, gecko, log) }),
+    swaps: new SwapQuoteService({
+      log,
+      read,
+      tokenList,
+      reference: new ReferencePrices(read, gecko, log),
+      providers: options.swapProviders,
+    }),
     bridges: new BridgeService(log, aurora, secrets.relayKey),
     aurora,
   };

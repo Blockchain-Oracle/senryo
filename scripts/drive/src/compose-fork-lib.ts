@@ -13,12 +13,13 @@ import { anvil, type freshUser } from "./fork.ts";
 
 const SLIPPAGE_BPS = 100;
 const SETTLE_BLOCKS = "0x3";
-/** Anvil's `safe` / `finalized` heads trail `latest` by 32 / 64 blocks: mine past them, same timestamp. */
-const FINALITY_BLOCKS = "0x41";
+/** Anvil's `safe` / `finalized` heads trail `latest` by 1 / 2 epochs (`--slots-in-an-epoch 1` → 1 / 2 blocks). */
+const FINALITY_BLOCKS = "0x3";
 const SAME_TIMESTAMP = "0x0";
 const MINE_EVERY_MS = 1_500;
 /** The fork loads remote state on first touch: a cold estimate can time out, a retry finds it warm. */
 const WARM_ATTEMPTS = 4;
+const HEX = 16;
 const HOLDER_GAS = "0xde0b6b3a7640000";
 
 export function forkKit(FORK: string, fork: ReadClient, api: ApiClient) {
@@ -58,11 +59,18 @@ export function forkKit(FORK: string, fork: ReadClient, api: ApiClient) {
       );
       writeOperation(record);
       const built = step.build ? await step.build() : step.request;
+      // Raw JSON-RPC without a client timeout: the first touch of a pool's state on the fork can take tens of seconds.
       for (let attempt = 1; attempt <= WARM_ATTEMPTS; attempt += 1) {
-        const warmed = await fork
-          .estimateGas({ account: sender.account.address, to: built.to, data: built.data, value: built.value ?? 0n })
+        const warmed = await anvil(FORK, "eth_estimateGas", [
+          {
+            from: sender.account.address,
+            to: built.to,
+            data: built.data,
+            value: `0x${(built.value ?? 0n).toString(HEX)}`,
+          },
+        ])
           .then(() => true)
-          .catch(() => false);
+          .catch((error: unknown) => String(error).includes("revert"));
         if (warmed) break;
       }
       record = builtOperation(record, built);
@@ -133,13 +141,49 @@ export function forkKit(FORK: string, fork: ReadClient, api: ApiClient) {
     return q;
   }
 
-  /** Keeps anvil's voted / finalized heads moving while the composed steps wait for them; returns the stop. */
+  /** Keeps anvil's voted / finalized heads moving while the composed steps wait for them (stop / start). */
   const keepFinalizing = () => {
-    const id = setInterval(
-      () => void anvil(FORK, "anvil_mine", [FINALITY_BLOCKS, SAME_TIMESTAMP]).catch(() => undefined),
-      MINE_EVERY_MS,
-    );
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval> | undefined;
+    const miner = {
+      start: () => {
+        id ??= setInterval(
+          () => void anvil(FORK, "anvil_mine", [FINALITY_BLOCKS, SAME_TIMESTAMP]).catch(() => undefined),
+          MINE_EVERY_MS,
+        );
+      },
+      stop: () => {
+        if (id) clearInterval(id);
+        id = undefined;
+      },
+    };
+    miner.start();
+    return miner;
   };
   return { failures, check, lend, balanceOf, journalled, mine, userSender, checkOperation, swapQuote, keepFinalizing };
+}
+
+/**
+ * Fork drift as the aggregator reports it: Monorail's `InsufficientLiquidity()` (an order-book hop priced on the live
+ * chain, missing on the fork) and `TransactionExpired()` (a route timed for the live chain).
+ */
+const DRIFT_SELECTORS = ["0xbb55fd27", "0xe397952c"] as const;
+const DRIFT_ATTEMPTS = 3;
+
+/** Retries a fork scenario on drift with a fresh quote, re-forking at the live head first when `reset`. */
+export function driftRetry(FORK: string, upstream: string) {
+  const refork = () => anvil(FORK, "anvil_reset", [{ forking: { jsonRpcUrl: upstream } }]);
+  const withDrift = async (label: string, scenario: () => Promise<void>, reset: boolean): Promise<void> => {
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await scenario();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const drift = DRIFT_SELECTORS.find((selector) => message.includes(selector));
+        if (!drift || attempt >= DRIFT_ATTEMPTS) throw error;
+        console.log(`~ ${label}: fork drift (${drift}) — ${reset ? "re-fork, " : ""}fresh quote`);
+        if (reset) await refork();
+      }
+    }
+  };
+  return { refork, withDrift };
 }
