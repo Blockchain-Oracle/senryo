@@ -1,6 +1,6 @@
 # STATUS — 2026-10-02, Claude Code (lead)
 
-Current work: **[Stage 14](stage-14-premium-takeover.md)** — product interrogated end to end ([flow book](../product/README.md)), then the premium rebuild and real integrations. Branch `claude/premium-takeover` (worktree `../metropolis-takeover`). Codex's rebuild below is the base; Codex is being stopped on this repo.
+Current work: **[Stage 14](stage-14-premium-takeover.md)** — product interrogated end to end ([flow book](../product/README.md)), then the premium rebuild and real integrations. Branch `claude/premium-takeover` (worktree `../metropolis-takeover`). **2 Oct evening:** every area (Home, money, trading+pool, card+notifications, identity/settings, social) built + merged; Perpl/any-asset/card/notifications backends merged; api/keeper deployed; iOS preview build 141ef955 + EAS Update `preview` 9b7caf82 ready for the phone; contract TP/SL epoch held on `claude/contracts` for the mainnet deploy. Waiting on the user: faucet (keeper ≈19:00 UTC), Chrome extension (dev accounts), real-money funding, stopping Codex.
 
 # Rebuild status — 2026-10-02, Codex
 

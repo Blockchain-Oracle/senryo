@@ -32,11 +32,11 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 
 ## Areas (each = its flow-book cards + §0.9 surfaces)
 - [x] Home: Total hero, Positions · Assets · Earn tabs (bb76518) — Assets moves to any-asset holdings in `claude/ui-money`
-- [ ] Money (B1–B16) — `claude/ui-money` (agent, in progress)
+- [x] Money (B1–B16) — built + merged (10a24c2): any-asset holdings, asset page, single-address receive, add money (Ramp buy, other chains quote), send any asset + scan + recipient checks, withdraw Monad/other chain (bank pending Ramp key), any↔any swap with impact rule, activity, balance sheet
 - [x] Identity / profile / settings / mode — built + merged (f563b2a): defects 6, 7, 10, 11 (blocked/muted); terms gate (`useTermsGate`) wired on Home + fan (1f25dd9), trading/money call sites pending their merges
 - [x] Card + Notifications — built + merged (02729d3, glyphs da7f655, details reveal dde70bc) · Social — built + merged (d718d25: trade-post likes/replies migration 0011, standings route, search)
-- [ ] Card service outbox fixes (capture/refund retry idempotency, per-chain stuck reset, over-capture push) — `claude/card-outbox` (agent)
-- [ ] Trading (C1–C12) + Pool (D1–D2) — `claude/ui-trading` (agent)
+- [x] Card service outbox fixes — merged (1f848e3), fault-injection check `card-outbox-check`
+- [x] Trading (C1–C12) + Pool (D1–D2) — built + merged (1113c5a): defects 2 (close cancels leftovers), 9, 13; TP/SL replace; pause blockers; markets/detail/ticket/position/orders/pool rebuilt
 - [ ] Welcome + setup (A1–A3) smoothness and sounds
 
 ## Integrations
@@ -51,6 +51,12 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [ ] D8 Wallet activity indexing
 - [ ] D9 api/keeper deployed `sha-294f8a2` (2 Oct 14:20 UTC); any-asset routes redeploy in progress; card service resource not created yet (needs Lithic key)
 - [ ] D10 Web parity · D11 Submission (external TestFlight by ~9 Oct) · D12 Meme coins
+
+## Builds and updates (2 Oct)
+- iOS preview (ad hoc, runtime 0.2.0) build 141ef955 FINISHED — install from https://expo.dev/accounts/0xabu/projects/senryo/builds/141ef955-01b6-4245-be59-67b509c4f9e9 (the user's iPhone UDID 00008150-000E31212142401C is provisioned).
+- EAS Update `preview` group 9b7caf82 (runtime 0.2.0) carries every merged area through 10a24c2. Rollback target: republish an earlier group or the embedded bundle.
+- Android preview APK 1f595b80 queued; iOS simulator build 07d63644 queued (launch smoke test).
+- api/keeper on Coolify at the latest pushed sha (holdings, swap/bridge quotes, notifications, standings, trade-post likes, card summary, delete-data completeness).
 
 ## Handoff
 Resume from STATUS.md → this file → the flow book. Accounts still needing the user's browser: Envio (second token), Aurora Studio, Lithic sandbox, Ramp support key, Alchemy, faucet claim.
