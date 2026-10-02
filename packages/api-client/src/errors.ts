@@ -27,6 +27,8 @@ export const API_ERROR_CODES = [
   "RELAY_REVERTED",
   "TURNSTILE_FAILED",
   "UPSTREAM_UNAVAILABLE",
+  // Card issuer (Lithic) not configured on this deployment, or not answering (E1 "issuer unavailable", named).
+  "ISSUER_UNAVAILABLE",
   // S12b social: handle claims, content filter, follows.
   "HANDLE_INVALID",
   "HANDLE_RESERVED",
