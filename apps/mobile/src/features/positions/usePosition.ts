@@ -13,6 +13,7 @@ import {
   cancelTriggerRequest,
   closeRequest,
   decreaseRequest,
+  readOperation,
   riskViewOf,
   TRADE_SLIPPAGE_BPS,
   useAccountRisk,
@@ -66,7 +67,6 @@ export function usePosition(marketId: number) {
     triggers.status === "fresh" || triggers.status === "stale"
       ? triggers.value.filter((t) => t.market_id === `ours-${marketId}`)
       : [];
-  const [cleanupFailed, setCleanupFailed] = useState(0);
 
   const m = market.status === "fresh" || market.status === "stale" ? market.value : undefined;
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
@@ -158,14 +158,15 @@ export function usePosition(marketId: number) {
     const client = account.client;
     if (!client || !address) return;
     const sender = userSender(client, address, account.settings.faceId);
-    let failed = 0;
     for (const id of ids) {
       const request = cancelTriggerRequest(env.chainId, id);
-      const result = await cleanup.run(sender, request, { preflight: gas.preflight(request), operationId });
-      if (result?.final?.stage !== "finalized") failed += 1;
+      await cleanup.run(sender, request, { preflight: gas.preflight(request), operationId });
     }
-    setCleanupFailed(failed);
   };
+  // The cleanup's progress is read from the close's own operation, so it survives a remount.
+  const operation = trace.record ? readOperation(trace.record.id) : undefined;
+  const cancelSteps = (operation?.steps ?? []).filter((step) => step.request?.kind === "cancelTrigger");
+  const planned = trace.record?.reviewedIntent.cancels;
 
   return {
     loading,
@@ -185,7 +186,12 @@ export function usePosition(marketId: number) {
     quoted: quoted ?? restoredReduce(trace.record?.reviewedIntent),
     /** Leftover TP/SL on this market, cancelled by a full close. */
     leftovers,
-    cleanup: { running: cleanup.running, failed: cleanupFailed, reset: cleanup.reset },
+    cleanup: {
+      running: cleanup.running,
+      cancels: planned ? planned.split(",").length : 0,
+      failed: cancelSteps.filter((step) => ["reverted", "abandoned", "not-sent"].includes(step.outcome)).length,
+      reset: cleanup.reset,
+    },
     submit,
     ready: account.client !== undefined,
   };

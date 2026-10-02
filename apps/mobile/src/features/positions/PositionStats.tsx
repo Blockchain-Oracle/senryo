@@ -1,85 +1,61 @@
 import type { PositionView } from "@senryo/chain";
 import type { PositionHealth } from "@senryo/core";
 import type { LiveMarket } from "@senryo/query";
-import type { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { MarginGauge } from "~/components/trade/MarginGauge";
+import { StyleSheet, Text } from "react-native";
 import { quantityText } from "~/features/trade/quantity";
-import { pct, price18, priceDecimalsOf, usd } from "~/lib/money";
-import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
+import { fundingForSide, marketRates } from "~/features/trade/rates";
+import { Facts } from "~/features/trade/TicketReceipt";
+import { price18, priceDecimalsOf, signedUsd } from "~/lib/money";
+import { CONTROL_FONT_SCALE, TYPE, useTheme } from "~/theme";
 
 /**
- * The position's facts as a grid of quiet label-over-value cells, bare on the page (Fomo F13's "Invested / Avg.
- * entry" pairs; not a table): size, exposure at the oracle price, entry, oracle, the liquidation price with how far
- * away it is, and margin use with its thin meter. Two columns, so a seven-decimal FX price still fits its cell.
+ * The position's stat strip (flow book C5 step 3; plan §0.9 Position): Size — oz for the metals, the base currency
+ * for FX (defect 9) — · Entry · Mark (the oracle) · Liq. One strip, value over label, no table.
  */
 export function PositionStats({
   market,
   position,
   health,
-  exposureUsd6,
 }: {
   market: LiveMarket;
   position: PositionView;
   health: PositionHealth;
-  exposureUsd6: bigint;
+}) {
+  const decimals = priceDecimalsOf(market.marketId);
+  return (
+    <Facts
+      facts={[
+        { label: "Size", value: quantityText(market.marketId, position.size) },
+        { label: "Entry", value: `$${price18(position.entry, decimals)}` },
+        { label: "Mark", value: `$${price18(market.pv.price18, decimals)}` },
+        { label: "Liq.", value: health.liqPrice18 === null ? "None" : `$${price18(health.liqPrice18, decimals)}` },
+      ]}
+    />
+  );
+}
+
+/**
+ * Funding and borrow in one line (C5 step 4): what was accrued so far and what the position pays or receives now
+ * ("Funding −P$0.12 · Borrow −P$0.04 so far · you pay 0.0040%/h").
+ */
+export function FundingLine({
+  market,
+  isLong,
+  fundingUsd6,
+  borrowUsd6,
+}: {
+  market: LiveMarket;
+  isLong: boolean;
+  fundingUsd6: bigint;
+  borrowUsd6: bigint;
 }) {
   const { color } = useTheme();
-  const decimals = priceDecimalsOf(market.marketId);
-  const away = health.liqDistanceBps;
+  const now = market.pv.status === "OPEN" ? fundingForSide(marketRates(market), isLong).toLowerCase() : undefined;
   return (
-    <View style={styles.grid}>
-      <View style={styles.row}>
-        <Stat label="Size" value={quantityText(market.marketId, position.size)} />
-        <Stat label="Exposure" value={usd(exposureUsd6)} />
-      </View>
-      <View style={styles.row}>
-        <Stat label="Entry" value={price18(position.entry, decimals)} />
-        <Stat label="Oracle" value={price18(market.pv.price18, decimals)} />
-      </View>
-      <View style={styles.row}>
-        <Stat
-          label="Liquidation"
-          value={
-            health.liqPrice18 === null
-              ? "none above $0"
-              : `${price18(health.liqPrice18, decimals)}${away === null ? "" : ` · ${away <= 0n ? "now" : `${pct(away)} away`}`}`
-          }
-          valueColor={away !== null && away <= 0n ? color.down : undefined}
-        />
-        <Cell>
-          <MarginGauge usageBps={health.marginUsageBps} label="Margin use" />
-        </Cell>
-      </View>
-    </View>
+    <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>
+      Funding {signedUsd(-fundingUsd6)} · Borrow {signedUsd(-borrowUsd6)} so far{now ? ` · ${now}` : ""}
+    </Text>
   );
 }
 
-function Cell({ children }: { children: ReactNode }) {
-  return <View style={styles.cell}>{children}</View>;
-}
-
-function Stat({ label, value, valueColor }: { label: string; value: string; valueColor?: string | undefined }) {
-  const { color } = useTheme();
-  return (
-    <View style={styles.cell} accessible accessibilityLabel={`${label} ${value}`}>
-      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
-        {label}
-      </Text>
-      <Text
-        maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-        style={[TYPE.rowAmount, { color: valueColor ?? color.ink }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  grid: { gap: SPACE.lgPlus },
-  row: { flexDirection: "row", gap: SPACE.lg },
-  cell: { flex: 1, gap: SPACE.xxs },
-});
+const styles = StyleSheet.create({ center: { textAlign: "center" } });
