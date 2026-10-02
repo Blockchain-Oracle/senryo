@@ -1,22 +1,25 @@
 /**
- * The person at the top of You (Fomo F16, adapted): avatar with the quiet "Edit profile" plate across from it (F16's
- * Rewards position), the display name, @handle, the bio or a quiet "Add a bio", following / followers, and one line
- * of facts (open positions, joined). Everything sits bare on the page — no card. The address is not here: it lives on
- * the Account identity page. Counts come from the public view of the selected network and are never invented: a
- * profile that isn't listed there says so instead of showing zeros.
+ * The person at the top of the own profile (F2; Fomo F16): the avatar with its pencil (tap to edit), the display name,
+ * @handle, the bio or "Add a bio", "3 Following · 0 Followers" (each opens its list), and one meta line with symbols —
+ * trades and joined. When the profile isn't public on this network, a chip "Make public on Mainnet" opens Edit profile
+ * on its visibility (with the shared-address ⓘ there). Everything sits bare on the page; the address is on Wallet &
+ * address. Counts come from the public view of this network and are never invented.
  */
 import type { Address } from "@senryo/account";
 import { shortAddress } from "@senryo/core";
-import { usePositions } from "@senryo/query";
+import { useLeaderboard } from "@senryo/query";
 import { type Href, router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { Avatar } from "~/components/identity/Avatar";
 import { Button } from "~/components/kit/Button";
 import { Skeleton } from "~/components/kit/states";
-import { CalendarDays, ChartCandlestick, Plus } from "~/components/kit/symbols";
+import { CalendarDays, ChartCandlestick, Globe, Plus, SquarePen } from "~/components/kit/symbols";
+import { usePressScale } from "~/components/kit/usePressScale";
+import { fire } from "~/feedback/fire";
 import { followsRoute, profileEditRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { joinedLabel } from "./format";
 import { portrait } from "./portrait";
 import { Tap } from "./Tap";
@@ -26,12 +29,15 @@ type Ready = Extract<OwnProfile, { kind: "ready" }>;
 
 /** F16's avatar is a 60 pt disc; the J9 brief sets ours at 64. */
 export const PROFILE_AVATAR = 64;
-/** The bio shows this many lines on the tab; the editor shows all of it. A long display name wraps once. */
 const BIO_LINES = 4;
 const NAME_LINES = 2;
-/** The plus beside "Add a bio" sits in a small filled disc (F16 draws a dashed ring; we don't draw borders). */
 const ADD_DISC = SIZE.icon;
 const ADD_GLYPH = SIZE.iconSm;
+/** The pencil badge on the avatar's lower right (F16). */
+const PENCIL_DISC = SIZE.icon;
+const PENCIL_GLYPH = 12;
+/** The edit form opened on the visibility section. */
+export const VISIBILITY_EDIT = "/account/profile?focus=visibility";
 
 /** The avatar alone, for the tab bar once the header has scrolled away. */
 export function CompactAvatar() {
@@ -45,30 +51,42 @@ export function ProfileHeader() {
   const ready = profile.kind === "ready" ? profile : undefined;
   return (
     <View style={styles.wrap}>
-      <View style={styles.head}>
-        <View style={styles.top}>
-          <Avatar {...portrait(ready?.identity?.avatar, address)} size={PROFILE_AVATAR} />
-          {ready ? (
-            <Button
-              label="Edit profile"
-              variant="outline"
-              size="sm"
-              block={false}
-              style={styles.edit}
-              onPress={() => router.push(ROUTES.accountProfile as Href)}
-            />
-          ) : null}
-        </View>
-        {ready ? <Names profile={ready} address={address} /> : <Waiting profile={profile} address={address} />}
-      </View>
+      <EditableAvatar avatar={ready?.identity?.avatar} address={address} />
+      {ready ? <Names profile={ready} address={address} /> : <Waiting profile={profile} address={address} />}
       {ready ? (
         <>
           <Bio text={ready.identity?.bio ?? null} />
           <Follows profile={ready} />
-          <Facts createdAt={ready.identity?.createdAt} address={address} />
+          <Meta createdAt={ready.identity?.createdAt} />
+          {ready.listedHere === false ? <MakePublic /> : null}
         </>
       ) : null}
     </View>
+  );
+}
+
+function EditableAvatar({ avatar, address }: { avatar: string | null | undefined; address: Address | undefined }) {
+  const { color } = useTheme();
+  const press = usePressScale();
+  return (
+    <Pressable
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      onPress={() => {
+        fire("tick");
+        router.push(ROUTES.accountProfile as Href);
+      }}
+      accessibilityRole="button"
+      accessibilityLabel="Edit profile"
+      style={styles.avatar}
+    >
+      <Animated.View style={press.style}>
+        <Avatar {...portrait(avatar, address)} size={PROFILE_AVATAR} />
+        <View style={[styles.pencil, { backgroundColor: color.raised2, borderColor: color.ground }]}>
+          <SquarePen size={PENCIL_GLYPH} strokeWidth={SIZE.iconStroke} color={color.ink} />
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -97,7 +115,7 @@ function Names({ profile, address }: { profile: Ready; address: Address | undefi
   );
 }
 
-/** Before the profile is known: its skeleton, or why it isn't here and the one action that brings it. */
+/** Before the profile is known: its skeleton, or the one action that brings it. */
 function Waiting({ profile, address }: { profile: OwnProfile; address: Address | undefined }) {
   const { color } = useTheme();
   if (profile.kind === "loading") {
@@ -114,12 +132,9 @@ function Waiting({ profile, address }: { profile: OwnProfile; address: Address |
       <Text accessibilityRole="header" style={[TYPE.sheetTitle, { color: color.ink }]}>
         {address ? shortAddress(address) : "Your account"}
       </Text>
-      <Text style={[TYPE.body, { color: color.text3 }]}>
-        {locked ? "Unlock to load your profile." : "Couldn’t load your profile. Check your connection."}
-      </Text>
       <Button
-        label={locked ? "Unlock" : "Try again"}
-        variant="outline"
+        label={locked ? "Unlock to load" : "Couldn’t load · Retry"}
+        variant="secondary"
         size="sm"
         block={false}
         style={styles.recover}
@@ -151,10 +166,8 @@ function Bio({ text }: { text: string | null }) {
   );
 }
 
-/** "3 Following · 0 Followers" — each opens its list. Unlisted on this network: one line saying so, no numbers. */
+/** "3 Following · 0 Followers" — each opens its list. Unlisted here: nothing (the chip below says why). */
 function Follows({ profile }: { profile: Ready }) {
-  const { color } = useTheme();
-  const network = useNetwork();
   if (profile.counts) {
     const { following, followers } = profile.counts;
     return (
@@ -168,17 +181,7 @@ function Follows({ profile }: { profile: Ready }) {
       </View>
     );
   }
-  if (profile.countsLoading) return <Skeleton width="48%" />;
-  if (profile.listedHere === undefined) return null;
-  return (
-    <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-      {profile.listedHere
-        ? "Following and followers couldn’t be loaded. Pull down to try again."
-        : profile.identity
-          ? `Not listed in ${network.modeLabel}. People can’t find or follow you here until you list your profile.`
-          : "People can find and follow you once you set up your profile."}
-    </Text>
-  );
+  return profile.countsLoading ? <Skeleton width="48%" /> : null;
 }
 
 function Count({ value, noun, onPress }: { value: number; noun: string; onPress: () => void }) {
@@ -192,20 +195,21 @@ function Count({ value, noun, onPress }: { value: number; noun: string; onPress:
   );
 }
 
-/** F16's line of facts, with the two this account really has: open positions in this mode, and when it joined. */
-function Facts({ createdAt, address }: { createdAt: string | undefined; address: Address | undefined }) {
+/** F16's line of facts: all-time trades on this network and when the profile was made. */
+function Meta({ createdAt }: { createdAt: string | undefined }) {
   const { color } = useTheme();
-  const positions = usePositions(address);
-  const open = positions.status === "fresh" || positions.status === "stale" ? positions.value.length : undefined;
+  const board = useLeaderboard("all", "all");
+  const you = board.status === "fresh" || board.status === "stale" ? board.value.you : undefined;
+  const trades = you?.trades ?? undefined;
   const joined = createdAt ? joinedLabel(createdAt) : undefined;
-  if (open === undefined && !joined) return null;
+  if (trades === undefined && !joined) return null;
   return (
     <View style={styles.facts}>
-      {open === undefined ? null : (
+      {trades === undefined ? null : (
         <View style={styles.fact}>
           <ChartCandlestick size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
           <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-            {open === 0 ? "No open positions" : `${open} open position${open === 1 ? "" : "s"}`}
+            {trades} {trades === 1 ? "trade" : "trades"}
           </Text>
         </View>
       )}
@@ -219,15 +223,52 @@ function Facts({ createdAt, address }: { createdAt: string | undefined; address:
   );
 }
 
+/** Not listed on this network: one chip that opens the visibility choice. */
+function MakePublic() {
+  const { color } = useTheme();
+  const network = useNetwork();
+  const press = usePressScale();
+  const tone = network.key === "mainnet" ? color.mainnet : color.practice;
+  const wash = network.key === "mainnet" ? color.mainnetWash : color.practiceWash;
+  return (
+    <Animated.View style={[styles.chipWrap, press.style]}>
+      <Pressable
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={() => {
+          fire("tick");
+          router.push(VISIBILITY_EDIT as Href);
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`Make public on ${network.modeLabel}`}
+        style={[styles.chip, { backgroundColor: wash }]}
+      >
+        <Globe size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={tone} />
+        <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.chipCategory, { color: tone }]}>
+          Make public on {network.modeLabel}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
-  wrap: { gap: SPACE.lg },
-  head: { gap: SPACE.md },
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  /** Centred on the avatar, as F16's Rewards plate is (a sized-to-label button otherwise hugs the top). */
-  edit: { alignSelf: "center" },
+  wrap: { gap: SPACE.md },
+  avatar: { alignSelf: "flex-start" },
+  pencil: {
+    position: "absolute",
+    right: -SPACE.xxs,
+    bottom: -SPACE.xxs,
+    width: PENCIL_DISC,
+    height: PENCIL_DISC,
+    borderRadius: RADIUS.pill,
+    borderWidth: SPACE.xxs,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   names: { gap: SPACE.xxs },
   loading: { gap: SPACE.sm },
-  recover: { marginTop: SPACE.md },
+  recover: { marginTop: SPACE.sm },
   add: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   addDisc: {
     width: ADD_DISC,
@@ -240,4 +281,13 @@ const styles = StyleSheet.create({
   count: { flexDirection: "row", alignItems: "baseline", gap: SPACE.xs },
   facts: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: SPACE.lg, rowGap: SPACE.xs },
   fact: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
+  chipWrap: { alignSelf: "flex-start" },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.xs,
+    height: SIZE.chipRowHeight,
+    paddingHorizontal: SPACE.md,
+    borderRadius: BUTTON.radius.sm,
+  },
 });

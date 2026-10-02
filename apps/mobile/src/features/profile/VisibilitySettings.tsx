@@ -1,15 +1,16 @@
 /**
- * Who can see the profile, per network (D-174, direction §6: Practice and Mainnet are separate datasets). The account
- * has one address on both networks, so each network gets its own two switches — list the profile, share its trades —
- * each with one line on what it exposes, under the network's own colour (practice violet, mainnet blue). Privacy
- * first, as the API has it: trades can only be shared from a listed profile, so turning a listing off turns that
- * network's trades off with it.
+ * Who can see the profile, per network (A7, D-174; f-social "Visibility per mode"): one address on both networks, so
+ * each network gets its own two switches — List my profile, Share my trades — as title-only rows under the network's
+ * name, with the one thing to know behind the heading's ⓘ (same address, onchain activity is public). Privacy first,
+ * as the API has it: trades are only shared from a listed profile, so turning a listing off turns its trades off.
  */
 import { StyleSheet, Switch, Text, View } from "react-native";
 import { ListRow } from "~/components/kit/ListRow";
 import { Panel } from "~/components/kit/Surface";
+import { InfoTip } from "~/features/setup/InfoTip";
 import { fire } from "~/feedback/fire";
-import { RADIUS, SPACE, TYPE, useTheme } from "~/theme";
+import { SPACE, TYPE, useTheme } from "~/theme";
+import { SHARED_ADDRESS } from "./ShowTrades";
 
 export interface Visibility {
   listedPractice: boolean;
@@ -26,22 +27,8 @@ export const visibilityOf = (v: Visibility): Visibility => ({
 });
 
 const NETWORKS = [
-  {
-    mode: "Practice",
-    money: "paper money",
-    listed: "listedPractice",
-    trades: "publicTradesPractice",
-    listedDetail: "Your username, name and bio can be found, followed and ranked in Practice.",
-    tradesDetail: "Your paper-money trades appear in the feed and on your profile.",
-  },
-  {
-    mode: "Mainnet",
-    money: "real money",
-    listed: "listedMainnet",
-    trades: "publicTradesMainnet",
-    listedDetail: "The same username, name and bio appear beside your real-money results.",
-    tradesDetail: "Your real-money trades appear in the feed and on your profile.",
-  },
+  { mode: "Practice", listed: "listedPractice", trades: "publicTradesPractice" },
+  { mode: "Mainnet", listed: "listedMainnet", trades: "publicTradesMainnet" },
 ] as const;
 
 export function VisibilitySettings({ value, onChange }: { value: Visibility; onChange: (next: Visibility) => void }) {
@@ -52,9 +39,7 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
         <Text accessibilityRole="header" style={[TYPE.rowTitle, { color: color.ink }]}>
           Who can see you
         </Text>
-        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-          Each network is its own choice. A profile that isn’t listed can’t be looked up, followed or ranked there.
-        </Text>
+        <InfoTip title={SHARED_ADDRESS.title} body={SHARED_ADDRESS.body} />
       </View>
       {NETWORKS.map((network) => {
         const tone = network.mode === "Practice" ? color.practice : color.mainnet;
@@ -62,16 +47,10 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
         const switchColors = { trackColor: { true: tone, false: color.muted }, thumbColor: color.foreground };
         return (
           <View key={network.mode} style={styles.network}>
-            <View style={styles.mode}>
-              <View style={[styles.dot, { backgroundColor: tone }]} />
-              <Text style={[TYPE.modeLabel, { color: tone }]}>
-                {network.mode} · {network.money}
-              </Text>
-            </View>
+            <Text style={[TYPE.modeLabel, { color: tone }]}>{network.mode}</Text>
             <Panel>
               <ListRow
-                title={`List my profile in ${network.mode}`}
-                detail={network.listedDetail}
+                title="List my profile"
                 trailing={
                   <Switch
                     {...switchColors}
@@ -85,8 +64,7 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
                 }
               />
               <ListRow
-                title={`Share my trades in ${network.mode}`}
-                detail={listed ? network.tradesDetail : `Needs your profile listed in ${network.mode}.`}
+                title="Share my trades"
                 trailing={
                   <Switch
                     {...switchColors}
@@ -108,12 +86,8 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
   );
 }
 
-const DOT = SPACE.sm;
-
 const styles = StyleSheet.create({
   wrap: { gap: SPACE.lg },
-  heading: { gap: SPACE.xs },
+  heading: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   network: { gap: SPACE.sm },
-  mode: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  dot: { width: DOT, height: DOT, borderRadius: RADIUS.pill },
 });

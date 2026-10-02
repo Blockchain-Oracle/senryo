@@ -46,15 +46,19 @@ export function ProfileEditor({
   base,
   address,
   focus,
+  toVisibility = false,
 }: {
   /** The saved profile; `null` for an account that has never saved one (the API's first-save defaults are shown). */
   base: MyProfile | null;
   address: Address;
   focus?: ProfileFocus | undefined;
+  /** Opened from "Make public on Mainnet": scroll to who can see the profile. */
+  toVisibility?: boolean;
 }) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const scroll = useRef<ScrollView>(null);
+  const revealed = useRef(false);
   const keyboard = useAnimatedKeyboard();
   const lift = useAnimatedStyle(() => ({
     paddingBottom: Math.max(insets.bottom, keyboard.height.value) + SPACE.md,
@@ -170,7 +174,15 @@ export function ProfileEditor({
           onFocus={reveal}
           input={{ autoCapitalize: "sentences" }}
         />
-        <VisibilitySettings value={visibility} onChange={setVisibility} />
+        <View
+          onLayout={(e) => {
+            if (!toVisibility || revealed.current) return;
+            revealed.current = true;
+            reveal(e.nativeEvent.layout.y);
+          }}
+        >
+          <VisibilitySettings value={visibility} onChange={setVisibility} />
+        </View>
       </ScrollView>
       <Animated.View style={[styles.footer, { backgroundColor: color.ground }, lift]}>
         {refusal?.field === "page" ? (
