@@ -1,3 +1,7 @@
+# STATUS — 2026-10-02, Claude Code (lead)
+
+Current work: **[Stage 14](stage-14-premium-takeover.md)** — product interrogated end to end ([flow book](../product/README.md)), then the premium rebuild and real integrations. Branch `claude/premium-takeover` (worktree `../metropolis-takeover`). Codex's rebuild below is the base; Codex is being stopped on this repo.
+
 # Rebuild status — 2026-10-02, Codex
 
 Current work: [approved mobile rebuild](mobile-rebuild-2026-10-02.md), branch `codex/mobile-quality-rebuild`, baseline `6e2be72`. Foundation and journey source are committed through `1c0ad7d`; source checks, iOS Release and iOS/Android export passed. Current physical-phone acceptance and release runtime/channel verification are pending. Continue from [Claude Code handoff](../design/reviews/2026-10-02-claude-code-handoff.md) and [validation](../design/reviews/2026-10-02-rebuild-validation.md). No new production deployment is claimed. Retained Mainnet/Perpl/issuer/other-chain/programme dependencies remain in the contract. Previous status below is historical and has not been reverified for this rebuild.
