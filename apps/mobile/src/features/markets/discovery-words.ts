@@ -1,19 +1,19 @@
-/** A discovery gate's on-screen words (review S03): plain language, never the plan's blocker code. */
-import type { ExecutionGate } from "@senryo/config";
+/** A discovery gate's on-screen words (review S03; flow book C1 step 3): one word on a row, never a sentence. */
+import { type DiscoveryInstrument, type ExecutionGate, MAINNET_CHAIN_ID } from "@senryo/config";
 
-const BLOCKED: Record<Extract<ExecutionGate, { state: "blocked" }>["blocker"], string> = {
-  B2: "Price too jumpy",
-  B10: "No practice venue",
-};
-
-/** The row's short state: "Read-only", or what blocks it. */
-export function gateShort(gate: ExecutionGate | undefined): string {
-  if (gate?.state === "blocked") return BLOCKED[gate.blocker];
+/**
+ * The lock's one word on a row: Perpl crypto is "Mainnet" in Practice and "Soon" on Mainnet until Senryo connects;
+ * calculated equity feeds are "Read-only"; an instrument with no price feed at all is "No feed".
+ */
+export function lockWord(instrument: Pick<DiscoveryInstrument, "class">, chainId: number): string {
+  if (instrument.class === "crypto") return chainId === MAINNET_CHAIN_ID ? "Soon" : "Mainnet";
   return "Read-only";
 }
 
-/** The page's gate title. */
+export const NO_FEED = "No feed";
+
+/** The page's gate title: what the lock means, in a few words. */
 export function gateTitle(gate: ExecutionGate | undefined): string {
-  if (gate?.state === "blocked") return `Not tradeable here · ${BLOCKED[gate.blocker]}`;
-  return "Not tradeable here yet";
+  if (gate?.state === "blocked") return gate.blocker === "B10" ? "Mainnet only" : "Read-only · price too jumpy";
+  return "Read-only for now";
 }
