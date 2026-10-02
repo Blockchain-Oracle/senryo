@@ -27,7 +27,7 @@ export interface AnyAssetServices {
 export function createAnyAsset(
   log: Logger,
   chains: ReadonlyMap<ChainId, ChainContext>,
-  secrets: Pick<ApiSecrets, "hypersyncToken" | "alchemyKey" | "auroraKey">,
+  secrets: Pick<ApiSecrets, "hypersyncToken" | "alchemyKey" | "auroraKey"> & Partial<Pick<ApiSecrets, "relayKey">>,
   options: { hypersyncPagesPerScan?: number } = {},
 ): AnyAssetServices {
   const own = new Map<ChainId, ReadClient>();
@@ -56,7 +56,7 @@ export function createAnyAsset(
       alchemyKey: secrets.alchemyKey,
     }),
     swaps: new SwapQuoteService({ log, read, tokenList, reference: new ReferencePrices(read, gecko, log) }),
-    bridges: new BridgeService(log, aurora),
+    bridges: new BridgeService(log, aurora, secrets.relayKey),
     aurora,
   };
 }

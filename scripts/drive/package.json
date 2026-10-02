@@ -23,7 +23,8 @@
     "spot-check": "tsx src/spot-check.ts",
     "discovery-check": "tsx src/discovery-check.ts",
     "perpl-check": "tsx src/perpl-check.ts",
-    "anyasset-check": "tsx src/anyasset-check.ts"
+    "anyasset-check": "tsx src/anyasset-check.ts",
+    "deposit-address-check": "tsx src/deposit-address-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",
