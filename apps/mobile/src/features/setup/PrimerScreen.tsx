@@ -20,6 +20,8 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
 import { EASE, SIZE, SPACE, SPRING, TIMING, TYPE, useTheme } from "~/theme";
+import type { SetupStep } from "./progress";
+import { SetupProgress } from "./SetupProgress";
 import { arriving, SetupBar } from "./SetupScreen";
 
 /** The art is drawn square with room around its subject; this wide on the page, so the subject reads at S14/P10 scale. */
@@ -49,6 +51,7 @@ export interface PrimerAction {
 }
 
 export function PrimerScreen({
+  step,
   art,
   motion,
   title,
@@ -58,7 +61,9 @@ export function PrimerScreen({
   primary,
   secondary,
   onBack,
+  onSkip,
 }: {
+  step: SetupStep;
   art: ReactNode;
   motion: PrimerMotion;
   title: string;
@@ -70,6 +75,8 @@ export function PrimerScreen({
   primary: PrimerAction;
   secondary?: PrimerAction | undefined;
   onBack?: () => void;
+  /** Every primer can be skipped (A2); Skip moves on like "Not now". */
+  onSkip?: () => void;
 }) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
@@ -104,8 +111,9 @@ export function PrimerScreen({
   const tone = { up: color.up, muted: color.text3, warn: color.warn } as const;
 
   return (
-    <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top }]}>
-      <SetupBar onBack={onBack} />
+    <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top + SPACE.sm }]}>
+      <SetupProgress step={step} />
+      <SetupBar onBack={onBack} onSkip={onSkip} />
       <View style={styles.centre}>
         <Animated.View
           entering={ZoomIn.duration(TIMING.onboardingScene).withInitialValues({

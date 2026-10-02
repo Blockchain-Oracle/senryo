@@ -1,14 +1,16 @@
 /**
- * Welcome actions (F01 / F02 / F03 / F08, D-029; Fomo F01's button stack): one 56 pt primary and two 44 pt quiet
- * controls under it. No hint → **Create account** (one passkey ceremony) is primary and "I have an account" runs the
- * discoverable sign-in; with a hint, continuing as that account is primary. "Browse markets" opens Markets without an
- * account. While a ceremony runs the primary shows its spinner and the rest wait; the ceremony and any failure are
- * the sheet over the story (`AuthFlowSheet`), never a card swapped in here.
+ * Welcome's fixed action area (A1–A3; Fomo F01's button stack, §0.9 "Story" / "Returning on the same phone"):
+ * - no account on this phone → **Create account** (primary, one passkey), **I have an account** (secondary), and
+ *   "Look around" (text, the only action that completes Welcome without an account);
+ * - this phone's account → its avatar and @handle large (the address only when there is no handle), **Continue with
+ *   Face ID** (primary) and "Use another account" (text; A5 asks first).
+ * Welcome is marked complete only by a successful ceremony or by Look around (§0.7 #12) — never on the tap, so a
+ * cancelled passkey leaves the phone on Welcome. While a ceremony runs the primary shows its spinner and the rest wait.
  */
-import { shortAddress } from "@senryo/core";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import { Avatar } from "~/components/identity/Avatar";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { LoadingState } from "~/components/kit/states";
@@ -16,10 +18,15 @@ import { ttftStart, ttftTap } from "~/lib/account/measure";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
-import { SPACE, useTheme } from "~/theme";
+import { SPACE, TYPE, useTheme } from "~/theme";
+import { accountName, useAccountIdentity } from "./SignInOutcome";
 import type { AuthFlow } from "./useAuthFlow";
 
-export function WelcomeActions({ flow }: { flow: AuthFlow }) {
+/** The returning account's avatar (A3: large). */
+const RETURNING_AVATAR = 72;
+const BIOMETRIC = Platform.OS === "ios" ? "Face ID" : "fingerprint";
+
+export function WelcomeActions({ flow, onSwitch }: { flow: AuthFlow; onSwitch: () => void }) {
   const { color } = useTheme();
   const account = useAccount();
 
@@ -27,93 +34,67 @@ export function WelcomeActions({ flow }: { flow: AuthFlow }) {
     if (account.ready && !account.hint) ttftStart(Date.now());
   }, [account.ready, account.hint]);
 
-  const lookAround = () => {
-    storage.set(STORAGE_KEYS.welcomed, true);
-    router.replace(ROUTES.markets);
-  };
-
   if (!account.ready) return <LoadingState shape="line" label="Opening Senryo" />;
   const busy = flow.phase.kind === "running";
   const hint = account.hint;
+  if (hint) return <Returning flow={flow} busy={busy} onSwitch={onSwitch} />;
   return (
     <View style={styles.actions}>
-      {hint ? (
-        <>
-          <Button
-            label={`Continue · ${shortAddress(hint.address)}`}
-            leading={<PasskeyGlyph color={color.primaryForeground} />}
-            loading={busy}
-            onPress={() => {
-              storage.set(STORAGE_KEYS.welcomed, true);
-              flow.unlock();
-            }}
-          />
-          <View style={styles.row}>
-            <Button
-              label="Open Home, locked"
-              variant="outline"
-              size="sm"
-              style={styles.flex}
-              disabled={busy}
-              onPress={() => {
-                storage.set(STORAGE_KEYS.welcomed, true);
-                router.replace(ROUTES.home);
-              }}
-            />
-            <Button
-              label="Another account"
-              variant="ghost"
-              size="sm"
-              style={styles.flex}
-              disabled={busy}
-              onPress={() => {
-                storage.set(STORAGE_KEYS.welcomed, true);
-                flow.signIn();
-              }}
-            />
-          </View>
-        </>
-      ) : (
-        <>
-          <Button
-            label="Create account"
-            leading={<PasskeyGlyph color={color.primaryForeground} />}
-            loading={busy}
-            onPress={() => {
-              storage.set(STORAGE_KEYS.welcomed, true);
-              ttftTap();
-              flow.create();
-            }}
-          />
-          <View style={styles.row}>
-            <Button
-              label="I have an account"
-              variant="outline"
-              size="sm"
-              style={styles.flex}
-              disabled={busy}
-              onPress={() => {
-                storage.set(STORAGE_KEYS.welcomed, true);
-                flow.signIn();
-              }}
-            />
-            <Button
-              label="Browse markets"
-              variant="ghost"
-              size="sm"
-              style={styles.flex}
-              disabled={busy}
-              onPress={lookAround}
-            />
-          </View>
-        </>
-      )}
+      <Button
+        label="Create account"
+        leading={<PasskeyGlyph color={color.primaryForeground} />}
+        loading={busy && flow.phase.kind === "running" && flow.phase.flow === "create"}
+        disabled={busy}
+        onPress={() => {
+          ttftTap();
+          flow.create();
+        }}
+      />
+      <Button
+        label="I have an account"
+        variant="secondary"
+        loading={busy && flow.phase.kind === "running" && flow.phase.flow === "sign-in"}
+        disabled={busy}
+        onPress={flow.signIn}
+      />
+      <Button
+        label="Look around"
+        variant="ghost"
+        size="sm"
+        disabled={busy}
+        onPress={() => {
+          storage.set(STORAGE_KEYS.welcomed, true);
+          router.replace(ROUTES.markets);
+        }}
+      />
+    </View>
+  );
+}
+
+function Returning({ flow, busy, onSwitch }: { flow: AuthFlow; busy: boolean; onSwitch: () => void }) {
+  const { color } = useTheme();
+  const address = useAccount().hint?.address;
+  const { handle, avatar } = useAccountIdentity(address);
+  return (
+    <View style={styles.actions}>
+      <View style={styles.who} accessible accessibilityLabel={`Your account, ${accountName(handle, address)}`}>
+        <Avatar avatar={avatar} {...(address ? { address } : {})} size={RETURNING_AVATAR} />
+        <Text style={[TYPE.sheetTitle, { color: color.ink }]} numberOfLines={1}>
+          {accountName(handle, address)}
+        </Text>
+      </View>
+      <Button
+        label={`Continue with ${BIOMETRIC}`}
+        leading={<PasskeyGlyph color={color.primaryForeground} />}
+        loading={busy}
+        onPress={flow.unlock}
+      />
+      <Button label="Use another account" variant="ghost" size="sm" disabled={busy} onPress={onSwitch} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  actions: { gap: SPACE.md },
-  row: { flexDirection: "row", gap: SPACE.md },
-  flex: { flex: 1 },
+  actions: { gap: SPACE.sm },
+  who: { alignItems: "center", gap: SPACE.sm, paddingBottom: SPACE.md },
 });

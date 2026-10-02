@@ -72,6 +72,10 @@ export const ROUTES = {
   leaderboardInfo: "/leaderboard-info",
   /** Where a profile's listing and handle are edited. The You tab holds it until it has its own page (J9). */
   profileSettings: "/you",
+  /** A11: the terms sheet — setup's last step over Home, and the gate before the first money action. */
+  termsSheet: "/terms",
+  /** A10 / F5: who you muted and blocked, with Unmute / Unblock. */
+  accountBlocked: "/account/blocked",
 } as const;
 
 /** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
@@ -120,3 +124,20 @@ export const profileEditRoute = (focus: ProfileFocus) => `/account/profile?focus
 
 /** The market the old Trade tab opened on (gold first, D-005); `/trade` links land on its detail. */
 export const DEFAULT_MARKET = "XAU";
+
+/**
+ * A1: the account sheet for a guest's action — "Create an account to {verb}" — carrying the in-app path that resumes
+ * it (the ticket on the same market and side, say) once the account exists and its setup is done or skipped.
+ */
+export type AccountVerb =
+  | "trade"
+  | "add money"
+  | "follow"
+  | "like"
+  | "reply"
+  | "post"
+  | "set alerts"
+  | "get a card"
+  | "send";
+export const accountRequiredRoute = (verb: AccountVerb, next?: string) =>
+  `/account-required?verb=${encodeURIComponent(verb)}${next ? `&next=${encodeURIComponent(next)}` : ""}` as const;

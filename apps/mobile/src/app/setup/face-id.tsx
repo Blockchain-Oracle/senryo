@@ -19,23 +19,20 @@ function said(outcome: BiometricOutcome | undefined, word: string): { text: stri
     case undefined:
       return undefined;
     case "on":
-      return { text: `${word} is on. Trading unlocks with ${gestureOf(word)}.`, tone: "up" };
+      return { text: `${word} is on`, tone: "up" };
     case "cancelled":
-      return { text: `Not turned on. Senryo asks again the first time you unlock.`, tone: "muted" };
+      return { text: "Not turned on · asked again at your first unlock", tone: "muted" };
     case "denied":
-      return { text: `${word} is off for Senryo in Settings, so trading unlocks with your passkey.`, tone: "warn" };
+      return { text: `${word} is off for Senryo in Settings`, tone: "warn" };
     case "locked-out":
-      return {
-        text: `${word} is locked after too many tries. Unlock the phone with its passcode first.`,
-        tone: "warn",
-      };
+      return { text: `${word} is locked · unlock the phone first`, tone: "warn" };
     case "failed":
-      return { text: `${word} didn’t respond. Try again, or continue with your passkey.`, tone: "warn" };
+      return { text: `${word} didn’t respond · try again`, tone: "warn" };
   }
 }
 
 /**
- * Setup step 5 — the Face ID primer (FT042, C06; Phantom P10 adapted). Unlocking trading reads a Face ID–gated key on
+ * Setup — the Face ID primer (A2; FT042, C06; Phantom P10 adapted): art, one title, one line, Turn on / Not now. Unlocking trading reads a Face ID–gated key on
  * this phone; this page asks iOS for that permission in context and does one real scan, so the first unlock is not a
  * surprise. It is not the passkey and never says it is. A phone without Face ID (or with none enrolled) gets one
  * honest line and Continue. Not now moves on; iOS will ask at the first unlock instead.
@@ -68,10 +65,12 @@ export default function FaceIdStep() {
   if (phone?.state === "old-build") {
     return (
       <PrimerScreen
+        step="face-id"
+        onSkip={next}
         art={art}
         motion="lift"
         title={`Unlock with ${gestureOf(word)}`}
-        body={`The first time you unlock trading, iOS asks whether Senryo may use ${word}. Say yes and it opens with ${gestureOf(word)} after that.`}
+        body={`iOS asks at your first unlock`}
         granted={false}
         primary={{ label: "Continue", onPress: next }}
         onBack={back}
@@ -82,14 +81,12 @@ export default function FaceIdStep() {
     const enrolLater = phone.state === "not-enrolled";
     return (
       <PrimerScreen
+        step="face-id"
+        onSkip={next}
         art={art}
         motion="lift"
         title={enrolLater ? `Set up ${word} later` : "Unlock with your passkey"}
-        body={
-          enrolLater
-            ? `This phone has no ${word} set up yet. Add it in Settings and trading unlocks with ${gestureOf(word)}; until then your passkey unlocks it.`
-            : "This phone can’t use Face ID for Senryo, so trading unlocks with your passkey. Nothing else changes."
-        }
+        body={enrolLater ? `No ${word} on this phone yet` : "Your passkey unlocks trading"}
         granted={false}
         primary={{ label: "Continue", onPress: next }}
         onBack={back}
@@ -100,10 +97,12 @@ export default function FaceIdStep() {
   const denied = outcome === "denied";
   return (
     <PrimerScreen
+      step="face-id"
+      onSkip={next}
       art={art}
       motion="lift"
       title={`Unlock with ${gestureOf(word)}`}
-      body={`${word} opens trading on this phone in a moment, without your passkey each time. Senryo never sees your ${word === "Face ID" ? "face" : "fingerprint"}; the phone only answers yes or no.`}
+      body="Trading opens in a moment, no passkey each time"
       status={said(outcome, word)}
       granted={outcome === "on"}
       primary={

@@ -6,7 +6,7 @@
 /** viem types re-exported so apps never import viem directly (invariant `viem-import-boundary`). */
 export type { Address, Hex, LocalAccount } from "viem";
 export { createPasskey, getPasskey, type PromptListener } from "./ceremony.ts";
-export { AccountClient, type AccountClientOptions } from "./client.ts";
+export { AccountClient, type AccountClientOptions, type PendingSignIn } from "./client.ts";
 export * from "./constants.ts";
 export { authFailureCopy, biometricWord, type Copy, type Surface, scopeCopy } from "./copy.ts";
 export { clearDelegation, DELEGATES, type DelegationRequest, signDelegation } from "./delegation.ts";
