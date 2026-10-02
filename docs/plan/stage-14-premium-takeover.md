@@ -51,7 +51,7 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [ ] D8 Wallet activity indexing
 - [ ] D9 api/keeper deployed `sha-294f8a2` (2 Oct 14:20 UTC); any-asset routes redeploy in progress; card service resource not created yet (needs Lithic key)
 - [ ] D10 Web parity round 1 merged (3c9dba7: Home, Add money/Receive/voucher, any-asset Send/Withdraw on Monad, asset page, markets, ticket with step-up, position reduce/close/TP-SL, social, watch by chainId, setup + terms, card locks; provenance docs/product/provenance/web.md). Round 2 (pool, inbox + activity, swaps, TP/SL edit, settings, scan, landing bundle, signed acceptance) in progress
-- [x] Mainnet composition merged (57d4eb0): B11 fee reserve ("~$0.50 → MON" step), Pay with any asset on ticket + pool, B4 Relay deposit addresses (EVM origins keyless; Solana/Bitcoin need RELAY_API_KEY). Open: ticket Details doesn't list composed steps before the slide; zero-MON wallet needs the mainnet sponsor top-up. Proven on a 143 fork; live once SenryoCore/LpVault are on 143 (D4)
+- [x] Mainnet composition merged (57d4eb0): B11 fee reserve ("~$0.50 → MON" step), Pay with any asset on ticket + pool, B4 Relay deposit addresses (EVM origins keyless; Solana/Bitcoin need RELAY_API_KEY). Ticket Details lists the composed steps before the slide (Steps row). Open, part of D4 acceptance: the Mainnet ticket plans its network fee before the slide (`usePreparedOperation`, as send/withdraw do) so a MON shortfall shows pre-slide; zero-MON wallet needs the mainnet sponsor top-up. Proven on a 143 fork; live once SenryoCore/LpVault are on 143 (D4)
 - [ ] D11 Submission (external TestFlight by ~9 Oct) · D12 Meme coins
 
 ## Builds and updates (2 Oct)
