@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ReadingView } from "~/components/kit/states";
-import { TraderAvatar, traderName } from "~/features/search/TraderAvatar";
+import { TraderAvatar, traderName } from "~/features/social/TraderAvatar";
 import { fire } from "~/feedback/fire";
 import { watchRoute } from "~/lib/constants/routes";
 import { price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";

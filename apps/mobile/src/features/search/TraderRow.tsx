@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { TraderAvatar, type TraderIdentity, traderDetail, traderName } from "~/features/social/TraderAvatar";
 import { fire } from "~/feedback/fire";
 import { watchRoute } from "~/lib/constants/routes";
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { TraderAvatar, type TraderIdentity, traderDetail, traderName } from "./TraderAvatar";
 
 /**
  * A trader in a list (search results, recents; Fomo F06/F30 row anatomy): avatar, name, the @handle or short address
