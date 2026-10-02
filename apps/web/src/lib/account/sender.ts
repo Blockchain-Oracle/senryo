@@ -22,12 +22,13 @@ import {
   type NonceSource,
   type ReadClient,
   type Reconciled,
+  receiptFacts,
   reconcileEntry,
   type Sender,
 } from "@senryo/chain";
 import { isChainId } from "@senryo/config";
 import { isTerminalStage } from "@senryo/core";
-import { userFeeCache } from "@senryo/query";
+import { operationOutcome, readOperation, userFeeCache, writeOperation } from "@senryo/query";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { policyContext } from "./api";
 import { kvStore } from "./local";
@@ -111,7 +112,9 @@ export async function recoverJournal(now = Date.now()): Promise<number> {
     const outcome = await reconcileEntry(shared().read, entry, now).catch((): Reconciled => ({ kind: "pending" }));
     if (outcome.kind === "pending") {
       waiting += 1;
-    } else if (outcome.kind === "settled") {
+      continue;
+    }
+    if (outcome.kind === "settled") {
       await journal.update(entry.hash, {
         stage: outcome.stage,
         blockNumber: outcome.receipt.blockNumber.toString(),
@@ -121,6 +124,33 @@ export async function recoverJournal(now = Date.now()): Promise<number> {
       await journal.update(entry.hash, { stage: "abandoned", error: outcome.reason });
       shared().nonces.resync(entry.from);
     }
+    settleOperation(entry, outcome, now);
   }
   return waiting;
+}
+
+/** The operation record a reconciled entry belongs to takes the same outcome (as the phone's TxRecovery does). */
+function settleOperation(entry: JournalEntry, outcome: Exclude<Reconciled, { kind: "pending" }>, now: number): void {
+  const lookup = entry.meta?.operationId ?? entry.meta?.operationKey;
+  const operation = lookup ? readOperation(lookup) : undefined;
+  if (!operation || operation.chainId !== entry.chainId || operation.account !== entry.from.toLowerCase()) return;
+  const steps = operation.steps.map((step, index) =>
+    step.hash !== entry.hash &&
+    !(step.hash === undefined && index === Number(entry.meta?.step) && step.action === entry.action)
+      ? step
+      : outcome.kind === "settled"
+        ? {
+            ...step,
+            hash: entry.hash,
+            outcome: outcome.stage === "finalized" ? ("completed" as const) : ("reverted" as const),
+            blockNumber: outcome.receipt.blockNumber.toString(),
+            blockHash: outcome.receipt.blockHash,
+            facts: receiptFacts(outcome.receipt, ACTIVE_NETWORK.chainId, entry.to),
+          }
+        : { ...step, outcome: "abandoned" as const },
+  );
+  writeOperation(
+    { ...operation, updatedAt: now, steps, outcome: operationOutcome(steps, operation.plannedActions) },
+    false,
+  );
 }
