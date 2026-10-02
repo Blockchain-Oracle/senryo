@@ -48,7 +48,9 @@ type Outcome = { status: "DONE" | "SKIPPED"; tx?: Hex } | { status: "RETRY"; err
 export function startOutbox(ctx: CardContext): () => void {
   let stopped = false;
   const tick = async () => {
-    await ctx.db`UPDATE outbox SET status = 'PENDING' WHERE status = 'SENDING' AND updated_at < now() - interval '5 minutes'`;
+    // Only this network's rows: every chain's card service shares the table.
+    await ctx.db`UPDATE outbox SET status = 'PENDING'
+                  WHERE chain_id = ${ctx.chainId} AND status = 'SENDING' AND updated_at < now() - interval '5 minutes'`;
     const rows = await ctx.db<Row[]>`
       UPDATE outbox SET status = 'SENDING', attempts = attempts + 1, updated_at = now()
        WHERE id IN (SELECT id FROM outbox WHERE chain_id = ${ctx.chainId} AND status = 'PENDING'
