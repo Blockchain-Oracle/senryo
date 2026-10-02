@@ -145,6 +145,7 @@ export const Star = symbol({ ios: "star", iosFilled: "star.fill", android: "star
 export const Trash = symbol({ ios: "trash", android: "delete" }, "Trash");
 export const Trash2 = symbol({ ios: "trash", android: "delete" }, "Trash2");
 export const UsersRound = symbol({ ios: "person.2", iosFilled: "person.2.fill", android: "group" }, "UsersRound");
+export const Volume = symbol({ ios: "speaker.wave.2", android: "volume_up" }, "Volume");
 export const VolumeX = symbol({ ios: "speaker.slash", android: "volume_off" }, "VolumeX");
 export const ChartLine = symbol({ ios: "chart.line.uptrend.xyaxis", android: "monitoring" }, "ChartLine");
 export const Coins = symbol(

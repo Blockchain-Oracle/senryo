@@ -70,6 +70,7 @@ export const ANDROID_CODEPOINTS = {
   view_list: 0xe8ef,
   visibility: 0xe8f4,
   volume_off: 0xe04f,
+  volume_up: 0xe050,
   warning: 0xe002,
   wifi_off: 0xe648,
 } as const;

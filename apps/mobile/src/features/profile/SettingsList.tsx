@@ -25,7 +25,7 @@ import {
   ShieldCheck,
   Signal,
   SlidersHorizontal,
-  VolumeX,
+  Volume,
 } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
@@ -111,7 +111,7 @@ export function SettingsList() {
           />
           <SettingsRow
             title="Sounds & haptics"
-            icon={VolumeX}
+            icon={Volume}
             tint={color.chart4}
             value={sound}
             onPress={() => open(ROUTES.accountPreferences)}
