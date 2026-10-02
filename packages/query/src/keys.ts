@@ -35,6 +35,7 @@ export const keys = {
   perpl: (address: Address) => ["account", MAINNET_CHAIN_ID, address.toLowerCase(), "perpl"] as const,
   perplMarket: (marketId: number) => ["perpl", MAINNET_CHAIN_ID, "market", marketId] as const,
   perplExchange: () => ["perpl", MAINNET_CHAIN_ID, "exchange"] as const,
+  perplCaps: () => ["perpl", MAINNET_CHAIN_ID, "caps"] as const,
   /** Under the mainnet account key, so a finalized swap's account invalidation refreshes the holdings. */
   spotHoldings: (address: Address, tokens: string) =>
     ["account", MAINNET_CHAIN_ID, address.toLowerCase(), "spot", tokens] as const,

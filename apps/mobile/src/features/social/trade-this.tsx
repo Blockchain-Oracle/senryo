@@ -6,12 +6,13 @@
  * (closed market, read-only market, an opposite position); real money asks for eligibility first, as Short / Long do.
  */
 import type { FeedTrade } from "@senryo/api-client";
-import { engineMarketsOn } from "@senryo/config";
+import { engineMarketsOn, MAINNET_CHAIN_ID } from "@senryo/config";
 import { type Href, router } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { useInShell } from "~/components/shell/dock-context";
 import { hasConfirmedEligibility } from "~/features/legal/eligibility";
+import { perplMarketBySymbol } from "~/features/perpl/market";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { marketRoute, ROUTES, type TicketSide, tradeThisRoute } from "~/lib/constants/routes";
@@ -26,10 +27,13 @@ export function tradeIsOpen(trade: FeedTrade): boolean {
   return OPENING_KINDS.has(trade.fillKind) && trade.positionStatus === "OPEN";
 }
 
-/** The market trades on our engine on this network (a Perpl market has no ticket here yet). */
+/** The market trades here: on our engine on this network, or a Perpl market on Mainnet (C4: its own ticket). */
 export function useTradable(market: MarketRef | undefined): boolean {
   const network = useNetwork();
-  return market?.engineId !== undefined && engineMarketsOn(network.chainId).some((m) => m.id === market.engineId);
+  if (market?.engineId !== undefined) return engineMarketsOn(network.chainId).some((m) => m.id === market.engineId);
+  return (
+    network.chainId === MAINNET_CHAIN_ID && market !== undefined && perplMarketBySymbol(market.symbol) !== undefined
+  );
 }
 
 export function useTradeThis(): (symbol: string, side: TicketSide, leverage?: number) => void {

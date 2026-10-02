@@ -99,8 +99,8 @@ export function TicketHeader({
   );
 }
 
-/** Long / Short in a small track; the chosen side fills with its wash and ink (C3a colours). */
-function SideToggle({ side, onSide, locked }: { side: Side; onSide: (side: Side) => void; locked: boolean }) {
+/** Long / Short in a small track; the chosen side fills with its wash and ink (C3a colours). The Perpl ticket shares it. */
+export function SideToggle({ side, onSide, locked }: { side: Side; onSide: (side: Side) => void; locked: boolean }) {
   const { color } = useTheme();
   const tone = (s: Side) => (s === "long" ? color.up : color.down);
   const wash = (s: Side) => (s === "long" ? color.upWash : color.downWash);

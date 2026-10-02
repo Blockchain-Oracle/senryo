@@ -10,6 +10,8 @@ import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { useMarketLine } from "~/features/markets/useMarketLine";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
+import { perplMarketBySymbol } from "~/features/perpl/market";
+import { PerplTicketScreen } from "~/features/perpl/PerplTicketScreen";
 import { useAccount } from "~/lib/account/provider";
 import { positionRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
@@ -51,6 +53,9 @@ export function TicketScreen({
   useHideDockWhileFocused("ticket");
   const meta = engineMarket(marketId);
   const readOnly = useReadOnlyNetwork();
+  // Perpl's crypto markets (C4) have their own ticket on the same route; it is mainnet money in either mode.
+  const perpl = meta ? undefined : perplMarketBySymbol(marketId);
+  if (perpl) return <PerplTicketScreen meta={perpl} side={side} leverage={leverage} />;
   return readOnly || !meta ? (
     <TransactionSheet onClose={() => router.back()} closeLabel="Close the order ticket">
       <View style={styles.pad}>

@@ -41,10 +41,13 @@ export function SideBar({
   symbol,
   status,
   calendarId,
+  banners,
 }: {
   symbol: string;
   status: MarketStatus | undefined;
   calendarId: number;
+  /** Another venue's own state lines (Perpl paused / halted) instead of the engine's pause and session banners. */
+  banners?: ReactNode;
 }) {
   const network = useNetwork();
   const address = useAccount().hint?.address;
@@ -66,8 +69,14 @@ export function SideBar({
   };
   return (
     <Bottom>
-      <ProtocolBanner />
-      {status ? <SessionBanner status={status} calendarId={calendarId} symbol={symbol} /> : null}
+      {banners === undefined ? (
+        <>
+          <ProtocolBanner />
+          {status ? <SessionBanner status={status} calendarId={calendarId} symbol={symbol} /> : null}
+        </>
+      ) : (
+        banners
+      )}
       <View style={styles.sides}>
         <SideButton side="short" symbol={symbol} onPress={() => open("short")} />
         <SideButton side="long" symbol={symbol} onPress={() => open("long")} />

@@ -5,16 +5,19 @@
  * account, so a finalized Perpl send's `keys.account(143, address)` invalidation refreshes them.
  */
 import {
+  type PerplExchangeState,
   type PerplMarketTerms,
   type PerplPosition,
   type PerplSnapshot,
   readPerplExchange,
+  readPerplLeverageCaps,
   readPerplMarketTerms,
   readPerplSnapshot,
 } from "@senryo/chain";
+import { PERPL_MARKETS } from "@senryo/config";
 import type { Address, Reading } from "@senryo/core";
 import { useQuery } from "@tanstack/react-query";
-import { PERPL_ACCOUNT_REFETCH_MS, PERPL_TERMS_REFETCH_MS } from "./constants.ts";
+import { PERPL_ACCOUNT_REFETCH_MS, PERPL_CAPS_REFETCH_MS, PERPL_TERMS_REFETCH_MS } from "./constants.ts";
 import { useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
 import { PERPL_CHAIN_ID } from "./perpl-plan.ts";
@@ -63,6 +66,31 @@ export function usePerplMarketTerms(marketId: number | undefined): Reading<Perpl
     staleTime: PERPL_TERMS_REFETCH_MS,
   });
   return readingOf(query, PERPL_TERMS_REFETCH_MS);
+}
+
+/** The Exchange's halt flag and account-open minimum (owner-set; read live). */
+export function usePerplExchange(): Reading<PerplExchangeState> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: keys.perplExchange(),
+    queryFn: () => readPerplExchange(mainnetReadOf(env), PERPL_CHAIN_ID),
+    refetchInterval: PERPL_TERMS_REFETCH_MS,
+    staleTime: PERPL_TERMS_REFETCH_MS,
+  });
+  return readingOf(query, PERPL_TERMS_REFETCH_MS);
+}
+
+/** Every listed market's base max leverage (hundredths, by market id) in one read — the Markets list's badges. */
+export function usePerplLeverageCaps(): Reading<Record<number, bigint>> {
+  const env = useQueryEnv();
+  const ids = Object.values(PERPL_MARKETS[PERPL_CHAIN_ID] ?? {});
+  const query = useQuery({
+    queryKey: keys.perplCaps(),
+    queryFn: () => readPerplLeverageCaps(mainnetReadOf(env), PERPL_CHAIN_ID, ids),
+    refetchInterval: PERPL_CAPS_REFETCH_MS,
+    staleTime: PERPL_CAPS_REFETCH_MS,
+  });
+  return readingOf(query, PERPL_CAPS_REFETCH_MS);
 }
 
 /**

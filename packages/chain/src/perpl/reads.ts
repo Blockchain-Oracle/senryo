@@ -148,6 +148,11 @@ export interface PerplMarketTerms extends PerplScale {
   paused: boolean;
   /** Highest leverage an open may ask for, hundredths (`getMarginFractions().perpInitMarginFracHdths`). */
   maxLeverageHdths: bigint;
+  /**
+   * Maintenance margin as a leverage-like factor, hundredths (`perpMaintMarginFracHdths`: 2500 = 25x = 4 %): the MMR
+   * of a position is its entry notional ÷ this (Perpl docs exchange/liquidation "Calculating Liquidation Price").
+   */
+  maintMarginFracHdths: bigint;
   /** Taker fee, millionths of notional (`getTakerFee`, contract ≥ 1.7.5). */
   takerFeePpm: bigint;
 }
@@ -178,8 +183,39 @@ export async function readPerplMarketTerms(
     markTimestamp: small(info.markTimestamp),
     paused: info.status === PERPL_PRICE_SOURCE.pausedStatus,
     maxLeverageHdths: margins[0],
+    maintMarginFracHdths: margins[1],
     takerFeePpm: fee,
   };
+}
+
+/**
+ * Every listed market's base maximum leverage (hundredths) in one multicall — the Markets list's badges. A market
+ * whose read fails is left out (no badge rather than a made-up one).
+ */
+export async function readPerplLeverageCaps(
+  read: ReadClient,
+  chainId: ChainId,
+  marketIds: readonly number[],
+): Promise<Record<number, bigint>> {
+  if (marketIds.length === 0) return {};
+  const results = await read.multicall({
+    contracts: marketIds.map(
+      (id) =>
+        ({
+          address: PERPL_EXCHANGE[chainId],
+          abi: perplExchangeAbi,
+          functionName: "getMarginFractions",
+          args: [BigInt(id), 0n],
+        }) as const,
+    ),
+    allowFailure: true,
+  });
+  const caps: Record<number, bigint> = {};
+  results.forEach((r, i) => {
+    const id = marketIds[i];
+    if (id !== undefined && r.status === "success") caps[id] = r.result[0];
+  });
+  return caps;
 }
 
 export interface PerplExchangeState {

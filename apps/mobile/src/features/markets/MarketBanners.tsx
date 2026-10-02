@@ -15,7 +15,8 @@ const HOLIDAY_LOOKAHEAD_SEC = 604_800n;
 
 const nowSec = () => BigInt(Date.now()) / MS_PER_SECOND;
 
-function Wash({ text, tone }: { text: string; tone: "warn" | "down" }) {
+/** One borderless state line (dot + words) — shared by Perpl's paused / halted banners. */
+export function Wash({ text, tone }: { text: string; tone: "warn" | "down" }) {
   const { color } = useTheme();
   return (
     <View

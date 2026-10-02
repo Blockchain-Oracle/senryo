@@ -160,11 +160,13 @@ export type JournalKind =
   | "pool"
   | "trade"
   | "card"
+  | "perpl"
   | "other";
 
 export function journalKind(record: OperationRecord, me: string): JournalKind {
   const intent = record.reviewedIntent;
   const k = intent.kind;
+  if (intent.venue === "perpl") return "perpl";
   if (k === "send" || k === "withdraw" || k === "swap" || k === "bridge" || k === "ramp") return k;
   const actions = new Set([record.kind, ...record.plannedActions]);
   const has = (set: ReadonlySet<string>) => [...actions].some((a) => set.has(a));
@@ -198,8 +200,31 @@ function journalStatus(record: OperationRecord): FeedStatus | undefined {
   }
 }
 
+/**
+ * A Perpl journey's row (D1): what the order did as the receipt's own events say (a fill fact, or none — an IOC that
+ * matched nobody is "nothing filled", never "opened"), or the AUSD moved back to the wallet.
+ */
+function perplTitle(record: OperationRecord): string {
+  const i = record.reviewedIntent;
+  const side = i.side === "short" ? "short" : "long";
+  const symbol = i.symbol ?? "Perpl";
+  if (i.intent === "withdraw") return `Moved ${intentAmount(i, i.withdraw, "AUSD") ?? "AUSD"} back from Perpl`;
+  const order = record.steps.find((s) => s.action === "perplOrder" && s.outcome === "completed");
+  if (!order) {
+    const moved = record.steps.some(
+      (s) => (s.action === "perplCreateAccount" || s.action === "perplDeposit") && s.outcome === "completed",
+    );
+    return moved ? "Moved to Perpl" : `Perpl ${side} ${symbol}`;
+  }
+  const filled = order.facts?.some((f) => f.event === "TakerOrderFilledV2");
+  if (!filled) return `Perpl order · nothing ${i.intent === "close" ? "closed" : "opened"}`;
+  if (i.intent === "close") return `${i.closingAll === "false" ? "Reduced" : "Closed"} ${side} ${symbol} · Perpl`;
+  return `Opened ${side} ${symbol} · Perpl`;
+}
+
 function journalTitle(kind: JournalKind, record: OperationRecord): string {
   const i = record.reviewedIntent;
+  if (kind === "perpl") return perplTitle(record);
   const amount = intentAmount(i) ?? "money";
   const out = i.outSymbol ?? i.toSymbol;
   switch (kind) {
@@ -232,6 +257,12 @@ function journalMarks(kind: JournalKind, record: OperationRecord): FeedMark[] {
   if (kind === "swap") {
     const out = i.outSymbol ?? i.toSymbol;
     return [symbolMark(chainId, i.symbol, i.asset), ...(out ? [symbolMark(chainId, out, i.outAsset)] : [])];
+  }
+  if (kind === "perpl") {
+    const perp = i.marketId === undefined ? undefined : Number(i.marketId);
+    return i.intent === "withdraw" || perp === undefined || !Number.isInteger(perp)
+      ? [{ id: ids.venue("perpl"), label: "Perpl" }]
+      : [{ id: ids.perplMarket(MAINNET_CHAIN_ID, perp), label: i.symbol ?? "Perpl" }];
   }
   if (kind === "trade" || kind === "card" || kind === "other") return [];
   if (kind === "pool") return [{ id: ids.brand("senryo"), label: "Senryo pool" }];
@@ -266,6 +297,7 @@ const GROUP_OF: Record<JournalKind, FeedGroup> = {
   other: "money",
   trade: "trades",
   card: "card",
+  perpl: "trades",
 };
 
 export function journalItem(record: OperationRecord, me: string): FeedItem | undefined {
@@ -275,7 +307,7 @@ export function journalItem(record: OperationRecord, me: string): FeedItem | und
   return {
     id: `journal:${record.id}`,
     at: record.updatedAt,
-    group: GROUP_OF[kind],
+    group: kind === "perpl" && record.reviewedIntent.intent === "withdraw" ? "money" : GROUP_OF[kind],
     title: journalTitle(kind, record),
     marks: journalMarks(kind, record),
     figure: journalFigure(kind, record),

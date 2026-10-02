@@ -97,6 +97,59 @@ export interface PerplMarginInput {
   slippageBps: bigint;
 }
 
+/** Signed ceil(a / b) for b > 0 (bigint `/` truncates toward 0). */
+const signedCeilDiv = (a: bigint, b: bigint): bigint => {
+  const q = a / b;
+  return a % b !== 0n && a > 0n ? q + 1n : q;
+};
+
+export interface PerplLiquidationInput extends PerplScale {
+  side: PerplSide;
+  entryPricePNS: bigint;
+  lots: bigint;
+  /** Collateral held by the position (`depositCNS`). */
+  depositCNS: bigint;
+  /** Funding booked to the position so far (`premiumPnlCNS`, signed; positive = received). */
+  premiumPnlCNS: bigint;
+  /** `getMarginFractions().perpMaintMarginFracHdths` (2500 = 4 % maintenance). */
+  maintMarginFracHdths: bigint;
+}
+
+/**
+ * The position's liquidation price (PNS), as Perpl computes it — dex-sdk `state/position.rs` `liquidation_price`
+ * (MIT) and Perpl docs exchange/liquidation "Calculating Liquidation Price":
+ *   P_liq = P_entry + s · (MMR − deposit − premiumPnl) / L,   MMR = P_entry · L / MMF,   s = +1 long, −1 short.
+ * Integer units throughout; the MMR is rounded up and the move toward the entry, so the estimate is never further
+ * from the mark than the exchange's own. Null when there is none above 0 (a long holding more than it owes).
+ */
+export function perplLiquidationPrice(input: PerplLiquidationInput): bigint | null {
+  if (input.lots <= 0n || input.maintMarginFracHdths <= 0n) return null;
+  const { num, den } = scaleFactor(input);
+  const notional = perplNotional(input.lots, input.entryPricePNS, input);
+  const mmr = ceilDiv(notional * oneUnit(PERPL_LEVERAGE_DECIMALS), input.maintMarginFracHdths);
+  const gapCNS = mmr - input.depositCNS - input.premiumPnlCNS;
+  // CNS over the position → a price move: the inverse of `perplNotional` (lots · price · den / num). Rounded up, so
+  // both sides land on the entry's side of the exact value.
+  const move = signedCeilDiv(gapCNS * num, input.lots * den);
+  const price = input.side === "long" ? input.entryPricePNS + move : input.entryPricePNS - move;
+  return price > 0n ? price : null;
+}
+
+/**
+ * The liquidation price an open would start with, at most this close to the entry: Perpl books `notional ÷ leverage`
+ * as the position's deposit plus whatever the fill loses against the mark (simulated 2 Oct 2026, perpl-plan-check), and
+ * no funding yet — so with the lower bound P_liq = P_entry · (1 ± (1/MMF − 1/leverage)), the docs' "(IM − MM) ÷ (1 −
+ * MM)" distance. Sized at the IOC's bound, the estimate never sits further from the mark than the real level.
+ */
+export function perplOpenLiquidationPrice(
+  input: Omit<PerplLiquidationInput, "depositCNS" | "premiumPnlCNS"> & { leverageHdths: bigint },
+): bigint | null {
+  if (input.leverageHdths <= 0n) return null;
+  const notional = perplNotional(input.lots, input.entryPricePNS, input);
+  const depositCNS = (notional * oneUnit(PERPL_LEVERAGE_DECIMALS)) / input.leverageHdths;
+  return perplLiquidationPrice({ ...input, depositCNS, premiumPnlCNS: 0n });
+}
+
 /**
  * Free collateral an open needs: initial margin (notional ÷ leverage) + the taker fee + the negative PnL a fill at the
  * slippage bound books against the mark (drawn from the account up to `maxNegPnlCollatBPS`). Rounded up throughout —

@@ -198,7 +198,7 @@ function RiskRow({
  * Keypad ↔ chart (C41): two icons in a small borderless track, the chosen one on a lighter plate (the segmented
  * control's grammar, without F37's divider line); the rest of the ticket stays put.
  */
-function ModeToggle({ mode, onMode }: { mode: EntryMode; onMode: (m: EntryMode) => void }) {
+export function ModeToggle({ mode, onMode }: { mode: EntryMode; onMode: (m: EntryMode) => void }) {
   const { color } = useTheme();
   const option = (m: EntryMode, label: string, Icon: typeof Grid3x3) => {
     const on = m === mode;

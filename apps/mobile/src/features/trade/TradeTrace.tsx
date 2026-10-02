@@ -12,7 +12,7 @@ import { type ReactNode, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
-import { ChevronDown, CircleCheck, History, X } from "~/components/kit/symbols";
+import { Ban, ChevronDown, CircleCheck, History, X } from "~/components/kit/symbols";
 import { ExecutionTrace, type TraceStep } from "~/components/trade/ExecutionTrace";
 import { shortAddress } from "~/lib/format";
 import { SPACE, TYPE, useTheme } from "~/theme";
@@ -46,6 +46,12 @@ export function failureWords(error: unknown, thing = "trade"): string {
   if (/LossExceedsBalance/.test(first)) return "Close the profitable position first, or add money. Nothing was sent.";
   if (/MinHoldNotElapsed/.test(first)) return "Profit can be taken a few seconds after opening. Nothing was sent.";
   if (/Cancel|cancel/.test(first)) return "Cancelled — nothing was signed.";
+  // Perpl (D1): the decoded Exchange reverts a simulation can hit.
+  if (/ExceedsLastExecutionBlock/.test(first)) return "The order’s time window passed. Nothing was sent.";
+  if (/AccountExists|AccountDoesNotExist/.test(first)) return "Your Perpl account changed. Review it again.";
+  if (/InsufficentAmountToOpenAccount|InsufficientAmountToOpenAccount/.test(first))
+    return "Perpl's account minimum went up. Review it again.";
+  if (/CloseOrderExceedsPosition/.test(first)) return "The position changed. Review it again.";
   return first.length > 0 ? first : `The ${thing} didn't go through. Nothing was sent.`;
 }
 
@@ -87,6 +93,14 @@ export const ORDER_WORDS: TraceWords = {
 
 type Phase = "running" | "success" | "failed" | "unknown";
 
+/**
+ * What a finalized operation actually did, when the receipt status alone can't say (a Perpl IOC succeeds onchain even
+ * when it matches no one): `reading` while the screen decodes the receipt — no success is claimed yet — `nothing`
+ * when it changed nothing ("Price moved — nothing opened."), and `unread` when the receipt couldn't be decoded (it may
+ * have done something: no success, no "nothing"). Undefined: finalized means done.
+ */
+export type SettledVerdict = "reading" | "nothing" | "unread";
+
 export function TradeTrace({
   events,
   record,
@@ -99,6 +113,7 @@ export function TradeTrace({
   children,
   details: extra,
   next,
+  verdict,
 }: {
   events: readonly TraceEvent[];
   record?: OperationRecord | undefined;
@@ -118,6 +133,8 @@ export function TradeTrace({
   details?: ReactNode;
   /** The next actions once it succeeded ("View position", "Share"), above Done. */
   next?: ReactNode;
+  /** Finalized, but still being read or changed nothing (`SettledVerdict`). */
+  verdict?: SettledVerdict | undefined;
 }) {
   const { color } = useTheme();
   const [details, setDetails] = useState(false);
@@ -181,17 +198,32 @@ export function TradeTrace({
             ? words.leave
             : undefined;
 
+  const reading = phase === "success" && verdict === "reading";
+  const nothing = phase === "success" && verdict === "nothing";
+  const unread = phase === "success" && verdict === "unread";
   const tone =
-    phase === "success" ? color.up : phase === "failed" ? color.down : phase === "unknown" ? color.warn : color.ink;
+    nothing || unread
+      ? color.warn
+      : phase === "success"
+        ? color.up
+        : phase === "failed"
+          ? color.down
+          : phase === "unknown"
+            ? color.warn
+            : color.ink;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.glyph} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {phase === "running" ? (
+        {phase === "running" || reading ? (
           <ActivityIndicator size="large" color={color.text2} />
         ) : (
           <Animated.View entering={ZoomIn.springify().damping(SPRING_IN)}>
-            {phase === "success" ? (
+            {nothing ? (
+              <Ban size={GLYPH} color={tone} />
+            ) : unread ? (
+              <History size={GLYPH} color={tone} />
+            ) : phase === "success" ? (
               <CircleCheck size={GLYPH} color={tone} />
             ) : phase === "failed" ? (
               <X size={GLYPH} color={tone} strokeWidth={2.5} />
@@ -240,13 +272,13 @@ export function TradeTrace({
         </Animated.View>
       ) : null}
       <View style={styles.actions}>
-        {phase === "success" ? next : null}
-        {phase === "unknown" || (phase === "running" && running) ? (
+        {phase === "success" && !reading ? next : null}
+        {phase === "unknown" || reading || (phase === "running" && running) ? (
           <Button label="Leave this screen" variant={phase === "unknown" ? "outline" : "ghost"} onPress={onLeave} />
         ) : phase === "running" ? null : (
           <Button
             label={phase === "success" || outcome === "finalized" ? words.done : words.back}
-            variant={phase === "success" ? "primary" : "outline"}
+            variant={phase === "success" && !nothing && !unread ? "primary" : "outline"}
             onPress={onDone}
           />
         )}

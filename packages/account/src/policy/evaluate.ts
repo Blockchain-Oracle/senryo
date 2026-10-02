@@ -183,6 +183,26 @@ export function evaluateTransaction(tx: TxInput, ctx: PolicyContext, usage: Poli
   return verdict;
 }
 
+/**
+ * Would one live session sign every transaction of a reviewed operation, in order, each counted to the usage before
+ * the next (approve → deposit → open)? The first refusal, or undefined when all of them sign in session. A screen
+ * uses it to name the confirmation before the slide ("… · passkey"); the signer still judges every one for real.
+ */
+export function evaluateSequence(
+  txs: readonly TxInput[],
+  ctx: PolicyContext,
+  usage: PolicyUsage,
+  now: number,
+): Extract<Verdict, { kind: "reject" }> | undefined {
+  let spent = usage;
+  for (const tx of txs) {
+    const verdict = evaluateTransaction(tx, ctx, spent, now);
+    if (verdict.kind === "reject") return verdict;
+    spent = recordUsage(spent, verdict, now);
+  }
+  return undefined;
+}
+
 /** Record a signed verdict against the session's usage (called only after the signature exists). */
 export function recordUsage(usage: PolicyUsage, verdict: Verdict, now: number): PolicyUsage {
   if (verdict.kind === "reject") return usage;

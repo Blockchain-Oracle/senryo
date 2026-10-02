@@ -71,8 +71,11 @@ function sharedNonces(chainId: ChainId): NonceSource {
   return nonces;
 }
 
-/** What a trade call site knows that the policy needs (S8): market room, equity, a label for the Face ID prompt. */
-export type TradeContext = Pick<PolicyContext, "marketRoomUsd6" | "equityUsd6" | "marketLabel">;
+/**
+ * What a trade call site knows that the policy needs (S8): market room, equity, a label for the Face ID prompt — and,
+ * for a Perpl order (D1), the Perpl market's own label ("Confirm long $60.00 Bitcoin on Perpl").
+ */
+export type TradeContext = Pick<PolicyContext, "marketRoomUsd6" | "equityUsd6" | "marketLabel" | "perplMarketLabel">;
 
 /**
  * One sender per call site; the read client and the nonce counter are shared by the whole app. A trade passes its

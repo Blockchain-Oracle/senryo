@@ -1,10 +1,11 @@
 import type { AddressStanding, SearchKind, SearchResult } from "@senryo/api-client";
-import { engineMarketsOn, type SpotToken } from "@senryo/config";
+import { engineMarketsOn, PERPL_INSTRUMENTS, type SpotToken } from "@senryo/config";
 import { ids } from "@senryo/identity";
 import {
   SEARCH_MIN_CHARS,
   socialKeys,
   spotToken,
+  useDiscoveryQuotes,
   useQueryEnv,
   useSearch,
   useStandings,
@@ -24,6 +25,7 @@ import type { RecentSearch } from "~/features/markets/device-store";
 import { EngineMarketRow } from "~/features/markets/MarketRow";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { QuietLine } from "~/features/markets/QuietLine";
+import { PerplMarketRow } from "~/features/perpl/PerplMarketRow";
 import { TokenRow } from "~/features/tokens/TokenRow";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, useTheme } from "~/theme";
@@ -149,7 +151,16 @@ function Found({ result, query, kind }: { result: SearchResult; query: string; k
   // Spot tokens (J11): their own list, mainnet pools, shown on either network.
   const tokens = kind === "all" || kind === "tokens" ? result.tokens.flatMap((t) => spotToken(t.symbol) ?? []) : [];
   const weekOf = useWeekResults(traders.map((t) => t.address));
-  if (markets.length + tokens.length + traders.length === 0) {
+  // Perpl's crypto perps (C1 acceptance: "btc" finds the Perpl perp): matched here by ticker or name.
+  const needle = query.trim().toLowerCase();
+  const perpl =
+    kind === "all" || kind === "perps"
+      ? PERPL_INSTRUMENTS.filter(
+          (i) => i.symbol.toLowerCase().includes(needle) || i.name.toLowerCase().includes(needle),
+        )
+      : [];
+  const perplQuotes = useDiscoveryQuotes(perpl.map((i) => i.id));
+  if (markets.length + perpl.length + tokens.length + traders.length === 0) {
     return <QuietLine>{kind === "traders" ? "No traders found" : `No results for “${query}”`}</QuietLine>;
   }
   return (
@@ -170,12 +181,17 @@ function Found({ result, query, kind }: { result: SearchResult; query: string; k
         </View>
       ) : null}
       {tokens.length > 0 ? <FoundTokens tokens={tokens} /> : null}
-      {markets.length > 0 ? (
+      {markets.length + perpl.length > 0 ? (
         <View>
           <SectionLabel style={styles.label}>Perps</SectionLabel>
           {markets.map((m) => (
             <EngineMarketRow key={m.id} marketId={m.id} onOpen={() => remember({ kind: "market", symbol: m.symbol })} />
           ))}
+          {perplQuotes.map((q) =>
+            q.instrument.class === "crypto" ? (
+              <PerplMarketRow key={q.instrument.id} instrument={q.instrument} reading={q.reading} />
+            ) : null,
+          )}
         </View>
       ) : null}
     </>

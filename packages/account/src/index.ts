@@ -39,7 +39,7 @@ export type {
   SyncEvent,
 } from "./platform/types.ts";
 export { decodeCall } from "./policy/decode.ts";
-export { evaluateTransaction, judgeAction, recordUsage, type TxInput } from "./policy/evaluate.ts";
+export { evaluateSequence, evaluateTransaction, judgeAction, recordUsage, type TxInput } from "./policy/evaluate.ts";
 export { scopeTargets } from "./policy/targets.ts";
 export { evaluateMessage, evaluateTypedData } from "./policy/typed-data.ts";
 export type { Action, FaceIdMode, PolicyContext, PolicyUsage, RejectReason, Verdict } from "./policy/types.ts";

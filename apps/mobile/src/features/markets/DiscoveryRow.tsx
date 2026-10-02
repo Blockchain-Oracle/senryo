@@ -1,14 +1,16 @@
 /**
  * A market that doesn't trade here yet, still discoverable (review S03; flow book C1 step 3): the `RowShell` grammar
- * with its real mark (Perpl's badge on crypto), the ticker with a lock and one word, its short name, and the live
- * price and 24 h change from its authoritative source — Perpl's mark price, or a calculated wrapper feed. The row
- * opens its read-only page; long-press stars it (C10). Nothing is invented: a price that can't be read shows none.
+ * with its real mark, the ticker with a lock and one word, its short name, and the live price and 24 h change from its
+ * authoritative source — a calculated wrapper feed. The row opens its read-only page; long-press stars it (C10).
+ * Nothing is invented: a price that can't be read shows none. Perpl's crypto markets have their own row
+ * (`PerplMarketRow`): they trade on Mainnet.
  */
 import type { DiscoveryInstrument, UnpricedInstrument } from "@senryo/config";
 import type { Reading } from "@senryo/core";
 import { ids } from "@senryo/identity";
 import type { DiscoveryQuote } from "@senryo/query";
 import { router } from "expo-router";
+import { PerplMarketRow } from "~/features/perpl/PerplMarketRow";
 import { tokenPrice } from "~/features/tokens/format";
 import { discoverRoute } from "~/lib/constants/routes";
 import { signedPct } from "~/lib/money";
@@ -25,6 +27,12 @@ export function DiscoveryRow({
   instrument: DiscoveryInstrument;
   reading: Reading<DiscoveryQuote>;
 }) {
+  // Perpl's crypto markets trade on Mainnet (C4): their row carries the live leverage, or the lock where they can't.
+  if (instrument.class === "crypto") return <PerplMarketRow instrument={instrument} reading={reading} />;
+  return <ReadOnlyRow instrument={instrument} reading={reading} />;
+}
+
+function ReadOnlyRow({ instrument, reading }: { instrument: DiscoveryInstrument; reading: Reading<DiscoveryQuote> }) {
   const network = useNetwork();
   const watchlist = useWatchlist();
   const quote = reading.status === "fresh" || reading.status === "stale" ? reading.value : undefined;
