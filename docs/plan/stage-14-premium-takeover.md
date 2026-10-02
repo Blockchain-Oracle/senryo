@@ -10,16 +10,16 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [x] 1 Over-cap opens step up with a passkey (built 924bd93)
 - [ ] 2 Orphan TP/SL — keeper guard + touch rule built and **deployed** (924bd93, 2602ae2; api/keeper `sha-294f8a2`); contract epoch in the signed order built on `claude/contracts` (D-251, 52 forge tests) — **held** until the mainnet deploy / a testnet core redeploy (merging it breaks Practice TP/SL signatures on the current testnet core); close cancels leftovers (trading area)
 - [x] 3 Opposite-side pre-slide blocker (built 924bd93)
-- [ ] 4 Inbox removed from Receive; Mainnet dead ends routed; fee reserve
-- [ ] 5 Send any asset; scanner; recipient checks; copy
-- [ ] 6 Guest-sheet setup; terms gate; welcome-complete timing; kill resume
-- [ ] 7 Explicit visibility; reserved-name copy; backup-passkey warning; watch link route + chainId
-- [ ] 8 Card intro claim; unfreeze; card push sender
-- [ ] 9 FX quantity units
-- [ ] 10 Delete-data completeness + privacy notice
-- [ ] 11 Push retry; blocked/muted list; alert cap per mode; alert edit
-- [ ] 12 Period consistency; SwapTicket fee preflight; Practice MON in total; Practice money routing
-- [ ] 13 Pool deposit above the move cap has no passkey route (found by the flow book, d-earn.md)
+- [x] 4 Inbox removed from Receive; Mainnet dead ends routed (built 10a24c2); fee reserve composed into every Mainnet operation (built 57d4eb0, fork check 37/37)
+- [x] 5 Send any asset; scanner; recipient checks; copy (built 10a24c2)
+- [x] 6 Guest-sheet setup; terms gate; welcome-complete timing; kill resume (built f563b2a, terms on every money entry 1f25dd9)
+- [x] 7 Explicit visibility; reserved-name copy; backup-passkey warning; watch link route + chainId (built f563b2a; web /watch by chainId 3c9dba7)
+- [x] 8 Card intro claim; unfreeze; card push sender (built 02729d3 + card service 38183de)
+- [x] 9 FX quantity units (built 1113c5a)
+- [x] 10 Delete-data completeness + privacy notice (built f563b2a)
+- [x] 11 Push retry (keeper `pushes` job); blocked/muted list; alert cap per mode (`ALERTS_PER_MODE_MAX`); alert edit = replace (built 27123af, f563b2a, 1113c5a)
+- [x] 12 Period consistency (D-249); swap fee preflight (B11, 57d4eb0); Practice MON listed under Assets at "No price" (testnet MON has no value, so it never inflates the total); Practice money routing — pool and ticket pull from wallet then trades in one operation (57d4eb0)
+- [x] 13 Pool deposit above the move cap steps up with the passkey (built 1113c5a; composed legs b757b7e)
 
 ## Foundation
 - [x] Native icons (2602ae2)
@@ -51,6 +51,7 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [ ] D8 Wallet activity indexing
 - [ ] D9 api/keeper deployed `sha-294f8a2` (2 Oct 14:20 UTC); any-asset routes redeploy in progress; card service resource not created yet (needs Lithic key)
 - [ ] D10 Web parity round 1 merged (3c9dba7: Home, Add money/Receive/voucher, any-asset Send/Withdraw on Monad, asset page, markets, ticket with step-up, position reduce/close/TP-SL, social, watch by chainId, setup + terms, card locks; provenance docs/product/provenance/web.md). Round 2 (pool, inbox + activity, swaps, TP/SL edit, settings, scan, landing bundle, signed acceptance) in progress
+- [x] Mainnet composition merged (57d4eb0): B11 fee reserve ("~$0.50 → MON" step), Pay with any asset on ticket + pool, B4 Relay deposit addresses (EVM origins keyless; Solana/Bitcoin need RELAY_API_KEY). Open: ticket Details doesn't list composed steps before the slide; zero-MON wallet needs the mainnet sponsor top-up. Proven on a 143 fork; live once SenryoCore/LpVault are on 143 (D4)
 - [ ] D11 Submission (external TestFlight by ~9 Oct) · D12 Meme coins
 
 ## Builds and updates (2 Oct)
