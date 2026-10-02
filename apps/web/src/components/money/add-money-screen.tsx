@@ -158,9 +158,8 @@ export function AddMoneyScreen() {
             />
           }
           title="From another chain"
-          subtitle="On the Senryo app"
-          trailing={<Lock className="size-4 text-text-3" aria-label="On the Senryo app" />}
-          className="opacity-60"
+          subtitle={practice ? "USDC from Sepolia testnets" : "Ethereum, Base, Solana and more"}
+          href={guard(ROUTES.bridgeIn)}
         />
       </div>
     </Column>

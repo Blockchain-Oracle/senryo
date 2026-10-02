@@ -15,6 +15,7 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { WithdrawToChain } from "@/components/bridge/withdraw-chain";
 import { PageHeader } from "@/components/kit/page-header";
 import { SEND_WORDS, type TraceWords } from "@/components/kit/trace-words";
 import { Column } from "@/components/shell/column";
@@ -137,6 +138,8 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const risk = known(useAccountRisk(isDeployed(env.chainId, "SenryoCore") ? me : undefined, "latest"));
   const bitmap = risk?.positionBitmap ?? 0;
   const [step, setStep] = useState<Step>("to");
+  /** Withdraw: to an address on Monad, or to another chain (B8 / B9). */
+  const [dest, setDest] = useState<"monad" | "chain">("monad");
   const [recipient, setRecipient] = useState<PickedRecipient>();
   const [assetKey, setAssetKey] = useState(params.get("asset") ?? undefined);
   const [reviewed, setReviewed] = useState<ReviewedMove>();
@@ -200,7 +203,24 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
             }
           : {})}
       />
-      {step === "to" ? (
+      {kind === "withdraw" && step === "to" ? (
+        <fieldset aria-label="Withdraw to" className="grid grid-cols-2 gap-1 rounded-md bg-raised-2 p-1">
+          {(["monad", "chain"] as const).map((d) => (
+            <button
+              key={d}
+              type="button"
+              aria-pressed={dest === d}
+              onClick={() => setDest(d)}
+              className={dest === d ? "h-10 rounded-sm bg-background text-row" : "h-10 rounded-sm text-row text-text-2"}
+            >
+              {d === "monad" ? "Monad" : "Another chain"}
+            </button>
+          ))}
+        </fieldset>
+      ) : null}
+      {kind === "withdraw" && step === "to" && dest === "chain" ? (
+        <WithdrawToChain me={me} />
+      ) : step === "to" ? (
         <RecipientStep
           people={kind === "send" ? people : []}
           initial={params.get("to") ?? ""}

@@ -26,6 +26,7 @@ export const ROUTES = {
   activity: "/activity/",
   notifications: "/notifications/",
   swap: "/swap/",
+  bridgeIn: "/bridge-in/",
 } as const;
 
 /** A position's page (one net position per engine market). */
