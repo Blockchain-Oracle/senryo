@@ -1,24 +1,26 @@
 import type { TraceWords } from "~/features/trade/TradeTrace";
 
-/** The shared outcome contract's words for a send to someone else (review S01). */
+/** The send and withdrawal nouns for the shared outcome surface (review S01; flow book B7/B8 copy). */
 export const SEND_WORDS: TraceWords = {
   thing: "send",
   again: "send it again",
-  landed: "Confirmed: it was sent. The recipient has it.",
-  reverted: "The send reverted onchain (gas was paid); the money stayed in your account.",
+  landed: "Confirmed — the recipient has it.",
+  reverted: "It reverted onchain. Only the network fee was paid.",
   done: "Send another",
   back: "Back to the send",
-  leave: "You can leave this screen. The send is on its way and can’t be cancelled; its result shows in Activity.",
+  leave: "You can leave — it continues and can’t be cancelled.",
+  pending: "Sending",
+  success: "Sent",
 };
 
-/** …and for a withdrawal to your own wallet. */
 export const WITHDRAW_WORDS: TraceWords = {
   thing: "withdrawal",
   again: "withdraw again",
-  landed: "Confirmed: it is in your wallet.",
-  reverted: "The withdrawal reverted onchain (gas was paid); the money stayed in your account.",
+  landed: "Confirmed — it’s at the destination.",
+  reverted: "It reverted onchain. Only the network fee was paid.",
   done: "Withdraw again",
   back: "Back to the withdrawal",
-  leave:
-    "You can leave this screen. The withdrawal is on its way and can’t be cancelled; its result shows in Activity.",
+  leave: "You can leave — it continues and can’t be cancelled.",
+  pending: "Withdrawing",
+  success: "Withdrawn",
 };

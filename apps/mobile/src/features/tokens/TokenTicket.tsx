@@ -35,12 +35,13 @@ import { type TradeBlock, type TradeSide, useTokenTrade } from "./useTokenTrade"
 const SWAP_WORDS: TraceWords = {
   thing: "swap",
   again: "swap again",
-  landed: "Confirmed: the swap went through. Your balances show it.",
-  reverted: "The swap reverted onchain (gas was paid); your tokens stayed where they were.",
+  landed: "Confirmed — your balances show it.",
+  reverted: "It reverted onchain. Only the network fee was paid.",
   done: "Done",
   back: "Back to the ticket",
-  leave:
-    "You can leave this screen. The swap is on its way and can’t be cancelled; reopen this ticket to see its result.",
+  leave: "You can leave — it continues and can’t be cancelled.",
+  pending: "Swapping",
+  success: "Swapped",
 };
 
 const SIDES = [
