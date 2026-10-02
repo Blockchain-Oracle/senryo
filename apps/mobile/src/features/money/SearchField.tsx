@@ -4,7 +4,7 @@
  * santoshvarmaaddala/search-bar (#1645) — the plate and its leading glyph — without its web focus ring.
  */
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, TextInput, type TextInputProps, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, type TextInputProps, View } from "react-native";
 import { Search, type SymbolIcon } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { BUTTON, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -65,7 +65,32 @@ export function ToolCircle({ icon: Icon, label, onPress }: { icon: SymbolIcon; l
   );
 }
 
+/** The text tool inside the field (Fomo F31's "Paste"). */
+export function TextTool({ label, onPress }: { label: string; onPress: () => void }) {
+  const { color } = useTheme();
+  return (
+    <Pressable
+      onPress={() => {
+        fire("tick");
+        onPress();
+      }}
+      accessibilityRole="button"
+      hitSlop={SPACE.xs}
+      style={({ pressed }) => [styles.textTool, { backgroundColor: pressed ? color.rowPressed : color.card }]}
+    >
+      <Text style={[TYPE.buttonCompact, { color: color.ink }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  textTool: {
+    height: BUTTON.utility,
+    paddingHorizontal: SPACE.md,
+    borderRadius: RADIUS.pill,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   tool: {
     width: BUTTON.utility,
     height: BUTTON.utility,

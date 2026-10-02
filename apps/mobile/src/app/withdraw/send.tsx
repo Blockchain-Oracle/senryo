@@ -1,67 +1,28 @@
-import { capabilitiesOf, useAccountRisk, useWalletCollateral } from "@senryo/query";
-import { router, Stack } from "expo-router";
-import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Button } from "~/components/kit/Button";
-import { Screen } from "~/components/kit/Screen";
-import { Segmented } from "~/components/kit/Segmented";
-import { ReadingView } from "~/components/kit/states";
-import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
-import { SendToAddress } from "~/features/withdraw/SendToAddress";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { StyleSheet, View } from "react-native";
+import { QuietLine } from "~/features/portfolio/QuietLine";
+import { SendFlow } from "~/features/send/SendFlow";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
-import { useNetwork } from "~/lib/network";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { useTheme } from "~/theme";
 
-/** Send (the fan's first action; FT058/C38): to an address or @handle, behind a fresh passkey check. */
+/** Send (the fan's first action; B7): `?asset=<address>` preselects the asset, `?to=<address or @handle>` the person. */
 export default function SendScreen() {
   const { color } = useTheme();
-  const network = useNetwork();
   const address = useAccount().hint?.address;
-  const risk = useAccountRisk(address, "latest");
-  const wallet = useWalletCollateral(address);
-  const capabilities = capabilitiesOf({ chainId: network.chainId, account: Boolean(address) });
-  const readOnly = Boolean(address) && !capabilities.tradingTransfer.available;
-  const [source, setSource] = useState<"wallet" | "trading">(network.key === "mainnet" ? "wallet" : "trading");
-  const practice = network.key === "testnet";
+  const { asset, to } = useLocalSearchParams<{ asset?: string; to?: string }>();
   return (
-    <Screen contentStyle={styles.page}>
+    <View style={[styles.fill, { backgroundColor: color.ground }]}>
       <Stack.Screen options={{ title: "Send" }} />
-      <Text style={[TYPE.rowDetail, { color: practice ? color.practice : color.mainnet }]}>
-        {practice ? "Practice · Paper money" : "Mainnet · Real money"} · {network.name}
-      </Text>
-      <Segmented
-        options={[
-          { value: "wallet", label: "Wallet" },
-          { value: "trading", label: "Trading account" },
-        ]}
-        value={source}
-        onChange={setSource}
-        label="Send from"
-      />
-      {source === "wallet" && address ? (
-        <ReadingView reading={wallet} loading="plate" loadingLabel="Reading wallet funds">
-          {(balances) => (
-            <SendToAddress key={`${network.chainId}:${address}:wallet`} wallet={balances} source="wallet" />
-          )}
-        </ReadingView>
-      ) : readOnly ? (
-        <PrelaunchMainnet surface="portfolio" />
-      ) : !address ? (
-        <View style={styles.quiet}>
-          <Text style={[TYPE.body, { color: color.text2 }]}>Create an account to send.</Text>
-          <Button label="Create account" block={false} onPress={() => router.push(ROUTES.accountRequired)} />
-        </View>
+      {address ? (
+        <SendFlow key={address} {...(asset ? { initialAsset: asset } : {})} {...(to ? { initialTo: to } : {})} />
       ) : (
-        <ReadingView reading={risk} loading="plate" loadingLabel="Reading what can leave">
-          {(snapshot) => <SendToAddress key={`${network.chainId}:${address}:trading`} snapshot={snapshot} />}
-        </ReadingView>
+        <QuietLine action={{ label: "Create account", onPress: () => router.push(ROUTES.accountRequired) }}>
+          Sign in to send
+        </QuietLine>
       )}
-    </Screen>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  page: { gap: SPACE.lg },
-  quiet: { alignItems: "flex-start", gap: SPACE.md },
-});
+const styles = StyleSheet.create({ fill: { flex: 1 } });

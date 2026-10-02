@@ -38,10 +38,10 @@ export type AmountMode = "units" | "usd";
 
 /**
  * The typed amount of one asset. `priceUsd18` enables the $ toggle; `available` is what Max fills (exact). Any key
- * press after Max makes it a typed amount again.
+ * press after Max makes it a typed amount again. `initial` pre-fills an exact amount (a scanned payment code).
  */
-export function useAmountInput(decimals: number, priceUsd18: bigint | null, available: bigint) {
-  const [text, setText] = useState("");
+export function useAmountInput(decimals: number, priceUsd18: bigint | null, available: bigint, initial?: bigint) {
+  const [text, setText] = useState(() => (initial !== undefined && initial > 0n ? plainAmount(initial, decimals) : ""));
   const [mode, setMode] = useState<AmountMode>("units");
   const [max, setMax] = useState(false);
   const usdMode = mode === "usd" && priceUsd18 !== null;
