@@ -96,8 +96,18 @@ interface PaymentRef {
   merchant: string | null;
 }
 
-/** Once a capture is finalized: "$x settled at …" (`ref` = the hold, captured once). */
-export async function notifyCaptured(ctx: CardContext, holdId: string, account: string, capturedUsd6: bigint) {
+/**
+ * Once a capture is finalized: "$x settled at …" with the amount the chain captured (`HoldCaptured.captured`, an
+ * over-capture included) and, when the collateral couldn't cover it, the card debt it created — the same numbers the
+ * ledger and the summary record. `ref` = the hold, captured once.
+ */
+export async function notifyCaptured(
+  ctx: CardContext,
+  holdId: string,
+  account: string,
+  capturedUsd6: bigint,
+  debtUsd6: bigint,
+) {
   if (capturedUsd6 === 0n) return;
   try {
     const [auth] = await ctx.db<PaymentRef[]>`
@@ -110,6 +120,7 @@ export async function notifyCaptured(ctx: CardContext, holdId: string, account: 
       txn: auth?.txn_token,
       merchant: auth?.merchant ?? null,
       amountUsd6: capturedUsd6,
+      debtUsd6,
     });
   } catch (error) {
     ctx.log.warn({ err: describeError(error), hold: holdId }, "capture notification skipped");
