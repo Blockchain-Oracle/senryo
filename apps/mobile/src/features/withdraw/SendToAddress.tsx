@@ -23,7 +23,7 @@ import {
   withdrawRequest,
 } from "@senryo/query";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
 import { MarkedLine } from "~/components/identity/MarkedLine";
@@ -81,10 +81,13 @@ export function SendToAddress({
   snapshot,
   wallet,
   source = "trading",
+  prefill,
 }: {
   snapshot?: AccountSnapshot;
   wallet?: Record<CollateralSymbol, bigint>;
   source?: "wallet" | "trading";
+  /** A recipient handed in by the page (a profile's Send, F6): it replaces what was typed last, once per value. */
+  prefill?: string | undefined;
 }) {
   const { color } = useTheme();
   const env = useQueryEnv();
@@ -99,6 +102,12 @@ export function SendToAddress({
   );
   const input = savedRecipient ?? "";
   const setInput = (next: string) => setSavedRecipient(next);
+  const applied = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!prefill || applied.current === prefill) return;
+    applied.current = prefill;
+    setSavedRecipient(prefill);
+  }, [prefill, setSavedRecipient]);
   const recipient = useRecipient(input);
   const [symbol, setSymbol] = useState<CollateralSymbol>(
     (snapshot?.ausd ?? wallet?.AUSD ?? 0n) >= (snapshot?.usdc ?? wallet?.USDC ?? 0n) ? "AUSD" : "USDC",
