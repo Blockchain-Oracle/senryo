@@ -1,3 +1,7 @@
+# 2 October mobile rebuild acceptance override
+
+[Current contract](mobile-rebuild-2026-10-02.md) · D-234–236. All rebuilt journeys are **pending phone acceptance**. Earlier rows below preserve historical results at their stated revisions. Source checks and simulator evidence for the new branch are recorded in `docs/design/reviews/2026-10-02-rebuild-validation.md`; none substitutes for physical-device or funded/provider acceptance.
+
 # Acceptance evidence
 
 Every chain action, deploy, spend and flow walk gets a row — including failures. Newest last. Public values only (no secrets).

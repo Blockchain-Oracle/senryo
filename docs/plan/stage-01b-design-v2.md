@@ -32,9 +32,13 @@ It ships mobile first; web inherits the tokens and identity immediately and gets
   - `brand/` (art masters);
   - `docs/design/senryo-v2/`;
   - `docs/design/reference-study-2026-09-30/PROJECT-HANDOFF.md`.
-- **Not owned:** money logic (`packages/core`, `packages/chain`, `packages/query`), the social api (S12b) and contracts.
+- **Rebuild ownership update (D-234):** S1b now owns the mobile journey seams in `packages/chain`, `packages/query`, card/api/indexer clients and actor/pool read APIs required by the [approved rebuild](mobile-rebuild-2026-10-02.md). Contract risk rules remain authoritative and unchanged; deployment, issuer and other-chain integrations retain their stage gates.
 
 **D-number range:** D-190…D-209.
+
+## Rebuild acceptance
+
+All retained features require fresh journey acceptance at the rebuilt revision. The checkmarks below describe historical construction; they do not accept the 2 October rebuild. Sequence and current source/dependency status: [mobile rebuild contract](mobile-rebuild-2026-10-02.md).
 
 ## Steps
 - [x] S1b.1 **Identity registry** `packages/identity`:

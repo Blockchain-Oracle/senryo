@@ -1,3 +1,7 @@
+# Rebuild status — 2026-10-02, Codex
+
+Current work: [approved mobile rebuild](mobile-rebuild-2026-10-02.md), branch `codex/mobile-quality-rebuild`, baseline `6e2be72`. Foundation and journey source changes are in progress; current physical-phone acceptance and release runtime/channel verification are pending. No new production deployment is claimed. Retained Mainnet/Perpl/issuer/other-chain/programme dependencies remain in the contract. Previous status below is historical and has not been reverified for this rebuild.
+
 # STATUS — updated 2026-10-01 18:10 UTC by claude (lead, Opus 5.5; expanded-review fixes S01/S02/S03/S05/S06, J11, Holders)
 
 Current stage: **S8 RWA mainnet (wave C)** — `docs/plan/stage-08-rwa-mainnet.md` · **v2 plan approved 30 Sep** (`docs/plan/v2-plan.md`): phone-test fixes S8.16a–e first, then S8.22 Practice↔Mainnet toggle, S8.24 mainnet cold start + TxRecovery, mainnet S8.17–S8.21 on the fixed UI when funded; parallel S1b design v2 "Living Lacquer" (`stage-01b-design-v2.md`, D-168; D2 retired), S12b social (`stage-12b-social.md`), S8.23 FX markets (contracts track) · practice side done: S8.2–S8.13, S8.15 · S6 done · S3/S4 merged · Wave A done

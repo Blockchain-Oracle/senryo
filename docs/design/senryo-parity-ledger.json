@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "title": "Senryo parity ledger — Living Lacquer (reference-product-fidelity §3)",
-  "generated": "2026-10-01",
+  "generated": "2026-10-02",
   "authority": {
     "target": "Senryo mobile app (apps/mobile), then web (apps/web) via @senryo/tokens and @senryo/identity",
     "reference_artifacts": "docs/design/reference-study-2026-09-30/** (R1 Solflare, R2 Phantom, R3 Fomo; untracked locally until Q-021) + ~/.claude/skills/mobile-reference-study bundled copy",
@@ -11,7 +11,7 @@
       "the study's guides",
       "Senryo product rules (docs/plan/00-plan.md §0/§1)"
     ],
-    "design_direction": "docs/design/senryo-v2/direction.md (Codex, verbatim) + docs/plan/v2-plan.md §5",
+    "design_direction": "docs/design/senryo-v2/direction.md (Codex, verbatim) + docs/plan/v2-plan.md §5 + docs/plan/mobile-rebuild-2026-10-02.md (latest user-approved authority)",
     "superseded": [
       "D-004 D2 Desk",
       "design/DIRECTIONS.md",
@@ -26,7 +26,10 @@
       "D-176",
       "D-177",
       "D-178",
-      "D-190"
+      "D-190",
+      "D-234",
+      "D-235",
+      "D-236"
     ]
   },
   "classification_rules": {
@@ -308,7 +311,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT002",
@@ -369,7 +373,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT003",
@@ -418,7 +423,8 @@
         ],
         "blocked_by": "B4 (An explicit security model beside passkeys)"
       },
-      "note": "Private-key/Ledger/Shield alternatives reserved (B4); seed import is a binding exclusion."
+      "note": "Private-key/Ledger/Shield alternatives reserved (B4); seed import is a binding exclusion.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT004",
@@ -461,7 +467,8 @@
         "remaining": [],
         "excluded_by": "D-195"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT005",
@@ -504,7 +511,8 @@
         "remaining": [],
         "excluded_by": "D-195"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT006",
@@ -555,7 +563,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT007",
@@ -606,7 +615,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT008",
@@ -657,7 +667,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT009",
@@ -704,7 +715,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT010",
@@ -752,7 +764,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Copy + ellipsis anatomy exact; the opened menu is target-specific."
+      "note": "Copy + ellipsis anatomy exact; the opened menu is target-specific.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT011",
@@ -803,7 +816,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT012",
@@ -849,7 +863,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT013",
@@ -898,7 +913,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT014",
@@ -941,7 +957,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT015",
@@ -984,7 +1001,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT016",
@@ -1027,7 +1045,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT017",
@@ -1070,7 +1089,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT018",
@@ -1113,7 +1133,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT019",
@@ -1156,7 +1177,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT020",
@@ -1199,7 +1221,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT021",
@@ -1243,7 +1266,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT022",
@@ -1291,7 +1315,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT023",
@@ -1337,7 +1362,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT024",
@@ -1385,7 +1411,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Real issuance/spend stays B11."
+      "note": "Real issuance/spend stays B11.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT025",
@@ -1428,7 +1455,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT026",
@@ -1477,7 +1505,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT027",
@@ -1520,7 +1549,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT028",
@@ -1563,7 +1593,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT029",
@@ -1606,7 +1637,8 @@
         ],
         "blocked_by": "B5 (A defined programme (eligibility, accounting, payout))"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT030",
@@ -1649,7 +1681,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT031",
@@ -1692,7 +1725,8 @@
         ],
         "blocked_by": "B6 (Real sources/services and moderation)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT032",
@@ -1746,7 +1780,8 @@
         ],
         "depends_on": "indicative equity discovery on the D-220 wrapper feeds (W6/J3): today only a non-interactive 'Arriving' Nvidia row with no price and no detail (review S03)"
       },
-      "note": "Partial row: equity discovery ships Adapted (indicative, D-175/D-220)."
+      "note": "Partial row: equity discovery ships Adapted (indicative, D-175/D-220).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT033",
@@ -1793,7 +1828,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT034",
@@ -1844,7 +1880,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT035",
@@ -1894,7 +1931,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT036",
@@ -1943,7 +1981,8 @@
         ],
         "blocked_by": "B4 (An explicit security model beside passkeys)"
       },
-      "note": "Private-key/Ledger siblings reserved (B4)."
+      "note": "Private-key/Ledger siblings reserved (B4).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT037",
@@ -1987,7 +2026,8 @@
         "remaining": [],
         "excluded_by": "D-029"
       },
-      "note": "Binding product rule (OAuth forbidden), not a new decision."
+      "note": "Binding product rule (OAuth forbidden), not a new decision.",
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT038",
@@ -2037,7 +2077,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT039",
@@ -2085,7 +2126,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT040",
@@ -2128,7 +2170,8 @@
         ],
         "blocked_by": "B6 (Real sources/services and moderation)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT041",
@@ -2182,7 +2225,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Lead correction (v2-plan §7): the code/Paste/'I don't have one'/skip pattern redeems a Senryo voucher (redeemVoucher + voucher route); semantic difference disclosed."
+      "note": "Lead correction (v2-plan §7): the code/Paste/'I don't have one'/skip pattern redeems a Senryo voucher (redeemVoucher + voucher route); semantic difference disclosed.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT042",
@@ -2232,7 +2276,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT043",
@@ -2280,7 +2325,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT044",
@@ -2328,7 +2374,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Mode capsule + selector built in S8.22 (D-172); carried into the dock header."
+      "note": "Mode capsule + selector built in S8.22 (D-172); carried into the dock header.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT045",
@@ -2374,7 +2421,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT046",
@@ -2420,7 +2468,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT047",
@@ -2463,7 +2512,8 @@
         ],
         "blocked_by": "B6 (Real sources/services and moderation)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT048",
@@ -2510,7 +2560,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT049",
@@ -2553,7 +2604,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT050",
@@ -2596,7 +2648,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT051",
@@ -2640,7 +2693,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT052",
@@ -2683,7 +2737,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT053",
@@ -2726,7 +2781,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT054",
@@ -2769,7 +2825,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT055",
@@ -2817,7 +2874,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Send · Receive · Add money · Swap; 'Swap' replaces Phantom's 'Trade' (direction §5)."
+      "note": "Send · Receive · Add money · Swap; 'Swap' replaces Phantom's 'Trade' (direction §5).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT056",
@@ -2870,7 +2928,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT057",
@@ -2917,7 +2976,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT058",
@@ -2968,7 +3028,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT059",
@@ -3016,7 +3077,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT060",
@@ -3070,7 +3132,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Partial row: Add money opens the method hub."
+      "note": "Partial row: Add money opens the method hub.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT061",
@@ -3119,7 +3182,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT062",
@@ -3169,7 +3233,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT063",
@@ -3222,7 +3287,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Partial row: the notification primer ships (043 covers the native surface)."
+      "note": "Partial row: the notification primer ships (043 covers the native surface).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT064",
@@ -3266,7 +3332,8 @@
         "remaining": [],
         "excluded_by": "D-029"
       },
-      "note": "Binding product rule (Google/Privy OAuth), not a new decision."
+      "note": "Binding product rule (Google/Privy OAuth), not a new decision.",
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT065",
@@ -3315,7 +3382,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT066",
@@ -3363,7 +3431,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT067",
@@ -3417,7 +3486,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Lead correction (v2-plan §7): Paste / no-code completion redeems a Senryo voucher; referral rewards stay B5."
+      "note": "Lead correction (v2-plan §7): Paste / no-code completion redeems a Senryo voucher; referral rewards stay B5.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT068",
@@ -3465,7 +3535,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT069",
@@ -3512,7 +3583,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT070",
@@ -3559,7 +3631,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "A Top Trades card opens the trader's account read-only (watchRoute in apps/mobile/src/features/home/TopTrades.tsx; the Social feed's Top Trades do the same), not the shared-position sheet target_treatment names."
+      "note": "A Top Trades card opens the trader's account read-only (watchRoute in apps/mobile/src/features/home/TopTrades.tsx; the Social feed's Top Trades do the same), not the shared-position sheet target_treatment names.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT071",
@@ -3608,7 +3681,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Token rows land with J11 spot tokens."
+      "note": "Token rows land with J11 spot tokens.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT072",
@@ -3654,7 +3728,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT073",
@@ -3703,7 +3778,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Fomo's deposit/dock overlap (X03) is a defect we fix."
+      "note": "Fomo's deposit/dock overlap (X03) is a defect we fix.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT074",
@@ -3748,7 +3824,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT075",
@@ -3799,7 +3876,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Also the shared position sheet (J8)."
+      "note": "Also the shared position sheet (J8).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT076",
@@ -3844,7 +3922,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT077",
@@ -3890,7 +3969,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT078",
@@ -3936,7 +4016,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT079",
@@ -3987,7 +4068,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT080",
@@ -4046,7 +4128,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Partial row: address disclosure ships."
+      "note": "Partial row: address disclosure ships.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT081",
@@ -4095,7 +4178,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Lead correction (v2-plan §7): our own 24-word export under step-up already exists (S6 PhraseGrid, Account → Advanced, D-148)."
+      "note": "Lead correction (v2-plan §7): our own 24-word export under step-up already exists (S6 PhraseGrid, Account → Advanced, D-148).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT082",
@@ -4149,7 +4233,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Partial row: history and settings utilities ship."
+      "note": "Partial row: history and settings utilities ship.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT083",
@@ -4194,7 +4279,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT084",
@@ -4237,7 +4323,8 @@
         ],
         "blocked_by": "B6 (Real sources/services and moderation)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT085",
@@ -4282,7 +4369,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT086",
@@ -4333,7 +4421,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT087",
@@ -4383,7 +4472,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT088",
@@ -4427,7 +4517,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT089",
@@ -4470,7 +4561,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT090",
@@ -4514,7 +4606,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT091",
@@ -4567,7 +4660,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Lead correction (v2-plan §7): minimum-deposit validation already exists in the Aurora/QR deposit ('below min', F17/F21) and swap tickets."
+      "note": "Lead correction (v2-plan §7): minimum-deposit validation already exists in the Aurora/QR deposit ('below min', F17/F21) and swap tickets.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT092",
@@ -4614,7 +4708,8 @@
         ],
         "blocked_by": "B11 (S10 card provider evidence; LITHIC_SANDBOX_KEY not set); fiat branch B3"
       },
-      "note": "Lead correction (v2-plan §7): the identity-verification handoff pattern serves card KYC (Immersve hosted KYC, S10; real issuance B11)."
+      "note": "Lead correction (v2-plan §7): the identity-verification handoff pattern serves card KYC (Immersve hosted KYC, S10; real issuance B11).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT093",
@@ -4667,7 +4762,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Lead correction (v2-plan §7): retained amount + fee lines already exist in the Aurora/QR deposit and swap tickets."
+      "note": "Lead correction (v2-plan §7): retained amount + fee lines already exist in the Aurora/QR deposit and swap tickets.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT094",
@@ -4709,7 +4805,8 @@
         ],
         "depends_on": "S1b.12: an exchange chooser with each exchange's withdrawal instructions; Add money has no exchange row today (Coinbase/Binance/Kraken marks are in the registry)"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT095",
@@ -4756,7 +4853,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT096",
@@ -4804,7 +4902,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT097",
@@ -4850,7 +4949,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Deviation in code, not approved by a decision: F32's history utility is a price alert here (the bell opens this market's alert editor; apps/mobile/src/features/markets/MarketActions.tsx, dd08d0c). No market history destination exists. Favourite and share are built."
+      "note": "Deviation in code, not approved by a decision: F32's history utility is a price alert here (the bell opens this market's alert editor; apps/mobile/src/features/markets/MarketActions.tsx, dd08d0c). No market history destination exists. Favourite and share are built.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT098",
@@ -4901,7 +5001,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Holders = indexed leveraged positions of opted-in handles, never ownership."
+      "note": "Holders = indexed leveraged positions of opted-in handles, never ownership.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT099",
@@ -4948,7 +5049,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT100",
@@ -4995,7 +5097,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT101",
@@ -5039,7 +5142,8 @@
         ],
         "depends_on": "S1b.8 follow-up: the C12 eligibility checkbox sheet before a Mainnet ticket (D-023/D-165); today a geo block only shows as a commit reason (GEO_BLOCKED via useGeo)"
       },
-      "note": "Mainnet eligibility gate (D-023)."
+      "note": "Mainnet eligibility gate (D-023).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT102",
@@ -5088,7 +5192,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT103",
@@ -5136,7 +5241,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT104",
@@ -5183,7 +5289,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT105",
@@ -5228,7 +5335,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT106",
@@ -5274,7 +5382,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT107",
@@ -5321,7 +5430,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT108",
@@ -5370,7 +5480,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "500 ms hold pill replaces the slider (D-177)."
+      "note": "500 ms hold pill replaces the slider (D-177).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT109",
@@ -5418,7 +5529,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT110",
@@ -5470,7 +5582,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Also from own position detail (J5); Perpl TP/SL B10."
+      "note": "Also from own position detail (J5); Perpl TP/SL B10.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT111",
@@ -5519,7 +5632,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT112",
@@ -5568,7 +5682,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT113",
@@ -5612,7 +5727,8 @@
         "remaining": [],
         "excluded_by": "D-195"
       },
-      "note": null
+      "note": null,
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "FT114",
@@ -5664,7 +5780,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "Real passkey ceremonies; no reference capture (G01)."
+      "note": "Real passkey ceremonies; no reference capture (G01).",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT115",
@@ -5722,7 +5839,8 @@
         ],
         "blocked_by": "B1 (unblocks journey by journey; trade, TP/SL, close, LP deposit, withdraw and send are recorded)"
       },
-      "note": "Unblocks journey by journey as our own finalized lifecycles are recorded in acceptance.md."
+      "note": "Unblocks journey by journey as our own finalized lifecycles are recorded in acceptance.md.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "FT116",
@@ -5776,7 +5894,8 @@
           "web layout (S11b)"
         ]
       },
-      "note": "A01/A02 additions: reduced motion/transparency, VoiceOver, 44 pt targets, restrained haptics."
+      "note": "A01/A02 additions: reduced motion/transparency, VoiceOver, 44 pt targets, restrained haptics.",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C01",
@@ -5831,7 +5950,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C02",
@@ -5884,7 +6004,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C03",
@@ -5947,7 +6068,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C04",
@@ -6006,7 +6128,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C05",
@@ -6050,7 +6173,8 @@
         "remaining": [],
         "excluded_by": "D-195"
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "C06",
@@ -6102,7 +6226,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C07",
@@ -6161,7 +6286,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C08",
@@ -6211,7 +6337,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C09",
@@ -6266,7 +6393,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C10",
@@ -6321,7 +6449,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C11",
@@ -6368,7 +6497,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C12",
@@ -6423,7 +6553,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C13",
@@ -6472,7 +6603,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C14",
@@ -6520,7 +6652,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C15",
@@ -6569,7 +6702,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C16",
@@ -6621,7 +6755,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C17",
@@ -6668,7 +6803,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C18",
@@ -6716,7 +6852,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C19",
@@ -6763,7 +6900,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C20",
@@ -6815,7 +6953,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C21",
@@ -6864,7 +7003,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C22",
@@ -6918,7 +7058,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C23",
@@ -6971,7 +7112,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C24",
@@ -7015,7 +7157,8 @@
         "remaining": [],
         "excluded_by": "D-194"
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "C25",
@@ -7067,7 +7210,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C26",
@@ -7118,7 +7262,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C27",
@@ -7163,7 +7308,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C28",
@@ -7215,7 +7361,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C29",
@@ -7277,7 +7424,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C30",
@@ -7329,7 +7477,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C31",
@@ -7379,7 +7528,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C32",
@@ -7433,7 +7583,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C33",
@@ -7490,7 +7641,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C34",
@@ -7538,7 +7690,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C35",
@@ -7587,7 +7740,8 @@
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C36",
@@ -7638,7 +7792,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])"
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C37",
@@ -7695,7 +7850,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C38",
@@ -7743,7 +7899,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C39",
@@ -7797,7 +7954,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C40",
@@ -7844,7 +8002,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C41",
@@ -7890,7 +8049,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C42",
@@ -7946,7 +8106,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C43",
@@ -7995,7 +8156,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "C44",
@@ -8045,7 +8207,8 @@
           "web layout (S11b)"
         ]
       },
-      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)"
+      "sourcing": "Reference evidence first; 21st.dev first among sources that preserve it; record port/reconstruction in apps/mobile/.21st/design.json (D-033 as amended by D-168)",
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M01",
@@ -8089,7 +8252,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M02",
@@ -8132,7 +8296,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M03",
@@ -8176,7 +8341,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M04",
@@ -8219,7 +8385,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M05",
@@ -8261,7 +8428,8 @@
           "once built: the S1b.17 fidelity row, a device run, Android, VoiceOver, web layout (S11b)"
         ],
         "depends_on": "ambient 6–10 s loops for the hero and the pending-passkey art over brand/art/onboarding/layers.json (S1b.13); no loop exists in the code: the story only travels with the scene position"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M06",
@@ -8305,7 +8473,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M07",
@@ -8348,7 +8517,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M08",
@@ -8391,7 +8561,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M09",
@@ -8435,7 +8606,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M10",
@@ -8479,7 +8651,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M11",
@@ -8522,7 +8695,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M12",
@@ -8566,7 +8740,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M13",
@@ -8608,7 +8783,8 @@
           "once built: the S1b.17 fidelity row, a device run, Android, VoiceOver, web layout (S11b)"
         ],
         "depends_on": "S1b.8 follow-up: the C12 eligibility checkbox sheet before a Mainnet ticket (D-023/D-165); today a geo block only shows as a commit reason (GEO_BLOCKED via useGeo)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M14",
@@ -8651,7 +8827,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M15",
@@ -8695,7 +8872,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M16",
@@ -8737,7 +8915,8 @@
           "once built: the S1b.17 fidelity row, a device run, Android, VoiceOver, web layout (S11b)"
         ],
         "depends_on": "S9 Aurora intents: other-chain routes are reserved pages today (app/fund/qr/[family].tsx for non-Monad families, app/fund/wallet.tsx, app/fund/deposit/[id].tsx are ShellScreens); AURORA_API_KEY not set (STATUS env readiness)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M17",
@@ -8782,7 +8961,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "M18",
@@ -8825,7 +9005,8 @@
           "a spoken VoiceOver pass",
           "web layout (S11b)"
         ]
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG01",
@@ -8874,7 +9055,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired (S1b.2); mono silhouette gap"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG02",
@@ -8922,7 +9104,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired; white diamond gap"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG03",
@@ -8971,7 +9154,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired; mono gap; licence flag (combining with badges needs permission)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG04",
@@ -9018,7 +9202,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired; Symbol vector gap; licence flag (Circle)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG05",
@@ -9071,7 +9256,8 @@
         ],
         "blocked_by": "B12 (first-party art) + a configured USDT route (S9)",
         "prior_status": "not acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG06",
@@ -9117,7 +9303,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG07",
@@ -9163,7 +9350,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "Perpl PNG kit + HYPE acquired; Perpl colour vector gap"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG08",
@@ -9215,7 +9403,8 @@
         ],
         "blocked_by": "B12 (first-party provenance) + S9 source-chain rows; the art itself is in the registry since c731503",
         "prior_status": "not attempted yet"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG09",
@@ -9261,7 +9450,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired; licence flag (written permission)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG10",
@@ -9307,7 +9497,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG11",
@@ -9358,7 +9549,8 @@
         ],
         "blocked_by": "B12 (first-party provenance) + S9 source-chain rows; the art itself is in the registry since c731503",
         "prior_status": "not attempted yet"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG12",
@@ -9409,7 +9601,8 @@
         ],
         "blocked_by": "B12 (first-party provenance) + S9 source-chain rows; the art itself is in the registry since c731503",
         "prior_status": "not attempted yet"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG13",
@@ -9455,7 +9648,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "acquired; mono logomark gap"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG14",
@@ -9503,7 +9697,8 @@
         ],
         "blocked_by": "B12 + a configured route that reaches the chain",
         "prior_status": "route support unverified; art not acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG15",
@@ -9551,7 +9746,8 @@
         ],
         "blocked_by": "B12 + a configured route that reaches the chain",
         "prior_status": "route support unverified; art not acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG16",
@@ -9600,7 +9796,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "pattern adopted; company art per listed equity is B12"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG17",
@@ -9649,7 +9846,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "pattern adopted"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG18",
@@ -9700,7 +9898,8 @@
         ],
         "blocked_by": "B12 (company art) + B2 (execution)",
         "prior_status": "not acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG19",
@@ -9746,7 +9945,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "rule enforced in registry"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG20",
@@ -9795,7 +9995,8 @@
           "no screenshot stored with the acceptance row: capture the mark at its §5.12 size in its journey"
         ],
         "prior_status": "lands with J11"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG21",
@@ -9844,7 +10045,8 @@
         ],
         "depends_on": "a token status badge backed by token-list membership on TokenRow / TokenDetail (J11); none is drawn today",
         "prior_status": "pattern adopted"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG22",
@@ -9892,7 +10094,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])",
         "prior_status": "not acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG23",
@@ -9938,7 +10141,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "site icon acquired; press kit is wordmark-only"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG24",
@@ -9984,7 +10188,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "site-hosted first-party file (press kit gated)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG25",
@@ -10027,7 +10232,8 @@
         "remaining": [],
         "excluded_by": "D-029",
         "prior_status": "binding exclusion"
-      }
+      },
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "LG26",
@@ -10070,7 +10276,8 @@
         "remaining": [],
         "excluded_by": "D-029",
         "prior_status": "binding exclusion"
-      }
+      },
+      "rebuild_acceptance": "excluded"
     },
     {
       "id": "LG27",
@@ -10112,7 +10319,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])",
         "prior_status": "not acquired"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG28",
@@ -10161,7 +10369,8 @@
         ],
         "blocked_by": "B11 (S10 provider evidence)",
         "prior_status": "pending S10 provider evidence"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG29",
@@ -10203,7 +10412,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "brand/ seal kept, recoloured via gold ramp"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG30",
@@ -10244,7 +10454,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "B12 art open"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG31",
@@ -10287,7 +10498,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "brand/"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG32",
@@ -10332,7 +10544,8 @@
           "B12: the user's design review of the authored art is still open"
         ],
         "prior_status": "avatars not authored yet (B12)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG33",
@@ -10380,7 +10593,8 @@
         ],
         "blocked_by": "B5 (A defined programme (eligibility, accounting, payout))",
         "prior_status": "reserved"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG34",
@@ -10428,7 +10642,8 @@
         ],
         "blocked_by": "B6 (Real sources/services and moderation)",
         "prior_status": "reserved"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG35",
@@ -10470,7 +10685,8 @@
         ],
         "blocked_by": "B3 (User decision + provider (Coinbase Onramp / Transak / MoonPay with Monad USDC, Q-018) + D-041 change + [OK?])",
         "prior_status": "reserved"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG36",
@@ -10515,7 +10731,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "built (S1b.1)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG37",
@@ -10555,7 +10772,8 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "lucide-react-native (S1b.6)"
-      }
+      },
+      "rebuild_acceptance": "pending"
     },
     {
       "id": "LG38",
@@ -10594,7 +10812,15 @@
           "its journey screenshot at the §5.12 size, recorded in acceptance.md"
         ],
         "prior_status": "first pass in brand/art (S1b.3); B12 review open"
-      }
+      },
+      "rebuild_acceptance": "pending"
     }
-  ]
+  ],
+  "rebuild_acceptance": {
+    "contract": "docs/plan/mobile-rebuild-2026-10-02.md",
+    "baseline_revision": "6e2be72",
+    "installed_recording_build": "unverified",
+    "status": "pending",
+    "note": "Historical acceptance is preserved; every retained feature requires acceptance at the rebuilt revision."
+  }
 }

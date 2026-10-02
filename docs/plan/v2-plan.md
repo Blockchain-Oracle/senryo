@@ -1,5 +1,7 @@
 # Senryo v2 — fix the practice loop, runtime Practice↔Mainnet, real identity, the reference-led redesign, social, full market breadth, mainnet
 
+> **2 October authority update (D-234–236):** The user approved implementation of the [reference-led mobile rebuild](mobile-rebuild-2026-10-02.md). Its complete-journey hierarchy, total portfolio, native slide confirmation and original quiet sounds supersede conflicting remediation/design details below. The broader roadmap and exclusions remain. Historical checks are revision-specific; rebuilt phone acceptance is pending.
+
 > For reviewers: this plan continues the existing plan system (`docs/plan/00-plan.md`, stage files, `decisions.md`). It does not
 > restart it. Everything below either fixes what the phone test found, or pulls the user's reference study
 > (`docs/design/reference-study-2026-09-30/`) in as the new design authority. Each piece of work has a home in a stage file
