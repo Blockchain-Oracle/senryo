@@ -1,10 +1,10 @@
-import type { SpotToken } from "@senryo/config";
+import { MAINNET_CHAIN_ID, type SpotToken } from "@senryo/config";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Skeleton } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
-import { tokenRoute } from "~/lib/constants/routes";
+import { assetRoute } from "~/lib/constants/routes";
 import { arrow, signedPct, usd } from "~/lib/money";
 import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { tokenAmount, tokenPrice } from "./format";
@@ -40,7 +40,7 @@ export function TokenRow({
     <Pressable
       onPress={() => {
         fire("tick");
-        router.push(tokenRoute(token.symbol));
+        router.push(assetRoute(MAINNET_CHAIN_ID, token.address));
       }}
       accessibilityRole="button"
       accessibilityLabel={`${token.name}, ${token.symbol}${priceText ? `, ${priceText}` : ""}${change24hBps === undefined ? "" : `, ${change24hBps >= 0n ? "up" : "down"} ${signedPct(change24hBps)} in 24 hours`}${held ? `, you hold ${detail}` : ""}`}
