@@ -5,11 +5,11 @@
  */
 import { useMarkets } from "@senryo/query";
 import { router } from "expo-router";
-import { X } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useMMKVBoolean } from "react-native-mmkv";
 import Svg, { Path } from "react-native-svg";
 import { Panel } from "~/components/kit/Surface";
+import { X } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";

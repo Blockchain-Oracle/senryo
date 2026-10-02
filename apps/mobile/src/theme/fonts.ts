@@ -1,4 +1,5 @@
 import { useFonts } from "expo-font";
+import { Platform } from "react-native";
 
 /**
  * Living Lacquer faces (D-192), loaded at runtime through expo-font from the vendored files in assets/fonts. Inter
@@ -16,6 +17,10 @@ const FACES = {
   NotoSansJP_500Medium: require("../../assets/fonts/NotoSansJP-Medium-subset.ttf"),
   NotoSansJP_600SemiBold: require("../../assets/fonts/NotoSansJP-SemiBold-subset.ttf"),
   NotoSansJP_700Bold: require("../../assets/fonts/NotoSansJP-Bold-subset.ttf"),
+  // Android utility icons draw from this face (components/kit/symbols.tsx); iOS uses SF Symbols, so it never loads there.
+  ...(Platform.OS === "android"
+    ? { MaterialSymbols_400Regular: require("../../assets/fonts/MaterialSymbols-Regular.ttf") }
+    : {}),
 };
 
 /** The chart's axis face (Skia loads its own copy of the file); axis figures are drawn with Inter. */

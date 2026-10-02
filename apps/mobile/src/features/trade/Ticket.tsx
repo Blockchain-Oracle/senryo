@@ -1,10 +1,10 @@
 import { DECIMALS, ONE_USD6 } from "@senryo/core";
 import { useCandles } from "@senryo/query";
-import { ChartCandlestick, Grid3x3, Info, SlidersHorizontal } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { CandleChart } from "~/components/charts/CandleChart";
 import { EmptyState, ReadingView, Skeleton } from "~/components/kit/states";
+import { ChartCandlestick, Grid3x3, Info, SlidersHorizontal } from "~/components/kit/symbols";
 import { Keypad } from "~/components/trade/Keypad";
 import { LeverageRuler } from "~/components/trade/LeverageRuler";
 import { Preset } from "~/components/trade/Preset";

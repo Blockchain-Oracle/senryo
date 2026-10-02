@@ -6,10 +6,10 @@
 import type { Post } from "@senryo/api-client";
 import { useLikeToggle } from "@senryo/query";
 import { router } from "expo-router";
-import { CornerDownRight, Heart } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
+import { CornerDownRight, Heart } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";

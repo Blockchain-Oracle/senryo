@@ -1,9 +1,9 @@
 import { WEB_ORIGIN } from "@senryo/config";
 import { router } from "expo-router";
-import { Settings, Share2 } from "lucide-react-native";
 import { Share, StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
+import { Settings, Share2 } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
 import { ActivityButton, UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";

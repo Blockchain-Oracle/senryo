@@ -5,9 +5,9 @@
  */
 import type { FeedScope } from "@senryo/api-client";
 import { useFeed, useFeedActivity } from "@senryo/query";
-import { ArrowUp } from "lucide-react-native";
 import { Pressable, StyleSheet, Text } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { ArrowUp } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { BUTTON, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";

@@ -1,4 +1,3 @@
-import { ChevronLeft } from "lucide-react-native";
 import { type ReactNode, useEffect, useState } from "react";
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -11,6 +10,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { SurfaceLevel } from "~/components/kit/Surface";
+import { ChevronLeft } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { EASE, EASE_SHEET, ELEVATION, RADIUS, SHEET_SHAPE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 

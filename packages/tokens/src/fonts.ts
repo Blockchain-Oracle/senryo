@@ -32,6 +32,27 @@ export interface FontSource {
 
 export const FONT_SOURCES: readonly FontSource[] = [
   {
+    family: "Material Symbols Outlined (Android utility icons)",
+    owner: "Google LLC",
+    provenance: "first-party",
+    pageUrl: "https://fonts.google.com/icons",
+    source: {
+      url: "https://unpkg.com/@expo-google-fonts/material-symbols@0.4.48/400Regular/MaterialSymbols_400Regular.ttf",
+      sha256: "8f57384eaa4ecdb719ca491147d53505fb48dcc44534c61355316c2409660fef",
+    },
+    licence:
+      "Apache License 2.0 (Google Material Symbols; LICENSE_FONT in @expo-google-fonts/material-symbols 0.4.48, the same file expo-symbols 57 loads on Android). Vendored so the glyphs render on first frame instead of after a per-mount load.",
+    licenceFiles: ["apps/mobile/assets/fonts/LICENSE-MaterialSymbols.txt"],
+    retrieved: "2026-10-02",
+    files: [
+      {
+        path: "apps/mobile/assets/fonts/MaterialSymbols-Regular.ttf",
+        sha256: "8f57384eaa4ecdb719ca491147d53505fb48dcc44534c61355316c2409660fef",
+        from: "400Regular/MaterialSymbols_400Regular.ttf",
+      },
+    ],
+  },
+  {
     family: "Inter / Inter Display",
     owner: "Rasmus Andersson / The Inter Project Authors",
     provenance: "first-party",

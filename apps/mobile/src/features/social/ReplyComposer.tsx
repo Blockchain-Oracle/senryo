@@ -7,11 +7,11 @@
 import { POST_MAX_CHARS, type Post } from "@senryo/api-client";
 import { useCreatePost } from "@senryo/query";
 import { type Href, router } from "expo-router";
-import { ArrowUp } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
+import { ArrowUp } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";

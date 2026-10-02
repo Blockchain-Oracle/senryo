@@ -6,6 +6,9 @@
  */
 import { shortAddress } from "@senryo/core";
 import { type Href, router } from "expo-router";
+import { StyleSheet, View } from "react-native";
+import { ListRow } from "~/components/kit/ListRow";
+import { Panel, useGroupFill } from "~/components/kit/Surface";
 import {
   ArrowLeftRight,
   Bell,
@@ -20,10 +23,7 @@ import {
   Signal,
   SlidersHorizontal,
   Trash,
-} from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
-import { ListRow } from "~/components/kit/ListRow";
-import { Panel, useGroupFill } from "~/components/kit/Surface";
+} from "~/components/kit/symbols";
 import { UTILITY_ICON } from "~/components/shell/Utilities";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";

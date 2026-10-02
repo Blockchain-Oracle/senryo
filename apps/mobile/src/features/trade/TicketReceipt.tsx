@@ -1,12 +1,12 @@
 import { explorerTxUrl, NETWORKS } from "@senryo/config";
 import { DECIMALS, formatUnits } from "@senryo/core";
 import type { OperationRecord, TraceEvent } from "@senryo/query";
-import { CircleCheck } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Linking, Share, StyleSheet, Switch, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { KeyValue, Panel } from "~/components/kit/Surface";
+import { CircleCheck } from "~/components/kit/symbols";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { shortAddress } from "~/lib/format";
 import { price18, priceDecimalsOf, usd } from "~/lib/money";

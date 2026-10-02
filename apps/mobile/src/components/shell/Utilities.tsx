@@ -1,8 +1,8 @@
 import { router } from "expo-router";
-import { Bell, History } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
+import { Bell, History } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";

@@ -5,8 +5,9 @@
  * and its rules (`applyKey`, unchanged: two decimals, a digit cap, no leading zeros). Distinct from the native
  * keyboard the TP/SL child uses (03-fomo "two input systems").
  */
-import { Delete } from "lucide-react-native";
+
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Delete } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { CONTROL_FONT_SCALE, NUMERIC_VARIANT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 

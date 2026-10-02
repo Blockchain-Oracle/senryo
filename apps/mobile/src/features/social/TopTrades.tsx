@@ -6,10 +6,10 @@
 import type { TopTrade } from "@senryo/api-client";
 import { useTopTrades } from "@senryo/query";
 import { type Href, router } from "expo-router";
-import { Pin } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Panel } from "~/components/kit/Surface";
+import { Pin } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { watchRoute } from "~/lib/constants/routes";
 import { signedUsd } from "~/lib/money";

@@ -1,10 +1,10 @@
 import { explorerTxUrl } from "@senryo/config";
 import { collateralId } from "@senryo/identity";
 import type { IndexedActivity } from "@senryo/indexer-client";
-import { ArrowLeftRight, ChartCandlestick, CreditCard, Crosshair } from "lucide-react-native";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { ArrowLeftRight, ChartCandlestick, CreditCard, Crosshair } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { useNetwork } from "~/lib/network";

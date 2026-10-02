@@ -1,8 +1,8 @@
 import { engineMarket } from "@senryo/config";
 import { ids } from "@senryo/identity";
-import { X } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { X } from "~/components/kit/symbols";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { clockTime } from "~/lib/format";
 import { price18, priceDecimalsOf } from "~/lib/money";

@@ -1,8 +1,8 @@
 import { ENGINE_MARKETS } from "@senryo/config";
 import type { OperationRecord } from "@senryo/query";
-import { CircleCheck } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { KeyValue, Panel } from "~/components/kit/Surface";
+import { CircleCheck } from "~/components/kit/symbols";
 import { pct, price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import type { ReduceQuote } from "./usePosition";

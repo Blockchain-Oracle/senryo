@@ -1,9 +1,9 @@
 import { type Href, router } from "expo-router";
-import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
+import { Check } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { acknowledgeTerms } from "~/features/legal/acknowledged";
 import { SetupScreen } from "~/features/setup/SetupScreen";

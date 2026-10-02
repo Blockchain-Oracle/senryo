@@ -1,14 +1,15 @@
-import { type ComponentType, useEffect } from "react";
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
 import { CONTROL_FONT_SCALE, EASE, HAIRLINE_PX, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import type { SymbolIcon } from "./symbols";
 
 /** The selected tab's underline (F09/F32 measure 2 pt). */
 const UNDERLINE = 2;
 
 /** A glyph beside a tab's label (Lucide icons fit): it takes the label's colour. */
-export type TabIcon = ComponentType<{ size: number; color: string; strokeWidth: number }>;
+export type TabIcon = SymbolIcon;
 
 /**
  * Text tabs with a sliding underline (Fomo F09 Watchlist / Tokens / Perps, F32 Holders / Feed / About): equal cells,

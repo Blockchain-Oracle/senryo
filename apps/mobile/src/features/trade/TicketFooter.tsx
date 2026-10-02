@@ -1,8 +1,8 @@
 import { blockerCopy, DECIMALS, formatUnits } from "@senryo/core";
 import { router } from "expo-router";
-import { CirclePlus } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
+import { CirclePlus } from "~/components/kit/symbols";
 import { HoldToConfirm } from "~/components/trade/HoldToConfirm";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";

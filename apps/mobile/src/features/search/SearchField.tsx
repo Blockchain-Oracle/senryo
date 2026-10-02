@@ -1,8 +1,8 @@
 import { SEARCH_QUERY_MAX_CHARS } from "@senryo/api-client";
-import { X } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
+import { X } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { readClipboard } from "~/lib/clipboard";

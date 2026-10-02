@@ -1,5 +1,5 @@
 /** Native slide-to-confirm; legacy export preserves the existing caller safety contract. */
-import { ArrowRight } from "lucide-react-native";
+
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Alert, AppState, Pressable, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -11,6 +11,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { ArrowRight } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 

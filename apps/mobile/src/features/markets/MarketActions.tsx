@@ -1,7 +1,7 @@
 import { WEB_ORIGIN } from "@senryo/config";
 import { type Href, router } from "expo-router";
-import { BellPlus, History, Share as ShareIcon, Star } from "lucide-react-native";
 import { Platform, Share, StyleSheet, View } from "react-native";
+import { BellPlus, History, Share as ShareIcon, Star } from "~/components/kit/symbols";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { alertRoute, marketRoute } from "~/lib/constants/routes";
 import { SIZE, SPACE, useTheme } from "~/theme";

@@ -7,11 +7,11 @@
  */
 import { MAINNET, TESTNET } from "@senryo/config";
 import { ids } from "@senryo/identity";
-import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
+import { Check } from "~/components/kit/symbols";
 import { SheetRow } from "~/components/sheet/SheetRow";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";

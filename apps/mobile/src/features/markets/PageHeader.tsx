@@ -1,8 +1,8 @@
 import { router } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ChevronLeft } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";

@@ -1,9 +1,9 @@
 import { ids } from "@senryo/identity";
 import { router } from "expo-router";
-import { ChevronDown } from "lucide-react-native";
 import { Pressable, StyleSheet, Text } from "react-native";
 import Animated from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { ChevronDown } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";

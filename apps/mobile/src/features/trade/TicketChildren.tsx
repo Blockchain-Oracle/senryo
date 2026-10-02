@@ -1,10 +1,10 @@
 import { DECIMALS, formatUnits } from "@senryo/core";
-import { Check, Info } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
 import { KeyValue } from "~/components/kit/Surface";
+import { Check, Info } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import type { MarketLine } from "~/features/markets/useMarketLine";

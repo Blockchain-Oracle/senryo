@@ -1,10 +1,10 @@
 import { type Href, router, useLocalSearchParams } from "expo-router";
-import { Check } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
 import { useGroupFill } from "~/components/kit/Surface";
+import { Check } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetRoute } from "~/components/sheet/SheetRoute";

@@ -5,8 +5,8 @@
  */
 import type { Post } from "@senryo/api-client";
 import { type Href, router } from "expo-router";
-import { Ellipsis } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Ellipsis } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { postActionsRoute, ROUTES, watchRoute } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";

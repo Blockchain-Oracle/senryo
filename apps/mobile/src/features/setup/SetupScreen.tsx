@@ -5,12 +5,12 @@
  * one"). Content arrives in a short stagger behind the page push.
  */
 import { ids } from "@senryo/identity";
-import { ChevronLeft } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { ChevronLeft } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
 

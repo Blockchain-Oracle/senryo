@@ -1,4 +1,3 @@
-import { X } from "lucide-react-native";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef } from "react";
 import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -11,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
+import { X } from "~/components/kit/symbols";
 import { EASE, EASE_SHEET, ELEVATION, RADIUS, SHEET_SHAPE, SIZE, SPACE, SPRING, TIMING, useTheme } from "~/theme";
 import { SHEET } from "./constants";
 

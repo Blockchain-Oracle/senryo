@@ -6,10 +6,10 @@
 import type { Address } from "@senryo/account";
 import { type ReportReason, SUPPORT_EMAIL } from "@senryo/api-client";
 import { useDeletePost, useProfile, useRelations, useRelationToggle, useReport } from "@senryo/query";
-import { Ban, Flag, Trash2, VolumeX } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button, type ButtonVariant } from "~/components/kit/Button";
+import { Ban, Flag, Trash2, VolumeX } from "~/components/kit/symbols";
 import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { SheetRow } from "~/components/sheet/SheetRow";

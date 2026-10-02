@@ -1,5 +1,4 @@
 import { BlurView } from "expo-blur";
-import { ArrowLeftRight, CirclePlus, type LucideIcon, Plus, QrCode, Send } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -13,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
+import { ArrowLeftRight, CirclePlus, type LucideIcon, Plus, QrCode, Send } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import {

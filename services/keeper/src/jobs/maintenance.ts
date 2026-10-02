@@ -79,9 +79,10 @@ export function triggerJob(ctx: KeeperContext): Job {
         const view = views.find((v) => v.marketId === order.marketId);
         if (view?.status !== "OPEN" || order.sizeDelta === 0n) continue;
         const price = view.price18;
-        const above = price >= order.triggerPrice18;
-        // Long TP fires above, long SL below; short TP below, short SL above.
-        const crossed = order.isLong === order.takeProfit ? above : !above;
+        // Same test as `TriggerOrders.executeTrigger`, touch included both ways (flow book C6): long TP and short SL
+        // fire at or above the level, long SL and short TP at or below it.
+        const upward = order.isLong === order.takeProfit;
+        const crossed = upward ? price >= order.triggerPrice18 : price <= order.triggerPrice18;
         if (!crossed) continue;
         try {
           const sent = await sendAndFinalize(

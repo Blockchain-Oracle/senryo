@@ -9,7 +9,6 @@ import { explorerAddressUrl, MAINNET, TESTNET, WEB_ORIGIN } from "@senryo/config
 import { ids } from "@senryo/identity";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
-import { ExternalLink } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Linking, Share, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
@@ -18,6 +17,7 @@ import { Button } from "~/components/kit/Button";
 import { ListRow } from "~/components/kit/ListRow";
 import { Panel } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
+import { ExternalLink } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { COPIED_MS } from "~/lib/constants/auth";

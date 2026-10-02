@@ -1,7 +1,6 @@
 import { BlurView } from "expo-blur";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { TabTrigger, type TabTriggerSlotProps, useTabTrigger } from "expo-router/ui";
-import { ChartCandlestick, CircleUserRound, CreditCard, House, type LucideIcon, UsersRound } from "lucide-react-native";
 import { forwardRef, useEffect, useRef } from "react";
 import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -13,6 +12,14 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  ChartCandlestick,
+  CircleUserRound,
+  CreditCard,
+  House,
+  type LucideIcon,
+  UsersRound,
+} from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { DOCK, dockBottom, EASE, ELEVATION, FAN, HAIRLINE_PX, RADIUS, SIZE, SPRING, TIMING, useTheme } from "~/theme";

@@ -8,12 +8,12 @@ import type { Leaderboard as Board, LeaderboardEntry, LeaderboardPeriod } from "
 import { socialKeys, useLeaderboard, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
-import { Info } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MarkCluster } from "~/components/identity/MarkCluster";
 import { ChipRow } from "~/components/kit/ChipRow";
 import { ErrorState, StaleStamp } from "~/components/kit/states";
+import { Info } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { leaderboardInfoRoute } from "~/lib/constants/routes";
 import { clockTime } from "~/lib/format";

@@ -1,7 +1,6 @@
 import { engineMarketsOn, marketPair } from "@senryo/config";
 import { ids } from "@senryo/identity";
 import { router, Stack } from "expo-router";
-import { Plus } from "lucide-react-native";
 import { type ReactNode, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -10,6 +9,7 @@ import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { SectionLabel } from "~/components/kit/Surface";
 import { LoadingState, ReadingView } from "~/components/kit/states";
+import { Plus } from "~/components/kit/symbols";
 import { Sheet } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { SheetRow } from "~/components/sheet/SheetRow";

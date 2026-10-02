@@ -1,9 +1,9 @@
 import { router } from "expo-router";
-import { Search, Star } from "lucide-react-native";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ChipRow } from "~/components/kit/ChipRow";
+import { Search, Star } from "~/components/kit/symbols";
 import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";

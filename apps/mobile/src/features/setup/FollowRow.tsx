@@ -4,10 +4,10 @@
  * one place a row carries an edge, because it marks a choice (F06). Selection is a checkbox for VoiceOver.
  */
 import type { Address } from "@senryo/account";
-import { Check } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Avatar } from "~/components/identity/Avatar";
+import { Check } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { signedUsd } from "~/lib/money";

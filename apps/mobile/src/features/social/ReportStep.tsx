@@ -3,11 +3,11 @@
  * list; a report is reviewed by a person and never acts by itself. The refusal, if any, is said under the list.
  */
 import { REPORT_REASONS, type ReportReason } from "@senryo/api-client";
-import { Check } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ListRow } from "~/components/kit/ListRow";
 import { Panel } from "~/components/kit/Surface";
+import { Check } from "~/components/kit/symbols";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
