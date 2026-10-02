@@ -253,11 +253,12 @@ export class BridgeService {
     try {
       q = await relayDepositAddress(ctx, input.recipient, this.relayKey);
     } catch (error) {
-      this.log.warn(
-        { err: errorText(error), fromChain: input.fromChain, asset: input.asset },
-        "deposit address failed",
-      );
-      return unsupported("No deposit address for this route");
+      const text = errorText(error);
+      this.log.warn({ err: text, fromChain: input.fromChain, asset: input.asset }, "deposit address failed");
+      // Relay: "Amount must be greater than 50000 for deposit address quotes" (AMOUNT_TOO_LOW) — B4's below-minimum
+      // state, named before any address is shown.
+      const low = /amount must be greater|amount_too_low/i.test(text);
+      return unsupported(low ? "Below minimum" : "No deposit address for this route");
     }
     return {
       status: "ok",

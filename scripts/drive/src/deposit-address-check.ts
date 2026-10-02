@@ -24,6 +24,8 @@ const OTHER = "0x00000000000000000000000000000000000000Aa";
 const TEN_USD6 = 10_000_000n;
 const ETH_005 = 5_000_000_000_000_000n;
 const XAUT_001 = 10_000n;
+/** 0.001 USDC: under Relay's deposit-address minimum (50,000 units on 2 Oct). */
+const TINY_USD6 = 1_000n;
 const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 /** Relay's documented open deposit address (Polygon USDC → Base), delivered in April 2026. */
 const SAMPLE_ADDRESS = "0xb353e49aa47514fb579d6ba6594c768379a96515";
@@ -130,6 +132,16 @@ const refused = [
   { label: "XAUt0 from Ethereum", fromChain: CHAIN_IDS_ELSEWHERE.ethereum, toChain: MAINNET_CHAIN_ID, asset: "XAUt0" },
   { label: "USDC from an unlisted chain", fromChain: 1_101, toChain: MAINNET_CHAIN_ID, asset: "USDC" },
 ] as const;
+const tiny = await live.api.call(bridgeDepositAddressRoute, {
+  body: {
+    fromChain: CHAIN_IDS_ELSEWHERE.base,
+    toChain: MAINNET_CHAIN_ID,
+    asset: "USDC",
+    amount: TINY_USD6,
+    recipient: ME,
+  },
+});
+check(tiny.status === "unsupported" && tiny.reason === "Below minimum", "a below-minimum amount is named first");
 for (const c of refused) {
   const r = await live.api.call(bridgeDepositAddressRoute, {
     body: {
