@@ -26,6 +26,14 @@ export type Action =
   | { kind: "delegation" }
   | { kind: "typed-data"; primaryType: string }
   | { kind: "message"; format: "prefixed" | "siwe" }
+  /** Perpl (D1): `execOrder` OpenLong/OpenShort — notional at the order's own limit price, leverage from calldata. */
+  | { kind: "perpl-open"; marketId: number; isLong: boolean; notionalUsd6: bigint; leverageHdths: bigint }
+  /** Perpl `execOrder` CloseLong/CloseShort — reduce-only by contract (`CloseOrderExceedsPosition` otherwise). */
+  | { kind: "perpl-reduce"; marketId: number }
+  /** Perpl `createAccount` / `depositCollateral`: the wallet's AUSD into its own Perpl account. */
+  | { kind: "perpl-deposit"; fn: "createAccount" | "depositCollateral"; amountUsd6: bigint }
+  /** Perpl `withdrawCollateral`: always paid to `msg.sender` (the signer) by the contract. */
+  | { kind: "perpl-withdraw"; amountUsd6: bigint }
   | { kind: "unknown"; to: Address | undefined; selector: string };
 
 /** Why a session refused to sign. `stepUp` = a fresh passkey ceremony may sign it; otherwise never in this app. */
@@ -68,6 +76,8 @@ export interface PolicyContext {
   equityUsd6(): bigint | undefined;
   /** Human label for prompts ("Gold"); falls back to "market #id". */
   marketLabel?(marketId: number): string | undefined;
+  /** Label of a Perpl market for prompts ("Bitcoin"); its ids overlap the engine's, so it has its own lookup. */
+  perplMarketLabel?(marketId: number): string | undefined;
 }
 
 /** What the session has already done (reset on every new session). */
