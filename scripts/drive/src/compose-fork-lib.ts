@@ -19,6 +19,8 @@ const SAME_TIMESTAMP = "0x0";
 const MINE_EVERY_MS = 1_500;
 /** The fork loads remote state on first touch: a cold estimate can time out, a retry finds it warm. */
 const WARM_ATTEMPTS = 6;
+const QUOTE_ATTEMPTS = 6;
+const QUOTE_RETRY_MS = 10_000;
 const HEX = 16;
 const HOLDER_GAS = "0xde0b6b3a7640000";
 
@@ -126,19 +128,23 @@ export function forkKit(FORK: string, fork: ReadClient, api: ApiClient) {
     return record;
   }
 
+  /** A live quote; an aggregator that answers "no route" for a pair it served seconds ago is asked again. */
   async function swapQuote(from: string, to: string, amount: bigint, sender: string): Promise<SwapQuoteOk> {
-    const q = await api.call(swapQuoteRoute, {
-      query: {
-        chainId: MAINNET_CHAIN_ID,
-        from: from as `0x${string}`,
-        to: to as `0x${string}`,
-        amount,
-        sender: sender as `0x${string}`,
-        slippageBps: SLIPPAGE_BPS,
-      },
-    });
-    if (q.status !== "ok") throw new Error(`no quote ${from} → ${to}: ${q.status}`);
-    return q;
+    for (let attempt = 1; ; attempt += 1) {
+      const q = await api.call(swapQuoteRoute, {
+        query: {
+          chainId: MAINNET_CHAIN_ID,
+          from: from as `0x${string}`,
+          to: to as `0x${string}`,
+          amount,
+          sender: sender as `0x${string}`,
+          slippageBps: SLIPPAGE_BPS,
+        },
+      });
+      if (q.status === "ok") return q;
+      if (attempt >= QUOTE_ATTEMPTS) throw new Error(`no quote ${from} → ${to}: ${q.status}`);
+      await new Promise((r) => setTimeout(r, QUOTE_RETRY_MS));
+    }
   }
 
   /** Keeps anvil's voted / finalized heads moving while the composed steps wait for them (stop / start). */
