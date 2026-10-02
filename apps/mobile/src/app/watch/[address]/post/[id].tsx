@@ -9,7 +9,7 @@ export default function TraderPostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
     <>
-      <Stack.Screen options={{ title: "Thesis" }} />
+      <Stack.Screen options={{ title: "Post" }} />
       <Thread id={id} />
     </>
   );
