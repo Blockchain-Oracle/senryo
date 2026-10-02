@@ -5,10 +5,12 @@ import { type Href, router } from "expo-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { EmptyState, ErrorState, LoadingState } from "~/components/kit/states";
+import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { TransactionSheet, useTransactionClose } from "~/components/sheet/TransactionSheet";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { useMarketLine } from "~/features/markets/useMarketLine";
+import { AssetPicker } from "~/features/money/AssetPicker";
 import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { useAccount } from "~/lib/account/provider";
 import { positionRoute, ROUTES } from "~/lib/constants/routes";
@@ -109,7 +111,7 @@ function TicketBody({
   const network = useNetwork();
   const account = useAccount();
   const [mode, setMode] = useState<EntryMode>("keypad");
-  const [child, setChild] = useState<TicketChild | "details" | "share" | undefined>();
+  const [child, setChild] = useState<TicketChild | "details" | "share" | "pay" | undefined>();
   const [note, setNote] = useState<string | undefined>();
   const [submitted, setOrder] = useState<SubmittedOrder | undefined>();
   const order = submitted ?? restoredOrder(t.trace.record);
@@ -232,10 +234,28 @@ function TicketBody({
               onReset={() => setNote(line.market.tickStale ? UPDATES_PAUSED : PRICE_UPDATED)}
               onConfirm={confirm}
               onDetails={() => setChild("details")}
+              onPayWith={() => setChild("pay")}
             />
           </>
         )}
       </TransactionSheet>
+      <ChildSheet
+        open={child === "pay"}
+        onClose={() => setChild(undefined)}
+        title="Pay with"
+        {...(t.pay.note ? { subtitle: t.pay.note } : {})}
+      >
+        <AssetPicker
+          assets={t.pay.assets}
+          other={t.pay.other}
+          selectedKey={t.pay.payWith?.key}
+          reasonFor={t.pay.reasonFor}
+          onPick={(a) => {
+            t.pay.choose(a.key);
+            setChild(undefined);
+          }}
+        />
+      </ChildSheet>
       <LiquidationInfo open={child === "liquidation"} onClose={() => setChild(undefined)} t={t} line={line} />
       <TpSlChild
         open={child === "tpsl"}

@@ -341,8 +341,10 @@ export async function runOperationSteps<R extends StepRun>(
   reviewedIntent: Record<string, string>,
   runStep: (step: ComposedStep, index: number, options: OperationRunOptions) => Promise<R | undefined>,
   settle: { read: ReadClient; waitForBlock?: ((target: bigint) => Promise<void>) | undefined },
+  /** Actions that follow outside these steps but belong to the operation (the ticket's TP/SL legs). */
+  alsoPlanned: readonly string[] = [],
 ): Promise<R | undefined> {
-  const plannedActions = steps.map((s) => s.action);
+  const plannedActions = [...steps.map((s) => s.action), ...alsoPlanned];
   const intent = { ...reviewedIntent, steps: stepsLine(steps) };
   let operationId: string | undefined;
   let last: R | undefined;
