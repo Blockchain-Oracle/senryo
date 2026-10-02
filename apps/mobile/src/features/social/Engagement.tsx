@@ -16,7 +16,7 @@ import { postActionsRoute, ROUTES, tradePostActionsRoute } from "~/lib/constants
 import { useNetwork } from "~/lib/network";
 import { notify } from "~/lib/notify";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { socialErrorCopy } from "./format";
+import { sameAddress, socialErrorCopy } from "./format";
 import { HEART_SIZE, LikeGlyph } from "./LikeBurst";
 import { useOpenPost } from "./navigation";
 import { postLink, shareLink } from "./share-links";
@@ -190,11 +190,15 @@ function ShareButton({ subject }: { subject: PostSubject }) {
   );
 }
 
-/** The ⋯ at a post's top-right: report / mute / block, or delete your own thesis or reply. */
+/**
+ * The ⋯ at a post's top-right: report / mute / block, or delete your own thesis or reply. Your own trade has none:
+ * it can't be deleted (it is onchain) and there is nobody to report.
+ */
 export function MoreButton({ subject }: { subject: PostSubject }) {
   const { color } = useTheme();
-  const { guest } = useSocialAccount();
+  const { guest, address } = useSocialAccount();
   const { resolve } = useResolvePost(subject);
+  if (subject.kind === "trade" && sameAddress(subject.author, address)) return null;
   const open = (id: string) =>
     router.push(
       (subject.kind === "trade"
