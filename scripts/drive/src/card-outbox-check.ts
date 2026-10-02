@@ -68,7 +68,6 @@ const AMOUNTS = {
 } as const;
 
 const usd6 = (cents: number) => BigInt(cents) * CENT;
-const centsOf = (amount: bigint) => Number(amount / CENT);
 /** "11.00" — the dollars the push title shows. */
 const shown = (cents: number) =>
   `${Math.floor(cents / CENTS_PER_DOLLAR)}.${String(cents % CENTS_PER_DOLLAR).padStart(2, "0")}`;
@@ -154,7 +153,7 @@ async function placeHold(account: string, cardToken: string, amount: bigint, mer
   await db`INSERT INTO card_auth (id, issuer, txn_token, kind, chain_id, card_token, account, amount_cents, currency,
                                   hold_usd6, hold_id, status, result, reason, deadline_at, request)
            VALUES (${randomUUID()}, ${ISSUER_LABEL}, ${txnToken}, 'AUTH', ${CHAIN}, ${cardToken}, ${a},
-                   ${centsOf(amount)}, 'USD', ${amount}, ${holdId}, 'APPROVED', 'APPROVED', 'hold finalized', now(),
+                   ${amount / CENT}, 'USD', ${amount}, ${holdId}, 'APPROVED', 'APPROVED', 'hold finalized', now(),
                    ${db.json({ merchant: { descriptor: merchant } } as never)})`;
   return { holdId, txnToken };
 }
