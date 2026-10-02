@@ -32,9 +32,10 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 
 ## Areas (each = its flow-book cards + §0.9 surfaces)
 - [x] Home: Total hero, Positions · Assets · Earn tabs (bb76518) — Assets moves to any-asset holdings in `claude/ui-money`
-- [ ] Money (B1–B16) — `claude/ui-money` (agent)
-- [ ] Identity / profile / settings / mode — `claude/ui-identity` (agent)
-- [ ] Card + Notifications — `claude/ui-card` (agent) · Social — `claude/ui-social` (agent)
+- [ ] Money (B1–B16) — `claude/ui-money` (agent, in progress)
+- [x] Identity / profile / settings / mode — built + merged (f563b2a): defects 6, 7, 10, 11 (blocked/muted); terms gate (`useTermsGate`) wired on Home + fan (1f25dd9), trading/money call sites pending their merges
+- [x] Card + Notifications — built + merged (02729d3, glyphs da7f655, details reveal dde70bc) · Social — built + merged (d718d25: trade-post likes/replies migration 0011, standings route, search)
+- [ ] Card service outbox fixes (capture/refund retry idempotency, per-chain stuck reset, over-capture push) — `claude/card-outbox` (agent)
 - [ ] Trading (C1–C12) + Pool (D1–D2) — `claude/ui-trading` (agent)
 - [ ] Welcome + setup (A1–A3) smoothness and sounds
 
