@@ -116,6 +116,12 @@ export function useMoneyOperation(traceKey: string) {
           },
           // The fee swap moves the dollar asset first: the act's own source check runs before the fee step only.
           revalidate: (index) => op.revalidate(index - plan.steps.length < 0 ? 0 : index - plan.steps.length),
+          // A swap always asks for the passkey (rule 11): an operation that was in session scope steps up for it.
+          stepUp: op.stepUp ?? {
+            title: "Network fee",
+            detail: `${formatUnits(plan.amountIn, plan.source.decimals, 2)} ${plan.source.symbol} is swapped to MON for the network fee first. Swaps always ask for a fresh passkey check.`,
+            confirmLabel: "Confirm with passkey",
+          },
         },
       };
     },

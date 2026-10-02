@@ -4,7 +4,7 @@
  * in spec order; and the send — `increase` through `@senryo/chain` with the scoped signer (the session policy sees
  * market room + equity, so an in-scope open signs without a step-up; D-037 Face ID is the policy's call).
  */
-import { authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
+import { authFailureCopy, classifyAuthError, isSilent, SESSION_MOVE_CAP_USD6 } from "@senryo/account";
 import { pinRead, readAccountSnapshot, readMarketRisk, readPositions, type Sender } from "@senryo/chain";
 import { MAINNET_CHAIN_ID, positionCount } from "@senryo/config";
 import {
@@ -149,8 +149,9 @@ export function useTicket(market: LiveMarket) {
     equityUsd6: snapshot?.equityInit,
     roomUsd6: capHeadroomUsd6(market.risk, market.book, market.pv, isLong),
   });
-  // A swap leg always asks for the passkey (rule 11); it signs every leg.
-  const confirmWith = pay.swapping ? "passkey" : sessionLevel;
+  // A swap leg always asks for the passkey (rule 11); so does a move whose approval is over the session's move cap.
+  // Either way one passkey signs every leg.
+  const confirmWith = pay.swapping || pay.incomingUsd6 > SESSION_MOVE_CAP_USD6 ? "passkey" : sessionLevel;
   const fees = useMoneyOperation(key);
   const ensureGas = useEnsureGas();
   const protection = usePlannedTriggers(planKey(env.chainId, address, market.marketId));
