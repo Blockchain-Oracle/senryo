@@ -8,7 +8,8 @@
       "namespace": "android_app",
       "package_name": "xyz.senryo.app",
       "sha256_cert_fingerprints": [
-        "E4:89:29:5E:DF:D5:56:E0:52:65:5C:16:AB:81:FE:FE:60:56:22:0E:2A:2A:D0:F4:24:24:B9:1F:D1:8E:B1:A5"
+        "E4:89:29:5E:DF:D5:56:E0:52:65:5C:16:AB:81:FE:FE:60:56:22:0E:2A:2A:D0:F4:24:24:B9:1F:D1:8E:B1:A5",
+        "8E:E1:96:5B:E6:FC:72:7C:66:3B:7A:49:B0:8E:80:50:DD:78:1C:65:5B:A4:D6:95:62:43:DE:5F:2E:F8:5D:D4"
       ]
     }
   }
