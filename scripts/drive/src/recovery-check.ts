@@ -3,7 +3,7 @@
  * journaled tx and never broadcasts, and the kv journal cap only ever drops settled entries.
  * Broadcasts go through the real sender (`sendTx`, the only write path) and recovery reads the entry IT journaled.
  *  1. a sent success → settled `finalized`;  2. a sent revert (fixed gas, no simulation) → settled `reverted`
- *  3. signed, never broadcast: young → `pending`; old → `abandoned (dropped)`, still unknown to the chain, nonce unused
+ *  3. signed, never broadcast: young → `pending`; old → `pending`, still unknown to the chain, nonce unused
  *  4. its nonce later used by another tx → `abandoned (nonce-used)`
  *  5. kvJournal at its cap keeps every non-terminal entry and drops the oldest settled ones
  * Run: anvil --fork-url https://testnet-rpc.monad.xyz --port 18765 --block-time 0.5 --mixed-mining --slots-in-an-epoch 1
@@ -134,7 +134,7 @@ const lost = await signedOnly(n0 + 2);
 const young = await reconcileEntry(read, lost);
 record("unbroadcast + young → pending", young.kind === "pending");
 const old = await reconcileEntry(read, { ...lost, updatedAt: Date.now() - JOURNAL_ABANDON_AFTER_MS - 1 });
-record("unbroadcast + old → abandoned (dropped)", old.kind === "abandoned" && old.reason === "dropped");
+record("unbroadcast + old → pending (age is not evidence)", old.kind === "pending");
 const nonceAfter = await read.getTransactionCount({ address: key.address, blockTag: "latest" });
 record("never broadcast by recovery", !(await known(lost.hash)) && nonceAfter === n0 + 2, `nonce ${nonceAfter}`);
 

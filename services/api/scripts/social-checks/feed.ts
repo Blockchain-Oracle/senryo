@@ -140,6 +140,22 @@ export async function feedChecks(h: Harness, checks: Checks): Promise<void> {
     seen.length === withThesis.length && new Set(seen).size === seen.length,
   );
 
+  const actorPage = await viewer.api.call(feedRoute, {
+    query: { chainId: TESTNET_CHAIN_ID, scope: "global", actor: s.address, limit: FEED_FIX.page },
+  });
+  checks.record(
+    "profile feed: actor is filtered before pagination",
+    actorPage.items.length > 0 && actorPage.items.every((item) => item.actor.address === s.address),
+  );
+  const privateActor = await h.anon.call(feedRoute, {
+    query: { chainId: TESTNET_CHAIN_ID, scope: "global", actor: unlisted.address },
+  });
+  checks.record("profile feed: actor does not bypass listing/privacy", privateActor.items.length === 0);
+  const actorMainnet = await h.anon.call(feedRoute, {
+    query: { chainId: MAINNET_CHAIN_ID, scope: "global", actor: s.address },
+  });
+  checks.record("profile feed: actor remains network separated", actorMainnet.items.length === 0);
+
   await waitPast(start);
   await s.api.call(profilePutRoute, { body: { listedMainnet: true, publicTradesMainnet: true } });
   const lateMainnet = fill(h, { user: s, chainId: MAINNET_CHAIN_ID, at: await sharingStart(h, s, MAINNET_CHAIN_ID) });

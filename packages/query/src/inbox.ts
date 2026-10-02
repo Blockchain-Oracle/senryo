@@ -5,7 +5,7 @@
  * crediting states.
  */
 import { inboxWatchRoute } from "@senryo/api-client";
-import { readContract, readInboxBalances } from "@senryo/chain";
+import { pinRead, readContract, readInboxBalances } from "@senryo/chain";
 import type { Address } from "@senryo/core";
 import { useQuery } from "@tanstack/react-query";
 import { INBOX_REFETCH_MS, INBOX_WATCH_REFRESH_MS } from "./constants.ts";
@@ -17,6 +17,7 @@ export interface InboxState {
   inbox: Address;
   /** AUSD + USDC (usd6) sitting in the inbox, not yet credited. */
   waitingUsd6: bigint;
+  blockNumber: bigint;
 }
 
 export function useInbox(user: Address | undefined) {
@@ -25,11 +26,13 @@ export function useInbox(user: Address | undefined) {
     queryKey: keys.inbox(env.chainId, user ?? "0x"),
     queryFn: async (): Promise<InboxState> => {
       if (!user) throw new Error("no account");
-      const inbox = await readContract(env.chainId, "InboxFactory", env.read).read.inboxOf([user]);
-      const balances = await readInboxBalances(env.read, env.chainId, [inbox]);
+      const { number: blockNumber } = await env.read.getBlock({ blockTag: "finalized" });
+      const read = pinRead(env.read, blockNumber);
+      const inbox = await readContract(env.chainId, "InboxFactory", read).read.inboxOf([user]);
+      const balances = await readInboxBalances(read, env.chainId, [inbox]);
       const waitingUsd6 = balances.get(inbox);
       if (waitingUsd6 === undefined) throw new Error("inbox balance unavailable");
-      return { inbox, waitingUsd6 };
+      return { inbox, waitingUsd6, blockNumber };
     },
     enabled: user !== undefined,
     refetchInterval: INBOX_REFETCH_MS,

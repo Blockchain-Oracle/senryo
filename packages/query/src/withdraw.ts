@@ -36,6 +36,9 @@ export function withdrawRequest(
     "withdraw",
     [collateralTokenOf(chainId, symbol), amountUsd6, to],
     "withdraw",
-    { gasCap: positionGasLimit("withdraw", positions), meta: { kind: "withdraw" } },
+    {
+      gasCap: positionGasLimit("withdraw", positions),
+      meta: { kind: "withdraw", amount: amountUsd6.toString(), symbol, recipient: to, source: "trading" },
+    },
   );
 }

@@ -8,7 +8,7 @@
  */
 import { createReadClient } from "@senryo/chain";
 import { createIndexerClient, graphqlEndpoint } from "@senryo/indexer-client";
-import { QueryEnvProvider } from "@senryo/query";
+import { configureOperationStorage, QueryEnvProvider } from "@senryo/query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { api } from "@/lib/account/api";
@@ -17,6 +17,12 @@ import { QUERY_RETRIES, QUERY_STALE_MS } from "@/lib/constants/query";
 import { ENV } from "@/lib/env";
 
 export function DeskDataProvider({ children }: { children: ReactNode }) {
+  if (typeof window !== "undefined")
+    configureOperationStorage({
+      get: (key) => localStorage.getItem(key) ?? undefined,
+      set: (key, value) => localStorage.setItem(key, value),
+      keys: () => Object.keys(localStorage),
+    });
   const [client] = useState(
     () => new QueryClient({ defaultOptions: { queries: { staleTime: QUERY_STALE_MS, retry: QUERY_RETRIES } } }),
   );

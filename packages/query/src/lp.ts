@@ -7,7 +7,9 @@ import {
   CONTRACT_ABIS,
   contractCall,
   externalCall,
+  isDeployed,
   type LpSnapshot,
+  pinRead,
   poolTokenOf,
   readLpVault,
   type TxRequest,
@@ -19,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ACCOUNT_REFETCH_MS, CANDLES_REFETCH_MS } from "./constants.ts";
 import { useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
+import { ownLpRequests } from "./lp-requests.ts";
 import { readingOf } from "./reading.ts";
 
 /** APR window: the last 7 full days of pool history. */
@@ -30,8 +33,23 @@ export function useLpVault(address: Address | undefined): Reading<LpSnapshot> {
   const env = useQueryEnv();
   const query = useQuery({
     queryKey: [...keys.account(env.chainId, address ?? "0x"), "lp"] as const,
-    queryFn: () => readLpVault(env.read, env.chainId, address ?? "0x"),
-    enabled: address !== undefined,
+    queryFn: async () => {
+      const finalized = await env.read.getBlock({ blockTag: "finalized" });
+      const requests = await ownLpRequests(env.indexer, env.chainId, address ?? "0x", finalized.number);
+      const at =
+        requests.indexedBlock !== undefined && requests.indexedBlock > 0n && requests.indexedBlock < finalized.number
+          ? requests.indexedBlock
+          : finalized.number;
+      return readLpVault(
+        pinRead(env.read, at),
+        env.chainId,
+        address ?? "0x",
+        "finalized",
+        requests.ids,
+        requests.complete || (requests.indexedBlock !== undefined && requests.indexedBlock >= at),
+      );
+    },
+    enabled: address !== undefined && isDeployed(env.chainId, "LpVault"),
     refetchInterval: ACCOUNT_REFETCH_MS,
     staleTime: ACCOUNT_REFETCH_MS,
   });

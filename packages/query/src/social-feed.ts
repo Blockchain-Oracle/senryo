@@ -30,23 +30,28 @@ export const SEARCH_STALE_MS = 30_000;
 export const SEARCH_MIN_CHARS = 2;
 
 /** The feed of the active network, newest first, page by page. `market` = the market detail Feed tab. */
-export function useFeed(scope: FeedScope = "global", market?: string) {
+export function useFeed(scope: FeedScope = "global", market?: string, actor?: string) {
   const env = useQueryEnv();
   const query = useInfiniteQuery({
-    queryKey: socialKeys.feed(env.chainId, scope, market),
-    queryFn: ({ pageParam, signal }) =>
-      env.api.call(
+    queryKey: [...socialKeys.feed(env.chainId, scope, market), actor?.toLowerCase() ?? "all"],
+    queryFn: async ({ pageParam, signal }) => {
+      const page = await env.api.call(
         feedRoute,
         {
           query: {
             chainId: env.chainId,
             scope,
             ...(market ? { market } : {}),
+            ...(actor ? { actor: actor as `0x${string}` } : {}),
             ...(pageParam ? { cursor: pageParam } : {}),
           },
         },
         { signal },
-      ),
+      );
+      if (actor && page.items.some((item) => item.actor.address.toLowerCase() !== actor.toLowerCase()))
+        throw new Error("The activity service needs the profile-feed update.");
+      return page;
+    },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     select: (data): FeedItem[] => data.pages.flatMap((page) => page.items),

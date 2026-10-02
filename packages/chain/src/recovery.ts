@@ -1,7 +1,6 @@
 import type { TxStage } from "@senryo/core";
 import type { TransactionReceipt } from "viem";
 import type { ReadClient } from "./clients.ts";
-import { JOURNAL_ABANDON_AFTER_MS } from "./constants.ts";
 import type { JournalEntry } from "./journal.ts";
 
 /**
@@ -12,15 +11,14 @@ import type { JournalEntry } from "./journal.ts";
  *  - receipt at or below the finalized head, canonical block → `finalized` / `reverted`
  *  - receipt above the finalized head (or a superseded block) → still `pending`, look again
  *  - no receipt, the finalized nonce moved past it → `abandoned` (another tx used the nonce)
- *  - no receipt, untouched for JOURNAL_ABANDON_AFTER_MS → `abandoned` (dropped); the caller resyncs the nonce so the
- *    next send reuses it, which also voids these bytes if they ever resurface
+ *  - no receipt, nonce not consumed → pending, however long the watch has been interrupted
  */
 export type Reconciled =
   | { kind: "pending" }
   | { kind: "settled"; stage: Extract<TxStage, "finalized" | "reverted">; receipt: TransactionReceipt }
   | { kind: "abandoned"; reason: "nonce-used" | "dropped" };
 
-export async function reconcileEntry(read: ReadClient, entry: JournalEntry, now = Date.now()): Promise<Reconciled> {
+export async function reconcileEntry(read: ReadClient, entry: JournalEntry, _now = Date.now()): Promise<Reconciled> {
   const receipt = await read.getTransactionReceipt({ hash: entry.hash }).catch(() => undefined);
   if (receipt) {
     const finalized = await read.getBlock({ blockTag: "finalized" });
@@ -31,6 +29,5 @@ export async function reconcileEntry(read: ReadClient, entry: JournalEntry, now 
   }
   const used = await read.getTransactionCount({ address: entry.from, blockTag: "finalized" });
   if (used > entry.nonce) return { kind: "abandoned", reason: "nonce-used" };
-  if (now - entry.updatedAt > JOURNAL_ABANDON_AFTER_MS) return { kind: "abandoned", reason: "dropped" };
   return { kind: "pending" };
 }

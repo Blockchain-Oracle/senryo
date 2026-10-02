@@ -35,6 +35,7 @@ export const feedQuerySchema = z.object({
   scope: z.enum(FEED_SCOPES).default("global"),
   /** Indexer market id: only that market's fills and theses (the market detail Feed tab). */
   market: marketIdSchema.optional(),
+  actor: addressSchema.optional(),
   cursor: idCursorSchema.optional(),
   limit: z.coerce.number().int().positive().max(FEED_PAGE_MAX).optional(),
 });

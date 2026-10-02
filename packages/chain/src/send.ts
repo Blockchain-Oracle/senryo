@@ -80,6 +80,8 @@ export interface TxRequest {
    */
   authorizationList?: readonly SignedAuthorization[] | undefined;
   meta?: Record<string, string> | undefined;
+  /** Ephemeral review guard; never serialized into the journal. Rechecked across authentication. */
+  validate?: (() => Promise<void> | void) | undefined;
 }
 
 export interface SentTx {
@@ -162,11 +164,13 @@ export async function sendTx(sender: Sender, req: TxRequest): Promise<SentTx> {
       maxFeePerGas: fees.maxFeePerGas,
       maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
     };
+    await req.validate?.();
     const raw = await sender.account.signTransaction(
       req.authorizationList
         ? { ...common, type: "eip7702", authorizationList: [...req.authorizationList] }
         : { ...common, type: "eip1559" },
     );
+    await req.validate?.();
     const hash = keccak256(raw);
     const now = Date.now();
     await sender.journal?.put({

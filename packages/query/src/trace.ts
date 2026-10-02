@@ -8,6 +8,7 @@ import {
   type Confirmation,
   type JournalEntry,
   planGas,
+  receiptFacts,
   type Sender,
   type SentTx,
   sendTx,
@@ -18,8 +19,15 @@ import {
 import type { Address } from "@senryo/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useId, useSyncExternalStore } from "react";
-import { useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
+import { beginOperation, builtOperation, progressOperation } from "./operation-progress.ts";
+import {
+  assertOperationScope,
+  type OperationRecord,
+  readOperation,
+  subscribeOperations,
+  writeOperation,
+} from "./operations.ts";
 
 export type TraceStage =
   | "checking"
@@ -39,7 +47,7 @@ export interface TraceEvent {
   error?: unknown;
 }
 
-export type TrackedResult = SentTx & { final: Confirmation | undefined };
+export type TrackedResult = SentTx & { final: Confirmation | undefined; operationId?: string | undefined };
 
 /**
  * What one request's events prove. `not-sent`: it failed before a signature left the device, so nothing changed.
@@ -99,7 +107,14 @@ function tapJournal(inner: TxJournal | undefined, onPut: (entry: JournalEntry) =
 
 /** Work that must succeed before signing (e.g. a gas top-up, S8.16c); a throw becomes the trace's `failed` event. */
 export interface SendOptions {
+  builderAction?: TxRequest["action"];
   preflight?: ((request: TxRequest) => Promise<void>) | undefined;
+  /** Re-check reviewed scope and bounds after asynchronous gas preparation, immediately before signing. */
+  revalidate?: (() => Promise<void> | void) | undefined;
+  reviewedIntent?: Record<string, string> | undefined;
+  /** Several transaction steps may share a reviewed operation (approval, execution, protection). */
+  operationId?: string | undefined;
+  plannedActions?: readonly string[] | undefined;
 }
 
 export async function sendTracked(
@@ -112,13 +127,19 @@ export async function sendTracked(
   emit("checking");
   await options.preflight?.(request);
   const gas = await planGas(sender, request);
+  await options.revalidate?.();
+  assertOperationScope(sender.chainId, sender.account.address);
   emit("signing");
   const tapped: Sender = { ...sender, journal: tapJournal(sender.journal, (e) => emit("signed", { hash: e.hash })) };
-  const sent = await sendTx(tapped, { ...request, fixedGas: gas });
-  if (sent.stage === "reverted") {
-    emit("reverted", { hash: sent.hash });
-    return { ...sent, final: undefined };
-  }
+  const sent = await sendTx(tapped, {
+    ...request,
+    fixedGas: gas,
+    validate: async () => {
+      assertOperationScope(sender.chainId, sender.account.address);
+      await request.validate?.();
+      await options.revalidate?.();
+    },
+  });
   emit("proposed", { hash: sent.hash });
   const opts = { read: sender.read, heads: sender.heads };
   const voted = await waitForCommit(opts, sent.receipt, "voted");
@@ -137,6 +158,8 @@ export async function sendTracked(
 interface TraceState {
   events: TraceEvent[];
   running: boolean;
+  record?: OperationRecord | undefined;
+  restored?: boolean;
 }
 
 const IDLE: TraceState = { events: [], running: false };
@@ -147,9 +170,48 @@ const IDLE: TraceState = { events: [], running: false };
  */
 const traces = new Map<string, TraceState>();
 const listeners = new Map<string, Set<() => void>>();
+subscribeOperations((record, live) => {
+  if (live) return;
+  const state = traces.get(record.key);
+  const step = record.steps.at(-1);
+  if (!state || !step) return;
+  const stage =
+    step.outcome === "completed"
+      ? "finalized"
+      : step.outcome === "reverted" || step.outcome === "abandoned"
+        ? step.outcome
+        : undefined;
+  if (!stage) return;
+  setTrace(record.key, (prev) => ({
+    ...prev,
+    record,
+    running: false,
+    events: [...prev.events, { stage, at: record.updatedAt, hash: step.hash as `0x${string}` }],
+  }));
+});
+
+function restoredTrace(key: string): TraceState {
+  const cached = traces.get(key);
+  if (cached) return cached;
+  const record = readOperation(key);
+  if (!record) return IDLE;
+  const step = record.steps.at(-1);
+  const stages: Record<string, TraceStage> = { completed: "finalized", reverted: "reverted", abandoned: "abandoned" };
+  const events: TraceEvent[] = [];
+  if (step?.hash) events.push({ stage: "signed", at: record.updatedAt, hash: step.hash as `0x${string}` });
+  // An unfinished signature stays unknown, never an automatically resumed send.
+  events.push({
+    stage: stages[step?.outcome ?? ""] ?? "failed",
+    at: record.updatedAt,
+    ...(step?.hash ? { hash: step.hash as `0x${string}` } : {}),
+  });
+  const state = { events, running: false, record, restored: true };
+  traces.set(key, state);
+  return state;
+}
 
 function setTrace(key: string, update: (prev: TraceState) => TraceState): void {
-  traces.set(key, update(traces.get(key) ?? IDLE));
+  traces.set(key, update(restoredTrace(key)));
   for (const listener of listeners.get(key) ?? []) listener();
 }
 
@@ -171,14 +233,13 @@ function subscribeTrace(key: string, listener: () => void): () => void {
  * holds one request: an action made of several transactions uses one trace per transaction, so no outcome is lost.
  */
 export function useSendTrace(key?: string) {
-  const env = useQueryEnv();
   const queryClient = useQueryClient();
   const localKey = useId();
   const id = key ?? `local:${localKey}`;
   const state = useSyncExternalStore(
     (listener) => subscribeTrace(id, listener),
-    () => traces.get(id) ?? IDLE,
-    () => traces.get(id) ?? IDLE,
+    () => restoredTrace(id),
+    () => restoredTrace(id),
   );
 
   const run = useCallback(
@@ -187,29 +248,127 @@ export function useSendTrace(key?: string) {
       request: TxRequest | (() => Promise<TxRequest>),
       options: SendOptions = {},
     ): Promise<TrackedResult | undefined> => {
-      if ((traces.get(id) ?? IDLE).running) return undefined;
-      setTrace(id, () => ({ events: [], running: true }));
-      const push = (event: TraceEvent) => setTrace(id, (prev) => ({ ...prev, events: [...prev.events, event] }));
+      const previous = restoredTrace(id);
+      if (previous.running) return undefined;
+      // Reserve synchronously before reading the journal, so two taps cannot pass the same asynchronous gate.
+      setTrace(id, (prev) => ({ ...prev, running: true }));
+      let prior: TraceOutcome | undefined;
+      try {
+        const journal = (await sender.journal?.list()) ?? [];
+        const unresolved = journal.some(
+          (entry) =>
+            entry.meta?.operationKey === id &&
+            entry.from.toLowerCase() === sender.account.address.toLowerCase() &&
+            entry.chainId === sender.chainId &&
+            !["finalized", "reverted", "abandoned"].includes(entry.stage),
+        );
+        prior = unresolved ? "unknown" : settledOutcome(previous.events, journal);
+      } catch {
+        setTrace(id, () => previous);
+        return undefined;
+      }
+      if (prior === "unknown" || (previous.events.length > 0 && prior === undefined)) {
+        setTrace(id, () => previous);
+        return undefined;
+      }
+      const parent = options.operationId ? readOperation(options.operationId) : undefined;
+      let record: OperationRecord;
+      try {
+        if (options.operationId && !parent)
+          throw new Error("The original operation is unavailable. Review its status before continuing.");
+        record = beginOperation(
+          id,
+          sender.account.address,
+          sender.chainId,
+          typeof request === "function" ? (options.builderAction ?? "placeTrigger") : request.action,
+          options.reviewedIntent,
+          parent,
+          options.plannedActions,
+        );
+        // Persist before a builder can request a signature.
+        writeOperation(record);
+      } catch (error) {
+        setTrace(id, () => ({
+          ...previous,
+          running: false,
+          events: [{ stage: "failed", at: Date.now(), error }],
+        }));
+        return undefined;
+      }
+      setTrace(id, () => ({ events: [], running: true, record }));
+      const push = (event: TraceEvent) => {
+        record = progressOperation(record, event.stage, event.at, event.hash);
+        // Keep the signed/pending gate in memory even if persistence fails. Never broadcast without a journal.
+        setTrace(id, (prev) => ({ ...prev, record, events: [...prev.events, event] }));
+        writeOperation(record);
+      };
       try {
         // A request that has to be built first (a signed TP/SL order): a build failure is this trace's `failed` event.
+        assertOperationScope(sender.chainId, sender.account.address);
+        await options.revalidate?.();
         const built = typeof request === "function" ? await request() : request;
-        const result = await sendTracked(sender, built, push, options);
+        record = builtOperation(record, built);
+        writeOperation(record);
+        const result = await sendTracked(
+          sender,
+          {
+            ...built,
+            meta: {
+              ...built.meta,
+              operationId: record.id,
+              operationKey: id,
+              step: String(record.steps.length - 1),
+            },
+          },
+          push,
+          options,
+        );
+        const receipt = result.final?.receipt ?? result.receipt;
+        record = {
+          ...record,
+          steps: record.steps.map((step) =>
+            step.hash === result.hash
+              ? {
+                  ...step,
+                  blockNumber: receipt.blockNumber.toString(),
+                  blockHash: receipt.blockHash,
+                  facts: receiptFacts(receipt, sender.chainId, built.to),
+                }
+              : step,
+          ),
+        };
+        writeOperation(record);
         const from = sender.account.address as Address;
-        void queryClient.invalidateQueries({ queryKey: keys.account(env.chainId, from) });
-        void queryClient.invalidateQueries({ queryKey: ["market", env.chainId] });
-        return result;
+        void queryClient.invalidateQueries({ queryKey: keys.account(sender.chainId, from) });
+        void queryClient.invalidateQueries({ queryKey: ["market", sender.chainId] });
+        return { ...result, operationId: record.id };
       } catch (error) {
-        push({ stage: "failed", at: Date.now(), error });
+        try {
+          push({ stage: "failed", at: Date.now(), error });
+        } catch {
+          /* signed gate is retained in memory */
+        }
         return undefined;
       } finally {
         setTrace(id, (prev) => ({ ...prev, running: false }));
       }
     },
-    [env.chainId, queryClient, id],
+    [queryClient, id],
   );
 
   const reset = useCallback(() => {
-    if (!(traces.get(id) ?? IDLE).running) setTrace(id, () => IDLE);
+    const state = restoredTrace(id);
+    const outcome = traceOutcome(state.events);
+    if (!state.running && outcome !== "unknown" && (state.events.length === 0 || outcome !== undefined)) {
+      setTrace(id, () => IDLE);
+    }
   }, [id]);
-  return { events: state.events, running: state.running, run, reset };
+  return {
+    events: state.events,
+    running: state.running,
+    record: state.record,
+    restored: state.restored ?? false,
+    run,
+    reset,
+  };
 }

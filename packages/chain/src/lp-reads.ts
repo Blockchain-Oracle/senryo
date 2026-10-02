@@ -5,8 +5,6 @@ import type { ReadClient } from "./clients.ts";
 import { addressOf } from "./contracts.ts";
 import type { ReadTag } from "./reads.ts";
 
-/** How many of the newest redeem request ids are scanned for the user's own (requests are few; ids are per vault). */
-export const LP_REQUEST_SCAN = 50;
 /** The LP pool's asset: AUSD on mainnet (external token), MockAUSD from our address book on practice. */
 export function poolTokenOf(chainId: ChainId): Address {
   return chainId === MAINNET_CHAIN_ID ? MAINNET_EXTERNAL.ausd : addressOf(chainId, "MockAUSD");
@@ -34,6 +32,8 @@ export interface LpSnapshot {
   /** Redeem claims need every market OPEN (weekend-gap protection). */
   allMarketsOpen: boolean;
   pending: LpRedeemView[];
+  pendingValue: bigint;
+  requestsComplete: boolean;
 }
 
 export async function readLpVault(
@@ -41,29 +41,27 @@ export async function readLpVault(
   chainId: ChainId,
   user: Address,
   blockTag: ReadTag = "latest",
+  requestIds: readonly bigint[] = [],
+  requestsComplete = false,
 ): Promise<LpSnapshot> {
   const vault = { address: addressOf(chainId, "LpVault"), abi: lpVaultAbi } as const;
   const token = { address: poolTokenOf(chainId), abi: mockAUSDAbi } as const;
   const core = { address: addressOf(chainId, "SenryoCore"), abi: senryoCoreAbi } as const;
-  const [totalAssets, totalSupply, tvlCap, maxDeposit, shares, walletAusd, allowance, allOpen, nextId] =
-    await read.multicall({
-      contracts: [
-        { ...vault, functionName: "totalAssets" },
-        { ...vault, functionName: "totalSupply" },
-        { ...vault, functionName: "tvlCap" },
-        { ...vault, functionName: "maxDeposit", args: [user] },
-        { ...vault, functionName: "balanceOf", args: [user] },
-        { ...token, functionName: "balanceOf", args: [user] },
-        { ...token, functionName: "allowance", args: [user, vault.address] },
-        { ...core, functionName: "allMarketsOpen" },
-        { ...vault, functionName: "nextRequestId" },
-      ],
-      allowFailure: false,
-      blockTag,
-    });
-  const first = nextId > BigInt(LP_REQUEST_SCAN) ? nextId - BigInt(LP_REQUEST_SCAN) : 0n;
-  const ids: bigint[] = [];
-  for (let id = first; id < nextId; id += 1n) ids.push(id);
+  const [totalAssets, totalSupply, tvlCap, maxDeposit, shares, walletAusd, allowance, allOpen] = await read.multicall({
+    contracts: [
+      { ...vault, functionName: "totalAssets" },
+      { ...vault, functionName: "totalSupply" },
+      { ...vault, functionName: "tvlCap" },
+      { ...vault, functionName: "maxDeposit", args: [user] },
+      { ...vault, functionName: "balanceOf", args: [user] },
+      { ...token, functionName: "balanceOf", args: [user] },
+      { ...token, functionName: "allowance", args: [user, vault.address] },
+      { ...core, functionName: "allMarketsOpen" },
+    ],
+    allowFailure: false,
+    blockTag,
+  });
+  const ids = [...new Set(requestIds)];
   const [value, requests] = await Promise.all([
     read.readContract({ ...vault, functionName: "convertToAssets", args: [shares], blockTag }),
     ids.length === 0
@@ -80,6 +78,12 @@ export async function readLpVault(
       ? [{ requestId: ids[i] ?? 0n, shares: reqShares, claimableAt: BigInt(claimableAt) }]
       : [];
   });
+  const pendingValue = await read.readContract({
+    ...vault,
+    functionName: "convertToAssets",
+    args: [pending.reduce((sum, request) => sum + request.shares, 0n)],
+    blockTag,
+  });
   return {
     totalAssets,
     totalSupply,
@@ -91,5 +95,7 @@ export async function readLpVault(
     allowance,
     allMarketsOpen: allOpen,
     pending,
+    pendingValue,
+    requestsComplete,
   };
 }

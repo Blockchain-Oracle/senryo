@@ -2,6 +2,7 @@ export * from "./client.ts";
 export * from "./constants.ts";
 export * from "./documents/fragments.ts";
 export * from "./documents/history.ts";
+export * from "./documents/lp-requests.ts";
 export * from "./documents/market-data.ts";
 export * from "./documents/portfolio.ts";
 export * from "./documents/social.ts";

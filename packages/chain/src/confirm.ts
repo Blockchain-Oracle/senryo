@@ -80,7 +80,8 @@ export async function waitForCommit(
     // The proposal carrying the receipt was superseded: look the tx up again.
     current = await opts.read.getTransactionReceipt({ hash: current.transactionHash }).catch(() => null);
   }
-  if (current === null) return { stage: "abandoned", receipt: undefined };
+  // A vanished proposal does not prove the signed transaction cannot be included later.
+  // Keep it uncertain until journal recovery observes final nonce consumption.
   throw new FinalityTimeoutError(receipt.transactionHash, level);
 }
 

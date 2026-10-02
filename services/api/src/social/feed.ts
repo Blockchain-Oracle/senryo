@@ -85,13 +85,14 @@ function itemOf(chainId: ChainId, row: FeedRow): FeedItem {
 export async function feedPage(db: Db, query: FeedQuery, viewer: string | null): Promise<FeedPage> {
   const { chainId } = query;
   if (query.scope === "friends" && viewer === null) {
-    throw new HttpError(HTTP_STATUS.unauthorized, "UNAUTHORIZED", "sign in to see your friends' feed");
+    throw new HttpError(HTTP_STATUS.unauthorized, "UNAUTHORIZED", "sign in to see your Following feed");
   }
   const limit = query.limit ?? FEED_PAGE_DEFAULT;
   const sharing = db`a.${db(publicTradesColumn(chainId))} AND e.occurred_at >= a.${db(sharingSinceColumn(chainId))}`;
   const market = query.market === undefined ? db`` : db`AND e.market_id = ${query.market}`;
   const friends =
     query.scope === "friends" ? db`AND e.actor IN (SELECT followee FROM follows WHERE follower = ${viewer})` : db``;
+  const actor = query.actor === undefined ? db`` : db`AND e.actor = ${query.actor.toLowerCase()}`;
   const before = query.cursor === undefined ? db`` : db`AND e.id < ${BigInt(query.cursor)}`;
   const rows = await db<FeedRow[]>`
     SELECT e.id AS event_id, e.kind AS event_kind, e.actor, e.market_id AS event_market_id, e.occurred_at, e.payload,
@@ -101,7 +102,7 @@ export async function feedPage(db: Db, query: FeedQuery, viewer: string | null):
       LEFT JOIN posts po ON po.id = e.post_id
      WHERE e.chain_id = ${chainId} AND ${visibleOn(db, "a", chainId)}
        AND ((e.kind = 'thesis' AND po.id IS NOT NULL AND NOT po.hidden) OR (e.kind <> 'thesis' AND ${sharing}))
-       ${market} ${friends} ${before}
+       ${market} ${friends} ${actor} ${before}
        ${viewerAccountFilter(db, viewer, "e", "actor")} ${viewerPostFilter(db, viewer, "e", "post_id")}
      ORDER BY e.id DESC
      LIMIT ${limit + 1}`;

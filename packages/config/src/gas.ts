@@ -25,6 +25,8 @@ export const LIQUIDATE_GAS_PER_POSITION = 180_000n;
 
 export const GAS_LIMITS = {
   transfer: NATIVE_TRANSFER_GAS,
+  /** Wallet ERC-20 send; estimated per token and refused above this conservative ceiling. Fork acceptance required. */
+  erc20Transfer: 150_000n,
   /**
    * (S3, D-122) raised from 80k: mainnet USDC (FiatToken proxy) `approve` estimates 87k on a Monad-rules fork.
    * (S1b.16) every J11 spot token's `approve(Permit2)` on a 143 fork: worst 96.0k (cbBTC) — inside.
