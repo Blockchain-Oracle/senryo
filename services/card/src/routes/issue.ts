@@ -19,20 +19,23 @@ function stateOf(card: LithicCard): CardState {
  * One live card per account per network (E1). Idempotent: an advisory lock serialises issuance for the account and
  * the live card, if any, is returned as is; the partial unique index `cards_one_live_idx` backs it up. The issuer has
  * no idempotency key, so a card created but not stored (the write failed) is closed again, and its token logged.
+ * The issuer is only needed (and only checked) when there is no live card yet.
  */
 async function issueCard(
   ctx: CardContext,
-  api: LithicApi,
+  issuer: () => LithicApi,
   account: string,
   label: string | undefined,
 ): Promise<{ cardToken: string; created: boolean }> {
-  const made: { card?: LithicCard } = {};
+  const made: { card?: LithicCard; api?: LithicApi } = {};
   try {
     return await ctx.db.begin(async (tx) => {
       await tx`SELECT pg_advisory_xact_lock(hashtextextended(${`card-issue:${ctx.chainId}:${account}`}, 0))`;
       const [live] = await tx<{ card_token: string }[]>`
         SELECT card_token FROM cards WHERE chain_id = ${ctx.chainId} AND account = ${account} AND state <> 'CLOSED'`;
       if (live) return { cardToken: live.card_token, created: false };
+      const api = issuer();
+      made.api = api;
       const card = await viaIssuer(() =>
         api.createCard({
           memo: `${CARD_MEMO_PREFIX}${account.slice(0, CARD_MEMO_ADDRESS_CHARS)}`,
@@ -50,9 +53,9 @@ async function issueCard(
     });
   } catch (error) {
     const orphan = made.card?.token;
-    if (orphan) {
+    if (orphan && made.api) {
       ctx.log.error({ card: orphan, account, err: describeError(error) }, "issued card not stored — closing it");
-      await api
+      await made.api
         .setState(orphan, "CLOSED")
         .catch((closeError: unknown) =>
           ctx.log.error({ card: orphan, err: describeError(closeError) }, "orphan card could not be closed"),
@@ -73,8 +76,7 @@ export function registerIssueRoutes(app: HttpServer, ctx: CardContext, kit: AppK
     async (request, reply) => {
       const s = await kit.session(request);
       const { body } = parseRoute(cardIssueRoute, request);
-      const api = kit.issuer();
-      const issued = await issueCard(ctx, api, s.address.toLowerCase(), body.label);
+      const issued = await issueCard(ctx, kit.issuer, s.address.toLowerCase(), body.label);
       const { summary, chain } = await buildSummary(ctx, s.address);
       return sendRoute(reply, cardIssueRoute, {
         ...summary,
