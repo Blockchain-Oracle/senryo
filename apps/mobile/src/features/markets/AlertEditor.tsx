@@ -25,9 +25,9 @@ import { type MarketLine, useMarketLine } from "./useMarketLine";
 
 /** What happens when the alert fires, as this phone is set up (the page never promises a push that won't come). */
 const PUSH_NOTE: Record<PushStatus, string> = {
-  on: "When it crosses you get a notification, and it shows as Triggered in Alerts.",
-  off: "Notifications are off on this phone, so an alert that fires shows as Triggered in Alerts.",
-  muted: "Price-alert notifications are switched off in You → Notifications, so it shows as Triggered in Alerts.",
+  on: "Push and inbox",
+  off: "Inbox only · push off",
+  muted: "Inbox only · price alerts muted",
 };
 
 const DIRECTIONS = [
@@ -43,7 +43,16 @@ type Direction = Alert["direction"];
  * alert is stored on the Senryo api for this account and network and checked by the keeper (`useAlerts`); saving shows
  * it in the list under the form — no toast. A guest is invited to create an account; nothing is stored on the phone.
  */
-export function AlertEditor({ marketId, onSeeAll }: { marketId: number; onSeeAll?: () => void }) {
+export function AlertEditor({
+  marketId,
+  onSeeAll,
+  editing,
+}: {
+  marketId: number;
+  onSeeAll?: () => void;
+  /** Edit (C9): the alert this form starts from; Save replaces it (one alert, never two). */
+  editing?: Alert;
+}) {
   const meta = engineMarket(marketId);
   const account = useAccount();
   const close = useSheetClose();
@@ -52,10 +61,7 @@ export function AlertEditor({ marketId, onSeeAll }: { marketId: number; onSeeAll
   if (account.ready && !account.hint) {
     return (
       <>
-        <SheetHeading
-          title={`Alert for ${meta.name}`}
-          body="Alerts belong to an account, so they follow you to every device you sign in on."
-        />
+        <SheetHeading title={`Alert for ${meta.name}`} body="Alerts need an account" />
         {/* This sheet slides away first, so the account sheet never stacks a second scrim over it. */}
         <Button label="Create an account" onPress={() => close(() => router.push(ROUTES.accountRequired))} />
       </>
@@ -63,19 +69,30 @@ export function AlertEditor({ marketId, onSeeAll }: { marketId: number; onSeeAll
   }
   return (
     <ReadingView reading={line} loading="line" loadingLabel="Reading the oracle">
-      {(l) => <Form meta={meta} line={l} {...(onSeeAll ? { onSeeAll } : {})} />}
+      {(l) => <Form meta={meta} line={l} {...(onSeeAll ? { onSeeAll } : {})} {...(editing ? { editing } : {})} />}
     </ReadingView>
   );
 }
 
-function Form({ meta, line, onSeeAll }: { meta: EngineMarket; line: MarketLine; onSeeAll?: () => void }) {
+function Form({
+  meta,
+  line,
+  onSeeAll,
+  editing,
+}: {
+  meta: EngineMarket;
+  line: MarketLine;
+  onSeeAll?: () => void;
+  editing?: Alert;
+}) {
   const { color } = useTheme();
   const network = useNetwork();
   const push = usePushStatus("priceAlerts");
-  const [direction, setDirection] = useState<Direction>("above");
-  const [text, setText] = useState("");
-  const create = useCreateAlert();
+  const close = useSheetClose();
   const decimals = priceDecimalsOf(meta.id);
+  const [direction, setDirection] = useState<Direction>(editing?.direction ?? "above");
+  const [text, setText] = useState(() => (editing ? priceText(editing.price18, decimals) : ""));
+  const create = useCreateAlert();
   const mark = line.price18;
   const shownMark = price18(mark, decimals);
   const target = parsePrice(text);
@@ -94,11 +111,13 @@ function Form({ meta, line, onSeeAll }: { meta: EngineMarket; line: MarketLine; 
   const save = () => {
     if (target === undefined || problem) return;
     create.mutate(
-      { marketId: meta.id, direction, price18: target },
+      { marketId: meta.id, direction, price18: target, ...(editing ? { replaces: editing.id } : {}) },
       {
         onSuccess: () => {
           fire("confirm");
-          setText("");
+          // An edit is done once saved; a new alert stays open to add another.
+          if (editing) close();
+          else setText("");
         },
         // A cancelled Face ID is the user's choice, not a failure: no error buzz.
         onError: (error) => {
@@ -109,7 +128,10 @@ function Form({ meta, line, onSeeAll }: { meta: EngineMarket; line: MarketLine; 
   };
   return (
     <>
-      <SheetHeading title={`Alert for ${meta.name}`} body={`${meta.symbol}/USD is $${shownMark} now`} />
+      <SheetHeading
+        title={editing ? `Edit ${meta.name} alert` : `Alert for ${meta.name}`}
+        body={`${meta.symbol}/USD is $${shownMark} now`}
+      />
       <Segmented options={DIRECTIONS} value={direction} onChange={setDirection} label="Alert condition" />
       <View style={styles.field}>
         <TriggerInput
@@ -145,27 +167,27 @@ function Form({ meta, line, onSeeAll }: { meta: EngineMarket; line: MarketLine; 
       ) : null}
       {/* Save sits right under the field, so it stays in the visible part of the sheet while the keyboard is up. */}
       <Button
-        label="Save alert"
+        label={editing ? "Save changes" : "Save alert"}
         disabled={target === undefined || problem !== undefined}
         loading={create.isPending}
         onPress={save}
       />
       <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-        {network.modeLabel} alert, checked against the oracle price. {PUSH_NOTE[push ?? "on"]}
+        {network.modeLabel} · oracle price · {PUSH_NOTE[push ?? "on"]}
       </Text>
-      <Existing marketId={meta.id} name={meta.name} />
+      <Existing marketId={meta.id} name={meta.name} {...(editing ? { except: editing.id } : {})} />
       {onSeeAll ? <Button label="All alerts" variant="ghost" size="sm" onPress={onSeeAll} /> : null}
     </>
   );
 }
 
 /** This market's alerts under the form: where a save shows up, and where one is removed. */
-function Existing({ marketId, name }: { marketId: number; name: string }) {
+function Existing({ marketId, name, except }: { marketId: number; name: string; except?: string }) {
   const { color } = useTheme();
   const alerts = useAlerts();
   const remove = useRemoveAlert();
   const all = alerts.reading.status === "fresh" || alerts.reading.status === "stale" ? alerts.reading.value : [];
-  const mine = all.filter((a) => a.marketId === marketId);
+  const mine = all.filter((a) => a.marketId === marketId && a.id !== except);
   const failure = remove.isError ? alertErrorCopy(remove.error) : undefined;
   if (mine.length === 0) return null;
   return (

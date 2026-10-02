@@ -1,9 +1,10 @@
 import { engineMarket } from "@senryo/config";
 import { ids } from "@senryo/identity";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { X } from "~/components/kit/symbols";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
+import { fire } from "~/feedback/fire";
 import { clockTime } from "~/lib/format";
 import { price18, priceDecimalsOf } from "~/lib/money";
 import { DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -26,25 +27,43 @@ function alertState(alert: Alert): string {
 /**
  * One price alert (direction "Alerts list": instrument, condition, active / triggered state, remove): the market's
  * mark and name when the list mixes markets, the condition, its state under it, and a round remove control. Bare on
- * its ground like every list row. `busy` dims it while its removal is in flight.
+ * its ground like every list row; a tap edits it (C9). `busy` dims it while its removal is in flight.
  */
 export function AlertRow({
   alert,
   showMarket,
   busy,
   onRemove,
+  onEdit,
 }: {
   alert: Alert;
   showMarket: boolean;
   busy: boolean;
   onRemove: () => void;
+  /** Opens the editor on this alert (Save replaces it). */
+  onEdit?: () => void;
 }) {
   const { color } = useTheme();
   const meta = engineMarket(alert.marketId);
   const condition = alertCondition(alert);
   const triggered = alert.status === "triggered";
   return (
-    <View style={[styles.row, busy ? styles.busy : null]}>
+    <Pressable
+      disabled={!onEdit || busy}
+      onPress={() => {
+        fire("tick");
+        onEdit?.();
+      }}
+      accessibilityRole={onEdit ? "button" : "text"}
+      accessibilityLabel={`${showMarket ? `${meta?.name ?? `Market ${alert.marketId}`}, ` : ""}${condition}, ${alertState(alert)}`}
+      {...(onEdit ? { accessibilityHint: "Edits this alert" } : {})}
+      // The row is one element for VoiceOver; removing it is its custom action (the × inside isn't reachable alone).
+      accessibilityActions={[{ name: "remove", label: "Remove alert" }]}
+      onAccessibilityAction={(event) => {
+        if (event.nativeEvent.actionName === "remove" && !busy) onRemove();
+      }}
+      style={({ pressed }) => [styles.row, busy ? styles.busy : null, pressed ? { opacity: PRESSED } : null]}
+    >
       {showMarket ? (
         <EntityMark
           id={ids.engineMarket(alert.chainId, alert.marketId)}
@@ -53,7 +72,7 @@ export function AlertRow({
           decorative
         />
       ) : null}
-      <View style={styles.text} accessible>
+      <View style={styles.text}>
         <Text numberOfLines={1} style={[TYPE.rowTitle, { color: color.ink }]}>
           {showMarket ? (meta?.name ?? `Market ${alert.marketId}`) : condition}
         </Text>
@@ -70,9 +89,11 @@ export function AlertRow({
       >
         <X size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
       </UtilityButton>
-    </View>
+    </Pressable>
   );
 }
+
+const PRESSED = 0.6;
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: SIZE.rowMinHeight },

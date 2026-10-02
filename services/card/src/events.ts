@@ -61,6 +61,8 @@ async function route(
       account: getAddress(account),
       refId: bytes32Of(`refund:${event.token}`),
       amountUsd6: usd6.toString(),
+      txnToken: webhook.token,
+      ...(webhook.merchant?.descriptor ? { merchant: webhook.merchant.descriptor } : {}),
     });
     return 1;
   }
