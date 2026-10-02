@@ -1,6 +1,14 @@
 import { z } from "zod";
-import { chainIdSchema, intCodec, isoTimeSchema, txHashSchema, uintCodec } from "../primitives.ts";
-import { LEADERBOARD_PAGE_MAX, LEADERBOARD_PERIODS, LEADERBOARD_SCOPES } from "../social.ts";
+import {
+  type Address,
+  addressSchema,
+  chainIdSchema,
+  intCodec,
+  isoTimeSchema,
+  txHashSchema,
+  uintCodec,
+} from "../primitives.ts";
+import { LEADERBOARD_PAGE_MAX, LEADERBOARD_PERIODS, LEADERBOARD_SCOPES, STANDINGS_MAX } from "../social.ts";
 import { defineRoute } from "./define.ts";
 import { TRADE_SIDES, TRADE_VENUES } from "./feed.ts";
 import { marketIdSchema, positionIdSchema, socialIdentitySchema } from "./posts.ts";
@@ -48,18 +56,22 @@ export const standingSchema = z.object({
   trades: z.int().nonnegative().nullable(),
 });
 
+export const leaderboardWindowSchema = z.object({
+  kind: z.enum(WINDOW_KINDS),
+  /** Inclusive start (rolling: now − 24h; utc_days: 00:00 UTC of the first day); null for lifetime. */
+  from: isoTimeSchema.nullable(),
+  to: isoTimeSchema,
+});
+
+export const leaderboardFloorSchema = z.object({ minTrades: z.int().nonnegative(), minNotionalUsd6: uintCodec });
+
 export const leaderboardSchema = z.object({
   chainId: chainIdSchema,
   period: z.enum(LEADERBOARD_PERIODS),
   scope: z.enum(LEADERBOARD_SCOPES),
   metric: z.literal(LEADERBOARD_METRIC),
-  window: z.object({
-    kind: z.enum(WINDOW_KINDS),
-    /** Inclusive start (rolling: now − 24h; utc_days: 00:00 UTC of the first day); null for lifetime. */
-    from: isoTimeSchema.nullable(),
-    to: isoTimeSchema,
-  }),
-  floor: z.object({ minTrades: z.int().nonnegative(), minNotionalUsd6: uintCodec }),
+  window: leaderboardWindowSchema,
+  floor: leaderboardFloorSchema,
   computedAt: isoTimeSchema,
   entries: z.array(leaderboardEntrySchema),
   /** Null without a session. */
@@ -75,6 +87,48 @@ export const leaderboardRoute = defineRoute({
   query: leaderboardQuerySchema,
   body: undefined,
   response: leaderboardSchema,
+});
+
+/** `0xa…,0xb…` on the wire ⇄ a list of addresses (a codec, so the client can encode it back). */
+const addressListCodec = z.codec(z.string(), z.array(addressSchema).min(1).max(STANDINGS_MAX), {
+  // Each part is checked by `addressSchema` after decoding; the cast only names what that check guarantees.
+  decode: (text) => text.split(",") as Address[],
+  encode: (list) => list.join(","),
+});
+
+export const standingsQuerySchema = z.object({
+  chainId: z.coerce.number().pipe(chainIdSchema),
+  period: z.enum(LEADERBOARD_PERIODS).default("7d"),
+  addresses: addressListCodec,
+});
+
+/** One account's standing on the full board (`rank` = `globalRank`); `not_listed` also covers unknown accounts. */
+export const addressStandingSchema = standingSchema.extend({ address: addressSchema });
+
+export const standingsSchema = z.object({
+  chainId: chainIdSchema,
+  period: z.enum(LEADERBOARD_PERIODS),
+  metric: z.literal(LEADERBOARD_METRIC),
+  window: leaderboardWindowSchema,
+  floor: leaderboardFloorSchema,
+  computedAt: isoTimeSchema,
+  /** One per distinct requested address, in request order. */
+  items: z.array(addressStandingSchema),
+});
+
+/**
+ * F-D4: any account's period result from the same snapshot as the board, so a profile and a search row show the
+ * number the leaderboard would — including below the floor ("Not ranked", numbers kept) and outside the top rows.
+ * Public; 503 UPSTREAM_UNAVAILABLE until the network's first snapshot.
+ */
+export const standingsRoute = defineRoute({
+  method: "GET",
+  path: "/v1/leaderboard/standings",
+  auth: "none",
+  params: undefined,
+  query: standingsQuerySchema,
+  body: undefined,
+  response: standingsSchema,
 });
 
 /**
@@ -144,6 +198,8 @@ export type LeaderboardScope = (typeof LEADERBOARD_SCOPES)[number];
 export type StandingStatus = (typeof STANDING_STATUSES)[number];
 export type LeaderboardEntry = z.output<typeof leaderboardEntrySchema>;
 export type Standing = z.output<typeof standingSchema>;
+export type AddressStanding = z.output<typeof addressStandingSchema>;
+export type Standings = z.output<typeof standingsSchema>;
 export type Leaderboard = z.output<typeof leaderboardSchema>;
 export type TopTrade = z.output<typeof topTradeSchema>;
 export type TopTrades = z.output<typeof topTradesSchema>;

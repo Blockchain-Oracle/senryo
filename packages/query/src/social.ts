@@ -55,6 +55,9 @@ export const socialKeys = {
   leaderboard: (chainId: ChainId, period: string, scope: string) =>
     ["social", chainId, "leaderboard", period, scope] as const,
   topTrades: (chainId: ChainId) => ["social", chainId, "top-trades"] as const,
+  /** `addresses` = the lower-cased, comma-joined list as requested. */
+  standings: (chainId: ChainId, period: string, addresses: string) =>
+    ["social", chainId, "standings", period, addresses] as const,
   recommendations: (chainId: ChainId) => ["social", chainId, "recommendations"] as const,
   search: (chainId: ChainId, q: string, kind: string | undefined) =>
     ["social", chainId, "search", q.trim().toLowerCase(), kind ?? "all"] as const,

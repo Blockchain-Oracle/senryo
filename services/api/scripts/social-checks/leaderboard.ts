@@ -7,10 +7,13 @@
 import {
   blockRoute,
   followRoute,
+  type Leaderboard,
   type LeaderboardPeriod,
   leaderboardRoute,
   profilePutRoute,
   recommendationsRoute,
+  STANDINGS_MAX,
+  standingsRoute,
   topTradesRoute,
 } from "@senryo/api-client";
 import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
@@ -20,6 +23,8 @@ import { type Checks, codeOf, type Harness, type User } from "../social-harness.
 import { LB_DAYS, LB_FILL, LB_TOP, LB_TOTALS } from "./constants.ts";
 import { leaderboardMathChecks } from "./leaderboard-math.ts";
 import { fill, member, nowSec, position, XAG } from "./seed.ts";
+
+const HTTP_BAD_REQUEST = 400;
 
 type DaySeed = (typeof LB_DAYS)[keyof typeof LB_DAYS];
 type TotalSeed = (typeof LB_TOTALS)[keyof typeof LB_TOTALS];
@@ -51,6 +56,66 @@ function seedTotals(h: Harness, u: User, t: TotalSeed, chainId: ChainId = TESTNE
     tradeCount: t.trades,
     deposited: 0n,
   });
+}
+
+/**
+ * F-D4 per-address standings: the same numbers as the board row, below-floor numbers kept with a null rank, null
+ * numbers without activity, `not_listed` for an unlisted account, request order kept and duplicates folded, and the
+ * address cap enforced.
+ */
+async function standingsChecks(
+  h: Harness,
+  checks: Checks,
+  who: { ranked: User; below: User; idle: User; unlisted: User },
+  day: Leaderboard,
+): Promise<void> {
+  const read = (addresses: `0x${string}`[]) =>
+    h.anon.call(standingsRoute, { query: { chainId: TESTNET_CHAIN_ID, period: "24h", addresses } });
+  const { ranked, below, idle, unlisted } = who;
+  const got = await read([
+    ranked.address,
+    below.address,
+    idle.address,
+    unlisted.address,
+    ranked.lower as `0x${string}`,
+  ]);
+  const [r, b, i, u] = got.items;
+  const row = day.entries.find((e) => e.address === ranked.address);
+  checks.record(
+    "standings: one item per distinct address, request order kept",
+    got.items.map((s) => s.address).join() === [ranked, below, idle, unlisted].map((x) => x.address).join(),
+    got.items,
+  );
+  checks.record(
+    "standings: a ranked account matches its board row (net, rank, trades)",
+    r?.status === "ranked" &&
+      r.netPnlUsd6 === row?.netPnlUsd6 &&
+      r.rank === row.globalRank &&
+      r.trades === row.trades &&
+      got.floor.minTrades === day.floor.minTrades,
+    { r, row },
+  );
+  checks.record(
+    "standings: below the floor → rank null, numbers kept",
+    b?.status === "below_floor" && b.rank === null && b.trades === LB_FILL.carol.count && b.netPnlUsd6 !== null,
+    b,
+  );
+  checks.record(
+    "standings: no activity → null numbers; unlisted → not_listed",
+    i?.status === "no_activity" && i.netPnlUsd6 === null && u?.status === "not_listed" && u.netPnlUsd6 === null,
+    { i, u },
+  );
+  // The client refuses to encode an over-long list, so the server's own cap is asked directly.
+  const many = Array.from({ length: STANDINGS_MAX + 1 }, () => h.user().address).join(",");
+  const capped = await h.app.inject({
+    method: "GET",
+    url: `${standingsRoute.path}?chainId=${TESTNET_CHAIN_ID}&period=24h&addresses=${many}`,
+  });
+  checks.record(
+    "standings: more than STANDINGS_MAX addresses → 400",
+    capped.statusCode === HTTP_BAD_REQUEST,
+    capped.statusCode,
+  );
 }
 
 export async function leaderboardChecks(h: Harness, checks: Checks): Promise<void> {
@@ -136,6 +201,8 @@ export async function leaderboardChecks(h: Harness, checks: Checks): Promise<voi
   checks.record("you: unlisted → not_listed", (await board(dave, "24h")).you?.status === "not_listed");
   const bobSees = (await board(bob, "24h")).you;
   checks.record("you: ranked → rank 1", bobSees?.status === "ranked" && bobSees.rank === 1, bobSees);
+
+  await standingsChecks(h, checks, { ranked: alice, below: carol, idle: erin, unlisted: dave }, day);
 
   const week = await board(undefined, "7d");
   const weekNet = LB_DAYS.aliceToday.pnl - LB_DAYS.aliceToday.fees - LB_DAYS.aliceToday.funding;
