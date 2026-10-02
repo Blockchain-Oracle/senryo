@@ -2,11 +2,13 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import { createDb, createHttpServer, createLogger, listen, migrate, pingDb, SessionKeys } from "@senryo/service-common";
+import { createAnyAsset } from "./anyasset/runtime.ts";
 import { CORS_METHODS, WS_MAX_PAYLOAD_BYTES } from "./constants.ts";
 import { type ApiContext, openChains, oracleMarks } from "./context.ts";
 import { loadApiEnv } from "./env.ts";
 import { GeoDb } from "./geo-db.ts";
 import { EnvioIndexerBridge, NullIndexerBridge } from "./indexer.ts";
+import { registerAnyAssetRoutes } from "./routes/anyasset.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerFollowRoutes } from "./routes/follow.ts";
@@ -56,6 +58,7 @@ const social: SocialServices = {
   adminSecret: secrets.adminSecret,
   contact: { email: env.SUPPORT_EMAIL, url: env.SUPPORT_URL ?? null },
 };
+const anyAsset = createAnyAsset(log, chains, secrets);
 const ctx: ApiContext = {
   env,
   secrets,
@@ -66,6 +69,7 @@ const ctx: ApiContext = {
   indexer,
   geo,
   social,
+  aurora: anyAsset.aurora,
 };
 if (!ctx.sessions) log.warn("API_SESSION_SECRET unset — session routes answer 503");
 if (!secrets.adminSecret) log.warn("API_ADMIN_SECRET unset — the moderation review queue answers 503");
@@ -95,6 +99,7 @@ registerPostRoutes(app, ctx);
 registerLeaderboardRoutes(app, ctx);
 registerHolderRoutes(app, ctx);
 registerModerationRoutes(app, ctx);
+registerAnyAssetRoutes(app, log, anyAsset);
 // Rows left non-terminal by a previous process (restart mid-claim) get their real stage; never re-sent (S8.16e).
 void reconcilePendingRelays(ctx).catch((err) => log.warn({ err: String(err) }, "relay reconcile failed"));
 const hub = new WsHub(ctx);
