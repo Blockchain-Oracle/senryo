@@ -9,6 +9,7 @@ import { pct } from "~/lib/money";
 import { TYPE, useTheme } from "~/theme";
 import { fundingForSide, liqDistanceBps, perplPrice, perplSize, perplUsd } from "./format";
 import { perplWatchKey } from "./market";
+import { PERPL_PRACTICE_REASON } from "./usePerplAccess";
 import type { PerplTicketModel } from "./usePerplTicket";
 import { feePct, stepLabel } from "./words";
 
@@ -129,10 +130,7 @@ export function PerplPracticeInfo({ open, onClose }: { open: boolean; onClose: (
   const { color } = useTheme();
   return (
     <ChildSheet open={open} onClose={onClose} title="Mainnet only">
-      <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>
-        Perpl trades with real AUSD on Monad mainnet. Its practice venue needs 100 AUSD to open an account and its
-        faucet is empty, so Practice shows its prices without a ticket. Switch to Mainnet to trade.
-      </Text>
+      <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{PERPL_PRACTICE_REASON}</Text>
       <Button label="Close" variant="secondary" onPress={onClose} />
     </ChildSheet>
   );

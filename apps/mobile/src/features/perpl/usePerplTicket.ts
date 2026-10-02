@@ -188,7 +188,9 @@ export function usePerplTicket(meta: PerplMarketMeta) {
                 ? { code: "frozen" }
                 : opposite
                   ? { code: "opposite", held: opposite }
-                  : maxX !== undefined && draft.leverage > maxX
+                  : // The ruler and "Trade this" clamp to the market's maximum (C11); only a maximum lowered
+                    // between reads can still refuse the leverage.
+                    plan?.blocker === "leverage" && maxX !== undefined
                     ? { code: "leverage", maxX }
                     : amountUsd6 > 0n && terms && lots === 0n
                       ? { code: "size", minUsd6: ceilDiv(oneLotUsd6, BigInt(leverage)) }

@@ -10,6 +10,10 @@ import { PERPL_CHAIN } from "./market";
 
 export type PerplAccess = { state: "trade" } | { state: "locked"; word: string; title: string; reason: string };
 
+/** Why Practice has no Perpl ticket (flow book C4 step 7): the named reason behind the "Mainnet" lock. */
+export const PERPL_PRACTICE_REASON =
+  "Perpl trades with real AUSD on Monad mainnet. Its practice venue needs 100 AUSD to open an account and its faucet is empty, so Practice shows its prices without a ticket. Switch to Mainnet to trade.";
+
 /** D-023 / services/api geo.ts: Perpl's blocked list, named as people read them. */
 const BLOCKED_REGIONS = "Belarus, Cuba, Iran, North Korea, Russia, Syria, Ukraine, the UK and the US";
 
@@ -23,8 +27,7 @@ export function usePerplAccess(): PerplAccess {
       state: "locked",
       word: "Mainnet",
       title: "Mainnet only",
-      reason:
-        "Perpl trades with real AUSD on Monad mainnet. Its practice venue needs 100 AUSD to open an account and its faucet is empty, so Practice shows its prices without a ticket.",
+      reason: PERPL_PRACTICE_REASON,
     };
   }
   if ((geo.status === "fresh" || geo.status === "stale") && !geo.value.perplAllowed) {
