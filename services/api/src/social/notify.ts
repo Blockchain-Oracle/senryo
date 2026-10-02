@@ -1,3 +1,4 @@
+import { type Address, getAddress } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import {
   appLink,
@@ -63,7 +64,7 @@ export async function notifyFollowed(db: Db, chainId: ChainId, follower: string,
     title: pushTitle(chainId, `${who} followed you`),
     body: "See their trades and theses.",
     url: appLink(chainId, `watch/${follower}`),
-    subject: { kind: "person", address: follower as `0x${string}` },
+    subject: { kind: "person", address: getAddress(follower) as Address },
   });
 }
 
@@ -82,7 +83,7 @@ export async function notifyLiked(db: Db, chainId: ChainId, liker: string, postI
     title: pushTitle(chainId, `${who} liked your ${post.kind}`),
     body: excerpt(post.text),
     url: threadLink(chainId, post.parent_id ?? postId),
-    subject: { kind: "person", address: liker as `0x${string}` },
+    subject: { kind: "person", address: getAddress(liker) as Address },
   });
 }
 
@@ -103,7 +104,7 @@ export async function notifyReplied(db: Db, chainId: ChainId, replyId: string) {
     title: pushTitle(chainId, `${who} replied to your thesis`),
     body: excerpt(reply.text),
     url: threadLink(chainId, reply.parent_id),
-    subject: { kind: "person", address: reply.author as `0x${string}` },
+    subject: { kind: "person", address: getAddress(reply.author) as Address },
   });
 }
 
@@ -122,7 +123,7 @@ function openedMessage(chainId: ChainId, who: string, e: OpenedEvent): Notificat
     title: pushTitle(chainId, `${who} opened a ${e.side.toLowerCase()} on ${e.symbol}`),
     body: "See the trade on their profile.",
     url: appLink(chainId, `watch/${e.actor}`),
-    subject: { kind: "person", address: e.actor as `0x${string}`, marketId: e.marketId },
+    subject: { kind: "person", address: getAddress(e.actor) as Address, marketId: e.marketId },
   };
 }
 

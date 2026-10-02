@@ -23,6 +23,7 @@ import { registerFollowRoutes } from "../src/routes/follow.ts";
 import { registerHolderRoutes } from "../src/routes/holders.ts";
 import { registerLeaderboardRoutes } from "../src/routes/leaderboard.ts";
 import { registerModerationRoutes } from "../src/routes/moderation.ts";
+import { registerNotificationRoutes } from "../src/routes/notifications.ts";
 import { registerPostRoutes } from "../src/routes/posts.ts";
 import { registerProfileRoutes } from "../src/routes/profile.ts";
 import { FeedPoller } from "../src/social/feed-poller.ts";
@@ -151,6 +152,7 @@ export async function openHarness(): Promise<Harness> {
   registerLeaderboardRoutes(app, ctx);
   registerHolderRoutes(app, ctx);
   registerModerationRoutes(app, ctx);
+  registerNotificationRoutes(app, ctx);
   await app.ready();
   const poller = new FeedPoller({ db, indexer: mock, notifier, log, chainIds });
   const fetchImpl = injectFetch(app);

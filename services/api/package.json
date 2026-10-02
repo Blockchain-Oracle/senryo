@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "tsx src/main.ts",
     "typecheck": "tsc --noEmit -p .",
-    "social-check": "tsx scripts/social-check.ts"
+    "social-check": "tsx scripts/social-check.ts",
+    "notify-check": "tsx scripts/notify-check.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",
