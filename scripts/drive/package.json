@@ -8,6 +8,7 @@
   "scripts": {
     "liquidation": "tsx src/liquidation.ts",
     "card-concurrency": "tsx src/card-concurrency.ts",
+    "card-outbox-check": "tsx src/card-outbox-check.ts",
     "typecheck": "tsc --noEmit -p .",
     "api-smoke": "tsx src/api-smoke.ts",
     "indexer-check": "tsx src/indexer-check.ts",
