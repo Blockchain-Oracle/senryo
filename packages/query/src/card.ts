@@ -64,6 +64,18 @@ export function setSpendAllowanceRequest(
   );
 }
 
+/**
+ * Repay card debt from the trading-account balance (E4, CardModule.repayCardDebt; the contract caps it at the debt).
+ * Session scope ("card-safe"): it only ever lowers a liability. The card service's `/v1/card/repay-quote` returns the
+ * same call; build it here and compare before signing.
+ */
+export function repayCardDebtRequest(chainId: ChainId, amountUsd6: bigint, positions: number): TxRequest {
+  return contractCall(chainId, "SenryoCore", "repayCardDebt", [amountUsd6], "repayCardDebt", {
+    gasCap: positionGasLimit("repayCardDebt", positions),
+    meta: { kind: "repayCardDebt" },
+  });
+}
+
 /** The freeze: the daily limit and expiry go to zero; the card can't spend until a new limit is signed. */
 export function revokeSpendAllowanceRequest(chainId: ChainId, positions: number): TxRequest {
   return contractCall(chainId, "SenryoCore", "revokeSpendAllowance", [], "revokeSpendAllowance", {

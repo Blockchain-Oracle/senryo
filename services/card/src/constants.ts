@@ -43,5 +43,18 @@ export const OUTBOX = {
 } as const;
 
 export const LITHIC_SANDBOX_API = "https://sandbox.lithic.com";
+export const LITHIC_SANDBOX_HOST = "sandbox.lithic.com";
 export const LITHIC_TIMEOUT_MS = 5_000;
+export const MS_PER_SECOND_N = 1_000n;
+/** Shown as the issuer's name in the summary (E1 "issuer unavailable (named)"). */
+export const ISSUER_NAME = "Lithic";
+
+/** Simulate waits this long for our ASA decision to be recorded (the decision deadline plus a margin). */
+export const SIMULATE_WAIT_MS = 3_500;
+export const SIMULATE_POLL_MS = 100;
+/** A PENDING `card_auth` row older than its deadline + this was never answered in time → Lithic declined it. */
+export const UNANSWERED_GRACE_MS = 1_000;
+/** Lithic `memo` on issued cards (≤ this many characters of the account address follow it). */
+export const CARD_MEMO_PREFIX = "Senryo Kinpaku ";
+export const CARD_MEMO_ADDRESS_CHARS = 10;
 export const BPS = 10_000n;

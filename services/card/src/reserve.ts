@@ -18,7 +18,13 @@ export const OPEN_HOLD_STATUSES = ["RESERVED", "SUBMITTED", "ONCHAIN", "FINALIZE
 
 export type ReserveOutcome =
   | { ok: true; snapshot: AccountSnapshot; pending: bigint; available: bigint; envelopeCovers: boolean }
-  | { ok: false; reason: "insufficient" | "allowance"; snapshot: AccountSnapshot; pending: bigint; available: bigint };
+  | {
+      ok: false;
+      reason: "insufficient" | "allowance" | "prices_paused";
+      snapshot: AccountSnapshot;
+      pending: bigint;
+      available: bigint;
+    };
 
 export interface ReserveRequest {
   account: Address;
@@ -43,13 +49,18 @@ export async function reserveHold(ctx: CardContext, req: ReserveRequest): Promis
       const allowanceBound = allowanceLimited;
       return { ok: false, reason: allowanceBound ? "allowance" : "insufficient", snapshot, pending, available };
     }
+    // Envelope fallback (risk-math.md "envelope" mode): unused envelope R − H at finalized, minus what we reserved.
+    const envelopeFree = snapshot.envelope - snapshot.holds - pending;
+    const envelopeCovers = envelopeFree >= req.amount;
+    // Status matrix: a non-envelope hold reverts while a held market is STALE / CIRCUIT / HALTED
+    // (CardModule._requireHoldAllowed) — decline now, with its reason, instead of after a reverted send.
+    if (snapshot.anyUnsafe && !envelopeCovers)
+      return { ok: false, reason: "prices_paused", snapshot, pending, available };
     await tx`
       INSERT INTO holds (hold_id, chain_id, account, issuer, txn_token, amount_usd6, status, expected_usd6)
       VALUES (${req.holdId}, ${ctx.chainId}, ${account}, ${ctx.env.CARD_ISSUER_LABEL}, ${req.txnToken},
               ${req.amount}, 'RESERVED', ${req.amount})`;
-    // Envelope fallback (risk-math.md "envelope" mode): unused envelope R − H at finalized, minus what we reserved.
-    const envelopeFree = snapshot.envelope - snapshot.holds - pending;
-    return { ok: true, snapshot, pending, available, envelopeCovers: envelopeFree >= req.amount };
+    return { ok: true, snapshot, pending, available, envelopeCovers };
   });
 }
 

@@ -21,6 +21,15 @@ export const cardEnvSchema = baseEnvSchema.extend({
   CARD_RELEASE_ONLY: z.stringbool().default(false),
   /** Sandbox API for card/simulate and freeze (D-042); simulate is refused when this is not the sandbox. */
   LITHIC_API_BASE: z.url().default(LITHIC_SANDBOX_API),
+  /**
+   * Card program (BIN range) for issued cards; empty → the program's default. Sandbox test programs:
+   * 00000000-0000-0000-1000-000000000000 and 00000000-0000-0000-2000-000000000000.
+   */
+  // z.guid, not z.uuid: the sandbox program tokens are not RFC 4122 v1–v8 UUIDs.
+  LITHIC_CARD_PROGRAM_TOKEN: z
+    .guid()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
 });
 
 export type CardEnv = z.output<typeof cardEnvSchema>;

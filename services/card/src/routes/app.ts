@@ -1,10 +1,4 @@
-import {
-  cardAllowanceRoute,
-  cardEmbedRoute,
-  cardFreezeRoute,
-  cardSimulateRoute,
-  cardSummaryRoute,
-} from "@senryo/api-client";
+import { cardAllowanceRoute, cardEmbedRoute } from "@senryo/api-client";
 import {
   contractCall,
   describeError,
@@ -13,82 +7,37 @@ import {
   sendAndFinalize,
   verifySpendAllowanceSignature,
 } from "@senryo/chain";
-import {
-  HTTP_STATUS,
-  HttpError,
-  type HttpServer,
-  MS_PER_SECOND,
-  parseRoute,
-  type Session,
-  sendRoute,
-} from "@senryo/service-common";
-import type { FastifyRequest } from "fastify";
+import { HTTP_STATUS, HttpError, type HttpServer, MS_PER_SECOND, parseRoute, sendRoute } from "@senryo/service-common";
 import { type CardContext, operatorFor } from "../context.ts";
-import { OPEN_HOLD_STATUSES } from "../reserve.ts";
+import { registerIssueRoutes } from "./issue.ts";
+import { appKit } from "./kit.ts";
+import { registerSimulateRoutes } from "./simulate.ts";
+import { registerSummaryRoutes } from "./summary.ts";
 
 const DEFAULT_EMBED_TTL_SEC = 60;
-const RECENT_AUTHS = 20;
 
 /** Allowance relays in flight, by user (one process serves the card API). */
 const allowanceInflight = new Set<string>();
 
-/** App-facing card routes (session = the api's SIWE token; D-111). Lithic-backed ones need `LITHIC_API_KEY`. */
+/**
+ * App-facing card routes (session = the api's SIWE token; D-111). Issuer-backed ones need `LITHIC_API_KEY` and
+ * answer a named `ISSUER_UNAVAILABLE` without it:
+ *   issue · freeze · unfreeze (issue.ts) · summary · repay-quote (summary.ts) · simulate · simulate/step (simulate.ts)
+ *   embed · allowance (here)
+ */
 export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
-  const session = async (request: FastifyRequest): Promise<Session> => {
-    if (!ctx.sessions) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", "sessions not configured");
-    const current = await ctx.sessions.require(request);
-    if (current.chainId !== ctx.chainId)
-      throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "wrong network for this card service");
-    return current;
-  };
-  const lithic = () => {
-    if (!ctx.lithic) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", "card issuer not configured");
-    return ctx.lithic;
-  };
-  const ownCard = async (cardToken: string, s: Session) => {
-    const [card] = await ctx.db<
-      { account: string }[]
-    >`SELECT account FROM cards WHERE card_token = ${cardToken} AND chain_id = ${ctx.chainId}`;
-    if (!card || card.account !== s.address.toLowerCase())
-      throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such card");
-  };
-
-  app.post(
-    cardSimulateRoute.path,
-    { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } },
-    async (request, reply) => {
-      const s = await session(request);
-      const { body } = parseRoute(cardSimulateRoute, request);
-      await ownCard(body.cardToken, s);
-      const api = lithic();
-      if (!api.isSandbox) throw new HttpError(HTTP_STATUS.forbidden, "FORBIDDEN", "simulate is sandbox-only (D-042)");
-      const card = await api.card(body.cardToken);
-      if (!card.pan) throw new HttpError(HTTP_STATUS.badGateway, "UPSTREAM_UNAVAILABLE", "card PAN unavailable");
-      const sim = await api.simulateAuthorize({
-        pan: card.pan,
-        amount: body.amountCents,
-        descriptor: body.descriptor,
-        mcc: body.mcc,
-      });
-      return sendRoute(reply, cardSimulateRoute, { transactionToken: sim.token });
-    },
-  );
-
-  app.post(cardFreezeRoute.path, async (request, reply) => {
-    const s = await session(request);
-    const { body } = parseRoute(cardFreezeRoute, request);
-    await ownCard(body.cardToken, s);
-    const updated = await lithic().setState(body.cardToken, body.frozen ? "PAUSED" : "OPEN");
-    await ctx.db`UPDATE cards SET state = ${body.frozen ? "PAUSED" : "ACTIVE"}, updated_at = now() WHERE card_token = ${body.cardToken}`;
-    return sendRoute(reply, cardFreezeRoute, { cardToken: body.cardToken, state: updated.state });
-  });
+  const kit = appKit(ctx);
+  registerIssueRoutes(app, ctx, kit);
+  registerSummaryRoutes(app, ctx, kit);
+  registerSimulateRoutes(app, ctx, kit);
 
   app.get(cardEmbedRoute.path, async (request, reply) => {
-    const s = await session(request);
+    const s = await kit.session(request);
     const { query } = parseRoute(cardEmbedRoute, request);
-    await ownCard(query.cardToken, s);
+    const card = await kit.ownCard(query.cardToken, s);
+    if (card.state === "CLOSED") throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", "card is closed");
     const ttl = query.ttlSec ?? DEFAULT_EMBED_TTL_SEC;
-    const url = lithic().embedUrl(query.cardToken, ttl);
+    const url = kit.issuer().embedUrl(card.card_token, ttl);
     return sendRoute(reply, cardEmbedRoute, {
       url,
       expiresAt: new Date(Date.now() + ttl * MS_PER_SECOND).toISOString(),
@@ -100,7 +49,7 @@ export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
     { config: { rateLimit: { max: 5, timeWindow: "1 minute" } } },
     async (request, reply) => {
       // S8.5b #4: only the signed-in owner may spend operator gas on their allowance, one relay at a time.
-      const s = await session(request);
+      const s = await kit.session(request);
       const { body } = parseRoute(cardAllowanceRoute, request);
       if (body.chainId !== ctx.chainId)
         throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "wrong chain for this card service");
@@ -142,56 +91,4 @@ export function registerAppRoutes(app: HttpServer, ctx: CardContext): void {
       }
     },
   );
-
-  app.get(cardSummaryRoute.path, async (request, reply) => {
-    const s = await session(request);
-    const account = s.address.toLowerCase();
-    const cards = await ctx.db<{ card_token: string; state: string; label: string | null }[]>`
-      SELECT card_token, state, label FROM cards WHERE account = ${account} AND chain_id = ${ctx.chainId} ORDER BY created_at`;
-    const [held] = await ctx.db<{ total: bigint }[]>`
-      SELECT COALESCE(SUM(amount_usd6), 0)::bigint AS total FROM holds
-       WHERE account = ${account} AND chain_id = ${ctx.chainId} AND status IN ${ctx.db(OPEN_HOLD_STATUSES)}`;
-    const recent = await ctx.db<
-      {
-        id: string;
-        kind: string;
-        status: string;
-        result: string | null;
-        amount_cents: bigint;
-        hold_usd6: bigint | null;
-        mcc: string | null;
-        merchant_descriptor: string | null;
-        received_at: Date;
-      }[]
-    >`SELECT id, kind, status, result, amount_cents, hold_usd6, mcc, received_at, request->'merchant'->>'descriptor' AS merchant_descriptor FROM card_auth
-       WHERE account = ${account} AND chain_id = ${ctx.chainId} ORDER BY received_at DESC LIMIT ${RECENT_AUTHS}`;
-    return sendRoute(reply, cardSummaryRoute, {
-      account: s.address,
-      cards: await Promise.all(
-        cards.map(async (c) => {
-          const issued = await ctx.lithic?.card(c.card_token).catch(() => undefined);
-          return {
-            cardToken: c.card_token,
-            state: c.state,
-            label: c.label,
-            last4: issued?.last_four && /^\d{4}$/.test(issued.last_four) ? issued.last_four : null,
-            sandbox: ctx.lithic?.isSandbox ?? false,
-            capabilities: { reveal: issued !== undefined, walletProvisioning: false },
-          };
-        }),
-      ),
-      openHoldsUsd6: held?.total ?? 0n,
-      recent: recent.map((r) => ({
-        id: r.id,
-        kind: r.kind,
-        status: r.status,
-        result: r.result,
-        amountCents: r.amount_cents,
-        holdUsd6: r.hold_usd6,
-        mcc: r.mcc,
-        merchantDescriptor: r.merchant_descriptor,
-        receivedAt: r.received_at.toISOString(),
-      })),
-    });
-  });
 }

@@ -120,6 +120,11 @@ export const GAS_LIMITS = {
    */
   revokeSpendAllowance: 410_000n,
   /**
+   * repayCardDebt (E4 Repay, user-sent): not fork-measured yet; bounded by `withdraw` — the same balance charge plus a
+   * risk-checked pass (`_emitRiskChecked`) — so it carries that budget.
+   */
+  repayCardDebt: 510_000n,
+  /**
    * (S8.6) SenryoCore.swapCollateral via CollateralSwapper → Universal Router (mainnet only): 0 positions 592.3k,
    * 1 position 765.2k.
    */
@@ -186,6 +191,7 @@ export const POSITION_GAS: Partial<Record<GasAction, bigint>> = {
   executeTrigger: 130_000n,
   setSpendAllowance: 130_000n,
   revokeSpendAllowance: 130_000n,
+  repayCardDebt: 130_000n,
   setCardEnvelope: 130_000n,
   swapCollateral: 130_000n,
   /** Two depositFor risk passes (AUSD and USDC) when both are swept. */
