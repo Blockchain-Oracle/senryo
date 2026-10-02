@@ -48,6 +48,10 @@ export const SPOT_STATS_REFETCH_MS = 60_000;
  */
 export const DISCOVERY_QUOTES_REFETCH_MS = 10_000;
 export const DISCOVERY_CANDLES_REFETCH_MS = 60_000;
+/** The wallet's Perpl account/positions (direct onchain reads) between send-driven invalidations. */
+export const PERPL_ACCOUNT_REFETCH_MS = 10_000;
+/** A Perpl market's order terms (mark, max leverage, fee) and the Exchange's halt flag while a ticket is open. */
+export const PERPL_TERMS_REFETCH_MS = 5_000;
 /** Perpl's `/v1/pub/context` (funding intervals) is re-read at most this often. */
 export const PERPL_CONTEXT_TTL_MS = 600_000;
 /** A Perpl REST call that takes longer is "didn't answer" (the onchain price beside it still shows). */

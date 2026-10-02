@@ -40,9 +40,15 @@ export function capabilitiesOf(f: CapabilityFacts) {
       f.account && f.chainId === MAINNET_CHAIN_ID,
       "Spot swaps require a Mainnet wallet and a live quote",
     ),
+    // D1: Perpl is traded from the wallet on Mainnet; `perplAccountReady` comes from `usePerplReady` (Exchange live,
+    // account not frozen — no account yet is fine: the first open creates it).
     perplTrade: decision(
-      f.account && f.perplAccountReady === true,
-      "Perpl account funding and execution acceptance are pending",
+      f.account && f.chainId === MAINNET_CHAIN_ID && f.perplAccountReady === true,
+      !f.account
+        ? "Sign in to trade on Perpl"
+        : f.chainId !== MAINNET_CHAIN_ID
+          ? "Perpl trades run on Mainnet"
+          : "Perpl isn't accepting orders from this account right now",
     ),
     pool: decision(f.account && isDeployed(f.chainId, "LpVault"), "Pool investment is unavailable on this network"),
     cardReveal: decision(
