@@ -112,7 +112,10 @@ export class HyperSyncScanner {
     if (fresh && state.complete && state.tracesComplete) return this.result(state, null);
     if (!this.token) throw new UpstreamError("hypersync", null, "no HyperSync token configured");
     if (Date.now() < this.backoffUntil) {
-      if (state.scannedAt > 0) return this.result(state, "HyperSync rate-limited; showing the last scan");
+      // A scan from this process, or one restored from the store, still answers while the budget recovers.
+      if (state.scannedAt > 0 || state.nextBlock > 0) {
+        return this.result(state, "HyperSync rate-limited; showing the last scan");
+      }
       throw new UpstreamError("hypersync", null, "rate-limited (backing off)");
     }
     let note: string | null = null;
