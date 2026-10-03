@@ -11,6 +11,9 @@ export const BRAND = {
   network: "MONAD",
 } as const;
 
+/** The public source (the judge guide's repo-relative links open here, on the default branch). */
+export const REPO = { url: "https://github.com/Blockchain-Oracle/senryo", branch: "main" } as const;
+
 /**
  * Top-bar seal edge (CSS px). brand/README.md: the full seal needs ≥ 32 device px (below that, use the favicon mark),
  * so the bar draws it at 32 and a 1× screen still gets the whole carving.

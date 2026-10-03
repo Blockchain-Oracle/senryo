@@ -769,6 +769,15 @@
         "use": "network pill (Monad mark + name) on Receive",
         "path": "src/components/money/receive-screen.tsx",
         "retokenized": true
+      },
+      {
+        "name": "stacked-activity",
+        "source": "21st:eugeneshilow/stacked-activity",
+        "id": 29474,
+        "url": "https://21st.dev/@eugeneshilow/components/stacked-activity",
+        "use": "/stats/ per-day columns (new accounts, trades) as two small multiples with a shared hover day and a hatched partial today",
+        "path": "src/components/ui/daily-bars.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -796,6 +805,26 @@
         "id": 25058,
         "name": "Account Settings Fieldset",
         "verdict": "rejected: profile fields; security uses the installed Segmented Control"
+      },
+      {
+        "id": 12396,
+        "name": "Markdown",
+        "verdict": "grammar ported, dependency rejected: needs react-markdown + remark-gfm; /judges/ renders docs/judges.md at build with src/components/public/markdown.tsx (zero client JS)"
+      },
+      {
+        "id": 28559,
+        "name": "Bar Chart (heygaia)",
+        "verdict": "rejected: Recharts for two small daily series"
+      },
+      {
+        "id": 28553,
+        "name": "Bar Chart (retroui)",
+        "verdict": "rejected: Recharts for two small daily series"
+      },
+      {
+        "id": 19070,
+        "name": "Advanced Stats",
+        "verdict": "rejected: boxed stat cards; /stats/ uses AmountHero + ListRow (rows, not boxes)"
       }
     ],
     "removed": [

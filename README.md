@@ -9,7 +9,8 @@ Monad Metropolis · Track 01 *Onchain Finance & Trading* · bounties: Agora Mobi
 | Web | https://senryo.xyz (passkeys need a PRF-capable authenticator: iCloud Keychain, Google Password Manager, 1Password) |
 | Android | Preview APK (runtime 0.2.0): https://expo.dev/artifacts/eas/QT0s9Zj8MY0RFhJeKx3zPn8m6709ABJLrXj0oNvcNvo.apk |
 | iOS | TestFlight *(judge access set up before submission; see the judge guide)* |
-| Judge guide | [`docs/judges.md`](docs/judges.md): the fastest path through every feature, voucher codes, watch mode for geo-blocked regions |
+| Judge guide | [`docs/judges.md`](docs/judges.md) (also at https://senryo.xyz/judges/): the fastest path through every feature, voucher codes, watch mode for geo-blocked regions |
+| Live stats | https://senryo.xyz/stats/: accounts, trades, traded notional, pool value and a daily chart per network, read live from the public indexer and the pool contract |
 | Demo video | *(added before submission)* |
 
 ## The problem and the first user

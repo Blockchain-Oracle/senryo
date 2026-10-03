@@ -61,6 +61,9 @@ Public GraphQL: `https://indexer.senryo.xyz/v1/graphql`. Try:
 
 Config, schema and handlers: [`indexer/`](../indexer).
 
+Live counts per network, read in the browser from this endpoint (accounts, trades, traded notional, a daily chart) and
+from the pool contract (pool value): https://senryo.xyz/stats/
+
 ## 7. Known limits, stated plainly
 
 - Practice swaps between tokens are limited; real swaps run on Mainnet.

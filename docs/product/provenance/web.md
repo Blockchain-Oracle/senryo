@@ -36,6 +36,13 @@ install or postinstall scripts, integrity `sha512-dxLob7q65Xg2…9HzU/A==`. It i
 change is jsqr's own three entries (written by hand, verified with `pnpm install --frozen-lockfile`) so the mobile tree
 is untouched. nginx now sends `camera=(self)`.
 
+### Round 3 ports (public stats and judge guide, `claude/stats`)
+
+| Component (file) | 21st source | What was ported | Deviations |
+|---|---|---|---|
+| `components/ui/daily-bars.tsx` (`/stats/` per-day chart) | eugeneshilow/stacked-activity **#29474** (search "bar chart daily activity") | Daily columns from one baseline, the hovered day's track band, per-day hit zones wider than the columns, the hatched partial last day (today isn't over), clean {1, 2, 2.5, 5}×10^k scale steps, the grow-in stagger. | One series per chart: new accounts and trades are two small multiples on one day axis (two scales are never one stack or a second axis). The live legend moved to the caller so both charts share one hovered day; tap works as hover. Labels are HTML so text never scales with the SVG; Living Lacquer tokens (`--practice` / `--mainnet` per network) instead of the vizcn palette; motion/react with the lacquer ease, reduced motion draws in place; a visually hidden table carries every value. Recharts-based bar charts (heygaia #28559, retroui #28553) were not used: a charting library for two small series. |
+| `components/public/markdown.tsx` (`/judges/`) | serafimcloud/markdown **#12396** (search "markdown prose renderer article") | The element grammar: headings, ordered and bullet lists, tables, quotes, code fences, external links in a new tab with `noopener`. | Not the dependency: the 21st component needs react-markdown + remark-gfm (the unified tree). The guide is our own file, rendered at build in a server component, so a ~250-line parser covering what the guides use ships zero JS; same-site links become in-app paths and repo-relative links open the file on GitHub. |
+
 ## Searched, none fit (built on the kit)
 
 | Need | Search | Result → what was used |
@@ -47,6 +54,7 @@ is untouched. nginx now sends `camera=(self)`.
 | Leaderboard / rows | "leaderboard list", "list item row avatar" | Achievement and item lists with boxes. Rows follow Part A rule 5 (`components/kit/list-row.tsx`, no boxes). |
 | Feed row | "social feed post" | Post cards (boxed). `components/social/feed-row.tsx` follows the phone's FeedRow (Fomo F15): bare rows, verb plate, market line, Trade this. |
 | Margin / amount entry | "amount input currency" | Input groups. The ticket's margin hero and the send amount are bare Inter Display inputs (Part A rule 1). |
+| Stats figures | "stat tile kpi metric row", "stats metrics dashboard kpi" | Stat cards, KPI cards and an 8-bit dashboard (boxed tiles). `/stats/` keeps the app's grammar: traded notional as the one `AmountHero`, then `ListRow`s with a quiet glyph; a figure the indexer can't answer is "—" with its reason as the subtitle. The network switch is the installed segmented control #23552. |
 | Period chips | "period selector chips" | preetsuthar17/selector-chips #1963 (already the phone's ChainGrid source); the web chips are plain pressed-state buttons with the same grammar. |
 
 ## Marks (rule 7)
