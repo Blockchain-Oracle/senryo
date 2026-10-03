@@ -1,7 +1,10 @@
 import { type ClassValue, clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
-/** The D2 type roles from globals.css `@theme` — registered so `text-label text-primary` never collapse into one. */
+/**
+ * Every type role from globals.css `@theme` (D2 and Living Lacquer) — registered so `text-meta text-text-2` never
+ * collapse into one (unregistered, tailwind-merge reads `text-meta` as a colour and drops it).
+ */
 const TYPE_ROLES = [
   "micro",
   "label",
@@ -14,6 +17,18 @@ const TYPE_ROLES = [
   "num-lg",
   "num-xl",
   "num-hero",
+  "display-balance",
+  "display-margin",
+  "display-price",
+  "page-title",
+  "sheet-title",
+  "section-title",
+  "row",
+  "meta",
+  "button",
+  "button-compact",
+  "tab",
+  "fan",
 ] as const;
 
 const twMerge = extendTailwindMerge({

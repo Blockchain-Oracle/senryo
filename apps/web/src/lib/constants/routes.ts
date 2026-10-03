@@ -27,7 +27,13 @@ export const ROUTES = {
   notifications: "/notifications/",
   swap: "/swap/",
   bridgeIn: "/bridge-in/",
+  /** Public pages outside the app shell (D-022 traction, F90 judge path). */
+  stats: "/stats/",
+  judges: "/judges/",
 } as const;
+
+/** The stats page on one network (the switch's deep link; `chainId` as in watch links). */
+export const statsHref = (chainId: number) => `/stats/?chainId=${chainId}` as const;
 
 /** A position's page (one net position per engine market). */
 export const positionHref = (market: string) => `/position/?market=${market}` as const;
