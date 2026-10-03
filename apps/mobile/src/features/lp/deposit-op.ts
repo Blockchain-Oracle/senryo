@@ -17,7 +17,7 @@ import {
   withdrawRequest,
 } from "@senryo/query";
 import type { MoneyAsset } from "~/features/money/assets";
-import { type PaySwap, payIntent, paySwapSteps } from "~/features/money/pay-with";
+import { type PaySwap, parPaySteps, payIntent, paySwapSteps } from "~/features/money/pay-with";
 import type { MoneyOperation } from "~/features/money/useMoneyOperation";
 import { usd } from "~/lib/money";
 
@@ -73,6 +73,8 @@ export async function poolDepositSteps(
         : [];
     return composeSteps({ pull, act });
   }
+  if (d.swap.status === "par")
+    return composeSteps({ swap: await parPaySteps(env, me, d.payWith, d.swap.amountIn), act });
   if (d.swap.status !== "ok") return undefined;
   return composeSteps({ swap: await paySwapSteps(env, me, d.payWith, d.swap.quote), act });
 }
@@ -97,7 +99,9 @@ export function poolDepositOperation(
       source: swapping ? "swap" : d.payWith.wallet >= d.amountUsd6 ? "wallet" : "wallet+trading",
       ...payIntent(d.payWith, d.swap),
     },
-    spends: { [d.payWith.key]: swapping && d.swap.status === "ok" ? d.swap.amountIn : d.amountUsd6 },
+    spends: {
+      [d.payWith.key]: swapping && (d.swap.status === "ok" || d.swap.status === "par") ? d.swap.amountIn : d.amountUsd6,
+    },
     // Before the first step: the pool's room and the paying balance; before the deposit: the AUSD it needs.
     revalidate: async (index) => {
       guard();

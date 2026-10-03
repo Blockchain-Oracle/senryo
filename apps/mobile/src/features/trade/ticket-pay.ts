@@ -104,7 +104,7 @@ export function useTicketPay(
     swap,
     swapping,
     block,
-    note: chainId === MAINNET_CHAIN_ID ? undefined : practiceNote("trade"),
+    note: chainId === MAINNET_CHAIN_ID ? undefined : practiceNote(),
     reasonFor: (a) => payWithReason(a, "trade", chainId),
     assets: money.assets,
     other: money.other,

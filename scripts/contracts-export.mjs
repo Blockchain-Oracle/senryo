@@ -39,6 +39,7 @@ const CONTRACTS = [
   ["AggregatorV3Interface.sol", "AggregatorV3Interface"],
   ["MockAUSD.sol", "MockAUSD"],
   ["MockUSDC.sol", "MockUSDC"],
+  ["PracticeSwap.sol", "PracticeSwap"],
   ["AccessManager.sol", "AccessManager"],
 ];
 

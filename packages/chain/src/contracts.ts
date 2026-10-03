@@ -10,6 +10,7 @@ import {
   mirrorAggregatorAbi,
   mockAUSDAbi,
   mockUSDCAbi,
+  practiceSwapAbi,
   senryoCoreAbi,
   sessionOracleAbi,
   starterDripAbi,
@@ -40,6 +41,8 @@ export const CONTRACT_ABIS = {
   MirrorCAD: mirrorAggregatorAbi,
   MockAUSD: mockAUSDAbi,
   MockUSDC: mockUSDCAbi,
+  /** Practice AUSD ↔ USDC at par on 10143 (D-252, `PracticeSwap.s.sol`). */
+  PracticeSwap: practiceSwapAbi,
 } as const;
 
 export type ContractName = keyof typeof CONTRACT_ABIS;

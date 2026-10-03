@@ -26,7 +26,14 @@ const MON_DECIMALS = 18;
 const STALE_PREPARING_MS = 600_000;
 
 const BRIDGE_ACTIONS = new Set(["relayDeposit", "cctpBurn", "acrossDeposit", "lifiBridge"]);
-const SWAP_ACTIONS = new Set(["aggregatorSwap", "spotSwap", "uniswapSwap", "swapCollateral", "swapToken"]);
+const SWAP_ACTIONS = new Set([
+  "aggregatorSwap",
+  "spotSwap",
+  "uniswapSwap",
+  "swapCollateral",
+  "swapToken",
+  "practiceSwap",
+]);
 const POOL_ACTIONS = new Set(["lpDeposit", "lpRequestRedeem", "lpClaimRedeem"]);
 const TRADE_ACTIONS = new Set(["increase", "decrease", "close", "placeTrigger", "executeTrigger"]);
 const CARD_ACTIONS = new Set(["setSpendAllowance", "revokeSpendAllowance", "setCardEnvelope", "repayCardDebt"]);

@@ -12,4 +12,5 @@ export { mirrorAggregatorAbi } from "./mirrorAggregatorAbi";
 export { aggregatorV3InterfaceAbi } from "./aggregatorV3InterfaceAbi";
 export { mockAUSDAbi } from "./mockAUSDAbi";
 export { mockUSDCAbi } from "./mockUSDCAbi";
+export { practiceSwapAbi } from "./practiceSwapAbi";
 export { accessManagerAbi } from "./accessManagerAbi";

@@ -16,9 +16,14 @@ export interface ScopeTargets {
   lpVault: Address | undefined;
   starterDrip: Address | undefined;
   intentRouter: Address | undefined;
+  /** Practice AUSD ↔ USDC at par (D-252, testnet only): its `swap` is a swap, and it may be approved. */
+  practiceSwap: Address | undefined;
   stables: readonly Address[];
   faucets: readonly Address[];
-  /** Spenders a session may approve: the core, the LP vault and Perpl's Exchange (D1). */
+  /**
+   * Spenders a session may approve: the core, the LP vault, Perpl's Exchange (D1) and the practice swap (it only ever
+   * pulls from its own caller).
+   */
   spenders: readonly Address[];
   /** Perpl's Exchange and its collateral (AUSD) on this network, from `@senryo/config` (not our address book). */
   perplExchange: Address | undefined;
@@ -44,14 +49,16 @@ export function scopeTargets(chainId: ChainId): ScopeTargets {
   const core = entry(chainId, "SenryoCore");
   const lpVault = entry(chainId, "LpVault");
   const perplExchange = PERPL_EXCHANGE[chainId] ? getAddress(PERPL_EXCHANGE[chainId]) : undefined;
+  const practiceSwap = entry(chainId, "PracticeSwap");
   const targets: ScopeTargets = {
     core,
     lpVault,
     starterDrip: entry(chainId, "StarterDrip"),
     intentRouter: entry(chainId, "IntentRouter"),
+    practiceSwap,
     stables: entries(chainId, STABLE_ENTRIES),
     faucets: entries(chainId, FAUCET_ENTRIES),
-    spenders: [core, lpVault, perplExchange].filter((a): a is Address => a !== undefined),
+    spenders: [core, lpVault, perplExchange, practiceSwap].filter((a): a is Address => a !== undefined),
     perplExchange,
     perplCollateral: PERPL_COLLATERAL[chainId] ? getAddress(PERPL_COLLATERAL[chainId]) : undefined,
     perplScales: PERPL_MARKET_SCALES[chainId] ?? {},
