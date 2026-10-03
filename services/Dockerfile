@@ -16,7 +16,10 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
       --filter "@senryo/api..." --filter "@senryo/card..." --filter "@senryo/keeper..."
 RUN node services/common/scripts/bundle.mjs /out
 
-FROM node:24-alpine AS runtime
+# Debian slim (glibc), not Alpine: musl's getaddrinfo fails the whole lookup when a name's AAAA query answers SERVFAIL,
+# which Docker's embedded DNS does for HyperSync's CNAME chain (143.hypersync.xyz → EAI_AGAIN, 3 Oct 2026) while the
+# A records resolve. glibc returns the A records. The bundle is plain JS, so only the libc changes.
+FROM node:24-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 # Fully bundled: no node_modules in the runtime image.
