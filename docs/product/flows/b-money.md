@@ -199,6 +199,13 @@ use the same pickers, sheets and receipts as AUSD.
   reused (open mode takes later deposits), the timeline is polled by address, issuing records an Arriving row.
   (P): "Mainnet only" (Relay has no test network). Solana / Bitcoin / Tron / TON origins: Relay with `RELAY_API_KEY`, or
   Aurora's persistent addresses once its Monad incident clears (routes.md §5).
+- **Web (claude/web3, 3 Oct):** the same on `/bridge-in/` (`apps/web/src/components/bridge/deposit-address.tsx`):
+  the address kept per route in the browser (a reload, or the same amount, shows it again), the dotted QR with the
+  origin chain's mark, the timeline polled by address, an "Arriving" row on Home → Assets until the balance rises;
+  below the minimum the request is refused by name ("Below minimum") and no address shows; Practice "Deposit address ·
+  Mainnet only". Seen live on Mainnet (local build pointed at 143, read-only issuance): USDC from Base →
+  `0x16df…a3f7`, ≥ 9.77 USDC, Waiting → Bridging → Arrived. The record, timeline and Arriving rule are
+  `@senryo/query`'s (`deposit-addresses.ts`, `arrivals.ts`).
 - **Still open:** XAUt0 has no deposit address (no Relay solver for XAUT) — its row keeps the wallet-signed quote only.
 - **Acceptance:**
   - [ ] (M) A live 10 USDC run from Base via Relay arrives in Assets, with Activity and push. A resumed kill mid-bridge shows the same row.
@@ -274,6 +281,12 @@ use the same pickers, sheets and receipts as AUSD.
   - [ ] A spam token appears in "You pay" with a warning and is absent from "You receive".
   - [ ] Calldata to a non-pinned router is refused before signing (test with a tampered quote on the fork).
   - [ ] (P) AUSD → USDC and back at par from the ticket: review "Practice swap · at par", slide, step-up, Activity row. The chain half is proven live (`scripts/drive` `practice-swap-check`, 3 Oct: approve 57.3k + swap 137.9k / 119.2k gas, exact par both ways, float total unchanged); the screen walk waits for the merged simulator pass.
+  - [x] (P, web, 3 Oct) The web walk, live on 10143 (dev rpId, virtual PRF passkey, fresh account `0xfEdB…0964`):
+    25 AUSD (all in trades) → USDC as ONE operation "Pull from trades · Approve AUSD · Swap" — pull `0xf985…31a1`,
+    approve `0x788f…704c`, swap `0x8768…539a` (25.000000 in, 25.000000 out); back 10 USDC → AUSD — approve
+    `0x6b04…dec1`, swap `0x1d51…c74f`; both "Swapped" rows in Activity; AUSD → MON keeps "Swaps run on Mainnet". The
+    first try stopped before signing with "The transaction differs from the reviewed intent" (nothing sent): a
+    composed pull from trades carried withdraw's own facts — fixed in `@senryo/query` (`pullRequest`) for both apps.
 
 ### B7 Send any asset to a person or address (Monad)
 - **Promise:** send any token to a @handle, contact or address.
@@ -416,6 +429,12 @@ use the same pickers, sheets and receipts as AUSD.
   MON, then runs; an operation the MON already pays for is never blocked; below the top-up's own fee (a zero-MON wallet)
   it names the MON it needs. Send, withdraw, swap, pool deposit and the ticket (Mainnet) all plan it with the review.
   Fork-checked: `scripts/drive` `compose-fork-check`.
+- **Web (claude/web3, 3 Oct):** the web runner prepares every Mainnet operation with the same shared planner
+  (`@senryo/query` `prepareMoneyOperation`, moved from the phone): send, withdraw, withdraw to another chain, swap,
+  pool deposit and the ticket show "Network fee" in Details before the slide, or the named shortfall. Read-only on 143:
+  a zero-MON, zero-dollar wallet → "Network fee needs ~0.019 MON or $0.50 in dollars"; a live wallet with 65 USDC and
+  0 MON → "Network fee needs ~0.128 MON first"; on a local anvil fork, 20 USDC + 0.099 MON (reserve 0.090) sending 1 USDC
+  → "Network fee · Send" with "0.50 USDC → MON", and 5 MON → covered.
 - **Still open:** the zero-MON bootstrap needs the sponsor (BD-4: `StarterDrip` on 143 + `topup.ts` eligibility on wallet
   value) — an EOA can't pay for its own first swap.
 - **Was (before claude/compose):**

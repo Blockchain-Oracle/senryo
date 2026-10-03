@@ -219,6 +219,11 @@ Session defaults: 30 min TTL, 5 min idle (`constants.ts:27-28`).
   - ~~"Pay with" is missing.~~ Built (claude/compose, 2 Oct): "Buying power $x · Pay with AUSD ⌄" over every holding;
     the shortfall comes from the chosen asset in the same operation — wallet AUSD/USDC moved in, or (Mainnet, gated on
     the deployed core) a swap to AUSD first (`features/trade/ticket-pay.ts`, `useTicket.ts`); Practice "dollars only".
+    Web (claude/web3, 3 Oct): the same hook, now `@senryo/query` `useTicketPay`, on the web ticket; Details lists the
+    composed steps before the slide ("Move to trading · Open", "Swap MON → AUSD · Move to trading · Open", "Network
+    fee" first on Mainnet when MON is short). The shortfall is now what the preview says the order takes (fee, margin,
+    the spread the entry costs, the $1 buffer — `ticketNeedUsd6`, both apps), not margin + fee: a 20× or wide-spread
+    order was short by the spread and still read "Insufficient funds".
   - The rail is always `color.primary` (`components/trade/HoldToConfirm.tsx:142`), with no `tone` or `busy` (Part F2).
   - Funding and borrow rates are never shown before a trade; only the liquidation child mentions them (`TicketChildren.tsx:50`).
   - There's no risk card specific to shorts. The accept control reads "Hold · I understand" on a slide (`risk-explainer.tsx:55`).
