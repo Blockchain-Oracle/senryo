@@ -20,6 +20,7 @@ import { ROUTES, sendToHref, watchHref } from "@/lib/constants/routes";
 import { handleOf, monthYear, nameOf, sameAddress } from "@/lib/social/format";
 import { useSessionGate } from "@/lib/social/session-gate";
 import { FollowButton } from "./follow-button";
+import { ProfileActions } from "./profile-actions";
 
 const PROFILE_AVATAR = 64;
 
@@ -55,7 +56,10 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
     <section className="grid gap-3">
       <div className="flex items-start justify-between gap-3">
         <Avatar avatar={profile.avatar} address={profile.address} size={PROFILE_AVATAR} />
-        <ShareProfile address={profile.address} chainId={env.chainId} />
+        <span className="flex gap-2">
+          <ShareProfile address={profile.address} chainId={env.chainId} />
+          {own ? null : <ProfileActions other={profile.address} name={handleOf(profile)} />}
+        </span>
       </div>
       <div>
         <h1 className="text-sheet-title">{nameOf(profile)}</h1>

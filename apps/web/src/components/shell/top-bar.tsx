@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SessionChip } from "@/components/auth/session-chip";
 import { EntityMark } from "@/components/identity/entity-mark";
+import { HeaderUtilities } from "@/components/shell/header-utilities";
 import { SealMark } from "@/components/shell/seal";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { Tabs as VercelTabs } from "@/components/ui/vercel-tabs";
@@ -42,6 +43,7 @@ export function TopBar() {
           />
         </div>
         <span className="flex-1 sm:hidden" />
+        <HeaderUtilities />
         <SessionChip />
         <span
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-raised-2 py-1 pr-3 pl-1 text-meta"

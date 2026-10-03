@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { StepUpProvider } from "@/components/auth/step-up";
 import { ThemeProvider } from "@/components/shell/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
 import { AccountProvider } from "@/lib/account/provider";
 import { BRAND } from "@/lib/constants/brand";
 import { inter, interDisplay, notoSansJp } from "./fonts";
@@ -34,7 +33,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AccountProvider>
             <StepUpProvider>{children}</StepUpProvider>
           </AccountProvider>
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

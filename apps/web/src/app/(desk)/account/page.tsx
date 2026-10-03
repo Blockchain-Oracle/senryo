@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { AccountScreen } from "@/components/screens/account-screen";
-import { Column } from "@/components/shell/column";
+import { Suspense } from "react";
+import { SettingsScreen } from "@/components/settings/settings-screen";
 
-export const metadata: Metadata = { title: "Account" };
+export const metadata: Metadata = { title: "Settings" };
 
+/** `?section=` is read on the client; the static export pre-renders the list. */
 export default function AccountPage() {
   return (
-    <Column>
-      <AccountScreen />
-    </Column>
+    <Suspense>
+      <SettingsScreen />
+    </Suspense>
   );
 }

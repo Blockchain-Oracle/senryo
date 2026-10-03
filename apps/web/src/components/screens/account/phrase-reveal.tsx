@@ -38,7 +38,7 @@ export function PhraseReveal({ phrase, onHide }: { phrase: string; onHide: () =>
         aria-label="Recovery phrase"
       >
         {words.map((word, i) => (
-          <li key={i} className="flex items-baseline gap-2 font-mono text-caption">
+          <li key={i} className="flex items-baseline gap-2 text-row">
             <span className="w-5 shrink-0 text-right text-muted-foreground tnum">{i + 1}</span>
             <EncryptedText text={word} startDelayMs={i * WORD_STAGGER_MS} />
           </li>

@@ -15,6 +15,8 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { WithdrawToChain } from "@/components/bridge/withdraw-chain";
+import { OperationStatus } from "@/components/kit/operation-status";
 import { PageHeader } from "@/components/kit/page-header";
 import { SEND_WORDS, type TraceWords } from "@/components/kit/trace-words";
 import { Column } from "@/components/shell/column";
@@ -25,7 +27,9 @@ import { useAccount } from "@/lib/account/provider";
 import { useTermsAccepted } from "@/lib/account/terms";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { ROUTES, setupHref } from "@/lib/constants/routes";
+import { plainAmount } from "@/lib/money/amount";
 import { type MoneyAsset, spendableOf } from "@/lib/money/assets";
+import { destinationMark, useDestinations } from "@/lib/money/destinations";
 import { amountOf, valueText } from "@/lib/money/format";
 import { moveOperation, type ReviewedMove, reviewMove } from "@/lib/money/move";
 import { usePeople } from "@/lib/money/people";
@@ -33,6 +37,7 @@ import { RECIPIENT_WORDS, useRecipientCheck } from "@/lib/money/recipient";
 import { useMoneyAssets } from "@/lib/money/use-money-assets";
 import { useMoneyOperation } from "@/lib/money/use-money-operation";
 import { useReviewGuard } from "@/lib/review-guard";
+import { useSettledOutcome } from "@/lib/trade/send-outcome";
 import { AssetMark } from "./asset-mark";
 import { AssetPicker } from "./asset-picker";
 import { MoveReview } from "./move-review";
@@ -56,6 +61,7 @@ function AmountStep({
   warnings,
   checking,
   blocked,
+  prefill,
   onAsset,
   onReview,
 }: {
@@ -63,10 +69,12 @@ function AmountStep({
   warnings: readonly string[];
   checking: boolean;
   blocked: string | undefined;
+  /** A scanned payment code's exact amount (raw units). */
+  prefill?: bigint | undefined;
   onAsset: () => void;
   onReview: (amount: bigint) => void;
 }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => (prefill && prefill > 0n ? plainAmount(prefill, asset.decimals) : ""));
   const available = spendableOf(asset);
   const parsed = parseUnits(text === "" ? "0" : text, asset.decimals);
   const amount = parsed.ok ? parsed.value : 0n;
@@ -133,17 +141,23 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const params = useSearchParams();
   const money = useMoneyAssets(me);
   const { people, known: knownAddresses } = usePeople(me);
+  const destinations = useDestinations(env.chainId, me);
   const runner = useMoneyOperation(`${kind}:${env.chainId}:${me.toLowerCase()}`);
   const risk = known(useAccountRisk(isDeployed(env.chainId, "SenryoCore") ? me : undefined, "latest"));
   const bitmap = risk?.positionBitmap ?? 0;
   const [step, setStep] = useState<Step>("to");
+  /** Withdraw: to an address on Monad, or to another chain (B8 / B9). */
+  const [dest, setDest] = useState<"monad" | "chain">("monad");
   const [recipient, setRecipient] = useState<PickedRecipient>();
   const [assetKey, setAssetKey] = useState(params.get("asset") ?? undefined);
   const [reviewed, setReviewed] = useState<ReviewedMove>();
+  /** Decided when the review opens, so "Save as…" stays on screen after it saves (B13). */
+  const [offerSave, setOfferSave] = useState(false);
   const [block, setBlock] = useState<string>();
   const [busy, setBusy] = useState(false);
   const check = useRecipientCheck(me, recipient?.address, knownAddresses);
   const guard = useReviewGuard(reviewed?.key ?? "");
+  const restoredOutcome = useSettledOutcome(runner.trace.events);
   const asset = (assetKey ? money.find(assetKey) : undefined) ?? money.assets[0];
   const words = kind === "send" ? SEND_WORDS : WITHDRAW_WORDS;
 
@@ -162,13 +176,23 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const warnings = [
     ...(verdict?.warnings ?? []).map((w) => RECIPIENT_WORDS[w]),
     ...(asset && !asset.verified ? ["Unverified token · send anyway?"] : []),
+    ...(recipient?.payment?.chainId !== undefined && recipient.payment.chainId !== env.chainId
+      ? [`Code is for chain ${recipient.payment.chainId}`]
+      : []),
   ];
   const confirm = async () => {
     if (!reviewed) return;
     setBusy(true);
     setBlock(undefined);
     try {
-      await runner.run(moveOperation(env, me, reviewed, ACTIVE_NETWORK.name, knownAddresses, guard));
+      const op = moveOperation(env, me, reviewed, ACTIVE_NETWORK.name, knownAddresses, guard);
+      // Mainnet pays its own fees: say so before the passkey is asked for (B11).
+      const fees = await runner.checkFees(op);
+      if (!fees.ok) {
+        setBlock("Add MON for network fees");
+        return;
+      }
+      await runner.run(op);
     } catch (error) {
       setBlock(error instanceof Error ? (error.message.split("\n")[0] ?? "") : "Couldn’t prepare it");
     } finally {
@@ -193,13 +217,38 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
             }
           : {})}
       />
-      {step === "to" ? (
+      {kind === "withdraw" && step === "to" ? (
+        <fieldset aria-label="Withdraw to" className="grid grid-cols-2 gap-1 rounded-md bg-raised-2 p-1">
+          {(["monad", "chain"] as const).map((d) => (
+            <button
+              key={d}
+              type="button"
+              aria-pressed={dest === d}
+              onClick={() => setDest(d)}
+              className={dest === d ? "h-10 rounded-sm bg-background text-row" : "h-10 rounded-sm text-row text-text-2"}
+            >
+              {d === "monad" ? "Monad" : "Another chain"}
+            </button>
+          ))}
+        </fieldset>
+      ) : null}
+      {kind === "withdraw" && step === "to" && dest === "chain" ? (
+        <WithdrawToChain me={me} />
+      ) : step === "to" ? (
         <RecipientStep
           people={kind === "send" ? people : []}
+          saved={
+            kind === "withdraw"
+              ? destinations.list
+                  .filter((d) => d.chainId === env.chainId)
+                  .map((d) => ({ name: d.name, address: d.address, mark: destinationMark(d) }))
+              : []
+          }
           initial={params.get("to") ?? ""}
           placeholder={kind === "send" ? "Name, @handle or address" : "Your Monad address or exchange deposit"}
           onPick={(r) => {
             setRecipient(r);
+            if (r.payment?.token) setAssetKey(r.payment.token.toLowerCase());
             setStep("amount");
           }}
         />
@@ -241,6 +290,7 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
               warnings={warnings}
               checking={check.isLoading}
               blocked={blocked}
+              prefill={recipient?.payment?.amount}
               onAsset={() => setStep("picker")}
               onReview={(amount) => {
                 if (!recipient) return;
@@ -257,6 +307,7 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
                     bitmap,
                   ),
                 );
+                setOfferSave(kind === "withdraw" && !destinations.find(recipient.address, env.chainId));
                 setStep("review");
               }}
             />
@@ -273,6 +324,9 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
           block={block}
           busy={busy}
           words={words}
+          {...(offerSave
+            ? { onSave: (name: string) => destinations.save({ name, address: reviewed.to, chainId: env.chainId }) }
+            : {})}
           onConfirm={() => void confirm()}
           onDone={() => {
             runner.reset();
@@ -282,7 +336,19 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
           onLeave={() => router.push(ROUTES.home)}
         />
       ) : (
-        <p className="py-6 text-center text-meta text-text-2">Nothing to review</p>
+        // Reopened after a reload: the journal's last move, with its true outcome; Done starts a new one.
+        <OperationStatus
+          events={runner.trace.events}
+          record={runner.trace.record}
+          running={runner.trace.running}
+          outcome={restoredOutcome}
+          words={words}
+          onDone={() => {
+            runner.reset();
+            setStep("to");
+          }}
+          onLeave={() => router.push(ROUTES.home)}
+        />
       )}
     </>
   );

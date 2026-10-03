@@ -23,6 +23,8 @@ import {
 } from "~/features/money/pay-with";
 import { useMoneyAssets } from "~/features/money/useMoneyAssets";
 
+/** The move leg's Details word (`moveToTradingSteps` labels its deposit the same). */
+const MOVE_LABEL = "Move to trading";
 /** One cent over the shortfall: the core's own rounding never leaves the open a hair short. */
 const CENT_USD6 = 10_000n;
 
@@ -50,6 +52,8 @@ export interface TicketPay {
   intent: Record<string, string>;
   /** The composed steps that come before the open ([swap] → [approve] → deposit), read fresh. */
   steps: (env: QueryEnv, owner: `0x${string}`) => Promise<ComposedStep[]>;
+  /** Those steps' Details words, known before the slide (approvals fold into their step; the receipt lists them). */
+  labels: string[];
 }
 
 export function useTicketPay(
@@ -105,6 +109,14 @@ export function useTicketPay(
     assets: money.assets,
     other: money.other,
     intent: payWith && shortfall > 0n ? { ...payIntent(payWith, swap), movedUsd6: incoming.toString() } : {},
+    labels:
+      !payWith || incoming === 0n
+        ? []
+        : direct
+          ? [MOVE_LABEL]
+          : swap.status === "ok"
+            ? [`Swap ${payWith.symbol} → AUSD`, MOVE_LABEL]
+            : [],
     steps: async (env, me) => {
       if (!payWith || shortfall === 0n || incoming === 0n) return [];
       const symbol = direct && payWith.collateral ? payWith.collateral : "AUSD";

@@ -96,3 +96,11 @@ export function moneyOn(chainId: number, value6: bigint, shown: number = DECIMAL
 export function signedMoneyOn(chainId: number, value6: bigint, shown: number = DECIMALS.cents): string {
   return value6 < 0n ? moneyOn(chainId, value6, shown) : `+${moneyOn(chainId, value6, shown)}`;
 }
+
+const TWO_DIGITS = 2;
+
+/** "14:02" in local time. */
+export function clockTime(ms: number): string {
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(TWO_DIGITS, "0")}:${String(d.getMinutes()).padStart(TWO_DIGITS, "0")}`;
+}

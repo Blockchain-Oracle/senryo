@@ -82,20 +82,20 @@ export function RecoveryPanel() {
   };
 
   return (
-    <Panel className="mx-4">
+    <Panel>
       <div className="grid gap-1 border-border border-b px-3 py-3">
-        <p className="flex items-center gap-1.5 font-mono text-caption">
+        <p className="flex items-center gap-1.5 text-row">
           <PasskeyGlyph className="text-primary" />
-          PASSKEY SYNC
+          Passkey sync
         </p>
-        <p className="text-caption text-muted-foreground">
+        <p className="text-meta text-text-2">
           Your passkey is your account. iCloud Keychain, Google Password Manager and 1Password sync it to your other
           devices — sign in there with "I already have an account" and the same address appears.
         </p>
       </div>
       <div className="grid gap-2 border-border border-b px-3 py-3">
-        <p className="font-mono text-caption">BACKUP PASSKEY</p>
-        <p className="text-caption text-muted-foreground">
+        <p className="text-row">Backup passkey</p>
+        <p className="text-meta text-text-2">
           For a provider that doesn't sync, or a move between Apple and Google: a second passkey. Senryo keeps an
           encrypted copy it can't open, and you get the same copy as a recovery file — both useless without that
           passkey.
@@ -105,24 +105,21 @@ export function RecoveryPanel() {
           {backup === "none" ? "Add a backup passkey" : "Add another backup passkey"}
         </Button>
         {backup !== "none" ? (
-          <p
-            role="status"
-            className={backup === "file-only" ? "text-caption text-down" : "text-caption text-muted-foreground"}
-          >
+          <p role="status" className={backup === "file-only" ? "text-caption text-down" : "text-meta text-text-2"}>
             {BACKUP_NOTE[backup]}
           </p>
         ) : null}
       </div>
       <details className="group px-3 py-3">
-        <summary className="cursor-pointer list-none font-mono text-caption text-muted-foreground hover:text-foreground">
-          ADVANCED · EXPORT TO ANOTHER WALLET
+        <summary className="cursor-pointer list-none text-row text-muted-foreground hover:text-foreground">
+          Export to another wallet
         </summary>
         <div className="mt-2 grid gap-2">
           {phrase ? (
             <PhraseReveal phrase={phrase} onHide={() => setPhrase(undefined)} />
           ) : (
             <>
-              <p className="text-caption text-muted-foreground">
+              <p className="text-meta text-text-2">
                 The 24 words behind your passkey import into any standard wallet (same address). Only for moving out —
                 Senryo never needs them.
               </p>

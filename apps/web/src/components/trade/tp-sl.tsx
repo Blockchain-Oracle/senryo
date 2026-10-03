@@ -3,15 +3,16 @@
 /**
  * The position's TP / SL (flow book C6, plan §0.9 Position "TP/SL row"): the active levels with their distance from the
  * mark and Cancel, then Add take profit / Add stop loss — a price field checked side-aware (long: liq < SL < mark < TP)
- * with its potential P/L, saved in the session. Each save or cancel shows its own status; nothing is re-sent, and a
+ * with its potential P/L, set with one slide in the session; Edit replaces a level in one operation (the new one placed,
+ * then the old one cancelled). Each save or cancel shows its own status; nothing is re-sent, and a
  * level being placed blocks a second of its kind until the indexer shows it (or it failed and was acknowledged).
  */
 import type { PositionView } from "@senryo/chain";
 import { notional } from "@senryo/core";
 import type { LiveMarket } from "@senryo/query";
-import { Loader2 } from "lucide-react";
 import { useId, useState } from "react";
 import { DetailRow, ListRow } from "@/components/kit/list-row";
+import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
 import { failureWords } from "@/components/kit/trace-words";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ function AddLevel({
   liq18,
   onSave,
   busy,
+  initial,
 }: {
   kind: TriggerKind;
   market: LiveMarket;
@@ -64,9 +66,12 @@ function AddLevel({
   liq18: bigint | null | undefined;
   onSave: (price18: bigint) => void;
   busy: boolean;
+  /** Editing: the active level's price (the save replaces it in one operation). */
+  initial?: bigint | undefined;
 }) {
   const id = useId();
-  const [text, setText] = useState("");
+  const decimalsShown = priceDecimalsOf(market.marketId);
+  const [text, setText] = useState(initial === undefined ? "" : price18(initial, decimalsShown).replace(/,/g, ""));
   const decimals = priceDecimalsOf(market.marketId);
   const mark = market.pv.price18;
   const price = parsePrice(text);
@@ -74,31 +79,19 @@ function AddLevel({
   const move = price ? notional(position.size, price) - notional(position.size, mark) : undefined;
   const pnl = move === undefined ? undefined : position.isLong ? move : -move;
   return (
-    <form
-      className="grid gap-2 rounded-md bg-raised-2 p-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (price && !problem) onSave(price);
-      }}
-    >
+    <div className="grid gap-2 rounded-md bg-raised-2 p-3">
       <label htmlFor={id} className="text-meta text-text-2">
         {LABEL[kind]} · mark ${price18(mark, decimals)}
       </label>
-      <div className="flex gap-2">
-        <Input
-          id={id}
-          inputMode="decimal"
-          autoComplete="off"
-          placeholder={price18(mark, decimals)}
-          value={text}
-          onChange={(e) => setText(e.target.value.replace(/[^\d.]/g, ""))}
-          aria-invalid={problem !== undefined}
-        />
-        <Button type="submit" disabled={!price || problem !== undefined || busy}>
-          {busy ? <Loader2 className="animate-spin" /> : null}
-          Save
-        </Button>
-      </div>
+      <Input
+        id={id}
+        inputMode="decimal"
+        autoComplete="off"
+        placeholder={price18(mark, decimals)}
+        value={text}
+        onChange={(e) => setText(e.target.value.replace(/[^\d.]/g, ""))}
+        aria-invalid={problem !== undefined}
+      />
       {problem ? (
         <p className="text-meta text-down">{problem}</p>
       ) : price && pnl !== undefined ? (
@@ -107,7 +100,25 @@ function AddLevel({
           <span className={pnl < 0n ? "text-down" : "text-up"}>{signedMoney(pnl)}</span> at the level
         </p>
       ) : null}
-    </form>
+      <SlideToConfirm
+        label={
+          !price
+            ? "Enter a price"
+            : problem
+              ? "Can’t set this level"
+              : initial === undefined
+                ? `Slide to set ${LABEL[kind].toLowerCase()}`
+                : `Slide to replace ${LABEL[kind].toLowerCase()}`
+        }
+        tone={position.isLong ? "up" : "down"}
+        disabled={!price || problem !== undefined || initial === price}
+        busy={busy}
+        resetKey={[kind, text, initial ?? ""].join("|")}
+        onConfirm={() => {
+          if (price && !problem) onSave(price);
+        }}
+      />
+    </div>
   );
 }
 
@@ -121,7 +132,7 @@ export function TpSl({
   liq18: bigint | null | undefined;
 }) {
   const t = useTpSl(market, position);
-  const [adding, setAdding] = useState<TriggerKind>();
+  const [adding, setAdding] = useState<{ kind: TriggerKind; initial?: bigint }>();
   const decimals = priceDecimalsOf(market.marketId);
   const busy = t.tp.running || t.sl.running || t.removal.running;
   const kinds: TriggerKind[] = ["sl", "tp"];
@@ -136,28 +147,39 @@ export function TpSl({
           title={`${level.takeProfit ? "Take profit" : "Stop loss"} $${price18(level.triggerPrice, decimals)}`}
           subtitle={`${signedPct(bpsFromMark(market.pv.price18, level.triggerPrice))} from mark`}
           trailing={
-            <Button size="sm" variant="outline" disabled={busy} onClick={() => void t.cancel(level.id)}>
-              Cancel
-            </Button>
+            <span className="flex gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => setAdding({ kind: level.takeProfit ? "tp" : "sl", initial: level.triggerPrice })}
+              >
+                Edit
+              </Button>
+              <Button size="sm" variant="outline" disabled={busy} onClick={() => void t.cancel(level.id)}>
+                Cancel
+              </Button>
+            </span>
           }
         />
       ))}
       {t.removal.events.length > 0 ? <TraceLine trace={t.removal} done="Cancelled" /> : null}
       {kinds.map((kind) =>
-        t.active.some((l) => l.takeProfit === (kind === "tp")) ? null : t[kind].events.length > 0 ? (
-          // A level being placed (or placed and not indexed yet) blocks a second one of its kind.
+        t[kind].events.length > 0 ? (
+          // A level being placed or replaced (or placed and not indexed yet) blocks another of its kind.
           <TraceLine key={kind} trace={t[kind]} done={`${LABEL[kind]} set`} />
-        ) : adding === kind ? (
+        ) : adding?.kind === kind ? (
           <AddLevel
-            key={kind}
+            key={`${kind}:${adding.initial ?? ""}`}
             kind={kind}
             market={market}
             position={position}
             liq18={liq18}
             busy={busy}
+            initial={adding.initial}
             onSave={(price) => void t.place(kind, price).then(() => setAdding(undefined))}
           />
-        ) : (
+        ) : t.active.some((l) => l.takeProfit === (kind === "tp")) ? null : (
           <DetailRow
             key={kind}
             label={LABEL[kind]}
@@ -165,7 +187,7 @@ export function TpSl({
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => setAdding(kind)}
+                onClick={() => setAdding({ kind })}
                 className="text-link hover:underline disabled:opacity-40"
               >
                 Add

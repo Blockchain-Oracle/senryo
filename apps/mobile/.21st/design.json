@@ -583,6 +583,146 @@
         "port": "components/kit/symbols.tsx: same component names/props the screens used; Android glyph drawn as text in the preloaded face (no per-mount load)",
         "deviations": "Android filled variants unavailable (outlined face)",
         "status": "built — 2602ae2"
+      },
+      {
+        "name": "amount-hero",
+        "source": "21st.dev number-ticker (id 21513), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
+        "status": "built — apps/mobile/src/components/kit/AmountHero.tsx"
+      },
+      {
+        "name": "card-tilt",
+        "source": "21st.dev ibelick/tilt (id 1448), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
+        "status": "built — apps/mobile/src/features/card/CardHero.tsx"
+      },
+      {
+        "name": "action-circle (card)",
+        "source": "21st.dev Codehagen/action-button (id 1051), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
+        "status": "built — apps/mobile/src/features/card/ActionCircle.tsx"
+      },
+      {
+        "name": "notification-inbox",
+        "source": "21st.dev uvain/notification-panel (id 27135), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
+        "status": "built — apps/mobile/src/features/notifications/InboxList.tsx"
+      },
+      {
+        "name": "notifications-bell",
+        "source": "21st.dev ruixen.ui/notification-button (id 7914), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
+        "status": "built — apps/mobile/src/features/notifications/NotificationsBell.tsx"
+      },
+      {
+        "name": "market-row",
+        "source": "21st.dev ssychui Market Watchlist (id 20110), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
+        "status": "built — apps/mobile/src/features/markets/RowShell.tsx"
+      },
+      {
+        "name": "disclosure",
+        "source": "21st.dev ibelick Disclosure (id 851), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
+        "status": "built — apps/mobile/src/features/markets/Disclosure.tsx"
+      },
+      {
+        "name": "ticket-details",
+        "source": "21st.dev ssychui Swap Ticket (id 27122), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
+        "status": "built — apps/mobile/src/features/trade/TicketChildren.tsx"
+      },
+      {
+        "name": "dotted-qr",
+        "source": "21st.dev tom_ui/qr-code (id 12248), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/fund/DottedQr.tsx"
+      },
+      {
+        "name": "swap-cards",
+        "source": "21st.dev ssychui/swap-ticket (id 27122), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/swap/SwapCards.tsx"
+      },
+      {
+        "name": "bridge-timeline",
+        "source": "21st.dev sean0205/vertical-titled-stepper (id 29815), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/money/BridgeTimeline.tsx"
+      },
+      {
+        "name": "action-circle (money)",
+        "source": "21st.dev radiumcoders/grid-button (id 13564), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/money/ActionCircle.tsx"
+      },
+      {
+        "name": "search-field",
+        "source": "21st.dev santoshvarmaaddala/search-bar (id 1645), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/money/SearchField.tsx"
+      },
+      {
+        "name": "chain-grid",
+        "source": "21st.dev preetsuthar17/selector-chips (id 1963), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/money/ChainGrid.tsx"
+      },
+      {
+        "name": "network-pill",
+        "source": "21st.dev haydenbleasel/pill (id 1600), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/fund/ReceiveCard.tsx"
+      },
+      {
+        "name": "activity-row + receipt",
+        "source": "21st.dev hari/transaction-list (id 2943), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/features/activity/FeedRow.tsx"
+      },
+      {
+        "name": "keypad",
+        "source": "21st.dev bankkroll/number-pad (id 3711), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
+        "status": "built — apps/mobile/src/components/trade/Keypad.tsx"
+      },
+      {
+        "name": "setup-progress",
+        "source": "21st.dev sean0205 Multi-Step Progress (id 29469), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/identity.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/identity.md",
+        "status": "built — apps/mobile/src/features/setup/SetupProgress.tsx"
+      },
+      {
+        "name": "settings-row",
+        "source": "21st.dev uiable List Group Badge (id 29345), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/identity.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/identity.md",
+        "status": "built — apps/mobile/src/features/profile/SettingsRow.tsx"
+      },
+      {
+        "name": "terms-agree-row",
+        "source": "21st.dev originui Checkbox (id 661), retrieved 2026-10-02 via `21st get`",
+        "evidence": ["flow book §0.9", "docs/product/provenance/identity.md"],
+        "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/identity.md",
+        "status": "built — apps/mobile/src/features/legal/AgreeRow.tsx"
       }
     ],
     "planned": [
@@ -996,7 +1136,8 @@
           "status": "planned (S5)"
         }
       ]
-    }
+    },
+    "records": "Per-area provenance (searches, ports, 'searched, none fit' cases): docs/product/provenance/*.md"
   },
   "decisions": [
     {

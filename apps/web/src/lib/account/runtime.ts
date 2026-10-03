@@ -7,12 +7,12 @@ import { AccountClient, type Flow, type SessionSettings } from "@senryo/account"
 import { passkeyPlatform } from "@senryo/account/passkey";
 import { secretStore } from "@senryo/account/secret-store";
 import { createSessionSync } from "@senryo/account/sync";
-import { RP_ID } from "@senryo/config";
 import { recordMeasure } from "./measure";
+import { WEB_RP_ID } from "./rp";
 
 export function createWebAccountClient(settings: SessionSettings, onExtraPrompt: (flow: Flow) => void): AccountClient {
   return new AccountClient({
-    rpId: RP_ID,
+    rpId: WEB_RP_ID,
     passkey: passkeyPlatform,
     store: secretStore,
     sync: createSessionSync(),

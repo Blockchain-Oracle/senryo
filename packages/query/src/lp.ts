@@ -26,6 +26,12 @@ import { readingOf } from "./reading.ts";
 
 /** APR window: the last 7 full days of pool history. */
 export const LP_APR_DAYS = 7;
+/**
+ * sLP share decimals: the vault's asset decimals (AUSD, 6) plus its virtual-share offset (`LP_VIRTUAL_SHARE_OFFSET`
+ * = 6 in contracts/src/libraries/Constants.sol, OpenZeppelin's inflation guard; `decimals()` reads 12 on 10143).
+ * Shown with 6 they read a million times too large.
+ */
+export const LP_SHARE_DECIMALS = 12;
 const DAYS_PER_YEAR = 365n;
 const MS_PER_SECOND = 1000;
 

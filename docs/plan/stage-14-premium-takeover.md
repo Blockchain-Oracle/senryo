@@ -27,7 +27,7 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [x] One outcome surface (TradeTrace as OperationStatus) + AmountHero rolling digits (8127cba)
 - [x] Sounds: ElevenLabs palette, by-ear picker, unlock/liquidation/error now sound (8e42c8e)
 - [x] Runtime 0.2.0 natives (expo-image, expo-camera, expo-web-browser, expo-sharing, view-shot); welcome swipe ±2 window; preview builds on production APNs (294f8a2)
-- [ ] Primitives sourced from 21st.dev: Text roles, Row, StatStrip, ActionCircle, AmountHero, GlassIconButton, InfoSheet, OperationStatus, SlideToConfirm (tone + busy), AssetPicker, ChainPicker, RecipientSearch, Keypad amount entry
+- [x] Primitives sourced from 21st.dev or recorded as "searched, none fit": 25 ports indexed in `apps/mobile/.21st/design.json` (SlideToConfirm 29304, AmountHero 21513, Keypad 3711, DottedQr 12248, ActionCircle 13564/1051, ChainGrid 1963, SearchField 1645, Disclosure 851, BridgeTimeline 29815, inbox 27135, …); per-area detail in docs/product/provenance/*.md
 - [x] Runtime 0.2.0 with native additions (294f8a2)
 
 ## Areas (each = its flow-book cards + §0.9 surfaces)
@@ -50,8 +50,8 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [x] D7 notifications inbox built + merged (27123af) + **deployed** (api/keeper `sha-294f8a2`, KEEPER_JOBS += pushes)
 - [ ] D8 Wallet activity indexing
 - [ ] D9 api/keeper deployed `sha-294f8a2` (2 Oct 14:20 UTC); any-asset routes redeploy in progress; card service resource not created yet (needs Lithic key)
-- [ ] D10 Web parity round 1 merged (3c9dba7: Home, Add money/Receive/voucher, any-asset Send/Withdraw on Monad, asset page, markets, ticket with step-up, position reduce/close/TP-SL, social, watch by chainId, setup + terms, card locks; provenance docs/product/provenance/web.md). Round 2 (pool, inbox + activity, swaps, TP/SL edit, settings, scan, landing bundle, signed acceptance) in progress
-- [x] Mainnet composition merged (57d4eb0): B11 fee reserve ("~$0.50 → MON" step), Pay with any asset on ticket + pool, B4 Relay deposit addresses (EVM origins keyless; Solana/Bitcoin need RELAY_API_KEY). Open: ticket Details doesn't list composed steps before the slide; zero-MON wallet needs the mainnet sponsor top-up. Proven on a 143 fork; live once SenryoCore/LpVault are on 143 (D4)
+- [ ] D10 Web parity round 1 merged (3c9dba7: Home, Add money/Receive/voucher, any-asset Send/Withdraw on Monad, asset page, markets, ticket with step-up, position reduce/close/TP-SL, social, watch by chainId, setup + terms, card locks; provenance docs/product/provenance/web.md). Round 2 merged (dfbf8a9: pool, activity + inbox, TP/SL replace, swaps, bridges, social actions, saved destinations, settings, scan via jsQR, landing 371→197 KB gz). **Signed acceptance on testnet** (localhost dev rpId, virtual PRF authenticator, account 0xC108…F529): claim 0x90e7…b3d6, send with step-up 0xc633…d6f6, withdraw 0xb39d…56f2, pool deposit (3 steps, one operation) 0xd961…0545, redeem request 0x436a…6266. **Trading steps pending the market reopen (Sun ~22:00 UTC)**. Fixes from the run: Home Total source, reopened moves, Save as…, sLP 12 decimals (phone too, 8336e3e), claim shown twice (b817e6c)
+- [x] Mainnet composition merged (57d4eb0): B11 fee reserve ("~$0.50 → MON" step), Pay with any asset on ticket + pool, B4 Relay deposit addresses (EVM origins keyless; Solana/Bitcoin need RELAY_API_KEY). Ticket Details lists the composed steps before the slide (Steps row). Open, part of D4 acceptance: the Mainnet ticket plans its network fee before the slide (`usePreparedOperation`, as send/withdraw do) so a MON shortfall shows pre-slide; zero-MON wallet needs the mainnet sponsor top-up. Proven on a 143 fork; live once SenryoCore/LpVault are on 143 (D4)
 - [ ] D11 Submission (external TestFlight by ~9 Oct) · D12 Meme coins
 
 ## Builds and updates (2 Oct)

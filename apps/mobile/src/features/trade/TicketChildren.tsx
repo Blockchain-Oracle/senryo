@@ -1,5 +1,5 @@
 import { DECIMALS, formatUnits, RISK } from "@senryo/core";
-import { TRADE_SLIPPAGE_BPS } from "@senryo/query";
+import { stepsLine, TRADE_SLIPPAGE_BPS } from "@senryo/query";
 import { useEffect, useState } from "react";
 import { AccessibilityInfo, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -121,6 +121,9 @@ export function TicketDetails({
         ) : null}
         {p ? <DetailRow label="Locked while open" value={usd(p.marginUsd6)} /> : null}
         {p ? <DetailRow label="Buying power after" value={usd(p.freeToTradeAfter)} /> : null}
+        {t.pay.labels.length > 0 ? (
+          <DetailRow label="Steps" value={stepsLine([...t.pay.labels, "Open"].map((label) => ({ label })))} />
+        ) : null}
       </View>
       {screenReader ? <Button label={`Open ${long ? "long" : "short"}`} disabled={!canOpen} onPress={onOpen} /> : null}
       <Button label="Back to order" variant="ghost" onPress={onClose} />
