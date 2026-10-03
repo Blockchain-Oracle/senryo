@@ -244,6 +244,11 @@ export function useSwap(initialPay?: string, initialReceive?: string) {
       });
       if (!prepared.ok) return setProblem(prepared.block);
       const feeWei = par ? 0n : swapGas * maxFee;
+      // Max is frozen at review: the reviewed amount is a number now, not "whatever is available" as legs land.
+      if (max) {
+        setMax(false);
+        setText(plainAmount(typed, pay.decimals));
+      }
       setReviewed({ pay, receive, amount: typed, quote: par ? undefined : ok, steps: prepared.op.steps, feeWei });
     } catch (error) {
       setProblem(

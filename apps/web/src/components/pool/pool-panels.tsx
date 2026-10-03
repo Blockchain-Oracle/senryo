@@ -92,7 +92,9 @@ export function DepositPanel({ lp, pool }: { lp: Lp; pool: LpSnapshot }) {
   const have = !payWith ? 0n : direct ? payWith.wallet + payWith.tradingFree : swappableUsd6(payWith, env.chainId);
   const max = have < pool.maxDeposit ? have : pool.maxDeposit;
   const passkey = !direct || lp.confirmFor(amount) === "passkey";
-  const guard = useReviewGuard([env.chainId, lp.address, amount, payWith?.key, swap.status].join(":"));
+  // What the user chose, not the plan's live state: once the swap leg lands, the paying asset's balance drops and its
+  // plan reads differently — that must not stop the deposit. The plan's figures re-arm the slide instead (reviewKey).
+  const guard = useReviewGuard([env.chainId, lp.address, amount, payWith?.key].join(":"));
   const busy = useBusy(lp);
   const deposit: PoolDeposit | undefined =
     payWith && lp.vaultAddress && lp.trading

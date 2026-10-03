@@ -210,7 +210,10 @@ export function useTicket(market: LiveMarket) {
       };
     },
   );
-  const intent = [env.chainId, address, market.marketId, side, amountText, leverage, ...payKey].join(":");
+  // The guard holds what the user chose (the paying asset included), not what the plan derives from live state: once
+  // the move to trading lands, Free to trade covers the order and the shortfall reads 0 — that must not stop the open.
+  // The plan's figures re-arm the slide instead (`payKey`), and each leg re-checks itself before it signs.
+  const intent = [env.chainId, address, market.marketId, side, amountText, leverage, pay.payWith?.key ?? ""].join(":");
   const guard = useReviewGuard(intent);
   const submit = async (): Promise<TrackedResult | string | undefined> => {
     const client = account.client;
@@ -370,6 +373,8 @@ export function useTicket(market: LiveMarket) {
     resetGas: topUp.reset,
     submit,
     intent,
+    /** The pay plan's figures (shortfall moved, swap minimum): a change re-arms the slide before it confirms. */
+    payKey: payKey.join(":"),
     nowSec,
   };
 }

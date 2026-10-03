@@ -120,6 +120,7 @@ export function Ticket({ market }: { market: LiveMarket }) {
   // The order's identity at the slide: any change re-arms it; so does a confirmation that sent nothing.
   const resetKey = [
     t.intent,
+    t.payKey,
     t.confirmWith,
     p?.execPrice18 ?? "",
     market.tickStale ? "paused" : "live",

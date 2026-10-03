@@ -187,13 +187,10 @@ export function useTicket(market: LiveMarket) {
     };
   }, []);
 
-  const payKey = [
-    pay.payWith?.key ?? "",
-    pay.incomingUsd6,
-    pay.swap.status === "ok" ? pay.swap.quote.quote.minOut : "",
-  ];
+  // What the user chose (the paying asset included), not what the plan derives from live state: once the move to
+  // trading lands, Free to trade covers the order and the shortfall reads 0 — that must not stop the open.
   const guard = useReviewGuard(
-    [env.chainId, address, market.marketId, side, amountText, leverage, ...payKey].join(":"),
+    [env.chainId, address, market.marketId, side, amountText, leverage, pay.payWith?.key ?? ""].join(":"),
   );
   const submit = async () => {
     const client = account.client;
