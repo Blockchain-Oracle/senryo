@@ -2,6 +2,7 @@
  * Check rules for Senryo that need more than a single-line pattern.
  * Each export takes (rule, ctx) and returns findings, or { findings, skipped } when what it guards has not landed yet.
  */
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -92,11 +93,21 @@ export function noUiTests(rule, ctx) {
 
 /** No committed env files (except examples) and no private-key-shaped literals next to key names. */
 const ENV_FILE = /(^|\/)\.env(\.[\w-]+)?$/;
+
+/** A local env file git ignores (`.env`, `.env.*` in .gitignore) can't be committed, so it isn't a finding. */
+function gitIgnored(root, rel) {
+  try {
+    execFileSync("git", ["check-ignore", "-q", rel], { cwd: root, stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
 const KEY_LITERAL = /(PRIVATE|SECRET|_PK\b|privateKey|mnemonic)[^\n]{0,40}0x[0-9a-fA-F]{64}\b/;
 export function noSecretsInTree(rule, ctx) {
   const findings = [];
   for (const { rel } of walkFiles(ctx.root, ".", [""])) {
-    if (ENV_FILE.test(rel) && !rel.endsWith(".env.example"))
+    if (ENV_FILE.test(rel) && !rel.endsWith(".env.example") && !gitIgnored(ctx.root, rel))
       findings.push(finding(rule, "env file must not be committed", rel));
   }
   for (const scope of [
