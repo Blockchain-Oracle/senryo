@@ -51,6 +51,8 @@ export interface FeedItem {
 export interface FeedPage {
   items: readonly FeedItem[];
   complete: boolean;
+  /** ms of the oldest row read, when rows were left out after reading (otherwise the last item's time). */
+  reach?: number | undefined;
 }
 
 const MS_PER_SECOND = 1000;
@@ -342,7 +344,7 @@ export function mergeFeed(indexed: FeedPage, journal: readonly FeedItem[], walle
   const moves = wallet.items.filter((w) => !w.hashes.some((h) => told.has(h)));
   let frontier: number | undefined;
   for (const page of [indexed, wallet]) {
-    const oldest = page.items.at(-1)?.at;
+    const oldest = page.reach ?? page.items.at(-1)?.at;
     if (!page.complete && oldest !== undefined && (frontier === undefined || oldest > frontier)) frontier = oldest;
   }
   const live = (s: FeedStatus) => s === "pending" || s === "checking";

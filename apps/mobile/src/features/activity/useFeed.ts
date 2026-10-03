@@ -17,6 +17,8 @@ import { walletItem, walletShown } from "./wallet-item";
 
 export type FeedFilter = "all" | FeedGroup;
 
+const MS_PER_SECOND = 1000;
+
 export interface Feed {
   /** Undefined until the first indexed page (or the indexer's failure) is known. */
   items: FeedItem[] | undefined;
@@ -44,6 +46,7 @@ export function useFeed(address: Address | undefined, filter: FeedFilter, market
       .filter((item): item is FeedItem => item !== undefined)
       .filter((item) => filter === "all" || item.group === filter);
   }, [address, env.chainId, filter, marketId, revision]);
+  const lastRead = wallet.items?.at(-1);
   const moves = {
     items:
       walletOn && wallet.items
@@ -51,6 +54,8 @@ export function useFeed(address: Address | undefined, filter: FeedFilter, market
         : [],
     // Not loaded yet, or unreachable: it holds nothing back (its rows join when they come).
     complete: !walletOn || wallet.items === undefined || !wallet.hasMore,
+    // Rows left out (Senryo's own, spam, hidden) still mark how far back the pages reach.
+    reach: lastRead ? lastRead.timestamp * MS_PER_SECOND : undefined,
   };
   const reading = activity.reading;
   const indexed =
