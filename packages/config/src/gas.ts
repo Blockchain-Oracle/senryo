@@ -169,6 +169,12 @@ export const GAS_LIMITS = {
    * (USDT0 swapped in before bridging) 714.8k → 800k.
    */
   relayDeposit: 800_000n,
+  /**
+   * (D-252) Practice AUSD ↔ USDC at par (`PracticeSwap.swap`, testnet only). 10143 `eth_estimateGas`, 3 Oct, with the
+   * exact allowance set by state override: 125.3k–125.4k from 1 unit to a whole 112 AUSD balance, the receiver's first
+   * USDC (zero → non-zero) included. The `approve` before it estimates 52.1k (inside `approve`).
+   */
+  practiceSwap: 140_000n,
   /** (D2) CCTP v2 `depositForBurnWithHook` (Forwarding Service): 273.8k on a 143 fork (USDC → Base). */
   cctpBurn: 330_000n,
   /** (D2) Across spoke deposit (swap/approval `swapTx`): 170.3k on a 143 fork (USDT0 → Arbitrum). */

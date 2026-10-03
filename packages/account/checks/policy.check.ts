@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { TESTNET_CHAIN_ID } from "@senryo/config";
-import { lpVaultAbi, mockAUSDAbi, senryoCoreAbi } from "@senryo/contracts";
+import { lpVaultAbi, mockAUSDAbi, practiceSwapAbi, senryoCoreAbi } from "@senryo/contracts";
 
 import { type Address, encodeFunctionData, type Hex, maxUint256 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -121,6 +121,21 @@ test("token approvals: known spender under the move cap only; transfers are send
   assert.equal((judge(ausd, tokenCall("approve", [core, maxUint256])) as { reason?: string }).reason, "over-move-cap");
   assert.equal((judge(ausd, tokenCall("transfer", [other, USD.one])) as { reason?: string }).reason, "send");
   assert.equal(judge(ausd, tokenCall("faucet", [])).kind, "sign");
+});
+
+test("practice par swap (D-252): a swap to self under the move cap; paying someone else is a send", () => {
+  const practice = need(T.practiceSwap, "PracticeSwap");
+  const usdc = need(T.stables[1], "MockUSDC");
+  const swap = (tokenIn: Address, amount: bigint, to: Address) =>
+    encodeFunctionData({ abi: practiceSwapAbi, functionName: "swap", args: [tokenIn, amount, amount, to] });
+  const v = judge(practice, swap(ausd, USD.hundred, self));
+  assert.equal(v.kind, "sign");
+  assert.deepEqual((v as { action?: unknown }).action, { kind: "swap", tokenIn: ausd, amountUsd6: USD.hundred });
+  assert.equal(judge(practice, swap(usdc, USD.hundred, self)).kind, "sign");
+  assert.equal(judge(ausd, tokenCall("approve", [practice, USD.hundred])).kind, "sign");
+  assert.equal((judge(practice, swap(ausd, USD.hundred, other)) as { reason?: string }).reason, "send");
+  assert.equal((judge(practice, swap(ausd, USD.threeHundred, self)) as { reason?: string }).reason, "over-move-cap");
+  assert.equal((judge(practice, swap(other, USD.one, self)) as { reason?: string }).reason, "out-of-scope");
 });
 
 test("LP deposit capped and to self; redeem to self", () => {

@@ -3,7 +3,7 @@
  * amounts, destinations and receivers come from the calldata itself; nothing the caller claims is trusted.
  */
 import { PERPL_COLLATERAL_DECIMALS, PERPL_ORDER_TYPE } from "@senryo/config";
-import { lpVaultAbi, mockAUSDAbi, perplExchangeAbi, senryoCoreAbi } from "@senryo/contracts";
+import { lpVaultAbi, mockAUSDAbi, perplExchangeAbi, practiceSwapAbi, senryoCoreAbi } from "@senryo/contracts";
 import { oneUnit } from "@senryo/core";
 import { type Abi, type Address, decodeFunctionData, type Hex, isHex, size, slice } from "viem";
 import { includesAddress, type ScopeTargets, sameAddress } from "./targets.ts";
@@ -146,6 +146,20 @@ function decodePerpl(call: CallInput, data: Hex, t: ScopeTargets): Action {
   }
 }
 
+/**
+ * The practice par swap (D-252): a swap of the signer's own stable, paid back to the signer — the same action (and so
+ * the same confirmation level) as any other swap. Paying the output to someone else is a send.
+ */
+function decodePracticeSwap(call: CallInput, data: Hex, self: Address, t: ScopeTargets): Action {
+  const fn = decode(practiceSwapAbi, data);
+  if (fn?.functionName !== "swap") return unknown(call);
+  const [tokenIn, amountIn, , to] = fn.args as readonly [Address, bigint, bigint, Address];
+  if (!includesAddress(t.stables, tokenIn)) return unknown(call);
+  return sameAddress(to, self)
+    ? { kind: "swap", tokenIn, amountUsd6: amountIn }
+    : { kind: "transfer", token: tokenIn, to, amountUsd6: amountIn };
+}
+
 function decodeToken(call: CallInput, data: Hex, token: Address, t: ScopeTargets): Action {
   const fn = decode(mockAUSDAbi, data);
   if (!fn) return unknown(call);
@@ -180,6 +194,7 @@ export function decodeCall(call: CallInput, self: Address, targets: ScopeTargets
   if (sameAddress(call.to, targets.core)) return decodeCore(call, call.data, self, targets);
   if (sameAddress(call.to, targets.lpVault)) return decodeVault(call, call.data, self);
   if (sameAddress(call.to, targets.perplExchange)) return decodePerpl(call, call.data, targets);
+  if (sameAddress(call.to, targets.practiceSwap)) return decodePracticeSwap(call, call.data, self, targets);
   // Perpl's AUSD is decoded like our stables (approve / transfer only — `faucet` stays limited to the mocks).
   if (includesAddress(targets.stables, call.to) || sameAddress(call.to, targets.perplCollateral))
     return decodeToken(call, call.data, call.to, targets);
