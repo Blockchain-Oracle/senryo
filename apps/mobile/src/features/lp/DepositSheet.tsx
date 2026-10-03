@@ -9,7 +9,7 @@
  */
 import type { LpSnapshot } from "@senryo/chain";
 import { DECIMALS, formatUnits, parseUnits } from "@senryo/core";
-import { stepsLine, useQueryEnv } from "@senryo/query";
+import { LP_SHARE_DECIMALS, stepsLine, useQueryEnv } from "@senryo/query";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
@@ -32,9 +32,6 @@ import { type PoolDeposit, poolDepositOperation, poolDepositSteps } from "./depo
 import type { useLp } from "./useLp";
 
 type Lp = ReturnType<typeof useLp>;
-
-/** sLP shares come in 6 decimals, like the AUSD they're minted against. */
-const SHARE_DECIMALS = DECIMALS.usd6;
 
 export function DepositSheet({
   open,
@@ -151,7 +148,7 @@ export function DepositSheet({
       <Keypad onKey={(k) => setText((t) => applyKey(t, k))} />
       {amount > 0n ? (
         <View>
-          <DetailRow label="You get" value={`≈ ${formatUnits(shares, SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
+          <DetailRow label="You get" value={`≈ ${formatUnits(shares, LP_SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
           {plan?.ok ? <DetailRow label="Steps" value={stepsLine(plan.op.steps)} /> : null}
           {impact === "warn" ? <DetailRow label="Price impact" value="Over 1%" /> : null}
         </View>

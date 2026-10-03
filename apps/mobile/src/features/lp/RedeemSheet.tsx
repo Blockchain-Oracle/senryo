@@ -6,6 +6,7 @@
  */
 import type { LpRedeemView, LpSnapshot } from "@senryo/chain";
 import { DECIMALS, formatUnits, RISK, utcSlotLabel } from "@senryo/core";
+import { LP_SHARE_DECIMALS } from "@senryo/query";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ChipRow } from "~/components/kit/ChipRow";
@@ -56,7 +57,7 @@ export function RedeemSheet({
         />
       </View>
       <View>
-        <DetailRow label="Shares" value={`${formatUnits(shares, DECIMALS.usd6, DECIMALS.cents)} sLP`} />
+        <DetailRow label="Shares" value={`${formatUnits(shares, LP_SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
         <DetailRow label="Value now" value={`≈ ${usd(sharesValueOf(shares, pool))}`} />
         <DetailRow label="Claim from" value={utcSlotLabel(claimFrom)} />
         <DetailRow label="Cancel" value="Can't be cancelled" />
@@ -95,7 +96,7 @@ export function ClaimSheet({
     <ChildSheet open={request !== undefined} onClose={onClose} title="Claim" subtitle="To your wallet">
       {request ? (
         <View>
-          <DetailRow label="Shares" value={`${formatUnits(request.shares, DECIMALS.usd6, DECIMALS.cents)} sLP`} />
+          <DetailRow label="Shares" value={`${formatUnits(request.shares, LP_SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
           <DetailRow label="You get" value={`≈ ${usd(sharesValueOf(request.shares, pool))}`} />
         </View>
       ) : null}
