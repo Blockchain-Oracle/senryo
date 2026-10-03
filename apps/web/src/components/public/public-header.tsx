@@ -17,8 +17,10 @@ const PAGES = [
 export function PublicHeader({ current }: { current: (typeof PAGES)[number]["id"] }) {
   return (
     <header className="flex items-center justify-between gap-3 pt-4">
+      {/* No prefetch: the welcome's payload preloads the seal art, which this page never shows (a console warning). */}
       <Link
         href={ROUTES.welcome}
+        prefetch={false}
         className="rounded-xs font-bold font-mono text-num-sm tracking-tight focus-visible:outline-2 focus-visible:outline-ring"
       >
         {BRAND.wordmark}
