@@ -29,6 +29,7 @@ import {
   runOperationSteps,
   TRADE_SLIPPAGE_BPS,
   type TrackedResult,
+  ticketNeedUsd6,
   useAccountRisk,
   useCalendar,
   useGasBalance,
@@ -96,7 +97,7 @@ export function useTicket(market: LiveMarket) {
   const own: IncreasePreview | undefined =
     base && notionalUsd6 > 0n ? previewIncrease({ ...base, notionalUsd6 }) : undefined;
   // "Pay with" (C3 step 4): what Free to trade doesn't cover comes from the chosen asset inside the same operation.
-  const pay = useTicketPay(env.chainId, address, snapshot?.freeToTrade, own ? own.marginUsd6 + own.feeUsd6 : 0n);
+  const pay = useTicketPay(env.chainId, address, snapshot?.freeToTrade, ticketNeedUsd6(own, snapshot?.freeToTrade));
   const funded = (extra: bigint) =>
     base && extra > 0n
       ? { ...base, account: { ...base.account, freeToTrade: base.account.freeToTrade + extra } }

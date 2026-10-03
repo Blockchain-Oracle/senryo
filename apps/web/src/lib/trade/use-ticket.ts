@@ -37,6 +37,7 @@ import {
   runOperationSteps,
   TRADE_SLIPPAGE_BPS,
   type TrackedResult,
+  ticketNeedUsd6,
   useAccountRisk,
   useCalendar,
   useGasBalance,
@@ -108,7 +109,7 @@ export function useTicket(market: LiveMarket) {
     env.chainId,
     address,
     snapshot?.freeToTrade,
-    own ? own.marginUsd6 + own.feeUsd6 : 0n,
+    ticketNeedUsd6(own, snapshot?.freeToTrade),
     useMoneyAssets(address),
   );
   const funded = (extra: bigint) =>

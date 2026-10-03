@@ -25,6 +25,20 @@ import {
 } from "./pay-with.ts";
 import { collateralTokenOf } from "./withdraw.ts";
 
+/**
+ * What the order takes from Free to trade, as the core preview counts it: the fee, the margin it locks, the spread its
+ * entry costs at once, and the safety buffer — so "Pay with" brings enough for the order to pass the same check the
+ * chain makes (margin + fee alone left a wide-spread or 20× order short by the entry's spread).
+ */
+export function ticketNeedUsd6(
+  preview: { freeToTradeAfter: bigint } | undefined,
+  freeToTradeUsd6: bigint | undefined,
+): bigint {
+  if (!preview || freeToTradeUsd6 === undefined) return 0n;
+  const need = freeToTradeUsd6 - preview.freeToTradeAfter;
+  return need > 0n ? need : 0n;
+}
+
 /** The move leg's Details word (`moveToTradingSteps` labels its deposit the same). */
 export const MOVE_LABEL = "Move to trading";
 /** One cent over the shortfall: the core's own rounding never leaves the open a hair short. */
