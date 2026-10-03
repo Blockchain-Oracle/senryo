@@ -5,6 +5,7 @@
  * send it again; there is never a resend here.
  */
 import { type ChainId, explorerTxUrl } from "@senryo/config";
+import { type FeedItem, walletReceiptLines } from "@senryo/query";
 import { Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { OperationSummary } from "~/components/trade/OperationSummary";
@@ -17,7 +18,7 @@ import { shortAddress } from "~/lib/format";
 import { usd } from "~/lib/money";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { FeedLead, type LogoOf, STATUS_WORDS } from "./FeedRow";
-import type { FeedItem } from "./feed";
+import { FEED_FORMAT } from "./feed-format";
 
 const MS_PER_SECOND = 1000;
 const PROVIDER_NAMES: Record<string, string> = {
@@ -45,6 +46,11 @@ interface Line {
 /** The facts a receipt lists, in order (also the Share text). */
 export function receiptLines(item: FeedItem, me: string): Line[] {
   const lines: Line[] = [];
+  if (item.source.kind === "wallet") {
+    lines.push(...walletReceiptLines(item.source.item, FEED_FORMAT));
+    lines.push({ label: "When", value: activityTime(Math.floor(item.at / MS_PER_SECOND)) });
+    return lines;
+  }
   if (item.figure) lines.push({ label: "Amount", value: item.figure.text });
   if (item.source.kind === "indexed") {
     const row = item.source.row;
@@ -107,8 +113,8 @@ export function ReceiptBody({
         )}
       </View>
       <ReviewRows>
-        {receiptLines(item, me).map((l) => (
-          <ReviewRow key={l.label} label={l.label} value={l.value} />
+        {receiptLines(item, me).map((l, i) => (
+          <ReviewRow key={`${l.label}:${i}`} label={l.label} value={l.value} />
         ))}
       </ReviewRows>
       {bridge && intent?.provider && trackingId && item.status !== "pending" ? (

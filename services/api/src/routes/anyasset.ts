@@ -1,5 +1,6 @@
 /**
- * The any-asset routes (public, rate-limited per IP): `GET /v1/holdings`, `GET /v1/swap/quote` (D6) and
+ * The any-asset routes (public, rate-limited per IP): `GET /v1/holdings`, `GET /v1/activity/wallet` (D8),
+ * `GET /v1/swap/quote` (D6) and
  * `GET /v1/bridge/{routes,quote,status}` (D2) and the B4 deposit address (`POST /v1/bridge/deposit-address`,
  * `GET /v1/bridge/deposit-status`). A provider that can't answer is 503 UPSTREAM_UNAVAILABLE with a fixed
  * line; the full error (which may carry a provider's message) goes to the log only.
@@ -12,10 +13,17 @@ import {
   bridgeStatusRoute,
   holdingsRoute,
   swapQuoteRoute,
+  walletActivityRoute,
 } from "@senryo/api-client";
 import { getAddress } from "@senryo/chain";
 import { HTTP_STATUS, HttpError, type HttpServer, type Logger, parseRoute, sendRoute } from "@senryo/service-common";
-import { BRIDGE_QUOTE_RATE, BRIDGE_READ_RATE, HOLDINGS_RATE, SWAP_QUOTE_RATE } from "../anyasset/constants.ts";
+import {
+  BRIDGE_QUOTE_RATE,
+  BRIDGE_READ_RATE,
+  HOLDINGS_RATE,
+  SWAP_QUOTE_RATE,
+  WALLET_ACTIVITY_RATE,
+} from "../anyasset/constants.ts";
 import type { AnyAssetServices } from "../anyasset/runtime.ts";
 import { errorText } from "../anyasset/upstream.ts";
 
@@ -34,6 +42,16 @@ export function registerAnyAssetRoutes(app: HttpServer, log: Logger, services: A
       .get(query.chainId, getAddress(query.address))
       .catch(upstream(log, "holdings"));
     return sendRoute(reply, holdingsRoute, holdings);
+  });
+
+  app.get(walletActivityRoute.path, { config: WALLET_ACTIVITY_RATE }, async (request, reply) => {
+    const { query } = parseRoute(walletActivityRoute, request);
+    const wallet = services.wallet;
+    if (!wallet) throw new HttpError(HTTP_STATUS.unavailable, "UPSTREAM_UNAVAILABLE", "wallet activity is unavailable");
+    const page = await wallet
+      .page(query.chainId, getAddress(query.address), query.before, query.limit)
+      .catch(upstream(log, "wallet activity"));
+    return sendRoute(reply, walletActivityRoute, page);
   });
 
   app.get(swapQuoteRoute.path, { config: SWAP_QUOTE_RATE }, async (request, reply) => {

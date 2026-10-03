@@ -59,7 +59,7 @@ const social: SocialServices = {
   adminSecret: secrets.adminSecret,
   contact: { email: env.SUPPORT_EMAIL, url: env.SUPPORT_URL ?? null },
 };
-const anyAsset = createAnyAsset(log, chains, secrets);
+const anyAsset = createAnyAsset(log, chains, secrets, { db });
 const ctx: ApiContext = {
   env,
   secrets,

@@ -66,6 +66,8 @@ export const FEED_HISTORY_MAX_ROUNDS = 6_000;
 
 /** Any-asset (D6/D2): holdings match the api's ~20 s cache; quotes re-fetch while a ticket or review is open. */
 export const HOLDINGS_REFETCH_MS = 20_000;
+/** Wallet activity (D8): the api rescans an address at most once a minute; reading twice as often shows a new movement within one scan. */
+export const WALLET_ACTIVITY_REFETCH_MS = 30_000;
 export const SWAP_QUOTE_REFETCH_MS = 10_000;
 /** The route table changes only with a release (Aurora's incident state rides along). */
 export const BRIDGE_ROUTES_STALE_MS = 300_000;

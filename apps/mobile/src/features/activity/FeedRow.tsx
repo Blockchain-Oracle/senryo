@@ -4,6 +4,7 @@
  * title over when it happened — or, while it settles, "Pending" / "Checking" with a spinner, "Partly done" — and the
  * signed figure at the right. Bare on the page, a 0.985 press, a 30 ms stagger once per mount. Opens the receipt.
  */
+import type { FeedItem, FeedStatus } from "@senryo/query";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { MarkCluster } from "~/components/identity/MarkCluster";
@@ -13,7 +14,6 @@ import { AssetMark } from "~/features/money/AssetMark";
 import { activityTime } from "~/features/portfolio/activity-copy";
 import { fire } from "~/feedback/fire";
 import { BUTTON, CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
-import type { FeedItem, FeedStatus } from "./feed";
 
 const ROW_PRESS_SCALE = 0.985;
 const MS_PER_SECOND = 1000;

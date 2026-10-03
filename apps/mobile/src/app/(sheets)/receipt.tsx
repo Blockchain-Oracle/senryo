@@ -1,8 +1,8 @@
-import { readOperation, subscribeOperations } from "@senryo/query";
+import { journalItem, readOperation, subscribeOperations } from "@senryo/query";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { SheetRoute } from "~/components/sheet/SheetRoute";
-import { journalItem } from "~/features/activity/feed";
+import { FEED_FORMAT } from "~/features/activity/feed-format";
 import { ReceiptBody } from "~/features/activity/Receipt";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { useAccount } from "~/lib/account/provider";
@@ -21,7 +21,7 @@ export default function ReceiptSheet() {
   useEffect(() => subscribeOperations(() => setRevision((r) => r + 1)), []);
   const record = op ? readOperation(op) : undefined;
   const mine = record && address && record.account === address.toLowerCase() && record.chainId === network.chainId;
-  const item = mine && address ? journalItem(record, address) : undefined;
+  const item = mine && address ? journalItem(record, address, FEED_FORMAT) : undefined;
   return (
     <SheetRoute title={item?.title ?? "Receipt"}>
       {item && address ? (

@@ -29,6 +29,8 @@ This file drives every picker in [`b-money.md`](b-money.md) (B1, B4, B5, B6, B9,
 
 **Spam rules** (spam seen live by the plan: a fake "WMON" `0x561a…`, SAKURA, JUSTIN): an unverified token gets no price and doesn't count in the Total; it sits in the collapsed "Other tokens" section; a lookalike symbol triggers a warning; zero balances are dropped.
 
+**Wallet activity (B12, D8) rides the same scan** (built 3 Oct): each query also selects the address's own transactions (MON value) and WMON `Deposit`/`Withdrawal`; on 143 a second cursor reads internal calls into the address on `143-traces.hypersync.xyz` (join-all, so reverted calls are dropped; 10143 has no traces host). Every movement is stored in `wallet_transfers` below a 3-block finality margin and `GET /v1/activity/wallet` folds them per transaction (received / sent / swap). One scan still spends at most 3 queries in all, transfers first. LIVE 3 Oct: the shared token (15 queries / 60 s) is drained within ~1 s of each window by other users, so a first scan of a busy address advances about one page a minute.
+
 ## 2. Any ↔ any swap (B6; also the auto-swap inside trade, card and pool funding)
 
 | Source | Call | RECHECKED 2 Oct: 10 USDC → XAUt0 |

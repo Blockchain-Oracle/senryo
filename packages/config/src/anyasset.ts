@@ -23,6 +23,23 @@ export const HYPERSYNC_URL: Readonly<Record<ChainId, string>> = {
 export const ERC20_TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" as const;
 
 /**
+ * HyperSync hosts that serve execution traces (Envio dev update, Apr 2026: Monad traces from block 0): internal calls
+ * that pay native MON to an address (a router's MON output, a bridge delivery, a WMON unwrap). `/height` answered on
+ * 3 Oct for 143 only; 10143 has no traces host, so Practice sees a transaction's own MON value but no internal payout.
+ */
+export const HYPERSYNC_TRACES_URL: Readonly<Partial<Record<ChainId, string>>> = {
+  [MAINNET_CHAIN_ID]: "https://143-traces.hypersync.xyz",
+};
+
+/**
+ * WMON (WETH9) `Deposit(address indexed dst, uint256 wad)` / `Withdrawal(address indexed src, uint256 wad)`: a wrap
+ * mints WMON to dst, an unwrap burns it from src — read as WMON transfers from / to the zero address (topics read
+ * from a mainnet unwrap receipt on 3 Oct).
+ */
+export const WMON_DEPOSIT_TOPIC = "0xe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c" as const;
+export const WMON_WITHDRAWAL_TOPIC = "0x7fcf532c15f0a6db0bd6d0e038bea71d30d808c7d98cb3bf7268a95bf5081b65" as const;
+
+/**
  * Verified = listed on Monad's token list, matched by ADDRESS (never by symbol). Holdings follow the list as it is
  * today (`main`), unlike the generated spot tokens, which stay on the pinned commit for reproducible logos.
  */
