@@ -1,6 +1,4 @@
-import { ids } from "@senryo/identity";
 import { WelcomeActions } from "@/components/auth/welcome-actions";
-import { EntityMark } from "@/components/identity/entity-mark";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { BRAND, WELCOME_SEAL_SIZE } from "@/lib/constants/brand";
 
@@ -18,7 +16,9 @@ export default function Welcome() {
         <ThemeToggle />
       </div>
       <div className="flex flex-1 flex-col items-center justify-center gap-6 py-10 text-center">
-        <EntityMark id={ids.brand("senryo")} size={WELCOME_SEAL_SIZE} variant="symbol" decorative />
+        {/* The seal as a static asset (brand/senryo-seal.svg, served from /brand): the first paint carries no art table. */}
+        {/* biome-ignore lint/performance/noImgElement: a static export has no image optimizer */}
+        <img src="/brand/seal.svg" alt="" width={WELCOME_SEAL_SIZE} height={WELCOME_SEAL_SIZE} />
         <h1 className="font-display text-page-title">
           {BRAND.name} <span className="text-text-3">{BRAND.kanji}</span>
         </h1>
