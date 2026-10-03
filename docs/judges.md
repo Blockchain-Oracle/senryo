@@ -66,7 +66,7 @@ from the pool contract (pool value): https://senryo.xyz/stats/
 
 ## 7. Known limits, stated plainly
 
-- Practice swaps between tokens are limited; real swaps run on Mainnet.
+- Practice swaps test AUSD ↔ test USDC at par (a testnet contract, no market); every other pair swaps on Mainnet.
 - Bank cash-out through Ramp waits for Ramp to enable the off-ramp key; buying with a card works.
 - Add to Apple Wallet is locked: it needs Apple's provisioning entitlement.
 - *(This section is updated as acceptance runs land before submission.)*
