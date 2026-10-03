@@ -449,7 +449,7 @@ use the same pickers, sheets and receipts as AUSD.
   - Indexer lag: pending rows stay until the event lands.
 - **After:** Share sends a receipt image or link. Explorer opens the tx.
 - **Today → gap:**
-  - ~~Indexer events only.~~ **Built 3 Oct (claude/activity, D8):** wallet transfers in and out of any token, MON (a transaction's value; on Mainnet also internal payouts) and swaps made anywhere come from `GET /v1/activity/wallet` (`services/api/src/anyasset/wallet-activity.ts`, stored by the holdings HyperSync scan in `wallet_transfers`), merged in `m/features/activity/feed.ts` after the journal and the indexer (dedupe by tx hash; Senryo-contract movements, spam and hidden tokens stay out).
+  - ~~Indexer events only.~~ **Built 3 Oct (claude/activity, D8):** wallet transfers in and out of any token, MON (a transaction's value; on Mainnet also internal payouts) and swaps made anywhere come from `GET /v1/activity/wallet` (`services/api/src/anyasset/wallet-activity.ts`, stored by the holdings HyperSync scan in `wallet_transfers`), merged after the journal and the indexer by the Activity model both apps share (`q/activity-feed.ts`, `-journal.ts`, `-wallet.ts`; dedupe by tx hash; Senryo-contract movements, spam and hidden tokens stay out). The web Activity shows the same rows.
   - The receipt sheet is a placeholder (`m/app/(sheets)/receipt.tsx:5-8`).
   - The pending block is captioned "Pending on this device", followed by a sentence (`m/features/portfolio/PendingOperations.tsx:30,50-52`).
   - The SWAP title is "Collateral swap" (`m/features/portfolio/activity-copy.ts:77`). There is an extra Orders chip (`:17`).

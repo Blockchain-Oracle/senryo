@@ -5,12 +5,13 @@
  * Trades · Money · Card; rows with the subject mark, a verb title, the time, and the coloured amount; pending rows say
  * so. A row opens its receipt — the facts, the operation's steps when it composed several, every transaction with its
  * explorer link, Share. The indexer's events merge with this browser's journal, so a send that is still settling is a
- * row too ("Checking · don't send it again").
+ * row too ("Checking · don't send it again"), and with the wallet's own movements (D8: received, sent and swapped
+ * anywhere).
  */
 import type { ChainId } from "@senryo/config";
 import { explorerTxUrl } from "@senryo/config";
 import { shortAddress } from "@senryo/core";
-import { useQueryEnv } from "@senryo/query";
+import { type FeedItem, type FeedStatus, useQueryEnv } from "@senryo/query";
 import { ArrowLeftRight, ChartCandlestick, CreditCard, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { RowsSkeleton } from "@/components/home/home-tabs";
@@ -23,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/vercel-tabs";
 import { useAccount } from "@/lib/account/provider";
 import { activityTime } from "@/lib/activity/copy";
-import type { FeedItem, FeedStatus } from "@/lib/activity/feed";
 import { receiptLines, shareText } from "@/lib/activity/receipt";
 import { type FeedFilter, useFeed } from "@/lib/activity/use-feed";
 import { MARK_ROW, MARK_SMALL } from "@/lib/constants/brand";
@@ -84,8 +84,8 @@ function Receipt({
         )}
       </div>
       <div>
-        {receiptLines(item, me).map((l) => (
-          <DetailRow key={l.label} label={l.label} value={l.value} />
+        {receiptLines(item, me).map((l, i) => (
+          <DetailRow key={`${l.label}:${i}`} label={l.label} value={l.value} />
         ))}
         {record && record.plannedActions.length > 1 ? (
           <DetailRow

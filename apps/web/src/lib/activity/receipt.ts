@@ -1,14 +1,15 @@
 /**
  * The facts a receipt lists (flow book B12; the phone's `receiptLines`), in order — also the Share text: the amount,
  * the market or the counterparty, route and minimum for a swap, the fee, and when. A journal row reads its reviewed
- * intent; an indexed row its decoded event.
+ * intent; an indexed row its decoded event; a wallet row (D8) each token that moved and who it went to or came from.
  */
 import { type ChainId, explorerTxUrl } from "@senryo/config";
 import { shortAddress } from "@senryo/core";
+import { type FeedItem, walletReceiptLines } from "@senryo/query";
 import { money } from "@/lib/format";
 import { tokenAmount } from "@/lib/money/format";
 import { activityTime } from "./copy";
-import type { FeedItem } from "./feed";
+import { FEED_FORMAT } from "./feed-format";
 
 const MS_PER_SECOND = 1000;
 const PROVIDER_NAMES: Record<string, string> = {
@@ -34,6 +35,11 @@ export interface Line {
 
 export function receiptLines(item: FeedItem, me: string): Line[] {
   const lines: Line[] = [];
+  if (item.source.kind === "wallet") {
+    lines.push(...walletReceiptLines(item.source.item, FEED_FORMAT));
+    lines.push({ label: "When", value: activityTime(Math.floor(item.at / MS_PER_SECOND)) });
+    return lines;
+  }
   if (item.figure) lines.push({ label: "Amount", value: item.figure.text });
   if (item.source.kind === "indexed") {
     const row = item.source.row;

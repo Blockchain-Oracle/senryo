@@ -21,6 +21,9 @@ import {
   type SwapQuoteOk,
   type SwapQuoteResponse,
   swapQuoteRoute,
+  WALLET_ACTIVITY_PAGE,
+  type WalletActivityItem,
+  walletActivityRoute,
 } from "@senryo/api-client";
 import {
   type PrepareAggregatorSwapOptions,
@@ -38,13 +41,14 @@ import {
   SWAP_SLIPPAGE_BPS,
 } from "@senryo/config";
 import type { Address, Reading } from "@senryo/core";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   BRIDGE_QUOTE_REFETCH_MS,
   BRIDGE_ROUTES_STALE_MS,
   BRIDGE_STATUS_REFETCH_MS,
   HOLDINGS_REFETCH_MS,
   SWAP_QUOTE_REFETCH_MS,
+  WALLET_ACTIVITY_REFETCH_MS,
 } from "./constants.ts";
 import { type QueryEnv, useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
@@ -54,6 +58,8 @@ import { mainnetReadOf } from "./spot.ts";
 export const anyAssetKeys = {
   /** Under the account key: a finalized account invalidation refreshes the holdings. */
   holdings: (chainId: ChainId, address: Address) => [...keys.account(chainId, address), "holdings"] as const,
+  walletActivity: (chainId: ChainId, address: Address) =>
+    [...keys.account(chainId, address), "wallet-activity"] as const,
   swapQuote: (chainId: ChainId, p: SwapQuoteParams) =>
     [
       "swap",
@@ -100,6 +106,47 @@ export function useHoldings(address: Address | undefined, chainId?: ChainId): Re
     refetchInterval: HOLDINGS_REFETCH_MS,
   });
   return readingOf(query, HOLDINGS_REFETCH_MS);
+}
+
+/**
+ * Wallet movements for Activity (B12, D8): tokens and MON received from anyone, sent anywhere and swapped anywhere —
+ * `/v1/activity/wallet`, one item per transaction, newest first, a page at a time by its own cursor. Under the account
+ * key, so a finalized operation's account invalidation refreshes it; while it is shown it re-reads at the api's rescan
+ * pace, so money that arrives from outside appears without any action.
+ */
+export function useWalletActivity(address: Address | undefined, enabled: boolean) {
+  const env = useQueryEnv();
+  const query = useInfiniteQuery({
+    queryKey: anyAssetKeys.walletActivity(env.chainId, address ?? "0x"),
+    queryFn: ({ pageParam, signal }) =>
+      env.api.call(
+        walletActivityRoute,
+        {
+          query: {
+            chainId: env.chainId,
+            address: address as Address,
+            limit: WALLET_ACTIVITY_PAGE,
+            ...(pageParam ? { before: pageParam } : {}),
+          },
+        },
+        { signal },
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next ?? undefined,
+    enabled: enabled && address !== undefined,
+    staleTime: WALLET_ACTIVITY_REFETCH_MS,
+    refetchInterval: WALLET_ACTIVITY_REFETCH_MS,
+  });
+  const items: WalletActivityItem[] | undefined = query.data?.pages.flatMap((p) => p.items);
+  return {
+    items,
+    /** The wallet source can't be read: Activity goes on without it (the indexer and the journal still show). */
+    failed: query.isError && query.data === undefined,
+    hasMore: query.hasNextPage,
+    loadingMore: query.isFetchingNextPage,
+    loadMore: () => void query.fetchNextPage(),
+    refetch: () => query.refetch(),
+  };
 }
 
 export interface SwapQuoteParams {

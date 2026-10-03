@@ -45,7 +45,7 @@ const short = (a: string) => `${a.slice(0, SHORT_HEAD)}…${a.slice(-SHORT_TAIL)
 const amount = (l: WalletLeg) =>
   `${formatUnits(l.amount, l.token.decimals, Math.min(l.token.decimals, SHOWN))} ${l.token.symbol}${l.token.verified ? "" : " (unverified)"}`;
 
-/** The row title the app builds (apps/mobile/src/features/activity/wallet-item.ts), for reading the output. */
+/** The row title both apps build (packages/query/src/activity-wallet.ts), for reading the output. */
 function words(item: WalletActivityItem): string {
   const sent = item.legs.find((l) => l.direction === "out");
   const got = item.legs.find((l) => l.direction === "in");

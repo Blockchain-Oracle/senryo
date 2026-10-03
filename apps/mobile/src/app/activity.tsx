@@ -1,4 +1,5 @@
 import { engineMarket } from "@senryo/config";
+import type { FeedItem } from "@senryo/query";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -8,7 +9,6 @@ import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { useDockInset } from "~/components/shell/dock-context";
 import { FeedRow, type LogoOf } from "~/features/activity/FeedRow";
-import type { FeedItem } from "~/features/activity/feed";
 import { ReceiptBody } from "~/features/activity/Receipt";
 import { type FeedFilter, useFeed } from "~/features/activity/useFeed";
 import { PositionRowsSkeleton } from "~/features/home/HomeParts";

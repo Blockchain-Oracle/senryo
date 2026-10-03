@@ -6,14 +6,24 @@
  * without it. Wallet rows are silent: the moment and the sound belong to the operation or the arrival, never a row.
  */
 import type { Address, Diagnosis } from "@senryo/core";
-import { operationsFor, subscribeOperations, useQueryEnv } from "@senryo/query";
+import {
+  type FeedGroup,
+  type FeedItem,
+  indexedItem,
+  journalItem,
+  mergeFeed,
+  operationsFor,
+  subscribeOperations,
+  useQueryEnv,
+  useWalletActivity,
+  walletItem,
+  walletShown,
+} from "@senryo/query";
 import { useEffect, useMemo, useState } from "react";
 import { useHiddenTokens } from "~/features/money/hidden";
 import { FILTER_KINDS } from "~/features/portfolio/activity-copy";
 import { useActivity } from "~/features/portfolio/useActivity";
-import { type FeedGroup, type FeedItem, indexedItem, journalItem, mergeFeed } from "./feed";
-import { useWalletActivity } from "./useWalletActivity";
-import { walletItem, walletShown } from "./wallet-item";
+import { FEED_FORMAT } from "./feed-format";
 
 export type FeedFilter = "all" | FeedGroup;
 
@@ -42,7 +52,7 @@ export function useFeed(address: Address | undefined, filter: FeedFilter, market
   const journal = useMemo(() => {
     if (!address || marketId) return [];
     return operationsFor(env.chainId, address)
-      .map((record) => journalItem(record, address))
+      .map((record) => journalItem(record, address, FEED_FORMAT))
       .filter((item): item is FeedItem => item !== undefined)
       .filter((item) => filter === "all" || item.group === filter);
   }, [address, env.chainId, filter, marketId, revision]);
@@ -50,7 +60,7 @@ export function useFeed(address: Address | undefined, filter: FeedFilter, market
   const moves = {
     items:
       walletOn && wallet.items
-        ? wallet.items.filter((w) => walletShown(w, hidden.has)).map((w) => walletItem(w, env.chainId))
+        ? wallet.items.filter((w) => walletShown(w, hidden.has)).map((w) => walletItem(w, env.chainId, FEED_FORMAT))
         : [],
     // Not loaded yet, or unreachable: it holds nothing back (its rows join when they come).
     complete: !walletOn || wallet.items === undefined || !wallet.hasMore,
@@ -60,7 +70,7 @@ export function useFeed(address: Address | undefined, filter: FeedFilter, market
   const reading = activity.reading;
   const indexed =
     reading.status === "fresh" || reading.status === "stale"
-      ? reading.value.map((row) => indexedItem(row, env.chainId, address ?? ""))
+      ? reading.value.map((row) => indexedItem(row, env.chainId, address ?? "", FEED_FORMAT))
       : undefined;
   const items =
     indexed !== undefined

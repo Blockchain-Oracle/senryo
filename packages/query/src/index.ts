@@ -1,4 +1,7 @@
 export * from "./account.ts";
+export * from "./activity-feed.ts";
+export * from "./activity-journal.ts";
+export * from "./activity-wallet.ts";
 export * from "./anyasset.ts";
 export { type Capability, type CapabilityFacts, capabilitiesOf } from "./capabilities.ts";
 export * from "./card.ts";

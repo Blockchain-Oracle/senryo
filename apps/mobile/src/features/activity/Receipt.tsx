@@ -5,6 +5,7 @@
  * send it again; there is never a resend here.
  */
 import { type ChainId, explorerTxUrl } from "@senryo/config";
+import { type FeedItem, walletReceiptLines } from "@senryo/query";
 import { Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { OperationSummary } from "~/components/trade/OperationSummary";
@@ -17,8 +18,7 @@ import { shortAddress } from "~/lib/format";
 import { usd } from "~/lib/money";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { FeedLead, type LogoOf, STATUS_WORDS } from "./FeedRow";
-import type { FeedItem } from "./feed";
-import { walletReceiptLines } from "./wallet-item";
+import { FEED_FORMAT } from "./feed-format";
 
 const MS_PER_SECOND = 1000;
 const PROVIDER_NAMES: Record<string, string> = {
@@ -47,7 +47,7 @@ interface Line {
 export function receiptLines(item: FeedItem, me: string): Line[] {
   const lines: Line[] = [];
   if (item.source.kind === "wallet") {
-    lines.push(...walletReceiptLines(item.source.item));
+    lines.push(...walletReceiptLines(item.source.item, FEED_FORMAT));
     lines.push({ label: "When", value: activityTime(Math.floor(item.at / MS_PER_SECOND)) });
     return lines;
   }
