@@ -97,6 +97,9 @@ Capability cards D1–D2. Sources: plan §0.4 "Pool", §0.6 D and §0.9 "Pool". 
   (withdrawn to self), any other verified holding swapped to AUSD on Mainnet, one operation (`features/lp/deposit-op.ts`,
   `DepositSheet.tsx`); Practice "dollars only" — test USDC (wallet part) pays through the par `PracticeSwap` to test AUSD
   in the same operation ("Approve USDC · Swap USDC → AUSD · Approve AUSD · Deposit", D-252).
+  Web (claude/web3, 3 Oct): the same composition (`@senryo/query` `pool-deposit.ts`) behind a "Pay with ⌄" chip on the
+  web pool. Live on 10143 (account `0x5023…8748`, 10 test USDC): one passkey, "Deposited P$10.00" — approve
+  `0x736d…3dcb`, par swap `0x45e2…e089`, approve `0x8f3d…b19e`, deposit `0xf38b…89ce`.
 - **Was:** deposits came from wallet AUSD only (`LpScreen.tsx:143-149`; `useLp.ts:73`), so P$ in trades couldn't be used; the faucet sits on the pool screen (`LpScreen.tsx:150-157`); the disclosures are paragraphs (`:22-23,135-137`); with an allowance in place, a deposit over $250 hits `over-move-cap` with no step-up route (`useLp.ts:56`; `apps/mobile/src/lib/account/sender.ts:81-99`), the same class as defect 1; the presets constant is unused; there's no pool mark (Part A3) and no Earn tab; the APR leaves out borrow and funding.
 - **Acceptance:**
   - [ ] (P) With P$ only in trades, deposit P$20: one slide; the status shows withdraw → approve → deposit; "Deposited P$20".

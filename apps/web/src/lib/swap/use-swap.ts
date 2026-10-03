@@ -3,17 +3,31 @@
 /**
  * Swap any ↔ any (flow book B6, routes.md §2; the phone's `useSwap`): what is paid (any holding — an unverified token
  * sells only), what is received (any verified token), the exact amount, the live best-of quote (Monorail · KyberSwap,
- * pinned routers) and what stops it, in the order checked. "Review" freezes the quote and builds the sends
- * ([pull from trades]? → [approve exact]? → swap) with the fee preflight; the slide signs them under one step-up, and the
- * swap's calldata is re-quoted the moment before signing — accepted only through the same router with at least the
- * reviewed minimum. Practice: the API answers "unsupported" (no aggregator serves the test network) — a named lock.
+ * pinned routers) and what stops it, in the order checked. "Review" freezes the quote and builds the sends ([network
+ * fee]? → [pull from trades]? → [approve exact]? → swap) with the fee planned (B11: MON short on Mainnet → "~$0.50 →
+ * MON" first in the same operation, or the named shortfall); the slide signs them under one step-up, and the swap's
+ * calldata is re-quoted the moment before signing — accepted only through the same router with at least the reviewed
+ * minimum. In Practice, test AUSD ↔ test USDC swaps at par through PracticeSwap (D-252: no aggregator call, nothing to
+ * re-quote); every other Practice pair stays locked ("Swaps run on Mainnet").
  */
 import { type SwapQuoteOk, swapQuoteRoute } from "@senryo/api-client";
-import { erc20Abi, isDeployed, MonReserveError, readAccountSnapshot } from "@senryo/chain";
+import {
+  erc20Abi,
+  isDeployed,
+  MonReserveError,
+  PRACTICE_SWAP_ROUTE,
+  PracticeSwapFloatError,
+  readAccountSnapshot,
+} from "@senryo/chain";
 import { GAS_LIMITS, NATIVE_TOKEN } from "@senryo/config";
 import {
   aggregatorSwapRequests,
+  isParPair,
   maxWithdrawable,
+  parCounterpart,
+  parReceivables,
+  parStepUp,
+  practiceSwapLeg,
   useAccountRisk,
   useQueryEnv,
   userFeeCache,
@@ -32,10 +46,11 @@ import { useMoneyAssets } from "@/lib/money/use-money-assets";
 import { type MoneyOperation, type PlannedStep, useMoneyOperation } from "@/lib/money/use-money-operation";
 import { useReviewGuard } from "@/lib/review-guard";
 import { nativeMon, receiveCandidates } from "./assets";
-import { monFee, swapProviderName } from "./format";
+import { swapProviderName } from "./format";
 
 const QUOTE_DEBOUNCE_MS = 350;
 const FEE_STALE_MS = 15_000;
+const MOVED = "Price moved · review again";
 
 export type SwapBlock =
   | "account"
@@ -52,8 +67,11 @@ export interface ReviewedSwap {
   pay: MoneyAsset;
   receive: MoneyAsset;
   amount: bigint;
-  quote: SwapQuoteOk;
+  /** The frozen aggregator quote; absent for the Practice par swap, whose output is the amount itself (D-252). */
+  quote: SwapQuoteOk | undefined;
+  /** The prepared steps, a "Network fee" swap first when MON is short (B11). */
   steps: PlannedStep[];
+  feeWei: bigint;
 }
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -65,7 +83,7 @@ function useDebounced<T>(value: T, ms: number): T {
   return settled;
 }
 
-export function useSwap(initialPay?: string) {
+export function useSwap(initialPay?: string, initialReceive?: string) {
   const env = useQueryEnv();
   const address = useAccount().hint?.address;
   const money = useMoneyAssets(address);
@@ -79,15 +97,22 @@ export function useSwap(initialPay?: string) {
     staleTime: FEE_STALE_MS,
   });
 
-  const receivable = receiveCandidates(env.chainId, money.assets, list.data ?? []);
+  // Practice: both test dollars are receivable even when not held (the par pair, D-252).
+  const receivable = receiveCandidates(env.chainId, money.assets, [
+    ...parReceivables(env.chainId),
+    ...(list.data ?? []),
+  ]);
   const payable = [...money.assets, ...money.other].filter((a) => a.total > 0n);
   const lookup = (key: string | undefined) =>
     key ? (money.find(key) ?? receivable.find((a) => a.key === key.toLowerCase())) : undefined;
   const [payKey, setPayKey] = useState<string | undefined>(initialPay?.toLowerCase());
-  const [receiveKey, setReceiveKey] = useState<string>();
+  const [receiveKey, setReceiveKey] = useState<string | undefined>(initialReceive?.toLowerCase());
   const pay = lookup(payKey ?? payable[0]?.key ?? NATIVE_TOKEN.toLowerCase()) ?? nativeMon(env.chainId, money.monWei);
-  const receive =
-    lookup(receiveKey) ?? receivable.find((a) => a.key !== pay.key && (a.collateral === "USDC" || a.native));
+  const fallbackReceive =
+    parCounterpart(env.chainId, pay, receivable) ??
+    receivable.find((a) => a.key !== pay.key && (a.collateral === "USDC" || a.native));
+  const receive = lookup(receiveKey) ?? fallbackReceive;
+  const par = isParPair(env.chainId, pay, receive);
 
   const [text, setText] = useState("");
   const [max, setMax] = useState(false);
@@ -101,7 +126,7 @@ export function useSwap(initialPay?: string) {
   const typed = max ? available : parseAmount(text, pay.decimals);
   const amount = useDebounced(typed, QUOTE_DEBOUNCE_MS);
   const quote = useSwapQuote(
-    address && receive && amount > 0n && amount <= available
+    !par && address && receive && amount > 0n && amount <= available
       ? { from: pay.address, to: receive.address, amount, sender: address }
       : undefined,
   );
@@ -110,28 +135,30 @@ export function useSwap(initialPay?: string) {
 
   const block: SwapBlock | undefined = !address
     ? "account"
-    : value?.status === "unsupported"
-      ? "unsupported"
-      : typed === 0n
-        ? "empty"
-        : typed > available
-          ? "short"
-          : receive && !receive.verified
-            ? "unverified-receive"
-            : amount !== typed || (quote.status === "unknown" && !ok)
-              ? "quoting"
-              : quote.status === "failed"
-                ? "failed"
-                : value?.status === "no_route"
-                  ? "no-route"
-                  : !ok
-                    ? "quoting"
-                    : ok.quote.impact === "block"
-                      ? "impact"
-                      : undefined;
+    : typed === 0n
+      ? "empty"
+      : typed > available
+        ? "short"
+        : par
+          ? undefined
+          : value?.status === "unsupported"
+            ? "unsupported"
+            : receive && !receive.verified
+              ? "unverified-receive"
+              : amount !== typed || (quote.status === "unknown" && !ok)
+                ? "quoting"
+                : quote.status === "failed"
+                  ? "failed"
+                  : value?.status === "no_route"
+                    ? "no-route"
+                    : !ok
+                      ? "quoting"
+                      : ok.quote.impact === "block"
+                        ? "impact"
+                        : undefined;
 
   const guard = useReviewGuard(
-    [env.chainId, address, pay.key, receive?.key, typed, reviewed?.quote.quote.minOut ?? ""].join(":"),
+    [env.chainId, address, pay.key, receive?.key, typed, reviewed?.quote?.quote.minOut ?? ""].join(":"),
   );
 
   /** Before the first step signs: the wallet (MON less its reserve) plus the free trading part still pays for it. */
@@ -175,38 +202,61 @@ export function useSwap(initialPay?: string) {
       fresh.quote.minOut < was.quote.minOut ||
       fresh.quote.router.toLowerCase() !== was.quote.router.toLowerCase()
     )
-      throw new Error("Price moved · review again");
+      throw new Error(MOVED);
     const requests = await aggregatorSwapRequests(env, address, fresh, { gasCostWei: swapGas * maxFee });
     const swap = requests.at(-1);
-    if (!swap || requests.length > 1) throw new Error("Price moved · review again");
+    if (!swap || requests.length > 1) throw new Error(MOVED);
     return swap;
   };
 
+  /** The swap's own steps: the par leg in Practice (nothing to re-quote), else the quote's, re-quoted at signing. */
+  const swapStepsFor = async (owner: `0x${string}`, quoted: SwapQuoteOk | undefined): Promise<PlannedStep[]> => {
+    const label = { approve: `Approve ${pay.symbol}`, swap: "Swap" };
+    if (!quoted) return practiceSwapLeg(env, owner, pay.address, typed, label, "swap");
+    const requests = await aggregatorSwapRequests(env, owner, quoted, { gasCostWei: swapGas * maxFee });
+    return requests.map((request, i) => {
+      const last = i === requests.length - 1;
+      return {
+        role: "swap" as const,
+        action: request.action,
+        label: last ? label.swap : label.approve,
+        request,
+        ...(last ? { build: () => requote(quoted) } : {}),
+      };
+    });
+  };
+
+  /** Freezes the quote and builds the sends; the network fee is planned here, before anything is signed (B11). */
   const review = async () => {
-    if (!address || !ok || !receive || block) return;
+    if (!address || !(ok || par) || !receive || block) return;
     setPreparing(true);
     setProblem(undefined);
     try {
       const pull = pullToSelfStep(env.chainId, pay, typed, address, snapshot?.positionBitmap ?? 0);
-      const requests = await aggregatorSwapRequests(env, address, ok, { gasCostWei: swapGas * maxFee });
-      const swapSteps: PlannedStep[] = requests.map((request, i) => {
-        const last = i === requests.length - 1;
-        return {
-          action: request.action,
-          label: last ? "Swap" : `Approve ${pay.symbol}`,
-          request,
-          ...(last ? { build: () => requote(ok) } : {}),
-        };
+      const swapSteps = await swapStepsFor(address, par ? undefined : ok);
+      const own = pull ? [pull, ...swapSteps] : swapSteps;
+      const walletPart = typed < pay.wallet ? typed : pay.wallet;
+      const prepared = await runner.prepare({
+        steps: own,
+        reviewedIntent: {},
+        revalidate: async () => undefined,
+        spends: { [pay.key]: walletPart },
       });
-      const steps = pull ? [pull, ...swapSteps] : swapSteps;
-      const fee = await runner.checkFees({ steps });
-      if (!fee.ok) return setProblem(`Add MON for fees · ${monFee(fee.shortWei)} short`);
-      setReviewed({ pay, receive, amount: typed, quote: ok, steps });
+      if (!prepared.ok) return setProblem(prepared.block);
+      const feeWei = par ? 0n : swapGas * maxFee;
+      // Max is frozen at review: the reviewed amount is a number now, not "whatever is available" as legs land.
+      if (max) {
+        setMax(false);
+        setText(plainAmount(typed, pay.decimals));
+      }
+      setReviewed({ pay, receive, amount: typed, quote: par ? undefined : ok, steps: prepared.op.steps, feeWei });
     } catch (error) {
       setProblem(
         error instanceof MonReserveError
           ? `Keep 10 MON for fees · max ${amountOf(pay, error.maxSpendWei)}`
-          : "Couldn’t prepare the swap · try again",
+          : error instanceof PracticeSwapFloatError
+            ? `Practice swap holds ${amountOf(receive, error.float)} now · try less`
+            : "Couldn’t prepare the swap · try again",
       );
     } finally {
       setPreparing(false);
@@ -215,9 +265,12 @@ export function useSwap(initialPay?: string) {
 
   const confirm = async () => {
     if (!reviewed || !address) return;
-    const { pay: p, receive: r, quote: q } = reviewed;
-    const paid = amountOf(p, reviewed.amount);
-    const atLeast = amountOf(r, q.quote.minOut);
+    const { pay: p, receive: r, quote: q, amount: a } = reviewed;
+    // The par swap's minimum and estimate are the amount itself (D-252).
+    const minOut = q ? q.quote.minOut : a;
+    const quotedOut = q ? q.quote.amountOut : a;
+    const paid = amountOf(p, a);
+    const atLeast = amountOf(r, minOut);
     const op: MoneyOperation = {
       steps: reviewed.steps,
       revalidate,
@@ -226,32 +279,28 @@ export function useSwap(initialPay?: string) {
         symbol: p.symbol,
         asset: p.key,
         decimals: String(p.decimals),
-        amount: reviewed.amount.toString(),
+        amount: a.toString(),
         outSymbol: r.symbol,
         outAsset: r.key,
         outDecimals: String(r.decimals),
-        minOut: q.quote.minOut.toString(),
-        quotedOut: q.quote.amountOut.toString(),
+        minOut: minOut.toString(),
+        quotedOut: quotedOut.toString(),
         paid,
         atLeast,
-        quoted: amountOf(r, q.quote.amountOut),
-        route: swapProviderName(q.quote.provider),
+        quoted: amountOf(r, quotedOut),
+        route: q ? swapProviderName(q.quote.provider) : PRACTICE_SWAP_ROUTE,
         recipient: address,
         source: "wallet",
         destination: "wallet",
       },
-      stepUp: {
-        title: `Swap ${paid} for ${r.symbol}`,
-        detail: `At least ${atLeast} through ${swapProviderName(q.quote.provider)}. Swaps always ask for a passkey.`,
-        confirmLabel: "Swap with passkey",
-      },
+      stepUp: q
+        ? {
+            title: `Swap ${paid} for ${r.symbol}`,
+            detail: `At least ${atLeast} through ${swapProviderName(q.quote.provider)} on Monad — real money. Swaps always ask for a fresh passkey check.`,
+            confirmLabel: "Swap with passkey",
+          }
+        : parStepUp(paid, amountOf(r, a), r.symbol),
     };
-    const fee = await runner.checkFees(op);
-    if (!fee.ok) {
-      setProblem(`Add MON for fees · ${monFee(fee.shortWei)} short`);
-      setReviewed(undefined);
-      return;
-    }
     await runner.run(op);
   };
 
@@ -281,11 +330,14 @@ export function useSwap(initialPay?: string) {
     value,
     ok,
     block,
+    /** Practice AUSD ↔ USDC at par (D-252): no quote; the output is the typed amount. */
+    par,
     preparing,
     problem,
     reviewed,
     runner,
     feeWei: (ok?.quote.gasLimit ?? swapGas) * maxFee,
+    tokenListFailed: list.isError,
     setPay: (key: string) => {
       if (receive && key === receive.key) setReceiveKey(pay.key);
       setPayKey(key);
@@ -307,6 +359,11 @@ export function useSwap(initialPay?: string) {
     review,
     closeReview: () => setReviewed(undefined),
     confirm,
+    /** After a finished swap: a fresh ticket. */
+    clear: () => {
+      setReviewed(undefined);
+      resetAmount();
+    },
   };
 }
 

@@ -4,11 +4,11 @@
  * Home's body (flow book §0.9 Home): Positions · Assets · Earn as underline tabs instead of stacked boxed sections. The
  * chosen tab is a per-viewer convenience kept in this browser. Every tab has its loading, empty and failed state.
  */
-import { ENGINE_MARKETS, engineMarketsOn } from "@senryo/config";
+import { ENGINE_MARKETS, engineMarketsOn, MONAD_BRIDGE_ASSETS } from "@senryo/config";
 import type { Address } from "@senryo/core";
 import { ids } from "@senryo/identity";
-import { useAccountRisk, useLpVault, usePositions, useQueryEnv } from "@senryo/query";
-import { ChevronDown } from "lucide-react";
+import { bridgeAssetOf, useAccountRisk, useLpVault, usePositions, useQueryEnv } from "@senryo/query";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ListRow, QuietLine } from "@/components/kit/list-row";
@@ -17,12 +17,15 @@ import { known } from "@/components/ui/reading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs } from "@/components/ui/vercel-tabs";
 import { readJson, writeJson } from "@/lib/account/local";
+import { bridgeAssetMark } from "@/lib/bridge/assets";
 import { MARK_ROW } from "@/lib/constants/brand";
 import { MONEY_STORAGE } from "@/lib/constants/money";
 import { assetHref, ROUTES } from "@/lib/constants/routes";
 import { money } from "@/lib/format";
+import { type Arrival, useArrivals } from "@/lib/money/arrivals";
 import type { MoneyAsset } from "@/lib/money/assets";
-import { useMoneyAssets } from "@/lib/money/use-money-assets";
+import { tokenAmount } from "@/lib/money/format";
+import { type MoneyAssets, useMoneyAssets } from "@/lib/money/use-money-assets";
 import { cn } from "@/lib/utils";
 import { PositionRow } from "./position-row";
 
@@ -130,12 +133,44 @@ function PositionsTab({ address, readOnly }: { address: Address; readOnly: boole
   );
 }
 
+/**
+ * "Arriving" (B4, B16): a deposit this browser opened from another chain, until the asset's balance rises — its
+ * mark, where it comes from and the least that arrives; it opens the route's address and timeline again.
+ */
+function ArrivingRow({ arrival, assets }: { arrival: Arrival; assets: MoneyAssets }) {
+  const env = useQueryEnv();
+  const held = assets.find(arrival.asset);
+  const bridged = bridgeAssetOf(env.chainId, arrival.asset);
+  const decimals = held?.decimals ?? (bridged ? MONAD_BRIDGE_ASSETS[env.chainId][bridged]?.decimals : undefined);
+  return (
+    <ListRow
+      href={ROUTES.bridgeIn}
+      leading={<EntityMark id={held?.mark ?? (bridged ? bridgeAssetMark(bridged) : "")} size={MARK_ROW} decorative />}
+      title="Arriving"
+      subtitle={`${arrival.symbol} from ${arrival.via}`}
+      value={
+        arrival.amount && decimals !== undefined ? (
+          `≥ ${tokenAmount(BigInt(arrival.amount), decimals, arrival.symbol)}`
+        ) : (
+          <Loader2 className="size-4 animate-spin text-text-3" aria-label="Arriving" />
+        )
+      }
+    />
+  );
+}
+
 function AssetsTab({ address, readOnly }: { address: Address; readOnly: boolean }) {
+  const env = useQueryEnv();
   const assets = useMoneyAssets(address);
+  const arrivals = useArrivals(
+    env.chainId,
+    readOnly ? undefined : address,
+    assets.status === "ready" ? assets.assets : undefined,
+  );
   if (assets.status === "loading") return <RowsSkeleton />;
   if (assets.status === "failed")
     return <QuietLine action={{ label: "Retry", onClick: assets.retry }}>Couldn’t load assets</QuietLine>;
-  if (assets.assets.length === 0 && assets.other.length === 0)
+  if (assets.assets.length === 0 && assets.other.length === 0 && arrivals.length === 0)
     return readOnly ? (
       <QuietLine>No assets</QuietLine>
     ) : (
@@ -145,6 +180,9 @@ function AssetsTab({ address, readOnly }: { address: Address; readOnly: boolean 
   return (
     <div>
       {assets.stale && assets.error ? <p className="pb-1 text-meta text-warn">Offline</p> : null}
+      {arrivals.map((a) => (
+        <ArrivingRow key={a.id} arrival={a} assets={assets} />
+      ))}
       {assets.assets.map((a) => (
         <AssetRow key={a.key} asset={a} href={href(a)} />
       ))}

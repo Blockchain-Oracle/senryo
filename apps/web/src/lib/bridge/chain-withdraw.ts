@@ -120,6 +120,7 @@ export async function chainSteps(
     swapRequests.forEach((request, i) => {
       const last = i === swapRequests.length - 1;
       steps.push({
+        role: "swap",
         action: request.action,
         label: last ? "Swap to USDC" : `Approve ${plan.asset.symbol}`,
         request,
@@ -132,6 +133,7 @@ export async function chainSteps(
   bridgeRequests.forEach((request, i) => {
     const last = i === bridgeRequests.length - 1;
     steps.push({
+      role: "act",
       action: request.action,
       label: last ? `Send to ${plan.chain.name}` : `Approve ${plan.bridgeAsset}`,
       request,

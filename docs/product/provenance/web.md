@@ -43,6 +43,24 @@ is untouched. nginx now sends `camera=(self)`.
 | `components/ui/daily-bars.tsx` (`/stats/` per-day chart) | eugeneshilow/stacked-activity **#29474** (search "bar chart daily activity") | Daily columns from one baseline, the hovered day's track band, per-day hit zones wider than the columns, the hatched partial last day (today isn't over), clean {1, 2, 2.5, 5}×10^k scale steps, the grow-in stagger. | One series per chart: new accounts and trades are two small multiples on one day axis (two scales are never one stack or a second axis). The live legend moved to the caller so both charts share one hovered day; tap works as hover. Labels are HTML so text never scales with the SVG; Living Lacquer tokens (`--practice` / `--mainnet` per network) instead of the vizcn palette; motion/react with the lacquer ease, reduced motion draws in place; a visually hidden table carries every value. Recharts-based bar charts (heygaia #28559, retroui #28553) were not used: a charting library for two small series. |
 | `components/public/markdown.tsx` (`/judges/`) | serafimcloud/markdown **#12396** (search "markdown prose renderer article") | The element grammar: headings, ordered and bullet lists, tables, quotes, code fences, external links in a new tab with `noopener`. | Not the dependency: the 21st component needs react-markdown + remark-gfm (the unified tree). The guide is our own file, rendered at build in a server component, so a ~250-line parser covering what the guides use ships zero JS; same-site links become in-app paths and repo-relative links open the file on GitHub. |
 
+### Round 3 parity (practice swap, deposit address, pay with, network fee; `claude/web3`)
+
+No new 21st installs: every search returned boxed cards or payment forms (recorded under `components.considered` in
+`apps/web/.21st/design.json`); the surfaces are built from components already ported here, as on the phone
+(`provenance/compose.md`).
+
+| Surface (file) | 21st search | Result → built from |
+|---|---|---|
+| B4 deposit address (`components/bridge/deposit-address.tsx`) | "crypto deposit address qr" → Wallet Card 2 #5214, QR Code #1706 / #6177, Crypto Swap Card #7973 | none fit (gradient boxes, square-module QRs) → the installed dotted QR (tom_ui #12248) with the ORIGIN chain's mark as the badge, the Receive grouping, Copy · Share action circles (radiumcoders #13564) |
+| B4 timeline (`TimelineSteps` in `components/bridge/chain-grid.tsx`) | "vertical timeline stepper status" → #29815, #3736, #778, #29866 | the installed sean0205/vertical-titled-stepper #29815 port, now one presentational stepper for both directions: Waiting → Bridging → Arrived (in) and Sent → Bridging → Delivered (out) |
+| "Pay with" chip (`components/money/asset-chip.tsx`) | "payment method selector pay with token" → Payment #7478, #24917, #4268, #5742 | none fit (card / checkbox payment forms) → the phone's AssetChip (Phantom P20) over the existing AssetPicker; the swap plates use the same chip |
+| Arriving row (Home → Assets) | "pending transfer row arriving" → Pending #19949, #29368 | the kit `ListRow` with the asset's mark, "USDC from Base", "≥ 9.77 USDC" |
+
+Shared code, not copies: the money model, the operation's fee plan, pay-with, the ticket's pay hook, the pool
+deposit's composition, the move request builders, the Practice par words, the deposit-address record + timeline and
+the Arriving rule moved from `apps/mobile` into `@senryo/query`; both apps import them (the phone keeps its paths as
+re-exports).
+
 ## Searched, none fit (built on the kit)
 
 | Need | Search | Result → what was used |
@@ -74,6 +92,7 @@ is untouched. nginx now sends `camera=(self)`.
 | Card → Add to Apple Wallet | Needs Apple approval |
 | Card → Get card | Card unavailable while `/v1/config` reports the card service off on this network |
 | Send / Withdraw → Scan | Camera where allowed, Paste always (flow book G6); a refused camera says so in one line |
-| Swap (Practice) | Mainnet only — the API's own reason: no aggregator serves the test network |
-| Add money → From another chain → Send | "Send from your <chain> wallet · soon": the transfer is signed on the other chain and the web has no connected-wallet route yet (same lock as the phone) |
+| Swap (Practice) | Test AUSD ↔ test USDC swap at par (D-252, "Practice swap · at par"); every other pair keeps the phone's locked slide "Swaps run on Mainnet" (no aggregator serves the test network) |
+| Add money → From another chain → deposit address (Practice) | "Deposit address · Mainnet only": Relay has no test network (same lock as the phone); Mainnet opens the address |
 | Add money → From another chain (Practice) | Only Circle's testnet USDC over CCTP; the other assets are locked Mainnet only |
+| Ticket / pool "Pay with" (Practice) | "Practice: dollars only" — test AUSD and test USDC (the pool takes USDC through the par leg); other holdings are listed, disabled, with that reason |

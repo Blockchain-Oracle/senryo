@@ -2,30 +2,46 @@
 
 /**
  * Deposit, Redeem and Claim (flow book D1 steps 2–5, D2; the phone's DepositSheet / RedeemSheet / ClaimSheet) as
- * panels on the pool page. Deposit: the amount as the figure, where the AUSD comes from (trading balance — withdrawn to
- * self first — or wallet AUSD), presets and Max (that balance capped by the pool's room), what it composes, "≈ n sLP",
- * and one slide ("· passkey" above the session's move cap). Redeem: 25 / 50 / 100 % of your sLP, its value now, when the
- * claim opens, "Can't be cancelled". Claim: once ready and every market is open. A panel stays mounted under the outcome
- * so its review guard holds through the send.
+ * panels on the pool page. Deposit: the amount as the figure, a "Pay with AUSD ⌄" chip over every holding (rule 1):
+ * AUSD comes from the wallet first, then the trading balance (withdrawn to self); on Mainnet any other verified holding
+ * is swapped to AUSD inside the same operation (its minimum covers the deposit, impact over 1 % warns, over 5 %
+ * blocks); Practice "dollars only" — test USDC pays through the par swap to test AUSD (D-252). Presets and Max (what
+ * the chosen asset brings, capped by the pool's room), what it composes ("Swap USDC → AUSD · Approve AUSD · Deposit",
+ * "Network fee" first on Mainnet when MON is short), "≈ n sLP", and one slide ("· passkey" with a swap leg or above
+ * the session's move cap). Redeem: 25 / 50 / 100 % of your sLP, its value now, when the claim opens, "Can't be
+ * cancelled". Claim: once ready and every market is open. A panel stays mounted under the outcome so its review guard
+ * holds through the send.
  */
 import type { LpRedeemView, LpSnapshot } from "@senryo/chain";
+import { MAINNET_CHAIN_ID } from "@senryo/config";
 import { DECIMALS, formatUnits, parseUnits, RISK, utcSlotLabel } from "@senryo/core";
-import { useQueryEnv } from "@senryo/query";
+import {
+  type PoolDeposit,
+  payWithReason,
+  poolDepositOperation,
+  poolDepositSteps,
+  practiceNote,
+  stepsLine,
+  swappableUsd6,
+  usePaySwap,
+  useQueryEnv,
+} from "@senryo/query";
 import { useState } from "react";
 import { DetailRow } from "@/components/kit/list-row";
 import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
+import { AssetChip } from "@/components/money/asset-chip";
+import { AssetPicker } from "@/components/money/asset-picker";
 import { MONEY, money, wholePct } from "@/lib/format";
+import { amountOf } from "@/lib/money/format";
+import { useMoneyAssets } from "@/lib/money/use-money-assets";
+import { usePreparedOperation } from "@/lib/money/use-money-operation";
 import { LP_DEPOSIT_CHIPS, LP_MIN_DEPOSIT_USD6, LP_REDEEM_STEPS_BPS, LP_SHARE_DECIMALS } from "@/lib/pool/constants";
-import { type DepositSource, type Lp, sharesValueOf } from "@/lib/pool/use-lp";
+import { type Lp, sharesValueOf } from "@/lib/pool/use-lp";
 import { useReviewGuard } from "@/lib/review-guard";
 import { useSettledOutcome } from "@/lib/trade/send-outcome";
 import { cn } from "@/lib/utils";
 
 const MS_PER_SECOND = 1000n;
-const SOURCES: readonly { value: DepositSource; label: string }[] = [
-  { value: "trading", label: "Trading balance" },
-  { value: "wallet", label: "Wallet AUSD" },
-];
 
 function Chip({
   on,
@@ -62,22 +78,36 @@ function useBusy(lp: Lp): boolean {
 
 export function DepositPanel({ lp, pool }: { lp: Lp; pool: LpSnapshot }) {
   const env = useQueryEnv();
+  const held = useMoneyAssets(lp.address);
   const [text, setText] = useState("");
-  const [source, setSource] = useState<DepositSource>(lp.available.trading > 0n ? "trading" : "wallet");
+  const [payKey, setPayKey] = useState<string>();
+  const [picking, setPicking] = useState(false);
+  const [problem, setProblem] = useState<string>();
   const parsed = parseUnits(text === "" ? "0" : text, DECIMALS.usd6);
   const amount = parsed.ok ? parsed.value : 0n;
-  const have = lp.available[source];
+  const ausd = held.assets.find((a) => a.collateral === "AUSD");
+  const payWith = (payKey ? held.find(payKey) : undefined) ?? ausd;
+  const direct = payWith?.collateral === "AUSD";
+  const swap = usePaySwap(env.chainId, direct ? undefined : payWith, amount, lp.address);
+  const have = !payWith ? 0n : direct ? payWith.wallet + payWith.tradingFree : swappableUsd6(payWith, env.chainId);
   const max = have < pool.maxDeposit ? have : pool.maxDeposit;
-  const guard = useReviewGuard([env.chainId, lp.address, amount, source].join(":"));
+  const passkey = !direct || lp.confirmFor(amount) === "passkey";
+  // What the user chose, not the plan's live state: once the swap leg lands, the paying asset's balance drops and its
+  // plan reads differently — that must not stop the deposit. The plan's figures re-arm the slide instead (reviewKey).
+  const guard = useReviewGuard([env.chainId, lp.address, amount, payWith?.key].join(":"));
   const busy = useBusy(lp);
-  const passkey = lp.confirmFor(amount) === "passkey";
-  const steps = [
-    ...(source === "trading" ? ["Withdraw"] : []),
-    ...(pool.allowance < amount ? ["Approve"] : []),
-    "Deposit",
-  ];
-  const shares =
-    pool.totalAssets > 0n && pool.totalSupply > 0n ? (amount * pool.totalSupply) / pool.totalAssets : amount;
+  const deposit: PoolDeposit | undefined =
+    payWith && lp.vaultAddress && lp.trading
+      ? {
+          amountUsd6: amount,
+          payWith,
+          swap,
+          vault: lp.vaultAddress,
+          allowance: pool.allowance,
+          positionBitmap: lp.trading.positionBitmap,
+          passkey,
+        }
+      : undefined;
   const blocked =
     amount <= 0n
       ? "Enter an amount"
@@ -86,8 +116,51 @@ export function DepositPanel({ lp, pool }: { lp: Lp; pool: LpSnapshot }) {
         : amount > pool.maxDeposit
           ? "Pool full"
           : amount > have
-            ? "Not enough in this balance"
-            : undefined;
+            ? `Not enough ${payWith?.symbol ?? ""}`
+            : swap.status === "blocked"
+              ? swap.reason
+              : swap.status === "quoting"
+                ? "Getting a quote"
+                : undefined;
+  const reviewKey =
+    deposit && !blocked
+      ? [amount, payWith?.key, swap.status === "ok" ? swap.quote.quote.minOut : swap.status, passkey].join(":")
+      : undefined;
+  // B11: the network fee is planned with the review — the slide signs exactly the steps Details shows.
+  const prepared = usePreparedOperation(lp.runner, reviewKey, async () => {
+    if (!deposit || !lp.address) return undefined;
+    const steps = await poolDepositSteps(env, lp.address, deposit);
+    return steps ? poolDepositOperation(env, lp.address, deposit, steps, guard, (v) => money(v)) : undefined;
+  });
+  const plan = prepared.data;
+  const why = blocked ?? problem ?? (plan && !plan.ok ? plan.block : undefined);
+  const shares =
+    pool.totalAssets > 0n && pool.totalSupply > 0n ? (amount * pool.totalSupply) / pool.totalAssets : amount;
+  const impact = swap.status === "ok" ? swap.quote.quote.impact : undefined;
+  if (picking)
+    return (
+      <section className="grid gap-3" aria-label="Pay with">
+        <div className="flex items-baseline justify-between">
+          <p className="text-row">Pay with</p>
+          {env.chainId === MAINNET_CHAIN_ID ? null : <p className="text-meta text-text-3">{practiceNote()}</p>}
+        </div>
+        <AssetPicker
+          assets={held.assets}
+          other={held.other}
+          selectedKey={payWith?.key}
+          reasonFor={(a) => payWithReason(a, "pool", env.chainId)}
+          detailFor={(a) => amountOf(a, a.total)}
+          onPick={(a) => {
+            setPayKey(a.key);
+            setProblem(undefined);
+            setPicking(false);
+          }}
+        />
+        <button type="button" onClick={() => setPicking(false)} className="text-meta text-link hover:underline">
+          Back to deposit
+        </button>
+      </section>
+    );
   return (
     <section className="grid gap-4" aria-label="Deposit">
       <label className="grid justify-items-center gap-1">
@@ -108,11 +181,12 @@ export function DepositPanel({ lp, pool }: { lp: Lp; pool: LpSnapshot }) {
           />
         </span>
       </label>
-      <div className="flex flex-wrap justify-center gap-2">
-        {SOURCES.map((s) => (
-          <Chip key={s.value} on={source === s.value} label={s.label} onClick={() => setSource(s.value)} />
-        ))}
-      </div>
+      {payWith ? (
+        <div className="grid justify-items-center gap-1">
+          <AssetChip asset={payWith} label="Pay with" onClick={() => setPicking(true)} />
+          {env.chainId === MAINNET_CHAIN_ID ? null : <p className="text-meta text-text-3">{practiceNote()}</p>}
+        </div>
+      ) : null}
       <p className="text-center text-meta text-text-3">
         {money(have)} available · {money(pool.maxDeposit, 0)} room left
       </p>
@@ -130,15 +204,20 @@ export function DepositPanel({ lp, pool }: { lp: Lp; pool: LpSnapshot }) {
       {amount > 0n ? (
         <div>
           <DetailRow label="You get" value={`≈ ${formatUnits(shares, LP_SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
-          <DetailRow label="Steps" value={steps.join(" → ")} />
+          {plan?.ok ? <DetailRow label="Steps" value={stepsLine(plan.op.steps)} /> : null}
+          {impact === "warn" ? <DetailRow label="Price impact" value="Over 1%" tone="warn" /> : null}
         </div>
       ) : null}
       <SlideToConfirm
-        label={blocked ?? (passkey ? "Slide to deposit · passkey" : "Slide to deposit")}
-        disabled={blocked !== undefined || busy || !lp.ready}
-        busy={busy}
-        resetKey={[env.chainId, lp.address, amount, source, passkey, lp.trace.events.length].join("|")}
-        onConfirm={() => void lp.deposit(amount, source, guard)}
+        label={why ?? (passkey ? "Slide to deposit · passkey" : "Slide to deposit")}
+        disabled={why !== undefined || busy || !lp.ready || !plan?.ok}
+        busy={busy || prepared.isFetching}
+        resetKey={[env.chainId, lp.address, reviewKey ?? "", passkey, lp.trace.events.length].join("|")}
+        onConfirm={() => {
+          if (!plan?.ok) return;
+          // The typed amount stays: clearing it would change the reviewed intent the guard holds.
+          void lp.deposit(plan.op).then(setProblem);
+        }}
       />
     </section>
   );

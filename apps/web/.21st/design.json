@@ -825,6 +825,56 @@
         "id": 19070,
         "name": "Advanced Stats",
         "verdict": "rejected: boxed stat cards; /stats/ uses AmountHero + ListRow (rows, not boxes)"
+      },
+      {
+        "id": 5214,
+        "name": "Wallet Card 2",
+        "verdict": "rejected for the B4 deposit address (search \"crypto deposit address qr\"): a boxed gradient wallet card; built from the installed DottedQr #12248, ActionCircle #13564 and the receive grouping (src/components/bridge/deposit-address.tsx)"
+      },
+      {
+        "id": 1706,
+        "name": "QR Code (designali-in)",
+        "verdict": "rejected for B4: square-module QR; the dotted QR (tom_ui #12248) is already ported"
+      },
+      {
+        "id": 6177,
+        "name": "QR Code (anubra266)",
+        "verdict": "rejected for B4: square-module QR; the dotted QR (tom_ui #12248) is already ported"
+      },
+      {
+        "id": 7973,
+        "name": "Crypto Swap Card",
+        "verdict": "rejected for B4: a boxed swap card, not an address"
+      },
+      {
+        "id": 7478,
+        "name": "Payment",
+        "verdict": "rejected for \"Pay with\" (search \"payment method selector pay with token\"): a card-number payment form; built AssetChip + the existing AssetPicker (src/components/money/asset-chip.tsx)"
+      },
+      {
+        "id": 24917,
+        "name": "Payment Method Card Checkbox",
+        "verdict": "rejected for \"Pay with\": checkbox payment methods, not an asset chip"
+      },
+      {
+        "id": 4268,
+        "name": "Modern Payment Form",
+        "verdict": "rejected for \"Pay with\": a card form"
+      },
+      {
+        "id": 5742,
+        "name": "Minimal Payment Modal",
+        "verdict": "rejected for \"Pay with\": a payment modal; the picker opens in place as on the swap"
+      },
+      {
+        "id": 19949,
+        "name": "Pending (diceui)",
+        "verdict": "rejected for the Arriving row (search \"pending transfer row arriving\"): a pending-state wrapper; the row is the kit ListRow with the asset's mark"
+      },
+      {
+        "id": 29866,
+        "name": "Vertical Descriptive Stepper",
+        "verdict": "not needed for the B4 timeline (search \"vertical timeline stepper status\"): the installed port of sean0205/vertical-titled-stepper #29815 now serves both directions as TimelineSteps (src/components/bridge/chain-grid.tsx)"
       }
     ],
     "removed": [
@@ -895,6 +945,11 @@
       "date": "2026-10-01",
       "decision": "Tokens moved to Living Lacquer; web layouts follow in S11b",
       "ref": "D-168, D-191"
+    },
+    {
+      "date": "2026-10-03",
+      "decision": "Web parity round 3 (claude/web3): Practice swap at par, B4 deposit address + Arriving, Pay with on the ticket and the pool, the Mainnet network fee planned with every review. No new 21st installs: the searches returned boxed cards and payment forms; built from the installed dotted QR, action circles, stepper and a new AssetChip",
+      "ref": "docs/product/provenance/web.md (round 3)"
     }
   ],
   "authority": {

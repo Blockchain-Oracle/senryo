@@ -1,9 +1,10 @@
+"use client";
+
 /**
- * The open deposit address issued per route (B4 step 4; routes.md §4), kept on this phone per network and account:
- * Relay's open mode takes later and different-sized deposits of the same route, so reopening the route — after a kill
- * too — shows the same address and its timeline instead of opening a new one. A new address is asked for only when
- * the route has none or its order deadline passed. The record and its rules live in `@senryo/query`
- * (`deposit-addresses.ts`), shared with the web; this module keeps them in MMKV.
+ * The open deposit address issued per route (flow book B4 step 4; the phone's `deposit-addresses.ts`), kept in this
+ * browser per network and account: Relay's open mode takes later and different-sized deposits of the same route, so
+ * reopening the route — after a reload too — shows the same address and its timeline instead of opening a new one.
+ * The record and its rules are `@senryo/query`'s (`deposit-addresses.ts`), shared with the phone.
  */
 import type { BridgeDepositAddressOk } from "@senryo/api-client";
 import {
@@ -13,16 +14,16 @@ import {
   savedDepositOf,
   withSavedDeposit,
 } from "@senryo/query";
-import { useMMKVString } from "react-native-mmkv";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { readLocalString, useLocalString, writeLocalString } from "@/lib/account/local-string";
+import { MONEY_STORAGE } from "@/lib/constants/money";
 
 export type { SavedDeposit };
 
 /** Keeps the address just issued for its route (replacing an older one of the same route). */
 export function saveDeposit(chainId: number, account: string, issued: BridgeDepositAddressOk): SavedDeposit {
   const saved = savedDepositOf(chainId, account, issued, Date.now());
-  const list = parseSavedDeposits(storage.getString(STORAGE_KEYS.depositAddresses));
-  storage.set(STORAGE_KEYS.depositAddresses, JSON.stringify(withSavedDeposit(list, saved)));
+  const list = parseSavedDeposits(readLocalString(MONEY_STORAGE.depositAddresses));
+  writeLocalString(MONEY_STORAGE.depositAddresses, JSON.stringify(withSavedDeposit(list, saved)));
   return saved;
 }
 
@@ -34,7 +35,7 @@ export function useSavedDeposit(
   asset: string,
   remote: string | undefined,
 ): SavedDeposit | undefined {
-  const [raw] = useMMKVString(STORAGE_KEYS.depositAddresses, storage);
+  const raw = useLocalString(MONEY_STORAGE.depositAddresses);
   if (!account || !remote) return undefined;
   return findSavedDeposit(parseSavedDeposits(raw), { chainId, account, fromChain, asset, remote }, Date.now());
 }

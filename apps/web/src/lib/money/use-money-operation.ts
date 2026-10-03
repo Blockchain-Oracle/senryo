@@ -1,65 +1,56 @@
 "use client";
 
 /**
- * One intent, one confirmation (flow book rules 4–5; the phone's `useMoneyOperation`): a reviewed money operation is
- * an ordered list of steps — [pull from trades] → act — signed under ONE slide and, outside the session's scope, ONE
- * passkey step-up. Every step is journalled under the same operation, so a failure after earlier steps is `partial`.
- * It never resends: a failure goes back to review, an unknown outcome offers nothing new until the journal settles it.
- * Practice network fees are topped up by the sponsor before each step.
+ * One intent, one confirmation (flow book rules 4–5, B0.4–B0.6, B11; the phone's `useMoneyOperation`): a reviewed money
+ * operation is an ordered list of steps — [network fee] → [pull from trades] → [swap] → [move] → act (`@senryo/query`
+ * compose.ts) — signed under ONE slide and, outside the session's scope, ONE passkey step-up. Every step is journalled
+ * under the same operation, so a failure after earlier steps is `partial`; it stops at the first step that doesn't
+ * finalize and never resends: a failure goes back to review, an unknown outcome offers nothing new until the journal
+ * settles it.
+ *
+ * Mainnet pays its own fees in MON (B11): `prepare` plans them before review (`@senryo/query` money-operation.ts) —
+ * covered by the account's MON, or "swap ~$0.50 of a dollar asset to MON" prepended as steps of the same operation
+ * (Details: "Network fee"), or the named shortfall. Practice fees are topped up by the sponsor before each step.
  */
 import type { TxRequest } from "@senryo/chain";
-import type { GasAction } from "@senryo/config";
-import { gasBudgetFor, type TrackedResult, useQueryEnv, useSendTrace } from "@senryo/query";
+import { MAINNET_CHAIN_ID } from "@senryo/config";
+import {
+  type ComposedStep,
+  type MoneyOperation,
+  type PreparedOperation,
+  prepareMoneyOperation,
+  runOperationSteps,
+  type TrackedResult,
+  useQueryEnv,
+  useSendTrace,
+} from "@senryo/query";
 import { useCallback, useState } from "react";
-import { type StepUpIntent, useStepUp } from "@/components/auth/step-up";
+import { useStepUp } from "@/components/auth/step-up";
 import { useAccount } from "@/lib/account/provider";
 import { stepUpSender, userSender } from "@/lib/account/sender";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { useEnsureGas } from "@/lib/trade/use-gas-top-up";
+import { useMoneyAssets } from "./use-money-assets";
 
-export interface PlannedStep {
-  action: GasAction;
-  /** Shown in Details ("Pull from trades", "Send"). */
-  label: string;
-  request: TxRequest;
-  build?: () => Promise<TxRequest>;
-}
-
-export interface MoneyOperation {
-  steps: PlannedStep[];
-  /** The facts the receipt shows, frozen at review (strings only). */
-  reviewedIntent: Record<string, string>;
-  /** Re-checks reviewed scope and balances right before each step's signature; throws to stop. */
-  revalidate: (stepIndex: number) => Promise<void>;
-  /** Present → outside the session's scope: one passkey step-up signs every step. */
-  stepUp?: StepUpIntent | undefined;
-}
-
-export type FeeCheck = { ok: true } | { ok: false; shortWei: bigint };
+export { type MoneyOperation, type PreparedOperation, usePreparedOperation } from "@senryo/query";
+export type PlannedStep = ComposedStep;
 
 export function useMoneyOperation(traceKey: string) {
   const env = useQueryEnv();
   const account = useAccount();
+  const money = useMoneyAssets(account.hint?.address);
   const trace = useSendTrace(traceKey);
   const gas = useEnsureGas();
   const stepUp = useStepUp();
   const [step, setStep] = useState<{ index: number; count: number; label: string }>();
 
-  /**
-   * Mainnet pays its own fees in MON: Σ (limit × max fee) of every step plus any MON value must be on the account
-   * before the passkey is asked for (B11). Practice tops up through the sponsor, so it always passes here.
-   */
-  const checkFees = useCallback(
-    async (op: Pick<MoneyOperation, "steps">): Promise<FeeCheck> => {
+  /** B11 before review: the network fee is on the account, or composed first, or named (never a dead end). */
+  const prepare = useCallback(
+    async (op: MoneyOperation): Promise<PreparedOperation> => {
       const address = account.hint?.address;
-      if (!address || ACTIVE_NETWORK.key === "testnet") return { ok: true };
-      const budgets = await Promise.all(op.steps.map((s) => gasBudgetFor(env.read, address, s.request)));
-      const need = budgets.reduce((sum, b) => sum + b.needWei, 0n);
-      const value = op.steps.reduce((sum, s) => sum + (s.request.value ?? 0n), 0n);
-      const balance = await env.read.getBalance({ address, blockTag: "latest" });
-      return balance >= need + value ? { ok: true } : { ok: false, shortWei: need + value - balance };
+      if (!address) return { ok: false, block: "Choose an account first" };
+      return prepareMoneyOperation(env, address, op, money.assets);
     },
-    [account.hint?.address, env.read],
+    [account.hint?.address, env, money.assets],
   );
 
   const run = useCallback(
@@ -67,36 +58,33 @@ export function useMoneyOperation(traceKey: string) {
       const client = account.client;
       const address = account.hint?.address;
       if (!client || !address || op.steps.length === 0) return undefined;
-      const plannedActions = op.steps.map((s) => s.action);
-      const practice = ACTIVE_NETWORK.key === "testnet";
-      const runAll = async (sender: Parameters<typeof trace.run>[0]) => {
-        let operationId: string | undefined;
-        let last: TrackedResult | undefined;
-        for (const [index, s] of op.steps.entries()) {
-          setStep({ index, count: op.steps.length, label: s.label });
-          last = await trace.run(sender, s.build ?? s.request, {
-            operationId,
-            plannedActions,
-            builderAction: s.action,
-            reviewedIntent: { ...op.reviewedIntent, steps: op.steps.map((x) => x.label).join(" · ") },
-            revalidate: () => op.revalidate(index),
-            ...(practice ? { preflight: (request: TxRequest) => gas.preflight(request)() } : {}),
-          });
-          operationId = last?.operationId ?? operationId;
-          if (last?.final?.stage !== "finalized") return last;
-        }
-        return last;
-      };
+      const practice = env.chainId !== MAINNET_CHAIN_ID;
+      const runAll = (sender: Parameters<typeof trace.run>[0]) =>
+        runOperationSteps<TrackedResult>(
+          op.steps,
+          op.reviewedIntent,
+          (s, index, options) => {
+            setStep({ index, count: op.steps.length, label: s.label });
+            const request: TxRequest | (() => Promise<TxRequest>) = s.build ?? s.request;
+            return trace.run(sender, request, {
+              ...options,
+              revalidate: () => op.revalidate(index),
+              // Practice fees are sponsored: top up before each step when the balance is short.
+              ...(practice ? { preflight: gas.preflight(s.request) } : {}),
+            });
+          },
+          { read: env.read },
+        );
       if (!op.stepUp) return runAll(userSender(client, address, account.settings.faceId));
       return stepUp.confirm(op.stepUp, () => account.stepUp((signer) => runAll(stepUpSender(signer))));
     },
-    [account, gas, stepUp, trace],
+    [account, env.chainId, env.read, gas, stepUp, trace],
   );
 
   return {
     trace,
     step,
-    checkFees,
+    prepare,
     run,
     reset: () => {
       trace.reset();
@@ -104,3 +92,5 @@ export function useMoneyOperation(traceKey: string) {
     },
   };
 }
+
+export type MoneyOperationRunner = ReturnType<typeof useMoneyOperation>;

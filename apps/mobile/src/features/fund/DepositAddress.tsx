@@ -5,8 +5,7 @@
  * amount gets its own request, so the quote-time request id can't be trusted to finish): Waiting → Bridging → Arrived
  * on Monad, or Refunded / Didn't arrive with Relay's reason and the source transaction. Nothing is signed here.
  */
-import type { BridgeDeposit } from "@senryo/api-client";
-import { useDepositStatus } from "@senryo/query";
+import { depositTimeline, useDepositStatus } from "@senryo/query";
 import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
 import { Pressable, Share as ShareSheet, StyleSheet, Text, View } from "react-native";
@@ -27,11 +26,6 @@ const QR_SIZE = 196;
 const BADGE = 32;
 const RELAY = "relay";
 
-/** The newest deposit Relay saw at the address since it was issued (older ones belong to earlier sends). */
-function latest(deposits: readonly BridgeDeposit[] | undefined, issuedAt: number): BridgeDeposit | undefined {
-  return deposits?.find((d) => d.updatedAt === null || Date.parse(d.updatedAt) >= issuedAt) ?? deposits?.[0];
-}
-
 export function DepositAddress({
   deposit,
   chainName,
@@ -47,33 +41,15 @@ export function DepositAddress({
   const [copied, setCopied] = useState(false);
   const status = useDepositStatus({ fromChain: deposit.fromChain, depositAddress: deposit.depositAddress });
   const value = status.status === "fresh" || status.status === "stale" ? status.value : undefined;
-  const last = latest(value?.deposits, deposit.issuedAt);
   const [top, bottom] = groupedAddress(deposit.depositAddress);
   const exact = tokenAmount(BigInt(deposit.amount), deposit.decimals, deposit.symbol);
-  const state = last?.state;
-  const seen = last !== undefined;
-  const ended = state === "delivered" || state === "refunded" || state === "failed";
-  const arrivedOut = last?.amountOut ?? null;
-  const steps: { title: string; detail?: string | undefined; state: StepState }[] = [
-    {
-      title: seen ? `${deposit.symbol} received on ${chainName}` : `Waiting for ${deposit.symbol}`,
-      state: seen ? "done" : "live",
-      detail: !seen && status.status === "failed" ? "Checking Relay" : undefined,
-    },
-    { title: "Bridging", state: !seen ? "waiting" : ended ? (state === "delivered" ? "done" : "failed") : "live" },
-    {
-      title:
-        state === "refunded"
-          ? `Refunded on ${chainName}`
-          : state === "failed"
-            ? "Didn’t arrive"
-            : arrivedOut !== null && state === "delivered"
-              ? `${tokenAmount(arrivedOut, deposit.outDecimals, deposit.outSymbol)} on Monad`
-              : "Arrived on Monad",
-      state: state === "delivered" ? "done" : state === "refunded" || state === "failed" ? "failed" : "waiting",
-      detail: last?.detail ?? undefined,
-    },
-  ];
+  const steps: { title: string; detail?: string | undefined; state: StepState }[] = depositTimeline(
+    deposit,
+    value,
+    chainName,
+    status.status === "failed",
+    tokenAmount,
+  );
   return (
     <View style={styles.stack}>
       <View style={styles.title}>

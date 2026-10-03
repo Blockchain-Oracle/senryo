@@ -69,33 +69,19 @@ export function ChainGrid({
 
 type StepState = "done" | "live" | "waiting" | "failed";
 
+export interface TimelineStep {
+  title: string;
+  detail?: string | null | undefined;
+  state: StepState;
+}
+
 /**
- * The cross-chain timeline (21st sean0205/vertical-titled-stepper #29815, as on the phone): Sent → Bridging →
- * Delivered (or Refunded / Didn't arrive), polled from `/v1/bridge/status` until it is terminal.
+ * A vertical stepper (21st sean0205/vertical-titled-stepper #29815, as on the phone): numbered dots, a check when
+ * done, a cross when it failed, a spinner on the live step, the reason under a step when there is one.
  */
-export function BridgeTimeline({
-  tracking,
-  sent,
-  destination,
-}: {
-  tracking: BridgeStatusRef | undefined;
-  sent: boolean;
-  destination: string;
-}) {
-  const value = known(useBridgeStatus(sent ? tracking : undefined));
-  const state = value?.state;
-  const terminal = state === "delivered" || state === "refunded" || state === "failed";
-  const steps: { title: string; detail?: string | null | undefined; state: StepState }[] = [
-    { title: "Sent", state: sent ? "done" : "live" },
-    { title: "Bridging", state: !sent ? "waiting" : terminal ? (state === "delivered" ? "done" : "failed") : "live" },
-    {
-      title: state === "refunded" ? "Refunded" : state === "failed" ? "Didn’t arrive" : `Delivered on ${destination}`,
-      state: state === "delivered" ? "done" : state === "refunded" || state === "failed" ? "failed" : "waiting",
-      detail: value?.detail,
-    },
-  ];
+export function TimelineSteps({ steps, label }: { steps: readonly TimelineStep[]; label: string }) {
   return (
-    <ol aria-label={`Transfer to ${destination}`} className="grid gap-3">
+    <ol aria-label={label} className="grid gap-3">
       {steps.map((s, i) => (
         <li key={s.title} className="flex items-start gap-3">
           <span
@@ -124,4 +110,32 @@ export function BridgeTimeline({
       ))}
     </ol>
   );
+}
+
+/**
+ * The cross-chain timeline out of Monad: Sent → Bridging → Delivered (or Refunded / Didn't arrive), polled from
+ * `/v1/bridge/status` until it is terminal.
+ */
+export function BridgeTimeline({
+  tracking,
+  sent,
+  destination,
+}: {
+  tracking: BridgeStatusRef | undefined;
+  sent: boolean;
+  destination: string;
+}) {
+  const value = known(useBridgeStatus(sent ? tracking : undefined));
+  const state = value?.state;
+  const terminal = state === "delivered" || state === "refunded" || state === "failed";
+  const steps: TimelineStep[] = [
+    { title: "Sent", state: sent ? "done" : "live" },
+    { title: "Bridging", state: !sent ? "waiting" : terminal ? (state === "delivered" ? "done" : "failed") : "live" },
+    {
+      title: state === "refunded" ? "Refunded" : state === "failed" ? "Didn’t arrive" : `Delivered on ${destination}`,
+      state: state === "delivered" ? "done" : state === "refunded" || state === "failed" ? "failed" : "waiting",
+      detail: value?.detail,
+    },
+  ];
+  return <TimelineSteps steps={steps} label={`Transfer to ${destination}`} />;
 }
