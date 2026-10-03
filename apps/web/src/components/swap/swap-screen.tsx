@@ -297,7 +297,7 @@ function Ticket({ s }: { s: SwapState }) {
               const next = cleanAmountText(e.target.value, s.pay.decimals);
               if (next !== undefined) s.setText(next);
             }}
-            className="min-w-0 flex-1 bg-transparent font-display text-display-price outline-none tnum placeholder:text-text-3"
+            className="w-0 min-w-0 flex-1 bg-transparent font-display text-display-price outline-none tnum placeholder:text-text-3"
           />
           <Chip asset={s.pay} onClick={() => setPicking("pay")} />
         </div>

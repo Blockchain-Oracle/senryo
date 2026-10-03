@@ -24,6 +24,7 @@ export * from "./lp-requests.ts";
 export * from "./markets.ts";
 export * from "./money-assets.ts";
 export * from "./money-operation.ts";
+export * from "./money-requests.ts";
 export * from "./notifications.ts";
 export * from "./operations.ts";
 export * from "./orders.ts";

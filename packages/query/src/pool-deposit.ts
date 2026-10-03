@@ -6,7 +6,7 @@
  * leg or a deposit above the cap asks for one passkey that signs every step (rule 11, defect 13). Shared by the phone
  * and the web; `money` words the amount in this network's money ("P$50.00").
  */
-import { readAccountSnapshot, readLpVault, type TxRequest } from "@senryo/chain";
+import { readAccountSnapshot, readLpVault } from "@senryo/chain";
 import { type ChainId, positionCount } from "@senryo/config";
 import { type ComposedStep, composeSteps } from "./compose.ts";
 import type { QueryEnv } from "./env.tsx";
@@ -14,7 +14,7 @@ import { lpApproveRequest, lpDepositRequest } from "./lp.ts";
 import type { MoneyAsset } from "./money-assets.ts";
 import type { MoneyOperation } from "./money-operation.ts";
 import { type PaySwap, parPaySteps, payIntent, paySwapSteps } from "./pay-with.ts";
-import { maxWithdrawable, withdrawRequest } from "./withdraw.ts";
+import { maxWithdrawable, pullRequest } from "./withdraw.ts";
 
 export interface PoolDeposit {
   amountUsd6: bigint;
@@ -56,13 +56,7 @@ export async function poolDepositSteps(
             {
               action: "withdraw",
               label: "Pull from trades",
-              request: withdrawRequest(
-                env.chainId as ChainId,
-                "AUSD",
-                fromTrading,
-                me,
-                positionCount(d.positionBitmap),
-              ) as TxRequest,
+              request: pullRequest(env.chainId as ChainId, "AUSD", fromTrading, me, positionCount(d.positionBitmap)),
             },
           ]
         : [];

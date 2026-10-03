@@ -42,3 +42,20 @@ export function withdrawRequest(
     },
   );
 }
+
+/**
+ * A dollar asset's trading part pulled as a COMPOSED step (B0.4 "pull from trades": before a swap, a bridge, a pool
+ * deposit, or beside a wallet transfer): the same `SenryoCore.withdraw`, but its meta never names the journal's
+ * intent keys (`amount`, `symbol`, `recipient`, `source`) — those are the act's facts, and a pull of part of the
+ * amount to the account itself would otherwise read as a transaction that differs from the reviewed intent.
+ */
+export function pullRequest(
+  chainId: ChainId,
+  symbol: CollateralSymbol,
+  amountUsd6: bigint,
+  to: Address,
+  positions: number,
+): TxRequest {
+  const request = withdrawRequest(chainId, symbol, amountUsd6, to, positions);
+  return { ...request, meta: { kind: "pull", collateral: symbol, units: amountUsd6.toString(), to, from: "trading" } };
+}
