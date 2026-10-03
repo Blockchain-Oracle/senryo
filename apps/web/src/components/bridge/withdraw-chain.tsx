@@ -5,12 +5,14 @@
  * bridges (Practice: Circle's testnet USDC over CCTP), a chain from the live routes for it (marks, time, provider), the
  * address there (checked for that chain's format), the exact amount, the quote — at least, fees, time, route — then
  * review → one slide and the passkey (money leaving Monad always asks) → the outcome with the cross-chain timeline.
- * A dollar asset's trading part is pulled first in the same operation; the bridge leg re-quotes only if its quote
- * expired, and then only to an equal-or-better minimum on the same provider. Nothing is resent.
+ * A dollar asset's trading part is pulled first in the same operation; on Mainnet the network fee is planned with the
+ * review (B11: MON on hand, or "~$0.50 → MON" first, or the named shortfall); the bridge leg re-quotes only if its
+ * quote expired, and then only to an equal-or-better minimum on the same provider. Nothing is resent.
  */
 import type { BridgeRouteChain } from "@senryo/api-client";
 import { isDeployed } from "@senryo/chain";
-import { useAccountRisk, useBridgeQuote, useBridgeRoutes, useQueryEnv } from "@senryo/query";
+import { MAINNET_CHAIN_ID } from "@senryo/config";
+import { stepsLine, useAccountRisk, useBridgeQuote, useBridgeRoutes, useQueryEnv } from "@senryo/query";
 import { useId, useState } from "react";
 import { RowsSkeleton } from "@/components/home/home-tabs";
 import { DetailRow, QuietLine } from "@/components/kit/list-row";
@@ -26,9 +28,9 @@ import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { cleanAmountText, parseAmount } from "@/lib/money/amount";
 import { type MoneyAsset, spendableOf } from "@/lib/money/assets";
 import { amountOf, tokenAmount } from "@/lib/money/format";
-import { checkSource } from "@/lib/money/move";
+import { checkSource, feeEstimate } from "@/lib/money/move";
 import { useMoneyAssets } from "@/lib/money/use-money-assets";
-import { type PlannedStep, useMoneyOperation } from "@/lib/money/use-money-operation";
+import { type MoneyOperation, useMoneyOperation } from "@/lib/money/use-money-operation";
 import { useReviewGuard } from "@/lib/review-guard";
 import { useSettledOutcome } from "@/lib/trade/send-outcome";
 import { BridgeTimeline, ChainGrid, etaText, providerName } from "./chain-grid";
@@ -51,7 +53,8 @@ function Route({ me, asset, chain }: { me: `0x${string}`; asset: MoneyAsset; cha
   const addressId = useId();
   const [recipient, setRecipient] = useState("");
   const [text, setText] = useState("");
-  const [steps, setSteps] = useState<PlannedStep[]>();
+  /** The reviewed operation, its network fee planned (B11), and that fee in words. */
+  const [prepared, setPrepared] = useState<{ op: MoneyOperation; fee: string }>();
   const [problem, setProblem] = useState<string>();
   const amount = parseAmount(text, asset.decimals);
   const available = spendableOf(asset);
@@ -100,9 +103,9 @@ function Route({ me, asset, chain }: { me: `0x${string}`; asset: MoneyAsset; cha
         }
         onDone={() => {
           runner.reset();
-          setSteps(undefined);
+          setPrepared(undefined);
         }}
-        onLeave={() => setSteps(undefined)}
+        onLeave={() => setPrepared(undefined)}
       />
     );
 
@@ -111,22 +114,27 @@ function Route({ me, asset, chain }: { me: `0x${string}`; asset: MoneyAsset; cha
     setProblem(undefined);
     try {
       const planned = await chainSteps(env, me, plan, bitmap);
-      const fees = await runner.checkFees({ steps: planned });
-      if (!fees.ok) return setProblem("Add MON for network fees");
-      setSteps(planned);
+      const op = chainOperation(plan, planned, ACTIVE_NETWORK.name, async (index) => {
+        guard();
+        if (index === 0) await checkSource(env, me, asset, amount);
+        guard();
+      });
+      // B11: MON on hand, or "~$0.50 → MON" first in the same operation, or the named shortfall — before the slide.
+      const ready = await runner.prepare({
+        ...op,
+        spends: { [asset.key]: amount < asset.wallet ? amount : asset.wallet },
+      });
+      if (!ready.ok) return setProblem(ready.block);
+      const mainnet = env.chainId === MAINNET_CHAIN_ID;
+      setPrepared({ op: ready.op, fee: mainnet ? await feeEstimate(env, me, ready.op.steps) : "Sponsored" });
     } catch (error) {
       setProblem(error instanceof Error ? (error.message.split("\n")[0] ?? "") : "Couldn’t prepare it");
     }
   };
   const confirm = async () => {
-    if (!plan || !steps) return;
-    const op = chainOperation(plan, steps, ACTIVE_NETWORK.name, async (index) => {
-      guard();
-      if (index === 0) await checkSource(env, me, asset, amount);
-      guard();
-    });
+    if (!prepared) return;
     await runner
-      .run(op)
+      .run(prepared.op)
       .catch((e: unknown) => setProblem(e instanceof Error ? e.message.split("\n")[0] : "Didn’t go through"));
   };
 
@@ -139,7 +147,7 @@ function Route({ me, asset, chain }: { me: `0x${string}`; asset: MoneyAsset; cha
           value={recipient}
           onChange={(e) => {
             setRecipient(e.target.value);
-            setSteps(undefined);
+            setPrepared(undefined);
           }}
           placeholder={chain.vm === "evm" ? "0x…" : "Address"}
           autoComplete="off"
@@ -160,7 +168,7 @@ function Route({ me, asset, chain }: { me: `0x${string}`; asset: MoneyAsset; cha
             const next = cleanAmountText(e.target.value, asset.decimals);
             if (next !== undefined) {
               setText(next);
-              setSteps(undefined);
+              setPrepared(undefined);
             }
           }}
           className="w-full bg-transparent text-center font-display text-display-margin outline-none tnum placeholder:text-text-3"
@@ -182,12 +190,13 @@ function Route({ me, asset, chain }: { me: `0x${string}`; asset: MoneyAsset; cha
           ) : (
             <DetailRow label="Quote" value="Getting a quote" />
           )}
-          {steps ? <DetailRow label="Steps" value={steps.map((s) => s.label).join(" → ")} /> : null}
-          {steps ? <DetailRow label="Confirm with" value="Passkey" /> : null}
+          {prepared ? <DetailRow label="Network fee" value={prepared.fee} /> : null}
+          {prepared ? <DetailRow label="Steps" value={stepsLine(prepared.op.steps)} /> : null}
+          {prepared ? <DetailRow label="Confirm with" value="Passkey" /> : null}
         </div>
       ) : null}
       {problem ? <p className="text-center text-meta text-down">{problem}</p> : null}
-      {steps && ok ? (
+      {prepared && ok ? (
         <SlideToConfirm
           label={`Slide to send to ${chain.name}`}
           resetKey={`${amount}|${recipient}|${ok.minReceived}`}

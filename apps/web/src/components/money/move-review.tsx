@@ -8,6 +8,7 @@
  * hands back to review without resending.
  */
 import { ids } from "@senryo/identity";
+import { stepsLine } from "@senryo/query";
 import { Avatar } from "@/components/identity/avatar";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { DetailRow } from "@/components/kit/list-row";
@@ -19,13 +20,15 @@ import { MARK_ROW, MARK_SMALL, MODE_MARK_SIZE } from "@/lib/constants/brand";
 import { exactAmount } from "@/lib/money/format";
 import type { ReviewedMove } from "@/lib/money/move";
 import { splitSource } from "@/lib/money/requests";
-import type { useMoneyOperation } from "@/lib/money/use-money-operation";
+import type { MoneyOperationRunner, PlannedStep } from "@/lib/money/use-money-operation";
 import { useSettledOutcome } from "@/lib/trade/send-outcome";
 import { AssetMark } from "./asset-mark";
 import { SaveDestination } from "./save-destination";
 
 export function MoveReview({
   move,
+  steps,
+  fee,
   runner,
   avatar,
   warnings,
@@ -38,7 +41,11 @@ export function MoveReview({
   onSave,
 }: {
   move: ReviewedMove;
-  runner: ReturnType<typeof useMoneyOperation>;
+  /** The prepared steps (a network-fee swap first when MON is short, B11); default: the move's own. */
+  steps?: readonly PlannedStep[] | undefined;
+  /** "Sponsored" (Practice), "~0.0031 MON" (Mainnet), or undefined while it is estimated. */
+  fee: string | undefined;
+  runner: MoneyOperationRunner;
   avatar: string | null;
   warnings: readonly string[];
   block: string | undefined;
@@ -76,7 +83,7 @@ export function MoveReview({
         details={
           <>
             <DetailRow label="Address" value={<span className="font-mono">{move.to}</span>} />
-            <DetailRow label="Steps" value={move.steps.map((s) => s.label).join(" · ")} />
+            <DetailRow label="Steps" value={stepsLine(steps ?? move.steps)} />
           </>
         }
         onDone={onDone}
@@ -108,8 +115,8 @@ export function MoveReview({
             </span>
           }
         />
-        <DetailRow label="Network fee" value={ACTIVE_NETWORK.key === "testnet" ? "Sponsored" : "Paid in MON"} />
-        {move.steps.length > 1 ? <DetailRow label="Steps" value={move.steps.map((s) => s.label).join(" · ")} /> : null}
+        <DetailRow label="Network fee" value={fee ?? "Estimating"} />
+        {(steps ?? move.steps).length > 1 ? <DetailRow label="Steps" value={stepsLine(steps ?? move.steps)} /> : null}
         <DetailRow label="Confirm with" value="Passkey" />
       </div>
       {warnings.map((w) => (
@@ -125,6 +132,7 @@ export function MoveReview({
       <SlideToConfirm
         label={move.kind === "send" ? "Slide to send" : "Slide to withdraw"}
         busy={busy}
+        disabled={block !== undefined}
         resetKey={`${move.key}|${block ?? ""}|${busy}`}
         onConfirm={onConfirm}
       />

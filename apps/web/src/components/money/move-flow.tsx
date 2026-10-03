@@ -9,9 +9,9 @@
  * sends twice. The page stays mounted from the first step to the receipt, so its review guard holds.
  */
 import { isDeployed } from "@senryo/chain";
-import { formatUnits, parseUnits } from "@senryo/core";
+import { MAINNET_CHAIN_ID } from "@senryo/config";
 import { useAccountRisk, useQueryEnv } from "@senryo/query";
-import { ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,18 +27,17 @@ import { useAccount } from "@/lib/account/provider";
 import { useTermsAccepted } from "@/lib/account/terms";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { ROUTES, setupHref } from "@/lib/constants/routes";
-import { plainAmount } from "@/lib/money/amount";
-import { type MoneyAsset, spendableOf } from "@/lib/money/assets";
+import { spendableOf } from "@/lib/money/assets";
 import { destinationMark, useDestinations } from "@/lib/money/destinations";
 import { amountOf, valueText } from "@/lib/money/format";
-import { moveOperation, type ReviewedMove, reviewMove } from "@/lib/money/move";
+import { feeEstimate, moveOperation, type ReviewedMove, reviewMove } from "@/lib/money/move";
 import { usePeople } from "@/lib/money/people";
 import { RECIPIENT_WORDS, useRecipientCheck } from "@/lib/money/recipient";
 import { useMoneyAssets } from "@/lib/money/use-money-assets";
-import { useMoneyOperation } from "@/lib/money/use-money-operation";
+import { useMoneyOperation, usePreparedOperation } from "@/lib/money/use-money-operation";
 import { useReviewGuard } from "@/lib/review-guard";
 import { useSettledOutcome } from "@/lib/trade/send-outcome";
-import { AssetMark } from "./asset-mark";
+import { AmountStep } from "./amount-step";
 import { AssetPicker } from "./asset-picker";
 import { MoveReview } from "./move-review";
 import { type PickedRecipient, RecipientStep } from "./recipient-step";
@@ -54,86 +53,7 @@ const WITHDRAW_WORDS: TraceWords = {
   success: "Withdrawn",
 };
 
-const MARK_PICK = 28;
-
-function AmountStep({
-  asset,
-  warnings,
-  checking,
-  blocked,
-  prefill,
-  onAsset,
-  onReview,
-}: {
-  asset: MoneyAsset;
-  warnings: readonly string[];
-  checking: boolean;
-  blocked: string | undefined;
-  /** A scanned payment code's exact amount (raw units). */
-  prefill?: bigint | undefined;
-  onAsset: () => void;
-  onReview: (amount: bigint) => void;
-}) {
-  const [text, setText] = useState(() => (prefill && prefill > 0n ? plainAmount(prefill, asset.decimals) : ""));
-  const available = spendableOf(asset);
-  const parsed = parseUnits(text === "" ? "0" : text, asset.decimals);
-  const amount = parsed.ok ? parsed.value : 0n;
-  const locked = asset.trading - asset.tradingFree;
-  const over = amount > available;
-  const problem = blocked ?? (checking ? "Checking the address" : over ? "More than available" : undefined);
-  return (
-    <div className="grid gap-5">
-      <button
-        type="button"
-        onClick={onAsset}
-        className="mx-auto flex items-center gap-2 rounded-full bg-raised-2 py-1.5 pr-3 pl-1.5 text-row hover:bg-row-pressed"
-      >
-        <AssetMark asset={asset} size={MARK_PICK} />
-        {asset.symbol}
-        <ChevronDown className="size-4 text-text-2" aria-hidden />
-      </button>
-      <div className="grid justify-items-center gap-1">
-        <input
-          inputMode="decimal"
-          autoComplete="off"
-          placeholder="0"
-          aria-label={`Amount in ${asset.symbol}`}
-          value={text}
-          onChange={(e) => {
-            const next = e.target.value.replace(/[^\d.]/g, "");
-            if (parseUnits(next === "" ? "0" : next, asset.decimals).ok || next.endsWith(".")) setText(next);
-          }}
-          className="w-full bg-transparent text-center font-display text-display-margin outline-none tnum placeholder:text-text-3"
-        />
-        <p className="text-meta text-text-2">
-          Available {amountOf(asset, available)}
-          <button
-            type="button"
-            onClick={() => setText(formatUnits(available, asset.decimals, asset.decimals, { grouping: false }))}
-            className="ml-2 text-link hover:underline"
-          >
-            Max
-          </button>
-        </p>
-        {locked > 0n ? (
-          <Link href={ROUTES.home} className="text-meta text-text-3 hover:underline">
-            {amountOf(asset, locked)} in trades ›
-          </Link>
-        ) : null}
-        {asset.native ? <p className="text-meta text-text-3">Keeps 10 MON for fees</p> : null}
-      </div>
-      {warnings.map((w) => (
-        <p key={w} className="text-center text-meta text-warn">
-          {w}
-        </p>
-      ))}
-      {problem && amount > 0n ? <p className="text-center text-meta text-down">{problem}</p> : null}
-      <Button size="xl" disabled={amount === 0n || problem !== undefined} onClick={() => onReview(amount)}>
-        Review
-      </Button>
-    </div>
-  );
-}
+const FEE_STALE_MS = 15_000;
 
 function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const env = useQueryEnv();
@@ -160,6 +80,19 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const restoredOutcome = useSettledOutcome(runner.trace.events);
   const asset = (assetKey ? money.find(assetKey) : undefined) ?? money.assets[0];
   const words = kind === "send" ? SEND_WORDS : WITHDRAW_WORDS;
+  const mainnet = env.chainId === MAINNET_CHAIN_ID;
+  // B11: the network fee is planned with the review — MON on hand, or a "~$0.50 → MON" step first in Details.
+  const prepared = usePreparedOperation(runner, reviewed?.key, () =>
+    reviewed ? moveOperation(env, me, reviewed, ACTIVE_NETWORK.name, knownAddresses, guard) : undefined,
+  );
+  const plan = prepared.data;
+  const steps = plan?.ok ? plan.op.steps : reviewed?.steps;
+  const fee = useQuery({
+    queryKey: ["move-fee", reviewed?.key ?? "", steps?.length ?? 0],
+    queryFn: () => feeEstimate(env, me, steps ?? []),
+    enabled: steps !== undefined && mainnet,
+    staleTime: FEE_STALE_MS,
+  });
 
   // A move restored from the journal (the page was reloaded after the slide) opens on its outcome.
   useEffect(() => {
@@ -185,14 +118,13 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
     setBusy(true);
     setBlock(undefined);
     try {
-      const op = moveOperation(env, me, reviewed, ACTIVE_NETWORK.name, knownAddresses, guard);
-      // Mainnet pays its own fees: say so before the passkey is asked for (B11).
-      const fees = await runner.checkFees(op);
-      if (!fees.ok) {
-        setBlock("Add MON for network fees");
+      // The slide signs exactly what Details showed: the prepared operation, its network fee planned (B11).
+      const ready = prepared.data ?? (await prepared.refetch()).data;
+      if (!ready?.ok) {
+        setBlock(ready?.block ?? "Couldn’t prepare it");
         return;
       }
-      await runner.run(op);
+      await runner.run(ready.op);
     } catch (error) {
       setBlock(error instanceof Error ? (error.message.split("\n")[0] ?? "") : "Couldn’t prepare it");
     } finally {
@@ -318,11 +250,13 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
       ) : reviewed ? (
         <MoveReview
           move={reviewed}
+          steps={steps}
+          fee={mainnet ? (fee.data ?? undefined) : "Sponsored"}
           runner={runner}
           avatar={recipient?.avatar ?? null}
           warnings={warnings}
-          block={block}
-          busy={busy}
+          block={block ?? (plan && !plan.ok ? plan.block : undefined)}
+          busy={busy || prepared.isFetching}
           words={words}
           {...(offerSave
             ? { onSave: (name: string) => destinations.save({ name, address: reviewed.to, chainId: env.chainId }) }

@@ -55,9 +55,9 @@ export function reviewMove(
   };
 }
 
-/** "~0.0031 MON" for the review (Σ limit × max fee of every step). */
-export async function feeEstimate(env: QueryEnv, me: `0x${string}`, move: ReviewedMove): Promise<string> {
-  const budgets = await Promise.all(move.steps.map((s) => gasBudgetFor(env.read, me, s.request)));
+/** "~0.0031 MON" for the review (Σ limit × max fee of every step, the network-fee swap included). */
+export async function feeEstimate(env: QueryEnv, me: `0x${string}`, steps: readonly PlannedStep[]): Promise<string> {
+  const budgets = await Promise.all(steps.map((s) => gasBudgetFor(env.read, me, s.request)));
   const wei = budgets.reduce((sum, b) => sum + b.needWei, 0n);
   return `~${formatUnits(wei, MON_DECIMALS, FEE_SHOWN_DECIMALS)} MON`;
 }
@@ -105,6 +105,7 @@ export function moveOperation(
       network,
       source: split.trading > 0n ? (split.wallet > 0n ? "wallet+trading" : "trading") : "wallet",
     },
+    spends: { [asset.key]: split.wallet },
     stepUp: {
       title: `${move.kind === "send" ? "Send" : "Withdraw"} ${exact}`,
       detail: `To ${move.label === to ? "" : `${move.label} · `}${to} on ${network}. Money leaving your account always asks for a fresh passkey check.`,
