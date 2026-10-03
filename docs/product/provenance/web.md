@@ -19,6 +19,23 @@ Reused from the existing web kit (already ported, recorded in `design.json`): ve
 profile / social underline tabs), originui/slider #304 (leverage ruler with detents), ddoemonn/segmented-control #23552
 (markets filters, chart periods), shadcn skeleton #1588, the vaul/radix responsive sheet (step-up, risk explainer).
 
+### Round 2 ports (pool, activity, inbox, swap, bridges, scan)
+
+| Component (file) | 21st source | What was ported | Deviations |
+|---|---|---|---|
+| `components/activity/activity-screen.tsx` | hari/transaction-list **#2943** (search "activity list transactions") | Row → detail. | The detail is the receipt (facts, steps, explorer links, Share), as on the phone. |
+| `components/notifications/notifications-screen.tsx` | uvain/notification-panel **#27135** (the phone's source) | Rows grouped by day, the sentence first, time quiet beside it. | Today / Earlier; unread rows on a raised fill, no dots. |
+| `components/shell/header-utilities.tsx` (bell) | ruixen.ui/notification-button **#7914** (the phone's source) | A round control with the count pill at its upper right. | Hidden at zero, capped at 99+, never a bare dot. |
+| `components/swap/swap-screen.tsx` | ssychui/swap-ticket **#27122** (the phone's source) | Pay and receive plates with the flip disc between them. | No colour flip for buy/sell; Review → slide. |
+| `components/bridge/chain-grid.tsx` (`ChainGrid`) | preetsuthar17/selector-chips **#1963** (the phone's source) | A wrap of selectable tiles, the selected one raised. | Mark, name, time and provider per tile; unavailable chains stay dimmed with their reason. |
+| `components/bridge/chain-grid.tsx` (`BridgeTimeline`) | sean0205/vertical-titled-stepper **#29815** (the phone's source) | Numbered dots, a check when done, a spinner on the live step. | Sent → Bridging → Delivered / Refunded / Didn't arrive from `/v1/bridge/status`. |
+
+**QR decoding (Scan, round 2).** The browser's `BarcodeDetector` is used where it exists (Chrome on macOS, Android,
+ChromeOS). Elsewhere the scanner lazy-loads **jsQR 1.4.0** (github.com/cozmo/jsQR, Apache-2.0): no dependencies, no
+install or postinstall scripts, integrity `sha512-dxLob7q65Xg2…9HzU/A==`. It is added to `apps/web` only; the lockfile
+change is jsqr's own three entries (written by hand, verified with `pnpm install --frozen-lockfile`) so the mobile tree
+is untouched. nginx now sends `camera=(self)`.
+
 ## Searched, none fit (built on the kit)
 
 | Need | Search | Result → what was used |
@@ -45,9 +62,10 @@ profile / social underline tabs), originui/slider #304 (leverage ruler with dete
 | Where | Lock |
 |---|---|
 | Add money → Card or bank | Mainnet only (Ramp) |
-| Add money → From another chain | On the Senryo app (bridge flows not built on the web yet) |
-| Asset → Swap | Mainnet only (aggregators don't serve Practice) |
 | Card → Card details | On the app · screen-capture protected |
 | Card → Add to Apple Wallet | Needs Apple approval |
 | Card → Get card | Card unavailable while `/v1/config` reports the card service off on this network |
-| Send / Withdraw → Scan | Paste stands in for the camera (flow book G6 "QR scan: camera if allowed, else Paste") |
+| Send / Withdraw → Scan | Camera where allowed, Paste always (flow book G6); a refused camera says so in one line |
+| Swap (Practice) | Mainnet only — the API's own reason: no aggregator serves the test network |
+| Add money → From another chain → Send | "Send from your <chain> wallet · soon": the transfer is signed on the other chain and the web has no connected-wallet route yet (same lock as the phone) |
+| Add money → From another chain (Practice) | Only Circle's testnet USDC over CCTP; the other assets are locked Mainnet only |

@@ -22,7 +22,7 @@ export function IdentityPanel() {
   const account = useAccount();
   if (account.status === "loading") {
     return (
-      <Panel className="mx-4 grid gap-3 p-4" aria-busy>
+      <Panel className="grid gap-3 p-4" aria-busy>
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-8 w-full" />
       </Panel>
@@ -31,9 +31,9 @@ export function IdentityPanel() {
   const hint = account.hint;
   if (!hint) {
     return (
-      <Panel className="mx-4 grid gap-3 p-4">
-        <p className="font-mono text-caption">NO ACCOUNT ON THIS DEVICE</p>
-        <p className="text-caption text-muted-foreground">
+      <Panel className="grid gap-3 p-4">
+        <p className="text-row">No account on this device</p>
+        <p className="text-meta text-text-2">
           Create one with a passkey, or open the account you already have — the same passkey gives the same address on
           every device.
         </p>
@@ -48,9 +48,9 @@ export function IdentityPanel() {
   }
   const shareUrl = `${WEB_ORIGIN}${watchHref(hint.address, ACTIVE_NETWORK.chainId)}`;
   return (
-    <Panel className="mx-4 grid gap-3 p-4">
+    <Panel className="grid gap-3 p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-mono text-label text-muted-foreground uppercase tracking-[0.14em]">Your account</p>
+        <p className="text-meta text-text-2">Your account</p>
         <span className="rounded-xs border border-primary/50 px-1.5 py-0.5 font-mono text-micro text-primary">
           {ACTIVE_NETWORK.modeLabel.toUpperCase()}
         </span>
@@ -58,7 +58,7 @@ export function IdentityPanel() {
       <p className="break-all font-mono text-num-sm tracking-tight tnum" data-testid="account-address">
         {hint.address}
       </p>
-      <div className="flex flex-wrap gap-x-4 gap-y-2 font-mono text-micro text-muted-foreground uppercase tracking-[0.12em]">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 text-meta text-text-2">
         <a
           href={explorerAddressUrl(ACTIVE_NETWORK.chainId, hint.address)}
           target="_blank"
@@ -90,7 +90,7 @@ function CopyText({ text, label, icon }: { text: string; label: string; icon: Re
     <button
       type="button"
       onClick={() => void navigator.clipboard?.writeText(text).then(() => setCopied(true))}
-      className="inline-flex items-center gap-1 uppercase hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+      className="inline-flex items-center gap-1 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
     >
       {copied ? <Check className="size-3 text-up" aria-hidden /> : icon}
       <span aria-live="polite">{copied ? "Copied" : label}</span>

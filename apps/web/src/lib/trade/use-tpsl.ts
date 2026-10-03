@@ -5,7 +5,7 @@
  * `TriggerOrder` with its session (our own domain — in scope, no prompt while unlocked) and places it with
  * `placeTrigger`; a keeper executes it when the oracle crosses. A level is bound to the position instance — it fills
  * `min(sizeDelta, size)`, so "the whole position" is the largest uint128 — and a full close cancels leftovers. The web
- * places a level only where none of its kind is active (edit = cancel, then add); each send never resends.
+ * replaces a level in one operation (place the new one, then cancel the old); each send never resends.
  */
 import { type PositionView, pinRead, readAccountSnapshot, readPositions } from "@senryo/chain";
 import { DECIMALS, parseUnits, RISK } from "@senryo/core";
@@ -79,11 +79,16 @@ export function useTpSl(market: LiveMarket, position: PositionView | undefined) 
     return client && address ? userSender(client, address, account.settings.faceId) : undefined;
   };
 
+  /**
+   * Set a level, or replace the active one of its kind (the phone's behaviour): the new level is placed first, then the
+   * replaced one is cancelled as a later step of the SAME operation, so one slide covers both and a failure after the
+   * placement stays visible as partial — never a window with no protection, never a resend.
+   */
   const place = async (kind: TriggerKind, price18: bigint) => {
     const from = sender();
     if (!from || !address || !position) return undefined;
-    if (active.some((t) => t.takeProfit === (kind === "tp"))) return undefined;
-    return traces[kind].run(
+    const replaced = active.filter((t) => t.takeProfit === (kind === "tp"));
+    const placed = await traces[kind].run(
       from,
       () =>
         placeTriggerRequest(
@@ -100,8 +105,14 @@ export function useTpSl(market: LiveMarket, position: PositionView | undefined) 
       {
         builderAction: "placeTrigger",
         preflight: (request) => gas.preflight(request)(),
-        plannedActions: ["placeTrigger"],
-        reviewedIntent: { marketId: String(market.marketId), leg: kind, price: price18.toString() },
+        // A cancel's gas class is "placeTrigger" (`cancelTriggerRequest`), so that is the step it records.
+        plannedActions: ["placeTrigger", ...replaced.map(() => "placeTrigger")],
+        reviewedIntent: {
+          marketId: String(market.marketId),
+          leg: kind,
+          price: price18.toString(),
+          ...(replaced.length > 0 ? { replaces: replaced.map((t) => t.id).join(",") } : {}),
+        },
         revalidate: async () => {
           guard();
           const block = await env.read.getBlock({ blockTag: "latest" });
@@ -115,6 +126,15 @@ export function useTpSl(market: LiveMarket, position: PositionView | undefined) 
         },
       },
     );
+    if (placed?.final?.stage !== "finalized" || replaced.length === 0) return placed;
+    // The replaced levels go in the same operation (in session: a cancel is reduce-class, no new prompt).
+    for (const level of replaced) {
+      await removal.run(from, cancelTriggerRequest(env.chainId, level.id as `0x${string}`), {
+        preflight: (request) => gas.preflight(request)(),
+        operationId: placed.operationId,
+      });
+    }
+    return placed;
   };
 
   const cancel = async (orderId: string) => {

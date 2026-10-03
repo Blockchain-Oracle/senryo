@@ -51,11 +51,11 @@ export function DataPanel() {
   };
 
   return (
-    <Panel className="mx-4">
+    <Panel>
       <div className="flex items-center justify-between gap-3 border-border border-b px-3 py-3">
         <div className="min-w-0">
-          <p className="font-mono text-caption">SIGN OUT</p>
-          <p className="text-caption text-muted-foreground">Forget this device. Your passkey signs you back in.</p>
+          <p className="text-row">SIGN OUT</p>
+          <p className="text-meta text-text-2">Forget this device. Your passkey signs you back in.</p>
         </div>
         <Button variant="outline" size="sm" disabled={!signedIn} onClick={() => void signOut()}>
           <LogOut />
@@ -64,8 +64,8 @@ export function DataPanel() {
       </div>
       <div className="grid gap-2 px-3 py-3">
         <div>
-          <p className="font-mono text-caption">DELETE MY DATA</p>
-          <p className="text-caption text-muted-foreground">
+          <p className="text-row">Delete my data</p>
+          <p className="text-meta text-text-2">
             Clears everything Senryo keeps in this browser, your encrypted settings, and your profile, posts, likes and
             follows on Senryo. Your handle stays reserved for 30 days so nobody can pose as you. Onchain history is
             public and permanent — it can't be deleted by anyone.

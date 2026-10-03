@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** D2 section label: mono, uppercase, widely tracked, muted. */
+/** A group's label in a settings list: one quiet line above its rows. */
 export function SectionLabel({
   children,
   className,
@@ -12,8 +12,8 @@ export function SectionLabel({
   right?: ReactNode;
 }) {
   return (
-    <div className={cn("flex items-baseline justify-between px-4 pt-6 pb-2", className)}>
-      <h2 className="font-mono text-label text-muted-foreground uppercase tracking-[0.2em]">{children}</h2>
+    <div className={cn("flex items-baseline justify-between pt-6 pb-2", className)}>
+      <h2 className="text-meta text-text-2">{children}</h2>
       {right}
     </div>
   );
@@ -24,9 +24,9 @@ export function Num({ children, className }: { children: ReactNode; className?: 
   return <span className={cn("font-mono tnum", className)}>{children}</span>;
 }
 
-/** Hairline-bordered panel used for registers and tables. */
+/** A raised group of rows (settings sections): no hairline box, the surface carries it. */
 export function Panel({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("border border-border", className)}>{children}</div>;
+  return <div className={cn("rounded-md bg-raised-2", className)}>{children}</div>;
 }
 
 /** ▲/▼ + sign with every colour (accessibility rule, plan §2.5). */

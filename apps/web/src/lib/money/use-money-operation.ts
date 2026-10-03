@@ -9,7 +9,7 @@
  */
 import type { TxRequest } from "@senryo/chain";
 import type { GasAction } from "@senryo/config";
-import { type TrackedResult, useSendTrace } from "@senryo/query";
+import { gasBudgetFor, type TrackedResult, useQueryEnv, useSendTrace } from "@senryo/query";
 import { useCallback, useState } from "react";
 import { type StepUpIntent, useStepUp } from "@/components/auth/step-up";
 import { useAccount } from "@/lib/account/provider";
@@ -35,12 +35,32 @@ export interface MoneyOperation {
   stepUp?: StepUpIntent | undefined;
 }
 
+export type FeeCheck = { ok: true } | { ok: false; shortWei: bigint };
+
 export function useMoneyOperation(traceKey: string) {
+  const env = useQueryEnv();
   const account = useAccount();
   const trace = useSendTrace(traceKey);
   const gas = useEnsureGas();
   const stepUp = useStepUp();
   const [step, setStep] = useState<{ index: number; count: number; label: string }>();
+
+  /**
+   * Mainnet pays its own fees in MON: Σ (limit × max fee) of every step plus any MON value must be on the account
+   * before the passkey is asked for (B11). Practice tops up through the sponsor, so it always passes here.
+   */
+  const checkFees = useCallback(
+    async (op: Pick<MoneyOperation, "steps">): Promise<FeeCheck> => {
+      const address = account.hint?.address;
+      if (!address || ACTIVE_NETWORK.key === "testnet") return { ok: true };
+      const budgets = await Promise.all(op.steps.map((s) => gasBudgetFor(env.read, address, s.request)));
+      const need = budgets.reduce((sum, b) => sum + b.needWei, 0n);
+      const value = op.steps.reduce((sum, s) => sum + (s.request.value ?? 0n), 0n);
+      const balance = await env.read.getBalance({ address, blockTag: "latest" });
+      return balance >= need + value ? { ok: true } : { ok: false, shortWei: need + value - balance };
+    },
+    [account.hint?.address, env.read],
+  );
 
   const run = useCallback(
     async (op: MoneyOperation): Promise<TrackedResult | undefined> => {
@@ -76,6 +96,7 @@ export function useMoneyOperation(traceKey: string) {
   return {
     trace,
     step,
+    checkFees,
     run,
     reset: () => {
       trace.reset();

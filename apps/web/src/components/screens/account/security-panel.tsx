@@ -26,7 +26,7 @@ import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 
 const MS_PER_MINUTE = 60_000;
 const USD_DECIMALS = 6;
-const minutes = (ms: number) => `${ms / MS_PER_MINUTE} MIN`;
+const minutes = (ms: number) => `${ms / MS_PER_MINUTE} min`;
 const threshold = `$${formatUnits(FACE_ID_TRADE_THRESHOLD_USD6, USD_DECIMALS, 0)}`;
 const FACE_ID_OPTIONS = [
   { value: "off", label: "Off" },
@@ -36,10 +36,10 @@ const FACE_ID_OPTIONS = [
 
 function Row({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-2 border-border border-b px-3 py-3 last:border-0">
+    <div className="grid gap-2 px-4 py-3">
       <div>
-        <p className="font-mono text-caption">{title}</p>
-        <p className="text-caption text-muted-foreground">{hint}</p>
+        <p className="text-row">{title}</p>
+        <p className="text-meta text-text-2">{hint}</p>
       </div>
       {children}
     </div>
@@ -76,8 +76,8 @@ export function SecurityPanel() {
   };
 
   return (
-    <Panel className="mx-4">
-      <Row title="SESSION LENGTH" hint="Trading locks after this long, however active you are.">
+    <Panel>
+      <Row title="Session length" hint="Trading locks after this long, however active you are.">
         <SegmentedControl
           label="Session length"
           fill
@@ -86,7 +86,7 @@ export function SecurityPanel() {
           onValueChange={(v) => void apply({ ...s, ttlMs: Number(v) })}
         />
       </Row>
-      <Row title="IDLE LOCK" hint="…or after this long without a signature.">
+      <Row title="Idle lock" hint="…or after this long without a signature.">
         <SegmentedControl
           label="Idle lock"
           fill
@@ -96,7 +96,7 @@ export function SecurityPanel() {
         />
       </Row>
       <Row
-        title="PASSKEY PER TRADE"
+        title="Passkey per trade"
         hint={`Practice default: off (the prompt-free session). Mainnet default: trades of ${threshold} or more.`}
       >
         <SegmentedControl
@@ -108,7 +108,7 @@ export function SecurityPanel() {
         />
       </Row>
       <div className="flex items-center justify-between gap-3 px-3 py-3">
-        <p className="flex items-center gap-2 text-caption text-muted-foreground" aria-live="polite">
+        <p className="flex items-center gap-2 text-meta text-text-2" aria-live="polite">
           <PasskeyGlyph />
           {note ?? "Withdrawals, sends, card limits and your recovery phrase always ask for a fresh passkey."}
         </p>

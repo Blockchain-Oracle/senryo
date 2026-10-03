@@ -59,3 +59,10 @@ export function holdingLine(asset: MoneyAsset): string {
   if (asset.trading > 0n) return `${base} · ${tokenAmount(asset.trading, asset.decimals)} in trades`;
   return base;
 }
+
+const BPS_AS_PCT = 2;
+/** "0.40%", "<0.01%" from bps — a swap's price impact. */
+export function finePct(bps: bigint): string {
+  if (bps === 0n) return "<0.01%";
+  return `${formatUnits(bps, BPS_AS_PCT, BPS_AS_PCT)}%`;
+}

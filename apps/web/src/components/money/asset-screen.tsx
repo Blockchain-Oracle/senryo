@@ -82,7 +82,7 @@ export function AssetScreen() {
         <ActionCircle
           icon={<Repeat />}
           label="Swap"
-          {...(practice ? { locked: "Mainnet only" } : { locked: "On the app" })}
+          {...(practice ? { locked: "Mainnet only" } : { href: `${ROUTES.swap}?pay=${asset.key}` })}
         />
       </ActionCircles>
       {!asset.verified ? (

@@ -17,6 +17,7 @@ import { ROUTES, watchHref } from "@/lib/constants/routes";
 import { moneyOn, signedMoneyOn } from "@/lib/format";
 import { marketOfId, nameOf, TRADE_VERB, timeAgo, tradeIsOpen } from "@/lib/social/format";
 import { cn } from "@/lib/utils";
+import { Engagement } from "./engagement";
 
 function VerbPlate({ item }: { item: FeedItem }) {
   const loss = item.trade?.fillKind === "LIQUIDATE";
@@ -81,6 +82,7 @@ export function FeedRow({ item }: { item: FeedItem }) {
           </Link>
         ) : null}
         {post ? <p className="text-row break-words">{post.text}</p> : null}
+        <Engagement item={item} />
         {trade && market && tradable && tradeIsOpen(trade) ? (
           <Link
             href={`${ROUTES.trade(market.symbol)}?side=${trade.side === "LONG" ? "long" : "short"}`}
