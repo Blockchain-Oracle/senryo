@@ -3,12 +3,12 @@
 /**
  * Who the money goes to (flow book B7 step 1 / B8 step 2; Phantom grammar): one field — "Name, @handle or address" —
  * with Paste, then (Send) recents and the people you follow. An @handle resolves through the profile service; an
- * address is taken as typed (its checksum and the chain checks run on the next step). The web has no camera scan in
- * this step: Paste is the named alternative (flow book G6).
+ * address is taken as typed (its checksum and the chain checks run on the next step). Scan reads a QR with the camera
+ * where the browser allows it; Paste always works (flow book G6).
  */
 import { shortAddress } from "@senryo/core";
 import { useProfile } from "@senryo/query";
-import { ClipboardPaste } from "lucide-react";
+import { ClipboardPaste, ScanLine } from "lucide-react";
 import { useState } from "react";
 import { Avatar, personDetail, personName } from "@/components/identity/avatar";
 import { EntityMark } from "@/components/identity/entity-mark";
@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { known } from "@/components/ui/reading";
 import { MARK_ROW } from "@/lib/constants/brand";
 import type { Person } from "@/lib/money/people";
+import type { ScannedPayment } from "@/lib/money/qr-payload";
+import { Scanner } from "./scanner";
 
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const HANDLE = /^@?[a-z0-9_]{2,20}$/i;
@@ -28,6 +30,8 @@ export interface PickedRecipient {
   /** "@kai", or the address itself. */
   label: string;
   avatar: string | null;
+  /** A scanned payment code's asset and amount (EIP-681), prefilled on the next step. */
+  payment?: ScannedPayment | undefined;
 }
 
 export function RecipientStep({
@@ -45,6 +49,7 @@ export function RecipientStep({
   onPick: (r: PickedRecipient) => void;
 }) {
   const [text, setText] = useState(initial);
+  const [scanning, setScanning] = useState(false);
   const value = text.trim();
   const isAddress = ADDRESS.test(value);
   const handle = !isAddress && HANDLE.test(value) ? value.replace(/^@/, "").toLowerCase() : undefined;
@@ -77,7 +82,20 @@ export function RecipientStep({
           <ClipboardPaste />
           <span className="hidden sm:inline">Paste</span>
         </Button>
+        <Button type="button" variant="outline" onClick={() => setScanning(true)} aria-label="Scan">
+          <ScanLine />
+          <span className="hidden sm:inline">Scan</span>
+        </Button>
       </form>
+      {scanning ? (
+        <Scanner
+          onClose={() => setScanning(false)}
+          onScan={(payment) => {
+            setScanning(false);
+            onPick({ address: payment.address, handle: null, label: payment.address, avatar: null, payment });
+          }}
+        />
+      ) : null}
       {isAddress ? (
         <Button
           size="xl"

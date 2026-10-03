@@ -26,6 +26,7 @@ import { useAccount } from "@/lib/account/provider";
 import { useTermsAccepted } from "@/lib/account/terms";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { ROUTES, setupHref } from "@/lib/constants/routes";
+import { plainAmount } from "@/lib/money/amount";
 import { type MoneyAsset, spendableOf } from "@/lib/money/assets";
 import { destinationMark, useDestinations } from "@/lib/money/destinations";
 import { amountOf, valueText } from "@/lib/money/format";
@@ -58,6 +59,7 @@ function AmountStep({
   warnings,
   checking,
   blocked,
+  prefill,
   onAsset,
   onReview,
 }: {
@@ -65,10 +67,12 @@ function AmountStep({
   warnings: readonly string[];
   checking: boolean;
   blocked: string | undefined;
+  /** A scanned payment code's exact amount (raw units). */
+  prefill?: bigint | undefined;
   onAsset: () => void;
   onReview: (amount: bigint) => void;
 }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => (prefill && prefill > 0n ? plainAmount(prefill, asset.decimals) : ""));
   const available = spendableOf(asset);
   const parsed = parseUnits(text === "" ? "0" : text, asset.decimals);
   const amount = parsed.ok ? parsed.value : 0n;
@@ -167,6 +171,9 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const warnings = [
     ...(verdict?.warnings ?? []).map((w) => RECIPIENT_WORDS[w]),
     ...(asset && !asset.verified ? ["Unverified token · send anyway?"] : []),
+    ...(recipient?.payment?.chainId !== undefined && recipient.payment.chainId !== env.chainId
+      ? [`Code is for chain ${recipient.payment.chainId}`]
+      : []),
   ];
   const confirm = async () => {
     if (!reviewed) return;
@@ -236,6 +243,7 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
           placeholder={kind === "send" ? "Name, @handle or address" : "Your Monad address or exchange deposit"}
           onPick={(r) => {
             setRecipient(r);
+            if (r.payment?.token) setAssetKey(r.payment.token.toLowerCase());
             setStep("amount");
           }}
         />
@@ -277,6 +285,7 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
               warnings={warnings}
               checking={check.isLoading}
               blocked={blocked}
+              prefill={recipient?.payment?.amount}
               onAsset={() => setStep("picker")}
               onReview={(amount) => {
                 if (!recipient) return;
