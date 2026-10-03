@@ -1,12 +1,10 @@
 /**
- * One Activity list from two sources (flow book B12): the indexer's onchain events for this account, and this phone's
+ * One Activity list from three sources (flow book B12): the indexer's onchain events for this account; this phone's
  * operation journal — the sends, withdrawals, swaps, bridges and purchases made here, including the ones still in
- * flight. Both become the same `FeedItem` (subject marks, a verb title, a signed figure, a status), deduplicated by
- * transaction hash (the journal's words win, the indexer's event is the proof it landed).
- *
- * Known gap (plan D8): the indexer does not yet index wallet ERC-20 transfers in or out of the user's address, nor
- * swaps made outside the app — so money received from an outside wallet only appears here once that indexing lands;
- * until then it shows in Assets (holdings) but not as a "Received" row.
+ * flight; and the wallet's own movements (D8, `/v1/activity/wallet`: tokens and MON received from anyone, sent
+ * anywhere, swaps made outside the app — wallet-item.ts). All become the same `FeedItem` (subject marks, a verb title,
+ * a signed figure, a status), deduplicated by transaction hash: the journal's words win, the indexer's event is the
+ * proof it landed (and keeps a trade's fill and result), and a wallet movement shows only when neither explains it.
  *
  * Journal intents are read by the money flows' convention (all strings, any may be absent): `kind` (send · withdraw ·
  * swap · bridge · ramp), `symbol`, `amount` (raw base units), `decimals`, `asset` (token address), `recipient`,
@@ -14,6 +12,7 @@
  * `destination` (chain name), `destinationChainId`, `provider`, `trackingId`, `direction` (bridge), `fee` (text),
  * `steps` (added by the runner); older spot trades carry preformatted `paid` / `quoted` / `atLeast`.
  */
+import type { WalletActivityItem } from "@senryo/api-client";
 import { MAINNET_CHAIN_ID, SPOT_TOKENS } from "@senryo/config";
 import { collateralId, ids } from "@senryo/identity";
 import type { IndexedActivity } from "@senryo/indexer-client";
@@ -42,7 +41,16 @@ export interface FeedItem {
   figure?: { text: string; tone: "up" | "down" | "plain" } | undefined;
   status: FeedStatus;
   hashes: string[];
-  source: { kind: "indexed"; row: IndexedActivity } | { kind: "journal"; record: OperationRecord };
+  source:
+    | { kind: "indexed"; row: IndexedActivity }
+    | { kind: "journal"; record: OperationRecord }
+    | { kind: "wallet"; item: WalletActivityItem };
+}
+
+/** A paged source's rows so far (newest first) and whether older pages remain. */
+export interface FeedPage {
+  items: readonly FeedItem[];
+  complete: boolean;
 }
 
 const MS_PER_SECOND = 1000;
@@ -320,18 +328,26 @@ export function journalItem(record: OperationRecord, me: string): FeedItem | und
 /**
  * The merged list, newest first: unsettled journal items first, then everything by time. For money, a finalized
  * journal item replaces the indexed event with the same hash (its words name the recipient and the route); for trades
- * and the card the indexed event wins (it carries the fill and the realised result). While more indexed pages exist,
- * settled journal items older than the last loaded event wait for that page.
+ * and the card the indexed event wins (it carries the fill and the realised result). A wallet movement is the last
+ * word: one whose transaction the journal or the indexer already tells is dropped. While a paged source (indexer,
+ * wallet) has older pages, settled items older than its last loaded row wait for that page, so a later page never
+ * slots rows in above ones already shown.
  */
-export function mergeFeed(indexed: readonly FeedItem[], journal: readonly FeedItem[], complete: boolean): FeedItem[] {
-  const indexedHashes = new Set(indexed.flatMap((row) => row.hashes));
+export function mergeFeed(indexed: FeedPage, journal: readonly FeedItem[], wallet: FeedPage): FeedItem[] {
+  const indexedHashes = new Set(indexed.items.flatMap((row) => row.hashes));
   const own = journal.filter((j) => j.group === "money" || !j.hashes.some((h) => indexedHashes.has(h)));
   const journalHashes = new Set(own.flatMap((j) => j.hashes));
-  const oldest = indexed.at(-1)?.at;
-  const kept = indexed.filter((row) => !row.hashes.some((h) => journalHashes.has(h)));
-  const window = own.filter((j) => complete || oldest === undefined || j.at >= oldest || j.status !== "done");
+  const kept = indexed.items.filter((row) => !row.hashes.some((h) => journalHashes.has(h)));
+  const told = new Set([...indexedHashes, ...journal.flatMap((j) => j.hashes)]);
+  const moves = wallet.items.filter((w) => !w.hashes.some((h) => told.has(h)));
+  let frontier: number | undefined;
+  for (const page of [indexed, wallet]) {
+    const oldest = page.items.at(-1)?.at;
+    if (!page.complete && oldest !== undefined && (frontier === undefined || oldest > frontier)) frontier = oldest;
+  }
   const live = (s: FeedStatus) => s === "pending" || s === "checking";
-  return [...kept, ...window].sort((a, b) => {
+  const shown = (item: FeedItem) => frontier === undefined || item.at >= frontier || item.status !== "done";
+  return [...kept, ...own, ...moves].filter(shown).sort((a, b) => {
     if (live(a.status) !== live(b.status)) return live(a.status) ? -1 : 1;
     return b.at - a.at;
   });
