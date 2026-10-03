@@ -22,6 +22,7 @@ import { OperationStatus } from "@/components/kit/operation-status";
 import { PageHeader } from "@/components/kit/page-header";
 import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
 import { SEND_WORDS } from "@/components/kit/trace-words";
+import { AssetChip } from "@/components/money/asset-chip";
 import { AssetMark } from "@/components/money/asset-mark";
 import { AssetPicker } from "@/components/money/asset-picker";
 import { Column } from "@/components/shell/column";
@@ -29,14 +30,12 @@ import { Button } from "@/components/ui/button";
 import { MARK_HERO, MODE_MARK_SIZE } from "@/lib/constants/brand";
 import { ROUTES } from "@/lib/constants/routes";
 import { cleanAmountText, plainAmount } from "@/lib/money/amount";
-import type { MoneyAsset } from "@/lib/money/assets";
 import { amountOf, exactAmount } from "@/lib/money/format";
 import { hopsText, impactText, maxUnderBlock, monFee, rateText, swapProviderName } from "@/lib/swap/format";
 import { type SwapState, useSwap } from "@/lib/swap/use-swap";
 import { useSettledOutcome } from "@/lib/trade/send-outcome";
 import { cn } from "@/lib/utils";
 
-const MARK_CHIP = 28;
 const SWAP_WORDS = {
   ...SEND_WORDS,
   thing: "swap",
@@ -73,20 +72,6 @@ function actionLabel(s: SwapState): string {
 }
 
 const SenryoMark = () => <EntityMark id={ids.brand("senryo")} label="Senryo" size={MODE_MARK_SIZE} decorative />;
-
-function Chip({ asset, onClick }: { asset: MoneyAsset | undefined; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex shrink-0 items-center gap-2 rounded-full bg-background/60 py-1.5 pr-3 pl-1.5 text-row hover:bg-row-pressed"
-    >
-      {asset ? <AssetMark asset={asset} size={MARK_CHIP} /> : null}
-      {asset?.symbol ?? "Choose"}
-      <ChevronDown className="size-4 text-text-2" aria-hidden />
-    </button>
-  );
-}
 
 /** One quiet line that opens Details underneath (route, minimum, fee, steps). */
 function DetailsLine({ text, tone, children }: { text: string; tone: string; children: ReactNode }) {
@@ -299,7 +284,7 @@ function Ticket({ s }: { s: SwapState }) {
             }}
             className="w-0 min-w-0 flex-1 bg-transparent font-display text-display-price outline-none tnum placeholder:text-text-3"
           />
-          <Chip asset={s.pay} onClick={() => setPicking("pay")} />
+          <AssetChip asset={s.pay} label="You pay" className="bg-background/60" onClick={() => setPicking("pay")} />
         </div>
         <p className="text-meta text-text-3">
           Available {amountOf(s.pay, s.available)}
@@ -323,7 +308,12 @@ function Ticket({ s }: { s: SwapState }) {
           <p className={cn("min-w-0 flex-1 truncate font-display text-display-price tnum", !out && "text-text-3")}>
             {out !== undefined && s.receive ? amountOf(s.receive, out).replace(` ${s.receive.symbol}`, "") : "0"}
           </p>
-          <Chip asset={s.receive} onClick={() => setPicking("receive")} />
+          <AssetChip
+            asset={s.receive}
+            label="You receive"
+            className="bg-background/60"
+            onClick={() => setPicking("receive")}
+          />
         </div>
         <p className="text-meta text-text-3">
           {s.receive && s.receive.total > 0n ? `You hold ${amountOf(s.receive, s.receive.total)}` : " "}

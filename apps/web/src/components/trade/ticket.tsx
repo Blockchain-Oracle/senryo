@@ -3,17 +3,20 @@
 /**
  * The ticket (flow book C3; Fomo F37, the phone's Ticket): Short (red) / Long (green), the leveraged size above the
  * centred margin hero, presets ($10 / $50 / $100 / Max), the leverage ruler up to the market's own maximum, the
- * liquidation estimate and buying power, Details (entry, fee, impact, funding and borrow, acceptable price), the first
- * blocker named before the slide, and the slide in the side's colour — "· passkey" when the order is above the
- * session's caps. Once confirmed, the outcome replaces the form; it never resends.
+ * liquidation estimate, "Buying power $x · Pay with AUSD ⌄" (C3 step 4: any holding; Practice dollars only), Details
+ * (entry, fee, impact, funding and borrow, acceptable price, and the composed steps — "Swap X → AUSD · Move to trading
+ * · Open", with "Network fee" first on Mainnet when MON is short), the first blocker named before the slide, and the
+ * slide in the side's colour — "· passkey" above the session's caps or with a swap leg. Once confirmed, the outcome
+ * replaces the form; it never resends.
  */
 import { DECIMALS, formatUnits } from "@senryo/core";
-import type { LiveMarket } from "@senryo/query";
+import { type LiveMarket, stepsLine } from "@senryo/query";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { DetailRow } from "@/components/kit/list-row";
 import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
+import { AssetPicker } from "@/components/money/asset-picker";
 import { Slider } from "@/components/ui/slider";
 import { useAccount } from "@/lib/account/provider";
 import { useTermsAccepted } from "@/lib/account/terms";
@@ -21,6 +24,7 @@ import { USD6_ONE } from "@/lib/constants/money";
 import { positionHref, ROUTES, setupHref } from "@/lib/constants/routes";
 import { LEVERAGE_DETENTS, LEVERAGE_MIN, MARGIN_PRESETS } from "@/lib/constants/ticket";
 import { MONEY, money, pctBps, price18, priceDecimalsOf } from "@/lib/format";
+import { amountOf } from "@/lib/money/format";
 import { type CommitState, commitState, type Side } from "@/lib/trade/commit";
 import { borrowApr, fundingForSide, marketRates } from "@/lib/trade/rates";
 import { useTicket } from "@/lib/trade/use-ticket";
@@ -65,6 +69,8 @@ export function Ticket({ market }: { market: LiveMarket }) {
   const t = useTicket(market);
   const amountId = useId();
   const [details, setDetails] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [problem, setProblem] = useState<string>();
   const [rearm, setRearm] = useState(0);
   const primer = useRiskPrimer();
   const accepted = useTermsAccepted(useAccount().hint?.address);
@@ -122,9 +128,46 @@ export function Ticket({ market }: { market: LiveMarket }) {
   ].join("|");
   const confirm = async () => {
     if (t.gasStep.kind === "failed") t.resetGas();
+    setProblem(undefined);
     const sent = await t.submit().catch(() => undefined);
-    if (!sent) setRearm((n) => n + 1);
+    // A network fee that can't be paid is named, never a dead end (B11); the slide re-arms either way.
+    if (typeof sent === "string") setProblem(sent);
+    if (!sent || typeof sent === "string") setRearm((n) => n + 1);
   };
+  const pay = t.pay;
+  // Paying with another asset that can't cover the shortfall right now names why, ahead of "Insufficient funds".
+  const payWhy = t.blocker?.code === "INSUFFICIENT_FREE" && pay.shortfallUsd6 > 0n ? pay.block : undefined;
+  const planned = t.planned;
+  const steps = planned?.ok
+    ? stepsLine(planned.op.steps)
+    : pay.labels.length > 0
+      ? stepsLine([...pay.labels, "Open"].map((label) => ({ label })))
+      : undefined;
+  const why = problem ?? (planned && !planned.ok ? planned.block : undefined);
+
+  if (picking)
+    return (
+      <div className="grid gap-3">
+        <div className="flex items-baseline justify-between">
+          <p className="text-row">Pay with</p>
+          {pay.note ? <p className="text-meta text-text-3">{pay.note}</p> : null}
+        </div>
+        <AssetPicker
+          assets={pay.assets}
+          other={pay.other}
+          selectedKey={pay.payWith?.key}
+          reasonFor={pay.reasonFor}
+          detailFor={(a) => amountOf(a, a.total)}
+          onPick={(a) => {
+            pay.choose(a.key);
+            setPicking(false);
+          }}
+        />
+        <button type="button" onClick={() => setPicking(false)} className="text-meta text-link hover:underline">
+          Back to order
+        </button>
+      </div>
+    );
 
   return (
     <div className="grid gap-4">
@@ -195,10 +238,22 @@ export function Ticket({ market }: { market: LiveMarket }) {
           value={p && t.hasAccount ? (p.liqPrice18 === null ? "None" : `$${price18(p.liqPrice18, decimals)}`) : "—"}
           tone="down"
         />
-        <DetailRow
-          label="Buying power"
-          value={t.snapshot ? money(t.snapshot.freeToTrade > 0n ? t.snapshot.freeToTrade : 0n) : "—"}
-        />
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          aria-label={`Buying power ${pay.buyingPowerUsd6 !== undefined ? money(pay.buyingPowerUsd6) : "unknown"}. Pay with ${pay.payWith?.symbol ?? "AUSD"}. Change`}
+          className="flex items-center justify-between gap-2 py-1.5 text-left text-meta text-text-2 hover:text-foreground"
+        >
+          <span>
+            Buying power{" "}
+            <span className="text-foreground tnum">
+              {pay.buyingPowerUsd6 !== undefined ? money(pay.buyingPowerUsd6) : "—"}
+            </span>
+            {" · "}Pay with {pay.payWith?.symbol ?? "AUSD"}
+            {pay.note ? <span className="block text-text-3">{pay.note}</span> : null}
+          </span>
+          <ChevronDown className="size-4 shrink-0" aria-hidden />
+        </button>
         <button
           type="button"
           aria-expanded={details}
@@ -219,10 +274,15 @@ export function Ticket({ market }: { market: LiveMarket }) {
               label="Acceptable price"
               value={`±${formatUnits(ACCEPTABLE_BPS, DECIMALS.bpsAsPct, DECIMALS.cents)}%`}
             />
+            {steps ? <DetailRow label="Steps" value={steps} /> : null}
           </div>
         ) : null}
       </div>
-      {t.blocker || commit.fix || termsHref ? (
+      {why || payWhy ? (
+        <p role="status" className="text-center text-meta text-warn">
+          {why ?? payWhy}
+        </p>
+      ) : t.blocker || commit.fix || termsHref ? (
         <p role="status" className="text-center text-meta text-warn">
           {commit.label}
           {fixHref ? (
@@ -244,7 +304,7 @@ export function Ticket({ market }: { market: LiveMarket }) {
       <SlideToConfirm
         label={commit.label}
         tone={t.side === "long" ? "up" : "down"}
-        disabled={!commit.ready}
+        disabled={!commit.ready || (planned !== undefined && !planned.ok)}
         busy={commit.busy ?? false}
         resetKey={resetKey}
         onConfirm={() => (primer.needed(t.side) ? primer.open(t.side) : void confirm())}
