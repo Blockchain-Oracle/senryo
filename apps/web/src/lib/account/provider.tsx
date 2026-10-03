@@ -18,10 +18,9 @@ import {
   type SessionSettings,
   type SessionSnapshot,
 } from "@senryo/account";
-import { RP_ID } from "@senryo/config";
-
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
+import { WEB_RP_ID } from "./rp";
 import { loadSettings, saveSettings } from "./settings";
 
 export type HostStatus = "ok" | "not-allowed";
@@ -50,7 +49,7 @@ const AccountContext = createContext<AccountContextValue | undefined>(undefined)
 
 /** WebAuthn only accepts an rpId that is the page host or a registrable suffix of it. */
 export function hostAllowed(hostname: string): boolean {
-  return hostname === RP_ID || hostname.endsWith(`.${RP_ID}`);
+  return hostname === WEB_RP_ID || hostname.endsWith(`.${WEB_RP_ID}`);
 }
 
 export function AccountProvider({ children }: { children: ReactNode }) {
