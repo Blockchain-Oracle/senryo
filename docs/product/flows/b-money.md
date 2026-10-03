@@ -449,7 +449,7 @@ use the same pickers, sheets and receipts as AUSD.
   - Indexer lag: pending rows stay until the event lands.
 - **After:** Share sends a receipt image or link. Explorer opens the tx.
 - **Today → gap:**
-  - Indexer events only (`m/features/portfolio/useActivity.ts:21-35`). The indexer watches core, pool, starter and inbox stablecoin transfers only (`indexer/config.yaml:13-67`). Wallet transfers and spot swaps are missing.
+  - ~~Indexer events only.~~ **Built 3 Oct (claude/activity, D8):** wallet transfers in and out of any token, MON (a transaction's value; on Mainnet also internal payouts) and swaps made anywhere come from `GET /v1/activity/wallet` (`services/api/src/anyasset/wallet-activity.ts`, stored by the holdings HyperSync scan in `wallet_transfers`), merged in `m/features/activity/feed.ts` after the journal and the indexer (dedupe by tx hash; Senryo-contract movements, spam and hidden tokens stay out).
   - The receipt sheet is a placeholder (`m/app/(sheets)/receipt.tsx:5-8`).
   - The pending block is captioned "Pending on this device", followed by a sentence (`m/features/portfolio/PendingOperations.tsx:30,50-52`).
   - The SWAP title is "Collateral swap" (`m/features/portfolio/activity-copy.ts:77`). There is an extra Orders chip (`:17`).
@@ -590,5 +590,5 @@ use the same pickers, sheets and receipts as AUSD.
 6. **Practice swap:** no AUSD/USDC pool on 10143 (`m/app/fund/swap.tsx:47-49`). Deploy a practice pool or keep the lock.
 7. **Exchange Monad support list** beyond Coinbase USDC, and the exchange tips per asset.
 8. **Spam report backend** (store, threshold, shared list).
-9. **Native MON inbound via internal calls** (contract → user): needs traces. Can HyperSync transaction selection find them?
-10. **Swap event source for Activity:** router logs vs journal-only for swaps made outside the app.
+9. ~~**Native MON inbound via internal calls**~~ **Settled 3 Oct (claude/activity):** transaction selection only sees a transaction's own value; internal payouts need traces, which HyperSync serves for Monad at `143-traces.hypersync.xyz` (Envio dev update, Apr 2026; `/height` answered). The scan reads calls into the address with join-all, so a payout inside a reverted call or a failed transaction is dropped. **10143 has no traces host**: Practice sees a transaction's own MON value only.
+10. ~~**Swap event source for Activity**~~ **Settled 3 Oct (claude/activity):** neither — a swap is folded from the wallet's own movements in one transaction (one or more tokens out, one or more in, netted per token), so every router and venue is covered without its ABI; swaps made in the app keep the journal's words (same hash).

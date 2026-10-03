@@ -619,6 +619,10 @@ It offers Practice money to learn and Mainnet for real.
   - it sits in a collapsed "Other tokens" section;
   - a lookalike-symbol warning shows;
   - zero balances are dropped.
+- **Wallet activity (B12, built 3 Oct):** the same scan also stores every movement it reads (`wallet_transfers`:
+  ERC-20 transfers, WMON wraps, MON by transaction value and, on Mainnet, by internal call from
+  `143-traces.hypersync.xyz`). `GET /v1/activity/wallet` folds them per transaction into received / sent / swap rows
+  for Activity (`routes.md` §1).
 
 **Any ↔ any swap (B6, plus auto-swap in trade/card/pool funding)**
 - **Quotes:** query **Monorail** (`pathfinder.monorail.xyz/v4/quote`, free, 0 bps, buys and sells nad.fun curve tokens) and **KyberSwap** (`aggregator-api.kyberswap.com/monad/api/v1/routes` → `route/build`, free, sells curve tokens only) in parallel. Pick the better minimum output. Both route XAUt0 via PancakeSwap v3 and graduated memes.
