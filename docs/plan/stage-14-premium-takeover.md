@@ -27,7 +27,7 @@ Status words: **built** (source) · **accepted-sim** · **accepted-device** · *
 - [x] One outcome surface (TradeTrace as OperationStatus) + AmountHero rolling digits (8127cba)
 - [x] Sounds: ElevenLabs palette, by-ear picker, unlock/liquidation/error now sound (8e42c8e)
 - [x] Runtime 0.2.0 natives (expo-image, expo-camera, expo-web-browser, expo-sharing, view-shot); welcome swipe ±2 window; preview builds on production APNs (294f8a2)
-- [ ] Primitives sourced from 21st.dev: Text roles, Row, StatStrip, ActionCircle, AmountHero, GlassIconButton, InfoSheet, OperationStatus, SlideToConfirm (tone + busy), AssetPicker, ChainPicker, RecipientSearch, Keypad amount entry
+- [x] Primitives sourced from 21st.dev or recorded as "searched, none fit": 25 ports indexed in `apps/mobile/.21st/design.json` (SlideToConfirm 29304, AmountHero 21513, Keypad 3711, DottedQr 12248, ActionCircle 13564/1051, ChainGrid 1963, SearchField 1645, Disclosure 851, BridgeTimeline 29815, inbox 27135, …); per-area detail in docs/product/provenance/*.md
 - [x] Runtime 0.2.0 with native additions (294f8a2)
 
 ## Areas (each = its flow-book cards + §0.9 surfaces)
