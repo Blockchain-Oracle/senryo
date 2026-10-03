@@ -6,3 +6,9 @@ export const LP_DEPOSIT_CHIPS = [10n, 25n, 50n] as const;
 export const LP_REDEEM_STEPS_BPS = [2_500n, 5_000n, 10_000n] as const;
 /** The UI floor (flow book D1 decision): a $1 / P$1 minimum, so dust can't mint unredeemable shares. */
 export const LP_MIN_DEPOSIT_USD6 = ONE_USD6;
+/**
+ * sLP share decimals: the vault's asset decimals (AUSD, 6) plus its virtual-share offset (`LP_VIRTUAL_SHARE_OFFSET`
+ * = 6 in contracts/src/libraries/Constants.sol, OpenZeppelin's inflation guard). Shown with 6 they read a million
+ * times too large.
+ */
+export const LP_SHARE_DECIMALS = 12;

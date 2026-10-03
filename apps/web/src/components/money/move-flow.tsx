@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { WithdrawToChain } from "@/components/bridge/withdraw-chain";
+import { OperationStatus } from "@/components/kit/operation-status";
 import { PageHeader } from "@/components/kit/page-header";
 import { SEND_WORDS, type TraceWords } from "@/components/kit/trace-words";
 import { Column } from "@/components/shell/column";
@@ -36,6 +37,7 @@ import { RECIPIENT_WORDS, useRecipientCheck } from "@/lib/money/recipient";
 import { useMoneyAssets } from "@/lib/money/use-money-assets";
 import { useMoneyOperation } from "@/lib/money/use-money-operation";
 import { useReviewGuard } from "@/lib/review-guard";
+import { useSettledOutcome } from "@/lib/trade/send-outcome";
 import { AssetMark } from "./asset-mark";
 import { AssetPicker } from "./asset-picker";
 import { MoveReview } from "./move-review";
@@ -149,10 +151,13 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
   const [recipient, setRecipient] = useState<PickedRecipient>();
   const [assetKey, setAssetKey] = useState(params.get("asset") ?? undefined);
   const [reviewed, setReviewed] = useState<ReviewedMove>();
+  /** Decided when the review opens, so "Save as…" stays on screen after it saves (B13). */
+  const [offerSave, setOfferSave] = useState(false);
   const [block, setBlock] = useState<string>();
   const [busy, setBusy] = useState(false);
   const check = useRecipientCheck(me, recipient?.address, knownAddresses);
   const guard = useReviewGuard(reviewed?.key ?? "");
+  const restoredOutcome = useSettledOutcome(runner.trace.events);
   const asset = (assetKey ? money.find(assetKey) : undefined) ?? money.assets[0];
   const words = kind === "send" ? SEND_WORDS : WITHDRAW_WORDS;
 
@@ -302,6 +307,7 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
                     bitmap,
                   ),
                 );
+                setOfferSave(kind === "withdraw" && !destinations.find(recipient.address, env.chainId));
                 setStep("review");
               }}
             />
@@ -318,7 +324,7 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
           block={block}
           busy={busy}
           words={words}
-          {...(kind === "withdraw" && !destinations.find(reviewed.to, env.chainId)
+          {...(offerSave
             ? { onSave: (name: string) => destinations.save({ name, address: reviewed.to, chainId: env.chainId }) }
             : {})}
           onConfirm={() => void confirm()}
@@ -330,7 +336,19 @@ function Flow({ kind, me }: { kind: Kind; me: `0x${string}` }) {
           onLeave={() => router.push(ROUTES.home)}
         />
       ) : (
-        <p className="py-6 text-center text-meta text-text-2">Nothing to review</p>
+        // Reopened after a reload: the journal's last move, with its true outcome; Done starts a new one.
+        <OperationStatus
+          events={runner.trace.events}
+          record={runner.trace.record}
+          running={runner.trace.running}
+          outcome={restoredOutcome}
+          words={words}
+          onDone={() => {
+            runner.reset();
+            setStep("to");
+          }}
+          onLeave={() => router.push(ROUTES.home)}
+        />
       )}
     </>
   );

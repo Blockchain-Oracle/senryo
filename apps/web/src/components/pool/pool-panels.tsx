@@ -15,7 +15,7 @@ import { useState } from "react";
 import { DetailRow } from "@/components/kit/list-row";
 import { SlideToConfirm } from "@/components/kit/slide-to-confirm";
 import { MONEY, money, wholePct } from "@/lib/format";
-import { LP_DEPOSIT_CHIPS, LP_MIN_DEPOSIT_USD6, LP_REDEEM_STEPS_BPS } from "@/lib/pool/constants";
+import { LP_DEPOSIT_CHIPS, LP_MIN_DEPOSIT_USD6, LP_REDEEM_STEPS_BPS, LP_SHARE_DECIMALS } from "@/lib/pool/constants";
 import { type DepositSource, type Lp, sharesValueOf } from "@/lib/pool/use-lp";
 import { useReviewGuard } from "@/lib/review-guard";
 import { useSettledOutcome } from "@/lib/trade/send-outcome";
@@ -129,7 +129,7 @@ export function DepositPanel({ lp, pool }: { lp: Lp; pool: LpSnapshot }) {
       </div>
       {amount > 0n ? (
         <div>
-          <DetailRow label="You get" value={`≈ ${formatUnits(shares, DECIMALS.usd6, DECIMALS.cents)} sLP`} />
+          <DetailRow label="You get" value={`≈ ${formatUnits(shares, LP_SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
           <DetailRow label="Steps" value={steps.join(" → ")} />
         </div>
       ) : null}
@@ -159,7 +159,7 @@ export function RedeemPanel({ lp, pool }: { lp: Lp; pool: LpSnapshot }) {
         ))}
       </div>
       <div>
-        <DetailRow label="Shares" value={`${formatUnits(shares, DECIMALS.usd6, DECIMALS.cents)} sLP`} />
+        <DetailRow label="Shares" value={`${formatUnits(shares, LP_SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
         <DetailRow label="Value now" value={`≈ ${money(sharesValueOf(shares, pool))}`} />
         <DetailRow label="Claim from" value={utcSlotLabel(claimFrom)} />
         <DetailRow label="Cancel" value="Can’t be cancelled" />
@@ -183,7 +183,7 @@ export function ClaimPanel({ lp, pool, request }: { lp: Lp; pool: LpSnapshot; re
   return (
     <section className="grid gap-4" aria-label="Claim">
       <div>
-        <DetailRow label="Shares" value={`${formatUnits(request.shares, DECIMALS.usd6, DECIMALS.cents)} sLP`} />
+        <DetailRow label="Shares" value={`${formatUnits(request.shares, LP_SHARE_DECIMALS, DECIMALS.cents)} sLP`} />
         <DetailRow label="You get" value={`≈ ${money(sharesValueOf(request.shares, pool))}`} />
         <DetailRow label="To" value="Wallet" />
       </div>
