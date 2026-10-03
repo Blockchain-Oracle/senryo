@@ -16,6 +16,7 @@ import {
   HYPERSYNC_BACKOFF_MS,
   HYPERSYNC_PAGES_PER_SCAN,
   HYPERSYNC_RESCAN_MS,
+  HYPERSYNC_SETTLE_GAP_BLOCKS,
   HYPERSYNC_TIMEOUT_MS,
   SCAN_STATE_TTL_MS,
   SCAN_STATES_MAX,
@@ -47,6 +48,8 @@ export interface Discovery {
   scannedToBlock: bigint;
   /** Logs, transactions and (where served) internal calls all reached the newest final block. */
   movementsComplete: boolean;
+  /** Every cursor has read the blocks below this one; newer stored movements may still gain a leg (null = none). */
+  settledBelow: bigint | null;
   note: string | null;
 }
 
@@ -114,13 +117,14 @@ export class HyperSyncScanner {
     }
     let note: string | null = null;
     try {
-      let pages = 0;
-      for (let done = false; !done && pages < this.pagesPerScan; pages += 1) {
-        done = await this.transferPage(chainId, address, state);
-      }
       const traces = HYPERSYNC_TRACES_URL[chainId];
-      for (let done = false; traces && !done && pages < this.pagesPerScan; pages += 1) {
-        done = await this.internalPage(traces, chainId, address, state);
+      const transfers = () => this.transferPage(chainId, address, state);
+      const calls = traces ? () => this.internalPage(traces, chainId, address, state) : undefined;
+      // Caught-up transfers yield the first query to internal calls still behind (the budget may allow only one).
+      const order = calls && state.complete && !state.tracesComplete ? [calls, transfers] : [transfers, calls];
+      let pages = 0;
+      for (const run of order) {
+        for (let done = false; run && !done && pages < this.pagesPerScan; pages += 1) done = await run();
       }
     } catch (error) {
       if (isRateLimited(error)) {
@@ -184,11 +188,14 @@ export class HyperSyncScanner {
   }
 
   private result(state: ScanState, note: string | null): Discovery {
+    const gap = state.nextBlock - state.traceNextBlock;
+    const trailing = !state.tracesComplete && gap > 0 && gap <= HYPERSYNC_SETTLE_GAP_BLOCKS;
     return {
       tokens: [...state.tokens].map((t) => getAddress(t)),
       complete: state.complete,
       scannedToBlock: BigInt(state.nextBlock),
       movementsComplete: state.complete && state.tracesComplete,
+      settledBelow: trailing ? BigInt(state.traceNextBlock) : null,
       note,
     };
   }

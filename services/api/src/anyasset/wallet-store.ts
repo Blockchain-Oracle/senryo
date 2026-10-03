@@ -93,28 +93,30 @@ export class WalletTransferStore implements MovementStore {
   }
 
   /**
-   * Every stored movement of `address` in its `limit` newest transactions before `before`, newest first, and whether
-   * the page is full (older transactions may follow). Each side is read through its own index, newest first.
+   * Every stored movement of `address` in its `limit` newest transactions before `before` (and below `settledBelow`,
+   * when the scan says newer ones may still gain a leg), newest first, and whether the page is full (older transactions
+   * may follow). Each side is read through its own index, newest first.
    */
   async page(
     chainId: ChainId,
     address: string,
     before: TxPosition | undefined,
     limit: number,
+    settledBelow?: bigint,
   ): Promise<{ movements: StoredMovement[]; full: boolean; last: TxPosition | undefined }> {
     const owner = address.toLowerCase();
-    const older = (sql: Db) =>
-      before
-        ? sql`AND (block_number, tx_index) < (${before.blockNumber.toString()}::bigint, ${before.txIndex})`
-        : sql``;
+    const sql = this.db;
+    const older = sql`
+      ${before ? sql`AND (block_number, tx_index) < (${before.blockNumber.toString()}::bigint, ${before.txIndex})` : sql``}
+      ${settledBelow === undefined ? sql`` : sql`AND block_number < ${settledBelow.toString()}::bigint`}`;
     const txs = await this.db<{ tx_hash: string; block_number: bigint; tx_index: number }[]>`
       SELECT tx_hash, block_number, tx_index FROM (
         (SELECT tx_hash, block_number, tx_index FROM wallet_transfers
-          WHERE chain_id = ${chainId} AND from_address = ${owner} ${older(this.db)}
+          WHERE chain_id = ${chainId} AND from_address = ${owner} ${older}
           GROUP BY block_number, tx_index, tx_hash ORDER BY block_number DESC, tx_index DESC LIMIT ${limit})
         UNION
         (SELECT tx_hash, block_number, tx_index FROM wallet_transfers
-          WHERE chain_id = ${chainId} AND to_address = ${owner} ${older(this.db)}
+          WHERE chain_id = ${chainId} AND to_address = ${owner} ${older}
           GROUP BY block_number, tx_index, tx_hash ORDER BY block_number DESC, tx_index DESC LIMIT ${limit})
       ) AS sides
       ORDER BY block_number DESC, tx_index DESC LIMIT ${limit}`;

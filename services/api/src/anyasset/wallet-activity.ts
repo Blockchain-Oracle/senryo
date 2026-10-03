@@ -53,8 +53,8 @@ export class WalletActivityService {
   constructor(private readonly deps: WalletActivityDeps) {}
 
   async page(chainId: ChainId, owner: Address, before: string | undefined, limit: number): Promise<WalletActivity> {
-    const scan = await this.catchUp(chainId, owner);
-    const stored = await this.deps.store.page(chainId, owner, positionOf(before), limit);
+    const { scan, settledBelow } = await this.catchUp(chainId, owner);
+    const stored = await this.deps.store.page(chainId, owner, positionOf(before), limit, settledBelow);
     const tokens = await this.tokensOf(
       chainId,
       stored.movements.map((m) => m.token),
@@ -78,16 +78,30 @@ export class WalletActivityService {
   }
 
   /** Runs (or joins) the address's scan; its failure becomes a note, never an error. */
-  private async catchUp(chainId: ChainId, owner: Address): Promise<WalletActivity["scan"]> {
+  private async catchUp(
+    chainId: ChainId,
+    owner: Address,
+  ): Promise<{ scan: WalletActivity["scan"]; settledBelow: bigint | undefined }> {
     const { scanner, log } = this.deps;
-    if (!scanner.configured) return { complete: false, scannedToBlock: null, note: "HyperSync token not configured" };
+    if (!scanner.configured) {
+      return {
+        scan: { complete: false, scannedToBlock: null, note: "HyperSync token not configured" },
+        settledBelow: undefined,
+      };
+    }
     try {
       const d = await scanner.discover(chainId, owner);
       const note = d.note ?? (d.movementsComplete ? null : "history scan still running");
-      return { complete: d.movementsComplete, scannedToBlock: d.scannedToBlock, note };
+      return {
+        scan: { complete: d.movementsComplete, scannedToBlock: d.scannedToBlock, note },
+        settledBelow: d.settledBelow ?? undefined,
+      };
     } catch (error) {
       log.warn({ chainId, err: errorText(error) }, "wallet activity: scan failed");
-      return { complete: false, scannedToBlock: null, note: `HyperSync: ${errorText(error)}` };
+      return {
+        scan: { complete: false, scannedToBlock: null, note: `HyperSync: ${errorText(error)}` },
+        settledBelow: undefined,
+      };
     }
   }
 

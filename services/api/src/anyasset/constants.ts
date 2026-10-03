@@ -18,6 +18,12 @@ export const SCAN_STATES_MAX = 20_000;
  * two blocks behind the proposal; one more for margin), so a reorg never leaves a stored transfer behind.
  */
 export const HYPERSYNC_FINALITY_BLOCKS = 3;
+/**
+ * When internal calls trail transfers by at most this many blocks (~10 min; one starved budget window in steady
+ * state), wallet activity holds back the newer transactions until both cursors have read them, so a swap that ends in
+ * MON never shows first as "Sent 10 USDC". A wider gap (a first scan) shows everything, marked incomplete.
+ */
+export const HYPERSYNC_SETTLE_GAP_BLOCKS = 1_500;
 /** Wallet movements per INSERT statement (12 columns, well under Postgres's 65,535 parameters). */
 export const WALLET_INSERT_CHUNK = 1_000;
 
