@@ -85,6 +85,12 @@
       "initCodeHash": "0xeac60e97ea21cd44a9747abbecdd58a7dea368f404cb34a5730ed1285aefb609",
       "startBlock": 66856078
     },
+    "PracticeSwap": {
+      "address": "0x1D75507fde3680af51f0d11A8A40B59a93399e6A",
+      "indexed": false,
+      "initCodeHash": "0xe41ac1d0c0de2aab5f083f63d8342b14d7813dc7731650fa5e1f128d9a41573c",
+      "startBlock": 67774372
+    },
     "SenryoCore": {
       "address": "0xA7EE451ACeaC1ccDDb5c486B9e72D3EdE457D8aD",
       "indexed": true,
