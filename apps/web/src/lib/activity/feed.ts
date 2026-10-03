@@ -317,13 +317,28 @@ export function journalItem(record: OperationRecord, me: string): FeedItem | und
   };
 }
 
+/** Kinds whose transaction also emits the trading-account credit it paid ("Added P$100 to trades"). */
+const CLAIM_KINDS = new Set(["STARTER", "VOUCHER"]);
+
+/** A claim or voucher is one row: its own DEPOSIT event in the same transaction folds into it. */
+function foldClaims(rows: readonly FeedItem[]): FeedItem[] {
+  const claims = new Set(
+    rows.flatMap((r) => (r.source.kind === "indexed" && CLAIM_KINDS.has(r.source.row.kind) ? r.hashes : [])),
+  );
+  if (claims.size === 0) return [...rows];
+  return rows.filter(
+    (r) => !(r.source.kind === "indexed" && r.source.row.kind === "DEPOSIT" && r.hashes.some((h) => claims.has(h))),
+  );
+}
+
 /**
  * The merged list, newest first: unsettled journal items first, then everything by time. For money, a finalized
  * journal item replaces the indexed event with the same hash (its words name the recipient and the route); for trades
  * and the card the indexed event wins (it carries the fill and the realised result). While more indexed pages exist,
  * settled journal items older than the last loaded event wait for that page.
  */
-export function mergeFeed(indexed: readonly FeedItem[], journal: readonly FeedItem[], complete: boolean): FeedItem[] {
+export function mergeFeed(rows: readonly FeedItem[], journal: readonly FeedItem[], complete: boolean): FeedItem[] {
+  const indexed = foldClaims(rows);
   const indexedHashes = new Set(indexed.flatMap((row) => row.hashes));
   const own = journal.filter((j) => j.group === "money" || !j.hashes.some((h) => indexedHashes.has(h)));
   const journalHashes = new Set(own.flatMap((j) => j.hashes));
