@@ -6,33 +6,27 @@
  * dropped. One response per (chain, address) is reused for HOLDINGS_CACHE_MS.
  */
 import type { Holding, Holdings } from "@senryo/api-client";
-import {
-  type Address,
-  getAddress,
-  type ReadClient,
-  readTokenBalances,
-  readTokenMetadata,
-  type TokenMetadata,
-} from "@senryo/chain";
+import { type Address, getAddress, type ReadClient, readTokenBalances, type TokenMetadata } from "@senryo/chain";
 import { type ChainId, MAINNET_CHAIN_ID, NATIVE_TOKEN, networkOf, WMON } from "@senryo/config";
 import type { Logger } from "@senryo/service-common";
 import { alchemyDiscover } from "./alchemy.ts";
-import { HOLDINGS_CACHE_MS, METADATA_TTL_MS } from "./constants.ts";
+import { HOLDINGS_CACHE_MS } from "./constants.ts";
 import type { GeckoTerminal, TokenPrice } from "./gecko.ts";
 import type { HyperSyncScanner } from "./hypersync.ts";
 import type { TokenList, TokenListService } from "./token-list.ts";
+import type { TokenMetadataCache } from "./token-meta.ts";
 import { errorText, TtlCache } from "./upstream.ts";
 
 const PRICE_DECIMALS = 18;
 const USD6_DECIMALS = 6;
 const TEN = 10n;
 const CACHE_MAX = 5_000;
-const META_CACHE_MAX = 50_000;
 
 export interface HoldingsDeps {
   log: Logger;
   read: (chainId: ChainId) => ReadClient;
   tokenList: TokenListService;
+  metadata: TokenMetadataCache;
   hypersync: HyperSyncScanner;
   gecko: GeckoTerminal;
   alchemyKey: string | undefined;
@@ -46,7 +40,6 @@ export function valueUsd6(balance: bigint, decimals: number, priceUsd18: bigint)
 
 export class HoldingsService {
   private readonly cache = new TtlCache<Holdings>(CACHE_MAX);
-  private readonly metadata = new TtlCache<TokenMetadata | null>(META_CACHE_MAX);
 
   constructor(private readonly deps: HoldingsDeps) {}
 
@@ -95,16 +88,6 @@ export class HoldingsService {
     };
   }
 
-  private async metadataOf(read: ReadClient, chainId: ChainId, tokens: readonly Address[]) {
-    const key = (t: Address) => `${chainId}:${t.toLowerCase()}`;
-    const unknown = tokens.filter((t) => this.metadata.get(key(t)) === undefined);
-    if (unknown.length > 0) {
-      const metas = await readTokenMetadata(read, unknown);
-      for (const [i, t] of unknown.entries()) this.metadata.set(key(t), metas[i] ?? null, METADATA_TTL_MS);
-    }
-    return new Map(tokens.map((t) => [t.toLowerCase(), this.metadata.get(key(t)) ?? null]));
-  }
-
   private async build(chainId: ChainId, owner: Address): Promise<Holdings> {
     const { read: readOf, tokenList, gecko } = this.deps;
     const read = readOf(chainId);
@@ -120,7 +103,7 @@ export class HoldingsService {
       return balance !== undefined && balance > 0n ? [{ address, balance }] : [];
     });
     const unlisted = held.filter((h) => !isNative(h.address) && !list.byAddress.has(h.address.toLowerCase()));
-    const metas = await this.metadataOf(
+    const metas = await this.deps.metadata.of(
       read,
       chainId,
       unlisted.map((h) => h.address),

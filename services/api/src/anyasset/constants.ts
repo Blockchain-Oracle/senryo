@@ -13,6 +13,13 @@ export const HYPERSYNC_BACKOFF_MS = 60_000;
 export const SCAN_STATE_TTL_MS = 604_800_000;
 /** Per-address scan states kept in memory (oldest dropped first). */
 export const SCAN_STATES_MAX = 20_000;
+/**
+ * A scan stores movements and moves its cursors only this many blocks below HyperSync's newest block (Monad finalizes
+ * two blocks behind the proposal; one more for margin), so a reorg never leaves a stored transfer behind.
+ */
+export const HYPERSYNC_FINALITY_BLOCKS = 3;
+/** Wallet movements per INSERT statement (12 columns, well under Postgres's 65,535 parameters). */
+export const WALLET_INSERT_CHUNK = 1_000;
 
 /** Monad token lists are refreshed this often; a failed refresh keeps the last good copy. */
 export const TOKEN_LIST_TTL_MS = 21_600_000;
@@ -41,6 +48,7 @@ export const AURORA_POLL_MS = 60_000;
 
 /** Per-IP rate limits of the public any-asset routes. */
 export const HOLDINGS_RATE = { rateLimit: { max: 60, timeWindow: "1 minute" } } as const;
+export const WALLET_ACTIVITY_RATE = { rateLimit: { max: 60, timeWindow: "1 minute" } } as const;
 export const SWAP_QUOTE_RATE = { rateLimit: { max: 60, timeWindow: "1 minute" } } as const;
 export const BRIDGE_QUOTE_RATE = { rateLimit: { max: 30, timeWindow: "1 minute" } } as const;
 export const BRIDGE_READ_RATE = { rateLimit: { max: 120, timeWindow: "1 minute" } } as const;
