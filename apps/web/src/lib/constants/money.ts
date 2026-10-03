@@ -13,6 +13,10 @@ export const MONEY_STORAGE = {
   hiddenTokens: "senryo.hidden-tokens.v1",
   homeTab: "senryo.home-tab.v1",
   destinations: "senryo.destinations.v1",
+  /** B4: the open deposit address issued per route, kept so a reload shows the same address and its timeline. */
+  depositAddresses: "senryo.deposit-addresses.v1",
+  /** B4/B16: inbound money this browser started that hasn't landed yet ("Arriving"). */
+  arrivals: "senryo.arrivals.v1",
 } as const;
 /** "Copied" stays on a Copy circle this long. */
 export const COPIED_MS = 1_600;
