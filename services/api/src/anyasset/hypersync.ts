@@ -7,7 +7,7 @@
  * HYPERSYNC_RESCAN_MS, and a long history finishes over several scans (`complete = false` until it reaches the newest
  * final block). With a store, the cursors and tokens survive a restart. The token's budget is shared (15,000 units /
  * 60 s, 1,000 per query on 2 Oct), so one scan spends at most `pagesPerScan` queries across both cursors (transfers
- * first: holdings need them), and a 429 backs every scan off until the window resets and the caller falls back.
+ * first: holdings need them), and a 429 backs that host's scans off until its window resets and the caller falls back.
  */
 import { type Address, getAddress } from "@senryo/chain";
 import { type ChainId, HYPERSYNC_TRACES_URL, HYPERSYNC_URL, WMON } from "@senryo/config";
@@ -69,7 +69,8 @@ export interface MovementStore {
 export class HyperSyncScanner {
   private readonly states = new TtlCache<ScanState>(SCAN_STATES_MAX);
   private readonly running = new Map<string, Promise<Discovery>>();
-  private backoffUntil = 0;
+  /** HyperSync budgets each host per token (143's can be spent by the indexer while 10143's is free): one per host. */
+  private readonly backoffUntil = new Map<string, number>();
 
   constructor(
     private readonly token: string | undefined,
@@ -111,7 +112,7 @@ export class HyperSyncScanner {
     const fresh = Date.now() - state.scannedAt < HYPERSYNC_RESCAN_MS;
     if (fresh && state.complete && state.tracesComplete) return this.result(state, null);
     if (!this.token) throw new UpstreamError("hypersync", null, "no HyperSync token configured");
-    if (Date.now() < this.backoffUntil) {
+    if (this.backingOff(HYPERSYNC_URL[chainId])) {
       // A scan from this process, or one restored from the store, still answers while the budget recovers.
       if (state.scannedAt > 0 || state.nextBlock > 0) {
         return this.result(state, "HyperSync rate-limited; showing the last scan");
@@ -122,7 +123,8 @@ export class HyperSyncScanner {
     try {
       const traces = HYPERSYNC_TRACES_URL[chainId];
       const transfers = () => this.transferPage(chainId, address, state);
-      const calls = traces ? () => this.internalPage(traces, chainId, address, state) : undefined;
+      const calls =
+        traces && !this.backingOff(traces) ? () => this.internalPage(traces, chainId, address, state) : undefined;
       // Caught-up transfers yield the first query to internal calls still behind (the budget may allow only one).
       const order = calls && state.complete && !state.tracesComplete ? [calls, transfers] : [transfers, calls];
       let pages = 0;
@@ -130,10 +132,6 @@ export class HyperSyncScanner {
         for (let done = false; run && !done && pages < this.pagesPerScan; pages += 1) done = await run();
       }
     } catch (error) {
-      if (isRateLimited(error)) {
-        const waitMs = error.retryAfterSec === undefined ? HYPERSYNC_BACKOFF_MS : error.retryAfterSec * MS_PER_SECOND;
-        this.backoffUntil = Date.now() + waitMs;
-      }
       if (state.scannedAt === 0 && state.nextBlock === 0) throw error;
       // Provider errors name the provider and status only (upstream.ts); anything else is the store's.
       note = `${error instanceof UpstreamError ? error.message : "scan store unavailable"}; showing the last scan`;
@@ -169,24 +167,36 @@ export class HyperSyncScanner {
     await this.store?.save(chainId, address, page.movements, cursors);
   }
 
+  private backingOff(url: string): boolean {
+    return Date.now() < (this.backoffUntil.get(url) ?? 0);
+  }
+
   private async query(url: string, body: unknown): Promise<unknown> {
-    const res = await fetchJson("hypersync", `${url}/query`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${this.token}` },
-      timeoutMs: HYPERSYNC_TIMEOUT_MS,
-      body,
-    });
-    this.watchBudget(res?.headers);
-    return res?.json;
+    try {
+      const res = await fetchJson("hypersync", `${url}/query`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${this.token}` },
+        timeoutMs: HYPERSYNC_TIMEOUT_MS,
+        body,
+      });
+      this.watchBudget(url, res?.headers);
+      return res?.json;
+    } catch (error) {
+      if (isRateLimited(error)) {
+        const waitMs = error.retryAfterSec === undefined ? HYPERSYNC_BACKOFF_MS : error.retryAfterSec * MS_PER_SECOND;
+        this.backoffUntil.set(url, Date.now() + waitMs);
+      }
+      throw error;
+    }
   }
 
   /** Stop before the shared budget runs dry: no query while the window has less than one query's cost left. */
-  private watchBudget(headers: Headers | undefined): void {
+  private watchBudget(url: string, headers: Headers | undefined): void {
     const remaining = Number(headers?.get("x-ratelimit-remaining") ?? "");
     const cost = Number(headers?.get("x-ratelimit-cost") ?? "");
     const reset = Number(headers?.get("x-ratelimit-reset") ?? "");
     if (Number.isFinite(remaining) && Number.isFinite(cost) && remaining < cost && Number.isFinite(reset)) {
-      this.backoffUntil = Date.now() + reset * MS_PER_SECOND;
+      this.backoffUntil.set(url, Date.now() + reset * MS_PER_SECOND);
     }
   }
 
