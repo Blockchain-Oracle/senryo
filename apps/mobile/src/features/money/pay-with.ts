@@ -3,13 +3,15 @@
  * ticket's margin and the pool's deposit are AUSD (USDC also funds the trading account). Any other verified holding
  * pays through a swap to AUSD composed into the same operation — sized so its MINIMUM covers what the act needs, the
  * impact rule applied (warn > 1 %, block > 5 %), re-quoted right before it is signed (`@senryo/query` swapLeg).
- * Practice has no aggregator on the test network: dollars only, and the picker says so in ≤ 4 words.
+ * Practice has no aggregator on the test network: dollars only, and the picker says so in ≤ 4 words — test USDC pays
+ * for the pool through the par swap to test AUSD (D-252), wallet part only.
  * Unverified tokens never fund an act (BD-7).
  */
 import type { SwapQuoteOk } from "@senryo/api-client";
-import { MAINNET_CHAIN_ID } from "@senryo/config";
+import { isPracticeSwapPair, PRACTICE_SWAP_ROUTE } from "@senryo/chain";
+import { isChainId, MAINNET_CHAIN_ID } from "@senryo/config";
 import { RISK } from "@senryo/core";
-import { collateralTokenOf, type QueryEnv, swapLeg, useSwapQuote } from "@senryo/query";
+import { collateralTokenOf, practiceSwapLeg, type QueryEnv, swapLeg, useSwapQuote } from "@senryo/query";
 import { useEffect, useState } from "react";
 import { type MoneyAsset, spendableOf, unitsOfValue, valueOfUnits } from "./assets";
 
@@ -19,8 +21,17 @@ const QUOTE_DEBOUNCE_MS = 350;
 
 export type PayAct = "trade" | "pool";
 /** What Practice can pay with, in ≤ 4 words (no aggregator on the test network): the chip's note and a row's reason. */
-export function practiceNote(act: PayAct): string {
-  return act === "pool" ? "Practice: AUSD only" : "Practice: dollars only";
+export function practiceNote(): string {
+  return "Practice: dollars only";
+}
+
+/** Practice (D-252): test USDC brings test AUSD through the par swap — the only swap a Practice act composes. */
+export function paysAtPar(asset: MoneyAsset, chainId: number): boolean {
+  return (
+    isChainId(chainId) &&
+    asset.collateral === "USDC" &&
+    isPracticeSwapPair(chainId, asset.address, collateralTokenOf(chainId, "AUSD"))
+  );
 }
 
 /** Does `asset` pay for this act directly (dollars the act takes as they are) or through a swap to AUSD? */
@@ -32,13 +43,15 @@ export function paysDirectly(asset: MoneyAsset, act: PayAct): boolean {
 export function payWithReason(asset: MoneyAsset, act: PayAct, chainId: number): string | undefined {
   if (!asset.verified) return "Unverified · can't fund";
   if (paysDirectly(asset, act)) return asset.wallet + asset.tradingFree > 0n ? undefined : "None to use";
-  if (chainId !== MAINNET_CHAIN_ID) return practiceNote(act);
+  if (paysAtPar(asset, chainId)) return asset.wallet > 0n ? undefined : "None to use";
+  if (chainId !== MAINNET_CHAIN_ID) return practiceNote();
   if (asset.priceUsd18 === null) return "No price";
   return spendableOf(asset) > 0n ? undefined : asset.native ? "Keeps 10 MON for fees" : "None to use";
 }
 
-/** usd6 the asset can bring through a swap (its spendable value, less the sizing buffer). */
-export function swappableUsd6(asset: MoneyAsset): bigint {
+/** usd6 the asset can bring through a swap (its spendable value, less the sizing buffer; at par, its wallet part). */
+export function swappableUsd6(asset: MoneyAsset, chainId?: number): bigint {
+  if (chainId !== undefined && paysAtPar(asset, chainId)) return asset.wallet;
   if (asset.priceUsd18 === null) return 0n;
   const value = valueOfUnits(spendableOf(asset), asset.decimals, asset.priceUsd18);
   return (value * RISK.BPS) / (RISK.BPS + SIZE_BUFFER_BPS);
@@ -48,6 +61,8 @@ export type PaySwap =
   | { status: "none" }
   | { status: "quoting" }
   | { status: "ok"; quote: SwapQuoteOk; amountIn: bigint }
+  /** Practice par swap (D-252): exactly the need in, the same out — nothing to quote. */
+  | { status: "par"; amountIn: bigint }
   | { status: "blocked"; reason: string };
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -81,6 +96,11 @@ export function usePaySwap(
       ? { from: asset.address, to: collateralTokenOf(MAINNET_CHAIN_ID, "AUSD"), amount: amountIn, sender: owner }
       : undefined,
   );
+  if (asset !== undefined && needUsd6 > 0n && paysAtPar(asset, chainId)) {
+    return needUsd6 <= asset.wallet
+      ? { status: "par", amountIn: needUsd6 }
+      : { status: "blocked", reason: `Not enough ${asset.symbol}` };
+  }
   if (!swapping) return { status: "none" };
   if (need !== needUsd6) return { status: "quoting" };
   if (!fits) return { status: "blocked", reason: `Not enough ${asset.symbol}` };
@@ -105,8 +125,25 @@ export function paySwapSteps(env: QueryEnv, owner: `0x${string}`, asset: MoneyAs
   );
 }
 
+/** The par swap leg ("Approve USDC"?, "Swap USDC → AUSD"): exactly what was reviewed, nothing re-quoted (D-252). */
+export function parPaySteps(env: QueryEnv, owner: `0x${string}`, asset: MoneyAsset, amountIn: bigint) {
+  return practiceSwapLeg(
+    env,
+    owner,
+    asset.address,
+    amountIn,
+    { approve: `Approve ${asset.symbol}`, swap: `Swap ${asset.symbol} → AUSD` },
+    "swap",
+  );
+}
+
 /** What the reviewed intent states about the payment: the asset, what it pays and the AUSD minimum it brings. */
 export function payIntent(asset: MoneyAsset, swap: PaySwap): Record<string, string> {
+  if (swap.status === "par") {
+    const paid = swap.amountIn.toString();
+    const base = { payWith: asset.symbol, payWithAsset: asset.key, paidDecimals: String(asset.decimals) };
+    return { ...base, paid, minReceived: paid, route: PRACTICE_SWAP_ROUTE };
+  }
   if (swap.status !== "ok") return { payWith: asset.symbol };
   return {
     payWith: asset.symbol,

@@ -29,6 +29,7 @@ React Native rewrites: Reanimated 4, react-native-svg and Gesture Handler. No we
 | Deposit method list | "deposit method list" | Only saved-payment checkboxes came back. The kit `SheetRow` was used, following Fomo F20/F21. |
 | Receipt | "transaction receipt" | Ticket and confirmation cards came back. The receipt reuses `ReviewRow` rows. |
 | Balance breakdown | "balance breakdown" | Only a chart and a billing card came back. The balance sheet uses kit `SheetRow`s with marks. |
+| Practice par swap (D-252) | — (no new component) | The swap ticket's own plates, Details line (`DetailsLine` extracted from `QuoteLine`) and review rows carry the par variant; the route row carries the Senryo seal. |
 
 ## Marks (rule 7)
 

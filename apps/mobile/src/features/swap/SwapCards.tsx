@@ -5,7 +5,7 @@
  * keyed by asset), as in the source. Under them: one line, rate · impact (amber over 1 %), and Details on request.
  */
 import { ids } from "@senryo/identity";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
@@ -38,11 +38,17 @@ import {
   TYPE,
   useTheme,
 } from "~/theme";
+import { PRACTICE_SWAP_ROUTE, parRateText } from "./practice";
 import { hopsText, impactText, monFee, rateText, swapProviderName } from "./swap-format";
 import type { SwapState } from "./useSwap";
 
 const HALF_TURN = 180;
 const SKELETON_AMOUNT = 120;
+
+/** The practice swap is ours: its route carries the Senryo seal. */
+export function SenryoMark() {
+  return <EntityMark id={ids.brand("senryo")} label="Senryo" size={SIZE.markChip} decorative />;
+}
 
 /** The asset chip: mark, symbol, ⌄ (opens the picker). */
 function AssetChip({ asset, onPress, label }: { asset: MoneyAsset; onPress: () => void; label: string }) {
@@ -128,7 +134,9 @@ export function PayPlate({ s, onPick }: { s: SwapState; onPick: () => void }) {
 export function ReceivePlate({ s, onPick }: { s: SwapState; onPick: () => void }) {
   const { color } = useTheme();
   const receive = s.receive;
-  const estimate = s.ok && receive ? tokenAmount(s.ok.quote.amountOut, receive.decimals) : undefined;
+  // The par pair's estimate is the amount itself (D-252).
+  const out = s.ok ? s.ok.quote.amountOut : s.par && s.input.amount > 0n ? s.input.amount : undefined;
+  const estimate = out !== undefined && receive ? tokenAmount(out, receive.decimals) : undefined;
   return (
     <Plate
       label="You receive"
@@ -216,22 +224,10 @@ export function SwapPlates({
   );
 }
 
-/** "1 USDC = 0.000204 XAUt0 · impact 0.40%", amber past 1 %; Details opens route, minimum, fee and steps. */
-export function QuoteLine({ s }: { s: SwapState }) {
+/** One quiet line that opens Details underneath (route, minimum, fee, steps); it folds when the quote goes. */
+function DetailsLine({ text, tone, children }: { text: string; tone: string; children: ReactNode }) {
   const { color } = useTheme();
   const [open, setOpen] = useState(false);
-  const q = s.ok;
-  useEffect(() => {
-    if (!q) setOpen(false);
-  }, [q]);
-  if (!q || !s.receive) return null;
-  const tone = q.quote.impact === "ok" ? color.text2 : q.quote.impact === "warn" ? color.warn : color.down;
-  const high = q.quote.impact !== "ok" ? `High ${impactText(q)}` : impactText(q);
-  const steps = [
-    ...(s.pay.collateral && s.input.amount > s.pay.wallet ? ["Pull from trades"] : []),
-    ...(s.pay.native ? [] : [`Approve ${s.pay.symbol}`]),
-    "Swap",
-  ];
   return (
     <View style={styles.quote}>
       <Pressable
@@ -248,32 +244,61 @@ export function QuoteLine({ s }: { s: SwapState }) {
           numberOfLines={1}
           style={[TYPE.rowDetail, styles.grow, { color: tone }]}
         >
-          {rateText(q)} · {high}
+          {text}
         </Text>
         <View style={{ transform: [{ rotate: open ? "180deg" : "0deg" }] }}>
           <ChevronDown size={SIZE.iconSm} color={color.text3} />
         </View>
       </Pressable>
-      {open ? (
-        <Animated.View entering={FadeIn}>
-          <ReviewRow
-            label="Route"
-            value={`${swapProviderName(q.quote.provider)} · ${hopsText(q)}`}
-            mark={
-              <EntityMark
-                id={ids.provider(q.quote.provider)}
-                label={swapProviderName(q.quote.provider)}
-                size={SIZE.markChip}
-                decorative
-              />
-            }
-          />
-          <ReviewRow label="Minimum received" value={amountOf(s.receive, q.quote.minOut)} />
-          <ReviewRow label="Network fee" value={`≈ ${monFee(s.feeWei)}`} />
-          <ReviewRow label="Steps" value={steps.join(" · ")} />
-        </Animated.View>
-      ) : null}
+      {open ? <Animated.View entering={FadeIn}>{children}</Animated.View> : null}
     </View>
+  );
+}
+
+/**
+ * "1 USDC = 0.000204 XAUt0 · impact 0.40%", amber past 1 %; Details opens route, minimum, fee and steps. The Practice
+ * par pair reads "1 AUSD = 1 USDC · at par" and its route "Practice swap · at par" (D-252) — never a market.
+ */
+export function QuoteLine({ s }: { s: SwapState }) {
+  const { color } = useTheme();
+  const q = s.ok;
+  const receive = s.receive;
+  const steps = [
+    ...(s.pay.collateral && s.input.amount > s.pay.wallet ? ["Pull from trades"] : []),
+    ...(s.pay.native ? [] : [`Approve ${s.pay.symbol}`]),
+    "Swap",
+  ].join(" · ");
+  if (s.par && receive && s.input.amount > 0n) {
+    return (
+      <DetailsLine key="par" text={`${parRateText(s.pay, receive)} · at par`} tone={color.text2}>
+        <ReviewRow label="Route" value={PRACTICE_SWAP_ROUTE} mark={<SenryoMark />} />
+        <ReviewRow label="You receive" value={amountOf(receive, s.input.amount)} />
+        <ReviewRow label="Network fee" value="Sponsored" />
+        <ReviewRow label="Steps" value={steps} />
+      </DetailsLine>
+    );
+  }
+  if (!q || !receive) return null;
+  const tone = q.quote.impact === "ok" ? color.text2 : q.quote.impact === "warn" ? color.warn : color.down;
+  const high = q.quote.impact !== "ok" ? `High ${impactText(q)}` : impactText(q);
+  return (
+    <DetailsLine key="quote" text={`${rateText(q)} · ${high}`} tone={tone}>
+      <ReviewRow
+        label="Route"
+        value={`${swapProviderName(q.quote.provider)} · ${hopsText(q)}`}
+        mark={
+          <EntityMark
+            id={ids.provider(q.quote.provider)}
+            label={swapProviderName(q.quote.provider)}
+            size={SIZE.markChip}
+            decorative
+          />
+        }
+      />
+      <ReviewRow label="Minimum received" value={amountOf(receive, q.quote.minOut)} />
+      <ReviewRow label="Network fee" value={`≈ ${monFee(s.feeWei)}`} />
+      <ReviewRow label="Steps" value={steps} />
+    </DetailsLine>
   );
 }
 

@@ -245,7 +245,7 @@ use the same pickers, sheets and receipts as AUSD.
   3. "You receive" card: asset chip ⌄ over all verified tokens (token list, searchable), estimate.
   4. One line: rate · impact. Details: route marks (Monorail/KyberSwap), minimum received, network fee, steps.
   5. Keypad → slide → step-up → `OperationStatus`.
-  - (P) The same ticket. AUSD↔USDC at par only if a testnet pool exists (UNDEFINED-6). Otherwise the slide locks: "Swaps run on Mainnet".
+  - (P) The same ticket. Test AUSD ↔ test USDC swaps **at par** through our own `PracticeSwap` (D-252, UNDEFINED-6 closed; `contracts/src/testnet/PracticeSwap.sol`, 10143 `0x1D75…9e6A`): no aggregator is asked, the receive plate shows the typed amount, the line reads "1 AUSD = 1 USDC · at par", Details and the review say "Practice swap · at par" with "Network fee: Sponsored", then the same slide → passkey step-up → `OperationStatus` → journal → Activity "Swapped AUSD → USDC". Both test dollars are always in "You receive". Every other Practice pair (MON, tokens) keeps the lock: "Swaps run on Mainnet".
 - **Rules:**
   - Quotes come from Monorail and KyberSwap in parallel. The better `minOut` wins, and the routers are pinned (routes.md §2).
   - Approvals are exact (`ch/spot-swap.ts:111-131`).
@@ -273,6 +273,7 @@ use the same pickers, sheets and receipts as AUSD.
   - [ ] A size over 5% impact blocks and shows the max. Tapping the max fills it.
   - [ ] A spam token appears in "You pay" with a warning and is absent from "You receive".
   - [ ] Calldata to a non-pinned router is refused before signing (test with a tampered quote on the fork).
+  - [ ] (P) AUSD → USDC and back at par from the ticket: review "Practice swap · at par", slide, step-up, Activity row. The chain half is proven live (`scripts/drive` `practice-swap-check`, 3 Oct: approve 57.3k + swap 137.9k / 119.2k gas, exact par both ways, float total unchanged); the screen walk waits for the merged simulator pass.
 
 ### B7 Send any asset to a person or address (Monad)
 - **Promise:** send any token to a @handle, contact or address.
@@ -587,7 +588,7 @@ use the same pickers, sheets and receipts as AUSD.
    `scripts/drive` `deposit-address-check`); Solana / Bitcoin origins need `RELAY_API_KEY`. A connected wallet stays out
    of scope.
 5. **Ramp purchase status** with the keyless hosted page (what `finalUrl` returns). The React Native embed: `WebView` vs browser.
-6. **Practice swap:** no AUSD/USDC pool on 10143 (`m/app/fund/swap.tsx:47-49`). Deploy a practice pool or keep the lock.
+6. ~~**Practice swap:** no AUSD/USDC pool on 10143.~~ **Settled 3 Oct (D-252):** `PracticeSwap` swaps test AUSD ↔ test USDC at par from its own float (P$1,000,000 a side, refilled by the deployer's mint; no owner, no role). The ticket (B6) and pool "Pay with" (D1, test USDC → test AUSD) use it; MON and tokens stay locked in Practice.
 7. **Exchange Monad support list** beyond Coinbase USDC, and the exchange tips per asset.
 8. **Spam report backend** (store, threshold, shared list).
 9. **Native MON inbound via internal calls** (contract → user): needs traces. Can HyperSync transaction selection find them?

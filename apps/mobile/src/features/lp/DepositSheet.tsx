@@ -61,7 +61,7 @@ export function DepositSheet({
   const payWith = (payKey ? money.find(payKey) : undefined) ?? ausd;
   const direct = payWith?.collateral === "AUSD";
   const swap = usePaySwap(env.chainId, direct ? undefined : payWith, amount, lp.address);
-  const have = !payWith ? 0n : direct ? payWith.wallet + payWith.tradingFree : swappableUsd6(payWith);
+  const have = !payWith ? 0n : direct ? payWith.wallet + payWith.tradingFree : swappableUsd6(payWith, env.chainId);
   const max = have < pool.maxDeposit ? have : pool.maxDeposit;
   const passkey = !direct || lp.confirmFor(amount) === "passkey";
   const guard = useReviewGuard([network.chainId, lp.address, amount, payWith?.key, swap.status].join(":"));
@@ -95,7 +95,7 @@ export function DepositSheet({
                 : undefined;
   const reviewKey =
     deposit && !blocked
-      ? [amount, payWith?.key, swap.status === "ok" ? swap.quote.quote.minOut : "", passkey].join(":")
+      ? [amount, payWith?.key, swap.status === "ok" ? swap.quote.quote.minOut : swap.status, passkey].join(":")
       : undefined;
   const prepared = usePreparedOperation(lp.runner, reviewKey, async () => {
     if (!deposit || !lp.address) return undefined;
@@ -124,7 +124,7 @@ export function DepositSheet({
           <AssetChip asset={payWith} onPress={() => setPicking(true)} />
           {network.key === "testnet" ? (
             <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
-              {practiceNote("pool")}
+              {practiceNote()}
             </Text>
           ) : null}
         </View>

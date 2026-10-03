@@ -95,7 +95,8 @@ Capability cards D1–D2. Sources: plan §0.4 "Pool", §0.6 D and §0.9 "Pool". 
 - **After:** A pool row under Home → Earn · Activity → Money: "LP vault deposit" (`apps/mobile/src/features/portfolio/activity-copy.ts:30,88`) · Receipt with the steps and txs. No push.
 - **Built (claude/compose, 2 Oct):** "Pay with ⌄" over every holding — AUSD from the wallet then the trading balance
   (withdrawn to self), any other verified holding swapped to AUSD on Mainnet, one operation (`features/lp/deposit-op.ts`,
-  `DepositSheet.tsx`); Practice "AUSD only".
+  `DepositSheet.tsx`); Practice "dollars only" — test USDC (wallet part) pays through the par `PracticeSwap` to test AUSD
+  in the same operation ("Approve USDC · Swap USDC → AUSD · Approve AUSD · Deposit", D-252).
 - **Was:** deposits came from wallet AUSD only (`LpScreen.tsx:143-149`; `useLp.ts:73`), so P$ in trades couldn't be used; the faucet sits on the pool screen (`LpScreen.tsx:150-157`); the disclosures are paragraphs (`:22-23,135-137`); with an allowance in place, a deposit over $250 hits `over-move-cap` with no step-up route (`useLp.ts:56`; `apps/mobile/src/lib/account/sender.ts:81-99`), the same class as defect 1; the presets constant is unused; there's no pool mark (Part A3) and no Earn tab; the APR leaves out borrow and funding.
 - **Acceptance:**
   - [ ] (P) With P$ only in trades, deposit P$20: one slide; the status shows withdraw → approve → deposit; "Deposited P$20".

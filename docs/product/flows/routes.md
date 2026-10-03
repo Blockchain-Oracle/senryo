@@ -59,7 +59,7 @@ This file drives every picker in [`b-money.md`](b-money.md) (B1, B4, B5, B6, B9,
 - The Uniswap v4 Permit2 path for its existing tokens (`cfg/markets.ts:118-126`, `cfg/spot.ts`).
 - `@nadfun/sdk` as the last resort for curve buys.
 
-**Testnet:** no aggregator coverage and no v4 pools (`cfg/spot.ts:4`). Practice swaps stay locked unless a direct AUSD↔USDC test pool is deployed.
+**Testnet:** no aggregator coverage and no v4 pools (`cfg/spot.ts:4`). Practice swaps test AUSD ↔ test USDC at par through our own `PracticeSwap` (D-252, 10143 `0x1D75507fde3680af51f0d11A8A40B59a93399e6A`; `@senryo/chain` `preparePracticeSwap`); every other Practice pair stays locked. LIVE 3 Oct: `scripts/drive` `practice-swap-check`.
 
 ## 3. Out of Monad to another chain (B9)
 
@@ -183,7 +183,7 @@ The destination is always the user's Monad wallet (Part F9).
 - **Cross-chain:** only CCTP v2 supports 10143 (plan). RECHECKED: the Circle sandbox `iris-api-sandbox` answers fees for 15 → 0.
   - That gives Practice a real USDC rehearsal, Sepolia ↔ Monad Testnet. Every other route locks: "Mainnet only".
 - **Relay:** RECHECKED: `api.testnets.relay.link/chains` lists 2 chains, without 10143.
-- **Not on testnet:** aggregators, Uniswap v4 pools (`cfg/spot.ts:4`) and Ramp. Holdings give balances only, with no prices.
+- **Not on testnet:** aggregators, Uniswap v4 pools (`cfg/spot.ts:4`) and Ramp. Holdings give balances only, with no prices. The one Practice swap is the par `PracticeSwap` (AUSD ↔ USDC, §2).
 - **Fees:** sponsored via `StarterDrip.topUp` (`contracts/src/periphery/StarterDrip.sol:105-112`).
 
 ## 9. Still to test (UNVERIFIED register)

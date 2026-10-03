@@ -3,7 +3,8 @@
  * · Max and the keypad, and one action that names what stops it ("Not enough XAUt0", "No route for this pair",
  * "Swaps run on Mainnet") until it reads Review. The pickers and the review are child sheets over the ticket, so its
  * values and the review guard survive. Once signed, the ticket becomes the outcome until it settles — never a second
- * swap beside an unresolved one.
+ * swap beside an unresolved one. In Practice, test AUSD ↔ test USDC runs the whole way at par (D-252); every other
+ * Practice pair keeps the locked slide.
  */
 import { RISK } from "@senryo/core";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ import { MoneyOutcome, ReviewRow } from "~/features/money/Review";
 import { SWAP_WORDS } from "~/features/money/words";
 import { ROUTES } from "~/lib/constants/routes";
 import { SPACE, TYPE, useTheme } from "~/theme";
+import { PRACTICE_SWAP_ROUTE } from "./practice";
 import { QuoteLine, SwapPlates } from "./SwapCards";
 import { SwapReview } from "./SwapReview";
 import { maxUnderBlock } from "./swap-format";
@@ -82,7 +84,12 @@ export function SwapView({
             intent ? (
               <>
                 {intent.paid ? <ReviewRow label="Paid" value={intent.paid} /> : null}
-                {intent.atLeast ? <ReviewRow label="Received at least" value={intent.atLeast} /> : null}
+                {intent.atLeast ? (
+                  <ReviewRow
+                    label={intent.route === PRACTICE_SWAP_ROUTE ? "Received" : "Received at least"}
+                    value={intent.atLeast}
+                  />
+                ) : null}
                 {intent.route ? <ReviewRow label="Route" value={intent.route} /> : null}
               </>
             ) : undefined

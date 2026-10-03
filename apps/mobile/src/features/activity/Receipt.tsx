@@ -66,6 +66,7 @@ export function receiptLines(item: FeedItem, me: string): Line[] {
     const atLeast = i.atLeast ?? minOutText(i);
     if (atLeast) lines.push({ label: "At least", value: atLeast });
     if (i.provider) lines.push({ label: "Route", value: PROVIDER_NAMES[i.provider] ?? i.provider });
+    else if (i.route) lines.push({ label: "Route", value: i.route });
     if (i.fee) lines.push({ label: "Fee", value: i.fee });
   }
   lines.push({ label: "When", value: activityTime(Math.floor(item.at / MS_PER_SECOND)) });

@@ -120,13 +120,13 @@ It offers Practice money to learn and Mainnet for real.
 | Receive on Monad (same single address) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ (appears automatically) | ✓ |
 | Deposit from another chain | Relay | USDC: CCTP/Relay; AUSD: Relay | Across | swap on arrival (bridge USDC/ETH, then swap) | same | LI.FI/Relay from Ethereum XAUt | ✗ (no bridge; buy here) | ✗ | USDC via CCTP testnet |
 | Buy with card/bank (Ramp) | M | M (if listed) | M | ✗ → buy USDC then swap | ✗ → via swap | ✗ → via swap | ✗ → via swap | ✗ | ✗ |
-| Swap from / to any other | M | M | M | M | M | M (impact rule) | M | sell only, warned | AUSD↔USDC rehearsal if a testnet pool exists, else locked |
+| Swap from / to any other | M | M | M | M | M | M (impact rule) | M | sell only, warned | AUSD↔USDC at par (PracticeSwap, D-252); others locked |
 | Send to person/address (Monad) | ✓ (fee reserve kept) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ (warned) | ✓ |
 | Withdraw to own address/exchange (Monad) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Withdraw to another chain | Relay | CCTP / Relay | Across / LI.FI | composed swap → USDC → route | same | LI.FI → Ethereum XAUt | composed swap → USDC → route | ✗ | USDC via CCTP testnet |
 | Sell to bank (Ramp) | M | M | M | ✗ → swap to USDC first, auto | same | same | same | ✗ | ✗ |
 | Fund a trade (auto-swap to AUSD) | ✓ | ✓ (direct) | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | P$ direct |
-| Fund the card / pool (auto-swap) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | P$ direct |
+| Fund the card / pool (auto-swap) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | P$ direct; pool: test USDC at par (D-252) |
 | Price alert / watch | ✓ | — | — | ✓ | ✓ | ✓ | ✓ | ✗ | — |
 | Trade the perp of it (cross-link) | Perpl MON | — | — | Perpl BTC/ETH | — | XAU (engine) | — | — | — |
 | Hide / report spam | — | — | — | — | — | — | ✓ | ✓ | — |
@@ -625,7 +625,7 @@ It offers Practice money to learn and Mainnet for real.
 - **Send list:** `[approve(router, exactAmount)?, call(tx.to, tx.data, tx.value)]`.
 - **Router addresses are pinned in config.** The app rejects calldata aimed at any other `to`.
 - **Kept as-is:** the Uniswap v4 Permit2 path for its existing tokens; `@nadfun/sdk` as the last resort for curve buys.
-- **Testnet:** no aggregator coverage, so Practice swaps stay on direct contracts (AUSD↔USDC only where a pool exists).
+- **Testnet:** no aggregator coverage, so Practice swaps stay on direct contracts: test AUSD ↔ test USDC at par through `PracticeSwap` (D-252); every other pair locks.
 
 **Out of Monad to other chains (B9)** (`services/api` proxies quotes; the app signs the source-chain transaction):
 
