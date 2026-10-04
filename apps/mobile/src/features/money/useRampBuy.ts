@@ -30,7 +30,7 @@ export function useRampBuy(chainId: number) {
       return result.kind === "created" && isCurrent() && activeNetwork().chainId === chainId;
     } finally {
       busy.current = false;
-      setOpening(undefined);
+      if (alive.current) setOpening(undefined);
     }
   };
   return { buy, opening };

@@ -12,6 +12,7 @@ Canonical branch: `codex/senryo-unified`. Accepted direction: Slush Home/Card, F
 - Ramp opens its official React Native SDK, constrains the selected Monad asset, verifies purchase recipient/asset, and rechecks account/mode after close. Purchase creation does not credit a balance or prove payment. Missing native modules and presentation failure are explicit states. The provider may still require a bank app handoff.
 - Native runtime/version is `0.3.0`: new `expo-print` and Ramp modules must not be sent as an OTA to runtime `0.2.1`.
 - Ramp RN 1.0.3 is patched to pin Android 4.0.1 and report iOS presentation/configuration failures instead of force-crashing. Android config omits unsafe debug logging, reads absent optional fields safely and reports missing/failed presentation. Its iOS pod is pinned to the official 4.0.1 tag. Source and compiled JS/type entries are patched together.
+- iOS presenter lookup and presentation both run on the main thread. SDK initialization failures and malformed purchase callbacks are handled without leaving the flow busy.
 
 ## Validation completed
 
@@ -30,3 +31,5 @@ The main API now has `CARD_URL=http://senryo-card:3001`; its restarted config co
 ## Native distribution
 
 The previous release `0.2.1 (5)` and its validation remain historical. The new 0.3.0 build must compile, upload, pass Apple processing and enter internal beta before the new native features are reported installable.
+
+The first 0.3.0 attempt, build 6 (`d6ff7a54-c3bc-4d80-81b3-99252e20d7fc`), was canceled before submission to include the SDK's UIKit main-thread repair. Its queued submission is not evidence of an Apple upload.

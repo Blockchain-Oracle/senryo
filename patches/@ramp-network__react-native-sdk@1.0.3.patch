@@ -112,7 +112,7 @@ index 847a6202fed7c77577d8f9e19227a2f1729f4050..3fb8513a605e817ba4430a83b5d08ea0
      fun onOfframpCryptoSent(txHash: String, error: String) {
          this.currentActivity?.let { activity ->
 diff --git a/ios/ReactNativeSdk.swift b/ios/ReactNativeSdk.swift
-index be2bf9346c69a9190dfe6870da8e701e3fcd9ee7..04d31a077f22f2f3e91e7f1d4003cdf96ccd87a1 100644
+index be2bf9346c69a9190dfe6870da8e701e3fcd9ee7..af00bbb8f3fd2522ef37ac8516deed6483b1c75e 100644
 --- a/ios/ReactNativeSdk.swift
 +++ b/ios/ReactNativeSdk.swift
 @@ -20,13 +20,18 @@ class RampSdk: RCTEventEmitter {
@@ -124,12 +124,12 @@ index be2bf9346c69a9190dfe6870da8e701e3fcd9ee7..04d31a077f22f2f3e91e7f1d4003cdf9
 -
 -        let presentedViewController = RCTPresentedViewController()
 -        
-+        guard let presentedViewController = RCTPresentedViewController() else {
-+            sendEvent(withName: "onRampDidClose", body: ["instanceId": instanceId ?? "", "error": "presentation_unavailable"])
-+            return
-+        }
          DispatchQueue.main.async {
 -            presentedViewController?.present(ramp, animated: true)
++            guard let presentedViewController = RCTPresentedViewController() else {
++                self.sendEvent(withName: "onRampDidClose", body: ["instanceId": self.instanceId ?? "", "error": "presentation_unavailable"])
++                return
++            }
 +            do {
 +                let ramp = try RampViewController(configuration: configuration)
 +                ramp.delegate = self

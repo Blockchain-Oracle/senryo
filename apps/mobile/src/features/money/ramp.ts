@@ -34,20 +34,38 @@ export async function openRampBuy(userAddress: string, outAsset?: string): Promi
   if (!NativeModules.RampSdk) return { kind: "unavailable" };
   if (opening || activeNetwork().chainId !== MAINNET_CHAIN_ID || !outAsset || !RAMP_ASSETS.includes(outAsset))
     return { kind: "closed" };
-  sdk ??= new (require("@ramp-network/react-native-sdk").default)();
+  try {
+    sdk ??= new (require("@ramp-network/react-native-sdk").default)();
+  } catch {
+    return { kind: "failed" };
+  }
   const ramp = sdk;
   if (!ramp) return { kind: "unavailable" };
   opening = true;
   return new Promise((resolve) => {
     let purchase: RampPurchase | undefined;
+    let settled = false;
     const finish = (result: RampResult) => {
+      if (settled) return;
+      settled = true;
       ramp.unsubscribe("*", listener);
       opening = false;
       resolve(result);
     };
     const listener: Parameters<RampSdk["unsubscribe"]>[1] = (event) => {
       if (event.type === "PURCHASE_CREATED") {
-        const value = event.payload.purchase;
+        const value = event.payload?.purchase;
+        // Provider events cross a native boundary; malformed events must not strand the close listener.
+        if (
+          !value?.asset ||
+          typeof value.id !== "string" ||
+          typeof value.status !== "string" ||
+          typeof value.cryptoAmount !== "string" ||
+          !/^\d+$/.test(value.cryptoAmount) ||
+          typeof value.receiverAddress !== "string" ||
+          (value.asset.address != null && typeof value.asset.address !== "string")
+        )
+          return;
         // The native SDK constrains the asset with swapAsset. Verify its network, receiver and actual address too.
         const wanted = Object.entries(RAMP_BY_ADDRESS).find(([, id]) => id === outAsset)?.[0];
         const identity = value.asset as RampPurchase["asset"] & { chain?: string; apiV3Symbol?: string };
@@ -58,8 +76,8 @@ export async function openRampBuy(userAddress: string, outAsset?: string): Promi
           (identity.chain === "MONAD" ||
             identity.apiV3Symbol === outAsset ||
             value.asset.symbol === outAsset ||
-            value.asset.type?.startsWith("MONAD") ||
-            value.asset.symbol?.startsWith("MONAD_"))
+            (typeof value.asset.type === "string" && value.asset.type.startsWith("MONAD")) ||
+            (typeof value.asset.symbol === "string" && value.asset.symbol.startsWith("MONAD_")))
         )
           purchase = value;
       }
