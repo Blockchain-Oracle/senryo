@@ -22,6 +22,7 @@ import { TokenRow } from "~/features/tokens/TokenRow";
 import { TOKEN_SORTS, type TokenSort } from "~/features/tokens/useTokenRows";
 import { ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { PredictionsList } from "../predictions/PredictionsList";
 import { DiscoveryRow, UnpricedRow } from "./DiscoveryRow";
 import { ProtocolBanner } from "./MarketBanners";
 import { EngineMarketRow, PrelaunchMarketRow } from "./MarketRow";
@@ -35,6 +36,7 @@ const VIEWS = [
   { value: "watchlist", label: "Watchlist", icon: Star },
   { value: "tokens", label: "Tokens" },
   { value: "perps", label: "Perps" },
+  { value: "predict", label: "Predict" },
 ] as const;
 
 export function MarketsScreen() {
@@ -42,7 +44,7 @@ export function MarketsScreen() {
   const insets = useSafeAreaInsets();
   const bottom = useDockInset();
   const refreshControl = usePullRefresh();
-  const [view, setView] = useState<MarketsView>("perps");
+  const [view, setView] = useState<MarketsView | "predict">("perps");
   const [filter, setFilter] = useState<MarketFilter>("all");
   const [tokenSort, setTokenSort] = useState<TokenSort>("all");
   return (
@@ -62,7 +64,7 @@ export function MarketsScreen() {
         <View style={styles.tabs}>
           <UnderlineTabs options={VIEWS} value={view} onChange={setView} label="Market list" />
         </View>
-        {view === "tokens" ? (
+        {view === "predict" ? null : view === "tokens" ? (
           <ChipRow options={TOKEN_SORTS} value={tokenSort} onChange={setTokenSort} label="Token order" />
         ) : (
           <ChipRow options={MARKET_FILTERS} value={filter} onChange={setFilter} label="Market category" />
@@ -70,7 +72,9 @@ export function MarketsScreen() {
       </View>
       {/* Each tab reads only what it shows: tokens never poll Perpl, perps never poll the token pools. */}
       <Animated.View key={view} entering={FadeIn.duration(TIMING.selection)} style={styles.fill}>
-        {view === "tokens" ? (
+        {view === "predict" ? (
+          <PredictionsList bottom={bottom} />
+        ) : view === "tokens" ? (
           <TokensView sort={tokenSort} bottom={bottom} refreshControl={refreshControl} />
         ) : view === "watchlist" ? (
           <WatchlistView filter={filter} bottom={bottom} refreshControl={refreshControl} />

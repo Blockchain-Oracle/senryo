@@ -11,4 +11,5 @@ export * from "./markets.ts";
 export * from "./networks.ts";
 export * from "./perpl.ts";
 export * from "./perpl-exchange.ts";
+export * from "./predictions.ts";
 export * from "./spot.ts";

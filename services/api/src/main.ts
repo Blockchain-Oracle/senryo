@@ -19,6 +19,7 @@ import { registerLeaderboardRoutes } from "./routes/leaderboard.ts";
 import { registerModerationRoutes } from "./routes/moderation.ts";
 import { registerNotificationRoutes } from "./routes/notifications.ts";
 import { registerPostRoutes } from "./routes/posts.ts";
+import { registerPredictionRoutes } from "./routes/predictions.ts";
 import { registerProfileRoutes } from "./routes/profile.ts";
 import { registerStarterRoutes } from "./routes/starter.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
@@ -102,6 +103,7 @@ registerLeaderboardRoutes(app, ctx);
 registerHolderRoutes(app, ctx);
 registerModerationRoutes(app, ctx);
 registerAnyAssetRoutes(app, log, anyAsset);
+registerPredictionRoutes(app, log);
 // Rows left non-terminal by a previous process (restart mid-claim) get their real stage; never re-sent (S8.16e).
 void reconcilePendingRelays(ctx).catch((err) => log.warn({ err: String(err) }, "relay reconcile failed"));
 const hub = new WsHub(ctx);

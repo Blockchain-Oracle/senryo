@@ -18,6 +18,7 @@ export * from "./routes/leaderboard.ts";
 export * from "./routes/moderation.ts";
 export * from "./routes/notifications.ts";
 export * from "./routes/posts.ts";
+export * from "./routes/predictions.ts";
 export * from "./routes/profile.ts";
 export * from "./routes/starter.ts";
 export * from "./routes/storage.ts";

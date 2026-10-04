@@ -34,6 +34,7 @@ export * from "./perpl-plan.ts";
 export * from "./pool-deposit.ts";
 export * from "./portfolio.ts";
 export * from "./practice-swap.ts";
+export * from "./predictions.ts";
 export * from "./price-store.ts";
 export * from "./recipients.ts";
 export * from "./social.ts";

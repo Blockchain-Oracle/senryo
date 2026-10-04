@@ -9,7 +9,8 @@
     "dev": "tsx src/main.ts",
     "typecheck": "tsc --noEmit -p .",
     "social-check": "tsx scripts/social-check.ts",
-    "notify-check": "tsx scripts/notify-check.ts"
+    "notify-check": "tsx scripts/notify-check.ts",
+    "predictions-check": "tsx scripts/predictions-check.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",

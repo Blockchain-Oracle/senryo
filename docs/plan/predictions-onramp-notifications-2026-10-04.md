@@ -2,7 +2,11 @@
 
 [Complete work register](reference-followthrough-2026-10-04.md) · [Prior mainnet plan](stage-08-rwa-mainnet.md)
 
-## Prediction-market conclusion
+## Prediction-market continuation
+
+The later user instruction authorizes staged implementation and delegates the venue/model sequence. [The build and fidelity ledger](../design/reviews/2026-10-04-predictions-build.md) records binary Polymarket discovery/details/history and distinct Castora contest reads. Execution, positions and settlement remain on the plan. The research-only conclusion below is historical; it is not an instruction to stop at research.
+
+## Initial prediction-market conclusion
 
 There is a concrete Monad mainnet candidate to investigate: **Castora**. Its published implementation is a numerical price-prediction pool/contest. It does not establish a liquid binary Yes/No or Up/Down exchange matching the Phantom recording. The source and a read-only chain check establish enough to pursue compatibility; they do not establish an integration ready for Senryo users.
 

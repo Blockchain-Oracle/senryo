@@ -1,4 +1,16 @@
 /** Limits shared by services/api (enforced) and the clients (pre-checked). */
+/** Public prediction payload bounds and numeric scales (no execution amounts). */
+export const PREDICTION_LIMITS = {
+  idDigits: 30,
+  titleChars: 500,
+  symbolChars: 24,
+  rulesChars: 20_000,
+  sourceChars: 2000,
+  decimals: 36,
+  markets: 100,
+  historyPoints: 2000,
+  bps: 10_000,
+} as const;
 
 /** SIWE message statement (EIP-4361) — the signer policy in packages/account allows exactly this format. */
 export const SIWE_STATEMENT = "Sign in to Senryo.";

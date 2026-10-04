@@ -101,6 +101,9 @@ export type TicketSide = "long" | "short";
 export const marketRoute = (market: string) => `/markets/${market}` as const;
 /** Review S03: a read-only instrument's page (Perpl crypto, calculated equity feeds) — no ticket. */
 export const discoverRoute = (id: string) => `/markets/discover/${encodeURIComponent(id)}` as const;
+/** Prediction detail keeps Markets beneath it; public browsing works in Practice. */
+export const predictionRoute = (provider: "polymarket" | "castora", id: string) =>
+  `/markets/predict/${provider}/${encodeURIComponent(id)}` as const;
 /** J11: a spot token's page and its buy/sell ticket (Mainnet pools; `side` opens the ticket on that side). */
 export const tokenRoute = (symbol: string) => `/markets/tokens/${symbol}` as const;
 export const tokenTradeRoute = (symbol: string, side: "buy" | "sell") =>

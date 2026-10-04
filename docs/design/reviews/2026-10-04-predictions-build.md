@@ -1,0 +1,38 @@
+# Prediction continuation — 4 October 2026
+
+The user delegated the provider/model sequence and explicitly retained every requested feature. This continuation amends the earlier evaluation-only boundary: build public prediction discovery now, then complete execution, positions and settlement when their actual prerequisites are satisfied. This does not close the full [work register](../../plan/reference-followthrough-2026-10-04.md).
+
+## Product decision
+
+Use two distinct adapters and market types. Polymarket supplies the reference-compatible binary BTC/ETH Up/Down and Yes/No price events. Castora supplies Monad numerical price contests. Public discovery is available in either Senryo money mode without authentication. The user's Practice/Mainnet setting, wallet balance and engine collateral remain independent of the external venue's settlement network.
+
+The alternatives were a Castora-only contest interface, which would lose the binary reference contract; waiting for a verified Monad binary exchange, which would delay independently buildable discovery; or the selected staged two-adapter approach. The user authorized the agent to make this sequencing decision. Sports remains outside the selected product scope.
+
+Markets gains Predict within its existing stack. Compact two-column cards open a detail page with real entity marks, event timing, outcome prices, observed/provider timestamps, source history, resolution rules and current state. Binary detail labels Polygon settlement; contests label Monad and their fixed stake, pool fee, snapshot deadline, entries, recorded winners/claims and operator/upgrade trust. Provider links are secondary. There is no pretend Buy/Sell/claim control, fabricated activity or implicit money-mode switch.
+
+## Fidelity ledger
+
+| Contract | This continuation | Remaining work |
+|---|---|---|
+| FT050 / R2 16–23 s, discovery → BTC detail | Adapted: real BTC/ETH short-window cards, filters and public route | Phone-scale/VoiceOver/Android Back acceptance; saved/search integration |
+| FT051, expiry/target/chart | Adapted: precise start/end, 5m/15m windows, real outcome-price history and sample inspection | Reference's underlying price/target graph needs the exact settlement source; outcome history is explicitly labeled |
+| FT052, detail/rules/sticky outcomes | Adapted: outcome values, resolution rules/source, resolved/disputed/pending states | Chat/moderation and a verified trading action surface remain open |
+| FT054, amount/keypad/buy | Planned, execution dependency remains open | Provider eligibility, Polygon wallet/funding/signature/order flow, exact quote/fees/expiry, durable operations and receipts |
+| C24, position/sell/claim lifecycle | Planned, retained | Actual holdings, cash-out where offered, settlement/redeem, cancellation/failure/recovery; no fake positions |
+| Castora numeric contests | Additive, clearly distinct from binary outcome shares | Full deployed implementation/rules/operator/audit/eligibility/account compatibility and live-entry validation before entry/claim |
+
+## Provider evidence
+
+Polymarket's current primary [discovery](https://docs.polymarket.com/market-data/discover-markets), [market-details](https://docs.polymarket.com/market-data/market-details), [price/history](https://docs.polymarket.com/market-data/prices-order-books) and [contract](https://docs.polymarket.com/resources/contracts) documentation supports public reading and Polygon settlement. Live Gamma keyset discovery and Data API v2 history were checked. Scope is BTC/ETH price events; tags alone do not admit politics/sports. Exact prices 0 and 1 remain prices until explicit resolved state. Outcome values are indicative share prices, not an executable quote.
+
+Castora public source remains pinned at `6e0b6dc6be9df1bffbb1d3e0270fe6153a9c8643`. At finalized Monad block `110441038` (timestamp `1791109234`), all 250 pools were read. No entry window was open. Stats reported 95 predictions, 44 winnings, 41 claimed and 3 claimable. These are provider counters, not Senryo users or independently reconciled payments. The last published pool's entry/snapshot deadlines had both passed. Proxy implementation slot returned `0x1cee4bfc463a7cc0016828bcc94e0592c850f97f`; owner returned `0x3961fe1541fc75fBbC3AdAEb018E65FE391333E0`, rules `0xfacA692BfeaFB4c6DCaF95a25E5CBCDB65d6eC41`, paused false. ABI-compatible reads and nonempty code do not prove full implementation equivalence, audit or liveness of future settlements.
+
+The original Senryo read ABI contains only public signatures and tuple shapes. No Castora implementation was copied. The provider's prediction identifiers are not token contracts; MON staking uses the core-address sentinel. Unknown identifiers are not assigned known marks/decimals. Unlisted pools stay out of discovery and detail. Expired empty pools do not appear as activity. Reads pin one finalized block; scans cap at 500 and disclose partial coverage if the venue grows beyond that.
+
+## Verification and release
+
+23 deterministic backend/parser/route checks pass, including zero/missing/malformed/out-of-range prices, false resolution, disputes, private/unknown contests, cache coalescing, input bounds, 404 scope, Data v2 history bounds/deduplication, public codec round-trip and honest 503 outages. No UI tests, user transaction, account creation or real-money prediction was performed.
+
+The first live smoke returned 22 short 15m markets, 64 short 5m markets, 100 Yes/No price-event rows, 10 recently resolved BTC markets and 41 Castora contests with entries. These counts are point-in-time observations, not product metrics or promised liquidity. History returned actual observations; a chart needs at least two distinct samples.
+
+Release verification and deployment identifiers will be recorded here once complete. Physical-phone acceptance remains unobserved.
