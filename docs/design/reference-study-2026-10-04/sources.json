@@ -1,0 +1,119 @@
+{
+  "processed_on": "2026-10-04",
+  "raw_media_policy": "Private sources and inspection caches only; no crops or personal data committed",
+  "sources": [
+    {
+      "source": "/Users/abu/Downloads/ScreenRecording_10-03-2026 21-09-48_1.MP4",
+      "sha256": "3c8f46963583f1e4840a791b3c8420ec2397756ad16b2a1019a03033c4832c2b",
+      "duration_seconds": 101.3,
+      "width": 1206,
+      "height": 2622,
+      "average_frame_rate": "364080/6079",
+      "reported_frame_rate": "60/1",
+      "frame_rate_caveat": "Rate metadata alone does not establish constant versus variable timestamps.",
+      "sampling_caveat": "Uniform fps samples have approximate source times; inspect decoded timestamps for precise motion work.",
+      "audio_streams": 1,
+      "id": "R1"
+    },
+    {
+      "source": "/Users/abu/Downloads/ScreenRecording_10-03-2026 21-07-31_1.MP4",
+      "sha256": "a6ec985987be173a04ef72f9a9ef5a165845de0e7bed052b8f0b157c300435ea",
+      "duration_seconds": 89.131667,
+      "width": 1206,
+      "height": 2622,
+      "average_frame_rate": "3205200/53489",
+      "reported_frame_rate": "60/1",
+      "frame_rate_caveat": "Rate metadata alone does not establish constant versus variable timestamps.",
+      "sampling_caveat": "Uniform fps samples have approximate source times; inspect decoded timestamps for precise motion work.",
+      "audio_streams": 1,
+      "id": "R2"
+    },
+    {
+      "id": "R3",
+      "source": "/Users/abu/Downloads/IMG_7128.PNG",
+      "sha256": "e87f902f81463c062a1d9d1e2c8b886ebcf2439c76fd6390937ab14fa2dd37e6",
+      "width": 1206,
+      "height": 2622
+    },
+    {
+      "id": "R4",
+      "source": "/Users/abu/Downloads/IMG_7127.PNG",
+      "sha256": "5775b9a268ef1ffd8cf65736741d1864631b7599f4d9360fa212e4a37603c7f4",
+      "width": 1206,
+      "height": 2622
+    },
+    {
+      "id": "R5",
+      "source": "/Users/abu/Downloads/55EAA662-BCA5-40BE-8404-5ABE7EBE3A50.JPG",
+      "sha256": "070880b78040ff212148ee9dcd1699e9c2006a3f3d7844ab0aed70e5af540bc2",
+      "width": 1638,
+      "height": 2048
+    },
+    {
+      "source": "/Users/abu/Downloads/2026-10-02 19.06.04.mp4",
+      "sha256": "30cdf10464d1b3856dbf11d335cb8f030f743a366d3b6e42ad8a3851bddd29c9",
+      "duration_seconds": 5.333333,
+      "width": 1024,
+      "height": 1280,
+      "average_frame_rate": "60/1",
+      "reported_frame_rate": "60/1",
+      "frame_rate_caveat": "Rate metadata alone does not establish constant versus variable timestamps.",
+      "sampling_caveat": "Uniform fps samples have approximate source times; inspect decoded timestamps for precise motion work.",
+      "audio_streams": 0,
+      "id": "R6"
+    },
+    {
+      "source": "/Users/abu/Downloads/2026-10-02 19.06.01.mp4",
+      "sha256": "f53b6f9b0b577c65ff9c3d12aaf93f6456ef53b11862328d7a22aea30169b261",
+      "duration_seconds": 11.016667,
+      "width": 1024,
+      "height": 1280,
+      "average_frame_rate": "60/1",
+      "reported_frame_rate": "60/1",
+      "frame_rate_caveat": "Rate metadata alone does not establish constant versus variable timestamps.",
+      "sampling_caveat": "Uniform fps samples have approximate source times; inspect decoded timestamps for precise motion work.",
+      "audio_streams": 0,
+      "id": "R7"
+    },
+    {
+      "id": "R8",
+      "source": "/Users/abu/Downloads/2026-10-02 19.05.45.jpg",
+      "sha256": "973e05b40f4f31f3f23b68b5ceec34cf395620129c2254abc58872597eb5dbb6",
+      "width": 589,
+      "height": 1280
+    },
+    {
+      "source": "/Users/abu/Downloads/2026-10-02 19.05.48.mp4",
+      "sha256": "c830b399501fa6a5a3806f0dfc2b1becf4ef36e7f9d54053360cdf220036df65",
+      "duration_seconds": 7.36,
+      "width": 960,
+      "height": 1280,
+      "average_frame_rate": "60/1",
+      "reported_frame_rate": "60/1",
+      "frame_rate_caveat": "Rate metadata alone does not establish constant versus variable timestamps.",
+      "sampling_caveat": "Uniform fps samples have approximate source times; inspect decoded timestamps for precise motion work.",
+      "audio_streams": 1,
+      "id": "R9"
+    },
+    {
+      "source": "/Users/abu/Downloads/2026-10-02 19.05.51.mp4",
+      "sha256": "53e3df94b5d65150781a70174aef64b99a5178fce89f778d0e3ca59fceaf3599",
+      "duration_seconds": 6.6,
+      "width": 1024,
+      "height": 1280,
+      "average_frame_rate": "60/1",
+      "reported_frame_rate": "60/1",
+      "frame_rate_caveat": "Rate metadata alone does not establish constant versus variable timestamps.",
+      "sampling_caveat": "Uniform fps samples have approximate source times; inspect decoded timestamps for precise motion work.",
+      "audio_streams": 0,
+      "id": "R10"
+    },
+    {
+      "id": "R11",
+      "source": "/Users/abu/Downloads/2026-10-02 19.05.38.jpg",
+      "sha256": "7a6755aa4b506b870fb91db4c7de5c0282cd937143fa36301e81cafc574ae28f",
+      "width": 899,
+      "height": 1280
+    }
+  ]
+}

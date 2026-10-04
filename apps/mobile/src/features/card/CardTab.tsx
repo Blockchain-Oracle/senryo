@@ -46,7 +46,9 @@ export function CardTab() {
   const deployed = isDeployed(network.chainId, "SenryoCore");
   const risk = useAccountRisk(deployed ? address : undefined, "latest");
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
-  const card = summary.data?.cards.find((c) => c.state !== "CLOSED");
+  // Query disabling retains cached issuer data; locked sessions must not render it.
+  const details = account.snapshot.status === "unlocked" ? summary.data : undefined;
+  const card = details?.cards.find((c) => c.state !== "CLOSED");
   const allowance = snapshot ? allowanceNow(snapshot) : undefined;
   const freeze = useCardFreeze(card, snapshot);
   const [open, setOpen] = useState<Open>();
@@ -75,10 +77,10 @@ export function CardTab() {
     <View style={styles.fill}>
       {/* Pull to refresh re-reads every query on the page: the card service and the account snapshot. */}
       <CollapsingScreen left={<TabTitle>Kinpaku</TabTitle>}>
-        {card && summary.data ? (
+        {card && details ? (
           <CardIssued
             card={card}
-            summary={summary.data}
+            summary={details}
             snapshot={snapshot}
             spendableUnavailable={!deployed || risk.status === "failed"}
             allowance={allowance}
@@ -92,12 +94,12 @@ export function CardTab() {
           <CardUnissued state={unissued()} />
         )}
       </CollapsingScreen>
-      {open === "breakdown" && snapshot ? (
+      {open === "breakdown" && details && snapshot ? (
         <TabSheet id="card-breakdown" onClose={close} closeLabel="Close Spendable">
           <SpendableBreakdown
             snapshot={snapshot}
-            openHoldsUsd6={summary.data?.openHoldsUsd6 ?? 0n}
-            debtUsd6={summary.data?.debtUsd6 ?? snapshot.cardDebt}
+            openHoldsUsd6={details?.openHoldsUsd6 ?? 0n}
+            debtUsd6={details?.debtUsd6 ?? snapshot.cardDebt}
           />
         </TabSheet>
       ) : null}
@@ -106,7 +108,7 @@ export function CardTab() {
           <SimulateSheet cardToken={card.cardToken} {...(allowance ? { allowance } : {})} />
         </TabSheet>
       ) : null}
-      {open === "wallet" ? (
+      {open === "wallet" && details ? (
         <TabSheet id="card-wallet" onClose={close} closeLabel="Close Add to Wallet">
           <WalletSheetBody />
         </TabSheet>

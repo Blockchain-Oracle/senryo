@@ -1,9 +1,4 @@
-/**
- * The Card tab with a card (§0.9 "Card tab, issued"; E2–E6): the art with •••• last4 (dimmed when frozen), the one
- * hero — Spendable — then the action circles Freeze/Unfreeze · Limit · Details · Add funds, the card-debt line with
- * Repay when there is debt, the locked Add to Wallet row, and the card's own payments (Practice: Simulate a payment
- * above them). No prose: every state is a word or a row.
- */
+/** Card art → supported controls → Available / On hold, then debt, Wallet and genuine issuer payments. */
 import type { CardSummary, CardSummaryCard } from "@senryo/api-client";
 import type { AccountSnapshot } from "@senryo/chain";
 import type { AllowanceState } from "@senryo/query";
@@ -14,6 +9,7 @@ import { Eye, Gauge, Plus, Snowflake } from "~/components/kit/symbols";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { fire } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
+import { masked, useHideBalances } from "~/lib/hide-balances";
 import { usd } from "~/lib/money";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ACTION_GLYPH, ActionCircle } from "./ActionCircle";
@@ -61,7 +57,6 @@ export function CardIssued({
           <Text style={[TYPE.meta, styles.center, { color: color.text3 }]}>Test card · no charge</Text>
         ) : null}
       </View>
-      <SpendableHero snapshot={snapshot} unavailable={spendableUnavailable} frozen={frozen} onOpen={onBreakdown} />
       <View style={styles.circles}>
         {frozen ? (
           <ActionCircle
@@ -93,6 +88,14 @@ export function CardIssued({
           <Plus size={ACTION_GLYPH} color={color.ink} />
         </ActionCircle>
       </View>
+      <SpendableHero
+        snapshot={snapshot}
+        unavailable={spendableUnavailable}
+        frozen={frozen}
+        onOpen={onBreakdown}
+        openHoldsUsd6={summary.openHoldsUsd6 ?? undefined}
+        practice={practice}
+      />
       <FreezeLine freeze={freeze} />
       {debt > 0n ? <DebtLine debtUsd6={debt} /> : null}
       <WalletRow onPress={onWallet} />
@@ -136,10 +139,11 @@ function FreezeLine({ freeze }: { freeze: ReturnType<typeof useCardFreeze> }) {
 /** Card debt (E4 step 6): the amount and Repay, on the down wash — the one coloured row on the page. */
 function DebtLine({ debtUsd6 }: { debtUsd6: bigint }) {
   const { color } = useTheme();
+  const [hidden] = useHideBalances();
   return (
     <View style={[styles.debt, { backgroundColor: color.downWash }]} accessibilityRole="alert">
       <View style={styles.debtText}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Card debt {usd(debtUsd6)}</Text>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Card debt {masked(usd(debtUsd6), hidden)}</Text>
       </View>
       <Button label="Repay" size="sm" block={false} onPress={() => router.push(ROUTES.cardRepay)} />
     </View>

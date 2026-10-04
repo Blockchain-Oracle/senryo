@@ -27,8 +27,8 @@ export function GuestHome() {
         </Text>
         <Text style={[TYPE.body, { color: color.text2 }]}>
           {practice
-            ? "Create an account with a passkey and claim practice dollars. Open and close real positions at live prices, with nothing real at risk."
-            : "Create an account with a passkey. Your balance, positions and card all run from it."}
+            ? "Claim paper money and practice at live market prices."
+            : "Your assets, trades and card in one account."}
         </Text>
         <Button
           label="Create account"

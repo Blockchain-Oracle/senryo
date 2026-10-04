@@ -73,7 +73,7 @@ export function ActionCircles({ children }: { children: ReactNode }) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-evenly", alignItems: "flex-start", gap: SPACE.sm },
-  slot: { alignItems: "center", gap: SPACE.xs, minWidth: CIRCLE + SPACE.lg, maxWidth: CIRCLE + SPACE.xxl },
+  slot: { alignItems: "center", gap: SPACE.xs, flex: 1, minWidth: 0, maxWidth: CIRCLE + SPACE.xxl },
   circle: {
     width: CIRCLE,
     height: CIRCLE,

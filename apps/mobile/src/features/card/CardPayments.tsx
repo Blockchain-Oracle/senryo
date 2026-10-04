@@ -23,6 +23,7 @@ import {
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { cardAuthRoute } from "~/lib/constants/routes";
+import { masked, useHideBalances } from "~/lib/hide-balances";
 import { signedUsd, usd } from "~/lib/money";
 import { RADIUS, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
 import { ROW_STAGGER_MS } from "./constants";
@@ -86,8 +87,9 @@ export function PaymentGlyph({ view, size = SIZE.markRow }: { view: PaymentView;
 function PaymentRow({ id, view }: { id: string; view: PaymentView }) {
   const { color } = useTheme();
   const press = usePressScale();
-  const amount = paymentAmount(view);
-  const detail = paymentDetail(view);
+  const [hidden] = useHideBalances();
+  const amount = masked(paymentAmount(view), hidden);
+  const detail = hidden ? view.status : paymentDetail(view);
   return (
     <Animated.View style={press.style}>
       <Pressable

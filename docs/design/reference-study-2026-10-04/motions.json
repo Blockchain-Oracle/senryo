@@ -1,0 +1,56 @@
+[
+  {
+    "id": "M01",
+    "source": "R1",
+    "start_seconds": 11.8,
+    "duration_seconds": 1.5,
+    "private_clip": "/tmp/senryo-reference-20261004/M01/refined-motion.mp4",
+    "private_strip": "/tmp/senryo-reference-20261004/M01/refined-strip.jpg",
+    "sampling": "10 Hz decoded uniform sampling; source times approximate"
+  },
+  {
+    "id": "M02",
+    "source": "R2",
+    "start_seconds": 2.8,
+    "duration_seconds": 2.0,
+    "private_clip": "/tmp/senryo-reference-20261004/M02/motion.mp4",
+    "private_strip": "/tmp/senryo-reference-20261004/M02/strip.jpg",
+    "sampling": "10 Hz decoded uniform sampling; source times approximate"
+  },
+  {
+    "id": "M03",
+    "source": "R6",
+    "start_seconds": 0.4,
+    "duration_seconds": 1.8,
+    "private_clip": "/tmp/senryo-reference-20261004/M03/motion.mp4",
+    "private_strip": "/tmp/senryo-reference-20261004/M03/strip.jpg",
+    "sampling": "10 Hz decoded uniform sampling; source times approximate"
+  },
+  {
+    "id": "M04",
+    "source": "R9",
+    "start_seconds": 0.0,
+    "duration_seconds": 2.2,
+    "private_clip": "/tmp/senryo-reference-20261004/M04/motion.mp4",
+    "private_strip": "/tmp/senryo-reference-20261004/M04/strip.jpg",
+    "sampling": "10 Hz decoded uniform sampling; source times approximate"
+  },
+  {
+    "id": "M05",
+    "source": "R9",
+    "start_seconds": 4.3,
+    "duration_seconds": 1.7,
+    "private_clip": "/tmp/senryo-reference-20261004/M05/refined-motion.mp4",
+    "private_strip": "/tmp/senryo-reference-20261004/M05/refined-strip.jpg",
+    "sampling": "10 Hz decoded uniform sampling; source times approximate"
+  },
+  {
+    "id": "M06",
+    "source": "R10",
+    "start_seconds": 0.3,
+    "duration_seconds": 2.2,
+    "private_clip": "/tmp/senryo-reference-20261004/M06/motion.mp4",
+    "private_strip": "/tmp/senryo-reference-20261004/M06/strip.jpg",
+    "sampling": "10 Hz decoded uniform sampling; source times approximate"
+  }
+]

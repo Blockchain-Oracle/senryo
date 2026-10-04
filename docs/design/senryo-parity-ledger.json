@@ -10822,5 +10822,13 @@
     "installed_recording_build": "unverified",
     "status": "pending",
     "note": "Historical acceptance is preserved; every retained feature requires acceptance at the rebuilt revision."
+  },
+  "reference_followthrough_2026_10_04": {
+    "contract": "docs/plan/reference-followthrough-2026-10-04.md",
+    "study": "docs/design/reference-study-2026-10-04/README.md",
+    "baseline": "eb3533deb5564cb304b38f0165c97ade4cb08016",
+    "direction": "Slush Home/Card; Fomo trading/social; Phantom action fan",
+    "prediction_evaluation": "FT050–FT054/C24 reopened for provider evaluation only; sports remains excluded",
+    "release": "TestFlight explicitly authorized; production App Store promotion not included"
   }
 }

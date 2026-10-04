@@ -3,20 +3,12 @@
   "project": {
     "name": "@senryo/mobile",
     "productType": "fintech trading app (Senryo 千両 + Kinpaku 金箔 card, Monad)",
-    "stack": [
-      "expo-57",
-      "react-native-0.86",
-      "expo-router",
-      "reanimated-4",
-      "skia",
-      "victory-native",
-      "lucide-react-native"
-    ]
+    "stack": ["expo-57", "react-native-0.86", "expo-router", "reanimated-4", "skia", "victory-native"]
   },
   "direction": {
     "name": "Living Lacquer",
-    "summary": "Fomo's rounded trading interface and dark violet surfaces + Phantom's contextual action fan + Solflare's illustrated onboarding and material artwork; Senryo's seal, gold leaf and lacquer are the identity inside that language. The reference study is the minimum baseline.",
-    "approved": "D-168 (user, 30 Sep 2026); docs/design/senryo-v2/direction.md; docs/plan/v2-plan.md §5",
+    "summary": "Slush Home/Card hierarchy with quiet balance cents and account/investment disclosure; Fomo Markets/Profile/Social; Phantom action fan; Senryo seal, gold leaf and lacquer. Existing native controls and operation flows retained.",
+    "approved": "D-253 (user, 4 Oct 2026); docs/plan/reference-followthrough-2026-10-04.md",
     "supersedes": "D2 Desk (D-004, design/DIRECTIONS.md, design/screens/d2-*) — history only"
   },
   "authority": {
@@ -30,7 +22,9 @@
       "study evidence (screens, motion)",
       "study guides",
       "Senryo product rules (00-plan §0/§1)"
-    ]
+    ],
+    "currentContract": "docs/plan/reference-followthrough-2026-10-04.md",
+    "currentStudy": "docs/design/reference-study-2026-10-04/README.md"
   },
   "sources": {
     "tokens": [
@@ -1185,5 +1179,11 @@
     "D-033 as amended by D-168: Reference evidence first; 21st.dev first among component sources that preserve that evidence. RN ports and reference-native reconstructions are recorded here, with evidence IDs, provenance and declared deviations.",
     "no hex/rgba outside apps/mobile/src/theme (invariant design-literals-mobile)",
     "no UI tests (invariant no-ui-tests)"
-  ]
+  ],
+  "referenceFollowthrough": {
+    "homeGroups": "Slush R6/R7 disclosure, adapted to owning useBalanceSheet parts; native symbols and Reanimated shared values. No vendor source copied.",
+    "amounts": "Existing number-ticker-02 port retained; optional smaller decimal role limited to Home/Card.",
+    "actions": "Existing grid-button port reused, with four cells that fit narrow screens.",
+    "card": "Slush R5 hierarchy adapted to real issuer/risk values; original Kinpaku art; no synthetic chart/yield/merchant events."
+  }
 }

@@ -1,3 +1,9 @@
+# Current continuation — 2026-10-04, Codex
+
+User selected Slush Home/Card + Fomo Markets/Profile/Social and explicitly requested an updated TestFlight build. Integrated baseline `eb3533d` (latest premium source), branch `codex/slush-home-card-testflight`; older source checkpoint `15ebab9` is preserved. Version/runtime `0.2.1`. [Complete work register](reference-followthrough-2026-10-04.md) retains every requested capability; [reference evidence](../design/reference-study-2026-10-04/README.md) distinguishes older recordings and concept videos from current behavior. [Provider/notification research](predictions-onramp-notifications-2026-10-04.md) preserves Ramp and recognizes the newer inbox/followed-trade implementation. Release/validation outcome: [record](../design/reviews/2026-10-04-testflight-validation.md).
+
+Historical source/deployment/device claims below are not new verification of this release.
+
 # STATUS — 2026-10-02, Claude Code (lead)
 
 Current work: **[Stage 14](stage-14-premium-takeover.md)** — product interrogated end to end ([flow book](../product/README.md)), then the premium rebuild and real integrations. Branch `claude/premium-takeover` (worktree `../metropolis-takeover`). **2 Oct evening:** every area (Home, money, trading+pool, card+notifications, identity/settings, social) built + merged; Perpl/any-asset/card/notifications backends merged; api/keeper deployed; iOS preview build 141ef955 + EAS Update `preview` 9b7caf82 ready for the phone; contract TP/SL epoch held on `claude/contracts` for the mainnet deploy. Waiting on the user: faucet (keeper ≈19:00 UTC), Chrome extension (dev accounts), real-money funding, stopping Codex.

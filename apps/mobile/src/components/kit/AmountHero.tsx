@@ -29,6 +29,8 @@ export interface AmountHeroProps {
   /** Type role; defaults to the display balance. */
   role?: TextStyle;
   color?: string;
+  /** Smaller cents for wallet/card balances; review amounts keep their original role. */
+  decimalRole?: TextStyle;
   /** Quiet decimals (Fomo); off for amounts where cents carry the meaning. */
   dimDecimals?: boolean;
   accessibilityLabel?: string;
@@ -40,13 +42,15 @@ export function AmountHero({
   role,
   color,
   dimDecimals = true,
+  decimalRole,
   accessibilityLabel,
 }: AmountHeroProps) {
   const theme = useTheme();
   const style = role ?? TYPE.displayBalance;
   // The text scales with Dynamic Type up to the hero cap; the rolling window must scale with it.
   const { fontScale } = useWindowDimensions();
-  const lineHeight = Number(style.lineHeight ?? style.fontSize ?? 0) * Math.min(fontScale, HERO_FONT_SCALE);
+  const scaledHeight = (role: TextStyle) =>
+    Number(role.lineHeight ?? role.fontSize ?? 0) * Math.min(fontScale, HERO_FONT_SCALE);
   const ink = color ?? theme.color.ink;
   const quiet = theme.color.text3;
   const shown = partial ? `≈ ${text}` : text;
@@ -61,11 +65,14 @@ export function AmountHero({
     >
       {chars.map((ch, i) => {
         const fromRight = chars.length - i;
-        const tint = dimDecimals && point >= 0 && i >= point ? quiet : ink;
+        const fractional = point >= 0 && i >= point;
+        const tint = dimDecimals && fractional ? quiet : ink;
+        const charStyle = fractional && decimalRole ? decimalRole : style;
+        const lineHeight = scaledHeight(charStyle);
         return DIGITS.includes(ch) ? (
-          <Digit key={`d${fromRight}`} value={Number(ch)} style={style} color={tint} lineHeight={lineHeight} />
+          <Digit key={`d${fromRight}`} value={Number(ch)} style={charStyle} color={tint} lineHeight={lineHeight} />
         ) : (
-          <Text key={`c${fromRight}`} maxFontSizeMultiplier={HERO_FONT_SCALE} style={[style, { color: tint }]}>
+          <Text key={`c${fromRight}`} maxFontSizeMultiplier={HERO_FONT_SCALE} style={[charStyle, { color: tint }]}>
             {ch}
           </Text>
         );
