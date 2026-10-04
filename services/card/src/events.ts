@@ -2,6 +2,7 @@ import { getAddress } from "@senryo/chain";
 import { bytes32Of } from "./amounts.ts";
 import { USD6_PER_CENT } from "./constants.ts";
 import type { CardContext } from "./context.ts";
+import { eventAmountCents } from "./lithic/event-amount.ts";
 import type { CardTransactionWebhook, TransactionEvent } from "./lithic/schemas.ts";
 import { enqueue } from "./outbox.ts";
 
@@ -28,7 +29,7 @@ export async function handleTransactionWebhook(ctx: CardContext, webhook: CardTr
     queued += await ctx.db.begin(async (tx) => {
       const fresh = await tx`
         INSERT INTO card_events (event_token, issuer, txn_token, type, amount_cents, payload)
-        VALUES (${event.token}, ${issuer}, ${webhook.token}, ${event.type}, ${centsOf(event)},
+        VALUES (${event.token}, ${issuer}, ${webhook.token}, ${event.type}, ${eventAmountCents(event)},
                 ${tx.json(event as never)})
         ON CONFLICT (event_token) DO NOTHING RETURNING event_token`;
       if (fresh.length === 0) return 0;
@@ -40,18 +41,13 @@ export async function handleTransactionWebhook(ctx: CardContext, webhook: CardTr
   return queued;
 }
 
-function centsOf(event: TransactionEvent): bigint {
-  const cents = event.amounts?.cardholder.amount ?? event.amount ?? 0;
-  return BigInt(Math.abs(cents));
-}
-
 async function route(
   ctx: CardContext,
   event: TransactionEvent,
   hold: { hold_id: string; account: string; amount_usd6: bigint; expected_usd6: bigint | null } | undefined,
   webhook: CardTransactionWebhook,
 ): Promise<number> {
-  const usd6 = centsOf(event) * USD6_PER_CENT;
+  const usd6 = eventAmountCents(event) * USD6_PER_CENT;
   const key = `${event.type}:${event.token}`;
   if (event.type === "RETURN") {
     if (ctx.env.CARD_RELEASE_ONLY) return 0;

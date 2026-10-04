@@ -35,3 +35,7 @@ The previous release `0.2.1 (5)` and its validation remain historical. The new 0
 The first 0.3.0 attempt, build 6 (`d6ff7a54-c3bc-4d80-81b3-99252e20d7fc`), was canceled before submission to include the SDK's UIKit main-thread repair. Its queued submission is not evidence of an Apple upload.
 
 Native 0.3.0 (7), source `8e6a56b`, has been uploaded to EAS: build `fafdcad2-81cf-4f97-9637-13e08ed3458b`; auto-submission `0013344c-03f9-432a-a834-38f91c1d3621`. Native compilation and Apple processing remain pending.
+
+## Refund correction
+
+The real sandbox RETURN arrived with legacy `amount: -480`, `amounts.cardholder.amount: 0`, and `amounts.settlement.amount: 480` (USD). The old handler selected the zero cardholder value, queued a zero refund and skipped it. CLEARING and RETURN now use the settlement amount/currency, and unsupported settlement currencies fail instead of being booked as USD. Five regression checks cover this payload, clearing, legacy credit, known zero and a foreign settlement currency. Card typecheck, scoped Biome and invariants pass. This follows Lithic's [transaction-flow ledger model](https://docs.lithic.com/docs/transaction-flow). The original skipped test refund still needs scoped recovery after deployment; creating a second issuer refund would not prove recovery.
