@@ -23,6 +23,7 @@ import { MAX_OPERATORS } from "./constants.ts";
 import type { CardContext } from "./context.ts";
 import { loadCardEnv } from "./env.ts";
 import { LithicApi } from "./lithic/api.ts";
+import { checkOperators } from "./operator-check.ts";
 import { startOutbox } from "./outbox.ts";
 import { registerAppRoutes } from "./routes/app.ts";
 import { registerLithicRoutes } from "./routes/lithic.ts";
@@ -44,6 +45,7 @@ const operators = loadSignerSet("OPERATOR", MAX_OPERATORS).map((account) =>
   createSender({ chainId: env.CHAIN_ID, account, rpc, read, heads, fees, nonces, journal: new MemoryJournal() }),
 );
 if (operators.length === 0) throw new Error("no card operator keys (OPERATOR_1_PK / OPERATOR_1_PK_FILE …)");
+await checkOperators(read, env.CHAIN_ID, operators);
 
 const ctx: CardContext = {
   env,

@@ -24,12 +24,14 @@ The user explicitly authorized provider signup and key creation using Blockchain
 
 Coolify resource `bw3mwbxy5muoflqpumyq2btk` (`senryo-card`) runs existing image `ghcr.io/blockchain-oracle/senryo-api:sha-a5630db`, Practice chain 10143, 192 MiB limit. Its `/v1/card/*` route shares `api.senryo.xyz` without stripping the prefix. Lithic ASA and card-transaction event subscriptions are enrolled and signed. Readiness checks confirm database, finalized heads and ASA secret. The image's Node health check is retained; Coolify's generated curl/wget check was incompatible with this image and disabled.
 
-Real sandbox acceptance through Senryo API: Practice SIWE login, summary, idempotent issuance with issuer last4, freeze to PAUSED, and unfreeze to ACTIVE passed. Daily spend allowance remains required. A signed simulated purchase correctly returned DECLINED / over_limit with its ASA ledger row. No real-money transaction or live card issuance occurred.
+Real sandbox acceptance through Senryo API: Practice SIWE login, summary, idempotent issuance with issuer last4, freeze to PAUSED, and unfreeze to ACTIVE passed. A signed simulated purchase correctly returned DECLINED / over_limit with its ASA ledger row. A separate Practice acceptance account claimed P$100 through the real starter relay and signed a P$20 daily allowance; that allowance finalized. The live service uses only the first authorized operator: the second configured shard lacked immediate placeHold permission and was removed without granting new privileges. Operators were funded with testnet MON. The new source also checks immediate placeHold permission before starting the service; live RPC checks accept the authorized shard and reject the unauthorized one. No real-money transaction or live card issuance occurred.
 
-The main API now has `CARD_URL=http://senryo-card:3001`; its restarted config confirms `card: true` on 10143. Native TestFlight processing still needs final verification. Production issuer approval, Wallet provisioning, an approved hold/capture/refund cycle and physical-phone acceptance remain separate gates.
+The main API now has `CARD_URL=http://senryo-card:3001`; its restarted config confirms `card: true` on 10143. Native TestFlight processing still needs final verification. Production issuer approval, Wallet provisioning, refund confirmation and physical-phone acceptance remain separate gates. The funded sandbox coffee purchase approved, reserved P$5.76 including its tip buffer, then captured P$4.80 with zero debt; refund confirmation is still being checked.
 
 ## Native distribution
 
 The previous release `0.2.1 (5)` and its validation remain historical. The new 0.3.0 build must compile, upload, pass Apple processing and enter internal beta before the new native features are reported installable.
 
 The first 0.3.0 attempt, build 6 (`d6ff7a54-c3bc-4d80-81b3-99252e20d7fc`), was canceled before submission to include the SDK's UIKit main-thread repair. Its queued submission is not evidence of an Apple upload.
+
+Native 0.3.0 (7), source `8e6a56b`, has been uploaded to EAS: build `fafdcad2-81cf-4f97-9637-13e08ed3458b`; auto-submission `0013344c-03f9-432a-a834-38f91c1d3621`. Native compilation and Apple processing remain pending.
