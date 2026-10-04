@@ -1,13 +1,17 @@
 import type { Prediction } from "@senryo/api-client";
 import { MAINNET_CHAIN_ID } from "@senryo/config";
-import { ids, perplMarketId } from "@senryo/identity";
+import { ids, routeAssetId } from "@senryo/identity";
 
 const BPS_PER_PERCENT = 100;
 const MS_PER_SECOND = 1000;
 const MINUTES_PER_DAY = 1440;
 
-export const predictionMark = (asset: string) =>
-  asset === "MON" ? ids.native(MAINNET_CHAIN_ID, "MON") : (perplMarketId(MAINNET_CHAIN_ID, asset) ?? ids.equity(asset));
+/** The underlying asset identity, rather than a Perpl instrument or a transferable Castora token. */
+export function predictionMark(asset: string) {
+  if (asset === "MON") return ids.native(MAINNET_CHAIN_ID, "MON");
+  const chain = asset === "BTC" ? "bitcoin" : asset === "ETH" ? "ethereum" : asset === "SOL" ? "solana" : undefined;
+  return chain ? (routeAssetId(asset, chain) ?? ids.equity(asset)) : ids.equity(asset);
+}
 export const percent = (bps: number | null) =>
   bps === null ? "Unavailable" : `${(bps / BPS_PER_PERCENT).toFixed(bps % BPS_PER_PERCENT === 0 ? 0 : 1)}%`;
 export const time = (sec: number) =>
