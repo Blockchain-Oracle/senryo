@@ -22,7 +22,7 @@ import { sharingOn, sharingSinceColumn } from "./shared.ts";
  * (`feed_cursors`, `<block>:<fillId>`) with a `chainId` filter. Only fills by an account that shares trades on that
  * network AND happened after it turned sharing on are written; the cursor advances past everything else. Each page
  * and its cursor commit together, and `(chain_id, source_id)` makes a replay a no-op. A newly written opening fill
- * then notifies the trader's followers who opted in (`followedTrades`, G1) — after the commit, best effort.
+ * then notifies the trader's followers who opted in (`followedTrades`, G1) in the same transaction as the feed and cursor.
  */
 
 export interface FeedPollerDeps {
@@ -146,7 +146,6 @@ export class FeedPoller {
     let cursor = decodeCursor(stored?.cursor);
     let written = 0;
     let latest = 0n;
-    const opened: OpenedEvent[] = [];
     for (let page = 0; page < FEED_PAGES_PER_TICK; page += 1) {
       const fills = await indexer.feedFills(chainId, cursor, users, floor, FEED_PAGE);
       const last = fills.at(-1);
@@ -167,6 +166,22 @@ export class FeedPoller {
                 ON CONFLICT (chain_id, source_id) DO NOTHING
                 RETURNING id, actor, market_id, occurred_at, payload->>'fillKind' AS fill_kind,
                           payload->>'side' AS side, payload->>'symbol' AS symbol`;
+        const opened: OpenedEvent[] = out.flatMap((row) =>
+          row.fill_kind === OPEN_FILL_KIND && row.side && row.symbol
+            ? [
+                {
+                  id: row.id,
+                  actor: row.actor,
+                  marketId: row.market_id,
+                  side: row.side,
+                  symbol: row.symbol,
+                  occurredAt: row.occurred_at,
+                },
+              ]
+            : [],
+        );
+        // Any recording failure rolls the page and cursor back; retry cannot lose or duplicate a notification.
+        await notifyFollowersOpened(tx, chainId, opened);
         await tx`
           INSERT INTO feed_cursors (chain_id, source, cursor) VALUES (${chainId}, ${FEED_SOURCE_FILL}, ${encodeCursor(next)})
           ON CONFLICT (chain_id, source) DO UPDATE SET cursor = EXCLUDED.cursor, updated_at = now()`;
@@ -175,25 +190,11 @@ export class FeedPoller {
       written += inserted.length;
       for (const row of inserted) {
         if (row.id > latest) latest = row.id;
-        if (row.fill_kind === OPEN_FILL_KIND && row.side && row.symbol)
-          opened.push({
-            id: row.id,
-            actor: row.actor,
-            marketId: row.market_id,
-            side: row.side,
-            symbol: row.symbol,
-            occurredAt: row.occurred_at,
-          });
       }
       cursor = next;
       if (fills.length < FEED_PAGE) break;
     }
     if (latest > 0n) this.deps.notifier.emit(chainId, latest);
-    if (opened.length > 0) {
-      await notifyFollowersOpened(db, chainId, opened).catch((error) =>
-        this.deps.log.warn({ chainId, err: String(error) }, "followed-trade notifications not recorded"),
-      );
-    }
     return written;
   }
 }

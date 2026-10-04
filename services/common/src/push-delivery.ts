@@ -1,9 +1,11 @@
 import type { PushChannel } from "@senryo/api-client";
 import { describeError } from "@senryo/chain";
+import { isChainId } from "@senryo/config";
 import { PUSH_DELIVERY } from "./constants.ts";
 import type { Db } from "./db.ts";
 import { DEVICE_NOT_REGISTERED, type ExpoMessage, type ExpoTicket, redactTokens } from "./expo.ts";
 import type { Logger } from "./logger.ts";
+import { followedTradeVisible } from "./social-visibility.ts";
 
 /**
  * Push delivery from the `push_sends` outbox (G1, D7). A recorded notification waits with `next_attempt_at`; a sender
@@ -115,6 +117,11 @@ export class PushDelivery {
     const column = PUSH_CHANNEL_COLUMNS[row.channel];
     if (!column) return "no_device";
     try {
+      if (!isChainId(row.chain_id)) return "no_device";
+      const [eligible] = await this.db`
+        SELECT 1 FROM push_sends p WHERE p.event_key = ${row.event_key}
+          AND ${followedTradeVisible(this.db, row.chain_id, "p")}`;
+      if (!eligible) return "no_device";
       const devices = await this.db<DeviceToken[]>`
         SELECT token, platform FROM push_tokens
          WHERE user_address = ${row.user_address} AND kind = 'expo' AND disabled_at IS NULL

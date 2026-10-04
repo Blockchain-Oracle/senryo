@@ -10,3 +10,4 @@ export * from "./logger.ts";
 export * from "./notifications.ts";
 export * from "./push-delivery.ts";
 export * from "./session.ts";
+export * from "./social-visibility.ts";

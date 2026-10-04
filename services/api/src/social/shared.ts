@@ -1,7 +1,7 @@
 import type { MyProfile, SocialIdentity } from "@senryo/api-client";
 import { type Address, getAddress } from "@senryo/chain";
-import { type ChainId, MAINNET_CHAIN_ID } from "@senryo/config";
-import { type Db, HTTP_STATUS, HttpError, type Session, type Tx } from "@senryo/service-common";
+
+import { HTTP_STATUS, HttpError, type Session, type Tx } from "@senryo/service-common";
 import type { FastifyRequest } from "fastify";
 import type { ApiContext } from "../context.ts";
 import { PG_DEADLOCK_DETECTED } from "./constants.ts";
@@ -19,32 +19,7 @@ export async function advisoryLock(tx: Tx, ns: string, key: string): Promise<voi
   await tx`SELECT pg_advisory_xact_lock(hashtextextended(${ns + key}, 0))`;
 }
 
-/** The per-network listing column; the ONLY place a chain id picks a visibility flag. */
-export function listedColumn(chainId: ChainId): "listed_mainnet" | "listed_practice" {
-  return chainId === MAINNET_CHAIN_ID ? "listed_mainnet" : "listed_practice";
-}
-
-export function publicTradesColumn(chainId: ChainId): "public_trades_mainnet" | "public_trades_practice" {
-  return chainId === MAINNET_CHAIN_ID ? "public_trades_mainnet" : "public_trades_practice";
-}
-
-/** When that network's trade sharing was last turned on (the feed never shows a fill from before it). */
-export function sharingSinceColumn(chainId: ChainId): "public_trades_mainnet_since" | "public_trades_practice_since" {
-  return chainId === MAINNET_CHAIN_ID ? "public_trades_mainnet_since" : "public_trades_practice_since";
-}
-
-/**
- * `<alias>.listed_<network> AND NOT <alias>.hidden` — the one test for "this profile may be shown on `chainId`".
- * A moderation-hidden profile reads exactly like an unlisted one.
- */
-export function visibleOn(db: Db | Tx, alias: string, chainId: ChainId) {
-  return db`${db(alias)}.${db(listedColumn(chainId))} AND NOT ${db(alias)}.hidden`;
-}
-
-/** Visible on `chainId` AND sharing its trades (the feed's and Top Trades' test for fills). */
-export function sharingOn(db: Db | Tx, alias: string, chainId: ChainId) {
-  return db`${visibleOn(db, alias, chainId)} AND ${db(alias)}.${db(publicTradesColumn(chainId))}`;
-}
+export { listedColumn, publicTradesColumn, sharingOn, sharingSinceColumn, visibleOn } from "@senryo/service-common";
 
 /**
  * The session when a valid bearer token came with the request; anonymous otherwise (an expired token on a public read

@@ -10,6 +10,7 @@
  */
 
 import { deliveryChecks } from "./notify-checks/delivery.ts";
+import { followedDeliveryChecks } from "./notify-checks/followed-delivery.ts";
 import { inboxChecks } from "./notify-checks/inbox.ts";
 import { Checks, cleanup, openHarness } from "./social-harness.ts";
 
@@ -20,6 +21,7 @@ try {
   for (const [name, suite] of [
     ["inbox: record → list → read", inboxChecks],
     ["delivery: retry once", deliveryChecks],
+    ["followed trades: recovery and privacy", followedDeliveryChecks],
   ] as const) {
     console.log(`\n── ${name}`);
     await suite(h, checks);

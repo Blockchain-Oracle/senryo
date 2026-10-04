@@ -9,10 +9,11 @@ import {
   personText,
   pushTitle,
   recordNotification,
+  type Tx,
 } from "@senryo/service-common";
 import type { FastifyBaseLogger } from "fastify";
 import { FOLLOWED_OPEN_FRESH_SEC, NOTIFY_EXCERPT_MAX_CHARS } from "./constants.ts";
-import { visibleOn } from "./shared.ts";
+import { sharingOn, sharingSinceColumn, visibleOn } from "./shared.ts";
 
 /**
  * Social notifications (G1, channel `social` / `followedTrades`), recorded by the api where the action happens; the
@@ -151,13 +152,14 @@ function openedMessage(chainId: ChainId, who: string, e: OpenedEvent): Notificat
  * "A trader you follow opened a position" (opt-in): one row per follower whose device keeps `followedTrades` on,
  * fanned out in one insert per event. Fills older than FOLLOWED_OPEN_FRESH_SEC (a backfill) notify nobody.
  */
-export async function notifyFollowersOpened(db: Db, chainId: ChainId, events: readonly OpenedEvent[]) {
+export async function notifyFollowersOpened(db: Db | Tx, chainId: ChainId, events: readonly OpenedEvent[]) {
   let recorded = 0;
   for (const e of events) {
     if (e.occurredAt.getTime() < Date.now() - FOLLOWED_OPEN_FRESH_SEC * MS_PER_SECOND) continue;
     const [actor] = await db<ActorRow[]>`
       SELECT p.address, p.handle, p.display_name FROM profiles p
-       WHERE p.address = ${e.actor} AND ${visibleOn(db, "p", chainId)}`;
+       WHERE p.address = ${e.actor} AND ${sharingOn(db, "p", chainId)}
+         AND p.${db(sharingSinceColumn(chainId))} <= ${e.occurredAt}`;
     if (!actor) continue;
     const m = openedMessage(chainId, personText({ ...actor, displayName: actor.display_name }), e);
     // The same columns `recordNotification` writes, as a set: the key is `<chainId>:opened:<feed id>:<follower>`.
@@ -166,7 +168,7 @@ export async function notifyFollowersOpened(db: Db, chainId: ChainId, events: re
       SELECT ${notificationKey(chainId, `opened:${e.id}:`)} || f.follower, f.follower, 'followedTrades', ${chainId},
              ${m.title}, ${m.body}, ${m.url}, ${db.json(m.subject as never)}, now()
         FROM follows f
-       WHERE f.followee = ${e.actor}
+       WHERE f.followee = ${e.actor} AND f.created_at <= ${e.occurredAt}
          AND EXISTS (SELECT 1 FROM push_tokens t WHERE t.user_address = f.follower AND t.kind = 'expo'
                         AND t.disabled_at IS NULL AND t.ch_followed_trades)
          AND NOT EXISTS (SELECT 1 FROM mutes mu WHERE mu.muter = f.follower AND mu.muted = f.followee)
