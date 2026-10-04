@@ -3,15 +3,18 @@ import { usePredictions } from "@senryo/query";
 import { FlashList } from "@shopify/flash-list";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { ChipRow } from "~/components/kit/ChipRow";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { EmptyState, ReadingView } from "~/components/kit/states";
 import { useNowSec } from "~/features/markets/useNowSec";
+import { useWatchlist } from "~/features/markets/useWatchlist";
 import { fire } from "~/feedback/fire";
 import { predictionRoute } from "~/lib/constants/routes";
 import { CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { countdown, percent, predictionMark, statusText, time } from "./format";
+import { predictionWatchKey } from "./references";
 import { useFocused } from "./useFocused";
 
 const VIEWS = [
@@ -47,6 +50,7 @@ export function PredictionsList({ bottom }: { bottom: number }) {
     focused,
   );
   const now = Number(useNowSec());
+  const refreshControl = usePullRefresh(data.retry);
   return (
     <View style={styles.fill}>
       <View style={styles.controls}>
@@ -73,7 +77,7 @@ export function PredictionsList({ bottom }: { bottom: number }) {
               keyExtractor={(m) => `${m.provider}:${m.id}`}
               renderItem={({ item }) => <PredictionCard market={item} now={now} />}
               contentContainerStyle={{ paddingHorizontal: SIZE.gutter - SPACE.xs, paddingBottom: bottom }}
-              refreshControl={<RefreshControl refreshing={false} onRefresh={data.retry} tintColor={color.text2} />}
+              refreshControl={refreshControl}
               ListHeaderComponent={
                 view === "contests" && !markets.some((m) => m.status === "open" && m.closesAt > now) ? (
                   <View style={styles.empty}>
@@ -109,11 +113,18 @@ export function PredictionsList({ bottom }: { bottom: number }) {
 
 function PredictionCard({ market: m, now }: { market: Prediction; now: number }) {
   const { color } = useTheme();
+  const watchlist = useWatchlist();
+  const key = predictionWatchKey(m);
   const status = statusText(m, now);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${m.title}, ${status}, view details`}
+      accessibilityLabel={`${m.title}, ${status}${watchlist.has(key) ? ", saved" : ""}, view details`}
+      accessibilityHint="Long-press to add or remove from your watchlist"
+      onLongPress={() => {
+        fire("tick");
+        watchlist.toggle(key);
+      }}
       onPress={() => {
         fire("tick");
         router.push(predictionRoute(m.provider, m.id));
@@ -123,6 +134,7 @@ function PredictionCard({ market: m, now }: { market: Prediction; now: number })
       <View style={styles.identity}>
         <EntityMark id={predictionMark(m.asset)} size={SIZE.icon + SPACE.sm} />
         <Text style={[TYPE.row, { color: color.ink }]}>{m.asset}</Text>
+        {watchlist.has(key) ? <Text style={[TYPE.meta, { color: color.text2 }]}>★</Text> : null}
       </View>
       <Text style={[TYPE.sectionTitle, { color: color.ink }]}>
         {m.kind === "binary" ? (m.window ? "Up or Down" : m.title) : "Price contest"}

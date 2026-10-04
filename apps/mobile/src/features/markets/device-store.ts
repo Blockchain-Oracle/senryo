@@ -5,12 +5,14 @@
  * both here only. Reads are defensive: a value this build can't parse reads as empty, never as a crash.
  */
 import { useMMKVString } from "react-native-mmkv";
+import { type PredictionReference, predictionReference } from "~/features/predictions/references";
 import type { NetworkKey } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
-/** Something the user opened from Search: a market by symbol, or a trader by address (with the name shown then). */
+/** Search targets: engine symbol, venue-qualified prediction, or a trader address and the name shown then. */
 export type RecentSearch =
   | { kind: "market"; symbol: string }
+  | ({ kind: "prediction" } & PredictionReference)
   | { kind: "trader"; address: string; handle: string | null; displayName: string | null };
 
 interface NetworkSlice {
@@ -29,6 +31,10 @@ function recentOf(value: unknown): RecentSearch | undefined {
   if (typeof value !== "object" || value === null) return undefined;
   const v = value as Record<string, unknown>;
   if (v.kind === "market" && typeof v.symbol === "string") return { kind: "market", symbol: v.symbol };
+  if (v.kind === "prediction" && typeof v.provider === "string" && typeof v.id === "string") {
+    const ref = predictionReference(`prediction:${v.provider}:${v.id}`);
+    if (ref) return { kind: "prediction", ...ref };
+  }
   if (v.kind === "trader" && typeof v.address === "string") {
     return { kind: "trader", address: v.address, handle: text(v.handle), displayName: text(v.displayName) };
   }

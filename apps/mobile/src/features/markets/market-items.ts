@@ -14,6 +14,7 @@ import {
 } from "@senryo/config";
 import type { Reading } from "@senryo/core";
 import { type DiscoveryQuote, useDiscoveryQuotes } from "@senryo/query";
+import { type PredictionReference, predictionReference } from "~/features/predictions/references";
 import { type TokenRowData, type TokenSort, useTokenRows } from "~/features/tokens/useTokenRows";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { MARKET_FILTERS, type MarketFilter } from "./universe";
@@ -29,6 +30,7 @@ export type MarketItem =
   | { kind: "discovery"; key: string; instrument: DiscoveryInstrument; reading: Reading<DiscoveryQuote> }
   | { kind: "unpriced"; key: string; instrument: UnpricedInstrument }
   | { kind: "token"; key: string; row: TokenRowData }
+  | { kind: "prediction"; key: string; reference: PredictionReference }
   | { kind: "empty"; key: string; text: string }
   | { kind: "credit"; key: string; text: string };
 
@@ -75,6 +77,8 @@ export function useWatchlistItems(filter: MarketFilter): MarketItem[] {
   if (watchlist.symbols.length === 0) return [{ kind: "empty", key: "empty", text: "Star a market" }];
   const listed = engineMarketsOn(network.chainId);
   const starred = watchlist.symbols.flatMap((symbol): MarketItem[] => {
+    const prediction = predictionReference(symbol);
+    if (prediction) return within("crypto", filter) ? [{ kind: "prediction", key: symbol, reference: prediction }] : [];
     const engine = listed.find((m) => m.symbol === symbol);
     if (engine) return within(engineCategory(engine), filter) ? [engineItem(engine)] : [];
     const quote = quotes.find((q) => q.instrument.id === symbol);
@@ -82,8 +86,11 @@ export function useWatchlistItems(filter: MarketFilter): MarketItem[] {
     const unpriced = UNPRICED_INSTRUMENTS.find((u) => u.id === symbol);
     return unpriced && within("commodities", filter) ? [unpricedItem(unpriced)] : [];
   });
+  const banner: MarketItem[] = starred.some((item) => item.kind === "engine" || item.kind === "prelaunch")
+    ? [{ kind: "banner", key: "banner" }]
+    : [];
   return starred.length > 0
-    ? [{ kind: "banner", key: "banner" }, ...starred]
+    ? [...banner, ...starred]
     : [{ kind: "empty", key: "empty", text: `Nothing starred in ${filterLabel(filter)}` }];
 }
 

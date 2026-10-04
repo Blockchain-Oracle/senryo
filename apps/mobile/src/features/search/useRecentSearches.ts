@@ -9,10 +9,11 @@ import { useNetwork } from "~/lib/network";
 /** Recents kept (a short list: this is a shortcut, not a history). */
 const RECENTS_MAX = 8;
 
-const sameTarget = (a: RecentSearch, b: RecentSearch): boolean =>
-  a.kind === "market"
-    ? b.kind === "market" && a.symbol === b.symbol
-    : b.kind === "trader" && a.address.toLowerCase() === b.address.toLowerCase();
+const sameTarget = (a: RecentSearch, b: RecentSearch): boolean => {
+  if (a.kind === "market") return b.kind === "market" && a.symbol === b.symbol;
+  if (a.kind === "prediction") return b.kind === "prediction" && a.provider === b.provider && a.id === b.id;
+  return b.kind === "trader" && a.address.toLowerCase() === b.address.toLowerCase();
+};
 
 export function useRecentSearches(): {
   recents: readonly RecentSearch[];

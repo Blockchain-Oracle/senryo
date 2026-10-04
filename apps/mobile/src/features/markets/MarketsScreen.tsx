@@ -22,6 +22,7 @@ import { TokenRow } from "~/features/tokens/TokenRow";
 import { TOKEN_SORTS, type TokenSort } from "~/features/tokens/useTokenRows";
 import { ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { PredictionReferenceRow } from "../predictions/PredictionRow";
 import { PredictionsList } from "../predictions/PredictionsList";
 import { DiscoveryRow, UnpricedRow } from "./DiscoveryRow";
 import { ProtocolBanner } from "./MarketBanners";
@@ -54,7 +55,12 @@ export function MarketsScreen() {
           <View style={styles.title}>
             <TabTitle>Markets</TabTitle>
           </View>
-          <UtilityButton label="Search markets, tokens and traders" onPress={() => router.push(ROUTES.marketSearch)}>
+          <UtilityButton
+            label="Search markets, predictions, tokens and traders"
+            onPress={() =>
+              router.push({ pathname: ROUTES.marketSearch, params: { kind: view === "predict" ? "predict" : "all" } })
+            }
+          >
             <Search size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
           </UtilityButton>
           <ModeCapsule />
@@ -146,6 +152,8 @@ function Row({ item }: { item: MarketItem }) {
           held={item.row.held}
         />
       );
+    case "prediction":
+      return <PredictionReferenceRow reference={item.reference} removable />;
     case "empty":
       return <QuietLine>{item.text}</QuietLine>;
     case "credit":

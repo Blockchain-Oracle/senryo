@@ -20,13 +20,16 @@ export function useWatchlist(): Watchlist {
     symbols,
     has: (symbol) => symbols.includes(symbol),
     toggle: (symbol) => {
-      const starred = !symbols.includes(symbol);
-      updateMarketsDevice(network, (slice) => ({
-        ...slice,
-        watchlist: starred
-          ? [symbol, ...slice.watchlist.filter((s) => s !== symbol)]
-          : slice.watchlist.filter((s) => s !== symbol),
-      }));
+      let starred = false;
+      updateMarketsDevice(network, (slice) => {
+        starred = !slice.watchlist.includes(symbol);
+        return {
+          ...slice,
+          watchlist: starred
+            ? [symbol, ...slice.watchlist.filter((s) => s !== symbol)]
+            : slice.watchlist.filter((s) => s !== symbol),
+        };
+      });
       touchWatchlist();
       return starred;
     },

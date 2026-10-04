@@ -26,6 +26,8 @@ import { EngineMarketRow } from "~/features/markets/MarketRow";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { PerplMarketRow } from "~/features/perpl/PerplMarketRow";
+import { PredictionReferenceRow } from "~/features/predictions/PredictionRow";
+import { PredictionSearchResults } from "~/features/predictions/PredictionSearchResults";
 import { TokenRow } from "~/features/tokens/TokenRow";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, useTheme } from "~/theme";
@@ -38,6 +40,7 @@ const KINDS = [
   { value: "tokens", label: "Tokens" },
   { value: "perps", label: "Perps" },
   { value: "traders", label: "Traders" },
+  { value: "predict", label: "Predict" },
 ] as const;
 export type Kind = (typeof KINDS)[number]["value"];
 
@@ -47,6 +50,7 @@ const API_KIND: Record<Kind, SearchKind | undefined> = {
   tokens: "tokens",
   perps: "markets",
   traders: "traders",
+  predict: undefined,
 };
 
 const PLACEHOLDER: Record<Kind, string> = {
@@ -54,6 +58,7 @@ const PLACEHOLDER: Record<Kind, string> = {
   tokens: "Token name or symbol",
   perps: "Market name or ticker",
   traders: "Name, @handle or address",
+  predict: "Asset, market or venue",
 };
 
 /** Typing settles for this long before a request goes out (the hook re-queries per distinct text). */
@@ -89,10 +94,11 @@ function useWeekResults(addresses: readonly string[]): (address: string) => Addr
 }
 
 /**
- * Search (`/markets/search`, `/social/search`; Fomo F31, F1): All · Tokens · Perps · Traders across the top, results
+ * Search (`/markets/search`, `/social/search`; Fomo F31, F1): All · Tokens · Perps · Traders · Predict, results
  * in the page, and the field floating low above the dock with Paste. Tokens are the J11 spot list; Perps are our
  * engine's listings on this network; Traders are profiles listed on it (handle prefix or an exact address), each with
- * their 7d result. Before a search: Recents, kept on this phone per network. Loading, no results and a failed request
+ * their 7d result. Public predictions use independent bounded venue reads. Before a search: Recents, kept on this
+ * phone per network. Loading, no results and a failed request
  * each say so; a failed request can be retried.
  */
 export function SearchScreen({ initialKind = "all" }: { initialKind?: Kind }) {
@@ -118,7 +124,14 @@ export function SearchScreen({ initialKind = "all" }: { initialKind?: Kind }) {
         automaticallyAdjustKeyboardInsets
         contentContainerStyle={[styles.body, { paddingBottom: dock + SEARCH_FIELD_HEIGHT + SPACE.xl }]}
       >
-        {searching ? <Results query={query} kind={kind} /> : <Recents kind={kind} />}
+        {searching ? (
+          <>
+            {kind !== "predict" ? <Results query={query} kind={kind} /> : null}
+            {kind === "all" || kind === "predict" ? <PredictionSearchResults query={query} /> : null}
+          </>
+        ) : (
+          <Recents kind={kind} />
+        )}
       </ScrollView>
       <SearchField value={text} onChange={setText} bottom={dock} placeholder={PLACEHOLDER[kind]} />
     </View>
@@ -161,6 +174,7 @@ function Found({ result, query, kind }: { result: SearchResult; query: string; k
       : [];
   const perplQuotes = useDiscoveryQuotes(perpl.map((i) => i.id));
   if (markets.length + perpl.length + tokens.length + traders.length === 0) {
+    if (kind === "all") return null;
     return <QuietLine>{kind === "traders" ? "No traders found" : `No results for “${query}”`}</QuietLine>;
   }
   return (
@@ -211,6 +225,7 @@ function Recents({ kind }: { kind: Kind }) {
   // Resolved before counting: a market this network no longer lists is dropped, so "Recents" never heads nothing.
   const shown = recents.flatMap((recent): Resolved[] => {
     if (recent.kind === "trader") return kind === "all" || kind === "traders" ? [{ recent }] : [];
+    if (recent.kind === "prediction") return kind === "all" || kind === "predict" ? [{ recent }] : [];
     if (kind !== "all" && kind !== "perps") return [];
     const market = listed.find((m) => m.symbol === recent.symbol);
     return market ? [{ recent, marketId: market.id }] : [];
@@ -238,6 +253,12 @@ function Recents({ kind }: { kind: Kind }) {
             key={`t:${recent.address}`}
             trader={recent}
             standing={weekOf(recent.address)}
+            onOpen={() => remember(recent)}
+          />
+        ) : recent.kind === "prediction" ? (
+          <PredictionReferenceRow
+            key={`p:${recent.provider}:${recent.id}`}
+            reference={recent}
             onOpen={() => remember(recent)}
           />
         ) : marketId === undefined ? null : (

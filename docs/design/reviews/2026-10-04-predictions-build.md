@@ -10,11 +10,13 @@ The alternatives were a Castora-only contest interface, which would lose the bin
 
 Markets gains Predict within its existing stack. Compact two-column cards open a detail page with real entity marks, event timing, outcome prices, observed/provider timestamps, source history, resolution rules and current state. Binary detail labels Polygon settlement; contests label Monad and their fixed stake, pool fee, snapshot deadline, entries, recorded winners/claims and operator/upgrade trust. Provider links are secondary. There is no pretend Buy/Sell/claim control, fabricated activity or implicit money-mode switch.
 
+Predictions also join the existing Watchlist and Search. Long-press a card/row or use the detail's star; saved keys contain venue + immutable id and use the existing per-mode encrypted watchlist sync. Guests retain their list on this phone. Saved events remain addressable after leaving live discovery. Search's All/Predict views filter the bounded BTC/ETH 5m/15m/price-event and listed Monad contest selections; unavailable sources are disclosed independently. Only a venue/id goes into device-only recent searches. Prices/titles are fetched again, never restored as current money. Detail sharing opens the actual public provider URL. Saved rows and Search do not add one polling timer per market. Pull-refresh follows request completion.
+
 ## Fidelity ledger
 
 | Contract | This continuation | Remaining work |
 |---|---|---|
-| FT050 / R2 16–23 s, discovery → BTC detail | Adapted: real BTC/ETH short-window cards, filters and public route | Phone-scale/VoiceOver/Android Back acceptance; saved/search integration |
+| FT050 / R2 16–23 s, discovery → BTC detail | Adapted: real BTC/ETH short-window cards, filters, public route, Watchlist, All/Predict Search and Recents | Phone-scale/VoiceOver/Android Back and encrypted cross-device restoration acceptance |
 | FT051, expiry/target/chart | Adapted: precise start/end, 5m/15m windows, real outcome-price history and sample inspection | Reference's underlying price/target graph needs the exact settlement source; outcome history is explicitly labeled |
 | FT052, detail/rules/sticky outcomes | Adapted: outcome values, resolution rules/source, resolved/disputed/pending states | Chat/moderation and a verified trading action surface remain open |
 | FT054, amount/keypad/buy | Planned, execution dependency remains open | Provider eligibility, Polygon wallet/funding/signature/order flow, exact quote/fees/expiry, durable operations and receipts |
@@ -35,4 +37,10 @@ The original Senryo read ABI contains only public signatures and tuple shapes. N
 
 The first live smoke returned 22 short 15m markets, 64 short 5m markets, 100 Yes/No price-event rows, 10 recently resolved BTC markets and 41 Castora contests with entries. These counts are point-in-time observations, not product metrics or promised liquidity. History returned actual observations; a chart needs at least two distinct samples.
 
-Release verification and deployment identifiers will be recorded here once complete. Physical-phone acceptance remains unobserved.
+API deployment `mcwcfsslgazxoty6kugo0pyy` finished with `ghcr.io/blockchain-oracle/senryo-api:sha-b28f3f6`, OCI revision `b28f3f64cf79ec2587b432d10cb0ae727bf63cce`, digest `sha256:a79195b4b11073dd1c49a2f0e17197aa35502fcdb40512ffbf0d407c184511e8`. The replacement container was healthy; health/readiness, public list/detail/history, resolved records and invalid-input behavior passed against production. `/v1/config` still advertises only Practice 10143. Card and keeper remain on `sha-34b2af3`. API rollback is that prior image.
+
+iOS and Android Hermes export, affected workspace typechecks, scoped Biome and invariants (0 errors / 0 warnings) passed. The production-environment native fingerprint `02a36e4747eb112b55c3513367b4649727020616` exactly matches TestFlight `0.3.0 (7)`. No native dependency/configuration changed. The first iOS OTA, source `50a73f51e3155ecd29f13e0f1ee7f99417393749`, published as group `316ed01a-a99c-41bd-8d33-db0895cec876`, update `01a10680-8e8d-7ed1-9c16-e90154096b1d`, production branch/runtime `0.3.0`. EAS view and the actual production-channel Expo manifest returned that id/runtime. The saved/search continuation will supersede this update after its final bundle passes.
+
+Physical-phone acceptance remains unobserved. No source push, real-money transaction, production issuer enablement or App Store production release was performed. The retained execution/positions/sell/claim lifecycle is not implemented by public discovery.
+
+The saved/search continuation passes mobile/query typechecks, scoped Biome (16 files), invariants (0/0), and fresh iOS + Android Hermes exports. A temporary pure-data check passed 12 assertions covering restored venue/id keys, malformed/unsupported identities, over-limit ids, multi-word matching, Unicode normalization and asset/network aliases. This is not a UI or cross-device synchronization test. No additional native modules or dependencies were introduced.

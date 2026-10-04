@@ -9,12 +9,14 @@ import { ChipRow } from "~/components/kit/ChipRow";
 import { KeyValue } from "~/components/kit/Surface";
 import { ReadingView } from "~/components/kit/states";
 import { useHideDockWhileFocused } from "~/components/shell/dock-context";
+import { MarketActions } from "~/features/markets/MarketActions";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { useNowSec } from "~/features/markets/useNowSec";
 import { compactUsd6 } from "~/features/tokens/format";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { percent, predictionMark, statusText, time } from "./format";
 import { OutcomeChart } from "./OutcomeChart";
+import { predictionWatchKey } from "./references";
 import { useFocused } from "./useFocused";
 
 const MULTIPLIER_SCALE = 100;
@@ -64,6 +66,7 @@ function Detail({ market: m }: { market: Prediction }) {
       <Text accessibilityRole="header" style={[TYPE.title, { color: color.ink }]}>
         {m.title}
       </Text>
+      <MarketActions name={m.title} watchKey={predictionWatchKey(m)} shareUrl={m.sourceUrl} />
       <KeyValue label="Status" value={statusText(m, now)} />
       {m.opensAt !== null ? <KeyValue label="Starts" value={time(m.opensAt)} /> : null}
       <KeyValue label={m.kind === "binary" ? "Ends" : "Entry deadline"} value={time(m.closesAt)} />

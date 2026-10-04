@@ -11,27 +11,27 @@ import { readingOf } from "./reading.ts";
 
 const REFRESH_MS = 20_000;
 /** Public venue reads in either money mode; queries never ask for an account or alter its chain. */
-export function usePredictions(input: PredictionListQuery, enabled = true) {
+export function usePredictions(input: PredictionListQuery, enabled = true, poll = true) {
   const { api } = useQueryEnv();
   const query = useQuery({
     queryKey: ["predictions", input.provider, input.asset, input.window, input.state],
     queryFn: ({ signal }) => api.call(predictionsRoute, { query: input }, { signal }),
     staleTime: REFRESH_MS,
-    refetchInterval: REFRESH_MS,
+    refetchInterval: poll ? REFRESH_MS : false,
     enabled,
   });
-  return { reading: readingOf(query, REFRESH_MS), retry: () => void query.refetch() };
+  return { reading: readingOf(query, REFRESH_MS), retry: () => query.refetch() };
 }
-export function usePrediction(provider: PredictionProvider, id: string, enabled = true) {
+export function usePrediction(provider: PredictionProvider, id: string, enabled = true, poll = true) {
   const { api } = useQueryEnv();
   const query = useQuery({
     queryKey: ["prediction", provider, id],
     queryFn: ({ signal }) => api.call(predictionDetailRoute, { params: { provider, id } }, { signal }),
     staleTime: REFRESH_MS,
-    refetchInterval: REFRESH_MS,
+    refetchInterval: poll ? REFRESH_MS : false,
     enabled,
   });
-  return { reading: readingOf(query, REFRESH_MS), retry: () => void query.refetch() };
+  return { reading: readingOf(query, REFRESH_MS), retry: () => query.refetch() };
 }
 export function usePredictionHistory(provider: PredictionProvider, id: string, outcome: number, enabled = true) {
   const { api } = useQueryEnv();
@@ -43,5 +43,5 @@ export function usePredictionHistory(provider: PredictionProvider, id: string, o
     staleTime: REFRESH_MS,
     refetchInterval: REFRESH_MS,
   });
-  return { reading: readingOf(query, REFRESH_MS), retry: () => void query.refetch() };
+  return { reading: readingOf(query, REFRESH_MS), retry: () => query.refetch() };
 }
