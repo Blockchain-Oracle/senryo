@@ -1,5 +1,5 @@
 import type { Address } from "@senryo/account";
-import { socialKeys, useFollowList } from "@senryo/query";
+import { type SessionRunner, socialKeys, useFollowList } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router, Stack, useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
@@ -10,9 +10,8 @@ import { Segmented } from "~/components/kit/Segmented";
 import { Skeleton } from "~/components/kit/states";
 import { PersonRow } from "~/features/profile/PersonRow";
 import { QuietState } from "~/features/profile/QuietState";
-import { useOwnProfile } from "~/features/profile/useOwnProfile";
-import { useAccount } from "~/lib/account/provider";
-import { accountRequiredRoute, type FollowDirection, ROUTES, watchRoute } from "~/lib/constants/routes";
+import { useSessionGate } from "~/features/social/useSocialAccount";
+import { accountRequiredRoute, type FollowDirection, socialSearchRoute, watchRoute } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -25,8 +24,8 @@ const LOADING_ROWS = ["first", "second", "third"] as const;
 
 /**
  * Your following / followers (J9; Fomo F30's people rows): one page, switched in place, with the people listed on the
- * selected network — bare identity rows that open the person. The API serves these lists only for a profile listed
- * on that network, so an unlisted profile says so and points at the editor; an empty list is one quiet line.
+ * selected network — bare identity rows that open the person. The authenticated owner can read their own lists
+ * without publishing their profile; other people still appear only where listed. An empty list is one quiet line.
  * Follow controls and relation state belong to Social's people rows (J8); this page reads.
  */
 export default function Follows() {
@@ -34,10 +33,7 @@ export default function Follows() {
   const direction: FollowDirection = params.direction === "followers" ? "followers" : "following";
   const { color } = useTheme();
   const network = useNetwork();
-  const account = useAccount();
-  const { address, profile } = useOwnProfile();
-  const guest = account.ready && !account.hint;
-  const unlisted = profile.kind === "ready" && profile.listedHere === false;
+  const gate = useSessionGate();
   return (
     <Screen contentStyle={styles.page}>
       <Stack.Screen options={{ title: direction === "following" ? "Following" : "Followers" }} />
@@ -50,7 +46,7 @@ export default function Follows() {
         />
         <Text style={[TYPE.meta, styles.center, { color: color.text3 }]}>People listed in {network.modeLabel}</Text>
       </View>
-      {guest ? (
+      {gate.status === "guest" ? (
         <QuietState
           line="Create an account to follow people"
           action={{
@@ -59,49 +55,45 @@ export default function Follows() {
             onPress: () => router.push(accountRequiredRoute("follow")),
           }}
         />
-      ) : unlisted ? (
+      ) : gate.status === "locked" || gate.status === "failed" ? (
         <QuietState
-          line={`Your profile isn’t listed in ${network.modeLabel}`}
-          detail="Following and followers show here once it is."
-          action={{ label: "Edit profile", onPress: () => router.push(ROUTES.accountProfile as Href) }}
+          line={gate.status === "failed" ? "Couldn’t confirm it’s you" : "Unlock to see your people"}
+          action={{ label: gate.status === "failed" ? "Try again" : "Unlock", onPress: gate.open }}
         />
+      ) : gate.status !== "ready" || !gate.address || !gate.session ? (
+        <LoadingPeople direction={direction} />
       ) : (
-        <People address={address} direction={direction} />
+        <People address={gate.address} direction={direction} session={gate.session} />
       )}
     </Screen>
   );
 }
 
-function People({ address, direction }: { address: Address | undefined; direction: FollowDirection }) {
+function People({
+  address,
+  direction,
+  session,
+}: {
+  address: Address;
+  direction: FollowDirection;
+  session: SessionRunner;
+}) {
   const network = useNetwork();
   const client = useQueryClient();
-  const list = useFollowList(address, direction);
+  const list = useFollowList(address, direction, { session });
   const mode = network.modeLabel;
   if (list.reading.status === "unknown") {
-    return (
-      <View accessibilityRole="progressbar" accessibilityLabel={`Loading ${direction}`}>
-        {LOADING_ROWS.map((row) => (
-          <View key={row} style={styles.loadingRow}>
-            <Avatar size={SIZE.markDetail} />
-            <View style={styles.loadingText}>
-              <Skeleton width="46%" />
-              <Skeleton width="28%" height={SIZE.skeletonSmall} />
-            </View>
-          </View>
-        ))}
-      </View>
-    );
+    return <LoadingPeople direction={direction} />;
   }
   if (list.reading.status === "failed") {
     return (
       <QuietState
         line="Couldn’t load this list"
-        detail={`It shows only for a profile listed in ${mode}. Check your connection, then try again.`}
+        detail="Check your connection, then try again."
         action={{
           label: "Try again",
           onPress: () => {
-            if (!address) return;
-            void client.invalidateQueries({ queryKey: socialKeys.list(network.chainId, direction, address) });
+            void client.invalidateQueries({ queryKey: socialKeys.ownList(network.chainId, direction, address) });
           },
         }}
       />
@@ -112,7 +104,7 @@ function People({ address, direction }: { address: Address | undefined; directio
     return direction === "following" ? (
       <QuietState
         line={`You aren’t following anyone in ${mode} yet`}
-        action={{ label: "Find people", onPress: () => router.navigate(ROUTES.social) }}
+        action={{ label: "Find people", onPress: () => router.navigate(socialSearchRoute("traders")) }}
       />
     ) : (
       <QuietState line={`No followers in ${mode} yet`} />
@@ -131,6 +123,22 @@ function People({ address, direction }: { address: Address | undefined; directio
       {list.hasMore ? (
         <Button label="Show more" variant="ghost" loading={list.loadingMore} onPress={list.loadMore} />
       ) : null}
+    </View>
+  );
+}
+
+function LoadingPeople({ direction }: { direction: FollowDirection }) {
+  return (
+    <View accessibilityRole="progressbar" accessibilityLabel={`Loading ${direction}`}>
+      {LOADING_ROWS.map((row) => (
+        <View key={row} style={styles.loadingRow}>
+          <Avatar size={SIZE.markDetail} />
+          <View style={styles.loadingText}>
+            <Skeleton width="46%" />
+            <Skeleton width="28%" height={SIZE.skeletonSmall} />
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
