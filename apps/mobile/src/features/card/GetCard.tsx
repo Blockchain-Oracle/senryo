@@ -99,6 +99,7 @@ function Flow({ snapshot, address }: { snapshot: Parameters<typeof allowanceNow>
   const issue = useIssueCard();
   const [pick, setPick] = useState(() => initialLimit(snapshot.allowanceDailyLimit || undefined));
   const [started, setStarted] = useState(false);
+  const [problem, setProblem] = useState<string>();
   /** Bumped when the passkey sheet is dismissed, so the slide springs back for another try. */
   const [attempt, setAttempt] = useState(0);
   const outcome = useSettledOutcome(allowance.trace.events);
@@ -173,15 +174,28 @@ function Flow({ snapshot, address }: { snapshot: Parameters<typeof allowanceNow>
         onChange={setPick}
         slideLabel="Slide to set limit"
         resetKey={`${intent}:${attempt}`}
-        busy={allowance.trace.running || unresolved}
+        busy={allowance.authorizing || allowance.trace.running || unresolved}
         disabled={!allowance.ready}
         onConfirm={() => {
           setStarted(true);
-          void allowance.setLimit(pick * ONE_USD6, guard).then((result) => {
-            if (result === undefined) setAttempt((n) => n + 1);
-          });
+          setProblem(undefined);
+          void allowance
+            .setLimit(pick * ONE_USD6, guard)
+            .then((result) => {
+              if (result === undefined) setAttempt((n) => n + 1);
+            })
+            .catch(() => {
+              setStarted(false);
+              setProblem("Couldn’t confirm the limit. Try again.");
+              setAttempt((n) => n + 1);
+            });
         }}
       />
+      {problem ? (
+        <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.center, { color: color.down }]}>
+          {problem}
+        </Text>
+      ) : null}
     </>
   );
 }

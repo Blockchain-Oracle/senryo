@@ -67,6 +67,17 @@ export async function isListedOn(db: Db, chainId: ChainId, address: string): Pro
   return row?.ok ?? false;
 }
 
+/** Counts for the owner, including when their own profile is private on this network. */
+export async function ownFollowCounts(db: Db, chainId: ChainId, address: string) {
+  const [row] = await db<{ followers: number; following: number }[]>`
+    SELECT
+      (SELECT count(*)::int FROM follows f JOIN profiles p ON p.address = f.follower
+        WHERE f.followee = ${address} AND ${visibleOn(db, "p", chainId)}) AS followers,
+      (SELECT count(*)::int FROM follows f JOIN profiles p ON p.address = f.followee
+        WHERE f.follower = ${address} AND ${visibleOn(db, "p", chainId)}) AS following`;
+  return row ?? { followers: 0, following: 0 };
+}
+
 /**
  * One page of `address`'s followers (`direction: "followers"`) or followees, newest first, keyset on `follows.id`.
  * Only accounts listed on `chainId` appear.

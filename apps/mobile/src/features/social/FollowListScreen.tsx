@@ -18,6 +18,7 @@ import { isNotFound, nameOf } from "./format";
 import { PersonRow } from "./PersonRow";
 import { PeopleSkeleton, QuietLine } from "./Quiet";
 import { useQueryError } from "./useQueryError";
+import { useSessionGate } from "./useSocialAccount";
 
 export type FollowDirection = "followers" | "following";
 
@@ -25,14 +26,33 @@ export function FollowListScreen({ address, direction }: { address: Address; dir
   const env = useQueryEnv();
   const network = useNetwork();
   const client = useQueryClient();
+  const gate = useSessionGate();
+  const own = gate.address?.toLowerCase() === address.toLowerCase();
   const profile = useProfile(address);
-  const list = useFollowList(address, direction);
-  const key = socialKeys.list(env.chainId, direction, address);
+  const list = useFollowList(
+    address,
+    direction,
+    own ? { session: gate.status === "ready" ? gate.session : undefined } : undefined,
+  );
+  const key = own
+    ? socialKeys.ownList(env.chainId, direction, address)
+    : socialKeys.list(env.chainId, direction, address);
   const error = useQueryError(key);
   const { reading } = list;
   const owner = profile.status === "fresh" || profile.status === "stale" ? nameOf(profile.value) : undefined;
   const title = direction === "followers" ? "Followers" : "Following";
   const items = reading.status === "fresh" || reading.status === "stale" ? reading.value : undefined;
+  if (own && gate.status !== "ready")
+    return (
+      <Screen>
+        <Stack.Screen options={{ title }} />
+        {gate.status === "pending" ? (
+          <PeopleSkeleton />
+        ) : (
+          <QuietLine text="Unlock to see your people" action={{ label: "Unlock", onPress: gate.open }} />
+        )}
+      </Screen>
+    );
   return (
     <Screen onRefresh={() => client.invalidateQueries({ queryKey: key })}>
       <Stack.Screen options={{ title: owner ? `${owner} · ${title}` : title }} />

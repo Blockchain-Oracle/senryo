@@ -22,7 +22,7 @@ export function exactAmount(asset: Pick<MoneyAsset, "decimals" | "symbol">, raw:
 
 /** "$1,204.50" / "P$300.00" / "No price". */
 export function valueText(asset: Pick<MoneyAsset, "valueUsd6">, chainId: number): string {
-  if (asset.valueUsd6 === null) return "No price";
+  if (asset.valueUsd6 === null) return chainId === MAINNET_CHAIN_ID ? "No price" : "Test token";
   return usd(asset.valueUsd6, undefined, chainId === MAINNET_CHAIN_ID ? "mainnet" : "testnet");
 }
 

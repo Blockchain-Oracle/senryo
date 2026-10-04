@@ -162,8 +162,12 @@ export async function leaderboardChecks(h: Harness, checks: Checks): Promise<voi
 
   const before = await codeOf(board(undefined, "24h", MAINNET_CHAIN_ID));
   checks.record("leaderboard: 503 until the network's first snapshot", before === "UPSTREAM_UNAVAILABLE", before);
-  await h.social.leaderboard.refresh(TESTNET_CHAIN_ID);
-  await h.social.leaderboard.refresh(MAINNET_CHAIN_ID);
+  await h.social.leaderboard.refreshAll();
+  checks.record(
+    "startup refresh initializes both public Social networks",
+    h.social.leaderboard.snapshot(TESTNET_CHAIN_ID) !== undefined &&
+      h.social.leaderboard.snapshot(MAINNET_CHAIN_ID) !== undefined,
+  );
 
   const day = await board(undefined, "24h");
   checks.record(

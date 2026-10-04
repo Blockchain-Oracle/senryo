@@ -9,12 +9,14 @@ import {
   followRoute,
   HANDLE_TOMBSTONE_DAYS,
   handleAvailableRoute,
+  myFollowCountsRoute,
+  myFollowListRoute,
   profileGetRoute,
   profilePutRoute,
   unfollowRoute,
 } from "@senryo/api-client";
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
-import { MS_PER_SECOND, SECONDS_PER_DAY } from "@senryo/service-common";
+import { HTTP_STATUS, MS_PER_SECOND, SECONDS_PER_DAY } from "@senryo/service-common";
 import { type Checks, codeOf, freshHandle, type Harness, randomAddress, type User } from "../social-harness.ts";
 
 const CLAIMANTS = 8;
@@ -123,6 +125,48 @@ export async function identityChecks(h: Harness, checks: Checks): Promise<void> 
   const inMain = mainFollowers.items.some((f) => f.address.toLowerCase() === priv.lower);
   const inPractice = practiceFollowers.items.some((f) => f.address.toLowerCase() === priv.lower);
   checks.record("privacy: unlisted follower hidden from mainnet list, shown on practice", !inMain && inPractice);
+  const practiceOnly = h.user();
+  await practiceOnly.api.call(profilePutRoute, {
+    body: { handle: freshHandle(), listedPractice: true, listedMainnet: false },
+  });
+  await priv.api.call(followRoute, { params: { address: practiceOnly.address } });
+  const privateMain = h.on(priv, MAINNET_CHAIN_ID);
+  const ownList = await privateMain.api.call(myFollowListRoute, {
+    params: { direction: "following" },
+    query: { chainId: MAINNET_CHAIN_ID },
+  });
+  const ownCounts = await privateMain.api.call(myFollowCountsRoute, { query: { chainId: MAINNET_CHAIN_ID } });
+  checks.record(
+    "private owner can read Mainnet friends without publishing",
+    ownList.items.some((p) => p.address === star.address) && ownCounts.following === 1 && ownCounts.followers === 0,
+  );
+  checks.record(
+    "private friends require an authenticated session",
+    (await codeOf(
+      h.anon.call(myFollowListRoute, { params: { direction: "following" }, query: { chainId: MAINNET_CHAIN_ID } }),
+    )) === "UNAUTHORIZED",
+  );
+  checks.record(
+    "private friends reject a session from another network",
+    (await codeOf(priv.api.call(myFollowCountsRoute, { query: { chainId: MAINNET_CHAIN_ID } }))) === "FORBIDDEN",
+  );
+  const ownPractice = await priv.api.call(myFollowListRoute, {
+    params: { direction: "following" },
+    query: { chainId: TESTNET_CHAIN_ID },
+  });
+  checks.record(
+    "own lists still filter others by network",
+    ownPractice.items.some((p) => p.address === practiceOnly.address) &&
+      !ownList.items.some((p) => p.address === practiceOnly.address),
+  );
+  const unauthenticated = await h.app.inject({
+    method: "GET",
+    url: `/v1/me/follows/following?chainId=${MAINNET_CHAIN_ID}`,
+  });
+  checks.record(
+    "server rejects unauthenticated private-list reads",
+    unauthenticated.statusCode === HTTP_STATUS.unauthorized,
+  );
   const starMain = await lookup(star.address, MAINNET_CHAIN_ID);
   checks.record("privacy: mainnet follower count excludes unlisted", starMain.followers === 0, starMain);
   const starSees = await star.api.call(followGetRoute, { params: { address: priv.address } });

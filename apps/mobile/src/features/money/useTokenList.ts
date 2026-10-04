@@ -1,7 +1,7 @@
 /**
  * Monad's verified token list (B6 "You receive": any verified token, searchable): the list the holdings service
  * verifies against (`TOKEN_LIST_URL`, matched by address), read once per session and shaped as zero-balance money rows
- * so the same picker shows it. Practice gets the testnet list (no swaps there; the ticket locks).
+ * so the same picker shows it. Practice supports the test-dollar pair through PracticeSwap.
  */
 import { type ChainId, TOKEN_LIST_URL } from "@senryo/config";
 import { ids } from "@senryo/identity";
@@ -39,7 +39,7 @@ function listedAsset(chainId: ChainId, t: ListedToken): MoneyAsset {
     trading: 0n,
     tradingFree: 0n,
     total: 0n,
-    valueUsd6: null,
+    valueUsd6: 0n,
     collateral: collateralOf(chainId, t.address),
     bridge: bridgeAssetOf(chainId, t.address),
   };

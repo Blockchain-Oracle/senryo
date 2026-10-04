@@ -4,6 +4,11 @@
  * for handles, names and bios — S12b.6's post filter extends it.
  */
 
+import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
+
+/** Social reads are available on both networks, independently of the deployed money engine. */
+export const SOCIAL_CHAIN_IDS = [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID] as const;
+
 /** Exact handles Senryo keeps: the product, partners and venues shown in the app, roles and app routes. */
 export const RESERVED_HANDLES: ReadonlySet<string> = new Set([
   // Senryo and the brands the app shows (v2-plan §5.12).

@@ -83,19 +83,27 @@ function LimitFlow({
   const open = useUnfreezeCard();
   const [pick, setPick] = useState(() => initialLimit(snapshot.allowanceDailyLimit || undefined));
   const [started, setStarted] = useState(false);
+  const [problem, setProblem] = useState<string>();
   /** Bumped when the passkey sheet is dismissed, so the slide springs back for another try. */
   const [attempt, setAttempt] = useState(0);
   const outcome = useSettledOutcome(allowance.trace.events);
   const intent = [network.chainId, address, pick, unfreeze ? "unfreeze" : "limit"].join(":");
   const guard = useReviewGuard(intent);
   const unresolved = outcome === "unknown";
-  const busy = allowance.trace.running || unresolved;
+  const busy = allowance.authorizing || allowance.trace.running || unresolved;
 
   const confirm = async () => {
     setStarted(true);
-    const result = await allowance.setLimit(pick * ONE_USD6, guard);
-    if (result === undefined) setAttempt((n) => n + 1);
-    if (result?.final?.stage === "finalized" && unfreeze && card) open.mutate(card.cardToken);
+    setProblem(undefined);
+    try {
+      const result = await allowance.setLimit(pick * ONE_USD6, guard);
+      if (result === undefined) setAttempt((n) => n + 1);
+      if (result?.final?.stage === "finalized" && unfreeze && card) open.mutate(card.cardToken);
+    } catch {
+      setStarted(false);
+      setProblem("Couldn’t confirm the limit. Try again.");
+      setAttempt((n) => n + 1);
+    }
   };
 
   const showTrace = started && (allowance.trace.running || allowance.trace.events.length > 0);
@@ -142,6 +150,11 @@ function LimitFlow({
         disabled={!allowance.ready || (unfreeze && !card)}
         onConfirm={() => void confirm()}
       />
+      {problem ? (
+        <Text accessibilityRole="alert" style={[TYPE.rowDetail, styles.center, { color: color.down }]}>
+          {problem}
+        </Text>
+      ) : null}
     </View>
   );
 }

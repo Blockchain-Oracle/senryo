@@ -1,7 +1,15 @@
-import { followersRoute, followGetRoute, followingRoute, followRoute, unfollowRoute } from "@senryo/api-client";
+import {
+  followersRoute,
+  followGetRoute,
+  followingRoute,
+  followRoute,
+  myFollowCountsRoute,
+  myFollowListRoute,
+  unfollowRoute,
+} from "@senryo/api-client";
 import { HTTP_STATUS, HttpError, type HttpServer, parseRoute, sendRoute } from "@senryo/service-common";
 import { FOLLOW_READ_RATE, FOLLOW_WRITE_RATE } from "../social/constants.ts";
-import { follow, followPage, followState, isListedOn, unfollow } from "../social/follows.ts";
+import { follow, followPage, followState, isListedOn, ownFollowCounts, unfollow } from "../social/follows.ts";
 import { bestEffort, notifyFollowed } from "../social/notify.ts";
 import { requireSession, type SocialContext } from "../social/shared.ts";
 
@@ -11,6 +19,24 @@ import { requireSession, type SocialContext } from "../social/shared.ts";
  * notifies the followed account ("@kai followed you", channel `social`).
  */
 export function registerFollowRoutes(app: HttpServer, ctx: SocialContext): void {
+  app.get(myFollowCountsRoute.path, { config: { rateLimit: FOLLOW_READ_RATE } }, async (request, reply) => {
+    const s = await requireSession(ctx, request);
+    const { query } = parseRoute(myFollowCountsRoute, request);
+    if (query.chainId !== s.chainId)
+      throw new HttpError(HTTP_STATUS.forbidden, "FORBIDDEN", "session is for another network");
+    return sendRoute(reply, myFollowCountsRoute, await ownFollowCounts(ctx.db, s.chainId, s.address.toLowerCase()));
+  });
+  app.get(myFollowListRoute.path, { config: { rateLimit: FOLLOW_READ_RATE } }, async (request, reply) => {
+    const s = await requireSession(ctx, request);
+    const { params, query } = parseRoute(myFollowListRoute, request);
+    if (query.chainId !== s.chainId)
+      throw new HttpError(HTTP_STATUS.forbidden, "FORBIDDEN", "session is for another network");
+    return sendRoute(
+      reply,
+      myFollowListRoute,
+      await followPage(ctx.db, s.chainId, s.address.toLowerCase(), params.direction, query.cursor, query.limit),
+    );
+  });
   app.get(followGetRoute.path, { config: { rateLimit: FOLLOW_READ_RATE } }, async (request, reply) => {
     const s = await requireSession(ctx, request);
     const { params } = parseRoute(followGetRoute, request);

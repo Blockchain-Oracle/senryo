@@ -24,6 +24,7 @@ import { registerProfileRoutes } from "./routes/profile.ts";
 import { registerStarterRoutes } from "./routes/starter.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
 import { registerTopUpRoutes } from "./routes/topup.ts";
+import { SOCIAL_CHAIN_IDS } from "./social/constants.ts";
 import { FeedPoller } from "./social/feed-poller.ts";
 import { HoldersService } from "./social/holders.ts";
 import { EnvioSocialIndexer, type SocialIndexer, UnavailableSocialIndexer } from "./social/indexer-source.ts";
@@ -49,14 +50,14 @@ const socialIndexer: SocialIndexer = env.INDEXER_GRAPHQL_URL
   ? new EnvioSocialIndexer(env.INDEXER_GRAPHQL_URL, log)
   : new UnavailableSocialIndexer();
 const notifier = new FeedNotifier();
-const leaderboard = new LeaderboardService({ db, indexer: socialIndexer, log, chainIds: env.CHAIN_IDS });
-const feedPoller = new FeedPoller({ db, indexer: socialIndexer, notifier, log, chainIds: env.CHAIN_IDS });
+const leaderboard = new LeaderboardService({ db, indexer: socialIndexer, log, chainIds: SOCIAL_CHAIN_IDS });
+const feedPoller = new FeedPoller({ db, indexer: socialIndexer, notifier, log, chainIds: SOCIAL_CHAIN_IDS });
 const social: SocialServices = {
   indexer: socialIndexer,
   leaderboard,
   holders: new HoldersService({ db, indexer: socialIndexer, marks: oracleMarks(chains) }),
   notifier,
-  chainIds: env.CHAIN_IDS,
+  chainIds: SOCIAL_CHAIN_IDS,
   adminSecret: secrets.adminSecret,
   contact: { email: env.SUPPORT_EMAIL, url: env.SUPPORT_URL ?? null },
 };

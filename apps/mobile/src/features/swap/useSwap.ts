@@ -25,7 +25,7 @@ import { useAmountInput } from "~/features/money/amount";
 import { type MoneyAsset, spendableOf } from "~/features/money/assets";
 import { amountOf } from "~/features/money/format";
 import { pullToSelfStep } from "~/features/money/requests";
-import { useMoneyAssets } from "~/features/money/useMoneyAssets";
+import { pegPriceUsd18, useMoneyAssets } from "~/features/money/useMoneyAssets";
 import { type MoneyOperation, type PlannedStep, useMoneyOperation } from "~/features/money/useMoneyOperation";
 import { useTokenList } from "~/features/money/useTokenList";
 import { useAccount } from "~/lib/account/provider";
@@ -108,7 +108,7 @@ export function useSwap(initialPay?: string, initialReceive?: string) {
   const maxFee = fees.data?.maxFeePerGas ?? 0n;
   const swapGas = GAS_LIMITS.aggregatorSwap;
   const available = spendableOf(pay, pay.native ? swapGas * maxFee : 0n);
-  const input = useAmountInput(pay.decimals, pay.priceUsd18, available);
+  const input = useAmountInput(pay.decimals, pegPriceUsd18(pay), available);
   const amount = useDebounced(input.amount, QUOTE_DEBOUNCE_MS);
   const quoting = amount !== input.amount;
   const quote = useSwapQuote(

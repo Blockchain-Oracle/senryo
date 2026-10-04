@@ -18,6 +18,7 @@ import {
   useSendTrace,
 } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { sharedRead, stepUpSender, userSender } from "~/lib/account/sender";
@@ -33,6 +34,7 @@ export function useCardAllowance(snapshot: AccountSnapshot | undefined) {
   const env = useQueryEnv();
   const account = useAccount();
   const trace = useSendTrace(`card-allowance:${env.chainId}:${account.hint?.address ?? "guest"}`);
+  const [authorizing, setAuthorizing] = useState(false);
   const gas = useEnsureGas();
   const queryClient = useQueryClient();
   const address = account.hint?.address;
@@ -54,38 +56,46 @@ export function useCardAllowance(snapshot: AccountSnapshot | undefined) {
 
   const setLimit = async (dailyUsd6: bigint, guard: () => void) => {
     if (!account.client || !address) return undefined;
-    const expiry = BigInt(Date.now()) / MS_PER_SECOND + ALLOWANCE_DAYS * SECONDS_PER_DAY;
-    const result = await requestStepUp(
-      {
-        title: `Set a ${usd(dailyUsd6, 0)} daily limit`,
-        detail: `For ${ALLOWANCE_DAYS} days, from your free balance only.`,
-        confirmLabel: "Set limit with passkey",
-      },
-      () =>
-        account.stepUp(async (signer) =>
-          trace.run(
-            stepUpSender(signer),
-            async () => {
-              if (!signer.signTypedData) throw new Error("Signer cannot sign typed data");
-              guard();
-              const nonce = await readAllowanceNonce(sharedRead(env.chainId), env.chainId, address);
-              const signature = await signer.signTypedData(
-                spendAllowanceTypedData(env.chainId, address, dailyUsd6, expiry, nonce),
-              );
-              return setSpendAllowanceRequest(env.chainId, address, dailyUsd6, expiry, signature, positions);
-            },
-            {
-              builderAction: "setSpendAllowance",
-              preflight: (request) => gas.preflight(request)(),
-              revalidate: guard,
-              reviewedIntent: { dailyUsd6: dailyUsd6.toString(), expiry: expiry.toString(), account: address },
-            },
+    // A completed earlier attempt must not appear underneath this attempt's consent sheet.
+    // reset() deliberately preserves running and unresolved signed operations.
+    trace.reset();
+    setAuthorizing(true);
+    try {
+      const expiry = BigInt(Date.now()) / MS_PER_SECOND + ALLOWANCE_DAYS * SECONDS_PER_DAY;
+      const result = await requestStepUp(
+        {
+          title: `Set a ${usd(dailyUsd6, 0)} daily limit`,
+          detail: `For ${ALLOWANCE_DAYS} days, from your free balance only.`,
+          confirmLabel: "Set limit with passkey",
+        },
+        () =>
+          account.stepUp(async (signer) =>
+            trace.run(
+              stepUpSender(signer),
+              async () => {
+                if (!signer.signTypedData) throw new Error("Signer cannot sign typed data");
+                guard();
+                const nonce = await readAllowanceNonce(sharedRead(env.chainId), env.chainId, address);
+                const signature = await signer.signTypedData(
+                  spendAllowanceTypedData(env.chainId, address, dailyUsd6, expiry, nonce),
+                );
+                return setSpendAllowanceRequest(env.chainId, address, dailyUsd6, expiry, signature, positions);
+              },
+              {
+                builderAction: "setSpendAllowance",
+                preflight: (request) => gas.preflight(request)(),
+                revalidate: guard,
+                reviewedIntent: { dailyUsd6: dailyUsd6.toString(), expiry: expiry.toString(), account: address },
+              },
+            ),
           ),
-        ),
-    );
-    if (result?.final?.stage === "finalized") await refresh();
-    return result;
+      );
+      if (result?.final?.stage === "finalized") await refresh();
+      return result;
+    } finally {
+      setAuthorizing(false);
+    }
   };
 
-  return { trace, freeze, setLimit, ready: account.client !== undefined };
+  return { trace, freeze, setLimit, authorizing, ready: account.client !== undefined };
 }

@@ -101,3 +101,24 @@ export const followingRoute = defineRoute({
 export type FollowState = z.output<typeof followStateSchema>;
 export type FollowEntry = z.output<typeof followEntrySchema>;
 export type FollowPage = z.output<typeof followPageSchema>;
+
+/** Your own lists remain readable without publishing your profile. Other people remain network-filtered. */
+export const myFollowListRoute = defineRoute({
+  method: "GET",
+  path: "/v1/me/follows/:direction",
+  auth: "session",
+  params: z.object({ direction: z.enum(["followers", "following"]) }),
+  query: followListQuerySchema,
+  body: undefined,
+  response: followPageSchema,
+});
+
+export const myFollowCountsRoute = defineRoute({
+  method: "GET",
+  path: "/v1/me/follow-counts",
+  auth: "session",
+  params: undefined,
+  query: chainQuerySchema,
+  body: undefined,
+  response: z.object({ followers: z.int().nonnegative(), following: z.int().nonnegative() }),
+});

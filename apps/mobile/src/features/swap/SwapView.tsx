@@ -157,7 +157,7 @@ export function SwapView({
           <Keypad onKey={s.input.key} />
         </View>
         {s.block === "unsupported" ? (
-          <SlideToConfirm label="Swaps run on Mainnet" disabled onConfirm={() => undefined} />
+          <SlideToConfirm label="Use AUSD or USDC in Practice" disabled onConfirm={() => undefined} />
         ) : (
           <Button
             label={s.preparing ? "Preparing" : actionLabel(s)}

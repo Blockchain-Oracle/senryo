@@ -8,7 +8,7 @@ import {
   SUPPORT_EMAIL,
 } from "@senryo/api-client";
 import { type Address, getAddress } from "@senryo/chain";
-import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
+import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
 import {
   createDb,
   createHttpServer,
@@ -26,6 +26,7 @@ import { registerModerationRoutes } from "../src/routes/moderation.ts";
 import { registerNotificationRoutes } from "../src/routes/notifications.ts";
 import { registerPostRoutes } from "../src/routes/posts.ts";
 import { registerProfileRoutes } from "../src/routes/profile.ts";
+import { SOCIAL_CHAIN_IDS } from "../src/social/constants.ts";
 import { FeedPoller } from "../src/social/feed-poller.ts";
 import { HoldersService, type Mark } from "../src/social/holders.ts";
 import { LeaderboardService } from "../src/social/leaderboard.ts";
@@ -119,7 +120,7 @@ export async function openHarness(): Promise<Harness> {
   await migrate(db, log);
   const sessions = new SessionKeys(randomBytes(SESSION_SECRET_BYTES).toString("hex"));
   const mock = new MockIndexer();
-  const chainIds = [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID] as const;
+  const chainIds = SOCIAL_CHAIN_IDS;
   const notifier = new FeedNotifier();
   const notices: Harness["notices"] = [];
   notifier.on((chainId, latestId) => notices.push({ chainId, latestId }));

@@ -6,7 +6,13 @@
  */
 import type { Address } from "@senryo/account";
 import type { Recommendation } from "@senryo/api-client";
-import { type SessionRunner, socialKeys, useFollowRecommendations, useProfile, useQueryEnv } from "@senryo/query";
+import {
+  type SessionRunner,
+  socialKeys,
+  useFollowRecommendations,
+  useMyFollowCounts,
+  useQueryEnv,
+} from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
@@ -19,11 +25,10 @@ import { type FollowDirection, followsRoute, ROUTES } from "~/lib/constants/rout
 import { signedUsd } from "~/lib/money";
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { FollowButton } from "./FollowButton";
-import { isNotFound, nameOf } from "./format";
+import { nameOf } from "./format";
 import { Leaderboard } from "./Leaderboard";
 import { PersonRow } from "./PersonRow";
 import { PeopleSkeleton, QuietLine, SectionHeading } from "./Quiet";
-import { useQueryError } from "./useQueryError";
 import { useSessionGate } from "./useSocialAccount";
 
 const VIEWS = [
@@ -64,27 +69,25 @@ function Friends() {
   if (gate.status === "pending" || !gate.address || !gate.session) return <PeopleSkeleton />;
   return (
     <View style={styles.sections}>
-      <Lists me={gate.address} />
+      <Lists me={gate.address} session={gate.session} />
       <Recommended session={gate.session} />
     </View>
   );
 }
 
-/** "Following 3" and "Followers 12" from your public profile here; unlisted here, the counts say how to change that. */
-function Lists({ me }: { me: Address }) {
+/** Your own network-filtered counts do not require publishing your profile. */
+function Lists({ me, session }: { me: Address; session: SessionRunner }) {
   const env = useQueryEnv();
-  const profile = useProfile(me);
-  const unlisted = isNotFound(useQueryError(socialKeys.profile(env.chainId, me)));
-  if (unlisted) {
+  const client = useQueryClient();
+  const counts = useMyFollowCounts(me, session);
+  if (counts.status === "failed")
     return (
-      <QuietLine
-        tight
-        text="Not public here"
-        action={{ label: "Make public", onPress: () => router.push(ROUTES.accountProfile as Href) }}
+      <ErrorState
+        diagnosis={counts.error}
+        retry={() => void client.invalidateQueries({ queryKey: socialKeys.ownCounts(env.chainId, me) })}
       />
     );
-  }
-  const known = profile.status === "fresh" || profile.status === "stale" ? profile.value : undefined;
+  const known = counts.status === "fresh" || counts.status === "stale" ? counts.value : undefined;
   return (
     <View>
       <CountRow label="Following" value={known?.following} direction="following" />

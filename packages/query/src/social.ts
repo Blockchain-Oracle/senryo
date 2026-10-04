@@ -15,6 +15,8 @@ import {
   handleAvailableRoute,
   handleSyntaxIssue,
   type MyProfile,
+  myFollowCountsRoute,
+  myFollowListRoute,
   myProfileRoute,
   normalizeHandle,
   type ProfileUpdate,
@@ -46,6 +48,9 @@ export const socialKeys = {
     ["social", chainId, "follow", me.toLowerCase(), other.toLowerCase()] as const,
   list: (chainId: ChainId, direction: "followers" | "following", address: Address) =>
     ["social", chainId, direction, address.toLowerCase()] as const,
+  ownList: (chainId: ChainId, direction: "followers" | "following", address: Address) =>
+    ["social", chainId, "own-list", direction, address.toLowerCase()] as const,
+  ownCounts: (chainId: ChainId, address: Address) => ["social", chainId, "own-counts", address.toLowerCase()] as const,
   /** S12b.4–8 */
   feed: (chainId: ChainId, scope: string, market: string | undefined) =>
     ["social", chainId, "feed", scope, market ?? "all"] as const,
@@ -155,24 +160,41 @@ export function useFollowToggle(me: Address | undefined, session: SessionRunner 
 }
 
 /** Followers or following of `address` on the active network, newest first, loaded page by page. */
-export function useFollowList(address: Address | undefined, direction: "followers" | "following") {
+export function useFollowList(
+  address: Address | undefined,
+  direction: "followers" | "following",
+  owner?: { session: SessionRunner | undefined },
+) {
   const env = useQueryEnv();
   const route = direction === "followers" ? followersRoute : followingRoute;
   const query = useInfiniteQuery({
-    queryKey: socialKeys.list(env.chainId, direction, address ?? "0x"),
+    queryKey: owner
+      ? socialKeys.ownList(env.chainId, direction, address ?? "0x")
+      : socialKeys.list(env.chainId, direction, address ?? "0x"),
     queryFn: ({ pageParam, signal }) =>
-      env.api.call(
-        route,
-        {
-          params: { address: address ?? "0x" },
-          query: { chainId: env.chainId, ...(pageParam ? { cursor: pageParam } : {}) },
-        },
-        { signal },
-      ),
+      owner
+        ? (owner.session ?? noSession)(() =>
+            env.api.call(
+              myFollowListRoute,
+              {
+                params: { direction },
+                query: { chainId: env.chainId, ...(pageParam ? { cursor: pageParam } : {}) },
+              },
+              { signal },
+            ),
+          )
+        : env.api.call(
+            route,
+            {
+              params: { address: address ?? "0x" },
+              query: { chainId: env.chainId, ...(pageParam ? { cursor: pageParam } : {}) },
+            },
+            { signal },
+          ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     select: (data): FollowEntry[] => data.pages.flatMap((page) => page.items),
-    enabled: address !== undefined,
+    enabled: address !== undefined && (!owner || owner.session !== undefined),
     staleTime: FOLLOW_STALE_MS,
   });
   return {
@@ -181,6 +203,20 @@ export function useFollowList(address: Address | undefined, direction: "follower
     loadingMore: query.isFetchingNextPage,
     loadMore: () => void query.fetchNextPage(),
   };
+}
+
+export function useMyFollowCounts(
+  address: Address | undefined,
+  session: SessionRunner | undefined,
+): Reading<{ followers: number; following: number }> {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: socialKeys.ownCounts(env.chainId, address ?? "0x"),
+    queryFn: () => (session ?? noSession)(() => env.api.call(myFollowCountsRoute, { query: { chainId: env.chainId } })),
+    enabled: address !== undefined && session !== undefined,
+    staleTime: FOLLOW_STALE_MS,
+  });
+  return fromQuery(query);
 }
 
 function noSession<T>(): Promise<T> {
