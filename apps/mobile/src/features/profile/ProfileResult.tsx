@@ -1,6 +1,6 @@
 /**
  * The own profile's period result (F2, F-D4; Fomo F16's "$0.00" with 24h · 7d · 30d · All): the realized PnL for the
- * period as the one hero (AmountHero, signed and coloured), the chips at its right, one line under it — "Rank 12 · 34
+ * period as the one hero (AmountHero, signed and coloured), the chips below it, one line under it — "Rank 12 · 34
  * trades" or "Not ranked · 34 trades" — and the account-value chart for the same period below. The figure is the
  * leaderboard's own standing for this account, so the profile and the board always agree (defect 12). It needs the
  * api session: a locked phone gets "Unlock to see your result", never Face ID on open. No trades → "No trades · 7d",
@@ -68,7 +68,9 @@ export function ProfileResult({ address }: { address: Address }) {
     <View style={styles.stack}>
       <View style={styles.top}>
         <View style={styles.hero}>{hero}</View>
-        <PeriodChips options={PERIOD_OPTIONS} value={period} onChange={setPeriod} label="Result period" />
+        <View style={styles.periods}>
+          <PeriodChips options={PERIOD_OPTIONS} value={period} onChange={setPeriod} label="Result period" />
+        </View>
       </View>
       {line ? <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{line}</Text> : null}
       <Curve address={address} period={period} tone={pnl !== null && pnl < 0n ? "down" : "up"} />
@@ -89,7 +91,8 @@ function Curve({ address, period, tone }: { address: Address; period: Leaderboar
 
 const styles = StyleSheet.create({
   stack: { gap: SPACE.sm },
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.md },
+  top: { gap: SPACE.sm },
   hero: { flexShrink: 1 },
+  periods: { alignSelf: "flex-end" },
   empty: { height: SPACE.xl },
 });

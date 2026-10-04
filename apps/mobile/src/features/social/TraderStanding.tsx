@@ -1,6 +1,6 @@
 /**
  * A profile's period hero (Fomo F16, F2 step 4, F-D4): the big signed realized P&L for the chosen period with the
- * 24h · 7d · 30d · All chips beside it (7d first), then one line — "Rank 12 · 34 trades", "Not ranked · 34 trades",
+ * 24h · 7d · 30d · All chips below it (7d first), then one line — "Rank 12 · 34 trades", "Not ranked · 34 trades",
  * or "No trades · 7d", never a fake $0. The numbers come from the same snapshot as the leaderboard (the per-address
  * standings route), so a profile below the floor or outside the top rows still shows its result, and a profile and
  * its board row always agree.
@@ -48,7 +48,9 @@ export function TraderStanding({ address }: { address: Address }) {
             <Text style={[TYPE.sheetTitle, { color: color.text3 }]}>—</Text>
           ) : null}
         </View>
-        <PeriodChips options={PERIOD_OPTIONS} value={period} onChange={setPeriod} label="Result period" />
+        <View style={styles.periods}>
+          <PeriodChips options={PERIOD_OPTIONS} value={period} onChange={setPeriod} label="Result period" />
+        </View>
       </View>
       {reading.status === "unknown" ? <Skeleton width={LINE_SKELETON_WIDTH} /> : null}
       {reading.status === "failed" ? (
@@ -69,6 +71,7 @@ export function TraderStanding({ address }: { address: Address }) {
 
 const styles = StyleSheet.create({
   block: { gap: SPACE.xs },
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.md },
+  top: { gap: SPACE.sm },
   figure: { flexShrink: 1 },
+  periods: { alignSelf: "flex-end" },
 });
