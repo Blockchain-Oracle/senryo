@@ -26,4 +26,11 @@ export const CHART = {
   lastPadX: 4,
   lastPadY: 2,
   lastRadius: 3,
+  /**
+   * A price-axis figure whose centre is closer than this (pt) to the current-price label's centre is left out: the
+   * label (10 pt figure + padding) would otherwise sit on top of it with its edge showing.
+   */
+  lastClear: 16,
+  /** Height (pt) the time axis takes under the plot, for turning `lastClear` into a price distance. */
+  xAxisBand: 24,
 } as const;

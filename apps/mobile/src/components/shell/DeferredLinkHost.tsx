@@ -8,30 +8,41 @@ import { linkTarget } from "~/lib/deep-link";
 import { incomingNeedsAccount, PENDING_LINK } from "~/lib/incoming-link";
 import { activeNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
+
+/** Screens a deferred link never opens over: welcome, first-run setup and the account sheet it may have raised. */
+const WAIT_SEGMENTS = new Set(["welcome", "setup", "account-required"]);
+
+/**
+ * Deferred links: a link that arrived before welcome or account setup finished (`incomingLink`) waits in storage and
+ * opens once both are done. A link that needs an account asks once: it leaves storage and waits in memory for this
+ * session, so an account made or signed in from that sheet still continues to it, while a guest who keeps browsing is
+ * not asked again on every launch. It opens only once the account sheet has gone, never pushed under a closing sheet.
+ */
 export function DeferredLinkHost() {
   const account = useAccount();
   const segments = useSegments();
-  const prompted = useRef<string | undefined>(undefined);
+  const asked = useRef<string | undefined>(undefined);
   const [pending, setPending] = useMMKVString(PENDING_LINK, storage);
+  const address = account.hint?.address;
   useEffect(() => {
+    const link = pending ?? (address ? asked.current : undefined);
     if (
-      !pending ||
+      !link ||
       !account.ready ||
       !storage.getBoolean(STORAGE_KEYS.welcomed) ||
-      segments.some((segment: string) => segment === "welcome" || segment === "setup") ||
-      pendingSetupStep(account.hint?.address)
+      segments.some((segment: string) => WAIT_SEGMENTS.has(segment)) ||
+      pendingSetupStep(address)
     )
       return;
-    if (incomingNeedsAccount(pending) && !account.hint) {
-      if (prompted.current !== pending) {
-        prompted.current = pending;
-        router.push(ROUTES.accountRequired);
-      }
+    if (incomingNeedsAccount(link) && !address) {
+      asked.current = link;
+      setPending(undefined);
+      router.push(ROUTES.accountRequired);
       return;
     }
-    const target = linkTarget(pending, activeNetwork().chainId);
+    asked.current = undefined;
     setPending(undefined);
-    router.push(target as Href);
-  }, [pending, setPending, segments, account.ready, account.hint?.address]);
+    router.push(linkTarget(link, activeNetwork().chainId) as Href);
+  }, [pending, setPending, segments, account.ready, address]);
   return null;
 }

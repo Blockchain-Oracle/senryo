@@ -7,7 +7,7 @@ const WEB = /^https?:\/\/[^/]+/i;
 /** The in-app path of a system URL: `https://senryo.xyz/a/b` → `/a/b`, `senryo://a/b` → `/a/b`, `/a/b` as is. */
 export function inAppPath(base: string): string {
   if (WEB.test(base)) return base.replace(WEB, "") || "/";
-  if (SCHEME.test(base)) return `/${base.replace(SCHEME, "")}`;
+  if (SCHEME.test(base)) return `/${base.replace(SCHEME, "").replace(/^\/+/, "")}`;
   return base.startsWith("/") ? base : `/${base}`;
 }
 
@@ -42,17 +42,24 @@ function watchPath(local: string, query: string | undefined): string | undefined
   return `${post ? traderPostRoute(address, post) : watchRoute(address)}${rest ? `?${rest}` : ""}`;
 }
 
-/** The current in-app path for an old one (any URL form, query kept); anything else is returned unchanged. */
+/**
+ * The current in-app path of any URL form (query kept): old paths are remapped, anything else becomes its in-app
+ * path. A deferred link is pushed inside the app, never as the system URL itself.
+ */
 export function currentPath(path: string): string {
   const [base = "/", query] = path.split("?", 2);
   const local = inAppPath(base);
   const watch = watchPath(local, query);
   if (watch) return watch;
+  const suffix = query ? `?${query}` : "";
   for (const [pattern, to] of LEGACY_PATHS) {
     const match = local.match(pattern);
-    if (match) return `${to(match)}${query ? `?${query}` : ""}`;
+    if (match) {
+      const target = to(match);
+      return query ? `${target}${target.includes("?") ? "&" : "?"}${query}` : target;
+    }
   }
-  return path;
+  return `${local}${suffix}`;
 }
 
 /**

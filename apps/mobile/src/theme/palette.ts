@@ -21,9 +21,14 @@ const WASH = { soft: 0.12, strong: 0.24, chartFill: 0.16, chartFillEnd: 0 } as c
 /** Edge light (fractions): the top highlight on a filled primary, the faint edge of a raised fill, the dock bubble. */
 const RIM = { primary: 0.2, surface: 0.06, bubble: 0.12, bubbleEdge: 0.16 } as const;
 
-function roles(t: TokenPalette) {
+/**
+ * `nestedFill` is a quiet plate on a group that already sits on a sheet (level 2): the group is `raised2`, so the plate
+ * takes the next step away from it — white in light, `rowPressed` in dark — and still reads without a border.
+ */
+function roles(t: TokenPalette, nestedFill: string) {
   return {
     ...t,
+    nestedFill,
     /** Page ground, panels and hairlines under their app names. */
     ground: t.background,
     ink: t.foreground,
@@ -67,5 +72,5 @@ function roles(t: TokenPalette) {
 }
 
 export type Palette = ReturnType<typeof roles>;
-export const DARK: Palette = roles(DARK_TOKENS);
-export const LIGHT: Palette = roles(LIGHT_TOKENS);
+export const DARK: Palette = roles(DARK_TOKENS, DARK_TOKENS.rowPressed);
+export const LIGHT: Palette = roles(LIGHT_TOKENS, LIGHT_TOKENS.card);

@@ -105,6 +105,8 @@ export function CandleChart({
     }
     return { y: [lo, hi] as [number, number] };
   }, [data, lastAt, refAt]);
+  // The price distance the current-price label covers on the axis; figures inside it are left out (F32 shows one).
+  const covered = domain ? ((domain.y[1] - domain.y[0]) * CHART.lastClear) / Math.max(1, height - CHART.xAxisBand) : 0;
   // Colour by previous close compares each close with the preceding candle's (the first falls back to open/close).
   const options: CandlestickOptionsFn | undefined = style
     ? (c) => {
@@ -166,7 +168,9 @@ export function CandleChart({
             labelColor: color.inkMuted,
             lineColor: color.hairline,
             formatYLabel: (v) =>
-              `${axisPrefix}${v.toLocaleString("en-US", { minimumFractionDigits: axisDecimals, maximumFractionDigits: axisDecimals })}`,
+              lastAt !== undefined && Math.abs(v - lastAt) < covered
+                ? ""
+                : `${axisPrefix}${v.toLocaleString("en-US", { minimumFractionDigits: axisDecimals, maximumFractionDigits: axisDecimals })}`,
           },
         ]}
         frame={{ lineColor: color.transparent }}

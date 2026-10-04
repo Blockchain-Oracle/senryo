@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBackOverSheet } from "~/components/shell/useBackOverSheet";
 import { SwapView } from "~/features/swap/SwapView";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
@@ -10,6 +11,7 @@ import { SIZE, SPACE, useTheme } from "~/theme";
  */
 export default function SwapScreen() {
   const { color } = useTheme();
+  useBackOverSheet();
   const insets = useSafeAreaInsets();
   const { pay, receive } = useLocalSearchParams<{ pay?: string; receive?: string }>();
   return (

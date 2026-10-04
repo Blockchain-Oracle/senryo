@@ -48,7 +48,10 @@ interface Tone {
   lift?: boolean;
 }
 
-/** Quiet fills step up with their ground: on a sheet (level 1) they are one step lighter than on a page. */
+/**
+ * Quiet fills step up with their ground: on a sheet (level 1) they are one step lighter than on a page, and on a group
+ * inside a sheet (level 2, whose fill is `raised2`) they take `nestedFill` — `raised2` there is the group's own colour.
+ */
 function tones(variant: ButtonVariant, c: Palette, level: number): Tone {
   switch (variant) {
     case "primary":
@@ -58,6 +61,7 @@ function tones(variant: ButtonVariant, c: Palette, level: number): Tone {
         ? { bg: c.rowPressed, pressed: c.raised2, ink: c.foreground, rim: c.surfaceRim }
         : { bg: c.raised2, pressed: c.rowPressed, ink: c.foreground, rim: c.surfaceRim };
     case "outline":
+      if (level > 1) return { bg: c.nestedFill, pressed: c.raised2, ink: c.foreground, rim: c.surfaceRim };
       return level > 0
         ? { bg: c.raised2, pressed: c.rowPressed, ink: c.foreground, rim: c.surfaceRim }
         : { bg: c.card, pressed: c.raised2, ink: c.foreground, rim: c.surfaceRim };
@@ -70,7 +74,7 @@ function tones(variant: ButtonVariant, c: Palette, level: number): Tone {
 
 /** A disabled filled button is the quiet plate (F08's Continue), whatever it becomes when enabled. */
 function quiet(c: Palette, level: number): Tone {
-  const bg = level > 0 ? c.raised2 : c.card;
+  const bg = level > 1 ? c.nestedFill : level > 0 ? c.raised2 : c.card;
   return { bg, pressed: bg, ink: c.text3, rim: c.surfaceRim };
 }
 
