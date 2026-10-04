@@ -1,9 +1,9 @@
 /**
  * Notifications (G1; §0.9 "Notifications"): the bell's page. A pushed page with its own bar — back, "Notifications",
- * the channels gear (and + on Alerts) — then underline tabs All · Alerts. All is the inbox from the push ledger,
+ * the channels gear — then underline tabs All · Alerts. All is the inbox from the push ledger,
  * grouped Today / Earlier; opening it marks everything up to the newest row read (the bell clears), while rows that
  * were unread keep their raised fill for this visit. Alerts is the price-alert list (C9): tap to edit (Save replaces),
- * × to delete, + for a new one. Guests, a locked session, loading, empty and failure each say one true thing.
+ * × to delete, Create alert for a new one. Guests, a locked session, loading, empty and failure each say one true thing.
  */
 import type { AppNotification } from "@senryo/api-client";
 import { router, Stack } from "expo-router";
@@ -12,7 +12,7 @@ import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { ReadingView } from "~/components/kit/states";
-import { Plus, Settings } from "~/components/kit/symbols";
+import { Settings } from "~/components/kit/symbols";
 import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { AlertSheet, type AlertSheetState, AlertsList } from "~/features/markets/AlertsScreen";
@@ -34,20 +34,16 @@ const TABS = [
 
 export function NotificationsScreen({ initialTab = "all" }: { initialTab?: InboxTab }) {
   const { color } = useTheme();
+  const account = useAccount();
+  const network = useNetwork();
   const [tab, setTab] = useState<InboxTab>(initialTab);
   const [sheet, setSheet] = useState<AlertSheetState>();
-  const hasAccount = useAccount().hint !== undefined;
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <PageHeader
         right={
           <View style={styles.utilities}>
-            {tab === "alerts" && hasAccount ? (
-              <UtilityButton label="New alert" onPress={() => setSheet("pick")}>
-                <Plus size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
-              </UtilityButton>
-            ) : null}
             <UtilityButton label="Notification settings" onPress={() => router.push(ROUTES.accountNotifications)}>
               <Settings size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
             </UtilityButton>
@@ -61,7 +57,7 @@ export function NotificationsScreen({ initialTab = "all" }: { initialTab?: Inbox
       </View>
       <Screen>
         {tab === "all" ? (
-          <Inbox />
+          <Inbox key={`${network.chainId}:${account.hint?.address ?? "guest"}`} />
         ) : (
           <AlertsList onNew={() => setSheet("pick")} onEdit={(a) => setSheet({ marketId: a.marketId, editing: a })} />
         )}
@@ -82,12 +78,12 @@ function Inbox() {
   const newest = items[0]?.createdAt;
   const mark = inbox.markRead.mutate;
   useEffect(() => {
-    if (marked.current || newest === undefined) return;
+    if (inbox.access !== "ready" || marked.current || newest === undefined) return;
     marked.current = true;
     setSeen(new Set(items.filter((n) => n.readAt === null).map((n) => n.id)));
     // Opening the inbox clears the bell: everything up to the newest row on screen is read.
     if (items.some((n) => n.readAt === null)) mark({ before: newest });
-  }, [newest, items, mark]);
+  }, [newest, items, mark, inbox.access]);
 
   if (inbox.access === "loading") return null;
   if (inbox.access === "guest") {

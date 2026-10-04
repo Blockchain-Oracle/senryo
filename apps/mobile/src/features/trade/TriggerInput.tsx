@@ -55,5 +55,5 @@ const styles = StyleSheet.create({
     borderWidth: HAIRLINE_PX,
     gap: SPACE.xxs,
   },
-  text: { flex: 1, paddingVertical: SPACE.xs },
+  text: { flex: 1, paddingVertical: 0, minHeight: SIZE.touch, includeFontPadding: false, textAlignVertical: "center" },
 });

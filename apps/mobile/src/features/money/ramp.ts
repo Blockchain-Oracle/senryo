@@ -1,22 +1,14 @@
-/**
- * Card or bank through Ramp (B5/B10, routes.md §6, plan D5). Buy: Ramp's hosted page in the in-app browser with the
- * wallet as `userAddress`, the app as `finalUrl`, `enabledFlows=ONRAMP` and the Monad assets Ramp lists (`MONAD_MON`,
- * `MONAD_USDC`, `MONAD_AUSD`, `MONAD_USDT0`; `outAsset` preselects one — `defaultAsset`/`swapAsset` are deprecated).
- * No key is needed to buy. A return through `finalUrl` is the only signal (keyless status is UNDEFINED-5), so arrival
- * is detected from the holdings. Sell needs a support-issued `hostApiKey` with off-ramp; until one is configured the
- * Bank tab says so and offers no dead button.
- */
+/** Ramp's official native SDK. Purchase creation is not proof of payment or arrival. */
+import type RampSdk from "@ramp-network/react-native-sdk";
+import type { RampPurchase } from "@ramp-network/react-native-sdk";
 import { MAINNET_CHAIN_ID, MAINNET_TOKENS, NATIVE_TOKEN, WEB_ORIGIN } from "@senryo/config";
+import { NativeModules } from "react-native";
 import { APP } from "~/lib/constants/app";
+import { activeNetwork } from "~/lib/network";
 import { notify } from "~/lib/notify";
 import { recordArrival } from "./arrivals";
 import type { MoneyAsset } from "./assets";
-import { webBrowserModule } from "./native";
 
-const RAMP_HOSTED = "https://app.rampnetwork.com/";
-const RAMP_RETURN = `${APP.scheme}://ramp-return`;
-
-/** Ramp's Monad asset ids by token address (mainnet only). */
 const RAMP_BY_ADDRESS: Readonly<Record<string, string>> = {
   [NATIVE_TOKEN.toLowerCase()]: "MONAD_MON",
   [MAINNET_TOKENS.usdc.toLowerCase()]: "MONAD_USDC",
@@ -24,58 +16,116 @@ const RAMP_BY_ADDRESS: Readonly<Record<string, string>> = {
   [MAINNET_TOKENS.usdt0.toLowerCase()]: "MONAD_USDT0",
 };
 export const RAMP_ASSETS = Object.values(RAMP_BY_ADDRESS);
-
-/** Off-ramp needs a Ramp `hostApiKey` with sell enabled (issued by Ramp support, not self-serve). */
 export const RAMP_SELL_READY = false;
+const PAID_STATES = new Set(["PAYMENT_EXECUTED", "FIAT_RECEIVED", "RELEASING", "RELEASED"]);
+let sdk: RampSdk | undefined;
+let opening = false;
 
 export function rampAssetOf(chainId: number, address: string): string | undefined {
   return chainId === MAINNET_CHAIN_ID ? RAMP_BY_ADDRESS[address.toLowerCase()] : undefined;
 }
 
-export function rampBuyUrl(userAddress: string, outAsset?: string): string {
-  const params = new URLSearchParams({
-    hostAppName: "Senryo",
-    hostLogoUrl: `${WEB_ORIGIN}/apple-touch-icon.png`,
-    userAddress,
-    finalUrl: RAMP_RETURN,
-    enabledFlows: "ONRAMP",
-    defaultFlow: "ONRAMP",
-    enabledCryptoAssets: RAMP_ASSETS.join(","),
-    ...(outAsset ? { outAsset } : {}),
-  });
-  return `${RAMP_HOSTED}?${params.toString()}`;
-}
+export type RampResult =
+  | { kind: "created"; purchase: Pick<RampPurchase, "id" | "status" | "asset" | "cryptoAmount" | "receiverAddress"> }
+  | { kind: "closed" | "unavailable" | "failed" };
 
-export type RampResult = "returned" | "closed" | "unavailable";
-
-/** Opens Ramp's hosted buy page; resolves `returned` only when Ramp sent the user back through `finalUrl`. */
+/** Singleton: the SDK attaches native listeners at construction and has no native-listener disposal API. */
 export async function openRampBuy(userAddress: string, outAsset?: string): Promise<RampResult> {
-  const browser = webBrowserModule();
-  if (!browser) return "unavailable";
-  const result = await browser.openAuthSessionAsync(rampBuyUrl(userAddress, outAsset), RAMP_RETURN);
-  return result.type === "success" ? "returned" : "closed";
+  if (!NativeModules.RampSdk) return { kind: "unavailable" };
+  if (opening || activeNetwork().chainId !== MAINNET_CHAIN_ID || !outAsset || !RAMP_ASSETS.includes(outAsset))
+    return { kind: "closed" };
+  sdk ??= new (require("@ramp-network/react-native-sdk").default)();
+  const ramp = sdk;
+  if (!ramp) return { kind: "unavailable" };
+  opening = true;
+  return new Promise((resolve) => {
+    let purchase: RampPurchase | undefined;
+    const finish = (result: RampResult) => {
+      ramp.unsubscribe("*", listener);
+      opening = false;
+      resolve(result);
+    };
+    const listener: Parameters<RampSdk["unsubscribe"]>[1] = (event) => {
+      if (event.type === "PURCHASE_CREATED") {
+        const value = event.payload.purchase;
+        // The native SDK constrains the asset with swapAsset. Verify its network, receiver and actual address too.
+        const wanted = Object.entries(RAMP_BY_ADDRESS).find(([, id]) => id === outAsset)?.[0];
+        const identity = value.asset as RampPurchase["asset"] & { chain?: string; apiV3Symbol?: string };
+        const address = value.asset?.address?.toLowerCase() ?? NATIVE_TOKEN.toLowerCase();
+        if (
+          value.receiverAddress?.toLowerCase() === userAddress.toLowerCase() &&
+          address === wanted &&
+          (identity.chain === "MONAD" ||
+            identity.apiV3Symbol === outAsset ||
+            value.asset.symbol === outAsset ||
+            value.asset.type?.startsWith("MONAD") ||
+            value.asset.symbol?.startsWith("MONAD_"))
+        )
+          purchase = value;
+      }
+      if (event.type === "WIDGET_CLOSE")
+        finish(
+          event.payload?.error
+            ? { kind: "failed" }
+            : purchase
+              ? {
+                  kind: "created",
+                  purchase: {
+                    id: purchase.id,
+                    status: purchase.status,
+                    asset: purchase.asset,
+                    cryptoAmount: purchase.cryptoAmount,
+                    receiverAddress: purchase.receiverAddress,
+                  },
+                }
+              : { kind: "closed" },
+        );
+    };
+    ramp.on("*", listener);
+    try {
+      ramp.show({
+        url: "https://app.rampnetwork.com",
+        hostAppName: APP.name,
+        hostLogoUrl: `${WEB_ORIGIN}/apple-touch-icon.png`,
+        userAddress,
+        // RN 1.0.3's native bridge forwards swapAsset; it doesn't forward the web SDK's outAsset parameter.
+        swapAsset: outAsset,
+        enabledFlows: ["ONRAMP"],
+        defaultFlow: "ONRAMP",
+        deepLinkScheme: APP.scheme,
+      });
+    } catch {
+      finish({ kind: "failed" });
+    }
+  });
 }
 
-/** After the hosted page: a return through `finalUrl` starts an "Arriving" row; a missing browser module says so. */
 export function recordRampReturn(
   result: RampResult,
   chainId: number,
-  account: string,
+  owner: string,
   asset: Pick<MoneyAsset, "key" | "symbol" | "wallet">,
+  isCurrent: () => boolean,
 ): void {
-  if (result === "unavailable") {
-    notify({ title: "Update the app to buy", tone: "warning" });
+  if (result.kind === "unavailable" || result.kind === "failed") {
+    notify({ title: result.kind === "unavailable" ? "Update the app to buy" : "Couldn’t open Ramp", tone: "warning" });
     return;
   }
-  if (result !== "returned") return;
+  if (result.kind !== "created") return;
+  if (activeNetwork().chainId !== chainId || !isCurrent()) return;
+  if (!PAID_STATES.has(result.purchase.status)) {
+    notify({ title: "Purchase started", description: "Payment and delivery are still handled by Ramp" });
+    return;
+  }
   recordArrival({
     kind: "ramp",
     chainId,
-    account: account.toLowerCase(),
+    account: owner.toLowerCase(),
     asset: asset.key,
     symbol: asset.symbol,
     baseline: asset.wallet.toString(),
+    amount: result.purchase.cryptoAmount,
     via: "Ramp",
   });
-  notify({ title: `${asset.symbol} arriving`, description: "From Ramp" });
+  notify({ title: "Checking delivery", description: `${asset.symbol} · Ramp` });
 }

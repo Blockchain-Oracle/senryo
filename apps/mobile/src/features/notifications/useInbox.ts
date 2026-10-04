@@ -33,8 +33,8 @@ export function useInbox() {
 /** The bell's count (a number, never a dot); undefined when unknown or zero. */
 export function useBellCount(): number | undefined {
   const network = useNetwork();
-  const { address, session } = useQuietSession();
+  const { access, address, session } = useQuietSession();
   const unread = useUnreadCount(network.chainId, address, session);
   const count = unread.status === "fresh" || unread.status === "stale" ? unread.value : 0;
-  return count > 0 ? count : undefined;
+  return access === "ready" && count > 0 ? count : undefined;
 }

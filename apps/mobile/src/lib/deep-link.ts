@@ -1,5 +1,12 @@
 import { isChainId, networkOf } from "@senryo/config";
-import { DEFAULT_MARKET, marketRoute, ROUTES, traderPostRoute, watchRoute } from "~/lib/constants/routes";
+import {
+  cardAuthRoute,
+  DEFAULT_MARKET,
+  marketRoute,
+  ROUTES,
+  traderPostRoute,
+  watchRoute,
+} from "~/lib/constants/routes";
 
 const SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
 const WEB = /^https?:\/\/[^/]+/i;
@@ -17,6 +24,7 @@ export function inAppPath(base: string): string {
  * Account is the You tab. A link written for the old app still lands on the right screen.
  */
 const LEGACY_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) => string]> = [
+  [/^\/card\/auth\/([^/]+)\/?$/, (m) => cardAuthRoute(decodeURIComponent(m[1] ?? ""))],
   [/^\/portfolio\/?$/, () => ROUTES.home],
   [/^\/trade\/?$/, () => marketRoute(DEFAULT_MARKET)],
   [/^\/trade\/([^/]+)\/?$/, (m) => marketRoute(decodeURIComponent(m[1] ?? DEFAULT_MARKET).toUpperCase())],
@@ -80,5 +88,8 @@ export function linkTarget(path: string, activeChainId: number): string {
   const target = currentPath(`${inAppPath(base)}${rest ? `?${rest}` : ""}`);
   const chainId = Number(raw);
   if (!isChainId(chainId) || chainId === activeChainId) return target;
+  // Asset pages are public, read-only until a deliberate mode switch inside the page.
+  const asset = target.match(/^\/asset\/(\d+)\/0x[a-fA-F0-9]{40}(?:[?/]|$)/);
+  if (asset && Number(asset[1]) === chainId) return target;
   return `/network?to=${networkOf(chainId).key}&next=${encodeURIComponent(target)}`;
 }

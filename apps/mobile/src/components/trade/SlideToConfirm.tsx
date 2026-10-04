@@ -59,6 +59,7 @@ export interface SlideToConfirmProps {
   /** A short preparation step is running (e.g. network fees): the rail holds still with a spinner. */
   busy?: boolean;
   tone?: SlideTone;
+  direction?: "left" | "right";
   /** The reviewed intent's identity: any change cancels a slide in progress. */
   resetKey?: string;
   onReset?: () => void;
@@ -72,12 +73,14 @@ export function SlideToConfirm({
   disabled = false,
   busy = false,
   tone = "primary",
+  direction = "right",
   resetKey,
   onReset,
   onAccessibleActivate,
 }: SlideToConfirmProps) {
   const { color } = useTheme();
   const reduce = useReducedMotion();
+  const left = direction === "left";
   const travel = useSharedValue(0);
   const width = useSharedValue(0);
   const epoch = useSharedValue(0);
@@ -104,7 +107,7 @@ export function SlideToConfirm({
     cancel();
     done.current = false;
     if (wasActive) current.current.onReset?.();
-  }, [resetKey, locked, active, cancel]);
+  }, [resetKey, locked, direction, active, cancel]);
   useEffect(() => {
     alive.current = true;
     void AccessibilityInfo.isScreenReaderEnabled().then(setReader);
@@ -151,7 +154,7 @@ export function SlideToConfirm({
     })
     .onUpdate((event) => {
       if (gestureEpoch.value !== epoch.value) return;
-      travel.value = Math.max(0, Math.min(width.value, event.translationX));
+      travel.value = Math.max(0, Math.min(width.value, event.translationX * (left ? -1 : 1)));
       const ready = width.value > 0 && travel.value >= width.value * COMMIT_FRACTION;
       if (ready !== armed.value) {
         armed.value = ready;
@@ -177,7 +180,10 @@ export function SlideToConfirm({
     return width.value > 0 ? travel.value / width.value : 0;
   };
   const thumbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: travel.value }, { scale: pressed.value && !reduce ? PRESSED_SCALE : 1 }],
+    transform: [
+      { translateX: travel.value * (left ? -1 : 1) },
+      { scale: pressed.value && !reduce ? PRESSED_SCALE : 1 },
+    ],
   }));
   const fillStyle = useAnimatedStyle(() => ({ width: travel.value + THUMB + INSET * 2 }));
   const labelStyle = useAnimatedStyle(() => ({
@@ -189,7 +195,9 @@ export function SlideToConfirm({
       interpolate(
         p,
         GLYPH_STEPS,
-        GLYPH_POINTS.map((points) => points[i] ?? 0),
+        GLYPH_POINTS.map((points, step) =>
+          left && step === 0 && i % 2 === 0 ? GLYPH_BOX - (points[i] ?? 0) : (points[i] ?? 0),
+        ),
         "clamp",
       );
     const xy = GLYPH_COORDS.map(at);
@@ -207,7 +215,7 @@ export function SlideToConfirm({
       accessible={!reader}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityHint={locked ? undefined : "Slide right to confirm, or use the review action"}
+      accessibilityHint={locked ? undefined : `Slide ${direction} to confirm, or use the review action`}
       accessibilityState={{ disabled: locked, busy }}
       accessibilityActions={[{ name: "activate", label: "Review and confirm" }]}
       onAccessibilityAction={(event) => {
@@ -219,9 +227,15 @@ export function SlideToConfirm({
       style={[styles.rail, { backgroundColor: locked ? color.raised2 : wash }]}
     >
       {locked ? null : (
-        <Animated.View pointerEvents="none" style={[styles.fill, { backgroundColor: washStrong }, fillStyle]} />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.fill, left ? { left: undefined, right: 0 } : null, { backgroundColor: washStrong }, fillStyle]}
+        />
       )}
-      <Animated.View pointerEvents="none" style={[styles.label, labelStyle]}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.label, left ? { paddingLeft: SPACE.md, paddingRight: THUMB + SPACE.sm } : null, labelStyle]}
+      >
         <Text
           maxFontSizeMultiplier={CONTROL_FONT_SCALE}
           numberOfLines={1}
@@ -242,7 +256,12 @@ export function SlideToConfirm({
       ) : (
         <GestureDetector gesture={pan}>
           <Animated.View
-            style={[styles.thumb, { backgroundColor: locked ? color.muted : solid }, thumbStyle]}
+            style={[
+              styles.thumb,
+              left ? { left: undefined, right: INSET } : null,
+              { backgroundColor: locked ? color.muted : solid },
+              thumbStyle,
+            ]}
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
           >

@@ -49,8 +49,14 @@ export function AmountHero({
   const style = role ?? TYPE.displayBalance;
   // The text scales with Dynamic Type up to the hero cap; the rolling window must scale with it.
   const { fontScale } = useWindowDimensions();
-  const scaledHeight = (role: TextStyle) =>
-    Number(role.lineHeight ?? role.fontSize ?? 0) * Math.min(fontScale, HERO_FONT_SCALE);
+  const scale = Math.min(fontScale, HERO_FONT_SCALE);
+  const metrics = (role: TextStyle): TextStyle => ({
+    ...role,
+    fontSize: (role.fontSize ?? 0) * scale,
+    lineHeight: (role.lineHeight ?? role.fontSize ?? 0) * scale,
+    letterSpacing: (role.letterSpacing ?? 0) * scale,
+    includeFontPadding: false,
+  });
   const ink = color ?? theme.color.ink;
   const quiet = theme.color.text3;
   const shown = partial ? `≈ ${text}` : text;
@@ -67,12 +73,12 @@ export function AmountHero({
         const fromRight = chars.length - i;
         const fractional = point >= 0 && i >= point;
         const tint = dimDecimals && fractional ? quiet : ink;
-        const charStyle = fractional && decimalRole ? decimalRole : style;
-        const lineHeight = scaledHeight(charStyle);
+        const charStyle = metrics(fractional && decimalRole ? decimalRole : style);
+        const lineHeight = charStyle.lineHeight ?? 0;
         return DIGITS.includes(ch) ? (
           <Digit key={`d${fromRight}`} value={Number(ch)} style={charStyle} color={tint} lineHeight={lineHeight} />
         ) : (
-          <Text key={`c${fromRight}`} maxFontSizeMultiplier={HERO_FONT_SCALE} style={[charStyle, { color: tint }]}>
+          <Text key={`c${fromRight}`} allowFontScaling={false} style={[charStyle, { color: tint, height: lineHeight }]}>
             {ch}
           </Text>
         );
@@ -109,11 +115,7 @@ function Digit({
     <View style={[styles.window, { height: lineHeight }]} importantForAccessibility="no-hide-descendants">
       <Animated.View style={column}>
         {[...DIGITS].map((d) => (
-          <Text
-            key={d}
-            maxFontSizeMultiplier={HERO_FONT_SCALE}
-            style={[style, { color, height: lineHeight, lineHeight }]}
-          >
+          <Text key={d} allowFontScaling={false} style={[style, { color, height: lineHeight, lineHeight }]}>
             {d}
           </Text>
         ))}

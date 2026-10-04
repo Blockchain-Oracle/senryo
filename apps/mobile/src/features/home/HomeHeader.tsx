@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { AmountHero } from "~/components/kit/AmountHero";
 import { Skeleton } from "~/components/kit/states";
-import { ArrowUp, Eye, Info, Plus, QrCode, Send } from "~/components/kit/symbols";
+import { ArrowUp, Eye, History, Info, ListRect } from "~/components/kit/symbols";
 import { ActionCircle, ActionCircles } from "~/features/money/ActionCircle";
 import { type BalanceSheet, useBalanceSheet } from "~/features/portfolio/useBalanceSheet";
 import { fire } from "~/feedback/fire";
@@ -94,21 +94,8 @@ export function ExpandedBalance() {
         )}
       </Pressable>
       <ActionCircles>
-        <ActionCircle
-          icon={Plus}
-          label="Add money"
-          onPress={() => gate(() => router.push(ROUTES.addMoney), { verb: "add money", next: ROUTES.addMoney })}
-        />
-        <ActionCircle
-          icon={Send}
-          label="Send"
-          onPress={() => gate(() => router.push(ROUTES.withdrawSend), { verb: "send", next: ROUTES.withdrawSend })}
-        />
-        <ActionCircle
-          icon={QrCode}
-          label="Receive"
-          onPress={() => gate(() => router.push(ROUTES.receive), { verb: "add money", next: ROUTES.receive })}
-        />
+        <ActionCircle icon={History} label="Activity" onPress={() => router.push(ROUTES.activity)} />
+        <ActionCircle icon={ListRect} label="Orders" onPress={() => router.push(ROUTES.orders)} />
         <ActionCircle
           icon={ArrowUp}
           label="Withdraw"

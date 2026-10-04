@@ -83,8 +83,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-build-properties",
       {
-        ios: { deploymentTarget: IOS_DEPLOYMENT_TARGET },
-        android: { minSdkVersion: ANDROID_MIN_SDK, buildArchs: [...ANDROID_BUILD_ARCHS] },
+        ios: {
+          deploymentTarget: IOS_DEPLOYMENT_TARGET,
+          extraPods: [{ name: "Ramp", git: "https://github.com/RampNetwork/ramp-sdk-ios.git", tag: "4.0.1" }],
+        },
+        android: {
+          minSdkVersion: ANDROID_MIN_SDK,
+          buildArchs: [...ANDROID_BUILD_ARCHS],
+          extraMavenRepos: ["https://jitpack.io"],
+        },
       },
     ],
     ["expo-audio", { microphonePermission: false }],

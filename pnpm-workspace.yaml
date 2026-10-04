@@ -6,7 +6,7 @@ packages:
   - scripts/drive
   # indexer/ and contracts/ are deliberately outside the workspace (own toolchains; invariant `indexer-isolated`).
 
-# Native/binary builds are opt-in; anything not listed is denied.
+  # Native/binary builds are opt-in; anything not listed is denied.
 allowBuilds:
   esbuild: true
   # Copies Skia's prebuilt xcframeworks/.so from react-native-skia-{apple,android} into libs/ (read in S5; no network).
@@ -41,3 +41,6 @@ minimumReleaseAgeExclude:
   - expo-modules-core@57.0.20
   - expo-router@57.0.24
   - expo@57.0.26
+
+patchedDependencies:
+  '@ramp-network/react-native-sdk@1.0.3': patches/@ramp-network__react-native-sdk@1.0.3.patch

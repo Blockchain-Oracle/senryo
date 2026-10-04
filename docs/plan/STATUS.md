@@ -4,7 +4,9 @@
 
 **TestFlight:** `0.2.1 (5)` is VALID / IN_BETA_TESTING, native build `1b9b28b8-5516-4dce-816f-8b24a5e34900`, embedded source `d86ccef`. Later JavaScript fixes are published on production for runtime `0.2.1`, group `6e96ecac-67d0-4893-accc-6b4370a78e00`; full identity is in the [release record](../design/reviews/2026-10-04-testflight-validation.md). Phone acceptance remains open. No GitHub push or App Store production promotion.
 
-[Complete work register](reference-followthrough-2026-10-04.md) retains every requested capability; [reference evidence](../design/reference-study-2026-10-04/README.md) distinguishes older recordings and concepts from current behavior. [Provider/notification research](predictions-onramp-notifications-2026-10-04.md) preserves Ramp and recognizes the existing inbox/followed-trade implementation. Live API currently advertises Practice 10143 and `card: false`; provider readiness is separate from source readiness.
+[Complete work register](reference-followthrough-2026-10-04.md) retains every requested capability; [reference evidence](../design/reference-study-2026-10-04/README.md) distinguishes older recordings and concepts from current behavior. [Provider/notification research](predictions-onramp-notifications-2026-10-04.md) preserves Ramp and recognizes the existing inbox/followed-trade implementation. Live API now advertises Practice 10143 with `card: true`; signed Lithic sandbox issue/freeze/unfreeze and a daily-limit decline with a ledger row passed. Provider readiness remains separate from physical-phone and production-card acceptance.
+
+**Phone feedback pass:** [approved changes](phone-feedback-2026-10-04.md) and [validation](../design/reviews/2026-10-04-phone-feedback-validation.md) cover Home action deduplication, aligned money figures, Alerts, receipt drawers/PDFs, read-only token browsing and native Ramp. New native runtime `0.3.0` is being prepared for TestFlight; do not send these modules as an OTA to 0.2.1.
 
 Historical source/deployment/device claims below are not new verification of this release.
 

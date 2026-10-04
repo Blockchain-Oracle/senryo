@@ -7,23 +7,26 @@
  * unverified token gets the banner with Hide.
  */
 import { isDeployed } from "@senryo/chain";
-import { MAINNET_CHAIN_ID, MAINNET_TOKENS } from "@senryo/config";
-import { spotToken, useAccountRisk, useTokenPrices } from "@senryo/query";
+import { type ChainId, isChainId, MAINNET_CHAIN_ID, MAINNET_TOKENS, networkOf } from "@senryo/config";
+import { QueryEnvProvider, spotToken, useAccountRisk, useQueryEnv, useTokenPrices } from "@senryo/query";
 import { type Href, router, Stack } from "expo-router";
 import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowDownUp, ArrowUp, CircleCheck, CreditCard, Download, Send } from "~/components/kit/symbols";
+import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import { PositionRowsSkeleton } from "~/features/home/HomeParts";
 import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
 import { ActionCircle, ActionCircles } from "~/features/money/ActionCircle";
 import { AssetMark } from "~/features/money/AssetMark";
 import { useHiddenTokens } from "~/features/money/hidden";
-import { openRampBuy, rampAssetOf, recordRampReturn } from "~/features/money/ramp";
+import { rampAssetOf } from "~/features/money/ramp";
+import { useRampBuy } from "~/features/money/useRampBuy";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { tokenPrice } from "~/features/tokens/format";
 import { TokenChart } from "~/features/tokens/TokenChart";
 import { useAccount } from "~/lib/account/provider";
+import { sharedRead } from "~/lib/account/sender";
 import {
   discoverRoute,
   marketRoute,
@@ -34,8 +37,9 @@ import {
   swapRoute,
   withdrawRoute,
 } from "~/lib/constants/routes";
+import { ENV } from "~/lib/env";
 import { arrow, signedPct } from "~/lib/money";
-import { useNetwork } from "~/lib/network";
+import { setActiveNetwork, useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { AboutSection, AssetActivity, BalanceSection, FactRow, UnverifiedBanner } from "./AssetSections";
@@ -52,17 +56,24 @@ const PERPL_OF: Readonly<Record<string, string>> = {
 
 export function AssetDetail({ chainId, address }: { chainId: number; address: string }) {
   const { color } = useTheme();
-  const network = useNetwork();
-  if (chainId !== network.chainId) {
+  const env = useQueryEnv();
+  if (!isChainId(chainId))
     return (
       <Page title="Asset">
-        <QuietLine action={{ label: "Choose your money", onPress: () => router.push(ROUTES.network) }}>
-          {chainId === MAINNET_CHAIN_ID ? "This asset is on Mainnet" : "This asset is in Practice"}
-        </QuietLine>
+        <QuietLine>Unsupported network</QuietLine>
       </Page>
     );
-  }
-  return <Detail address={address} ground={color.ground} />;
+  return (
+    <QueryEnvProvider
+      chainId={chainId}
+      read={sharedRead(chainId)}
+      api={env.api}
+      indexer={env.indexer}
+      apiOrigin={ENV.API_ORIGIN}
+    >
+      <Detail address={address} chainId={chainId} ground={color.ground} />
+    </QueryEnvProvider>
+  );
 }
 
 function Page({ title, children, right }: { title: string; children: ReactNode; right?: ReactNode }) {
@@ -78,18 +89,22 @@ function Page({ title, children, right }: { title: string; children: ReactNode; 
   );
 }
 
-function Detail({ address, ground }: { address: string; ground: string }) {
+function Detail({ address, chainId, ground }: { address: string; chainId: ChainId; ground: string }) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
-  const network = useNetwork();
-  const me = useAccount().hint?.address;
+  const active = useNetwork();
+  const network = networkOf(chainId);
+  const account = useAccount();
+  const me = account.hint?.address;
+  const readOnly = active.chainId !== chainId;
   const page = useAsset(address);
+  const rampBuy = useRampBuy(chainId);
   const hidden = useHiddenTokens(network.chainId, me);
   const asset = page.asset;
   const spot = asset && network.chainId === MAINNET_CHAIN_ID ? spotToken(asset.key) : undefined;
   const spotPrices = useTokenPrices(spot ? [spot] : []);
   const coreReady = isDeployed(network.chainId, "SenryoCore");
-  const risk = useAccountRisk(coreReady && asset?.collateral ? me : undefined, "finalized");
+  const risk = useAccountRisk(!readOnly && coreReady && asset?.collateral ? me : undefined, "finalized");
   if (!asset) {
     return (
       <Page title="Asset">
@@ -155,51 +170,73 @@ function Detail({ address, ground }: { address: string; ground: string }) {
           ) : null}
         </View>
         {spot && !stable ? <TokenChart token={spot} priceUsd18={price ?? undefined} /> : null}
-        <BalanceSection
-          asset={asset}
-          chainId={network.chainId}
-          holdsUsd6={asset.collateral ? holds : 0n}
-          onTrades={() => goHomeTab("positions")}
-          onCard={() => router.navigate(ROUTES.card)}
-        />
-        <ActionCircles>
-          <ActionCircle icon={Download} label="Receive" onPress={() => router.push(receiveRoute(asset.key))} />
-          <ActionCircle
-            icon={Send}
-            label="Send"
-            reason={none ? "None to send" : undefined}
-            note={asset.verified ? undefined : "Warned"}
-            onPress={() => router.push(sendRoute(asset.key))}
-          />
-          <ActionCircle
-            icon={ArrowDownUp}
-            label="Swap"
-            reason={practice ? "Mainnet only" : !asset.verified && none ? "Unverified" : undefined}
-            note={asset.verified ? undefined : "Unverified · sell only"}
-            onPress={() => router.push(none ? swapRoute(undefined, asset.key) : swapRoute(asset.key))}
-          />
-          <ActionCircle
-            icon={ArrowUp}
-            label="Withdraw"
-            reason={none ? "None to withdraw" : undefined}
-            onPress={() => router.push(withdrawRoute(asset.key))}
-          />
-          {ramp && me ? (
-            <ActionCircle
-              icon={CreditCard}
-              label="Buy"
-              onPress={() => void openRampBuy(me, ramp).then((r) => recordRampReturn(r, network.chainId, me, asset))}
+        {readOnly ? (
+          <View style={styles.price}>
+            <QuietLine>
+              {network.key === "mainnet"
+                ? "Browse Mainnet tokens in Practice. Switch to use real funds."
+                : "Browse Practice tokens. Switch to use paper funds."}
+            </QuietLine>
+            <SlideToConfirm
+              direction="left"
+              label={`Slide left to switch to ${network.key === "mainnet" ? "Mainnet" : "Practice"}`}
+              resetKey={`${active.chainId}:${chainId}`}
+              onConfirm={() => {
+                account.lock();
+                setActiveNetwork(network.key);
+              }}
             />
-          ) : null}
-        </ActionCircles>
-        {gold ? (
+          </View>
+        ) : (
+          <>
+            <BalanceSection
+              asset={asset}
+              chainId={network.chainId}
+              holdsUsd6={asset.collateral ? holds : 0n}
+              onTrades={() => goHomeTab("positions")}
+              onCard={() => router.navigate(ROUTES.card)}
+            />
+            <ActionCircles>
+              <ActionCircle icon={Download} label="Receive" onPress={() => router.push(receiveRoute(asset.key))} />
+              <ActionCircle
+                icon={Send}
+                label="Send"
+                reason={none ? "None to send" : undefined}
+                note={asset.verified ? undefined : "Warned"}
+                onPress={() => router.push(sendRoute(asset.key))}
+              />
+              <ActionCircle
+                icon={ArrowDownUp}
+                label="Swap"
+                reason={practice ? "Mainnet only" : !asset.verified && none ? "Unverified" : undefined}
+                note={asset.verified ? undefined : "Unverified · sell only"}
+                onPress={() => router.push(none ? swapRoute(undefined, asset.key) : swapRoute(asset.key))}
+              />
+              <ActionCircle
+                icon={ArrowUp}
+                label="Withdraw"
+                reason={none ? "None to withdraw" : undefined}
+                onPress={() => router.push(withdrawRoute(asset.key))}
+              />
+              {ramp && me ? (
+                <ActionCircle
+                  icon={CreditCard}
+                  label="Buy"
+                  reason={rampBuy.opening ? "Opening Ramp" : undefined}
+                  onPress={() => void rampBuy.buy(asset)}
+                />
+              ) : null}
+            </ActionCircles>
+          </>
+        )}
+        {gold && !readOnly ? (
           <FactRow
             label="Gold, with leverage"
             value="Trade XAU"
             onPress={() => router.push(marketRoute("XAU") as Href)}
           />
         ) : null}
-        {perp ? (
+        {perp && !readOnly ? (
           <FactRow
             label="Perpetual on Perpl"
             value={`Trade ${perp}`}
@@ -207,7 +244,7 @@ function Detail({ address, ground }: { address: string; ground: string }) {
           />
         ) : null}
         <AboutSection asset={asset} chainId={network.chainId} networkName={network.name} />
-        {me ? (
+        {me && !readOnly ? (
           <AssetActivity
             asset={asset}
             chainId={network.chainId}

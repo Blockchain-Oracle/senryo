@@ -33,7 +33,6 @@ export function AlertsList({ onNew, onEdit }: { onNew: () => void; onEdit: (aler
   const account = useAccount();
   const alerts = useAlerts();
   const remove = useRemoveAlert();
-  const known = alerts.reading.status === "fresh" || alerts.reading.status === "stale";
   // Until the account store has been read, "no account" is not known yet: show the loader, not the invitation.
   if (!account.ready) return <LoadingState shape="list" label="Loading your alerts" />;
   if (alerts.access === "guest") {
@@ -43,7 +42,7 @@ export function AlertsList({ onNew, onEdit }: { onNew: () => void; onEdit: (aler
       </Quiet>
     );
   }
-  if (alerts.access === "locked" && !known) {
+  if (alerts.access === "locked") {
     return (
       <Quiet line="Unlock to see your alerts">
         <Button
@@ -61,10 +60,9 @@ export function AlertsList({ onNew, onEdit }: { onNew: () => void; onEdit: (aler
     <ReadingView reading={alerts.reading} loading="list" loadingLabel="Loading your alerts" retry={alerts.refetch}>
       {(items: Alert[]) => (
         <View style={styles.list}>
+          <Button label="Create alert" size="sm" block={false} onPress={onNew} />
           {items.length === 0 ? (
-            <Quiet line="No alerts yet">
-              <Button label="New alert" size="sm" block={false} onPress={onNew} />
-            </Quiet>
+            <Quiet line="No alerts yet" />
           ) : (
             items.map((alert) => (
               <AlertRow
@@ -124,7 +122,7 @@ export function AlertSheet({
 }
 
 /** One quiet line and at most one action under it (build brief §2). */
-function Quiet({ line, children }: { line: string; children: ReactNode }) {
+function Quiet({ line, children }: { line: string; children?: ReactNode }) {
   return (
     <View style={styles.quiet}>
       <QuietLine>{line}</QuietLine>

@@ -115,9 +115,7 @@ function Form({
       {
         onSuccess: () => {
           fire("confirm");
-          // An edit is done once saved; a new alert stays open to add another.
-          if (editing) close();
-          else setText("");
+          close();
         },
         // A cancelled Face ID is the user's choice, not a failure: no error buzz.
         onError: (error) => {

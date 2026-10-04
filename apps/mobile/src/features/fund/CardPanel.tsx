@@ -5,13 +5,11 @@
  */
 import { MAINNET_CHAIN_ID, MAINNET_TOKENS, NATIVE_TOKEN } from "@senryo/config";
 import { collateralId, ids } from "@senryo/identity";
-import { useState } from "react";
 import { ActivityIndicator } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { SheetRow } from "~/components/sheet/SheetRow";
-import { openRampBuy, rampAssetOf, recordRampReturn } from "~/features/money/ramp";
 import { useMoneyAssets } from "~/features/money/useMoneyAssets";
-import { useAccount } from "~/lib/account/provider";
+import { useRampBuy } from "~/features/money/useRampBuy";
 import { SIZE, useTheme } from "~/theme";
 
 const RAMP_ROWS = [
@@ -28,24 +26,12 @@ const RAMP_ROWS = [
 
 export function CardPanel({ onDone }: { onDone: () => void }) {
   const { color } = useTheme();
-  const address = useAccount().hint?.address;
   const money = useMoneyAssets();
-  const [opening, setOpening] = useState<string>();
+  const ramp = useRampBuy(MAINNET_CHAIN_ID);
+  const opening = ramp.opening;
   const buy = async (row: (typeof RAMP_ROWS)[number]) => {
-    if (!address || opening) return;
     const key = row.address.toLowerCase();
-    setOpening(key);
-    try {
-      const result = await openRampBuy(address, rampAssetOf(MAINNET_CHAIN_ID, key));
-      recordRampReturn(result, MAINNET_CHAIN_ID, address, {
-        key,
-        symbol: row.symbol,
-        wallet: money.find(key)?.wallet ?? 0n,
-      });
-      if (result === "returned") onDone();
-    } finally {
-      setOpening(undefined);
-    }
+    if (await ramp.buy({ key, symbol: row.symbol, wallet: money.find(key)?.wallet ?? 0n })) onDone();
   };
   return (
     <>

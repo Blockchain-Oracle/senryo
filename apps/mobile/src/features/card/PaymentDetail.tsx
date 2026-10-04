@@ -6,18 +6,23 @@
  * last 20; an unknown one says so in four words.
  */
 
+import { networkOf } from "@senryo/config";
 import { useAccountRisk } from "@senryo/query";
 import { router, Stack } from "expo-router";
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
 import { LoadingState } from "~/components/kit/states";
+import { ReceiptSaveButton } from "~/features/activity/ReceiptSaveButton";
+import { saveReceiptDocument } from "~/features/activity/receipt-export";
 import { dayLabel } from "~/features/markets/periods";
 import { QuietLine } from "~/features/markets/QuietLine";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { clockTime } from "~/lib/format";
 import { usd } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
 import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { PaymentGlyph, paymentAmount, paymentDetail } from "./CardPayments";
 import { type PaymentView, paymentView } from "./payment";
@@ -40,19 +45,28 @@ function steps(view: PaymentView, holdUsd6: bigint | null, at: number): Readonly
   return out;
 }
 
-export function PaymentDetail({ id }: { id: string }) {
+export function PaymentDetail({ id, sheet = false }: { id: string; sheet?: boolean }) {
   const { color } = useTheme();
   const { payment, loading } = useCardPayment(id);
   const summary = useCardSummary();
   const card = summary.data?.cards.find((c) => c.state !== "CLOSED");
-  const address = useAccount().hint?.address;
+  const account = useAccount();
+  const address = account.hint?.address;
+  const network = useNetwork();
   const risk = useAccountRisk(address, "latest");
   const allowance = risk.status === "fresh" || risk.status === "stale" ? allowanceNow(risk.value) : undefined;
   const step = useSimulateStep();
+  if (account.snapshot.status !== "unlocked")
+    return (
+      <PaymentFrame sheet={sheet}>
+        <QuietLine>Unlock to see this payment</QuietLine>
+        <Button label="Unlock" onPress={() => void account.unlock().catch(() => undefined)} />
+      </PaymentFrame>
+    );
   if (!payment) {
     return (
-      <Screen>
-        <Stack.Screen options={{ title: "Payment" }} />
+      <PaymentFrame sheet={sheet}>
+        {!sheet ? <Stack.Screen options={{ title: "Payment" }} /> : null}
         {loading ? (
           <LoadingState shape="list" label="Reading this payment" />
         ) : (
@@ -61,7 +75,7 @@ export function PaymentDetail({ id }: { id: string }) {
             <Button label="Open Card" variant="secondary" onPress={() => router.navigate(ROUTES.card)} />
           </View>
         )}
-      </Screen>
+      </PaymentFrame>
     );
   }
   const view = paymentView(payment, allowance);
@@ -69,10 +83,11 @@ export function PaymentDetail({ id }: { id: string }) {
     view.stage === "pending" ? ["clear", "void"] : view.stage === "paid" ? ["return"] : [];
   const sandbox = card?.sandbox === true && payment.transactionToken !== undefined;
   return (
-    <Screen contentStyle={styles.page}>
-      <Stack.Screen options={{ title: view.merchant }} />
+    <PaymentFrame sheet={sheet}>
+      {!sheet ? <Stack.Screen options={{ title: view.merchant }} /> : null}
       <View style={styles.head}>
         <PaymentGlyph view={view} size={SIZE.markDetail} />
+        {sheet ? <Text style={[TYPE.rowTitle, { color: color.ink }]}>{view.merchant}</Text> : null}
         <Text
           maxFontSizeMultiplier={HERO_FONT_SCALE}
           style={[TYPE.displayBalance, { color: view.stage === "declined" ? color.text3 : color.ink }]}
@@ -91,6 +106,25 @@ export function PaymentDetail({ id }: { id: string }) {
           </View>
         ))}
       </View>
+      <ReceiptSaveButton
+        save={() =>
+          saveReceiptDocument(view.merchant, [
+            { label: "Status", value: view.status },
+            {
+              label: "Mode",
+              value: `${network.key === "testnet" ? "Practice" : "Mainnet"}${card?.sandbox ? " · simulated card payment" : ""}`,
+            },
+            { label: "Network", value: `${networkOf(network.chainId).name} · ${network.chainId}` },
+            { label: "Amount", value: paymentAmount(view) },
+            ...(address ? [{ label: "Account", value: address }] : []),
+            ...(card?.last4 ? [{ label: "Card", value: `Kinpaku · •••• ${card.last4}` }] : []),
+            { label: "Time (UTC)", value: new Date(payment.receivedAt).toISOString() },
+            { label: "Receipt ID", value: payment.id },
+            ...(payment.transactionToken ? [{ label: "Issuer transaction", value: payment.transactionToken }] : []),
+            ...(payment.holdUsd6 !== null ? [{ label: "Hold", value: usd(payment.holdUsd6) }] : []),
+          ])
+        }
+      />
       {sandbox && card && actions.length > 0 ? (
         <View style={styles.actions}>
           {actions.map((s) => (
@@ -117,8 +151,12 @@ export function PaymentDetail({ id }: { id: string }) {
           Issuer didn’t answer · Retry
         </Text>
       ) : null}
-    </Screen>
+    </PaymentFrame>
   );
+}
+
+function PaymentFrame({ sheet, children }: { sheet: boolean; children: ReactNode }) {
+  return sheet ? <View style={styles.page}>{children}</View> : <Screen contentStyle={styles.page}>{children}</Screen>;
 }
 
 const styles = StyleSheet.create({

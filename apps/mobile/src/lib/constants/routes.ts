@@ -110,7 +110,7 @@ export const ticketRoute = (market: string, side: TicketSide) => `/markets/${mar
 /** The price-alert editor for one market: a compact sheet over market detail (J3). */
 export const alertRoute = (market: string) => `/markets/${market}/alert` as Href;
 export const positionRoute = (id: string) => `/positions/${id}` as const;
-export const cardAuthRoute = (id: string) => `/card/auth/${id}` as const;
+export const cardAuthRoute = (id: string) => `/card-payment?id=${encodeURIComponent(id)}` as const;
 export const fundQrRoute = (family: string) => `/fund/qr/${family}` as const;
 export const depositRoute = (id: string) => `/fund/deposit/${id}` as const;
 export const watchRoute = (address: string) => `/watch/${address}` as const;
@@ -192,6 +192,8 @@ export const withdrawRoute = (asset?: string, to?: "monad" | "chain" | "bank") =
 export const receiveRoute = (asset?: string) => (asset ? `/receive?asset=${asset.toLowerCase()}` : "/receive") as Href;
 /** B12: the receipt of one operation from this phone's journal. */
 export const receiptRoute = (operationId: string) => `/receipt?op=${encodeURIComponent(operationId)}` as Href;
+/** An indexed event's receipt, read again within the current account and network. */
+export const indexedReceiptRoute = (eventId: string) => `/receipt?event=${encodeURIComponent(eventId)}` as Href;
 /** D1 / C4: a Perpl position (`/positions/perpl-1`) shares the positions route under the indexer's market id. */
 export const perplPositionRoute = (marketId: number) => `/positions/perpl-${marketId}` as const;
 /** D1 / C5: move free AUSD from Perpl back to the wallet (`withdrawCollateral`). */

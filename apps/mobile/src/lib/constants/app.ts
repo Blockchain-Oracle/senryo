@@ -11,8 +11,8 @@ export const APP = {
   scheme: "senryo",
   // Runtime version (appVersion policy): 0.2.0 adds expo-image, expo-camera, expo-web-browser, expo-sharing and
   // react-native-view-shot, so OTA updates for it never reach 0.1.0 binaries that lack those modules.
-  // A separate runtime keeps this TestFlight source pass independent of the earlier premium preview.
-  version: "0.2.1",
+  // Runtime 0.3.0 adds Ramp native presentation and PDF receipt export (expo-print).
+  version: "0.3.0",
   bundleId: IOS_BUNDLE_ID,
   androidPackage: ANDROID_PACKAGE,
 } as const;

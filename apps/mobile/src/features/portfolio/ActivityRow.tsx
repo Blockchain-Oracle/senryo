@@ -1,12 +1,13 @@
-import { explorerTxUrl } from "@senryo/config";
 import { collateralId } from "@senryo/identity";
 import type { IndexedActivity } from "@senryo/indexer-client";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { ArrowLeftRight, ChartCandlestick, CreditCard } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
+import { indexedReceiptRoute } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { activityFigure, activityNote, activityTime, activityTitle, groupOf } from "./activity-copy";
@@ -37,11 +38,9 @@ function Lead({ row }: { row: IndexedActivity }) {
 /**
  * One activity row in the market-row anatomy (Fomo F12; Activity history in the screen inventory): bare on the page,
  * a 48 pt lead, what happened over when, and at the right the figure the event carries — a signed change in its
- * colour, a realised result, or a plain size — over what that figure is. It opens the transaction in the explorer:
- * every row is an onchain event, and that is its receipt.
+ * colour, a realised result, or a plain size — over what that figure is. It opens the receipt drawer; the explorer is a secondary action.
  */
 export function ActivityRow({ row }: { row: IndexedActivity }) {
-  const network = useNetwork();
   const { color } = useTheme();
   const press = usePressScale(ROW_PRESS_SCALE);
   const title = activityTitle(row);
@@ -56,11 +55,11 @@ export function ActivityRow({ row }: { row: IndexedActivity }) {
         onPressOut={press.onPressOut}
         onPress={() => {
           fire("tick");
-          void Linking.openURL(explorerTxUrl(network.chainId, row.txHash));
+          router.push(indexedReceiptRoute(row.id));
         }}
-        accessibilityRole="link"
+        accessibilityRole="button"
         accessibilityLabel={`${title}, ${when}${figure ? `, ${figure.text}` : ""}${note ? `, ${note}` : ""}`}
-        accessibilityHint="Opens the transaction in the explorer"
+        accessibilityHint="Opens transaction details and receipt"
         style={({ pressed }) => [styles.row, pressed ? { backgroundColor: color.card } : null]}
       >
         <Lead row={row} />
