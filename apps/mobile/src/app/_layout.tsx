@@ -39,6 +39,7 @@ const SHEETS = [
   "receipt",
   "session",
   "card-reveal",
+  "card-payment",
   "account-required",
   "network",
   "receive",

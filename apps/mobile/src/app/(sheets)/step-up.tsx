@@ -76,7 +76,7 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
         </Text>
       ) : null}
       <Button
-        label={busy ? "Waiting for your passkey…" : (request.intent.confirmLabel ?? "Confirm with passkey")}
+        label={busy ? "Confirming…" : (request.intent.confirmLabel ?? "Confirm with passkey")}
         loading={busy}
         onPress={() => void confirm()}
       />
