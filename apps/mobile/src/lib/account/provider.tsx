@@ -24,6 +24,7 @@ import { activeNetwork } from "~/lib/network";
 import { unregisterPush } from "~/lib/notifications/push";
 import { clearApiSession } from "./api";
 import { serverDeleteDone, serverDeleteOwed } from "./delete-data";
+import { waitForAuthForeground } from "./foreground";
 import { rememberAccount } from "./identity-cache";
 import { deleteRemoteData, pullPrefs, pushPrefs } from "./remote";
 import { createNativeAccountClient } from "./runtime";
@@ -194,7 +195,19 @@ export function AccountProvider({ children }: { children: ReactNode }) {
           await c.signOut();
           clearApiSession();
         }),
-      stepUp: (fn) => flow((c) => c.stepUp(fn)),
+      stepUp: (fn) =>
+        flow((c) =>
+          c.stepUp(async (signer) => {
+            await waitForAuthForeground({
+              current: () => AppState.currentState,
+              subscribe: (listener) => {
+                const sub = AppState.addEventListener("change", listener);
+                return () => sub.remove();
+              },
+            });
+            return fn(signer);
+          }),
+        ),
       applySettings,
       refresh: async () => {
         setHint(await client.load());
