@@ -3,11 +3,12 @@
  * wallet holds one on Perpl, and "Own BTC ›" — the spot token that is the asset itself (WBTC, WETH, MON), opening its
  * page — where Monad lists one.
  */
+import { MAINNET_CHAIN_ID } from "@senryo/config";
 import { spotToken, usePerplPositions } from "@senryo/query";
 import { router } from "expo-router";
 import { LinkRow } from "~/features/trade/MarketLinks";
 import { useAccount } from "~/lib/account/provider";
-import { perplPositionRoute, tokenRoute } from "~/lib/constants/routes";
+import { assetRoute, perplPositionRoute } from "~/lib/constants/routes";
 import { perplSize } from "./format";
 import type { PerplMarketMeta } from "./market";
 
@@ -42,7 +43,7 @@ export function PerplOwnRow({ meta }: { meta: PerplMarketMeta }) {
       label={symbol}
       title={`Own ${meta.symbol}`}
       subtitle={`${symbol} on Monad`}
-      onPress={() => router.push(tokenRoute(symbol))}
+      onPress={() => router.push(assetRoute(MAINNET_CHAIN_ID, token.address))}
     />
   );
 }
