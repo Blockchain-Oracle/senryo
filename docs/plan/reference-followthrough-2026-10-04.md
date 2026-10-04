@@ -79,7 +79,7 @@ No row is removed because another UI pass is underway. Built, accepted on simula
 3. Close the remaining Practice money/trade/install acceptance and measured performance defects.
 4. Finish existing notification delivery acceptance; close followed-trader ingest/privacy gaps and add momentum triggers with explicit preferences and trustworthy sources.
 5. Complete independently buildable provider adapters and discovery. Enable on-ramp, Aurora, issuer, Perpl and mainnet features only when their prerequisites are real.
-6. Complete prediction markets in stages: public binary discovery/detail/history and distinct Monad contests first; verified quotes, orders, positions, cash-out/claims and durable recovery next. The user delegated the provider sequence and retained every requested feature. See [prediction build ledger](../design/reviews/2026-10-04-predictions-build.md).
+6. Complete prediction execution: public binary discovery/detail/history, distinct Monad contests, Watchlist/Search/Recents are now deployed for iOS runtime 0.3.0; verified quotes, orders, positions, cash-out/claims and durable recovery are next. The user delegated the provider sequence and retained every requested feature. See [prediction build ledger](../design/reviews/2026-10-04-predictions-build.md).
 7. Finish web/accessibility/distribution/docs/submission and operation gates. Record every unresolved dependency and next action in the same register.
 
 ## Current boundaries
