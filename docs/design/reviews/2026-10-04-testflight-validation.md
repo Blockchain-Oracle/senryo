@@ -2,7 +2,7 @@
 
 ## Source identity and release authority
 
-The user explicitly selected Slush Home/Card + Fomo trading/social, then requested **Update TestFlight**. This work integrates the latest premium baseline `eb3533deb5564cb304b38f0165c97ade4cb08016` on `codex/slush-home-card-testflight`. The earlier branch's source pass and dirty continuation were preserved at `15ebab9`; its simulator/native checks are not evidence for this newer release.
+The user explicitly selected Slush Home/Card + Fomo trading/social, then requested **Update TestFlight**. This work integrates the latest premium baseline `eb3533deb5564cb304b38f0165c97ade4cb08016` with the Slush pass, now consolidated in the primary checkout on `codex/senryo-unified` ([reconciliation/recovery map](../../plan/consolidation-2026-10-04.md)). The earlier branch's source pass and dirty continuation were preserved at `15ebab9`; its simulator/native checks are not evidence for this newer release.
 
 Version/runtime: **0.2.1**. Bundle ID: `xyz.senryo.app`. EAS project: `2d424d4b-644e-4231-a156-a8c63d802e9c`. App Store Connect app ID `6818426846` was returned by the authenticated EAS status check. Before this upload, ASC reported only `0.1.0 (4)` as VALID / IN_BETA_TESTING; the newer 0.2.0 EAS builds were internal previews.
 
@@ -19,6 +19,22 @@ Passed on the final source: mobile TypeScript check; scoped Biome check (15 chan
 
 No new UI tests were introduced (repository invariant). No screenshot-per-edit loop was used. Physical phone, VoiceOver/large text, Android Back, audio, passkey restore/upgrade, real provider/funded transactions and notification delivery/taps remain acceptance work. [Complete work register](../../plan/reference-followthrough-2026-10-04.md) tracks retained scope. [Provider/notification evidence](../../plan/predictions-onramp-notifications-2026-10-04.md) distinguishes existing Ramp/followed-trade source from remaining integration work.
 
+## Live service check
+
+Read-only checks on 4 October: `https://api.senryo.xyz/health` returned 200 / `ok: true`; `/v1/config` returned Practice chain 10143 and `card: false`. Source `services/api/src/routes/info.ts` derives that flag from `CARD_URL`, so the live API does not advertise a connected card service. The new Card layout cannot establish provider readiness; an unavailable service remains a truthful unavailable state. No service environment or provider was changed as part of this binary upload.
+
 ## Release outcome
 
-Pending build/upload at this checkpoint. No GitHub push or production App Store promotion performed.
+Native build [1b9b28b8-5516-4dce-816f-8b24a5e34900](https://expo.dev/accounts/0xabu/projects/senryo/builds/1b9b28b8-5516-4dce-816f-8b24a5e34900): `0.2.1 (5)`, source `d86cceffbd411c8eb0c065682e1e389bd0496642`, production profile/channel, normal priority. EAS native compilation finished successfully; Apple binary upload also finished successfully.
+
+The first auto-submission request was rejected because optional `--what-to-test` maps to the Enterprise-only EAS changelog feature. No plan upgrade or duplicate build was requested. The same build was successfully scheduled without that optional field as submission `75edfcc3-f4aa-4ed7-bb97-b1c1e7054a8e`, now `FINISHED`.
+
+Authenticated ASC status now reports **0.2.1 (5): VALID / IN_BETA_TESTING**, not expired, runtime `0.2.1`. Internal testers can install/update in TestFlight. External state is `READY_FOR_BETA_SUBMISSION`; no external beta review or production App Store promotion was performed.
+
+## Consolidated JavaScript continuation
+
+Source `4d399d44558eff69decd9ff5e5e95c77fc2fc8a1` adds compatible earlier fixes: once-only deferred account prompts, normalized internal URL targets with latest social mappings preserved, correct query merging for legacy funding links, Swap Back over a sheet, chart price-label clear space, real square-logo clear space and nested button contrast. Redirect-only QR/wallet routes remain current; older money/Home/Card models were not restored. This introduces no new native dependency or native app configuration change.
+
+Passed: regenerated current Expo route declarations + mobile typecheck, scoped Biome on nine source files, invariants (0 errors/warnings), iOS/Android export and 15 actual-source deep-link cases. The first consolidation check identified an obsolete icon import and stale generated route declarations; these were corrected before release. Production iOS JavaScript update was successfully published to the existing `production` channel/branch for runtime **`0.2.1`**: group **`6e96ecac-67d0-4893-accc-6b4370a78e00`**, update `01a10607-b72a-7485-b2eb-8fddd6f55bdb`, source `4d399d44558eff69decd9ff5e5e95c77fc2fc8a1`. EAS exported and uploaded the bundle, computed fingerprints and confirmed publication. A separate authenticated `update:view` read confirmed the group, source hash, iOS platform and `0.2.1` runtime. Final iOS/Android export after the query fix also passed. The embedded binary remains `d86ccef`; this compatible continuation arrives through EAS Update on subsequent app launch. Device download/application has not been observed. The older `0.1.0` runtime cannot receive this update. No new Android binary/update was published as part of the TestFlight request.
+
+No GitHub push was performed.
