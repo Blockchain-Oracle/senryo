@@ -121,7 +121,9 @@ export function PaymentDetail({ id, sheet = false }: { id: string; sheet?: boole
             { label: "Time (UTC)", value: new Date(payment.receivedAt).toISOString() },
             { label: "Receipt ID", value: payment.id },
             ...(payment.transactionToken ? [{ label: "Issuer transaction", value: payment.transactionToken }] : []),
-            ...(payment.holdUsd6 !== null ? [{ label: "Hold", value: usd(payment.holdUsd6) }] : []),
+            ...(payment.holdUsd6 !== null
+              ? [{ label: view.stage === "declined" ? "Requested hold" : "Hold", value: usd(payment.holdUsd6) }]
+              : []),
           ])
         }
       />
