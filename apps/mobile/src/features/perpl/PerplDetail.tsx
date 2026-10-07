@@ -32,7 +32,7 @@ import { usePerplAccess } from "./usePerplAccess";
 const MS_PER_SECOND = 1000;
 const E18 = 18;
 
-/** Feed first when it can be read (Mainnet), then what the market is. Perpl has no holders list we can read. */
+/** Market activity and opted-in Senryo posts, then market facts. Perpl has no holders list we can read. */
 const TABS = [
   { value: "feed", label: "Feed" },
   { value: "about", label: "About" },
@@ -43,8 +43,8 @@ type DetailTab = (typeof TABS)[number]["value"];
  * A Perpl market's page (flow book C2 for C4 markets; Fomo F32 anatomy): mark with Perpl's badge, ticker, the max
  * leverage read live and the venue in the bar with Watch · Share → Perpl's mark price with its 24 h change and open
  * interest → Perpl's candles with the period chips → "Your position ›" and "Own BTC ›" → Feed (public fills on this
- * market) · About → a state line when Perpl pauses → sticky Short / Long into the Perpl ticket. Practice shows the same
- * page with the bar locked to "Mainnet" (ⓘ says why); Perpl's restricted regions see it read-only.
+ * market) · About → a state line when Perpl pauses → sticky Short / Long into the Perpl ticket. Perpl's restricted
+ * regions see it read-only.
  */
 export function PerplDetail({ meta }: { meta: PerplMarketMeta }) {
   useHideDockWhileFocused("perpl-detail");
@@ -152,6 +152,7 @@ export function PerplDetail({ meta }: { meta: PerplMarketMeta }) {
               <MarketFeed
                 marketId={meta.marketId}
                 name={meta.symbol}
+                symbol={meta.symbol}
                 format={{
                   id: `perpl-${meta.marketId}`,
                   priceDecimals: meta.priceDecimals,

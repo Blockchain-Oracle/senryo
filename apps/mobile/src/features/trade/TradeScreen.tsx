@@ -179,7 +179,7 @@ function Body({ line, tab, onTab }: { line: MarketLine; tab: DetailTab; onTab: (
           {tab === "holders" ? (
             <MarketHolders marketId={line.marketId} name={line.name} decimals={priceDecimalsOf(line.marketId)} />
           ) : tab === "feed" ? (
-            <MarketFeed marketId={line.marketId} name={line.name} />
+            <MarketFeed marketId={line.marketId} name={line.name} symbol={line.symbol} />
           ) : (
             <MarketAbout line={line} />
           )}

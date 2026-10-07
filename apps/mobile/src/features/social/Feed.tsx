@@ -1,6 +1,6 @@
 /**
- * The Social feed (Fomo F15, F4): Global is every public trade and thesis on the active network, led by the Weekly
- * Top Trades strip; Following is the same from the accounts you follow. Rows sit bare on the page. Every state is
+ * The Social feed (Fomo F15, F4): Global leads with labelled outside spot activity, then public Senryo trades and
+ * theses on the active network. Following contains only accounts you follow. Every state is
  * designed and short: skeleton rows of the row's own shape, an empty line that differs per audience with the one way
  * to fill it, a failure with its reason and Retry, a stale stamp, and "Show more" at the end of a page. Practice and
  * Mainnet are separate feeds.
@@ -14,6 +14,7 @@ import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ErrorState, Skeleton, StaleStamp } from "~/components/kit/states";
 import { TopTrades } from "~/features/home/TopTrades";
+import { ExternalMarketActivity } from "~/features/markets/ExternalMarketActivity";
 import { ROUTES } from "~/lib/constants/routes";
 import { RADIUS, SIZE, SPACE, useTheme } from "~/theme";
 import { FeedRow } from "./FeedRow";
@@ -22,7 +23,12 @@ import { useSessionGate } from "./useSocialAccount";
 
 export function Feed({ scope, onFindPeople }: { scope: FeedScope; onFindPeople: () => void }) {
   if (scope === "friends") return <FollowingFeed onFindPeople={onFindPeople} />;
-  return <FeedList scope="global" pinned={<TopTrades />} empty={<QuietLine text="No public trades yet" />} />;
+  return (
+    <View style={styles.list}>
+      <ExternalMarketActivity />
+      <FeedList scope="global" pinned={<TopTrades />} empty={<QuietLine text="No public Senryo trades yet" />} />
+    </View>
+  );
 }
 
 /** Following needs to know who is asking: the gate says so in the feed's own place, never with a prompt on arrival. */

@@ -11,6 +11,7 @@ import { fire } from "~/feedback/fire";
 import { watchRoute } from "~/lib/constants/routes";
 import { price18, priceDecimalsOf, signedUsd, usd } from "~/lib/money";
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { ExternalMarketActivity } from "./ExternalMarketActivity";
 import { SideBadge } from "./LeverageBadge";
 import { QuietLine } from "./QuietLine";
 import { ageLabel } from "./session";
@@ -37,10 +38,8 @@ const FILL_VERB: Record<FeedTrade["fillKind"], string> = {
 };
 
 /**
- * Market detail's Feed tab (Fomo F34; direction "Market Feed tab": trade and thesis events for this market): public
- * fills and theses from accounts that share their trades on this network, newest first — who, what they did, the side,
- * how long ago; then the size in this network's money at the fill price. A closed position adds its net result.
- * Nothing is listed that the api did not return; an empty feed is one quiet line. A row opens the trader.
+ * Market detail's Feed tab: verified spot activity with its own venue and instrument label, followed by public
+ * Senryo fills and theses from accounts that opted to share on this network. Only community rows open a trader.
  */
 /** How a market that isn't ours names and sizes its fills (Perpl: `perpl-1`, its tick, the base asset). */
 export interface FeedMarketFormat {
@@ -51,37 +50,54 @@ export interface FeedMarketFormat {
   size: (size18: bigint) => string;
 }
 
-export function MarketFeed({ marketId, name, format }: { marketId: number; name: string; format?: FeedMarketFormat }) {
+export function MarketFeed({
+  marketId,
+  name,
+  symbol,
+  format,
+}: {
+  marketId: number;
+  name: string;
+  symbol: string;
+  format?: FeedMarketFormat;
+}) {
   const env = useQueryEnv();
   const client = useQueryClient();
   const market = format?.id ?? feedMarketId(marketId);
   const feed = useFeed(FEED_SCOPE, market);
   const now = useNowSec();
   const retry = () => void client.resetQueries({ queryKey: socialKeys.feed(env.chainId, FEED_SCOPE, market) });
+  const { color } = useTheme();
   return (
-    <ReadingView reading={feed.reading} loading="list" loadingLabel="Loading the feed" retry={retry}>
-      {(items) =>
-        items.length === 0 ? (
-          <QuietLine>No public trades in {name} yet</QuietLine>
-        ) : (
-          <View>
-            {items.map((item) => (
-              <FeedRow key={item.id} item={item} marketId={marketId} now={now} format={format} />
-            ))}
-            {feed.hasMore ? (
-              <Button
-                label="Show more"
-                variant="ghost"
-                size="sm"
-                loading={feed.loadingMore}
-                onPress={feed.loadMore}
-                style={styles.more}
-              />
-            ) : null}
-          </View>
-        )
-      }
-    </ReadingView>
+    <View style={styles.sections}>
+      <ExternalMarketActivity symbol={symbol} />
+      <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
+        Senryo community
+      </Text>
+      <ReadingView reading={feed.reading} loading="list" loadingLabel="Loading the feed" retry={retry}>
+        {(items) =>
+          items.length === 0 ? (
+            <QuietLine>No public Senryo trades in {name} yet</QuietLine>
+          ) : (
+            <View>
+              {items.map((item) => (
+                <FeedRow key={item.id} item={item} marketId={marketId} now={now} format={format} />
+              ))}
+              {feed.hasMore ? (
+                <Button
+                  label="Show more"
+                  variant="ghost"
+                  size="sm"
+                  loading={feed.loadingMore}
+                  onPress={feed.loadMore}
+                  style={styles.more}
+                />
+              ) : null}
+            </View>
+          )
+        }
+      </ReadingView>
+    </View>
   );
 }
 
@@ -165,6 +181,7 @@ function TradeLine({
 }
 
 const styles = StyleSheet.create({
+  sections: { gap: SPACE.md },
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
