@@ -49,7 +49,7 @@ const GLYPH_STROKE = 2.4;
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-export type SlideTone = "primary" | "up" | "down";
+export type SlideTone = "primary" | "action" | "up" | "down";
 
 export interface SlideToConfirmProps {
   /** Shown on the rail ("Slide to short"); when disabled, the reason ("Enter an amount"). */
@@ -59,6 +59,8 @@ export interface SlideToConfirmProps {
   /** A short preparation step is running (e.g. network fees): the rail holds still with a spinner. */
   busy?: boolean;
   tone?: SlideTone;
+  /** Reference-style filled action rail, used where the brand action must remain visually primary. */
+  surface?: "wash" | "solid";
   direction?: "left" | "right";
   /** The reviewed intent's identity: any change cancels a slide in progress. */
   resetKey?: string;
@@ -73,6 +75,7 @@ export function SlideToConfirm({
   disabled = false,
   busy = false,
   tone = "primary",
+  surface = "wash",
   direction = "right",
   resetKey,
   onReset,
@@ -204,11 +207,20 @@ export function SlideToConfirm({
     return { d: `M ${xy[0]} ${xy[1]} L ${xy[2]} ${xy[3]} L ${xy[4]} ${xy[5]}` };
   });
 
-  const solid = tone === "up" ? color.up : tone === "down" ? color.down : color.primary;
-  const onSolid = tone === "up" ? color.upForeground : tone === "down" ? color.downForeground : color.primaryForeground;
+  const solid =
+    tone === "up" ? color.up : tone === "down" ? color.down : tone === "action" ? color.action : color.primary;
+  const onSolid =
+    tone === "up"
+      ? color.upForeground
+      : tone === "down"
+        ? color.downForeground
+        : tone === "action"
+          ? color.actionInk
+          : color.primaryForeground;
   const wash = tone === "up" ? color.upWash : tone === "down" ? color.downWash : color.primaryWash;
   const washStrong =
     tone === "up" ? color.upWashStrong : tone === "down" ? color.downWashStrong : color.primaryWashStrong;
+  const filled = surface === "solid" && !locked;
 
   return (
     <View
@@ -224,12 +236,17 @@ export function SlideToConfirm({
       onLayout={(event) => {
         width.value = Math.max(0, event.nativeEvent.layout.width - THUMB - INSET * 2);
       }}
-      style={[styles.rail, { backgroundColor: locked ? color.raised2 : wash }]}
+      style={[styles.rail, { backgroundColor: locked ? color.raised2 : filled ? solid : wash }]}
     >
       {locked ? null : (
         <Animated.View
           pointerEvents="none"
-          style={[styles.fill, left ? { left: undefined, right: 0 } : null, { backgroundColor: washStrong }, fillStyle]}
+          style={[
+            styles.fill,
+            left ? { left: undefined, right: 0 } : null,
+            { backgroundColor: filled ? solid : washStrong },
+            fillStyle,
+          ]}
         />
       )}
       <Animated.View
@@ -239,7 +256,7 @@ export function SlideToConfirm({
         <Text
           maxFontSizeMultiplier={CONTROL_FONT_SCALE}
           numberOfLines={1}
-          style={[TYPE.buttonLabel, { color: locked ? color.text3 : color.ink }]}
+          style={[TYPE.buttonLabel, { color: locked ? color.text3 : filled ? onSolid : color.ink }]}
         >
           {label}
         </Text>
@@ -259,7 +276,7 @@ export function SlideToConfirm({
             style={[
               styles.thumb,
               left ? { left: undefined, right: INSET } : null,
-              { backgroundColor: locked ? color.muted : solid },
+              { backgroundColor: locked ? color.muted : filled ? color.raised2 : solid },
               thumbStyle,
             ]}
             accessibilityElementsHidden
@@ -272,7 +289,7 @@ export function SlideToConfirm({
                 <AnimatedPath
                   animatedProps={glyphProps}
                   fill="none"
-                  stroke={locked ? color.text3 : onSolid}
+                  stroke={locked ? color.text3 : filled ? color.ink : onSolid}
                   strokeWidth={GLYPH_STROKE}
                   strokeLinecap="round"
                   strokeLinejoin="round"

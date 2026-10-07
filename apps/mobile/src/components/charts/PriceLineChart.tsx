@@ -10,7 +10,8 @@ export interface PriceSample {
   value: bigint;
 }
 const HEIGHT = 220;
-const AXIS = 74;
+const COMPACT_HEIGHT = 156;
+const AXIS = 104;
 const PAD = 18;
 const GRID_X = 20;
 const GRID_Y = 30;
@@ -31,6 +32,7 @@ export function PriceLineChart({
   entry,
   maxGapMs,
   profitable,
+  compact = false,
   sourceLabel = "oracle",
 }: {
   samples: PriceSample[];
@@ -38,11 +40,13 @@ export function PriceLineChart({
   entry?: { value: bigint; label: string } | undefined;
   maxGapMs: number;
   profitable?: boolean | undefined;
+  compact?: boolean | undefined;
   sourceLabel?: string | undefined;
 }) {
   const { color } = useTheme();
   const reduced = useReducedMotion();
   const [width, setWidth] = useState(0);
+  const height = compact ? COMPACT_HEIGHT : HEIGHT;
   const plot = Math.max(1, width - AXIS);
   const model = useMemo(() => {
     const points = samples.filter((s) => s.t <= last.t && s.value > 0n);
@@ -57,7 +61,7 @@ export function PriceLineChart({
     const low = lo - range * RANGE_PAD;
     const high = hi + range * RANGE_PAD;
     const x = (at: number) => PAD + ((at - firstAt) / span) * (plot - PAD * 2);
-    const y = (value: bigint) => PAD + ((high - toPlot(value, PRICE_DECIMALS)) / (high - low)) * (HEIGHT - PAD * 2);
+    const y = (value: bigint) => PAD + ((high - toPlot(value, PRICE_DECIMALS)) / (high - low)) * (height - PAD * 2);
     const path = Skia.Path.Make();
     let previous: PriceSample | undefined;
     for (const point of points) {
@@ -73,7 +77,7 @@ export function PriceLineChart({
       tail: tail && last.t - tail.t <= maxGapMs ? { x: x(tail.t), y: y(tail.value) } : undefined,
       entryY: entry ? y(entry.value) : undefined,
     };
-  }, [samples, last.t, last.value, entry, maxGapMs, plot]);
+  }, [samples, last.t, last.value, entry, maxGapMs, plot, height]);
   const headY = useSharedValue(model.y);
   useEffect(() => {
     headY.value = reduced ? model.y : withTiming(model.y, { duration: HEAD_DURATION_MS, easing: EASE });
@@ -92,17 +96,17 @@ export function PriceLineChart({
   const grid = useMemo(
     () =>
       Array.from({ length: Math.max(0, Math.floor(plot / GRID_X)) }, (_, col) =>
-        Array.from({ length: Math.floor(HEIGHT / GRID_Y) }, (_, row) => ({
+        Array.from({ length: Math.floor(height / GRID_Y) }, (_, row) => ({
           x: col * GRID_X + PAD,
           y: row * GRID_Y + PAD,
         })),
       ),
-    [plot],
+    [plot, height],
   );
   return (
     <View
       onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-      style={styles.chart}
+      style={[styles.chart, compact ? styles.compact : null]}
       accessible
       accessibilityLabel={`Price line, current ${sourceLabel} ${last.label}${entry ? `, ${entry.label}` : ""}. Gaps have no observations.`}
     >
@@ -123,15 +127,22 @@ export function PriceLineChart({
           <Circle cx={model.x} cy={headY} r={HEAD_RADIUS} color={tone} />
         </Canvas>
       ) : null}
-      {entry ? <Text style={[TYPE.meta, styles.entry, { color: color.text3 }]}>{entry.label}</Text> : null}
-      <View style={[styles.label, { top: Math.max(PAD, Math.min(HEIGHT - SIZE.touch, model.y - SPACE.sm)) }]}>
-        <Text style={[TYPE.moneyMeta, { color: tone }]}>{last.label}</Text>
+      {entry ? (
+        <Text numberOfLines={1} adjustsFontSizeToFit style={[TYPE.meta, styles.entry, { color: color.text3 }]}>
+          {entry.label}
+        </Text>
+      ) : null}
+      <View style={[styles.label, { top: Math.max(PAD, Math.min(height - SIZE.touch, model.y - SPACE.sm)) }]}>
+        <Text numberOfLines={1} adjustsFontSizeToFit style={[TYPE.moneyMeta, { color: tone }]}>
+          {last.label}
+        </Text>
       </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
   chart: { height: HEIGHT },
-  label: { position: "absolute", right: 0, maxWidth: AXIS, paddingVertical: SPACE.xs },
-  entry: { position: "absolute", left: PAD, top: 0 },
+  compact: { height: COMPACT_HEIGHT },
+  label: { position: "absolute", right: 0, width: AXIS, paddingVertical: SPACE.xs, alignItems: "flex-end" },
+  entry: { position: "absolute", left: PAD, top: 0, right: AXIS + SPACE.sm },
 });

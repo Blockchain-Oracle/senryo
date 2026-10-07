@@ -7,7 +7,6 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { HistoryChart } from "~/components/charts/HistoryChart";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { VenueChip } from "~/components/identity/VenueChip";
-import { AmountHero } from "~/components/kit/AmountHero";
 import { Button } from "~/components/kit/Button";
 import { ChipRow } from "~/components/kit/ChipRow";
 import { Screen } from "~/components/kit/Screen";
@@ -23,7 +22,6 @@ import { QuietLine } from "~/features/portfolio/QuietLine";
 import { SideBadge } from "~/features/portfolio/SideBadge";
 import { CloseBar } from "~/features/positions/CloseTicket";
 import { REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "~/features/positions/constants";
-import { Facts } from "~/features/trade/TicketReceipt";
 import { fire } from "~/feedback/fire";
 import { marketRoute, perplWithdrawRoute, ticketRoute } from "~/lib/constants/routes";
 import { DEV_WORKSPACE } from "~/lib/dev/config";
@@ -40,8 +38,9 @@ const STEP_LABEL = (bps: bigint) => (bps >= REDUCE_ALL_BPS ? "100%" : pct(bps));
 
 /**
  * A held Perpl position (flow book C5 for Perpl, Part D1) on the positions route: identity with Perpl's chip → the
- * P&L the Exchange computes at its mark, coloured by profit (ⓘ: price and funding) → Perpl's candles with the entry
- * line → Size (in the asset) · Entry · Mark · Liq. (Perpl's own formula) → margin and funding so far, and what's free
+ * P&L the Exchange computes at its mark, coloured by profit (ⓘ: price and funding) → a two-column grid of Size (in
+ * the asset) · Entry · Mark · Liq. (Perpl's own formula) → margin and funding so far, then Perpl's compact live chart
+ * with the entry line and what's free
  * on Perpl with "Move it back" → TP/SL "On Perpl soon" → Add · Share → Reduce 25/50/75/100 % with its quote and the
  * pinned slide. After the slide the page is the outcome surface.
  */
@@ -141,9 +140,26 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
             </View>
           </View>
         </Rise>
+        <Rise index={1}>
+          <Panel style={styles.stats}>
+            <Pnl pnl={position.pnlCNS} onInfo={() => setPnl(true)} />
+            <View style={styles.factGrid}>
+              <PositionFact label="Size" value={perplSize(position.lots, meta)} />
+              <PositionFact label="Entry" value={perplPrice(position.entryPricePNS, meta)} />
+              <PositionFact label="Mark" value={perplPrice(markPNS, meta)} />
+              <PositionFact label="Liq." value={p.liqPricePNS === null ? "None" : perplPrice(p.liqPricePNS, meta)} />
+            </View>
+            <View style={styles.collateral}>
+              <PositionLine label="Margin" value={perplUsd(position.depositCNS)} />
+              <PositionLine label="Funding so far" value={perplSignedUsd(position.premiumPnlCNS)} />
+            </View>
+            {moveBack}
+          </Panel>
+        </Rise>
         <Rise index={2}>
           <PerplLiveChart
             marketId={meta.marketId}
+            compact
             entry={{
               value: perplPrice18(position.entryPricePNS, meta),
               label: `Entry ${perplPrice(position.entryPricePNS, meta)}`,
@@ -167,27 +183,6 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
           />
         </Rise>
         <Rise index={3}>
-          <Panel style={styles.stats}>
-            <Pnl pnl={position.pnlCNS} onInfo={() => setPnl(true)} />
-            <Facts
-              facts={[
-                { label: "Size", value: perplSize(position.lots, meta) },
-                { label: "Entry", value: perplPrice(position.entryPricePNS, meta) },
-              ]}
-            />
-            <Facts
-              facts={[
-                { label: "Mark", value: perplPrice(markPNS, meta) },
-                { label: "Liq.", value: p.liqPricePNS === null ? "None" : perplPrice(p.liqPricePNS, meta) },
-              ]}
-            />
-            <Quiet center>
-              {`Margin ${perplUsd(position.depositCNS)} · Funding ${perplSignedUsd(position.premiumPnlCNS)} so far`}
-            </Quiet>
-            {moveBack}
-          </Panel>
-        </Rise>
-        <Rise index={4}>
           <View style={styles.row} accessible accessibilityLabel="Stop loss and take profit on Perpl soon">
             <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowTitle, styles.flex, { color: color.ink }]}>
               TP / SL
@@ -195,7 +190,7 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
             <Quiet>On Perpl soon</Quiet>
           </View>
         </Rise>
-        <Rise index={5}>
+        <Rise index={4}>
           <View style={styles.actions}>
             <Button
               label="Add"
@@ -207,7 +202,7 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
             <Button label="Share" variant="secondary" style={styles.flex} onPress={share} />
           </View>
         </Rise>
-        <Rise index={6}>
+        <Rise index={5}>
           <View style={styles.reduce}>
             <Text accessibilityRole="header" style={[TYPE.rowTitle, { color: color.ink }]}>
               Reduce
@@ -234,6 +229,7 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
         </Rise>
       </Screen>
       <CloseBar
+        brand
         label={
           p.feeShortWei > 0n
             ? `Add ${monText(p.feeShortWei)} for fees`
@@ -261,13 +257,10 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
   );
 }
 
-function Quiet({ children, center }: { children: string; center?: boolean }) {
+function Quiet({ children }: { children: string }) {
   const { color } = useTheme();
   return (
-    <Text
-      maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-      style={[TYPE.rowDetail, center ? styles.center : null, { color: color.text3 }]}
-    >
+    <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
       {children}
     </Text>
   );
@@ -289,17 +282,57 @@ function Pnl({ pnl, onInfo }: { pnl: bigint; onInfo: () => void }) {
         style={styles.inline}
       >
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
-          Unrealised P&L · live estimate
+          Unrealised P&L
         </Text>
         <Info size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
       </Pressable>
-      <AmountHero
-        text={perplSignedUsd(pnl)}
-        role={TYPE.displayPrice}
-        color={pnl < 0n ? color.down : color.up}
-        dimDecimals={false}
-        accessibilityLabel={`Unrealised ${pnl < 0n ? "loss" : "profit"} ${perplSignedUsd(pnl)}`}
-      />
+      <Text
+        maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={[
+          TYPE.displayPrice,
+          styles.pnlAmount,
+          { color: pnl < 0n ? color.down : pnl > 0n ? color.up : color.ink },
+        ]}
+        accessibilityLabel={`Unrealised P&L ${perplSignedUsd(pnl)}`}
+      >
+        {perplSignedUsd(pnl)}
+      </Text>
+      <Quiet>Live mark estimate</Quiet>
+    </View>
+  );
+}
+
+function PositionFact({ label, value }: { label: string; value: string }) {
+  const { color } = useTheme();
+  return (
+    <View style={styles.fact} accessible accessibilityLabel={`${label} ${value}`}>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+        {label}
+      </Text>
+      <Text
+        maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={[TYPE.rowAmount, { color: color.ink }]}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function PositionLine({ label, value }: { label: string; value: string }) {
+  const { color } = useTheme();
+  return (
+    <View style={styles.positionLine} accessible accessibilityLabel={`${label} ${value}`}>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+        {label}
+      </Text>
+      <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, { color: color.ink }]}>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -308,6 +341,7 @@ function Pnl({ pnl, onInfo }: { pnl: bigint; onInfo: () => void }) {
 function Rise({ index, children }: { index: number; children: ReactNode }) {
   return (
     <Animated.View
+      style={styles.rise}
       entering={FadeInDown.duration(TIMING.staggerItem)
         .delay(index * TIMING.stagger)
         .withInitialValues({ transform: [{ translateY: STAGGER_RISE }] })}
@@ -319,15 +353,20 @@ function Rise({ index, children }: { index: number; children: ReactNode }) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { paddingBottom: SPACE.xl },
+  content: { paddingBottom: SPACE.xl, gap: SPACE.lg },
+  rise: { width: "100%", minWidth: 0 },
   outcome: { gap: SPACE.xl },
   head: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
   titles: { flex: 1, gap: SPACE.xs },
   symbol: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  hero: { gap: SPACE.xs },
+  hero: { gap: SPACE.xxs, minWidth: 0 },
   inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, alignSelf: "flex-start" },
-  stats: { gap: SPACE.md, padding: SPACE.lg },
-  center: { textAlign: "center" },
+  stats: { width: "100%", minWidth: 0, gap: SPACE.md, padding: SPACE.lg },
+  pnlAmount: { width: "100%" },
+  factGrid: { flexDirection: "row", flexWrap: "wrap", rowGap: SPACE.md },
+  fact: { width: "50%", minWidth: 0, gap: SPACE.xxs, paddingRight: SPACE.sm },
+  collateral: { gap: SPACE.xs },
+  positionLine: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: SPACE.sm },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, minHeight: SIZE.touch },
   flex: { flex: 1 },
   actions: { flexDirection: "row", gap: SPACE.md },

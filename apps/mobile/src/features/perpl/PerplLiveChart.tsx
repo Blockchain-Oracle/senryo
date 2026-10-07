@@ -22,11 +22,13 @@ export function PerplLiveChart({
   history,
   entry,
   profitable,
+  compact = false,
 }: {
   marketId: number;
   history: ReactNode;
   entry?: { value: bigint; label: string } | undefined;
   profitable?: boolean | undefined;
+  compact?: boolean | undefined;
 }) {
   const tick = usePerplLivePrice(marketId);
   const [mode, setMode] = useState<"live" | "history">("live");
@@ -51,13 +53,14 @@ export function PerplLiveChart({
             maxGapMs={MAX_GAP_MS}
             entry={entry}
             profitable={profitable}
+            compact={compact}
           />
           <Text style={[TYPE.meta, { color: stale ? color.warn : color.text3 }]}>
             {`${DEV_WORKSPACE ? "Local fork · " : ""}Perpl mark · ${stale ? "reconnecting · " : ""}updated ${ageLabel(BigInt(Math.floor(tick.at / MS_PER_SECOND)), now)}`}
           </Text>
         </>
       ) : (
-        <View style={styles.wait}>
+        <View style={[styles.wait, compact ? styles.waitCompact : null]}>
           <Text style={[TYPE.meta, { color: color.text3 }]}>Connecting to Perpl prices…</Text>
         </View>
       )}
@@ -68,4 +71,5 @@ const styles = StyleSheet.create({
   wrap: { gap: SPACE.md },
   switch: { alignSelf: "flex-end", width: 168 },
   wait: { height: 220, justifyContent: "center", alignItems: "center" },
+  waitCompact: { height: 156 },
 });

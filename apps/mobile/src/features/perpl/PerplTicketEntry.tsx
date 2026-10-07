@@ -121,17 +121,21 @@ function RiskRow({ t, onLiquidation }: { t: PerplTicketModel; onLiquidation: () 
             —
           </Text>
         ) : (
-          <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowAmount, { color: color.ink }]}>
-            {t.liqPricePNS === null ? "None" : `~${perplPrice(t.liqPricePNS, t.meta)}`}
-            {away === null ? (
-              ""
-            ) : (
-              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.moneyMeta, { color: color.text3 }]}>
-                {" "}
-                · {pct(away < 0n ? -away : away)} away
+          <View style={styles.riskValue}>
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={[TYPE.rowAmount, { color: color.ink }]}
+            >
+              {t.liqPricePNS === null ? "None" : `~${perplPrice(t.liqPricePNS, t.meta)}`}
+            </Text>
+            {away !== null ? (
+              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, { color: color.text3 }]}>
+                {pct(away < 0n ? -away : away)} away
               </Text>
-            )}
-          </Text>
+            ) : null}
+          </View>
         )}
       </Pressable>
       <View
@@ -140,7 +144,7 @@ function RiskRow({ t, onLiquidation }: { t: PerplTicketModel; onLiquidation: () 
         accessibilityLabel="Stop loss and take profit on Perpl soon"
       >
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, styles.right, { color: color.text3 }]}>
-          Stop loss / Take profit
+          TP / SL
         </Text>
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, styles.right, { color: color.text3 }]}>
           On Perpl soon
@@ -225,8 +229,9 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   scrollBody: { paddingHorizontal: SIZE.gutter, gap: SPACE.sm, paddingBottom: SPACE.md },
   amount: { alignItems: "center", gap: SPACE.xxs },
-  risk: { flexDirection: "row", justifyContent: "space-between", gap: SPACE.md },
-  riskCell: { flexShrink: 1, gap: SPACE.xxs, minHeight: SIZE.touch, justifyContent: "center" },
+  risk: { flexDirection: "row", gap: SPACE.md },
+  riskCell: { flex: 1, minWidth: 0, gap: SPACE.xxs, minHeight: SIZE.touch, justifyContent: "center" },
+  riskValue: { minWidth: 0, gap: SPACE.xxs },
   end: { alignItems: "flex-end" },
   right: { textAlign: "right" },
   inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },

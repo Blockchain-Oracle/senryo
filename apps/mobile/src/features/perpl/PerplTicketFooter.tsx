@@ -153,7 +153,8 @@ export function PerplTicketFooter({
           label={commit.label}
           disabled={!commit.holdable}
           busy={commit.holdable === false && commit.label === "Preparing order…"}
-          tone={t.side === "long" ? "up" : "down"}
+          tone="action"
+          surface="solid"
           onConfirm={onConfirm}
           resetKey={resetKey}
           onReset={onReset}

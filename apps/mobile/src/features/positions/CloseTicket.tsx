@@ -82,12 +82,14 @@ export function CloseBar({
   label,
   disabled,
   isLong,
+  brand = false,
   resetKey,
   onConfirm,
 }: {
   label: string;
   disabled: boolean;
   isLong: boolean;
+  brand?: boolean;
   resetKey: string;
   onConfirm: () => void;
 }) {
@@ -98,7 +100,8 @@ export function CloseBar({
       <SlideToConfirm
         label={label}
         disabled={disabled}
-        tone={isLong ? "up" : "down"}
+        tone={brand ? "action" : isLong ? "up" : "down"}
+        surface={brand ? "solid" : "wash"}
         resetKey={resetKey}
         onConfirm={onConfirm}
       />

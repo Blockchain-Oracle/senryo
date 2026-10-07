@@ -223,7 +223,14 @@ export function LinkLine({
 
 const styles = StyleSheet.create({
   next: { flexDirection: "row", gap: SPACE.md },
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   center: { textAlign: "center" },
-  line: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.sm },
+  line: {
+    width: "100%",
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACE.sm,
+  },
 });
