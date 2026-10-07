@@ -1,0 +1,1121 @@
+{
+  "date": "2026-10-07",
+  "reference": "UGLYCASH",
+  "baseline_strength": "exact visual and journey target with explicit Senryo capability adaptations",
+  "flow_count": 16,
+  "screen_count": 89,
+  "private_contact_sheets": "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07",
+  "flows": [
+    {
+      "id": "U01",
+      "title": "Adding Bitcoin to portfolio",
+      "archive": "/Users/abu/Downloads/refero.design - Adding Bitcoin to portfolio on UGLYCASH.zip",
+      "sha256": "5a8abb2d24a261617500b330c4f2addaded1b6d59345d1cb936080eee6587779",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U01-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U01-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U01-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U01-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U01-S05",
+          "visually_reviewed": true
+        },
+        {
+          "step": 6,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 6.jpg",
+          "evidence_id": "U01-S06",
+          "visually_reviewed": true
+        },
+        {
+          "step": 7,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 7.jpg",
+          "evidence_id": "U01-S07",
+          "visually_reviewed": true
+        },
+        {
+          "step": 8,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 8.jpg",
+          "evidence_id": "U01-S08",
+          "visually_reviewed": true
+        },
+        {
+          "step": 9,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 9.jpg",
+          "evidence_id": "U01-S09",
+          "visually_reviewed": true
+        },
+        {
+          "step": 10,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 10.jpg",
+          "evidence_id": "U01-S10",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/01/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/01/sheet-2.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/01/sheet-3.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U02",
+      "title": "Adding funds via Apple Pay",
+      "archive": "/Users/abu/Downloads/refero.design - Adding funds via Apple Pay on UGLYCASH.zip",
+      "sha256": "1cbf3aadd01a670f2f585ab940b8ab579c346a016c4b5d4b86982f8f047d56a8",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U02-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U02-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U02-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U02-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U02-S05",
+          "visually_reviewed": true
+        },
+        {
+          "step": 6,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 6.jpg",
+          "evidence_id": "U02-S06",
+          "visually_reviewed": true
+        },
+        {
+          "step": 7,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 7.jpg",
+          "evidence_id": "U02-S07",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/02/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/02/sheet-2.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U03",
+      "title": "Adding users to club",
+      "archive": "/Users/abu/Downloads/refero.design - Adding users to club on UGLYCASH.zip",
+      "sha256": "e1985e09e96006c25d526a34fc2bbf25983a9ea2d602b06bcdb0a11354c3ca2b",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U03-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U03-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U03-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U03-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U03-S05",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/03/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/03/sheet-2.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U04",
+      "title": "Concealing wallet balance",
+      "archive": "/Users/abu/Downloads/refero.design - Concealing wallet balance on UGLYCASH.zip",
+      "sha256": "5a356857c626724c57d72150ea6bf0eb40b1f9ccc820a045bfd652d5ef628316",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U04-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U04-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U04-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U04-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U04-S05",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/04/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/04/sheet-2.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U05",
+      "title": "Copying link to profile card",
+      "archive": "/Users/abu/Downloads/refero.design - Copying link to profile card on UGLYCASH.zip",
+      "sha256": "cf9052f063d805c22b2fb6da8a798945d3b38332661a9488411d8a7160082640",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U05-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U05-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U05-S03",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/05/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U06",
+      "title": "Exporting private keys",
+      "archive": "/Users/abu/Downloads/refero.design - Exporting private keys on UGLYCASH.zip",
+      "sha256": "1176ac31f11abaceb29fd5d54cf49bddf0b32f9beb814bec60e3ccea9eedd8a9",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U06-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U06-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U06-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U06-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U06-S05",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/06/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/06/sheet-2.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U07",
+      "title": "Filtering trading clubs leaderboard",
+      "archive": "/Users/abu/Downloads/refero.design - Filtering trading clubs leaderboard on UGLYCASH.zip",
+      "sha256": "208c8bf720b5afb4e86e6145a92687e9c1a59acd8af541301911d09dad92aef9",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U07-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U07-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U07-S03",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/07/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U08",
+      "title": "Following users",
+      "archive": "/Users/abu/Downloads/refero.design - Following users on UGLYCASH.zip",
+      "sha256": "e27e3f4cc34d8bf142d2892084ee23c52787ab2c99e54b20cd0d4a72314db23a",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U08-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U08-S02",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/08/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U09",
+      "title": "Searching for users",
+      "archive": "/Users/abu/Downloads/refero.design - Searching for users on UGLYCASH.zip",
+      "sha256": "bb1156e02b82be771ff5ad0d711fc4f097fd16c68a11a2cd2307e4ea12f7dc45",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U09-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U09-S02",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/09/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U10",
+      "title": "Searching",
+      "archive": "/Users/abu/Downloads/refero.design - Searching on UGLYCASH.zip",
+      "sha256": "f891b6f0ca44b83bc6c8d1fb3949f855f0dd4082aa7edb49cebc226df4ee6746",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U10-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U10-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U10-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U10-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U10-S05",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/10/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/10/sheet-2.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U11",
+      "title": "Sending money",
+      "archive": "/Users/abu/Downloads/refero.design - Sending money on UGLYCASH.zip",
+      "sha256": "3a0c34448b87a0d781391d075a3fa8f92d3ffa167be5e02f1e7a6434dbfe36dc",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U11-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U11-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U11-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U11-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U11-S05",
+          "visually_reviewed": true
+        },
+        {
+          "step": 6,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 6.jpg",
+          "evidence_id": "U11-S06",
+          "visually_reviewed": true
+        },
+        {
+          "step": 7,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 7.jpg",
+          "evidence_id": "U11-S07",
+          "visually_reviewed": true
+        },
+        {
+          "step": 8,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 8.jpg",
+          "evidence_id": "U11-S08",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/11/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/11/sheet-2.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U12",
+      "title": "Sharing club profile via messages",
+      "archive": "/Users/abu/Downloads/refero.design - Sharing club profile via messages on UGLYCASH.zip",
+      "sha256": "bc78897c7e1ca8479f34e4b8c95e5dfd8d1b851e89584faf0192a1459e571dcb",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U12-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U12-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U12-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U12-S04",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/12/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U13",
+      "title": "Sharing financial profile by message",
+      "archive": "/Users/abu/Downloads/refero.design - Sharing financial profile by message on UGLYCASH.zip",
+      "sha256": "1f6fc8436e939cfe8c3394b512aee5368d4bfb85351843f496c12fa29b9fb382",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U13-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U13-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U13-S03",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/13/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U14",
+      "title": "Signing up & onboarding",
+      "archive": "/Users/abu/Downloads/refero.design - Signing up & onboarding on UGLYCASH.zip",
+      "sha256": "b0238c77736ace8948108b1abfb1c23683b024c5968894266d67638685a0c438",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U14-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U14-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U14-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U14-S04",
+          "visually_reviewed": true
+        },
+        {
+          "step": 5,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 5.jpg",
+          "evidence_id": "U14-S05",
+          "visually_reviewed": true
+        },
+        {
+          "step": 6,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 6.jpg",
+          "evidence_id": "U14-S06",
+          "visually_reviewed": true
+        },
+        {
+          "step": 7,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 7.jpg",
+          "evidence_id": "U14-S07",
+          "visually_reviewed": true
+        },
+        {
+          "step": 8,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 8.jpg",
+          "evidence_id": "U14-S08",
+          "visually_reviewed": true
+        },
+        {
+          "step": 9,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 9.jpg",
+          "evidence_id": "U14-S09",
+          "visually_reviewed": true
+        },
+        {
+          "step": 10,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 10.jpg",
+          "evidence_id": "U14-S10",
+          "visually_reviewed": true
+        },
+        {
+          "step": 11,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 11.jpg",
+          "evidence_id": "U14-S11",
+          "visually_reviewed": true
+        },
+        {
+          "step": 12,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 12.jpg",
+          "evidence_id": "U14-S12",
+          "visually_reviewed": true
+        },
+        {
+          "step": 13,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 13.jpg",
+          "evidence_id": "U14-S13",
+          "visually_reviewed": true
+        },
+        {
+          "step": 14,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 14.jpg",
+          "evidence_id": "U14-S14",
+          "visually_reviewed": true
+        },
+        {
+          "step": 15,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 15.jpg",
+          "evidence_id": "U14-S15",
+          "visually_reviewed": true
+        },
+        {
+          "step": 16,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 16.jpg",
+          "evidence_id": "U14-S16",
+          "visually_reviewed": true
+        },
+        {
+          "step": 17,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 17.jpg",
+          "evidence_id": "U14-S17",
+          "visually_reviewed": true
+        },
+        {
+          "step": 18,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 18.jpg",
+          "evidence_id": "U14-S18",
+          "visually_reviewed": true
+        },
+        {
+          "step": 19,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 19.jpg",
+          "evidence_id": "U14-S19",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/14/sheet-1.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/14/sheet-2.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/14/sheet-3.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/14/sheet-4.jpg",
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/14/sheet-5.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U15",
+      "title": "Transferring funds via QR code",
+      "archive": "/Users/abu/Downloads/refero.design - Transferring funds via QR code on UGLYCASH.zip",
+      "sha256": "8308855772a9e0125314eef7184119feed86095fc6d26d386de341351a57d6d9",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U15-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U15-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U15-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U15-S04",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/15/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    },
+    {
+      "id": "U16",
+      "title": "Writing trade thesis",
+      "archive": "/Users/abu/Downloads/refero.design - Writing trade thesis on UGLYCASH.zip",
+      "sha256": "b1805c1d20c4cac979ac4dde8eb37fd8c8a1697a3af2ad3dcfbb754198bc3c89",
+      "screens": [
+        {
+          "step": 1,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 1.jpg",
+          "evidence_id": "U16-S01",
+          "visually_reviewed": true
+        },
+        {
+          "step": 2,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 2.jpg",
+          "evidence_id": "U16-S02",
+          "visually_reviewed": true
+        },
+        {
+          "step": 3,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 3.jpg",
+          "evidence_id": "U16-S03",
+          "visually_reviewed": true
+        },
+        {
+          "step": 4,
+          "size": [
+            1179,
+            2556
+          ],
+          "archive_member": "step - 4.jpg",
+          "evidence_id": "U16-S04",
+          "visually_reviewed": true
+        }
+      ],
+      "sheets": [
+        "/Users/abu/.codex/artifacts/senryo-uglycash-2026-10-07/16/sheet-1.jpg"
+      ],
+      "format": "ordered JPEG screenshots; no recording, timestamps, audio or motion timing supplied"
+    }
+  ],
+  "second_visual_pass": {
+    "date": "2026-10-07",
+    "flows_reviewed": 16,
+    "screens_reviewed": 89,
+    "contact_sheets_reviewed": 28,
+    "focus": [
+      "username",
+      "all forms",
+      "onboarding loading",
+      "receive",
+      "profile",
+      "sharing",
+      "backgrounds",
+      "cleanup"
+    ],
+    "contract": "forms-and-states.md"
+  }
+}
