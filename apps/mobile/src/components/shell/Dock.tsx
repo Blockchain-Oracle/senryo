@@ -1,209 +1,121 @@
-import { BlurView } from "expo-blur";
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
-import { TabTrigger, type TabTriggerSlotProps, useTabTrigger } from "expo-router/ui";
-import { forwardRef, useEffect, useRef } from "react";
-import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withSequence,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
+import { ids } from "@senryo/identity";
+import { useTabTrigger } from "expo-router/ui";
+import { useEffect, useState } from "react";
+import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  ChartCandlestick,
-  CircleUserRound,
-  CreditCard,
-  House,
-  type LucideIcon,
-  UsersRound,
-} from "~/components/kit/symbols";
-import { usePressScale } from "~/components/kit/usePressScale";
+import { EntityMark } from "~/components/identity/EntityMark";
+import { UsersRound, Wallet } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
-import { DOCK, dockBottom, EASE, ELEVATION, FAN, HAIRLINE_PX, RADIUS, SIZE, SPRING, TIMING, useTheme } from "~/theme";
-import { DOCK_BLUR_INTENSITY, DOCK_PRESS_SCALE, TAB_LABEL, TABS, type TabName } from "./constants";
-import { useDock } from "./dock-context";
-import { useReduceTransparency } from "./useReduceTransparency";
+import { dockBottom, EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { TABS, type TabName } from "./constants";
+import { type ShellContext, useDock } from "./dock-context";
 
-/**
- * The C15 floating dock (Fomo F12/F16, M10; Codex consult 1 Oct): an icon-only glass capsule, 56 pt high and 28 pt
- * from the left edge, sitting low in the home-indicator band, with the plus (Phantom P12) beside it on the same row. The active destination sits in a lighter
- * bubble that travels on a spring with a small overshoot and stretches while it moves; the arriving icon pops.
- * Material: Liquid Glass on iOS 26 (expo-glass-effect), blur + tint elsewhere, opaque under Reduce Transparency.
- * Destinations keep their names for VoiceOver; nothing is labelled on screen (the reference dock has no labels).
- * Slides out while a transaction is entered. Lucide identifies the destinations (actions), never entities.
- */
-const ICON: Record<TabName, LucideIcon> = {
-  home: House,
-  markets: ChartCandlestick,
-  card: CreditCard,
-  social: UsersRound,
-  you: CircleUserRound,
-};
-const GLASS = Platform.OS === "ios" && isLiquidGlassAvailable();
+const DOCK_HIDDEN_OFFSET = 120;
 
-function DockMaterial() {
-  const { color, name } = useTheme();
-  if (useReduceTransparency()) {
-    return <View style={[StyleSheet.absoluteFill, { backgroundColor: color.glassOpaque }]} />;
-  }
-  if (GLASS) {
-    return (
-      <GlassView
-        style={StyleSheet.absoluteFill}
-        glassEffectStyle="regular"
-        tintColor={color.glassTint}
-        colorScheme={name}
-      />
-    );
-  }
-  return (
-    <BlurView intensity={DOCK_BLUR_INTENSITY} tint={name} style={StyleSheet.absoluteFill}>
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: color.glassTint }]} />
-    </BlurView>
-  );
-}
-
-type DockButtonProps = TabTriggerSlotProps & { tab: TabName };
-
-const DockButton = forwardRef<View, DockButtonProps>(function DockButton({ tab, isFocused, onPress, ...props }, ref) {
-  const { color } = useTheme();
-  const reduce = useReducedMotion();
-  const press = usePressScale(DOCK_PRESS_SCALE);
-  const pop = useSharedValue(1);
-  const wasFocused = useRef(isFocused);
-  useEffect(() => {
-    if (isFocused && !wasFocused.current && !reduce) {
-      pop.value = withSequence(
-        withTiming(DOCK.iconPop, { duration: TIMING.press, easing: EASE }),
-        withSpring(1, SPRING.dockBubble),
-      );
-    }
-    wasFocused.current = isFocused;
-  }, [isFocused, pop, reduce]);
-  const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
-  const Icon = ICON[tab];
-  return (
-    <Pressable
-      ref={ref}
-      {...props}
-      onPressIn={press.onPressIn}
-      onPressOut={press.onPressOut}
-      onPress={(e) => {
-        if (!isFocused) fire("tick");
-        onPress?.(e);
-      }}
-      accessibilityRole="tab"
-      accessibilityLabel={TAB_LABEL[tab]}
-      accessibilityState={{ selected: Boolean(isFocused) }}
-      style={styles.button}
-    >
-      <Animated.View style={press.style}>
-        <Animated.View style={popStyle}>
-          <Icon
-            size={DOCK.iconSize}
-            strokeWidth={isFocused ? DOCK.iconStrokeActive : DOCK.iconStroke}
-            color={isFocused ? color.ink : color.text3}
-          />
-        </Animated.View>
-      </Animated.View>
-    </Pressable>
-  );
-});
-
-/** The focused destination, by route name (D-193: the router's route order need not follow the dock's order). */
+/** Retain all five registered stacks; the visible dock groups them into three reference contexts. */
 export function useFocusedTab(): TabName {
   const { getTrigger } = useTabTrigger({ name: TABS[0] });
   return TABS.find((tab) => getTrigger(tab)?.isFocused) ?? TABS[0];
 }
 
-/** The dock: triggers outside `TabList` (the hidden list in `(tabs)/_layout.tsx` defines the routes). */
 export function Dock() {
   const { color } = useTheme();
-  const { hidden } = useDock();
+  const { hidden, context, setContext } = useDock();
+  const { switchTab } = useTabTrigger({ name: "home" });
+  const focused = useFocusedTab();
+  const [typing, setTyping] = useState(false);
   const reduce = useReducedMotion();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const focused = Math.max(0, TABS.indexOf(useFocusedTab()));
-  const itemWidth = (width - 2 * DOCK.inset - FAN.trigger - DOCK.plusGap - 2 * DOCK.padding) / TABS.length;
-  const bottom = dockBottom(insets.bottom);
-  const x = useSharedValue(focused * itemWidth);
-  const stretch = useSharedValue(1);
-  const drop = DOCK.height + bottom;
-  const y = useSharedValue(hidden ? drop : 0);
+  const shown = !hidden && !typing;
+  const offset = useSharedValue(shown ? 0 : DOCK_HIDDEN_OFFSET);
   useEffect(() => {
-    const to = focused * itemWidth;
-    if (reduce) {
-      x.value = withTiming(to, { duration: TIMING.reducedMotion });
-      return;
-    }
-    if (x.value !== to) {
-      stretch.value = withSequence(
-        withTiming(DOCK.bubbleStretch, { duration: TIMING.press, easing: EASE }),
-        withSpring(1, SPRING.dockBubble),
-      );
-    }
-    x.value = withSpring(to, SPRING.dockBubble);
-  }, [focused, itemWidth, x, stretch, reduce]);
+    if (focused === "you") return; // Profile keeps the context it was opened from.
+    setContext(focused === "markets" ? "trade" : focused === "social" ? "social" : "money");
+  }, [focused, setContext]);
   useEffect(() => {
-    y.value = withTiming(hidden ? drop : 0, { duration: reduce ? TIMING.reducedMotion : TIMING.selection });
-  }, [hidden, drop, y, reduce]);
-  const bubble = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }, { scaleX: stretch.value }] }));
-  const lift = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+    const show = Keyboard.addListener("keyboardDidShow", () => setTyping(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setTyping(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  useEffect(() => {
+    offset.value = withTiming(shown ? 0 : DOCK_HIDDEN_OFFSET, {
+      duration: reduce ? 0 : TIMING.selection,
+      easing: EASE,
+    });
+  }, [shown, reduce, offset]);
+  const motion = useAnimatedStyle(() => ({ transform: [{ translateY: offset.value }] }));
+  const select = (next: ShellContext) => {
+    if (next !== context) fire("tick");
+    setContext(next);
+    switchTab(next === "money" ? "home" : next === "trade" ? "markets" : "social", {});
+  };
   return (
     <Animated.View
-      pointerEvents={hidden ? "none" : "box-none"}
-      accessibilityElementsHidden={hidden}
-      importantForAccessibility={hidden ? "no-hide-descendants" : "auto"}
-      accessibilityRole="tablist"
-      style={[styles.shadowed, ELEVATION.dock, { bottom }, lift]}
+      pointerEvents={shown ? "box-none" : "none"}
+      accessibilityElementsHidden={!shown}
+      importantForAccessibility={shown ? "auto" : "no-hide-descendants"}
+      style={[styles.position, { bottom: dockBottom(insets.bottom) }, motion]}
     >
-      <View style={[styles.dock, GLASS ? null : { borderWidth: HAIRLINE_PX, borderColor: color.glassRim }]}>
-        <DockMaterial />
-        <Animated.View
-          style={[
-            styles.bubble,
-            {
-              width: itemWidth - 2 * DOCK.bubbleGap,
-              backgroundColor: color.glassBubble,
-              boxShadow: `inset 0px ${HAIRLINE_PX}px 0px 0px ${color.glassBubbleRim}`,
-            },
-            bubble,
-          ]}
-        />
-        {TABS.map((tab) => (
-          <TabTrigger key={tab} name={tab} asChild>
-            <DockButton tab={tab} />
-          </TabTrigger>
-        ))}
+      <View
+        style={[styles.rail, { backgroundColor: color.glassOpaque }]}
+        accessibilityRole="tablist"
+        accessibilityLabel="App context"
+      >
+        <Pressable
+          onPress={() => select("social")}
+          accessibilityRole="tab"
+          accessibilityLabel="Social"
+          accessibilityState={{ selected: context === "social" }}
+          style={styles.side}
+        >
+          <UsersRound size={24} color={context === "social" ? color.ink : color.text3} />
+          <Text style={[TYPE.micro, { color: context === "social" ? color.ink : color.text3 }]}>Social</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => select("trade")}
+          accessibilityRole="tab"
+          accessibilityLabel="Trade"
+          accessibilityState={{ selected: context === "trade" }}
+          style={[styles.anchor, { backgroundColor: color.action, boxShadow: `0px 0px 18px 0px ${color.glow}` }]}
+        >
+          <EntityMark id={ids.brand("senryo")} size={52} variant="symbol" decorative ground={color.action} />
+        </Pressable>
+        <Pressable
+          onPress={() => select("money")}
+          accessibilityRole="tab"
+          accessibilityLabel="Money"
+          accessibilityState={{ selected: context === "money" }}
+          style={styles.side}
+        >
+          <Wallet size={24} color={context === "money" ? color.ink : color.text3} />
+          <Text style={[TYPE.micro, { color: context === "money" ? color.ink : color.text3 }]}>Money</Text>
+        </Pressable>
       </View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  shadowed: {
-    position: "absolute",
-    left: DOCK.inset,
-    right: DOCK.inset + FAN.trigger + DOCK.plusGap,
-    height: DOCK.height,
-    borderRadius: RADIUS.pill,
-  },
-  dock: {
-    flex: 1,
-    borderRadius: RADIUS.pill,
-    overflow: "hidden",
+  position: { position: "absolute", alignSelf: "center" },
+  rail: {
     flexDirection: "row",
-    paddingHorizontal: DOCK.padding,
+    alignItems: "center",
+    borderRadius: 40,
+    minHeight: 60,
+    paddingHorizontal: SPACE.sm,
+    gap: SPACE.sm,
   },
-  bubble: {
-    position: "absolute",
-    top: DOCK.bubbleInset,
-    bottom: DOCK.bubbleInset,
-    left: DOCK.padding + DOCK.bubbleGap,
-    borderRadius: RADIUS.pill,
+  side: { minWidth: 62, minHeight: SIZE.touch, alignItems: "center", justifyContent: "center", gap: SPACE.xs },
+  anchor: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: -SPACE.sm,
   },
-  button: { flex: 1, alignItems: "center", justifyContent: "center", minHeight: SIZE.touch },
 });

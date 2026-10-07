@@ -5,8 +5,8 @@
  * has All · Trending · Gainers. One dismissible "Go long or short" card leads Perps. The list fades in once per tab.
  */
 import { FlashList } from "@shopify/flash-list";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,6 +14,7 @@ import { ChipRow } from "~/components/kit/ChipRow";
 import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { Search, Star } from "~/components/kit/symbols";
 import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
+import { ContextTabs } from "~/components/shell/ContextTabs";
 import { useDockInset } from "~/components/shell/dock-context";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
 import { TabTitle } from "~/components/shell/TabTitle";
@@ -36,7 +37,7 @@ import { MARKET_FILTERS, type MarketFilter } from "./universe";
 const VIEWS = [
   { value: "watchlist", label: "Watchlist", icon: Star },
   { value: "tokens", label: "Tokens" },
-  { value: "perps", label: "Perps" },
+  { value: "perps", label: "Pairs" },
   { value: "predict", label: "Predict" },
 ] as const;
 
@@ -46,6 +47,11 @@ export function MarketsScreen() {
   const bottom = useDockInset();
   const refreshControl = usePullRefresh();
   const [view, setView] = useState<MarketsView | "predict">("perps");
+  const params = useLocalSearchParams<{ view?: string }>();
+  useEffect(() => {
+    if (params.view === "predict" || params.view === "perps" || params.view === "watchlist" || params.view === "tokens")
+      setView(params.view);
+  }, [params.view]);
   const [filter, setFilter] = useState<MarketFilter>("all");
   const [tokenSort, setTokenSort] = useState<TokenSort>("all");
   return (
@@ -67,9 +73,20 @@ export function MarketsScreen() {
         </View>
       </View>
       <View style={styles.controls}>
-        <View style={styles.tabs}>
-          <UnderlineTabs options={VIEWS} value={view} onChange={setView} label="Market list" />
-        </View>
+        <ContextTabs />
+        {view === "perps" || view === "tokens" ? (
+          <View style={styles.tabs}>
+            <UnderlineTabs
+              options={VIEWS.filter((option) => option.value === "perps" || option.value === "tokens")}
+              value={view}
+              onChange={(next) => {
+                setView(next);
+                router.setParams({ view: next });
+              }}
+              label="Instrument type"
+            />
+          </View>
+        ) : null}
         {view === "predict" ? null : view === "tokens" ? (
           <ChipRow options={TOKEN_SORTS} value={tokenSort} onChange={setTokenSort} label="Token order" />
         ) : (

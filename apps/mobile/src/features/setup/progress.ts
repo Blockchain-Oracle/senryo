@@ -3,24 +3,17 @@
  * resumable — killing the app mid-way reopens on the same step. Setup is owed from the moment a create's passkey
  * succeeds (the account provider records it then, `oweSetup`), so a kill or a create from the guest sheet still lands
  * on it. An account that signs in has no entry and goes straight to Home. Every step can be skipped except the terms,
- * which come last as a sheet over Home (Fomo F08).
+ * which appear over Home before biometric setup for new accounts. Existing accounts keep their remaining order.
  */
 import type { Address } from "@senryo/account";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
-/** In order. `done` is the completion scene; `terms` is the sheet over Home; after it the entry reads `finished`. */
-export const SETUP_STEPS = ["handle", "follow", "money", "face-id", "notifications", "done", "terms"] as const;
-export type SetupStep = (typeof SETUP_STEPS)[number];
-type Stored = Record<string, string>;
+import { decodeSetupRecord, modernSetupAccount, nextSetupStep, SETUP_STEPS, type SetupStep } from "./setup-order";
 
-function read(): Stored {
-  const raw = storage.getString(STORAGE_KEYS.setup);
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw) as Stored;
-  } catch {
-    return {};
-  }
+export { SETUP_STEPS, type SetupStep } from "./setup-order";
+
+function read(): Record<string, string> {
+  return decodeSetupRecord(storage.getString(STORAGE_KEYS.setup));
 }
 
 function write(address: Address, value: SetupStep | "finished") {
@@ -42,6 +35,14 @@ export function anySetupPending(): boolean {
  * complete from then on (§0.7 #12): never before, so a cancelled passkey leaves the phone on Welcome.
  */
 export function oweSetup(address: Address) {
+  const raw = storage.getString(STORAGE_KEYS.setupOrder);
+  // Reconstruct only valid markers rather than trusting arbitrary JSON.
+  const versions = Object.fromEntries(
+    Object.keys(read())
+      .filter((key) => modernSetupAccount(raw, key))
+      .map((key) => [key, true]),
+  );
+  storage.set(STORAGE_KEYS.setupOrder, JSON.stringify({ ...versions, [address.toLowerCase()]: true }));
   write(address, SETUP_STEPS[0]);
   storage.set(STORAGE_KEYS.welcomed, true);
 }
@@ -55,7 +56,9 @@ export function pendingSetupStep(address: Address | undefined): SetupStep | unde
 
 /** Marks `step` complete (or skipped) and returns the next one, or undefined after the last. */
 export function completeSetupStep(address: Address, step: SetupStep): SetupStep | undefined {
-  const next = SETUP_STEPS[SETUP_STEPS.indexOf(step) + 1];
+  const pending = pendingSetupStep(address);
+  if (pending !== step) return pending; // A repeated callback cannot advance completed setup twice.
+  const next = nextSetupStep(pending, step, modernSetupAccount(storage.getString(STORAGE_KEYS.setupOrder), address));
   write(address, next ?? "finished");
   return next;
 }

@@ -8,8 +8,8 @@ import {
 import type { TextStyle } from "react-native";
 
 /**
- * Loaded face names (expo-font keys in fonts.ts). Inter 400–700 for UI; Inter Display SemiBold for numbers and titles
- * ≥ 32; Noto Sans JP for Japanese text (React Native does not fall back per glyph to a custom font, so Japanese runs set
+ * Loaded face names (expo-font keys in fonts.ts). Inter 400–700 for UI; Roboto Condensed Black for display amounts
+ * and titles; Noto Sans JP for Japanese text (React Native does not fall back per glyph to a custom font, so Japanese runs set
  * `jp*` explicitly). The `mono*` names are legacy aliases from D2's monospace amounts: they resolve to Inter, and numbers
  * get tabular lining figures.
  */
@@ -18,7 +18,7 @@ export const FONT = {
   sansMedium: "Inter_500Medium",
   sansStrong: "Inter_600SemiBold",
   sansBold: "Inter_700Bold",
-  display: "InterDisplay_600SemiBold",
+  display: "RobotoCondensed_900Black",
   jp: "NotoSansJP_400Regular",
   jpMedium: "NotoSansJP_500Medium",
   jpStrong: "NotoSansJP_600SemiBold",

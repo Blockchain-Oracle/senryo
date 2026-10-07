@@ -16,6 +16,7 @@ import { ChartCandlestick, CreditCard, type SymbolIcon, TriangleAlert } from "~/
 import { useSheetClose } from "~/components/sheet/Sheet";
 import { SheetRow } from "~/components/sheet/SheetRow";
 import { ROUTES } from "~/lib/constants/routes";
+import { masked, useHideBalances } from "~/lib/hide-balances";
 import { signedUsd, usd } from "~/lib/money";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, RADIUS, SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -36,13 +37,14 @@ const TARGET: Record<SheetRowKey, { tab?: "assets" | "positions"; href?: Href }>
 /** "≈ $12,402.55" with the decimals in the quiet ink (Fomo's hero), never rolling (it is not the hero). */
 function TotalLine({ value, partial }: { value: bigint; partial: boolean }) {
   const { color } = useTheme();
-  const text = `${partial ? "≈ " : ""}${usd(value)}`;
+  const [hidden] = useHideBalances();
+  const text = masked(`${partial ? "≈ " : ""}${usd(value)}`, hidden);
   const point = text.lastIndexOf(DECIMAL_POINT);
   return (
     <Text
       maxFontSizeMultiplier={HERO_FONT_SCALE}
       accessibilityRole="header"
-      accessibilityLabel={`Total ${partial ? "about " : ""}${usd(value)}`}
+      accessibilityLabel={hidden ? "Balance hidden" : `Total ${partial ? "about " : ""}${usd(value)}`}
       style={[TYPE.numXl, styles.center, { color: color.ink }]}
     >
       {point < 0 ? text : text.slice(0, point)}
@@ -80,6 +82,7 @@ function valueText(part: Part): string {
 export function BalanceDetails() {
   const { color } = useTheme();
   const close = useSheetClose();
+  const [hidden] = useHideBalances();
   const sheet = useBalanceSheet();
   const open = (key: SheetRowKey) => {
     const target = TARGET[key];
@@ -107,7 +110,7 @@ export function BalanceDetails() {
       </View>
       <View style={styles.rows}>
         {sheet.rows.map((part, i) => {
-          const value = valueText(part);
+          const value = masked(valueText(part), hidden);
           const negative = part.valueUsd6 !== undefined && part.valueUsd6 < 0n;
           const ink =
             part.key === "positions" && part.valueUsd6 !== undefined

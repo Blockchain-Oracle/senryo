@@ -26,6 +26,7 @@ export function AuthFlowBody({ flow, onClose }: { flow: AuthFlow; onClose?: () =
           onRetry={flow.retry}
           onSignIn={flow.signIn}
           onCreate={flow.create}
+          onClose={onClose ?? flow.reset}
         />
       );
     case "check":

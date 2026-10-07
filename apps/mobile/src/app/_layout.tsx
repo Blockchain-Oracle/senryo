@@ -44,6 +44,8 @@ const SHEETS = [
   "network",
   "receive",
   "balance-details",
+  "display-balance",
+  "transfer",
   "voucher",
   "compose-thesis",
   "social-actions",

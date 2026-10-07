@@ -32,6 +32,27 @@ export interface FontSource {
 
 export const FONT_SOURCES: readonly FontSource[] = [
   {
+    family: "Roboto Condensed (native display adaptation)",
+    owner: "Google / The Roboto Project Authors",
+    provenance: "derived",
+    pageUrl: "https://github.com/google/fonts/tree/69d0549e8fc7ad72e1531734c81237be401ec4fd/ofl/robotocondensed",
+    source: {
+      url: "https://raw.githubusercontent.com/google/fonts/69d0549e8fc7ad72e1531734c81237be401ec4fd/ofl/robotocondensed/RobotoCondensed%5Bwght%5D.ttf",
+      sha256: "dace262afcee68a5276f200d8026c57221735c0118ab5fda8c2c0d3dc409a8d0",
+    },
+    licence: "SIL Open Font License 1.1; native condensed display adaptation, not a claim of UGLYCASH's source font.",
+    licenceFiles: ["apps/mobile/assets/fonts/OFL-RobotoCondensed.txt"],
+    retrieved: "2026-10-07",
+    derivation:
+      "fontTools 4.66.1 varLib.instancer wght=900; recalcTimestamp=False; complete static TTF, no subsetting.",
+    files: [
+      {
+        path: "apps/mobile/assets/fonts/RobotoCondensed-Black.ttf",
+        sha256: "974689edba7bf50c6b38ffbe569ca66c246a5c27c5ed2a8f693d9e5ab6e6601d",
+      },
+    ],
+  },
+  {
     family: "Material Symbols Outlined (Android utility icons)",
     owner: "Google LLC",
     provenance: "first-party",

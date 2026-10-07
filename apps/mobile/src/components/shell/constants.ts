@@ -1,6 +1,6 @@
 /**
- * Shell constants (S1b.7, D-176/D-193): the five dock destinations in dock order, the Phantom fan's four actions, and
- * the material strengths the tokens leave to the renderer. Geometry and motion live in the theme (DOCK, FAN, SPRING,
+ * Shell constants (S1b.7, D-176/D-193): the five dock destinations in dock order, the contextual money sheet's four actions, and
+ * the material strengths the tokens leave to the renderer. Geometry and motion live in the theme (DOCK, SPRING,
  * TIMING); these are shell choices only.
  */
 
@@ -36,18 +36,6 @@ export const FAN_LABEL: Record<FanAction, string> = {
   swap: "Swap",
 };
 
-/**
- * Material strengths (expo-blur intensity 0–100). The dock's blur only stands in for Liquid Glass before iOS 26; the
- * fan's backdrop is the "strong live blur" of P19/M06 — the page underneath stays recognisable only as colour fields.
- */
-export const DOCK_BLUR_INTENSITY = 60;
-export const FAN_BLUR_INTENSITY = 90;
-
-/** The fan items start this far below their slot and this small (M06 onset: rise + scale from the plus). */
-export const FAN_ITEM_RISE = 24;
-export const FAN_ITEM_FROM_SCALE = 0.6;
-/** A dock icon shrinks to this under the finger. */
-export const DOCK_PRESS_SCALE = 0.88;
 /** The collapsed header's compact balance fades in over the last part of the collapse (fraction of the distance). */
 export const HEADER_COMPACT_FROM = 0.55;
 /** The expanded header content fades out over the first part of the collapse. */

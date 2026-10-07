@@ -2,12 +2,14 @@ import { useFonts } from "expo-font";
 import { Platform } from "react-native";
 
 /**
- * Living Lacquer faces (D-192), loaded at runtime through expo-font from the vendored files in assets/fonts. Inter
+ * Native faces loaded through expo-font from vendored files. Roboto Condensed Black supplies the reference’s
+ * condensed display character; its exact font is unknown. Inter
  * 400–700 and Inter Display SemiBold are byte-for-byte from the official Inter 4.1 release; Noto Sans JP is instanced and
  * subset to the Japanese glyphs we ship (千両金箔). Provenance + sha256 in `packages/tokens/src/fonts.ts` (invariant
  * font-provenance). Keys are the family names `type.ts` uses.
  */
 const FACES = {
+  RobotoCondensed_900Black: require("../../assets/fonts/RobotoCondensed-Black.ttf"),
   Inter_400Regular: require("../../assets/fonts/Inter-Regular.ttf"),
   Inter_500Medium: require("../../assets/fonts/Inter-Medium.ttf"),
   Inter_600SemiBold: require("../../assets/fonts/Inter-SemiBold.ttf"),

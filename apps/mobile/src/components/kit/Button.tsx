@@ -2,26 +2,11 @@ import { type ReactNode, useContext } from "react";
 import { ActivityIndicator, Pressable, type StyleProp, StyleSheet, Text, type ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
-import {
-  BUTTON,
-  BUTTON_LIFT,
-  CONTROL_FONT_SCALE,
-  DISABLED_OPACITY,
-  type Palette,
-  SIZE,
-  SPACE,
-  TYPE,
-  useTheme,
-} from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, DISABLED_OPACITY, type Palette, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { SurfaceLevel } from "./Surface";
 import { usePressScale } from "./usePressScale";
 
-/**
- * The button (Fomo F01 / F09 / F36 / F44): a rounded rectangle — 56 pt with 12 pt corners, 44 pt with 10 — never a
- * full pill and never an outline box. Depth comes from a 1 pt top highlight inside the fill, not from a border.
- * It shrinks to 0.97 under the finger and darkens; a disabled primary turns into the quiet dark plate with muted ink
- * (F08 → F36), so "not yet" and "go" are two different objects, not one faded one.
- */
+/** Native reference controls: flat pill buttons, black primary, outlined secondary and gray disabled. */
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 
 interface Props {
@@ -42,10 +27,6 @@ interface Tone {
   bg: string;
   pressed: string;
   ink: string;
-  /** Colour of the 1 pt inner highlight; none on text-only buttons. */
-  rim: string | null;
-  /** Only the filled primary lifts off the page. */
-  lift?: boolean;
 }
 
 /**
@@ -55,27 +36,24 @@ interface Tone {
 function tones(variant: ButtonVariant, c: Palette, level: number): Tone {
   switch (variant) {
     case "primary":
-      return { bg: c.primary, pressed: c.primaryPressed, ink: c.primaryForeground, rim: c.primaryRim, lift: true };
+      return { bg: c.primary, pressed: c.primaryPressed, ink: c.primaryForeground };
     case "secondary":
       return level > 0
-        ? { bg: c.rowPressed, pressed: c.raised2, ink: c.foreground, rim: c.surfaceRim }
-        : { bg: c.raised2, pressed: c.rowPressed, ink: c.foreground, rim: c.surfaceRim };
+        ? { bg: c.rowPressed, pressed: c.raised2, ink: c.foreground }
+        : { bg: c.raised2, pressed: c.rowPressed, ink: c.foreground };
     case "outline":
-      if (level > 1) return { bg: c.nestedFill, pressed: c.raised2, ink: c.foreground, rim: c.surfaceRim };
-      return level > 0
-        ? { bg: c.raised2, pressed: c.rowPressed, ink: c.foreground, rim: c.surfaceRim }
-        : { bg: c.card, pressed: c.raised2, ink: c.foreground, rim: c.surfaceRim };
+      return { bg: c.transparent, pressed: c.rowPressed, ink: c.foreground };
     case "ghost":
-      return { bg: c.transparent, pressed: c.rowPressed, ink: c.link, rim: null };
+      return { bg: c.transparent, pressed: c.rowPressed, ink: c.link };
     case "destructive":
-      return { bg: c.destructiveWash, pressed: c.destructiveWash, ink: c.destructive, rim: c.surfaceRim };
+      return { bg: c.destructiveWash, pressed: c.destructiveWash, ink: c.destructive };
   }
 }
 
-/** A disabled filled button is the quiet plate (F08's Continue), whatever it becomes when enabled. */
-function quiet(c: Palette, level: number): Tone {
-  const bg = level > 1 ? c.nestedFill : level > 0 ? c.raised2 : c.card;
-  return { bg, pressed: bg, ink: c.text3, rim: c.surfaceRim };
+/** Disabled filled buttons use the reference's gray inset plate. */
+function quiet(c: Palette): Tone {
+  const bg = c.input;
+  return { bg, pressed: bg, ink: c.text3 };
 }
 
 export function Button({
@@ -94,7 +72,7 @@ export function Button({
   const press = usePressScale();
   const inert = disabled || loading;
   const level = useContext(SurfaceLevel);
-  const tone = disabled && variant !== "ghost" ? quiet(color, level) : tones(variant, color, level);
+  const tone = disabled && variant !== "ghost" ? quiet(color) : tones(variant, color, level);
   const compact = size === "sm";
   return (
     <Animated.View style={[block ? styles.block : styles.inline, style, press.style]}>
@@ -117,9 +95,7 @@ export function Button({
             borderRadius: compact ? BUTTON.radius.sm : BUTTON.radius.md,
             backgroundColor: pressed ? tone.pressed : tone.bg,
           },
-          tone.rim
-            ? { boxShadow: `inset 0px ${BUTTON.rim}px 0px 0px ${tone.rim}${tone.lift ? `, ${BUTTON_LIFT}` : ""}` }
-            : null,
+          variant === "outline" ? { borderWidth: 1.5, borderColor: color.ink } : null,
           disabled && variant === "ghost" ? styles.faded : null,
         ]}
       >

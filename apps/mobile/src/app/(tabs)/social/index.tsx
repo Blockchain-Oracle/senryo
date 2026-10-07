@@ -22,7 +22,7 @@ const SCOPES = [
 ] as const satisfies readonly { value: FeedScope; label: string }[];
 
 /** Where the pill floats: under the fixed bar (touch row + its padding + hairline) and the pinned tabs. */
-const PILL_TOP = SIZE.touch + SPACE.md + HAIRLINE_PX + SIZE.touch + SPACE.sm;
+const PILL_TOP = SIZE.touch + SPACE.md + HAIRLINE_PX + SIZE.touch + SPACE.sm + SIZE.touch;
 
 /**
  * Social (F4, Fomo F15): the feed, with Global · Following underline tabs pinned under the bar. Round utilities open

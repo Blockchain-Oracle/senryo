@@ -1,5 +1,4 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
-import { DARK } from "../../packages/tokens/src/palette.ts";
 import {
   ANDROID_BUILD_ARCHS,
   ANDROID_MIN_SDK,
@@ -12,6 +11,7 @@ import {
   RP_ID,
   SPLASH_IMAGE_WIDTH,
 } from "./src/lib/constants/app.ts";
+import { NATIVE_LIGHT } from "./src/theme/native-palette.ts";
 
 /**
  * Senryo mobile (Expo SDK 57 dev build — Expo Go is unsupported: passkeys and biometric SecureStore need native code).
@@ -33,7 +33,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   userInterfaceStyle: "automatic",
   icon: "./assets/images/icon.png",
-  backgroundColor: DARK.background,
+  backgroundColor: NATIVE_LIGHT.background,
   ios: {
     bundleIdentifier: APP.bundleId,
     // Without a team, a local build identifies itself as FAKETEAMID.<bundle id>: the association file can't match it,
@@ -50,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // GOOGLE_SERVICES_JSON (Firebase project senryo-app-xyz); a local prebuild without it simply has no FCM.
     ...(process.env.GOOGLE_SERVICES_JSON ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON } : {}),
     adaptiveIcon: {
-      backgroundColor: DARK.background,
+      backgroundColor: NATIVE_LIGHT.background,
       foregroundImage: "./assets/images/android-icon-foreground.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
@@ -70,7 +70,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-font",
     [
       "expo-splash-screen",
-      { backgroundColor: DARK.background, image: "./assets/images/splash-icon.png", imageWidth: SPLASH_IMAGE_WIDTH },
+      {
+        backgroundColor: NATIVE_LIGHT.background,
+        image: "./assets/images/splash-icon.png",
+        imageWidth: SPLASH_IMAGE_WIDTH,
+      },
     ],
     ["expo-secure-store", { faceIDPermission: FACE_ID_PERMISSION }],
     ["expo-local-authentication", { faceIDPermission: FACE_ID_PERMISSION }],

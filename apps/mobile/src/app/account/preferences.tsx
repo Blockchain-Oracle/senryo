@@ -29,7 +29,7 @@ export default function Preferences() {
   const [sounds, setSounds] = useMMKVBoolean(STORAGE_KEYS.sounds, storage);
   const [haptics, setHaptics] = useMMKVBoolean(STORAGE_KEYS.haptics, storage);
   const switchColors = { trackColor: { true: color.primary, false: color.muted }, thumbColor: color.foreground };
-  const appearance: Appearance = stored === "dark" || stored === "light" ? stored : "system";
+  const appearance: Appearance = stored === "dark" || stored === "system" ? stored : "light";
   return (
     <Screen>
       <Stack.Screen options={{ title: "Preferences" }} />

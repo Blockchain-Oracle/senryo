@@ -1,7 +1,8 @@
-import { DARK as DARK_TOKENS, LIGHT as LIGHT_TOKENS, type Palette as TokenPalette } from "@senryo/tokens";
+import type { Palette as TokenPalette } from "@senryo/tokens";
+import { NATIVE_DARK as DARK_TOKENS, NATIVE_LIGHT as LIGHT_TOKENS, NATIVE_SCENE } from "./native-palette";
 
 /**
- * The app palette: every role from `@senryo/tokens` (the only colour source, Living Lacquer D-168) plus the few washes
+ * Native reference colors retain the shared role vocabulary plus the few washes
  * React Native needs precomputed (it has no color-mix()). One `roles()` per theme, same keys in both.
  * This folder is the only place a hex or rgba() may appear in apps/mobile (invariant design-literals-mobile).
  */
@@ -28,6 +29,7 @@ const RIM = { primary: 0.2, surface: 0.06, bubble: 0.12, bubbleEdge: 0.16 } as c
 function roles(t: TokenPalette, nestedFill: string) {
   return {
     ...t,
+    ...NATIVE_SCENE,
     nestedFill,
     /** Page ground, panels and hairlines under their app names. */
     ground: t.background,
@@ -35,7 +37,7 @@ function roles(t: TokenPalette, nestedFill: string) {
     inkMuted: t.mutedForeground,
     hairline: t.border,
     upWash: withAlpha(t.up, WASH.soft),
-    /** Mode and status plates are the opaque Living Lacquer surfaces (Codex consult §4), not alpha washes. */
+    /** Mode and status plates use opaque neutral surfaces for legibility. */
     practiceWash: t.practiceSurface,
     mainnetWash: t.mainnetSurface,
     downWash: withAlpha(t.down, WASH.soft),
@@ -50,7 +52,7 @@ function roles(t: TokenPalette, nestedFill: string) {
     chartFillBottom: withAlpha(t.chartUp, WASH.chartFillEnd),
     chartDownFillTop: withAlpha(t.chartDown, WASH.chartFill),
     chartDownFillBottom: withAlpha(t.chartDown, WASH.chartFillEnd),
-    /** Ordinary sheets dim the parent (#00000066 / #17151F38); the fan has its own `fanScrim` over live blur. */
+    /** Sheets dim the retained parent with the native scrim role. */
     scrim: t.sheetScrim,
     /** Depth without borders: 1 px inner highlights (Fomo's buttons, sheets and dock bubble). */
     primaryRim: withAlpha(t.primaryForeground, RIM.primary),

@@ -37,14 +37,8 @@ interface SheetProps {
   dismissible?: boolean;
 }
 
-/**
- * The compact sheet (Fomo F08 / F20 / F36, M12; Codex consult 1 Oct): a content-sized panel that floats 8 pt from the
- * left, right and bottom edges with 38 pt corners all round, no border, over a scrim that dims the page (no blur: only
- * the fan blurs). It leaves the bottom edge fast and settles long on the iOS drawer curve, and leaves quicker than it
- * came. A drag follows the finger, resists upward, hands over to the content's own scroll, and closes past a quarter
- * of the height (120 pt at most) or on a flick; otherwise it returns on a spring that keeps the finger's velocity.
- * The keyboard pushes it up. Reduce Motion swaps the travel for a fade. Rendered by a transparent-modal route, or
- * inline over a screen.
+/** Edge-attached reference sheet: rounded top, live dimmed parent and keyboard-aware scrolling.
+ * Existing drag/Back/cancel ownership stays intact; Reduced Motion fades instead of travelling.
  */
 export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeight, dismissible = true }: SheetProps) {
   const { color } = useTheme();
@@ -122,6 +116,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
     });
 
   const panelStyle = useAnimatedStyle(() => ({
+    maxHeight: Math.max(0, Math.min(windowHeight * maxHeight, windowHeight - insets.top - keyboard.height.value)),
     opacity: reduce ? scrim.value : 1,
     transform: [{ translateY: drag.value - keyboard.height.value }],
   }));
@@ -150,12 +145,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
             onAccessibilityEscape={() => {
               if (dismissible) close();
             }}
-            style={[
-              styles.panel,
-              ELEVATION.sheet,
-              { maxHeight: windowHeight * maxHeight, backgroundColor: color.card },
-              panelStyle,
-            ]}
+            style={[styles.panel, ELEVATION.sheet, { backgroundColor: color.popover }, panelStyle]}
           >
             <View
               pointerEvents="none"
@@ -166,7 +156,7 @@ export function Sheet({ onClose, children, closeLabel, maxHeight = SHEET.maxHeig
               ]}
             />
             <View style={styles.handleZone} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <View style={[styles.handle, { backgroundColor: dismissible ? color.border : color.transparent }]} />
+              <View style={[styles.handle, { backgroundColor: dismissible ? color.sheetHandle : color.transparent }]} />
             </View>
             <GestureDetector gesture={native}>
               <DrawerScroll
@@ -193,10 +183,11 @@ const styles = StyleSheet.create({
   panel: {
     marginHorizontal: SHEET_SHAPE.inset,
     marginBottom: SHEET_SHAPE.inset,
-    borderRadius: SHEET_SHAPE.radius,
+    borderTopLeftRadius: SHEET_SHAPE.radius,
+    borderTopRightRadius: SHEET_SHAPE.radius,
     overflow: "hidden",
   },
-  edge: { borderRadius: SHEET_SHAPE.radius },
+  edge: { borderTopLeftRadius: SHEET_SHAPE.radius, borderTopRightRadius: SHEET_SHAPE.radius },
   handleZone: { alignItems: "center", paddingTop: SHEET_SHAPE.handleTop, paddingBottom: SHEET_SHAPE.handleBottom },
   handle: { width: SIZE.handleWidth, height: SIZE.handleHeight, borderRadius: RADIUS.pill },
   content: { paddingHorizontal: SHEET_SHAPE.padding, gap: SHEET_SHAPE.padding },

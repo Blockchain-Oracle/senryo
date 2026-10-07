@@ -53,6 +53,8 @@ export const ROUTES = {
   addMoney: "/add-money",
   /** Home's availability row: what each number means, what is locked, and the collateral behind them (direction §7). */
   balanceDetails: "/balance-details",
+  displayBalance: "/display-balance",
+  transfer: "/transfer",
   /** The fan's Receive: compact QR sheet over the page under the fan (P21, FT057). */
   receive: "/receive",
   /** S8.22 mode selector sheet (the mode capsule). */
@@ -93,7 +95,8 @@ export const ROUTES = {
 } as const;
 
 /** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
-export const setupRoute = (step: string) => `/setup/${step}` as const;
+export const setupRoute = (step: string) =>
+  step === "face-id" || step === "terms" ? ROUTES.home : (`/setup/${step}` as const);
 
 export type TicketSide = "long" | "short";
 

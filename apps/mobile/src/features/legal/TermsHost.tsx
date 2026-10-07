@@ -1,18 +1,18 @@
-/**
- * Setup's last step is the terms sheet over Home (A2 step 4; Fomo F08 shows it over the loaded Home). This headless
- * host raises it whenever the account owes it and the tab shell is on screen — after "Go to Home", after a relaunch
- * that killed the app on that step, and again if it was somehow closed before agreeing (it has no Skip). Terms
- * already agreed at a money action's gate during setup complete the step without asking twice.
+/** Terms open over Home before Face ID for new accounts; legacy accounts retain their remaining order.
+ * A previous money-action acknowledgement completes the same legal version without asking twice.
  */
 import { type Href, router, useSegments } from "expo-router";
 import { useEffect, useRef } from "react";
+import { useMMKVString } from "react-native-mmkv";
 import { completeSetupStep, pendingSetupStep } from "~/features/setup/progress";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
+import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { hasAcknowledgedTerms } from "./acknowledged";
 
 export function TermsHost() {
   const account = useAccount();
+  useMMKVString(STORAGE_KEYS.setup, storage);
   const segments = useSegments() as string[];
   const raised = useRef(false);
   const onTabs = segments[0] === "(tabs)";
