@@ -49,7 +49,7 @@ Private screenshot directory: `/Users/abu/.codex/artifacts/senryo-uglycash-2026-
 
 Final mobile/Drive typechecks, setup migration runtime checks, iOS/Android export, repository invariants (0 errors / 0 warnings), 38-file focused Biome check and staged whitespace check passed. Native Release build commands use `Senryo.xcworkspace`, scheme Senryo and the device ID above; the final build uses `CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES`. The final signed simulator displays a dark/Mainnet guest state; that observation is not acceptance of Mainnet services or a full dark-theme sweep. The earlier light guest/privacy screenshots show the reference presentation.
 
-The approved plan/reference study is local commit `649bc0a`. Task-owned implementation is committed separately after validation. Pre-existing prediction, CardIssued, website and unrelated documentation changes remain outside this implementation commit. No source push or distributed-app update occurred. UI interaction stopped when the simulator was changed by the user; no further settings action was taken.
+The approved plan/reference study is local commit `649bc0a`. Task-owned implementation is local commit `ad69449`; a documentation follow-up normalizes CSV line endings and records this validation. Pre-existing prediction, CardIssued, website and unrelated documentation changes remain outside this implementation commit. No source push or distributed-app update occurred. UI interaction stopped when the simulator was changed by the user; no further settings action was taken.
 
 ## Remaining acceptance and full roadmap
 
