@@ -5,9 +5,8 @@
  * from the operation record.
  */
 import { decodePerplOrder, type PerplOrderOutcome } from "@senryo/chain";
-import { mainnetReadOf, type OperationRecord, useQueryEnv } from "@senryo/query";
+import { type OperationRecord, perplReadOf, useQueryEnv } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
-import { PERPL_CHAIN } from "./market";
 
 export function perplOrderHash(record: OperationRecord | undefined): `0x${string}` | undefined {
   const step = record?.steps.find((s) => s.action === "perplOrder" && s.outcome === "completed" && s.hash);
@@ -16,14 +15,15 @@ export function perplOrderHash(record: OperationRecord | undefined): `0x${string
 
 export function usePerplFill(record: OperationRecord | undefined) {
   const env = useQueryEnv();
+  const chainId = env.chainId;
   const hash = perplOrderHash(record);
   const query = useQuery({
-    queryKey: ["perpl", PERPL_CHAIN, "fill", hash ?? ""] as const,
+    queryKey: ["perpl", chainId, "fill", hash ?? ""] as const,
     enabled: hash !== undefined,
     staleTime: Number.POSITIVE_INFINITY,
     queryFn: async (): Promise<PerplOrderOutcome> => {
-      const receipt = await mainnetReadOf(env).getTransactionReceipt({ hash: hash as `0x${string}` });
-      return decodePerplOrder(receipt.logs, PERPL_CHAIN);
+      const receipt = await perplReadOf(env).getTransactionReceipt({ hash: hash as `0x${string}` });
+      return decodePerplOrder(receipt.logs, chainId);
     },
   });
   return { hash, fill: query.data, failed: query.isError, retry: () => void query.refetch() };

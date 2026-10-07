@@ -6,6 +6,7 @@ import { Platform, Share, StyleSheet, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Button } from "~/components/kit/Button";
 import { Screen } from "~/components/kit/Screen";
+import { Panel } from "~/components/kit/Surface";
 import { Skeleton } from "~/components/kit/states";
 import { marketShareUrl } from "~/features/markets/MarketActions";
 import { MarketChart } from "~/features/markets/MarketChart";
@@ -101,24 +102,24 @@ export function PositionDetail({ marketId }: { marketId: number }) {
           <PositionHeader market={m} position={position} />
         </Rise>
         <Rise index={1}>
-          <PnlHero
-            priceUsd6={health.upnlUsd6}
-            fundingUsd6={p.fundingUsd6}
-            borrowUsd6={p.borrowUsd6}
-            onInfo={() => setChild("pnl")}
+          <MarketChart
+            line={{ symbol: m.symbol, marketId: m.marketId, price18: m.pv.price18, updatedAt: m.updatedAt }}
+            entry={position.entry}
+            profitable={health.upnlUsd6 - p.fundingUsd6 - p.borrowUsd6 >= 0n}
           />
         </Rise>
         <Rise index={2}>
-          <MarketChart
-            line={{ symbol: m.symbol, marketId: m.marketId, price18: m.pv.price18 }}
-            entry={position.entry}
-          />
-        </Rise>
-        <Rise index={3}>
-          <View style={styles.stats}>
+          <Panel style={styles.summary}>
+            <PnlHero
+              priceUsd6={health.upnlUsd6}
+              fundingUsd6={p.fundingUsd6}
+              borrowUsd6={p.borrowUsd6}
+              onInfo={() => setChild("pnl")}
+            />
             <PositionStats market={m} position={position} health={health} />
             <FundingLine market={m} isLong={position.isLong} fundingUsd6={p.fundingUsd6} borrowUsd6={p.borrowUsd6} />
-          </View>
+            <Button label="Share position" variant="secondary" onPress={share} />
+          </Panel>
         </Rise>
         <Rise index={4}>
           <TpSlRow market={m} onOpen={() => setChild("tpsl")} />
@@ -132,7 +133,6 @@ export function PositionDetail({ marketId }: { marketId: number }) {
               onPress={() => router.push(ticketRoute(m.symbol, side))}
               accessibilityHint={`Opens the ticket on the ${side} side`}
             />
-            <Button label="Share" variant="secondary" style={styles.flex} onPress={share} />
           </View>
         </Rise>
         <Rise index={6}>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   // The slide is pinned under the scroll, so the content only needs to end clear of it.
   content: { paddingBottom: SPACE.xl },
   outcome: { gap: SPACE.xl },
-  stats: { gap: SPACE.sm },
+  summary: { gap: SPACE.md, padding: SPACE.md },
   actions: { flexDirection: "row", gap: SPACE.md },
   flex: { flex: 1 },
   loading: { gap: SPACE.xl },

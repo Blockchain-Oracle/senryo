@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { ArrowLeftRight } from "~/components/kit/symbols";
 import { LeverageBadge } from "~/features/markets/LeverageBadge";
+import { PriceFreshness } from "~/features/markets/PriceFreshness";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { arrow, price18, priceDecimalsOf, signedPct, usd } from "~/lib/money";
 import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -107,6 +108,7 @@ export function PriceBlock({ line }: { line: MarketLine }) {
           ${shown}
         </Text>
         <Change bps={line.change24hBps} suffix />
+        <PriceFreshness market={line.market} />
       </View>
       <View style={styles.oi} accessible accessibilityLabel={`Open interest ${openInterest}`}>
         <View style={styles.inline}>

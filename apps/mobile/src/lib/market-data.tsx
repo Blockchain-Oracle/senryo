@@ -4,12 +4,13 @@
  */
 import { createIndexerClient, graphqlEndpoint } from "@senryo/indexer-client";
 import { configureOperationScopeValidator, configureOperationStorage, QueryEnvProvider } from "@senryo/query";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { AppState } from "react-native";
 import { api } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
 import { sharedRead } from "~/lib/account/sender";
 import { DEV_WORKSPACE } from "~/lib/dev/config";
+import { devMarketHistory, devPerplSnapshot } from "~/lib/dev/history";
 import { ENV } from "~/lib/env";
 import { activeNetwork, useNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
@@ -25,6 +26,11 @@ export function MarketDataProvider({ children }: { children: ReactNode }) {
   // A network switch re-points every query (keys carry the chain), the socket and the price store (S8.22).
   const network = useNetwork();
   const account = useAccount();
+  const [streamActive, setStreamActive] = useState(AppState.currentState === "active");
+  useEffect(() => {
+    const listener = AppState.addEventListener("change", (state) => setStreamActive(state === "active"));
+    return () => listener.remove();
+  }, []);
   configureOperationScopeValidator((chainId, address) => {
     if (
       activeNetwork().chainId !== chainId ||
@@ -41,6 +47,9 @@ export function MarketDataProvider({ children }: { children: ReactNode }) {
       indexer={indexer}
       apiOrigin={ENV.API_ORIGIN}
       socketEnabled={!DEV_WORKSPACE}
+      streamActive={streamActive}
+      perplSnapshot={DEV_WORKSPACE ? devPerplSnapshot : undefined}
+      marketHistory={DEV_WORKSPACE ? devMarketHistory : undefined}
     >
       {children}
     </QueryEnvProvider>

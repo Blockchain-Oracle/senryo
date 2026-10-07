@@ -5,7 +5,7 @@
  * in session (a withdrawal to oneself is in scope), and the one outcome surface. Never resent; unknown stays pending.
  */
 import { PERPL_MIN_WITHDRAW_CNS } from "@senryo/config";
-import { mainnetReadOf, perplWithdrawOperation, usePerplAccount, useQueryEnv } from "@senryo/query";
+import { perplReadOf, perplWithdrawOperation, usePerplAccount, useQueryEnv } from "@senryo/query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -23,7 +23,6 @@ import { useReviewGuard } from "~/lib/review-guard";
 import { CONTROL_FONT_SCALE, SPACE, TYPE, useTheme } from "~/theme";
 import { perplFeeShortWei } from "./fees";
 import { monText, perplUsd } from "./format";
-import { PERPL_CHAIN } from "./market";
 import { usePerplRun } from "./usePerplRun";
 import { WITHDRAW_WORDS } from "./words";
 
@@ -32,18 +31,19 @@ const AUSD = { symbol: "AUSD", decimals: 6 } as const;
 export function PerplWithdraw() {
   const { color } = useTheme();
   const env = useQueryEnv();
+  const chainId = env.chainId;
   const network = useNetwork();
   const address = useAccount().hint?.address;
   const snapshot = usePerplAccount(address);
   const known = snapshot.status === "fresh" || snapshot.status === "stale" ? snapshot.value : undefined;
   const free = known?.account?.availableCNS ?? 0n;
   const input = useAmountInput(AUSD.decimals, null, free);
-  const runner = usePerplRun(`perpl-withdraw:${PERPL_CHAIN}:${address?.toLowerCase() ?? "guest"}`);
+  const runner = usePerplRun(`perpl-withdraw:${chainId}:${address?.toLowerCase() ?? "guest"}`);
   const outcome = useSettledOutcome(runner.trace.events);
-  const guard = useReviewGuard([PERPL_CHAIN, address, input.amount].join(":"));
+  const guard = useReviewGuard([chainId, address, input.amount].join(":"));
   const [problem, setProblem] = useState<string>();
   const amount = input.amount;
-  const mainnet = network.chainId === PERPL_CHAIN;
+  const matchingNetwork = network.chainId === chainId;
 
   if (runner.trace.events.length > 0 || runner.active) {
     const moved = BigInt(runner.trace.record?.reviewedIntent.withdraw ?? "0");
@@ -71,7 +71,7 @@ export function PerplWithdraw() {
       </View>
     );
   }
-  if (!mainnet) return <QuietLine>Perpl runs on Mainnet</QuietLine>;
+  if (!matchingNetwork) return <QuietLine>Review the selected network</QuietLine>;
   if (known && !known.account) {
     return (
       <QuietLine action={{ label: "Explore markets", onPress: () => router.navigate(ROUTES.markets) }}>
@@ -94,8 +94,8 @@ export function PerplWithdraw() {
   const confirm = async () => {
     if (!address) return;
     setProblem(undefined);
-    const read = mainnetReadOf(env);
-    const plan = await perplWithdrawOperation(read, address, amount);
+    const read = perplReadOf(env);
+    const plan = await perplWithdrawOperation(read, address, amount, chainId);
     if (plan.blocker) {
       setProblem(plan.blocker === "over-available" ? "Less is free on Perpl now · review" : "Review the amount");
       return;
@@ -108,7 +108,7 @@ export function PerplWithdraw() {
     await runner.run({
       plan,
       labels: ["Move back to wallet"],
-      reviewedIntent: { ...plan.reviewedIntent, kind: "perpl", network: "mainnet", symbol: "AUSD" },
+      reviewedIntent: { ...plan.reviewedIntent, kind: "perpl", network: network.key, symbol: "AUSD" },
       confirmWith: "session",
       revalidate: async () => guard(),
     });

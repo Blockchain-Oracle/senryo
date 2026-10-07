@@ -8,7 +8,6 @@ import { type AccountClient, type Address, emptyUsage, evaluateSequence, type Fa
 import type { TxRequest } from "@senryo/chain";
 import type { ConfirmLevel } from "~/features/trade/confirm-level";
 import { policyContext } from "~/lib/account/api";
-import { PERPL_CHAIN } from "./market";
 
 export interface PerplConfirmCheck {
   client: AccountClient | undefined;
@@ -24,11 +23,9 @@ export function perplConfirmLevel(check: PerplConfirmCheck): ConfirmLevel {
   const { client, address, requests } = check;
   if (!client || !address || requests.length === 0) return "session";
   const ctx = { ...policyContext(address, check.faceId)(), perplMarketLabel: () => check.marketLabel };
-  // Perpl is mainnet only: judging it on another network would only ever say "wrong chain".
-  if (ctx.chainId !== PERPL_CHAIN) return "session";
   const refusal = evaluateSequence(
     requests.map((r) => ({
-      chainId: PERPL_CHAIN,
+      chainId: ctx.chainId,
       to: r.to,
       data: r.data,
       value: r.value ?? 0n,

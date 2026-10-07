@@ -36,7 +36,7 @@ export function PerplHeldRow({ meta }: { meta: PerplMarketMeta }) {
 export function PerplOwnRow({ meta }: { meta: PerplMarketMeta }) {
   const symbol = OWN_TOKEN[meta.symbol];
   const token = symbol ? spotToken(symbol) : undefined;
-  if (!symbol || !token) return null;
+  if (!symbol || !token || meta.chainId !== MAINNET_CHAIN_ID) return null;
   return (
     <LinkRow
       mark={token.mark}

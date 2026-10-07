@@ -6,7 +6,7 @@
  * A proxy round id is `phase << 64 | aggregatorRound`, and aggregator rounds run 1…latest without gaps (OCR2), so a
  * range or a search is plain arithmetic on ids inside the current phase. Earlier phases are not crossed.
  */
-import { MAINNET_EXTERNAL, PERPL_PRICE_SOURCE } from "@senryo/config";
+import { type ChainId, MAINNET_CHAIN_ID, PERPL_EXCHANGE, PERPL_PRICE_SOURCE } from "@senryo/config";
 import { aggregatorV3InterfaceAbi } from "@senryo/contracts/abis";
 import type { Address } from "viem";
 import type { ReadClient } from "./clients.ts";
@@ -95,10 +95,11 @@ export interface PerplMarketInfo {
 export async function readPerplMarkets(
   read: ReadClient,
   marketIds: readonly number[],
+  chainId: ChainId = MAINNET_CHAIN_ID,
 ): Promise<Array<PerplMarketInfo | undefined>> {
   const results = await read.multicall({
     contracts: marketIds.map((id) => ({
-      address: MAINNET_EXTERNAL.perplExchange,
+      address: PERPL_EXCHANGE[chainId],
       abi: perplExchangeAbi,
       functionName: "getPerpetualInfo",
       args: [BigInt(id)],

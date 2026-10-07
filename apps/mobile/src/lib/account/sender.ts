@@ -30,7 +30,7 @@ import {
 import { type ChainId, isChainId, TESTNET_CHAIN_ID } from "@senryo/config";
 import { isTerminalStage } from "@senryo/core";
 import { operationOutcome, readOperation, userFeeCache, writeOperation } from "@senryo/query";
-import { DEV_RPC, DEV_WORKSPACE } from "~/lib/dev/config";
+import { DEV_RPC, DEV_RPC_TIMEOUT_MS, DEV_WORKSPACE } from "~/lib/dev/config";
 import { activeNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
 import { policyContext } from "./api";
@@ -38,7 +38,7 @@ import { policyContext } from "./api";
 function developmentRpc(chainId: ChainId) {
   if (!DEV_WORKSPACE) return undefined;
   if (chainId !== TESTNET_CHAIN_ID) throw new Error("Development signing is restricted to the local Practice fork.");
-  return { http: [DEV_RPC] };
+  return { http: [DEV_RPC], timeoutMs: DEV_RPC_TIMEOUT_MS };
 }
 
 const mmkv: KvStore = {

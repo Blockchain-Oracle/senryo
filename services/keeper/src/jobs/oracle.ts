@@ -10,13 +10,13 @@ import {
   readOracleStates,
   readOracles,
   sendAndFinalize,
-  sendTx,
 } from "@senryo/chain";
 import { ENGINE_MARKETS, engineMarketsOn, TESTNET_CHAIN_ID } from "@senryo/config";
 import { MS_PER_SECOND } from "@senryo/service-common";
 import { BPS, MIRROR_CONFIRM_PUSH_SEC } from "../constants.ts";
 import { type KeeperContext, loadJobState, saveJobState } from "../context.ts";
 import type { Job } from "../runner.ts";
+import { mirrorDecision } from "./mirror-policy.ts";
 
 type PokeReason = "edge" | "drift";
 
@@ -118,6 +118,11 @@ export function mirrorJob(ctx: KeeperContext): Job {
         ctx.chainId,
         listed.map((m) => m.id),
       );
+      const interest = await readOpenInterest(
+        ctx.read,
+        ctx.chainId,
+        listed.map((m) => m.id),
+      );
       const relayed = ENGINE_MARKETS.filter(
         (m) => ctx.env.MIRROR_MARKETS.includes(m.symbol) && isDeployed(ctx.chainId, m.testnetMirror),
       );
@@ -126,30 +131,42 @@ export function mirrorJob(ctx: KeeperContext): Job {
           readFeedRound(ctx.mainnet, market.mainnetFeed),
           readFeedRound(ctx.read, addressOf(ctx.chainId, market.testnetMirror)),
         ]);
-        const moved = source.answer - mirror.answer;
-        const movedBps = mirror.answer === 0n ? BPS : ((moved < 0n ? -moved : moved) * BPS) / mirror.answer;
-        const age = nowSec - mirror.updatedAt;
         const heartbeat = market.category === "fx" ? ctx.env.MIRROR_FX_HEARTBEAT_SEC : ctx.env.MIRROR_HEARTBEAT_SEC;
-        const stale = age >= BigInt(heartbeat);
         const confirming = views.find((v) => v.marketId === market.id)?.status === "CIRCUIT";
-        const confirmDue = confirming && age >= BigInt(MIRROR_CONFIRM_PUSH_SEC);
-        const newRound = rounds[market.symbol] !== source.roundId.toString();
-        if (!(stale || confirmDue || (newRound && movedBps >= BigInt(ctx.env.MIRROR_DEVIATION_BPS)))) continue;
-        const sent = await sendTx(
+        const reason = mirrorDecision({
+          source,
+          mirror,
+          category: market.category,
+          nowSec,
+          active: interest.get(market.id) === true,
+          confirming,
+          lastSourceRound: rounds[market.symbol],
+          heartbeatSec: heartbeat,
+          deviationBps: ctx.env.MIRROR_DEVIATION_BPS,
+          confirmSec: MIRROR_CONFIRM_PUSH_SEC,
+        });
+        if (reason === "invalid-source") {
+          ctx.log.warn(
+            { market: market.symbol, sourceUpdatedAt: source.updatedAt },
+            "mirror source invalid or stale; not refreshing it",
+          );
+          continue;
+        }
+        if (!reason) continue;
+        const sent = await sendAndFinalize(
           ctx.sender,
           contractCall(ctx.chainId, market.testnetMirror, "pushAnswer", [source.answer], "pushAnswer"),
         );
-        rounds[market.symbol] = source.roundId.toString();
-        ctx.recent.add({ job: "mirror", subject: market.symbol, tx: sent.hash, stage: sent.stage });
+        if (sent.final.stage === "finalized") rounds[market.symbol] = source.roundId.toString();
+        ctx.recent.add({ job: "mirror", subject: market.symbol, tx: sent.hash, stage: sent.final.stage });
         ctx.log.info(
           {
             market: market.symbol,
             answer: source.answer,
-            movedBps,
-            stale,
+            reason,
             confirming,
             tx: sent.hash,
-            stage: sent.stage,
+            stage: sent.final.stage,
           },
           "mirror push",
         );

@@ -1,4 +1,4 @@
-import { explorerTxUrl } from "@senryo/config";
+import { explorerTxUrl, MAINNET_CHAIN_ID } from "@senryo/config";
 import { type Href, router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Share, StyleSheet, View } from "react-native";
@@ -9,8 +9,9 @@ import { useAccount } from "~/lib/account/provider";
 import { perplPositionRoute, perplWithdrawRoute, ROUTES } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE } from "~/theme";
-import { PERPL_CHAIN, type PerplMarketMeta } from "./market";
+import type { PerplMarketMeta } from "./market";
 import { PerplOpenOutcome } from "./PerplOutcome";
+import { PerplPracticeFunds } from "./PerplPracticeFunds";
 import { PerplTicketEntry } from "./PerplTicketEntry";
 import { PerplTicketFooter, perplCommit } from "./PerplTicketFooter";
 import { PerplTicketHeader } from "./PerplTicketHeader";
@@ -35,7 +36,7 @@ function useScreenReader(): boolean {
  * the engine's, with Perpl's venue chip and "Mainnet" as plain words, Perpl's maximum on the ruler and its liquidation
  * estimate; a first order composes approve → open the Perpl account (≥ 10 AUSD) → the IOC in one operation and one
  * slide, a step-up above the session's limits named on the rail; the outcome reads the fill from the receipt's events.
- * In Practice every number still shows and the slide reads "Mainnet only" with its reason one tap away.
+ * Practice follows the testnet deployment; the same native journey uses its test collateral and market terms.
  */
 export function PerplTicketScreen({
   meta,
@@ -50,7 +51,7 @@ export function PerplTicketScreen({
   const address = useAccount().hint?.address;
   const screenReader = useScreenReader();
   const [mode, setMode] = useState<EntryMode>("keypad");
-  const [child, setChild] = useState<"details" | "liquidation" | "why" | undefined>();
+  const [child, setChild] = useState<"details" | "liquidation" | "why" | "funds" | undefined>();
   const [note, setNote] = useState<string | undefined>();
   const sided = useRef(false);
 
@@ -67,7 +68,7 @@ export function PerplTicketScreen({
   const commit = perplCommit(t);
   // The order's identity at the slide: any change while sliding resets it.
   const resetKey = [
-    PERPL_CHAIN,
+    meta.chainId,
     meta.marketId,
     address ?? "",
     t.side,
@@ -124,6 +125,7 @@ export function PerplTicketScreen({
               onConfirm={confirm}
               onDetails={() => setChild("details")}
               onWhy={() => setChild("why")}
+              onFunds={() => setChild("funds")}
             />
           </>
         )}
@@ -137,6 +139,7 @@ export function PerplTicketScreen({
         screenReader={screenReader}
       />
       <PerplLiquidationInfo open={child === "liquidation"} onClose={() => setChild(undefined)} t={t} />
+      <PerplPracticeFunds open={child === "funds"} onClose={() => setChild(undefined)} />
       <PerplPracticeInfo open={child === "why"} onClose={() => setChild(undefined)} />
     </View>
   );
@@ -155,8 +158,8 @@ function Outcome({ t }: { t: PerplTicketModel }) {
   const share = () => {
     const side = trace.record?.reviewedIntent.side === "short" ? "short" : "long";
     const lines = [
-      `Opened a ${trace.record?.reviewedIntent.leverage ?? ""}× ${side} on ${t.meta.symbol} with Senryo on Perpl (real money).`,
-      ...(hash ? [explorerTxUrl(PERPL_CHAIN, hash)] : []),
+      `Opened a ${trace.record?.reviewedIntent.leverage ?? ""}× ${side} on ${t.meta.symbol} with Senryo on Perpl (${t.meta.chainId === MAINNET_CHAIN_ID ? "Mainnet" : "Practice testnet tokens"}).`,
+      ...(hash ? [explorerTxUrl(t.meta.chainId, hash)] : []),
     ];
     void Share.share({ message: lines.join("\n") });
   };

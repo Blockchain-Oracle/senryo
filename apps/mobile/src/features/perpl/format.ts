@@ -5,7 +5,7 @@
 import { PERPL_LEVERAGE_DECIMALS } from "@senryo/config";
 import { BPS_DENOMINATOR, DECIMALS, formatUnits, oneUnit } from "@senryo/core";
 import { signedUsd, usd } from "~/lib/money";
-import { PERPL_MONEY, type PerplMarketMeta } from "./market";
+import type { PerplMarketMeta } from "./market";
 
 const E18 = 18;
 const MON_SHOWN = 3;
@@ -29,9 +29,22 @@ export function perplSize(lots: bigint, meta: Pick<PerplMarketMeta, "lotDecimals
   return `${formatUnits(lots, meta.lotDecimals, meta.lotDecimals)} ${meta.symbol}`;
 }
 
-/** "$12.40" in real dollars whichever mode is selected (Perpl is mainnet money). */
-export const perplUsd = (value6: bigint, shown: number = DECIMALS.cents) => usd(value6, shown, PERPL_MONEY);
-export const perplSignedUsd = (value6: bigint) => signedUsd(value6, DECIMALS.cents, PERPL_MONEY);
+/** Collateral and PnL use the selected network’s dollar / practice-dollar label. */
+export const perplUsd = (value6: bigint, shown: number = DECIMALS.cents) => usd(value6, shown);
+const CENT_USD6 = 10_000n;
+const FOUR_DECIMAL_UNIT_USD6 = 100n;
+const SMALL_PNL_DECIMALS = 4;
+/** Preserve the sign and magnitude of sub-cent PnL rather than showing a red “−0.00”. */
+export const perplSignedUsd = (value6: bigint) => {
+  const magnitude = value6 < 0n ? -value6 : value6;
+  const shown =
+    magnitude > 0n && magnitude < CENT_USD6
+      ? magnitude < FOUR_DECIMAL_UNIT_USD6
+        ? DECIMALS.usd6
+        : SMALL_PNL_DECIMALS
+      : DECIMALS.cents;
+  return signedUsd(value6, shown);
+};
 
 /** 1500 hundredths → 15 (the ruler's whole steps; a fractional maximum rounds down). */
 export const leverageX = (hdths: bigint): number => Number(hdths / LEVERAGE_UNIT);

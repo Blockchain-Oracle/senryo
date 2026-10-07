@@ -11,13 +11,15 @@ import {
   readPerplMarketTerms,
   readPerplPositions,
 } from "@senryo/chain";
-import { PERPL_FEE_DENOMINATOR } from "@senryo/config";
-import { BPS_DENOMINATOR } from "@senryo/core";
+import { type ChainId, MAINNET_CHAIN_ID, PERPL_FEE_DENOMINATOR } from "@senryo/config";
+import { BPS_DENOMINATOR, divRound, formatUnits } from "@senryo/core";
 import {
-  mainnetReadOf,
   PERPL_TERMS_REFETCH_MS,
   perplCloseOperation,
+  perplPnlAtMark,
+  perplReadOf,
   usePerplAccount,
+  usePerplLivePrice,
   usePerplMarketTerms,
   useQueryEnv,
 } from "@senryo/query";
@@ -28,16 +30,25 @@ import { useAccount } from "~/lib/account/provider";
 import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
 import { perplFeeShortWei } from "./fees";
-import { PERPL_CHAIN, type PerplMarketMeta } from "./market";
+import type { PerplMarketMeta } from "./market";
 import { usePerplRun } from "./usePerplRun";
 
+const MS_PER_SECOND = 1000;
+const LIVE_MAX_AGE_MS = 30_000;
+const E18 = 18;
+const DECIMAL_BASE = 10n;
 const ceilDiv = (a: bigint, b: bigint) => (a + b - 1n) / b;
 
-export const perplPositionTraceKey = (address: string | undefined, marketId: number) =>
-  `perpl-position:${PERPL_CHAIN}:${address?.toLowerCase() ?? "guest"}:${marketId}`;
+export const perplPositionTraceKey = (
+  address: string | undefined,
+  marketId: number,
+  chainId: ChainId = MAINNET_CHAIN_ID,
+) => `perpl-position:${chainId}:${address?.toLowerCase() ?? "guest"}:${marketId}`;
 
 export function usePerplPosition(meta: PerplMarketMeta) {
   const env = useQueryEnv();
+  const chainId = meta.chainId;
+  const live = usePerplLivePrice(meta.marketId);
   const network = useNetwork();
   const account = useAccount();
   const address = account.hint?.address;
@@ -46,7 +57,22 @@ export function usePerplPosition(meta: PerplMarketMeta) {
     snapshotReading.status === "fresh" || snapshotReading.status === "stale" ? snapshotReading.value : undefined;
   const termsReading = usePerplMarketTerms(meta.marketId);
   const terms = termsReading.status === "fresh" || termsReading.status === "stale" ? termsReading.value : undefined;
-  const position = snapshot?.positions.find((p) => p.marketId === meta.marketId);
+  const storedPosition = snapshot?.positions.find((p) => p.marketId === meta.marketId);
+  const freshMark =
+    live && terms && live.at >= terms.markTimestamp * MS_PER_SECOND && Date.now() - live.at < LIVE_MAX_AGE_MS
+      ? live.price18 / DECIMAL_BASE ** BigInt(E18 - meta.priceDecimals)
+      : undefined;
+  const livePnl =
+    storedPosition && freshMark !== undefined ? perplPnlAtMark(storedPosition, freshMark, meta) : undefined;
+  const position =
+    storedPosition && livePnl !== undefined
+      ? {
+          ...storedPosition,
+          pnlCNS: livePnl,
+          deltaPnlCNS: livePnl - storedPosition.premiumPnlCNS,
+          markPricePNS: freshMark ?? storedPosition.markPricePNS,
+        }
+      : storedPosition;
   const [shareBps, setShareBps] = useState<bigint>(REDUCE_ALL_BPS);
   const closingAll = shareBps >= REDUCE_ALL_BPS;
 
@@ -65,17 +91,22 @@ export function usePerplPosition(meta: PerplMarketMeta) {
       : null;
   const entryNotional = position ? perplNotional(position.lots, position.entryPricePNS, meta) : 0n;
   /** Leverage the position carries: entry notional over its collateral (isolated margin). */
-  const leverageX = position && position.depositCNS > 0n ? entryNotional / position.depositCNS : undefined;
+  const LEVERAGE_SCALE = 100n;
+  const LEVERAGE_DECIMALS = 2;
+  const leverageText =
+    position && position.depositCNS > 0n
+      ? formatUnits(divRound(entryNotional * LEVERAGE_SCALE, position.depositCNS), LEVERAGE_DECIMALS, LEVERAGE_DECIMALS)
+      : undefined;
 
   const plan = useQuery({
-    queryKey: ["perpl", PERPL_CHAIN, "close-plan", address?.toLowerCase() ?? "", meta.marketId, shareBps.toString()],
-    enabled: address !== undefined && position !== undefined && network.chainId === PERPL_CHAIN,
+    queryKey: ["perpl", chainId, "close-plan", address?.toLowerCase() ?? "", meta.marketId, shareBps.toString()],
+    enabled: address !== undefined && position !== undefined && network.chainId === chainId,
     refetchInterval: PERPL_TERMS_REFETCH_MS,
     staleTime: PERPL_TERMS_REFETCH_MS,
     queryFn: async () => {
-      const read = mainnetReadOf(env);
+      const read = perplReadOf(env);
       const owner = address as NonNullable<typeof address>;
-      const closing = await perplCloseOperation(read, owner, { marketId: meta.marketId, shareBps });
+      const closing = await perplCloseOperation(read, owner, { chainId, marketId: meta.marketId, shareBps });
       return { plan: closing, feeShortWei: await perplFeeShortWei(read, owner, closing.plannedActions) };
     },
   });
@@ -90,13 +121,13 @@ export function usePerplPosition(meta: PerplMarketMeta) {
   const feeUsd6 = terms ? ceilDiv(exitNotional * terms.takerFeePpm, PERPL_FEE_DENOMINATOR) : 0n;
   const realizedUsd6 = position && position.lots > 0n ? (position.pnlCNS * lots) / position.lots : 0n;
 
-  const runner = usePerplRun(perplPositionTraceKey(address, meta.marketId));
-  const guard = useReviewGuard([PERPL_CHAIN, address, meta.marketId, shareBps, position?.lots].join(":"));
+  const runner = usePerplRun(perplPositionTraceKey(address, meta.marketId, chainId));
+  const guard = useReviewGuard([chainId, address, meta.marketId, shareBps, position?.lots].join(":"));
 
   const submit = async () => {
     const frozen = reviewed;
     if (!frozen || frozen.blocker || !address || !position) return undefined;
-    const read = mainnetReadOf(env);
+    const read = perplReadOf(env);
     let checked = false;
     return runner.run({
       plan: frozen,
@@ -104,7 +135,7 @@ export function usePerplPosition(meta: PerplMarketMeta) {
       reviewedIntent: {
         ...frozen.reviewedIntent,
         kind: "perpl",
-        network: "mainnet",
+        network: network.key,
         symbol: meta.symbol,
         name: meta.name,
         shareBps: shareBps.toString(),
@@ -121,10 +152,10 @@ export function usePerplPosition(meta: PerplMarketMeta) {
         guard();
         if (checked) return;
         const [acct, market] = await Promise.all([
-          readPerplAccount(read, PERPL_CHAIN, address),
-          readPerplMarketTerms(read, PERPL_CHAIN, meta.marketId),
+          readPerplAccount(read, chainId, address),
+          readPerplMarketTerms(read, chainId, meta.marketId),
         ]);
-        const [now] = acct ? await readPerplPositions(read, PERPL_CHAIN, acct.accountId, [meta.marketId]) : [];
+        const [now] = acct ? await readPerplPositions(read, chainId, acct.accountId, [meta.marketId]) : [];
         // A full close must close exactly what was reviewed: a grown position would leave exposure open.
         const changed = closingAll ? now?.lots !== frozen.lots : (now?.lots ?? 0n) < frozen.lots;
         if (!now || now.side !== position.side || changed) throw new Error("The position changed. Review it again.");
@@ -142,7 +173,7 @@ export function usePerplPosition(meta: PerplMarketMeta) {
     terms,
     position,
     liqPricePNS,
-    leverageX,
+    leverageText,
     entryNotional,
     shareBps,
     setShareBps,
@@ -155,7 +186,7 @@ export function usePerplPosition(meta: PerplMarketMeta) {
     realizedUsd6,
     runner,
     submit,
-    ready: account.client !== undefined && network.chainId === PERPL_CHAIN,
+    ready: account.client !== undefined && network.chainId === chainId,
   };
 }
 

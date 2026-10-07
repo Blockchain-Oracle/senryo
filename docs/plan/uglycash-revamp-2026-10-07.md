@@ -265,3 +265,10 @@ Known source gaps: native font files/license; actual animation/audio; dark-mode 
 Tradash narrows the live-chart/sound reference gap but does not supply exact UGLYCASH motion or a prediction execution provider. Current source-age diagnosis, current provider protocol/market identifiers, authoritative resolution data, native audio/performance and physical-device acceptance remain explicit gates.
 
 **First reviewable implementation target:** Money Home + shared light tokens + source-style dock/top context navigation + edge-attached Display Balance sheet, accompanied by the contextual Face ID sheet over Home. Show the four matching reference states and their actual Senryo versions at phone scale before propagating component decisions across trading/social/card. Reuse current account and balance data. Follow with the full username/onboarding forms and native money journeys, using the second-pass state contract. This confirms the user's requested background, overall composition and biometric presentation early while preserving the full roadmap.
+
+
+## Native trading continuation — 7 October 2026
+
+[Implementation/evidence](../design/reviews/2026-10-07-native-trade-slice.md) records the approved §5/4A continuation. Live Perpl market-state feeds and selected-network native Practice replace the obsolete Mainnet-only/faucet-empty assumption: all eight testnet markets are unpaused and Agora’s test-AUSD faucet is funded. Market ids, scales, account reads, plans and receipts follow the chosen deployment. The local workspace exercises actual gold and ZEC long/short contracts with controlled prices, real fills/PnL/close and reset; raw displayed marks remain distinct from executable quotes and realized receipts. Public transactions were not sent.
+
+This is progress within 4A, not completion of the roadmap. Remaining work includes native BTC/ETH prediction execution, crypto protection orders, rolling-price/reaction/audio fidelity, physical-device/security/provider acceptance and the other reference-flow slices. Keep the entire plan and existing product routes; add behavior only where it helps the current product.

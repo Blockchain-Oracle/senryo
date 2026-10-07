@@ -6,7 +6,7 @@
  */
 
 import type { PerplMarketTerms } from "@senryo/chain";
-import { explorerAddressUrl, PERPL_EXCHANGE, PERPL_SLIPPAGE_BPS } from "@senryo/config";
+import { explorerAddressUrl, MAINNET_CHAIN_ID, PERPL_EXCHANGE, PERPL_SLIPPAGE_BPS } from "@senryo/config";
 import { BPS_DENOMINATOR, DECIMALS, formatUnits, shortAddress } from "@senryo/core";
 import type { DiscoveryQuote } from "@senryo/query";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
@@ -15,7 +15,7 @@ import { compactUsd6 } from "~/features/tokens/format";
 import { fire } from "~/feedback/fire";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { fundingText, leverageX } from "./format";
-import { PERPL_CHAIN, type PerplMarketMeta } from "./market";
+import type { PerplMarketMeta } from "./market";
 import { feePct } from "./words";
 
 const HDTHS_PER_X = 100n;
@@ -49,7 +49,7 @@ export function PerplAbout({
       label: "Maintenance",
       value: bpsPct((BPS_DENOMINATOR * HDTHS_PER_X) / terms.maintMarginFracHdths, PCT_SHOWN),
     });
-  const exchange = PERPL_EXCHANGE[PERPL_CHAIN];
+  const exchange = PERPL_EXCHANGE[meta.chainId];
   return (
     <View style={styles.wrap}>
       <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
@@ -80,7 +80,7 @@ export function PerplAbout({
         <Pressable
           onPress={() => {
             fire("tick");
-            void Linking.openURL(explorerAddressUrl(PERPL_CHAIN, exchange));
+            void Linking.openURL(explorerAddressUrl(meta.chainId, exchange));
           }}
           accessibilityRole="link"
           accessibilityLabel={`Perpl Exchange: ${shortAddress(exchange)}`}
@@ -95,7 +95,7 @@ export function PerplAbout({
         <DetailRow label="Size unit" value={`${formatUnits(1n, meta.lotDecimals, meta.lotDecimals)} ${meta.symbol}`} />
         <DetailRow label="Order type" value={`Market (IOC at mark ± ${bpsPct(PERPL_SLIPPAGE_BPS)})`} />
         <DetailRow label="Collateral" value="AUSD · isolated per position" />
-        <DetailRow label="Venue" value="Perpl · Mainnet" />
+        <DetailRow label="Venue" value={`Perpl · ${meta.chainId === MAINNET_CHAIN_ID ? "Mainnet" : "Practice"}`} />
       </Disclosure>
     </View>
   );

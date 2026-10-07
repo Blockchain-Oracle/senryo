@@ -35,6 +35,7 @@ import {
   type TxRequest,
 } from "@senryo/chain";
 import {
+  type ChainId,
   type GasAction,
   MAINNET_CHAIN_ID,
   PERPL_MIN_DEPOSIT_CNS,
@@ -43,7 +44,7 @@ import {
 } from "@senryo/config";
 import { type Address, BPS_DENOMINATOR } from "@senryo/core";
 
-/** Perpl is traded on Monad mainnet only (testnet needs 100 AUSD and has no faucet). */
+/** Backward-compatible default; native operations explicitly capture the selected deployment. */
 export const PERPL_CHAIN_ID = MAINNET_CHAIN_ID;
 
 /** Why a Perpl journey can't be sent as reviewed. */
@@ -86,6 +87,7 @@ export interface PerplOpenPlan extends PerplPlan {
 }
 
 export interface PerplOpenInput {
+  chainId?: ChainId | undefined;
   marketId: number;
   side: PerplSide;
   /** Exposure in AUSD base units; sized to whole lots at the limit price (rounded down). */
@@ -97,9 +99,9 @@ export interface PerplOpenInput {
 }
 
 const orderStep =
-  (read: ReadClient, params: Omit<Parameters<typeof perplOrderRequest>[1], "headBlock">): PerplStep =>
+  (read: ReadClient, chainId: ChainId, params: Omit<Parameters<typeof perplOrderRequest>[1], "headBlock">): PerplStep =>
   async () =>
-    perplOrderRequest(PERPL_CHAIN_ID, { ...params, headBlock: await read.getBlockNumber() });
+    perplOrderRequest(chainId, { ...params, headBlock: await read.getBlockNumber() });
 
 const blocked = <T extends PerplPlan>(plan: Omit<T, "steps" | "plannedActions" | "blocker">, blocker: PerplBlocker) =>
   ({ ...plan, steps: [], plannedActions: [], blocker }) as unknown as T;
@@ -110,7 +112,7 @@ export async function perplOpenOperation(
   owner: Address,
   input: PerplOpenInput,
 ): Promise<PerplOpenPlan> {
-  const chainId = PERPL_CHAIN_ID;
+  const chainId = input.chainId ?? PERPL_CHAIN_ID;
   const slippageBps = input.slippageBps ?? PERPL_SLIPPAGE_BPS;
   const [terms, exchange, account, wallet] = await Promise.all([
     readPerplMarketTerms(read, chainId, input.marketId),
@@ -139,6 +141,7 @@ export async function perplOpenOperation(
   const walletShortCNS = depositCNS > wallet.balance ? depositCNS - wallet.balance : 0n;
   const reviewedIntent = {
     venue: "perpl",
+    chainId: String(chainId),
     intent: "open",
     marketId: String(input.marketId),
     side: input.side,
@@ -179,7 +182,7 @@ export async function perplOpenOperation(
   if (depositCNS > 0n)
     steps.push(account ? perplDepositRequest(chainId, depositCNS) : perplCreateAccountRequest(chainId, depositCNS));
   steps.push(
-    orderStep(read, {
+    orderStep(read, chainId, {
       marketId: input.marketId,
       intent: "open",
       side: input.side,
@@ -202,9 +205,14 @@ export interface PerplClosePlan extends PerplPlan {
 export async function perplCloseOperation(
   read: ReadClient,
   owner: Address,
-  input: { marketId: number; shareBps?: bigint | undefined; slippageBps?: bigint | undefined },
+  input: {
+    chainId?: ChainId | undefined;
+    marketId: number;
+    shareBps?: bigint | undefined;
+    slippageBps?: bigint | undefined;
+  },
 ): Promise<PerplClosePlan> {
-  const chainId = PERPL_CHAIN_ID;
+  const chainId = input.chainId ?? PERPL_CHAIN_ID;
   const slippageBps = input.slippageBps ?? PERPL_SLIPPAGE_BPS;
   const shareBps = input.shareBps ?? BPS_DENOMINATOR;
   const [terms, account] = await Promise.all([
@@ -222,6 +230,7 @@ export async function perplCloseOperation(
     : 0n;
   const reviewedIntent = {
     venue: "perpl",
+    chainId: String(chainId),
     intent: "close",
     marketId: String(input.marketId),
     side,
@@ -234,7 +243,7 @@ export async function perplCloseOperation(
   if (lots === 0n) return blocked<PerplClosePlan>(base, "size");
   // A close carries the market's maximum leverage, as Perpl's SDK does for orders that name none (reduce-only).
   const steps = [
-    orderStep(read, {
+    orderStep(read, chainId, {
       marketId: input.marketId,
       intent: "close",
       side,
@@ -247,8 +256,13 @@ export async function perplCloseOperation(
 }
 
 /** Withdraw free collateral back to the wallet (the contract always pays the account's own address). */
-export async function perplWithdrawOperation(read: ReadClient, owner: Address, amountCNS: bigint): Promise<PerplPlan> {
-  const account = await readPerplAccount(read, PERPL_CHAIN_ID, owner);
+export async function perplWithdrawOperation(
+  read: ReadClient,
+  owner: Address,
+  amountCNS: bigint,
+  chainId: ChainId = PERPL_CHAIN_ID,
+): Promise<PerplPlan> {
+  const account = await readPerplAccount(read, chainId, owner);
   const reviewedIntent = { venue: "perpl", intent: "withdraw", withdraw: amountCNS.toString() };
   const blocker: PerplBlocker | undefined = !account
     ? "no-account"
@@ -259,7 +273,7 @@ export async function perplWithdrawOperation(read: ReadClient, owner: Address, a
         : undefined;
   if (blocker) return blocked<PerplPlan>({ reviewedIntent }, blocker);
   return {
-    steps: [perplWithdrawRequest(PERPL_CHAIN_ID, amountCNS)],
+    steps: [perplWithdrawRequest(chainId, amountCNS)],
     plannedActions: ["perplWithdraw"],
     reviewedIntent,
     blocker: undefined,

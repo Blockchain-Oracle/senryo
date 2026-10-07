@@ -113,11 +113,12 @@ export function useCalendar(calendarId: number | undefined): Reading<WeekCalenda
  */
 export function useCandles(symbol: string, interval: CandleInterval): Reading<Candles> {
   const env = useQueryEnv();
-  const feedChain: ChainId = MAINNET_CHAIN_ID;
+  const feedChain: ChainId = env.marketHistory?.chainId ?? MAINNET_CHAIN_ID;
   const query = useQuery({
     queryKey: keys.candles(feedChain, symbol, interval),
     queryFn: ({ signal }) => {
       const since = Math.floor(Date.now() / MS_PER_SECOND) - CANDLE_WINDOW_SEC[interval];
+      if (env.marketHistory) return env.marketHistory.load(symbol, interval, since, signal);
       return env.indexer.request(CandlesDocument, candlesVars(feedChain, symbol, interval, { since }), signal);
     },
     refetchInterval: CANDLES_REFETCH_MS,

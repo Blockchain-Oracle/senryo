@@ -3,7 +3,7 @@ import { ids } from "@senryo/identity";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { VenueChip } from "~/components/identity/VenueChip";
-import { ageLabel, STATUS_LABEL, statusTone } from "~/features/markets/session";
+import { PriceFreshness } from "~/features/markets/PriceFreshness";
 import type { MarketLine } from "~/features/markets/useMarketLine";
 import { fire } from "~/feedback/fire";
 import { price18, priceDecimalsOf, usd } from "~/lib/money";
@@ -11,7 +11,6 @@ import { useNetwork } from "~/lib/network";
 import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import type { Side } from "./useTicket";
 
-const MS_PER_SECOND = 1000n;
 const SIDES: readonly Side[] = ["long", "short"];
 /** The side toggle is small (F37 has none; ours replaces the old full-width segmented control). */
 const TOGGLE_HEIGHT = SIZE.chipHeight;
@@ -38,7 +37,6 @@ export function TicketHeader({
   const { color } = useTheme();
   const shown = price18(line.price18, priceDecimalsOf(line.marketId));
   const openInterest = usd(notional(line.market.book.longSize + line.market.book.shortSize, line.price18), 0);
-  const stale = line.market.tickStale;
   const practice = network.key === "testnet";
   return (
     <View style={styles.wrap}>
@@ -64,23 +62,7 @@ export function TicketHeader({
           >
             ${shown}
           </Text>
-          <Text
-            maxFontSizeMultiplier={CONTROL_FONT_SCALE}
-            style={[TYPE.meta, styles.right, { color: stale ? color.warn : color.text3 }]}
-            numberOfLines={1}
-          >
-            <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: color.link }}>
-              Market
-            </Text>
-            {line.status === "OPEN" ? null : (
-              <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={{ color: statusTone(line.status, color) }}>
-                {" "}
-                · {STATUS_LABEL[line.status]}
-              </Text>
-            )}{" "}
-            · {stale ? "not live · " : ""}
-            {ageLabel(line.updatedAt, BigInt(Date.now()) / MS_PER_SECOND)}
-          </Text>
+          <PriceFreshness market={line.market} />
         </View>
       </View>
       <View style={styles.row}>

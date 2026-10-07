@@ -1,34 +1,30 @@
-/**
- * Perpl, traded from the user's own wallet on Monad mainnet (D1): the account and its positions read straight from
- * the Exchange (no API key), a market's order terms, and whether the Perpl path is ready for the `perplTrade`
- * capability. Reads go to 143 whichever network is selected (like the spot tokens); keys sit under the mainnet
- * account, so a finalized Perpl send's `keys.account(143, address)` invalidation refreshes them.
- */
+/** Selected-network Perpl account, position and order-term reads. Cache keys include the deployment chain. */
 import {
   type PerplExchangeState,
   type PerplMarketTerms,
   type PerplPosition,
   type PerplSnapshot,
+  type ReadClient,
   readPerplExchange,
   readPerplLeverageCaps,
   readPerplMarketTerms,
   readPerplSnapshot,
 } from "@senryo/chain";
-import { PERPL_MARKETS } from "@senryo/config";
+import { type ChainId, PERPL_MARKETS } from "@senryo/config";
 import type { Address, Reading } from "@senryo/core";
 import { useQuery } from "@tanstack/react-query";
 import { PERPL_ACCOUNT_REFETCH_MS, PERPL_CAPS_REFETCH_MS, PERPL_TERMS_REFETCH_MS } from "./constants.ts";
-import { useQueryEnv } from "./env.tsx";
+import { type QueryEnv, useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
-import { PERPL_CHAIN_ID } from "./perpl-plan.ts";
 import { readingOf } from "./reading.ts";
 import { mainnetReadOf } from "./spot.ts";
 
 function usePerplSnapshotQuery<T>(address: Address | undefined, select: (s: PerplSnapshot) => T) {
   const env = useQueryEnv();
+  const chainId = env.chainId;
   return useQuery({
-    queryKey: keys.perpl(address ?? "0x"),
-    queryFn: () => readPerplSnapshot(mainnetReadOf(env), PERPL_CHAIN_ID, address as Address),
+    queryKey: keys.perpl(address ?? "0x", chainId),
+    queryFn: () => readPerplSnapshot(perplReadOf(env), chainId, address as Address),
     enabled: address !== undefined,
     refetchInterval: PERPL_ACCOUNT_REFETCH_MS,
     staleTime: PERPL_ACCOUNT_REFETCH_MS,
@@ -58,9 +54,10 @@ export function usePerplPositions(address: Address | undefined): Reading<PerplPo
 /** Mark, decimals, max leverage and taker fee of one market — what a ticket sizes an order with. */
 export function usePerplMarketTerms(marketId: number | undefined): Reading<PerplMarketTerms> {
   const env = useQueryEnv();
+  const chainId = env.chainId;
   const query = useQuery({
-    queryKey: keys.perplMarket(marketId ?? -1),
-    queryFn: () => readPerplMarketTerms(mainnetReadOf(env), PERPL_CHAIN_ID, marketId as number),
+    queryKey: keys.perplMarket(marketId ?? -1, chainId),
+    queryFn: () => readPerplMarketTerms(perplReadOf(env), chainId, marketId as number),
     enabled: marketId !== undefined,
     refetchInterval: PERPL_TERMS_REFETCH_MS,
     staleTime: PERPL_TERMS_REFETCH_MS,
@@ -71,9 +68,10 @@ export function usePerplMarketTerms(marketId: number | undefined): Reading<Perpl
 /** The Exchange's halt flag and account-open minimum (owner-set; read live). */
 export function usePerplExchange(): Reading<PerplExchangeState> {
   const env = useQueryEnv();
+  const chainId = env.chainId;
   const query = useQuery({
-    queryKey: keys.perplExchange(),
-    queryFn: () => readPerplExchange(mainnetReadOf(env), PERPL_CHAIN_ID),
+    queryKey: keys.perplExchange(chainId),
+    queryFn: () => readPerplExchange(perplReadOf(env), chainId),
     refetchInterval: PERPL_TERMS_REFETCH_MS,
     staleTime: PERPL_TERMS_REFETCH_MS,
   });
@@ -83,10 +81,11 @@ export function usePerplExchange(): Reading<PerplExchangeState> {
 /** Every listed market's base max leverage (hundredths, by market id) in one read — the Markets list's badges. */
 export function usePerplLeverageCaps(): Reading<Record<number, bigint>> {
   const env = useQueryEnv();
-  const ids = Object.values(PERPL_MARKETS[PERPL_CHAIN_ID] ?? {});
+  const chainId = env.chainId;
+  const ids = Object.values(PERPL_MARKETS[chainId] ?? {});
   const query = useQuery({
-    queryKey: keys.perplCaps(),
-    queryFn: () => readPerplLeverageCaps(mainnetReadOf(env), PERPL_CHAIN_ID, ids),
+    queryKey: keys.perplCaps(chainId),
+    queryFn: () => readPerplLeverageCaps(perplReadOf(env), chainId, ids),
     refetchInterval: PERPL_CAPS_REFETCH_MS,
     staleTime: PERPL_CAPS_REFETCH_MS,
   });
@@ -100,9 +99,10 @@ export function usePerplLeverageCaps(): Reading<Record<number, bigint>> {
  */
 export function usePerplReady(address: Address | undefined): boolean | undefined {
   const env = useQueryEnv();
+  const chainId = env.chainId;
   const exchange = useQuery({
-    queryKey: keys.perplExchange(),
-    queryFn: () => readPerplExchange(mainnetReadOf(env), PERPL_CHAIN_ID),
+    queryKey: keys.perplExchange(chainId),
+    queryFn: () => readPerplExchange(perplReadOf(env), chainId),
     refetchInterval: PERPL_TERMS_REFETCH_MS,
     staleTime: PERPL_TERMS_REFETCH_MS,
   });
@@ -110,3 +110,7 @@ export function usePerplReady(address: Address | undefined): boolean | undefined
   if (address === undefined || !exchange.data || account.status !== "success") return undefined;
   return !exchange.data.halted && (account.data === undefined || account.data.frozen === 0);
 }
+
+/** Read the selected Perpl deployment, including a local testnet fork. */
+export const perplReadOf = (env: QueryEnv, chainId: ChainId = env.chainId): ReadClient =>
+  chainId === env.chainId ? env.read : mainnetReadOf(env);

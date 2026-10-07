@@ -4,6 +4,7 @@ import type { LiveMarket } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { VenueChip } from "~/components/identity/VenueChip";
+import { PriceFreshness } from "~/features/markets/PriceFreshness";
 import { STATUS_LABEL, statusTone } from "~/features/markets/session";
 import { SideBadge } from "~/features/portfolio/SideBadge";
 import { useNetwork } from "~/lib/network";
@@ -35,6 +36,7 @@ export function PositionHeader({ market, position }: { market: LiveMarket; posit
           <SideBadge isLong={position.isLong} />
         </View>
         <VenueChip venue={ids.venue("senryo")} />
+        <PriceFreshness market={market} />
       </View>
       <View style={styles.status} accessible accessibilityLabel={`Market ${STATUS_LABEL[market.pv.status]}`}>
         <View style={[styles.dot, { backgroundColor: tone }]} />

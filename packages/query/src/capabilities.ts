@@ -1,5 +1,5 @@
 import { isDeployed } from "@senryo/chain";
-import { type ChainId, MAINNET_CHAIN_ID } from "@senryo/config";
+import { type ChainId, MAINNET_CHAIN_ID, PERPL_EXCHANGE } from "@senryo/config";
 
 export interface Capability {
   available: boolean;
@@ -43,11 +43,11 @@ export function capabilitiesOf(f: CapabilityFacts) {
     // D1: Perpl is traded from the wallet on Mainnet; `perplAccountReady` comes from `usePerplReady` (Exchange live,
     // account not frozen — no account yet is fine: the first open creates it).
     perplTrade: decision(
-      f.account && f.chainId === MAINNET_CHAIN_ID && f.perplAccountReady === true,
+      f.account && PERPL_EXCHANGE[f.chainId] !== undefined && f.perplAccountReady === true,
       !f.account
         ? "Sign in to trade on Perpl"
-        : f.chainId !== MAINNET_CHAIN_ID
-          ? "Perpl trades run on Mainnet"
+        : PERPL_EXCHANGE[f.chainId] === undefined
+          ? "Perpl is unavailable on this network"
           : "Perpl isn't accepting orders from this account right now",
     ),
     pool: decision(f.account && isDeployed(f.chainId, "LpVault"), "Pool investment is unavailable on this network"),

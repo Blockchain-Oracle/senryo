@@ -11,9 +11,11 @@ import { AmountHero } from "~/components/kit/AmountHero";
 import { Button } from "~/components/kit/Button";
 import { ChipRow } from "~/components/kit/ChipRow";
 import { Screen } from "~/components/kit/Screen";
+import { Panel } from "~/components/kit/Surface";
 import { ErrorState, Skeleton } from "~/components/kit/states";
 import { Info } from "~/components/kit/symbols";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
+import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import { DetailRow } from "~/features/markets/Disclosure";
 import { marketShareUrl } from "~/features/markets/MarketActions";
 import { DEFAULT_PERIOD, type PeriodKey, periodOf } from "~/features/markets/periods";
@@ -24,11 +26,13 @@ import { REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "~/features/positions/constants
 import { Facts } from "~/features/trade/TicketReceipt";
 import { fire } from "~/feedback/fire";
 import { marketRoute, perplWithdrawRoute, ticketRoute } from "~/lib/constants/routes";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { pct } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
 import { monText, perplPrice, perplPrice18, perplSignedUsd, perplSize, perplUsd } from "./format";
 import { type PerplMarketMeta, perplWatchKey } from "./market";
 import { PerplCloseOutcome } from "./PerplCloseOutcome";
+import { PerplLiveChart } from "./PerplLiveChart";
 import { LinkLine } from "./PerplOutcome";
 import { usePerplPosition } from "./usePerplPosition";
 
@@ -42,6 +46,7 @@ const STEP_LABEL = (bps: bigint) => (bps >= REDUCE_ALL_BPS ? "100%" : pct(bps));
  * pinned slide. After the slide the page is the outcome surface.
  */
 export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
+  useHideDockWhileFocused("perpl-position");
   const p = usePerplPosition(meta);
   const { color } = useTheme();
   const client = useQueryClient();
@@ -49,7 +54,7 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
   const [period, setPeriod] = useState<PeriodKey>(DEFAULT_PERIOD);
   const id = perplWatchKey(meta.symbol);
   const quote = useDiscoveryQuote(id);
-  const candles = useDiscoveryCandles(id, periodOf(period).interval);
+  const candles = useDiscoveryCandles(id, periodOf(period).interval, !DEV_WORKSPACE);
   const { trace, active } = p.runner;
   const title = <Stack.Screen options={{ title: `${meta.symbol} position` }} />;
   if (trace.events.length > 0 || active) {
@@ -107,7 +112,7 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
     );
   }
   const long = position.side === "long";
-  const markPNS = p.terms?.markPNS ?? position.markPricePNS;
+  const markPNS = position.markPricePNS;
   const share = () => {
     const url = marketShareUrl(meta.symbol);
     const message = `I'm ${position.side} ${meta.symbol} on Perpl with Senryo.`;
@@ -130,36 +135,48 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
                   {meta.symbol}
                 </Text>
                 <SideBadge isLong={long} />
-                {p.leverageX !== undefined ? <Quiet>{`${p.leverageX}×`}</Quiet> : null}
+                {p.leverageText !== undefined ? <Quiet>{`${p.leverageText}×`}</Quiet> : null}
               </View>
               <VenueChip venue={meta.venueMark} />
             </View>
           </View>
         </Rise>
-        <Rise index={1}>
-          <Pnl pnl={position.pnlCNS} onInfo={() => setPnl(true)} />
-        </Rise>
         <Rise index={2}>
-          <HistoryChart
-            reading={candles}
-            period={period}
-            onPeriod={setPeriod}
-            priceUsd18={quote.status === "fresh" || quote.status === "stale" ? quote.value.price18 : undefined}
-            caption={`${meta.symbol}/USD`}
-            loadingLabel="Loading its history"
-            retry={() => void client.invalidateQueries({ queryKey: ["discovery"] })}
+          <PerplLiveChart
+            marketId={meta.marketId}
             entry={{
               value: perplPrice18(position.entryPricePNS, meta),
               label: `Entry ${perplPrice(position.entryPricePNS, meta)}`,
             }}
+            profitable={position.pnlCNS >= 0n}
+            history={
+              <HistoryChart
+                reading={candles}
+                period={period}
+                onPeriod={setPeriod}
+                priceUsd18={quote.status === "fresh" || quote.status === "stale" ? quote.value.price18 : undefined}
+                caption={`${meta.symbol}/USD`}
+                loadingLabel="Loading its history"
+                retry={() => void client.invalidateQueries({ queryKey: ["discovery"] })}
+                entry={{
+                  value: perplPrice18(position.entryPricePNS, meta),
+                  label: `Entry ${perplPrice(position.entryPricePNS, meta)}`,
+                }}
+              />
+            }
           />
         </Rise>
         <Rise index={3}>
-          <View style={styles.stats}>
+          <Panel style={styles.stats}>
+            <Pnl pnl={position.pnlCNS} onInfo={() => setPnl(true)} />
             <Facts
               facts={[
                 { label: "Size", value: perplSize(position.lots, meta) },
                 { label: "Entry", value: perplPrice(position.entryPricePNS, meta) },
+              ]}
+            />
+            <Facts
+              facts={[
                 { label: "Mark", value: perplPrice(markPNS, meta) },
                 { label: "Liq.", value: p.liqPricePNS === null ? "None" : perplPrice(p.liqPricePNS, meta) },
               ]}
@@ -168,7 +185,7 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
               {`Margin ${perplUsd(position.depositCNS)} · Funding ${perplSignedUsd(position.premiumPnlCNS)} so far`}
             </Quiet>
             {moveBack}
-          </View>
+          </Panel>
         </Rise>
         <Rise index={4}>
           <View style={styles.row} accessible accessibilityLabel="Stop loss and take profit on Perpl soon">
@@ -235,7 +252,10 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
           <DetailRow label="Funding" value={perplSignedUsd(position.premiumPnlCNS)} />
           <DetailRow label="Net" value={perplSignedUsd(position.pnlCNS)} />
         </View>
-        <Quiet>At Perpl’s mark price, as the Exchange computes it.</Quiet>
+        <Quiet>
+          Live mark estimate, including the funding last booked by the Exchange. The close receipt gives the realised
+          result.
+        </Quiet>
       </ChildSheet>
     </View>
   );
@@ -269,7 +289,7 @@ function Pnl({ pnl, onInfo }: { pnl: bigint; onInfo: () => void }) {
         style={styles.inline}
       >
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowDetail, { color: color.text3 }]}>
-          Unrealised P&L
+          Unrealised P&L · live estimate
         </Text>
         <Info size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
       </Pressable>
@@ -306,7 +326,7 @@ const styles = StyleSheet.create({
   symbol: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   hero: { gap: SPACE.xs },
   inline: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, alignSelf: "flex-start" },
-  stats: { gap: SPACE.sm },
+  stats: { gap: SPACE.md, padding: SPACE.lg },
   center: { textAlign: "center" },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, minHeight: SIZE.touch },
   flex: { flex: 1 },

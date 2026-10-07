@@ -40,7 +40,7 @@ export function blockCopy(block: PerplBlock, symbol: string): PerplBlockCopy {
     case "offline":
       return { label: "You’re offline" };
     case "practice":
-      return { label: "Mainnet only", fix: "why" };
+      return { label: "Review network", fix: "why" };
     case "region":
       return { label: "Not available in your region" };
     case "guest":

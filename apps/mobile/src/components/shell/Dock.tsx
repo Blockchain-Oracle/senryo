@@ -58,7 +58,7 @@ export function Dock() {
       pointerEvents={shown ? "box-none" : "none"}
       accessibilityElementsHidden={!shown}
       importantForAccessibility={shown ? "auto" : "no-hide-descendants"}
-      style={[styles.position, { bottom: dockBottom(insets.bottom) }, motion]}
+      style={[styles.position, { bottom: dockBottom(insets.bottom), opacity: shown ? 1 : 0 }, motion]}
     >
       <View
         style={[styles.rail, { backgroundColor: color.glassOpaque }]}

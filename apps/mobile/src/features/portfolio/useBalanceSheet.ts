@@ -52,8 +52,7 @@ export function useBalanceSheet(): BalanceSheet {
   const risk = useAccountRisk(coreReady ? address : undefined, "finalized");
   const positions = usePositions(coreReady ? address : undefined);
   const summary = usePositionsSummary();
-  const mainnet = env.chainId === MAINNET_CHAIN_ID;
-  const perpl = usePerplAccount(mainnet ? address : undefined);
+  const perpl = usePerplAccount(address);
   const vault = useLpVault(address);
   const arrivals = useArrivals(env.chainId, address, money.status === "ready" ? money.assets : undefined);
 
@@ -138,8 +137,7 @@ export function useBalanceSheet(): BalanceSheet {
       : [];
   const missingTokens = money.degraded || (money.partial && missingPrices.length === 0);
   const unreadPositions =
-    (open !== undefined && open > 0 && summary === undefined) ||
-    (mainnet && address !== undefined && perpl.status === "failed");
+    (open !== undefined && open > 0 && summary === undefined) || (address !== undefined && perpl.status === "failed");
   const unreadCore = coreReady && address !== undefined && risk.status === "failed";
   const totalUsd6 = rows.reduce((sum, r) => sum + (r.valueUsd6 ?? 0n), 0n);
   return {

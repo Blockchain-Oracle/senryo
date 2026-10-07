@@ -1,3 +1,4 @@
+import { TESTNET_CHAIN_ID } from "@senryo/config";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
@@ -44,6 +45,7 @@ export function PerplTicketFooter({
   onConfirm,
   onDetails,
   onWhy,
+  onFunds,
 }: {
   t: PerplTicketModel;
   note: string | undefined;
@@ -52,10 +54,14 @@ export function PerplTicketFooter({
   onConfirm: () => void;
   onDetails: () => void;
   onWhy: () => void;
+  onFunds: () => void;
 }) {
   const { color } = useTheme();
   const gate = useTermsGate();
-  const addMoney = () => gate(() => router.push(ROUTES.addMoney), { verb: "add money", next: ROUTES.addMoney });
+  const addMoney = () =>
+    t.meta.chainId === TESTNET_CHAIN_ID && t.block?.code !== "fees"
+      ? onFunds()
+      : gate(() => router.push(ROUTES.addMoney), { verb: "add money", next: ROUTES.addMoney });
   const commit = perplCommit(t);
   const copy = t.block ? blockCopy(t.block, t.meta.symbol) : undefined;
   const guest = t.block?.code === "guest";

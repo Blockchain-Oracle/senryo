@@ -12,6 +12,8 @@ export type ReadClient = PublicClient<Transport, Chain>;
 export interface RpcOverrides {
   http?: readonly string[] | undefined;
   ws?: readonly string[] | undefined;
+  /** Local forks may need extra time to fetch uncached upstream storage. */
+  timeoutMs?: number | undefined;
 }
 
 /** How many RPCs the same signed tx is broadcast to (D-027: two in parallel). */
@@ -27,7 +29,9 @@ function wsUrls(chainId: ChainId, overrides?: RpcOverrides): readonly string[] {
 
 /** Reads: fallback across the network's HTTP RPCs, polling at half a block. */
 export function createReadClient(chainId: ChainId, overrides?: RpcOverrides): ReadClient {
-  const transports = httpUrls(chainId, overrides).map((url) => http(url, { timeout: HTTP_TIMEOUT_MS }));
+  const transports = httpUrls(chainId, overrides).map((url) =>
+    http(url, { timeout: overrides?.timeoutMs ?? HTTP_TIMEOUT_MS }),
+  );
   return createPublicClient({
     chain: viemChain(chainId),
     transport: fallback(transports),
@@ -45,7 +49,7 @@ export function createBroadcastClients(chainId: ChainId, overrides?: RpcOverride
     .map((url) =>
       createPublicClient({
         chain: viemChain(chainId),
-        transport: http(url, { timeout: HTTP_TIMEOUT_MS, retryCount: 0 }),
+        transport: http(url, { timeout: overrides?.timeoutMs ?? HTTP_TIMEOUT_MS, retryCount: 0 }),
         pollingInterval: POLL_INTERVAL_MS,
       }),
     );

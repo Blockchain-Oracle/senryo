@@ -1,3 +1,4 @@
+import { useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { closeMenu, registerDevMenuItems } from "expo-dev-client";
 import { router } from "expo-router";
@@ -23,6 +24,7 @@ function WorkspaceControls() {
   const insets = useSafeAreaInsets();
   const account = useAccount();
   const queries = useQueryClient();
+  const env = useQueryEnv();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -67,13 +69,14 @@ function WorkspaceControls() {
               <Text style={[TYPE.sectionTitle, { color: color.ink }]}>Development workspace</Text>
               <Text style={[TYPE.body, { color: color.text2 }]}>
                 Actual app screens and contracts on a local Practice fork. Controlled prices, local profile, no real
-                funds. Passkey and Face ID ceremonies are bypassed here.
+                funds. Local weekly sessions stay open for after-hours iteration. Passkey and Face ID ceremonies are
+                bypassed here.
               </Text>
               <Text style={[TYPE.meta, { color: color.text2 }]}>
                 {!account.ready
                   ? "Preparing account…"
                   : account.hint
-                    ? "Account ready · 75 P$ in trading, 25 P$ in wallet on reset"
+                    ? "Account ready · 75 P$ in trading, 25 P$ in wallet · test AUSD for crypto"
                     : "Fork unavailable. Start the local controller and retry."}
               </Text>
               {error ? (
@@ -95,6 +98,18 @@ function WorkspaceControls() {
                 variant="secondary"
                 disabled={busy}
                 onPress={() => void run(() => devControl("price", { marketId: 0, bps: -100 }))}
+              />
+              <Button
+                label="ZEC price +0.25%"
+                variant="secondary"
+                disabled={busy}
+                onPress={() => void run(() => devControl("perpl-price", { marketId: 256, bps: 25 }))}
+              />
+              <Button
+                label="ZEC price −0.25%"
+                variant="secondary"
+                disabled={busy}
+                onPress={() => void run(() => devControl("perpl-price", { marketId: 256, bps: -25 }))}
               />
               <Button
                 label={frozen ? "Resume oracle updates" : "Pause oracle updates · test stale state"}
@@ -125,6 +140,7 @@ function WorkspaceControls() {
                 onPress={() =>
                   void run(async () => {
                     await devControl("reset", { address: account.hint?.address });
+                    env.perplPrices.reset();
                     storage.clearAll();
                     resetDevProfile();
                     storage.set(STORAGE_KEYS.welcomed, true);

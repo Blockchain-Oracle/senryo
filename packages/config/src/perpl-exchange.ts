@@ -97,6 +97,16 @@ export const PERPL_FEE_DENOMINATOR = 1_000_000n;
 export const PERPL_MARKET_SCALES: Readonly<
   Record<number, Readonly<Record<number, { priceDecimals: number; lotDecimals: number }>>>
 > = {
+  [TESTNET_CHAIN_ID]: {
+    16: { priceDecimals: 1, lotDecimals: 5 },
+    32: { priceDecimals: 2, lotDecimals: 3 },
+    48: { priceDecimals: 2, lotDecimals: 3 },
+    64: { priceDecimals: 5, lotDecimals: 0 },
+    256: { priceDecimals: 3, lotDecimals: 3 },
+    272: { priceDecimals: 5, lotDecimals: 1 },
+    320: { priceDecimals: 6, lotDecimals: 0 },
+    336: { priceDecimals: 4, lotDecimals: 2 },
+  },
   [MAINNET_CHAIN_ID]: {
     1: { priceDecimals: 1, lotDecimals: 5 },
     10: { priceDecimals: 6, lotDecimals: 0 },
@@ -110,3 +120,6 @@ export const PERPL_MARKET_SCALES: Readonly<
     100: { priceDecimals: 4, lotDecimals: 2 },
   },
 };
+
+/** Agora's test AUSD faucet. Only chain 10143; native Practice never routes this collateral to MockAUSD. */
+export const PERPL_TESTNET_FAUCET = "0xd236c18D274E54FAccC3dd9DDA4b27965a73ee6C" as const;

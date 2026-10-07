@@ -3,6 +3,7 @@ export const DEV_WORKSPACE = __DEV__ && process.env.EXPO_PUBLIC_DEV_WORKSPACE ==
 
 /** Host-side fork controller; never a public RPC or production API. */
 export const DEV_ORIGIN = "http://127.0.0.1:18766";
+export const DEV_RPC_TIMEOUT_MS = 30_000;
 export const DEV_RPC = "http://127.0.0.1:18765";
 
 export function requireDevWorkspace(): void {

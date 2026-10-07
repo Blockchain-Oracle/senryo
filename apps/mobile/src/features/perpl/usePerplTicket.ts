@@ -18,12 +18,12 @@ import {
   readPerplWalletCollateral,
   type TxRequest,
 } from "@senryo/chain";
-import { PERPL_FEE_DENOMINATOR, PERPL_SLIPPAGE_BPS } from "@senryo/config";
+import { type ChainId, MAINNET_CHAIN_ID, PERPL_FEE_DENOMINATOR, PERPL_SLIPPAGE_BPS } from "@senryo/config";
 import { DECIMALS, formatUnits, parseUnits } from "@senryo/core";
 import {
-  mainnetReadOf,
   PERPL_TERMS_REFETCH_MS,
   perplOpenOperation,
+  perplReadOf,
   useGeo,
   usePerplAccount,
   usePerplExchange,
@@ -40,7 +40,7 @@ import { useReviewGuard } from "~/lib/review-guard";
 import { perplConfirmLevel } from "./confirm";
 import { perplFeeShortWei } from "./fees";
 import { leverageHdths, leverageX } from "./format";
-import { PERPL_CHAIN, type PerplMarketMeta } from "./market";
+import type { PerplMarketMeta } from "./market";
 import { usePerplRun } from "./usePerplRun";
 import { type PerplBlock, stepLabel } from "./words";
 
@@ -63,15 +63,16 @@ const PPM_PER_BPS = 100n;
 /** Max rounds down to whole cents (the keypad's precision). */
 const CENT_USD6 = 10_000n;
 
-export const perplTraceKey = (address: string | undefined, marketId: number) =>
-  `perpl:${PERPL_CHAIN}:${address?.toLowerCase() ?? "guest"}:${marketId}`;
+export const perplTraceKey = (address: string | undefined, marketId: number, chainId: ChainId = MAINNET_CHAIN_ID) =>
+  `perpl:${chainId}:${address?.toLowerCase() ?? "guest"}:${marketId}`;
 
 export function usePerplTicket(meta: PerplMarketMeta) {
   const env = useQueryEnv();
+  const chainId = meta.chainId;
   const network = useNetwork();
   const account = useAccount();
   const address = account.hint?.address;
-  const mainnet = network.chainId === PERPL_CHAIN;
+  const matchingNetwork = network.chainId === chainId;
   const online = useSyncExternalStore(onlineManager.subscribe, () => onlineManager.isOnline());
   const termsReading = usePerplMarketTerms(meta.marketId);
   const terms = termsReading.status === "fresh" || termsReading.status === "stale" ? termsReading.value : undefined;
@@ -84,7 +85,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
   const perplAllowed = geo.status === "fresh" || geo.status === "stale" ? geo.value.perplAllowed : true;
   const maxX = terms ? leverageX(terms.maxLeverageHdths) : undefined;
 
-  const key = perplTraceKey(address, meta.marketId);
+  const key = perplTraceKey(address, meta.marketId, chainId);
   const { draft, update } = useTicketDraft(key, { side: "long", amountText: "", leverage: DEFAULT_LEVERAGE });
   const { side, amountText } = draft;
   // The draft's default waits for the market's maximum: a 3× market never opens at 5×.
@@ -122,7 +123,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
   const planQuery = useQuery({
     queryKey: [
       "perpl",
-      PERPL_CHAIN,
+      chainId,
       "plan",
       address?.toLowerCase() ?? "",
       meta.marketId,
@@ -130,13 +131,14 @@ export function usePerplTicket(meta: PerplMarketMeta) {
       planned.notional.toString(),
       planned.hdths.toString(),
     ] as const,
-    enabled: mainnet && address !== undefined && planned.notional > 0n,
+    enabled: matchingNetwork && address !== undefined && planned.notional > 0n,
     refetchInterval: PERPL_TERMS_REFETCH_MS,
     staleTime: PERPL_TERMS_REFETCH_MS,
     queryFn: async () => {
-      const read = mainnetReadOf(env);
+      const read = perplReadOf(env);
       const owner = address as NonNullable<typeof address>;
       const plan = await perplOpenOperation(read, owner, {
+        chainId,
         marketId: meta.marketId,
         side: planned.side,
         notionalCNS: planned.notional,
@@ -173,7 +175,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
   const opposite = held && held.side !== side ? held : undefined;
   const block: PerplBlock | undefined = !online
     ? { code: "offline" }
-    : !mainnet
+    : !matchingNetwork
       ? { code: "practice" }
       : !perplAllowed
         ? { code: "region" }
@@ -204,7 +206,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
     plan && !plan.blocker
       ? plan.steps.map((s) =>
           typeof s === "function"
-            ? perplOrderRequest(PERPL_CHAIN, {
+            ? perplOrderRequest(chainId, {
                 marketId: meta.marketId,
                 intent: "open",
                 side,
@@ -224,13 +226,13 @@ export function usePerplTicket(meta: PerplMarketMeta) {
   });
 
   const runner = usePerplRun(key);
-  const guard = useReviewGuard([PERPL_CHAIN, address, meta.marketId, side, amountText, leverage].join(":"));
+  const guard = useReviewGuard([chainId, address, meta.marketId, side, amountText, leverage].join(":"));
   const checked = useRef(new Set<number>());
 
   const submit = async () => {
     const reviewed = plan;
     if (!reviewed || reviewed.blocker || !address || block) return undefined;
-    const read = mainnetReadOf(env);
+    const read = perplReadOf(env);
     checked.current = new Set();
     const firstOrderIndex = reviewed.steps.findIndex((s) => typeof s === "function");
     /** Before the first step and before the order: the venue, the market and the money are still as reviewed. */
@@ -238,10 +240,10 @@ export function usePerplTicket(meta: PerplMarketMeta) {
       guard();
       if (checked.current.has(index) || (index !== 0 && index !== firstOrderIndex)) return;
       const [ex, market, acct, wallet] = await Promise.all([
-        readPerplExchange(read, PERPL_CHAIN),
-        readPerplMarketTerms(read, PERPL_CHAIN, meta.marketId),
-        readPerplAccount(read, PERPL_CHAIN, address),
-        readPerplWalletCollateral(read, PERPL_CHAIN, address),
+        readPerplExchange(read, chainId),
+        readPerplMarketTerms(read, chainId, meta.marketId),
+        readPerplAccount(read, chainId, address),
+        readPerplWalletCollateral(read, chainId, address),
       ]);
       if (ex.halted || market.paused) throw new Error("Perpl paused this market. Nothing was sent.");
       if (acct && acct.frozen !== 0) throw new Error("Perpl froze this account. Nothing was sent.");
@@ -262,7 +264,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
       reviewedIntent: {
         ...reviewed.reviewedIntent,
         kind: "perpl",
-        network: "mainnet",
+        network: network.key,
         symbol: meta.symbol,
         name: meta.name,
         leverage: String(leverage),
@@ -301,7 +303,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
     held,
     buyingPowerUsd6,
     plan,
-    planning: notionalUsd6 > 0n && mainnet && address !== undefined && !settledPlan && !planQuery.isError,
+    planning: notionalUsd6 > 0n && matchingNetwork && address !== undefined && !settledPlan && !planQuery.isError,
     /** Perpl's chain reads failed for this order (the query keeps retrying on its interval). */
     planFailed: !settledPlan && planQuery.isError,
     block,

@@ -11,7 +11,7 @@ import type { Side } from "~/features/trade/useTicket";
 import { useNetwork } from "~/lib/network";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { perplPrice } from "./format";
-import { PERPL_CHAIN, perplWatchKey } from "./market";
+import { perplWatchKey } from "./market";
 import type { PerplTicketModel } from "./usePerplTicket";
 
 const PRICE_SKELETON = 96;
@@ -38,7 +38,7 @@ export function PerplTicketHeader({
   const known = quote.status === "fresh" || quote.status === "stale" ? quote.value : undefined;
   const oi = known?.openInterest.available ? compactUsd6(known.openInterest.value.usd6) : undefined;
   const mark = t.terms ? perplPrice(t.terms.markPNS, t.meta) : undefined;
-  const mainnet = network.chainId === PERPL_CHAIN;
+  const mode = network.key === "mainnet" ? "Mainnet" : "Practice";
   return (
     <View style={styles.wrap}>
       <View style={styles.identity}>
@@ -81,10 +81,10 @@ export function PerplTicketHeader({
       </View>
       <View style={styles.row}>
         <SideToggle side={t.side} onSide={onSide} locked={sideLocked} />
-        <View style={styles.venue} accessible accessibilityLabel={`Perpl, ${mainnet ? "Mainnet" : "Mainnet only"}`}>
+        <View style={styles.venue} accessible accessibilityLabel={`Perpl, ${mode}`}>
           <VenueChip venue={t.meta.venueMark} />
           <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.chipLabel, { color: color.mainnet }]}>
-            Mainnet
+            {mode}
           </Text>
         </View>
       </View>

@@ -40,7 +40,8 @@
     "@senryo/query": "workspace:*",
     "@senryo/indexer-client": "workspace:*",
     "@senryo/service-common": "workspace:*",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "viem": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

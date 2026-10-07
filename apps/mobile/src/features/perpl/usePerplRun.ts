@@ -10,9 +10,9 @@
 import { authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
 import type { Sender, TxRequest } from "@senryo/chain";
 import {
-  mainnetReadOf,
   type PerplPlan,
   type PerplStep,
+  perplReadOf,
   type TrackedResult,
   useQueryEnv,
   useSendTrace,
@@ -79,7 +79,7 @@ export function usePerplRun(traceKey: string) {
         validate: async () => {
           await request.validate?.();
           if (last === 0n) return;
-          const head = await mainnetReadOf(env).getBlockNumber();
+          const head = await perplReadOf(env).getBlockNumber();
           if (head + DEADLINE_MARGIN_BLOCKS > last) {
             throw new Error("The order’s time window passed before it was signed. Nothing was sent. Review it again.");
           }

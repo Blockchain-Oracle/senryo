@@ -10,10 +10,11 @@ import {
   PERPL_MAX_NEG_PNL_COLLAT_BPS,
   PERPL_ORDER_MAX_MATCHES,
   PERPL_ORDER_TTL_BLOCKS,
+  PERPL_TESTNET_FAUCET,
   type PerplOrderType,
 } from "@senryo/config";
 import { perplExchangeAbi } from "@senryo/contracts/external";
-import { erc20Abi } from "viem";
+import { erc20Abi, parseAbi } from "viem";
 import { externalCall } from "../calls.ts";
 import type { TxRequest } from "../send.ts";
 import { type PerplIntent, PerplOrderError, type PerplSide, perplOrderType } from "./math.ts";
@@ -117,4 +118,17 @@ export function perplOrderRequest(chainId: ChainId, params: PerplOrderParams): T
       lastExecutionBlock: desc.lastExecutionBlock.toString(),
     }),
   });
+}
+
+const PERPL_FAUCET_GAS_CAP = 180_000n; // Local fork estimate: 129,671; separate from the simpler MockStable faucet.
+/** Public testnet faucet: sends test collateral to the reviewed wallet. */
+export function perplPracticeFundsRequest(recipient: `0x${string}`): TxRequest {
+  return externalCall(
+    PERPL_TESTNET_FAUCET,
+    parseAbi(["function requestFunds(address recipient)"]),
+    "requestFunds",
+    [recipient],
+    "faucet",
+    { gasCap: PERPL_FAUCET_GAS_CAP },
+  );
 }

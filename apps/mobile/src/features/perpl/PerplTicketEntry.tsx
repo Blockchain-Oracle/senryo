@@ -11,10 +11,11 @@ import { Preset } from "~/components/trade/Preset";
 import { useCandleStyle } from "~/features/trade/candle-style";
 import { AMOUNT_CHIPS_USD } from "~/features/trade/constants";
 import { type EntryMode, ModeToggle } from "~/features/trade/Ticket";
-import { pct } from "~/lib/money";
+import { moneySymbol, pct } from "~/lib/money";
 import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, SIZE, SPACE, STACK_FONT_SCALE, TYPE, useTheme } from "~/theme";
 import { liqDistanceBps, perplPrice, perplUsd } from "./format";
 import { perplWatchKey } from "./market";
+import { PerplLiveChart } from "./PerplLiveChart";
 import type { PerplTicketModel } from "./usePerplTicket";
 
 const CHART_INTERVAL = 900;
@@ -85,7 +86,8 @@ function Amount({ t }: { t: PerplTicketModel }) {
         style={[TYPE.displayMargin, { color: empty ? color.text3 : color.ink }]}
         accessibilityLabel={`Margin ${empty ? "not set" : `${t.amountText} dollars`}, leverage ${t.leverage} times`}
       >
-        ${empty ? "0" : t.amountText}
+        {moneySymbol()}
+        {empty ? "0" : t.amountText}
       </Text>
     </View>
   );
@@ -174,6 +176,13 @@ function KeypadRegion({ t }: { t: PerplTicketModel }) {
 
 /** Perpl's own 15-minute trade candles (the market's candles API), in the saved candle style. */
 function ChartRegion({ t, fixed }: { t: PerplTicketModel; fixed: boolean }) {
+  return (
+    <View style={styles.region}>
+      <PerplLiveChart marketId={t.meta.marketId} history={<HistoricalChartRegion t={t} fixed={fixed} />} />
+    </View>
+  );
+}
+function HistoricalChartRegion({ t, fixed }: { t: PerplTicketModel; fixed: boolean }) {
   const { color } = useTheme();
   const candles = useDiscoveryCandles(perplWatchKey(t.meta.symbol), CHART_INTERVAL);
   const style = useCandleStyle();

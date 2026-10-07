@@ -19,12 +19,14 @@ import { DEFAULT_PERIOD, type PeriodKey, periodOf } from "~/features/markets/per
 import { compactUsd6, tokenPrice } from "~/features/tokens/format";
 import { LockedBar, SideBar } from "~/features/trade/SideBar";
 import { Change, MarketIdentity } from "~/features/trade/TradeHeader";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { clockTime } from "~/lib/format";
 import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { leverageX } from "./format";
 import { type PerplMarketMeta, perplWatchKey } from "./market";
 import { PerplAbout } from "./PerplAbout";
 import { PerplHeldRow, PerplOwnRow } from "./PerplLinks";
+import { PerplLiveChart } from "./PerplLiveChart";
 import { usePerplAccess } from "./usePerplAccess";
 
 const MS_PER_SECOND = 1000;
@@ -59,7 +61,7 @@ export function PerplDetail({ meta }: { meta: PerplMarketMeta }) {
   const [period, setPeriod] = useState<PeriodKey>(DEFAULT_PERIOD);
   const [tab, setTab] = useState<DetailTab>(access.state === "trade" ? "feed" : "about");
   const [why, setWhy] = useState(false);
-  const candles = useDiscoveryCandles(id, periodOf(period).interval);
+  const candles = useDiscoveryCandles(id, periodOf(period).interval, !DEV_WORKSPACE);
   const known = quote.status === "fresh" || quote.status === "stale" ? quote.value : undefined;
   const mainnet = access.state === "trade" || access.word !== "Mainnet";
   const tabs = mainnet ? TABS : TABS.filter((t) => t.value === "about");
@@ -123,14 +125,19 @@ export function PerplDetail({ meta }: { meta: PerplMarketMeta }) {
             </View>
           )}
         </ReadingView>
-        <HistoryChart
-          reading={candles}
-          period={period}
-          onPeriod={setPeriod}
-          priceUsd18={known?.price18}
-          caption={`${meta.symbol}/USD`}
-          loadingLabel="Loading its history"
-          retry={() => void client.invalidateQueries({ queryKey: ["discovery"] })}
+        <PerplLiveChart
+          marketId={meta.marketId}
+          history={
+            <HistoryChart
+              reading={candles}
+              period={period}
+              onPeriod={setPeriod}
+              priceUsd18={known?.price18}
+              caption={`${meta.symbol}/USD`}
+              loadingLabel="Loading its history"
+              retry={() => void client.invalidateQueries({ queryKey: ["discovery"] })}
+            />
+          }
         />
         <View style={styles.links}>
           {mainnet ? <PerplHeldRow meta={meta} /> : null}

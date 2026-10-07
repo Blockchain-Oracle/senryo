@@ -1,6 +1,5 @@
 import type { PositionView } from "@senryo/chain";
 import { isDeployed } from "@senryo/chain";
-import { MAINNET_CHAIN_ID } from "@senryo/config";
 import type { Reading } from "@senryo/core";
 import { useAccountRisk, usePerplAccount, usePositions, useQueryEnv } from "@senryo/query";
 import { router } from "expo-router";
@@ -32,15 +31,14 @@ export function PositionsSection({ bare = false }: { bare?: boolean } = {}) {
   const env = useQueryEnv();
   const address = useAccount().hint?.address;
   const coreReady = isDeployed(env.chainId, "SenryoCore");
-  const mainnet = env.chainId === MAINNET_CHAIN_ID;
   const engine = usePositions(coreReady ? address : undefined);
   const live = useAccountRisk(coreReady ? address : undefined, "latest");
-  const perpl = usePerplAccount(mainnet ? address : undefined);
+  const perpl = usePerplAccount(address);
   const retry = useAccountRetry();
   const account = live.status === "fresh" || live.status === "stale" ? live.value : undefined;
   const ours = coreReady ? engine : NONE;
   const theirs = perpl.status === "fresh" || perpl.status === "stale" ? perpl.value : undefined;
-  const perplLoading = mainnet && address !== undefined && perpl.status === "unknown";
+  const perplLoading = address !== undefined && perpl.status === "unknown";
   if (ours.status === "unknown" || perplLoading) {
     return (
       <View style={styles.section}>

@@ -1,4 +1,4 @@
-import { PERPL_ORDER_TTL_BLOCKS, PERPL_SLIPPAGE_BPS } from "@senryo/config";
+import { MAINNET_CHAIN_ID, PERPL_ORDER_TTL_BLOCKS, PERPL_SLIPPAGE_BPS } from "@senryo/config";
 import { BPS_DENOMINATOR, DECIMALS, formatUnits } from "@senryo/core";
 import { useDiscoveryQuote } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
@@ -80,7 +80,7 @@ export function PerplDetails({
           />
         ) : null}
         {steps ? <DetailRow label="Steps" value={steps} /> : null}
-        <DetailRow label="Venue" value="Perpl · Mainnet" />
+        <DetailRow label="Venue" value={`Perpl · ${t.meta.chainId === MAINNET_CHAIN_ID ? "Mainnet" : "Practice"}`} />
       </View>
       {screenReader ? <Button label={`Open ${t.side}`} disabled={!canOpen} onPress={onOpen} /> : null}
       <Button label="Back to order" variant="ghost" onPress={onClose} />
@@ -125,11 +125,11 @@ export function PerplLiquidationInfo({
   );
 }
 
-/** Why a Perpl market can't trade in Practice (flow book C4 step 7): the named reason behind the lock. */
+/** Explain why a ticket must be reviewed after a network change. */
 export function PerplPracticeInfo({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { color } = useTheme();
   return (
-    <ChildSheet open={open} onClose={onClose} title="Mainnet only">
+    <ChildSheet open={open} onClose={onClose} title="Review network">
       <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{PERPL_PRACTICE_REASON}</Text>
       <Button label="Close" variant="secondary" onPress={onClose} />
     </ChildSheet>

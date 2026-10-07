@@ -9,7 +9,7 @@ import { shortAddress } from "~/lib/format";
 import { pct } from "~/lib/money";
 import { CONTROL_FONT_SCALE, TYPE, useTheme } from "~/theme";
 import { perplPrice, perplSignedUsd, perplSize, perplUsd } from "./format";
-import { PERPL_CHAIN, type PerplMarketMeta } from "./market";
+import type { PerplMarketMeta } from "./market";
 import { LinkLine } from "./PerplOutcome";
 import { usePerplFill } from "./usePerplFill";
 import type { PerplRunner } from "./usePerplRun";
@@ -93,7 +93,7 @@ export function PerplCloseOutcome({
                 label={`Order ${shortAddress(hash)}`}
                 variant="ghost"
                 size="sm"
-                onPress={() => void Linking.openURL(explorerTxUrl(PERPL_CHAIN, hash))}
+                onPress={() => void Linking.openURL(explorerTxUrl(meta.chainId, hash))}
               />
             ) : null}
           </>

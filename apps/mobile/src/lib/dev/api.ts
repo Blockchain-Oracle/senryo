@@ -59,7 +59,7 @@ export const devApi = createApiClient({
         response = await devHoldings(url);
         break;
       case "/v1/geo":
-        response = { country: null, mainnetTradingAllowed: false, perplAllowed: false, reason: "Local fork" };
+        response = { country: null, mainnetTradingAllowed: false, perplAllowed: true, reason: "Local fork" };
         break;
       case "/v1/profile":
         if (method === "PUT" && profile) {

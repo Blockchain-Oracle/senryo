@@ -116,11 +116,9 @@ const PERPL_EXECUTION: Readonly<Record<ChainId, ExecutionGate>> = {
     source: "flow book C4 · D1 (packages/chain perpl, features/perpl)",
   },
   [TESTNET_CHAIN_ID]: {
-    state: "blocked",
-    blocker: "B10",
-    reason: "Perpl has no practice venue here yet",
-    unblocks: "a funded Perpl practice venue, or clearly labelled paper trading",
-    source: "v2-plan §7 B10 · Q-002 (Perpl testnet flow) or a labelled paper adapter",
+    state: "open",
+    reason: "Trades with test AUSD on Perpl’s Monad Testnet deployment",
+    source: "2026-10-07 funded-faucet and unpaused-market probes · native Perpl Practice",
   },
 };
 

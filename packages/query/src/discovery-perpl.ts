@@ -6,7 +6,15 @@
  * refuses), those fields say so and the price still shows.
  */
 import { type PerplMarketInfo, type ReadClient, readPerplMarkets } from "@senryo/chain";
-import { PERPL_API, PERPL_APP_URL, PERPL_MAX_CANDLES, PERPL_PRICE_SOURCE, type PerplInstrument } from "@senryo/config";
+import {
+  type ChainId,
+  MAINNET_CHAIN_ID,
+  PERPL_API,
+  PERPL_APP_URL,
+  PERPL_MAX_CANDLES,
+  PERPL_PRICE_SOURCE,
+  type PerplInstrument,
+} from "@senryo/config";
 import { BPS_DENOMINATOR, DECIMALS, divRound, oneUnit, rescale } from "@senryo/core";
 import type { CandleInterval } from "@senryo/indexer-client";
 import { CANDLE_WINDOW_SEC, PERPL_CONTEXT_TTL_MS, PERPL_HTTP_TIMEOUT_MS } from "./constants.ts";
@@ -48,7 +56,7 @@ const settle = <T>(p: Promise<T>): Promise<PromiseSettledResult<T>> =>
  * GET with a deadline, so a hung Perpl call never holds back the onchain price it is read beside. AbortController +
  * setTimeout rather than AbortSignal.timeout/any, which Hermes does not ship (as the indexer client does).
  */
-async function getJson(path: string, signal?: AbortSignal): Promise<unknown> {
+async function getJson(path: string, signal?: AbortSignal, chainId: ChainId = MAINNET_CHAIN_ID): Promise<unknown> {
   const controller = new AbortController();
   let timedOut = false;
   const timer = setTimeout(() => {
@@ -58,7 +66,7 @@ async function getJson(path: string, signal?: AbortSignal): Promise<unknown> {
   const forward = () => controller.abort();
   signal?.addEventListener("abort", forward);
   try {
-    const res = await fetch(`${PERPL_API}${path}`, {
+    const res = await fetch(`${chainId === MAINNET_CHAIN_ID ? PERPL_API : "https://testnet.perpl.xyz/api"}${path}`, {
       headers: { accept: "application/json" },
       signal: controller.signal,
     });
@@ -74,8 +82,10 @@ async function getJson(path: string, signal?: AbortSignal): Promise<unknown> {
 }
 
 /** `GET /v1/market-data/ticker` → per market id. A market Perpl has no state for yet is absent. */
-async function fetchTicker(signal?: AbortSignal): Promise<Map<number, TickerRow>> {
-  const body = (await getJson("/v1/market-data/ticker", signal)) as { d?: Record<string, Record<string, unknown>> };
+async function fetchTicker(signal?: AbortSignal, chainId: ChainId = MAINNET_CHAIN_ID): Promise<Map<number, TickerRow>> {
+  const body = (await getJson("/v1/market-data/ticker", signal, chainId)) as {
+    d?: Record<string, Record<string, unknown>>;
+  };
   const out = new Map<number, TickerRow>();
   for (const [id, row] of Object.entries(body.d ?? {})) {
     const lst = integer(row.lst);
@@ -86,19 +96,23 @@ async function fetchTicker(signal?: AbortSignal): Promise<Map<number, TickerRow>
   return out;
 }
 
-let funding: { at: number; byMarket: Map<number, number> } | undefined;
+const funding = new Map<ChainId, { at: number; byMarket: Map<number, number> }>();
 
 /** Funding interval (s) per market from `/v1/pub/context`, re-read at most every `PERPL_CONTEXT_TTL_MS`. */
-async function fundingIntervals(signal?: AbortSignal): Promise<Map<number, number>> {
-  if (funding && Date.now() - funding.at < PERPL_CONTEXT_TTL_MS) return funding.byMarket;
-  const body = (await getJson("/v1/pub/context", signal)) as { markets?: Array<Record<string, unknown>> };
+async function fundingIntervals(
+  signal?: AbortSignal,
+  chainId: ChainId = MAINNET_CHAIN_ID,
+): Promise<Map<number, number>> {
+  const cached = funding.get(chainId);
+  if (cached && Date.now() - cached.at < PERPL_CONTEXT_TTL_MS) return cached.byMarket;
+  const body = (await getJson("/v1/pub/context", signal, chainId)) as { markets?: Array<Record<string, unknown>> };
   const byMarket = new Map<number, number>();
   for (const m of body.markets ?? []) {
     const id = integer(m.id);
     const interval = integer(m.funding_interval_sec);
     if (id !== undefined && interval !== undefined) byMarket.set(Number(id), Number(interval));
   }
-  funding = { at: Date.now(), byMarket };
+  funding.set(chainId, { at: Date.now(), byMarket });
   return byMarket;
 }
 
@@ -166,14 +180,16 @@ export async function fetchPerplQuotes(
   read: ReadClient,
   instruments: readonly PerplInstrument[],
   signal?: AbortSignal,
+  chainId: ChainId = MAINNET_CHAIN_ID,
 ): Promise<DiscoveryQuoteResult[]> {
   const [infos, ticker, context] = await Promise.all([
     readPerplMarkets(
       read,
       instruments.map((i) => i.perplMarketId),
+      chainId,
     ),
-    settle(fetchTicker(signal)),
-    settle(fundingIntervals(signal)),
+    settle(fetchTicker(signal, chainId)),
+    settle(fundingIntervals(signal, chainId)),
   ]);
   const rows = ticker.status === "fulfilled" ? ticker.value : undefined;
   const intervals = context.status === "fulfilled" ? context.value : undefined;
@@ -198,13 +214,18 @@ export async function fetchPerplCandles(
   instrument: PerplInstrument,
   interval: CandleInterval,
   signal?: AbortSignal,
+  chainId: ChainId = MAINNET_CHAIN_ID,
 ): Promise<DiscoveryCandles> {
   const toMs = Date.now();
   const windowSec = Math.min(CANDLE_WINDOW_SEC[interval], interval * PERPL_MAX_CANDLES);
   const fromMs = toMs - windowSec * MS_PER_SECOND;
   const [[info], body] = await Promise.all([
-    readPerplMarkets(read, [instrument.perplMarketId]),
-    getJson(`/v1/market-data/${instrument.perplMarketId}/candles/${interval}/${fromMs}-${toMs}`, signal) as Promise<{
+    readPerplMarkets(read, [instrument.perplMarketId], chainId),
+    getJson(
+      `/v1/market-data/${instrument.perplMarketId}/candles/${interval}/${fromMs}-${toMs}`,
+      signal,
+      chainId,
+    ) as Promise<{
       d?: Array<Record<string, unknown>>;
     }>,
   ]);
@@ -229,7 +250,10 @@ export async function fetchPerplCandles(
   return {
     kind: "history",
     candles,
-    source: { text: `Perpl · ${instrument.symbol} trades`, url: PERPL_APP_URL },
+    source: {
+      text: `Perpl · ${instrument.symbol} trades`,
+      url: chainId === MAINNET_CHAIN_ID ? PERPL_APP_URL : "https://testnet.perpl.xyz",
+    },
     coverage: { from: first.t, complete: true, note: undefined },
   };
 }

@@ -70,7 +70,9 @@ export function PrelaunchDetail({ meta }: { meta: EngineMarket }) {
             {feedUpdatedAt(feed)} · Chainlink{query.isError ? " · Refresh failed" : ""}
           </Text>
         ) : null}
-        {price === undefined ? null : <MarketChart line={{ symbol: meta.symbol, marketId: meta.id, price18: price }} />}
+        {price === undefined || !feed ? null : (
+          <MarketChart line={{ symbol: meta.symbol, marketId: meta.id, price18: price, updatedAt: feed.updatedAt }} />
+        )}
         <View style={styles.about}>
           <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
             About {meta.name}

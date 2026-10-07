@@ -7,12 +7,19 @@ import type { ApiClient } from "@senryo/api-client";
 import type { ReadClient } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import type { Address } from "@senryo/core";
-import type { IndexerClient } from "@senryo/indexer-client";
+import type { CandleInterval, Candles, IndexerClient } from "@senryo/indexer-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useContext, useEffect, useMemo } from "react";
 import { keys } from "./keys.ts";
+import { PerplPriceStream } from "./perpl-stream.ts";
 import { PriceStore } from "./price-store.ts";
 import { EngineSocket } from "./socket.ts";
+
+export interface MarketHistorySource {
+  chainId: ChainId;
+  label: string;
+  load: (symbol: string, interval: CandleInterval, since: number, signal: AbortSignal) => Promise<Candles>;
+}
 
 export interface QueryEnv {
   chainId: ChainId;
@@ -21,7 +28,9 @@ export interface QueryEnv {
   mainnetRead?: ReadClient | undefined;
   api: ApiClient;
   indexer: IndexerClient;
+  marketHistory?: MarketHistorySource | undefined;
   prices: PriceStore;
+  perplPrices: PerplPriceStream;
   socket: EngineSocket;
 }
 
@@ -34,10 +43,13 @@ export interface QueryEnvProviderProps {
   mainnetRead?: ReadClient | undefined;
   api: ApiClient;
   indexer: IndexerClient;
+  marketHistory?: MarketHistorySource | undefined;
   /** API origin for the engine socket. */
   apiOrigin: string;
   /** Local fork workspaces use contract polling and must not subscribe a fixture account to production. */
   socketEnabled?: boolean;
+  streamActive?: boolean;
+  perplSnapshot?: (() => Promise<unknown>) | undefined;
   children: ReactNode;
 }
 
@@ -47,8 +59,11 @@ export function QueryEnvProvider({
   mainnetRead,
   api,
   indexer,
+  marketHistory,
   apiOrigin,
   socketEnabled = true,
+  streamActive = true,
+  perplSnapshot,
   children,
 }: QueryEnvProviderProps) {
   const queryClient = useQueryClient();
@@ -60,14 +75,29 @@ export function QueryEnvProvider({
       prices,
       onAccount: (address: Address) => void queryClient.invalidateQueries({ queryKey: keys.account(chainId, address) }),
     });
-    return { chainId, read, mainnetRead, api, indexer, prices, socket };
-  }, [chainId, read, mainnetRead, api, indexer, apiOrigin, queryClient]);
+    return {
+      chainId,
+      read,
+      mainnetRead,
+      api,
+      indexer,
+      marketHistory,
+      prices,
+      socket,
+      perplPrices: new PerplPriceStream(chainId, perplSnapshot),
+    };
+  }, [chainId, read, mainnetRead, api, indexer, marketHistory, apiOrigin, queryClient, perplSnapshot]);
 
   useEffect(() => {
     if (!socketEnabled) return;
     env.socket.start();
     return () => env.socket.stop();
   }, [env, socketEnabled]);
+
+  useEffect(() => {
+    env.perplPrices.setActive(streamActive);
+    return () => env.perplPrices.setActive(false);
+  }, [env, streamActive]);
 
   return <Context.Provider value={env}>{children}</Context.Provider>;
 }

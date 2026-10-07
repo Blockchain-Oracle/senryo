@@ -33,7 +33,10 @@ export function PerplMarketRow({
   const quote = reading.status === "fresh" || reading.status === "stale" ? reading.value : undefined;
   const change = quote?.change24h.available ? quote.change24h.value.bps : undefined;
   const price = reading.status === "unknown" ? undefined : quote ? tokenPrice(quote.price18) : null;
-  const cap = caps.status === "fresh" || caps.status === "stale" ? caps.value[instrument.perplMarketId] : undefined;
+  const cap =
+    caps.status === "fresh" || caps.status === "stale"
+      ? caps.value[meta?.marketId ?? instrument.perplMarketId]
+      : undefined;
   const tag =
     access.state === "locked" ? (
       <LockTag word={access.word} />

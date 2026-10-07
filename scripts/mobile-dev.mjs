@@ -79,7 +79,7 @@ try {
       "--host",
       "127.0.0.1",
       "--block-time",
-      "0.5",
+      "1",
       "--mixed-mining",
       "--slots-in-an-epoch",
       "1",
