@@ -10,6 +10,16 @@ Status: **approved by the user (“lgtm”), 7 October**. The first implementati
 
 ## 1. Product and authority lock
 
+### Development and functional iteration amendment — 7 October
+
+The user's latest steering explicitly authorizes a native development workspace: explore the signed-in dashboard, balances, long/short tickets, positions and outcomes without repeated sign-in. Preserve this entire approved roadmap; speed comes from hot reload, reusable scenarios and fixing shared data paths, with the same fidelity/quality bar.
+
+Implement an explicit development-only opt-in, separate account/storage and loopback-only Practice fork. Reuse actual native routes, account policy, contract risk/preview, sender, operation journal and receipt lifecycle. Add reset, controlled-price and onboarding replay controls; fixtures must be labelled and cannot become real-money or release behavior. Profile/service fixtures stay local; unsupported provider scenarios are declared rather than silently routed to a website. Physical passkey/Face ID and production services retain their own acceptance gates.
+
+Pricing work includes fixing Home's Mainnet contract/feed mismatch, visible source timestamps, meaningful failed-refresh/retry states, fewer duplicate subscriptions and stale-tick handling. Next continue complete native trade journeys and the UGLYCASH route/state revamp, then finish the existing profile/onboarding/money/social/prediction/provider roadmap. A working development account is infrastructure for that work, not evidence the whole product is complete.
+
+[Workspace runbook and verification](../development/mobile-workspace.md).
+
 Senryo is a **mobile app for accessible pair trading on Monad, predictions, money movement and Kinpaku**, with social discovery supporting traders. Practice comes first; the browser is a companion. Existing holdings compatibility does not turn meme-coin discovery into the product positioning.
 
 The authoritative visual source is the user's 16 UGLYCASH ZIPs: **89 screenshots, all inspected**, indexed by SHA-256 and step in the [new study](../design/reference-study-2026-10-07-uglycash/README.md). [All flows](../design/reference-study-2026-10-07-uglycash/flows.md) and the [parity ledger](../design/reference-study-2026-10-07-uglycash/parity-ledger.csv) are part of this plan.

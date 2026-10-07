@@ -14,6 +14,7 @@ import { Check } from "~/components/kit/symbols";
 import { SheetRow } from "~/components/sheet/SheetRow";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import { useAccount } from "~/lib/account/provider";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { usd } from "~/lib/money";
 import { type NetworkKey, setActiveNetwork, useNetwork } from "~/lib/network";
 import { SHEET_SHAPE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
@@ -29,7 +30,9 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
   const network = useNetwork();
   const account = useAccount();
   const balances = useNetworkBalances();
-  const [confirming, setConfirming] = useState(request === MAINNET.key && network.key !== MAINNET.key);
+  const [confirming, setConfirming] = useState(
+    !DEV_WORKSPACE && request === MAINNET.key && network.key !== MAINNET.key,
+  );
 
   const choose = (key: NetworkKey) => {
     if (key === network.key) return onDone?.();
@@ -70,7 +73,12 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
         index={1}
         leading={<EntityMark id={ids.evmChain(MAINNET.chainId)} size={SIZE.markToken} decorative />}
         title="Mainnet"
-        {...(mainnet ? { detail: mainnet } : {})}
+        {...(DEV_WORKSPACE
+          ? { detail: "Unavailable in the local development workspace" }
+          : mainnet
+            ? { detail: mainnet }
+            : {})}
+        disabled={DEV_WORKSPACE}
         selected={network.key === MAINNET.key}
         onPress={() => choose(MAINNET.key)}
         trailing={check(MAINNET.key)}

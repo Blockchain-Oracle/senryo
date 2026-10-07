@@ -9,6 +9,7 @@ import { Button } from "~/components/kit/Button";
 import { useGroupFill } from "~/components/kit/Surface";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { SHEET_SHAPE, SPACE, TYPE, useTheme } from "~/theme";
 import { StarterCard } from "./StarterCard";
 
@@ -17,6 +18,8 @@ export function AccountStrip() {
   const account = useAccount();
   const fill = useGroupFill();
   if (!account.ready) return null;
+  // The local controller funds the development account directly.
+  if (DEV_WORKSPACE && account.hint) return null;
   if (account.hint) return <StarterCard hideWhenClaimed />;
   return (
     <View style={[styles.guest, { backgroundColor: fill }]}>

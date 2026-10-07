@@ -11,7 +11,7 @@ import { ids } from "@senryo/identity";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { usePrelaunchPrices } from "~/features/network/usePrelaunchPrices";
+import { feedUpdatedAt, usePrelaunchPrice } from "~/features/network/usePrelaunchPrices";
 import { fire } from "~/feedback/fire";
 import { marketRoute } from "~/lib/constants/routes";
 import { price18, priceDecimalsOf, signedPct } from "~/lib/money";
@@ -100,8 +100,9 @@ export function EngineMarketRow({ marketId, onOpen }: { marketId: number; onOpen
  */
 export function PrelaunchMarketRow({ marketId }: { marketId: number }) {
   const meta = ENGINE_MARKETS.find((m) => m.id === marketId);
-  // One shared query per feed (react-query dedups by key), read only when this row is on screen.
-  const price = usePrelaunchPrices().find((p) => p.symbol === meta?.symbol)?.price;
+  const query = usePrelaunchPrice(marketId);
+  const price = query.data;
+  const { color } = useTheme();
   const symbol = meta?.symbol ?? String(marketId);
   const shown = price ? `$${formatUnits(price.answer, price.decimals, price.shown)}` : undefined;
   return (
@@ -109,11 +110,30 @@ export function PrelaunchMarketRow({ marketId }: { marketId: number }) {
       mark={ids.engineMarket(MAINNET_CHAIN_ID, marketId)}
       title={symbol}
       tag={<LockTag word="Soon" />}
-      subtitle={meta?.name ?? ""}
-      price={shown}
+      subtitle={
+        price
+          ? `${meta?.name} · ${feedUpdatedAt(price)}${query.isError ? " · Refresh failed" : ""}`
+          : query.isError
+            ? "Feed could not be reached"
+            : (meta?.name ?? "")
+      }
+      price={shown ?? (query.isError ? null : undefined)}
       changeBps={undefined}
+      trailing={
+        query.isError ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Retry ${symbol} feed`}
+            disabled={query.isFetching}
+            onPress={() => void query.refetch()}
+            style={[styles.retry, { backgroundColor: color.raised2 }]}
+          >
+            <Text style={[TYPE.rowDetail, { color: color.ink }]}>{query.isFetching ? "Retrying…" : "Retry"}</Text>
+          </Pressable>
+        ) : undefined
+      }
       onPress={() => router.push(marketRoute(symbol))}
-      accessibilityLabel={`${meta?.name ?? symbol}, opening soon${shown ? `, ${shown}` : ""}`}
+      accessibilityLabel={`${meta?.name ?? symbol}, opening soon${shown && price ? `, ${shown}, ${feedUpdatedAt(price)}` : query.isError ? ", feed could not be reached" : ", reading price"}`}
     />
   );
 }

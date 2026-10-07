@@ -1,7 +1,8 @@
 import { createMMKV } from "react-native-mmkv";
+import { DEV_WORKSPACE } from "./dev/config";
 
 /** The app's synchronous key-value store (theme, remembered choices, later the tx journal). Never secrets (SecureStore). */
-export const storage = createMMKV({ id: "senryo" });
+export const storage = createMMKV({ id: DEV_WORKSPACE ? "senryo-dev-workspace-v1" : "senryo" });
 
 /** Every persisted key, versioned so a shape change never reads stale data. */
 export const STORAGE_KEYS = {

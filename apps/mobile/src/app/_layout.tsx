@@ -16,6 +16,7 @@ import { TermsHost } from "~/features/legal/TermsHost";
 import { WatchlistSync } from "~/features/markets/WatchlistSync";
 import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
+import { WorkspaceHost } from "~/lib/dev/WorkspaceHost";
 import { MarketDataProvider } from "~/lib/market-data";
 import { PushHost } from "~/lib/notifications/PushHost";
 import { FONT, ThemeProvider, useTheme } from "~/theme";
@@ -120,6 +121,7 @@ function RootStack() {
       <WatchlistSync />
       <TermsHost />
       <PrivacyPlate />
+      <WorkspaceHost />
     </>
   );
 }

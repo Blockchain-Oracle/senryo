@@ -20,8 +20,11 @@ import {
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { beginCreate, endCreate, oweSetup, reconcileCreate } from "~/features/setup/progress";
+import { createDevAccountClient, prepareDevAccount } from "~/lib/dev/account";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { activeNetwork } from "~/lib/network";
 import { unregisterPush } from "~/lib/notifications/push";
+import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { clearApiSession } from "./api";
 import { serverDeleteDone, serverDeleteOwed } from "./delete-data";
 import { waitForAuthForeground } from "./foreground";
@@ -59,7 +62,11 @@ const AccountContext = createContext<AccountContextValue | undefined>(undefined)
 export function AccountProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SessionSettings>(DEFAULT_SETTINGS);
   const [extraPrompt, setExtraPrompt] = useState<Flow>();
-  const [client] = useState(() => createNativeAccountClient(loadSettings(), (flow) => setExtraPrompt(flow)));
+  const [client] = useState(() =>
+    DEV_WORKSPACE
+      ? createDevAccountClient()
+      : createNativeAccountClient(loadSettings(), (flow) => setExtraPrompt(flow)),
+  );
   const [ready, setReady] = useState(false);
   const [snapshot, setSnapshot] = useState<SessionSnapshot>(client.session.snapshot());
   const [hint, setHint] = useState<AccountHint>();
@@ -70,8 +77,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     setSettings(loadSettings());
     const unsubscribe = client.session.subscribe(() => setSnapshot(client.session.snapshot()));
     // A failed read never strands the app on a loader: no hint is the normal (stateless) path.
-    void client
-      .load()
+    if (DEV_WORKSPACE) storage.set(STORAGE_KEYS.welcomed, true);
+    void (DEV_WORKSPACE ? prepareDevAccount(client) : client.load())
       .catch(() => undefined)
       .then((h) => {
         // A create killed after its passkey succeeded still owes its setup (defect 6).
@@ -86,6 +93,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       // Backgrounded: end the signing session now (Mera: "end the session when the app's session expires"); the
       // ticket and the portfolio survive, the next trade asks for Face ID once.
       if (state === "background") client.session.lock("background");
+      if (state === "active" && DEV_WORKSPACE) void client.unlock().catch(() => undefined);
     });
     return () => {
       unsubscribe();
@@ -116,7 +124,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const unlockedAs = snapshot.status === "unlocked" ? snapshot.address : undefined;
   useEffect(() => {
     const c = clientRef.current;
-    if (!unlockedAs) return;
+    if (!unlockedAs || DEV_WORKSPACE) return;
     // A9: a "Delete my data" whose server part couldn't reach Senryo completes at this account's next unlock.
     if (serverDeleteOwed(unlockedAs)) {
       deleteRemoteData(c, c.session.settings.faceId)
@@ -210,7 +218,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         ),
       applySettings,
       refresh: async () => {
-        setHint(await client.load());
+        setHint(await (DEV_WORKSPACE ? prepareDevAccount(client) : client.load()));
       },
     }),
     [ready, snapshot, hint, extraPrompt, settings, obscured, client, flow, applySettings],

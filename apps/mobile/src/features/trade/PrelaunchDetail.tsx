@@ -8,12 +8,13 @@ import { type EngineMarket, MAINNET_CHAIN_ID } from "@senryo/config";
 import { ids } from "@senryo/identity";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "~/components/kit/Button";
 import { Skeleton } from "~/components/kit/states";
 import { MARKET_ABOUT } from "~/features/markets/MarketAbout";
 import { MarketActions, marketShareUrl } from "~/features/markets/MarketActions";
 import { MarketChart } from "~/features/markets/MarketChart";
 import { PageHeader } from "~/features/markets/PageHeader";
-import { usePrelaunchPrices } from "~/features/network/usePrelaunchPrices";
+import { feedUpdatedAt, usePrelaunchPrice } from "~/features/network/usePrelaunchPrices";
 import { price18 } from "~/lib/money";
 import { HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { LockedBar } from "./SideBar";
@@ -26,7 +27,8 @@ const PRICE_SKELETON = 160;
 export function PrelaunchDetail({ meta }: { meta: EngineMarket }) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
-  const feed = usePrelaunchPrices().find((p) => p.symbol === meta.symbol)?.price;
+  const query = usePrelaunchPrice(meta.id);
+  const feed = query.data;
   // The feed's answer in 1e18, as the engine would read it.
   const price = feed ? feed.answer * DECIMAL_BASE ** BigInt(PRICE_DECIMALS - feed.decimals) : undefined;
   return (
@@ -42,7 +44,16 @@ export function PrelaunchDetail({ meta }: { meta: EngineMarket }) {
         />
       </PageHeader>
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + SPACE.xl }]}>
-        {price === undefined ? (
+        {price === undefined && query.isError ? (
+          <View style={styles.about}>
+            <Text style={[TYPE.body, { color: color.text2 }]}>The price feed could not be reached.</Text>
+            <Button
+              label={query.isFetching ? "Retrying…" : "Retry price"}
+              disabled={query.isFetching}
+              onPress={() => void query.refetch()}
+            />
+          </View>
+        ) : price === undefined ? (
           <Skeleton width={PRICE_SKELETON} height={SIZE.skeletonRow} />
         ) : (
           <Text
@@ -54,6 +65,11 @@ export function PrelaunchDetail({ meta }: { meta: EngineMarket }) {
             ${price18(price, meta.priceDecimals)}
           </Text>
         )}
+        {feed ? (
+          <Text style={[TYPE.meta, { color: color.text2 }]}>
+            {feedUpdatedAt(feed)} · Chainlink{query.isError ? " · Refresh failed" : ""}
+          </Text>
+        ) : null}
         {price === undefined ? null : <MarketChart line={{ symbol: meta.symbol, marketId: meta.id, price18: price }} />}
         <View style={styles.about}>
           <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>

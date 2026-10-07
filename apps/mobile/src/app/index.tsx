@@ -2,6 +2,7 @@ import { type Href, Redirect } from "expo-router";
 import { anySetupPending, creating, pendingSetupStep } from "~/features/setup/progress";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES, setupRoute } from "~/lib/constants/routes";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
 /**
@@ -12,6 +13,7 @@ import { STORAGE_KEYS, storage } from "~/lib/storage";
  */
 export default function Index() {
   const { ready, hint } = useAccount();
+  if (DEV_WORKSPACE) return ready ? <Redirect href={ROUTES.home} /> : null;
   const welcomed = storage.getBoolean(STORAGE_KEYS.welcomed) === true;
   const unsettled = creating();
   if (!welcomed && !unsettled) return <Redirect href={ROUTES.welcome} />;

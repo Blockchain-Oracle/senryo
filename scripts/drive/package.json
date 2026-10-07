@@ -6,6 +6,7 @@
   "description": "Testnet drive scripts (S3.8): deposit → XAU long → MirrorAggregator price move → keeper liquidation; card concurrency check.",
   "license": "MIT",
   "scripts": {
+    "mobile-dev-server": "tsx src/mobile-dev-server.ts",
     "liquidation": "tsx src/liquidation.ts",
     "card-concurrency": "tsx src/card-concurrency.ts",
     "card-outbox-check": "tsx src/card-outbox-check.ts",

@@ -60,8 +60,8 @@ function overlay(snapshot: MarketRiskSnapshot, tick: PriceTick | undefined, now:
     ...base,
     pv: { price18: tick.price18, latest18: tick.latest18, status: tick.status, spreadBps: tick.spreadBps },
     updatedAt: tick.updatedAt,
-    live: true,
-    tickStale: now - tick.receivedAt > PRICE_STALE_MS,
+    live: tick.status === "OPEN" && now - tick.receivedAt <= PRICE_STALE_MS,
+    tickStale: tick.status !== "OPEN" || now - tick.receivedAt > PRICE_STALE_MS,
   };
 }
 

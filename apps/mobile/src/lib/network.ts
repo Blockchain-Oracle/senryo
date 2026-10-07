@@ -8,10 +8,12 @@ import { isDeployed } from "@senryo/chain";
 import { MAINNET, MAINNET_CHAIN_ID, type NetworkConfig, TESTNET } from "@senryo/config";
 import { useSyncExternalStore } from "react";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { DEV_WORKSPACE } from "./dev/config";
 
 export type NetworkKey = NetworkConfig["key"];
 
-let current: NetworkConfig = storage.getString(STORAGE_KEYS.network) === MAINNET.key ? MAINNET : TESTNET;
+let current: NetworkConfig =
+  !DEV_WORKSPACE && storage.getString(STORAGE_KEYS.network) === MAINNET.key ? MAINNET : TESTNET;
 const listeners = new Set<() => void>();
 
 export function activeNetwork(): NetworkConfig {
@@ -19,6 +21,8 @@ export function activeNetwork(): NetworkConfig {
 }
 
 export function setActiveNetwork(key: NetworkKey): void {
+  if (DEV_WORKSPACE && key !== "testnet")
+    throw new Error("The development workspace only supports the local Practice fork.");
   const next = key === MAINNET.key ? MAINNET : TESTNET;
   if (next === current) return;
   current = next;

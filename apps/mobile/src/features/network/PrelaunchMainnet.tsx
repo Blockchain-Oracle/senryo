@@ -59,13 +59,19 @@ export function PrelaunchMainnet({ surface }: { surface: keyof typeof LINE }) {
       </Panel>
       {showPrices ? (
         <View style={styles.prices}>
-          <SectionHeading>Live on Monad · Chainlink</SectionHeading>
+          <SectionHeading>Oracle prices · Chainlink</SectionHeading>
           <Panel>
             {prices.map((p) => (
               <ListRow
                 key={p.symbol}
                 title={p.symbol}
-                detail={p.price ? feedTime(p.price.updatedAt) : "Reading…"}
+                detail={
+                  p.price
+                    ? `Updated ${feedTime(p.price.updatedAt)}${p.failed ? " · Refresh failed" : ""}`
+                    : p.failed
+                      ? "Feed could not be reached"
+                      : "Reading…"
+                }
                 trailing={
                   <Text style={[TYPE.rowPrice, { color: color.ink }]}>
                     {p.price ? formatUnits(p.price.answer, p.price.decimals, p.price.shown) : "—"}

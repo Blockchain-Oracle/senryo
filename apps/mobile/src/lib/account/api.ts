@@ -9,6 +9,8 @@ import { defaultFaceIdMode, type FaceIdMode } from "@senryo/account";
 import { type ApiClient, ApiError, authNonceRoute, authVerifyRoute, createApiClient } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
 import { DEVICE_ID_BYTES } from "~/lib/constants/auth";
+import { devApi, setDevProfileAddress } from "~/lib/dev/api";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { ENV } from "~/lib/env";
 import { activeNetwork, type NetworkKey } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -33,6 +35,7 @@ function deviceId(): string {
 }
 
 export function api(): ApiClient {
+  if (DEV_WORKSPACE) return devApi;
   client ??= createApiClient({ origin: ENV.API_ORIGIN, deviceHash: deviceId(), getToken: () => session?.token });
   return client;
 }
@@ -69,6 +72,10 @@ export function policyContext(address: Address, faceId: PolicyContext["faceId"] 
 
 /** A valid API session for the signed-in account (SIWE: nonce → in-session signMessage → verify). */
 export async function ensureApiSession(account: AccountClient, faceId?: PolicyContext["faceId"]): Promise<void> {
+  if (DEV_WORKSPACE) {
+    if (account.hint) setDevProfileAddress(account.hint.address);
+    return;
+  }
   const address = account.hint?.address;
   if (!address) throw new Error("No account on this device");
   const chainId = activeNetwork().chainId;

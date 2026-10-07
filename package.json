@@ -10,6 +10,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:mobile": "node scripts/mobile-dev.mjs",
     "typecheck": "turbo run typecheck",
     "lint": "biome check .",
     "format": "biome format --write .",

@@ -4,9 +4,9 @@ import { StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Panel } from "~/components/kit/Surface";
-import { EngineMarketRow } from "~/features/markets/MarketRow";
+import { EngineMarketRow, PrelaunchMarketRow } from "~/features/markets/MarketRow";
 import { ROUTES } from "~/lib/constants/routes";
-import { useNetwork } from "~/lib/network";
+import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 /**
@@ -17,6 +17,7 @@ import { SPACE, TYPE, useTheme } from "~/theme";
 export function GuestHome() {
   const { color } = useTheme();
   const network = useNetwork();
+  const readOnly = useReadOnlyNetwork();
   const practice = network.key === "testnet";
   const markets = engineMarketsOn(network.chainId);
   return (
@@ -45,9 +46,13 @@ export function GuestHome() {
             <Text style={[TYPE.meta, { color: color.text3 }]}>Oracle prices</Text>
           </View>
           <View>
-            {markets.map((m) => (
-              <EngineMarketRow key={m.id} marketId={m.id} />
-            ))}
+            {markets.map((m) =>
+              readOnly ? (
+                <PrelaunchMarketRow key={m.id} marketId={m.id} />
+              ) : (
+                <EngineMarketRow key={m.id} marketId={m.id} />
+              ),
+            )}
           </View>
           <Button label="See all markets" variant="ghost" onPress={() => router.navigate(ROUTES.markets)} />
         </View>

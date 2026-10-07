@@ -36,6 +36,8 @@ export interface QueryEnvProviderProps {
   indexer: IndexerClient;
   /** API origin for the engine socket. */
   apiOrigin: string;
+  /** Local fork workspaces use contract polling and must not subscribe a fixture account to production. */
+  socketEnabled?: boolean;
   children: ReactNode;
 }
 
@@ -46,6 +48,7 @@ export function QueryEnvProvider({
   api,
   indexer,
   apiOrigin,
+  socketEnabled = true,
   children,
 }: QueryEnvProviderProps) {
   const queryClient = useQueryClient();
@@ -61,9 +64,10 @@ export function QueryEnvProvider({
   }, [chainId, read, mainnetRead, api, indexer, apiOrigin, queryClient]);
 
   useEffect(() => {
+    if (!socketEnabled) return;
     env.socket.start();
     return () => env.socket.stop();
-  }, [env]);
+  }, [env, socketEnabled]);
 
   return <Context.Provider value={env}>{children}</Context.Provider>;
 }

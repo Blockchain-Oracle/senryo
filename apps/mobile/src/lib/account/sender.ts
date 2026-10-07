@@ -27,12 +27,19 @@ import {
   reconcileEntry,
   type Sender,
 } from "@senryo/chain";
-import { type ChainId, isChainId } from "@senryo/config";
+import { type ChainId, isChainId, TESTNET_CHAIN_ID } from "@senryo/config";
 import { isTerminalStage } from "@senryo/core";
 import { operationOutcome, readOperation, userFeeCache, writeOperation } from "@senryo/query";
+import { DEV_RPC, DEV_WORKSPACE } from "~/lib/dev/config";
 import { activeNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
 import { policyContext } from "./api";
+
+function developmentRpc(chainId: ChainId) {
+  if (!DEV_WORKSPACE) return undefined;
+  if (chainId !== TESTNET_CHAIN_ID) throw new Error("Development signing is restricted to the local Practice fork.");
+  return { http: [DEV_RPC] };
+}
 
 const mmkv: KvStore = {
   getItem: (key) => storage.getString(key),
@@ -56,7 +63,10 @@ const nonceSources = new Map<ChainId, NonceSource>();
 export function sharedRead(chainId: ChainId = activeNetwork().chainId): ReadClient {
   let read = reads.get(chainId);
   if (!read) {
-    read = createReadClient(chainId);
+    read = createReadClient(
+      chainId,
+      DEV_WORKSPACE && chainId === TESTNET_CHAIN_ID ? developmentRpc(chainId) : undefined,
+    );
     reads.set(chainId, read);
   }
   return read;
@@ -92,6 +102,7 @@ export function userSender(
   const base = policyContext(address, faceId);
   return createSender({
     chainId,
+    rpc: developmentRpc(chainId),
     account: client.signer(trade ? () => ({ ...base(), ...trade }) : base),
     read,
     nonces: sharedNonces(chainId),
@@ -111,6 +122,7 @@ export function stepUpSender(signer: LocalAccount): Sender {
   const read = sharedRead(chainId);
   return createSender({
     chainId,
+    rpc: developmentRpc(chainId),
     account: signer,
     read,
     nonces: sharedNonces(chainId),

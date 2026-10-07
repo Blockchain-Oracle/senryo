@@ -9,6 +9,7 @@ import { AppState } from "react-native";
 import { api } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
 import { sharedRead } from "~/lib/account/sender";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { ENV } from "~/lib/env";
 import { activeNetwork, useNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
@@ -39,6 +40,7 @@ export function MarketDataProvider({ children }: { children: ReactNode }) {
       api={api()}
       indexer={indexer}
       apiOrigin={ENV.API_ORIGIN}
+      socketEnabled={!DEV_WORKSPACE}
     >
       {children}
     </QueryEnvProvider>

@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "start": "expo start --dev-client",
+    "dev:workspace": "EXPO_PUBLIC_DEV_WORKSPACE=1 REACT_NATIVE_PACKAGER_HOSTNAME=localhost expo start --dev-client --localhost",
     "ios": "expo run:ios",
     "android": "expo run:android",
     "export": "expo export -p ios -p android",
