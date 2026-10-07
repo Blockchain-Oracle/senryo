@@ -22,6 +22,7 @@ export function SetupField({
   input,
   onMessagePress,
   messageAccessory,
+  variant = "default",
 }: {
   value: string;
   onChangeText: (next: string) => void;
@@ -39,13 +40,23 @@ export function SetupField({
   onMessagePress?: () => void;
   /** Sits after the state line (an ⓘ behind "On hold"). */
   messageAccessory?: ReactNode;
+  variant?: "default" | "username";
 }) {
   const { color } = useTheme();
   const [focused, setFocused] = useState(false);
   const ink = tone === "good" ? color.up : tone === "bad" ? color.down : color.text3;
   return (
     <View style={styles.wrap}>
-      <View style={[styles.plate, { backgroundColor: color.card, borderColor: focused ? color.ring : color.border }]}>
+      <View
+        style={[
+          styles.plate,
+          variant === "username" ? styles.usernamePlate : null,
+          {
+            backgroundColor: variant === "username" ? color.input : color.card,
+            borderColor: variant === "username" ? color.transparent : focused ? color.ring : color.border,
+          },
+        ]}
+      >
         {prefix ? <Text style={[TYPE.field, { color: color.text3 }]}>{prefix}</Text> : null}
         <TextInput
           value={value}
@@ -59,7 +70,12 @@ export function SetupField({
           accessibilityLabel={label}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          style={[TYPE.field, styles.input, { color: color.ink }]}
+          style={[
+            variant === "username" ? TYPE.displayPrice : TYPE.field,
+            styles.input,
+            variant === "username" ? styles.usernameInput : null,
+            { color: color.ink },
+          ]}
           {...input}
         />
         {action ? (
@@ -106,6 +122,8 @@ const styles = StyleSheet.create({
   },
   // lineHeight is dropped: iOS centres a single-line input's text only when the line box is its own.
   input: { flex: 1, height: SIZE.fieldHeight, lineHeight: undefined, paddingVertical: 0 },
+  usernamePlate: { height: SIZE.fieldHeight + SPACE.xl, borderWidth: 0, borderRadius: BUTTON.radius.md },
+  usernameInput: { height: SIZE.fieldHeight + SPACE.xl, textAlign: "center" },
   line: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: SPACE.xs },
   message: { textAlign: "center" },
 });

@@ -2,7 +2,7 @@ import { ApiError, normalizeHandle } from "@senryo/api-client";
 import { socialKeys, useHandleAvailability, useSaveProfile } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { HELD_INFO, handleLine } from "~/features/profile/handle-copy";
 import { DEFAULT_VISIBILITY, ShowTrades } from "~/features/profile/ShowTrades";
@@ -14,7 +14,7 @@ import { suggestHandle } from "~/features/setup/suggest-handle";
 import { useSetupNav } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
-import { SPACE } from "~/theme";
+import { SPACE, TYPE, useTheme } from "~/theme";
 
 /** The availability check waits for the typing to pause. */
 const CHECK_DELAY_MS = 300;
@@ -28,6 +28,7 @@ const HANDLE_MAX = 20;
  * account without a name (Home offers "Pick a username").
  */
 export default function HandleStep() {
+  const { color } = useTheme();
   const { next, address } = useSetupNav("handle");
   const session = useSessionRunner();
   const [text, setText] = useState(() => suggestHandle(address));
@@ -68,7 +69,7 @@ export default function HandleStep() {
   }
 
   const claim = () => {
-    if (!known) return;
+    if (!available || !known || save.isPending) return;
     setSaveError(undefined);
     save.mutate(
       { handle: known.handle, ...visibility },
@@ -89,13 +90,22 @@ export default function HandleStep() {
   return (
     <SetupScreen
       step="handle"
-      title="Create your username"
-      body="You can change it later"
+      title="Enter your username"
+      body=""
       onSkip={next}
-      footer={<Button label="Continue" disabled={!available} loading={save.isPending} onPress={claim} />}
+      footer={<Button label="Claim username" disabled={!available} loading={save.isPending} onPress={claim} />}
     >
-      <View style={styles.stack}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.stack}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text accessibilityRole="header" style={[TYPE.displayBalance, styles.wordmark, { color: color.ink }]}>
+          SENRYO
+        </Text>
         <SetupField
+          variant="username"
           label="Username"
           value={text}
           onChangeText={(t) => {
@@ -104,32 +114,27 @@ export default function HandleStep() {
             setText(t.toLowerCase());
           }}
           placeholder="username"
-          prefix="@"
-          {...(text
-            ? {
-                action: {
-                  label: "Clear",
-                  onPress: () => {
-                    touched.current = true;
-                    setText("");
-                  },
-                },
-              }
-            : {})}
           {...(message ? { message } : {})}
           {...(check.status === "failed" && !saveError ? { onMessagePress: recheck } : {})}
           {...(known?.state === "held" && !typing
             ? { messageAccessory: <InfoTip title={HELD_INFO.title} body={HELD_INFO.body} /> }
             : {})}
           tone={tone}
-          input={{ autoCapitalize: "none", maxLength: HANDLE_MAX, returnKeyType: "done" }}
+          input={{
+            autoCapitalize: "none",
+            maxLength: HANDLE_MAX,
+            returnKeyType: "done",
+            onSubmitEditing: claim,
+          }}
         />
         <ShowTrades value={visibility} onChange={setVisibility} />
-      </View>
+      </ScrollView>
     </SetupScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  stack: { gap: SPACE.lg },
+  scroll: { flex: 1 },
+  stack: { gap: SPACE.xl, paddingBottom: SPACE.lg },
+  wordmark: { textAlign: "center", marginBottom: SPACE.sm },
 });

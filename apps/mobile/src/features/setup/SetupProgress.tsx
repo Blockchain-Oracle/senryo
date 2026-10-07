@@ -34,7 +34,7 @@ export function SetupProgress({ step }: { step: SetupStep }) {
       accessibilityLabel={`Step ${Math.min(index, COUNTED.length)} of ${COUNTED.length}`}
       style={[styles.track, { backgroundColor: color.raised2 }]}
     >
-      <Animated.View style={[styles.fill, { backgroundColor: color.primary }, bar]} />
+      <Animated.View style={[styles.fill, { backgroundColor: color.action }, bar]} />
     </View>
   );
 }

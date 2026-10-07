@@ -99,7 +99,7 @@ function ModeChip({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACE.md },
+  row: { alignItems: "flex-start", gap: SPACE.sm },
   title: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, flexShrink: 1 },
   chips: { flexDirection: "row", gap: SPACE.sm },
   chip: {

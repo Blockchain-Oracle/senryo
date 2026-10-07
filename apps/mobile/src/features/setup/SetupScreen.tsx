@@ -59,7 +59,7 @@ export function SetupScreen({
         <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.center, { color: color.ink }]}>
           {title}
         </Text>
-        <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{body}</Text>
+        {body ? <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{body}</Text> : null}
       </Animated.View>
       <Animated.View entering={arriving(1)} style={styles.content}>
         {children}

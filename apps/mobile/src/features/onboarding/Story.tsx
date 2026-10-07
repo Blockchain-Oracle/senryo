@@ -166,7 +166,7 @@ export function Story() {
             importantForAccessibility="no-hide-descendants"
             style={styles.segmentTap}
           >
-            <View style={[styles.segment, { backgroundColor: i === index ? color.ink : color.raised2 }]} />
+            <View style={[styles.segment, { backgroundColor: i === index ? color.action : color.raised2 }]} />
           </Pressable>
         ))}
       </View>
