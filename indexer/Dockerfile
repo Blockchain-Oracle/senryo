@@ -3,6 +3,12 @@
 # Hasura off — the api reads them over SQL. Codegen runs at build time; config.yaml is re-read at start.
 FROM node:24-slim
 
+# The system CA store: Envio's native RPC client verifies TLS against it (node:slim ships none; Node's own fetch
+# bundles its roots, so only the realtime RPC failed — "certificate verify failed", D-279).
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 

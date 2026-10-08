@@ -14,6 +14,7 @@ import { addressOf, createReadClient, dollarTokenOf } from "@senryo/chain";
 import { TESTNET_CHAIN_ID } from "@senryo/config";
 import { bandReserveAbi } from "@senryo/contracts/abis";
 import { getAddress, type Hex, toEventSelector } from "viem";
+import { sleep } from "./lib.ts";
 
 const CHAIN = TESTNET_CHAIN_ID;
 const ORIGIN = process.env.API_ORIGIN ?? "https://api.senryo.xyz";
@@ -26,6 +27,10 @@ const WORD_HEX = 64;
 /** Chain `TICKET_*` → the api's status (an open ticket with a pending close reads "closing"). */
 const STATUS = ["none", "committed", "open", "closed", "settled", "refunded"] as const;
 const FILLED_FROM = 2;
+const HTTP_TOO_MANY = 429;
+const RATE_LIMIT_TRIES = 4;
+const RATE_LIMIT_FALLBACK_SEC = 10;
+const MS = 1000;
 
 const api = createApiClient({ origin: ORIGIN, getToken: () => undefined });
 const read = createReadClient(CHAIN);
@@ -37,6 +42,22 @@ const check = (ok: boolean, what: string) => {
   if (!ok) failures.push(what);
 };
 const word = (address: string) => `0x${address.slice(2).toLowerCase().padStart(WORD_HEX, "0")}`;
+
+/** One HyperSync query; a 429 waits out the token's window (`x-ratelimit-reset`, seconds) and asks again. */
+async function hypersync(token: string, query: object): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    const res = await fetch(HYPERSYNC, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify(query),
+    });
+    if (res.ok) return res;
+    if (res.status !== HTTP_TOO_MANY || attempt === RATE_LIMIT_TRIES) throw new Error(`HyperSync ${res.status}`);
+    const waitSec = Number(res.headers.get("x-ratelimit-reset") ?? RATE_LIMIT_FALLBACK_SEC);
+    console.log(`  HyperSync rate-limited — retrying in ${waitSec} s`);
+    await sleep(waitSec * MS);
+  }
+}
 
 interface Flow {
   paidIn: bigint;
@@ -55,19 +76,14 @@ async function flows(): Promise<Map<string, Flow>> {
   };
   let from = FROM_BLOCK;
   for (;;) {
-    const res = await fetch(HYPERSYNC, {
-      method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({
-        from_block: from,
-        logs: [
-          { address: [dollar], topics: [[TRANSFER], [word(reserve)]] },
-          { address: [dollar], topics: [[TRANSFER], [], [word(reserve)]] },
-        ],
-        field_selection: { log: ["topic1", "topic2", "data"] },
-      }),
+    const res = await hypersync(token, {
+      from_block: from,
+      logs: [
+        { address: [dollar], topics: [[TRANSFER], [word(reserve)]] },
+        { address: [dollar], topics: [[TRANSFER], [], [word(reserve)]] },
+      ],
+      field_selection: { log: ["topic1", "topic2", "data"] },
     });
-    if (!res.ok) throw new Error(`HyperSync ${res.status}`);
     const page = (await res.json()) as {
       data: { logs?: { topic1: Hex; topic2: Hex; data: Hex }[] }[];
       archive_height: number;
