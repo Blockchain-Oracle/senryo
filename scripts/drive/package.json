@@ -30,7 +30,8 @@
     "compose-fork-check": "tsx src/compose-fork-check.ts",
     "wallet-activity-check": "tsx src/wallet-activity-check.ts",
     "practice-swap-check": "tsx src/practice-swap-check.ts",
-    "practice-funds-check": "tsx src/practice-funds-check.ts"
+    "practice-funds-check": "tsx src/practice-funds-check.ts",
+    "perpl-public-check": "tsx src/perpl-public-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",

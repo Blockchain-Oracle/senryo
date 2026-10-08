@@ -52,6 +52,8 @@ assert.ok(["RATE_LIMITED", "NOT_NEEDED"].includes(again.code), `second ask: ${ag
 console.log(`PASS second ask refused (${again.code})`);
 
 const holdings = await api.call(holdingsRoute, { query: { chainId: TESTNET_CHAIN_ID, address: user.address } });
-const listed = holdings.tokens.find((t) => t.address.toLowerCase() === PERPL_COLLATERAL[TESTNET_CHAIN_ID].toLowerCase());
+const listed = holdings.tokens.find(
+  (t) => t.address.toLowerCase() === PERPL_COLLATERAL[TESTNET_CHAIN_ID].toLowerCase(),
+);
 assert.ok(listed?.verified, "holdings list the test AUSD as verified");
 console.log(`PASS holdings: ${listed.symbol} · ${listed.name} · verified`);
