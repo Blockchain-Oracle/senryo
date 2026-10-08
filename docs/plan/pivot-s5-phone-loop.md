@@ -39,13 +39,13 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
 - [x] S5.7 Setup order: passkey → handle → terms → test dollars (auto, with sound) → first call → one-tap → notifications
       → Face ID; the broken `follow`/`money` steps retired (they resume at test dollars); story copy rewritten, keeping
       the three scenes whose art is true (passkey, the pool, Practice)
-  - [ ] S5.7a New story art (brand/scripts/onboarding.py): "call the next move" on a live line, "payouts land on
+  - [x] S5.7a New story art (brand/scripts/onboarding.py): "call the next move" on a live line, "payouts land on
         their own" — then back to six scenes
 - [x] S5.8 Delete what the pivot left: dead `Stack.Screen`s, unused trading modules, stale copy (leverage, liquidation,
       card limits, "trades"), dead storage keys, the liquidation sound, `policyContext` trading fields
 
 ### The loop
-- [ ] S5.9 Terminal: Skia live chart (Owarine engine as worklets: 600-sample ring, ease 0.18 at 60 Hz, nice grid, one
+- [x] S5.9 Terminal: Skia live chart (Owarine engine as worklets: 600-sample ring, ease 0.18 at 60 Hz, nice grid, one
       reused path, `Picture` dot grid), the line K with entry marker and win zone, countdown ring, odometers on shared
       values, amount (last stake, $1/5/10/25/Max, keypad), quote in words, UP/DOWN → CLOSE (long-press partial),
       lockout at −20 s, auto-roll, result reveal (win/loss/refund), honest states (reconnecting, paused, missed print)
@@ -54,11 +54,12 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
 - [x] S5.11 Calls: open and history (Won/Lost/Refunded filters), the timeline receipt, the window's proof
 - [x] S5.12 Wallet: Practice sheet (Get test dollars, Receive Test USD), Withdraw (EIP-3009 through the relay), Real
       methods visible and locked
-- [ ] S5.13 Results and share card, session chip ("One-tap on · 12 min · $76 left"), Sound & Vibration, result pushes
+- [x] S5.13 Results and share card, session chip ("One-tap on · 12 min · $76 left"), Sound & Vibration, result pushes
 
 ### Acceptance
-- [ ] S5.14 Simulator pass per merged area; gate measurements recorded in `acceptance.md`
-- [ ] S5.15 OTA to runtime 0.4.0 (production channel); handoff in STATUS
+- [x] S5.14 Simulator pass per merged area; gate measurements recorded in `acceptance.md`
+- [x] S5.15 OTA to runtime 0.4.0 (production channel); handoff in STATUS
 
 ## Handoff
-(written at the end of the stage)
+See STATUS.md "S5 handoff" (8–9 Oct). Five story scenes, not six: the markets scene returns at S7 with the
+markets it can truthfully show (D-281).

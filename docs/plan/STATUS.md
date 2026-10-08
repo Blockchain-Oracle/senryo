@@ -20,12 +20,36 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0–S4 done (S1b's builds submitted to TestFlight and Play internal); next is S5 (the phone loop).
+**Where we are:** S0–S5 done (S1b's builds on TestFlight and Play internal take S5 over the air); next is S6 (the web app).
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
 - Agari's new key is live on `agari-ops`.
 - Owarine's ops env now uses Senryo's key.
+
+## S5 handoff (phone loop, 8–9 Oct)
+
+- **Shipped over the air** to runtime 0.4.0 (production channel): update groups `dc2be2eb…` (the loop) and
+  `811a41f2…` (S5 complete). iOS build 11 and Android versionCode 5 pick them up on launch; no native change since.
+- **The loop on the phone:** story (call · payout · passkey · pool · Practice/Real) → passkey → @handle → terms →
+  $1,000 test dollars → "Try your first call" (watched through) → one-tap → notifications → Face ID. The live
+  terminal: Skia chart (adaptive easing, K / entry levels, zone, rolling pill), odds in words with the pool-load
+  surcharge, stake presets + keypad, Up/Down → Cash out (long-press 25/50/100 %), lockout and "result in", crowd
+  split, Tradash reactions (callouts on the head, surge glow), confetti on wins, one-tap line. Calls: record,
+  filters, receipts with every transaction and the window's proof; share cards. Wallet: test dollars, Receive,
+  Withdraw (EIP-3009 relayed).
+- **Gate (acceptance.md, 8 Oct):** 2 taps after the dollars step to a confirmed call (tap → open ≈ 2.0 s; one-tap
+  tap → fill 1.26 s) · stateless test passed (reinstall → passkey → balance, record and calls rebuilt) · session
+  expiry shows on Home and the terminal · renders once a second, none per tick · chart frame 1.23 ms avg (dev
+  build; was 4.1) · 1 SSE, 0 RPC by construction.
+- **Fixed on the way:** profile save / inbox / pushes read tables 0015 dropped (invariant `sql-no-dropped-tables`);
+  the terms hand-off race; the withdraw sheet clipped in a page; results waited 30 s without the user topic
+  (`useRefreshCaller`, close + 5 s look); a failed catalogue read stuck forever.
+- **D-281 market universe:** the Pyth key streams BTC, ETH, SOL, DOGE, XRP, BNB, HYPE · TSLA, QQQ · XAU, XAG ·
+  EUR/USD only; S7 lists all of them and prices a second source (RedStone vs a Pyth equities tier) for Mitoshi's
+  nine stocks — a money choice for the user at S7.
+- **Carried to S6+:** the web app (S6 removes the web's journal modules and `marketRoomUsd6`); the markets story
+  scene returns at S7; the dock's first tap after the Face ID sheet was once ignored (not reproduced).
 
 ## S4 handoff (indexer, 8 Oct)
 
