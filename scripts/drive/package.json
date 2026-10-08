@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Testnet drive scripts (S3.8): deposit → XAU long → MirrorAggregator price move → keeper liquidation; card concurrency check.",
+  "description": "Testnet drive scripts (S3.8): deposit \u2192 XAU long \u2192 MirrorAggregator price move \u2192 keeper liquidation; card concurrency check.",
   "license": "MIT",
   "scripts": {
     "mobile-dev-server": "tsx src/mobile-dev-server.ts",
@@ -29,7 +29,8 @@
     "deposit-address-check": "tsx src/deposit-address-check.ts",
     "compose-fork-check": "tsx src/compose-fork-check.ts",
     "wallet-activity-check": "tsx src/wallet-activity-check.ts",
-    "practice-swap-check": "tsx src/practice-swap-check.ts"
+    "practice-swap-check": "tsx src/practice-swap-check.ts",
+    "practice-funds-check": "tsx src/practice-funds-check.ts"
   },
   "dependencies": {
     "@senryo/account": "workspace:*",
