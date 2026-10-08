@@ -24,6 +24,20 @@ export const NATIVE_TRANSFER_GAS = 21_000n;
 export const LIQUIDATE_GAS_PER_POSITION = 180_000n;
 
 export const GAS_LIMITS = {
+  /**
+   * Binary V1 development-only caps. Disposable original-contract Anvil receipts (8 Oct 2026):
+   * buy 140,098–140,110; partial sell 153,027–153,039; winner claim 111,156–111,168; withdrawal 93,190;
+   * rejecting-recipient WithdrawalFailed 113,838 gas used. Conservative configured caps below,
+   * not Monad estimates/public measurements. Actual estimate + headroom and reviewed ceiling remain mandatory.
+   * Boundary cap is configuration only: real public Pyth costs remain unverified here.
+   */
+  binaryBuy: 400_000n,
+  binarySell: 400_000n,
+  binaryClaim: 250_000n,
+  binaryWithdraw: 200_000n,
+  binaryBoundary: 1_500_000n,
+  binaryVoid: 200_000n,
+  binaryLiquidity: 250_000n,
   transfer: NATIVE_TRANSFER_GAS,
   /** Wallet ERC-20 send; estimated per token and refused above this conservative ceiling. Fork acceptance required. */
   erc20Transfer: 150_000n,

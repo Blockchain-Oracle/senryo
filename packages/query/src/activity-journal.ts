@@ -85,12 +85,14 @@ export type JournalKind =
   | "pool"
   | "trade"
   | "card"
+  | "binary"
   | "perpl"
   | "other";
 
 export function journalKind(record: OperationRecord, me: string): JournalKind {
   const intent = record.reviewedIntent;
   const k = intent.kind;
+  if (intent.kind === "binary" || intent.venue === "senryo-binary-v1") return "binary";
   if (intent.venue === "perpl") return "perpl";
   if (k === "send" || k === "withdraw" || k === "swap" || k === "bridge" || k === "ramp") return k;
   const actions = new Set([record.kind, ...record.plannedActions]);
@@ -106,7 +108,22 @@ export function journalKind(record: OperationRecord, me: string): JournalKind {
   return "other";
 }
 
+function binaryFacts(record: OperationRecord) {
+  return record.steps.flatMap((step) => {
+    const i = { ...record.reviewedIntent, ...step.request };
+    return (step.outcome === "completed" ? (step.facts ?? []) : []).filter(
+      (f) =>
+        f.contract.toLowerCase() === i.contract?.toLowerCase() &&
+        f.values.owner?.toLowerCase() === record.account.toLowerCase() &&
+        f.values.environmentId === i.environmentId &&
+        f.values.configHash === i.configHash &&
+        f.values.operationId?.toLowerCase() === i.operationId?.toLowerCase(),
+    );
+  });
+}
 function journalStatus(record: OperationRecord): FeedStatus | undefined {
+  if (record.reviewedIntent.kind === "binary" && binaryFacts(record).some((f) => f.event === "WithdrawalFailed"))
+    return "partial";
   switch (record.outcome) {
     case "completed":
       return "done";
@@ -149,6 +166,15 @@ function perplTitle(record: OperationRecord, format: FeedFormat): string {
 
 function journalTitle(kind: JournalKind, record: OperationRecord, format: FeedFormat): string {
   const i = record.reviewedIntent;
+  if (kind === "binary") {
+    const events = new Set(binaryFacts(record).map((f) => f.event));
+    if (events.has("WithdrawalFailed")) return "Prediction payout failed · MON remains ready to withdraw";
+    if (events.has("Withdrawal")) return "Prediction MON moved to wallet";
+    if (events.has("SharesClaimed")) return "Prediction claimed · MON ready to withdraw";
+    if (events.has("Sold")) return "Prediction shares sold · MON ready to withdraw";
+    if (events.has("Bought")) return "Prediction shares bought";
+    return "Prediction transaction · checking outcome";
+  }
   if (kind === "perpl") return perplTitle(record, format);
   const amount = intentAmount(format, i) ?? "money";
   const out = i.outSymbol ?? i.toSymbol;
@@ -223,6 +249,7 @@ const GROUP_OF: Record<JournalKind, FeedGroup> = {
   trade: "trades",
   card: "card",
   perpl: "trades",
+  binary: "trades",
 };
 
 export function journalItem(record: OperationRecord, me: string, format: FeedFormat): FeedItem | undefined {

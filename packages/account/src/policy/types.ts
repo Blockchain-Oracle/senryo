@@ -3,13 +3,14 @@
  * decoded into an `Action` from the real calldata / typed data, then judged into a `Verdict`. Amounts are usd6
  * bigints decoded from calldata — never trusted from the caller.
  */
-import type { ChainId } from "@senryo/config";
+import type { BinaryEnvironment, BinaryManifest, ChainId } from "@senryo/config";
 import type { Address } from "viem";
 
 /** D-037: practice → off; mainnet → above the threshold; the user may pick "every trade". */
 export type FaceIdMode = "off" | "above-threshold" | "every-trade";
 
 export type Action =
+  | { kind: "binary-mutation"; fn: string; valueWei: bigint }
   | { kind: "open"; marketId: number; isLong: boolean; notionalUsd6: bigint }
   | { kind: "reduce"; fn: "decrease" | "close" | "cancelTrigger" | "placeTrigger"; marketId?: number }
   | { kind: "deposit"; token: Address; amountUsd6: bigint }
@@ -38,6 +39,7 @@ export type Action =
 
 /** Why a session refused to sign. `stepUp` = a fresh passkey ceremony may sign it; otherwise never in this app. */
 export type RejectReason =
+  | "binary-mutation"
   | "wrong-chain"
   | "delegation"
   | "value"
@@ -68,6 +70,8 @@ export type Verdict =
 /** Live reads the policy needs (from the query cache; synchronous). Missing reads never widen the scope. */
 export interface PolicyContext {
   chainId: ChainId;
+  /** Explicit environment-bound activation; native supplies __DEV__ && dev workspace gates. */
+  binary?: { manifest: BinaryManifest; environment: BinaryEnvironment };
   self: Address;
   faceId: FaceIdMode;
   /** Remaining open-interest room on the market side (usd6), from `MarketRegistry` + `MarketAccounting`. */

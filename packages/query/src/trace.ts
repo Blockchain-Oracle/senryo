@@ -332,7 +332,7 @@ export function useSendTrace(key?: string) {
                   ...step,
                   blockNumber: receipt.blockNumber.toString(),
                   blockHash: receipt.blockHash,
-                  facts: receiptFacts(receipt, sender.chainId, built.to),
+                  facts: receiptFacts(receipt, sender.chainId, built.to, built.binaryReceiptContext),
                 }
               : step,
           ),

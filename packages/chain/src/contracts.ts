@@ -11,6 +11,8 @@ import {
   mockAUSDAbi,
   mockUSDCAbi,
   practiceSwapAbi,
+  pythBoundaryOracleAbi,
+  senryoBinaryV1Abi,
   senryoCoreAbi,
   sessionOracleAbi,
   starterDripAbi,
@@ -53,9 +55,12 @@ export { aggregatorV3InterfaceAbi };
  * Every custom error any of our contracts — or the external venue the app sends to directly (Perpl's Exchange) — can
  * revert with, for decoding reverts from raw calls.
  */
-export const ALL_ERRORS_ABI: Abi = [...Object.values(CONTRACT_ABIS).flat(), ...perplExchangeAbi].filter(
-  (item) => item.type === "error",
-);
+export const ALL_ERRORS_ABI: Abi = [
+  ...Object.values(CONTRACT_ABIS).flat(),
+  ...perplExchangeAbi,
+  ...senryoBinaryV1Abi,
+  ...pythBoundaryOracleAbi,
+].filter((item) => item.type === "error");
 
 export class NotDeployedError extends Error {
   constructor(

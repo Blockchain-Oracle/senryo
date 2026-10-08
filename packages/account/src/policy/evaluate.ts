@@ -1,3 +1,4 @@
+import { assertBinaryActivation } from "@senryo/config";
 /**
  * `Policy.evaluate` — the one judge every in-session signature passes (spec session-policy.md). Pure: it reads the
  * decoded action, the live context and what the session already spent, and returns sign / confirm / reject.
@@ -115,6 +116,8 @@ function judgeMove(action: Action, amount: bigint, ctx: PolicyContext, usage: Po
 export function judgeAction(action: Action, ctx: PolicyContext, usage: PolicyUsage): Verdict {
   const t = scopeTargets(ctx.chainId);
   switch (action.kind) {
+    case "binary-mutation":
+      return reject(action, "binary-mutation");
     case "open":
       return judgeOpen(action, ctx, usage);
     case "reduce":
@@ -176,7 +179,17 @@ export function evaluateTransaction(tx: TxInput, ctx: PolicyContext, usage: Poli
     value: tx.value ?? 0n,
     hasAuthorizationList: (tx.authorizationList?.length ?? 0) > 0,
   };
-  const verdict = judgeAction(decodeCall(call, ctx.self, scopeTargets(ctx.chainId)), ctx, usage);
+  const targets = { ...scopeTargets(ctx.chainId) };
+  if (ctx.binary) {
+    try {
+      assertBinaryActivation(ctx.binary.manifest, ctx.binary.environment);
+    } catch {
+      return reject(undefined, "out-of-scope", false);
+    }
+    if (ctx.binary.manifest.chainId !== ctx.chainId) return reject(undefined, "wrong-chain", false);
+    targets.binary = ctx.binary.manifest;
+  }
+  const verdict = judgeAction(decodeCall(call, ctx.self, targets), ctx, usage);
   if (verdict.kind !== "reject" && verdict.rateLimited && recentCount(usage, now) >= SESSION_RATE_PER_MINUTE) {
     return reject(verdict.action, "rate");
   }

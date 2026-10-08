@@ -2,7 +2,13 @@
  * The session allowlist per network, read from the generated address book (`@senryo/contracts`) — never typed in by
  * hand, so a redeploy moves the scope with it (the `address-drift` invariant keeps the book honest).
  */
-import { type ChainId, PERPL_COLLATERAL, PERPL_EXCHANGE, PERPL_MARKET_SCALES } from "@senryo/config";
+import {
+  type BinaryManifest,
+  type ChainId,
+  PERPL_COLLATERAL,
+  PERPL_EXCHANGE,
+  PERPL_MARKET_SCALES,
+} from "@senryo/config";
 import { addressBooks } from "@senryo/contracts";
 import { type Address, getAddress } from "viem";
 
@@ -12,6 +18,7 @@ const STABLE_ENTRIES = ["MockAUSD", "MockUSDC", "AUSD", "USDC"] as const;
 const FAUCET_ENTRIES = ["MockAUSD", "MockUSDC"] as const;
 
 export interface ScopeTargets {
+  binary?: BinaryManifest;
   core: Address | undefined;
   lpVault: Address | undefined;
   starterDrip: Address | undefined;

@@ -3,9 +3,16 @@
  * amounts, destinations and receivers come from the calldata itself; nothing the caller claims is trusted.
  */
 import { PERPL_COLLATERAL_DECIMALS, PERPL_ORDER_TYPE } from "@senryo/config";
-import { lpVaultAbi, mockAUSDAbi, perplExchangeAbi, practiceSwapAbi, senryoCoreAbi } from "@senryo/contracts";
+import {
+  lpVaultAbi,
+  mockAUSDAbi,
+  perplExchangeAbi,
+  practiceSwapAbi,
+  senryoBinaryV1Abi,
+  senryoCoreAbi,
+} from "@senryo/contracts";
 import { oneUnit } from "@senryo/core";
-import { type Abi, type Address, decodeFunctionData, type Hex, isHex, size, slice } from "viem";
+import { type Abi, type Address, decodeFunctionData, encodeFunctionData, type Hex, isHex, size, slice } from "viem";
 import { includesAddress, type ScopeTargets, sameAddress } from "./targets.ts";
 import type { Action } from "./types.ts";
 
@@ -187,6 +194,22 @@ function decodeToken(call: CallInput, data: Hex, token: Address, t: ScopeTargets
 /** Decodes one transaction into the action it performs for `self` on this network. */
 export function decodeCall(call: CallInput, self: Address, targets: ScopeTargets): Action {
   if (call.hasAuthorizationList) return { kind: "delegation" };
+  if (targets.binary && sameAddress(call.to, targets.binary.contract)) {
+    // All mutations, including credits/reductions/permissionless settlement, require a fresh ceremony.
+    // A malformed or admin selector on the binary target must never fall through to native-send.
+    if (!call.data || call.value < 0n) return unknown(call);
+    const fn = decode(senryoBinaryV1Abi, call.data);
+    const allowed = ["buy", "sell", "claim", "withdraw", "recordOpening", "resolve", "voidExpired", "claimLiquidity"];
+    if (!fn || !allowed.includes(fn.functionName)) return unknown(call);
+    const item = senryoBinaryV1Abi.find((i) => i.type === "function" && i.name === fn.functionName);
+    if (item?.type !== "function" || (item.stateMutability !== "payable" && call.value !== 0n)) return unknown(call);
+    // Reject trailing bytes/noncanonical encodings as well as invalid ABI data.
+    const canonical = encodeFunctionData({ abi: [item], functionName: fn.functionName, args: fn.args } as never);
+    if (canonical.toLowerCase() !== call.data.toLowerCase()) return unknown(call);
+    const opIndex = ({ buy: 4, sell: 5, claim: 1, withdraw: 1 } as Record<string, number>)[fn.functionName];
+    if (opIndex !== undefined && /^0x0{64}$/.test(String(fn.args[opIndex]))) return unknown(call);
+    return { kind: "binary-mutation", fn: fn.functionName, valueWei: call.value };
+  }
   if (call.value > 0n) {
     return call.to ? { kind: "native-send", to: call.to, valueWei: call.value } : unknown(call);
   }
