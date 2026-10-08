@@ -6,10 +6,10 @@
  * and withdraw" as one operation), the quote, one passkey, the timeline. Bank: pending Ramp's off-ramp key.
  */
 import { isDeployed } from "@senryo/chain";
-import { stepsLine, useAccountRisk, useQueryEnv } from "@senryo/query";
-import { useQuery } from "@tanstack/react-query";
+import { assertBridgeExecution, stepsLine, useAccountRisk, useQueryEnv } from "@senryo/query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { PositionRowsSkeleton } from "~/features/home/HomeParts";
@@ -39,15 +39,18 @@ import { useDestinations } from "./destinations";
 import { SaveDestination } from "./SaveDestination";
 import { WITHDRAW_WORDS } from "./words";
 
-const FEE_STALE_MS = 15_000;
 type Sheet = "to" | "amount" | "review" | "chain" | undefined;
 type Dest =
   | { kind: "monad"; address: `0x${string}`; label: string }
   | { kind: "chain"; target: Omit<ChainTarget, "amount" | "asset"> };
 
+const DEFAULT_ASSET_DECIMALS = 18;
+const MS_PER_SECOND = 1000;
+
 export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: string; initialTab?: DestinationTab }) {
   const { color } = useTheme();
   const env = useQueryEnv();
+  const queries = useQueryClient();
   const network = useNetwork();
   const me = useAccount().hint?.address as `0x${string}`;
   const money = useMoneyAssets();
@@ -62,6 +65,7 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
   const [tab, setTab] = useState<DestinationTab>(initialTab ?? "monad");
   const [sheet, setSheet] = useState<Sheet>(initialAsset ? "to" : undefined);
   const [dest, setDest] = useState<Dest>();
+  const reviewSerial = useRef(0);
   const [reviewed, setReviewed] = useState<ReviewedMove>();
   const [target, setTarget] = useState<ChainTarget>();
   const [scanning, setScanning] = useState(false);
@@ -69,28 +73,84 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
   const [block, setBlock] = useState<string>();
   const [busy, setBusy] = useState(false);
   const asset = assetKey ? money.find(assetKey) : undefined;
+  const draft = useAmountInput(
+    asset?.decimals ?? DEFAULT_ASSET_DECIMALS,
+    asset?.priceUsd18 ?? null,
+    asset ? spendableOf(asset) : 0n,
+  );
+  useEffect(() => {
+    draft.reset();
+  }, [asset?.key]);
   const monadTo = dest?.kind === "monad" ? dest.address : undefined;
   const check = useRecipientCheck(me, monadTo, known);
-  const plan = useChainPlan(sheet === "chain" ? target : undefined, me);
-  const targetKey = target ? [target.asset.key, target.amount, target.chain.chainId, target.recipient].join(":") : "";
-  const guard = useReviewGuard(sheet === "chain" ? targetKey : (reviewed?.key ?? ""));
+  const [frozenChain, setFrozenChain] = useState<ChainPlan>();
+  const livePlan = useChainPlan(sheet === "chain" ? target : undefined, me);
+  const plan = frozenChain ?? livePlan;
+  useEffect(() => {
+    if (
+      sheet === "chain" &&
+      target &&
+      typeof livePlan === "object" &&
+      !frozenChain &&
+      (livePlan.bridge.expiresAt === null || livePlan.bridge.expiresAt * MS_PER_SECOND > Date.now())
+    )
+      setFrozenChain(livePlan);
+  }, [sheet, target, livePlan, frozenChain]);
+  const targetKey = target
+    ? [
+        monad.reviewKey,
+        reviewSerial.current,
+        target.asset.key,
+        target.amount,
+        target.chain.chainId,
+        target.recipient,
+      ].join(":")
+    : "";
+  const guard = useReviewGuard(`${monad.reviewKey}:${sheet}:${sheet === "chain" ? targetKey : (reviewed?.key ?? "")}`);
   // B11: each review plans its network fee — MON on hand, or a "~$0.50 → MON" step first in Details.
-  const preparedMove = usePreparedOperation(monad, reviewed?.key, () =>
+  const preparedMove = usePreparedOperation(monad, reviewed ? `${guard.key}:${reviewed.key}` : undefined, () =>
     reviewed ? moveOperation(env, me, reviewed, network.name, known, guard) : undefined,
   );
   const chainReady = sheet === "chain" && typeof plan === "object" ? plan : undefined;
   const preparedChain = usePreparedOperation(
     bridge,
-    chainReady ? `${targetKey}:${chainReady.bridge.minReceived}:${chainReady.swap?.quote.minOut ?? ""}` : undefined,
+    chainReady
+      ? `${guard.key}:${targetKey}:${chainReady.bridge.provider}:${chainReady.bridge.tracking.id}:${chainReady.bridge.expiresAt}:${chainReady.bridge.minReceived}:${chainReady.swap?.quote.router ?? ""}:${chainReady.swap?.quote.minOut ?? ""}`
+      : undefined,
     async () => (chainReady ? chainOp(chainReady) : undefined),
   );
+  const chainStepsPrepared = preparedChain.data?.ok ? preparedChain.data.op.steps : undefined;
+  const chainFee = useQuery({
+    queryKey: [
+      "withdraw-chain-fee",
+      guard.key,
+      targetKey,
+      preparedChain.data?.ok ? preparedChain.data.op.reviewedIntent.reviewId : "",
+    ],
+    queryFn: () => feeEstimate(env, me, chainStepsPrepared ?? []),
+    enabled: chainStepsPrepared !== undefined && !practice,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
   const moveSteps = preparedMove.data?.ok ? preparedMove.data.op.steps : reviewed?.steps;
   const fee = useQuery({
     queryKey: ["withdraw-fee", reviewed?.key ?? "", moveSteps?.length ?? 0],
     queryFn: () => feeEstimate(env, me, moveSteps ?? []),
     enabled: moveSteps !== undefined && !practice,
-    staleTime: FEE_STALE_MS,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
+
+  useEffect(() => {
+    if (!monad.trace.running && monad.trace.events.length === 0) {
+      setReviewed(undefined);
+      setSheet((current) => (current === "review" || current === "chain" ? "amount" : current));
+      setFrozenChain(undefined);
+      setTarget(undefined);
+    }
+  }, [monad.reviewKey]);
 
   // A withdrawal restored from the journal (killed after the slide) opens on its outcome.
   useEffect(() => {
@@ -112,9 +172,12 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
   const review = (a: MoneyAsset, amount: bigint) => {
     setBlock(undefined);
     if (dest?.kind === "monad") {
-      setReviewed(reviewMove(env.chainId, "withdraw", a, amount, dest.address, null, dest.label, bitmap));
+      const move = reviewMove(env.chainId, "withdraw", a, amount, dest.address, null, dest.label, bitmap);
+      setReviewed({ ...move, key: `${monad.reviewKey}:${++reviewSerial.current}:${move.key}` });
       setSheet("review");
     } else if (dest?.kind === "chain") {
+      setFrozenChain(undefined);
+      reviewSerial.current += 1;
       setTarget({ ...dest.target, asset: a, amount });
       setSheet("chain");
     }
@@ -124,6 +187,7 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
     const steps = await chainSteps(env, me, p, bitmap);
     const op = chainOperation(p, steps, network.name, async (step) => {
       guard();
+      assertBridgeExecution(p.bridge.expiresAt, Date.now());
       if (step === 0) await checkSource(env, me, p.asset, p.amount);
       guard();
     });
@@ -160,6 +224,7 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
     bridge.reset();
     setReviewed(undefined);
     setTarget(undefined);
+    setFrozenChain(undefined);
     setSheet(undefined);
   };
   const toTrades = () => {
@@ -227,6 +292,7 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
           <WithdrawAmount
             key={asset.key}
             asset={asset}
+            input={draft}
             warnings={warnings}
             checking={dest?.kind === "monad" && check.isLoading}
             onAsset={() => setSheet(undefined)}
@@ -246,12 +312,14 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
           runner={monad}
           avatar={null}
           fee={fee.data}
+          feeTopUp={preparedMove.data?.ok ? preparedMove.data.op.reviewedIntent.networkFee : undefined}
           practice={practice}
           network={network.name}
           warnings={warnings}
           block={block ?? (preparedMove.data && !preparedMove.data.ok ? preparedMove.data.block : undefined)}
           busy={busy || (preparedMove.isFetching && !practice)}
           words={WITHDRAW_WORDS}
+          onReviewAgain={() => asset && review(asset, draft.amount)}
           onConfirm={() => void confirmMonad()}
           onDone={done}
           onLeave={() => router.back()}
@@ -269,13 +337,22 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
           target={target}
           plan={plan}
           runner={bridge}
+          networkFee={practice ? "Sponsored" : chainFee.data}
+          feeTopUp={preparedChain.data?.ok ? preparedChain.data.op.reviewedIntent.networkFee : undefined}
           steps={
             preparedChain.data?.ok && preparedChain.data.op.steps.length > 1
               ? stepsLine(preparedChain.data.op.steps)
               : undefined
           }
           block={block ?? (preparedChain.data && !preparedChain.data.ok ? preparedChain.data.block : undefined)}
-          busy={busy}
+          busy={busy || preparedChain.isFetching}
+          onReviewAgain={() => {
+            void queries.invalidateQueries({ queryKey: ["bridge", "quote"] });
+            void queries.invalidateQueries({ queryKey: ["swap"] });
+            setFrozenChain(undefined);
+            setTarget(undefined);
+            setSheet("amount");
+          }}
           onConfirm={(p) => void confirmChain(p)}
           onDone={done}
           onLeave={() => router.back()}
@@ -296,6 +373,7 @@ export function WithdrawFlow({ initialAsset, initialTab }: { initialAsset?: stri
 
 function WithdrawAmount({
   asset,
+  input,
   warnings,
   checking,
   onAsset,
@@ -303,6 +381,7 @@ function WithdrawAmount({
   onReview,
 }: {
   asset: MoneyAsset;
+  input: ReturnType<typeof useAmountInput>;
   warnings: readonly string[];
   checking: boolean;
   onAsset: () => void;
@@ -310,7 +389,6 @@ function WithdrawAmount({
   onReview: (amount: bigint) => void;
 }) {
   const available = spendableOf(asset);
-  const input = useAmountInput(asset.decimals, asset.priceUsd18, available);
   const locked = asset.trading - asset.tradingFree;
   return (
     <AmountStep

@@ -1,7 +1,7 @@
 /**
  * "Arriving" (flow book B4, B5, B16): money this device started bringing in that hasn't landed yet — a Ramp purchase
  * the user came back from, a bridge into Monad through a deposit address. Each record keeps the wallet balance of the
- * asset when it started; once the balance is above it (or a day has passed) the record clears. Per network and
+ * asset when it started; provider evidence is required to settle it; elapsed time marks unresolved. Per network and
  * account. The platform-free half shared by the phone and the web; each app keeps the list in its own storage.
  */
 import type { MoneyAsset } from "./money-assets.ts";
@@ -23,6 +23,10 @@ export interface Arrival {
   /** "Ramp", "Base". */
   via: string;
   at: number;
+  providerOperationId?: string;
+  providerStatus?: string;
+  status?: "created" | "paid" | "processing" | "delivered" | "cancelled" | "unresolved";
+  deliveryTransaction?: string;
 }
 
 /** The stored list, tolerant of a missing or damaged value. */
@@ -38,12 +42,18 @@ export function parseArrivals(raw: string | null | undefined): Arrival[] {
 
 /** A new record, stamped now. */
 export function arrivalOf(arrival: Omit<Arrival, "id" | "at">, at: number): Arrival {
-  return { ...arrival, id: `${arrival.kind}:${at}`, at };
+  return {
+    ...arrival,
+    id: arrival.providerOperationId
+      ? `${arrival.kind}:${arrival.chainId}:${arrival.account}:${arrival.providerOperationId}`
+      : `${arrival.kind}:${at}`,
+    at,
+  };
 }
 
 /**
- * This account's open arrivals, and the list to store when some have landed (their asset's wallet balance rose above
- * the baseline, or a day passed) — undefined when nothing changed or the holdings aren't read yet.
+ * This account's open provider operations. Only provider status plus destination-transaction evidence
+ * settles delivery; overdue records become unresolved and remain stored.
  */
 export function openArrivals(
   all: readonly Arrival[],
@@ -52,14 +62,13 @@ export function openArrivals(
   assets: readonly Pick<MoneyAsset, "key" | "wallet">[] | undefined,
   nowMs: number,
 ): { open: Arrival[]; settled: Arrival[] | undefined } {
-  const landed = (a: Arrival) => {
-    if (nowMs - a.at > DAY_MS) return true;
-    const held = assets?.find((x) => x.key === a.asset);
-    return held !== undefined && held.wallet > BigInt(a.baseline);
-  };
+  // Holdings are only a refresh hint. Dust/internal transfers and elapsed time cannot settle provider money.
   const mine = all.filter((a) => a.chainId === chainId && a.account === account?.toLowerCase());
-  const open = mine.filter((a) => !landed(a));
-  const settled =
-    assets && open.length !== mine.length ? all.filter((a) => !mine.includes(a) || open.includes(a)) : undefined;
+  const open = mine.filter((a) => a.status !== "cancelled" && !(a.status === "delivered" && a.deliveryTransaction));
+  const overdue = open.filter((a) => nowMs - a.at > DAY_MS && a.status !== "unresolved");
+  const settled = overdue.length
+    ? all.map((a) => (overdue.includes(a) ? { ...a, status: "unresolved" as const } : a))
+    : undefined;
+  void assets;
   return { open, settled };
 }

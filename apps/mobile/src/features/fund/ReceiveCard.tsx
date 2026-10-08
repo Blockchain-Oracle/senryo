@@ -3,29 +3,28 @@
  * wallet/trading toggle and no deposit inbox here (the inbox only sweeps AUSD/USDC and would strand anything else).
  * The network pill with the Monad mark, optional asset chips that only change the share text, the dotted QR with the
  * Monad badge, the address in grouped mono, Copy · Share · Explorer circles, one line, and the way to other chains.
- * While it is open, a holdings increase of a verified token is the arrival moment ("Received 20 USDC", sound).
+ * Fresh complete holdings changes say Balance updated; only inbound transfer evidence can establish a receipt.
  */
 import { explorerAddressUrl } from "@senryo/config";
 import { ids } from "@senryo/identity";
-import * as Clipboard from "expo-clipboard";
+import { type WalletSnapshot, walletSnapshot } from "@senryo/query";
 import { useEffect, useRef, useState } from "react";
-import { Linking, Share as ShareSheet, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { MarkCluster } from "~/components/identity/MarkCluster";
+import { Button } from "~/components/kit/Button";
 import { ChipRow } from "~/components/kit/ChipRow";
-import { Copy, ExternalLink, Share } from "~/components/kit/symbols";
+import { ExternalLink, Share } from "~/components/kit/symbols";
 import { ActionCircle, ActionCircles } from "~/features/money/ActionCircle";
 import type { MoneyAsset } from "~/features/money/assets";
-import { amountOf } from "~/features/money/format";
 import { useMoneyAssets } from "~/features/money/useMoneyAssets";
 import { fire } from "~/feedback/fire";
-import { COPIED_MS } from "~/lib/constants/auth";
 import { useNetwork } from "~/lib/network";
 import { CONTROL_FONT_SCALE, NUMERIC_VARIANT, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { useAddressActions } from "./address-actions";
 import { DottedQr } from "./DottedQr";
 
-const QR_SIZE = 216;
+const QR_SIZE = 196;
 const BADGE = 34;
 const GROUP = 4;
 const HEX_START = 2;
@@ -35,6 +34,10 @@ const ANY = "any";
 
 /** "0x1234 5678 9abc def0 1234" / "5678 9abc def0 1234 5678": ten groups of four on two rows. */
 export function groupedAddress(address: string): [string, string] {
+  if (!/^0x[0-9a-f]+$/i.test(address)) {
+    const middle = Math.ceil(address.length / 2);
+    return [address.slice(0, middle), address.slice(middle)];
+  }
   const body = address.slice(HEX_START);
   const groups = body.match(new RegExp(`.{1,${GROUP}}`, "g")) ?? [];
   return [`0x${groups.slice(0, GROUPS_PER_ROW).join(" ")}`, groups.slice(GROUPS_PER_ROW).join(" ")];
@@ -58,33 +61,26 @@ export function NetworkPill() {
   );
 }
 
-/** Watches the verified wallet balances while Receive is open; returns the first increase as the arrival moment. */
-function useArrival(assets: readonly MoneyAsset[], ready: boolean): string | undefined {
-  const baseline = useRef<Map<string, bigint> | undefined>(undefined);
+/** Complete, fresh holdings snapshots are balance evidence, not inbound-transfer evidence. */
+function useArrival(scope: string, assets: readonly MoneyAsset[], ready: boolean): string | undefined {
+  const baseline = useRef<WalletSnapshot | undefined>(undefined);
   const [moment, setMoment] = useState<string>();
   useEffect(() => {
-    if (!ready) return;
-    if (!baseline.current) {
-      baseline.current = new Map(assets.map((a) => [a.key, a.wallet]));
-      return;
-    }
-    for (const a of assets) {
-      const before = baseline.current.get(a.key) ?? 0n;
-      if (a.wallet > before) {
-        baseline.current.set(a.key, a.wallet);
-        fire("filled", { sound: "deposit" });
-        setMoment(`Received ${amountOf(a, a.wallet - before)}`);
-        return;
-      }
-    }
-  }, [assets, ready]);
+    baseline.current = undefined;
+    setMoment(undefined);
+  }, [scope]);
+  useEffect(() => {
+    const result = walletSnapshot(baseline.current, scope, assets, ready);
+    baseline.current = result.snapshot;
+    if (result.changed) setMoment("Balance updated");
+  }, [scope, assets, ready]);
   return moment;
 }
 
 export function ReceiveCard({
   address,
   preselected,
-  exchange,
+  exchange: _exchange,
   onOtherChain,
 }: {
   address: `0x${string}`;
@@ -97,17 +93,24 @@ export function ReceiveCard({
   const { color } = useTheme();
   const network = useNetwork();
   const money = useMoneyAssets();
-  const [copied, setCopied] = useState(false);
+  const scope = `${network.chainId}:${address.toLowerCase()}`;
   const chips = money.assets.filter((a, i) => i < CHIPS_MAX || a.key === preselected);
   const [chip, setChip] = useState<string>(preselected && chips.some((c) => c.key === preselected) ? preselected : ANY);
   const picked = chips.find((c) => c.key === chip);
-  const moment = useArrival(money.assets, money.status === "ready");
-  const [top, bottom] = groupedAddress(address);
+  const actions = useAddressActions(
+    scope,
+    address,
+    `${picked ? `${picked.symbol} on ` : ""}${network.name}\n${address}`,
+  );
   useEffect(() => {
-    if (!copied) return;
-    const id = setTimeout(() => setCopied(false), COPIED_MS);
-    return () => clearTimeout(id);
-  }, [copied]);
+    setChip(preselected ?? ANY);
+  }, [scope, preselected]);
+  const moment = useArrival(
+    scope,
+    [...money.assets, ...money.other, ...money.hidden],
+    money.status === "ready" && !money.stale && !money.partial && !money.degraded,
+  );
+  const [top, bottom] = groupedAddress(address);
   return (
     <View style={styles.stack}>
       {chips.length > 1 ? (
@@ -120,19 +123,9 @@ export function ReceiveCard({
           />
         </View>
       ) : null}
-      {exchange ? (
-        <View style={[styles.tip, { backgroundColor: color.raised2 }]}>
-          <MarkCluster
-            ids={[ids.exchange("coinbase"), ids.exchange("binance")]}
-            size={SIZE.markCell}
-            ground={color.raised2}
-          />
-          <View style={styles.tipText}>
-            <Text style={[TYPE.rowStrong, { color: color.ink }]}>Choose Monad network</Text>
-            <Text style={[TYPE.meta, { color: color.text3 }]}>Coinbase sends USDC on Monad</Text>
-          </View>
-        </View>
-      ) : null}
+      <Text style={[TYPE.rowDetail, styles.center, { color: color.text2 }]}>
+        Send tokens on {network.name} to this wallet address. Check the sending network before you transfer.
+      </Text>
       <View style={styles.code}>
         <DottedQr
           value={address}
@@ -149,30 +142,18 @@ export function ReceiveCard({
           {bottom}
         </Text>
       </View>
+      <Button label={actions.copied ? "Copied" : "Copy wallet address"} onPress={actions.copy} />
+      {actions.error ? (
+        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, styles.center, { color: color.down }]}>
+          {actions.error}
+        </Text>
+      ) : null}
       <ActionCircles>
-        <ActionCircle
-          icon={Copy}
-          label={copied ? "Copied" : "Copy"}
-          onPress={() => {
-            void Clipboard.setStringAsync(address).then(() => {
-              fire("filled");
-              setCopied(true);
-            });
-          }}
-        />
-        <ActionCircle
-          icon={Share}
-          label="Share"
-          onPress={() =>
-            void ShareSheet.share({
-              message: `${picked ? `${picked.symbol} on ` : ""}${network.name}\n${address}`,
-            })
-          }
-        />
+        <ActionCircle icon={Share} label="Share" onPress={actions.share} />
         <ActionCircle
           icon={ExternalLink}
           label="Explorer"
-          onPress={() => void Linking.openURL(explorerAddressUrl(network.chainId, address))}
+          onPress={() => actions.explorer(explorerAddressUrl(network.chainId, address))}
         />
       </ActionCircles>
       {moment ? (
@@ -219,6 +200,4 @@ const styles = StyleSheet.create({
     paddingVertical: SPACE.xs,
     borderRadius: RADIUS.pill,
   },
-  tip: { flexDirection: "row", alignItems: "center", gap: SPACE.md, padding: SPACE.md, borderRadius: RADIUS.md },
-  tipText: { flex: 1, gap: SPACE.xxs },
 });

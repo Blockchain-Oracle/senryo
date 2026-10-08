@@ -10,7 +10,7 @@ import { isDeployed } from "@senryo/chain";
 import { useAccountRisk, useQueryEnv } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ChildSheet } from "~/components/sheet/ChildSheet";
@@ -28,13 +28,14 @@ import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SPACE, TYPE, useTheme } from "~/theme";
-import { AmountStep } from "./AmountStep";
 import { MoveReview } from "./MoveReview";
 import { feeEstimate, moveOperation, type ReviewedMove, reviewMove } from "./move";
 import { usePeople } from "./people";
 import { type PickedRecipient, RecipientStep } from "./RecipientStep";
+import { SendIntro } from "./SendIntro";
+import { SendWorkspace } from "./SendWorkspace";
 
-const FEE_STALE_MS = 15_000;
+const DEFAULT_ASSET_DECIMALS = 18;
 
 export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; initialTo?: string }) {
   const { color } = useTheme();
@@ -46,21 +47,37 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
   const runner = useMoneyOperation(`send:${env.chainId}:${me.toLowerCase()}`);
   const risk = useAccountRisk(isDeployed(env.chainId, "SenryoCore") ? me : undefined, "latest");
   const bitmap = risk.status === "fresh" || risk.status === "stale" ? risk.value.positionBitmap : 0;
+  const [introduced, setIntroduced] = useState(initialTo !== undefined);
+  const [recipientDraft, setRecipientDraft] = useState(initialTo ?? "");
   const [recipient, setRecipient] = useState<PickedRecipient>();
   const [assetKey, setAssetKey] = useState(initialAsset);
-  const [sheet, setSheet] = useState<"amount" | "picker" | "review" | undefined>();
+  const [sheet, setSheet] = useState<"amount" | "recipient" | "picker" | "review" | undefined>();
+  const reviewSerial = useRef(0);
   const [reviewed, setReviewed] = useState<ReviewedMove>();
   const [block, setBlock] = useState<string>();
   const [busy, setBusy] = useState(false);
   const check = useRecipientCheck(me, recipient?.address, known);
-  const guard = useReviewGuard(reviewed?.key ?? "");
+  const guard = useReviewGuard(`${runner.reviewKey}:${sheet}:${reviewed?.key ?? ""}`);
   const practice = network.key === "testnet";
   const asset =
     (assetKey ? money.find(assetKey) : undefined) ??
     (recipient?.payment?.token ? money.find(recipient.payment.token) : undefined) ??
     money.assets[0];
+  const draft = useAmountInput(
+    asset?.decimals ?? DEFAULT_ASSET_DECIMALS,
+    asset?.priceUsd18 ?? null,
+    asset ? spendableOf(asset) : 0n,
+  );
+  useEffect(() => {
+    draft.reset();
+  }, [asset?.key]);
+  useEffect(() => {
+    const payment = recipient?.payment;
+    if (payment?.amount && (!payment.token || payment.token.toLowerCase() === asset?.key))
+      draft.fillUnits(payment.amount);
+  }, [recipient?.payment, asset?.key]);
   // B11: the network fee is planned with the review — MON on hand, or a "~$0.50 → MON" step first in Details.
-  const prepared = usePreparedOperation(runner, reviewed?.key, () =>
+  const prepared = usePreparedOperation(runner, reviewed ? `${guard.key}:${reviewed.key}` : undefined, () =>
     reviewed ? moveOperation(env, me, reviewed, network.name, known, guard) : undefined,
   );
   const plan = prepared.data;
@@ -69,8 +86,17 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
     queryKey: ["send-fee", reviewed?.key ?? "", steps?.length ?? 0],
     queryFn: () => feeEstimate(env, me, steps ?? []),
     enabled: steps !== undefined && !practice,
-    staleTime: FEE_STALE_MS,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
+
+  useEffect(() => {
+    if (!runner.trace.running && runner.trace.events.length === 0) {
+      setReviewed(undefined);
+      setSheet((current) => (current === "review" ? undefined : current));
+    }
+  }, [runner.reviewKey]);
 
   // A send restored from the journal (the app was killed after the slide) opens straight on its outcome.
   useEffect(() => {
@@ -88,14 +114,22 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
   const pick = (r: PickedRecipient) => {
     setRecipient(r);
     if (r.payment?.token) setAssetKey(r.payment.token.toLowerCase());
-    setSheet("amount");
+    setSheet(undefined);
   };
   const review = (a: MoneyAsset, amount: bigint) => {
     if (!recipient) return;
     setBlock(undefined);
-    setReviewed(
-      reviewMove(env.chainId, "send", a, amount, recipient.address, recipient.handle, recipient.label, bitmap),
+    const move = reviewMove(
+      env.chainId,
+      "send",
+      a,
+      amount,
+      recipient.address,
+      recipient.handle,
+      recipient.label,
+      bitmap,
     );
+    setReviewed({ ...move, key: `${runner.reviewKey}:${++reviewSerial.current}:${move.key}` });
     setSheet("review");
   };
   const confirm = async () => {
@@ -115,47 +149,59 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
     }
   };
   const done = () => {
+    const completed = runner.trace.record?.outcome === "completed";
     runner.reset();
     setReviewed(undefined);
     setSheet(undefined);
-    setRecipient(undefined);
-  };
-  const toTrades = () => {
-    storage.set(STORAGE_KEYS.homeTab, "positions");
-    router.navigate(ROUTES.home);
+    if (completed) {
+      setRecipient(undefined);
+      draft.reset();
+    }
   };
 
   return (
     <View style={styles.fill}>
-      <RecipientStep people={people} loading={loading} initial={initialTo ?? ""} onPick={pick} />
-      <ChildSheet
-        open={sheet === "amount"}
-        onClose={() => setSheet(undefined)}
-        title={`Send to ${recipient?.label ?? ""}`}
-      >
-        {verdict?.block ? (
-          <View style={styles.blocked}>
-            <Text style={[TYPE.rowTitle, styles.center, { color: color.down }]}>{RECIPIENT_WORDS[verdict.block]}</Text>
-            {verdict.block === "self" ? (
-              <Button label="Withdraw instead" onPress={() => router.replace(withdrawRoute(asset?.key))} />
-            ) : null}
-          </View>
-        ) : asset ? (
-          <AmountBody
-            key={asset.key}
-            asset={asset}
-            warnings={warnings}
-            checking={check.isLoading}
-            prefill={recipient?.payment?.amount}
-            onAsset={() => setSheet("picker")}
-            onTrades={toTrades}
-            onReview={(amount) => review(asset, amount)}
-          />
-        ) : (
-          <Text style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>Nothing to send yet</Text>
-        )}
+      {!introduced && runner.trace.events.length === 0 && !runner.trace.running ? (
+        <SendIntro network={network.name} onContinue={() => setIntroduced(true)} />
+      ) : asset ? (
+        <SendWorkspace
+          asset={asset}
+          input={draft}
+          recipient={recipient?.label}
+          network={network.name}
+          warnings={recipient ? warnings : []}
+          block={
+            recipient && verdict?.block
+              ? RECIPIENT_WORDS[verdict.block]
+              : recipient && check.isLoading
+                ? "Checking the address"
+                : undefined
+          }
+          onTrades={() => {
+            storage.set(STORAGE_KEYS.homeTab, "positions");
+            router.navigate(ROUTES.home);
+          }}
+          onAsset={() => setSheet("picker")}
+          onRecipient={() => setSheet("recipient")}
+          onReview={() => review(asset, draft.amount)}
+        />
+      ) : (
+        <Text style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>Nothing to send yet</Text>
+      )}
+      {verdict?.block === "self" ? (
+        <Button label="Withdraw instead" onPress={() => router.replace(withdrawRoute(asset?.key))} />
+      ) : null}
+      <ChildSheet open={sheet === "recipient"} onClose={() => setSheet(undefined)} title="Send to">
+        <RecipientStep
+          people={people}
+          loading={loading}
+          initial={initialTo ?? ""}
+          value={recipientDraft}
+          onChange={setRecipientDraft}
+          onPick={pick}
+        />
       </ChildSheet>
-      <ChildSheet open={sheet === "picker"} onClose={() => setSheet("amount")} title="Asset">
+      <ChildSheet open={sheet === "picker"} onClose={() => setSheet(undefined)} title="Asset">
         <AssetPicker
           assets={money.assets}
           other={money.other}
@@ -166,13 +212,13 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
           detailFor={(a) => `Available ${amountOf(a, spendableOf(a))}`}
           onPick={(a) => {
             setAssetKey(a.key);
-            setSheet("amount");
+            setSheet(undefined);
           }}
         />
       </ChildSheet>
       <ChildSheet
         open={sheet === "review"}
-        onClose={() => (runner.trace.running ? undefined : setSheet(reviewed ? "amount" : undefined))}
+        onClose={() => (runner.trace.running ? undefined : setSheet(undefined))}
         title={runner.trace.events.length > 0 ? "Send" : "Review"}
       >
         <MoveReview
@@ -181,52 +227,20 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
           runner={runner}
           avatar={recipient?.avatar ?? null}
           fee={fee.data}
+          feeTopUp={plan?.ok ? plan.op.reviewedIntent.networkFee : undefined}
           practice={practice}
           network={network.name}
           warnings={warnings}
           block={block ?? (plan && !plan.ok ? plan.block : undefined)}
           busy={busy || (prepared.isFetching && !practice)}
           words={SEND_WORDS}
+          onReviewAgain={() => asset && review(asset, draft.amount)}
           onConfirm={() => void confirm()}
           onDone={done}
           onLeave={() => router.back()}
         />
       </ChildSheet>
     </View>
-  );
-}
-
-function AmountBody({
-  asset,
-  warnings,
-  checking,
-  prefill,
-  onAsset,
-  onTrades,
-  onReview,
-}: {
-  asset: MoneyAsset;
-  warnings: readonly string[];
-  checking: boolean;
-  prefill: bigint | undefined;
-  onAsset: () => void;
-  onTrades: () => void;
-  onReview: (amount: bigint) => void;
-}) {
-  const available = spendableOf(asset);
-  const input = useAmountInput(asset.decimals, asset.priceUsd18, available, prefill);
-  const locked = asset.trading - asset.tradingFree;
-  return (
-    <AmountStep
-      asset={asset}
-      input={input}
-      available={available}
-      locked={locked > 0n ? { text: `${amountOf(asset, locked)} in trades`, onPress: onTrades } : undefined}
-      warnings={warnings}
-      blocked={checking ? "Checking the address" : undefined}
-      onAsset={onAsset}
-      onReview={() => onReview(input.amount)}
-    />
   );
 }
 

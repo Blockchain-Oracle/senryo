@@ -17,6 +17,9 @@ export interface SavedDeposit {
   asset: string;
   remote: string;
   depositAddress: string;
+  sourceName?: string;
+  sourceMark?: string;
+  issuedWhileAway?: boolean;
   /** Source symbol and decimals ("USDC", 6) and what arrives ("AUSD", 6). */
   symbol: string;
   decimals: number;
@@ -77,9 +80,9 @@ export function savedDepositOf(
   };
 }
 
-/** The list with `saved` kept for its route (an older address of the same route is replaced). */
+/** Keep every issued address: older routes may still have unresolved deposits to reconcile. */
 export function withSavedDeposit(list: readonly SavedDeposit[], saved: SavedDeposit): SavedDeposit[] {
-  return [...list.filter((d) => !sameRoute(d, saved)), saved];
+  return [...list.filter((d) => !(sameRoute(d, saved) && d.depositAddress === saved.depositAddress)), saved];
 }
 
 /** This route's live address, if one was issued and its order hasn't expired. */
@@ -89,7 +92,7 @@ export function findSavedDeposit(
   nowMs: number,
 ): SavedDeposit | undefined {
   const key = { ...route, account: route.account.toLowerCase() };
-  const found = list.find((d) => sameRoute(d, key));
+  const found = [...list].reverse().find((d) => sameRoute(d, key));
   if (!found) return undefined;
   return found.expiresAt !== null && found.expiresAt * MS_PER_SECOND < nowMs ? undefined : found;
 }
@@ -99,7 +102,7 @@ export function latestDeposit(
   deposits: readonly BridgeDeposit[] | undefined,
   issuedAt: number,
 ): BridgeDeposit | undefined {
-  return deposits?.find((d) => d.updatedAt === null || Date.parse(d.updatedAt) >= issuedAt) ?? deposits?.[0];
+  return deposits?.find((d) => d.updatedAt !== null && Date.parse(d.updatedAt) >= issuedAt);
 }
 
 export type DepositStepState = "done" | "live" | "waiting" | "failed";

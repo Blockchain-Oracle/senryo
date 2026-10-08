@@ -2,27 +2,20 @@
  * Withdraw to another chain (flow book B9; routes.md §3, §7): the quote for the asset's own route, or — for a
  * verified asset with no route — "Swap to USDC and withdraw" as ONE operation: [pull from trades]? → [approve]? →
  * swap → [approve]? → bridge, signed under one slide and one passkey (B0.4). The swap leg re-quotes right before it
- * is signed (same router, at least the reviewed minimum); the bridge leg re-quotes only if its quote expired, and then
- * only to an equal-or-better minimum on the same provider. Anything else stops at that step and goes back to review —
+ * is signed (same router, at least the reviewed minimum); an expired bridge leg requires a fresh explicit
+ * review, so approval/spender and tracking identity can never change silently. Anything else stops at that step and goes back to review —
  * completed steps are never resent. An unverified token never auto-composes (BD-7).
  */
-import {
-  type BridgeQuoteOk,
-  type BridgeRouteChain,
-  bridgeQuoteRoute,
-  type SwapQuoteOk,
-  swapQuoteRoute,
-} from "@senryo/api-client";
+import { type BridgeQuoteOk, type BridgeRouteChain, type SwapQuoteOk, swapQuoteRoute } from "@senryo/api-client";
 import type { TxRequest } from "@senryo/chain";
 import type { BridgeAsset } from "@senryo/config";
-import { aggregatorSwapRequests, bridgeSendRequests, type QueryEnv } from "@senryo/query";
+import { aggregatorSwapRequests, assertBridgeExecution, bridgeSendRequests, type QueryEnv } from "@senryo/query";
 import type { MoneyAsset } from "~/features/money/assets";
 import { exactAmount } from "~/features/money/format";
 import { pullToSelfStep } from "~/features/money/requests";
 import type { MoneyOperation, PlannedStep } from "~/features/money/useMoneyOperation";
 import { tokenAmount } from "~/features/tokens/format";
 
-const MS_PER_SECOND = 1000;
 const MOVED = "Price moved · review again";
 
 export interface ChainPlan {
@@ -45,20 +38,6 @@ export function addressFits(vm: BridgeRouteChain["vm"], address: string): boolea
 
 export function vmName(vm: BridgeRouteChain["vm"]): string {
   return vm === "evm" ? "an EVM" : vm === "svm" ? "a Solana" : "a Tron";
-}
-
-function bridgeQuery(env: QueryEnv, me: string, plan: ChainPlan, amount: bigint) {
-  const remote = plan.chain.remote[0]?.asset;
-  return {
-    fromChain: env.chainId,
-    toChain: plan.chain.chainId,
-    asset: plan.bridgeAsset,
-    amount,
-    sender: me as `0x${string}`,
-    recipient: plan.recipient,
-    ...(remote ? { remote } : {}),
-    provider: plan.bridge.provider,
-  };
 }
 
 async function freshSwap(env: QueryEnv, me: `0x${string}`, was: SwapQuoteOk): Promise<TxRequest> {
@@ -85,21 +64,12 @@ async function freshSwap(env: QueryEnv, me: `0x${string}`, was: SwapQuoteOk): Pr
   return swap;
 }
 
-async function bridgeCall(env: QueryEnv, me: `0x${string}`, plan: ChainPlan, amount: bigint): Promise<TxRequest> {
-  const expired = plan.bridge.expiresAt !== null && plan.bridge.expiresAt * MS_PER_SECOND < Date.now();
-  let quote = plan.bridge;
-  if (expired) {
-    const fresh = await env.api.call(bridgeQuoteRoute, { query: bridgeQuery(env, me, plan, amount) });
-    if (
-      fresh.status !== "ok" ||
-      fresh.minReceived < plan.bridge.minReceived ||
-      fresh.provider !== plan.bridge.provider
-    ) {
-      throw new Error(MOVED);
-    }
-    quote = fresh;
-  }
-  const requests = await bridgeSendRequests(env, me, quote);
+async function bridgeCall(env: QueryEnv, me: `0x${string}`, plan: ChainPlan): Promise<TxRequest> {
+  // A new quote can change approval/spender/tracking identity. Require a new explicit review;
+  // never substitute it after earlier signed steps or poll an expired quote for a new call.
+  assertBridgeExecution(plan.bridge.expiresAt, Date.now());
+  const requests = await bridgeSendRequests(env, me, plan.bridge);
+  assertBridgeExecution(plan.bridge.expiresAt, Date.now(), requests.length);
   const call = requests.at(-1);
   if (!call) throw new Error(MOVED);
   return call;
@@ -129,7 +99,6 @@ export async function chainSteps(
       });
     });
   }
-  const bridgeAmount = plan.swap ? plan.swap.quote.minOut : plan.amount;
   const bridgeRequests = await bridgeSendRequests(env, me, plan.bridge);
   bridgeRequests.forEach((request, i) => {
     const last = i === bridgeRequests.length - 1;
@@ -138,7 +107,7 @@ export async function chainSteps(
       action: request.action,
       label: last ? `Send to ${plan.chain.name}` : `Approve ${plan.bridgeAsset}`,
       request,
-      ...(last ? { build: () => bridgeCall(env, me, plan, bridgeAmount) } : {}),
+      ...(last ? { build: () => bridgeCall(env, me, plan) } : {}),
     });
   });
   return steps;

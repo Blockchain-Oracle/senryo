@@ -9,6 +9,7 @@ import { type BridgeAsset, MAINNET_TOKENS } from "@senryo/config";
 import { type BridgeStatusRef, useBridgeQuote, useQueryEnv, useSwapQuote } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { Button } from "~/components/kit/Button";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import { AssetMark } from "~/features/money/AssetMark";
 import type { MoneyAsset } from "~/features/money/assets";
@@ -73,16 +74,21 @@ export function ChainReview({
   target,
   plan,
   runner,
+  networkFee,
+  feeTopUp,
   steps,
   block,
   busy,
   onConfirm,
   onDone,
   onLeave,
+  onReviewAgain,
 }: {
   target: ChainTarget | undefined;
   plan: ChainPlan | "quoting" | string;
   runner: MoneyOperationRunner;
+  networkFee?: string | undefined;
+  feeTopUp?: string | undefined;
   /** The prepared steps line ("Network fee · Swap to USDC · Send to Base"), when it has more than one step. */
   steps?: string | undefined;
   block: string | undefined;
@@ -90,6 +96,7 @@ export function ChainReview({
   onConfirm: (plan: ChainPlan) => void;
   onDone: () => void;
   onLeave: () => void;
+  onReviewAgain: () => void;
 }) {
   const { color } = useTheme();
   const env = useQueryEnv();
@@ -150,7 +157,9 @@ export function ChainReview({
               label="You receive at least"
               value={tokenAmount(ok.bridge.minReceived, ok.bridge.out.decimals, ok.bridge.out.symbol)}
             />
-            <ReviewRow label="Fees" value={feeUsd6 > 0n ? usd(feeUsd6, undefined, "mainnet") : "Included"} />
+            <ReviewRow label="Network fee" value={networkFee ?? "Estimating"} />
+            {feeTopUp ? <ReviewRow label="Fee top-up first" value={feeTopUp} /> : null}
+            <ReviewRow label="Bridge fees" value={feeUsd6 > 0n ? usd(feeUsd6, undefined, "mainnet") : "Included"} />
             <ReviewRow label="Time" value={etaText(ok.bridge.etaSec)} />
             <ReviewRow
               label="Route"
@@ -175,12 +184,15 @@ export function ChainReview({
         )}
       </ReviewRows>
       {block ? <Text style={[TYPE.rowDetail, styles.center, { color: color.down }]}>{block}</Text> : null}
+      {block && !busy ? <Button label="Review again" onPress={onReviewAgain} /> : null}
       <SlideToConfirm
         label={ok ? "Slide to withdraw" : (reason ?? "Getting a quote")}
         tone="primary"
         busy={busy}
         disabled={!ok || block !== undefined}
         resetKey={[
+          runner.reviewKey,
+          ok?.bridge.tracking.id,
           target.asset.key,
           target.amount,
           target.chain.chainId,

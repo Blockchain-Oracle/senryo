@@ -3,6 +3,8 @@ import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBackOverSheet } from "~/components/shell/useBackOverSheet";
 import { SwapView } from "~/features/swap/SwapView";
+import { useAccount } from "~/lib/account/provider";
+import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 /**
@@ -11,6 +13,8 @@ import { SIZE, SPACE, useTheme } from "~/theme";
  */
 export default function SwapScreen() {
   const { color } = useTheme();
+  const chainId = useNetwork().chainId;
+  const address = useAccount().hint?.address;
   useBackOverSheet();
   const insets = useSafeAreaInsets();
   const { pay, receive } = useLocalSearchParams<{ pay?: string; receive?: string }>();
@@ -18,7 +22,7 @@ export default function SwapScreen() {
     <View style={[styles.page, { backgroundColor: color.ground, paddingBottom: insets.bottom + SPACE.sm }]}>
       <Stack.Screen options={{ title: "Swap" }} />
       <SwapView
-        key={`${pay ?? ""}:${receive ?? ""}`}
+        key={`${address}:${chainId}:${pay ?? ""}:${receive ?? ""}`}
         initialPay={pay}
         initialReceive={receive}
         onLeave={() => router.back()}

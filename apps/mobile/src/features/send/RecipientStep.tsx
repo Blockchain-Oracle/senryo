@@ -5,20 +5,21 @@
  * amount forward.
  */
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Avatar } from "~/components/identity/Avatar";
-import { ScanLine } from "~/components/kit/symbols";
+import { ScanLine, Search } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import type { ScannedPayment } from "~/features/money/qr-payload";
 import { Scanner } from "~/features/money/Scanner";
-import { SearchField, TextTool, ToolCircle } from "~/features/money/SearchField";
+import { TextTool, ToolCircle } from "~/features/money/SearchField";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { useRecipient } from "~/features/withdraw/useRecipient";
 import { fire } from "~/feedback/fire";
 import { readClipboard } from "~/lib/clipboard";
 import { shortAddress } from "~/lib/format";
-import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
+import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE } from "~/theme";
+import { DARK } from "~/theme/palette";
 import type { Person } from "./people";
 
 const INPUT_MAX = 64;
@@ -42,14 +43,20 @@ export function RecipientStep({
   loading,
   initial = "",
   onPick,
+  value,
+  onChange,
 }: {
   people: readonly Person[];
   loading: boolean;
   initial?: string;
   onPick: (r: PickedRecipient) => void;
+  value?: string | undefined;
+  onChange?: ((text: string) => void) | undefined;
 }) {
-  const { color } = useTheme();
-  const [input, setInput] = useState(initial);
+  const color = DARK;
+  const [local, setLocal] = useState(initial);
+  const input = value ?? local;
+  const setInput = onChange ?? setLocal;
   const [scanning, setScanning] = useState(false);
   const recipient = useRecipient(input);
   const query = input.trim().toLowerCase().replace(/^@/, "");
@@ -84,7 +91,10 @@ export function RecipientStep({
       ? { address: recipient.address, handle: recipient.handle, displayName: null, avatar: null }
       : undefined;
   return (
-    <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView
+      style={[styles.fill, { backgroundColor: color.ground }]}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
         {match ? <PersonRow person={match} detail={match.address} onPress={() => pick(match)} /> : null}
         {shown.map((p, i) => (
@@ -107,22 +117,26 @@ export function RecipientStep({
             {status}
           </Text>
         ) : null}
-        <SearchField
-          value={input}
-          onChangeText={(t) => setInput(t.slice(0, INPUT_MAX))}
-          placeholder="Name, @handle or address"
-          label="Recipient"
-          input={{ maxLength: INPUT_MAX, returnKeyType: "done" }}
-          tools={
-            <>
-              <TextTool
-                label="Paste"
-                onPress={() => void readClipboard().then((t) => setInput(t.trim().slice(0, INPUT_MAX)))}
-              />
-              <ToolCircle icon={ScanLine} label="Scan" onPress={() => setScanning(true)} />
-            </>
-          }
-        />
+        <View style={[styles.search, { borderColor: color.border }]}>
+          <Search size={SIZE.iconSm} color={color.text2} />
+          <TextInput
+            value={input}
+            onChangeText={(t) => setInput(t.slice(0, INPUT_MAX))}
+            placeholder="Name, @handle or address"
+            placeholderTextColor={color.text3}
+            accessibilityLabel="Recipient"
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={INPUT_MAX}
+            returnKeyType="done"
+            style={[TYPE.field, styles.searchInput, { color: color.ink }]}
+          />
+          <TextTool
+            label="Paste"
+            onPress={() => void readClipboard().then((t) => setInput(t.trim().slice(0, INPUT_MAX)))}
+          />
+          <ToolCircle icon={ScanLine} label="Scan" onPress={() => setScanning(true)} />
+        </View>
       </View>
       {scanning ? (
         <Scanner
@@ -149,7 +163,7 @@ function PersonRow({
   index?: number;
   onPress: () => void;
 }) {
-  const { color } = useTheme();
+  const color = DARK;
   const press = usePressScale(ROW_PRESS_SCALE);
   return (
     <Animated.View
@@ -192,7 +206,16 @@ function PersonRow({
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
+  fill: { minHeight: 420 },
+  search: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.sm,
+    borderWidth: 1,
+    borderRadius: BUTTON.radius.sm,
+    padding: SPACE.sm,
+  },
+  searchInput: { flex: 1, minHeight: SIZE.touch },
   list: { padding: SIZE.gutter, gap: SPACE.xxs, flexGrow: 1 },
   bottom: { paddingHorizontal: SIZE.gutter, paddingBottom: SPACE.lg, paddingTop: SPACE.sm, gap: SPACE.sm },
   row: {

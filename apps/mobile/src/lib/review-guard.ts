@@ -1,26 +1,24 @@
+import { createReviewLease } from "@senryo/query";
 import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 /** Changes, unmounts and background interruptions invalidate the original asynchronous review. */
 export function useReviewGuard(intent: string) {
-  const [generation, setGeneration] = useState(0);
-  const live = useRef({ intent, mounted: true, generation });
-  live.current.intent = intent;
+  const [, render] = useState(0);
+  const lease = useRef(createReviewLease(intent));
+  lease.current.update(intent);
   useEffect(() => {
-    live.current.mounted = true;
+    lease.current.mount();
     const listener = AppState.addEventListener("change", (state) => {
-      // Authentication can briefly make iOS inactive. Leaving the app ends this review.
+      // Native authentication can briefly make iOS inactive; a real background interrupts review.
       if (state === "background") {
-        live.current.generation += 1;
-        setGeneration(live.current.generation);
+        lease.current.interrupt();
+        render((generation) => generation + 1);
       }
     });
     return () => {
-      live.current.mounted = false;
+      lease.current.unmount();
       listener.remove();
     };
   }, []);
-  return () => {
-    if (!live.current.mounted || live.current.intent !== intent || live.current.generation !== generation)
-      throw new Error("Details or app state changed. Review again.");
-  };
+  return lease.current.capture();
 }

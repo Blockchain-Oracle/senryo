@@ -11,6 +11,7 @@
 import { MAINNET_CHAIN_ID, MAINNET_TOKENS } from "@senryo/config";
 import { type Address, formatUnits } from "@senryo/core";
 import { useQuery } from "@tanstack/react-query";
+import { useId } from "react";
 import { type ComposedStep, type FeePlan, type FeeSource, planNetworkFee } from "./compose.ts";
 import type { QueryEnv } from "./env.tsx";
 import type { MoneyAsset } from "./money-assets.ts";
@@ -85,6 +86,11 @@ export async function prepareMoneyOperation(
   const plan = await planNetworkFee(env, address, op.steps, feeSources(assets, op.spends));
   if (plan.kind === "short") return { ok: false, block: feeShortCopy(plan) };
   if (plan.kind === "covered") return { ok: true, op, fee: "covered" };
+  return preparedWithFee(op, plan);
+}
+
+/** Keep top-up intent and original-step index mapping together with the executable plan. */
+export function preparedWithFee(op: MoneyOperation, plan: Extract<FeePlan, { kind: "top-up" }>): PreparedOperation {
   const paid = `${formatUnits(plan.amountIn, plan.source.decimals, SOURCE_SHOWN_DECIMALS)} ${plan.source.symbol}`;
   return {
     ok: true,
@@ -105,20 +111,22 @@ export async function prepareMoneyOperation(
   };
 }
 
-/** A prepared review is re-planned after this (balances and the fee quote move). */
-const PREPARE_STALE_MS = 15_000;
+/** Facts stay frozen until an explicit new review key; execution still revalidates balances and route. */
+const PREPARE_STALE_MS = Number.POSITIVE_INFINITY;
 
 /**
  * The review's operation with its network fee planned (B11) while the review is open, keyed by the reviewed intent:
  * Details shows "Network fee" before the slide, and the slide signs exactly what was shown.
  */
 export function usePreparedOperation(
-  runner: { prepare: (op: MoneyOperation) => Promise<PreparedOperation> },
+  runner: { prepare: (op: MoneyOperation) => Promise<PreparedOperation>; reviewKey?: string },
   key: string | undefined,
   build: () => MoneyOperation | undefined | Promise<MoneyOperation | undefined>,
 ) {
+  // Executable validators belong to one mounted review, never another consumer.
+  const instance = useId();
   return useQuery({
-    queryKey: ["money-prepare", key ?? ""],
+    queryKey: ["money-prepare", instance, runner.reviewKey ?? "", key ?? ""],
     queryFn: async (): Promise<PreparedOperation> => {
       const op = await build();
       return op ? runner.prepare(op) : { ok: false, block: "Review again" };
@@ -126,5 +134,7 @@ export function usePreparedOperation(
     enabled: key !== undefined && key !== "",
     staleTime: PREPARE_STALE_MS,
     gcTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }

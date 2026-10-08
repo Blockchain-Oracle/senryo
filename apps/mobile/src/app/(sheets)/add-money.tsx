@@ -2,12 +2,12 @@ import { isDeployed } from "@senryo/chain";
 import type { BridgeAsset } from "@senryo/config";
 import { collateralId, ids, ROUTE_CHAIN_ID } from "@senryo/identity";
 import { type Href, router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MarkCluster } from "~/components/identity/MarkCluster";
 import { Gift } from "~/components/kit/symbols";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
-import { SheetRow } from "~/components/sheet/SheetRow";
 import { CardPanel } from "~/features/fund/CardPanel";
 import { ChainAssets, ChainSources } from "~/features/fund/ChainPanel";
 import { PracticePanel } from "~/features/fund/PracticePanel";
@@ -17,7 +17,7 @@ import { useAccount } from "~/lib/account/provider";
 import { useStarter } from "~/lib/account/use-starter";
 import { bridgeInRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
-import { SIZE, useTheme } from "~/theme";
+import { DISABLED_OPACITY, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 type Panel =
   | { kind: "methods" }
@@ -35,9 +35,11 @@ type Panel =
  * other-chain panel directly (Receive's "Sending from another chain?").
  */
 export default function AddMoneySheet() {
+  const owner = useAccount().hint?.address;
+  const chainId = useNetwork().chainId;
   return (
     <Sheet onClose={() => router.back()} closeLabel="Close add money">
-      <Body />
+      <Body key={`${owner}:${chainId}`} />
     </Sheet>
   );
 }
@@ -57,7 +59,7 @@ function Body() {
     <SheetPanel panelKey={key} direction={direction}>
       {panel.kind === "methods" ? (
         <>
-          <SheetHeading title="Deposit with" />
+          <SheetHeading title="Add funds" />
           <Methods onPanel={go} />
         </>
       ) : panel.kind === "practice" ? (
@@ -101,9 +103,9 @@ function Methods({ onPanel }: { onPanel: (next: Panel) => void }) {
   const claimed = starter.phase.kind === "claimed" || starter.phase.kind === "done";
   let index = 0;
   return (
-    <>
+    <View style={methodStyles.grid}>
       {practice ? (
-        <SheetRow
+        <MethodTile
           index={index++}
           title="Get practice money"
           detail={claimed ? "Claimed · use a code ›" : "Free practice dollars"}
@@ -111,7 +113,7 @@ function Methods({ onPanel }: { onPanel: (next: Panel) => void }) {
           onPress={guard(() => onPanel({ kind: "practice" }))}
         />
       ) : null}
-      <SheetRow
+      <MethodTile
         index={index++}
         title="Card or bank"
         detail={practice ? "Mainnet only" : "USDC, AUSD or MON · Ramp"}
@@ -125,26 +127,21 @@ function Methods({ onPanel }: { onPanel: (next: Panel) => void }) {
         disabled={practice}
         onPress={guard(() => onPanel({ kind: "card" }))}
       />
-      <SheetRow
+      <MethodTile
         index={index++}
         title="Crypto on Monad"
         detail="Any token"
         trailing={<MarkCluster ids={[ids.evmChain(chainId)]} size={SIZE.markCell} />}
         onPress={guard(() => close(() => router.push(ROUTES.receive)))}
       />
-      <SheetRow
+      <MethodTile
         index={index++}
         title="From an exchange"
-        detail="Coinbase, Binance, Kraken"
-        trailing={
-          <MarkCluster
-            ids={[ids.exchange("coinbase"), ids.exchange("binance"), ids.exchange("kraken")]}
-            size={SIZE.markCell}
-          />
-        }
+        detail="Check Monad support with your exchange"
+        trailing={<MarkCluster ids={[ids.evmChain(chainId)]} size={SIZE.markCell} />}
         onPress={guard(() => close(() => router.push(`${ROUTES.receive}?from=exchange` as Href)))}
       />
-      <SheetRow
+      <MethodTile
         index={index++}
         title="From another chain"
         detail="Ethereum, Base, Solana and more"
@@ -157,7 +154,7 @@ function Methods({ onPanel }: { onPanel: (next: Panel) => void }) {
         onPress={guard(() => onPanel({ kind: "chain" }))}
       />
       {vouchers ? (
-        <SheetRow
+        <MethodTile
           index={index++}
           title="Redeem a code"
           detail="A code adds money"
@@ -165,7 +162,7 @@ function Methods({ onPanel }: { onPanel: (next: Panel) => void }) {
           onPress={guard(() => close(() => router.push(ROUTES.voucher)))}
         />
       ) : null}
-    </>
+    </View>
   );
 }
 
@@ -179,3 +176,50 @@ function GiftMark() {
   const { color } = useTheme();
   return <Gift size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.gold} />;
 }
+
+function MethodTile({
+  title,
+  detail,
+  trailing,
+  disabled,
+  onPress,
+  badge,
+}: {
+  title: string;
+  detail: string;
+  trailing?: ReactNode;
+  disabled?: boolean;
+  onPress: () => void;
+  badge?: ReactNode;
+  index: number;
+}) {
+  const { color } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${detail}`}
+      accessibilityState={{ disabled }}
+      style={[methodStyles.tile, { backgroundColor: color.raised2, opacity: disabled ? DISABLED_OPACITY : 1 }]}
+    >
+      {trailing}
+      <Text style={[TYPE.rowStrong, methodStyles.center, { color: color.ink }]}>{title}</Text>
+      <Text style={[TYPE.meta, methodStyles.center, { color: color.text2 }]}>{detail}</Text>
+      {badge}
+    </Pressable>
+  );
+}
+const methodStyles = StyleSheet.create({
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm },
+  tile: {
+    width: "48%",
+    minHeight: 116,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACE.xs,
+    padding: SPACE.sm,
+    borderRadius: RADIUS.md,
+  },
+  center: { textAlign: "center" },
+});

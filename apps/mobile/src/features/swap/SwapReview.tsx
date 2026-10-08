@@ -34,6 +34,9 @@ function QuotedRows({ r, q }: { r: ReviewedSwap; q: NonNullable<ReviewedSwap["qu
         mark={<EntityMark id={ids.provider(q.quote.provider)} label={provider} size={SIZE.markChip} decorative />}
       />
       <ReviewRow label="Network fee" value={`≈ ${monFee(r.feeWei)}`} />
+      {r.operation.reviewedIntent.networkFee ? (
+        <ReviewRow label="Fee top-up first" value={r.operation.reviewedIntent.networkFee} />
+      ) : null}
     </>
   );
 }
@@ -54,7 +57,14 @@ export function SwapReview({ s, busy, onConfirm }: { s: SwapState; busy: boolean
   const r = s.reviewed;
   if (!r) return null;
   const q = r.quote;
-  const resetKey = [r.pay.key, r.receive.key, r.amount, q?.quote.minOut ?? "par", q?.quote.router ?? ""].join(":");
+  const resetKey = [
+    r.operation.reviewedIntent.reviewId,
+    r.pay.key,
+    r.receive.key,
+    r.amount,
+    q?.quote.minOut ?? "par",
+    q?.quote.router ?? "",
+  ].join(":");
   return (
     <View style={styles.stack}>
       <MoveLine

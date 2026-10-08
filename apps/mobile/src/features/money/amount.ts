@@ -69,6 +69,11 @@ export function useAmountInput(decimals: number, priceUsd18: bigint | null, avai
           : plainAmount(available, decimals),
       );
     },
+    fillUnits: (raw: bigint) => {
+      setMax(false);
+      setMode("units");
+      setText(plainAmount(raw, decimals));
+    },
     /** A share of what's available (bps of 10 000), typed in units. */
     fillShare: (bps: bigint, totalBps: bigint) => {
       setMax(false);

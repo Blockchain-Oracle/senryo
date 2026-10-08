@@ -17,6 +17,13 @@ const RAMP_BY_ADDRESS: Readonly<Record<string, string>> = {
 };
 export const RAMP_ASSETS = Object.values(RAMP_BY_ADDRESS);
 export const RAMP_SELL_READY = false;
+function purchaseState(status: RampPurchase["status"]) {
+  if (status === "CANCELLED" || status === "EXPIRED") return "cancelled" as const;
+  if (status === "PAYMENT_FAILED") return "unresolved" as const;
+  if (status === "PAYMENT_EXECUTED" || status === "FIAT_RECEIVED") return "paid" as const;
+  if (status === "RELEASING" || status === "RELEASED") return "processing" as const;
+  return "created" as const;
+}
 const PAID_STATES = new Set(["PAYMENT_EXECUTED", "FIAT_RECEIVED", "RELEASING", "RELEASED"]);
 let sdk: RampSdk | undefined;
 let opening = false;
@@ -78,8 +85,22 @@ export async function openRampBuy(userAddress: string, outAsset?: string): Promi
             value.asset.symbol === outAsset ||
             (typeof value.asset.type === "string" && value.asset.type.startsWith("MONAD")) ||
             (typeof value.asset.symbol === "string" && value.asset.symbol.startsWith("MONAD_")))
-        )
+        ) {
           purchase = value;
+          recordArrival({
+            kind: "ramp",
+            chainId: MAINNET_CHAIN_ID,
+            account: userAddress.toLowerCase(),
+            asset: address,
+            symbol: value.asset.symbol,
+            baseline: "0",
+            amount: value.cryptoAmount,
+            via: "Ramp",
+            providerOperationId: value.id,
+            providerStatus: value.status,
+            status: purchaseState(value.status),
+          });
+        }
       }
       if (event.type === "WIDGET_CLOSE")
         finish(
@@ -126,15 +147,12 @@ export function recordRampReturn(
   isCurrent: () => boolean,
 ): void {
   if (result.kind === "unavailable" || result.kind === "failed") {
+    if (!isCurrent() || activeNetwork().chainId !== chainId) return;
     notify({ title: result.kind === "unavailable" ? "Update the app to buy" : "Couldn’t open Ramp", tone: "warning" });
     return;
   }
   if (result.kind !== "created") return;
-  if (activeNetwork().chainId !== chainId || !isCurrent()) return;
-  if (!PAID_STATES.has(result.purchase.status)) {
-    notify({ title: "Purchase started", description: "Payment and delivery are still handled by Ramp" });
-    return;
-  }
+  // Persist the originating owner even if checkout returns after account/network navigation.
   recordArrival({
     kind: "ramp",
     chainId,
@@ -144,6 +162,13 @@ export function recordRampReturn(
     baseline: asset.wallet.toString(),
     amount: result.purchase.cryptoAmount,
     via: "Ramp",
+    providerOperationId: result.purchase.id,
+    providerStatus: result.purchase.status,
+    status: purchaseState(result.purchase.status),
   });
-  notify({ title: "Checking delivery", description: `${asset.symbol} · Ramp` });
+  if (activeNetwork().chainId === chainId && isCurrent())
+    notify({
+      title: PAID_STATES.has(result.purchase.status) ? "Checking delivery" : "Purchase started",
+      description: `${asset.symbol} · Ramp payment and delivery need provider confirmation`,
+    });
 }

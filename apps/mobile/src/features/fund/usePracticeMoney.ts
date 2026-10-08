@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMoneyOperation } from "~/features/money/useMoneyOperation";
 import { useAccount } from "~/lib/account/provider";
 import { useStarter } from "~/lib/account/use-starter";
+import { notify } from "~/lib/notify";
 
 const MS_PER_SECOND = 1000n;
 const PRACTICE_AMOUNT_INDEX = 4;
@@ -51,17 +52,26 @@ export function usePracticeMoney() {
   const topUp = () => {
     if (!address || !value || faucet.trace.running) return;
     faucet.reset();
-    void faucet.run({
-      steps: [{ action: "faucet", label: "Daily top-up", request: practiceFaucetRequest(env.chainId) }],
-      reviewedIntent: {
-        kind: "faucet",
-        symbol: "AUSD",
-        amount: value.faucetAmount.toString(),
-        recipient: address,
-        destination: "wallet",
-      },
-      revalidate: async () => undefined,
-    });
+    void faucet
+      .prepare({
+        steps: [{ action: "faucet", label: "Daily top-up", request: practiceFaucetRequest(env.chainId) }],
+        reviewedIntent: {
+          kind: "faucet",
+          symbol: "AUSD",
+          amount: value.faucetAmount.toString(),
+          recipient: address,
+          destination: "wallet",
+        },
+        revalidate: async () => undefined,
+      })
+      .then((ready) => {
+        if (ready.ok) return faucet.run(ready.op);
+        notify({ title: ready.block, tone: "warning" });
+        return undefined;
+      })
+      .catch(() =>
+        notify({ title: "Top-up interrupted", description: "Review Practice money and try again", tone: "warning" }),
+      );
   };
   return {
     starter,

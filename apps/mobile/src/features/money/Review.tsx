@@ -4,6 +4,7 @@
  * from the reviewed intent, the settled outcome from the journal (an unknown send offers nothing new), and the next
  * action. Steps and hashes live under the trace's Details.
  */
+import { Image } from "expo-image";
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Panel } from "~/components/kit/Surface";
@@ -99,28 +100,40 @@ export function MoneyOutcome({
   onDone: () => void;
   onLeave: () => void;
 }) {
+  const { color } = useTheme();
   const outcome = useSettledOutcome(runner.trace.events);
   const step = runner.step;
   const stepTitle =
     runner.trace.running && step && step.count > 1 ? `${step.label} · ${step.index + 1} of ${step.count}` : undefined;
   const headline = title ?? stepTitle;
   return (
-    <TradeTrace
-      record={runner.trace.record}
-      events={runner.trace.events}
-      running={runner.trace.running}
-      outcome={outcome}
-      onDone={onDone}
-      onLeave={onLeave}
-      words={words}
-      {...(headline ? { title: headline } : {})}
-    >
-      {facts ? <ReviewRows>{facts}</ReviewRows> : null}
-    </TradeTrace>
+    <View style={[styles.receipt, { backgroundColor: color.card }]}>
+      <Image
+        source={require("../../../assets/onboarding/welcome-sky.png")}
+        contentFit="cover"
+        style={[StyleSheet.absoluteFill, styles.sky]}
+        accessible={false}
+      />
+      <Text style={[TYPE.rowStrong, { color: color.ink }]}>SENRYO · MONEY RECORD</Text>
+      <TradeTrace
+        record={runner.trace.record}
+        events={runner.trace.events}
+        running={runner.trace.running}
+        outcome={outcome}
+        onDone={onDone}
+        onLeave={onLeave}
+        words={words}
+        {...(headline ? { title: headline } : {})}
+      >
+        {facts ? <ReviewRows>{facts}</ReviewRows> : null}
+      </TradeTrace>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  receipt: { padding: SPACE.md, gap: SPACE.lg, overflow: "hidden" },
+  sky: { opacity: 0.12 },
   panel: { paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm },
   row: {
     flexDirection: "row",

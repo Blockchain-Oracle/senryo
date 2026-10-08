@@ -6,6 +6,7 @@ import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { NetworkPill, ReceiveCard } from "~/features/fund/ReceiveCard";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { SPACE } from "~/theme";
 
 /**
@@ -24,13 +25,15 @@ export default function ReceiveSheet() {
 function Body() {
   const close = useSheetClose();
   const address = useAccount().hint?.address;
+  const chainId = useNetwork().chainId;
   const { asset, from } = useLocalSearchParams<{ asset?: string; from?: string }>();
   return (
     <View style={styles.stack}>
-      <SheetHeading title="Receive" />
+      <SheetHeading title="Deposit crypto" />
       <NetworkPill />
       {address ? (
         <ReceiveCard
+          key={`${chainId}:${address}`}
           address={address}
           preselected={asset?.toLowerCase()}
           exchange={from === "exchange"}

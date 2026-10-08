@@ -8,6 +8,7 @@
 import { type OperationRecord, stepsLine } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
 import { Avatar } from "~/components/identity/Avatar";
+import { Button } from "~/components/kit/Button";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import { groupedAddress } from "~/features/fund/ReceiveCard";
 import { AssetMark } from "~/features/money/AssetMark";
@@ -41,6 +42,7 @@ export function MoveReview({
   runner,
   avatar,
   fee,
+  feeTopUp,
   practice,
   network,
   warnings,
@@ -48,6 +50,7 @@ export function MoveReview({
   busy,
   words,
   onConfirm,
+  onReviewAgain,
   onDone,
   onLeave,
 }: {
@@ -57,6 +60,7 @@ export function MoveReview({
   runner: MoneyOperationRunner;
   avatar: string | null;
   fee: string | undefined;
+  feeTopUp?: string | undefined;
   practice: boolean;
   network: string;
   warnings: readonly string[];
@@ -64,6 +68,7 @@ export function MoveReview({
   busy: boolean;
   words: TraceWords;
   onConfirm: () => void;
+  onReviewAgain?: (() => void) | undefined;
   onDone: () => void;
   onLeave: () => void;
 }) {
@@ -93,6 +98,7 @@ export function MoveReview({
         <ReviewRow label="To" value={`${line1}\n${line2}`} />
         <ReviewRow label="Amount" value={exact} />
         <ReviewRow label="Network fee" value={practice ? "Sponsored" : (fee ?? "Estimating")} />
+        {feeTopUp ? <ReviewRow label="Fee top-up first" value={feeTopUp} /> : null}
         {(steps ?? move.steps).length > 1 ? <ReviewRow label="Steps" value={stepsLine(steps ?? move.steps)} /> : null}
         <ReviewRow label="Network" value={network} />
         {warnings.map((w) => (
@@ -104,6 +110,7 @@ export function MoveReview({
           {block}
         </Text>
       ) : null}
+      {block && onReviewAgain ? <Button label="Review again" onPress={onReviewAgain} disabled={busy} /> : null}
       <SlideToConfirm
         label={move.kind === "send" ? "Slide to send" : "Slide to withdraw"}
         tone="primary"

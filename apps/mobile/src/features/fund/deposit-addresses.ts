@@ -19,8 +19,13 @@ import { STORAGE_KEYS, storage } from "~/lib/storage";
 export type { SavedDeposit };
 
 /** Keeps the address just issued for its route (replacing an older one of the same route). */
-export function saveDeposit(chainId: number, account: string, issued: BridgeDepositAddressOk): SavedDeposit {
-  const saved = savedDepositOf(chainId, account, issued, Date.now());
+export function saveDeposit(
+  chainId: number,
+  account: string,
+  issued: BridgeDepositAddressOk,
+  source?: { sourceName: string; sourceMark: string; issuedWhileAway?: boolean },
+): SavedDeposit {
+  const saved = { ...savedDepositOf(chainId, account, issued, Date.now()), ...source };
   const list = parseSavedDeposits(storage.getString(STORAGE_KEYS.depositAddresses));
   storage.set(STORAGE_KEYS.depositAddresses, JSON.stringify(withSavedDeposit(list, saved)));
   return saved;
@@ -37,4 +42,23 @@ export function useSavedDeposit(
   const [raw] = useMMKVString(STORAGE_KEYS.depositAddresses, storage);
   if (!account || !remote) return undefined;
   return findSavedDeposit(parseSavedDeposits(raw), { chainId, account, fromChain, asset, remote }, Date.now());
+}
+
+/** Saved routes remain reachable after quote expiry and while money is unresolved. */
+export function useSavedDeposits(
+  chainId: number,
+  account: string | undefined,
+  fromChain: number,
+  asset: string,
+  remote: string | undefined,
+) {
+  const [raw] = useMMKVString(STORAGE_KEYS.depositAddresses, storage);
+  return parseSavedDeposits(raw).filter(
+    (d) =>
+      d.chainId === chainId &&
+      d.account === account?.toLowerCase() &&
+      d.fromChain === fromChain &&
+      d.asset === asset &&
+      d.remote === remote,
+  );
 }

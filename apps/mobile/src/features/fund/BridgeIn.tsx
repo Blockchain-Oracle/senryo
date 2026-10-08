@@ -11,8 +11,8 @@ import type { BridgeRouteChain } from "@senryo/api-client";
 import { type BridgeAsset, MAINNET_CHAIN_ID, MONAD_BRIDGE_ASSETS } from "@senryo/config";
 import { anyAssetKeys, requestDepositAddress, useBridgeQuote, useBridgeRoutes, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, usePathname } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
@@ -28,11 +28,12 @@ import { useMoneyAssets } from "~/features/money/useMoneyAssets";
 import { tokenAmount } from "~/features/tokens/format";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
+import { shortAddress } from "~/lib/format";
 import { usd } from "~/lib/money";
 import { CONTROL_FONT_SCALE, HERO_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { bridgeAssetMark } from "./bridge-assets";
 import { DepositAddress } from "./DepositAddress";
-import { saveDeposit, useSavedDeposit } from "./deposit-addresses";
+import { saveDeposit, useSavedDeposit, useSavedDeposits } from "./deposit-addresses";
 
 /** No balance to cap a deposit from elsewhere: the route's minimum and the quote say what works. */
 const NO_CAP_BITS = 128n;
@@ -67,11 +68,29 @@ function Quote({ asset, chain }: { asset: BridgeAsset; chain: BridgeRouteChain }
   const remote = chain.remote[0];
   const decimals = remote?.decimals ?? 0;
   const input = useAmountInput(decimals, null, NO_CAP);
+  const pathname = usePathname();
+  const scope = `${pathname}:${env.chainId}:${address}:${chain.chainId}:${asset}:${remote?.asset}:${input.amount}`;
+  const live = useRef({ scope, mounted: true, busy: false, generation: 0 });
+  if (live.current.scope !== scope) {
+    live.current.scope = scope;
+    live.current.generation += 1;
+  }
+  useEffect(() => {
+    live.current.mounted = true;
+    return () => {
+      live.current.mounted = false;
+    };
+  }, []);
+  useEffect(() => {
+    setOpen(false);
+    setRefused(undefined);
+  }, [scope]);
   const [why, setWhy] = useState(false);
   const [open, setOpen] = useState(false);
   const [issuing, setIssuing] = useState(false);
   const [refused, setRefused] = useState<string>();
   const saved = useSavedDeposit(env.chainId, address, chain.chainId, asset, remote?.asset);
+  const history = useSavedDeposits(env.chainId, address, chain.chainId, asset, remote?.asset);
   const mainnet = env.chainId === MAINNET_CHAIN_ID;
   const quote = useBridgeQuote(
     address && remote && input.amount > 0n
@@ -93,8 +112,17 @@ function Quote({ asset, chain }: { asset: BridgeAsset; chain: BridgeRouteChain }
   // The saved address already serves this amount (or none is typed): show it; another amount opens a fresh one.
   const reuse = saved !== undefined && (input.amount === 0n || BigInt(saved.amount) === input.amount);
   const issue = async () => {
-    if (!address || !remote) return;
-    if (reuse) return setOpen(true);
+    if (!address || !remote || live.current.busy) return;
+    if (reuse && saved && (saved.expiresAt === null || saved.expiresAt * MS_PER_SECOND > Date.now()))
+      return setOpen(true);
+    if (!ok || (ok.expiresAt !== null && ok.expiresAt * MS_PER_SECOND <= Date.now())) {
+      setRefused("Quote expired · refresh before opening an address");
+      return;
+    }
+    live.current.busy = true;
+    const generation = live.current.generation;
+    const current = () =>
+      live.current.mounted && live.current.scope === scope && live.current.generation === generation;
     setIssuing(true);
     setRefused(undefined);
     try {
@@ -105,8 +133,15 @@ function Quote({ asset, chain }: { asset: BridgeAsset; chain: BridgeRouteChain }
         amount: input.amount,
         recipient: address,
       });
-      if (issued.status !== "ok") return setRefused(issued.reason);
-      saveDeposit(env.chainId, address, issued);
+      if (issued.status !== "ok") {
+        if (current()) setRefused(issued.reason);
+        return;
+      }
+      saveDeposit(env.chainId, address, issued, {
+        sourceName: chain.name,
+        sourceMark: chain.mark,
+        issuedWhileAway: !current(),
+      });
       const token = MONAD_BRIDGE_ASSETS[env.chainId][asset]?.address;
       if (token) {
         recordArrival({
@@ -118,13 +153,16 @@ function Quote({ asset, chain }: { asset: BridgeAsset; chain: BridgeRouteChain }
           baseline: (money.find(token)?.wallet ?? 0n).toString(),
           amount: issued.minReceived.toString(),
           via: chain.name,
+          providerOperationId: issued.depositAddress,
+          status: "created",
         });
       }
-      setOpen(true);
+      if (current()) setOpen(true);
     } catch {
-      setRefused("Couldn’t open an address · try again");
+      if (current()) setRefused("Couldn’t open an address · try again");
     } finally {
-      setIssuing(false);
+      live.current.busy = false;
+      if (live.current.mounted) setIssuing(false);
     }
   };
   const depositLabel = !mainnet
@@ -204,6 +242,20 @@ function Quote({ asset, chain }: { asset: BridgeAsset; chain: BridgeRouteChain }
         disabled={!mainnet || issuing || (!reuse && (!ok || expired))}
         onPress={() => void issue()}
       />
+      {history.map((deposit) => (
+        <Pressable
+          key={deposit.depositAddress}
+          accessibilityRole="link"
+          onPress={() =>
+            router.push(`/fund/deposit/${encodeURIComponent(`${deposit.fromChain}:${deposit.depositAddress}`)}`)
+          }
+        >
+          <Text style={[TYPE.rowDetail, { color: color.link }]}>
+            {deposit.issuedWhileAway ? "Saved while away" : "Saved deposit"} · {deposit.symbol} ·{" "}
+            {shortAddress(deposit.depositAddress)} ›
+          </Text>
+        </Pressable>
+      ))}
       <View style={styles.links}>
         <Pressable onPress={() => setWhy(true)} accessibilityRole="button" hitSlop={SPACE.sm} style={styles.link}>
           <Info size={SIZE.iconSm} color={color.text3} />
