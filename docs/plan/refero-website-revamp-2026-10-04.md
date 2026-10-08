@@ -1,5 +1,7 @@
 # Senryo website revamp — Refero, 4 October 2026
 
+**Product emphasis superseded on 5 October.** The first implementation led with the browser wallet and omitted predictions. The user corrected this: Senryo is mobile first, centred on Monad pair trading, predictions, accessible money flows and Kinpaku. Use [the corrected product brief](../product/current-product.md) and [mobile-first website amendment](refero-mobile-first-2026-10-05.md). The first prototype was never publicly deployed. Its light visual treatment may remain; its primary journey and claims must change.
+
 ## Brief and authority
 
 Designing Senryo's public website for people exploring a Monad wallet and market product. The primary action is to start in Practice or browse the actual app. Preserve Senryo's seal, gold-leaf Kinpaku artwork, approved illustrations, existing passkey/create/sign-in/recovery flows, routes and legal documents. Do not imply production card spending, enabled Mainnet trading, returns, user counts or prediction execution.

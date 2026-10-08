@@ -1,14 +1,16 @@
 # Senryo
 
-**Trade gold, silver, FX and crypto long or short from one Face ID account on Monad, and own, move or spend any asset you hold.**
+**Senryo is a mobile app for pair trading on Monad, predictions, money flows and the Kinpaku card. Start with paper funds in Practice.**
+
+The [current product brief](docs/product/current-product.md) records what is implemented, what is accepted and what remains open. The [reference follow-through plan](docs/plan/reference-followthrough-2026-10-04.md) retains the complete feature scope and the approved Slush, Fomo and Phantom direction. The website introduces the mobile app; its browser companion is secondary. Meme coins are not the product's positioning.
 
 Monad Metropolis · Track 01 *Onchain Finance & Trading* · bounties: Agora Mobile Trading (Mera + AUSD + Perpl), Mera-Powered UX, Aurora Intents, Envio.
 
 | Try it | |
 |---|---|
-| Web | https://senryo.xyz (passkeys need a PRF-capable authenticator: iCloud Keychain, Google Password Manager, 1Password) |
-| Android | Preview APK (runtime 0.2.0): https://expo.dev/artifacts/eas/QT0s9Zj8MY0RFhJeKx3zPn8m6709ABJLrXj0oNvcNvo.apk |
-| iOS | TestFlight *(judge access set up before submission; see the judge guide)* |
+| iOS | TestFlight beta: release record 0.3.0 (7). Invitation required; a public join link has not been verified. |
+| Browser companion | https://senryo.xyz (passkeys need a PRF-capable authenticator: iCloud Keychain, Google Password Manager, 1Password) |
+| Android | Older preview APK (runtime 0.2.0; current mobile parity is not confirmed): https://expo.dev/artifacts/eas/QT0s9Zj8MY0RFhJeKx3zPn8m6709ABJLrXj0oNvcNvo.apk |
 | Judge guide | [`docs/judges.md`](docs/judges.md) (also at https://senryo.xyz/judges/): the fastest path through every feature, voucher codes, watch mode for geo-blocked regions |
 | Live stats | https://senryo.xyz/stats/: accounts, trades, traded notional, pool value and a daily chart per network, read live from the public indexer and the pool contract |
 | Demo video | *(added before submission)* |
@@ -25,18 +27,16 @@ twice.
 
 - **Account:** create with one passkey ceremony (Mera 0.2.0, PRF → BIP-39 → EOA; no custody backend), sign in statelessly
   on any device, scoped prompt-free trading sessions with a passkey step-up above the session's caps.
-- **Practice mode** (Monad testnet): P$100 to start, every flow rehearsed with paper money. **Mainnet**: the same screens with real money.
+- **Practice mode** (Monad testnet): P$100 to start and paper trading on Senryo's engine. Mainnet browsing remains available; the current public configuration enables Senryo money operations only on Practice. Provider setup and acceptance are separate from a screen being implemented.
 - **Hold any asset:** every token at the address is discovered (Envio HyperSync, Alchemy fallback), verified against
   Monad's token list by address, priced, and can be received, sent, swapped (Monorail + KyberSwap, best of both, routers
   pinned, price-impact rule) or withdrawn: to a Monad address, to another chain (Relay, Circle CCTP v2, Across, LI.FI),
   or bought with a card via Ramp.
-- **Trade:** gold (XAU), silver (XAG), EUR, GBP, JPY, CHF, CAD on Senryo's own engine (Chainlink feeds, market-hours
-  calendar, TP/SL, liquidation keeper), and BTC, ETH, MON, SOL and more on **Perpl** (Monad's order-book perps, AUSD margin).
-  Pay for a trade with any asset (Mainnet; Practice pays in dollars): the swap, the move and the open are one operation
-  behind one slide.
+- **Trade:** gold (XAU), silver (XAG), EUR, GBP, JPY, CHF and CAD on Senryo's Practice engine (Chainlink feeds, market-hours
+  calendar, TP/SL, liquidation keeper). **Perpl** markets can be discovered; enrollment, funding and live execution still require their acceptance gates. The composed swap → move → open journey remains in scope and uses one durable operation; it does not bypass those gates.
+- **Predict:** Bitcoin/Ethereum binary price markets from Polymarket (settled on Polygon), plus numerical price contests from Castora (on Monad). Discovery, details, history and saved markets are implemented. Orders, entries, positions, settlement and claims remain in scope and are not enabled by the browsing UI.
 - **Earn:** the trading pool (ERC-4626 on AUSD, delayed redeem).
-- **Spend:** the Kinpaku card (Lithic sandbox in Practice): every authorization becomes an onchain hold against the same
-  balance. *(Card service built; its sandbox deployment is in progress.)*
+- **Card:** Kinpaku's Lithic sandbox is connected in Practice, with recorded card issuance, limits, freeze/unfreeze and hold acceptance. Production spending and Apple/Google Wallet provisioning remain open. Every authorization uses an onchain hold against the same balance.
 - **Social:** profiles, follow, a trade feed with "Trade this", leaderboards, watch any public account by link.
 
 ## How Senryo uses Monad

@@ -5,9 +5,9 @@ export const BRAND = {
   wordmark: "SENRYO",
   card: "Kinpaku",
   cardKanji: "金箔",
-  title: "Senryo 千両 — gold, markets and a card on one balance",
+  title: "Senryo 千両 — markets and predictions, in your pocket",
   description:
-    "Trade gold, silver, equities, FX and crypto perps on Monad from one risk-accounted balance, and spend it with the Kinpaku card.",
+    "A mobile app for pair trading on Monad, predictions, money and Kinpaku. Start gold, silver and FX trading with paper funds in the iOS beta.",
   network: "MONAD",
 } as const;
 

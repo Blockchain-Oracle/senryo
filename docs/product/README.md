@@ -1,6 +1,8 @@
 # Senryo product flow book
 
-The authority for every screen (D-237…D-250, 2 Oct 2026). Built with the `product-how-tree` method (`~/.claude/skills/product-how-tree/`): objects × verbs with the symmetry rule, a how-ladder per capability, evidence-backed answers, a surface pass (before → after → why) and a two-way trace. Implementation follows these pages; a screen that disagrees with them is the bug.
+For current product positioning, implementation boundaries and readiness, start with the [current product brief](current-product.md) and [reference follow-through plan](../plan/reference-followthrough-2026-10-04.md). Senryo is a mobile app; predictions are part of its scope. This flow book retains the comprehensive capability specification. Its 2 October “today” descriptions are historical snapshots, not current acceptance evidence.
+
+The original screen authority (D-237…D-250, 2 Oct 2026) was built with the `product-how-tree` method (`~/.claude/skills/product-how-tree/`): objects × verbs with the symmetry rule, a how-ladder per capability, evidence-backed answers, a surface pass (before → after → why) and a two-way trace. Current approved amendments above take precedence where the implementation direction has changed.
 
 | Page | Covers |
 |---|---|

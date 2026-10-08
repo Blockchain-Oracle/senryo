@@ -1,0 +1,322 @@
+.site {
+  --page-ink: #3c315b;
+  --page-muted: #655d76;
+  --page-paper: #fdfcfe;
+  --page-lavender: #e2dffe;
+  --page-line: #ded9e5;
+  color: var(--page-ink);
+  background: var(--page-paper);
+  font-family: var(--font-inter), var(--font-noto-jp), sans-serif;
+  overflow: clip;
+}
+.site :is(a, summary) {
+  -webkit-tap-highlight-color: transparent;
+}
+.site :is(a, button, summary):focus-visible {
+  outline: 3px solid #7463b6;
+  outline-offset: 5px;
+}
+.site :is(section, main)[id] {
+  scroll-margin-top: 40px;
+}
+.site h1:not(.accountActions *),
+.site h2:not(.accountActions *),
+.site h3:not(.accountActions *) {
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+.site h2:not(.accountActions *),
+.site h3:not(.accountActions *) {
+  font-size: clamp(38px, 4.2vw, 58px);
+  line-height: 1.08;
+}
+.skip {
+  position: absolute;
+  z-index: 20;
+  left: 20px;
+  top: 12px;
+  padding: 14px 20px;
+  border-radius: 100px;
+  background: var(--page-ink);
+  color: white;
+  transform: translateY(-150%);
+}
+.skip:focus {
+  transform: translateY(0);
+}
+.smallButton,
+.primaryButton,
+.whiteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-radius: 100px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  background: var(--page-lavender);
+  transition:
+    background-color 160ms,
+    transform 160ms;
+}
+.smallButton {
+  min-height: 48px;
+  padding: 12px 22px;
+  font-size: 14px;
+  gap: 12px;
+}
+.primaryButton,
+.whiteButton {
+  min-height: 58px;
+  padding: 17px 28px;
+  font-size: 16px;
+}
+.smallButton:hover,
+.primaryButton:hover {
+  background: #d3cdf5;
+  transform: translateY(-2px);
+}
+.whiteButton {
+  background: var(--page-paper);
+  width: fit-content;
+}
+.whiteButton:hover {
+  background: #f4f0fa;
+  transform: translateY(-2px);
+}
+.hero {
+  max-width: 1320px;
+  padding: 28px 36px 88px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1.14fr 1fr;
+  gap: 34px;
+  align-items: center;
+}
+.heroCopy {
+  padding: 30px 0;
+}
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.065em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+.hero h1 {
+  font-size: clamp(60px, 6.6vw, 92px);
+  line-height: 1.035;
+  letter-spacing: -0.065em;
+  margin: 26px 0;
+}
+.intro {
+  max-width: 440px;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--page-muted);
+}
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 32px;
+}
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.textLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.betaNote {
+  margin-top: 24px;
+  font-size: 11px;
+  color: var(--page-muted);
+  line-height: 1.7;
+}
+.artCaption {
+  position: absolute;
+  z-index: 1;
+  top: 28px;
+  left: 30px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.artSignature {
+  position: absolute;
+  right: 30px;
+  bottom: 30px;
+  font-family: var(--font-noto-jp), sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+}
+.site summary::-webkit-details-marker {
+  display: none;
+}
+.entry {
+  max-width: 1232px;
+  margin: 0 auto;
+  padding: 72px 64px;
+  border-radius: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+  background: #211c2c;
+  color: #f3eef8;
+}
+.entry h2 {
+  margin: 22px 0;
+}
+.entry > div > p:last-child {
+  color: #d3c9de;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.accountActions {
+  max-width: 420px;
+  width: 100%;
+  justify-self: end;
+  color: var(--foreground);
+}
+@media (max-width: 1300px) {
+  .hero {
+    gap: 24px;
+  }
+  .hero h1 {
+    font-size: 6.6vw;
+  }
+  .entry {
+    margin-left: 28px;
+    margin-right: 28px;
+  }
+}
+@media (max-width: 980px) {
+  .hero {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  .actions {
+    gap: 16px;
+  }
+  .primaryButton,
+  .whiteButton {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+  .entry {
+    gap: 36px;
+  }
+  .entry {
+    padding: 44px;
+  }
+}
+@media (max-width: 760px) {
+  .smallButton {
+    min-height: 44px;
+    padding: 11px 16px;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 30px;
+    padding: 24px 20px 48px;
+  }
+  .heroCopy {
+    padding: 12px 0 0;
+  }
+  .hero .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.045em;
+  }
+  .hero h1 {
+    font-size: clamp(46px, 10.8vw, 76px);
+    margin: 22px 0;
+  }
+  .intro {
+    max-width: 420px;
+    font-size: 16px;
+  }
+  .actions {
+    gap: 18px;
+    margin-top: 26px;
+  }
+  .primaryButton,
+  .whiteButton {
+    min-height: 54px;
+    padding: 16px 22px;
+    font-size: 14px;
+    gap: 12px;
+  }
+  .textLink {
+    font-size: 14px;
+    gap: 9px;
+  }
+  .betaNote {
+    font-size: 10px;
+    margin-top: 18px;
+  }
+  .artCaption {
+    top: 24px;
+    left: 24px;
+    font-size: 11px;
+  }
+  .artSignature {
+    right: 24px;
+    bottom: 24px;
+    font-size: 13px;
+  }
+  .site h2:not(.accountActions *),
+  .site h3:not(.accountActions *) {
+    font-size: clamp(36px, 8.6vw, 52px);
+  }
+  .entry {
+    margin: 0 20px;
+    padding: 38px 26px;
+    grid-template-columns: 1fr;
+    gap: 36px;
+    border-radius: 24px;
+  }
+  .entry h2 {
+    margin: 18px 0;
+  }
+  .entry > div > p:last-child {
+    font-size: 14px;
+  }
+  .accountActions {
+    max-width: none;
+  }
+}
+@media (max-width: 360px) {
+  .hero h1 {
+    font-size: 40px;
+  }
+  .site h2:not(.accountActions *),
+  .site h3:not(.accountActions *) {
+    font-size: 32px;
+  }
+  .smallButton {
+    padding: 11px 12px;
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site :is(a, svg) {
+    transition: none;
+  }
+  .site a:hover {
+    transform: none;
+  }
+}
