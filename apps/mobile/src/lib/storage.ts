@@ -24,8 +24,8 @@ export const STORAGE_KEYS = {
   measure: "senryo.measure.v1",
   /** Per-install id for the starter relay's rate limit (`x-senryo-device`) — not an identity. */
   device: "senryo.device.v1",
-  /** F10: the three-card risk explainer was accepted ("I understand" hold) — shown once, before the first trade. */
-  riskExplained: "senryo.risk-explained.v1",
+  /** F10: the risk explainer was accepted before the first trade — per network (`…:testnet` / `…:mainnet`). */
+  riskExplained: "senryo.risk-explained.v2",
   /** F12: the newest liquidation id the user has seen (haptic once) and dismissed (post-mortem card hidden). */
   liquidationSeen: "senryo.liquidation-seen.v1",
   liquidationDismissed: "senryo.liquidation-dismissed.v1",
@@ -63,8 +63,8 @@ export const STORAGE_KEYS = {
   pendingDelete: "senryo.pending-delete.v1",
   /** A10: show "••••" for amounts on Home, Assets and Card. */
   hideBalances: "senryo.hide-balances.v1",
-  /** Flow book C3a: the short-specific risk card was accepted (shown before the first short, after the general three). */
-  shortRiskExplained: "senryo.short-risk-explained.v1",
+  /** Flow book C3a: the short-specific risk card was accepted before the first short — per network, like the above. */
+  shortRiskExplained: "senryo.short-risk-explained.v2",
   /** B14: tokens this account hid, per network and account (server-side storage arrives with BD-5). */
   hiddenTokens: "senryo.hidden-tokens.v1",
   /** B13: saved destinations (name, address, chain, mark) per network and account, until BD-5's server copy. */

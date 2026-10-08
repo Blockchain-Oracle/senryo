@@ -265,6 +265,7 @@ for (const [who, owner] of [
   ["fresh wallet", FRESH],
 ] as const) {
   const plan = await perplOpenOperation(read, owner, {
+    chainId,
     marketId: MARKET,
     side: "long",
     notionalCNS: NOTIONAL_CNS,

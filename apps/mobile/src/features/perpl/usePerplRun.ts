@@ -2,13 +2,14 @@
  * Runs one reviewed Perpl journey (`perplOpenOperation` / `perplCloseOperation` / `perplWithdrawOperation`, D1) as ONE
  * operation: every step goes through `trace.run(sender, step, …)` under the same journal record (`operationId`,
  * `plannedActions`, `reviewedIntent`), signed by the session or — when the slide named it — by one passkey step-up
- * that signs every leg. The order step is a builder: it reads the head block right before signing (the 20-block
+ * that signs every leg; in Practice each step first tops the wallet's MON up to its budget. The order step is a builder: it reads the head block right before signing (the 20-block
  * window counts from there), and the signed bytes are checked against that window before they are broadcast, so an
  * order the user took too long to confirm is never sent to revert. A failure stops the journey and is never resent;
  * an unknown outcome blocks a new run until the journal settles it (useSendTrace).
  */
 import { authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
 import type { Sender, TxRequest } from "@senryo/chain";
+import { TESTNET_CHAIN_ID } from "@senryo/config";
 import {
   type PerplPlan,
   type PerplStep,
@@ -20,6 +21,7 @@ import {
 import { useCallback, useState, useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 import type { ConfirmLevel } from "~/features/trade/confirm-level";
+import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { stepUpSender, userSender } from "~/lib/account/sender";
 import { notify } from "~/lib/notify";
@@ -62,6 +64,7 @@ export function usePerplRun(traceKey: string) {
   const env = useQueryEnv();
   const account = useAccount();
   const trace = useSendTrace(traceKey);
+  const ensureGas = useEnsureGas();
   const [step, setStep] = useState<{ index: number; count: number; label: string }>();
   /** True from the slide until the last step returns: a finalized step with more to come is not the end. */
   const active = useSyncExternalStore(
@@ -118,6 +121,10 @@ export function usePerplRun(traceKey: string) {
             builderAction: "perplOrder",
             reviewedIntent,
             revalidate: () => op.revalidate(index),
+            // Practice: the sponsor tops the wallet's MON up to this step's budget first (as the engine ticket does).
+            ...(env.chainId === TESTNET_CHAIN_ID
+              ? { preflight: (built: TxRequest) => ensureGas.preflight(built)() }
+              : {}),
           });
           operationId = last?.operationId ?? operationId;
           if (last?.final?.stage !== "finalized") return last;
@@ -145,7 +152,7 @@ export function usePerplRun(traceKey: string) {
         }),
       );
     },
-    [account, timed, trace],
+    [account, env.chainId, ensureGas, timed, trace],
   );
 
   const run = useCallback(

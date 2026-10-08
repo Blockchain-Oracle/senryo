@@ -1,13 +1,14 @@
 import { explorerTxUrl, MAINNET_CHAIN_ID } from "@senryo/config";
-import { type Href, router } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Share, StyleSheet, View } from "react-native";
 import { TransactionSheet, useTransactionClose } from "~/components/sheet/TransactionSheet";
+import { requireRisk } from "~/features/trade/risk-gate";
 import type { EntryMode } from "~/features/trade/Ticket";
 import type { Side } from "~/features/trade/useTicket";
 import { useAccount } from "~/lib/account/provider";
-import { perplPositionRoute, perplWithdrawRoute, ROUTES } from "~/lib/constants/routes";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { perplPositionRoute, perplWithdrawRoute } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE } from "~/theme";
 import type { PerplMarketMeta } from "./market";
 import { PerplOpenOutcome } from "./PerplOutcome";
@@ -47,6 +48,7 @@ export function PerplTicketScreen({
   leverage?: number | undefined;
 }) {
   const t = usePerplTicket(meta);
+  const network = useNetwork();
   const address = useAccount().hint?.address;
   const screenReader = useScreenReader();
   const [mode, setMode] = useState<EntryMode>("keypad");
@@ -80,16 +82,13 @@ export function PerplTicketScreen({
     t.networkFeeWei ?? "",
   ].join("|");
 
+  // The explainer's accept continues the slide with the ticket as it is then (never a stale closure).
+  const submit = useRef(t.submit);
+  submit.current = t.submit;
   const confirm = () => {
     setChild(undefined);
     setNote(undefined);
-    const explained = storage.getBoolean(STORAGE_KEYS.riskExplained) ?? false;
-    const shortExplained = storage.getBoolean(STORAGE_KEYS.shortRiskExplained) ?? false;
-    if (!explained || (t.side === "short" && !shortExplained)) {
-      router.push(`${ROUTES.riskExplainer}?side=${t.side}` as Href);
-      return;
-    }
-    void t.submit();
+    requireRisk(network.key, t.side, "perpl", () => void submit.current());
   };
 
   return (

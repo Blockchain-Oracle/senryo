@@ -17,7 +17,8 @@ const ACCOUNT_KEYS = [
   STORAGE_KEYS.setup,
   STORAGE_KEYS.setupCreating,
   STORAGE_KEYS.termsAccepted,
-  STORAGE_KEYS.riskExplained,
+  "senryo.risk-explained.v1",
+  "senryo.short-risk-explained.v1",
   STORAGE_KEYS.eligibilityAccepted,
   STORAGE_KEYS.cardIntroSeen,
   STORAGE_KEYS.markets,
@@ -29,6 +30,8 @@ const ACCOUNT_KEYS = [
 ] as const;
 /** Stored once per network or account (`key:…`), so they are found by prefix. */
 const ACCOUNT_KEY_PREFIXES = [
+  STORAGE_KEYS.riskExplained,
+  STORAGE_KEYS.shortRiskExplained,
   STORAGE_KEYS.liquidationSeen,
   STORAGE_KEYS.liquidationDismissed,
   "senryo.welcome-complete:",

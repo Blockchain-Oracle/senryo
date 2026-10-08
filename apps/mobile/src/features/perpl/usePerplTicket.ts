@@ -18,7 +18,13 @@ import {
   readPerplWalletCollateral,
   type TxRequest,
 } from "@senryo/chain";
-import { type ChainId, MAINNET_CHAIN_ID, PERPL_FEE_DENOMINATOR, PERPL_SLIPPAGE_BPS } from "@senryo/config";
+import {
+  type ChainId,
+  MAINNET_CHAIN_ID,
+  PERPL_FEE_DENOMINATOR,
+  PERPL_SLIPPAGE_BPS,
+  TESTNET_CHAIN_ID,
+} from "@senryo/config";
 import { DECIMALS, formatUnits, parseUnits } from "@senryo/core";
 import {
   PERPL_TERMS_REFETCH_MS,
@@ -197,7 +203,8 @@ export function usePerplTicket(meta: PerplMarketMeta) {
                       ? { code: "size", minUsd6: ceilDiv(oneLotUsd6, BigInt(leverage)) }
                       : plan?.blocker === "wallet-short"
                         ? { code: "wallet-short", shortCNS: plan.walletShortCNS }
-                        : settledPlan && settledPlan.feeShortWei > 0n
+                        : // Practice tops the wallet's MON up before each send (usePerplRun's preflight).
+                          settledPlan && settledPlan.feeShortWei > 0n && chainId !== TESTNET_CHAIN_ID
                           ? { code: "fees", shortWei: settledPlan.feeShortWei }
                           : undefined;
 

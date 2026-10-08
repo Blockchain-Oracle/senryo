@@ -11,7 +11,7 @@ import {
   readPerplMarketTerms,
   readPerplPositions,
 } from "@senryo/chain";
-import { type ChainId, MAINNET_CHAIN_ID, PERPL_FEE_DENOMINATOR } from "@senryo/config";
+import { type ChainId, MAINNET_CHAIN_ID, PERPL_FEE_DENOMINATOR, TESTNET_CHAIN_ID } from "@senryo/config";
 import { BPS_DENOMINATOR, divRound, formatUnits } from "@senryo/core";
 import {
   PERPL_TERMS_REFETCH_MS,
@@ -113,8 +113,11 @@ export function usePerplPosition(meta: PerplMarketMeta) {
   // The plan answers for the share on screen only: a full close sends the exact size, a share rounds down to lots.
   const expectedLots = position ? (closingAll ? position.lots : (position.lots * shareBps) / BPS_DENOMINATOR) : 0n;
   const reviewed = plan.data && plan.data.plan.lots === expectedLots ? plan.data.plan : undefined;
-  /** MON missing for the close's network fee (closing never needs a passkey, but it does need MON). */
-  const feeShortWei = reviewed ? (plan.data?.feeShortWei ?? 0n) : 0n;
+  /**
+   * MON missing for the close's network fee (closing never needs a passkey, but it does need MON). Practice never
+   * blocks on it: the run tops the wallet up before the send (usePerplRun's preflight).
+   */
+  const feeShortWei = reviewed && chainId !== TESTNET_CHAIN_ID ? (plan.data?.feeShortWei ?? 0n) : 0n;
   // The quote for this share: exit bound, its fee, and the share of the Exchange's own unrealized PnL it realises.
   const lots = reviewed?.lots ?? 0n;
   const exitNotional = reviewed && terms ? perplNotional(lots, reviewed.limitPricePNS, meta) : 0n;

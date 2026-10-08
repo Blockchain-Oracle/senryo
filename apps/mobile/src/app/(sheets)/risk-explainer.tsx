@@ -1,32 +1,47 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Panel } from "~/components/kit/Surface";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { acceptRisk, generalRiskAccepted, type RiskVenue, takePendingRisk } from "~/features/trade/risk-gate";
+import { activeNetwork, type NetworkKey } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 /**
- * The risk explainer (F10 step 2, D-023; flow book C3 step 6, C3a): three facts before the first leveraged trade, and
- * a fourth before the first short — each a borderless filled card on the sheet, accepted with one slide. The general
- * three are shown once; the short card once more for the first short (`?side=short`). After accepting, the user
- * slides the order again (nothing is sent from here).
+ * The risk explainer (F10 step 2, D-023; flow book C3 step 6, C3a): what leverage, liquidation and the venue's own rules
+ * mean, before a person's first trade on THIS network, and a short card before their first short — each a borderless
+ * filled card, accepted with one slide. Opened from a ticket (`?side&venue&network`) the order continues by itself
+ * once accepted; from the Perps card it just explains (all cards). Nothing is sent from here.
  */
-const CARDS = [
-  {
-    title: "Leverage multiplies gains and losses",
-    body: "At 5× a 1% move is 5% of your margin, both ways. Settled in dollars: nothing is delivered.",
-  },
-  {
-    title: "Liquidation",
-    body: "If losses reach the maintenance level, the position closes with a 1% fee. The ticket shows the price.",
-  },
-  {
-    title: "Market hours",
-    body: "When a market is closed or its price pauses, closing still works; opening waits for the market.",
-  },
-] as const;
+const LEVERAGE = {
+  title: "Leverage multiplies gains and losses",
+  body: "You put in $100 at 5× and control $500. A 1% move is $5 — 5% of what you put in — both ways.",
+} as const;
+
+const VENUE_CARDS: Record<RiskVenue, readonly { title: string; body: string }[]> = {
+  perpl: [
+    {
+      title: "Each position has its own margin",
+      body: "If losses reach its maintenance level, Perpl closes that position. Most you can lose is the margin you put in; the rest of your money isn't touched.",
+    },
+    {
+      title: "Orders fill on Perpl's order book",
+      body: "Your order takes the best prices available, never worse than the ticket's limit. A thin book can fill only part.",
+    },
+  ],
+  engine: [
+    {
+      title: "Liquidation",
+      body: "Margin is shared across your positions. If losses reach the maintenance level, a position closes with a 1% fee. The ticket shows the price.",
+    },
+    {
+      title: "Market hours",
+      body: "When a market is closed or its price pauses, closing still works; opening waits for the market.",
+    },
+  ],
+};
 
 const SHORT_CARD = {
   title: "Short: you profit if the price falls",
@@ -44,16 +59,32 @@ export default function RiskExplainerSheet() {
 function Body() {
   const { color } = useTheme();
   const close = useSheetClose();
-  const { side } = useLocalSearchParams<{ side?: string }>();
-  // From the ticket the side is named and only what wasn't accepted yet is shown; from the Perps card, all four.
-  const fromTicket = side === "long" || side === "short";
-  const general = !fromTicket || !(storage.getBoolean(STORAGE_KEYS.riskExplained) ?? false);
-  const short = !fromTicket || side === "short";
-  const cards = [...(general ? CARDS : []), ...(short ? [SHORT_CARD] : [])];
+  const params = useLocalSearchParams<{ side?: string; venue?: string; network?: string }>();
+  const network: NetworkKey =
+    params.network === "mainnet" || params.network === "testnet" ? params.network : activeNetwork().key;
+  const venue: RiskVenue = params.venue === "engine" ? "engine" : "perpl";
+  // From a ticket the side is named and only what wasn't accepted yet is shown; from the Perps card, everything.
+  const fromTicket = params.side === "long" || params.side === "short";
+  const general = !fromTicket || !generalRiskAccepted(network);
+  const short = !fromTicket || params.side === "short";
+  const cards = [...(general ? [LEVERAGE, ...VENUE_CARDS[venue]] : []), ...(short ? [SHORT_CARD] : [])];
+  const accepted = useRef(false);
+  // Dismissed any other way than accepting: the waiting slide is dropped, never sent later.
+  useEffect(
+    () => () => {
+      if (!accepted.current) takePendingRisk();
+    },
+    [],
+  );
+  const heading = general
+    ? network === "mainnet"
+      ? "Before your first real-money trade"
+      : "Before your first trade"
+    : "Before your first short";
   return (
     <View style={styles.body}>
       <Text accessibilityRole="header" style={[TYPE.sheetHeading, styles.center, { color: color.ink }]}>
-        {general ? "Before your first trade" : "Before your first short"}
+        {heading}
       </Text>
       {cards.map((c, i) => (
         <Panel key={c.title} style={styles.card}>
@@ -65,12 +96,13 @@ function Body() {
         </Panel>
       ))}
       <SlideToConfirm
-        label="Slide to accept"
+        label={fromTicket ? "Slide to accept and place the order" : "Slide to accept"}
         tone={fromTicket && short ? "down" : "primary"}
         onConfirm={() => {
-          storage.set(STORAGE_KEYS.riskExplained, true);
-          if (short) storage.set(STORAGE_KEYS.shortRiskExplained, true);
-          close();
+          accepted.current = true;
+          acceptRisk(network, short);
+          const next = takePendingRisk();
+          close(next);
         }}
       />
       <Button label="Not now" variant="ghost" onPress={() => close()} />

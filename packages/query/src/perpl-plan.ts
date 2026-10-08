@@ -37,15 +37,11 @@ import {
 import {
   type ChainId,
   type GasAction,
-  MAINNET_CHAIN_ID,
   PERPL_MIN_DEPOSIT_CNS,
   PERPL_MIN_WITHDRAW_CNS,
   PERPL_SLIPPAGE_BPS,
 } from "@senryo/config";
 import { type Address, BPS_DENOMINATOR } from "@senryo/core";
-
-/** Backward-compatible default; native operations explicitly capture the selected deployment. */
-export const PERPL_CHAIN_ID = MAINNET_CHAIN_ID;
 
 /** Why a Perpl journey can't be sent as reviewed. */
 export type PerplBlocker =
@@ -87,7 +83,8 @@ export interface PerplOpenPlan extends PerplPlan {
 }
 
 export interface PerplOpenInput {
-  chainId?: ChainId | undefined;
+  /** The deployment the order is reviewed for — always explicit (Perpl market ids differ per network). */
+  chainId: ChainId;
   marketId: number;
   side: PerplSide;
   /** Exposure in AUSD base units; sized to whole lots at the limit price (rounded down). */
@@ -112,7 +109,7 @@ export async function perplOpenOperation(
   owner: Address,
   input: PerplOpenInput,
 ): Promise<PerplOpenPlan> {
-  const chainId = input.chainId ?? PERPL_CHAIN_ID;
+  const chainId = input.chainId;
   const slippageBps = input.slippageBps ?? PERPL_SLIPPAGE_BPS;
   const [terms, exchange, account, wallet] = await Promise.all([
     readPerplMarketTerms(read, chainId, input.marketId),
@@ -206,13 +203,13 @@ export async function perplCloseOperation(
   read: ReadClient,
   owner: Address,
   input: {
-    chainId?: ChainId | undefined;
+    chainId: ChainId;
     marketId: number;
     shareBps?: bigint | undefined;
     slippageBps?: bigint | undefined;
   },
 ): Promise<PerplClosePlan> {
-  const chainId = input.chainId ?? PERPL_CHAIN_ID;
+  const chainId = input.chainId;
   const slippageBps = input.slippageBps ?? PERPL_SLIPPAGE_BPS;
   const shareBps = input.shareBps ?? BPS_DENOMINATOR;
   const [terms, account] = await Promise.all([
@@ -260,7 +257,7 @@ export async function perplWithdrawOperation(
   read: ReadClient,
   owner: Address,
   amountCNS: bigint,
-  chainId: ChainId = PERPL_CHAIN_ID,
+  chainId: ChainId,
 ): Promise<PerplPlan> {
   const account = await readPerplAccount(read, chainId, owner);
   const reviewedIntent = { venue: "perpl", intent: "withdraw", withdraw: amountCNS.toString() };

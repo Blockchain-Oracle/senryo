@@ -248,6 +248,7 @@ expect(
 
 // ---------------------------------------------------------------- 4. the planner, existing account
 const plan = await perplOpenOperation(read, HOLDER, {
+  chainId,
   marketId: BTC,
   side: "long",
   notionalCNS: MARGIN * 2n,

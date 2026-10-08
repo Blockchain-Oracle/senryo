@@ -1,11 +1,11 @@
 import { journalItem, readOperation, subscribeOperations } from "@senryo/query";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { SheetRoute } from "~/components/sheet/SheetRoute";
 import { LoadingState } from "~/components/kit/states";
-import { useIndexedReceipt } from "~/features/activity/useIndexedReceipt";
+import { SheetRoute } from "~/components/sheet/SheetRoute";
 import { FEED_FORMAT } from "~/features/activity/feed-format";
 import { ReceiptBody } from "~/features/activity/Receipt";
+import { useIndexedReceipt } from "~/features/activity/useIndexedReceipt";
 import { QuietLine } from "~/features/portfolio/QuietLine";
 import { useAccount } from "~/lib/account/provider";
 import { useNetwork } from "~/lib/network";
@@ -33,7 +33,11 @@ export default function ReceiptSheet() {
         <LoadingState shape="list" label="Loading transaction" />
       ) : (
         <QuietLine {...(indexed.isError ? { action: { label: "Retry", onPress: () => void indexed.refetch() } } : {})}>
-          {event ? indexed.isError ? "Couldn’t load this transaction" : "Transaction unavailable for this account" : "Not on this phone"}
+          {event
+            ? indexed.isError
+              ? "Couldn’t load this transaction"
+              : "Transaction unavailable for this account"
+            : "Not on this phone"}
         </QuietLine>
       )}
     </SheetRoute>

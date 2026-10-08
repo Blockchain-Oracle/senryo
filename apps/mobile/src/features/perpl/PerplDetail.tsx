@@ -63,9 +63,8 @@ export function PerplDetail({ meta }: { meta: PerplMarketMeta }) {
   const [why, setWhy] = useState(false);
   const candles = useDiscoveryCandles(id, periodOf(period).interval, !DEV_WORKSPACE);
   const known = quote.status === "fresh" || quote.status === "stale" ? quote.value : undefined;
-  const mainnet = access.state === "trade" || access.word !== "Mainnet";
-  const tabs = mainnet ? TABS : TABS.filter((t) => t.value === "about");
-  const shown = mainnet ? tab : "about";
+  const tabs = TABS;
+  const shown = tab;
   const banner = halted ? (
     <Wash tone="down" text="Perpl paused · closing may wait" />
   ) : terms?.paused ? (
@@ -140,7 +139,7 @@ export function PerplDetail({ meta }: { meta: PerplMarketMeta }) {
           }
         />
         <View style={styles.links}>
-          {mainnet ? <PerplHeldRow meta={meta} /> : null}
+          <PerplHeldRow meta={meta} />
           <PerplOwnRow meta={meta} />
         </View>
         <View style={styles.tabs}>

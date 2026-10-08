@@ -1,7 +1,7 @@
 import { engineMarket } from "@senryo/config";
 import { useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { type Href, router } from "expo-router";
+import { router } from "expo-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { EmptyState, ErrorState, LoadingState } from "~/components/kit/states";
@@ -15,12 +15,12 @@ import { PrelaunchMainnet } from "~/features/network/PrelaunchMainnet";
 import { perplMarketBySymbol } from "~/features/perpl/market";
 import { PerplTicketScreen } from "~/features/perpl/PerplTicketScreen";
 import { useAccount } from "~/lib/account/provider";
-import { positionRoute, ROUTES } from "~/lib/constants/routes";
+import { positionRoute } from "~/lib/constants/routes";
 import { useNetwork, useReadOnlyNetwork } from "~/lib/network";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE } from "~/theme";
 import { ProtectAfterOpen } from "./ProtectAfterOpen";
 import { planKey } from "./planned-triggers";
+import { requireRisk } from "./risk-gate";
 import { useSettledOutcome } from "./send-outcome";
 import { type EntryMode, type TicketChild, TicketEntry } from "./Ticket";
 import { CandleSettings, LiquidationInfo, TicketDetails } from "./TicketChildren";
@@ -161,15 +161,7 @@ function TicketBody({
     line.market.tickStale ? "paused" : "live",
   ].join("|");
 
-  const confirm = () => {
-    setChild(undefined);
-    setNote(undefined);
-    const explained = storage.getBoolean(STORAGE_KEYS.riskExplained) ?? false;
-    const shortExplained = storage.getBoolean(STORAGE_KEYS.shortRiskExplained) ?? false;
-    if (!explained || (t.side === "short" && !shortExplained)) {
-      router.push(`${ROUTES.riskExplainer}?side=${t.side}` as Href);
-      return;
-    }
+  const place = () => {
     if (t.preview) {
       setOrder({
         network: network.key,
@@ -189,6 +181,14 @@ function TicketBody({
     }
     if (commit.retryGas) t.resetGas();
     void t.submit();
+  };
+  // The explainer's accept continues the slide with the ticket as it is then (never a stale closure).
+  const placeLatest = useRef(place);
+  placeLatest.current = place;
+  const confirm = () => {
+    setChild(undefined);
+    setNote(undefined);
+    requireRisk(network.key, t.side, "engine", () => placeLatest.current());
   };
 
   return (
