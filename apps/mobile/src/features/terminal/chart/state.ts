@@ -1,0 +1,138 @@
+/**
+ * The chart's per-frame state, as plain data the UI thread mutates (worklets carry no classes): the 600-sample ring of
+ * eased prices, the rolling-digit slots of the pill (Owarine `canvas-odometer.ts`), and the parallax dot field's drift
+ * (`dot-grid.ts`). `advance` runs once per display frame inside `useFrameCallback`; nothing here touches React.
+ */
+import { emptyOdometer, type Odometer, stepOdometer } from "~/components/kit/odometer";
+import { easeFor, PRICE_EASE, SAMPLE_CAPACITY, SAMPLE_MS, stepFor } from "./engine";
+
+/** At most this many samples catch up in one frame (a stalled frame never smears the line). */
+const MAX_SAMPLES_PER_FRAME = 8;
+const MAX_FRAME_MS = 250;
+const SETTLE_FRACTION = 1e-7;
+/** Dot field (Tradash `DotGrid`): 34 px spacing, half the line's scroll, drift by price velocity in grid steps. */
+export const DOT_SPACING = 34;
+const DRIFT_GAIN = 4;
+const DRIFT_CLAMP = 6;
+const DRIFT_EASE = 0.06;
+const DRIFT_WRAP = 1000;
+const DOT_SCROLL = 0.5;
+
+export interface ChartState {
+  ready: boolean;
+  ring: number[];
+  start: number;
+  size: number;
+  target: number;
+  latest: number;
+  eased: number;
+  step: number;
+  sampleDebt: number;
+  lastFrame: number;
+  /** The last tick taken from `incoming` (its sequence number). */
+  seenSeq: number;
+  velocitySteps: number;
+  price: Odometer;
+  pnl: Odometer;
+  dotX: number;
+  dotY: number;
+  dotTargetY: number;
+}
+
+export function createChartState(): ChartState {
+  return {
+    ready: false,
+    ring: new Array<number>(SAMPLE_CAPACITY).fill(0),
+    start: 0,
+    size: 0,
+    target: 0,
+    latest: 0,
+    eased: 0,
+    step: 0,
+    sampleDebt: 0,
+    lastFrame: 0,
+    seenSeq: 0,
+    velocitySteps: 0,
+    price: emptyOdometer(),
+    pnl: emptyOdometer(),
+    dotX: 0,
+    dotY: 0,
+    dotTargetY: 0,
+  };
+}
+
+export function ringAt(s: ChartState, i: number): number {
+  "worklet";
+  return s.ring[(s.start + i) % SAMPLE_CAPACITY] ?? 0;
+}
+
+function ringPush(s: ChartState, v: number): void {
+  "worklet";
+  if (s.size < SAMPLE_CAPACITY) {
+    s.ring[(s.start + s.size) % SAMPLE_CAPACITY] = v;
+    s.size += 1;
+  } else {
+    s.ring[s.start] = v;
+    s.start = (s.start + 1) % SAMPLE_CAPACITY;
+  }
+}
+
+/** A tick. The first one seeds a flat line at it (the chart grows movement from the right). */
+export function takePrice(s: ChartState, price: number): void {
+  "worklet";
+  if (!(price > 0) || !Number.isFinite(price)) return;
+  s.latest = price;
+  if (!s.ready) {
+    s.ready = true;
+    s.target = price;
+    s.eased = price;
+    s.step = stepFor(price);
+    for (let i = 0; i < SAMPLE_CAPACITY; i += 1) s.ring[i] = price;
+    s.start = 0;
+    s.size = SAMPLE_CAPACITY;
+    return;
+  }
+  s.target = price;
+}
+
+/** A new market: forget the line, the scale and the digits. */
+export function resetChart(s: ChartState): void {
+  "worklet";
+  s.ready = false;
+  s.start = 0;
+  s.size = 0;
+  s.step = 0;
+  s.price = emptyOdometer();
+  s.pnl = emptyOdometer();
+}
+
+/**
+ * One display frame: ease and sample on the fixed 60 Hz clock, roll the digits, and move the dots — left at half the
+ * line's speed per sample pushed (so a 120 Hz screen doesn't double it), and up or down with the price's velocity.
+ */
+export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: number): void {
+  "worklet";
+  const dt = s.lastFrame === 0 ? SAMPLE_MS : Math.min(MAX_FRAME_MS, nowMs - s.lastFrame);
+  s.lastFrame = nowMs;
+  if (!s.ready) return;
+  const before = s.eased;
+  s.sampleDebt += dt / SAMPLE_MS;
+  let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(s.sampleDebt));
+  const pushed = pushes;
+  s.sampleDebt -= Math.floor(s.sampleDebt);
+  const k = reduced ? 1 : easeFor(PRICE_EASE, SAMPLE_MS);
+  while (pushes > 0) {
+    const d = s.target - s.eased;
+    s.eased = Math.abs(d) < SETTLE_FRACTION * Math.abs(s.eased) ? s.target : s.eased + d * k;
+    ringPush(s, s.eased);
+    pushes -= 1;
+  }
+  stepOdometer(s.price, dt);
+  stepOdometer(s.pnl, dt);
+  s.velocitySteps = s.step > 0 ? (s.eased - before) / s.step : 0;
+  if (reduced) return;
+  s.dotX = (s.dotX - (DOT_SCROLL * pushed * plotW) / (SAMPLE_CAPACITY - 1)) % DOT_SPACING;
+  s.dotTargetY += Math.max(-DRIFT_CLAMP, Math.min(DRIFT_CLAMP, DRIFT_GAIN * s.velocitySteps * DOT_SPACING));
+  s.dotTargetY %= DOT_SPACING * DRIFT_WRAP;
+  s.dotY += (s.dotTargetY - s.dotY) * DRIFT_EASE;
+}

@@ -7,7 +7,6 @@ import { AmountHero } from "~/components/kit/AmountHero";
 import { Button } from "~/components/kit/Button";
 import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { EmptyState } from "~/components/kit/states";
-import { ContextTabs } from "~/components/shell/ContextTabs";
 import { useDockInset } from "~/components/shell/dock-context";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
 import { NotificationsBell } from "~/features/notifications/NotificationsBell";
@@ -44,7 +43,6 @@ export default function Home() {
           <NotificationsBell />
         </View>
       </View>
-      <ContextTabs />
       <ScrollView
         refreshControl={refresh}
         contentContainerStyle={[styles.content, { paddingBottom: bottom }]}

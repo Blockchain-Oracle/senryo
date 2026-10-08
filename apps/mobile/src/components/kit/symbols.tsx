@@ -163,6 +163,14 @@ export const TriangleAlert = symbol({ ios: "exclamationmark.triangle", android: 
 export const WifiOff = symbol({ ios: "wifi.slash", android: "wifi_off" }, "WifiOff");
 export const Snowflake = symbol({ ios: "snowflake", android: "ac_unit" }, "Snowflake");
 export const Wallet = symbol({ ios: "wallet.pass", android: "account_balance_wallet" }, "Wallet");
+export const Receipt = symbol(
+  { ios: "list.bullet.rectangle.portrait", iosFilled: "list.bullet.rectangle.portrait.fill", android: "receipt_long" },
+  "Receipt",
+);
+export const LayoutGrid = symbol(
+  { ios: "square.grid.2x2", iosFilled: "square.grid.2x2.fill", android: "grid_view" },
+  "LayoutGrid",
+);
 // Merchant categories (card payments).
 export const Food = symbol({ ios: "fork.knife", android: "restaurant" }, "Food");
 export const Groceries = symbol({ ios: "cart", android: "shopping_cart" }, "Groceries");

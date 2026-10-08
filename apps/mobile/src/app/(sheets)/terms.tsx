@@ -9,6 +9,7 @@ import { AgreeRow } from "~/features/legal/AgreeRow";
 import { acknowledgeTerms } from "~/features/legal/acknowledged";
 import { InfoTip } from "~/features/setup/InfoTip";
 import { completeSetupStep } from "~/features/setup/progress";
+import { goToSetupStep } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { useTermsRequest } from "~/lib/account/terms-gate";
@@ -23,14 +24,14 @@ const POINTS: readonly { title: string; detail: string; icon: SymbolIcon }[] = [
     icon: KeyRound,
   },
   {
-    title: "Leverage can lose it all",
+    title: "A call can lose its whole stake",
     detail:
-      "Leverage multiplies losses as well as gains. A position can be liquidated and you can lose what you put in.",
+      "If the price closes on the wrong side of the line, the stake goes to the pool. Cash out before then to keep part of it.",
     icon: TriangleAlert,
   },
   {
-    title: "Practice money has no value",
-    detail: "Practice uses paper money on a test network. Real money starts only when you switch to Mainnet.",
+    title: "Practice dollars have no value",
+    detail: "Practice uses test dollars on a test network. Real money starts only when you switch to Real.",
     icon: Coins,
   },
 ];
@@ -69,9 +70,13 @@ function Body({ owed, settle }: { owed: boolean; settle: ((agreed: boolean) => v
     if (!address) return;
     settled.current = true;
     acknowledgeTerms(address);
-    if (owed) completeSetupStep(address, "terms");
+    const following = owed ? completeSetupStep(address, "terms") : undefined;
     fire("confirm");
-    close(() => settle?.(true));
+    close(() => {
+      settle?.(true);
+      // The first run moves on to its next page (test dollars) the moment the terms are agreed.
+      if (owed) goToSetupStep(following);
+    });
   };
   return (
     <>

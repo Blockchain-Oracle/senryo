@@ -5,4 +5,5 @@ export * from "./gas.ts";
 export * from "./hosts.ts";
 export * from "./legal.ts";
 export * from "./money.ts";
+export * from "./nav.ts";
 export * from "./networks.ts";

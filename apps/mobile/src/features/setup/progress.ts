@@ -8,7 +8,14 @@
 import type { Address } from "@senryo/account";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
-import { decodeSetupRecord, modernSetupAccount, nextSetupStep, SETUP_STEPS, type SetupStep } from "./setup-order";
+import {
+  decodeSetupRecord,
+  modernSetupAccount,
+  nextSetupStep,
+  RETIRED_STEPS,
+  SETUP_STEPS,
+  type SetupStep,
+} from "./setup-order";
 
 export { SETUP_STEPS, type SetupStep } from "./setup-order";
 
@@ -22,7 +29,8 @@ function write(address: Address, value: SetupStep | "finished") {
 
 /** A stored step this build no longer has (an older order) restarts from the first one rather than a dead route. */
 function known(at: string): SetupStep {
-  return (SETUP_STEPS as readonly string[]).includes(at) ? (at as SetupStep) : SETUP_STEPS[0];
+  if ((SETUP_STEPS as readonly string[]).includes(at)) return at as SetupStep;
+  return RETIRED_STEPS[at] ?? SETUP_STEPS[0];
 }
 
 /** True when some account on this device left its setup unfinished (a synchronous read for the launch gate). */

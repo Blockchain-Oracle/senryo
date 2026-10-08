@@ -18,7 +18,7 @@ export function inAppPath(base: string): string {
 const LEGACY_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) => string]> = [
   [/^\/(portfolio|fund|card|lp|orders|positions|withdraw|activity)(\/.*)?$/, () => ROUTES.home],
   [/^\/(trade|social|watch)(\/.*)?$/, () => ROUTES.markets],
-  [/^\/account\/?$/, () => ROUTES.you],
+  [/^\/account\/?$/, () => ROUTES.more],
 ];
 
 /**

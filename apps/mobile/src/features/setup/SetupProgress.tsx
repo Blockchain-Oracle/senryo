@@ -11,7 +11,7 @@ import { EASE, RADIUS, SIZE, TIMING, useTheme } from "~/theme";
 import type { SetupStep } from "./progress";
 
 /** The pages the bar counts; `done` and the terms sheet sit after it. */
-const COUNTED: readonly SetupStep[] = ["handle", "follow", "money", "face-id", "notifications"];
+const COUNTED: readonly SetupStep[] = ["handle", "dollars", "first-call", "one-tap", "notifications"];
 const TRACK_HEIGHT = 3;
 const PERCENT = 100;
 

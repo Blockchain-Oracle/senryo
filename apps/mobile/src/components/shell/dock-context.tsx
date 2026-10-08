@@ -1,16 +1,10 @@
-import { useFocusEffect, usePathname } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import { useMMKVString } from "react-native-mmkv";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { DOCK, dockBottom, SPACE } from "~/theme";
 
-/** Route context and transactional visibility; content always clears the dock footprint. */
-export type ShellContext = "money" | "trade";
-
+/** The dock's transactional visibility; content always clears the dock footprint. */
 interface DockState {
-  context: ShellContext;
-  setContext: (context: ShellContext) => void;
   hidden: boolean;
   hide: (key: string) => void;
   show: (key: string) => void;
@@ -31,19 +25,13 @@ export function DockProvider({ children }: { children: ReactNode }) {
       }),
     [],
   );
-  const [stored, setContext] = useMMKVString(STORAGE_KEYS.shellContext, storage);
-  const pathname = usePathname();
-  const remembered: ShellContext = stored === "trade" ? stored : "money";
-  const context: ShellContext = pathname.startsWith("/markets") ? "trade" : pathname === "/home" ? "money" : remembered;
   const hidden = holders.size > 0;
-  const value = useMemo(() => ({ hidden, hide, show, context, setContext }), [hidden, hide, show, context, setContext]);
+  const value = useMemo(() => ({ hidden, hide, show }), [hidden, hide, show]);
   return <DockContext.Provider value={value}>{children}</DockContext.Provider>;
 }
 
 /** Outside the tab shell (root pages, sheets) there is no dock: a no-op state that is never hidden. */
 const NO_DOCK: DockState = {
-  context: "money",
-  setContext: () => undefined,
   hidden: false,
   hide: () => undefined,
   show: () => undefined,

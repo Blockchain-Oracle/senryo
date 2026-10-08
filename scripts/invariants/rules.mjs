@@ -17,6 +17,7 @@ import {
   fileLength,
   indexerIsolated,
   mobileTightLeading,
+  navRouteCoverage,
   noSecretsInTree,
   noUiTests,
   pnpmOnly,
@@ -204,6 +205,11 @@ export const rules = [
     id: "address-drift",
     description: "deployed addresses agree between contracts export and indexer",
     check: addressDrift,
+  },
+  {
+    id: "nav-route-coverage",
+    description: "every shared navigation path resolves to a phone route (D-268)",
+    check: navRouteCoverage,
   },
   {
     id: "indexer-reads-chain-filter",

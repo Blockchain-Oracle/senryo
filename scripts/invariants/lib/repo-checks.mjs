@@ -206,3 +206,31 @@ export function easignoreCoversGitignore(rule, ctx) {
     .map((line) => finding(rule, `.gitignore rule "${line}" is missing from .easignore`, ".easignore"));
   return { findings };
 }
+
+/**
+ * D-268: every path the shared navigation (`packages/config/src/nav.ts`) lists resolves to a phone route — expo-router
+ * strips `(group)` segments and a trailing `index`; `_layout`/`+` files are not routes.
+ */
+export function navRouteCoverage(rule, ctx) {
+  const navFile = join(ctx.root, "packages/config/src/nav.ts");
+  const appDir = "apps/mobile/src/app";
+  if (!existsSync(navFile) || !existsSync(join(ctx.root, appDir)))
+    return { findings: [], skipped: "no nav source yet" };
+  const routes = new Set();
+  for (const { rel } of walkFiles(ctx.root, appDir, [".tsx", ".ts"])) {
+    const segments = rel
+      .slice(appDir.length + 1)
+      .replace(/\.tsx?$/, "")
+      .split("/");
+    const last = segments.at(-1) ?? "";
+    if (last.startsWith("_") || last.startsWith("+")) continue;
+    const kept = segments.filter((s) => !/^\(.*\)$/.test(s));
+    if (kept.at(-1) === "index") kept.pop();
+    routes.add(`/${kept.join("/")}`);
+  }
+  const findings = [];
+  for (const [, path] of readText(navFile).matchAll(/path:\s*"(\/[^"]*)"/g))
+    if (!routes.has(path))
+      findings.push(finding(rule, `nav path ${path} has no route in ${appDir}`, "packages/config/src/nav.ts"));
+  return { findings };
+}

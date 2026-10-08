@@ -29,5 +29,7 @@ const code = await run(["start"], (line) => {
   if (line.includes(REFUSED)) refused = true;
 });
 if (!refused) process.exit(code);
-console.log(JSON.stringify({ msg: "schema or config changed incompatibly — re-indexing from the start block" }));
+process.stdout.write(
+  `${JSON.stringify({ msg: "schema or config changed incompatibly — re-indexing from the start block" })}\n`,
+);
 process.exit(await run(["start", "-r"], () => {}));

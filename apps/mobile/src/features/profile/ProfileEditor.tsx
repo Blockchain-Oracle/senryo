@@ -97,7 +97,7 @@ export function ProfileEditor({
       onSuccess: () => {
         fire("confirm");
         if (router.canGoBack()) router.back();
-        else router.replace(ROUTES.you);
+        else router.replace(ROUTES.more);
       },
       onError: (error) => {
         const refused = saveRefusal(error, update.handle !== undefined);

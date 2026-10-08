@@ -1,27 +1,37 @@
-import { router } from "expo-router";
+import { MORE_NAV, type NavIcon } from "@senryo/config";
+import { type Href, router } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { Settings } from "~/components/kit/symbols";
+import { Bell, CircleUserRound, QrCode, Settings, Signal, type SymbolIcon } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { CompactAvatar, ProfileHeader } from "~/features/profile/ProfileHeader";
 import { QuietState } from "~/features/profile/QuietState";
+import { SettingsRow } from "~/features/profile/SettingsRow";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
+const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
+  profile: CircleUserRound,
+  receive: QrCode,
+  notifications: Bell,
+  settings: Settings,
+  status: Signal,
+};
+
 /**
- * The own profile (F2; Fomo F16): Settings in the bar; the person — avatar (edit), name, @handle,
- * bio. Calls, stats and the leaderboard place return with S5/S8 (D-256). A guest gets the tab's title and one way in.
+ * More (D-268): the person on top — avatar (edit), name, @handle, bio — then every destination the dock doesn't hold,
+ * from the shared navigation source. A guest gets the title and one way in.
  */
-export default function You() {
+export default function More() {
   const account = useAccount();
   const { color } = useTheme();
   const guest = account.ready && !account.hint;
   const address = account.hint?.address;
   return (
     <CollapsingScreen
-      left={guest ? <TabTitle>Profile</TabTitle> : null}
+      left={guest ? <TabTitle>More</TabTitle> : null}
       compact={
         guest ? undefined : (
           <View style={styles.compact}>
@@ -48,6 +58,16 @@ export default function You() {
       {address ? (
         <View style={styles.page}>
           <ProfileHeader />
+          <View>
+            {MORE_NAV.map((item) => (
+              <SettingsRow
+                key={item.key}
+                title={item.label}
+                {...(GLYPH[item.icon] ? { icon: GLYPH[item.icon] } : {})}
+                onPress={() => router.push(item.path as Href)}
+              />
+            ))}
+          </View>
         </View>
       ) : null}
     </CollapsingScreen>

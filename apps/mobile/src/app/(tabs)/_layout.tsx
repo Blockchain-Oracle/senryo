@@ -1,21 +1,20 @@
+import { DOCK_NAV } from "@senryo/config";
+import type { Href } from "expo-router";
 import { TabList, TabSlot, Tabs, TabTrigger } from "expo-router/ui";
 import { StyleSheet, View } from "react-native";
-import { TAB_HREF, TABS } from "~/components/shell/constants";
 import { Dock } from "~/components/shell/Dock";
 import { DockProvider } from "~/components/shell/dock-context";
 import { useTheme } from "~/theme";
 
-/** Three visible contexts over five retained stacks. Visited routes keep their scroll and history.
- * Money operations now use a contextual method sheet; no competing fan remains.
- */
+/** The five dock destinations, each a retained stack (D-193): visited routes keep their scroll and history. */
 export default function TabsLayout() {
   return (
     <DockProvider>
       <Tabs>
         <Shell />
         <TabList style={styles.hidden}>
-          {TABS.map((tab) => (
-            <TabTrigger key={tab} name={tab} href={TAB_HREF[tab]} />
+          {DOCK_NAV.map((tab) => (
+            <TabTrigger key={tab.key} name={tab.key} href={tab.path as Href} />
           ))}
         </TabList>
       </Tabs>

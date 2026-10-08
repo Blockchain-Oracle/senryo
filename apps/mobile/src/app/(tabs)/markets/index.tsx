@@ -1,7 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmptyState } from "~/components/kit/states";
-import { ContextTabs } from "~/components/shell/ContextTabs";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 /**
@@ -13,7 +12,6 @@ export default function Markets() {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.fill, { backgroundColor: color.ground, paddingTop: insets.top }]}>
-      <ContextTabs />
       <View style={styles.content}>
         <EmptyState why="Live markets are on their way" detail="BTC, ETH, SOL, MON, TSLA, NVDA and more." />
       </View>

@@ -7,6 +7,13 @@ import { useCallback, useRef } from "react";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES, setupRoute } from "~/lib/constants/routes";
 import { completeSetupStep, type SetupStep } from "./progress";
+import { OVER_HOME } from "./setup-order";
+
+/** After a step completes: its successor's page, or Home (where the over-Home steps appear, and setup ends). */
+export function goToSetupStep(following: SetupStep | undefined): void {
+  if (following && !OVER_HOME.includes(following)) router.push(setupRoute(following) as Href);
+  else router.replace(ROUTES.home);
+}
 
 export function useSetupNav(step: SetupStep) {
   const address = useAccount().hint?.address;
@@ -24,9 +31,7 @@ export function useSetupNav(step: SetupStep) {
   const next = useCallback(() => {
     if (!address || owner.current !== address || advanced.current) return;
     advanced.current = true;
-    const following = address ? completeSetupStep(address, step) : undefined;
-    if (following && following !== "terms" && following !== "face-id") router.push(setupRoute(following) as Href);
-    else router.replace(ROUTES.home);
+    goToSetupStep(address ? completeSetupStep(address, step) : undefined);
   }, [address, step]);
   const back = useCallback(() => router.back(), []);
   return { next, back, address };

@@ -11,7 +11,6 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { HAIRLINE_PX, HEADER_COLLAPSE_DISTANCE, SIZE, SPACE, useTheme } from "~/theme";
-import { ContextTabs } from "./ContextTabs";
 import { HEADER_COMPACT_FROM, HEADER_EXPANDED_UNTIL, SCROLL_THROTTLE_MS } from "./constants";
 import { useDockInset } from "./dock-context";
 import { ModeCapsule } from "./ModeCapsule";
@@ -84,7 +83,6 @@ export function CollapsingScreen({
           {utilities}
           <ModeCapsule />
         </View>
-        <ContextTabs />
         {status ? <View style={styles.status}>{status}</View> : null}
         <Animated.View style={[styles.rule, { backgroundColor: color.hairline }, rule]} />
       </View>

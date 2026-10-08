@@ -1,7 +1,27 @@
-/** Persisted legacy accounts retain their remaining order; new accounts accept terms before permissions. */
-export const SETUP_STEPS = ["handle", "follow", "money", "terms", "face-id", "notifications", "done"] as const;
+/**
+ * The first run (pivot plan "Onboarding", S5.7): passkey → handle → terms (over Home) → test dollars (granted on
+ * arrival) → the first call in the live terminal → one-tap calls → notifications → Face ID unlock (over Home). The
+ * first call is the celebration; there is no separate "done" page. Older accounts mid-setup keep terms last.
+ */
+export const SETUP_STEPS = ["handle", "terms", "dollars", "first-call", "one-tap", "notifications", "face-id"] as const;
 export type SetupStep = (typeof SETUP_STEPS)[number];
-const LEGACY_STEPS: readonly SetupStep[] = ["handle", "follow", "money", "face-id", "notifications", "done", "terms"];
+const LEGACY_STEPS: readonly SetupStep[] = [
+  "handle",
+  "dollars",
+  "first-call",
+  "one-tap",
+  "notifications",
+  "face-id",
+  "terms",
+];
+/** Steps shown over Home rather than as a setup page. */
+export const OVER_HOME: readonly SetupStep[] = ["terms", "face-id"];
+/** Steps an older build stored that this order replaced: they resume at the step that took their place. */
+export const RETIRED_STEPS: Readonly<Record<string, SetupStep>> = {
+  follow: "dollars",
+  money: "dollars",
+  done: "face-id",
+};
 
 /** A repeated/stale callback cannot advance another step, including after completion. */
 export function nextSetupStep(

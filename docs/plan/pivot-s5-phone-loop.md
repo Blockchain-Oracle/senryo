@@ -34,7 +34,7 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
       first call's allowance; the account policy allows exactly these typed-data shapes
 
 ### Shell and cleanup
-- [ ] S5.6 `packages/config/src/nav.ts` (pure data, `iconKey`): dock Home · Markets · [seal = Trade] · Calls · More; the
+- [x] S5.6 `packages/config/src/nav.ts` (pure data, `iconKey`): dock Home · Markets · [seal = Trade] · Calls · More; the
       More grid; route-coverage check
 - [ ] S5.7 Setup order: passkey → handle → terms → test dollars (auto, with sound) → first call → one-tap → notifications;
       fix the broken `follow`/`money` steps; new story copy and art for the six scenes

@@ -3,6 +3,7 @@ import {
   decodeSetupRecord,
   modernSetupAccount,
   nextSetupStep,
+  RETIRED_STEPS,
   type SetupStep,
 } from "../../../apps/mobile/src/features/setup/setup-order.ts";
 
@@ -22,8 +23,12 @@ function walkthrough(expected: readonly SetupStep[], modern: boolean) {
     "finished accounts cannot restart from a late callback",
   );
 }
-walkthrough(["handle", "follow", "money", "terms", "face-id", "notifications", "done"], true);
-walkthrough(["handle", "follow", "money", "face-id", "notifications", "done", "terms"], false);
+walkthrough(["handle", "terms", "dollars", "first-call", "one-tap", "notifications", "face-id"], true);
+walkthrough(["handle", "dollars", "first-call", "one-tap", "notifications", "face-id", "terms"], false);
+// Steps an older build stored resume at what replaced them, never at a dead route.
+assert.equal(RETIRED_STEPS.follow, "dollars");
+assert.equal(RETIRED_STEPS.money, "dollars");
+assert.equal(RETIRED_STEPS.done, "face-id");
 assert.equal(
   nextSetupStep("notifications", "terms", true),
   "notifications",
@@ -42,5 +47,5 @@ for (const malformed of [undefined, "null", "[]", "42", "{bad"]) {
   assert.equal(modernSetupAccount(malformed, "0xabc"), false);
 }
 console.log(
-  "Setup migration checks passed: new and legacy order, account isolation, duplicate/stale callbacks, completion and malformed storage.",
+  "Setup migration checks passed: new and legacy order, retired steps, account isolation, duplicate/stale callbacks, completion and malformed storage.",
 );

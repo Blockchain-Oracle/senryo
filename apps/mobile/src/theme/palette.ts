@@ -76,3 +76,6 @@ function roles(t: TokenPalette, nestedFill: string) {
 export type Palette = ReturnType<typeof roles>;
 export const DARK: Palette = roles(DARK_TOKENS, DARK_TOKENS.rowPressed);
 export const LIGHT: Palette = roles(LIGHT_TOKENS, LIGHT_TOKENS.card);
+
+/** The live chart erases the left of its line with this gradient (only alpha matters: destination-out). */
+export const CHART_ERASER = { solid: "rgba(0,0,0,1)", mid: "rgba(0,0,0,0.55)", clear: "rgba(0,0,0,0)" } as const;

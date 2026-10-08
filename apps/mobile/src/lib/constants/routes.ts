@@ -10,7 +10,7 @@ export const ROUTES = {
   welcome: "/welcome",
   home: "/home",
   markets: "/markets",
-  you: "/you",
+  more: "/more",
   /** Compatibility: `/account` is the You tab. */
   account: "/account",
   accountSettings: "/account/settings",
@@ -37,7 +37,7 @@ export const ROUTES = {
   session: "/session",
   accountRequired: "/account-required",
   /** Where a profile's listing and handle are edited. */
-  profileSettings: "/you",
+  profileSettings: "/more",
   /** G1: the inbox (bell). */
   notifications: "/notifications",
   /** A11: the terms sheet — setup's last step over Home, and the gate before the first money action. */
