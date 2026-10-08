@@ -6,7 +6,7 @@
 import type { IntentStatus } from "@senryo/api-client";
 import { formatUnits } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
-import { useIntentStatus } from "@senryo/query";
+import { useIntentStatus, useRefreshCaller } from "@senryo/query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -71,8 +71,10 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
 
   // A call settles into a result: filled (sound and haptic), refused or failed (said plainly).
   const status: IntentStatus | null = "value" in intent ? intent.value : null;
+  const refresh = useRefreshCaller(t.owner);
   useEffect(() => {
     if (!status || !SETTLED.has(status.state)) return;
+    refresh();
     if (status.state === "filled") {
       fire("filled", { cue: pendingRef.current?.kind === "close" ? "close" : "open" });
       onFilled?.();
@@ -85,7 +87,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       });
     }
     setPending(null);
-  }, [status, onFilled]);
+  }, [status, onFilled, refresh]);
 
   const stale = live.prices.isStale(t.symbol, Date.now());
   const holding = t.position !== undefined && t.position.state !== "committed";

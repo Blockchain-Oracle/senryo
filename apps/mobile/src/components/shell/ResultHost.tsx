@@ -1,5 +1,5 @@
 import { formatUnits } from "@senryo/core";
-import { useTickets } from "@senryo/query";
+import { useRefreshCaller, useTickets } from "@senryo/query";
 import { useEffect, useRef } from "react";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
@@ -9,6 +9,12 @@ const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const SECONDS_PER_MINUTE = 60;
 const FINAL = new Set(["settled", "refunded"]);
+const OPEN = new Set(["committed", "open", "closing"]);
+const MS = 1_000;
+/** Settlement posts about 4 s after a window closes; look then, and once more in case the keeper ran late. */
+const SETTLE_LOOK_MS = 5_000;
+const SETTLE_RELOOK_MS = 12_000;
+const SETTLE_LOOKS_MS = [SETTLE_LOOK_MS, SETTLE_RELOOK_MS] as const;
 
 const usd = (v: bigint) => `$${formatUnits(v < 0n ? -v : v, DOLLAR_DECIMALS, CENTS)}`;
 const signed = (v: bigint) => `${v > 0n ? "+" : v < 0n ? "−" : ""}${usd(v)}`;
@@ -24,6 +30,26 @@ export function ResultHost() {
   const tickets = useTickets(owner);
   // The book zeroes a cashed-out ticket's stake, so the stake it had before is remembered with its state.
   const seen = useRef(new Map<string, { state: string; stake: bigint }>());
+  const refresh = useRefreshCaller(owner);
+  const expiries =
+    "value" in tickets
+      ? [...new Set(tickets.value.tickets.filter((t) => OPEN.has(t.state)).map((t) => t.start + t.cadenceSec))]
+          .sort()
+          .join(",")
+      : "";
+
+  // A held window's result shows when it lands, with or without the user's stream topic.
+  useEffect(() => {
+    if (!expiries) return;
+    const timers = expiries
+      .split(",")
+      .flatMap((e) => SETTLE_LOOKS_MS.map((after) => Number(e) * MS + after - Date.now()))
+      .filter((wait) => wait > 0)
+      .map((wait) => setTimeout(refresh, wait));
+    return () => {
+      for (const timer of timers) clearTimeout(timer);
+    };
+  }, [expiries, refresh]);
 
   useEffect(() => {
     if (!("value" in tickets)) return;

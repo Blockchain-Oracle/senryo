@@ -5,7 +5,7 @@
  */
 import { useLive, useLiveStream } from "@senryo/live/react";
 import { Canvas, matchFont, Picture, Skia, useFont } from "@shopify/react-native-skia";
-import { useEffect, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { type LayoutChangeEvent, Platform, StyleSheet, View } from "react-native";
 import {
   type SharedValue,
@@ -18,8 +18,9 @@ import { setOdometer, setOdometerTrend } from "~/components/kit/odometer";
 import { useTheme } from "~/theme";
 import { CHART_ERASER } from "~/theme/palette";
 import { LEVEL_DASH } from "./constants";
-import { type ChartOverlay, type DrawKit, drawFrame } from "./draw";
+import { type ChartOverlay, drawFrame } from "./draw";
 import { formatUsd, priceDecimals } from "./engine";
+import { type DrawKit, makeDotPicture, makeKit } from "./kit";
 import { advance, createChartState, resetChart, takePrice } from "./state";
 
 const E8 = 1e8;
@@ -38,7 +39,8 @@ export interface LiveChartProps {
   waiting: string;
 }
 
-export function LiveChart({ symbol, overlay, waiting }: LiveChartProps) {
+/** Memoised: its props are stable, so the terminal's once-a-second countdown render never reaches the chart. */
+export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting }: LiveChartProps) {
   const live = useLive();
   useLiveStream();
   const { color } = useTheme();
@@ -46,36 +48,34 @@ export function LiveChart({ symbol, overlay, waiting }: LiveChartProps) {
   const markFont = useFont(require("../../../../assets/fonts/NotoSansJP-Bold-subset.ttf"), MARK_FONT_SIZE);
 
   const kit = useMemo<DrawKit>(
-    () => ({
-      paint: Skia.Paint(),
-      line: Skia.PathBuilder.Make(),
-      zone: Skia.PathBuilder.Make(),
-      fonts: {
-        axis: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.axis }),
-        pill: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.pill, fontWeight: "bold" }),
-        pillSmall: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.pillSmall, fontWeight: "bold" }),
-        tag: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.tag, fontWeight: "bold" }),
-        mark: markFont,
-      },
-      colors: {
-        up: Skia.Color(color.chartUp),
-        down: Skia.Color(color.chartDown),
-        ink: Skia.Color(color.ink),
-        inverse: Skia.Color(color.ground),
-        helper: Skia.Color(color.inkMuted),
-        onLine: Skia.Color(color.paperInk),
-      },
-      dash: {
-        line: Skia.PathEffect.MakeDash([...LEVEL_DASH.line], 0),
-        entry: Skia.PathEffect.MakeDash([...LEVEL_DASH.entry], 0),
-      },
-      fade: {
-        solid: Skia.Color(CHART_ERASER.solid),
-        mid: Skia.Color(CHART_ERASER.mid),
-        clear: Skia.Color(CHART_ERASER.clear),
-      },
-      mark: MARK,
-    }),
+    () =>
+      makeKit(
+        {
+          axis: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.axis }),
+          pill: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.pill, fontWeight: "bold" }),
+          pillSmall: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.pillSmall, fontWeight: "bold" }),
+          tag: matchFont({ fontFamily: MONO, fontSize: FONT_SIZE.tag, fontWeight: "bold" }),
+          mark: markFont,
+        },
+        {
+          up: Skia.Color(color.chartUp),
+          down: Skia.Color(color.chartDown),
+          ink: Skia.Color(color.ink),
+          inverse: Skia.Color(color.ground),
+          helper: Skia.Color(color.inkMuted),
+          onLine: Skia.Color(color.paperInk),
+        },
+        {
+          line: Skia.PathEffect.MakeDash([...LEVEL_DASH.line], 0),
+          entry: Skia.PathEffect.MakeDash([...LEVEL_DASH.entry], 0),
+        },
+        {
+          solid: Skia.Color(CHART_ERASER.solid),
+          mid: Skia.Color(CHART_ERASER.mid),
+          clear: Skia.Color(CHART_ERASER.clear),
+        },
+        MARK,
+      ),
     [color, markFont],
   );
   const recorder = useMemo(() => Skia.PictureRecorder(), []);
@@ -122,11 +122,14 @@ export function LiveChart({ symbol, overlay, waiting }: LiveChartProps) {
     clock.value = frame.timestamp;
   });
 
+  // The dot field is drawn once per size and shifted each frame (one picture instead of ~270 circles).
+  const dots = useDerivedValue(() => makeDotPicture(kit, size.value.w, size.value.h));
+
   const picture = useDerivedValue(() => {
     "worklet";
     const { w, h } = size.value;
     const canvas = recorder.beginRecording(Skia.XYWHRect(0, 0, w, h));
-    if (clock.value > 0 && w > 0) drawFrame(canvas, kit, state.value, overlayValue.value, w, h, waiting);
+    if (clock.value > 0 && w > 0) drawFrame(canvas, kit, state.value, overlayValue.value, w, h, waiting, dots.value);
     return recorder.finishRecordingAsPicture();
   });
 
@@ -141,6 +144,6 @@ export function LiveChart({ symbol, overlay, waiting }: LiveChartProps) {
       </Canvas>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({ fill: { flex: 1 } });

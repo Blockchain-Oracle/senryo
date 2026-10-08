@@ -3,23 +3,12 @@
  * labels and tags changes every frame). Tradash's order (Owarine `chart-engine.ts`/`chart-draw.ts`): dots and the 千両
  * watermark behind; then on one layer the grid, your side's zone against K, the line's 6 px glow and 2 px stroke, and
  * the left 32 % erased with a gradient; then the axis, the K and entry levels, the head dot and the rolling pill.
+ * Native calls are the cost (≤ 2 ms gate): the line and the axis ticks are each one path parsed from a string, the
+ * dots one picture, and paints come pre-set from the kit (`kit.ts`).
  */
-import {
-  BlendMode,
-  PaintStyle,
-  type SkCanvas,
-  type SkColor,
-  type SkFont,
-  Skia,
-  type SkPaint,
-  type SkPathBuilder,
-  type SkPathEffect,
-  StrokeCap,
-  StrokeJoin,
-  TileMode,
-} from "@shopify/react-native-skia";
+import { type SkCanvas, type SkColor, Skia, type SkPicture, TileMode } from "@shopify/react-native-skia";
 import { drawOdometer } from "~/components/kit/odometer";
-import { CATMULL, HALF_PIXEL, LEVEL_ALPHA } from "./constants";
+import { HALF_PIXEL, LEVEL_ALPHA } from "./constants";
 import {
   EDGE_FADE_PX,
   edgeAlpha,
@@ -33,6 +22,7 @@ import {
   type YWindow,
   yOf,
 } from "./engine";
+import { type DrawKit, fill, stroke, textRight } from "./kit";
 import { type ChartState, DOT_SPACING, ringAt } from "./state";
 
 export const PAD_Y = 28;
@@ -61,17 +51,19 @@ const TICK_INSET = 3;
 const MAJOR_TICK_ALPHA = 0.9;
 const MINOR_TICK_ALPHA = 0.45;
 const LABEL_SPAN = 1.2;
-const DOT_R = 1.1;
-const DOT_ALPHA = 0.14;
 const MARK_ALPHA = 0.07;
 const MARK_MAX_W = 260;
 const MARK_PLOT_SHARE = 0.5;
 const FADE_MID = 0.45;
+/** The ticks' edge fade never takes more than this share of the window at each end. */
+const FADE_STOP_MAX = 0.45;
 const ROLL_PITCH = 20;
 const ROLL_PITCH_SMALL = 15;
 const PILL_ROW_OFFSET = 7.5;
 const PILL_TEXT_RIGHT = 9;
 const HALF = 2;
+/** Coordinates in the path strings keep a tenth of a pixel. */
+const PX_TENTHS = 10;
 
 export type LevelKind = "line" | "entry";
 
@@ -95,62 +87,21 @@ export interface ChartOverlay {
   levels: ChartLevel[];
 }
 
-export interface DrawKit {
-  paint: SkPaint;
-  line: SkPathBuilder;
-  zone: SkPathBuilder;
-  fonts: { axis: SkFont; pill: SkFont; pillSmall: SkFont; tag: SkFont; mark: SkFont | null };
-  colors: { up: SkColor; down: SkColor; ink: SkColor; inverse: SkColor; helper: SkColor; onLine: SkColor };
-  dash: { line: SkPathEffect; entry: SkPathEffect };
-  /** The fade's erasing gradient stops (opaque → clear). */
-  fade: { solid: SkColor; mid: SkColor; clear: SkColor };
-  mark: string;
+/** A coordinate for a path string, to a tenth of a pixel. */
+function px(v: number): number {
+  "worklet";
+  return Math.round(v * PX_TENTHS) / PX_TENTHS;
 }
 
-function fill(k: DrawKit, color: SkColor, alpha = 1): SkPaint {
+function drawDots(c: SkCanvas, dots: SkPicture | null, s: ChartState) {
   "worklet";
-  const p = k.paint;
-  p.reset();
-  p.setAntiAlias(true);
-  p.setStyle(PaintStyle.Fill);
-  p.setColor(color);
-  p.setAlphaf(alpha);
-  return p;
-}
-
-function stroke(k: DrawKit, color: SkColor, width: number, alpha = 1): SkPaint {
-  "worklet";
-  const p = fill(k, color, alpha);
-  p.setStyle(PaintStyle.Stroke);
-  p.setStrokeWidth(width);
-  p.setStrokeCap(StrokeCap.Round);
-  p.setStrokeJoin(StrokeJoin.Round);
-  return p;
-}
-
-function textRight(
-  c: SkCanvas,
-  k: DrawKit,
-  text: string,
-  right: number,
-  midY: number,
-  font: SkFont,
-  color: SkColor,
-  alpha: number,
-) {
-  "worklet";
-  const w = font.getTextWidth(text);
-  const m = font.getMetrics();
-  c.drawText(text, right - w, midY - (m.ascent + m.descent) / HALF, fill(k, color, alpha), font);
-}
-
-function drawDots(c: SkCanvas, k: DrawKit, s: ChartState, w: number, h: number) {
-  "worklet";
-  const p = fill(k, k.colors.ink, DOT_ALPHA);
+  if (!dots) return;
   const ox = ((s.dotX % DOT_SPACING) + DOT_SPACING) % DOT_SPACING;
   const oy = ((s.dotY % DOT_SPACING) + DOT_SPACING) % DOT_SPACING;
-  for (let x = ox - DOT_SPACING; x < w + DOT_SPACING; x += DOT_SPACING)
-    for (let y = oy - DOT_SPACING; y < h + DOT_SPACING; y += DOT_SPACING) c.drawCircle(x, y, DOT_R, p);
+  c.save();
+  c.translate(ox - DOT_SPACING, oy - DOT_SPACING);
+  c.drawPicture(dots);
+  c.restore();
 }
 
 function drawMark(c: SkCanvas, k: DrawKit, plotW: number, h: number) {
@@ -171,7 +122,7 @@ function tag(c: SkCanvas, k: DrawKit, text: string, x: number, y: number, color:
   "worklet";
   const w = k.fonts.tag.getTextWidth(text) + TAG_PAD * HALF;
   c.drawRRect(Skia.RRectXY(Skia.XYWHRect(x - w, y, w, TAG_H), TAG_RADIUS, TAG_RADIUS), fill(k, color));
-  textRight(c, k, text, x - TAG_PAD, y + TAG_H / HALF, k.fonts.tag, onColor, 1);
+  textRight(c, k, text, x - TAG_PAD, y + TAG_H / HALF, k.fonts.tag, k.mids.tag, onColor, 1);
 }
 
 /** The pill's box: a level tag that would land under it moves to the end of its line instead. */
@@ -199,7 +150,9 @@ function drawLevel(c: SkCanvas, k: DrawKit, level: ChartLevel, win: YWindow, plo
     );
     return;
   }
-  const p = stroke(k, color, 1, LEVEL_ALPHA[level.kind]);
+  const p = k.paints.level;
+  p.setColor(color);
+  p.setAlphaf(LEVEL_ALPHA[level.kind]);
   p.setPathEffect(level.kind === "line" ? k.dash.line : k.dash.entry);
   const ry = Math.round(y) + HALF_PIXEL;
   c.drawLine(0, ry, plotW, ry, p);
@@ -217,11 +170,13 @@ export function drawFrame(
   w: number,
   h: number,
   waiting: string,
+  dots: SkPicture | null,
 ) {
   "worklet";
-  drawDots(c, k, s, w, h);
+  drawDots(c, dots, s);
   if (!s.ready || w < MIN_PLOT_LEFTOVER || h < PAD_Y * HALF) {
-    textRight(c, k, waiting, (w + k.fonts.tag.getTextWidth(waiting)) / HALF, h / HALF, k.fonts.tag, k.colors.helper, 1);
+    const x = (w + k.fonts.tag.getTextWidth(waiting)) / HALF;
+    textRight(c, k, waiting, x, h / HALF, k.fonts.tag, k.mids.tag, k.colors.helper, 1);
     return;
   }
   const tone = o?.winning === false ? k.colors.down : k.colors.up;
@@ -252,45 +207,26 @@ export function drawFrame(
     const bottom = o.zone === "above" ? ky : h;
     if (bottom > top) c.drawRect(Skia.XYWHRect(0, top, plotW, bottom - top), fill(k, tone, ZONE_ALPHA));
   }
+  // The line as one path string: about one point per pixel (the ring holds more samples than the plot has pixels,
+  // so straight segments read as the curve), parsed natively in one call.
   const n = s.size;
-  const b = k.line;
-  b.reset();
+  const stride = Math.max(1, Math.floor((n - 1) / Math.max(1, plotW)));
+  let d = "";
   let headY = 0;
-  let px = 0;
-  let py = 0;
-  let ppx = 0;
-  let ppy = 0;
-  for (let i = 0; i < n; i += 1) {
-    const x = (i / (n - 1)) * plotW;
-    const y = yOf(ringAt(s, i), win);
-    if (i === 0) b.moveTo(x, y);
-    else {
-      // Catmull-Rom (1/6) through the previous two points and this one (next = this, at the head).
-      const nx = i + 1 < n ? ((i + 1) / (n - 1)) * plotW : x;
-      const ny = i + 1 < n ? yOf(ringAt(s, i + 1), win) : y;
-      const ax = i > 1 ? ppx : px;
-      const ay = i > 1 ? ppy : py;
-      b.cubicTo(
-        px + (x - ax) / CATMULL,
-        py + (y - ay) / CATMULL,
-        x - (nx - px) / CATMULL,
-        y - (ny - py) / CATMULL,
-        x,
-        y,
-      );
-    }
-    ppx = px;
-    ppy = py;
-    px = x;
-    py = y;
+  for (let i = 0; ; i += stride) {
+    const at = Math.min(i, n - 1);
+    const y = yOf(ringAt(s, at), win);
+    d += `${at === 0 ? "M" : "L"}${px((at / (n - 1)) * plotW)} ${px(y)}`;
     headY = y;
+    if (at === n - 1) break;
   }
-  const path = b.build();
-  c.drawPath(path, stroke(k, tone, GLOW_W, GLOW_ALPHA));
-  c.drawPath(path, stroke(k, tone, LINE_W));
+  const path = Skia.Path.MakeFromSVGString(d);
+  if (path) {
+    c.drawPath(path, stroke(k, tone, GLOW_W, GLOW_ALPHA));
+    c.drawPath(path, stroke(k, tone, LINE_W));
+  }
   const fadeW = plotW * FADE_FRACTION;
-  const eraser = fill(k, k.fade.solid);
-  eraser.setBlendMode(BlendMode.DstOut);
+  const eraser = k.paints.eraser;
   eraser.setShader(
     Skia.Shader.MakeLinearGradient(
       Skia.Point(0, 0),
@@ -303,24 +239,48 @@ export function drawFrame(
   c.drawRect(Skia.XYWHRect(0, 0, fadeW, h), eraser);
   c.restore();
 
-  // Axis: ticks on both edges, major labels at the right, fading near the edges and the pill.
   const pillH = o?.pnlText ? PILL_H_POSITION : PILL_H;
   const decimals = labelDecimals(win.center, s.step);
+  // Ticks on both edges as two paths (major, minor) faded at the window's edges by one gradient; major labels at the
+  // right, giving way to the pill and to the level tags (K, entry), as Tradash's fade near the pill.
+  let major = "";
+  let minor = "";
   for (const t of ticks) {
     const y = Math.round(yOf(t.value, win)) + HALF_PIXEL;
     const edge = edgeAlpha(Math.min(y - win.top, win.bottom - y));
     if (edge <= 0) continue;
     const len = t.major ? MAJOR_TICK : MINOR_TICK;
-    const tick = stroke(k, k.colors.helper, 1, (t.major ? MAJOR_TICK_ALPHA : MINOR_TICK_ALPHA) * edge);
-    c.drawLine(TICK_INSET, y, TICK_INSET + len, y, tick);
-    c.drawLine(w - TICK_INSET, y, w - TICK_INSET - len, y, tick);
+    const seg = `M${TICK_INSET} ${y}h${len}M${w - TICK_INSET} ${y}h${-len}`;
+    if (t.major) major += seg;
+    else minor += seg;
     if (!t.major) continue;
-    // Labels give way to the pill and to the level tags (K, entry), as Tradash's fade near the pill.
     let clear = Math.abs(y - headY) - (pillH / HALF + EDGE_FADE_PX / HALF);
     for (const level of o?.levels ?? []) clear = Math.min(clear, Math.abs(y - yOf(level.price, win)) - TAG_H);
     const alpha = edge * edgeAlpha(clear);
-    if (alpha > 0)
-      textRight(c, k, `$${formatFixed(t.value, decimals)}`, w - LABEL_RIGHT, y, k.fonts.axis, k.colors.helper, alpha);
+    if (alpha > 0) {
+      const label = `$${formatFixed(t.value, decimals)}`;
+      textRight(c, k, label, w - LABEL_RIGHT, y, k.fonts.axis, k.mids.axis, k.colors.helper, alpha);
+    }
+  }
+  const tick = k.paints.tick;
+  const fadeStop = Math.min(FADE_STOP_MAX, EDGE_FADE_PX / Math.max(1, win.bottom - win.top));
+  tick.setShader(
+    Skia.Shader.MakeLinearGradient(
+      Skia.Point(0, win.top),
+      Skia.Point(0, win.bottom),
+      [k.colors.helperClear, k.colors.helper, k.colors.helper, k.colors.helperClear],
+      [0, fadeStop, 1 - fadeStop, 1],
+      TileMode.Clamp,
+    ),
+  );
+  for (const [segs, alpha] of [
+    [major, MAJOR_TICK_ALPHA],
+    [minor, MINOR_TICK_ALPHA],
+  ] as const) {
+    const ticksPath = segs ? Skia.Path.MakeFromSVGString(segs) : null;
+    if (!ticksPath) continue;
+    tick.setAlphaf(alpha);
+    c.drawPath(ticksPath, tick);
   }
   const pillX = w - PILL_RIGHT - pillW;
   const pillY = Math.min(h - pillH - HALF, Math.max(HALF, headY - pillH / HALF));

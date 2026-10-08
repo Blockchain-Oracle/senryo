@@ -22,7 +22,6 @@ export const THOUSANDS = 3;
 /** A 1 px line centred on a pixel row. */
 export const HALF_PIXEL = 0.5;
 /** Catmull-Rom → Bézier control-point divisor (tension 1/6). */
-export const CATMULL = 6;
 export const LEVEL_DASH = { line: [2, 3], entry: [4, 4] } as const;
 /**
  * The eased price follows the tick cadence it measures (Pyth Starter prints about once a second, D-272: "the chart

@@ -7,7 +7,7 @@ import type { IntentStatus } from "@senryo/api-client";
 import type { Address } from "@senryo/core";
 import type { Live } from "@senryo/live";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useQueryEnv } from "./env.tsx";
 import { historyKeys } from "./history.ts";
 import { marketKeys } from "./markets.ts";
@@ -19,6 +19,25 @@ interface TicketEventData {
   chainId: number;
   ticketId: string;
   owner: string;
+}
+
+/**
+ * Refreshes the caller's tickets and balance now, and their history once the indexer has it: for changes the app
+ * learns of itself — its own call settling, a window it holds closing — so a run without the user's topic (no API
+ * session yet, D-280) still shows a fill or a result in seconds rather than at the 30 s fallback.
+ */
+export function useRefreshCaller(owner: Address | undefined): () => void {
+  const env = useQueryEnv();
+  const client = useQueryClient();
+  return useCallback(() => {
+    if (!owner) return;
+    void client.invalidateQueries({ queryKey: marketKeys.tickets(env.chainId, owner) });
+    void client.invalidateQueries({ queryKey: marketKeys.account(env.chainId, owner) });
+    setTimeout(
+      () => void client.invalidateQueries({ queryKey: historyKeys.owner(env.chainId, owner) }),
+      HISTORY_LAG_MS,
+    );
+  }, [client, env.chainId, owner]);
 }
 
 export function useLiveSync(live: Live, owner: Address | undefined): void {
