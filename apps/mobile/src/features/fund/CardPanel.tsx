@@ -1,7 +1,7 @@
 /**
  * "Card or bank" (B5 step 1): the assets Ramp sells on Monad — MON, USDC, AUSD, USDT0 — each opening Ramp's hosted
- * page with it preselected; KYC and payment happen in Ramp. A return through `finalUrl` starts an "Arriving" row that
- * clears when the holdings show it. An asset Ramp doesn't list (XAUt0) stays, dimmed: "Buy USDC, then swap".
+ * page with it preselected; KYC and payment happen in Ramp. Provider creation persists an "Arriving" row;
+ * delivery requires provider evidence and a destination transaction. An asset Ramp doesn't list (XAUt0) stays, dimmed: "Buy USDC, then swap".
  */
 import { MAINNET_CHAIN_ID, MAINNET_TOKENS, NATIVE_TOKEN } from "@senryo/config";
 import { collateralId, ids } from "@senryo/identity";

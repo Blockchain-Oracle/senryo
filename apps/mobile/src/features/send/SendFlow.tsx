@@ -8,7 +8,6 @@
  */
 import { isDeployed } from "@senryo/chain";
 import { useAccountRisk, useQueryEnv } from "@senryo/query";
-import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -21,6 +20,7 @@ import { amountOf } from "~/features/money/format";
 import { RECIPIENT_WORDS, useRecipientCheck } from "~/features/money/recipient";
 import { useMoneyAssets } from "~/features/money/useMoneyAssets";
 import { useMoneyOperation, usePreparedOperation } from "~/features/money/useMoneyOperation";
+import { useReviewedFee } from "~/features/money/useReviewedFee";
 import { SEND_WORDS } from "~/features/withdraw/words";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES, withdrawRoute } from "~/lib/constants/routes";
@@ -82,14 +82,9 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
   );
   const plan = prepared.data;
   const steps = plan?.ok ? plan.op.steps : reviewed?.steps;
-  const fee = useQuery({
-    queryKey: ["send-fee", reviewed?.key ?? "", steps?.length ?? 0],
-    queryFn: () => feeEstimate(env, me, steps ?? []),
-    enabled: steps !== undefined && !practice,
-    staleTime: Number.POSITIVE_INFINITY,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const fee = useReviewedFee(plan?.ok ? plan.op : undefined, prepared.isFetching, practice, (steps) =>
+    feeEstimate(env, me, steps),
+  );
 
   useEffect(() => {
     if (!runner.trace.running && runner.trace.events.length === 0) {
@@ -136,12 +131,9 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
     if (!reviewed) return;
     setBusy(true);
     try {
-      const ready = prepared.data ?? (await prepared.refetch()).data;
-      if (!ready?.ok) {
-        setBlock(ready?.block ?? "Couldn’t prepare the send");
-        return;
-      }
-      await runner.run(ready.op);
+      guard();
+      const op = fee.require();
+      await runner.run(op);
     } catch (error) {
       setBlock(error instanceof Error ? error.message.split("\n")[0] : "Couldn’t prepare the send");
     } finally {
@@ -226,13 +218,18 @@ export function SendFlow({ initialAsset, initialTo }: { initialAsset?: string; i
           steps={steps}
           runner={runner}
           avatar={recipient?.avatar ?? null}
-          fee={fee.data}
+          fee={fee.fee}
           feeTopUp={plan?.ok ? plan.op.reviewedIntent.networkFee : undefined}
           practice={practice}
           network={network.name}
           warnings={warnings}
-          block={block ?? (plan && !plan.ok ? plan.block : undefined)}
-          busy={busy || (prepared.isFetching && !practice)}
+          block={
+            block ??
+            fee.block ??
+            (prepared.isError ? "Couldn’t prepare the send. Review again." : undefined) ??
+            (plan && !plan.ok ? plan.block : undefined)
+          }
+          busy={busy || prepared.isPending || prepared.isFetching || fee.busy}
           words={SEND_WORDS}
           onReviewAgain={() => asset && review(asset, draft.amount)}
           onConfirm={() => void confirm()}

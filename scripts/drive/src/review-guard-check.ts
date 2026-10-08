@@ -63,6 +63,13 @@ const request: TxRequest = {
     if (!reviewed) throw new Error("Review changed");
   },
 };
+await assert.rejects(
+  sendTx(sender, { ...request, reviewedNetworkFeeWei: GAS_LIMITS.erc20Transfer - 1n }),
+  /Network fee increased/,
+);
+assert.equal(signatures, 0, "higher signed fee cannot request authentication");
+assert.equal(journalWrites, 0);
+assert.equal(broadcasts, 0);
 reviewed = false;
 await assert.rejects(sendTx(sender, request), /Review changed/);
 assert.equal(signatures, 0, "invalid review never requests authentication");
@@ -73,4 +80,6 @@ assert.equal(journalWrites, 0, "invalidated local signature never enters a broad
 assert.equal(broadcasts, 0);
 const nonce = await nonces.withNext(account.address, async (value) => value);
 assert.equal(nonce, INITIAL_NONCE, "cancelled preparation does not consume the local nonce");
-console.log("Passed: pre-sign guard; post-auth guard; no journal/broadcast; cancelled nonce released.");
+console.log(
+  "Passed: reviewed fee ceiling before authentication; pre-sign guard; post-auth guard; no journal/broadcast; cancelled nonce released.",
+);

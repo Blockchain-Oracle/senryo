@@ -18,7 +18,6 @@ import type { MoneyOperation, PlannedStep } from "~/features/money/useMoneyOpera
 import { validateMoney } from "~/lib/validate-money";
 
 const MON_DECIMALS = 18;
-const FEE_SHOWN_DECIMALS = 4;
 
 export interface ReviewedMove {
   kind: "send" | "withdraw";
@@ -55,11 +54,15 @@ export function reviewMove(
   };
 }
 
-/** "~0.0031 MON" for the review (Σ limit × max fee of every step, the network-fee swap included). */
-export async function feeEstimate(env: QueryEnv, me: `0x${string}`, steps: readonly PlannedStep[]): Promise<string> {
+/** Reviewed maximum budget (Σ limit × max fee of every step, including the fee top-up), never actual spent gas. */
+export async function feeEstimate(
+  env: QueryEnv,
+  me: `0x${string}`,
+  steps: readonly PlannedStep[],
+): Promise<{ fee: string; bounds: bigint[] }> {
   const budgets = await Promise.all(steps.map((s) => gasBudgetFor(env.read, me, s.request)));
   const wei = budgets.reduce((sum, b) => sum + b.needWei, 0n);
-  return `~${formatUnits(wei, MON_DECIMALS, FEE_SHOWN_DECIMALS)} MON`;
+  return { fee: `Up to ${formatUnits(wei, MON_DECIMALS, MON_DECIMALS)} MON`, bounds: budgets.map((b) => b.needWei) };
 }
 
 /** The reviewed amount is still at its source: the wallet part (MON keeping its floor) and the free trading part. */

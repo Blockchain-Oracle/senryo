@@ -24,7 +24,7 @@ export function recordArrival(arrival: Omit<Arrival, "id" | "at">): void {
 export function useArrivals(chainId: number, account: string | undefined, assets: readonly MoneyAsset[] | undefined) {
   const [raw, setRaw] = useMMKVString(STORAGE_KEYS.arrivals, storage);
   const { open, settled } = openArrivals(parseArrivals(raw), chainId, account, assets, Date.now());
-  // Settle on read: landed records leave the store (their asset shows in Assets now).
+  // Persist provider-evidenced status changes; overdue records remain unresolved.
   if (settled)
     queueMicrotask(() => {
       const current = openArrivals(

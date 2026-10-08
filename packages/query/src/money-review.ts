@@ -82,3 +82,18 @@ export async function settleDestinationAction(work: () => Promise<unknown>, curr
     return { ok: false, current: current() };
   }
 }
+
+/** Authorization requires successful fee facts for this exact prepared review, with no pending refetch. */
+export function requireReviewedFee(
+  reviewId: string | undefined,
+  facts: { id: string; fee: string } | undefined,
+  pending: boolean,
+): void {
+  if (!reviewId || !facts || facts.id !== reviewId || !facts.fee || pending)
+    throw new Error("Wait for the complete network fee, then review again.");
+}
+
+/** Only the runner that owns an approval keeps its original route lease. */
+export function moneyReviewRoute(path: string, running: boolean, origin: string, approval: string): string {
+  return path === approval && running ? origin : path;
+}

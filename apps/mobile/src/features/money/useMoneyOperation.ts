@@ -16,6 +16,7 @@ import {
   assertReviewedSource,
   type ComposedStep,
   type MoneyOperation,
+  moneyReviewRoute,
   type PreparedOperation,
   prepareMoneyOperation,
   runOperationSteps,
@@ -48,7 +49,7 @@ export function useMoneyOperation(traceKey: string) {
   const running = useRef(false);
   const origin = useRef(pathname);
   // The expected approval sheet belongs to this run. Every other route change abandons an unsent review.
-  const route = pathname === ROUTES.stepUp && running.current ? origin.current : pathname;
+  const route = moneyReviewRoute(pathname, running.current, origin.current, ROUTES.stepUp);
   origin.current = route;
   const source = `${env.chainId}:${account.hint?.address.toLowerCase() ?? "guest"}:${route}`;
   const guard = useReviewGuard(source);

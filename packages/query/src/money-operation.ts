@@ -138,3 +138,20 @@ export function usePreparedOperation(
     refetchOnReconnect: false,
   });
 }
+
+/** Freeze the disclosed fee budget onto every prepared step, including dynamic builds and fee top-ups. */
+export function withReviewedNetworkFee(op: MoneyOperation, fee: string, bounds?: readonly bigint[]): MoneyOperation {
+  if (bounds && bounds.length !== op.steps.length) throw new Error("Incomplete network fee. Review again.");
+  const steps = op.steps.map((step, index) => {
+    if (!bounds) return step;
+    const bound = bounds[index];
+    if (bound === undefined) throw new Error("Incomplete network fee. Review again.");
+    const build = step.build;
+    return {
+      ...step,
+      request: { ...step.request, reviewedNetworkFeeWei: bound },
+      ...(build ? { build: async () => ({ ...(await build()), reviewedNetworkFeeWei: bound }) } : {}),
+    };
+  });
+  return { ...op, steps, reviewedIntent: { ...op.reviewedIntent, estimatedNetworkFee: fee } };
+}

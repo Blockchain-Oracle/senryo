@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/noMagicNumbers: Exact numeric lifecycle fixtures and boundary assertions. */
 /** Offline lifecycle contracts; no native UI, provider requests or chain broadcast. */
 import assert from "node:assert/strict";
+import { assertReviewedNetworkFee } from "../../../packages/chain/src/send.ts";
 import { arrivalOf, openArrivals } from "../../../packages/query/src/arrivals.ts";
 import type { FeePlan } from "../../../packages/query/src/compose.ts";
 import {
@@ -9,11 +10,17 @@ import {
   type SavedDeposit,
   withSavedDeposit,
 } from "../../../packages/query/src/deposit-addresses.ts";
-import { type MoneyOperation, preparedWithFee } from "../../../packages/query/src/money-operation.ts";
+import {
+  type MoneyOperation,
+  preparedWithFee,
+  withReviewedNetworkFee,
+} from "../../../packages/query/src/money-operation.ts";
 import {
   assertBridgeExecution,
   assertReviewedSource,
   createReviewLease,
+  moneyReviewRoute,
+  requireReviewedFee,
   settleDestinationAction,
   walletSnapshot,
 } from "../../../packages/query/src/money-review.ts";
@@ -222,3 +229,62 @@ assert.deepEqual(
   "late copy success cannot flash on another destination",
 );
 console.log("Passed: caught native address action rejection and scoped late copy completion.");
+
+// Two runners mounted: only the bridge owns the approval route. Its original validator survives both transitions.
+const idleMonad = createReviewLease("/withdraw");
+const activeBridge = createReviewLease("/withdraw");
+const chainValidator = activeBridge.capture();
+const idleValidator = idleMonad.capture();
+idleMonad.update(moneyReviewRoute("/step-up", false, "/withdraw", "/step-up"));
+activeBridge.update(moneyReviewRoute("/step-up", true, "/withdraw", "/step-up"));
+assert.doesNotThrow(chainValidator);
+assert.throws(idleValidator);
+activeBridge.update(moneyReviewRoute("/withdraw", true, "/withdraw", "/step-up"));
+assert.doesNotThrow(chainValidator);
+activeBridge.interrupt();
+assert.throws(chainValidator, /Review again/);
+console.log("Passed: two mounted runners preserve owning bridge approval and return; background still invalidates.");
+
+let feeFacts: { id: string; fee: string } | undefined;
+let finishFee: ((facts: { id: string; fee: string }) => void) | undefined;
+const delayedFee = new Promise<{ id: string; fee: string }>((resolve) => {
+  finishFee = resolve;
+});
+assert.throws(() => requireReviewedFee("composed-topup", feeFacts, true));
+finishFee?.({ id: "composed-topup", fee: "Up to 0.01 MON" });
+feeFacts = await delayedFee;
+assert.doesNotThrow(() => requireReviewedFee("composed-topup", feeFacts, false));
+assert.throws(() => requireReviewedFee("composed-topup", feeFacts, true), /complete network fee/);
+assert.throws(() => requireReviewedFee("changed-preparation", feeFacts, false), /complete network fee/);
+await assert.rejects(async () => {
+  await Promise.reject(new Error("fee RPC rejected"));
+});
+assert.throws(() => requireReviewedFee("composed-topup", undefined, false));
+// Each composed step, including top-up, has an independent reviewed bound.
+for (const bound of [20n, 30n, 40n]) {
+  assert.doesNotThrow(() => assertReviewedNetworkFee(bound, bound));
+  assert.doesNotThrow(() => assertReviewedNetworkFee(bound, bound - 1n));
+  assert.throws(() => assertReviewedNetworkFee(bound, bound + 1n), /Network fee increased/);
+}
+console.log(
+  "Passed: delayed/rejected/refetch/changed fee facts block authorization; composed per-step ceilings reject higher signed fees.",
+);
+
+const composed = withReviewedNetworkFee(prepared.op, "Up to 0.01 MON", [20n, 30n, 40n]);
+assert.equal(composed.revalidate, prepared.op.revalidate);
+assert.equal(composed.stepUp, prepared.op.stepUp);
+assert.equal(composed.reviewedIntent.networkFee, "0.50 USDC → MON");
+assert.deepEqual(
+  composed.steps.map((step) => step.request.reviewedNetworkFeeWei),
+  [20n, 30n, 40n],
+);
+assert.throws(() => withReviewedNetworkFee(prepared.op, "Up to 0.01 MON", [20n]), /Incomplete/);
+const originalStep = own.steps[0];
+assert.ok(originalStep);
+const built = withReviewedNetworkFee(
+  { ...own, steps: [{ ...originalStep, build: async () => originalStep.request }] },
+  "Up to 0.01 MON",
+  [40n],
+);
+assert.equal((await built.steps[0]?.build?.())?.reviewedNetworkFeeWei, 40n);
+console.log("Passed: composed top-up step bounds, dynamic builds, original validator and disclosure stay coupled.");

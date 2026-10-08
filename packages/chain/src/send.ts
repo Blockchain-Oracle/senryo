@@ -74,6 +74,8 @@ export interface TxRequest {
   gasCap?: bigint | undefined;
   /** Skip the estimate and use this explicit limit (pre-calibrated hot paths); must be ≤ the budget. */
   fixedGas?: bigint | undefined;
+  /** Optional reviewed per-step ceiling; authorization must never exceed it. */
+  reviewedNetworkFeeWei?: bigint | undefined;
   /**
    * EIP-7702 authorizations (signed by each EOA behind a step-up, `@senryo/account` `signDelegation`): present → a
    * type-4 tx, e.g. the sponsor delegating a user's EOA (D-145, D-155). Monad supports type 4; clear = authorize `0x0`.
@@ -152,6 +154,7 @@ async function broadcast(sender: Sender, raw: Hex, hash: Hex): Promise<Transacti
 export async function sendTx(sender: Sender, req: TxRequest): Promise<SentTx> {
   const gas = await planGas(sender, req);
   const fees = await sender.fees.get();
+  assertReviewedNetworkFee(req.reviewedNetworkFeeWei, gas * fees.maxFeePerGas);
   const from = sender.account.address;
   const signed = await sender.nonces.withNext(from, async (nonce) => {
     const common = {
@@ -219,4 +222,10 @@ export async function sendAndFinalize(sender: Sender, req: TxRequest): Promise<S
     blockHash: final.receipt?.blockHash,
   });
   return { ...sent, final };
+}
+
+/** Checked against the exact gas and max fee that the sender signs, before authentication/signing. */
+export function assertReviewedNetworkFee(ceiling: bigint | undefined, actualBudget: bigint): void {
+  if (ceiling !== undefined && actualBudget > ceiling)
+    throw new Error("Network fee increased. Review remaining steps again.");
 }
