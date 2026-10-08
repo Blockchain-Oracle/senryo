@@ -10,3 +10,9 @@ export function watchLink(address: string, chainId: ChainId, post?: string): str
   if (post) query.set("post", post);
   return `${WEB_ORIGIN}/watch?${query.toString()}`;
 }
+
+/** A call's receipt (S5.13 share card): the web shows it publicly; the app opens `/calls/<ticketId>`. */
+export function callLink(ticketId: bigint, chainId: ChainId): string {
+  const query = new URLSearchParams({ id: String(ticketId), chainId: String(chainId) });
+  return `${WEB_ORIGIN}/call?${query.toString()}`;
+}

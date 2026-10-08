@@ -69,7 +69,7 @@ export function useCallTimeline(ticketId: bigint | undefined) {
 }
 
 /** A window's proof: its open and close prints with their transactions, state, calls and the crowd split. */
-export function useWindowProof(windowId: `0x${string}` | undefined) {
+export function useWindowProof(windowId: `0x${string}` | undefined, options: { live?: boolean } = {}) {
   const env = useQueryEnv();
   const query = useQuery({
     queryKey: historyKeys.window(env.chainId, windowId ?? "0x"),
@@ -79,6 +79,8 @@ export function useWindowProof(windowId: `0x${string}` | undefined) {
     },
     enabled: windowId !== undefined,
     staleTime: (q) => (q.state.data?.settled ? Number.POSITIVE_INFINITY : OPEN_WINDOW_STALE_MS),
+    // The terminal follows the crowd while its window is open; elsewhere a proof is read once.
+    refetchInterval: (q) => (options.live && !q.state.data?.settled ? OPEN_WINDOW_STALE_MS : false),
   });
   return fromQuery(query);
 }

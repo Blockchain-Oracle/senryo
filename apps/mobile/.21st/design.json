@@ -837,6 +837,22 @@
         "port": "two emitters at 18 % / 82 % width, 34 pieces each, gravity 0.14, drag 0.982–0.994, 1.1 s fading after half; Skia picture stepped on the UI thread; one host over the app triggered by celebrate() on a paid win or a cash-out in profit",
         "deviations": "Senryo colours (chart up, accent, gold, practice, ink); none for Reduce Motion",
         "status": "built (S5.9) — src/components/kit/Confetti.tsx, src/components/shell/ConfettiHost.tsx"
+      },
+      {
+        "name": "share-card",
+        "source": "Owarine terminal/share-png.ts charm card; 21st searched \"trade result share card pnl\" (8263 Share Card = folder access) and \"social share image card\" (27909, 2652, 1512, 10388) — none fit",
+        "evidence": ["pivot plan: Call → share; S8 share card"],
+        "port": "4:5 card (360×450 captured at 3× = 1080×1350): welcome sky, tilted paper charm with market, side and lane, the result in its colour, entry → exit, 千両 corner; seal, line, link and QR; react-native-view-shot + expo-sharing (both in the 0.4.0 build)",
+        "deviations": "portrait for phone posts (the reference is 1600×1000 landscape); link is the static web's /call?id= query form mapped to /calls/<id> in the app",
+        "status": "built (S5.13) — src/features/calls/{ShareCard,ShareCallButton}.tsx"
+      },
+      {
+        "name": "stake-keypad",
+        "source": "21st #3711 bankkroll/number-pad (the earlier kit port, restored)",
+        "evidence": ["pivot plan Call: presets $1/5/10/25/Max or the keypad"],
+        "port": "the 3×4 keypad under the amount, checked against the pool's min/max stake and the balance; \"Use $7.50\"",
+        "deviations": "opened from a sixth preset chip that shows a custom stake once chosen",
+        "status": "built (S5.9) — src/components/kit/Keypad.tsx, src/features/terminal/StakeSheet.tsx"
       }
     ],
     "planned": [

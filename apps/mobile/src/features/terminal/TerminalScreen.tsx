@@ -4,7 +4,7 @@
  * renders on events and once a second for the countdown. A call is followed from tap to fill on the stream.
  */
 import type { IntentStatus } from "@senryo/api-client";
-import { formatUnits } from "@senryo/core";
+import { formatUnits, proceedsFor } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useIntentStatus, useRefreshCaller, useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
@@ -23,20 +23,25 @@ import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useCallActions } from "../calls/useCall";
 import { CallPanel, type PanelState } from "./CallPanel";
+import { CashOutSheet } from "./CashOutSheet";
+import { CrowdLine } from "./CrowdLine";
 import type { Head } from "./chart/draw";
 import { LiveChart } from "./chart/LiveChart";
 import { MarketsSheet } from "./MarketsSheet";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
+import { StakeSheet } from "./StakeSheet";
 import { clockText, TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
 import { useReactions } from "./useReactions";
 import { useTerminal } from "./useTerminal";
 
 const DEFAULT_STAKE = 5_000_000;
+const MIN_STAKE = 1_000_000n;
 const CLOCK_SYNC_MS = 5_000;
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const SETTLED = new Set(["filled", "refused", "failed"]);
+const WHOLE = 100n;
 
 export interface TerminalProps {
   /** First run: a title over the terminal and its one action (Skip before the call, Continue once it is live). */
@@ -60,6 +65,9 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   useReactions(t.symbol, q.onTick, reactions);
   const actions = useCallActions();
   const [picking, setPicking] = useState(false);
+  const [sheet, setSheet] = useState<"stake" | "part" | null>(null);
+  // Between the tap and the relay's answer: the signature (one-tap, or the passkey — maybe behind Face ID).
+  const [signing, setSigning] = useState(false);
   const [pending, setPending] = useState<{ digest: `0x${string}`; label: string; kind: "open" | "close" } | null>(null);
   const intent = useIntentStatus(pending?.digest);
   const pendingRef = useRef(pending);
@@ -101,13 +109,15 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     : `Calls closed · next opens in ${clockText(t.window.expiry - t.now)}`;
   const panel: PanelState = pending
     ? { kind: "pending", status, label: pending.label }
-    : !t.window.trading
-      ? { kind: "locked", text: lockText }
-      : stale
-        ? { kind: "stale" }
-        : t.k === undefined
-          ? { kind: "no-price" }
-          : { kind: "ready" };
+    : signing
+      ? { kind: "pending", status: null, label: "Signing…" }
+      : !t.window.trading
+        ? { kind: "locked", text: lockText }
+        : stale
+          ? { kind: "stale" }
+          : t.k === undefined
+            ? { kind: "no-price" }
+            : { kind: "ready" };
 
   const guard = (): boolean => {
     if (!t.owner) {
@@ -144,6 +154,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     }
     const label = side === "up" ? "Up" : "Down";
     fire("press");
+    setSigning(true);
     try {
       const r = await actions.open({
         window: t.window,
@@ -156,26 +167,34 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     } catch (error) {
       fire("fail");
       notify({ title: "Couldn't place the call", description: (error as Error).message, tone: "warning" });
+    } finally {
+      setSigning(false);
     }
   };
 
-  const close = async () => {
+  const close = async (percent: bigint = WHOLE) => {
     const position = t.position;
     const quote = q.latest.current.close;
     if (!guard() || !position || !quote || quote.refusal) return;
     fire("press");
+    // A part sells that share of the call at the live bid (proceeds are linear in shares, BandBook `_fillClose`).
+    const shares = (position.payout * percent) / WHOLE;
+    setSigning(true);
     try {
       const r = await actions.close({
         window: t.window,
         ticketId: position.ticketId,
         band: position.band,
-        shares: position.payout,
-        proceedsQuote: quote.proceeds,
+        shares,
+        proceedsQuote: percent === WHOLE ? quote.proceeds : proceedsFor(shares, quote.bidE6),
       });
-      if (r.kind === "sent") setPending({ digest: r.status.digest, label: "Cashing out…", kind: "close" });
+      const label = percent === WHOLE ? "Cashing out…" : `Cashing out ${percent}%…`;
+      if (r.kind === "sent") setPending({ digest: r.status.digest, label, kind: "close" });
     } catch (error) {
       fire("fail");
       notify({ title: "Couldn't cash out", description: (error as Error).message, tone: "warning" });
+    } finally {
+      setSigning(false);
     }
   };
 
@@ -193,6 +212,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
         <ReactionOverlay ref={reactions} head={head} />
       </View>
       <LiveText text={q.lineText} style={[TYPE.caption, styles.line, { color: color.inkMuted }]} />
+      <CrowdLine windowId={t.window.windowId} />
       <View style={{ paddingBottom: bottom }}>
         <CallPanel
           state={panel}
@@ -206,8 +226,28 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           onUp={() => void open("up")}
           onDown={() => void open("down")}
           onClose={() => void close()}
+          onCustom={() => setSheet("stake")}
+          onClosePart={() => setSheet("part")}
         />
       </View>
+      {sheet === "stake" ? (
+        <StakeSheet
+          current={stake}
+          min={t.terms?.minStake ?? MIN_STAKE}
+          max={t.terms?.maxStake ?? stake}
+          balance={t.balance}
+          onPick={(s) => setStoredStake(Number(s))}
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
+      {sheet === "part" && t.position && q.latest.current.close ? (
+        <CashOutSheet
+          shares={t.position.payout}
+          bidE6={q.latest.current.close.bidE6}
+          onPick={(pct) => void close(pct)}
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
       {picking ? (
         <MarketsSheet
           markets={t.markets}

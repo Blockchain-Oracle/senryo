@@ -2,6 +2,7 @@ import { isChainId, networkOf } from "@senryo/config";
 import { ROUTES } from "~/lib/constants/routes";
 
 const SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
+const TICKET_ID = /^\d{1,20}$/;
 const WEB = /^https?:\/\/[^/]+/i;
 
 /** The in-app path of a system URL: `https://senryo.xyz/a/b` → `/a/b`, `senryo://a/b` → `/a/b`, `/a/b` as is. */
@@ -29,6 +30,9 @@ export function currentPath(path: string): string {
   const [base = "/", query] = path.split("?", 2);
   const local = inAppPath(base);
   const suffix = query ? `?${query}` : "";
+  // The web's static export shares a call as `/call?id=<ticketId>` (`share-link.ts`); in the app it is its receipt.
+  const call = local === "/call" ? new URLSearchParams(query ?? "").get("id") : null;
+  if (call && TICKET_ID.test(call)) return `/calls/${call}`;
   for (const [pattern, to] of LEGACY_PATHS) {
     const match = local.match(pattern);
     if (match) {

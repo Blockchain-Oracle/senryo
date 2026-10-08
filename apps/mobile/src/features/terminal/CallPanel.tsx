@@ -4,6 +4,7 @@
  * CLOSE with the cash-out value rolling. Honest states: calls closed for the lockout, a stale price, a call in flight.
  */
 import type { IntentStatus } from "@senryo/api-client";
+import { formatUnits } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
@@ -12,11 +13,14 @@ import { LiveText } from "~/components/kit/LiveText";
 import { ArrowDownUp } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
-import { DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { CONTROL_FONT_SCALE, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { STAKE_PRESETS_USD } from "./constants";
 import { OneTapLine } from "./OneTapLine";
 
 const USD = 1_000_000n;
+const DOLLAR_DECIMALS = 6;
+const CENTS = 2;
+const dollars = (v: bigint) => `$${formatUnits(v, DOLLAR_DECIMALS, CENTS)}`;
 const BUTTON_H = 64;
 const CASH_SIZE = 20;
 const CASH_HEIGHT = 26;
@@ -77,6 +81,8 @@ export function CallPanel({
   onUp,
   onDown,
   onClose,
+  onCustom,
+  onClosePart,
 }: {
   state: PanelState;
   stake: bigint;
@@ -89,11 +95,17 @@ export function CallPanel({
   onUp: () => void;
   onDown: () => void;
   onClose: () => void;
+  /** The keypad for any other stake. */
+  onCustom: () => void;
+  /** Long-press on Cash out: a part of the call (25 / 50 / 100 %). */
+  onClosePart: () => void;
 }) {
   const { color } = useTheme();
   const font = useFont(require("../../../assets/fonts/Inter-SemiBold.ttf"), CASH_SIZE);
   const closePress = usePressScale();
   const blocked = state.kind !== "ready";
+  const presets = STAKE_PRESETS_USD.map((usd) => BigInt(usd) * USD);
+  const custom = !presets.includes(stake) && !(balance !== undefined && stake === balance);
   const notice =
     state.kind === "pending"
       ? state.label
@@ -130,6 +142,24 @@ export function CallPanel({
           })}
           <Pressable
             onPress={() => {
+              fire("tick");
+              onCustom();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={custom ? `Stake ${dollars(stake)}. Change` : "Other stake"}
+            style={[styles.preset, { backgroundColor: custom ? color.ink : color.raised2 }]}
+          >
+            <Text
+              maxFontSizeMultiplier={CONTROL_FONT_SCALE}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={[TYPE.rowTitle, { color: custom ? color.ground : color.ink }]}
+            >
+              {custom ? dollars(stake) : "···"}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
               if (balance === undefined) return;
               fire("tick");
               onStake(balance);
@@ -160,6 +190,11 @@ export function CallPanel({
       {holding ? (
         <Pressable
           onPress={onClose}
+          onLongPress={() => {
+            fire("snap");
+            onClosePart();
+          }}
+          accessibilityHint="Hold to cash out part of the call"
           onPressIn={closePress.onPressIn}
           onPressOut={closePress.onPressOut}
           disabled={blocked}
