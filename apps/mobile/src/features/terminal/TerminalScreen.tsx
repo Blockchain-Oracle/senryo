@@ -6,7 +6,7 @@
 import type { IntentStatus } from "@senryo/api-client";
 import { formatUnits } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
-import { useIntentStatus, useRefreshCaller } from "@senryo/query";
+import { useIntentStatus, useRefreshCaller, useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -53,7 +53,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const t = useTerminal();
   const [storedStake, setStoredStake] = useMMKVNumber(STORAGE_KEYS.lastStake, storage);
   const stake = BigInt(storedStake ?? DEFAULT_STAKE);
-  const q = useLiveQuote(t, stake);
+  const load = useWindowLoad(t.window.expiry > 0 ? t.window.expiry : undefined);
+  const q = useLiveQuote(t, stake, "value" in load ? load.value : undefined);
   const head = useSharedValue<Head | null>(null);
   const reactions = useRef<ReactionOverlayHandle>(null);
   useReactions(t.symbol, q.onTick, reactions);
@@ -121,6 +122,14 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     if (!guard()) return;
     const band = side === "up" ? q.upBand : q.downBand;
     const quote = side === "up" ? q.latest.current.up : q.latest.current.down;
+    if (quote?.refusal === "capacity") {
+      notify({
+        title: "This window is full",
+        description: `The pool has no more room on it. The next opens in ${clockText(t.window.expiry - t.now)}.`,
+        tone: "warning",
+      });
+      return;
+    }
     if (!band || !quote || quote.refusal) {
       notify({ title: "Not priced right now", description: "Try the next window.", tone: "warning" });
       return;

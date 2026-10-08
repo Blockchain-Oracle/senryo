@@ -33,6 +33,7 @@ export function useRefreshCaller(owner: Address | undefined): () => void {
     if (!owner) return;
     void client.invalidateQueries({ queryKey: marketKeys.tickets(env.chainId, owner) });
     void client.invalidateQueries({ queryKey: marketKeys.account(env.chainId, owner) });
+    void client.invalidateQueries({ queryKey: marketKeys.loads(env.chainId) });
     setTimeout(
       () => void client.invalidateQueries({ queryKey: historyKeys.owner(env.chainId, owner) }),
       HISTORY_LAG_MS,

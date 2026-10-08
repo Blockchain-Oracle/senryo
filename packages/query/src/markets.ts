@@ -14,6 +14,7 @@ import {
   revokeSessionRoute,
   submitIntentRoute,
   ticketsRoute,
+  windowLoadRoute,
   withdrawRoute,
 } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
@@ -34,7 +35,27 @@ export const marketKeys = {
   account: (chainId: ChainId, owner: Address) => [...marketKeys.owner(chainId, owner), "account"] as const,
   tickets: (chainId: ChainId, owner: Address) => [...marketKeys.owner(chainId, owner), "tickets"] as const,
   intent: (digest: string) => ["markets", "intent", digest] as const,
+  load: (chainId: ChainId, expiry: number) => ["markets", chainId, "load", expiry] as const,
+  loads: (chainId: ChainId) => ["markets", chainId, "load"] as const,
 };
+
+/** Other callers move a window's load too: the terminal reads it this often while the window is on screen. */
+export const LOAD_POLL_MS = 5_000;
+
+/** The pool's load for one expiry (surcharge and capacity); refreshed on the user's own fills as well. */
+export function useWindowLoad(expiry: number | undefined) {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: marketKeys.load(env.chainId, expiry ?? 0),
+    queryFn: ({ signal }) => {
+      if (expiry === undefined) throw new Error("no window");
+      return env.api.call(windowLoadRoute, { query: { chainId: env.chainId, expiry } }, { signal });
+    },
+    enabled: expiry !== undefined,
+    refetchInterval: LOAD_POLL_MS,
+  });
+  return fromQuery(query);
+}
 
 /** The catalogue as deployed on the active network (markets, cadences, band menus, σ, pool terms). */
 export function useCatalog() {

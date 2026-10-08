@@ -4,17 +4,21 @@
  * the distance to K, and write it all into shared values the chart, the odometers and the quote lines read. The latest
  * quotes stay readable synchronously for the tap (the limit is the quote the user saw).
  */
+import type { WindowLoad } from "@senryo/api-client";
 import { FILL_DELAY_SEC } from "@senryo/config";
 import {
   type BandShape,
   type CloseQuote,
+  fitOpen,
   formatUnits,
+  loadSurchargeE6,
   multiplierE2,
   type OpenQuote,
   P_ONE,
   type QuoteTerms,
   quoteClose,
   quoteOpen,
+  reserveCapacity,
 } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useCallback, useEffect, useRef } from "react";
@@ -56,13 +60,14 @@ const money = (v: bigint) => `$${formatUnits(v < 0n ? -v : v, DOLLAR_DECIMALS, C
 const signedMoney = (v: bigint) => `${v < 0n ? "−" : "+"}${money(v)}`;
 
 function oddsLine(q: OpenQuote | null, stake: bigint): string {
+  if (q?.refusal === "capacity") return "Window full · next one soon";
   if (!q || q.refusal) return "Not priced now";
   const x = multiplierE2(stake, q.payout);
   const pct = (q.probE6 * BigInt(PERCENT)) / P_ONE;
   return `pays ${formatUnits(x, CENTS, CENTS)}× · about ${pct}%`;
 }
 
-export function useLiveQuote(t: TerminalView, stake: bigint) {
+export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | undefined) {
   const live = useLive();
   const upLine = useSharedValue("");
   const downLine = useSharedValue("");
@@ -88,12 +93,22 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
   const positionBand = position ? bands?.[position.band] : undefined;
 
   useEffect(() => {
+    // The load surcharge and the pool's room come from `/v1/markets/load` (polled; refreshed on the user's fills).
     const terms: QuoteTerms | undefined = t.terms && {
       halfSpreadE6: BigInt(t.terms.halfSpreadE6),
       minProbE6: BigInt(t.terms.minProbE6),
       maxProbE6: BigInt(t.terms.maxProbE6),
-      surchargeE6: 0n,
+      surchargeE6: load
+        ? loadSurchargeE6(BigInt(t.terms.maxSurchargeE6), load.reservedByExpiry, t.terms.maxExpiryReserved)
+        : 0n,
     };
+    const capacity =
+      load && t.terms
+        ? reserveCapacity(load, {
+            maxExpiryReserved: t.terms.maxExpiryReserved,
+            maxExposureBps: BigInt(t.terms.maxExposureBps),
+          })
+        : undefined;
     const run = () => {
       const tick = live.prices.latest(t.symbol);
       if (!tick || !t.series || !terms || t.k === undefined) {
@@ -106,8 +121,8 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
       const tauSec = BigInt(Math.max(0, t.window.expiry - (live.clock.nowSec() + FILL_DELAY_SEC)));
       const w = { openE8: t.k, sigmaE8: BigInt(t.series.sigmaE8), tauSec };
       const shape = (b: { kind: BandShape["kind"]; lowBps: number; highBps: number }): BandShape => b;
-      const up = upBand ? quoteOpen(shape(upBand), w, spot, stake, terms) : null;
-      const down = downBand ? quoteOpen(shape(downBand), w, spot, stake, terms) : null;
+      const up = upBand ? fitOpen(quoteOpen(shape(upBand), w, spot, stake, terms), stake, capacity) : null;
+      const down = downBand ? fitOpen(quoteOpen(shape(downBand), w, spot, stake, terms), stake, capacity) : null;
       upLine.value = oddsLine(up, stake);
       downLine.value = oddsLine(down, stake);
 
@@ -175,6 +190,7 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
     downBand,
     position,
     positionBand,
+    load,
     upLine,
     downLine,
     lineText,

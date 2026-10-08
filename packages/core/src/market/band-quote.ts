@@ -20,7 +20,8 @@ export interface QuoteWindow {
   tauSec: bigint;
 }
 
-export type QuoteRefusal = "price";
+/** `price`: outside the pool's probability bounds · `capacity`: the fill would not fit the pool (BandPool `_hasCapacity`). */
+export type QuoteRefusal = "price" | "capacity";
 
 export interface OpenQuote {
   probE6: bigint;
@@ -63,3 +64,28 @@ export const withTolerance = (amount: bigint, toleranceBps: bigint): bigint => (
 
 /** "pays 1.92×" — the payout per dollar staked, × 100 (integer hundredths for display). */
 export const multiplierE2 = (stake: bigint, payout: bigint): bigint => (stake === 0n ? 0n : (payout * HUNDRED) / stake);
+
+/** What a window's load costs: `maxSurchargeE6 × reservedByExpiry / maxExpiryReserved` (BandBook / BandReserve). */
+export function loadSurchargeE6(maxSurchargeE6: bigint, reservedByExpiry: bigint, maxExpiryReserved: bigint): bigint {
+  return maxExpiryReserved > 0n ? (maxSurchargeE6 * reservedByExpiry) / maxExpiryReserved : 0n;
+}
+
+/**
+ * The most a new fill may reserve now (`payout − stake`), as BandPool `_hasCapacity` decides it: the pool's liquid
+ * dollars, total exposure within `maxExposureBps` of the pool, and the expiry's own cap. Never negative.
+ */
+export function reserveCapacity(
+  load: { reservedByExpiry: bigint; liquid: bigint; reserved: bigint },
+  caps: { maxExpiryReserved: bigint; maxExposureBps: bigint },
+): bigint {
+  const exposure = ((load.liquid + load.reserved) * caps.maxExposureBps - load.reserved * BPS) / BPS;
+  const expiry = caps.maxExpiryReserved - load.reservedByExpiry;
+  const least = [load.liquid, exposure, expiry].reduce((a, b) => (b < a ? b : a));
+  return least > 0n ? least : 0n;
+}
+
+/** An open quote checked against the pool's room: a fill reserves `payout − stake`, and must fit `capacity`. */
+export function fitOpen(q: OpenQuote, stake: bigint, capacity: bigint | undefined): OpenQuote {
+  if (q.refusal || capacity === undefined || q.payout - stake <= capacity) return q;
+  return { ...q, refusal: "capacity" };
+}

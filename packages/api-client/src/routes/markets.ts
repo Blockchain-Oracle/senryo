@@ -47,6 +47,10 @@ export const catalogResponseSchema = z.object({
     halfSpreadE6: z.int(),
     minProbE6: z.int(),
     maxProbE6: z.int(),
+    /** The load surcharge at a full expiry, and the caps a fill must fit (BandPool `_hasCapacity`). */
+    maxSurchargeE6: z.int(),
+    maxExpiryReserved: uintCodec,
+    maxExposureBps: z.int(),
     minStake: uintCodec,
     maxStake: uintCodec,
     session: z.object({ perCallCap: uintCodec, sessionCap: uintCodec, maxSessionSec: z.int() }),
@@ -113,6 +117,31 @@ export const intentStatusSchema = z.object({
 });
 
 export type IntentStatus = z.output<typeof intentStatusSchema>;
+
+/**
+ * The pool's load for one expiry: what the device needs to price a call exactly (the surcharge is
+ * `maxSurchargeE6 × reservedByExpiry / maxExpiryReserved`) and to know before signing whether the fill fits (pool
+ * liquidity, total exposure, the expiry's cap). Read from the chain, cached a second.
+ */
+export const windowLoadRoute = defineRoute({
+  method: "GET",
+  path: "/v1/markets/load",
+  auth: "none",
+  params: undefined,
+  query: z.object({
+    chainId: z.coerce.number().pipe(chainIdSchema),
+    expiry: z.coerce.number().int().nonnegative(),
+  }),
+  body: undefined,
+  response: z.object({
+    expiry: unixSecondsSchema,
+    reservedByExpiry: uintCodec,
+    liquid: uintCodec,
+    reserved: uintCodec,
+  }),
+});
+
+export type WindowLoad = z.output<typeof windowLoadRoute.response>;
 
 export const submitIntentRoute = defineRoute({
   method: "POST",

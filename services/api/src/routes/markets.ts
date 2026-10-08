@@ -8,6 +8,7 @@ import {
   streamTicketRoute,
   submitIntentRoute,
   ticketsRoute,
+  windowLoadRoute,
   withdrawRoute,
 } from "@senryo/api-client";
 import { addressOf, dollarTokenOf, type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
@@ -26,6 +27,14 @@ const WITHDRAW_PER_MINUTE = 5;
 const MINUTE_MS = 60_000;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const configCache = new Map<ChainId, { at: number; version: number }>();
+/** A window's load moves with every fill: a second of cache absorbs a terminal crowd without going stale. */
+const LOAD_CACHE_MS = 1_000;
+/** Entries older than this many cache lifetimes are dropped (windows roll every minute). */
+const LOAD_CACHE_KEEP = 120;
+const loadCache = new Map<
+  string,
+  { at: number; value: { reservedByExpiry: bigint; liquid: bigint; reserved: bigint } }
+>();
 
 async function configVersion(ctx: ApiContext, chainId: ChainId): Promise<number> {
   const hit = configCache.get(chainId);
@@ -67,6 +76,9 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         halfSpreadE6: terms.halfSpreadE6,
         minProbE6: terms.minProbE6,
         maxProbE6: terms.maxProbE6,
+        maxSurchargeE6: terms.maxSurchargeE6,
+        maxExpiryReserved: terms.maxExpiryReserved,
+        maxExposureBps: terms.maxExposureBps,
         minStake: terms.minStake,
         maxStake: terms.maxStake,
         session: terms.session,
@@ -158,6 +170,29 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         ];
       }),
     });
+  });
+
+  app.get(windowLoadRoute.path, async (request, reply) => {
+    const { query } = parseRoute(windowLoadRoute, request);
+    const chain = chainOf(ctx, query.chainId);
+    const key = `${chain.chainId}:${query.expiry}`;
+    let hit = loadCache.get(key);
+    if (!hit || Date.now() - hit.at >= LOAD_CACHE_MS) {
+      const reserve = addressOf(chain.chainId, "BandReserve");
+      const [reservedByExpiry, liquid, reserved] = await chain.read.multicall({
+        allowFailure: false,
+        contracts: [
+          { address: reserve, abi: bandReserveAbi, functionName: "reservedByExpiry", args: [query.expiry] },
+          { address: reserve, abi: bandReserveAbi, functionName: "liquid" },
+          { address: reserve, abi: bandReserveAbi, functionName: "reserved" },
+        ],
+      });
+      hit = { at: Date.now(), value: { reservedByExpiry, liquid, reserved } };
+      loadCache.set(key, hit);
+      for (const [k, v] of loadCache) if (Date.now() - v.at > LOAD_CACHE_MS * LOAD_CACHE_KEEP) loadCache.delete(k);
+    }
+    reply.header("cache-control", "public, max-age=1");
+    return sendRoute(reply, windowLoadRoute, { expiry: query.expiry, ...hit.value });
   });
 
   app.get(marketAccountRoute.path, async (request, reply) => {
