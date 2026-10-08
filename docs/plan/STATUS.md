@@ -1,3 +1,22 @@
+# Real venues on Monad: Stage 1 (8 October 2026, Claude Code)
+
+Perpl now works for real on public Monad testnet, through the app's own code. A brand-new wallet ran the whole journey:
+- starter gift (gas) and **Get test money** (10,000 test AUSD, sponsor-paid);
+- open BTC long $300 at 3×;
+- close 50 %, close the rest, withdraw.
+
+Evidence:
+- `scripts/drive/src/perpl-public-check.ts`; transaction hashes in `acceptance.md`.
+- api `sha-35e3257` deployed (`POST /v1/practice/perpl-funds`, migration 0014, Test AUSD listed).
+- iOS OTA `1736175c-5d78-4b8b-b186-f48fa48ed359`.
+- Simulator crash pass on the current UGLYCASH build: Money home, Add funds → Practice money, engine ticket → "Long EUR opened".
+
+Moved to Stage 2, so they're built once on the unified ticket rather than twice:
+- Perpl "pay with any token" on mainnet;
+- Perpl inside the main Withdraw flow.
+
+Phone acceptance is still owed by the user.
+
 # Real venues on Monad: Stage 0 (8 October 2026, Claude Code)
 
 **Current plan:** [real-venues-2026-10-08.md](real-venues-2026-10-08.md), approved by the user on 8 Oct.
