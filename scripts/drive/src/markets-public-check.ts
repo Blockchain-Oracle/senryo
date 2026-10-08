@@ -9,6 +9,7 @@
 import {
   authNonceRoute,
   authVerifyRoute,
+  callTimelineRoute,
   catalogRoute,
   createApiClient,
   grantSessionRoute,
@@ -43,6 +44,8 @@ const PERMIT_VALUE = 100_000_000n;
 const MIN_LEFT_SEC = 42;
 const POLL_MS = 250;
 const FILL_TIMEOUT_MS = 30_000;
+/** The indexer follows the head within a couple of seconds (D-279). */
+const INDEX_WAIT_MS = 10_000;
 const SETTLE_TIMEOUT_MS = 120_000;
 const DEADLINE_SEC = 90;
 const SESSION_SEC = 900;
@@ -130,7 +133,22 @@ async function submitIntent(
     if (s.state === "filled" || s.state === "refused" || s.state === "failed") break;
     await sleep(POLL_MS);
   }
-  return { ...s, committedTx, tapToDoneMs: Date.now() - tapped };
+  const tapToDoneMs = Date.now() - tapped;
+  if (!committedTx && s.ticketId !== null) committedTx = await indexedCommitTx(s.ticketId);
+  return { ...s, committedTx, tapToDoneMs };
+}
+
+/** The commit tx when polling missed the brief "committed" state: the indexer's call timeline has it (S4). */
+async function indexedCommitTx(ticketId: bigint): Promise<string | null> {
+  const until = Date.now() + INDEX_WAIT_MS;
+  while (Date.now() < until) {
+    const found = await api
+      .call(callTimelineRoute, { params: { ticketId }, query: { chainId: CHAIN } })
+      .catch(() => undefined);
+    if (found) return found.call.commitTx;
+    await sleep(POLL_MS);
+  }
+  return null;
 }
 
 async function main() {

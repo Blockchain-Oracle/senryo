@@ -20,12 +20,48 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0–S3 done (S1b's builds submitted to TestFlight and Play internal); next is S4 (indexer).
+**Where we are:** S0–S4 done (S1b's builds submitted to TestFlight and Play internal); next is S5 (the phone loop).
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
 - Agari's new key is live on `agari-ops`.
 - Owarine's ops env now uses Senryo's key.
+
+## S4 handoff (indexer, 8 Oct)
+
+The markets' history is indexed on production and served by the api (`ids-and-txs.md` → "Indexer deploy (S4)").
+Gate (`scripts/drive/src/indexer-parity-check.ts`, exit 0 on production, 23 tickets · 9 owners · 15 windows): every
+ticket on chain equals what the api serves for its owner (status, band, window, remaining payout, entry print); for
+every owner, Σ stakes equals the Test USD paid to the reserve and Σ returned equals what the reserve paid out plus
+anything owed (Transfer logs over HyperSync, independent of the indexer); `/stats` agrees with the calls; each
+window's call count equals its filled tickets. Two fresh S3 journeys passed on production with the indexer live; on
+the final image every ticket event (commit, fill, cash-out, settlement, payout) was indexed 0–2 s after its block.
+`pnpm gate` 0.
+
+**Built (D-279):**
+- `indexer/`: Envio 3.14 schema and handlers — windows and their prints, tickets with full timelines, accounts (pnl,
+  wins, streaks), daily stats (pnl, calls, wins), markets, pool, sessions. A Docker Image app on the ledger Postgres
+  (schema `envio`, its own role `senryo_indexer`), Hasura off; HyperSync backfills, Monad's public RPC follows the head
+  (100-block requests); `start.mjs` re-indexes in place when a deploy changes the schema incompatibly (tested both
+  ways locally).
+- api: `/v1/markets/calls`, `/calls/:ticketId` (timeline with receipts), `/windows/:windowId` (proof prints + crowd
+  split), `/leaderboard` (day / week / all, per network), `/stats` — `IndexerReader` over SQL, typed in
+  `@senryo/api-client` (`routes/history.ts`). The S3 journey now reads a commit tx it missed from the timeline.
+- Removed: the compose stack with its own Postgres and Hasura (Coolify resource `gafyrh7f…` and its volume deleted),
+  the empty `packages/indexer-client`, unused indexer dependencies, the pre-pivot drive plumbing; the chain-filter
+  invariant now checks the SQL reads.
+
+**Found on the way (fixed and verified on production):**
+- Under `NODE_ENV=production` Envio requires settings it otherwise defaults (throttles, Hasura settings even with
+  Hasura off); the first image crash-looped.
+- `node:24-slim` has no CA store: Envio's native RPC client failed TLS, so the indexer fell back to HyperSync, whose
+  token allows 15 queries a minute — one ticket waited 48 s. With `ca-certificates` and 100-block requests (Monad's
+  public `eth_getLogs` cap) the head runs on the RPC with no fallbacks.
+
+**Carried forward:**
+- The head depends on Monad's public RPC (`ENVIO_RPC_URL_10143` / `ENVIO_WS_URL_10143` override it); HyperSync stays
+  the backfill and the fallback.
+- Mainnet (143) joins the config at S9 with the mainnet deploy block.
 
 ## S3 handoff (services, 8 Oct)
 
