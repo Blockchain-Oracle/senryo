@@ -47,18 +47,18 @@ export function SetupScreen({
     <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top + SPACE.sm }]}>
       <SetupProgress step={step} />
       <SetupBar onBack={onBack} onSkip={onSkip} />
-      <View style={styles.heading}>
-        <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.title, { color: color.ink }]}>
-          {title}
-        </Text>
-        {body ? <Text style={[TYPE.body, styles.body, { color: color.text2 }]}>{body}</Text> : null}
-      </View>
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentBody}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
       >
+        <View style={styles.heading}>
+          <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.title, { color: color.ink }]}>
+            {title}
+          </Text>
+          {body ? <Text style={[TYPE.body, styles.body, { color: color.text2 }]}>{body}</Text> : null}
+        </View>
         {children}
       </ScrollView>
       <Animated.View style={[styles.footer, lift]}>{footer}</Animated.View>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   side: { flex: 1, flexDirection: "row" },
   end: { justifyContent: "flex-end" },
   tap: { minWidth: SIZE.touch, minHeight: SIZE.touch, justifyContent: "center" },
-  heading: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, paddingBottom: SPACE.xl },
+  heading: { gap: SPACE.sm, paddingTop: SPACE.md, paddingBottom: SPACE.xl },
   title: { fontFamily: FONT.display, textAlign: "left" },
   body: { textAlign: "left" },
   content: { flex: 1 },
