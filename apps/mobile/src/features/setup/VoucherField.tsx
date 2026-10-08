@@ -4,11 +4,14 @@
  * never a second send. "Use the free money" goes back to the card.
  */
 import { canonicalVoucherCode } from "@senryo/account";
-import { useEffect, useState } from "react";
+import { useQueryEnv } from "@senryo/query";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/kit/Button";
 import { fire } from "~/feedback/fire";
+import { useAccount } from "~/lib/account/provider";
 import type { StarterErrorCode } from "~/lib/account/starter";
 import { readClipboard } from "~/lib/clipboard";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { usd } from "~/lib/money";
 import { useReviewGuard } from "~/lib/review-guard";
 import { SetupField } from "./SetupField";
@@ -30,7 +33,21 @@ const FAILED: Partial<Record<StarterErrorCode | "AUTH", string>> = {
 };
 
 export function VoucherField({ onBack, onDone, back }: { onBack: () => void; onDone: () => void; back: () => void }) {
+  const address = useAccount().hint?.address;
+  const { chainId } = useQueryEnv();
+  return <AccountVoucher key={`${chainId}:${address}`} onBack={onBack} onDone={onDone} back={back} />;
+}
+
+function AccountVoucher({ onBack, onDone, back }: { onBack: () => void; onDone: () => void; back: () => void }) {
   const voucher = useVoucher();
+  const [pasteError, setPasteError] = useState(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const [code, setCode] = useState("");
   const guard = useReviewGuard(code);
   const canonical = canonicalVoucherCode(code);
@@ -52,19 +69,23 @@ export function VoucherField({ onBack, onDone, back }: { onBack: () => void; onD
       : phase.kind === "done"
         ? `${usd(phase.creditUsd6)} added`
         : phase.kind === "failed"
-          ? (FAILED[phase.code] ?? "Couldn’t redeem · try again")
-          : undefined;
+          ? DEV_WORKSPACE && phase.code === "NOT_DEPLOYED"
+            ? "Voucher relay isn’t available in this local workspace"
+            : (FAILED[phase.code] ?? "Couldn’t redeem · try again")
+          : pasteError
+            ? "Couldn’t paste · try again"
+            : undefined;
   return (
     <SetupScreen
       step="money"
-      title="Have a code?"
-      body="We pay the network fee"
-      onBack={back}
-      onSkip={onDone}
+      title="Enter your voucher code"
+      body="Optional · redeem practice money with a valid code"
+      onBack={phase.kind === "working" ? undefined : back}
+      onSkip={phase.kind === "working" ? undefined : onDone}
       footer={
         <>
           <Button
-            label="Use the free money"
+            label="I don’t have a code"
             variant="ghost"
             size="sm"
             disabled={phase.kind === "working" || phase.kind === "pending"}
@@ -84,16 +105,32 @@ export function VoucherField({ onBack, onDone, back }: { onBack: () => void; onD
         value={code}
         onChangeText={(t) => {
           if (phase.kind === "failed") voucher.reset();
+          setPasteError(false);
           setCode(t.toUpperCase());
         }}
         placeholder="Voucher code"
         action={{
           label: "Paste",
-          onPress: () => void readClipboard().then((t) => setCode(t.trim().toUpperCase().slice(0, VOUCHER_MAX))),
+          onPress: () =>
+            void readClipboard()
+              .then((t) => {
+                if (!alive.current) return;
+                setPasteError(false);
+                if (phase.kind === "failed") voucher.reset();
+                setCode(t.trim().toUpperCase().slice(0, VOUCHER_MAX));
+              })
+              .catch(() => {
+                if (alive.current) setPasteError(true);
+              }),
         }}
         {...(message ? { message } : {})}
         tone={phase.kind === "done" ? "good" : phase.kind === "failed" ? "bad" : "quiet"}
-        input={{ autoCapitalize: "characters", maxLength: VOUCHER_MAX, returnKeyType: "done" }}
+        input={{
+          autoCapitalize: "characters",
+          maxLength: VOUCHER_MAX,
+          returnKeyType: "done",
+          editable: phase.kind !== "working" && phase.kind !== "pending",
+        }}
       />
     </SetupScreen>
   );

@@ -91,6 +91,10 @@ export const NATIVE_DARK: Palette = {
 
 /** Scene roles used on the source's black account header and magenta context anchor. */
 export const NATIVE_SCENE = {
+  welcomeSky: "#428FC8",
+  welcomeInk: "#FFFFFF",
+  welcomeShade: "#00253D",
+  welcomeTrack: "#FFFFFF66",
   account: "#000000",
   onAccount: "#FFFFFF",
   accountMuted: "#B8B8B8",

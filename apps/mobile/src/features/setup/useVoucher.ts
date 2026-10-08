@@ -6,7 +6,7 @@
 import { classifyAuthError, isSilent, signVoucher } from "@senryo/account";
 import { assertOperationScope, keys, operationKey, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { policyContext } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
 import {
@@ -18,6 +18,7 @@ import {
 } from "~/lib/account/relay-operation";
 import { isTerminal, type RelayResult, StarterError, type StarterErrorCode, starter } from "~/lib/account/starter";
 import { RELAY_POLL_MAX, RELAY_POLL_MS } from "~/lib/constants/auth";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { useReviewGuard } from "~/lib/review-guard";
 
 export type VoucherPhase =
@@ -37,8 +38,22 @@ export function useVoucher() {
   const guard = useReviewGuard([env.chainId, address].join(":"));
   const [phase, setPhase] = useState<VoucherPhase>({ kind: "idle" });
 
+  const scope = `${env.chainId}:${address}`;
+  const current = useRef(scope);
+  current.current = scope;
+  const alive = useRef(true);
+  const running = useRef(false);
   useEffect(() => {
-    if (!address) return;
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (!address) {
+      setPhase({ kind: "idle" });
+      return;
+    }
     const previous = restoredRelay(operationKey(env.chainId, address, "relay-voucher"));
     setPhase(
       previous?.outcome === "pending" || previous?.outcome === "preparing" ? { kind: "pending" } : { kind: "idle" },
@@ -48,8 +63,17 @@ export function useVoucher() {
   const redeem = useCallback(
     async (code: string, validateInput: () => void) => {
       const client = account.client;
-      if (!client || !address) return;
-      setPhase({ kind: "working" });
+      if (!client || !address || running.current) return;
+      if (DEV_WORKSPACE) {
+        setPhase({ kind: "failed", code: "NOT_DEPLOYED" });
+        return;
+      }
+      running.current = true;
+      const owner = scope;
+      const update = (next: VoucherPhase) => {
+        if (alive.current && current.current === owner) setPhase(next);
+      };
+      update({ kind: "working" });
       const existing = restoredRelay(operationKey(env.chainId, address, "relay-voucher"));
       const recovering = existing?.outcome === "pending" || existing?.outcome === "preparing";
       const record = recovering ? existing : relayOperation(env, address, "voucher");
@@ -61,7 +85,7 @@ export function useVoucher() {
           const id = record.steps[0]?.request?.relayId;
           const latest = id ? await starter.relay(id) : (await starter.status(env.chainId, address)).lastRelay;
           if (latest?.kind !== "voucher" || Date.parse(latest.createdAt) < record.createdAt)
-            return setPhase({ kind: "pending" });
+            return update({ kind: "pending" });
           relay = latest;
         } else {
           guard();
@@ -82,9 +106,9 @@ export function useVoucher() {
         }
         await queryClient.invalidateQueries({ queryKey: keys.account(env.chainId, address) });
         const progress = await relayProgress(env, record, relay, !recovering);
-        if (!isTerminal(relay) || progress.outcome === "pending") return setPhase({ kind: "pending" });
-        if (relay.stage !== "finalized") return setPhase({ kind: "failed", code: "RELAY_REVERTED" });
-        setPhase({ kind: "done", creditUsd6: relay.creditUsd6 });
+        if (!isTerminal(relay) || progress.outcome === "pending") return update({ kind: "pending" });
+        if (relay.stage !== "finalized") return update({ kind: "failed", code: "RELAY_REVERTED" });
+        update({ kind: "done", creditUsd6: relay.creditUsd6 });
       } catch (error) {
         if (
           !submitted ||
@@ -95,13 +119,15 @@ export function useVoucher() {
           submitted &&
           !(error instanceof StarterError && !["UNREACHABLE", "RELAYER_BUSY", "UNKNOWN"].includes(error.code))
         )
-          return setPhase({ kind: "pending" });
-        if (error instanceof StarterError) return setPhase({ kind: "failed", code: error.code });
+          return update({ kind: "pending" });
+        if (error instanceof StarterError) return update({ kind: "failed", code: error.code });
         const kind = classifyAuthError(error);
-        setPhase(isSilent(kind) ? { kind: "idle" } : { kind: "failed", code: "AUTH" });
+        update(isSilent(kind) ? { kind: "idle" } : { kind: "failed", code: "AUTH" });
+      } finally {
+        running.current = false;
       }
     },
-    [account.client, account.settings.faceId, address, env, queryClient, guard],
+    [account.client, account.settings.faceId, address, env, queryClient, guard, scope],
   );
 
   return { phase, redeem, reset: () => setPhase({ kind: "idle" }) };

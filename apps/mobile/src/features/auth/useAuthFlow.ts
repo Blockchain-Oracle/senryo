@@ -17,6 +17,7 @@ import { lastAccount } from "~/lib/account/identity-cache";
 import { useAccount } from "~/lib/account/provider";
 import { isEmptyAccount } from "./account-check";
 import type { CeremonyKind } from "./CeremonyCard";
+import { ceremonyLifecycle } from "./ceremony-lifecycle";
 
 /** How long "Signed in as @handle" stays before Home (A3: ~1 s, with the unlock sound). */
 export const SIGNED_IN_MS = 1_200;
@@ -65,6 +66,20 @@ export function useAuthFlow({
 }): AuthFlow {
   const account = useAccount();
   const [phase, setPhase] = useState<AuthPhase>({ kind: "idle" });
+  const lifecycle = useRef(ceremonyLifecycle()).current;
+  const opened = useRef<PendingSignIn | undefined>(undefined);
+  const current = account.hint?.address;
+  const owner = useRef(current);
+  owner.current = current;
+  const openedFor = useRef(current);
+  useEffect(() => {
+    lifecycle.mount();
+    return () => {
+      lifecycle.unmount();
+      opened.current?.discard();
+    };
+  }, [lifecycle]);
+  const valid = lifecycle.current;
   const done = useRef(onDone);
   done.current = onDone;
 
@@ -80,66 +95,112 @@ export function useAuthFlow({
 
   const run = useCallback(
     async (flow: CeremonyKind, action: () => Promise<unknown>) => {
+      const id = lifecycle.begin();
+      if (id === undefined) return;
       setPhase({ kind: "running", flow });
       try {
         await action();
+        if (!valid(id)) return;
         fire("confirm", { sound: "unlock" });
         done.current(flow);
       } catch (error) {
-        fail(flow, error);
+        if (valid(id)) fail(flow, error);
+      } finally {
+        lifecycle.finish();
       }
     },
-    [fail],
+    [fail, lifecycle],
   );
 
   const adopt = useCallback(
-    async (pending: PendingSignIn) => {
+    async (pending: PendingSignIn, activeId?: number) => {
+      const id = activeId ?? lifecycle.begin();
+      if (id === undefined) return;
+      if (owner.current !== openedFor.current) {
+        pending.discard();
+        opened.current = undefined;
+        lifecycle.finish();
+        setPhase({ kind: "closing", flow: "sign-in" });
+        return;
+      }
+      opened.current = undefined;
       setPhase({ kind: "running", flow: "sign-in" });
       try {
         const address = await pending.adopt();
+        if (!valid(id)) return;
         fire("confirm", { sound: "unlock" });
         setPhase({ kind: "signed-in", address });
       } catch (error) {
-        fail("sign-in", error);
+        if (valid(id)) fail("sign-in", error);
+      } finally {
+        lifecycle.finish();
       }
     },
-    [fail],
+    [fail, lifecycle],
   );
 
-  const current = account.hint?.address;
   const signIn = useCallback(async () => {
+    const id = lifecycle.begin();
+    if (id === undefined) return;
     setPhase({ kind: "running", flow: "sign-in" });
-    let pending: PendingSignIn;
+    openedFor.current = current;
+    let pending: PendingSignIn | undefined;
     try {
       pending = await account.openSignIn();
+      if (!valid(id)) return pending.discard();
+      if (owner.current !== current) {
+        pending.discard();
+        opened.current = undefined;
+        setPhase({ kind: "closing", flow: "sign-in" });
+        return;
+      }
+      opened.current = pending;
+      if (switching && current && same(current, pending.address)) {
+        pending.discard();
+        opened.current = undefined;
+        fire("tick");
+        setPhase({ kind: "same", address: pending.address });
+        return;
+      }
+      const empty = await isEmptyAccount(pending.address);
+      if (!valid(id)) return pending.discard();
+      if (owner.current !== current) {
+        pending.discard();
+        opened.current = undefined;
+        setPhase({ kind: "closing", flow: "sign-in" });
+        return;
+      }
+      if (empty) {
+        const known = current ?? lastAccount();
+        const different = !switching && known !== undefined && !same(known, pending.address);
+        fire("warn");
+        setPhase({ kind: "check", reason: different ? "different" : "empty", pending });
+        return;
+      }
+      await adopt(pending, id);
     } catch (error) {
-      fail("sign-in", error);
-      return;
+      pending?.discard();
+      opened.current = undefined;
+      if (valid(id)) fail("sign-in", error);
+    } finally {
+      lifecycle.finish();
     }
-    if (switching && current && same(current, pending.address)) {
-      pending.discard();
-      fire("tick");
-      setPhase({ kind: "same", address: pending.address });
-      return;
-    }
-    if (await isEmptyAccount(pending.address)) {
-      const known = current ?? lastAccount();
-      const different = !switching && known !== undefined && !same(known, pending.address);
-      fire("warn");
-      setPhase({ kind: "check", reason: different ? "different" : "empty", pending });
-      return;
-    }
-    await adopt(pending);
-  }, [account.openSignIn, adopt, current, fail, switching]);
+  }, [account.openSignIn, adopt, current, fail, switching, lifecycle]);
 
   // The confirmation moment, then on.
   useEffect(() => {
     if (phase.kind !== "signed-in") return;
-    const id = setTimeout(() => done.current("sign-in"), SIGNED_IN_MS);
+    const address = phase.address;
+    const id = setTimeout(() => {
+      if (owner.current && same(owner.current, address)) done.current("sign-in");
+      else setPhase({ kind: "idle" });
+    }, SIGNED_IN_MS);
     return () => clearTimeout(id);
   }, [phase.kind]);
 
-  const create = useCallback(() => void run("create", account.create), [run, account.create]);
+  const create = useCallback(() => {
+    if (phase.kind !== "signed-in") void run("create", account.create);
+  }, [run, account.create, phase.kind]);
   const unlock = useCallback(() => void run("unlock", account.unlock), [run, account.unlock]);
   const retry = useCallback(() => {
     if (phase.kind !== "failed") return;
@@ -153,20 +214,23 @@ export function useAuthFlow({
   const pickAnother = useCallback(() => {
     if (phase.kind !== "check") return;
     phase.pending.discard();
+    opened.current = undefined;
     void signIn();
   }, [phase, signIn]);
   const reset = useCallback(() => {
-    setPhase((was) => {
-      if (was.kind === "check") was.pending.discard();
-      return { kind: "idle" };
-    });
-  }, []);
+    lifecycle.invalidate();
+    opened.current?.discard();
+    opened.current = undefined;
+    setPhase({ kind: "idle" });
+  }, [lifecycle]);
 
   return {
     phase,
     extraPrompt: account.extraPrompt !== undefined,
     create,
-    signIn: () => void signIn(),
+    signIn: () => {
+      if (phase.kind !== "signed-in") void signIn();
+    },
     unlock,
     retry,
     useIt,

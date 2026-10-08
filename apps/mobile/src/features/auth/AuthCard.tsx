@@ -8,7 +8,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Icon } from "~/components/kit/Icon";
 import type { IconName } from "~/components/kit/icons";
-import { type Palette, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { FONT, type Palette, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 export type GlyphTone = "primary" | "gold" | "down";
 
@@ -48,7 +48,7 @@ export function AuthCard({
   const tint = ink(tone, color);
   return (
     <View accessibilityRole={tone === "down" ? "alert" : undefined} style={styles.wrap}>
-      <View style={styles.head}>
+      <View style={[styles.head, tone === "down" ? styles.failure : null]}>
         {art ? (
           art
         ) : glyph === "passkey" ? (
@@ -56,10 +56,15 @@ export function AuthCard({
         ) : glyph ? (
           <Icon name={glyph} size={GLYPH} tint={tint} />
         ) : null}
-        <Text accessibilityRole="header" style={[TYPE.sheetHeading, styles.center, { color: color.ink }]}>
+        <Text
+          accessibilityRole="header"
+          style={[TYPE.sheetHeading, styles.title, tone === "down" ? styles.left : styles.center, { color: color.ink }]}
+        >
           {title}
         </Text>
-        {body ? <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{body}</Text> : null}
+        {body ? (
+          <Text style={[TYPE.body, tone === "down" ? styles.left : styles.center, { color: color.text2 }]}>{body}</Text>
+        ) : null}
         {busy ? <ActivityIndicator size="small" color={color.text2} style={styles.spinner} /> : null}
       </View>
       {children ? <View style={styles.actions}>{children}</View> : null}
@@ -71,6 +76,9 @@ export function AuthCard({
 const styles = StyleSheet.create({
   wrap: { gap: SPACE.lgPlus },
   head: { alignItems: "center", gap: SPACE.sm, paddingHorizontal: SPACE.sm },
+  title: { fontFamily: FONT.display },
+  failure: { alignItems: "stretch" },
+  left: { textAlign: "left" },
   center: { textAlign: "center" },
   spinner: { marginTop: SPACE.sm },
   actions: { gap: SPACE.sm },

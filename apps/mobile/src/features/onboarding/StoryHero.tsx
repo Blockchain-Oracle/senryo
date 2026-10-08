@@ -2,7 +2,7 @@ import { useState } from "react";
 import { type ImageSourcePropType, StyleSheet, View } from "react-native";
 import Animated, { type SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { imageModule } from "~/lib/native-modules";
-import { FONT, RADIUS, useTheme } from "~/theme";
+import { FONT, useTheme } from "~/theme";
 import { ART_SIZE, LAYER_DEPTH, LAYER_ORDER, SCENES, type SceneLabel } from "./scenes";
 
 /** A layer starts fading once the scene is this far from centre and is gone when the next scene is centred. */
@@ -17,11 +17,11 @@ const MOUNT_WINDOW = 2;
 const LABEL_FONT_RATIO = 0.44;
 
 /**
- * The story's hero (C01, S01–S06, M01): one inset, rounded, clipped stage. The scenes' colour fields crossfade in
+ * The story's hero (Senryo art adapted to U14-S01–S04): one full-width transparent stage. The owned foreground layers crossfade in
  * place; their artwork layers travel with the page at different depths (the foreground a little faster, the back a
  * little slower), so objects move independently instead of one flat picture sliding. The artwork leaves a few label
  * plates blank (pair names, mode names): the app draws them as text on the plate's own layer, placed by the same
- * cover fit as the images. `position` is the scene index as a float. Reduce Motion: nothing travels, scenes crossfade.
+ * contain fit as the images. `position` is the scene index as a float. Reduce Motion: nothing travels, scenes crossfade.
  */
 export function StoryHero({
   position,
@@ -44,9 +44,6 @@ export function StoryHero({
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      {scenes.map(({ scene, index }) => (
-        <Layer key={scene.key} source={scene.field} index={index} position={position} travel={0} />
-      ))}
       {scenes.flatMap(({ scene, index }) =>
         LAYER_ORDER.map((name) => {
           const source = scene.layers[name];
@@ -107,19 +104,21 @@ function Layer({
   const expoImage = imageModule();
   // Scene art is always a bundled require (a module number); anything else stays on React Native's Image.
   if (!expoImage || typeof source !== "number") {
-    return <Animated.Image source={source} resizeMode="cover" style={[StyleSheet.absoluteFill, styles.image, style]} />;
+    return (
+      <Animated.Image source={source} resizeMode="contain" style={[StyleSheet.absoluteFill, styles.image, style]} />
+    );
   }
   const { Image } = expoImage;
   // The layer moves as one native view; expo-image keeps the decoded bitmap in memory, so re-entering a scene never
   // decodes again.
   return (
     <Animated.View style={[StyleSheet.absoluteFill, style]}>
-      <Image source={source} contentFit="cover" cachePolicy="memory" transition={0} style={styles.image} />
+      <Image source={source} contentFit="contain" cachePolicy="memory" transition={0} style={styles.image} />
     </Animated.View>
   );
 }
 
-/** One label, centred in its plate. The box is mapped from the master's units by the images' cover fit. */
+/** One label, centred in its plate. The box is mapped from the master's units by the images' contain fit. */
 function Label({
   label,
   stage,
@@ -135,7 +134,7 @@ function Label({
 }) {
   const { color } = useTheme();
   const style = useLayerStyle(index, position, travel);
-  const scale = Math.max(stage.width / ART_SIZE.width, stage.height / ART_SIZE.height);
+  const scale = Math.min(stage.width / ART_SIZE.width, stage.height / ART_SIZE.height);
   const left = (stage.width - ART_SIZE.width * scale) / 2 + label.x * scale;
   const top = (stage.height - ART_SIZE.height * scale) / 2 + label.y * scale;
   const fontSize = label.height * scale * LABEL_FONT_RATIO;
@@ -156,7 +155,7 @@ function Label({
 }
 
 const styles = StyleSheet.create({
-  hero: { flex: 1, borderRadius: RADIUS.xl, overflow: "hidden" },
+  hero: { flex: 1, overflow: "hidden" },
   image: { width: "100%", height: "100%" },
   label: { position: "absolute", alignItems: "center", justifyContent: "center" },
 });

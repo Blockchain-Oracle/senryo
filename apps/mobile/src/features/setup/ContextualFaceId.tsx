@@ -1,12 +1,13 @@
 import { useFocusEffect, usePathname } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Linking, StyleSheet, Text, View } from "react-native";
+import { AppState, Linking, StyleSheet, Text, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
 import { Button } from "~/components/kit/Button";
 import { FaceId } from "~/components/kit/symbols";
 import { Sheet } from "~/components/sheet/Sheet";
 import { useDock } from "~/components/shell/dock-context";
 import { fire } from "~/feedback/fire";
+import { waitForAuthForeground } from "~/lib/account/foreground";
 import { useAccount } from "~/lib/account/provider";
 import { type BiometricOutcome, type Biometrics, readBiometrics, turnOnBiometrics } from "~/lib/biometrics";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -48,9 +49,26 @@ export function ContextualFaceId() {
   }, []);
   const current = useRef(address);
   current.current = address;
+  const [refresh, setRefresh] = useState(0);
+  const interruptions = useRef(0);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "background") interruptions.current += 1;
+      if (state === "active") {
+        if (!running.current) setOutcome(undefined);
+        setRefresh((value) => value + 1);
+      }
+    });
+    return () => sub.remove();
+  }, []);
+  useEffect(() => {
+    setOutcome(undefined);
+    setBusy(false);
+  }, [address]);
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
+    setPhone(undefined);
     setReadFailed(false);
     void readBiometrics().then(
       (value) => {
@@ -63,7 +81,7 @@ export function ContextualFaceId() {
     return () => {
       cancelled = true;
     };
-  }, [visible]);
+  }, [visible, address, refresh]);
   const next = () => {
     if (!alive.current || !address || running.current || pendingSetupStep(address) !== "face-id") return;
     completeSetupStep(address, "face-id");
@@ -73,7 +91,22 @@ export function ContextualFaceId() {
     const owner = address;
     running.current = true;
     setBusy(true);
-    const result = await turnOnBiometrics(`Enable ${phone.word} for Senryo`);
+    const review = interruptions.current;
+    let result = await turnOnBiometrics(`Enable ${phone.word} for Senryo`);
+    if (result === "on") {
+      try {
+        await waitForAuthForeground({
+          current: () => AppState.currentState,
+          subscribe: (listener) => {
+            const sub = AppState.addEventListener("change", listener);
+            return () => sub.remove();
+          },
+        });
+      } catch {
+        result = "cancelled";
+      }
+      if (review !== interruptions.current) result = "cancelled";
+    }
     running.current = false;
     if (!alive.current || current.current !== owner) return;
     setBusy(false);

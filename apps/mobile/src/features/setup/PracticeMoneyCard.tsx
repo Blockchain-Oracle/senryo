@@ -6,7 +6,7 @@
  */
 import { NATIVE_ART } from "@senryo/identity/native";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { ZoomIn } from "react-native-reanimated";
+import Animated, { ReduceMotion, ZoomIn } from "react-native-reanimated";
 import { CircleCheck } from "~/components/kit/symbols";
 import type { StarterPhase } from "~/lib/account/use-starter";
 import { SHEET_SHAPE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
@@ -63,7 +63,9 @@ export function PracticeMoneyCard({
   return (
     <View style={[styles.card, { backgroundColor: color.practiceWash }]}>
       <Animated.View
-        entering={ZoomIn.duration(TIMING.onboardingScene).withInitialValues({ transform: [{ scale: ART_FROM_SCALE }] })}
+        entering={ZoomIn.duration(TIMING.onboardingScene)
+          .reduceMotion(ReduceMotion.System)
+          .withInitialValues({ transform: [{ scale: ART_FROM_SCALE }] })}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >

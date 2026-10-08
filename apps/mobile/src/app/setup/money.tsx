@@ -14,6 +14,7 @@ import { useAccount } from "~/lib/account/provider";
 import { useTermsGate } from "~/lib/account/terms-gate";
 import { useStarter } from "~/lib/account/use-starter";
 import { ROUTES } from "~/lib/constants/routes";
+import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, useTheme } from "~/theme";
@@ -28,7 +29,37 @@ const CREDITED_HOLD_MS = 1_200;
  */
 export default function MoneyStep() {
   const network = useNetwork();
-  return network.key === "mainnet" ? <MainnetMoney /> : <PracticeMoney />;
+  const address = useAccount().hint?.address;
+  if (DEV_WORKSPACE) return <LocalMoney key={address ?? "guest"} />;
+  return network.key === "mainnet" ? <MainnetMoney key={address} /> : <PracticeMoney key={address} />;
+}
+
+/** The opt-in local controller funds its fixture during prepare; no sponsor claim happened. */
+function LocalMoney() {
+  const { next, back } = useSetupNav("money");
+  const [code, setCode] = useState(false);
+  if (code) return <VoucherField onBack={() => setCode(false)} onDone={next} back={back} />;
+  return (
+    <SetupScreen
+      step="money"
+      title="Your practice money"
+      body="Local development workspace"
+      onBack={back}
+      onSkip={next}
+      footer={
+        <>
+          <Button label="Have a code?" variant="ghost" size="sm" onPress={() => setCode(true)} />
+          <Button label="Continue" onPress={next} />
+        </>
+      }
+    >
+      <PracticeMoneyCard
+        amount={undefined}
+        credited
+        line="Local fork funded by the development controller · no relay claim"
+      />
+    </SetupScreen>
+  );
 }
 
 function PracticeMoney() {

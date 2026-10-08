@@ -35,7 +35,7 @@ export function WelcomeActions({ flow, onSwitch }: { flow: AuthFlow; onSwitch: (
   }, [account.ready, account.hint]);
 
   if (!account.ready) return <LoadingState shape="line" label="Opening Senryo" />;
-  const busy = flow.phase.kind === "running";
+  const busy = flow.phase.kind === "running" || flow.phase.kind === "signed-in";
   const hint = account.hint;
   if (hint) return <Returning flow={flow} busy={busy} onSwitch={onSwitch} />;
   return (
@@ -52,14 +52,14 @@ export function WelcomeActions({ flow, onSwitch }: { flow: AuthFlow; onSwitch: (
       />
       <Button
         label="I have an account"
-        variant="secondary"
+        variant="primary"
         loading={busy && flow.phase.kind === "running" && flow.phase.flow === "sign-in"}
         disabled={busy}
         onPress={flow.signIn}
       />
       <Button
         label="Look around"
-        variant="ghost"
+        variant="secondary"
         size="sm"
         disabled={busy}
         onPress={() => {
@@ -79,7 +79,7 @@ function Returning({ flow, busy, onSwitch }: { flow: AuthFlow; busy: boolean; on
     <View style={styles.actions}>
       <View style={styles.who} accessible accessibilityLabel={`Your account, ${accountName(handle, address)}`}>
         <Avatar avatar={avatar} {...(address ? { address } : {})} size={RETURNING_AVATAR} />
-        <Text style={[TYPE.sheetTitle, { color: color.ink }]} numberOfLines={1}>
+        <Text style={[TYPE.sheetTitle, { color: color.account }]} numberOfLines={1}>
           {accountName(handle, address)}
         </Text>
       </View>
@@ -89,7 +89,7 @@ function Returning({ flow, busy, onSwitch }: { flow: AuthFlow; busy: boolean; on
         loading={busy}
         onPress={flow.unlock}
       />
-      <Button label="Use another account" variant="ghost" size="sm" disabled={busy} onPress={onSwitch} />
+      <Button label="Use another account" variant="secondary" size="sm" disabled={busy} onPress={onSwitch} />
     </View>
   );
 }

@@ -2,7 +2,7 @@ import { NATIVE_ART } from "@senryo/identity/native";
 import { useMyProfile } from "@senryo/query";
 import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { ZoomIn } from "react-native-reanimated";
+import Animated, { ReduceMotion, ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
 import { arriving } from "~/features/setup/SetupScreen";
@@ -47,9 +47,11 @@ export default function DoneStep() {
     <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top }]}>
       <View style={styles.centre}>
         <Animated.View
-          entering={ZoomIn.duration(TIMING.completionFoil).withInitialValues({
-            transform: [{ scale: FOIL_FROM_SCALE }],
-          })}
+          entering={ZoomIn.duration(TIMING.completionFoil)
+            .reduceMotion(ReduceMotion.System)
+            .withInitialValues({
+              transform: [{ scale: FOIL_FROM_SCALE }],
+            })}
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         >

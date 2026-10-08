@@ -1,27 +1,19 @@
-/**
- * A first-run setup step (A2; Fomo F04–F07): the progress bar on top, back and Skip in the corners with the seal
- * between them, one centred title and one short line, the step's content, and the primary action pinned to the
- * bottom — above the keyboard when a field is focused, so it is never covered (F04/F07). A quiet text action can sit
- * above the primary ("Have a code?"). Content arrives in a short stagger behind the page push.
- */
-import { ids } from "@senryo/identity";
+/** U14 setup: clear heading, recessed form and keyboard-anchored action. */
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown, ReduceMotion, useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { EntityMark } from "~/components/identity/EntityMark";
 import { ChevronLeft } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
-import { SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
+import { FONT, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
 import type { SetupStep } from "./progress";
 import { SetupProgress } from "./SetupProgress";
-
-const SEAL = ids.brand("senryo");
 
 /** The i-th block of a step rises into place behind the previous one. */
 export function arriving(i: number) {
   return FadeInDown.duration(TIMING.staggerItem)
     .delay(i * TIMING.stagger)
+    .reduceMotion(ReduceMotion.System)
     .withInitialValues({ transform: [{ translateY: STAGGER_RISE }] });
 }
 
@@ -39,8 +31,8 @@ export function SetupScreen({
   /** One short line under the title (no sentences on setup pages, D-237). */
   body: string;
   /** Omit on the first step: there is nothing to go back to once the account exists. */
-  onBack?: () => void;
-  onSkip?: () => void;
+  onBack?: (() => void) | undefined;
+  onSkip?: (() => void) | undefined;
   children: ReactNode;
   /** The pinned actions (a primary `Button`, optionally a quiet one above it). */
   footer: ReactNode;
@@ -55,23 +47,26 @@ export function SetupScreen({
     <View style={[styles.root, { backgroundColor: color.ground, paddingTop: insets.top + SPACE.sm }]}>
       <SetupProgress step={step} />
       <SetupBar onBack={onBack} onSkip={onSkip} />
-      <Animated.View entering={arriving(0)} style={styles.heading}>
-        <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.center, { color: color.ink }]}>
+      <View style={styles.heading}>
+        <Text accessibilityRole="header" style={[TYPE.stepTitle, styles.title, { color: color.ink }]}>
           {title}
         </Text>
-        {body ? <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{body}</Text> : null}
-      </Animated.View>
-      <Animated.View entering={arriving(1)} style={styles.content}>
+        {body ? <Text style={[TYPE.body, styles.body, { color: color.text2 }]}>{body}</Text> : null}
+      </View>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentBody}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
         {children}
-      </Animated.View>
-      <Animated.View entering={arriving(2)} style={[styles.footer, lift]}>
-        {footer}
-      </Animated.View>
+      </ScrollView>
+      <Animated.View style={[styles.footer, lift]}>{footer}</Animated.View>
     </View>
   );
 }
 
-/** Back and Skip in the corners with the seal between them; either corner may be empty. */
+/** Retained Back and optional Skip; account access never depends on decoration. */
 export function SetupBar({ onBack, onSkip }: { onBack?: (() => void) | undefined; onSkip?: (() => void) | undefined }) {
   const { color } = useTheme();
   return (
@@ -92,7 +87,6 @@ export function SetupBar({ onBack, onSkip }: { onBack?: (() => void) | undefined
           </Pressable>
         ) : null}
       </View>
-      <EntityMark id={SEAL} size={SIZE.avatarSm} variant="symbol" decorative ground={color.ground} />
       <View style={[styles.side, styles.end]}>
         {onSkip ? (
           <Pressable
@@ -124,8 +118,10 @@ const styles = StyleSheet.create({
   side: { flex: 1, flexDirection: "row" },
   end: { justifyContent: "flex-end" },
   tap: { minWidth: SIZE.touch, minHeight: SIZE.touch, justifyContent: "center" },
-  heading: { gap: SPACE.sm, paddingHorizontal: SPACE.xl, paddingTop: SPACE.xl, paddingBottom: SPACE.xl },
-  center: { textAlign: "center" },
-  content: { flex: 1, paddingHorizontal: SPACE.xl },
-  footer: { paddingHorizontal: SPACE.xl, paddingTop: SPACE.md, gap: SPACE.sm },
+  heading: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, paddingBottom: SPACE.xl },
+  title: { fontFamily: FONT.display, textAlign: "left" },
+  body: { textAlign: "left" },
+  content: { flex: 1 },
+  contentBody: { flexGrow: 1, paddingHorizontal: SIZE.gutter, paddingBottom: SPACE.lg },
+  footer: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.sm },
 });

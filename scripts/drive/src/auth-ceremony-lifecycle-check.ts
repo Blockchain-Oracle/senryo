@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { ceremonyLifecycle } from "../../../apps/mobile/src/features/auth/ceremony-lifecycle.ts";
+
+const gate = ceremonyLifecycle();
+const first = gate.begin();
+assert.ok(first !== undefined);
+assert.equal(gate.begin(), undefined, "duplicate taps cannot overlap native ceremonies");
+gate.invalidate();
+assert.equal(gate.current(first), false, "dismissed ceremony cannot publish a late outcome");
+assert.equal(gate.begin(), undefined, "dismissal does not unlock an outstanding native ceremony");
+gate.finish();
+const retry = gate.begin();
+assert.ok(retry !== undefined);
+assert.equal(gate.current(retry), true);
+gate.unmount();
+assert.equal(gate.current(retry), false, "unmounted parent cannot navigate after completion");
+gate.finish();
+assert.equal(gate.begin(), undefined);
+gate.mount();
+assert.notEqual(gate.begin(), undefined, "a remounted owner can retry");
+console.log("Auth ceremony lifecycle checks passed: duplicate taps, late outcomes, native lock, unmount and retry.");

@@ -1,4 +1,5 @@
 import { type Href, router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,6 +8,7 @@ import { SwitchConfirm } from "~/features/auth/SwitchConfirm";
 import { useAuthFlow } from "~/features/auth/useAuthFlow";
 import { WelcomeActions } from "~/features/auth/WelcomeActions";
 import { Story } from "~/features/onboarding/Story";
+import { WelcomeBackdrop } from "~/features/onboarding/WelcomeBackdrop";
 import { pendingSetupStep } from "~/features/setup/progress";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES, setupRoute } from "~/lib/constants/routes";
@@ -42,7 +44,9 @@ export default function Welcome() {
     router.replace(ROUTES.home);
   }, [phase]);
   return (
-    <View style={[styles.root, { backgroundColor: color.ground }]}>
+    <View style={[styles.root, { backgroundColor: color.welcomeSky }]}>
+      <StatusBar style="light" />
+      <WelcomeBackdrop />
       <View style={[styles.page, { paddingTop: insets.top, paddingBottom: insets.bottom + SPACE.md }]}>
         <View style={styles.top}>
           <Story />
@@ -59,7 +63,7 @@ export default function Welcome() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  page: { flex: 1, justifyContent: "space-between", gap: SPACE.lg },
+  page: { flex: 1, justifyContent: "space-between", gap: SPACE.sm },
   top: { flex: 1 },
   bottom: { paddingHorizontal: SIZE.gutter },
 });

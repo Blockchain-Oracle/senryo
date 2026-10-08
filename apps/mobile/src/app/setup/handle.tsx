@@ -2,7 +2,7 @@ import { ApiError, normalizeHandle } from "@senryo/api-client";
 import { socialKeys, useHandleAvailability, useSaveProfile } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { HELD_INFO, handleLine } from "~/features/profile/handle-copy";
 import { DEFAULT_VISIBILITY, ShowTrades } from "~/features/profile/ShowTrades";
@@ -13,6 +13,7 @@ import { SetupScreen } from "~/features/setup/SetupScreen";
 import { suggestHandle } from "~/features/setup/suggest-handle";
 import { useSetupNav } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
+import { useAccount } from "~/lib/account/provider";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
@@ -28,6 +29,11 @@ const HANDLE_MAX = 20;
  * account without a name (Home offers "Pick a username").
  */
 export default function HandleStep() {
+  const address = useAccount().hint?.address;
+  return <AccountHandle key={address ?? "guest"} />;
+}
+
+function AccountHandle() {
   const { color } = useTheme();
   const { next, address } = useSetupNav("handle");
   const session = useSessionRunner();
@@ -36,6 +42,14 @@ export default function HandleStep() {
   const [saveError, setSaveError] = useState<string>();
   const [visibility, setVisibility] = useState<Visibility>(DEFAULT_VISIBILITY);
   const touched = useRef(false);
+  const alive = useRef(true);
+  const submitting = useRef(false);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   // The address can arrive after the first frame (a resumed setup): offer the suggestion then, unless already typing.
   useEffect(() => {
     if (!touched.current && address) setText((t) => (t === "" ? suggestHandle(address) : t));
@@ -69,19 +83,29 @@ export default function HandleStep() {
   }
 
   const claim = () => {
-    if (!available || !known || save.isPending) return;
+    if (!available || !known || save.isPending || submitting.current) return;
+    submitting.current = true;
     setSaveError(undefined);
     save.mutate(
       { handle: known.handle, ...visibility },
       {
         onSuccess: () => {
+          submitting.current = false;
+          if (!alive.current) return;
           fire("confirm");
           next();
         },
         onError: (error) => {
+          submitting.current = false;
+          if (!alive.current) return;
           fire("fail");
-          const taken = error instanceof ApiError && (error.code === "HANDLE_TAKEN" || error.code === "HANDLE_HELD");
-          setSaveError(taken ? "Just taken · try another" : "Couldn’t save · try again");
+          setSaveError(
+            error instanceof ApiError && error.code === "HANDLE_HELD"
+              ? "On hold · try another"
+              : error instanceof ApiError && error.code === "HANDLE_TAKEN"
+                ? "Just taken · try another"
+                : "Couldn’t save · try again",
+          );
         },
       },
     );
@@ -92,15 +116,10 @@ export default function HandleStep() {
       step="handle"
       title="Enter your username"
       body=""
-      onSkip={next}
+      onSkip={save.isPending ? undefined : next}
       footer={<Button label="Claim username" disabled={!available} loading={save.isPending} onPress={claim} />}
     >
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.stack}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.stack}>
         <Text accessibilityRole="header" style={[TYPE.displayBalance, styles.wordmark, { color: color.ink }]}>
           SENRYO
         </Text>
@@ -128,13 +147,12 @@ export default function HandleStep() {
           }}
         />
         <ShowTrades value={visibility} onChange={setVisibility} />
-      </ScrollView>
+      </View>
     </SetupScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1 },
   stack: { gap: SPACE.xl, paddingBottom: SPACE.lg },
   wordmark: { textAlign: "center", marginBottom: SPACE.sm },
 });

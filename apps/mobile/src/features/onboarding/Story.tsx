@@ -5,6 +5,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
   FadeIn,
+  ReduceMotion,
   useReducedMotion,
   useSharedValue,
   withSpring,
@@ -12,10 +13,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { fire } from "~/feedback/fire";
-import { EASE, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
+import { EASE, FONT, RADIUS, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { STORY } from "./constants";
 import { StoryHero } from "./StoryHero";
 import { SCENES } from "./scenes";
+import { WelcomeCaptionShade } from "./WelcomeBackdrop";
 
 const LAST = SCENES.length - 1;
 const FIRST = SCENES[0] as (typeof SCENES)[number];
@@ -34,11 +36,12 @@ export function Story() {
   const width = useSharedValue(1);
   const start = useSharedValue(0);
   const [index, setIndex] = useState(0);
+  const [captionHeight, setCaptionHeight] = useState(0);
   const touched = useRef(false);
   const committed = useRef(0);
   const ended = useSharedValue(false);
   useEffect(() => {
-    const artwork = SCENES.flatMap((scene) => [scene.field, ...Object.values(scene.layers)]).filter(
+    const artwork = SCENES.flatMap((scene) => Object.values(scene.layers)).filter(
       (source): source is number => typeof source === "number",
     );
     void Asset.loadAsync(artwork).catch(() => {});
@@ -89,7 +92,7 @@ export function Story() {
 
   useEffect(() => {
     if (reduce) return;
-    let reader = false;
+    let reader = true;
     void AccessibilityInfo.isScreenReaderEnabled().then((on) => {
       reader = on;
     });
@@ -156,20 +159,6 @@ export function Story() {
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.segments}>
-        {SCENES.map((s, i) => (
-          <Pressable
-            key={s.key}
-            onPress={() => jump(i)}
-            hitSlop={{ top: SPACE.md, bottom: SPACE.md }}
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={styles.segmentTap}
-          >
-            <View style={[styles.segment, { backgroundColor: i === index ? color.action : color.raised2 }]} />
-          </Pressable>
-        ))}
-      </View>
       <GestureDetector gesture={Gesture.Exclusive(pan, tap)}>
         <View
           style={styles.stage}
@@ -188,24 +177,48 @@ export function Story() {
       </GestureDetector>
       <Animated.View
         key={scene.key}
-        entering={FadeIn.duration(TIMING.selection)}
+        entering={FadeIn.duration(TIMING.selection).reduceMotion(ReduceMotion.System)}
         style={styles.copy}
+        onLayout={(event) => setCaptionHeight(event.nativeEvent.layout.height)}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        <Text style={[TYPE.sheetTitle, styles.center, { color: color.ink }]}>{scene.title}</Text>
-        <Text style={[TYPE.body, styles.center, { color: color.text2 }]}>{scene.body}</Text>
+        <WelcomeCaptionShade height={captionHeight} />
+        <Text style={[TYPE.stepTitle, styles.title, { color: color.welcomeInk }]}>{scene.title}</Text>
+        <Text style={[TYPE.body, styles.center, { color: color.welcomeInk }]}>{scene.body}</Text>
       </Animated.View>
+      <View style={styles.segments}>
+        {SCENES.map((s, i) => (
+          <Pressable
+            key={s.key}
+            onPress={() => jump(i)}
+            hitSlop={{ top: SPACE.md, bottom: SPACE.md }}
+            accessibilityRole="button"
+            accessibilityLabel={`Show scene ${i + 1}: ${s.title}`}
+            style={styles.segmentTap}
+          >
+            <View style={[styles.segment, { backgroundColor: i <= index ? color.action : color.welcomeTrack }]} />
+          </Pressable>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, paddingHorizontal: SIZE.gutter, gap: SPACE.md },
-  segments: { flexDirection: "row", gap: SPACE.xs, paddingTop: SPACE.sm },
-  segmentTap: { flex: 1 },
+  wrap: { flex: 1, gap: SPACE.sm },
+  segments: {
+    flexDirection: "row",
+    gap: SPACE.xs,
+    paddingTop: SPACE.sm,
+    alignSelf: "center",
+    width: 160,
+    maxWidth: "100%",
+  },
+  segmentTap: { flex: 1, minHeight: SIZE.touch, justifyContent: "center" },
   segment: { height: STORY.segmentHeight, borderRadius: RADIUS.pill },
   stage: { flex: 1 },
-  copy: { gap: SPACE.xs, minHeight: STORY.copyMinHeight, justifyContent: "flex-start" },
-  center: { textAlign: "center" },
+  copy: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter, minHeight: STORY.copyMinHeight, justifyContent: "flex-start" },
+  title: { fontFamily: FONT.display, textAlign: "center", paddingHorizontal: SIZE.gutter },
+  center: { textAlign: "center", paddingHorizontal: SIZE.gutter },
 });

@@ -1,7 +1,7 @@
 import { useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { closeMenu, registerDevMenuItems } from "expo-dev-client";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,6 +21,12 @@ export function WorkspaceHost() {
 
 function WorkspaceControls() {
   const { color } = useTheme();
+  const pathname = usePathname();
+  const hideBadge =
+    pathname === "/welcome" ||
+    pathname.startsWith("/setup") ||
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/recover");
   const insets = useSafeAreaInsets();
   const account = useAccount();
   const queries = useQueryClient();
@@ -45,23 +51,25 @@ function WorkspaceControls() {
       setBusy(false);
     }
   };
-  const go = (href: typeof ROUTES.home | typeof ROUTES.markets | typeof ROUTES.you) => {
+  const go = (href: typeof ROUTES.home | typeof ROUTES.markets | typeof ROUTES.you | typeof ROUTES.welcome) => {
     setOpen(false);
     router.navigate(href);
   };
   return (
     <>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Open development workspace controls"
-        onPress={() => setOpen(true)}
-        style={[
-          styles.badge,
-          { bottom: dockBottom(insets.bottom) + DOCK.height + SPACE.sm, backgroundColor: color.ink },
-        ]}
-      >
-        <Text style={[TYPE.meta, { color: color.ground }]}>DEV · Local fork</Text>
-      </Pressable>
+      {!hideBadge ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open development workspace controls"
+          onPress={() => setOpen(true)}
+          style={[
+            styles.badge,
+            { bottom: dockBottom(insets.bottom) + DOCK.height + SPACE.sm, backgroundColor: color.ink },
+          ]}
+        >
+          <Text style={[TYPE.meta, { color: color.ground }]}>DEV · Local fork</Text>
+        </Pressable>
+      ) : null}
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
         <View style={[styles.scrim, { backgroundColor: color.scrim }]}>
           <View style={[styles.panel, { backgroundColor: color.ground, paddingBottom: insets.bottom + SPACE.lg }]}>
@@ -122,6 +130,7 @@ function WorkspaceControls() {
                   })
                 }
               />
+              <Button label="Preview welcome" variant="secondary" disabled={busy} onPress={() => go(ROUTES.welcome)} />
               <Button
                 label="Replay onboarding"
                 variant="secondary"

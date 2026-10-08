@@ -34,7 +34,7 @@ export function CeremonyCard({ kind, extraPrompt }: { kind: CeremonyKind; extraP
       body={
         extraPrompt
           ? "One more confirmation. Some passkey providers ask twice the first time: same passkey, same account."
-          : `Confirm with ${SHEET_WORD}. Your keys stay on this phone.`
+          : `Confirm with ${SHEET_WORD}. Use the account’s passkey in the system prompt.`
       }
     />
   );

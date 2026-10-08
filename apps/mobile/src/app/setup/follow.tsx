@@ -1,7 +1,8 @@
 import type { Address } from "@senryo/account";
-import { useFollowRecommendations, useFollowToggle } from "@senryo/query";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { socialKeys, useFollowRecommendations, useFollowToggle, useQueryEnv } from "@senryo/query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Skeleton } from "~/components/kit/states";
 import { FollowRow } from "~/features/setup/FollowRow";
@@ -22,16 +23,41 @@ const LOADING_KEYS = ["a", "b", "c"] as const;
  * failed → "Couldn't load · Skip".
  */
 export default function FollowStep() {
+  const { address } = useSetupNav("follow");
+  const { chainId } = useQueryEnv();
+  return <AccountFollow key={`${chainId}:${address}`} />;
+}
+function AccountFollow() {
   const { color } = useTheme();
   const { next, back, address } = useSetupNav("follow");
   const session = useSessionRunner();
   const suggestions = useFollowRecommendations(session);
+  const { chainId } = useQueryEnv();
+  const client = useQueryClient();
+  const [retrying, setRetrying] = useState(false);
+  const retry = async () => {
+    if (retrying) return;
+    setRetrying(true);
+    try {
+      await client.refetchQueries({ queryKey: socialKeys.recommendations(chainId), exact: true });
+    } finally {
+      if (alive.current) setRetrying(false);
+    }
+  };
   const follow = useFollowToggle(address, session);
   const [picked, setPicked] = useState<ReadonlySet<Address>>(() => new Set());
   const [all, setAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
+  const running = useRef(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const toggle = (who: Address) =>
     setPicked((prev) => {
       const out = new Set(prev);
@@ -41,18 +67,26 @@ export default function FollowStep() {
     });
 
   const done = async () => {
+    if (running.current) return;
     setFailed(false);
     if (picked.size === 0) return next();
+    running.current = true;
     setBusy(true);
     try {
-      for (const other of picked) await follow.mutateAsync({ other, follow: true });
+      for (const other of picked) {
+        if (!alive.current) return;
+        await follow.mutateAsync({ other, follow: true });
+      }
+      if (!alive.current) return;
       fire("confirm");
       next();
     } catch {
+      if (!alive.current) return;
       fire("fail");
       setFailed(true);
     } finally {
-      setBusy(false);
+      running.current = false;
+      if (alive.current) setBusy(false);
     }
   };
 
@@ -63,8 +97,8 @@ export default function FollowStep() {
       step="follow"
       title="Follow top traders"
       body="Highest 30-day PnL"
-      onBack={back}
-      onSkip={next}
+      onBack={busy ? undefined : back}
+      onSkip={busy ? undefined : next}
       footer={
         <>
           {failed ? (
@@ -80,12 +114,17 @@ export default function FollowStep() {
         </>
       }
     >
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
+      <View style={styles.list}>
         {suggestions.status === "unknown"
           ? LOADING_KEYS.map((key) => <Skeleton key={key} height={SIZE.rowMinHeight + SPACE.sm} />)
           : null}
         {suggestions.status === "failed" ? (
-          <Text style={[TYPE.body, styles.center, { color: color.text3 }]}>Couldn’t load · Skip</Text>
+          <View style={styles.list}>
+            <Text accessibilityRole="alert" style={[TYPE.body, styles.center, { color: color.text2 }]}>
+              Couldn’t load traders. Try again or continue without following anyone.
+            </Text>
+            <Button label="Try again" variant="outline" loading={retrying} onPress={() => void retry()} />
+          </View>
         ) : null}
         {items && items.length === 0 ? (
           <Text style={[TYPE.body, styles.center, { color: color.text3 }]}>No ranked traders yet</Text>
@@ -98,7 +137,7 @@ export default function FollowStep() {
             <Button label="Show more" variant="secondary" size="sm" block={false} onPress={() => setAll(true)} />
           </View>
         ) : null}
-      </ScrollView>
+      </View>
     </SetupScreen>
   );
 }
