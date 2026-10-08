@@ -7,7 +7,7 @@ import { ChildSheet } from "~/components/sheet/ChildSheet";
 import { DetailRow } from "~/features/markets/Disclosure";
 import { pct } from "~/lib/money";
 import { TYPE, useTheme } from "~/theme";
-import { fundingForSide, liqDistanceBps, perplPrice, perplSize, perplUsd } from "./format";
+import { fundingForSide, liqDistanceBps, perplNetworkFee, perplPrice, perplSize, perplUsd } from "./format";
 import { perplWatchKey } from "./market";
 import { PERPL_PRACTICE_REASON } from "./usePerplAccess";
 import type { PerplTicketModel } from "./usePerplTicket";
@@ -66,6 +66,10 @@ export function PerplDetails({
             value={`${long ? "≤" : "≥"} ${perplPrice(t.limitPricePNS, t.meta)} · ${PERPL_ORDER_TTL_BLOCKS} blocks`}
           />
         ) : null}
+        <DetailRow
+          label="Network fee"
+          value={t.networkFeeWei === undefined ? "Preparing…" : perplNetworkFee(t.networkFeeWei)}
+        />
         <DetailRow label="Slippage" value={bpsPct(PERPL_SLIPPAGE_BPS)} />
         {t.terms ? (
           <DetailRow label="Fee (taker)" value={`${perplUsd(t.feeUsd6)} · ${feePct(t.terms.takerFeePpm)}`} />

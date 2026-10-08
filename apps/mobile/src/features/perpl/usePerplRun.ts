@@ -47,6 +47,7 @@ function subscribeActive(listener: () => void): () => void {
 
 export interface PerplRun {
   plan: PerplPlan;
+  reviewedNetworkFeesWei?: readonly bigint[];
   /** One label per step for the outcome and Details ("Approve AUSD", "Open Perpl account", "Order"). */
   labels: readonly string[];
   reviewedIntent: Record<string, string>;
@@ -95,13 +96,22 @@ export function usePerplRun(traceKey: string) {
       const address = account.hint?.address;
       if (!client || !address || op.plan.steps.length === 0) return undefined;
       const { steps, plannedActions } = op.plan;
+      if (op.reviewedNetworkFeesWei && op.reviewedNetworkFeesWei.length !== steps.length)
+        throw new Error("Incomplete network fee review.");
       const reviewedIntent = { ...op.reviewedIntent, steps: op.labels.join(" · ") };
       const runAll = async (sender: Sender) => {
         let operationId: string | undefined;
         let last: TrackedResult | undefined;
         for (const [index, s] of steps.entries()) {
           setStep({ index, count: steps.length, label: op.labels[index] ?? "" });
-          const request: PerplStep = typeof s === "function" ? timed(s) : s;
+          const base: PerplStep = typeof s === "function" ? timed(s) : s;
+          const bound = op.reviewedNetworkFeesWei?.[index];
+          const request: PerplStep =
+            bound === undefined
+              ? base
+              : typeof base === "function"
+                ? async () => ({ ...(await base()), reviewedNetworkFeeWei: bound })
+                : { ...base, reviewedNetworkFeeWei: bound };
           last = await trace.run(sender, request, {
             operationId,
             plannedActions,

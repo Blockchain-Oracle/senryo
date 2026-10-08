@@ -86,6 +86,8 @@ export function commitState(input: {
   gasStep: GasStep;
   hasAccount: boolean;
   ready: boolean;
+  feeBlock?: string | undefined;
+  feeBusy?: boolean | undefined;
   previewReady: boolean;
   confirmWith?: ConfirmLevel;
 }): CommitState {
@@ -100,6 +102,8 @@ export function commitState(input: {
   if (input.amountUsd6 === 0n) return { label: "Enter an amount", holdable: false, retryGas: false };
   if (!input.hasAccount)
     return { label: "Create an account to trade", holdable: false, retryGas: false, fix: "createAccount" };
+  if (input.feeBlock) return { label: input.feeBlock, holdable: false, retryGas: false };
+  if (input.feeBusy) return { label: "Preparing network fee…", holdable: false, retryGas: false, busy: true };
   // `ready` is the account client being loaded (not the session lock: a locked session signs after Face ID).
   if (!input.ready || !input.previewReady) return { label: "Preparing order…", holdable: false, retryGas: false };
   return { label: readyLabel(input.side, input.confirmWith ?? "session"), holdable: true, retryGas: false };

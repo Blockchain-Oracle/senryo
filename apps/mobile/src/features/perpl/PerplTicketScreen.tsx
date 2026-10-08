@@ -78,6 +78,7 @@ export function PerplTicketScreen({
     t.plan?.limitPricePNS ?? "",
     t.plan?.depositCNS ?? "",
     t.plan?.lots ?? "",
+    t.networkFeeWei ?? "",
   ].join("|");
 
   const confirm = () => {

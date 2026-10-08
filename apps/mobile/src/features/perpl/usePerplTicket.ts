@@ -38,7 +38,7 @@ import { useAccount } from "~/lib/account/provider";
 import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
 import { perplConfirmLevel } from "./confirm";
-import { perplFeeShortWei } from "./fees";
+import { perplFeeReview } from "./fees";
 import { leverageHdths, leverageX } from "./format";
 import type { PerplMarketMeta } from "./market";
 import { usePerplRun } from "./usePerplRun";
@@ -144,7 +144,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
         notionalCNS: planned.notional,
         leverageHdths: planned.hdths,
       });
-      return { plan, feeShortWei: await perplFeeShortWei(read, owner, plan.plannedActions) };
+      return { plan, ...(await perplFeeReview(read, owner, plan.plannedActions)) };
     },
   });
   const settledPlan =
@@ -231,7 +231,8 @@ export function usePerplTicket(meta: PerplMarketMeta) {
 
   const submit = async () => {
     const reviewed = plan;
-    if (!reviewed || reviewed.blocker || !address || block) return undefined;
+    if (!reviewed || reviewed.blocker || !address || block || planQuery.isFetching || planQuery.isError || !settledPlan)
+      return undefined;
     const read = perplReadOf(env);
     checked.current = new Set();
     const firstOrderIndex = reviewed.steps.findIndex((s) => typeof s === "function");
@@ -260,6 +261,7 @@ export function usePerplTicket(meta: PerplMarketMeta) {
     };
     return runner.run({
       plan: reviewed,
+      reviewedNetworkFeesWei: settledPlan.feeBoundsWei,
       labels: reviewed.plannedActions.map((a) => stepLabel(a, reviewed.depositCNS)),
       reviewedIntent: {
         ...reviewed.reviewedIntent,
@@ -305,11 +307,12 @@ export function usePerplTicket(meta: PerplMarketMeta) {
     plan,
     planning: notionalUsd6 > 0n && matchingNetwork && address !== undefined && !settledPlan && !planQuery.isError,
     /** Perpl's chain reads failed for this order (the query keeps retrying on its interval). */
-    planFailed: !settledPlan && planQuery.isError,
+    planFailed: planQuery.isError,
     block,
     confirmWith,
     hasAccount: address !== undefined,
-    ready: account.client !== undefined,
+    networkFeeWei: settledPlan?.networkFeeWei,
+    ready: !planQuery.isFetching && !planQuery.isError && account.client !== undefined,
     runner,
     submit,
   };

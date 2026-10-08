@@ -89,10 +89,10 @@ export function QueryEnvProvider({
   }, [chainId, read, mainnetRead, api, indexer, marketHistory, apiOrigin, queryClient, perplSnapshot]);
 
   useEffect(() => {
-    if (!socketEnabled) return;
+    if (!socketEnabled || !streamActive) return;
     env.socket.start();
     return () => env.socket.stop();
-  }, [env, socketEnabled]);
+  }, [env, socketEnabled, streamActive]);
 
   useEffect(() => {
     env.perplPrices.setActive(streamActive);

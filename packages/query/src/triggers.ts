@@ -4,7 +4,7 @@
  * crosses. A trigger only ever reduces the matching position. Active orders come from the indexer.
  */
 import { contractCall, coreDomain, type Sender, type TxRequest } from "@senryo/chain";
-import { type ChainId, positionGasLimit } from "@senryo/config";
+import { type ChainId, GAS_LIMITS, positionGasLimit } from "@senryo/config";
 import { type Address, type Reading, RISK, TRIGGER_ORDER_TYPES } from "@senryo/core";
 import {
   type Liquidations,
@@ -17,6 +17,7 @@ import {
   triggersVars,
 } from "@senryo/indexer-client";
 import { useQuery } from "@tanstack/react-query";
+import type { ComposedStep } from "./compose.ts";
 import { ACCOUNT_REFETCH_MS } from "./constants.ts";
 import { useQueryEnv } from "./env.tsx";
 import { keys } from "./keys.ts";
@@ -136,4 +137,46 @@ export function useRecentLiquidations(address: Address | undefined, windowSec: n
     staleTime: ACCOUNT_REFETCH_MS,
   });
   return readingOf(query, ACCOUNT_REFETCH_MS);
+}
+
+const UINT128_BITS = 128n;
+/** Unsigned, non-executable placeholders so the full entry review reserves later SL/TP fees before any authority. */
+export function triggerBudgetSteps(
+  chainId: ChainId,
+  user: Address,
+  marketId: number,
+  isLong: boolean,
+  levels: readonly { kind: "sl" | "tp"; price18: bigint }[],
+): ComposedStep[] {
+  return levels.map((level) => ({
+    role: "act",
+    action: "placeTrigger",
+    label: level.kind === "sl" ? "Stop loss" : "Take profit",
+    request: {
+      ...contractCall(
+        chainId,
+        "SenryoCore",
+        "placeTrigger",
+        [
+          triggerOrder({
+            user,
+            marketId,
+            isLong,
+            takeProfit: level.kind === "tp",
+            triggerPrice18: level.price18,
+            sizeDelta: (1n << UINT128_BITS) - 1n,
+          }),
+          "0x",
+        ],
+        "placeTrigger",
+        {
+          fixedGas: GAS_LIMITS.placeTrigger,
+          meta: { kind: "protectionBudget", leg: level.kind },
+        },
+      ),
+      validate: () => {
+        throw new Error("Fee-budget-only trigger cannot be signed.");
+      },
+    },
+  }));
 }

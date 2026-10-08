@@ -75,6 +75,8 @@ export class EngineSocket {
     const socket = new WebSocket(wsUrl(this.opts.origin));
     this.socket = socket;
     socket.onopen = () => {
+      if (this.socket !== socket || this.stopped) return;
+      this.opts.prices.beginEpoch();
       this.attempt = 0;
       this.opts.onStatus?.(true);
       for (const m of engineMarketsOn(this.opts.chainId)) {
@@ -84,8 +86,11 @@ export class EngineSocket {
       if (this.feedListeners.size > 0) this.subscribeFeed("subscribe");
       this.ping = setInterval(() => this.send({ op: "ping" }), SOCKET_PING_MS);
     };
-    socket.onmessage = (event) => this.onMessage(String(event.data));
+    socket.onmessage = (event) => {
+      if (this.socket === socket && !this.stopped) this.onMessage(String(event.data));
+    };
     socket.onclose = () => {
+      if (this.socket !== socket) return;
       clearInterval(this.ping);
       this.opts.onStatus?.(false);
       if (this.stopped) return;

@@ -29,7 +29,7 @@ import { REDUCE_ALL_BPS } from "~/features/positions/constants";
 import { useAccount } from "~/lib/account/provider";
 import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
-import { perplFeeShortWei } from "./fees";
+import { perplFeeReview } from "./fees";
 import type { PerplMarketMeta } from "./market";
 import { usePerplRun } from "./usePerplRun";
 
@@ -107,7 +107,7 @@ export function usePerplPosition(meta: PerplMarketMeta) {
       const read = perplReadOf(env);
       const owner = address as NonNullable<typeof address>;
       const closing = await perplCloseOperation(read, owner, { chainId, marketId: meta.marketId, shareBps });
-      return { plan: closing, feeShortWei: await perplFeeShortWei(read, owner, closing.plannedActions) };
+      return { plan: closing, ...(await perplFeeReview(read, owner, closing.plannedActions)) };
     },
   });
   // The plan answers for the share on screen only: a full close sends the exact size, a share rounds down to lots.
@@ -126,11 +126,13 @@ export function usePerplPosition(meta: PerplMarketMeta) {
 
   const submit = async () => {
     const frozen = reviewed;
-    if (!frozen || frozen.blocker || !address || !position) return undefined;
+    if (!frozen || frozen.blocker || !address || !position || plan.isFetching || plan.isError || !plan.data)
+      return undefined;
     const read = perplReadOf(env);
     let checked = false;
     return runner.run({
       plan: frozen,
+      reviewedNetworkFeesWei: plan.data.feeBoundsWei,
       labels: [closingAll ? "Close" : "Reduce"],
       reviewedIntent: {
         ...frozen.reviewedIntent,
@@ -186,7 +188,10 @@ export function usePerplPosition(meta: PerplMarketMeta) {
     realizedUsd6,
     runner,
     submit,
-    ready: account.client !== undefined && network.chainId === chainId,
+    networkFeeWei: plan.data?.networkFeeWei,
+    feeBlock: plan.isError ? "Network fee check failed. Review again." : undefined,
+    feeBusy: plan.isFetching,
+    ready: !plan.isFetching && !plan.isError && account.client !== undefined && network.chainId === chainId,
   };
 }
 

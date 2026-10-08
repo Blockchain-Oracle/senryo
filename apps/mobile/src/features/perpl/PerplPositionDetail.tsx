@@ -1,4 +1,11 @@
-import { useDiscoveryCandles, useDiscoveryQuote } from "@senryo/query";
+import {
+  PERPL_PROTECTION_GATES,
+  useDiscoveryCandles,
+  useDiscoveryQuote,
+  usePerplConnection,
+  usePerplLivePrice,
+  useQueryEnv,
+} from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
 import { type ReactNode, useState } from "react";
@@ -23,11 +30,12 @@ import { SideBadge } from "~/features/portfolio/SideBadge";
 import { CloseBar } from "~/features/positions/CloseTicket";
 import { REDUCE_ALL_BPS, REDUCE_STEPS_BPS } from "~/features/positions/constants";
 import { fire } from "~/feedback/fire";
+import { usePositionReaction } from "~/feedback/usePositionReaction";
 import { marketRoute, perplWithdrawRoute, ticketRoute } from "~/lib/constants/routes";
 import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { pct } from "~/lib/money";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, STAGGER_RISE, TIMING, TYPE, useTheme } from "~/theme";
-import { monText, perplPrice, perplPrice18, perplSignedUsd, perplSize, perplUsd } from "./format";
+import { monText, perplNetworkFee, perplPrice, perplPrice18, perplSignedUsd, perplSize, perplUsd } from "./format";
 import { type PerplMarketMeta, perplWatchKey } from "./market";
 import { PerplCloseOutcome } from "./PerplCloseOutcome";
 import { PerplLiveChart } from "./PerplLiveChart";
@@ -41,14 +49,31 @@ const STEP_LABEL = (bps: bigint) => (bps >= REDUCE_ALL_BPS ? "100%" : pct(bps));
  * P&L the Exchange computes at its mark, coloured by profit (ⓘ: price and funding) → a two-column grid of Size (in
  * the asset) · Entry · Mark · Liq. (Perpl's own formula) → margin and funding so far, then Perpl's compact live chart
  * with the entry line and what's free
- * on Perpl with "Move it back" → TP/SL "On Perpl soon" → Add · Share → Reduce 25/50/75/100 % with its quote and the
+ * on Perpl with "Move it back" → TP/SL setup requirements → Add · Share → Reduce 25/50/75/100 % with its quote and the
  * pinned slide. After the slide the page is the outcome surface.
  */
 export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
   useHideDockWhileFocused("perpl-position");
   const p = usePerplPosition(meta);
+  const env = useQueryEnv();
+  const live = usePerplLivePrice(meta.marketId);
+  const connection = usePerplConnection();
+  usePositionReaction(
+    `${connection.epoch}:${env.chainId}:${p.snapshot?.account?.accountId ?? ""}:${meta.marketId}:${p.position?.side ?? ""}:${p.position?.lots ?? ""}`,
+    live?.at ?? 0,
+    p.position?.pnlCNS ?? 0n,
+    Boolean(
+      connection.state === "connected" &&
+        p.terms !== undefined &&
+        !p.terms.paused &&
+        p.position?.markPriceValid &&
+        live &&
+        perplPrice18(p.position.markPricePNS, meta) === live.price18,
+    ),
+  );
   const { color } = useTheme();
   const client = useQueryClient();
+  const [protection, setProtection] = useState(false);
   const [pnl, setPnl] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>(DEFAULT_PERIOD);
   const id = perplWatchKey(meta.symbol);
@@ -183,12 +208,17 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
           />
         </Rise>
         <Rise index={3}>
-          <View style={styles.row} accessible accessibilityLabel="Stop loss and take profit on Perpl soon">
+          <Pressable
+            style={styles.row}
+            accessibilityRole="button"
+            accessibilityLabel="Protection setup requirements"
+            onPress={() => setProtection(true)}
+          >
             <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowTitle, styles.flex, { color: color.ink }]}>
               TP / SL
             </Text>
-            <Quiet>On Perpl soon</Quiet>
-          </View>
+            <Quiet>Setup required</Quiet>
+          </Pressable>
         </Rise>
         <Rise index={4}>
           <View style={styles.actions}>
@@ -221,6 +251,10 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
                 <DetailRow label="Size" value={perplSize(p.lots, meta)} />
                 <DetailRow label="Realised (est.)" value={perplSignedUsd(p.realizedUsd6)} />
                 <DetailRow label="Fee (est.)" value={perplUsd(p.feeUsd6)} />
+                <DetailRow
+                  label="Network fee"
+                  value={p.networkFeeWei === undefined ? "Preparing…" : perplNetworkFee(p.networkFeeWei)}
+                />
               </View>
             ) : (
               <Skeleton height={SIZE.skeletonRow} />
@@ -231,17 +265,39 @@ export function PerplPositionDetail({ meta }: { meta: PerplMarketMeta }) {
       <CloseBar
         brand
         label={
-          p.feeShortWei > 0n
-            ? `Add ${monText(p.feeShortWei)} for fees`
-            : p.closingAll
-              ? "Slide to close"
-              : `Slide to reduce ${pct(p.shareBps)}`
+          p.feeBlock
+            ? p.feeBlock
+            : p.feeBusy
+              ? "Preparing network fee…"
+              : p.feeShortWei > 0n
+                ? `Add ${monText(p.feeShortWei)} for fees`
+                : p.closingAll
+                  ? "Slide to close"
+                  : `Slide to reduce ${pct(p.shareBps)}`
         }
         isLong={long}
-        resetKey={[meta.marketId, p.shareBps, position.lots, p.plan?.limitPricePNS ?? ""].join("|")}
+        resetKey={[meta.marketId, p.shareBps, position.lots, p.plan?.limitPricePNS ?? "", p.networkFeeWei ?? ""].join(
+          "|",
+        )}
         disabled={!p.plan || Boolean(p.plan.blocker) || !p.ready || p.feeShortWei > 0n}
         onConfirm={() => void p.submit()}
       />
+      <ChildSheet open={protection} onClose={() => setProtection(false)} title="Perpl protection">
+        <View>
+          <DetailRow label="Venue account" value={String(p.snapshot?.account?.accountId ?? "Unavailable")} />
+          <DetailRow label="Held position" value={`${position.side} ${perplSize(position.lots, meta)}`} />
+          <DetailRow label="Mark" value={perplPrice(position.markPricePNS, meta)} />
+          <DetailRow label="Protection status" value="Not activated" />
+        </View>
+        <Quiet>
+          Perpl supports server-managed stop loss and take profit. Activation requires separate provider authorization;
+          saving a level cannot silently enable it.
+        </Quiet>
+        {PERPL_PROTECTION_GATES.map((gate) => (
+          <Quiet key={gate}>{gate}</Quiet>
+        ))}
+        <Quiet>Existing direct reviewed close remains available. No protection order is active from this screen.</Quiet>
+      </ChildSheet>
       <ChildSheet open={pnl} onClose={() => setPnl(false)} title="Unrealised P&L">
         <View>
           <DetailRow label="Price" value={perplSignedUsd(position.deltaPnlCNS)} />

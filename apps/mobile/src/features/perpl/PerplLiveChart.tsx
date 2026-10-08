@@ -1,4 +1,4 @@
-import { usePerplLivePrice } from "@senryo/query";
+import { usePerplConnection, usePerplLivePrice, usePerplMarketTerms } from "@senryo/query";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -31,6 +31,9 @@ export function PerplLiveChart({
   compact?: boolean | undefined;
 }) {
   const tick = usePerplLivePrice(marketId);
+  const connection = usePerplConnection();
+  const terms = usePerplMarketTerms(marketId);
+  const paused = (terms.status === "fresh" || terms.status === "stale") && terms.value.paused;
   const [mode, setMode] = useState<"live" | "history">("live");
   const now = useNowSec();
   const { color } = useTheme();
@@ -51,12 +54,13 @@ export function PerplLiveChart({
             last={{ t: tick.at, value: tick.price18, label: tokenPrice(tick.price18) }}
             sourceLabel="Perpl mark"
             maxGapMs={MAX_GAP_MS}
+            windowMs={120_000}
             entry={entry}
             profitable={profitable}
             compact={compact}
           />
           <Text style={[TYPE.meta, { color: stale ? color.warn : color.text3 }]}>
-            {`${DEV_WORKSPACE ? "Local fork · " : ""}Perpl mark · ${stale ? "reconnecting · " : ""}updated ${ageLabel(BigInt(Math.floor(tick.at / MS_PER_SECOND)), now)}`}
+            {`${DEV_WORKSPACE ? "Local fork · " : ""}Perpl mark · ${paused ? "market paused · " : ""}${connection.state} · ${stale ? "stale source · " : ""}updated ${ageLabel(BigInt(Math.floor(tick.at / MS_PER_SECOND)), now)}`}
           </Text>
         </>
       ) : (

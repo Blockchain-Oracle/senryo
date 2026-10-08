@@ -1,5 +1,5 @@
 import { DECIMALS } from "@senryo/core";
-import { useCandles, useQueryEnv } from "@senryo/query";
+import { useCandles, usePriceTick, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -15,8 +15,11 @@ import { SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { PeriodChips } from "./PeriodChips";
 import { axisTimeLabel, CHART_PERIODS, DEFAULT_PERIOD, dayLabel, type PeriodKey, periodOf } from "./periods";
 import { QuietLine } from "./QuietLine";
+import { ageLabel } from "./session";
 import type { MarketLine } from "./useMarketLine";
+import { useNowSec } from "./useNowSec";
 
+const STALE_SOURCE_SEC = 15n;
 const MS_PER_SECOND = 1000;
 const GAP_INTERVALS = 2;
 const CHART_MODES = [
@@ -44,6 +47,9 @@ export function MarketChart({
   const { color } = useTheme();
   const client = useQueryClient();
   const env = useQueryEnv();
+  const tick = usePriceTick(line.symbol);
+  const now = useNowSec();
+  const [window, setWindow] = useState<"live" | "history">("live");
   const [period, setPeriod] = useState<PeriodKey>(DEFAULT_PERIOD);
   const [mode, setMode] = useState<"line" | "candles">("line");
   const chosen = periodOf(period);
@@ -77,56 +83,90 @@ export function MarketChart({
   );
   return (
     <View style={styles.wrap}>
-      <View style={styles.switch}>
-        <Segmented options={CHART_MODES} value={mode} onChange={setMode} label="Chart style" />
-      </View>
-      <View style={styles.chart}>
-        <ReadingView
-          reading={candles}
-          loading="chart"
-          loadingLabel={env.marketHistory ? "Loading local oracle rounds" : "Loading Chainlink rounds"}
-          retry={() => void client.invalidateQueries()}
-        >
-          {(loaded) =>
-            mode === "line" ? (
-              <PriceLineChart
-                samples={samples}
-                profitable={profitable}
-                last={{
-                  t: Number(line.updatedAt) * MS_PER_SECOND,
-                  value: line.price18,
-                  label: `$${price18(line.price18, decimals)}`,
-                }}
-                maxGapMs={chosen.interval * MS_PER_SECOND * GAP_INTERVALS}
-                entry={entry === undefined ? undefined : { value: entry, label: `Entry $${price18(entry, decimals)}` }}
-              />
-            ) : loaded.length < CHART.minPoints ? (
-              <QuietLine>No rounds in this window yet</QuietLine>
-            ) : (
-              <Animated.View key={period} entering={FadeIn.duration(TIMING.chartReveal)} style={styles.bleed}>
-                <CandleChart
-                  decimals={DECIMALS.e18}
-                  style={style}
-                  axisDecimals={decimals}
-                  axisPrefix="$"
-                  formatTime={(ms) => axisTimeLabel(chosen.axis, ms)}
-                  last={{ value: line.price18, label: `$${price18(line.price18, decimals)}` }}
-                  {...(entry === undefined
-                    ? {}
-                    : { reference: { value: entry, label: `Entry $${price18(entry, decimals)}` } })}
-                  candles={plotted}
-                  pannable
-                />
-              </Animated.View>
-            )
-          }
-        </ReadingView>
-      </View>
-      <PeriodChips options={CHART_PERIODS} value={period} onChange={setPeriod} label="Chart period" />
-      <Text style={[TYPE.meta, { color: color.text3 }]}>
-        {env.marketHistory?.label ?? "Chainlink"} · {chosen.candle} {mode === "line" ? "closes" : "candles"}
-        {first ? ` · since ${dayLabel(first.openTime * MS_PER_SECOND)}` : ""}
-      </Text>
+      <Segmented
+        options={[
+          { value: "live", label: "Live" },
+          { value: "history", label: "History" },
+        ]}
+        value={window}
+        onChange={setWindow}
+        label="Chart window"
+      />
+      {window === "live" ? (
+        <>
+          <PriceLineChart
+            samples={[...(tick?.samples ?? [])]}
+            profitable={profitable}
+            last={{
+              t: Number(line.updatedAt) * MS_PER_SECOND,
+              value: line.price18,
+              label: `$${price18(line.price18, decimals)}`,
+            }}
+            maxGapMs={30_000}
+            windowMs={120_000}
+            entry={entry === undefined ? undefined : { value: entry, label: `Entry $${price18(entry, decimals)}` }}
+          />
+          <Text style={[TYPE.meta, { color: color.text3 }]}>
+            {tick?.status ?? "Waiting for stream"} · {now - line.updatedAt > STALE_SOURCE_SEC ? "stale source · " : ""}
+            updated {ageLabel(line.updatedAt, now)} · observed oracle rounds
+          </Text>
+        </>
+      ) : (
+        <>
+          <View style={styles.switch}>
+            <Segmented options={CHART_MODES} value={mode} onChange={setMode} label="Chart style" />
+          </View>
+          <View style={styles.chart}>
+            <ReadingView
+              reading={candles}
+              loading="chart"
+              loadingLabel={env.marketHistory ? "Loading local oracle rounds" : "Loading Chainlink rounds"}
+              retry={() => void client.invalidateQueries()}
+            >
+              {(loaded) =>
+                mode === "line" ? (
+                  <PriceLineChart
+                    samples={samples}
+                    profitable={profitable}
+                    last={{
+                      t: Number(line.updatedAt) * MS_PER_SECOND,
+                      value: line.price18,
+                      label: `$${price18(line.price18, decimals)}`,
+                    }}
+                    maxGapMs={chosen.interval * MS_PER_SECOND * GAP_INTERVALS}
+                    entry={
+                      entry === undefined ? undefined : { value: entry, label: `Entry $${price18(entry, decimals)}` }
+                    }
+                  />
+                ) : loaded.length < CHART.minPoints ? (
+                  <QuietLine>No rounds in this window yet</QuietLine>
+                ) : (
+                  <Animated.View key={period} entering={FadeIn.duration(TIMING.chartReveal)} style={styles.bleed}>
+                    <CandleChart
+                      decimals={DECIMALS.e18}
+                      style={style}
+                      axisDecimals={decimals}
+                      axisPrefix="$"
+                      formatTime={(ms) => axisTimeLabel(chosen.axis, ms)}
+                      last={{ value: line.price18, label: `$${price18(line.price18, decimals)}` }}
+                      {...(entry === undefined
+                        ? {}
+                        : { reference: { value: entry, label: `Entry $${price18(entry, decimals)}` } })}
+                      candles={plotted}
+                      pannable
+                    />
+                  </Animated.View>
+                )
+              }
+            </ReadingView>
+          </View>
+          <PeriodChips options={CHART_PERIODS} value={period} onChange={setPeriod} label="Chart period" />
+          <Text style={[TYPE.meta, { color: color.text3 }]}>
+            {env.marketHistory?.label ?? "Chainlink"} · {chosen.candle} {mode === "line" ? "closes" : "candles"}
+            {first ? ` · since ${dayLabel(first.openTime * MS_PER_SECOND)}` : ""}
+          </Text>
+        </>
+      )}
     </View>
   );
 }

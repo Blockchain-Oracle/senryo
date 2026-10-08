@@ -14,6 +14,9 @@ const MON_SHOWN = 3;
 export const monText = (wei: bigint) => `${formatUnits(wei, E18, MON_SHOWN)} MON`;
 const LEVERAGE_UNIT = oneUnit(PERPL_LEVERAGE_DECIMALS);
 
+/** Exact disclosed signing maximum; never round a nonzero network fee to zero. */
+export const perplNetworkFee = (wei: bigint) => `Up to ${formatUnits(wei, E18, E18)} MON`;
+
 /** "$85,163.2" — a Perpl price at its market's own tick. */
 export function perplPrice(pns: bigint, meta: Pick<PerplMarketMeta, "priceDecimals">): string {
   return `$${formatUnits(pns, meta.priceDecimals, meta.priceDecimals)}`;

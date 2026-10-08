@@ -141,13 +141,13 @@ function RiskRow({ t, onLiquidation }: { t: PerplTicketModel; onLiquidation: () 
       <View
         style={[styles.riskCell, styles.end]}
         accessible
-        accessibilityLabel="Stop loss and take profit on Perpl soon"
+        accessibilityLabel="Stop loss and take profit require separate provider authorization. See protection requirements on the position screen."
       >
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.meta, styles.right, { color: color.text3 }]}>
           TP / SL
         </Text>
         <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.rowStrong, styles.right, { color: color.text3 }]}>
-          On Perpl soon
+          Setup required
         </Text>
       </View>
     </View>

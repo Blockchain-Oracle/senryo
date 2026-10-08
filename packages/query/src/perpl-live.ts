@@ -7,3 +7,10 @@ export function usePerplLivePrice(marketId: number) {
   const get = useCallback(() => perplPrices.get(marketId), [perplPrices, marketId]);
   return useSyncExternalStore(perplPrices.subscribe, get, get);
 }
+
+/** Transport state is distinct from source freshness; connected does not prove an account snapshot. */
+export function usePerplConnection() {
+  const { perplPrices } = useQueryEnv();
+  const state = useSyncExternalStore(perplPrices.subscribe, perplPrices.getConnection, perplPrices.getConnection);
+  return { state, epoch: perplPrices.getEpoch() };
+}

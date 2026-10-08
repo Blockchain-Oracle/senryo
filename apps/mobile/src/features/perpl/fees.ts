@@ -22,3 +22,14 @@ export async function perplFeeShortWei(
   const need = actions.reduce((sum, action) => sum + GAS_LIMITS[action], 0n) * fees.maxFeePerGas;
   return monWei >= need ? 0n : need - monWei;
 }
+
+/** Frozen conservative per-step signing ceilings, including prerequisite deposits that cannot yet simulate. */
+export async function perplFeeReview(read: ReadClient, owner: Address, actions: readonly GasAction[]) {
+  const [fees, monWei] = await Promise.all([
+    userFeeCache(read).get(),
+    read.getBalance({ address: owner, blockTag: "latest" }),
+  ]);
+  const bounds = actions.map((action) => GAS_LIMITS[action] * fees.maxFeePerGas);
+  const need = bounds.reduce((sum, value) => sum + value, 0n);
+  return { feeShortWei: monWei >= need ? 0n : need - monWei, feeBoundsWei: bounds, networkFeeWei: need };
+}

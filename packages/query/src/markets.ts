@@ -28,7 +28,20 @@ const PROTOCOL_REFETCH_FACTOR = 6;
 export const marketRiskOptions = (env: QueryEnv, marketId: number) =>
   queryOptions({
     queryKey: keys.marketRisk(env.chainId, marketId),
-    queryFn: () => readMarketRisk(env.read, env.chainId, marketId, "latest"),
+    queryFn: async () => {
+      const snapshot = await readMarketRisk(env.read, env.chainId, marketId, "latest");
+      const symbol = ENGINE_MARKETS.find((m) => m.id === marketId)?.symbol;
+      if (symbol)
+        env.prices.push({
+          chainId: env.chainId,
+          marketId,
+          symbol,
+          ...snapshot.pv,
+          updatedAt: snapshot.updatedAt,
+          receivedAt: Date.now(),
+        });
+      return snapshot;
+    },
     refetchInterval: MARKET_REFETCH_MS,
     staleTime: MARKET_REFETCH_MS,
   });
@@ -48,20 +61,38 @@ export interface LiveMarket extends MarketRiskSnapshot {
   name: string;
   /** The price shown is a socket tick newer than the block read. */
   live: boolean;
+  sourceEpoch: number;
   /** No tick within `PRICE_STALE_MS` and the socket is quiet — the UI says "updated …". */
   tickStale: boolean;
 }
 
+/** Receipt time cannot make an old oracle observation fresh. */
+export function priceTickFresh(tick: PriceTick, now: number): boolean {
+  const source = Number(tick.updatedAt) * MS_PER_SECOND;
+  return (
+    tick.status === "OPEN" &&
+    source <= now &&
+    tick.receivedAt <= now &&
+    now - source <= PRICE_STALE_MS &&
+    now - tick.receivedAt <= PRICE_STALE_MS
+  );
+}
+
 function overlay(snapshot: MarketRiskSnapshot, tick: PriceTick | undefined, now: number): LiveMarket {
   const meta = ENGINE_MARKETS.find((m) => m.id === snapshot.marketId);
-  const base = { ...snapshot, symbol: meta?.symbol ?? String(snapshot.marketId), name: meta?.name ?? "" };
+  const base = {
+    ...snapshot,
+    sourceEpoch: tick?.epoch ?? 0,
+    symbol: meta?.symbol ?? String(snapshot.marketId),
+    name: meta?.name ?? "",
+  };
   if (!tick || tick.updatedAt < snapshot.updatedAt) return { ...base, live: false, tickStale: true };
   return {
     ...base,
     pv: { price18: tick.price18, latest18: tick.latest18, status: tick.status, spreadBps: tick.spreadBps },
     updatedAt: tick.updatedAt,
-    live: tick.status === "OPEN" && now - tick.receivedAt <= PRICE_STALE_MS,
-    tickStale: tick.status !== "OPEN" || now - tick.receivedAt > PRICE_STALE_MS,
+    live: priceTickFresh(tick, now),
+    tickStale: !priceTickFresh(tick, now),
   };
 }
 

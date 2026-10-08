@@ -1,6 +1,8 @@
 import { type ChainId, MAINNET_CHAIN_ID, PERPL_MARKET_SCALES } from "@senryo/config";
 import { rescale } from "@senryo/core";
 
+const JITTER_MIN = 0.8;
+const JITTER_RANGE = 0.4;
 const MAX_SAMPLES = 600;
 const MAX_AGE_MS = 15_000;
 const CHECK_MS = 5_000;
@@ -61,6 +63,15 @@ export class PerplPriceStream {
     private readonly chainId: ChainId = MAINNET_CHAIN_ID,
     private readonly snapshot?: (() => Promise<unknown>) | undefined,
   ) {}
+  private connection: "idle" | "connecting" | "connected" | "disconnected" | "background" = "idle";
+  private epoch = 0;
+  getConnection = () => this.connection;
+  getEpoch = () => this.epoch;
+  private setConnection(state: typeof this.connection): void {
+    if (state === this.connection) return;
+    this.connection = state;
+    for (const listener of this.listeners) listener();
+  }
   private socket: WebSocket | undefined;
   private retry: ReturnType<typeof setTimeout> | undefined;
   private polling: ReturnType<typeof setInterval> | undefined;
@@ -85,8 +96,10 @@ export class PerplPriceStream {
   };
   setActive(active: boolean): void {
     this.active = active;
-    if (!active) this.disconnect();
-    else if (this.listeners.size > 0 && !this.socket && !this.retry && !this.polling) this.connect();
+    if (!active) {
+      this.disconnect();
+      this.setConnection("background");
+    } else if (this.listeners.size > 0 && !this.socket && !this.retry && !this.polling) this.connect();
   }
   reset(): void {
     this.prices.clear();
@@ -105,14 +118,21 @@ export class PerplPriceStream {
   }
   private connect(): void {
     if (!this.active || this.listeners.size === 0) return;
+    this.epoch += 1;
+    const epoch = this.epoch;
+    this.setConnection("connecting");
     if (this.snapshot) {
       const poll = async () => {
         if (this.pollBusy || !this.active) return;
         this.pollBusy = true;
         try {
           const packet = await this.snapshot?.();
-          if (this.active && this.listeners.size > 0) this.accept(packet);
+          if (this.active && this.listeners.size > 0 && this.epoch === epoch) {
+            this.accept(packet);
+            this.setConnection("connected");
+          }
         } catch {
+          if (this.epoch === epoch && this.active) this.setConnection("disconnected");
           /* The last source timestamp keeps ageing; never manufacture a fresh tick. */
         } finally {
           this.pollBusy = false;
@@ -129,6 +149,7 @@ export class PerplPriceStream {
     this.receivedAt = Date.now();
     socket.onopen = () => {
       if (this.socket !== socket) return;
+      this.setConnection("connected");
       socket.send(JSON.stringify({ mt: 5, subs: [{ stream: `market-state@${this.chainId}`, subscribe: true }] }));
       // Market-data streams do not require client pings (which consume the venue's request budget).
       this.watchdog = setInterval(() => {
@@ -156,12 +177,16 @@ export class PerplPriceStream {
       if (this.socket !== socket) return;
       clearInterval(this.watchdog);
       this.socket = undefined;
+      this.setConnection(this.active ? "disconnected" : "background");
       if (!this.active || this.listeners.size === 0) return;
       const delay = BACKOFF_MS[Math.min(this.attempt++, BACKOFF_MS.length - 1)];
-      this.retry = setTimeout(() => {
-        this.retry = undefined;
-        this.connect();
-      }, delay);
+      this.retry = setTimeout(
+        () => {
+          this.retry = undefined;
+          this.connect();
+        },
+        (delay ?? RETRY_MAX_MS) * (JITTER_MIN + Math.random() * JITTER_RANGE),
+      );
     };
   }
   private accept(packet: unknown): void {

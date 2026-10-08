@@ -141,6 +141,8 @@ function TicketBody({
     gasStep: t.gasStep,
     hasAccount: t.hasAccount,
     ready: t.ready,
+    feeBlock: t.feeBlock,
+    feeBusy: t.feeBusy,
     previewReady: t.preview !== undefined,
     confirmWith: t.confirmWith,
   });
@@ -151,6 +153,8 @@ function TicketBody({
     account.hint?.address ?? "",
     t.side,
     t.confirmWith,
+    t.reviewId ?? "",
+    t.networkFee ?? "",
     t.amountText,
     t.leverage,
     t.preview?.execPrice18 ?? "",

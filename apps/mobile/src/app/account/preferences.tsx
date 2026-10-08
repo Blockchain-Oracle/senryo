@@ -26,6 +26,7 @@ const APPEARANCE = [
 export default function Preferences() {
   const { setTheme, color } = useTheme();
   const [stored] = useMMKVString(STORAGE_KEYS.theme, storage);
+  const [reactions, setReactions] = useMMKVBoolean(STORAGE_KEYS.tradeReactions, storage);
   const [sounds, setSounds] = useMMKVBoolean(STORAGE_KEYS.sounds, storage);
   const [haptics, setHaptics] = useMMKVBoolean(STORAGE_KEYS.haptics, storage);
   const switchColors = { trackColor: { true: color.primary, false: color.muted }, thumbColor: color.foreground };
@@ -67,6 +68,17 @@ export default function Preferences() {
                   if (v) fire("tick");
                 }}
                 accessibilityLabel="Haptics"
+              />
+            }
+          />
+          <ListRow
+            title="Live position reactions"
+            trailing={
+              <Switch
+                {...switchColors}
+                value={reactions ?? false}
+                onValueChange={setReactions}
+                accessibilityLabel="Live position reactions"
               />
             }
           />

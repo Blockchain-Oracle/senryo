@@ -1,4 +1,5 @@
 import { type PositionView, pinRead, readAccountSnapshot, readPositions } from "@senryo/chain";
+import { GAS_LIMITS, MAINNET_CHAIN_ID } from "@senryo/config";
 import {
   cancelTriggerRequest,
   type LiveMarket,
@@ -7,6 +8,7 @@ import {
   signedHash,
   triggerOrder,
   useQueryEnv,
+  userFeeCache,
   useSendTrace,
   useTriggers,
 } from "@senryo/query";
@@ -142,8 +144,19 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
           const replaced = active.filter((t) => t.takeProfit === (level.kind === "tp"));
           const result = await traces[level.kind].run(
             from,
-            () =>
-              placeTriggerRequest(
+            async () => {
+              const bound =
+                parentId && env.chainId === MAINNET_CHAIN_ID
+                  ? readOperation(parentId)?.reviewedIntent[`protectionFeeWei.${level.kind}`]
+                  : undefined;
+              if (parentId && env.chainId === MAINNET_CHAIN_ID) {
+                if (!bound || !/^\d+$/.test(bound)) throw new Error("Review the protection network fee again.");
+                const fees = await userFeeCache(env.read).get();
+                if (GAS_LIMITS.placeTrigger * fees.maxFeePerGas > BigInt(bound))
+                  throw new Error("Protection network fee increased. Review again.");
+                guard();
+              }
+              const request = await placeTriggerRequest(
                 from,
                 triggerOrder({
                   user: address,
@@ -153,7 +166,9 @@ export function useTriggerLegs(market: LiveMarket, position: PositionView) {
                   triggerPrice18: level.price18,
                   sizeDelta: WHOLE_POSITION,
                 }),
-              ),
+              );
+              return bound ? { ...request, reviewedNetworkFeeWei: BigInt(bound) } : request;
+            },
             {
               preflight: (request) => gas.preflight(request)(),
               operationId,

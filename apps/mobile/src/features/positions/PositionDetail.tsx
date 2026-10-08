@@ -14,6 +14,7 @@ import { QuietLine } from "~/features/portfolio/QuietLine";
 import { planKey } from "~/features/trade/planned-triggers";
 import { useSettledOutcome } from "~/features/trade/send-outcome";
 import { TpSlChild } from "~/features/trade/TpSlChild";
+import { usePositionReaction } from "~/feedback/usePositionReaction";
 import { useAccount } from "~/lib/account/provider";
 import { marketRoute, ticketRoute } from "~/lib/constants/routes";
 import { pct } from "~/lib/money";
@@ -28,6 +29,8 @@ import { FundingLine, PositionStats } from "./PositionStats";
 import { TpSlRow } from "./TpSlRow";
 import { usePosition } from "./usePosition";
 
+const MS_PER_SECOND = 1000;
+
 /**
  * A held position (Fomo F13/F14; flow book C5/C6; plan §0.9 Position) on a pushed page: identity → the P&L hero
  * coloured by profit (ⓘ for its parts) → the chart with the entry line → Size · Entry · Mark · Liq. → funding and
@@ -39,6 +42,12 @@ export function PositionDetail({ marketId }: { marketId: number }) {
   const p = usePosition(marketId);
   const env = useQueryEnv();
   const address = useAccount().hint?.address;
+  usePositionReaction(
+    `${p.market?.sourceEpoch ?? 0}:${env.chainId}:${address ?? ""}:${marketId}:${p.position?.isLong ?? ""}:${p.position?.size ?? ""}`,
+    Number(p.market?.updatedAt ?? 0n) * MS_PER_SECOND,
+    (p.health?.upnlUsd6 ?? 0n) - p.fundingUsd6 - p.borrowUsd6,
+    Boolean(p.position && p.market?.live && !p.market?.tickStale),
+  );
   const outcome = useSettledOutcome(p.trace.events);
   const [child, setChild] = useState<"pnl" | "tpsl" | undefined>();
   if (p.trace.events.length > 0) {

@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   /** Home's last tab (Positions / Assets / Earn) — a per-viewer convenience. */
   homeTab: "senryo.home-tab.v1",
   sounds: "senryo.sounds.v1",
+  tradeReactions: "senryo.trade-reactions.v1",
   /** The ElevenLabs cue variant chosen per sound in Preferences (by ear); absent = the bundled default. */
   soundChoice: "senryo.sound-choice.v1",
   haptics: "senryo.haptics.v1",

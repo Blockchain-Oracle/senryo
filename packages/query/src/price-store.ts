@@ -19,8 +19,13 @@ export interface PriceTick {
   spreadBps: bigint;
   /** When this client received it (ms), for "live" vs "stale". */
   receivedAt: number;
+  epoch?: number;
+  /** Actual observed oracle rounds, bounded independently of historical candles. */
+  samples?: readonly { t: number; value: bigint }[];
 }
 
+const MS_PER_SECOND = 1000;
+const MAX_SAMPLES = 600;
 type Listener = () => void;
 const keyOf = (chainId: ChainId, symbol: string) => `${chainId}|${symbol}`;
 const nextFrame: (run: () => void) => void =
@@ -34,8 +39,23 @@ export class PriceStore {
   private readonly listeners = new Set<Listener>();
   private scheduled = false;
 
+  private epoch = 0;
+  beginEpoch(): void {
+    this.epoch += 1;
+  }
+
   push(tick: PriceTick): void {
-    this.pending.set(keyOf(tick.chainId, tick.symbol), tick);
+    const key = keyOf(tick.chainId, tick.symbol);
+    const previous = this.pending.get(key) ?? this.published.get(key);
+    if (previous && tick.updatedAt < previous.updatedAt) return;
+    // Equal rounds may change market status/spread, but never invent another price sample.
+    const sample = { t: Number(tick.updatedAt) * MS_PER_SECOND, value: tick.price18 };
+    const samples = previous?.samples ?? [];
+    this.pending.set(key, {
+      ...tick,
+      epoch: this.epoch,
+      samples: previous?.updatedAt === tick.updatedAt ? samples : [...samples, sample].slice(-MAX_SAMPLES),
+    });
     if (this.scheduled) return;
     this.scheduled = true;
     nextFrame(() => this.flush());

@@ -32,6 +32,7 @@ export function PriceLineChart({
   entry,
   maxGapMs,
   profitable,
+  windowMs,
   compact = false,
   sourceLabel = "oracle",
 }: {
@@ -39,6 +40,7 @@ export function PriceLineChart({
   last: PriceSample & { label: string };
   entry?: { value: bigint; label: string } | undefined;
   maxGapMs: number;
+  windowMs?: number | undefined;
   profitable?: boolean | undefined;
   compact?: boolean | undefined;
   sourceLabel?: string | undefined;
@@ -49,9 +51,9 @@ export function PriceLineChart({
   const height = compact ? COMPACT_HEIGHT : HEIGHT;
   const plot = Math.max(1, width - AXIS);
   const model = useMemo(() => {
-    const points = samples.filter((s) => s.t <= last.t && s.value > 0n);
+    const points = samples.filter((s) => s.t <= last.t && (windowMs === undefined || s.t >= last.t - windowMs));
     // A current oracle observation is not backfilled into the unobserved past.
-    const span = Math.max(last.t - (points[0]?.t ?? last.t), maxGapMs);
+    const span = windowMs ?? Math.max(last.t - (points[0]?.t ?? last.t), maxGapMs);
     const firstAt = last.t - span;
     const values = [...points.map((s) => toPlot(s.value, PRICE_DECIMALS)), toPlot(last.value, PRICE_DECIMALS)];
     if (entry) values.push(toPlot(entry.value, PRICE_DECIMALS));
@@ -77,7 +79,7 @@ export function PriceLineChart({
       tail: tail && last.t - tail.t <= maxGapMs ? { x: x(tail.t), y: y(tail.value) } : undefined,
       entryY: entry ? y(entry.value) : undefined,
     };
-  }, [samples, last.t, last.value, entry, maxGapMs, plot, height]);
+  }, [samples, last.t, last.value, entry, maxGapMs, windowMs, plot, height]);
   const headY = useSharedValue(model.y);
   useEffect(() => {
     headY.value = reduced ? model.y : withTiming(model.y, { duration: HEAD_DURATION_MS, easing: EASE });
