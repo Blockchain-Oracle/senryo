@@ -40,10 +40,14 @@ chains:
   - id: 10143
     # The S2 deploy block (packages/contracts/src/addresses/10143.json startBlock).
     start_block: 69306230
+    # HyperSync backfills; this RPC follows the head (HyperSync's token budget is 15 queries a minute, D-279). Monad's
+    # public RPC answers eth_getLogs over at most 100 blocks, so every request stays within that.
     rpc:
       - url: ${ENVIO_RPC_URL_10143:-https://testnet-rpc.monad.xyz}
         ws: ${ENVIO_WS_URL_10143:-wss://testnet-rpc.monad.xyz}
         for: realtime
+        initial_block_interval: 100
+        interval_ceiling: 100
     contracts:
       - name: Windows
         address: "0x6f4Cc798951f889b9f2a7029C1D8D7749860dF69"
