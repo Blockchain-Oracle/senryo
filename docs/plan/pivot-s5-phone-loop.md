@@ -29,7 +29,7 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
 - [x] S5.4 Zero RPC from the app: balance from `/v1/markets/account`; retire `useDollarBalance` RPC polling,
       `useNetworkBalances`, the RPC half of `account-check`, and the app-side sender for markets — done: the app holds
       no chain client; the sender and transaction recovery are deleted (the web's journal modules leave with S6)
-- [ ] S5.5 Signing: an open/close intent signed by the session key when a grant is live (no Face ID), else by the
+- [x] S5.5 Signing: an open/close intent signed by the session key when a grant is live (no Face ID), else by the
       passkey owner with Face ID; the session grant ("Turn on one-tap calls": caps, length) and revoke; permit for the
       first call's allowance; the account policy allows exactly these typed-data shapes
 

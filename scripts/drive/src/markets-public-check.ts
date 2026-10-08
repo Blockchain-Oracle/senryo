@@ -23,15 +23,15 @@ import {
   ACTION_CLOSE,
   ACTION_OPEN,
   freshNonce,
-  INTENT_TYPES,
-  marketsDomain,
-  SESSION_GRANT_TYPES,
+  intentRequest,
+  permitParts,
+  permitRequest,
   seriesIdOf,
+  sessionGrantRequest,
   windowIdOf,
 } from "@senryo/chain";
 import { BAND_INDEX, DOLLAR_DECIMALS, explorerTxUrl, TESTNET_CHAIN_ID } from "@senryo/config";
 import { formatUnits } from "@senryo/core";
-import { parseSignature } from "viem";
 import { generatePrivateKey, type PrivateKeyAccount, privateKeyToAccount } from "viem/accounts";
 import { sleep } from "./lib.ts";
 
@@ -84,12 +84,7 @@ async function window(): Promise<{ start: number; windowId: `0x${string}` }> {
 }
 
 async function signIntent(signer: PrivateKeyAccount, intent: Parameters<typeof submitIntent>[0]) {
-  return signer.signTypedData({
-    domain: marketsDomain(CHAIN),
-    types: INTENT_TYPES,
-    primaryType: "Intent",
-    message: intent,
-  });
+  return signer.signTypedData(intentRequest(CHAIN, intent));
 }
 
 async function submitIntent(
@@ -171,27 +166,16 @@ async function main() {
 
   // 1 — Up with a permit (the finite allowance in the same transaction).
   const permitDeadline = BigInt(Math.floor(Date.now() / MS) + DEADLINE_SEC);
-  const permitSig = parseSignature(
-    await owner.signTypedData({
-      domain: { name: "Test USD", version: "1", chainId: CHAIN, verifyingContract: catalog.contracts.dollar },
-      types: {
-        Permit: [
-          { name: "owner", type: "address" },
-          { name: "spender", type: "address" },
-          { name: "value", type: "uint256" },
-          { name: "nonce", type: "uint256" },
-          { name: "deadline", type: "uint256" },
-        ],
-      },
-      primaryType: "Permit",
-      message: {
+  const permit = permitParts(
+    await owner.signTypedData(
+      permitRequest(CHAIN, {
         owner: owner.address,
         spender: catalog.contracts.reserve,
         value: PERMIT_VALUE,
         nonce: acct.permitNonce,
         deadline: permitDeadline,
-      },
-    }),
+      }),
+    ),
   );
   const deadline = () => BigInt(Math.floor(Date.now() / MS) + DEADLINE_SEC);
   const up = await submitIntent(
@@ -208,7 +192,7 @@ async function main() {
     },
     owner,
     start,
-    { value: PERMIT_VALUE, deadline: permitDeadline, v: Number(permitSig.v), r: permitSig.r, s: permitSig.s },
+    { value: PERMIT_VALUE, deadline: permitDeadline, ...permit },
   );
   if (up.state !== "filled") throw new Error(`up: ${up.state} ${up.reason}`);
   log("commit Up $5 (+ permit)", up.committedTx, `ticket ${up.ticketId}`);
@@ -288,12 +272,7 @@ async function main() {
     epoch: acct.epoch,
     nonce: freshNonce(),
   };
-  const sessionSig = await owner.signTypedData({
-    domain: marketsDomain(CHAIN),
-    types: SESSION_GRANT_TYPES,
-    primaryType: "SessionGrant",
-    message: { ...session, expiry: Number(session.expiry) },
-  });
+  const sessionSig = await owner.signTypedData(sessionGrantRequest(CHAIN, session));
   const granted = await api.call(grantSessionRoute, {
     body: { chainId: CHAIN, grant: session, signature: sessionSig, permit: null },
   });
