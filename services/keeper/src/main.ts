@@ -1,12 +1,4 @@
-import {
-  createReadClient,
-  createSender,
-  createWsClient,
-  FeeCache,
-  HeadTracker,
-  LocalNonceSource,
-  MemoryJournal,
-} from "@senryo/chain";
+import { createReadClient, createSender, createWsClient, FeeCache, HeadTracker, LocalNonceSource } from "@senryo/chain";
 import {
   createDb,
   createHttpServer,
@@ -17,14 +9,19 @@ import {
   MS_PER_SECOND,
   migrate,
   PushDelivery,
+  pgJournal,
   pingDb,
 } from "@senryo/service-common";
 import { type KeeperContext, RecentActions } from "./context.ts";
 import { type KeeperJob, loadKeeperEnv } from "./env.ts";
+import { fillsJob } from "./jobs/fills.ts";
 import { pushOutboxJob } from "./jobs/pushes.ts";
 import { pushReceiptsJob } from "./jobs/receipts.ts";
 import { retentionJob } from "./jobs/retention.ts";
+import { settleJob } from "./jobs/settle.ts";
+import { syncJob } from "./jobs/sync.ts";
 import { LedgerNotifier } from "./notify.ts";
+import { notifyResults } from "./results.ts";
 import { type Job, Runner } from "./runner.ts";
 
 const env = loadKeeperEnv();
@@ -47,9 +44,10 @@ const sender = createSender({
   heads,
   fees,
   nonces: new LocalNonceSource(read),
-  journal: new MemoryJournal(),
+  journal: pgJournal(db, `keeper:${env.CHAIN_ID}:${account.address.toLowerCase()}`),
 });
 const expo = expoClient(env);
+const notifier = new LedgerNotifier(db, log, expo ? new PushDelivery(db, log, expo) : undefined);
 const ctx: KeeperContext = {
   env,
   chainId: env.CHAIN_ID,
@@ -57,11 +55,15 @@ const ctx: KeeperContext = {
   sender,
   db,
   log,
-  notifier: new LedgerNotifier(db, log, expo ? new PushDelivery(db, log, expo) : undefined),
+  notifier,
   recent: new RecentActions(),
+  notifyResults: (changes) => notifyResults(db, notifier, env.CHAIN_ID, changes),
 };
 
 const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
+  sync: syncJob,
+  settle: settleJob,
+  fills: fillsJob,
   retention: retentionJob,
   receipts: pushReceiptsJob,
   pushes: pushOutboxJob,

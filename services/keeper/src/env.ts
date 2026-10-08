@@ -3,10 +3,11 @@ import { z } from "zod";
 import { KEEPER_PORT, KEEPER_STALE_SEC } from "./constants.ts";
 
 /**
- * Jobs after the pivot (D-256): push delivery, push receipts and retention. The market jobs (finalize, settle,
- * payouts, void-stale) arrive with S3 (D-264, D-272).
+ * Jobs: the ticket book's sync with the chain, settlement with automatic payouts and backup fills for the markets
+ * (D-264, D-278), push delivery, push
+ * receipts and retention.
  */
-export const KEEPER_JOBS = ["retention", "receipts", "pushes"] as const;
+export const KEEPER_JOBS = ["sync", "settle", "fills", "retention", "receipts", "pushes"] as const;
 export type KeeperJob = (typeof KEEPER_JOBS)[number];
 
 /**

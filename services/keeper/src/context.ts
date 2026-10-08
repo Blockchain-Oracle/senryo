@@ -1,4 +1,4 @@
-import type { ReadClient, Sender } from "@senryo/chain";
+import type { ReadClient, Sender, TicketChange } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import type { Db, Logger } from "@senryo/service-common";
 import type { KeeperEnv } from "./env.ts";
@@ -14,6 +14,8 @@ export interface KeeperContext {
   notifier: Notifier;
   /** Recent onchain actions (exposed on `/v1/keeper/status` for ops and the drive script). */
   recent: RecentActions;
+  /** Pushes wins and refunds from a receipt's ticket changes. */
+  notifyResults: (changes: readonly TicketChange[]) => Promise<void>;
 }
 
 export interface KeeperAction {

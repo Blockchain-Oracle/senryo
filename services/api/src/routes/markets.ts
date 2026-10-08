@@ -1,0 +1,202 @@
+import {
+  catalogRoute,
+  grantSessionRoute,
+  intentStatusRoute,
+  marketAccountRoute,
+  practiceGrantRoute,
+  revokeSessionRoute,
+  streamTicketRoute,
+  submitIntentRoute,
+  ticketsRoute,
+} from "@senryo/api-client";
+import { addressOf, dollarTokenOf, type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
+import { bandMenu, type ChainId, marketsOn, POOL_TERMS, sigmaE8Of } from "@senryo/config";
+import { bandReserveAbi, testUSDAbi } from "@senryo/contracts/abis";
+import type { HttpServer } from "@senryo/service-common";
+import { HTTP_STATUS, HttpError, nowSec, parseRoute, sendRoute, ticketsOf } from "@senryo/service-common";
+import { type ApiContext, chainOf } from "../context.ts";
+import { TICKETS_PAGE } from "../relay/constants.ts";
+import { mintStreamTicket } from "../stream/ticket.ts";
+
+/** The markets over HTTP (S3): catalogue, relayed calls and sessions, the caller's tickets, Practice dollars. */
+const CONFIG_CACHE_MS = 10_000;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const configCache = new Map<ChainId, { at: number; version: number }>();
+
+async function configVersion(ctx: ApiContext, chainId: ChainId): Promise<number> {
+  const hit = configCache.get(chainId);
+  if (hit && Date.now() - hit.at < CONFIG_CACHE_MS) return hit.version;
+  const version = Number(
+    await chainOf(ctx, chainId).read.readContract({
+      address: addressOf(chainId, "BandReserve"),
+      abi: bandReserveAbi,
+      functionName: "configVersion",
+    }),
+  );
+  configCache.set(chainId, { at: Date.now(), version });
+  return version;
+}
+
+function marketsOf(ctx: ApiContext, chainId: ChainId) {
+  const m = ctx.markets.get(chainId);
+  if (!m) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", `markets are not live on ${chainId}`);
+  return m;
+}
+
+export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
+  app.get(catalogRoute.path, async (request, reply) => {
+    const { query } = parseRoute(catalogRoute, request);
+    const chain = chainOf(ctx, query.chainId);
+    const terms = POOL_TERMS[chain.chainId];
+    reply.header("cache-control", "public, max-age=10");
+    return sendRoute(reply, catalogRoute, {
+      chainId: chain.chainId,
+      deployed: chain.deployed,
+      configVersion: await configVersion(ctx, chain.chainId),
+      contracts: {
+        reserve: addressOf(chain.chainId, "BandReserve"),
+        windows: addressOf(chain.chainId, "Windows"),
+        verifier: addressOf(chain.chainId, "PythPrintVerifier"),
+        dollar: dollarTokenOf(chain.chainId) ?? addressOf(chain.chainId, "BandReserve"),
+      },
+      terms: {
+        halfSpreadE6: terms.halfSpreadE6,
+        minProbE6: terms.minProbE6,
+        maxProbE6: terms.maxProbE6,
+        minStake: terms.minStake,
+        maxStake: terms.maxStake,
+        session: terms.session,
+      },
+      markets: marketsOn(chain.chainId).map((m) => ({
+        symbol: m.symbol,
+        name: m.name,
+        kind: m.kind,
+        feedId: m.pythFeedId,
+        series: m.cadences.map((cadenceSec) => ({
+          cadenceSec,
+          seriesId: seriesIdOf(m.symbol, cadenceSec),
+          sigmaE8: sigmaE8Of(m),
+          bands: bandMenu(m, cadenceSec).map((b, index) => ({ index, ...b })),
+        })),
+      })),
+    });
+  });
+
+  app.post(
+    submitIntentRoute.path,
+    { config: { rateLimit: { max: 60, timeWindow: 60_000 } } },
+    async (request, reply) => {
+      const { body } = parseRoute(submitIntentRoute, request);
+      const status = await marketsOf(ctx, body.chainId).relay.submit({ ...body, signature: body.signature as Hex });
+      return sendRoute(reply, submitIntentRoute, status);
+    },
+  );
+
+  app.get(intentStatusRoute.path, async (request, reply) => {
+    const { params } = parseRoute(intentStatusRoute, request);
+    for (const m of ctx.markets.values()) {
+      const status = await m.relay.status(params.digest);
+      if (status) return sendRoute(reply, intentStatusRoute, status);
+    }
+    throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such call");
+  });
+
+  app.post(grantSessionRoute.path, async (request, reply) => {
+    const { body } = parseRoute(grantSessionRoute, request);
+    const result = await marketsOf(ctx, body.chainId).accounts.grantSession(body.grant, body.signature, body.permit);
+    return sendRoute(reply, grantSessionRoute, result);
+  });
+
+  app.post(revokeSessionRoute.path, async (request, reply) => {
+    const { body } = parseRoute(revokeSessionRoute, request);
+    const result = await marketsOf(ctx, body.chainId).accounts.revoke(
+      body.owner,
+      body.nonce,
+      body.deadline,
+      body.signature,
+    );
+    return sendRoute(reply, revokeSessionRoute, result);
+  });
+
+  app.get(ticketsRoute.path, async (request, reply) => {
+    const { query } = parseRoute(ticketsRoute, request);
+    const rows = await ticketsOf(ctx.db, query.chainId, query.owner, TICKETS_PAGE);
+    return sendRoute(reply, ticketsRoute, {
+      tickets: rows.flatMap((r) => {
+        const series = seriesOf(query.chainId, r.series_id as Hex);
+        if (!series) return [];
+        return [
+          {
+            ticketId: r.ticket_id,
+            windowId: r.window_id as Hex,
+            symbol: series.market.symbol,
+            cadenceSec: series.cadenceSec,
+            start: Number(r.window_start),
+            band: r.band,
+            state: r.state as "committed",
+            stake: r.stake,
+            payout: r.payout,
+            entryE8: r.entry_e8,
+            result: r.result,
+            outcome: r.outcome as "win" | null,
+            updatedAt: r.updated_at.toISOString(),
+          },
+        ];
+      }),
+    });
+  });
+
+  app.get(marketAccountRoute.path, async (request, reply) => {
+    const { query } = parseRoute(marketAccountRoute, request);
+    const chain = chainOf(ctx, query.chainId);
+    const reserve = addressOf(chain.chainId, "BandReserve");
+    const dollar = dollarTokenOf(chain.chainId);
+    if (!dollar) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", "no dollar on this network");
+    const [balance, allowance, permitNonce, epoch, session] = await chain.read.multicall({
+      allowFailure: false,
+      contracts: [
+        { address: dollar, abi: testUSDAbi, functionName: "balanceOf", args: [query.owner] },
+        { address: dollar, abi: testUSDAbi, functionName: "allowance", args: [query.owner, reserve] },
+        { address: dollar, abi: testUSDAbi, functionName: "nonces", args: [query.owner] },
+        { address: reserve, abi: bandReserveAbi, functionName: "epochOf", args: [query.owner] },
+        { address: reserve, abi: bandReserveAbi, functionName: "sessionOf", args: [query.owner] },
+      ],
+    });
+    const live = session.delegate !== ZERO_ADDRESS && session.epoch === epoch && session.expiry > nowSec();
+    return sendRoute(reply, marketAccountRoute, {
+      balance,
+      allowance,
+      permitNonce,
+      epoch,
+      session: live
+        ? {
+            delegate: session.delegate,
+            expiry: session.expiry,
+            perCallCap: session.perCallCap,
+            sessionCap: session.sessionCap,
+            spent: session.spent,
+          }
+        : null,
+    });
+  });
+
+  app.post(streamTicketRoute.path, async (request, reply) => {
+    const session = await ctx.sessions?.require(request);
+    if (!session || !ctx.secrets.sessionSecret) {
+      throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", "sessions not configured");
+    }
+    const minted = mintStreamTicket(ctx.secrets.sessionSecret, session.address, nowSec());
+    return sendRoute(reply, streamTicketRoute, minted);
+  });
+
+  app.post(
+    practiceGrantRoute.path,
+    { config: { rateLimit: { max: 5, timeWindow: 60_000 } } },
+    async (request, reply) => {
+      const session = await ctx.sessions?.require(request);
+      if (!session) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", "sessions not configured");
+      const result = await marketsOf(ctx, session.chainId).accounts.practiceGrant(session.address);
+      return sendRoute(reply, practiceGrantRoute, result);
+    },
+  );
+}

@@ -12,6 +12,17 @@ export const INTERVALS_MS = {
   pushes: 3_000,
 } as const;
 
+/** Markets (D-278): settle a window this long after its expiry (its close print streams within a second). */
+export const SETTLE_AFTER_SEC = 2;
+export const SETTLE_INTERVAL_MS = 2_000;
+/** A fill the relay has not done this long after its print instant is done here. */
+export const FILL_STALE_SEC = 6;
+export const FILLS_INTERVAL_MS = 3_000;
+/** The book follows the chain: new ticket ids and quiet open tickets re-read every few seconds, in batches. */
+export const SYNC_INTERVAL_MS = 4_000;
+export const SYNC_STALE_SEC = 20;
+export const SYNC_BATCH = 64;
+
 /** Retention windows in days (S8.5b K9). */
 export const RETENTION_DAYS = {
   siweNonces: 1,

@@ -35,6 +35,8 @@ export interface ApiSecrets {
   alchemyKey: string | undefined;
   /** Aurora (NEAR Intents) Studio key — incident feed, quotes and deposit addresses (S9); unset → `no_key`. */
   auroraKey: string | undefined;
+  /** Pyth key — the gateway is its only holder (D-272); header only, never logged. */
+  pythKey: string | undefined;
 }
 
 export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
@@ -46,6 +48,7 @@ export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
       sessionSecret: readSecret("API_SESSION_SECRET"),
       alchemyKey: readSecret("ALCHEMY_API_KEY"),
       auroraKey: readSecret("AURORA_API_KEY"),
+      pythKey: readSecret("PYTH_API_KEY"),
     },
   };
 }

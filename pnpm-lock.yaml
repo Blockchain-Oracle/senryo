@@ -615,12 +615,18 @@ importers:
       '@senryo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@senryo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@senryo/service-common':
         specifier: workspace:*
         version: link:../common
+      eventsource-parser:
+        specifier: 4.1.1
+        version: 4.1.1
       fastify:
         specifier: 5.12.5
         version: 5.12.5
@@ -652,6 +658,9 @@ importers:
       '@senryo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@senryo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -692,6 +701,9 @@ importers:
       '@senryo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@senryo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -3192,6 +3204,10 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
+
+  eventsource-parser@4.1.1:
+    resolution: {integrity: sha512-zaWNqeSLeyzEAAt2Q6aDBRDRk/VnPmsKqvToyGvv6aahvLv71A4Jw7jG93Hckf11zXurbqgsffvpSgKPoeU1Qw==}
+    engines: {node: '>=22.12'}
 
   expo-application@57.0.3:
     resolution: {integrity: sha512-t/CxeLio0NjY9/cOak1tQp62/hAUjzJxmhR4rVUR7K5bb9YoEtfl1ZekTn+Iuh+dYOMYzF0l72ODMSmY3CR1NA==}
@@ -8251,6 +8267,8 @@ snapshots:
   eventemitter3@5.0.1: {}
 
   events@3.3.0: {}
+
+  eventsource-parser@4.1.1: {}
 
   expo-application@57.0.3(expo@57.0.27):
     dependencies:

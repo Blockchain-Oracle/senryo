@@ -18,6 +18,7 @@
     "@senryo/api-client": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
+    "@senryo/contracts": "workspace:*",
     "@senryo/core": "workspace:*",
     "fastify": "5.12.5",
     "jose": "6.2.12",

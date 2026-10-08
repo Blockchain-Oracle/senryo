@@ -3,11 +3,12 @@ import type { ChainId } from "@senryo/config";
 import { type Db, HTTP_STATUS, HttpError, type Logger, type SessionKeys } from "@senryo/service-common";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { GeoDb } from "./geo-db.ts";
+import type { PythGateway } from "./prices/gateway.ts";
+import type { AccountRelay } from "./relay/accounts.ts";
+import type { MarketRelay } from "./relay/relay.ts";
+import type { StreamBus } from "./stream/bus.ts";
 
-/**
- * One served network: reads and commit-state heads. The sponsor (relayer) and the Pyth gateway arrive with S3
- * (D-266/D-272); `deployed` turns true once the prediction-market contracts are in the address book (S2).
- */
+/** One served network: reads and commit-state heads; `deployed` once its reserve is in the address book (S2). */
 export interface ChainContext {
   chainId: ChainId;
   deployed: boolean;
@@ -24,6 +25,11 @@ export interface ApiContext {
   sessions: SessionKeys | undefined;
   /** DB-IP Lite country lookup (S8.15); null country until loaded. */
   geo: GeoDb;
+  /** The one Pyth gateway and the one stream's bus (D-272). */
+  gateway: PythGateway;
+  bus: StreamBus;
+  /** The relay per network where the markets are live (needs a sponsor key). */
+  markets: Map<ChainId, { relay: MarketRelay; accounts: AccountRelay }>;
 }
 
 /** A network has markets once its reserve is deployed (S2 testnet; S9 mainnet). */

@@ -12,6 +12,7 @@
   "dependencies": {
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
+    "@senryo/contracts": "workspace:*",
     "@senryo/core": "workspace:*",
     "@senryo/service-common": "workspace:*",
     "zod": "catalog:"

@@ -17,6 +17,13 @@ export type BandKind = "up" | "down" | "range" | "moonshot" | "crash";
 export const CADENCES_SEC = [60, 300, 900, 3600] as const;
 export type CadenceSec = (typeof CADENCES_SEC)[number];
 
+/** Call timing, mirrored from contracts/src/markets/MarketTypes.sol (D-261). */
+export const LOCKOUT_SEC = 20;
+export const FILL_DELAY_SEC = 1;
+export const MIN_HOLD_SEC = 3;
+/** Most tickets one `finalize`, `expire` or `claimFor` takes. */
+export const MARKET_BATCH_MAX = 32;
+
 /** Mirrors `BAND_*` in contracts/src/markets/MarketTypes.sol. */
 export const BAND_KIND_CODE: Readonly<Record<BandKind, number>> = { up: 1, down: 2, range: 3, moonshot: 4, crash: 5 };
 

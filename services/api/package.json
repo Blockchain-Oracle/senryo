@@ -16,8 +16,10 @@
     "@senryo/api-client": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
+    "@senryo/contracts": "workspace:*",
     "@senryo/core": "workspace:*",
     "@senryo/service-common": "workspace:*",
+    "eventsource-parser": "4.1.1",
     "fastify": "5.12.5",
     "zod": "catalog:"
   },

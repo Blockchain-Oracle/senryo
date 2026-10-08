@@ -3,9 +3,8 @@
  * `packages/chain/send.ts` sets gas = estimate × (1 + GAS_HEADROOM_BPS), capped at the action's budget, and refuses to
  * send when the estimate alone is above the budget (something is wrong; a huge limit would be charged in full).
  *
- * After the prediction-market pivot (D-256) only the generic money actions remain here. The market budgets
- * (commit, finalize, close, settle, claimFor) are measured with `eth_estimateGas` against the S2 deploy and added then.
- * Every user action is relayed by the sponsor (D-266), so users never hold gas.
+ * Market budgets are ceilings for relayed and keeper sends (D-266, D-278); the limit actually set is the estimate plus
+ * `GAS_HEADROOM_BPS`, so a ceiling only stops a runaway. Every user action is relayed, so users never hold gas.
  */
 
 /** +10 % over `eth_estimateGas`: small on purpose — the whole limit is paid. */
@@ -22,6 +21,18 @@ export const GAS_LIMITS = {
   erc20Transfer: 90_000n,
   /** Circle USDC `transferWithAuthorization` (EIP-3009) relayed for withdrawals. */
   transferWithAuthorization: 120_000n,
+  /** A commit, possibly batched with opening its window and recording the open print (Multicall3). */
+  marketCommit: 900_000n,
+  /** One `finalize` of up to 32 tickets at one print. */
+  marketFinalize: 4_000_000n,
+  /** Close print + resolve + settle + the first `claimFor` batch (Multicall3), or a further batch. */
+  marketSettle: 5_000_000n,
+  /** `expire` of up to 32 tickets. */
+  marketExpire: 2_000_000n,
+  sessionGrant: 300_000n,
+  sessionRevoke: 150_000n,
+  /** Test USD `mint` for the Practice grant. */
+  dollarMint: 150_000n,
 };
 export type GasAction = keyof typeof GAS_LIMITS;
 
