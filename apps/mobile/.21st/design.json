@@ -818,6 +818,25 @@
         "port": "the journal's range filter as the kit Segmented (All · Open · Won · Lost · Refunded), outcome in words beside the signed result, a one-line record above (result, calls, won, lost, best streak)",
         "deviations": "rows not a table (mark, market and side, lane · stake · state, result); no slippage/fee/hold columns — a call's facts live on its receipt",
         "status": "built (S5.11) — src/features/calls/CallsScreen.tsx, CallReceipt.tsx, WindowProof.tsx"
+      },
+      {
+        "name": "reaction-overlay",
+        "source": "Owarine ui/ReactionOverlay.tsx + feedback/reactions.ts (Tradash SPEC-chart §5 aX); 21st searched \"floating emoji reaction callout\" (6601 Reaction Chip, 28349, 28759, 693) — none fit (chips, not head-riding callouts)",
+        "evidence": [
+          "user direction 8 Oct: Tradash is the live loop's direction (chart motion, controls, sounds, reactions)",
+          "TRADASH-FIDELITY reactions"
+        ],
+        "port": "ReactionEngine ported with the same thresholds (steps, surges z ≥ 3 / mega z ≥ 4.5, ROI milestones, new high, comeback, near the line, callout gate); callouts ride the chart head via a UI-thread shared value; inset edge glow 0.9 s via boxShadow; dispatch to the existing cue and haptic maps",
+        "deviations": "P/L fed as basis points of the stake (only ratios matter; no float money); 'Near liquidation' is 'Near the line'; one implementation replaces useMoveFeedback",
+        "status": "built (S5.9) — src/features/terminal/{reactions.ts,useReactions.ts,ReactionOverlay.tsx}"
+      },
+      {
+        "name": "confetti",
+        "source": "Owarine toasts.tsx Confetti (Tradash win burst) + 21st #24692 motiondotdev/motion-confetti (shape mix: dots, rects, strips)",
+        "evidence": ["Tradash: confetti on a win", "pivot craft list: result reveal"],
+        "port": "two emitters at 18 % / 82 % width, 34 pieces each, gravity 0.14, drag 0.982–0.994, 1.1 s fading after half; Skia picture stepped on the UI thread; one host over the app triggered by celebrate() on a paid win or a cash-out in profit",
+        "deviations": "Senryo colours (chart up, accent, gold, practice, ink); none for Reduce Motion",
+        "status": "built (S5.9) — src/components/kit/Confetti.tsx, src/components/shell/ConfettiHost.tsx"
       }
     ],
     "planned": [

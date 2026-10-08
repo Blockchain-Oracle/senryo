@@ -23,11 +23,13 @@ import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useCallActions } from "../calls/useCall";
 import { CallPanel, type PanelState } from "./CallPanel";
+import type { Head } from "./chart/draw";
 import { LiveChart } from "./chart/LiveChart";
 import { MarketsSheet } from "./MarketsSheet";
+import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { clockText, TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
-import { useMoveFeedback } from "./useMoveFeedback";
+import { useReactions } from "./useReactions";
 import { useTerminal } from "./useTerminal";
 
 const DEFAULT_STAKE = 5_000_000;
@@ -52,8 +54,9 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const [storedStake, setStoredStake] = useMMKVNumber(STORAGE_KEYS.lastStake, storage);
   const stake = BigInt(storedStake ?? DEFAULT_STAKE);
   const q = useLiveQuote(t, stake);
-  const heldBand = t.position && t.position.state === "open" ? t.series?.bands[t.position.band] : undefined;
-  useMoveFeedback(t.symbol, heldBand?.kind === "up" ? "up" : heldBand?.kind === "down" ? "down" : null);
+  const head = useSharedValue<Head | null>(null);
+  const reactions = useRef<ReactionOverlayHandle>(null);
+  useReactions(t.symbol, q.onTick, reactions);
   const actions = useCallActions();
   const [picking, setPicking] = useState(false);
   const [pending, setPending] = useState<{ digest: `0x${string}`; label: string; kind: "open" | "close" } | null>(null);
@@ -177,7 +180,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       ) : null}
       <TerminalTop t={t} offsetMs={offsetMs} onPickMarket={() => setPicking(true)} />
       <View style={styles.chart}>
-        <LiveChart symbol={t.symbol} overlay={q.overlay} waiting={`Waiting for ${t.symbol}…`} />
+        <LiveChart symbol={t.symbol} overlay={q.overlay} waiting={`Waiting for ${t.symbol}…`} head={head} />
+        <ReactionOverlay ref={reactions} head={head} />
       </View>
       <LiveText text={q.lineText} style={[TYPE.caption, styles.line, { color: color.inkMuted }]} />
       <View style={{ paddingBottom: bottom }}>

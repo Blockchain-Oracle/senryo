@@ -17,11 +17,12 @@ import {
   quoteOpen,
 } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import type { LiveFigure } from "~/components/kit/LiveOdometer";
 import type { ChartOverlay } from "./chart/draw";
 import { PRICE_DECIMALS } from "./constants";
+import type { ReactionPosition } from "./reactions";
 import type { TerminalView } from "./useTerminal";
 
 const E8 = 1e8;
@@ -36,6 +37,16 @@ export interface Quotes {
   up: OpenQuote | null;
   down: OpenQuote | null;
   close: CloseQuote | null;
+}
+
+/** Basis points: the reaction engine reads a call's result as a share of its stake. */
+const BPS = 10_000n;
+
+/** One tick as the reaction engine reads it: the price and, holding a call, its result as a share of the stake. */
+export interface QuoteTick {
+  t: number;
+  price: number;
+  position: ReactionPosition | null;
 }
 
 /** Which way a money figure moved, compared as bigints (−1, 0, 1). */
@@ -61,6 +72,14 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
   const lastPnl = useRef<bigint | null>(null);
   const overlay = useSharedValue<ChartOverlay | null>(null);
   const latest = useRef<Quotes>({ up: null, down: null, close: null });
+  // Tick listeners (the reactions): fed from the same pass as the quotes, so nothing is computed twice.
+  const listeners = useRef(new Set<(tick: QuoteTick) => void>());
+  const onTick = useCallback((listener: (tick: QuoteTick) => void) => {
+    listeners.current.add(listener);
+    return () => {
+      listeners.current.delete(listener);
+    };
+  }, []);
 
   const bands = t.series?.bands;
   const upBand = bands?.find((b) => b.kind === "up");
@@ -97,9 +116,19 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
       lineText.value = `${diff >= 0n ? "▲" : "▼"} $${formatUnits(diff < 0n ? -diff : diff, PRICE_DECIMALS, CENTS)} (${formatUnits(pct < 0n ? -pct : pct, PERCENT_DECIMALS, PERCENT_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
 
       let close: CloseQuote | null = null;
+      let reading: ReactionPosition | null = null;
       if (position && positionBand && position.state !== "committed") {
         close = quoteClose(shape(positionBand), w, spot, position.payout, terms);
         const pnl = close.proceeds - position.stake;
+        const roiBps = position.stake > 0n ? (pnl * BPS) / position.stake : 0n;
+        reading = {
+          key: String(position.ticketId),
+          side: positionBand.kind === "down" ? -1 : 1,
+          pnl: Number(roiBps),
+          margin: Number(BPS),
+          entry: position.entryE8 === null ? tick.priceE8 / E8 : Number(position.entryE8) / E8,
+          line: Number(t.k) / E8,
+        };
         cashOut.value = { text: money(close.proceeds), trend: trendOf(lastProceeds.current, close.proceeds) };
         lastProceeds.current = close.proceeds;
         const winning = positionBand.kind === "down" ? spot < t.k : spot > t.k;
@@ -129,6 +158,8 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
         };
       }
       latest.current = { up, down, close };
+      const reactionTick: QuoteTick = { t: performance.now(), price: tick.priceE8 / E8, position: reading };
+      for (const listener of listeners.current) listener(reactionTick);
     };
     run();
     return live.prices.subscribe(t.symbol, run);
@@ -151,5 +182,5 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
     overlay,
   ]);
 
-  return { upLine, downLine, lineText, cashOut, overlay, latest, upBand, downBand };
+  return { upLine, downLine, lineText, cashOut, overlay, latest, upBand, downBand, onTick };
 }

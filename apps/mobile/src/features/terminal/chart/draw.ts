@@ -37,6 +37,8 @@ const TAG_H = 15;
 const TAG_PAD = 5;
 const TAG_RADIUS = 3;
 const EDGE_TAG_INSET = 9;
+/** Space between two tags stacked at the same edge. */
+const EDGE_TAG_GAP = 4;
 /** A level tag that would sit under the pill moves to the end of its line, this far left of the head dot. */
 const TAG_CLEAR = 8;
 const HEAD_R = 3.5;
@@ -131,7 +133,22 @@ interface PillBox {
   bottom: number;
 }
 
-function drawLevel(c: SkCanvas, k: DrawKit, level: ChartLevel, win: YWindow, plotW: number, w: number, pill: PillBox) {
+/** How many tags already sit at each edge this frame: a second level off the same edge stacks under the first. */
+interface EdgeSlots {
+  up: number;
+  down: number;
+}
+
+function drawLevel(
+  c: SkCanvas,
+  k: DrawKit,
+  level: ChartLevel,
+  win: YWindow,
+  plotW: number,
+  w: number,
+  pill: PillBox,
+  edges: EdgeSlots,
+) {
   "worklet";
   const color = level.kind === "line" ? k.colors.ink : k.colors.helper;
   const y = yOf(level.price, win);
@@ -139,15 +156,10 @@ function drawLevel(c: SkCanvas, k: DrawKit, level: ChartLevel, win: YWindow, plo
   if (y < win.top - HALF || y > win.bottom + HALF) {
     const up = y < win.top;
     const text = `${up ? "▲" : "▼"} ${level.label} $${formatFixed(level.price, priceDecimals(level.price))}`;
-    tag(
-      c,
-      k,
-      text,
-      right,
-      up ? win.top - PAD_Y + EDGE_TAG_INSET : win.bottom + PAD_Y - EDGE_TAG_INSET - TAG_H,
-      color,
-      k.colors.inverse,
-    );
+    const slot = up ? edges.up++ : edges.down++;
+    const step = slot * (TAG_H + EDGE_TAG_GAP);
+    const at = up ? win.top - PAD_Y + EDGE_TAG_INSET + step : win.bottom + PAD_Y - EDGE_TAG_INSET - TAG_H - step;
+    tag(c, k, text, right, at, color, k.colors.inverse);
     return;
   }
   const p = k.paints.level;
@@ -161,7 +173,13 @@ function drawLevel(c: SkCanvas, k: DrawKit, level: ChartLevel, win: YWindow, plo
   tag(c, k, level.label, underPill ? plotW - HEAD_R - TAG_CLEAR : right, top, color, k.colors.inverse);
 }
 
-/** The whole frame. Returns nothing: the picture is the output. */
+/** Where the line's head sits on this frame (the reactions ride it); null while waiting for a price. */
+export interface Head {
+  x: number;
+  y: number;
+}
+
+/** The whole frame, recorded into `c`; returns the head so the reactions can ride it. */
 export function drawFrame(
   c: SkCanvas,
   k: DrawKit,
@@ -171,13 +189,13 @@ export function drawFrame(
   h: number,
   waiting: string,
   dots: SkPicture | null,
-) {
+): Head | null {
   "worklet";
   drawDots(c, dots, s);
   if (!s.ready || w < MIN_PLOT_LEFTOVER || h < PAD_Y * HALF) {
     const x = (w + k.fonts.tag.getTextWidth(waiting)) / HALF;
     textRight(c, k, waiting, x, h / HALF, k.fonts.tag, k.mids.tag, k.colors.helper, 1);
-    return;
+    return null;
   }
   const tone = o?.winning === false ? k.colors.down : k.colors.up;
   const priceText = formatUsd(s.latest, priceDecimals(s.latest));
@@ -285,7 +303,8 @@ export function drawFrame(
   const pillX = w - PILL_RIGHT - pillW;
   const pillY = Math.min(h - pillH - HALF, Math.max(HALF, headY - pillH / HALF));
   const box: PillBox = { top: pillY, bottom: pillY + pillH };
-  for (const level of o?.levels ?? []) drawLevel(c, k, level, win, plotW, w, box);
+  const edges: EdgeSlots = { up: 0, down: 0 };
+  for (const level of o?.levels ?? []) drawLevel(c, k, level, win, plotW, w, box, edges);
 
   c.drawCircle(plotW, headY, HEAD_R, fill(k, tone));
   c.drawRRect(Skia.RRectXY(Skia.XYWHRect(pillX, pillY, pillW, pillH), pillH / HALF, pillH / HALF), fill(k, tone));
@@ -302,10 +321,11 @@ export function drawFrame(
       pillY,
       pillY + pillH,
     );
-    return;
+    return { x: plotW, y: headY };
   }
   const mid = pillY + pillH / HALF;
   const ink = fill(k, k.colors.onLine);
   drawOdometer(c, s.price, k.fonts.pillSmall, ink, right, mid - PILL_ROW_OFFSET, ROLL_PITCH_SMALL, pillY, mid);
   drawOdometer(c, s.pnl, k.fonts.pillSmall, ink, right, mid + PILL_ROW_OFFSET, ROLL_PITCH_SMALL, mid, pillY + pillH);
+  return { x: plotW, y: headY };
 }

@@ -18,7 +18,7 @@ import { setOdometer, setOdometerTrend } from "~/components/kit/odometer";
 import { useTheme } from "~/theme";
 import { CHART_ERASER } from "~/theme/palette";
 import { LEVEL_DASH } from "./constants";
-import { type ChartOverlay, drawFrame } from "./draw";
+import { type ChartOverlay, drawFrame, type Head } from "./draw";
 import { formatUsd, priceDecimals } from "./engine";
 import { type DrawKit, makeDotPicture, makeKit } from "./kit";
 import { advance, createChartState, resetChart, takePrice } from "./state";
@@ -37,10 +37,12 @@ export interface LiveChartProps {
   overlay: SharedValue<ChartOverlay | null>;
   /** Shown before the first tick ("Waiting for BTC…"). */
   waiting: string;
+  /** Where the line's head is, written every frame (the reactions ride it; null while waiting). */
+  head?: SharedValue<Head | null>;
 }
 
 /** Memoised: its props are stable, so the terminal's once-a-second countdown render never reaches the chart. */
-export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting }: LiveChartProps) {
+export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, head }: LiveChartProps) {
   const live = useLive();
   useLiveStream();
   const { color } = useTheme();
@@ -129,7 +131,11 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting }: L
     "worklet";
     const { w, h } = size.value;
     const canvas = recorder.beginRecording(Skia.XYWHRect(0, 0, w, h));
-    if (clock.value > 0 && w > 0) drawFrame(canvas, kit, state.value, overlayValue.value, w, h, waiting, dots.value);
+    const at =
+      clock.value > 0 && w > 0
+        ? drawFrame(canvas, kit, state.value, overlayValue.value, w, h, waiting, dots.value)
+        : null;
+    if (head) head.value = at;
     return recorder.finishRecordingAsPicture();
   });
 

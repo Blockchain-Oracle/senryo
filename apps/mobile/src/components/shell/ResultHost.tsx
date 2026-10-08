@@ -1,6 +1,7 @@
 import { formatUnits } from "@senryo/core";
 import { useRefreshCaller, useTickets } from "@senryo/query";
 import { useEffect, useRef } from "react";
+import { celebrate } from "~/feedback/celebrate";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { notify } from "~/lib/notify";
@@ -60,12 +61,14 @@ export function ResultHost() {
       if (was === undefined || FINAL.has(was.state) || was.state === "closed") continue;
       const where = `${t.symbol} ${t.cadenceSec / SECONDS_PER_MINUTE}m`;
       if (t.state === "closed" && t.result !== null) {
+        if (t.result > was.stake) celebrate();
         notify({ title: `Cashed out ${usd(t.result)}`, description: `${signed(t.result - was.stake)} on ${where}` });
         continue;
       }
       if (!FINAL.has(t.state)) continue;
       if (t.outcome === "win") {
         fire("win", { cue: "win" });
+        celebrate();
         notify({ title: `Won ${usd(t.result ?? t.payout)} on ${where}`, description: "Paid to your balance." });
       } else if (t.outcome === "lose") {
         fire("loss", { cue: "loss" });

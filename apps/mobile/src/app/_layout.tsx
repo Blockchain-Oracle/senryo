@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ConfettiHost } from "~/components/shell/ConfettiHost";
 import { DeferredLinkHost } from "~/components/shell/DeferredLinkHost";
 import { FeedbackHost } from "~/components/shell/FeedbackHost";
 import { LiveHost } from "~/components/shell/LiveHost";
@@ -102,6 +103,7 @@ function RootStack() {
       <ToastHost />
       <PushHost />
       <TermsHost />
+      <ConfettiHost />
       <PrivacyPlate />
     </>
   );

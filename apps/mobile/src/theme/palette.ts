@@ -21,6 +21,8 @@ function withAlpha(hex: string, alpha: number): string {
 const WASH = { soft: 0.12, strong: 0.24, chartFill: 0.16, chartFillEnd: 0 } as const;
 /** Edge light (fractions): the top highlight on a filled primary, the faint edge of a raised fill, the dock bubble. */
 const RIM = { primary: 0.2, surface: 0.06, bubble: 0.12, bubbleEdge: 0.16 } as const;
+/** The terminal's surge / slump edge glow (Tradash's reactions flash; Owarine's 22 / 26 / 18 % mixes). */
+const GLOW = { surge: 0.22, mega: 0.26, slump: 0.18 } as const;
 
 /**
  * `nestedFill` is a quiet plate on a group that already sits on a sheet (level 2): the group is `raised2`, so the plate
@@ -48,6 +50,9 @@ function roles(t: TokenPalette, nestedFill: string) {
     downWashStrong: withAlpha(t.down, WASH.strong),
     warnWash: t.warningSurface,
     destructiveWash: t.destructiveSurface,
+    surgeGlow: withAlpha(t.chartUp, GLOW.surge),
+    megaGlow: withAlpha(t.chartUp, GLOW.mega),
+    slumpGlow: withAlpha(t.chartDown, GLOW.slump),
     chartFillTop: withAlpha(t.chartUp, WASH.chartFill),
     chartFillBottom: withAlpha(t.chartUp, WASH.chartFillEnd),
     chartDownFillTop: withAlpha(t.chartDown, WASH.chartFill),
