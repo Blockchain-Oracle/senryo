@@ -17,6 +17,7 @@ import { CORS_METHODS } from "./constants.ts";
 import { type ApiContext, openChains } from "./context.ts";
 import { loadApiEnv } from "./env.ts";
 import { GeoDb } from "./geo-db.ts";
+import { ARCHIVE_PENDING_MS } from "./prices/constants.ts";
 import { PythGateway } from "./prices/gateway.ts";
 import { AccountRelay } from "./relay/accounts.ts";
 import { openLanes } from "./relay/lanes.ts";
@@ -48,6 +49,11 @@ geo.start();
 const bus = new StreamBus();
 const gateway = new PythGateway(db, bus, log, secrets.pythKey);
 gateway.start();
+const archiveTimer = setInterval(() => {
+  void gateway
+    .archivePending(db)
+    .catch((error) => log.warn({ err: (error as Error).message }, "archive pending failed"));
+}, ARCHIVE_PENDING_MS);
 
 // Sponsor lanes (relayer keys, D-266): SPONSOR_PK, plus SPONSOR_2_PK for a second lane.
 const sponsors = [loadOptionalSigner("SPONSOR"), loadOptionalSigner("SPONSOR_2")].filter((s) => s !== undefined);
@@ -121,6 +127,7 @@ registerStreamRoute(app, {
 
 await listen(app, env.PORT, env.HOST, async () => {
   geo.stop();
+  clearInterval(archiveTimer);
   gateway.stop();
   for (const chain of chains.values()) await chain.heads.stop();
   await db.end();

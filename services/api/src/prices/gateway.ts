@@ -1,9 +1,9 @@
-import type { Hex } from "@senryo/chain";
+import { type Hex, seriesIdOf } from "@senryo/chain";
 import { MARKETS, type MarketSpec } from "@senryo/config";
-import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
+import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
-import { FRAME_GAP_MS, PRINT_WAIT_MS } from "./constants.ts";
+import { FRAME_GAP_MS, PRINT_WAIT_MS, RING_KEEP_SEC } from "./constants.ts";
 import { type HermesStatus, HermesStream } from "./hermes.ts";
 import { FeedRing, type PriceUpdate, toE8 } from "./ring.ts";
 
@@ -36,6 +36,22 @@ export class PythGateway {
     this.archive = new PriceArchive(db, log);
     this.feeds = MARKETS.map((market, index) => ({ index, market, ring: new FeedRing(market.pythFeedId) }));
     for (const f of this.feeds) this.byId.set(f.market.pythFeedId, f);
+  }
+
+  /**
+   * Archives the print of every pending fill instant still in the ring (the relay's own and anyone else's), so the
+   * keeper can back-fill from the archive even if this process restarts between a commit and its fill.
+   */
+  async archivePending(db: Db): Promise<void> {
+    const rows = await db<{ series_id: string; target: bigint }[]>`
+      SELECT DISTINCT series_id, target FROM market_tickets
+      WHERE state IN ('committed', 'closing') AND target IS NOT NULL AND target > ${nowSec() - RING_KEEP_SEC}`;
+    for (const r of rows) {
+      const feed = this.feeds.find((f) =>
+        f.market.cadences.some((c) => seriesIdOf(f.market.symbol, c) === r.series_id),
+      );
+      if (feed) await this.printAt(feed.market.pythFeedId, Number(r.target), 0);
+    }
   }
 
   start(): void {

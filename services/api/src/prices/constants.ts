@@ -18,6 +18,8 @@ export const ROTATE_AFTER_MS = (23 * 60 + 45) * 60 * 1000;
 export const BOUNDARY_SEC = 60;
 /** At most one price frame per feed per this many ms on `/v1/stream` (Owarine's coalescer). */
 export const FRAME_GAP_MS = 125;
+/** How often pending fill instants are archived for the keeper's backup. */
+export const ARCHIVE_PENDING_MS = 2_000;
 /** A REST lookup for a print that never streamed. */
 export const REST_TIMEOUT_MS = 4_000;
 /** Kept in `pyth_prints` (window boundaries and fills): the chain holds them forever; the archive serves proofs. */

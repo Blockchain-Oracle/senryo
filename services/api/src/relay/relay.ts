@@ -42,6 +42,7 @@ export interface IntentStatus {
 
 interface IntentRow {
   digest: string;
+  kind: "open" | "close";
   owner: string;
   state: IntentStatus["state"];
   ticket_id: bigint | null;
@@ -87,9 +88,22 @@ export class MarketRelay {
     return { digest: checked.digest, state: "received", ticketId: null, txHash: null, target: null, reason: null };
   }
 
+  /**
+   * The call's status. While an open's intent row says "committed", the ticket book decides: a fill or refusal made
+   * while this process was restarting (its NOTIFY lost) still shows as filled or refused.
+   */
   async status(digest: Hex): Promise<IntentStatus | undefined> {
-    const [row] = await this.d.db<IntentRow[]>`SELECT * FROM market_intents WHERE digest = ${digest}`;
-    return row ? toStatus(row) : undefined;
+    const [row] = await this.d.db<(IntentRow & { ticket_state: string | null })[]>`
+      SELECT i.*, t.state AS ticket_state FROM market_intents i
+      LEFT JOIN market_tickets t ON t.chain_id = i.chain_id AND t.ticket_id = i.ticket_id
+      WHERE i.digest = ${digest}`;
+    if (!row) return undefined;
+    const status = toStatus(row);
+    // Only an open is unambiguous in the book (a refused close and a partial one both leave the ticket open).
+    if (status.state !== "committed" || row.kind !== "open" || !row.ticket_state || row.ticket_state === "committed") {
+      return status;
+    }
+    return { ...status, state: row.ticket_state === "refunded" ? "refused" : "filled" };
   }
 
   private async commit(req: IntentRequest, c: CheckedIntent): Promise<void> {
