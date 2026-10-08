@@ -11,9 +11,9 @@ import { useNetwork } from "~/lib/network";
 import { BUTTON, CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 /**
- * The persistent mode control (S8.22 → Living Lacquer §5.6, FT044; Codex consult 1 Oct): "Practice · Paper money"
- * (violet) or "Mainnet · Real money" (blue), full label, upper right on every money surface — a 34 pt borderless plate
- * in the mode's wash with a chevron, because it opens a selector (`/network`), where entering Mainnet takes the
+ * The persistent mode control (S8.22 → Living Lacquer §5.6, FT044; Codex consult 1 Oct): "Practice · Test dollars"
+ * (violet) or "Real · USDC" (blue), full label, upper right on every money surface — a 34 pt borderless plate
+ * in the mode's wash with a chevron, because it opens a selector (`/network`), where entering Real takes the
  * deliberate "Switch to real money" (which locks the session). `compact` drops the second half for the ticket header,
  * where the money word already sits beside the amount.
  */
@@ -22,8 +22,8 @@ export function ModeCapsule({ compact = false }: { compact?: boolean }) {
   const { color } = useTheme();
   const practice = network.key === "testnet";
   const tone = practice ? color.practice : color.mainnet;
-  const mode = practice ? "Practice" : "Mainnet";
-  const money = practice ? "Paper money" : "Real money";
+  const mode = network.modeLabel;
+  const money = practice ? "Test dollars" : "USDC";
   const press = usePressScale();
   return (
     <Animated.View style={[styles.shrink, press.style]}>
@@ -35,8 +35,8 @@ export function ModeCapsule({ compact = false }: { compact?: boolean }) {
           router.push(ROUTES.network);
         }}
         accessibilityRole="button"
-        accessibilityLabel={`${mode}, ${money.toLowerCase()}. Change`}
-        accessibilityHint="Opens the Practice and Mainnet selector"
+        accessibilityLabel={`${mode}, ${money}. Change`}
+        accessibilityHint="Opens the Practice and Real selector"
         hitSlop={(SIZE.touch - (compact ? SIZE.chipHeight : SIZE.modeCapsuleHeight)) / 2}
         style={[
           styles.capsule,

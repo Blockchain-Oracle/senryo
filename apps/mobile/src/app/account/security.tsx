@@ -40,9 +40,9 @@ const FACE_ID_OPTIONS = [
 ] as const;
 
 const INFO = {
-  ttl: "Trading locks after this long, however active you are. Leaving the app always locks.",
-  idle: "Trading also locks after this long without a signature.",
-  gate: `Off by default in Practice. On Mainnet, trades of ${threshold} or more always ask, whatever is chosen here.`,
+  ttl: "Your account locks after this long, however active you are. Leaving the app always locks.",
+  idle: "It also locks after this long without a signature.",
+  gate: `Off by default in Practice. In Real, calls of ${threshold} or more always ask, whatever is chosen here.`,
   rule: `Tightening applies at once. Loosening asks for ${UNLOCK_WORD} first. Withdrawals, one-tap calls and your recovery phrase always ask for ${UNLOCK_WORD} again.`,
 } as const;
 

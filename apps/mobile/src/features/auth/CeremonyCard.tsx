@@ -16,7 +16,7 @@ export type CeremonyKind = "create" | "sign-in" | "unlock" | "recover";
 const TITLE: Record<CeremonyKind, string> = {
   create: "Creating your account",
   "sign-in": "Opening your account",
-  unlock: "Unlocking trading",
+  unlock: "Unlocking your account",
   recover: "Opening with your backup passkey",
 };
 

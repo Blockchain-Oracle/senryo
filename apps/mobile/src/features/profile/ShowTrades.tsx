@@ -15,10 +15,10 @@ import type { Visibility } from "./VisibilitySettings";
 
 export const SHARED_ADDRESS = {
   title: "One address, two networks",
-  body: "Same address on Practice and Mainnet. Onchain activity is public. Each chip lists your profile and shares your trades on that network only.",
+  body: "Same address in Practice and Real. Onchain activity is public. Each chip lists your profile and shows your calls in that mode only.",
 } as const;
 
-/** First-save defaults (`packages/api-client/src/social.ts`): Practice listed and sharing, Mainnet off. */
+/** First-save defaults (`packages/api-client/src/handles.ts`): Practice listed and sharing, Real off. */
 export const DEFAULT_VISIBILITY: Visibility = {
   listedPractice: true,
   publicTradesPractice: true,
@@ -45,7 +45,7 @@ export function ShowTrades({ value, onChange }: { value: Visibility; onChange: (
           onPress={() => onChange({ ...value, listedPractice: !practice, publicTradesPractice: !practice })}
         />
         <ModeChip
-          label="Mainnet"
+          label="Real"
           on={mainnet}
           tone={color.mainnet}
           wash={color.mainnetWash}

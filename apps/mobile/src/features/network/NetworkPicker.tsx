@@ -1,8 +1,8 @@
 /**
  * The mode sheet's two rows (A8, Part A rule 9; Fomo F21/F22 selection): Monad's mark, the mode, its balance, and a
- * check on the one in use. Practice switches at once. Mainnet opens one sentence and a slide — "Slide to use real
- * money" — and only the completed slide switches; it also locks the session so the next signature starts under
- * Mainnet's Face ID floor (D-037). Partial totals carry "≈". A deep link for Mainnet (`request`) opens on the slide.
+ * check on the one in use. Practice switches at once. Real opens one sentence and a slide — "Slide to use real money"
+ * — and only the completed slide switches; it also locks the session so the next signature starts under Real's Face ID
+ * floor (D-037). Partial totals carry "≈". A deep link for Real (`request`) opens on the slide.
  */
 import { MAINNET, TESTNET } from "@senryo/config";
 import { ids } from "@senryo/identity";
@@ -63,7 +63,7 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
       <SheetRow
         index={0}
         leading={<EntityMark id={ids.evmChain(TESTNET.chainId)} size={SIZE.markToken} decorative />}
-        title="Practice"
+        title={TESTNET.modeLabel}
         {...(practice ? { detail: practice } : {})}
         selected={network.key === TESTNET.key}
         onPress={() => choose(TESTNET.key)}
@@ -72,7 +72,7 @@ export function NetworkPicker({ onDone, request }: { onDone?: () => void; reques
       <SheetRow
         index={1}
         leading={<EntityMark id={ids.evmChain(MAINNET.chainId)} size={SIZE.markToken} decorative />}
-        title="Mainnet"
+        title={MAINNET.modeLabel}
         {...(DEV_WORKSPACE
           ? { detail: "Unavailable in the local development workspace" }
           : mainnet

@@ -1,21 +1,24 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useState } from "react";
 import { useSetupNav } from "~/features/setup/useSetupNav";
 import { TerminalScreen } from "~/features/terminal/TerminalScreen";
 
-/** The fill lands with its sound and haptic; the next step follows after the user has seen it. */
-const AFTER_FILL_MS = 1_600;
-
 /**
  * Setup — "Try your first call" (pivot onboarding step 6): the live terminal on BTC 1m with the test dollars just
- * granted. The first fill moves setup on; Skip is always there.
+ * granted. Once the call fills, the page stays: the user watches it breathe on the chart (cash out, or the result
+ * reveal at the close) and moves on with Continue when they choose. Skip is there until then.
  */
 export default function FirstCallStep() {
   const { next } = useSetupNav("first-call");
-  const done = useRef(false);
-  const onFilled = useCallback(() => {
-    if (done.current) return;
-    done.current = true;
-    setTimeout(next, AFTER_FILL_MS);
-  }, [next]);
-  return <TerminalScreen coach={{ title: "Try your first call", onSkip: next }} onFilled={onFilled} />;
+  const [live, setLive] = useState(false);
+  const onFilled = useCallback(() => setLive(true), []);
+  return (
+    <TerminalScreen
+      coach={
+        live
+          ? { title: "Your call is live", action: "Continue", onAction: next }
+          : { title: "Try your first call", action: "Skip", onAction: next }
+      }
+      onFilled={onFilled}
+    />
+  );
 }

@@ -23,7 +23,7 @@ export function ActionCircle({
   icon: SymbolIcon;
   label: string;
   onPress: () => void;
-  /** Why it can't be used here ("Mainnet only"); the circle stays, inert. */
+  /** Why it can't be used here ("Real money only"); the circle stays, inert. */
   reason?: string | undefined;
   /** A caveat that doesn't stop it ("Sell only"). */
   note?: string | undefined;

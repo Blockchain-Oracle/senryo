@@ -105,7 +105,7 @@ function AccountNotifications() {
 
   const art = BellArt ? <BellArt width={PRIMER_ART} height={PRIMER_ART} /> : null;
   const title = "Don’t miss a move";
-  const body = "Fills, warnings and money arriving";
+  const body = "Your results and money arriving";
 
   if (readFailed) {
     return (

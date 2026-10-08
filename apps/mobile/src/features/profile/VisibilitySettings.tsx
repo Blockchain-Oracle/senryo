@@ -28,7 +28,7 @@ export const visibilityOf = (v: Visibility): Visibility => ({
 
 const NETWORKS = [
   { mode: "Practice", listed: "listedPractice", trades: "publicTradesPractice" },
-  { mode: "Mainnet", listed: "listedMainnet", trades: "publicTradesMainnet" },
+  { mode: "Real", listed: "listedMainnet", trades: "publicTradesMainnet" },
 ] as const;
 
 export function VisibilitySettings({ value, onChange }: { value: Visibility; onChange: (next: Visibility) => void }) {
@@ -74,7 +74,7 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
                       fire("tick");
                       onChange({ ...value, [network.trades]: on });
                     }}
-                    accessibilityLabel={`Share my trades in ${network.mode}`}
+                    accessibilityLabel={`Show my calls in ${network.mode}`}
                   />
                 }
               />

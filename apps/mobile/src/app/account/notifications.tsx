@@ -145,7 +145,7 @@ export default function NotificationsScreen() {
         </Panel>
       ) : null}
       <View style={styles.section}>
-        <SectionHeading detail="Practice and Mainnet both notify; each notification says which.">
+        <SectionHeading detail="Practice and Real both notify; each notification says which.">
           What to tell you
         </SectionHeading>
         <Panel>

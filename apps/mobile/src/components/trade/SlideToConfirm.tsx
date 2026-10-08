@@ -52,7 +52,7 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export type SlideTone = "primary" | "action" | "up" | "down";
 
 export interface SlideToConfirmProps {
-  /** Shown on the rail ("Slide to short"); when disabled, the reason ("Enter an amount"). */
+  /** Shown on the rail ("Slide to use real money"); when disabled, the reason ("Enter an amount"). */
   label: string;
   onConfirm: () => void;
   disabled?: boolean;

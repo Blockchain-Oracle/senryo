@@ -70,7 +70,7 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
       tone="gold"
       title={request.intent.title}
       body={request.intent.detail}
-      {...(copy ? {} : { footer: "Always asked, never inside a trading session." })}
+      {...(copy ? {} : { footer: "Always asked, even while your account is unlocked." })}
     >
       {copy ? (
         <Text accessibilityRole="alert" style={[TYPE.rowDetail, { color: color.down, textAlign: "center" }]}>

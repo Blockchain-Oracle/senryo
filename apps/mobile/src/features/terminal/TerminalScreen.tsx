@@ -37,8 +37,8 @@ const CENTS = 2;
 const SETTLED = new Set(["filled", "refused", "failed"]);
 
 export interface TerminalProps {
-  /** First run: a title over the terminal and a way past it. */
-  coach?: { title: string; onSkip: () => void };
+  /** First run: a title over the terminal and its one action (Skip before the call, Continue once it is live). */
+  coach?: { title: string; action: string; onAction: () => void };
   /** Told when one of this screen's calls fills (setup moves on). */
   onFilled?: () => void;
 }
@@ -165,7 +165,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       {coach ? (
         <View style={styles.coach}>
           <Text style={[TYPE.title, { color: color.ink }]}>{coach.title}</Text>
-          <Button label="Skip" variant="ghost" size="sm" block={false} onPress={coach.onSkip} />
+          <Button label={coach.action} variant="ghost" size="sm" block={false} onPress={coach.onAction} />
         </View>
       ) : null}
       <TerminalTop t={t} offsetMs={offsetMs} onPickMarket={() => setPicking(true)} />

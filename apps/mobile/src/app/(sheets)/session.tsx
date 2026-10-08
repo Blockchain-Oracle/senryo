@@ -48,7 +48,7 @@ function Body() {
 
 export default function SessionSheet() {
   return (
-    <Sheet onClose={() => router.back()} closeLabel="Close trading session">
+    <Sheet onClose={() => router.back()} closeLabel="Close session">
       <Body />
     </Sheet>
   );

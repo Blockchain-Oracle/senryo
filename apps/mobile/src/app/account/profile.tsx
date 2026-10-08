@@ -81,7 +81,7 @@ function unavailable(profile: OwnProfile): ReactNode {
   return (
     <QuietState
       line="Unlock to edit your profile"
-      detail="Your profile settings load once trading is unlocked."
+      detail="Your profile settings load once your account is unlocked."
       action={{ label: "Unlock", variant: "primary", onPress: () => router.push(ROUTES.session) }}
     />
   );

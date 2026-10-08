@@ -52,7 +52,7 @@ export function ProfileEditor({
   base: MyProfile | null;
   address: Address;
   focus?: ProfileFocus | undefined;
-  /** Opened from "Make public on Mainnet": scroll to who can see the profile. */
+  /** Opened from "Make public on Real": scroll to who can see the profile. */
   toVisibility?: boolean;
 }) {
   const { color } = useTheme();
