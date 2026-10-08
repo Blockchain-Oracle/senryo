@@ -27,6 +27,8 @@ const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 /** [artifact file, contract name] for every contract a client, service or the indexer talks to. */
 const CONTRACTS = [
   ["SenryoCore.sol", "SenryoCore"],
+  ["SenryoBinaryV1.sol", "SenryoBinaryV1"],
+  ["PythBoundaryOracle.sol", "PythBoundaryOracle"],
   ["SessionOracle.sol", "SessionOracle"],
   ["MarketCalendar.sol", "MarketCalendar"],
   ["LpVault.sol", "LpVault"],
