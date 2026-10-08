@@ -32,9 +32,11 @@ export interface TicketNotice {
   entryE8: string | null;
   result: string | null;
   outcome: string | null;
+  /** The transaction that made this change, when known. */
+  txHash: Hex | null;
 }
 
-async function announce(db: Db, chainId: ChainId, c: TicketChange): Promise<void> {
+async function announce(db: Db, chainId: ChainId, c: TicketChange, txHash: Hex | null): Promise<void> {
   const [row] = await db<
     TicketRow[]
   >`SELECT * FROM market_tickets WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
@@ -50,6 +52,7 @@ async function announce(db: Db, chainId: ChainId, c: TicketChange): Promise<void
     entryE8: row.entry_e8?.toString() ?? null,
     result: row.result?.toString() ?? null,
     outcome: row.outcome,
+    txHash,
   };
   await db`SELECT pg_notify(${TICKET_CHANNEL}, ${JSON.stringify(notice)})`;
 }
@@ -60,6 +63,7 @@ export async function applyTicketChanges(
   chainId: ChainId,
   changes: readonly TicketChange[],
   windowOf: (windowId: Hex) => Promise<WindowRef>,
+  txHash: Hex | null = null,
 ): Promise<void> {
   for (const c of changes) {
     switch (c.kind) {
@@ -101,7 +105,7 @@ export async function applyTicketChanges(
                  WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
         break;
     }
-    await announce(db, chainId, c);
+    await announce(db, chainId, c, txHash);
   }
 }
 

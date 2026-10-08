@@ -75,11 +75,17 @@ async function fillGroup(ctx: KeeperContext, rows: TicketRow[], now: number): Pr
       "the relay had not filled these; done here",
     );
     const changes = ticketChanges(sent.receipt.logs, reserve);
-    await applyTicketChanges(ctx.db, ctx.chainId, changes, async (windowId) => ({
-      windowId,
-      seriesId: head.series_id as Hex,
-      start: Number(head.window_start),
-      expiry: Number(head.window_expiry),
-    }));
+    await applyTicketChanges(
+      ctx.db,
+      ctx.chainId,
+      changes,
+      async (windowId) => ({
+        windowId,
+        seriesId: head.series_id as Hex,
+        start: Number(head.window_start),
+        expiry: Number(head.window_expiry),
+      }),
+      sent.hash,
+    );
   }
 }

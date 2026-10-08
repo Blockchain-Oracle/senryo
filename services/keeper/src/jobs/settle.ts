@@ -90,12 +90,18 @@ async function send(
   if (sent.stage === "reverted") throw new Error(`settle reverted in ${sent.hash}`);
   const changes = ticketChanges(sent.receipt.logs, addressOf(ctx.chainId, "BandReserve"));
   const expiry = Number(w.window_expiry);
-  await applyTicketChanges(ctx.db, ctx.chainId, changes, async () => ({
-    windowId,
-    seriesId: w.series_id as Hex,
-    start: expiry - (seriesOf(ctx.chainId, w.series_id as Hex)?.cadenceSec ?? 0),
-    expiry,
-  }));
+  await applyTicketChanges(
+    ctx.db,
+    ctx.chainId,
+    changes,
+    async () => ({
+      windowId,
+      seriesId: w.series_id as Hex,
+      start: expiry - (seriesOf(ctx.chainId, w.series_id as Hex)?.cadenceSec ?? 0),
+      expiry,
+    }),
+    sent.hash,
+  );
   await ctx.notifyResults(changes);
 }
 

@@ -132,7 +132,7 @@ export class MarketRelay {
     if (sent.stage === "reverted") throw new Error(`commit reverted in ${sent.hash}`);
     const changes = ticketChanges(sent.receipt.logs, reserve);
     const window = { windowId: req.intent.windowId, seriesId: c.seriesId, start: c.start, expiry: c.expiry };
-    await applyTicketChanges(this.d.db, this.d.chainId, changes, async () => window);
+    await applyTicketChanges(this.d.db, this.d.chainId, changes, async () => window, sent.hash);
     const committed = changes.find((x) => x.kind === "committed" || x.kind === "closing");
     if (!committed || (committed.kind !== "committed" && committed.kind !== "closing")) {
       throw new Error("the commit landed without a ticket event");
@@ -202,6 +202,7 @@ export class MarketRelay {
     const refused = n.change === "refused" || n.change === "closeRefused";
     await this.setState(row.digest as Hex, row.owner as Address, {
       state: refused ? "refused" : "filled",
+      txHash: n.txHash,
       reason: refused ? "refused" : null,
     });
   }

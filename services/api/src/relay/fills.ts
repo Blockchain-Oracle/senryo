@@ -76,11 +76,17 @@ export class FillBatcher {
         }),
       );
       const changes = ticketChanges(sent.receipt.logs, reserve);
-      await applyTicketChanges(this.d.db, this.d.chainId, changes, async (id) => {
-        const w = windows.get(id);
-        if (!w) throw new Error(`unknown window ${id}`);
-        return w;
-      });
+      await applyTicketChanges(
+        this.d.db,
+        this.d.chainId,
+        changes,
+        async (id) => {
+          const w = windows.get(id);
+          if (!w) throw new Error(`unknown window ${id}`);
+          return w;
+        },
+        sent.hash,
+      );
       this.d.log.info(
         { actor: "relay", why: "fill", target: batch.target, tickets: ids.length, waitedMs, tx: sent.hash },
         "fill sent",
