@@ -123,3 +123,10 @@ export const PERPL_MARKET_SCALES: Readonly<
 
 /** Agora's test AUSD faucet. Only chain 10143; native Practice never routes this collateral to MockAUSD. */
 export const PERPL_TESTNET_FAUCET = "0xd236c18D274E54FAccC3dd9DDA4b27965a73ee6C" as const;
+/**
+ * One `requestFunds(recipient)` pays 10,000 test AUSD (traced 8 Oct 2026). Anyone may call it for any recipient, so the
+ * api's sponsor funds Practice users gas-free; the faucet keeps ONE cooldown for every caller (`MaxFrequencyExceeded`),
+ * so the api serializes its calls and waits this long before a retry.
+ */
+export const PERPL_TESTNET_FAUCET_CNS = 10_000_000_000n;
+export const PERPL_TESTNET_FAUCET_COOLDOWN_SEC = 60;

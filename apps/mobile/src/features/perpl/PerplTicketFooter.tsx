@@ -1,5 +1,5 @@
 import { TESTNET_CHAIN_ID } from "@senryo/config";
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ChevronDown, CirclePlus, Info } from "~/components/kit/symbols";
@@ -7,7 +7,7 @@ import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import { fire } from "~/feedback/fire";
 import { useTermsGate } from "~/lib/account/terms-gate";
 import { UNLOCK_WORD } from "~/lib/constants/auth";
-import { accountRequiredRoute, perplPositionRoute, ROUTES, ticketRoute } from "~/lib/constants/routes";
+import { accountRequiredRoute, addMoneyRoute, perplPositionRoute, ROUTES, ticketRoute } from "~/lib/constants/routes";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { perplUsd } from "./format";
 import type { PerplTicketModel } from "./usePerplTicket";
@@ -46,7 +46,6 @@ export function PerplTicketFooter({
   onConfirm,
   onDetails,
   onWhy,
-  onFunds,
 }: {
   t: PerplTicketModel;
   note: string | undefined;
@@ -55,14 +54,12 @@ export function PerplTicketFooter({
   onConfirm: () => void;
   onDetails: () => void;
   onWhy: () => void;
-  onFunds: () => void;
 }) {
   const { color } = useTheme();
   const gate = useTermsGate();
-  const addMoney = () =>
-    t.meta.chainId === TESTNET_CHAIN_ID && t.block?.code !== "fees"
-      ? onFunds()
-      : gate(() => router.push(ROUTES.addMoney), { verb: "add money", next: ROUTES.addMoney });
+  // Practice adds go straight to "Get test money" (test AUSD for Perpl + gas); Mainnet to every way to add money.
+  const destination = t.meta.chainId === TESTNET_CHAIN_ID ? addMoneyRoute("practice") : ROUTES.addMoney;
+  const addMoney = () => gate(() => router.push(destination as Href), { verb: "add money", next: destination });
   const commit = perplCommit(t);
   const copy = t.block ? blockCopy(t.block, t.meta.symbol) : undefined;
   const guest = t.block?.code === "guest";

@@ -6,7 +6,15 @@
  * price and never counts in a total. Pure: each app's hook reads it (`useMoneyAssets`).
  */
 import type { Holding } from "@senryo/api-client";
-import { type BridgeAsset, type ChainId, MAINNET_CHAIN_ID, MONAD_BRIDGE_ASSETS, NATIVE_TOKEN } from "@senryo/config";
+import {
+  type BridgeAsset,
+  type ChainId,
+  MAINNET_CHAIN_ID,
+  MONAD_BRIDGE_ASSETS,
+  NATIVE_TOKEN,
+  PERPL_COLLATERAL,
+  TESTNET_CHAIN_ID,
+} from "@senryo/config";
 import { ONE_E18 } from "@senryo/core";
 import { collateralId, entity, ids } from "@senryo/identity";
 import { MON_RESERVE_WEI } from "./compose.ts";
@@ -95,6 +103,14 @@ export function collateralOf(chainId: ChainId, address: string): CollateralSymbo
   return undefined;
 }
 
+/**
+ * Practice's venue test dollar: Agora's test AUSD, Perpl's testnet collateral (on mainnet Perpl takes the real AUSD,
+ * which is already our own collateral). Valued at its peg and drawn with the AUSD mark, so Home counts it.
+ */
+export function isVenueTestDollar(chainId: ChainId, address: string): boolean {
+  return chainId === TESTNET_CHAIN_ID && PERPL_COLLATERAL[TESTNET_CHAIN_ID].toLowerCase() === address.toLowerCase();
+}
+
 export interface TradingPart {
   ausd: bigint;
   usdc: bigint;
@@ -109,12 +125,19 @@ export function assetOf(chainId: ChainId, h: Holding, trading: TradingPart | und
   const free = trading ? (tradingUnits < trading.free ? tradingUnits : trading.free) : 0n;
   const total = h.balance + tradingUnits;
   const ownCollateral = collateral !== undefined;
-  const mark = ownCollateral ? collateralId(chainId, collateral) : h.native ? ids.native(chainId, "MON") : h.mark;
+  const testDollar = isVenueTestDollar(chainId, h.address);
+  const mark = ownCollateral
+    ? collateralId(chainId, collateral)
+    : testDollar
+      ? collateralId(chainId, "AUSD")
+      : h.native
+        ? ids.native(chainId, "MON")
+        : h.mark;
   const price = h.priceUsd18;
   const valueUsd6 =
     price !== null
       ? valueOfUnits(total, h.decimals, price)
-      : ownCollateral && chainId !== MAINNET_CHAIN_ID
+      : (ownCollateral || testDollar) && chainId !== MAINNET_CHAIN_ID
         ? pegValue(total, h.decimals)
         : null;
   return {
@@ -126,8 +149,8 @@ export function assetOf(chainId: ChainId, h: Holding, trading: TradingPart | und
     decimals: h.decimals,
     mark,
     logoUrl: h.logoUrl,
-    verified: h.verified || ownCollateral,
-    lookalike: h.lookalike && !ownCollateral,
+    verified: h.verified || ownCollateral || testDollar,
+    lookalike: h.lookalike && !ownCollateral && !testDollar,
     priceUsd18: price,
     change24hBps: h.change24hBps,
     wallet: h.balance,

@@ -9,6 +9,8 @@ import {
   type ChainId,
   MAINNET_CHAIN_ID,
   MONAD_TOKEN_LIST,
+  PERPL_COLLATERAL,
+  PERPL_COLLATERAL_DECIMALS,
   SPOT_TOKENS,
   TESTNET_CHAIN_ID,
   TOKEN_LIST_URL,
@@ -70,10 +72,21 @@ function seed(chainId: ChainId): ListedToken[] {
   }));
 }
 
-/** Practice's own assets (mock AUSD/USDC), verified on 10143 alongside the testnet list. */
+/**
+ * Practice's own assets (mock AUSD/USDC for the FX practice engine) and the venues' test dollars (Agora's test AUSD,
+ * Perpl's collateral), verified on 10143 alongside the testnet list.
+ */
 function practiceTokens(chainId: ChainId): ListedToken[] {
   if (chainId !== TESTNET_CHAIN_ID) return [];
-  const out: ListedToken[] = [];
+  const out: ListedToken[] = [
+    {
+      address: getAddress(PERPL_COLLATERAL[TESTNET_CHAIN_ID]),
+      symbol: "AUSD",
+      name: "Test AUSD · Perpl",
+      decimals: PERPL_COLLATERAL_DECIMALS,
+      logoURI: null,
+    },
+  ];
   for (const [name, symbol] of [
     ["MockAUSD", "AUSD"],
     ["MockUSDC", "USDC"],

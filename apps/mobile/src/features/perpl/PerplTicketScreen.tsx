@@ -11,7 +11,6 @@ import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE } from "~/theme";
 import type { PerplMarketMeta } from "./market";
 import { PerplOpenOutcome } from "./PerplOutcome";
-import { PerplPracticeFunds } from "./PerplPracticeFunds";
 import { PerplTicketEntry } from "./PerplTicketEntry";
 import { PerplTicketFooter, perplCommit } from "./PerplTicketFooter";
 import { PerplTicketHeader } from "./PerplTicketHeader";
@@ -51,7 +50,7 @@ export function PerplTicketScreen({
   const address = useAccount().hint?.address;
   const screenReader = useScreenReader();
   const [mode, setMode] = useState<EntryMode>("keypad");
-  const [child, setChild] = useState<"details" | "liquidation" | "why" | "funds" | undefined>();
+  const [child, setChild] = useState<"details" | "liquidation" | "why" | undefined>();
   const [note, setNote] = useState<string | undefined>();
   const sided = useRef(false);
 
@@ -126,7 +125,6 @@ export function PerplTicketScreen({
               onConfirm={confirm}
               onDetails={() => setChild("details")}
               onWhy={() => setChild("why")}
-              onFunds={() => setChild("funds")}
             />
           </>
         )}
@@ -140,7 +138,6 @@ export function PerplTicketScreen({
         screenReader={screenReader}
       />
       <PerplLiquidationInfo open={child === "liquidation"} onClose={() => setChild(undefined)} t={t} />
-      <PerplPracticeFunds open={child === "funds"} onClose={() => setChild(undefined)} />
       <PerplPracticeInfo open={child === "why"} onClose={() => setChild(undefined)} />
     </View>
   );

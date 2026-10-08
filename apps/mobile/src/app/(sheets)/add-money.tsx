@@ -32,7 +32,8 @@ type Panel =
  * Practice leads with "Get practice money" (claim · daily top-up · code, landing in Assets); Mainnet with "Card or
  * bank" (Ramp). Then Crypto on Monad and From an exchange (Receive), From another chain (asset → source chain → the
  * quote page) and Redeem a code where vouchers are live. A child panel slides in with Back; `?panel=chain` opens the
- * other-chain panel directly (Receive's "Sending from another chain?").
+ * other-chain panel directly (Receive's "Sending from another chain?"), `?panel=practice` Get test money (the Perpl
+ * ticket in Practice).
  */
 export default function AddMoneySheet() {
   const owner = useAccount().hint?.address;
@@ -46,7 +47,9 @@ export default function AddMoneySheet() {
 
 function Body() {
   const { panel: start } = useLocalSearchParams<{ panel?: string }>();
-  const [panel, setPanel] = useState<Panel>(start === "chain" ? { kind: "chain" } : { kind: "methods" });
+  const [panel, setPanel] = useState<Panel>(
+    start === "chain" ? { kind: "chain" } : start === "practice" ? { kind: "practice" } : { kind: "methods" },
+  );
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const close = useSheetClose();
   const go = (next: Panel, dir: "forward" | "back" = "forward") => {

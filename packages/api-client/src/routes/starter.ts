@@ -55,7 +55,7 @@ export const starterTopUpRequestSchema = z.object({
   signature: signatureSchema,
 });
 
-export const relayKindSchema = z.enum(["claim", "voucher", "topup"]);
+export const relayKindSchema = z.enum(["claim", "voucher", "topup", "perpl-funds"]);
 
 /** A relayed transaction as the server tracks it; poll `starterRelayRoute` until `stage` is terminal. */
 export const relayResponseSchema = z.object({
@@ -127,6 +127,23 @@ export const starterTopUpRoute = defineRoute({
   params: undefined,
   query: undefined,
   body: starterTopUpRequestSchema,
+  response: relayResponseSchema,
+});
+
+export const perplFundsRequestSchema = z.object({ chainId: chainIdSchema });
+
+/**
+ * Practice only: the sponsor asks Agora's test-AUSD faucet for the signed-in user (10,000 test AUSD to the wallet, no
+ * gas for the user). One per address per day; 409 NOT_NEEDED when the wallet already holds plenty; 503 RELAYER_BUSY
+ * (with retry-after) while the faucet's shared cooldown runs.
+ */
+export const perplFundsRoute = defineRoute({
+  method: "POST",
+  path: "/v1/practice/perpl-funds",
+  auth: "session",
+  params: undefined,
+  query: undefined,
+  body: perplFundsRequestSchema,
   response: relayResponseSchema,
 });
 

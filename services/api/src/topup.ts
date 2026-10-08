@@ -2,7 +2,7 @@
  * Gas top-ups and relay reconciliation (S8.16c/e, D-171).
  *
  * `planTopUp` decides how much MON the sponsor sends so the user's next sends fit Monad's consensus check (gas LIMIT ×
- * max fee against the balance): practice needs a prior claim, mainnet needs funded equity (real collateral is the
+ * max fee against the balance; the ceiling covers a Perpl order as well as an engine increase): practice needs a prior claim, mainnet needs funded equity (real collateral is the
  * anti-sybil cost, so no Turnstile — D-166 still gates the *drips*). The app's `needWei` is trusted only up to what an
  * increase with one more position can need at the current max fee; the amount is then clamped to the drip's per-day cap.
  *
@@ -18,6 +18,7 @@ import {
   TransactionReceiptNotFoundError,
 } from "@senryo/chain";
 import {
+  GAS_LIMITS,
   GAS_TOPUP_ACTIONS,
   MAINNET_TOPUP_MIN_EQUITY_USD6,
   positionCount,
@@ -42,7 +43,9 @@ export async function planTopUp(chain: ChainContext, user: Address, needWei: big
     throw new HttpError(HTTP_STATUS.forbidden, "NOT_ELIGIBLE", "deposit into your account first");
   }
   const fees = await (chain.sponsor?.fees ?? new FeeCache(chain.read)).get();
-  const ceiling = positionGasLimit("increase", positionCount(snapshot.positionBitmap) + 1) * fees.maxFeePerGas;
+  // The costliest next send: an engine increase with one more position, or a Perpl IOC order walking the book.
+  const engineGas = positionGasLimit("increase", positionCount(snapshot.positionBitmap) + 1);
+  const ceiling = (engineGas > GAS_LIMITS.perplOrder ? engineGas : GAS_LIMITS.perplOrder) * fees.maxFeePerGas;
   const need = needWei < ceiling ? needWei : ceiling;
   const balance = await chain.read.getBalance({ address: user, blockTag: "latest" });
   if (balance >= need)

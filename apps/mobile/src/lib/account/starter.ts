@@ -7,6 +7,7 @@ import type { Address, SignedClaim, SignedTopUp, SignedVoucher } from "@senryo/a
 import {
   ApiError,
   type ApiErrorCode,
+  perplFundsRoute,
   type RelayResponse,
   starterClaimRoute,
   starterRelayRoute,
@@ -120,4 +121,7 @@ export const starter = {
       }),
     ),
   relay: (relayId: string) => guarded(() => api().call(starterRelayRoute, { params: { relayId } })),
+  /** Practice test AUSD for Perpl, sent by the sponsor; `session` wraps the call in the account's API session. */
+  perplFunds: (chainId: ChainId, session: <T>(run: () => Promise<T>) => Promise<T>) =>
+    guarded(() => session(() => api().call(perplFundsRoute, { body: { chainId } }))),
 };

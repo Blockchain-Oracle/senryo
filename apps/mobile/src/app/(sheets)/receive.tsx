@@ -5,7 +5,7 @@ import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { NetworkPill, ReceiveCard } from "~/features/fund/ReceiveCard";
 import { useAccount } from "~/lib/account/provider";
-import { ROUTES } from "~/lib/constants/routes";
+import { addMoneyRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SPACE } from "~/theme";
 
@@ -37,7 +37,7 @@ function Body() {
           address={address}
           preselected={asset?.toLowerCase()}
           exchange={from === "exchange"}
-          onOtherChain={() => close(() => router.push(`${ROUTES.addMoney}?panel=chain` as Href))}
+          onOtherChain={() => close(() => router.push(addMoneyRoute("chain") as Href))}
         />
       ) : (
         <View style={styles.guest}>

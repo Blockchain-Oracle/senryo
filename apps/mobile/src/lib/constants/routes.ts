@@ -185,6 +185,8 @@ export const sendToRoute = (to: string) => `/withdraw/send?to=${encodeURICompone
 export const assetRoute = (chainId: number, address: string) => `/asset/${chainId}/${address.toLowerCase()}` as const;
 /** B4: deposit from another chain — amount, quote and timeline for one asset and source chain. */
 export const bridgeInRoute = (asset: string, chain: number) => `/fund/bridge?asset=${asset}&chain=${chain}` as const;
+/** Add money opened on one panel: `practice` (Get test money) or `chain` (from another chain). */
+export const addMoneyRoute = (panel: "practice" | "chain") => `/add-money?panel=${panel}` as const;
 /** B6: the swap with a pay (and optionally receive) asset preselected, by address. */
 export const swapRoute = (pay?: string, receive?: string) =>
   `/fund/swap${pay ? `?pay=${pay.toLowerCase()}${receive ? `&receive=${receive.toLowerCase()}` : ""}` : ""}` as Href;

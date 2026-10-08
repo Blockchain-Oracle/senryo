@@ -1,8 +1,10 @@
 /**
- * "Get practice money" (B15; Fomo F21 child panel): the one-time claim, the daily top-up and a code, as three rows with
- * their state in the second line. Everything lands in Assets as the one AUSD row, so each says so once done.
+ * "Get practice money" (B15; Fomo F21 child panel; real venues Stage 1): one "Get test money" row — the one-time
+ * starter claim (gas + FX practice dollars) when it's still owed, then 10,000 test AUSD for crypto on Perpl, sent by
+ * the sponsor with no Face ID and no gas — then the daily FX top-up and a code. Each row's second line is its state.
  */
 
+import { PERPL_COLLATERAL_DECIMALS, PERPL_TESTNET_FAUCET_CNS } from "@senryo/config";
 import { collateralId } from "@senryo/identity";
 import { ActivityIndicator } from "react-native";
 import { MarkCluster } from "~/components/identity/MarkCluster";
@@ -13,31 +15,38 @@ import type { StarterPhase } from "~/lib/account/use-starter";
 import { usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { SIZE, useTheme } from "~/theme";
+import { type TestFundsPhase, usePerplTestFunds } from "./usePerplTestFunds";
 import { usePracticeMoney } from "./usePracticeMoney";
 
 const SEC_PER_HOUR = 3600n;
 const SEC_PER_MIN = 60n;
 
-function claimLine(phase: StarterPhase, amount: string | undefined): { title: string; detail: string } {
-  const get = amount ? `Get ${amount}` : "Get practice money";
-  switch (phase.kind) {
-    case "signing":
-    case "sending":
-    case "settling":
-      return { title: get, detail: "Adding…" };
-    case "pending":
-      return { title: "Claim pending", detail: "Tap to check status" };
+const DECIMAL_BASE = 10n;
+const TEST_AUSD = Number(PERPL_TESTNET_FAUCET_CNS / DECIMAL_BASE ** BigInt(PERPL_COLLATERAL_DECIMALS)).toLocaleString(
+  "en-US",
+);
+const TITLE = "Get test money";
+
+const claimWorking = (phase: StarterPhase) =>
+  phase.kind === "signing" || phase.kind === "sending" || phase.kind === "settling";
+
+function testMoneyLine(funds: TestFundsPhase, claim: StarterPhase): { title: string; detail: string } {
+  if (claimWorking(claim) || funds.kind === "sending" || funds.kind === "settling")
+    return { title: TITLE, detail: "Adding…" };
+  switch (funds.kind) {
     case "done":
-      return { title: `${usd(phase.creditUsd6)} added`, detail: "In your Assets" };
-    case "claimed":
-      return { title: "Claimed", detail: "In your Assets" };
+      return { title: `${TEST_AUSD} AUSD added`, detail: "In your wallet · for crypto" };
     case "failed":
-      return { title: get, detail: "Didn’t go through · try again" };
-    case "checking":
-    case "unchecked":
-      return { title: get, detail: "Checking…" };
+      if (funds.code === "RATE_LIMITED")
+        return {
+          title: "Today’s test money is in",
+          detail: funds.retryAfterSec ? waitText(BigInt(funds.retryAfterSec)) : "More tomorrow",
+        };
+      if (funds.code === "NOT_NEEDED") return { title: "You have test AUSD", detail: "In your wallet" };
+      if (funds.code === "RELAYER_BUSY") return { title: TITLE, detail: "Faucet busy · try again in a minute" };
+      return { title: TITLE, detail: "Didn’t go through · try again" };
     default:
-      return { title: get, detail: "Free · once" };
+      return { title: TITLE, detail: `${TEST_AUSD} AUSD for crypto · gas included` };
   }
 }
 
@@ -50,10 +59,17 @@ export function PracticePanel({ onCode }: { onCode: () => void }) {
   const { color } = useTheme();
   const network = useNetwork();
   const p = usePracticeMoney();
+  const funds = usePerplTestFunds();
   const { phase } = p.starter;
-  const working = phase.kind === "signing" || phase.kind === "sending" || phase.kind === "settling";
-  const claimed = phase.kind === "claimed" || phase.kind === "done";
-  const claim = claimLine(phase, p.claimAmount !== undefined ? usd(p.claimAmount) : undefined);
+  const working = claimWorking(phase) || funds.busy;
+  const owed = phase.kind === "idle" || (phase.kind === "failed" && phase.code !== "ALREADY_CLAIMED");
+  const line = testMoneyLine(funds.phase, phase);
+  const fundsDone = funds.phase.kind === "done";
+  // The starter claim (gas + FX practice dollars) rides along while it's owed; the test AUSD comes every day.
+  const getTestMoney = async () => {
+    if (owed && p.starter.ready) await p.starter.claim();
+    await funds.request();
+  };
   const ausd = <MarkCluster ids={[collateralId(network.chainId, "AUSD")]} size={SIZE.markCell} />;
   const faucetDone = p.faucetOutcome === "finalized";
   const faucetFailed = p.faucetOutcome !== undefined && p.faucetOutcome !== "finalized";
@@ -73,24 +89,24 @@ export function PracticePanel({ onCode }: { onCode: () => void }) {
     <>
       <SheetRow
         index={0}
-        title={claim.title}
-        detail={claim.detail}
+        title={line.title}
+        detail={line.detail}
         trailing={
           working ? (
             <ActivityIndicator color={color.practice} />
-          ) : claimed ? (
+          ) : fundsDone ? (
             <Check size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.up} />
           ) : (
             ausd
           )
         }
-        disabled={working || claimed || !p.starter.ready}
-        onPress={() => (phase.kind === "pending" ? p.starter.recheck() : void p.starter.claim())}
+        disabled={working || fundsDone || !funds.available}
+        onPress={() => (phase.kind === "pending" ? p.starter.recheck() : void getTestMoney())}
       />
       {p.faucetAvailable ? (
         <SheetRow
           index={1}
-          title={faucetDone ? "Topped up" : "Daily top-up"}
+          title={faucetDone ? "Topped up" : "Daily FX top-up"}
           detail={faucetDetail}
           trailing={
             p.faucetRunning ? (

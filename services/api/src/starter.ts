@@ -7,13 +7,14 @@ import {
   describeError,
   GasAboveCapError,
   type Hex,
+  perplPracticeFundsRequest,
   readContract,
   SimulationRevertedError,
   sendTx,
   voucherCodeBytes,
   voucherCodeHash,
 } from "@senryo/chain";
-import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
+import { type ChainId, PERPL_TESTNET_FAUCET_CNS, TESTNET_CHAIN_ID } from "@senryo/config";
 import {
   appLink,
   type Db,
@@ -35,7 +36,12 @@ const REVERT_CODES: Record<string, [number, ApiErrorCode]> = {
   UnknownVoucher: [HTTP_STATUS.notFound, "VOUCHER_INVALID"],
   VoucherCapReached: [HTTP_STATUS.gone, "VOUCHER_CAP_REACHED"],
   AccessManagedUnauthorized: [HTTP_STATUS.unavailable, "RELAYER_BUSY"],
+  // Agora's test-AUSD faucet: one cooldown shared by every caller; a full wallet can't receive more.
+  MaxFrequencyExceeded: [HTTP_STATUS.unavailable, "RELAYER_BUSY"],
+  MaxBalanceExceeded: [HTTP_STATUS.conflict, "NOT_NEEDED"],
 };
+
+export type RelayKind = "claim" | "voucher" | "topup" | "perpl-funds";
 
 export interface StarterConfig {
   dripWei: bigint;
@@ -55,10 +61,11 @@ export async function starterConfig(chain: ChainContext): Promise<StarterConfig>
 }
 
 interface RelayInput {
-  kind: "claim" | "voucher" | "topup";
+  kind: RelayKind;
   user: Address;
-  deadline: bigint;
-  signature: Hex;
+  /** User-signed kinds only (claim, voucher, top-up); Perpl test dollars are authorized by the API session. */
+  deadline?: bigint | undefined;
+  signature?: Hex | undefined;
   code?: string | undefined;
   /** Top-ups only: the MON the sponsor sends (already clamped by `planTopUp`). */
   amountWei?: bigint | undefined;
@@ -73,24 +80,30 @@ interface RelayInput {
 export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayInput): Promise<RelayResponse> {
   if (!chain.sponsor) throw new HttpError(HTTP_STATUS.unavailable, "RELAYER_BUSY", "no sponsor key configured");
   const practice = chain.chainId === TESTNET_CHAIN_ID;
+  const signed = () => {
+    if (input.deadline === undefined || !input.signature) throw new Error(`${input.kind} relay needs a signature`);
+    return { deadline: input.deadline, signature: input.signature };
+  };
   const request =
-    input.kind === "topup"
-      ? contractCall(chain.chainId, "StarterDrip", "topUp", [input.user, input.amountWei ?? 0n], "topUp")
-      : input.kind === "claim"
-        ? contractCall(
-            chain.chainId,
-            "StarterDrip",
-            "claimFor",
-            [input.user, input.deadline, input.signature],
-            practice ? "claimForPractice" : "claimFor",
-          )
-        : contractCall(
-            chain.chainId,
-            "StarterDrip",
-            "redeemVoucher",
-            [input.user, voucherCodeBytes(input.code ?? ""), input.deadline, input.signature],
-            "redeemVoucher",
-          );
+    input.kind === "perpl-funds"
+      ? perplPracticeFundsRequest(input.user)
+      : input.kind === "topup"
+        ? contractCall(chain.chainId, "StarterDrip", "topUp", [input.user, input.amountWei ?? 0n], "topUp")
+        : input.kind === "claim"
+          ? contractCall(
+              chain.chainId,
+              "StarterDrip",
+              "claimFor",
+              [input.user, signed().deadline, signed().signature],
+              practice ? "claimForPractice" : "claimFor",
+            )
+          : contractCall(
+              chain.chainId,
+              "StarterDrip",
+              "redeemVoucher",
+              [input.user, voucherCodeBytes(input.code ?? ""), signed().deadline, signed().signature],
+              "redeemVoucher",
+            );
   const config = await starterConfig(chain);
   const relayId = randomUUID();
   const createdAt = new Date();
@@ -114,7 +127,9 @@ export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayIn
         : 0n
       : input.kind === "voucher"
         ? config.voucherAmount
-        : 0n;
+        : input.kind === "perpl-funds"
+          ? PERPL_TESTNET_FAUCET_CNS
+          : 0n;
   await ctx.db`
     INSERT INTO starter_claims (id, kind, chain_id, user_address, code_hash, tx_hash, stage, block_number, native_wei,
                                 credit_usd6, ip_prefix, device_hash, created_at)
@@ -150,7 +165,7 @@ export async function relay(ctx: ApiContext, chain: ChainContext, input: RelayIn
  */
 export async function notifyStarterCredit(
   db: Db,
-  claim: { id: string; kind: "claim" | "voucher" | "topup"; chainId: ChainId; user: string; creditUsd6: bigint },
+  claim: { id: string; kind: RelayKind; chainId: ChainId; user: string; creditUsd6: bigint },
 ): Promise<boolean> {
   if (claim.kind === "topup" || claim.creditUsd6 <= 0n) return false;
   return recordNotification(db, {
@@ -160,7 +175,11 @@ export async function notifyStarterCredit(
     channel: "deposits",
     title: pushTitle(claim.chainId, `${dollarsText(claim.chainId, claim.creditUsd6)} has arrived`),
     body:
-      claim.kind === "voucher" ? "Your voucher's money is in your account." : "Your starter money is in your account.",
+      claim.kind === "voucher"
+        ? "Your voucher's money is in your account."
+        : claim.kind === "perpl-funds"
+          ? "Your test AUSD for crypto trading is in your wallet."
+          : "Your starter money is in your account.",
     url: appLink(claim.chainId, "activity"),
     subject: { kind: "account" },
   });
@@ -168,7 +187,7 @@ export async function notifyStarterCredit(
 
 interface ClaimRow {
   id: string;
-  kind: "claim" | "voucher" | "topup";
+  kind: RelayKind;
   chain_id: number;
   user_address: string;
   tx_hash: string;
