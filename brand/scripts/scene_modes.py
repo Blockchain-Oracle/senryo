@@ -25,8 +25,8 @@ LABEL_H = 48
 MAINNET_DEPTH, BUNDLE_DEPTH = 0.4, 0.8
 MOTION = {"subject": "bundle", "mostMotion": ["note", "bundle"]}
 LABELS = (
-    ("practice", "bundle", "Practice · Paper money", (452, 700), 284, PRACTICE["pale"], PRACTICE["deep"]),
-    ("mainnet", "mainnet", "Mainnet · Real money", (404, 376), 284, "#E8EBFF", MAINNET["deep"]),
+    ("practice", "bundle", "Practice · Test dollars", (452, 700), 284, PRACTICE["pale"], PRACTICE["deep"]),
+    ("mainnet", "mainnet", "Real · USDC", (404, 376), 284, "#E8EBFF", MAINNET["deep"]),
 )
 
 

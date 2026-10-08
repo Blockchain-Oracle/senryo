@@ -51,8 +51,8 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
       lockout at −20 s, auto-roll, result reveal (win/loss/refund), honest states (reconnecting, paused, missed print)
 - [x] S5.10 Markets (BTC/ETH/SOL × 1m/5m/15m/1h with live price, countdown, crowd split) and Home (balance, open calls,
       next windows, Practice chip)
-- [ ] S5.11 Calls: open and history (Won/Lost/Refunded filters), the timeline receipt, the window's proof
-- [ ] S5.12 Wallet: Practice sheet (Get test dollars, Receive Test USD), Withdraw (EIP-3009 through the relay), Real
+- [x] S5.11 Calls: open and history (Won/Lost/Refunded filters), the timeline receipt, the window's proof
+- [x] S5.12 Wallet: Practice sheet (Get test dollars, Receive Test USD), Withdraw (EIP-3009 through the relay), Real
       methods visible and locked
 - [ ] S5.13 Results and share card, session chip ("One-tap on · 12 min · $76 left"), Sound & Vibration, result pushes
 

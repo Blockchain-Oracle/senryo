@@ -26,7 +26,7 @@
     ],
     "modes": [
       {
-        "text": "Practice · Paper money",
+        "text": "Practice · Test dollars",
         "x": 452,
         "y": 700,
         "width": 284,
@@ -35,7 +35,7 @@
         "layer": "main"
       },
       {
-        "text": "Mainnet · Real money",
+        "text": "Real · USDC",
         "x": 404,
         "y": 376,
         "width": 284,
