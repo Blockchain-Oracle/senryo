@@ -7,6 +7,7 @@ import {
   type BinarySnapshot,
   binaryBytes32,
   binaryMaxBuy,
+  readBinaryQuote,
   readBinaryRound,
   verifyBinarySource,
 } from "./binary-reads.ts";
@@ -15,6 +16,12 @@ import type { ReadClient } from "./clients.ts";
 import type { TxRequest } from "./send.ts";
 
 const UINT64_LIMIT = 1n << 64n;
+const BPS = 10_000n;
+/** Ceil preserves the user's minimum: never round permission beyond the maximum output loss. */
+export function binaryMinimumOutput(quotedOutput: bigint): bigint {
+  if (quotedOutput <= 0n) throw new Error("binary: nonpositive quote output");
+  return (quotedOutput * (BPS - BigInt(BINARY_POLICY.maxSlippageBps)) + BPS - 1n) / BPS;
+}
 
 /** Caller must additionally pin active account/network/foreground/source-generation through the shared planner. */
 export interface BinaryReview {
@@ -58,7 +65,7 @@ function bind(
   s: BinarySnapshot,
   r: BinaryReview,
   read: ReadClient,
-  check: (fresh: BinarySnapshot) => void,
+  check: (fresh: BinarySnapshot) => Promise<void> | void,
 ): TxRequest {
   review(s, r);
   // Pins all economic calldata and deployment identity in the durable request metadata. No alternate sender.
@@ -97,7 +104,7 @@ function bind(
         BINARY_POLICY.walletReserveWei + r.pendingMonWei + r.reviewedNetworkFeeWei + (req.value ?? 0n)
       )
         throw new Error("binary: MON reserve/gas unavailable");
-      check(fresh);
+      await check(fresh);
       await r.validateScope();
     },
   };
@@ -111,10 +118,10 @@ export function buildBinaryTrade(
 ): TxRequest {
   review(s, r);
   if (
-    minOut <= 0n ||
+    minOut < binaryMinimumOutput(s.quote.output) ||
     minOut > s.quote.output ||
     deadline <= r.now ||
-    deadline > r.now + BigInt(BINARY_POLICY.quoteSeconds) ||
+    deadline > s.quote.timestamp + BigInt(BINARY_POLICY.quoteSeconds) ||
     deadline >= s.round.cutoff ||
     deadline >= UINT64_LIMIT ||
     s.quote.input <= 0n ||
@@ -167,7 +174,7 @@ export function buildBinaryTrade(
           "binarySell",
           { meta },
         );
-  return bind(req, s, r, read, (fresh) => {
+  return bind(req, s, r, read, async (fresh) => {
     if (
       fresh.timestamp >= deadline ||
       deadline > fresh.timestamp + BigInt(BINARY_POLICY.quoteSeconds) ||
@@ -178,8 +185,9 @@ export function buildBinaryTrade(
       throw new Error("binary: review expired or round closed");
     if (s.action === "sell" && amount > (s.isUp ? fresh.position.up : fresh.position.down))
       throw new Error("binary: shares changed");
-    // Changed reserves require a fresh review rather than silently changing quoted economics.
-    if (fresh.round.revision !== s.quote.revision) throw new Error("binary: quote revision changed");
+    // Reserves may move within the original review. Never substitute a new input/minimum/deadline.
+    const current = await readBinaryQuote(read, fresh, s.isUp, s.action, amount);
+    if (current.quote.output < minOut) throw new Error("binary: current output below reviewed minimum");
   });
 }
 export function buildBinaryClaim(read: ReadClient, s: BinarySnapshot, r: BinaryReview): TxRequest {

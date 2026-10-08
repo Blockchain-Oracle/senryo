@@ -39,6 +39,7 @@ import {
 } from "../src/binary-receipts.ts";
 import { type Sender, sendTx } from "../src/send.ts";
 import { assertFailedWithdrawalActivity } from "./binary-activity.ts";
+import { checkDeploymentIdentity, checkReviewBounds } from "./binary-review-bounds.ts";
 
 const TEST_TIMEOUT_MS = 90000,
   STARTUP_ATTEMPTS = 100,
@@ -76,7 +77,7 @@ const rejectedStepUp = (v: ReturnType<typeof evaluateTransaction>) => {
 const op = (s: string) => keccak256(stringToHex(s));
 test("binary original-contract reads, builders, policy, receipts and replay in disposable local EVM", {
   timeout: TEST_TIMEOUT_MS,
-}, async () => {
+}, async (t) => {
   const socket = createServer();
   await new Promise<void>((r) => socket.listen(0, "127.0.0.1", r));
   const port = (socket.address() as { port: number }).port;
@@ -106,7 +107,8 @@ test("binary original-contract reads, builders, policy, receipts and replay in d
       }
     }
     const wallet = createWalletClient({ chain, transport: http(chain.rpcUrls.default.http[0]) });
-    const [owner] = await wallet.getAddresses();
+    const [owner, other] = await wallet.getAddresses();
+    assert.ok(other);
     assert.ok(owner);
     const send = async (to: Address, data: Hex, value = 0n) =>
       read.waitForTransactionReceipt({
@@ -160,6 +162,7 @@ test("binary original-contract reads, builders, policy, receipts and replay in d
     };
     const m = { ...manifest, configHash: binaryConfigHash(manifest) },
       e = { environmentId: m.environmentId, development: true, devWorkspace: true, consumer: "local-test" as const };
+    checkDeploymentIdentity(m);
     await verifyBinarySource(read, m, e);
     for (const bad of [
       { ...e, development: false },
@@ -288,6 +291,18 @@ test("binary original-contract reads, builders, policy, receipts and replay in d
       send(actor, encodeFunctionData({ abi: actorArtifact.abi, functionName: fn, args }), value);
     const actorBought = await actorCall("buy", [roundId], TEN ** MON_DECIMALS);
     assert.equal(actorBought.status, "success");
+    await checkReviewBounds(
+      read,
+      m,
+      e,
+      roundId,
+      owner,
+      async (data, value) =>
+        read.waitForTransactionReceipt({
+          hash: await wallet.sendTransaction({ account: other, to: contract, data, value, gas: TEST_TX_GAS }),
+        }),
+      warp,
+    );
     const facts: BinaryFact[] = [...binaryReceiptFacts(bought, m, e)];
     assert.equal(binaryReceiptOutcome(facts, owner, op("buy")).outcome, "bought");
     assert.equal(binaryReceiptFacts({ ...bought, logs: [...bought.logs, ...bought.logs] }, m, e).length, 1);
@@ -363,16 +378,17 @@ test("binary original-contract reads, builders, policy, receipts and replay in d
     assert.equal(rollback.creditWei, snapshot.creditWei);
     assert.equal(rollback.transferredWei, 0n);
     assert.equal(binaryReceiptOutcome(binaryReceiptFacts(withdrawn, m, e), owner, op("withdraw")).outcome, "paid");
-    console.warn(
-      "Disposable fixture gasUsed (not public gas):",
-      JSON.stringify({
-        buy: String(bought.gasUsed),
-        sell: String(sold.gasUsed),
-        claim: String(claimed.gasUsed),
-        withdraw: String(withdrawn.gasUsed),
-        withdrawFailed: String(rejected.gasUsed),
-      }),
-    );
+    if (process.env.BINARY_GAS_DIAGNOSTICS === "1")
+      t.diagnostic(
+        "Disposable fixture gasUsed (not public gas): " +
+          JSON.stringify({
+            buy: String(bought.gasUsed),
+            sell: String(sold.gasUsed),
+            claim: String(claimed.gasUsed),
+            withdraw: String(withdrawn.gasUsed),
+            withdrawFailed: String(rejected.gasUsed),
+          }),
+      );
   } finally {
     proc.kill("SIGTERM");
     await new Promise<void>((resolve) => {

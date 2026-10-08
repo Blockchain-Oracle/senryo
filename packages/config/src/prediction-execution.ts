@@ -20,6 +20,7 @@ export const BINARY_POLICY = Object.freeze({
   supplyCapWei: 1000n * 10n ** 18n,
   activeRoundCap: 8,
   quoteSeconds: 15,
+  maxSlippageBps: 500,
   feeBps: 0,
   walletReserveWei: 10n * 10n ** 18n,
   btcFeed: "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
@@ -55,6 +56,27 @@ export interface BinaryEnvironment {
 }
 /** Intentionally empty: no invented contract, block, roles or bytecode. */
 export const BINARY_PUBLIC_DEPLOYMENTS: readonly BinaryManifest[] = Object.freeze([]);
+/** Complete immutable identity comparison; cloning/serialization does not change an approved deployment. */
+export function sameBinaryDeployment(a: BinaryManifest, b: BinaryManifest): boolean {
+  return (
+    a.version === b.version &&
+    a.chainId === b.chainId &&
+    a.environment === b.environment &&
+    a.environmentId === b.environmentId &&
+    a.anchorBlock === b.anchorBlock &&
+    a.contract.toLowerCase() === b.contract.toLowerCase() &&
+    a.configHash.toLowerCase() === b.configHash.toLowerCase() &&
+    a.oracle.toLowerCase() === b.oracle.toLowerCase() &&
+    a.receiver.toLowerCase() === b.receiver.toLowerCase() &&
+    a.roundCreator.toLowerCase() === b.roundCreator.toLowerCase() &&
+    a.guardian.toLowerCase() === b.guardian.toLowerCase() &&
+    a.liquidityBeneficiary.toLowerCase() === b.liquidityBeneficiary.toLowerCase() &&
+    a.marketCodeHash.toLowerCase() === b.marketCodeHash.toLowerCase() &&
+    a.oracleCodeHash.toLowerCase() === b.oracleCodeHash.toLowerCase() &&
+    a.receiverCodeHash.toLowerCase() === b.receiverCodeHash.toLowerCase() &&
+    a.anchorHash.toLowerCase() === b.anchorHash.toLowerCase()
+  );
+}
 export function assertBinaryActivation(m: BinaryManifest, e: BinaryEnvironment): void {
   if (m.chainId !== BINARY_POLICY.chainId || m.version !== BINARY_POLICY.version || m.environmentId !== e.environmentId)
     throw new Error("binary: unsupported chain/version/environment");
@@ -66,7 +88,8 @@ export function assertBinaryActivation(m: BinaryManifest, e: BinaryEnvironment):
       !m.environmentId.startsWith("fixture:")
     )
       throw new Error("binary: development fixture unavailable to this consumer");
-  } else if (!BINARY_PUBLIC_DEPLOYMENTS.includes(m)) throw new Error("binary: public deployment inactive");
+  } else if (!BINARY_PUBLIC_DEPLOYMENTS.some((approved) => sameBinaryDeployment(approved, m)))
+    throw new Error("binary: public deployment inactive");
 }
 
 /** ABI enum values; do not reorder without a new immutable version. */
