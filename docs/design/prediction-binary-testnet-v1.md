@@ -2,6 +2,8 @@
 
 8 October 2026 — architecture only; **undeployed, unfunded, unverified against signed public Pyth boundary payloads**. This report authorizes no deployment or funding. It follows `task-4-design-brief.md`, `docs/design/reviews/2026-10-08-native-prediction-feasibility.md` and the approved native execution amendment. Existing dirty UI/source work must be preserved. Names below are proposed additions unless explicitly described as existing.
 
+Implementation progress after this architecture snapshot: original contract foundation `7506663` + `6cac7c9` passed scoped independent review. Integration, public proof/deployment/funding and device acceptance remain separate required phases in the [continuation record](reviews/2026-10-08-uglycash-continuation.md). The numerical settings below remain proposed testnet economics.
+
 ## 1. Decision and deliberately explicit economics
 
 Use one non-upgradeable `SenryoBinaryV1` contract with a round mapping, original internal nontransferable Up/Down share ledgers, a two-reserve constant-product AMM and native MON collateral. No factory/clones, token approvals, external share transfers, loans, pair LP or card collateral are needed for the initial native lifecycle. Users may buy either side, hold both, and sell any positive portion of a held side before cutoff. Orders are atomic transactions, not resting exchange orders. There is no meaningful cancel after inclusion; an unsigned review may be canceled.

@@ -35,6 +35,14 @@ Source `d8b2cdc` adds source-time ordering, distinct Live/History, background/re
 
 Mobile/query/drive types, focused lint and live/recovery/fee checks passed. A separate disposable Anvil fork executed open, new-before-retire SL replacement, TP cancellation, partial reduction, full close, reopen and actual keeper stop execution using throwaway accounts. That fork was stopped. These checks did not reset the user's active account or establish native phone/public-provider acceptance. Physical audio, keyboard, accessibility and measured frame-rate checks remain open. Authenticated Perpl conditional enrollment/signing, explicit authority UX, provider expiry/revocation and real trigger/race/restart acceptance remain concrete required gates.
 
+## Prediction foundation and retained provider work
+
+Task4 is split into sequential review gates:4A contract foundation,4B chain/account/receipt support,4C API/indexer/keeper/live display,4D native binary journeys and4E retained Castora numerical contests. Full Task4 remains incomplete.
+
+Foundation `7506663` implements the original MON-collateralized internal-share AMM and pinned Pyth boundary adapter. All32 Solidity tests passed, including172,304 sell cases,172,304 buy/reverse-sell cases and32,768 randomized two-round accounting actions. Independent source review found no Critical/Important defect; minor lint/recovery-interface findings were resolved in `6cac7c9`, with clean scoped lint and canonical failed-withdrawal/consumed-ID/fresh-retry assertions. Scoped re-review found all findings addressed and no new breakage. These are fixture-EVM results, not genuine Pyth proof compatibility, public deployment, funded liquidity, native account/sender or phone acceptance. Chain/account/service/native source phases remain pending work rather than external blockers.
+
+The [Castora protocol audit](../castora-native-protocol-2026-10-08.md) identifies feasible numerical-entry/owned-record/claim/recovery source. Its finalized Mainnet snapshot had zero open pools. Castora has no participant early exit/refund and depends on provider settlement; it remains distinct from owned binary-share trading. Live activation requires concrete deployment equivalence, provider/product eligibility policy and separately authorized Mainnet transaction/device acceptance.
+
 ## Remaining full scope
 
 Money/receive/send/swap/withdraw/provider receipts, live trading and feedback/protection, genuine native BTC/ETH execution, profile/thesis/sharing, real clubs/programmes, Card/Pool/settings and retained features, companion/distribution, accessibility and full physical-device acceptance remain required. The first-run source milestone does not close those rows or claim fresh TestFlight installation.

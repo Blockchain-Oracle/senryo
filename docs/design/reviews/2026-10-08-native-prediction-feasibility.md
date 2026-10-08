@@ -1,5 +1,7 @@
 # Native BTC/ETH prediction execution feasibility
 
+This feasibility snapshot predates the original contract implementation. For current source/review progress and still-open integration/activation gates, use the [continuation record](2026-10-08-uglycash-continuation.md). Historical absence findings below are not a claim that the foundation remains absent.
+
 Research date: 8 October 2026. Read-only repository inspection, official documentation, public HTTP GETs and Monad JSON-RPC reads only. No account creation, credentials inspection, signatures, transaction broadcasts, deployments or source changes. This report is a proposed design and evidence record, not implemented readiness.
 
 ## Recommendation
