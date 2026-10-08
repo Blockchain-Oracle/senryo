@@ -1,69 +1,118 @@
 {
   "masters": {
-    "scene-balance": {
-      "subject": "scene-balance-chest",
+    "scene-call": {
+      "subject": "scene-call-tablet",
       "mostMotion": [
-        "scene-balance-card",
-        "scene-balance-koban"
+        "scene-call-up",
+        "scene-call-down"
       ],
       "layers": [
         {
-          "id": "scene-balance-field",
+          "id": "scene-call-field",
           "role": "field",
           "depth": 0.0
         },
         {
-          "id": "scene-balance-chest-shadow",
+          "id": "scene-call-tablet-shadow",
           "role": "shadow",
           "depth": 0.4,
-          "of": "scene-balance-chest"
+          "of": "scene-call-tablet"
         },
         {
-          "id": "scene-balance-path-spend",
-          "role": "ground",
-          "depth": 0.4
-        },
-        {
-          "id": "scene-balance-path-trade",
-          "role": "ground",
-          "depth": 0.4
-        },
-        {
-          "id": "scene-balance-pad-spend",
-          "role": "ground",
-          "depth": 0.4
-        },
-        {
-          "id": "scene-balance-card-shadow",
+          "id": "scene-call-down-shadow",
           "role": "shadow",
           "depth": 0.4,
-          "of": "scene-balance-card"
+          "of": "scene-call-down"
         },
         {
-          "id": "scene-balance-pad-trade",
-          "role": "ground",
-          "depth": 0.4
-        },
-        {
-          "id": "scene-balance-koban-shadow",
+          "id": "scene-call-up-shadow",
           "role": "shadow",
           "depth": 0.4,
-          "of": "scene-balance-koban"
+          "of": "scene-call-up"
         },
         {
-          "id": "scene-balance-chest",
+          "id": "scene-call-tablet",
           "role": "object",
           "depth": 0.4
         },
         {
-          "id": "scene-balance-card",
+          "id": "scene-call-down",
           "role": "object",
-          "depth": 1
+          "depth": 0.7
         },
         {
-          "id": "scene-balance-koban",
+          "id": "scene-call-up",
           "role": "object",
-          "depth": 1
+          "depth": 1.0
+        },
+        {
+          "id": "scene-call-glints",
+          "role": "accent",
+          "depth": 0.2
+        }
+      ]
+    },
+    "scene-payout": {
+      "subject": "scene-payout-chest",
+      "mostMotion": [
+        "scene-payout-coin-high",
+        "scene-payout-coin-mid",
+        "scene-payout-coin-low"
+      ],
+      "layers": [
+        {
+          "id": "scene-payout-field",
+          "role": "field",
+          "depth": 0.0
+        },
+        {
+          "id": "scene-payout-chest-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-payout-chest"
+        },
+        {
+          "id": "scene-payout-coin-high-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-payout-coin-high"
+        },
+        {
+          "id": "scene-payout-coin-mid-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-payout-coin-mid"
+        },
+        {
+          "id": "scene-payout-coin-low-shadow",
+          "role": "shadow",
+          "depth": 0.4,
+          "of": "scene-payout-coin-low"
+        },
+        {
+          "id": "scene-payout-chest",
+          "role": "object",
+          "depth": 0.4
+        },
+        {
+          "id": "scene-payout-coin-high",
+          "role": "object",
+          "depth": 1.0
+        },
+        {
+          "id": "scene-payout-coin-mid",
+          "role": "object",
+          "depth": 0.85
+        },
+        {
+          "id": "scene-payout-coin-low",
+          "role": "object",
+          "depth": 0.7
+        },
+        {
+          "id": "scene-payout-glints",
+          "role": "accent",
+          "depth": 0.2
         }
       ]
     },
@@ -136,54 +185,6 @@
         }
       ]
     },
-    "scene-markets": {
-      "subject": "scene-markets-fx",
-      "mostMotion": [
-        "scene-markets-commodities",
-        "scene-markets-fx",
-        "scene-markets-crypto"
-      ],
-      "layers": [
-        {
-          "id": "scene-markets-field",
-          "role": "field",
-          "depth": 0.0
-        },
-        {
-          "id": "scene-markets-commodities-shadow",
-          "role": "shadow",
-          "depth": 0.6,
-          "of": "scene-markets-commodities"
-        },
-        {
-          "id": "scene-markets-fx-shadow",
-          "role": "shadow",
-          "depth": 0.8,
-          "of": "scene-markets-fx"
-        },
-        {
-          "id": "scene-markets-crypto-shadow",
-          "role": "shadow",
-          "depth": 1.0,
-          "of": "scene-markets-crypto"
-        },
-        {
-          "id": "scene-markets-commodities",
-          "role": "object",
-          "depth": 0.6
-        },
-        {
-          "id": "scene-markets-fx",
-          "role": "object",
-          "depth": 0.8
-        },
-        {
-          "id": "scene-markets-crypto",
-          "role": "object",
-          "depth": 1.0
-        }
-      ]
-    },
     "scene-lp": {
       "subject": "scene-lp-well",
       "mostMotion": [
@@ -226,51 +227,6 @@
           "id": "scene-lp-drop",
           "role": "accent",
           "depth": 1
-        }
-      ]
-    },
-    "scene-kinpaku": {
-      "subject": "scene-kinpaku-card",
-      "mostMotion": [
-        "scene-kinpaku-card"
-      ],
-      "layers": [
-        {
-          "id": "scene-kinpaku-field",
-          "role": "field",
-          "depth": 0.0
-        },
-        {
-          "id": "scene-kinpaku-leaf-book-shadow",
-          "role": "shadow",
-          "depth": 0.4,
-          "of": "scene-kinpaku-leaf-book"
-        },
-        {
-          "id": "scene-kinpaku-card-shadow",
-          "role": "shadow",
-          "depth": 1,
-          "of": "scene-kinpaku-card"
-        },
-        {
-          "id": "scene-kinpaku-leaf-book",
-          "role": "object",
-          "depth": 0.4
-        },
-        {
-          "id": "scene-kinpaku-tweezers",
-          "role": "object",
-          "depth": 0.4
-        },
-        {
-          "id": "scene-kinpaku-card",
-          "role": "object",
-          "depth": 1
-        },
-        {
-          "id": "scene-kinpaku-flakes",
-          "role": "accent",
-          "depth": 0.7
         }
       ]
     },

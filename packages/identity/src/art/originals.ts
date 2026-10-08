@@ -107,4 +107,33 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       },
     },
   },
+  {
+    key: "xag-chogin",
+    owner: "Senryo",
+    provenance: "senryo-original",
+    pageUrl: "brand/scripts/art.py",
+    licence: ORIGINAL_LICENCE,
+    retrieved: AUTHORED,
+    usage: "Silver (XAG) exposure. XAG has no universal issuer logo; this is Senryo's own commodity art.",
+    variants: {
+      disc: {
+        path: "brand/art/xag-chogin-disc.svg",
+        url: "brand/art/xag-chogin-disc.svg",
+        sha256: "b2deeaf0219d8e9d693ad7068bd0869cc48148f11a547538c28d352b9120d00b",
+        viewBox: "0 0 256 256",
+        insetPermille: 0,
+        surface: "any",
+        shape: "disc",
+      },
+      symbol: {
+        path: "brand/art/xag-chogin.svg",
+        url: "brand/art/xag-chogin.svg",
+        sha256: "9470a0ea863eebf91ce1a2d5652767d4e7ff577b07959dd02165315b886dd8f7",
+        viewBox: "0 0 256 256",
+        insetPermille: 0,
+        surface: "any",
+        shape: "free",
+      },
+    },
+  },
 ];

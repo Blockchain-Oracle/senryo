@@ -54,11 +54,12 @@ import ArtSenryoSealSymbol from "./senryo-seal-symbol.tsx";
 import ArtSenryoSealMonoLight from "./senryo-seal-monolight.tsx";
 import ArtXauKobanDisc from "./xau-koban-disc.tsx";
 import ArtXauKobanSymbol from "./xau-koban-symbol.tsx";
-import ArtSceneBalanceSymbol from "./scene-balance-symbol.tsx";
+import ArtXagChoginDisc from "./xag-chogin-disc.tsx";
+import ArtXagChoginSymbol from "./xag-chogin-symbol.tsx";
+import ArtSceneCallSymbol from "./scene-call-symbol.tsx";
+import ArtScenePayoutSymbol from "./scene-payout-symbol.tsx";
 import ArtScenePasskeySymbol from "./scene-passkey-symbol.tsx";
-import ArtSceneMarketsSymbol from "./scene-markets-symbol.tsx";
 import ArtSceneLpSymbol from "./scene-lp-symbol.tsx";
-import ArtSceneKinpakuSymbol from "./scene-kinpaku-symbol.tsx";
 import ArtSceneModesSymbol from "./scene-modes-symbol.tsx";
 import ArtPasskeyPendingSymbol from "./passkey-pending-symbol.tsx";
 import ArtCompletionFoilSymbol from "./completion-foil-symbol.tsx";
@@ -164,11 +165,11 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "fx-cad-usd": { disc: ArtFxCadUsdDisc },
   "senryo-seal": { symbol: ArtSenryoSealSymbol, monoLight: ArtSenryoSealMonoLight },
   "xau-koban": { disc: ArtXauKobanDisc, symbol: ArtXauKobanSymbol },
-  "scene-balance": { symbol: ArtSceneBalanceSymbol },
+  "xag-chogin": { disc: ArtXagChoginDisc, symbol: ArtXagChoginSymbol },
+  "scene-call": { symbol: ArtSceneCallSymbol },
+  "scene-payout": { symbol: ArtScenePayoutSymbol },
   "scene-passkey": { symbol: ArtScenePasskeySymbol },
-  "scene-markets": { symbol: ArtSceneMarketsSymbol },
   "scene-lp": { symbol: ArtSceneLpSymbol },
-  "scene-kinpaku": { symbol: ArtSceneKinpakuSymbol },
   "scene-modes": { symbol: ArtSceneModesSymbol },
   "passkey-pending": { symbol: ArtPasskeyPendingSymbol },
   "completion-foil": { symbol: ArtCompletionFoilSymbol },

@@ -1,4 +1,4 @@
-"""Writes the authored J1 artwork masters (S1b.3, pending design review — B12): six onboarding scenes, the
+"""Writes the authored J1 artwork masters (S1b.3, pending design review — B12): five onboarding scenes, the
 pending-passkey art, the completion foil, the two permission-primer heroes (S1b.13) and the twelve default avatars.
 Deterministic: same input, same bytes.
 
@@ -23,15 +23,14 @@ import foil
 import pending
 import primer_bell
 import primer_lock
-import scene_balance
-import scene_kinpaku
+import scene_call
 import scene_lp
-import scene_markets
 import scene_modes
 import scene_passkey
+import scene_payout
 from kit import ART, LABELS, MANIFEST, ROOT, SCENE_H, SCENE_W, write
 
-SCENES = (scene_balance, scene_passkey, scene_markets, scene_lp, scene_kinpaku, scene_modes)
+SCENES = (scene_call, scene_payout, scene_passkey, scene_lp, scene_modes)
 EXTRAS = (pending, foil, primer_bell, primer_lock)
 
 

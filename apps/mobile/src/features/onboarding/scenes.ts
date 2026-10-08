@@ -45,6 +45,32 @@ export interface Scene {
 
 export const SCENES: readonly Scene[] = [
   {
+    key: "call",
+    title: "Call the next move.",
+    body: "Up or Down on a live price, in dollars. Cash out any time before the close.",
+    art: "A gold line climbing past a dashed line on a lacquer tablet, with an Up dish and a Down dish beside it.",
+    field: require("../../../assets/onboarding/scene-call-field.webp"),
+    layers: {
+      shadow: require("../../../assets/onboarding/scene-call-shadow.webp"),
+      back: require("../../../assets/onboarding/scene-call-back.webp"),
+      main: require("../../../assets/onboarding/scene-call-main.webp"),
+      fore: require("../../../assets/onboarding/scene-call-fore.webp"),
+    },
+  },
+  {
+    key: "payout",
+    title: "Payouts land on their own.",
+    body: "When the window closes, a winning call is paid straight to your balance. Nothing to claim.",
+    art: "Gold koban falling into the lacquer senryō-bako chest.",
+    field: require("../../../assets/onboarding/scene-payout-field.webp"),
+    layers: {
+      shadow: require("../../../assets/onboarding/scene-payout-shadow.webp"),
+      back: require("../../../assets/onboarding/scene-payout-back.webp"),
+      main: require("../../../assets/onboarding/scene-payout-main.webp"),
+      fore: require("../../../assets/onboarding/scene-payout-fore.webp"),
+    },
+  },
+  {
     key: "passkey",
     title: "Your account, with a passkey.",
     body: "Your phone creates it and unlocks it. There is no password to remember.",
@@ -60,7 +86,7 @@ export const SCENES: readonly Scene[] = [
   {
     key: "lp",
     title: "One pool takes the other side.",
-    body: "Call Up or Down on a live price. A shared pool is your counterparty.",
+    body: "A shared pool takes the other side of every call and pays the winners.",
     art: "A lacquer basin holding one shared pool, its lid open beside it.",
     field: require("../../../assets/onboarding/scene-lp-field.webp"),
     layers: {
@@ -73,7 +99,7 @@ export const SCENES: readonly Scene[] = [
   {
     key: "modes",
     title: "Start with test dollars.",
-    body: "Practice is free, and payouts land on their own. Real money starts only when you switch to Real.",
+    body: "Practice is free. Real money starts only when you switch to Real.",
     art: "Paper practice notes in front, with a gold koban set apart on its own dish.",
     field: require("../../../assets/onboarding/scene-modes-field.webp"),
     layers: {

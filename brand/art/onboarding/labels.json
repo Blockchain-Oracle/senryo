@@ -4,28 +4,6 @@
     940
   ],
   "labels": {
-    "scene-markets": [
-      {
-        "id": "scene-markets-label-eurusd",
-        "layer": "scene-markets-fx",
-        "text": "EUR/USD",
-        "x": 280.8,
-        "y": 546.7,
-        "width": 146,
-        "height": 48,
-        "ink": "#17151F"
-      },
-      {
-        "id": "scene-markets-label-jpyusd",
-        "layer": "scene-markets-fx",
-        "text": "JPY/USD",
-        "x": 494.3,
-        "y": 561.6,
-        "width": 146,
-        "height": 48,
-        "ink": "#17151F"
-      }
-    ],
     "scene-modes": [
       {
         "id": "scene-modes-label-practice",

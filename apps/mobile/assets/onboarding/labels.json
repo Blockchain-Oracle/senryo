@@ -4,26 +4,6 @@
     940
   ],
   "scenes": {
-    "markets": [
-      {
-        "text": "EUR/USD",
-        "x": 280.8,
-        "y": 546.7,
-        "width": 146,
-        "height": 48,
-        "ink": "paperInk",
-        "layer": "main"
-      },
-      {
-        "text": "JPY/USD",
-        "x": 494.3,
-        "y": 561.6,
-        "width": 146,
-        "height": 48,
-        "ink": "paperInk",
-        "layer": "main"
-      }
-    ],
     "modes": [
       {
         "text": "Practice · Test dollars",

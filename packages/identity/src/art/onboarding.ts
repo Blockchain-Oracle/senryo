@@ -56,9 +56,14 @@ function avatar(key: string, sha256: string): ArtSource {
 
 export const ONBOARDING_ART: readonly ArtSource[] = [
   scene(
-    "scene-balance",
-    "One balance. The lacquer senryō-bako; two inlaid gold paths run from its seal to the Kinpaku card and the koban.",
-    "9df264ae7c2be90742b4ce39b6fc05469fdb9ca4d24ced1225f0cb008c75e498",
+    "scene-call",
+    "Call the next move. A gold line wanders, then climbs past the dashed line on a lacquer tablet to a glowing head; an Up dish and a Down dish hover beside it.",
+    "3b137a6d8b025bb504f6e3db90bffb4abbe3c9e99b34f7c06518baa9329c59ff",
+  ),
+  scene(
+    "scene-payout",
+    "Payouts land on their own. Three koban fall to the lacquer senryō-bako, the lowest landing on its lid.",
+    "188c5c768f7a8fa3dcd813f86758fb2d05dbd832bda06c57d0b6f9bb5fae5707",
     ["xau-koban"],
   ),
   scene(
@@ -67,20 +72,9 @@ export const ONBOARDING_ART: readonly ArtSource[] = [
     "ed459da3e8b4603a07ee3f579a01e63d1cac0f4b2d131f6dcc7f8bcbaf8902a8",
   ),
   scene(
-    "scene-markets",
-    "Markets. Three lacquer trays: koban and chōgin, the EUR/USD and JPY/USD pair discs, the Bitcoin and MON marks. Pair names are native text over its label plates (labels.json).",
-    "6d07b19ecbee899225d03792f20c7da83bdfec2e35399b0dc8fd798c4e661c52",
-    ["xau-koban", "xag-chogin", "bitcoin", "monad", "fx-eur-usd", "fx-jpy-usd"],
-  ),
-  scene(
     "scene-lp",
     "LP vault. The lacquer vault well, its round bolted door open, one shared pool inside.",
     "698ffa82a49092719bbdee8d495c7cb3c2fbeefadb33f07a195a4e5597f44e9d",
-  ),
-  scene(
-    "scene-kinpaku",
-    "Kinpaku. The lacquer and gold-leaf card over a book of beaten gold leaf.",
-    "8a198e75016e5a73b5cbefc01894db8b15ca3b82091a847640b7712136dad8ef",
   ),
   scene(
     "scene-modes",

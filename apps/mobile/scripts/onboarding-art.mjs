@@ -33,12 +33,12 @@ const LAYER = /^scene-[a-z]+-(field|shadow|back|main|fore)\.svg$/;
 /** The masters' label inks are the light theme's text colours (the plates are light in both themes). */
 const INK_ROLE = { "#17151F": "paperInk", "#7049C8": "paperPractice", "#3643D8": "paperMainnet" };
 /** Per scene, the master layer each band starts at (layers.json ids without the scene prefix). */
+// Only the scenes the story shows (scenes.ts); the retired masters (balance, markets, kinpaku) stay in brand/art.
 const BANDS = {
-  balance: { back: "path-spend", main: "chest", fore: "card" },
+  call: { back: "tablet", main: "down", fore: "glints" },
+  payout: { back: "chest", main: "coin-high", fore: "glints" },
   passkey: { back: "tablet", main: "tag-shadow", fore: "glints" },
-  markets: { main: "commodities" },
   lp: { back: "door", main: "well", fore: "drop" },
-  kinpaku: { back: "leaf-book", main: "card", fore: "flakes" },
   modes: { back: "mainnet", main: "bundle", fore: "note-shadow" },
 };
 /** Writes `scene-<key>-<band>.svg` into `out` from the per-layer files `onboarding.py --layers` wrote into `split`. */
@@ -80,8 +80,9 @@ try {
     stdio: ["ignore", "ignore", "inherit"],
   });
   writeBands(split, work);
-  rmSync(OUT, { recursive: true, force: true });
+  // Only the scene layers are this script's: other files in the folder (the welcome sky) are left alone.
   mkdirSync(OUT, { recursive: true });
+  for (const name of readdirSync(OUT)) if (/^scene-.*\.webp$/.test(name)) rmSync(join(OUT, name));
   const layers = readdirSync(work).filter((name) => LAYER.test(name));
   for (const name of layers) {
     const png = join(work, name.replace(".svg", ".png"));
@@ -100,6 +101,7 @@ try {
   const master = JSON.parse(readFileSync(join(ROOT, "brand/art/onboarding/labels.json"), "utf8"));
   const scenes = {};
   for (const [scene, labels] of Object.entries(master.labels)) {
+    if (!(scene.replace("scene-", "") in BANDS)) continue;
     scenes[scene.replace("scene-", "")] = labels.map((label) => {
       const layer = layers.find(
         (name) => name.startsWith(`${scene}-`) && readFileSync(join(work, name), "utf8").includes(`id="${label.id}"`),
