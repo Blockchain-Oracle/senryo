@@ -2,10 +2,10 @@
  * Get card (E1 steps 4–6; E-D2 "limit first, then issue"): the daily limit is signed first — a card without one can't
  * spend — then `POST /v1/card/issue` creates the sandbox virtual card and the art turns to show •••• last4. Reopened
  * after a kill between the two, the live limit skips straight to issuing; issuing is idempotent (one live card per
- * account per network). A card service that isn't there is a named, calm "Card unavailable" with Retry; any other
- * issue failure is "Card not created" with Try again, the limit kept. The limit's outcome surface never resends.
+ * account per network). A failure names its cause with the action that fixes it (Switch to Practice, Sign in again,
+ * Retry — only a real outage blames the issuer); any other issue failure is "Card not created" with Try again, the
+ * limit kept. The limit's outcome surface never resends.
  */
-import { ApiError } from "@senryo/api-client";
 import { ONE_USD6 } from "@senryo/core";
 import { useAccountRisk } from "@senryo/query";
 import { router, Stack } from "expo-router";
@@ -20,19 +20,21 @@ import { useHideDockWhileFocused } from "~/components/shell/dock-context";
 import { useSettledOutcome } from "~/features/trade/send-outcome";
 import { TradeTrace } from "~/features/trade/TradeTrace";
 import { fire } from "~/feedback/fire";
+import { clearApiSession } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
-import { useNetwork } from "~/lib/network";
+import { setActiveNetwork, useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { CardFace } from "./CardFace";
 import { CardHero } from "./CardHero";
+import { CARD_NETWORKS, CARD_PROBLEM_COPY, type CardProblem, cardProblem } from "./card-problem";
 import { initialLimit, LimitPicker } from "./LimitPicker";
 import { allowanceNow } from "./SpendableHero";
 import { useCardAllowance } from "./useCardAllowance";
 import { useIssueCard } from "./useCardService";
-import { cardUnavailable, useCardSummary } from "./useCardSummary";
+import { useCardSummary } from "./useCardSummary";
 import { LIMIT_WORDS } from "./words";
 
 const READY_GLYPH = 28;
@@ -43,6 +45,7 @@ export function GetCard() {
   const address = account.hint?.address;
   useHideDockWhileFocused("card-get");
   const summary = useCardSummary();
+  const network = useNetwork();
   const risk = useAccountRisk(address, "latest");
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
   const card = summary.data?.cards.find((c) => c.state !== "CLOSED");
@@ -68,8 +71,14 @@ export function GetCard() {
       <Stack.Screen options={{ title }} />
       {card ? (
         <Ready last4={card.last4 ?? undefined} />
-      ) : summary.isError || cardUnavailable(summary.error, summary.data) ? (
-        <Unavailable retry={() => void summary.refetch()} retrying={summary.isFetching} />
+      ) : !CARD_NETWORKS.has(network.key) ? (
+        <Problem problem="practice-only" act={() => setActiveNetwork("testnet")} acting={false} />
+      ) : cardProblem(summary.error, summary.data) ? (
+        <Problem
+          problem={cardProblem(summary.error, summary.data) ?? "unknown"}
+          act={() => retryAfter(cardProblem(summary.error, summary.data), () => void summary.refetch())}
+          acting={summary.isFetching}
+        />
       ) : summary.isPending || !snapshot ? (
         <>
           <Art />
@@ -131,9 +140,9 @@ function Flow({ snapshot, address }: { snapshot: Parameters<typeof allowanceNow>
     );
   }
   if (issue.isError) {
-    const unavailable = issue.error instanceof ApiError && cardUnavailable(issue.error);
-    return unavailable ? (
-      <Unavailable retry={() => issue.mutate()} retrying={false} />
+    const problem = cardProblem(issue.error);
+    return problem && problem !== "unknown" ? (
+      <Problem problem={problem} act={() => retryAfter(problem, () => issue.mutate())} acting={false} />
     ) : (
       <>
         <Art />
@@ -225,14 +234,21 @@ function Ready({ last4 }: { last4: string | undefined }) {
   );
 }
 
-function Unavailable({ retry, retrying }: { retry: () => void; retrying: boolean }) {
+/** A refused or expired sign-in starts over before the retry: the next call signs in again (one unlock prompt). */
+function retryAfter(problem: CardProblem | undefined, retry: () => void) {
+  if (problem === "sign-in") clearApiSession();
+  retry();
+}
+
+function Problem({ problem, act, acting }: { problem: CardProblem; act: () => void; acting: boolean }) {
   const { color } = useTheme();
+  const copy = CARD_PROBLEM_COPY[problem];
   return (
     <>
       <Art />
-      <Text style={[TYPE.sectionTitle, styles.center, { color: color.ink }]}>Card unavailable</Text>
-      <Text style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>Card issuer not answering</Text>
-      <Button label="Retry" variant="secondary" loading={retrying} onPress={retry} />
+      <Text style={[TYPE.sectionTitle, styles.center, { color: color.ink }]}>{copy.title}</Text>
+      <Text style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>{copy.line}</Text>
+      <Button label={copy.action} variant="secondary" loading={acting} onPress={act} />
     </>
   );
 }

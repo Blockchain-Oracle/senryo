@@ -1,14 +1,10 @@
-import {
-  ApiError,
-  type CardAuthSummary,
-  type CardSummary,
-  cardAuthDetailRoute,
-  cardSummaryRoute,
-} from "@senryo/api-client";
+import { type CardAuthSummary, cardAuthDetailRoute, cardSummaryRoute } from "@senryo/api-client";
 import { useQueryEnv } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "~/lib/account/provider";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
+import { useNetwork } from "~/lib/network";
+import { CARD_NETWORKS } from "./card-problem";
 
 /** The tab re-reads the service this often while it is on screen (E6: rows move Pending → Paid without a pull). */
 const REFRESH_MS = 30_000;
@@ -16,29 +12,24 @@ const REFRESH_MS = 30_000;
 export const cardSummaryKey = (chainId: number, address: string | undefined) =>
   ["account", chainId, address, "card-service"] as const;
 
-/** Error codes that mean "the card service or its issuer isn't there", shown as a calm named state, not an error. */
-const UNAVAILABLE_CODES = new Set(["ISSUER_UNAVAILABLE", "NOT_DEPLOYED", "UPSTREAM_UNAVAILABLE"]);
-
-export function cardUnavailable(error: unknown, summary?: CardSummary): boolean {
-  if (summary && summary.issuer.status === "issuer_unavailable") return true;
-  return error instanceof ApiError && UNAVAILABLE_CODES.has(error.code);
-}
-
 /**
  * The authenticated card service's summary (E2–E6): the live card, holds, card debt, issuer status and recent
- * payments. Read only while the session is unlocked, so opening the tab never raises Face ID by itself.
+ * payments. Read only while the session is unlocked, so opening the tab never raises Face ID by itself, and only on a
+ * network the card service runs on (`CARD_NETWORKS`): elsewhere the tab says so instead of polling a refusal. It
+ * re-reads on a timer only where the caller is on screen (`poll`).
  */
-export function useCardSummary() {
+export function useCardSummary({ poll = false }: { poll?: boolean } = {}) {
   const env = useQueryEnv();
+  const network = useNetwork();
   const account = useAccount();
   const address = account.hint?.address;
   const session = useSessionRunner();
   return useQuery({
     queryKey: cardSummaryKey(env.chainId, address),
-    enabled: Boolean(address && session && account.snapshot.status === "unlocked"),
+    enabled: Boolean(CARD_NETWORKS.has(network.key) && address && session && account.snapshot.status === "unlocked"),
     retry: false,
     staleTime: REFRESH_MS,
-    refetchInterval: REFRESH_MS,
+    refetchInterval: poll ? REFRESH_MS : false,
     queryFn: () => {
       if (!session || account.snapshot.status !== "unlocked") throw new Error("Unlock to load your card");
       return session(() => env.api.call(cardSummaryRoute, {}));

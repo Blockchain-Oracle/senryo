@@ -16,18 +16,21 @@ import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { SheetRow } from "~/components/sheet/SheetRow";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
+import { clearApiSession } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
-import { useNetwork } from "~/lib/network";
+import { setActiveNetwork, useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { useFocused } from "~/lib/use-focused";
 import { SHEET_SHAPE, SIZE, useTheme } from "~/theme";
 import { CardIssued } from "./CardIssued";
 import { CardUnissued, type UnissuedState } from "./CardUnissued";
+import { CARD_NETWORKS, cardProblem } from "./card-problem";
 import { SimulateSheet } from "./SimulateSheet";
 import { allowanceNow, SpendableBreakdown } from "./SpendableHero";
 import { TabSheet } from "./TabSheet";
 import { useCardFreeze } from "./useCardFreeze";
-import { cardUnavailable, useCardSummary } from "./useCardSummary";
+import { useCardSummary } from "./useCardSummary";
 import { WalletSheetBody } from "./WalletRow";
 
 type Open = "breakdown" | "simulate" | "wallet" | "choose";
@@ -42,7 +45,8 @@ export function CardTab() {
   const network = useNetwork();
   const practice = network.key === "testnet";
   const address = account.hint?.address;
-  const summary = useCardSummary();
+  const focused = useFocused();
+  const summary = useCardSummary({ poll: focused });
   const deployed = isDeployed(network.chainId, "SenryoCore");
   const risk = useAccountRisk(deployed ? address : undefined, "latest");
   const snapshot = risk.status === "fresh" || risk.status === "stale" ? risk.value : undefined;
@@ -67,9 +71,18 @@ export function CardTab() {
     if (!address) return { kind: "guest" };
     if (account.snapshot.status !== "unlocked")
       return { kind: "locked", unlock: () => void account.unlock().catch(() => undefined) };
+    if (!CARD_NETWORKS.has(network.key))
+      return { kind: "problem", problem: "practice-only", act: () => setActiveNetwork("testnet"), acting: false };
     if (summary.isPending) return { kind: "loading" };
-    if (summary.isError || cardUnavailable(summary.error, summary.data))
-      return { kind: "unavailable", retry: () => void summary.refetch(), retrying: summary.isFetching };
+    const problem = cardProblem(summary.error, summary.data);
+    if (problem) {
+      const retry = () => {
+        // A refused or expired sign-in starts over: the next read signs in again (one unlock prompt).
+        if (problem === "sign-in") clearApiSession();
+        void summary.refetch();
+      };
+      return { kind: "problem", problem, act: retry, acting: summary.isFetching };
+    }
     return { kind: "get", practice, onGet: practice ? startGetCard : () => setOpen("choose") };
   };
 

@@ -22,6 +22,8 @@ const HEX_PER_BYTE = 2;
 let client: ApiClient | undefined;
 /** One API session per (address, chain): the SIWE message binds a chain, so a switch never reuses the other one. */
 let session: { token: string; address: Address; chainId: ChainId; expiresAt: number } | undefined;
+/** The sign-in in flight, shared by every caller for the same (address, chain). */
+let signingIn: { key: string; done: Promise<void> } | undefined;
 
 /** Per-install id for the relay's rate limit (`x-senryo-device`): random, MMKV, not an identity. */
 function deviceId(): string {
@@ -70,24 +72,42 @@ export function policyContext(address: Address, faceId: PolicyContext["faceId"] 
   };
 }
 
-/** A valid API session for the signed-in account (SIWE: nonce → in-session signMessage → verify). */
-export async function ensureApiSession(account: AccountClient, faceId?: PolicyContext["faceId"]): Promise<void> {
+/**
+ * A valid API session for the signed-in account (SIWE: nonce → in-session signMessage → verify). Single-flight per
+ * (address, chain): the screens that mount together after a switch share one sign-in — one unlock prompt, one nonce —
+ * instead of racing several into the nonce rate limit and stacked Face ID/passkey sheets.
+ */
+export function ensureApiSession(account: AccountClient, faceId?: PolicyContext["faceId"]): Promise<void> {
   if (DEV_WORKSPACE) {
     if (account.hint) setDevProfileAddress(account.hint.address);
-    return;
+    return Promise.resolve();
   }
   const address = account.hint?.address;
-  if (!address) throw new Error("No account on this device");
+  if (!address) return Promise.reject(new Error("No account on this device"));
   const chainId = activeNetwork().chainId;
-  if (session && session.address === address && session.chainId === chainId && session.expiresAt > Date.now()) return;
+  if (session && session.address === address && session.chainId === chainId && session.expiresAt > Date.now())
+    return Promise.resolve();
+  const key = `${address.toLowerCase()}:${chainId}`;
+  if (signingIn?.key === key) return signingIn.done;
+  const done = signIn(account, address, chainId, faceId).finally(() => {
+    if (signingIn?.done === done) signingIn = undefined;
+  });
+  signingIn = { key, done };
+  return done;
+}
+
+async function signIn(account: AccountClient, address: Address, chainId: ChainId, faceId?: PolicyContext["faceId"]) {
   const challenge = await api().call(authNonceRoute, { body: { address, chainId } });
   const signature = await account.signer(policyContext(address, faceId)).signMessage({ message: challenge.message });
   const verified = await api().call(authVerifyRoute, { body: { message: challenge.message, signature } });
+  // A switch or sign-out while this was in flight: never adopt a token for a scope the app has left.
+  if (account.hint?.address !== address || activeNetwork().chainId !== chainId) return;
   session = { token: verified.token, address, chainId, expiresAt: Date.parse(verified.expiresAt) };
 }
 
 export function clearApiSession(): void {
   session = undefined;
+  signingIn = undefined;
 }
 
 /** Runs a session route; a token the server no longer knows (restart, expiry) is replaced once, then retried. */
