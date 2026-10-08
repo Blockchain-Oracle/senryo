@@ -47,6 +47,8 @@ const TAG_H = 15;
 const TAG_PAD = 5;
 const TAG_RADIUS = 3;
 const EDGE_TAG_INSET = 9;
+/** A level tag that would sit under the pill moves to the end of its line, this far left of the head dot. */
+const TAG_CLEAR = 8;
 const HEAD_R = 3.5;
 const GLOW_W = 6;
 const GLOW_ALPHA = 0.18;
@@ -172,7 +174,13 @@ function tag(c: SkCanvas, k: DrawKit, text: string, x: number, y: number, color:
   textRight(c, k, text, x - TAG_PAD, y + TAG_H / HALF, k.fonts.tag, onColor, 1);
 }
 
-function drawLevel(c: SkCanvas, k: DrawKit, level: ChartLevel, win: YWindow, plotW: number, w: number) {
+/** The pill's box: a level tag that would land under it moves to the end of its line instead. */
+interface PillBox {
+  top: number;
+  bottom: number;
+}
+
+function drawLevel(c: SkCanvas, k: DrawKit, level: ChartLevel, win: YWindow, plotW: number, w: number, pill: PillBox) {
   "worklet";
   const color = level.kind === "line" ? k.colors.ink : k.colors.helper;
   const y = yOf(level.price, win);
@@ -195,7 +203,9 @@ function drawLevel(c: SkCanvas, k: DrawKit, level: ChartLevel, win: YWindow, plo
   p.setPathEffect(level.kind === "line" ? k.dash.line : k.dash.entry);
   const ry = Math.round(y) + HALF_PIXEL;
   c.drawLine(0, ry, plotW, ry, p);
-  tag(c, k, level.label, right, y - TAG_H / HALF, color, k.colors.inverse);
+  const top = y - TAG_H / HALF;
+  const underPill = top < pill.bottom && top + TAG_H > pill.top;
+  tag(c, k, level.label, underPill ? plotW - HEAD_R - TAG_CLEAR : right, top, color, k.colors.inverse);
 }
 
 /** The whole frame. Returns nothing: the picture is the output. */
@@ -312,11 +322,12 @@ export function drawFrame(
     if (alpha > 0)
       textRight(c, k, `$${formatFixed(t.value, decimals)}`, w - LABEL_RIGHT, y, k.fonts.axis, k.colors.helper, alpha);
   }
-  for (const level of o?.levels ?? []) drawLevel(c, k, level, win, plotW, w);
-
-  c.drawCircle(plotW, headY, HEAD_R, fill(k, tone));
   const pillX = w - PILL_RIGHT - pillW;
   const pillY = Math.min(h - pillH - HALF, Math.max(HALF, headY - pillH / HALF));
+  const box: PillBox = { top: pillY, bottom: pillY + pillH };
+  for (const level of o?.levels ?? []) drawLevel(c, k, level, win, plotW, w, box);
+
+  c.drawCircle(plotW, headY, HEAD_R, fill(k, tone));
   c.drawRRect(Skia.RRectXY(Skia.XYWHRect(pillX, pillY, pillW, pillH), pillH / HALF, pillH / HALF), fill(k, tone));
   const right = pillX + pillW - PILL_TEXT_RIGHT;
   if (!o?.pnlText) {

@@ -4,7 +4,7 @@
  */
 import type { CallItem } from "@senryo/api-client";
 import { formatUnits } from "@senryo/core";
-import { formatUsd } from "~/features/terminal/chart/engine";
+import { formatUsd, priceDecimals } from "~/features/terminal/chart/engine";
 
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
@@ -34,6 +34,10 @@ export const toneOf = (v: bigint | null): Tone => (v === null || v === 0n ? "mut
 
 /** A print or an entry price (e-8) as the terminal shows it. */
 export const priceText = (e8: bigint) => formatUsd(Number(e8) / E8);
+
+/** A distance between two prices, at the precision of the price it is measured from (`$16.97`, not `$16.965`). */
+export const gapText = (gapE8: bigint, fromE8: bigint) =>
+  formatUsd(Number(gapE8 < 0n ? -gapE8 : gapE8) / E8, priceDecimals(Number(fromE8) / E8));
 
 /** One word for where a finished or live call stands. */
 export function stateWord(c: Pick<CallItem, "status" | "outcome">): string {

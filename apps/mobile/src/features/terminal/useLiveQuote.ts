@@ -28,8 +28,9 @@ const E8 = 1e8;
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const PERCENT = 100;
-const PERCENT_E6 = 10_000n;
-const BPS_DECIMALS = 2;
+/** The distance to the line in thousandths of a percent: a 1-minute move is often under 0.01 %. */
+const PERCENT_E3 = 100_000n;
+const PERCENT_DECIMALS = 3;
 
 export interface Quotes {
   up: OpenQuote | null;
@@ -92,8 +93,8 @@ export function useLiveQuote(t: TerminalView, stake: bigint) {
       downLine.value = oddsLine(down, stake);
 
       const diff = spot - t.k;
-      const pctBps = t.k > 0n ? (diff * PERCENT_E6) / t.k : 0n;
-      lineText.value = `${diff >= 0n ? "▲" : "▼"} $${formatUnits(diff < 0n ? -diff : diff, PRICE_DECIMALS, CENTS)} (${formatUnits(pctBps < 0n ? -pctBps : pctBps, BPS_DECIMALS, BPS_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
+      const pct = t.k > 0n ? (diff * PERCENT_E3) / t.k : 0n;
+      lineText.value = `${diff >= 0n ? "▲" : "▼"} $${formatUnits(diff < 0n ? -diff : diff, PRICE_DECIMALS, CENTS)} (${formatUnits(pct < 0n ? -pct : pct, PERCENT_DECIMALS, PERCENT_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
 
       let close: CloseQuote | null = null;
       if (position && positionBand && position.state !== "committed") {

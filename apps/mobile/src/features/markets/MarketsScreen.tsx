@@ -29,6 +29,7 @@ export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: stri
   const now = useServerSeconds();
   const closesIn = FIRST_CADENCE - LOCKOUT_SEC - (now % FIRST_CADENCE);
   const open = closesIn > 0;
+  const reopensIn = FIRST_CADENCE - (now % FIRST_CADENCE);
   return (
     <Pressable
       onPress={onOpen}
@@ -40,7 +41,8 @@ export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: stri
       <View style={styles.text}>
         <Text style={[TYPE.rowTitle, { color: color.ink }]}>{symbol}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          {name} · {laneLabel(FIRST_CADENCE)} {open ? `closes in ${clockText(closesIn)}` : "next opening"}
+          {name} · {laneLabel(FIRST_CADENCE)}{" "}
+          {open ? `closes in ${clockText(closesIn)}` : `calls reopen in ${clockText(reopensIn)}`}
         </Text>
       </View>
       <Text style={[TYPE.rowTitle, { color: color.ink }]}>{price ? formatUsd(price / E8) : "—"}</Text>

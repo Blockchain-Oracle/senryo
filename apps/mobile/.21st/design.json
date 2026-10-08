@@ -796,6 +796,28 @@
         "port": "WAVs rendered by scripts/gen-trade-sounds.mjs; pooled expo-audio players; pre-rendered pentatonic profit ladder",
         "deviations": "no music bed yet",
         "status": "built (S5.13) — src/feedback/trade-sound.ts, assets/sounds/trade/"
+      },
+      {
+        "name": "call-timeline",
+        "source": "21st #28295 Timeline (cubby-ui/timeline)",
+        "evidence": [
+          "pivot plan Call: see receipt; the receipt shows entry → exit",
+          "searched also: 26902 Vertical How It Works Timeline, 28381 Process Timeline, 28298 slide-cn Timeline"
+        ],
+        "port": "indicator disc per step joined by a 2 pt rule, title then time; each step opens its transaction on the explorer",
+        "deviations": "done = check, refused/lost = cross, waiting = hollow disc (state never by colour alone); borderless rows, no cards or step numbers",
+        "status": "built (S5.11) — src/features/calls/CallTimeline.tsx"
+      },
+      {
+        "name": "calls-journal",
+        "source": "21st #27124 Trade Journal Table (ssychui/trade-journal-table)",
+        "evidence": [
+          "pivot plan S5.11: open and history (Won/Lost/Refunded filters)",
+          "searched also: 5120 Ruixen Stats, 6835 Public Stats, 22187/28473 Invoice History Table"
+        ],
+        "port": "the journal's range filter as the kit Segmented (All · Open · Won · Lost · Refunded), outcome in words beside the signed result, a one-line record above (result, calls, won, lost, best streak)",
+        "deviations": "rows not a table (mark, market and side, lane · stake · state, result); no slippage/fee/hold columns — a call's facts live on its receipt",
+        "status": "built (S5.11) — src/features/calls/CallsScreen.tsx, CallReceipt.tsx, WindowProof.tsx"
       }
     ],
     "planned": [

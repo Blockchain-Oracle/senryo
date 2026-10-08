@@ -14,6 +14,7 @@ import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { STAKE_PRESETS_USD } from "./constants";
+import { OneTapLine } from "./OneTapLine";
 
 const USD = 1_000_000n;
 const BUTTON_H = 64;
@@ -153,7 +154,9 @@ export function CallPanel({
         <Text style={[TYPE.caption, styles.notice, { color: color.inkMuted }]} accessibilityLiveRegion="polite">
           {notice}
         </Text>
-      ) : null}
+      ) : (
+        <OneTapLine />
+      )}
       {holding ? (
         <Pressable
           onPress={onClose}

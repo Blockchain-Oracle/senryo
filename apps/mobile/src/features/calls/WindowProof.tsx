@@ -10,7 +10,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { fire } from "~/feedback/fire";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { priceText, SIDE, usd, whenText } from "./format";
+import { gapText, priceText, SIDE, usd, whenText } from "./format";
 
 const PERCENT = 100n;
 const UP = 0;
@@ -84,9 +84,9 @@ export function WindowProof({ windowId, chainId }: { windowId: `0x${string}`; ch
 }
 
 /** Where the close landed against the line, in words. */
-function whereText(gap: bigint): string {
+function whereText(gap: bigint, lineE8: bigint): string {
   if (gap === 0n) return "Closed on the line";
-  return `Closed ${priceText(gap < 0n ? -gap : gap)} ${gap > 0n ? "above" : "below"} the line`;
+  return `Closed ${gapText(gap, lineE8)} ${gap > 0n ? "above" : "below"} the line`;
 }
 
 function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
@@ -127,7 +127,7 @@ function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
         tx={p.close?.txHash ?? null}
         chainId={chainId}
       />
-      {gap !== null ? <Fact label="Result" value={whereText(gap)} chainId={chainId} /> : null}
+      {gap !== null && open ? <Fact label="Result" value={whereText(gap, open.priceE8)} chainId={chainId} /> : null}
       <Fact
         label="Crowd"
         value={crowdText(p)}

@@ -88,10 +88,15 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   }, [status, onFilled]);
 
   const stale = live.prices.isStale(t.symbol, Date.now());
+  const holding = t.position !== undefined && t.position.state !== "committed";
+  // Opens and cash-outs both stop 20 s before expiry (D-261): a holder is waiting for the result, not the next window.
+  const lockText = holding
+    ? `Cash-out closed · result in ${clockText(t.window.expiry - t.now)}`
+    : `Calls closed · next opens in ${clockText(t.window.expiry - t.now)}`;
   const panel: PanelState = pending
     ? { kind: "pending", status, label: pending.label }
     : !t.window.trading
-      ? { kind: "locked", text: `Calls closed · next opens in ${clockText(t.window.expiry - t.now)}` }
+      ? { kind: "locked", text: lockText }
       : stale
         ? { kind: "stale" }
         : t.k === undefined
@@ -181,7 +186,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           onStake={(s) => setStoredStake(Number(s))}
           upOdds={q.upLine}
           downOdds={q.downLine}
-          holding={t.position !== undefined && t.position.state !== "committed"}
+          holding={holding}
           cashOut={q.cashOut}
           onUp={() => void open("up")}
           onDown={() => void open("down")}
