@@ -12,13 +12,11 @@ import { chooseVariant, chosenVariant, SOUND_VARIANTS } from "~/feedback/sound-v
 import { BUTTON, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const CUES: readonly { name: SoundName; label: string }[] = [
-  { name: "fill", label: "Trade filled" },
   { name: "deposit", label: "Money arrived" },
   { name: "send", label: "Sent" },
   { name: "onboarding", label: "Welcome" },
   { name: "scene", label: "Welcome swipe" },
   { name: "unlock", label: "Unlocked" },
-  { name: "liquidation", label: "Liquidation warning" },
   { name: "error", label: "Error" },
 ];
 

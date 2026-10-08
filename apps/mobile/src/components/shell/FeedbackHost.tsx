@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { prepareSounds, releaseSounds } from "~/feedback/sound";
+import { releaseCues } from "~/feedback/trade-sound";
 
 /**
  * Holds the sound players for the app's life. Call outcomes fire their own feedback from the user's live events (a
@@ -8,7 +9,10 @@ import { prepareSounds, releaseSounds } from "~/feedback/sound";
 export function FeedbackHost() {
   useEffect(() => {
     void prepareSounds();
-    return releaseSounds;
+    return () => {
+      releaseSounds();
+      releaseCues();
+    };
   }, []);
   return null;
 }

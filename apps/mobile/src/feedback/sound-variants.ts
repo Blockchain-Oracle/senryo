@@ -18,11 +18,6 @@ export const SOUND_VARIANTS: Readonly<Record<SoundName, readonly AudioSource[]>>
     require("../../assets/sounds/variants/onboarding_v2.wav"),
     require("../../assets/sounds/variants/onboarding_v3.wav"),
   ],
-  fill: [
-    require("../../assets/sounds/variants/fill_v1.wav"),
-    require("../../assets/sounds/variants/fill_v2.wav"),
-    require("../../assets/sounds/variants/fill_v3.wav"),
-  ],
   deposit: [
     require("../../assets/sounds/variants/deposit_v1.wav"),
     require("../../assets/sounds/variants/deposit_v2.wav"),
@@ -37,11 +32,6 @@ export const SOUND_VARIANTS: Readonly<Record<SoundName, readonly AudioSource[]>>
     require("../../assets/sounds/variants/unlock_v1.wav"),
     require("../../assets/sounds/variants/unlock_v2.wav"),
     require("../../assets/sounds/variants/unlock_v3.wav"),
-  ],
-  liquidation: [
-    require("../../assets/sounds/variants/liquidation_v1.wav"),
-    require("../../assets/sounds/variants/liquidation_v2.wav"),
-    require("../../assets/sounds/variants/liquidation_v3.wav"),
   ],
   error: [
     require("../../assets/sounds/variants/error_v1.wav"),

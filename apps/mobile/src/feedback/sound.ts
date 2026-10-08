@@ -4,22 +4,21 @@ import { SOUND_VOLUME } from "./constants";
 import { chosenVariant, SOUND_VARIANTS } from "./sound-variants";
 
 /**
- * The UI sound palette (plan §2.4): fill, deposit, send, unlock, liquidation; error is optional and off by default.
+ * The UI sound palette (plan §2.4): story, deposit, send, unlock, error. The terminal's cues (open, close, win, loss,
+ * the profit ladder) live in `trade-sound.ts`.
  * Ported from the pre-existing audio pool: app-lifetime players preloaded once, replayed with seekTo(0) + play(),
  * errors swallowed. Sounds follow the ringer switch (`playsInSilentMode: false`) and mix with other audio.
  * No sound for ticks or navigation — haptics own those.
  */
-export type SoundName = "scene" | "onboarding" | "fill" | "deposit" | "send" | "unlock" | "liquidation" | "error";
+export type SoundName = "scene" | "onboarding" | "deposit" | "send" | "unlock" | "error";
 
 /** Original cues generated with ElevenLabs, trimmed and level-matched (assets/sounds/README.md). */
 const SOURCES: Record<SoundName, AudioSource> = {
   scene: require("../../assets/sounds/scene.wav"),
   onboarding: require("../../assets/sounds/onboarding.wav"),
-  fill: require("../../assets/sounds/fill.wav"),
   deposit: require("../../assets/sounds/deposit.wav"),
   send: require("../../assets/sounds/send.wav"),
   unlock: require("../../assets/sounds/unlock.wav"),
-  liquidation: require("../../assets/sounds/liquidation.wav"),
   error: require("../../assets/sounds/error.wav"),
 };
 

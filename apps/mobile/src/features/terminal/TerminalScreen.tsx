@@ -8,7 +8,7 @@ import { formatUnits } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useIntentStatus } from "@senryo/query";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useMMKVNumber } from "react-native-mmkv";
 import { useSharedValue } from "react-native-reanimated";
@@ -27,6 +27,7 @@ import { LiveChart } from "./chart/LiveChart";
 import { MarketsSheet } from "./MarketsSheet";
 import { clockText, TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
+import { useMoveFeedback } from "./useMoveFeedback";
 import { useTerminal } from "./useTerminal";
 
 const DEFAULT_STAKE = 5_000_000;
@@ -51,10 +52,14 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const [storedStake, setStoredStake] = useMMKVNumber(STORAGE_KEYS.lastStake, storage);
   const stake = BigInt(storedStake ?? DEFAULT_STAKE);
   const q = useLiveQuote(t, stake);
+  const heldBand = t.position && t.position.state === "open" ? t.series?.bands[t.position.band] : undefined;
+  useMoveFeedback(t.symbol, heldBand?.kind === "up" ? "up" : heldBand?.kind === "down" ? "down" : null);
   const actions = useCallActions();
   const [picking, setPicking] = useState(false);
-  const [pending, setPending] = useState<{ digest: `0x${string}`; label: string } | null>(null);
+  const [pending, setPending] = useState<{ digest: `0x${string}`; label: string; kind: "open" | "close" } | null>(null);
   const intent = useIntentStatus(pending?.digest);
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
   const offsetMs = useSharedValue(live.clock.offset);
 
   useEffect(() => {
@@ -69,7 +74,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   useEffect(() => {
     if (!status || !SETTLED.has(status.state)) return;
     if (status.state === "filled") {
-      fire("filled", { sound: "fill" });
+      fire("filled", { cue: pendingRef.current?.kind === "close" ? "close" : "open" });
       onFilled?.();
     } else {
       fire("fail", { sound: "error" });
@@ -128,7 +133,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
         stake,
         payoutQuote: quote.payout,
       });
-      if (r.kind === "sent") setPending({ digest: r.status.digest, label: `Opening ${label}…` });
+      if (r.kind === "sent") setPending({ digest: r.status.digest, label: `Opening ${label}…`, kind: "open" });
     } catch (error) {
       fire("fail");
       notify({ title: "Couldn't place the call", description: (error as Error).message, tone: "warning" });
@@ -148,7 +153,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
         shares: position.payout,
         proceedsQuote: quote.proceeds,
       });
-      if (r.kind === "sent") setPending({ digest: r.status.digest, label: "Cashing out…" });
+      if (r.kind === "sent") setPending({ digest: r.status.digest, label: "Cashing out…", kind: "close" });
     } catch (error) {
       fire("fail");
       notify({ title: "Couldn't cash out", description: (error as Error).message, tone: "warning" });
