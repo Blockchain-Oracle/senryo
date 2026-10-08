@@ -2,6 +2,7 @@ import type { BinaryApiSnapshot, BinaryHistory } from "@senryo/api-client";
 import {
   assertBinaryManifest,
   type BinarySnapshot,
+  decodeRevert,
   type ReadClient,
   readBinaryQuote,
   readBinaryRound,
@@ -126,10 +127,14 @@ export class BinaryPredictions {
         this.sources.map(async (s) => {
           const result = await readBinaryScheduledRounds(s.read, s.manifest, s.environment, asset, duration);
           await this.canonical(s, result.source);
-          return result.rounds.map(snapshot);
+          return { source: evidence(s.manifest, result.source), rounds: result.rounds.map(snapshot) };
         }),
       );
-      return { status: this.sources.length ? ("available" as const) : ("inactive" as const), rounds: groups.flat() };
+      return {
+        status: this.sources.length ? ("available" as const) : ("inactive" as const),
+        sources: groups.map((g) => g.source),
+        rounds: groups.flatMap((g) => g.rounds),
+      };
     });
   }
   async round(chainId: string, contract: string, roundId: `0x${string}`, owner?: `0x${string}`) {
@@ -172,7 +177,16 @@ export class BinaryPredictions {
           state.round.escrow + amount > BINARY_POLICY.supplyCapWei)
       )
         throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "Input exceeds binary purchase bounds");
-      const result = await readBinaryQuote(s.read, state, side === "up", action, amount);
+      const result = await readBinaryQuote(s.read, state, side === "up", action, amount).catch(
+        async (error: unknown) => {
+          // Only a decoded revert from this verified, pinned quote call is an economic rejection.
+          // Reorg/staleness still takes precedence over an input classification.
+          await this.canonical(s, state);
+          if (decodeRevert(error)?.name === "Invalid")
+            throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "Input cannot produce a valid binary quote");
+          throw error;
+        },
+      );
       await this.canonical(s, state);
       return { snapshot: snapshot(state), side, action, quote: result.quote };
     });

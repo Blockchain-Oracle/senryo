@@ -114,7 +114,11 @@ export const binaryRoundsRoute = defineRoute({
     asset: z.enum(["BTC", "ETH"]),
     duration: z.enum(["300", "900"]).default("900"),
   }),
-  response: z.object({ status: z.enum(["inactive", "available"]), rounds: z.array(binarySnapshotSchema) }),
+  response: z.object({
+    status: z.enum(["inactive", "available"]),
+    sources: z.array(binarySourceSchema),
+    rounds: z.array(binarySnapshotSchema),
+  }),
 });
 export const binaryRoundRoute = defineRoute({
   ...common,

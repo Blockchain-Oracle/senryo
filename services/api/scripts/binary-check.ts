@@ -49,7 +49,7 @@ test("public binary composition remains inactive and rejects untrusted source fl
   try {
     const list = await app.inject("/v1/binary-predictions?chainId=10143&asset=BTC&duration=900");
     assert.equal(list.statusCode, OK);
-    assert.deepEqual(list.json(), { status: "inactive", rounds: [] });
+    assert.deepEqual(list.json(), { status: "inactive", sources: [], rounds: [] });
     const contract = `0x${"1".repeat(ADDRESS_HEX_LENGTH)}`,
       round = operation("not-deployed");
     for (const path of [
@@ -152,7 +152,21 @@ test("typed binary HTTP reads real rounds/quotes/positions/credits, freshness an
       ["ETH", "300"],
       ["BTC", "900"],
     ] as const) {
-      assert.equal((await client.call(binaryRoundsRoute, { query: { ...query, asset, duration } })).rounds.length, 0);
+      const empty = await client.call(binaryRoundsRoute, { query: { ...query, asset, duration } });
+      const head = await f.read.getBlock();
+      assert.equal(empty.status, "available");
+      assert.equal(empty.rounds.length, 0);
+      assert.deepEqual(empty.sources, [
+        {
+          chainId: BINARY_POLICY.chainId,
+          environmentId: f.manifest.environmentId,
+          contract: f.manifest.contract,
+          configHash: f.manifest.configHash,
+          blockNumber: head.number,
+          blockHash: head.hash,
+          timestamp: head.timestamp,
+        },
+      ]);
     }
     const nextLong = (f.start / FIFTEEN_MINUTES + 1n) * FIFTEEN_MINUTES;
     await f.call(
@@ -231,6 +245,34 @@ test("typed binary HTTP reads real rounds/quotes/positions/credits, freshness an
     assert.equal(other.creditWei, 0n);
     const quoteUrl = `/v1/binary-predictions/${params.contract}/${params.roundId}/quote?chainId=10143&owner=${f.other}&side=up&action=sell&amountWei=1`;
     assert.equal((await app.inject(quoteUrl)).statusCode, BAD_REQUEST);
+    const ownedDustUrl = quoteUrl.replace(f.other, f.owner);
+    const dust = await app.inject(ownedDustUrl);
+    assert.equal(dust.statusCode, BAD_REQUEST);
+    assert.deepEqual(dust.json(), {
+      error: { code: "BAD_REQUEST", message: "Input cannot produce a valid binary quote" },
+    });
+    // Neither a transport failure nor an undecoded error whose message resembles a revert is an input rejection.
+    for (const message of ["transport unavailable at private RPC", "Invalid() unknown failure"]) {
+      const failedRead = new Proxy(f.read, {
+        get(target, key) {
+          if (key !== "readContract") return Reflect.get(target, key);
+          return (args: Parameters<typeof target.readContract>[0]) => {
+            if (args.functionName === "quoteSell") throw new Error(message);
+            return target.readContract(args);
+          };
+        },
+      });
+      const failed = appFor(new BinaryPredictions([{ ...source, read: failedRead }], undefined, () => now));
+      try {
+        const result = await failed.inject(ownedDustUrl);
+        assert.equal(result.statusCode, UNAVAILABLE);
+        assert.deepEqual(result.json(), {
+          error: { code: "UPSTREAM_UNAVAILABLE", message: "Binary source is unavailable" },
+        });
+      } finally {
+        await failed.close();
+      }
+    }
     for (const amount of ["0", "-1", "1.5", (2n ** UINT256_BITS).toString()]) {
       assert.equal((await app.inject(quoteUrl.replace("amountWei=1", `amountWei=${amount}`))).statusCode, BAD_REQUEST);
     }
