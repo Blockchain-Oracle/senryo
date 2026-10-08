@@ -30,6 +30,7 @@ import { pegPriceUsd18, useMoneyAssets } from "~/features/money/useMoneyAssets";
 import { type MoneyOperation, type PlannedStep, useMoneyOperation } from "~/features/money/useMoneyOperation";
 import { useTokenList } from "~/features/money/useTokenList";
 import { useAccount } from "~/lib/account/provider";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { useReviewGuard } from "~/lib/review-guard";
 import { isParPair, PRACTICE_SWAP_ROUTE, parCounterpart, parReceivables, parStepUp } from "./practice";
 import { nativeMon, receiveCandidates } from "./swap-assets";
@@ -247,8 +248,8 @@ export function useSwap(initialPay?: string, initialReceive?: string) {
         stepUp: q
           ? {
               title: `Swap ${paid} for ${receive.symbol}`,
-              detail: `At least ${atLeast} through ${swapProviderName(q.quote.provider)} on Monad — real money. Swaps always ask for a fresh passkey check.`,
-              confirmLabel: "Swap with passkey",
+              detail: `At least ${atLeast} through ${swapProviderName(q.quote.provider)} on Monad — real money. Swaps always ask for ${UNLOCK_WORD} again.`,
+              confirmLabel: `Swap with ${UNLOCK_WORD}`,
             }
           : parStepUp(pay, receive, input.amount),
         spends: { [pay.key]: walletPart },

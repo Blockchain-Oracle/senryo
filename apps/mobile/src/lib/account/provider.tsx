@@ -20,6 +20,7 @@ import {
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { beginCreate, endCreate, oweSetup, reconcileCreate } from "~/features/setup/progress";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { createDevAccountClient, prepareDevAccount } from "~/lib/dev/account";
 import { DEV_WORKSPACE } from "~/lib/dev/config";
 import { activeNetwork } from "~/lib/network";
@@ -27,7 +28,6 @@ import { unregisterPush } from "~/lib/notifications/push";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { clearApiSession } from "./api";
 import { serverDeleteDone, serverDeleteOwed } from "./delete-data";
-import { waitForAuthForeground } from "./foreground";
 import { rememberAccount } from "./identity-cache";
 import { deleteRemoteData, pullPrefs, pushPrefs } from "./remote";
 import { createNativeAccountClient } from "./runtime";
@@ -203,19 +203,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
           await c.signOut();
           clearApiSession();
         }),
-      stepUp: (fn) =>
-        flow((c) =>
-          c.stepUp(async (signer) => {
-            await waitForAuthForeground({
-              current: () => AppState.currentState,
-              subscribe: (listener) => {
-                const sub = AppState.addEventListener("change", listener);
-                return () => sub.remove();
-              },
-            });
-            return fn(signer);
-          }),
-        ),
+      // The runtime's prompt wrappers already wait for the foreground before the one-shot signer exists.
+      stepUp: (fn) => flow((c) => c.stepUp(fn, `Approve with ${UNLOCK_WORD}`)),
       applySettings,
       refresh: async () => {
         setHint(await (DEV_WORKSPACE ? prepareDevAccount(client) : client.load()));

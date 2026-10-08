@@ -22,7 +22,7 @@ const FLOW_NAME: Record<Flow, string> = {
   "sign-in": "Sign in",
   unlock: "Unlock",
   gate: "Confirm a trade",
-  "step-up": "Fresh passkey check",
+  "step-up": "Fresh approval",
   reveal: "Show recovery phrase",
   "vault-create": "Add backup passkey",
   "vault-recover": "Recover with backup",

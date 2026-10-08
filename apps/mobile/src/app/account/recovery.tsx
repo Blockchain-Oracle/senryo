@@ -17,6 +17,7 @@ import { useSessionGate } from "~/features/social/useSocialAccount";
 import { api } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
 import { requestStepUp } from "~/lib/account/step-up";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
 import { SPACE, useTheme } from "~/theme";
 
@@ -58,7 +59,11 @@ export default function RecoveryScreen() {
   const reveal = async () => {
     if (!client) return;
     const words = await requestStepUp(
-      { title: "Show your recovery phrase", detail: "Confirm with your passkey", confirmLabel: "Show with passkey" },
+      {
+        title: "Show your recovery phrase",
+        detail: `Confirm with ${UNLOCK_WORD}`,
+        confirmLabel: `Show with ${UNLOCK_WORD}`,
+      },
       async () => (await import("@senryo/account")).revealRecoveryPhrase(client),
     );
     if (words) setPhrase(words);

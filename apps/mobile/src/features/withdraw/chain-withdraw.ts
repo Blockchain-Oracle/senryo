@@ -15,6 +15,7 @@ import { exactAmount } from "~/features/money/format";
 import { pullToSelfStep } from "~/features/money/requests";
 import type { MoneyOperation, PlannedStep } from "~/features/money/useMoneyOperation";
 import { tokenAmount } from "~/features/tokens/format";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 
 const MOVED = "Price moved · review again";
 
@@ -144,8 +145,8 @@ export function chainOperation(
     },
     stepUp: {
       title: `Withdraw ${exact} to ${chain.name}`,
-      detail: `At least ${receive} arrives at ${plan.recipient} on ${chain.name}. Money leaving Monad always asks for a fresh passkey check.`,
-      confirmLabel: "Withdraw with passkey",
+      detail: `At least ${receive} arrives at ${plan.recipient} on ${chain.name}. Money leaving Monad always asks for ${UNLOCK_WORD} again.`,
+      confirmLabel: `Withdraw with ${UNLOCK_WORD}`,
     },
   };
 }

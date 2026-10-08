@@ -14,6 +14,7 @@ import { clearPhone, oweServerDelete } from "~/lib/account/delete-data";
 import { useAccount } from "~/lib/account/provider";
 import { deleteRemoteData } from "~/lib/account/remote";
 import { requestStepUp } from "~/lib/account/step-up";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
@@ -61,7 +62,7 @@ export default function DeleteDataScreen() {
   };
   const start = async () => {
     const confirmed = await requestStepUp(
-      { title: "Delete your data", detail: "Confirm with your passkey", confirmLabel: "Delete with passkey" },
+      { title: "Delete your data", detail: `Confirm with ${UNLOCK_WORD}`, confirmLabel: `Delete with ${UNLOCK_WORD}` },
       () => account.stepUp(async () => true),
     ).catch(() => undefined);
     if (confirmed) await runServer();

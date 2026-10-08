@@ -5,6 +5,7 @@
  * locked session is not a blocker: holding signs through Face ID, as before.
  */
 import { formatUnits, type GasShortReason, type TradeBlocker } from "@senryo/core";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import type { ConfirmLevel } from "./confirm-level";
 import type { GasStep } from "./useGasTopUp";
 import type { Side } from "./useTicket";
@@ -76,7 +77,7 @@ function blockerLabel(b: TradeBlocker): { label: string; fix?: Fix } {
 /** "Slide to long" / "Slide to short" (flow book C3a); above the session's limits the passkey is named up front. */
 function readyLabel(side: Side, confirmWith: ConfirmLevel): string {
   const verb = `Slide to ${side}`;
-  return confirmWith === "passkey" ? `${verb} · passkey` : verb;
+  return confirmWith === "passkey" ? `${verb} · ${UNLOCK_WORD}` : verb;
 }
 
 export function commitState(input: {

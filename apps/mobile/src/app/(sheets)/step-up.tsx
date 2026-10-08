@@ -7,11 +7,13 @@ import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { AuthCard } from "~/features/auth/AuthCard";
 import { fire } from "~/feedback/fire";
 import { type StepUpRequest, useStepUpRequest } from "~/lib/account/step-up";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { TYPE, useTheme } from "~/theme";
 
 /**
- * Step-up (spec session-policy §5): what is being approved, then one fresh passkey ceremony (never the in-session
- * biometric read). Opened by `requestStepUp`; a direct deep link with nothing pending just explains the rule.
+ * Step-up (spec session-policy §5): what is being approved, then one fresh Face ID read of the account's unlock item
+ * (the passkey ceremony only when that item is gone, D-255) — never the live session. Opened by `requestStepUp`; a
+ * direct deep link with nothing pending just explains the rule.
  */
 function Body({ request }: { request: StepUpRequest | undefined }) {
   const { color } = useTheme();
@@ -31,10 +33,10 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
   if (!request) {
     return (
       <AuthCard
-        glyph="passkey"
+        glyph="faceId"
         tone="gold"
-        title="Confirm with your passkey"
-        body="Withdrawals, sends, card limits, your recovery phrase and looser security settings always ask for a fresh passkey check."
+        title={`Confirm with ${UNLOCK_WORD}`}
+        body={`Withdrawals, sends, card limits, your recovery phrase and looser security settings always ask for ${UNLOCK_WORD} again.`}
       >
         <Button label="Close" variant="outline" onPress={() => close()} />
       </AuthCard>
@@ -64,7 +66,7 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
   const copy = failure ? authFailureCopy(failure, Platform.OS === "ios" ? "ios" : "android") : undefined;
   return (
     <AuthCard
-      glyph="passkey"
+      glyph="faceId"
       tone="gold"
       title={request.intent.title}
       body={request.intent.detail}
@@ -76,7 +78,7 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
         </Text>
       ) : null}
       <Button
-        label={busy ? "Confirming…" : (request.intent.confirmLabel ?? "Confirm with passkey")}
+        label={busy ? "Confirming…" : (request.intent.confirmLabel ?? `Confirm with ${UNLOCK_WORD}`)}
         loading={busy}
         onPress={() => void confirm()}
       />

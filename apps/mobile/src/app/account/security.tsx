@@ -23,6 +23,7 @@ import { SectionHeading } from "~/features/profile/SectionHeading";
 import { InfoTip } from "~/features/setup/InfoTip";
 import { useAccount } from "~/lib/account/provider";
 import { requestStepUp } from "~/lib/account/step-up";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SPACE, TYPE, useTheme } from "~/theme";
@@ -42,7 +43,7 @@ const INFO = {
   ttl: "Trading locks after this long, however active you are. Leaving the app always locks.",
   idle: "Trading also locks after this long without a signature.",
   gate: `Off by default in Practice. On Mainnet, trades of ${threshold} or more always ask, whatever is chosen here.`,
-  rule: "Tightening applies at once. Loosening asks for your passkey first. Withdrawals, sends, card limits and your recovery phrase always ask for a fresh passkey.",
+  rule: `Tightening applies at once. Loosening asks for ${UNLOCK_WORD} first. Withdrawals, sends, card limits and your recovery phrase always ask for ${UNLOCK_WORD} again.`,
 } as const;
 
 function Row({ title, info, children }: { title: string; info: string; children: ReactNode }) {
@@ -80,7 +81,7 @@ export default function SecurityScreen() {
       return setNote("Saved");
     }
     const done = await requestStepUp(
-      { title: "Loosen session security", detail: "Confirm with your passkey" },
+      { title: "Loosen session security", detail: `Confirm with ${UNLOCK_WORD}` },
       async () => {
         await account.applySettings(next);
         return true;

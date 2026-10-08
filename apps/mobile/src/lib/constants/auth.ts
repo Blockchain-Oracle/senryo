@@ -2,6 +2,10 @@
  * Mobile auth constants (S6). The rpId is `RP_ID` from `@senryo/config` — never duplicated here.
  */
 // The selected network lives in `~/lib/network` (S8.22): `useNetwork()` in React, `activeNetwork()` elsewhere.
+import { Platform } from "react-native";
+
+/** "Face ID" on iOS, "fingerprint" on Android (ux-product-feel B.11: never "passkey" on the first screens). */
+export const UNLOCK_WORD = Platform.OS === "ios" ? "Face ID" : "fingerprint";
 
 /** The session chip re-renders once a second while unlocked. */
 export const CHIP_TICK_MS = 1_000;

@@ -137,7 +137,7 @@ export function ContextualFaceId() {
                     ? "This app build cannot check biometrics. Your passkey remains available."
                     : phone.state === "unavailable"
                       ? "Biometrics aren’t available on this phone. Use your passkey to unlock."
-                      : `Use ${word} to unlock trading on this phone. Sensitive actions still use your passkey.`;
+                      : `Use ${word} to unlock trading on this phone. Sends and withdrawals ask for it again.`;
   return (
     <View style={StyleSheet.absoluteFill}>
       <Sheet closeLabel="Not now" onClose={next} dismissible={!busy}>

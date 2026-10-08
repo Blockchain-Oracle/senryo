@@ -14,7 +14,7 @@ import type { AccountHint, PasskeyPlatform, SecretStore, SessionSync } from "./p
 import type { PolicyContext } from "./policy/types.ts";
 import { openPrefs, type Prefs, sealPrefs } from "./prefs.ts";
 import { type Clock, SessionManager, type SessionSettings, systemClock } from "./session/manager.ts";
-import { createScopedSigner, UNLOCK_PROMPT } from "./session/signer.ts";
+import { createScopedSigner, STEP_UP_PROMPT, UNLOCK_PROMPT } from "./session/signer.ts";
 
 export interface AccountClientOptions {
   rpId: string;
@@ -144,18 +144,9 @@ export class AccountClient {
   unlock(prompt: string = UNLOCK_PROMPT): Promise<void> {
     return this.#flow("unlock", async (onPrompt) => {
       const hint = this.#requireHint();
-      const stored = await this.#o.store.readUnlock(prompt);
-      if (stored.status === "ok") {
-        const opened = this.#open(stored.prfOutput);
-        if (isAddressEqual(opened.address, hint.address)) {
-          this.#start(hint, opened);
-          return { value: undefined, prompts: 1 };
-        }
-        // A stale item from another account (iOS keeps Keychain items across reinstalls): the pinned ceremony below
-        // re-persists the right one (F02 "reinstall mismatch → wipe + re-persist").
-        opened.session.end();
-      }
-      const { opened, prompts } = await this.#ceremonyOpen(hint, onPrompt);
+      // iOS keeps Keychain items across reinstalls: an item from another account falls through to the pinned
+      // ceremony, which re-persists the right one (F02 "reinstall mismatch → wipe + re-persist").
+      const { opened, prompts } = await this.#freshOpen(hint, prompt, onPrompt);
       this.#start(hint, opened);
       return { value: undefined, prompts };
     });
@@ -178,12 +169,14 @@ export class AccountClient {
   }
 
   /**
-   * Step-up: a fresh passkey ceremony pinned to the stored credential → a one-shot, unscoped signer → `end()` in
-   * `finally`. For withdraw/send, card limits, phrase export, 7702, loosening settings (plan §2.4).
+   * Step-up: a fresh authentication → a one-shot, unscoped signer → `end()` in `finally`. For withdraw/send, card
+   * limits, phrase export, 7702, loosening settings (plan §2.4). Native reads the biometric-gated unlock item — a fresh
+   * Face ID over the same root the passkey's PRF yields, so the passkey sheet adds no factor (D-255). The pinned
+   * passkey ceremony runs only when that item is absent or invalidated, and always on web.
    */
-  stepUp<T>(fn: (signer: LocalAccount) => Promise<T>): Promise<T> {
+  stepUp<T>(fn: (signer: LocalAccount) => Promise<T>, prompt: string = STEP_UP_PROMPT): Promise<T> {
     return this.#flow("step-up", async (onPrompt) => {
-      const { opened, prompts } = await this.#ceremonyOpen(this.#requireHint(), onPrompt);
+      const { opened, prompts } = await this.#freshOpen(this.#requireHint(), prompt, onPrompt);
       try {
         return { value: await fn(toViemAccount(opened.session)), prompts };
       } finally {
@@ -252,6 +245,19 @@ export class AccountClient {
 
   #open(prfOutput: Uint8Array): OpenedAccount {
     return openAccount(prfOutput, this.#o.pbkdf2 ? { pbkdf2: this.#o.pbkdf2 } : {});
+  }
+
+  /** One fresh prompt → the hinted account: the biometric-gated item when it opens this account, else the ceremony. */
+  async #freshOpen(hint: AccountHint, prompt: string, onPrompt: PromptListener) {
+    const stored = await this.#o.store.readUnlock(prompt);
+    if (stored.status === "ok") {
+      const opened = this.#open(stored.prfOutput);
+      if (isAddressEqual(opened.address, hint.address)) return { opened, prompts: 1 };
+      // A stale item from another account: the pinned ceremony below re-persists the right one.
+      opened.session.end();
+      opened.prefsKey.fill(0);
+    }
+    return this.#ceremonyOpen(hint, onPrompt);
   }
 
   /** Pinned ceremony (or vault decrypt) → the hinted account; a different passkey is refused, never adopted. */

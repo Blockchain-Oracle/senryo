@@ -1,6 +1,6 @@
 /**
  * Step-up requests (spec session-policy §5). A screen asks `requestStepUp(intent, action)`; the `step-up` sheet route
- * shows what is being approved and runs `action` (which performs the one fresh passkey ceremony) on confirm. The
+ * shows what is being approved and runs `action` (which performs the one fresh Face ID check) on confirm. The
  * promise resolves with the result, or `undefined` if the user backs out (cancel is silent).
  */
 import { router } from "expo-router";

@@ -14,6 +14,7 @@ import type { PolicyContext, Verdict } from "../policy/types.ts";
 import type { LiveSession, SessionManager } from "./manager.ts";
 
 export const UNLOCK_PROMPT = "Unlock trading";
+export const STEP_UP_PROMPT = "Approve with Face ID";
 
 export interface SignerDeps {
   manager: SessionManager;

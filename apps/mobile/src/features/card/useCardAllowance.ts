@@ -23,6 +23,7 @@ import { useEnsureGas } from "~/features/trade/useGasTopUp";
 import { useAccount } from "~/lib/account/provider";
 import { sharedRead, stepUpSender, userSender } from "~/lib/account/sender";
 import { requestStepUp } from "~/lib/account/step-up";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { usd } from "~/lib/money";
 
 /** A new limit lasts this long before it has to be signed again. */
@@ -66,7 +67,7 @@ export function useCardAllowance(snapshot: AccountSnapshot | undefined) {
         {
           title: `Set a ${usd(dailyUsd6, 0)} daily limit`,
           detail: `For ${ALLOWANCE_DAYS} days, from your free balance only.`,
-          confirmLabel: "Set limit with passkey",
+          confirmLabel: `Set limit with ${UNLOCK_WORD}`,
         },
         () =>
           account.stepUp(async (signer) =>

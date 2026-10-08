@@ -15,6 +15,7 @@ import { exactAmount } from "~/features/money/format";
 import { checkRecipient, RECIPIENT_WORDS } from "~/features/money/recipient";
 import { moveSteps, splitSource } from "~/features/money/requests";
 import type { MoneyOperation, PlannedStep } from "~/features/money/useMoneyOperation";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { validateMoney } from "~/lib/validate-money";
 
 const MON_DECIMALS = 18;
@@ -111,8 +112,8 @@ export function moveOperation(
     },
     stepUp: {
       title: `${move.kind === "send" ? "Send" : "Withdraw"} ${exact}`,
-      detail: `To ${move.label === to ? "" : `${move.label} · `}${to} on ${network}. Money leaving your account always asks for a fresh passkey check.`,
-      confirmLabel: move.kind === "send" ? "Send with passkey" : "Withdraw with passkey",
+      detail: `To ${move.label === to ? "" : `${move.label} · `}${to} on ${network}. Money leaving your account always asks for ${UNLOCK_WORD} again.`,
+      confirmLabel: `${move.kind === "send" ? "Send" : "Withdraw"} with ${UNLOCK_WORD}`,
     },
     revalidate: async (step) => {
       guard();

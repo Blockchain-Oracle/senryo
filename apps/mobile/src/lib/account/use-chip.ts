@@ -1,12 +1,10 @@
 import { type ChipState, chipState } from "@senryo/account";
 import { useEffect, useRef, useState } from "react";
-import { Platform } from "react-native";
 import { fire } from "~/feedback/fire";
-import { CHIP_TICK_MS } from "~/lib/constants/auth";
+import { CHIP_TICK_MS, UNLOCK_WORD } from "~/lib/constants/auth";
 import { useAccount } from "./provider";
 
-/** "Face ID" on iOS, "fingerprint" on Android (ux-product-feel B.11: never "passkey" on the first screens). */
-export const UNLOCK_WORD = Platform.OS === "ios" ? "Face ID" : "fingerprint";
+export { UNLOCK_WORD };
 
 /** The session chip, re-evaluated once a second while unlocked; a `warn` haptic when it enters the last minute (F04). */
 export function useChip(): ChipState {

@@ -31,7 +31,7 @@ const FAQ = [
   },
   {
     q: "Why does Face ID ask?",
-    a: "One Face ID unlocks trading for a while; it locks when you leave the app or stop. Sends, withdrawals and security changes always ask for your passkey.",
+    a: "One Face ID unlocks trading for a while; it locks when you leave the app or stop. Sends, withdrawals and security changes always ask for Face ID again. Your passkey is for signing in on a new phone.",
   },
   {
     q: "What does a trade cost?",

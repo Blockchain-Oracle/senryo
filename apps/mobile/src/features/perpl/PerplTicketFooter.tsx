@@ -6,6 +6,7 @@ import { ChevronDown, CirclePlus, Info } from "~/components/kit/symbols";
 import { SlideToConfirm } from "~/components/trade/SlideToConfirm";
 import { fire } from "~/feedback/fire";
 import { useTermsGate } from "~/lib/account/terms-gate";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { accountRequiredRoute, perplPositionRoute, ROUTES, ticketRoute } from "~/lib/constants/routes";
 import { CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { perplUsd } from "./format";
@@ -28,7 +29,7 @@ export function perplCommit(t: PerplTicketModel): { label: string; holdable: boo
   // A planner refusal the blocker chain hasn't named yet (its reads are a moment apart): never holdable.
   if (t.plan.blocker) return { label: "Preparing order…", holdable: false };
   const verb = `Slide to ${t.side}`;
-  return { label: t.confirmWith === "passkey" ? `${verb} · passkey` : verb, holdable: true };
+  return { label: t.confirmWith === "passkey" ? `${verb} · ${UNLOCK_WORD}` : verb, holdable: true };
 }
 
 /**

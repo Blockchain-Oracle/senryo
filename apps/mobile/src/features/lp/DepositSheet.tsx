@@ -23,6 +23,7 @@ import { useMoneyAssets } from "~/features/money/useMoneyAssets";
 import { usePreparedOperation } from "~/features/money/useMoneyOperation";
 import { AssetChip } from "~/features/send/AmountStep";
 import { useOutcome } from "~/features/trade/OutcomeNote";
+import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { moneySymbol, usd } from "~/lib/money";
 import { useNetwork } from "~/lib/network";
 import { useReviewGuard } from "~/lib/review-guard";
@@ -156,7 +157,7 @@ export function DepositSheet({
         </View>
       ) : null}
       <SlideToConfirm
-        label={why ?? (passkey ? "Slide to deposit · passkey" : "Slide to deposit")}
+        label={why ?? (passkey ? `Slide to deposit · ${UNLOCK_WORD}` : "Slide to deposit")}
         disabled={why !== undefined || busy || !lp.ready || !plan?.ok}
         busy={busy || prepared.isFetching}
         resetKey={[network.chainId, lp.address, reviewKey ?? "", passkey].join("|")}
