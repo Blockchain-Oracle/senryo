@@ -16,7 +16,7 @@ export const INTERVALS_MS = {
 export const SETTLE_AFTER_SEC = 2;
 export const SETTLE_INTERVAL_MS = 2_000;
 /** A fill the relay has not done this long after its print instant is done here. */
-export const FILL_STALE_SEC = 6;
+export const FILL_STALE_SEC = 10;
 export const FILLS_INTERVAL_MS = 3_000;
 /** The book follows the chain: new ticket ids and quiet open tickets re-read every few seconds, in batches. */
 export const SYNC_INTERVAL_MS = 4_000;

@@ -70,6 +70,10 @@ async function fillGroup(ctx: KeeperContext, rows: TicketRow[], now: number): Pr
       meta: { job: "fills", target: String(target) },
     });
     ctx.recent.add({ job: "fills", subject: `${series.market.symbol}@${target}`, tx: sent.hash, stage: sent.stage });
+    ctx.log.info(
+      { actor: "keeper", why: windowOver ? "expire" : "backup fill", target, tickets: ids.length, tx: sent.hash },
+      "the relay had not filled these; done here",
+    );
     const changes = ticketChanges(sent.receipt.logs, reserve);
     await applyTicketChanges(ctx.db, ctx.chainId, changes, async (windowId) => ({
       windowId,

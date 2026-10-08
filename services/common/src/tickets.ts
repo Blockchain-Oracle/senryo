@@ -17,6 +17,43 @@ export interface WindowRef {
 
 const OUTCOME_NAMES = ["lose", "win", "refund"] as const;
 
+/** Every applied change is announced here (Postgres NOTIFY); the api pushes it to the owner's stream (D-272). */
+export const TICKET_CHANNEL = "market_ticket";
+
+/** What the api hears on `TICKET_CHANNEL`: the change and the ticket's row after it (bigints as strings). */
+export interface TicketNotice {
+  chainId: ChainId;
+  change: TicketChange["kind"];
+  ticketId: string;
+  owner: string;
+  state: string;
+  stake: string;
+  payout: string;
+  entryE8: string | null;
+  result: string | null;
+  outcome: string | null;
+}
+
+async function announce(db: Db, chainId: ChainId, c: TicketChange): Promise<void> {
+  const [row] = await db<
+    TicketRow[]
+  >`SELECT * FROM market_tickets WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
+  if (!row) return;
+  const notice: TicketNotice = {
+    chainId,
+    change: c.kind,
+    ticketId: row.ticket_id.toString(),
+    owner: row.owner,
+    state: row.state,
+    stake: row.stake.toString(),
+    payout: row.payout.toString(),
+    entryE8: row.entry_e8?.toString() ?? null,
+    result: row.result?.toString() ?? null,
+    outcome: row.outcome,
+  };
+  await db`SELECT pg_notify(${TICKET_CHANNEL}, ${JSON.stringify(notice)})`;
+}
+
 /** Applies changes in order. `windowOf` resolves a committed ticket's window (the relay knows it; the keeper reads it). */
 export async function applyTicketChanges(
   db: Db,
@@ -64,6 +101,7 @@ export async function applyTicketChanges(
                  WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
         break;
     }
+    await announce(db, chainId, c);
   }
 }
 

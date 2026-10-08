@@ -83,6 +83,10 @@ async function send(
 ): Promise<void> {
   const sent = await sendTx(ctx.sender, { to, data, action: "marketSettle", meta: { job: "settle", windowId } });
   ctx.recent.add({ job: "settle", subject: windowId, tx: sent.hash, stage: sent.stage });
+  ctx.log.info(
+    { actor: "keeper", why: "settle", windowId, tx: sent.hash, stage: sent.stage },
+    "window settled and paid",
+  );
   if (sent.stage === "reverted") throw new Error(`settle reverted in ${sent.hash}`);
   const changes = ticketChanges(sent.receipt.logs, addressOf(ctx.chainId, "BandReserve"));
   const expiry = Number(w.window_expiry);

@@ -10,6 +10,8 @@ import {
   migrate,
   pingDb,
   SessionKeys,
+  TICKET_CHANNEL,
+  type TicketNotice,
 } from "@senryo/service-common";
 import { CORS_METHODS } from "./constants.ts";
 import { type ApiContext, openChains } from "./context.ts";
@@ -66,6 +68,16 @@ for (const chain of chains.values()) {
   log.info({ chainId: chain.chainId, lanes: sponsors.map((s) => s.address) }, "relay ready");
 }
 if (sponsors.length === 0) log.warn("no SPONSOR_PK — calls, sessions and Practice dollars answer 503");
+
+// Every ticket change any service applies reaches the owner's stream and the relay's intents (D-272).
+await db.listen(TICKET_CHANNEL, (payload) => {
+  const notice = JSON.parse(payload) as TicketNotice;
+  bus.emit(`user:${notice.owner}`, "ticket", notice);
+  void markets
+    .get(notice.chainId)
+    ?.relay.onTicket(notice)
+    .catch((error) => log.warn({ err: (error as Error).message }, "intent update from a ticket notice failed"));
+});
 
 const ctx: ApiContext = {
   env,

@@ -13,12 +13,11 @@ import {
   revertReason,
   SimulationRevertedError,
   sendTx,
-  type TicketChange,
   ticketChanges,
 } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import { windowsAbi } from "@senryo/contracts/abis";
-import { applyTicketChanges, type Db, type Logger, nowSec } from "@senryo/service-common";
+import { applyTicketChanges, type Db, type Logger, nowSec, type TicketNotice } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
 import type { StreamBus } from "../stream/bus.ts";
 import { OPEN_PRINT_WAIT_MS } from "./constants.ts";
@@ -51,8 +50,6 @@ interface IntentRow {
   reason: string | null;
 }
 
-const REFUSALS = ["", "price", "slippage", "capacity", "config", "window", "no print"] as const;
-
 export class MarketRelay {
   readonly fills: FillBatcher;
 
@@ -67,7 +64,7 @@ export class MarketRelay {
       log: Logger;
     },
   ) {
-    this.fills = new FillBatcher({ ...d, onChanges: (changes, tx) => this.onChanges(changes, tx) });
+    this.fills = new FillBatcher(d);
   }
 
   laneFor(owner: Address): Lane {
@@ -132,6 +129,16 @@ export class MarketRelay {
       txHash: sent.hash,
       target: committed.target,
     });
+    this.d.log.info(
+      {
+        actor: "relay",
+        why: "commit",
+        ticketId: committed.ticketId.toString(),
+        target: committed.target,
+        tx: sent.hash,
+      },
+      "call committed",
+    );
     this.fills.add(c.market.pythFeedId, committed.target, {
       ticketId: committed.ticketId,
       owner: req.intent.owner,
@@ -167,22 +174,22 @@ export class MarketRelay {
     return p.publishTime !== 0;
   }
 
-  /** Fill results land here: intents move to filled/refused and every owner hears about their ticket. */
-  private async onChanges(changes: TicketChange[], txHash: Hex): Promise<void> {
-    for (const c of changes) {
-      if (c.kind !== "filled" && c.kind !== "refused" && c.kind !== "closed" && c.kind !== "closeRefused") continue;
-      const [row] = await this.d.db<IntentRow[]>`
-        SELECT * FROM market_intents WHERE chain_id = ${this.d.chainId} AND ticket_id = ${c.ticketId}
-        ORDER BY created_at DESC LIMIT 1`;
-      if (!row) continue;
-      const refused = c.kind === "refused" || c.kind === "closeRefused";
-      await this.setState(row.digest as Hex, row.owner as Address, {
-        state: refused ? "refused" : "filled",
-        txHash,
-        reason: refused ? (REFUSALS[c.reason] ?? "refused") : null,
-      });
-      this.d.bus.emit(`user:${row.owner}`, "ticket", { ...c, txHash });
-    }
+  /**
+   * Every ticket change, whoever made it (this relay's fill, the keeper's backup, settlement), arrives here from the
+   * ticket book's NOTIFY: the call's intent moves to filled or refused, so its status never depends on which service
+   * filled it.
+   */
+  async onTicket(n: TicketNotice): Promise<void> {
+    if (n.change !== "filled" && n.change !== "refused" && n.change !== "closed" && n.change !== "closeRefused") return;
+    const [row] = await this.d.db<IntentRow[]>`
+      SELECT * FROM market_intents WHERE chain_id = ${this.d.chainId} AND ticket_id = ${BigInt(n.ticketId)}
+      ORDER BY created_at DESC LIMIT 1`;
+    if (!row || row.state === "filled" || row.state === "refused") return;
+    const refused = n.change === "refused" || n.change === "closeRefused";
+    await this.setState(row.digest as Hex, row.owner as Address, {
+      state: refused ? "refused" : "filled",
+      reason: refused ? "refused" : null,
+    });
   }
 
   private async setState(

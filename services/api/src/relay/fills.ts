@@ -1,13 +1,4 @@
-import {
-  type Address,
-  addressOf,
-  finalizeCallData,
-  type Hex,
-  printProof,
-  sendTx,
-  type TicketChange,
-  ticketChanges,
-} from "@senryo/chain";
+import { type Address, addressOf, finalizeCallData, type Hex, printProof, sendTx, ticketChanges } from "@senryo/chain";
 import { type ChainId, MARKET_BATCH_MAX } from "@senryo/config";
 import { applyTicketChanges, type Db, type Logger, type WindowRef } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
@@ -42,8 +33,6 @@ export class FillBatcher {
       bus: StreamBus;
       db: Db;
       log: Logger;
-      /** Called with every applied change (the relay updates its intents). */
-      onChanges: (changes: TicketChange[], txHash: Hex) => Promise<void>;
     },
   ) {}
 
@@ -62,7 +51,9 @@ export class FillBatcher {
   }
 
   private async run(key: string, batch: Batch): Promise<void> {
+    const asked = Date.now();
     const print = await this.d.gateway.printAt(batch.feedId, batch.target);
+    const waitedMs = Date.now() - asked;
     // Anything added from now on starts its own batch (it will find the print in the ring at once).
     this.batches.delete(key);
     if (!print) {
@@ -90,7 +81,10 @@ export class FillBatcher {
         if (!w) throw new Error(`unknown window ${id}`);
         return w;
       });
-      await this.d.onChanges(changes, sent.hash);
+      this.d.log.info(
+        { actor: "relay", why: "fill", target: batch.target, tickets: ids.length, waitedMs, tx: sent.hash },
+        "fill sent",
+      );
     }
   }
 }
