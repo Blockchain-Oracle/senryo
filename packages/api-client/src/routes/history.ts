@@ -40,6 +40,9 @@ export const callSchema = z.object({
   settleTx: txHashSchema.nullable(),
 });
 
+/** One call as history reads it (`/v1/markets/calls` rows, the timeline's `call`). */
+export type CallItem = z.output<typeof callSchema>;
+
 export const callsRoute = defineRoute({
   method: "GET",
   path: "/v1/markets/calls",
@@ -94,6 +97,8 @@ export const windowProofRoute = defineRoute({
     open: z.object({ priceE8: uintCodec, publishTime: unixSecondsSchema, txHash: txHashSchema }).nullable(),
     close: z.object({ priceE8: uintCodec, publishTime: unixSecondsSchema, txHash: txHashSchema }).nullable(),
     calls: z.int(),
+    /** Calls still riding it. Settlement posts the close only while some are: 0 after expiry means it never will. */
+    liveCalls: z.int().nonnegative(),
     volume: uintCodec,
     /** Stake per band index — "62 % called Up". */
     bandStake: z.array(uintCodec),
@@ -101,6 +106,10 @@ export const windowProofRoute = defineRoute({
     settledTx: txHashSchema.nullable(),
   }),
 });
+
+export type CallTimeline = z.output<typeof callTimelineRoute.response>;
+export type WindowProof = z.output<typeof windowProofRoute.response>;
+export type CallerStats = z.output<typeof callerStatsRoute.response>;
 
 export const LEADERBOARD_PERIODS = ["day", "week", "all"] as const;
 

@@ -9,6 +9,7 @@ import {
   callTimelineRoute,
   type LEADERBOARD_PERIODS,
   leaderboardRoute,
+  printRoute,
   windowProofRoute,
 } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
@@ -32,6 +33,7 @@ export const historyKeys = {
   call: (chainId: ChainId, ticketId: bigint) => ["history", chainId, "call", ticketId.toString()] as const,
   window: (chainId: ChainId, windowId: string) => ["history", chainId, "window", windowId.toLowerCase()] as const,
   leaderboard: (chainId: ChainId, period: LeaderboardPeriod) => ["history", chainId, "leaderboard", period] as const,
+  print: (symbol: string, t: number) => ["history", "print", symbol, t] as const,
 };
 
 /** A caller's calls, newest first, a page at a time. */
@@ -77,6 +79,25 @@ export function useWindowProof(windowId: `0x${string}` | undefined) {
     },
     enabled: windowId !== undefined,
     staleTime: (q) => (q.state.data?.settled ? Number.POSITIVE_INFINITY : OPEN_WINDOW_STALE_MS),
+  });
+  return fromQuery(query);
+}
+
+/**
+ * The archived Pyth print of one instant (the services' `pyth_prints`, the same unique print settlement would post):
+ * how a window nobody was left in still shows its close. Immutable once it exists.
+ */
+export function usePrint(symbol: string, t: number | undefined) {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: historyKeys.print(symbol, t ?? 0),
+    queryFn: ({ signal }) => {
+      if (t === undefined) throw new Error("no instant");
+      return env.api.call(printRoute, { query: { symbol, t } }, { signal });
+    },
+    enabled: t !== undefined,
+    staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
   });
   return fromQuery(query);
 }

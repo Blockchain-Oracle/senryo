@@ -61,6 +61,7 @@ export function registerHistoryRoutes(app: HttpServer, ctx: ApiContext): void {
       open: print(w.open),
       close: print(w.close),
       calls: w.calls,
+      liveCalls: w.liveCalls,
       volume: w.volume,
       bandStake: w.bandStake.map(BigInt),
       openedTx: w.openedTx as Hex,

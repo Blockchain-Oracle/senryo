@@ -97,7 +97,13 @@ export class IndexerReader {
       SELECT t, "priceE8"::int8 AS "priceE8", "publishTime", "txHash" FROM ${this.t("Print")}
       WHERE "chainId" = ${chainId} AND "feedId" = ${series.market.pythFeedId} AND t IN (${w.start}, ${w.expiry})`;
     const at = (t: number) => prints.find((p) => p.t === t) ?? null;
-    return { ...w, series, open: at(w.start), close: at(w.expiry) };
+    // Calls still riding the window: settlement runs only while there are some (a window every call cashed out of
+    // is never resolved on chain, and its proof says so rather than waiting for a close that won't be posted).
+    const [live] = await this.db<{ n: number }[]>`
+      SELECT count(*)::int AS n FROM ${this.t("Ticket")}
+      WHERE "chainId" = ${chainId} AND "windowId" = ${windowId.toLowerCase()}
+        AND status IN ('committed', 'open', 'closing')`;
+    return { ...w, series, open: at(w.start), close: at(w.expiry), liveCalls: live?.n ?? 0 };
   }
 
   /** Practice and Real boards are separate (`chainId`); handles only for profiles listed on that network. */
