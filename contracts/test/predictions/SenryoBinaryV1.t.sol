@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.31;
 import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {SenryoBinaryV1 as Binary} from "../../src/predictions/SenryoBinaryV1.sol";
 import {PythBoundaryOracle} from "../../src/predictions/PythBoundaryOracle.sol";
 import {FixturePyth} from "./FixturePyth.sol";
@@ -240,6 +241,26 @@ contract SenryoBinaryV1Test is Test {
         assertEq(m.totalEscrow(), 100 ether);
     }
 
+    function assertWithdrawalReceipt(
+        Vm.Log[] memory logs,
+        bool paid,
+        address owner,
+        bytes32 operationId,
+        uint256 amount
+    ) internal view {
+        // Exactly one canonical result, not merely a matching event somewhere in a receipt.
+        assertEq(logs.length, 1);
+        assertEq(logs[0].emitter, address(m));
+        assertEq(logs[0].topics.length, 3);
+        assertEq(
+            logs[0].topics[0],
+            keccak256(bytes(paid ? "Withdrawal(address,bytes32,uint256)" : "WithdrawalFailed(address,bytes32,uint256)"))
+        );
+        assertEq(logs[0].topics[1], bytes32(uint256(uint160(owner))));
+        assertEq(logs[0].topics[2], operationId);
+        assertEq(abi.decode(logs[0].data, (uint256)), amount);
+    }
+
     function testWithdrawalFailureAndReentrancyRestoreCredit() public {
         open();
         WithdrawalActor a = new WithdrawalActor(m);
@@ -247,15 +268,54 @@ contract SenryoBinaryV1Test is Test {
         settle(110000);
         a.claim(id);
         uint256 value = m.creditOf(address(a));
-        assertFalse(a.withdraw(op()));
+        uint256 cashBefore = address(m).balance;
+        uint256 creditsBefore = m.totalCredits();
+        bytes32 failedId = op();
+        vm.recordLogs();
+        assertFalse(a.withdraw(failedId));
+        assertWithdrawalReceipt(vm.getRecordedLogs(), false, address(a), failedId, value);
+        assertTrue(m.usedOperation(address(a), failedId));
         assertEq(m.creditOf(address(a)), value);
-        a.configure(false, true);
-        assertFalse(a.withdraw(op()));
-        assertEq(m.creditOf(address(a)), value);
+        assertEq(m.totalCredits(), creditsBefore);
+        assertEq(address(m).balance, cashBefore);
+        assertEq(address(a).balance, 0);
+
+        // Consumed failure ID cannot become a later successful payment even after recipient recovery.
         a.configure(false, false);
-        assertTrue(a.withdraw(op()));
+        vm.recordLogs();
+        vm.expectRevert(Binary.Duplicate.selector);
+        a.withdraw(failedId);
+        assertEq(vm.getRecordedLogs().length, 0);
+        assertEq(m.creditOf(address(a)), value);
+        assertEq(address(a).balance, 0);
+
+        a.configure(false, true);
+        bytes32 reentrantId = op();
+        vm.recordLogs();
+        assertFalse(a.withdraw(reentrantId));
+        assertWithdrawalReceipt(vm.getRecordedLogs(), false, address(a), reentrantId, value);
+        assertTrue(m.usedOperation(address(a), reentrantId));
+        assertEq(m.creditOf(address(a)), value);
+        assertEq(m.totalCredits(), creditsBefore);
+        assertEq(address(m).balance, cashBefore);
+        assertEq(address(a).balance, 0);
+
+        a.configure(false, false);
+        bytes32 retryId = op();
+        vm.recordLogs();
+        assertTrue(a.withdraw(retryId));
+        assertWithdrawalReceipt(vm.getRecordedLogs(), true, address(a), retryId, value);
+        assertTrue(m.usedOperation(address(a), retryId));
         assertEq(address(a).balance, value);
+        assertEq(address(m).balance, cashBefore - value);
         assertEq(m.creditOf(address(a)), 0);
+        assertEq(m.totalCredits(), creditsBefore - value);
+        vm.recordLogs();
+        vm.expectRevert(Binary.Duplicate.selector);
+        a.withdraw(retryId);
+        assertEq(vm.getRecordedLogs().length, 0);
+        assertEq(address(a).balance, value);
+        assertEq(address(m).balance, cashBefore - value);
         solvent();
     }
 

@@ -40,13 +40,17 @@ contract PythBoundaryOracle {
             receiver.parsePriceFeedUpdatesUnique{value: msg.value}(proof, ids, boundary, boundary + 5);
         if (values.length != 1 || values[0].id != feed) revert InvalidProof();
         IPythBoundary.Price memory p = values[0].price;
+        // Reject future publications relative to consensus block time; never select a settlement price by this clock.
+        // forge-lint: disable-next-line(block-timestamp)
         if (p.publishTime < boundary || p.publishTime > boundary + 5 || p.publishTime > block.timestamp) {
             revert InvalidProof();
         }
         bool quality = p.price > 0 && p.price <= 1e16 && p.expo == -8;
         // quality proves positive int64 price <= 1e16 before converting to unsigned.
+        // forge-lint: disable-next-line(unsafe-typecast)
         if (quality) quality = uint256(p.conf) * 10000 <= uint256(uint64(p.price)) * 25;
         // publishTime <= boundary + 5, whose checked uint64 addition above bounds this cast.
+        // forge-lint: disable-next-line(unsafe-typecast)
         o = Observation(p.price, p.conf, p.expo, uint64(p.publishTime), keccak256(abi.encode(proof)), quality);
     }
 }

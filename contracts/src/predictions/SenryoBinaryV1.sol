@@ -186,9 +186,13 @@ contract SenryoBinaryV1 is ReentrancyGuard {
         if (riskPaused || activeRounds >= 8) revert Closed();
         if (
             (asset != BTC && asset != ETH) || (duration != 300 && duration != 900) || start % duration != 0
+                // Fixed consensus-time schedule/deadline; proof price selection uses signed unique observations.
+                // forge-lint: disable-next-line(block-timestamp)
                 || start < block.timestamp + 30 || start > block.timestamp + 3600 || beneficiary != liquidityBeneficiary
                 || msg.value < 10 ether || msg.value > 100 ether
-        ) revert Invalid();
+        ) {
+            revert Invalid();
+        }
         id = keccak256(abi.encode(block.chainid, address(this), configHash, asset, duration, start));
         Round storage r = rounds[id];
         if (r.state != State.Missing) revert Duplicate();
@@ -211,25 +215,35 @@ contract SenryoBinaryV1 is ReentrancyGuard {
 
     function recordOpening(bytes32 id, bytes[] calldata proof) external payable nonReentrant {
         Round storage r = rounds[id];
+        // Fixed consensus-time schedule/deadline; proof price selection uses signed unique observations.
+        // forge-lint: disable-next-line(block-timestamp)
         if (r.state != State.Scheduled || block.timestamp < r.start || block.timestamp >= r.start + 30) {
             revert Closed();
         }
         r.opening = oracle.verify{value: msg.value}(r.feed, r.start, proof);
         if (!r.opening.quality) {
             r.state = State.OpeningInvalid;
+            // All reaching mutation paths are nonReentrant; this event records the completed guarded outcome.
+            // forge-lint: disable-next-line(reentrancy-events)
             emit BoundaryRejected(id, true, r.opening);
         } else {
             r.state = State.Open;
+            // All reaching mutation paths are nonReentrant; this event records the completed guarded outcome.
+            // forge-lint: disable-next-line(reentrancy-events)
             emit OpeningRecorded(id, r.opening);
         }
     }
 
     function resolve(bytes32 id, bytes[] calldata proof) external payable nonReentrant {
         Round storage r = rounds[id];
+        // Fixed consensus-time schedule/deadline; proof price selection uses signed unique observations.
+        // forge-lint: disable-next-line(block-timestamp)
         if (r.state != State.Open || block.timestamp < r.end || block.timestamp >= r.end + 120) revert Closed();
         r.closing = oracle.verify{value: msg.value}(r.feed, r.end, proof);
         if (!r.closing.quality) {
             r.state = State.ClosingInvalid;
+            // All reaching mutation paths are nonReentrant; this event records the completed guarded outcome.
+            // forge-lint: disable-next-line(reentrancy-events)
             emit BoundaryRejected(id, false, r.closing);
             return;
         }
@@ -246,8 +260,12 @@ contract SenryoBinaryV1 is ReentrancyGuard {
         bool opening = r.state == State.Scheduled || r.state == State.OpeningInvalid;
         if (
             (!opening && r.state != State.Open && r.state != State.ClosingInvalid)
+                // Fixed consensus-time schedule/deadline; proof price selection uses signed unique observations.
+                // forge-lint: disable-next-line(block-timestamp)
                 || block.timestamp < (opening ? r.start + 30 : r.end + 120)
-        ) revert Closed();
+        ) {
+            revert Closed();
+        }
         ResolutionReason reason = opening
             ? (r.state == State.Scheduled ? ResolutionReason.OpeningMissing : ResolutionReason.OpeningQuality)
             : (r.state == State.Open ? ResolutionReason.ClosingMissing : ResolutionReason.ClosingQuality);
@@ -257,14 +275,20 @@ contract SenryoBinaryV1 is ReentrancyGuard {
     function _finalize(bytes32 id, Round storage r, State outcome, ResolutionReason reason) private {
         r.state = outcome;
         activeRounds--;
+        // All reaching mutation paths are nonReentrant; this event records the completed guarded outcome.
+        // forge-lint: disable-next-line(reentrancy-events)
         emit RoundResolved(id, outcome, reason, r.opening, r.closing);
     }
 
     function _trade(Round storage r) private view {
+        // Fixed consensus-time schedule/deadline; proof price selection uses signed unique observations.
+        // forge-lint: disable-next-line(block-timestamp)
         if (r.state != State.Open || block.timestamp >= r.cutoff) revert Closed();
     }
 
     function _deadline(Round storage r, uint64 deadline) private view {
+        // Fixed consensus-time schedule/deadline; proof price selection uses signed unique observations.
+        // forge-lint: disable-next-line(block-timestamp)
         if (deadline <= block.timestamp || deadline > block.timestamp + 15 || deadline >= r.cutoff) revert Closed();
     }
 
@@ -341,6 +365,8 @@ contract SenryoBinaryV1 is ReentrancyGuard {
             positions[id][msg.sender].down += out;
         }
         r.revision++;
+        // Internal quote/math calls cannot reenter; mutation is also nonReentrant.
+        // forge-lint: disable-next-line(reentrancy-events)
         emit Bought(id, msg.sender, op, isUp, msg.value, out, r.up, r.down, r.revision);
     }
 
@@ -369,6 +395,8 @@ contract SenryoBinaryV1 is ReentrancyGuard {
         r.totalDown -= out;
         _credit(r, msg.sender, out);
         r.revision++;
+        // Internal quote/math calls cannot reenter; mutation is also nonReentrant.
+        // forge-lint: disable-next-line(reentrancy-events)
         emit Sold(id, msg.sender, op, isUp, shares, out, r.up, r.down, r.revision);
     }
 
@@ -415,12 +443,17 @@ contract SenryoBinaryV1 is ReentrancyGuard {
         creditOf[msg.sender] -= amount;
         totalCredits -= amount;
         // Effects precede interaction; nonReentrant protects both oracle and recipient callbacks.
+        // forge-lint: disable-next-line(reentrancy-eth)
         (paid,) = payable(msg.sender).call{value: amount}("");
         if (!paid) {
             creditOf[msg.sender] += amount;
             totalCredits += amount;
+            // All reaching mutation paths are nonReentrant; this event records the completed guarded outcome.
+            // forge-lint: disable-next-line(reentrancy-events)
             emit WithdrawalFailed(msg.sender, op, amount);
         } else {
+            // All reaching mutation paths are nonReentrant; this event records the completed guarded outcome.
+            // forge-lint: disable-next-line(reentrancy-events)
             emit Withdrawal(msg.sender, op, amount);
         }
     }

@@ -100,9 +100,24 @@ ABI fixture bytes and the arbitrary 7-wei fixture fee are not real signatures,
 real Pyth proof verification or measured public oracle cost. No shared fork is
 reset and no RPC broadcast occurs.
 
-Lint's timestamp findings correspond to intentional block-time contract deadlines.
-The adapter's narrowing casts follow positive bounded price and uint64 boundary
-checks. Reentrancy findings are guarded by `nonReentrant`; credits are debited
-before transfer and restored only on failure. Adversarial tests exercise both
-recipient and oracle callbacks. These findings are assessed, not an audit or a
-claim that lint emitted no warnings.
+Scoped `forge lint src/predictions` is clean after narrowly documenting and
+suppressing only the following accepted findings, each with a
+`disable-next-line` rule at the statement. No file-wide or rule-wide suppression
+is used; new locations remain checked.
+
+| Rule | Exact source location | Accepted reason |
+|---|---|---|
+| `block-timestamp` | `PythBoundaryOracle.verify`: publication upper-bound check | Rejects future publications using consensus time; never selects a price by keeper time. |
+| `unsafe-typecast` | `PythBoundaryOracle.verify`: confidence ratio cast | Earlier `quality` checks prove `0 < price <= 1e16` before int64→uint64→uint256 conversion. |
+| `unsafe-typecast` | `PythBoundaryOracle.verify`: observation publish-time cast | Earlier comparison bounds publication by checked uint64 `boundary+5`. |
+| `block-timestamp` | `SenryoBinaryV1.createRound`, `recordOpening`, `resolve`, `voidExpired`, `_trade`, `_deadline`: schedule/deadline comparisons | Fixed block-time cutoffs intentionally enforce the frozen policy; signed unique observations determine prices. |
+| `reentrancy-events` | `SenryoBinaryV1.recordOpening`: both result events; `resolve`: rejection event; `_finalize`: resolution event | Every reaching mutation path is guarded by `nonReentrant`, including oracle callbacks. |
+| `reentrancy-events` | `SenryoBinaryV1.buy` / `sell`: trade event | Quote and math calls dispatch internally and cannot reenter; mutations also have `nonReentrant`. |
+| `reentrancy-eth` | `SenryoBinaryV1.withdraw`: recipient call | Credits debit before interaction; `nonReentrant` protects callback paths; only failed payment restores credit. |
+| `reentrancy-events` | `SenryoBinaryV1.withdraw`: both result events | The guarded payment must complete before emitting its canonical success/failure outcome. |
+
+The focused withdrawal test asserts the exact event emitter, signature, indexed
+owner/operation ID and MON amount, with exactly one result event per processed
+attempt. Failed IDs stay consumed; duplicate attempts revert without logs. A fresh
+ID pays exactly once, verified against both wallet/contract cash and credit
+balances. Recipient and oracle callback tests remain fixture evidence, not an audit.
