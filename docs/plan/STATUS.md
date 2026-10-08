@@ -1,3 +1,28 @@
+# Real venues on Monad: Stage 0 (8 October 2026, Claude Code)
+
+**Current plan:** [real-venues-2026-10-08.md](real-venues-2026-10-08.md), approved by the user on 8 Oct.
+- **Trading venues.** Senryo trades on real Monad venues with their own liquidity:
+  - Perpl for crypto perps, on mainnet and testnet;
+  - HelloTrade for gold, silver and stocks (invite code requested; Hyperliquid `xyz` is the fallback).
+- **Our engine.** It stays a Practice-only market, used for FX. There is no Senryo-run mainnet pool.
+- **How work runs.** Stages go one at a time in this checkout. No worktrees (user rule).
+
+**Stage 0, done:**
+- **D-255** (`e31d387`): Face ID step-up, plus a wait for the app to return to the foreground before signing.
+- **`6316f36`**: card failures now name their cause; API sign-in is single-flight.
+- **iOS OTA** published as group `06cc0818-5758-423d-909c-3135ee307d85` on runtime 0.3.0 (production). Codex's uncommitted prediction/card/binary files were stashed out of it and restored.
+- **Keeper** topped up to 2.22 MON (about 1 day of runway). See the [MON runbook](../development/practice-mon-runbook.md).
+- **Outreach drafts** for HelloTrade, Monad DevRel and Perpl: [outreach-2026-10-08.md](outreach-2026-10-08.md).
+
+**Waiting on the user:**
+- Retest on the phone after the update applies (launch, wait, relaunch).
+- Send the HelloTrade and DevRel messages.
+- Claim testnet MON to the keeper.
+
+**Next:** Stage 1, completing Perpl on both networks.
+
+**Preserved:** Codex's uncommitted 4C1b binary indexer, Predict UI, CardIssued and website work stays untouched in this checkout.
+
 # Native development workspace and pricing repair — 2026-10-07, Codex
 
 The latest user instruction adds fast native iteration to the approved whole-product plan. `pnpm dev:mobile` starts a separate-account/storage development workspace against a loopback Practice fork and Metro; native Home opens without OS sign-in. Actual contract long/short opens, finalized positions, controlled price changes, closes and reset passed in the local contract check. Release/development gate checks, Mobile/Drive typechecks, focused Biome, invariants and both Release Hermes exports passed. The final native dashboard shows the fixture account and P$100 without holdings/starter-relay errors; touch checks were interrupted by Mac locking and remain separate from the contract checks. [Runbook](../development/mobile-workspace.md), [verification record](../design/reviews/2026-10-07-native-dev-workspace.md).
