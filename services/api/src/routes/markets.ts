@@ -8,6 +8,7 @@ import {
   streamTicketRoute,
   submitIntentRoute,
   ticketsRoute,
+  withdrawRoute,
 } from "@senryo/api-client";
 import { addressOf, dollarTokenOf, type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
 import { bandMenu, type ChainId, marketsOn, POOL_TERMS, sigmaE8Of } from "@senryo/config";
@@ -20,6 +21,9 @@ import { mintStreamTicket } from "../stream/ticket.ts";
 
 /** The markets over HTTP (S3): catalogue, relayed calls and sessions, the caller's tickets, Practice dollars. */
 const CONFIG_CACHE_MS = 10_000;
+/** Withdrawals spend the sponsor's gas: a few a minute per client is plenty. */
+const WITHDRAW_PER_MINUTE = 5;
+const MINUTE_MS = 60_000;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const configCache = new Map<ChainId, { at: number; version: number }>();
 
@@ -117,6 +121,16 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
     );
     return sendRoute(reply, revokeSessionRoute, result);
   });
+
+  app.post(
+    withdrawRoute.path,
+    { config: { rateLimit: { max: WITHDRAW_PER_MINUTE, timeWindow: MINUTE_MS } } },
+    async (request, reply) => {
+      const { body } = parseRoute(withdrawRoute, request);
+      const result = await marketsOf(ctx, body.chainId).accounts.withdraw(body.authorization, body.signature);
+      return sendRoute(reply, withdrawRoute, result);
+    },
+  );
 
   app.get(ticketsRoute.path, async (request, reply) => {
     const { query } = parseRoute(ticketsRoute, request);

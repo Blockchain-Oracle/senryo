@@ -1,7 +1,7 @@
 import { MORE_NAV, type NavIcon } from "@senryo/config";
 import { type Href, router } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { Bell, CircleUserRound, QrCode, Settings, Signal, type SymbolIcon } from "~/components/kit/symbols";
+import { Bell, CircleUserRound, QrCode, Settings, Signal, type SymbolIcon, Wallet } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
@@ -13,6 +13,7 @@ import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
+  wallet: Wallet,
   profile: CircleUserRound,
   receive: QrCode,
   notifications: Bell,

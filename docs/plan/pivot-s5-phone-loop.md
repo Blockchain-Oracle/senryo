@@ -46,7 +46,7 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
       reused path, `Picture` dot grid), the line K with entry marker and win zone, countdown ring, odometers on shared
       values, amount (last stake, $1/5/10/25/Max, keypad), quote in words, UP/DOWN → CLOSE (long-press partial),
       lockout at −20 s, auto-roll, result reveal (win/loss/refund), honest states (reconnecting, paused, missed print)
-- [ ] S5.10 Markets (BTC/ETH/SOL × 1m/5m/15m/1h with live price, countdown, crowd split) and Home (balance, open calls,
+- [x] S5.10 Markets (BTC/ETH/SOL × 1m/5m/15m/1h with live price, countdown, crowd split) and Home (balance, open calls,
       next windows, Practice chip)
 - [ ] S5.11 Calls: open and history (Won/Lost/Refunded filters), the timeline receipt, the window's proof
 - [ ] S5.12 Wallet: Practice sheet (Get test dollars, Receive Test USD), Withdraw (EIP-3009 through the relay), Real

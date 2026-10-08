@@ -10,6 +10,7 @@ export type NavIcon =
   | "calls"
   | "more"
   | "profile"
+  | "wallet"
   | "notifications"
   | "settings"
   | "receive"
@@ -35,6 +36,7 @@ export type DockKey = (typeof DOCK_NAV)[number]["key"];
 
 /** The More grid (phone) and the rail's secondary group (web), in order. */
 export const MORE_NAV = [
+  { key: "wallet", label: "Wallet", icon: "wallet", path: "/wallet" },
   { key: "profile", label: "Profile", icon: "profile", path: "/account/profile" },
   { key: "receive", label: "Receive", icon: "receive", path: "/receive" },
   { key: "notifications", label: "Notifications", icon: "notifications", path: "/notifications" },

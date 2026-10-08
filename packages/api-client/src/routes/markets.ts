@@ -187,6 +187,31 @@ export const revokeSessionRoute = defineRoute({
   response: relayResultSchema,
 });
 
+/**
+ * Send dollars out (Wallet → Withdraw): the owner's EIP-3009 `transferWithAuthorization`, signed under Face ID; the
+ * relay submits it on the dollar, so no MON is needed (D-266). The chain checks the signature and the balance.
+ */
+export const withdrawRoute = defineRoute({
+  method: "POST",
+  path: "/v1/money/withdraw",
+  auth: "none",
+  params: undefined,
+  query: undefined,
+  body: z.object({
+    chainId: chainIdSchema,
+    authorization: z.object({
+      from: addressSchema,
+      to: addressSchema,
+      value: uintCodec,
+      validAfter: uintCodec,
+      validBefore: uintCodec,
+      nonce: bytes32Schema,
+    }),
+    signature: signatureSchema,
+  }),
+  response: relayResultSchema,
+});
+
 // ------------------------------------------------------------------------------------------------ tickets
 
 export const TICKET_STATES = ["committed", "open", "closing", "closed", "settled", "refunded"] as const;

@@ -14,7 +14,7 @@ import {
   zeroHash,
 } from "viem";
 import { ALL_ERRORS_ABI } from "./contracts.ts";
-import type { MarketIntent, MarketSessionGrant } from "./market-typed-data.ts";
+import { type MarketIntent, type MarketSessionGrant, permitParts } from "./market-typed-data.ts";
 
 export interface PermitArgs {
   value: bigint;
@@ -64,6 +64,19 @@ export function revokeCallData(owner: Address, nonce: bigint, deadline: bigint, 
 
 export function mintDollarsCallData(to: Address, amount: bigint): Hex {
   return encodeFunctionData({ abi: testUSDAbi, functionName: "mint", args: [to, amount] });
+}
+
+/** The dollar's EIP-3009 `transferWithAuthorization` (Test USD and Circle USDC share the v, r, s form). */
+export function transferWithAuthorizationData(
+  a: { from: Address; to: Address; value: bigint; validAfter: bigint; validBefore: bigint; nonce: Hex },
+  signature: Hex,
+): Hex {
+  const { v, r, s } = permitParts(signature);
+  return encodeFunctionData({
+    abi: testUSDAbi,
+    functionName: "transferWithAuthorization",
+    args: [a.from, a.to, a.value, a.validAfter, a.validBefore, a.nonce, v, r, s],
+  });
 }
 
 /** A revert's name and arguments from raw return data (one of our contracts', or "reverted"). */

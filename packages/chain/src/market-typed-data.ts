@@ -3,7 +3,7 @@
  * the phone, the web and the relay sign and check one definition. Domain: "Senryo Markets" v1 on the reserve.
  */
 import { type ChainId, MAINNET_CHAIN_ID, TEST_USD_DOMAIN, USDC_DOMAIN } from "@senryo/config";
-import { type Address, bytesToBigInt, type Hex, hashTypedData, parseSignature } from "viem";
+import { type Address, bytesToBigInt, bytesToHex, type Hex, hashTypedData, parseSignature } from "viem";
 import { addressOf, dollarTokenOf } from "./contracts.ts";
 
 export const MARKETS_DOMAIN_NAME = "Senryo Markets";
@@ -158,6 +158,40 @@ export interface MarketRevoke {
 
 export const revokeRequest = (chainId: ChainId, message: MarketRevoke) =>
   ({ domain: marketsDomain(chainId), types: REVOKE_TYPES, primaryType: "Revoke", message }) as const;
+
+export const TRANSFER_AUTH_TYPES = {
+  TransferWithAuthorization: [
+    { name: "from", type: "address" },
+    { name: "to", type: "address" },
+    { name: "value", type: "uint256" },
+    { name: "validAfter", type: "uint256" },
+    { name: "validBefore", type: "uint256" },
+    { name: "nonce", type: "bytes32" },
+  ],
+} as const;
+
+/** EIP-3009: move `value` dollars from the owner to `to`; anyone (the relay) may submit it — no MON needed. */
+export interface TransferAuthorization {
+  from: Address;
+  to: Address;
+  value: bigint;
+  validAfter: bigint;
+  validBefore: bigint;
+  nonce: Hex;
+}
+
+export const transferAuthRequest = (chainId: ChainId, message: TransferAuthorization) =>
+  ({
+    domain: dollarDomain(chainId),
+    types: TRANSFER_AUTH_TYPES,
+    primaryType: "TransferWithAuthorization",
+    message,
+  }) as const;
+
+/** A fresh random 32-byte authorization nonce (EIP-3009 nonces are unordered). */
+export function freshAuthNonce(): Hex {
+  return bytesToHex(crypto.getRandomValues(new Uint8Array(NONCE_BYTES)));
+}
 
 /** A 65-byte signature as the permit argument `{ v, r, s }` the relay forwards. */
 export function permitParts(signature: Hex): { v: number; r: Hex; s: Hex } {

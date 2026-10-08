@@ -14,6 +14,7 @@ import {
   revokeSessionRoute,
   submitIntentRoute,
   ticketsRoute,
+  withdrawRoute,
 } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
 import { type Address, fromQuery } from "@senryo/core";
@@ -140,6 +141,19 @@ export function usePracticeGrant(owner: Address | undefined, session: SessionRun
       if (!session) throw new Error("Sign in first");
       return session(() => env.api.call(practiceGrantRoute, {}));
     },
+    onSuccess: () => owner && client.invalidateQueries({ queryKey: marketKeys.account(env.chainId, owner) }),
+  });
+}
+
+type WithdrawBody = CallInput<typeof withdrawRoute>["body"];
+
+/** Send dollars out: relay the owner's signed EIP-3009 transfer (no MON needed); the balance refreshes on its event. */
+export function useWithdraw(owner: Address | undefined) {
+  const env = useQueryEnv();
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Omit<WithdrawBody, "chainId">) =>
+      env.api.call(withdrawRoute, { body: { ...body, chainId: env.chainId } }),
     onSuccess: () => owner && client.invalidateQueries({ queryKey: marketKeys.account(env.chainId, owner) }),
   });
 }

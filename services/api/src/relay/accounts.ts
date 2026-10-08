@@ -9,6 +9,7 @@ import {
   type ReadClient,
   revokeCallData,
   sendTx,
+  transferWithAuthorizationData,
 } from "@senryo/chain";
 import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
 import { testUSDAbi } from "@senryo/contracts/abis";
@@ -63,6 +64,24 @@ export class AccountRelay {
     const data = revokeCallData(owner, nonce, deadline, signature);
     const result = await this.send(owner, data, "sessionRevoke");
     this.d.bus.emit(`user:${owner.toLowerCase()}`, "session", { revoked: true, ...result });
+    return result;
+  }
+
+  /** A withdrawal: the owner's signed EIP-3009 transfer, submitted on the dollar from the owner's lane. */
+  async withdraw(
+    a: { from: Address; to: Address; value: bigint; validAfter: bigint; validBefore: bigint; nonce: Hex },
+    signature: Hex,
+  ): Promise<RelayResult> {
+    const dollar = dollarTokenOf(this.d.chainId);
+    if (!dollar) throw new Error(`no dollar token on ${this.d.chainId}`);
+    const data = transferWithAuthorizationData(a, signature);
+    const sent = await this.d
+      .laneFor(a.from)
+      .run((sender) =>
+        sendTx(sender, { to: dollar, data, action: "transferWithAuthorization", meta: { job: "withdraw" } }),
+      );
+    const result = { txHash: sent.hash, state: sent.stage } as const;
+    this.d.bus.emit(`user:${a.from.toLowerCase()}`, "dollars", { amount: -a.value, txHash: sent.hash });
     return result;
   }
 
