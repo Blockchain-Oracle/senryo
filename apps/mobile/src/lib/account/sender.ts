@@ -5,14 +5,7 @@
  * (`kvJournal`, capped) so an app kill mid-send is reconciled on the next launch by `recoverJournal` (S8.24) — read
  * only, on each entry's own chain, never re-broadcast.
  */
-import {
-  type AccountClient,
-  type Address,
-  type FaceIdMode,
-  type LocalAccount,
-  type PolicyContext,
-  queuedNonces,
-} from "@senryo/account";
+import { type AccountClient, type Address, type FaceIdMode, type LocalAccount, queuedNonces } from "@senryo/account";
 import {
   createReadClient,
   createSender,
@@ -82,28 +75,17 @@ function sharedNonces(chainId: ChainId): NonceSource {
 }
 
 /**
- * What a trade call site knows that the policy needs (S8): market room, equity, a label for the Face ID prompt — and,
- * for a Perpl order (D1), the Perpl market's own label ("Confirm long $60.00 Bitcoin on Perpl").
+ * One sender per call site; the read client and the nonce counter are shared by the whole app. Calls themselves are
+ * relayed EIP-712 intents (D-266); this sender only carries the rare transaction a user signs directly.
  */
-export type TradeContext = Pick<PolicyContext, "marketRoomUsd6" | "equityUsd6" | "marketLabel" | "perplMarketLabel">;
-
-/**
- * One sender per call site; the read client and the nonce counter are shared by the whole app. A trade passes its
- * `TradeContext` so the session policy can judge the open in scope instead of asking for a step-up.
- */
-export function userSender(
-  client: AccountClient,
-  address: Address,
-  faceId: FaceIdMode | undefined,
-  trade?: TradeContext,
-): Sender {
+export function userSender(client: AccountClient, address: Address, faceId: FaceIdMode | undefined): Sender {
   const chainId = activeNetwork().chainId;
   const read = sharedRead(chainId);
   const base = policyContext(address, faceId);
   return createSender({
     chainId,
     rpc: developmentRpc(chainId),
-    account: client.signer(trade ? () => ({ ...base(), ...trade }) : base),
+    account: client.signer(base),
     read,
     nonces: sharedNonces(chainId),
     journal,

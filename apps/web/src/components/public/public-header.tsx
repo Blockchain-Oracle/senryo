@@ -5,10 +5,7 @@ import { BRAND } from "@/lib/constants/brand";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 
-const PAGES = [
-  { id: "judges", label: "Judge guide", href: ROUTES.judges },
-  { id: "stats", label: "Stats", href: ROUTES.stats },
-] as const;
+const PAGES = [{ id: "judges", label: "Judge guide", href: ROUTES.judges }] as const;
 
 /**
  * The public pages' top line (outside the app shell, like the legal pages): the wordmark home, the two public pages

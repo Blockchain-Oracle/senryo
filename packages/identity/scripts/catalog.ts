@@ -6,40 +6,29 @@
  * Sources (researched 2026-10-01; docs read through Context7):
  * - web3icons (github.com/0xa3k5/web3icons, MIT): 1,800+ tokens, 250 networks, 30 exchanges, each as `branded`
  *   (colour mark), `mono` (white silhouette) and `background` (mark on its brand colour, full-bleed square).
- * - Hyperliquid's app icon per listed coin (app.hyperliquid.xyz/coins/<COIN>.svg): the venue's own vector for assets
- *   too new for the libraries (Lighter, Venice, Pump).
  * - Simple Icons (github.com/simple-icons/simple-icons, CC0-1.0): one-path company marks plus the brand hex, for the
- *   underlying companies of equity markets (Nvidia, Tesla, SpaceX).
- * - Monad's token list (github.com/monad-crypto/token-list, pinned by commit in `MONAD_TOKEN_LIST`): the logo each
- *   issuer submitted with its token (`mainnet/<SYMBOL>/logo.svg|png`), for the J11 spot tokens (`SPOT_TOKENS`, itself
- *   generated from that list). Native MON keeps Monad's own first-party mark.
+ *   underlying companies of equity markets (Nvidia, Tesla).
  * - Wikimedia Commons (commons.wikimedia.org, MediaWiki API `prop=imageinfo&iiprop=url|sha1|extmetadata`): a file whose
  *   page records it public domain or CC0 (a {{PD-textlogo}} wordmark with {{Trademarked}}), pinned by its version's
- *   SHA-1, with the page's licence fields read into the record — for fund brands no icon library carries (iShares).
+ *   SHA-1, with the page's licence fields read into the record — for fund brands no icon library carries (none on file since the D-256 pivot).
  * - Google's Material Symbols (github.com/google/material-design-icons, Apache-2.0, pinned by `MATERIAL_COMMIT`, the
- *   passkey glyph's pin): neutral glyphs for an instrument no owner's mark identifies (crude oil: `oil_barrel`, a drum
- *   with an oil drop, where Lucide's and Tabler's `barrel` read as a wooden cask).
+ *   passkey glyph's pin): neutral glyphs for an instrument no owner's mark identifies (none on file since the pivot).
  * Researched and not usable (1 Oct 2026), so SPY and QQQ are recorded gaps in src/entities.ts: SPDR and Invesco have
  * no Simple Icons or Iconify entry (every collection searched), no Commons file and no Wikidata logo (P154); Brandfetch
  * forbids programmatic download ("Programmatic access to logo images is not permitted"); nvstly/icons has no licence
  * and ships recoloured redraws; logo aggregators (worldvectorlogo, seeklogo, companieslogo) are uploads with no
  * owner's grant. Never the xStocks wrapper's art for an equity feed.
  */
-import { SPOT_TOKENS } from "@senryo/config";
-import { spotArtKey } from "../src/ids.ts";
 
 /** web3icons variant → ours: `background` is clipped to a disc, `mono` also yields the derived dark-ink silhouette. */
 export type Web3IconsTake = "disc" | "symbol" | "mono";
 
 export type FetchSpec =
   | { from: "web3icons"; group: "tokens" | "networks" | "exchanges"; name: string; take: readonly Web3IconsTake[] }
-  | { from: "hyperliquid"; coin: string }
   | { from: "simple-icons"; slug: string }
-  | { from: "monad-token-list"; dir: string; file: string; symbol: string }
   /** A mark served by its owner's own site (no library carries it), pinned by sha256 so a silent change fails. */
   | { from: "first-party"; url: string; page: string; sha256: string }
   /** LI.FI's open icon set (lifinance/types, Apache-2.0, pinned by commit): the bridges and aggregators it routes. */
-  | { from: "lifi-types"; group: "bridges" | "exchanges"; file: string; brand: string }
   /** `file` is the title without "File:"; `sha1` (Commons' own hash of the version) pins one upload. */
   | { from: "wikimedia-commons"; file: string; sha1: string }
   | { from: "material-symbols"; name: string; style: "outlined" | "rounded" | "sharp"; filled: boolean };
@@ -67,32 +56,8 @@ const STANDALONE: readonly CatalogEntry[] = [
     spec: { from: "web3icons", group: "networks", name: "optimism", take: ALL },
   },
   { key: "avalanche", owner: "Ava Labs", spec: { from: "web3icons", group: "networks", name: "avalanche", take: ALL } },
-  { key: "apple-pay", owner: "Apple Inc.", spec: { from: "simple-icons", slug: "applepay" } },
-  { key: "google-pay", owner: "Google LLC", spec: { from: "simple-icons", slug: "googlepay" } },
-  { key: "lighter", owner: "Lighter", spec: { from: "hyperliquid", coin: "LIT" } },
-  { key: "venice", owner: "Venice", spec: { from: "hyperliquid", coin: "VVV" } },
-  { key: "pump", owner: "pump.fun", spec: { from: "hyperliquid", coin: "PUMP" } },
   { key: "nvidia", owner: "NVIDIA Corporation", spec: { from: "simple-icons", slug: "nvidia" } },
   { key: "tesla", owner: "Tesla, Inc.", spec: { from: "simple-icons", slug: "tesla" } },
-  {
-    key: "spacex",
-    owner: "Space Exploration Technologies Corp. (SpaceX)",
-    spec: { from: "simple-icons", slug: "spacex" },
-  },
-  {
-    key: "ishares",
-    owner: "BlackRock, Inc. (iShares)",
-    spec: {
-      from: "wikimedia-commons",
-      file: "Logo-ishares 2019.svg",
-      sha1: "c88e0c781deb3fb5d02d865e20341caba6cee26a",
-    },
-  },
-  {
-    key: "oil-barrel",
-    owner: "Google — Material Symbols (github.com/google/material-design-icons)",
-    spec: { from: "material-symbols", name: "oil_barrel", style: "rounded", filled: true },
-  },
 ];
 
 /**
@@ -147,75 +112,4 @@ const SUPPLEMENTS: readonly CatalogEntry[] = [
   },
 ];
 
-/** Every listed spot token except native MON, keyed by its token-list folder. */
-const SPOT_LOGOS: readonly CatalogEntry[] = SPOT_TOKENS.filter((t) => !t.native).map((t) => ({
-  key: spotArtKey(t.list.dir),
-  owner: `${t.name} (${t.symbol}) — its issuer's token art, as submitted to Monad's token list`,
-  spec: { from: "monad-token-list", dir: t.list.dir, file: t.list.logo, symbol: t.symbol },
-}));
-
-/**
- * Owned assets beyond the J11 spot list (D-248): Tether Gold's omnichain XAUt0 on Monad — the token a user owns when
- * they buy real gold (the XAU perp keeps Senryo's own koban art, never this mark: LG19/LG38).
- */
-const OWNED_LOGOS: readonly CatalogEntry[] = [
-  {
-    key: spotArtKey("XAUt0"),
-    owner: "Tether Gold (XAUt0) — its issuer's token art, as submitted to Monad's token list",
-    spec: { from: "monad-token-list", dir: "XAUt0", file: "logo.svg", symbol: "XAUt0" },
-  },
-];
-
-/**
- * The routes behind any-asset swaps and bridges (D-239, flow book routes.md), as LI.FI's own icon set draws them —
- * researched 2 Oct 2026: none of web3icons, Simple Icons or the token list carries Relay, LI.FI or Monorail
- * (Simple Icons' "Relay" is relay.dev, a different product).
- */
-const ROUTE_LOGOS: readonly CatalogEntry[] = [
-  {
-    key: "relay",
-    owner: "Relay Protocol",
-    spec: { from: "lifi-types", group: "bridges", file: "relay.svg", brand: "Relay" },
-  },
-  {
-    key: "across",
-    owner: "Risk Labs (Across Protocol)",
-    spec: { from: "lifi-types", group: "bridges", file: "across.svg", brand: "Across" },
-  },
-  { key: "lifi", owner: "LI.FI", spec: { from: "lifi-types", group: "bridges", file: "lifi.svg", brand: "LI.FI" } },
-  {
-    key: "circle-cctp",
-    owner: "Circle Internet Group",
-    spec: { from: "lifi-types", group: "bridges", file: "circle.svg", brand: "Circle CCTP" },
-  },
-  {
-    key: "kyberswap",
-    owner: "KyberSwap",
-    spec: { from: "lifi-types", group: "exchanges", file: "kyberswap.svg", brand: "KyberSwap" },
-  },
-  {
-    key: "monorail",
-    owner: "Monorail",
-    spec: { from: "lifi-types", group: "exchanges", file: "monorail.svg", brand: "Monorail" },
-  },
-  // Ramp Network is in no open library (researched 2 Oct 2026: web3icons, Simple Icons, lifinance/types, its MIT SDK
-  // repos); the sign mark its own site serves.
-  {
-    key: "ramp",
-    owner: "Ramp Network (Ramp Swaps Ltd)",
-    spec: {
-      from: "first-party",
-      url: "https://cdn.prod.website-files.com/63fe1b7ead2cd2d5e0af02e7/6a4bbd700ee30b63d3ba9652_Logo%20sign.svg",
-      page: "https://rampnetwork.com",
-      sha256: "a1ab5313f6758d9d77c5027d6b2a406d3d681ac30b6b3c0a4c1267d65c4fc9b0",
-    },
-  },
-];
-
-export const CATALOG: readonly CatalogEntry[] = [
-  ...STANDALONE,
-  ...SUPPLEMENTS,
-  ...SPOT_LOGOS,
-  ...OWNED_LOGOS,
-  ...ROUTE_LOGOS,
-];
+export const CATALOG: readonly CatalogEntry[] = [...STANDALONE, ...SUPPLEMENTS];

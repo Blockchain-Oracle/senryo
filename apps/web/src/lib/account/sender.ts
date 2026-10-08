@@ -5,14 +5,7 @@
  * localStorage (`kvJournal`) so a reload mid-send reconciles the same signed bytes — read only, never re-broadcast.
  * Import this lazily where possible — chain carries the contract ABIs, which stay out of the landing bundle.
  */
-import {
-  type AccountClient,
-  type Address,
-  type FaceIdMode,
-  type LocalAccount,
-  type PolicyContext,
-  queuedNonces,
-} from "@senryo/account";
+import { type AccountClient, type Address, type FaceIdMode, type LocalAccount, queuedNonces } from "@senryo/account";
 import {
   createReadClient,
   createSender,
@@ -48,21 +41,13 @@ function shared(): { read: ReadClient; nonces: NonceSource } {
   return { read, nonces };
 }
 
-/** What a trade call site knows that the policy needs: market room, equity, a label for the prompt. */
-export type TradeContext = Pick<PolicyContext, "marketRoomUsd6" | "equityUsd6" | "marketLabel">;
-
 /** One sender per call site; the read client, nonce counter, journal and fee quote are shared by the whole tab. */
-export function userSender(
-  client: AccountClient,
-  address: Address,
-  faceId: FaceIdMode | undefined,
-  trade?: TradeContext,
-): Sender {
+export function userSender(client: AccountClient, address: Address, faceId: FaceIdMode | undefined): Sender {
   const { read, nonces } = shared();
   const base = policyContext(address, faceId);
   return createSender({
     chainId: ACTIVE_NETWORK.chainId,
-    account: client.signer(trade ? () => ({ ...base(), ...trade }) : base),
+    account: client.signer(base),
     read,
     nonces,
     journal,

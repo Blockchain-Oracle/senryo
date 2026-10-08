@@ -15,20 +15,12 @@ export type EntityRole =
   | "route-provider"
   | "exchange"
   | "auth-provider"
-  /** A phone wallet a card is added to (Apple Wallet, Google Wallet; flow book E5). */
-  | "wallet"
   | "brand";
 
 /** `token`: an ERC-20 held and traded spot on Monad (J11), whatever it tracks. */
 export type InstrumentType =
-  | "native-token"
-  | "stablecoin"
-  | "token"
-  | "perp"
-  | "commodity"
-  | "fx-pair"
-  | "equity"
-  | "none";
+  /** A crypto asset called on as a price market (BTC, ETH, SOL, MON). */
+  "crypto" | "native-token" | "stablecoin" | "token" | "commodity" | "fx-pair" | "equity" | "none";
 
 /**
  * Artwork variants. `disc` is the contained asset presentation (market rows, pickers); `symbol` the uncontained mark;

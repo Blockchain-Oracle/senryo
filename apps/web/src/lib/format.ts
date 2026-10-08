@@ -1,31 +1,26 @@
-import { ENGINE_MARKETS, MAINNET_CHAIN_ID, type NetworkKey } from "@senryo/config";
+import { MAINNET_CHAIN_ID, type NetworkKey } from "@senryo/config";
 import { DECIMALS, formatUnits, toPlot } from "@senryo/core";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { BPS_PERCENT_DECIMALS, USD6_DECIMALS } from "@/lib/constants/money";
 
 const TEN = 10n;
 
-/** The money glyph per network (Living Lacquer §5.6, as on mobile): paper money is never written as plain dollars. */
-const MONEY_SYMBOL: Record<NetworkKey, string> = { testnet: "P$", mainnet: "$" };
+/** Dollars on both networks (D-258); Practice says so through its tint and chip, never through the glyph. */
+const MONEY_SYMBOL: Record<NetworkKey, string> = { testnet: "$", mainnet: "$" };
 export const MONEY = MONEY_SYMBOL[ACTIVE_NETWORK.key];
 
-/** Account money in this network's glyph: `P$12,480.52` in practice. Market prices use `price18`. */
+/** Account money: `$12,480.52`. Market prices use `price18`. */
 export function money(value6: bigint, shown: number = DECIMALS.cents): string {
   const s = formatUnits(value6 < 0n ? -value6 : value6, USD6_DECIMALS, shown);
   return value6 < 0n ? `−${MONEY}${s}` : `${MONEY}${s}`;
 }
 
-/** `+P$184.22` / `−P$6.40` — a sign always, so colour is never the only signal. */
+/** `+$184.22` / `−$6.40` — a sign always, so colour is never the only signal. */
 export function signedMoney(value6: bigint, shown: number = DECIMALS.cents): string {
   return value6 < 0n ? money(value6, shown) : `+${money(value6, shown)}`;
 }
 
-/** A market's display precision (S8.23): metals in cents, FX majors to 5 places, JPY/USD to 7. */
-export function priceDecimalsOf(marketId: number): number {
-  return ENGINE_MARKETS.find((m) => m.id === marketId)?.priceDecimals ?? DECIMALS.cents;
-}
-
-/** `4,189.06` from an engine price (1e18 USD per unit); pass `priceDecimalsOf(id)` for a market. */
+/** `4,189.06` from a 1e18 price. */
 export function price18(value18: bigint, shown: number = DECIMALS.cents): string {
   return formatUnits(value18, DECIMALS.e18, shown);
 }

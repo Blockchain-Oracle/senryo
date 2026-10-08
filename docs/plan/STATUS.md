@@ -20,12 +20,45 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0 in progress.
+**Where we are:** S0 and S1 done; next is S1b (native build 0.4.0 → TestFlight + Play internal).
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
 - Agari's new key is live on `agari-ops`.
 - Owarine's ops env now uses Senryo's key.
+
+## S1 handoff (cleanup, 8 Oct)
+
+The trading product is gone from the code: perps, venues, swap, LP, card/KYC, social feed, discovery, the engine
+contracts and their scripts and tests, the trading indexer handlers, `services/card`, `packages/indexer-client`, the
+WsHub socket and the trading query modules. One implementation per capability is left. Checked by exit code:
+`pnpm gate` 0 (typecheck, Biome, invariants), `forge build` OK, `packages/account` checks 13/13, web static export
+builds (`/`, `/judges`, `/privacy`, `/terms`), iOS `expo export` bundles. An `rg` sweep finds no live reference to a
+deleted module (old append-only migrations keep their history).
+
+**Also in S1:**
+- Migration `0015_prediction_pivot` drops the trading tables (runs when the S3 api deploys).
+- Logos: 29 trading-only marks pruned (venues, card, swap aggregators, bridges, spot tokens) and codegen rerun; chain
+  marks stay for S9's Aurora picker; Chainlink is a provider row (the MON market's labelled second source, D-258).
+- Invariants: `risk-mirror-constants` dropped (the band-pricing mirror check comes with S2's test vectors);
+  `identity-provenance` now checks Practice's Test USD once it is in the address book; the Pyth oracle's literals are
+  named constants.
+- Fixed while sweeping: the phone had lost its `QueryEnvProvider` mount, the operation-journal storage and the
+  "review again if the account, network or app changed" guard when `lib/market-data.tsx` went. They are back as
+  `apps/mobile/src/lib/query-env.tsx`.
+- The Real-money region list on the phone matches the api's D-273 list (US, GB, CA, AU, BY, RU + CU, IR, KP, SY).
+- Coolify: `senryo-card` deleted, the old indexer stopped, the old keeper limited to pushes/receipts/retention
+  (ids-and-txs.md).
+
+**Carried forward on purpose:**
+- `QueryEnv.read` and the wallet balance poll stay until S5 moves balances onto the user's stream (D-272).
+- The indexer is a placeholder until S4; Aurora's module was deleted and is rebuilt in S9 as `services/api/src/deposit/`.
+- The session security check returns in S2 with the on-chain `SessionGrant` caps (D-267).
+- `victory-native` and the Ramp pod/patch leave with the S1b native freeze (no screen imports them now).
+- `services/api/src/single-flight.ts` stays for profile writes (it shares the in-flight promise; no 409).
+- Copy: the landing (S6), `/judges` (S10) and the onboarding story (S5) still describe the old product; the live web
+  is unchanged because images deploy manually. Don't redeploy web before S6.
+- The sound palette keeps `liquidation` until S5's win/loss/refund result sounds replace it.
 
 **Research notes:** [docs/research/pivot/](../research/pivot/).
 **Product how-tree:** [docs/product/predictions/](../product/predictions/).

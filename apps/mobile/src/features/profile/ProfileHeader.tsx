@@ -7,17 +7,16 @@
  */
 import type { Address } from "@senryo/account";
 import { shortAddress } from "@senryo/core";
-import { useLeaderboard } from "@senryo/query";
 import { type Href, router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Avatar } from "~/components/identity/Avatar";
 import { Button } from "~/components/kit/Button";
 import { Skeleton } from "~/components/kit/states";
-import { CalendarDays, ChartCandlestick, Globe, Plus, SquarePen } from "~/components/kit/symbols";
+import { CalendarDays, Globe, Plus, SquarePen } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
-import { followsRoute, profileEditRoute, ROUTES } from "~/lib/constants/routes";
+import { profileEditRoute, ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { BUTTON, CONTROL_FONT_SCALE, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { joinedLabel } from "./format";
@@ -56,7 +55,6 @@ export function ProfileHeader() {
       {ready ? (
         <>
           <Bio text={ready.identity?.bio ?? null} />
-          <Follows profile={ready} />
           <Meta createdAt={ready.identity?.createdAt} />
           {ready.listedHere === false ? <MakePublic /> : null}
         </>
@@ -166,59 +164,17 @@ function Bio({ text }: { text: string | null }) {
   );
 }
 
-/** "3 Following · 0 Followers" — each opens its list. Unlisted here: nothing (the chip below says why). */
-function Follows({ profile }: { profile: Ready }) {
-  if (profile.counts) {
-    const { following, followers } = profile.counts;
-    return (
-      <View style={styles.follows}>
-        <Count value={following} noun="Following" onPress={() => router.push(followsRoute("following") as Href)} />
-        <Count
-          value={followers}
-          noun={followers === 1 ? "Follower" : "Followers"}
-          onPress={() => router.push(followsRoute("followers") as Href)}
-        />
-      </View>
-    );
-  }
-  return profile.countsLoading ? <Skeleton width="48%" /> : null;
-}
-
-function Count({ value, noun, onPress }: { value: number; noun: string; onPress: () => void }) {
-  const { color } = useTheme();
-  const shown = value.toLocaleString("en-US");
-  return (
-    <Tap label={`${shown} ${noun}`} hint="Opens the list" onPress={onPress} style={styles.count}>
-      <Text style={[TYPE.rowAmount, { color: color.ink }]}>{shown}</Text>
-      <Text style={[TYPE.row, { color: color.text2 }]}>{noun}</Text>
-    </Tap>
-  );
-}
-
-/** F16's line of facts: all-time trades on this network and when the profile was made. */
+/** F16's line of facts: when the profile was made. Calls and win rate join in S8 (D-256). */
 function Meta({ createdAt }: { createdAt: string | undefined }) {
   const { color } = useTheme();
-  const board = useLeaderboard("all", "all");
-  const you = board.status === "fresh" || board.status === "stale" ? board.value.you : undefined;
-  const trades = you?.trades ?? undefined;
   const joined = createdAt ? joinedLabel(createdAt) : undefined;
-  if (trades === undefined && !joined) return null;
+  if (!joined) return null;
   return (
     <View style={styles.facts}>
-      {trades === undefined ? null : (
-        <View style={styles.fact}>
-          <ChartCandlestick size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
-          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>
-            {trades} {trades === 1 ? "trade" : "trades"}
-          </Text>
-        </View>
-      )}
-      {joined ? (
-        <View style={styles.fact}>
-          <CalendarDays size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
-          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{joined}</Text>
-        </View>
-      ) : null}
+      <View style={styles.fact}>
+        <CalendarDays size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
+        <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{joined}</Text>
+      </View>
     </View>
   );
 }
@@ -277,8 +233,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  follows: { flexDirection: "row", alignItems: "center", gap: SPACE.lgPlus },
-  count: { flexDirection: "row", alignItems: "baseline", gap: SPACE.xs },
   facts: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: SPACE.lg, rowGap: SPACE.xs },
   fact: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   chipWrap: { alignSelf: "flex-start" },

@@ -12,7 +12,7 @@ export type { NotificationSubject, PushChannel };
  * event key makes the whole thing idempotent — recording the same event twice is a no-op, so it is never pushed twice.
  *
  * Copy rules (S1b): a short title that says what happened, a plain-words body, Practice notifications say so in the
- * title and write money as P$ (Living Lacquer §5.6), links carry `?chainId=` so a tap opens in its own mode (S8.22).
+ * title (money is plain dollars in both modes, D-258), links carry `?chainId=` so a tap opens in its own mode (S8.22).
  * Only what the caller knows is stated.
  */
 
@@ -37,8 +37,7 @@ export interface NotificationRecord extends NotificationMessage {
 }
 
 const SCHEME = "senryo://";
-const PAPER_MONEY = "P$";
-const REAL_MONEY = "$";
+const DOLLAR = "$";
 /** Token amounts in a notification show at most this many decimals (trailing zeros dropped). */
 const TOKEN_SHOWN_DECIMALS = 6;
 const TRAILING_ZEROS = /\.?0+$/;
@@ -77,10 +76,9 @@ export function appLink(chainId: ChainId, path = ""): string {
   return `${SCHEME}${path}?chainId=${chainId}`;
 }
 
-/** Account dollars: P$ in Practice, $ on Mainnet, cents shown. */
-export function dollarsText(chainId: ChainId, usd6: bigint): string {
-  const symbol = networkOf(chainId).key === "testnet" ? PAPER_MONEY : REAL_MONEY;
-  return `${symbol}${formatUnits(usd6, DECIMALS.usd6, DECIMALS.cents)}`;
+/** Dollars with cents; the title already says "Practice ·" on testnet (D-258). */
+export function dollarsText(_chainId: ChainId, usd6: bigint): string {
+  return `${DOLLAR}${formatUnits(usd6, DECIMALS.usd6, DECIMALS.cents)}`;
 }
 
 /** A token amount, exact up to TOKEN_SHOWN_DECIMALS, without trailing zeros: `20`, `0.5`, `1,234.000001`. */
@@ -97,102 +95,6 @@ export function personText(person: { address: string; handle: string | null; dis
 }
 
 /** Why the card said no (E4); the card service maps its decline to one of these. */
-export const CARD_DECLINE_REASONS = ["overLimit", "notEnoughSpendable", "frozen", "pricesPaused", "other"] as const;
-export type CardDeclineReason = (typeof CARD_DECLINE_REASONS)[number];
-
-/**
- * A card event worth a notification. `ref` makes it idempotent (the card_auth id for a decision, the hold id for a
- * capture, the Lithic event token for a refund); `authId`, when known, opens that payment's page; `txn` (the issuer's
- * transaction token) makes each stage of one payment replace the previous push on screen (E-D5).
- */
-export type CardNotice = {
-  ref: string;
-  authId?: string | undefined;
-  txn?: string | undefined;
-  merchant: string | null;
-  amountUsd6: bigint;
-} & (
-  | { kind: "approved" }
-  /** `amountUsd6` is everything the merchant settled; `debtUsd6` the part the collateral couldn't pay (card debt). */
-  | { kind: "captured"; debtUsd6?: bigint | undefined }
-  | { kind: "refunded" }
-  | { kind: "declined"; reason: CardDeclineReason }
-);
-
-const DECLINE_BODY: Record<CardDeclineReason, string> = {
-  overLimit: "It's over your card's daily limit.",
-  notEnoughSpendable: "There isn't enough spendable money for it.",
-  frozen: "Your card is frozen. Unfreeze it to pay.",
-  pricesPaused: "Prices are paused, so card payments wait until markets reopen.",
-  other: "The payment didn't go through.",
-};
-
-export function cardMessage(chainId: ChainId, notice: CardNotice): NotificationMessage {
-  const amount = dollarsText(chainId, notice.amountUsd6);
-  const at = notice.merchant ?? "a merchant";
-  const url = appLink(chainId, notice.authId ? `card/auth/${notice.authId}` : "card");
-  const subject: NotificationSubject = { kind: "card" };
-  const collapseKey = notice.txn ? `card:${notice.txn}` : undefined;
-  switch (notice.kind) {
-    case "approved":
-      return {
-        title: pushTitle(chainId, `Paid ${amount} at ${at}`),
-        body: "It's held from your spendable money until the merchant settles it.",
-        url,
-        subject,
-        collapseKey,
-      };
-    case "captured":
-      return {
-        title: pushTitle(chainId, `${amount} settled at ${at}`),
-        body:
-          notice.debtUsd6 && notice.debtUsd6 > 0n
-            ? `${dollarsText(chainId, notice.amountUsd6 - notice.debtUsd6)} came from your spendable money and ` +
-              `${dollarsText(chainId, notice.debtUsd6)} is card debt. Repay it on the Card tab.`
-            : "The merchant settled it from your spendable money.",
-        url,
-        subject,
-        collapseKey,
-      };
-    case "refunded":
-      return {
-        title: pushTitle(chainId, `${amount} refunded by ${at}`),
-        body: "It's back in your spendable money.",
-        url,
-        subject,
-        collapseKey,
-      };
-    case "declined":
-      return {
-        title: pushTitle(chainId, `Card declined at ${at}`),
-        body: `${amount}: ${DECLINE_BODY[notice.reason]}`,
-        url,
-        subject,
-        collapseKey,
-      };
-  }
-}
-
-/**
- * The card channel's sender (E4: "the card push has no sender"). services/card calls it once a stage is final — after
- * the ASA answer is sent, and once a capture or a refund is finalized onchain. Idempotent per `kind:ref`; false when
- * it was already recorded. The card service needs no Expo access: the keeper of `chainId` delivers it.
- */
-export async function notifyCardEvent(
-  db: Db | Tx,
-  chainId: ChainId,
-  user: string,
-  notice: CardNotice,
-): Promise<boolean> {
-  return recordNotification(db, {
-    chainId,
-    eventKey: `card:${notice.kind}:${notice.ref}`,
-    user,
-    channel: "card",
-    ...cardMessage(chainId, notice),
-  });
-}
-
 export interface ArrivedAsset {
   /** The token contract, or the zero address for native MON. */
   address: `0x${string}`;

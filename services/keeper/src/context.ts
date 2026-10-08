@@ -3,7 +3,6 @@ import type { ChainId } from "@senryo/config";
 import type { Db, Logger } from "@senryo/service-common";
 import type { KeeperEnv } from "./env.ts";
 import type { Notifier } from "./notify.ts";
-import type { KeeperSource } from "./sources.ts";
 
 export interface KeeperContext {
   env: KeeperEnv;
@@ -12,10 +11,7 @@ export interface KeeperContext {
   sender: Sender;
   db: Db;
   log: Logger;
-  source: KeeperSource;
   notifier: Notifier;
-  /** Mainnet read client (Chainlink source for the testnet mirror relay). */
-  mainnet: ReadClient;
   /** Recent onchain actions (exposed on `/v1/keeper/status` for ops and the drive script). */
   recent: RecentActions;
 }

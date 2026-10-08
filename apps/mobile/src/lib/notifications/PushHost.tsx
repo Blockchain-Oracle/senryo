@@ -17,13 +17,10 @@ type NotificationResponse = import("expo-notifications").NotificationResponse;
 
 /** One Android channel per kind of news, named as You → Notifications names them. */
 const ANDROID_CHANNELS: ReadonlyArray<{ id: PushChannel; name: string }> = [
-  { id: "fills", name: "Trades and stop losses" },
-  { id: "liquidation", name: "Liquidation warnings" },
-  { id: "priceAlerts", name: "Price alerts" },
-  { id: "deposits", name: "Deposits" },
-  { id: "card", name: "Kinpaku card" },
-  { id: "social", name: "Followers and replies" },
-  { id: "followedTrades", name: "Traders you follow" },
+  { id: "results", name: "Call results" },
+  { id: "deposits", name: "Money arrived" },
+  { id: "priceAlerts", name: "Markets and alerts" },
+  { id: "social", name: "People and invites" },
 ];
 
 /** Where a tapped push goes, or undefined when it names nowhere this app knows. */
@@ -60,9 +57,7 @@ export function PushHost() {
         void notifications.setNotificationChannelAsync(channel.id, {
           name: channel.name,
           importance:
-            channel.id === "liquidation"
-              ? notifications.AndroidImportance.HIGH
-              : notifications.AndroidImportance.DEFAULT,
+            channel.id === "results" ? notifications.AndroidImportance.HIGH : notifications.AndroidImportance.DEFAULT,
         });
       }
     }

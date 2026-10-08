@@ -1,37 +1,18 @@
-import {
-  createReadClient,
-  createSender,
-  createWsClient,
-  HeadTracker,
-  isDeployed,
-  MemoryJournal,
-  type ReadClient,
-  readOracles,
-  type Sender,
-} from "@senryo/chain";
+import { createReadClient, createWsClient, HeadTracker, isDeployed, type ReadClient } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
-import {
-  type Db,
-  HTTP_STATUS,
-  HttpError,
-  type Logger,
-  loadOptionalSigner,
-  type SessionKeys,
-} from "@senryo/service-common";
-import type { AuroraWatcher } from "./anyasset/bridge/aurora.ts";
+import { type Db, HTTP_STATUS, HttpError, type Logger, type SessionKeys } from "@senryo/service-common";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { GeoDb } from "./geo-db.ts";
-import type { IndexerBridge } from "./indexer.ts";
-import type { MarkReader } from "./social/holders.ts";
-import type { SocialServices } from "./social/runtime.ts";
 
-/** One served network: reads, commit-state heads, and the sponsor (RELAYER_ROLE) that relays starter claims. */
+/**
+ * One served network: reads and commit-state heads. The sponsor (relayer) and the Pyth gateway arrive with S3
+ * (D-266/D-272); `deployed` turns true once the prediction-market contracts are in the address book (S2).
+ */
 export interface ChainContext {
   chainId: ChainId;
   deployed: boolean;
   read: ReadClient;
   heads: HeadTracker;
-  sponsor: Sender | undefined;
 }
 
 export interface ApiContext {
@@ -41,29 +22,23 @@ export interface ApiContext {
   log: Logger;
   chains: Map<ChainId, ChainContext>;
   sessions: SessionKeys | undefined;
-  indexer: IndexerBridge;
   /** DB-IP Lite country lookup (S8.15); null country until loaded. */
   geo: GeoDb;
-  /** S12b social services: indexer reads, leaderboard snapshots, feed notices. */
-  social: SocialServices;
-  /** Aurora incident watcher (D2) for `/v1/status`; absent → `aurora` reads unknown. */
-  aurora?: AuroraWatcher | undefined;
 }
+
+/** The market contracts on a network (S2); until then every network reads as not deployed. */
+const MARKETS_CONTRACT = "PythBoundaryOracle";
 
 export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId, ChainContext>> {
   const chains = new Map<ChainId, ChainContext>();
-  const sponsorKey = loadOptionalSigner("SPONSOR");
   for (const chainId of env.CHAIN_IDS) {
     const rpc = chainId === env.CHAIN_ID ? { http: env.RPC_HTTP, ws: env.RPC_WS } : undefined;
     const read = createReadClient(chainId, rpc);
     const heads = new HeadTracker(read, createWsClient(chainId, rpc));
     await heads.start();
-    const deployed = isDeployed(chainId, "SenryoCore");
-    const sponsor = sponsorKey
-      ? createSender({ chainId, account: sponsorKey, rpc, read, heads, journal: new MemoryJournal() })
-      : undefined;
-    chains.set(chainId, { chainId, deployed, read, heads, sponsor });
-    log.info({ chainId, deployed, sponsor: sponsorKey?.address ?? null }, "chain ready");
+    const deployed = isDeployed(chainId, MARKETS_CONTRACT);
+    chains.set(chainId, { chainId, deployed, read, heads });
+    log.info({ chainId, deployed }, "chain ready");
   }
   return chains;
 }
@@ -73,12 +48,4 @@ export function chainOf(ctx: Pick<ApiContext, "chains">, chainId: ChainId): Chai
   if (!chain) throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", `chain ${chainId} is not served here`);
   if (!chain.deployed) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", `not deployed on ${chainId} yet`);
   return chain;
-}
-
-/** Holders' mark: the accepted oracle price at `latest`, the read `/v1/markets` serves. */
-export function oracleMarks(chains: Map<ChainId, ChainContext>): MarkReader {
-  return async (chainId, marketId) => {
-    const [view] = await readOracles(chainOf({ chains }, chainId).read, chainId, [marketId]);
-    return { price18: view?.price18 ?? 0n, updatedAt: Number(view?.updatedAt ?? 0n) };
-  };
 }

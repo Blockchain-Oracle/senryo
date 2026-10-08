@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { addressSchema, chainIdSchema, isoTimeSchema } from "../primitives.ts";
 import {
   AVATAR_ID_PATTERN,
   BIO_MAX_CHARS,
   DISPLAY_NAME_MAX_CHARS,
   HANDLE_INPUT_MAX_CHARS,
   HANDLE_MAX_CHARS,
-} from "../social.ts";
+} from "../handles.ts";
+import { addressSchema, chainIdSchema, isoTimeSchema } from "../primitives.ts";
 import { defineRoute } from "./define.ts";
 
 /**
@@ -143,3 +143,36 @@ export type HandleAvailability = z.output<typeof handleAvailabilitySchema>;
 export type ProfileUpdate = z.output<typeof profileUpdateSchema>;
 export type MyProfile = z.output<typeof myProfileSchema>;
 export type PublicProfile = z.output<typeof publicProfileSchema>;
+
+/** Who did something — only ever an account listed on the network it is shown on. */
+export const socialIdentitySchema = z.object({
+  address: addressSchema,
+  handle: z.string().max(HANDLE_MAX_CHARS).nullable(),
+  displayName: z.string().nullable(),
+  avatar: z.string().regex(AVATAR_ID_PATTERN).nullable(),
+});
+export type SocialIdentity = z.output<typeof socialIdentitySchema>;
+
+/** "Delete my data" (App Store 5.1.1(v), S12b.8): what was removed, and how long the released handle stays held. */
+export const socialDeleteSchema = z.object({
+  deleted: z.object({
+    profile: z.boolean(),
+    pushTokens: z.int().nonnegative(),
+    vaults: z.int().nonnegative(),
+    prefs: z.boolean(),
+    notifications: z.int().nonnegative(),
+  }),
+  /** The released handle stays held this long (Q-022 default); null when there was no handle. */
+  handleHeldUntil: isoTimeSchema.nullable(),
+});
+export type SocialDelete = z.output<typeof socialDeleteSchema>;
+
+export const socialDeleteRoute = defineRoute({
+  method: "DELETE",
+  path: "/v1/social",
+  auth: "session",
+  params: undefined,
+  query: undefined,
+  body: undefined,
+  response: socialDeleteSchema,
+});

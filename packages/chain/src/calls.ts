@@ -23,7 +23,7 @@ export type WriteArgs<N extends ContractName, F extends WriteFunction<N>> = Cont
 >;
 
 /**
- * Typed tx request for one of our deployed contracts: `contractCall(10143, "SenryoCore", "placeHold", [...], "placeHold")`.
+ * Typed tx request for one of our deployed contracts: `contractCall(10143, "PythBoundaryOracle", "verify", [...], "approve")`.
  * The gas budget key is explicit so every call site states which budget it spends.
  */
 export function contractCall<N extends ContractName, F extends WriteFunction<N>>(

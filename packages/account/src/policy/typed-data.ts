@@ -1,43 +1,21 @@
 /**
- * Typed-data and message scope. In session: only our own EIP-712 domains, for the signer's own benefit (starter claim,
- * voucher, TP/SL trigger) and our own message formats. Spend allowances, Aurora intents (`OpenOrder`), Perpl key
- * enrolment, AUSD 3009 and anything unrecognised need a step-up (spec client.md "Session policy").
+ * Typed-data and message scope. In session: our own message formats and SIWE for our hosts. Every EIP-712 request —
+ * USDC permit, EIP-3009 transfers, and until S2 any market intent — needs a step-up (D-266/D-267). The market intents
+ * signed under a `SessionGrant` join the in-session list with the S2 contracts.
  */
 import { RP_ID } from "@senryo/config";
-import type { Address, TypedDataDefinition } from "viem";
+import type { TypedDataDefinition } from "viem";
 import { parseSiweMessage } from "viem/siwe";
 import { MESSAGE_PREFIXES, SIWE_MAX_TTL_MS } from "../constants.ts";
-import { STARTER_DOMAIN, TRIGGER_DOMAIN } from "../starter/typed-data.ts";
-import { sameAddress, scopeTargets } from "./targets.ts";
+import { sameAddress } from "./targets.ts";
 import type { Action, PolicyContext, Verdict } from "./types.ts";
 
 const typedReject: Verdict = { kind: "reject", action: undefined, reason: "typed-data", stepUp: true };
 const messageReject: Verdict = { kind: "reject", action: undefined, reason: "message", stepUp: true };
 const signs = (action: Action): Verdict => ({ kind: "sign", action, spendUsd6: 0n, rateLimited: false });
 
-/** Domains + primary types a session may sign, keyed by the contract that verifies them. */
-const SESSION_TYPES: Record<string, { domain: { name: string; version: string }; contract: "starterDrip" | "core" }> = {
-  Claim: { domain: STARTER_DOMAIN, contract: "starterDrip" },
-  Voucher: { domain: STARTER_DOMAIN, contract: "starterDrip" },
-  // Off-chain gas top-up authorisation (S8.16c); the contract never accepts this type.
-  TopUp: { domain: STARTER_DOMAIN, contract: "starterDrip" },
-  TriggerOrder: { domain: TRIGGER_DOMAIN, contract: "core" },
-};
-
-export function evaluateTypedData(def: TypedDataDefinition, ctx: PolicyContext): Verdict {
-  const rule = SESSION_TYPES[String(def.primaryType)];
-  if (!rule) return typedReject;
-  const domain = def.domain ?? {};
-  const targets = scopeTargets(ctx.chainId);
-  const verifying = rule.contract === "starterDrip" ? targets.starterDrip : targets.core;
-  const message = def.message as { user?: Address };
-  const ok =
-    domain.name === rule.domain.name &&
-    domain.version === rule.domain.version &&
-    Number(domain.chainId) === ctx.chainId &&
-    sameAddress(domain.verifyingContract as Address | undefined, verifying) &&
-    sameAddress(message.user, ctx.self);
-  return ok ? signs({ kind: "typed-data", primaryType: String(def.primaryType) }) : typedReject;
+export function evaluateTypedData(_def: TypedDataDefinition, _ctx: PolicyContext): Verdict {
+  return typedReject;
 }
 
 function messageText(message: unknown): string | undefined {

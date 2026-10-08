@@ -1,27 +1,16 @@
 import { type Href, router, useLocalSearchParams, usePathname } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fire } from "~/feedback/fire";
-import { ROUTES, socialPeopleRoute } from "~/lib/constants/routes";
+import { ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { useDock } from "./dock-context";
 
 const MONEY = [
   { label: "Home", href: ROUTES.home },
-  { label: "Card", href: ROUTES.card },
-  { label: "Activity", href: ROUTES.activity },
-  { label: "Pool", href: ROUTES.lp },
   { label: "Profile", href: ROUTES.you },
 ];
 const TRADE = [
-  { label: "Pairs", href: "/markets?view=perps" },
-  { label: "Predict", href: "/markets?view=predict" },
-  { label: "Watchlist", href: "/markets?view=watchlist" },
-  { label: "Orders", href: ROUTES.orders },
-  { label: "Profile", href: ROUTES.you },
-];
-const SOCIAL = [
-  { label: "Feed", href: ROUTES.social },
-  { label: "People", href: socialPeopleRoute },
+  { label: "Markets", href: ROUTES.markets },
   { label: "Profile", href: ROUTES.you },
 ];
 
@@ -31,7 +20,7 @@ export function ContextTabs() {
   const { context } = useDock();
   const pathname = usePathname();
   const params = useLocalSearchParams<{ view?: string }>();
-  const options = context === "trade" ? TRADE : context === "social" ? SOCIAL : MONEY;
+  const options = context === "trade" ? TRADE : MONEY;
   return (
     <ScrollView
       horizontal

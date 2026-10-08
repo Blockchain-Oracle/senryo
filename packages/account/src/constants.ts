@@ -34,26 +34,14 @@ export const SESSION_IDLE_CHOICES_MS = [1 * MINUTES, 5 * MINUTES, 15 * MINUTES] 
 
 /** Money in the policy is usd6 (AUSD/USDC are 6-decimal stables, valued at par). Per-trade Face ID threshold on mainnet (D-037): trades at or above it confirm with Face ID. */
 export const FACE_ID_TRADE_THRESHOLD_USD6 = 50n * ONE_USD6;
-/** Session caps (D-018 session design). The per-trade cap is further bounded by market OI cap and account balance. */
-export const SESSION_TRADE_CAP_USD6 = 250n * ONE_USD6;
-export const SESSION_TOTAL_CAP_USD6 = 1_000n * ONE_USD6;
-/** Approvals, swaps, LP deposits and venue moves inside a session are capped per action. */
-export const SESSION_MOVE_CAP_USD6 = 250n * ONE_USD6;
-/** Session leverage cap in bps of account equity (10× — the gold/silver engine's IM is 10 %). */
-export const SESSION_MAX_LEVERAGE_BPS = 100_000n;
+/** On-chain SessionGrant caps (D-267: per call, per session, expiry) replace the old trade caps in S2. */
 /** Signed transactions per rolling minute inside a session (reduce-only actions are exempt). */
 export const SESSION_RATE_PER_MINUTE = 20;
 
 /** Messages the session may sign without a prompt (spec client.md). */
-export const MESSAGE_PREFIXES = ["Senryo:claim:", "Senryo:push:"] as const;
+export const MESSAGE_PREFIXES = ["Senryo:push:"] as const;
 /** SIWE messages signed in session must expire within this window. */
 export const SIWE_MAX_TTL_MS = 10 * MINUTES;
-
-/**
- * Starter claim / voucher signatures expire after this many seconds (StarterDrip checks `deadline`). Half the relay's
- * limit (`RELAY_SIGNATURE_MAX_TTL_SECONDS` = 600 in `@senryo/core`), so a phone clock a few minutes fast still passes.
- */
-export const STARTER_DEADLINE_SECONDS = 300n;
 
 /** Hint + unlock storage keys (versioned). Only the unlock item holds secret bytes (native, biometric-gated). */
 export const STORAGE = {

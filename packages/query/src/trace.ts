@@ -332,7 +332,7 @@ export function useSendTrace(key?: string) {
                   ...step,
                   blockNumber: receipt.blockNumber.toString(),
                   blockHash: receipt.blockHash,
-                  facts: receiptFacts(receipt, sender.chainId, built.to, built.binaryReceiptContext),
+                  facts: receiptFacts(receipt, sender.chainId, built.to),
                 }
               : step,
           ),
@@ -340,7 +340,6 @@ export function useSendTrace(key?: string) {
         writeOperation(record);
         const from = sender.account.address as Address;
         void queryClient.invalidateQueries({ queryKey: keys.account(sender.chainId, from) });
-        void queryClient.invalidateQueries({ queryKey: ["market", sender.chainId] });
         return { ...result, operationId: record.id };
       } catch (error) {
         try {

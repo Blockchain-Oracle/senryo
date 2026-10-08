@@ -12,19 +12,15 @@ export const DIAGNOSIS_COPY: Record<DiagnosisKind, { headline: string; body: str
   },
   "api-down": {
     headline: "Senryo's service is unreachable",
-    body: "Your funds and positions are safe onchain. This is only the screen.",
+    body: "Your money and calls are safe onchain. This is only the screen.",
   },
   "indexer-lag": {
     headline: "History is catching up",
     body: "The activity index is a few blocks behind. Balances read the chain directly.",
   },
-  "perpl-down": {
-    headline: "Perpl is unreachable",
-    body: "Crypto orders are paused. Gold, silver and your card are unaffected.",
-  },
   "oracle-stale": {
     headline: "Price paused",
-    body: "The oracle hasn't updated. New risk is blocked; closing still works.",
+    body: "The price source isn't updating. New calls wait; open calls still settle or refund.",
   },
   "not-deployed": {
     headline: "Not live on this network yet",
@@ -32,7 +28,7 @@ export const DIAGNOSIS_COPY: Record<DiagnosisKind, { headline: string; body: str
   },
   unknown: {
     headline: "Something went wrong",
-    body: "Your funds and positions are safe onchain. This is only the screen.",
+    body: "Your money and calls are safe onchain. This is only the screen.",
   },
 };
 

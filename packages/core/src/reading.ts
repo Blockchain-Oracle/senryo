@@ -9,7 +9,6 @@ export type DiagnosisKind =
   | "rpc-down"
   | "api-down"
   | "indexer-lag"
-  | "perpl-down"
   | "oracle-stale"
   | "not-deployed"
   | "unknown";

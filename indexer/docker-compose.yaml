@@ -75,18 +75,12 @@ services:
       ENVIO_TUI: "false"
       LOG_LEVEL: ${LOG_LEVEL:-info}
       LOG_STRATEGY: ${LOG_STRATEGY:-ecs-console}
-      # Optional overrides (empty = the defaults in config.yaml / src/lib/constants.ts).
-      ENVIO_APP_LAUNCH_BLOCK_143: ${ENVIO_APP_LAUNCH_BLOCK_143:-}
-      ENVIO_PERPL_BUILDER_ID: ${ENVIO_PERPL_BUILDER_ID:-}
-      ENVIO_FEED_START_BLOCK_143: ${ENVIO_FEED_START_BLOCK_143:-}
-      ENVIO_FEED_WATCH_START_BLOCK_143: ${ENVIO_FEED_WATCH_START_BLOCK_143:-}
-      ENVIO_PERPL_START_BLOCK_143: ${ENVIO_PERPL_START_BLOCK_143:-}
+      # Optional overrides (empty = the defaults in config.yaml). S4 rewrites this file (Hasura off, shared Postgres).
+      ENVIO_START_BLOCK_10143: ${ENVIO_START_BLOCK_10143:-}
       ENVIO_START_BLOCK_143: ${ENVIO_START_BLOCK_143:-}
       ENVIO_SKIP_143: ${ENVIO_SKIP_143:-}
       ENVIO_RPC_URL_143: ${ENVIO_RPC_URL_143:-}
       ENVIO_RPC_URL_10143: ${ENVIO_RPC_URL_10143:-}
-      ENVIO_ARCHIVE_RPC_URL_143: ${ENVIO_ARCHIVE_RPC_URL_143:-}
-      ENVIO_ARCHIVE_RPC_URL_10143: ${ENVIO_ARCHIVE_RPC_URL_10143:-}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9898/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s

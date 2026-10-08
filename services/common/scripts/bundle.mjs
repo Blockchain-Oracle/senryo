@@ -1,6 +1,6 @@
-// Bundle services/{api,card,keeper} into self-contained ESM files for the one-image, three-entrypoint container.
+// Bundle services/{api,keeper} into self-contained ESM files for the one-image, two-entrypoint container.
 //   node services/common/scripts/bundle.mjs <outdir>
-// Output: api.mjs · card.mjs · keeper.mjs · run.mjs (dispatches on SERVICE) · health.mjs (HEALTHCHECK → /health).
+// Output: api.mjs · keeper.mjs · run.mjs (dispatches on SERVICE) · health.mjs (HEALTHCHECK → /health).
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,7 +19,6 @@ const banner = [
 await build({
   entryPoints: {
     api: join(root, "services/api/src/main.ts"),
-    card: join(root, "services/card/src/main.ts"),
     keeper: join(root, "services/keeper/src/main.ts"),
   },
   outdir,
@@ -36,13 +35,13 @@ await build({
   logLevel: "info",
 });
 
-const PORTS = { api: 3000, card: 3001, keeper: 3002 };
+const PORTS = { api: 3000, keeper: 3002 };
 writeFileSync(
   join(outdir, "run.mjs"),
-  `// SERVICE = api | card | keeper (one image, three Coolify resources).
+  `// SERVICE = api | keeper (one image, two Coolify resources).
 const service = process.env.SERVICE;
-if (!["api", "card", "keeper"].includes(service)) {
-  console.error("SERVICE must be api, card or keeper");
+if (!["api", "keeper"].includes(service)) {
+  console.error("SERVICE must be api or keeper");
   process.exit(1);
 }
 process.env.PORT ??= String(${JSON.stringify(PORTS)}[service]);

@@ -1,23 +1,20 @@
 /**
  * Notifications (G1; §0.9 "Notifications"): the bell's page. A pushed page with its own bar — back, "Notifications",
- * the channels gear — then underline tabs All · Alerts. All is the inbox from the push ledger,
- * grouped Today / Earlier; opening it marks everything up to the newest row read (the bell clears), while rows that
- * were unread keep their raised fill for this visit. Alerts is the price-alert list (C9): tap to edit (Save replaces),
- * × to delete, Create alert for a new one. Guests, a locked session, loading, empty and failure each say one true thing.
+ * the channels gear — then the inbox from the push ledger, grouped Today / Earlier; opening it marks everything up to
+ * the newest row read (the bell clears), while rows that were unread keep their raised fill for this visit. Market
+ * alerts return with S8 (D-256). Guests, a locked session, loading, empty and failure each say one true thing.
  */
 import type { AppNotification } from "@senryo/api-client";
 import { router, Stack } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
+import { PageHeader, PageTitle } from "~/components/kit/PageHeader";
+import { QuietLine } from "~/components/kit/QuietLine";
 import { Screen } from "~/components/kit/Screen";
 import { ReadingView } from "~/components/kit/states";
 import { Settings } from "~/components/kit/symbols";
-import { UnderlineTabs } from "~/components/kit/UnderlineTabs";
 import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
-import { AlertSheet, type AlertSheetState, AlertsList } from "~/features/markets/AlertsScreen";
-import { PageHeader, PageTitle } from "~/features/markets/PageHeader";
-import { QuietLine } from "~/features/markets/QuietLine";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
@@ -26,18 +23,10 @@ import { InboxList, openNotification } from "./InboxList";
 import { PushBanner } from "./PushBanner";
 import { useInbox } from "./useInbox";
 
-export type InboxTab = "all" | "alerts";
-const TABS = [
-  { value: "all", label: "All" },
-  { value: "alerts", label: "Alerts" },
-] as const;
-
-export function NotificationsScreen({ initialTab = "all" }: { initialTab?: InboxTab }) {
+export function NotificationsScreen() {
   const { color } = useTheme();
   const account = useAccount();
   const network = useNetwork();
-  const [tab, setTab] = useState<InboxTab>(initialTab);
-  const [sheet, setSheet] = useState<AlertSheetState>();
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -52,17 +41,9 @@ export function NotificationsScreen({ initialTab = "all" }: { initialTab?: Inbox
       >
         <PageTitle>Notifications</PageTitle>
       </PageHeader>
-      <View style={styles.tabs}>
-        <UnderlineTabs options={TABS} value={tab} onChange={setTab} label="Notifications" />
-      </View>
       <Screen>
-        {tab === "all" ? (
-          <Inbox key={`${network.chainId}:${account.hint?.address ?? "guest"}`} />
-        ) : (
-          <AlertsList onNew={() => setSheet("pick")} onEdit={(a) => setSheet({ marketId: a.marketId, editing: a })} />
-        )}
+        <Inbox key={`${network.chainId}:${account.hint?.address ?? "guest"}`} />
       </Screen>
-      <AlertSheet open={sheet} onClose={() => setSheet(undefined)} onPick={(marketId) => setSheet({ marketId })} />
     </View>
   );
 }
@@ -136,7 +117,6 @@ function Inbox() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   utilities: { flexDirection: "row", gap: SPACE.sm },
-  tabs: { paddingHorizontal: SIZE.gutter },
   quiet: { alignItems: "center" },
   list: { gap: SPACE.lg },
 });

@@ -15,7 +15,6 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { MONAD_TOKEN_LIST } from "@senryo/config";
 import { MATERIAL_COMMIT } from "../src/art/auth.ts";
 import { deriveSvg } from "../src/derive.ts";
 import type { ArtFile, ArtSource, Derivation, MarkVariant } from "../src/types.ts";
@@ -24,7 +23,6 @@ import { fromCommons } from "./fetch-commons.ts";
 import {
   DARK_INK,
   type Fetched,
-  fetched,
   get,
   getSvg,
   LIGHT_INK,
@@ -47,21 +45,15 @@ const WEB3ICONS_RAW = `https://raw.githubusercontent.com/0xa3k5/web3icons/${WEB3
 const WEB3ICONS_LICENCE_URL = `${WEB3ICONS_REPO}/blob/${WEB3ICONS_COMMIT}/LICENCE`;
 /** The library draws every mark on a 24-unit grid with 3 units of clear space: 3/24 of the edge. */
 const WEB3ICONS_INSET_PERMILLE = 125;
-/** lifinance/types (Apache-2.0) at a pinned commit (2 Oct 2026): LI.FI's icons for the bridges and DEXs it routes. */
-const LIFI_TYPES_COMMIT = "b554730b3918534c91591743e83c427a4f50cbd1";
-const LIFI_TYPES_REPO = "https://github.com/lifinance/types";
-const LIFI_TYPES_RAW = `https://raw.githubusercontent.com/lifinance/types/${LIFI_TYPES_COMMIT}`;
 const SIMPLE_ICONS_VERSION = "16.33.0";
 const SIMPLE_ICONS_CDN = `https://cdn.jsdelivr.net/npm/simple-icons@${SIMPLE_ICONS_VERSION}`;
 const SIMPLE_ICONS_LICENCE_URL = `https://github.com/simple-icons/simple-icons/blob/${SIMPLE_ICONS_VERSION}/LICENSE.md`;
-const HYPERLIQUID_APP = "https://app.hyperliquid.xyz";
 const MATERIAL_RAW = `https://raw.githubusercontent.com/google/material-design-icons/${MATERIAL_COMMIT}`;
 const MATERIAL_LICENCE_URL = `https://github.com/google/material-design-icons/blob/${MATERIAL_COMMIT}/LICENSE`;
 /** Material's system-icon grid: 24 units with a 20-unit live area, so 2/24 of the edge is clear space. */
 const MATERIAL_INSET_PERMILLE = 83;
 
 const ISO_DATE_CHARS = 10;
-const PNG_SIGNATURE = Buffer.from("89504e470d0a1a0a", "hex");
 /** A commit named in a licence line: its first 8 hex digits. */
 const SHORT_SHA_CHARS = 8;
 /** IHDR is the first chunk: width and height (big-endian u32) sit right after its length and type. */
@@ -70,13 +62,7 @@ const PNG_HEIGHT_OFFSET = 20;
 
 const sha256 = (bytes: string | Buffer): string => createHash("sha256").update(bytes).digest("hex");
 
-/** A raster file must really be a PNG; its viewBox is its pixel size (IHDR width × height). */
-async function getPng(url: string): Promise<Buffer> {
-  const bytes = Buffer.from(await (await fetched(url)).arrayBuffer());
-  if (!bytes.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) throw new Error(`${url}: not a PNG`);
-  return bytes;
-}
-
+/** A raster file's viewBox is its pixel size (IHDR width × height). */
 function pngViewBox(png: Buffer): string {
   return `0 0 ${png.readUInt32BE(PNG_WIDTH_OFFSET)} ${png.readUInt32BE(PNG_HEIGHT_OFFSET)}`;
 }
@@ -145,18 +131,6 @@ async function fromWeb3Icons(key: string, spec: Extract<FetchSpec, { from: "web3
     usage:
       "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
     pieces,
-  };
-}
-
-async function fromHyperliquid(spec: Extract<FetchSpec, { from: "hyperliquid" }>): Promise<Fetched> {
-  const url = `${HYPERLIQUID_APP}/coins/${spec.coin}.svg`;
-  const present: Presentation = { insetPermille: 0, surface: "any", shape: "disc" };
-  return {
-    provenance: "venue-metadata",
-    pageUrl: `${HYPERLIQUID_APP}/trade/${spec.coin}`,
-    licence: `No separate licence: this is the icon Hyperliquid's own app serves for the ${spec.coin} market it lists (${url}), i.e. venue-published instrument metadata. The mark belongs to its project and is used nominatively, only to identify that asset beside its ticker.`,
-    usage: "A full disc as served; shown only for the asset itself, never as a venue badge.",
-    pieces: [{ variant: "disc", name: `hyperliquid-coin-${spec.coin}.svg`, url, body: await getSvg(url), present }],
   };
 }
 
@@ -262,46 +236,6 @@ async function fromMaterialSymbols(
   };
 }
 
-/**
- * A J11 spot token's logo from Monad's token list at the pinned commit — the file its issuer submitted (SVG or PNG),
- * kept as delivered. Token art is a full disc (checked by rendering the listed logos, 1 Oct 2026).
- */
-async function fromMonadTokenList(spec: Extract<FetchSpec, { from: "monad-token-list" }>): Promise<Fetched> {
-  const folder = `mainnet/${encodeURIComponent(spec.dir)}`;
-  const url = `${MONAD_TOKEN_LIST.raw}/${MONAD_TOKEN_LIST.commit}/${folder}/${spec.file}`;
-  const present: Presentation = { insetPermille: 0, surface: "any", shape: "disc" };
-  const body = spec.file.endsWith(".png") ? await getPng(url) : await getSvg(url);
-  const ext = spec.file.slice(spec.file.lastIndexOf("."));
-  return {
-    provenance: "first-party",
-    pageUrl: `${MONAD_TOKEN_LIST.repo}/tree/${MONAD_TOKEN_LIST.commit}/${folder}`,
-    licence: `monad-crypto/token-list (Monad's official token list), ${folder}/${spec.file} at commit ${MONAD_TOKEN_LIST.commit.slice(0, SHORT_SHA_CHARS)}: the logo the issuer submitted with its token (CONTRIBUTING.md: "must provide a logo in SVG or PNG format"). The repo has no LICENSE and says inclusion "does not imply endorsement". ${spec.symbol} is its issuer's mark, used nominatively beside its ticker.`,
-    usage:
-      "Token art beside the ticker in token rows, the token page and the ticket; never as a venue or network badge.",
-    pieces: [{ variant: "disc", name: `${spec.dir.toLowerCase()}-token-monad-tokenlist${ext}`, url, body, present }],
-  };
-}
-
-/**
- * A route provider's mark from LI.FI's open icon set at the pinned commit, kept as delivered (a full-bleed square
- * or disc as LI.FI draws it). The Apache-2.0 notice ships next to it.
- */
-async function fromLifiTypes(spec: Extract<FetchSpec, { from: "lifi-types" }>): Promise<Fetched> {
-  const folder = `src/assets/icons/${spec.group}`;
-  const url = `${LIFI_TYPES_RAW}/${folder}/${spec.file}`;
-  const licenceRaw = `${LIFI_TYPES_RAW}/LICENSE.md`;
-  const present: Presentation = { insetPermille: 0, surface: "any", shape: "disc" };
-  return {
-    provenance: "open-library",
-    pageUrl: `${LIFI_TYPES_REPO}/blob/${LIFI_TYPES_COMMIT}/${folder}/${spec.file}`,
-    licence: `lifinance/types at commit ${LIFI_TYPES_COMMIT.slice(0, SHORT_SHA_CHARS)}, Apache License 2.0 (LICENSE in the repo): LI.FI's icon for ${spec.brand}. The mark stays ${spec.brand}'s trademark, used nominatively to name the route a quote takes.`,
-    usage:
-      "Route marks in swap and bridge quotes, timelines and receipts — beside the route's name, never as an asset.",
-    pieces: [{ variant: "disc", name: `lifi-${spec.group}-${spec.file}`, url, body: await getSvg(url), present }],
-    notices: [{ name: "LICENSE-lifinance-types.txt", url: licenceRaw, body: await get(licenceRaw) }],
-  };
-}
-
 /** A mark from its owner's own site, refused unless its bytes still match the pinned sha256. */
 async function fromFirstParty(key: string, spec: Extract<FetchSpec, { from: "first-party" }>): Promise<Fetched> {
   const body = await getSvg(spec.url);
@@ -327,9 +261,6 @@ async function fromFirstParty(key: string, spec: Extract<FetchSpec, { from: "fir
 function fetchEntry(entry: CatalogEntry): Promise<Fetched> {
   const { spec } = entry;
   if (spec.from === "web3icons") return fromWeb3Icons(entry.key, spec);
-  if (spec.from === "hyperliquid") return fromHyperliquid(spec);
-  if (spec.from === "monad-token-list") return fromMonadTokenList(spec);
-  if (spec.from === "lifi-types") return fromLifiTypes(spec);
   if (spec.from === "first-party") return fromFirstParty(entry.key, spec);
   if (spec.from === "wikimedia-commons") return fromCommons(entry.key, spec);
   if (spec.from === "material-symbols") return fromMaterialSymbols(entry.key, spec);

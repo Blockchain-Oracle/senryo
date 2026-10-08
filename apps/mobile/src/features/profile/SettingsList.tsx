@@ -13,7 +13,6 @@ import { useMMKVBoolean, useMMKVString } from "react-native-mmkv";
 import { Panel } from "~/components/kit/Surface";
 import {
   ArrowLeftRight,
-  Ban,
   Bell,
   Eye,
   History,
@@ -89,12 +88,6 @@ export function SettingsList() {
               tint={practice ? color.practice : color.mainnet}
               value={network.modeLabel}
               onPress={() => open(ROUTES.accountMode)}
-            />
-            <SettingsRow
-              title="Blocked & muted"
-              icon={Ban}
-              tint={color.chartNeutral}
-              onPress={() => open(ROUTES.accountBlocked)}
             />
           </Panel>
         </View>

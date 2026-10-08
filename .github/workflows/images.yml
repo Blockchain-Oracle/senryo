@@ -2,7 +2,7 @@ name: images
 
 # Build + push linux/amd64 images to GHCR (D-016: built here, pulled by Coolify — nothing builds on the server).
 # Trigger: manual only (the lead enables push-to-main at deploy time). Tags are immutable `sha-<short>`; never `latest`
-# (deploy-runbook §3/§11). The `api` image also runs card + keeper (SERVICE=api|card|keeper, one image, D-013).
+# (deploy-runbook §3/§11). The `api` image also runs the keeper (SERVICE=api|keeper, one image, D-013).
 on:
   workflow_dispatch:
     inputs:

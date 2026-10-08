@@ -5,7 +5,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { finding } from "./report.mjs";
 import { codeLines, readText, walkFiles } from "./walk.mjs";
 
@@ -184,41 +183,6 @@ export function addressDrift(rule, ctx) {
       const address = String(value.address ?? value).toLowerCase();
       if (value.indexed !== false && !config.includes(address))
         findings.push(finding(rule, `${name} ${address} missing from indexer/config.yaml`, rel));
-    }
-  }
-  return { findings };
-}
-
-/**
- * The core risk mirror (`packages/core/src/risk/constants.ts`) copies protocol constants **by name** from
- * `Constants.sol`; any drift fails the gate so previews never disagree with the contract silently (S8.7).
- */
-const SOL_CONSTANT = /constant\s+([A-Z0-9_]+)\s*=\s*([^;]+);/g;
-const SOL_TIME_UNITS = { seconds: 1n, minutes: 60n, hours: 3600n, days: 86_400n, weeks: 604_800n };
-function solLiteral(expr) {
-  const text = expr.trim().replace(/_/g, "");
-  const timed = text.match(/^(\d+)\s+(seconds|minutes|hours|days|weeks)$/);
-  if (timed) return BigInt(timed[1]) * SOL_TIME_UNITS[timed[2]];
-  const scientific = text.match(/^(\d+)e(\d+)$/);
-  if (scientific) return BigInt(scientific[1]) * 10n ** BigInt(scientific[2]);
-  return /^\d+$/.test(text) ? BigInt(text) : undefined;
-}
-export async function riskMirrorConstants(rule, ctx) {
-  const rel = "packages/core/src/risk/constants.ts";
-  const tsPath = join(ctx.root, rel);
-  const solPath = join(ctx.root, "contracts/src/libraries/Constants.sol");
-  if (!existsSync(tsPath) || !existsSync(solPath)) return { findings: [], skipped: "risk mirror not landed" };
-  const sol = new Map();
-  for (const m of readFileSync(solPath, "utf8").matchAll(SOL_CONSTANT)) {
-    const value = solLiteral(m[2]);
-    if (value !== undefined) sol.set(m[1], value);
-  }
-  const { RISK } = await import(pathToFileURL(tsPath).href);
-  const findings = [];
-  for (const [name, value] of Object.entries(RISK)) {
-    if (!sol.has(name)) findings.push(finding(rule, `${name} has no Constants.sol twin`, rel));
-    else if (sol.get(name) !== value) {
-      findings.push(finding(rule, `${name} = ${value} but Constants.sol says ${sol.get(name)}`, rel));
     }
   }
   return { findings };

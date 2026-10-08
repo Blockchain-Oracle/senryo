@@ -1,6 +1,6 @@
 /**
- * FT101 / M13 (Fomo F36 adapted; D-023, D-038): before an account's first real-money trade it confirms it is outside
- * the regions Mainnet trading is closed to — sanctioned jurisdictions plus Perpl's list. Practice is never gated, and
+ * FT101 / M13 (Fomo F36 adapted; D-273): before an account's first Real call it confirms it is outside the regions
+ * Real money is closed to — sanctioned jurisdictions plus the Real-money list. Practice is never gated, and
  * deposits and withdrawals of your own funds never are. This self-attestation sits beside the server's IP check
  * (`/v1/geo`), which stays the primary block. The wording is the lead's draft for the user's review, like the Terms.
  */
@@ -8,19 +8,23 @@ import type { Address } from "@senryo/account";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
 /** Bump when the wording or the region list changes: every account confirms again. */
-export const ELIGIBILITY_VERSION = "2026-10-01";
+export const ELIGIBILITY_VERSION = "2026-10-08";
 
-/** D-023: Perpl's blocked list (BY, CU, GB, IR, KP, RU, SY, UA, US), named as people read them. */
+/**
+ * D-273: the api's `REAL_MONEY_BLOCKED` (AU, BY, CA, GB, RU, US) plus `SANCTIONED` (CU, IR, KP, SY), named as people
+ * read them. The server's IP check uses the same two lists.
+ */
 export const RESTRICTED_REGIONS = [
   "the United States",
   "the United Kingdom",
+  "Canada",
+  "Australia",
   "Belarus",
+  "Russia",
   "Cuba",
   "Iran",
   "North Korea",
-  "Russia",
   "Syria",
-  "Ukraine",
 ] as const;
 
 type Stored = Record<string, string>;

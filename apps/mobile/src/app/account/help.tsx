@@ -19,7 +19,7 @@ const SEAL = ids.brand("senryo");
 const FAQ = [
   {
     q: "What is Practice?",
-    a: "Practice runs on Monad’s test network with paper money (P$) that has no value. Every flow works the same, so you can rehearse before real money.",
+    a: "Practice runs on Monad’s test network with test dollars that have no value. Every call works the same, so you can learn before Real money.",
   },
   {
     q: "Who holds my money?",
@@ -31,11 +31,11 @@ const FAQ = [
   },
   {
     q: "Why does Face ID ask?",
-    a: "One Face ID unlocks trading for a while; it locks when you leave the app or stop. Sends, withdrawals and security changes always ask for Face ID again. Your passkey is for signing in on a new phone.",
+    a: "One Face ID turns on one-tap calls for a while, within a spending cap; it locks when you leave the app or stop. Sends, withdrawals and security changes always ask for Face ID again. Your passkey is for signing in on a new phone.",
   },
   {
-    q: "What does a trade cost?",
-    a: "The ticket shows the trading fee and the network fee before you confirm. Open positions pay or receive funding and borrow, shown on the position.",
+    q: "What does a call cost?",
+    a: "Only your stake. Senryo pays the network fee, so you never need MON. The call shows what it pays before you tap.",
   },
 ] as const;
 
@@ -43,21 +43,21 @@ const FAQ = [
 const SOURCES = [
   {
     title: "Prices",
-    mark: { id: ids.provider("chainlink"), variant: "symbol" },
-    name: "Chainlink",
-    about: "Chainlink push feeds on Monad. Practice relays the same feeds to Monad testnet.",
+    mark: { id: ids.provider("pyth"), variant: "symbol" },
+    name: "Pyth",
+    about: "Pyth prices draw the chart and settle every call — the same print, verified on Monad.",
   },
   {
     title: "Charts and history",
     mark: { id: ids.provider("envio"), variant: "wordmark" },
     name: "Envio",
-    about: "Price rounds and your fills, indexed by Envio from Monad.",
+    about: "Your calls, results and the leaderboard, indexed by Envio from Monad.",
   },
   {
     title: "Region check",
     mark: { id: ids.provider("db-ip"), variant: "wordmark" },
     name: "IP Geolocation by DB-IP",
-    about: "IP Geolocation by DB-IP (db-ip.com), CC BY 4.0 — used only to apply the Mainnet trading rules.",
+    about: "IP Geolocation by DB-IP (db-ip.com), CC BY 4.0 — used only to apply the Real money rules.",
     link: "https://db-ip.com",
   },
 ] as const;
@@ -67,7 +67,7 @@ const MARKS_CREDIT =
   "Asset, network, venue and provider logos are their owners' trademarks, shown only to identify them; no " +
   "endorsement is implied. All trademarks shown are the property of Circle Internet Group, Inc. and/or its " +
   "affiliates (USDC), and of their respective owners. ETH diamond: ethereum.org, CC BY 4.0. Flags: Wikimedia " +
-  "Commons, public domain. Passkey and crude-oil icons: Material Symbols by Google, Apache License 2.0.";
+  "Commons, public domain. Passkey icon: Material Symbols by Google, Apache License 2.0.";
 
 /**
  * Help (A10): the seal, version and mode; the first questions as rows with their answers behind an ⓘ; the contact

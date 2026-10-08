@@ -1,18 +1,17 @@
-import { type Href, router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
-import { NetworkPill, ReceiveCard } from "~/features/fund/ReceiveCard";
+import { NetworkPill, ReceiveCard } from "~/features/wallet/ReceiveCard";
 import { useAccount } from "~/lib/account/provider";
-import { addMoneyRoute, ROUTES } from "~/lib/constants/routes";
+import { ROUTES } from "~/lib/constants/routes";
 import { useNetwork } from "~/lib/network";
 import { SPACE } from "~/theme";
 
 /**
- * Receive (B3, plan §0.9 Receive; Solflare S21): the fan's Receive, an asset page's Receive circle and Add money's
- * "Crypto on Monad" / "From an exchange" all open this compact sheet over the page beneath. One address for every
- * token; `?asset=` preselects a chip, `?from=exchange` leads with the exchange's network tip.
+ * Receive (B3; Solflare S21): the fan's Receive opens this compact sheet over the page beneath — one address on Monad
+ * for dollars. "Sending from another chain?" opens Add money's any-chain route once it exists (Aurora, S9).
  */
 export default function ReceiveSheet() {
   return (
@@ -26,18 +25,15 @@ function Body() {
   const close = useSheetClose();
   const address = useAccount().hint?.address;
   const chainId = useNetwork().chainId;
-  const { asset, from } = useLocalSearchParams<{ asset?: string; from?: string }>();
   return (
     <View style={styles.stack}>
-      <SheetHeading title="Deposit crypto" />
+      <SheetHeading title="Receive dollars" />
       <NetworkPill />
       {address ? (
         <ReceiveCard
           key={`${chainId}:${address}`}
           address={address}
-          preselected={asset?.toLowerCase()}
-          exchange={from === "exchange"}
-          onOtherChain={() => close(() => router.push(addMoneyRoute("chain") as Href))}
+          onOtherChain={() => close(() => router.push(ROUTES.home))}
         />
       ) : (
         <View style={styles.guest}>

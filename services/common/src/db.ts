@@ -13,6 +13,7 @@ import * as m0011 from "../migrations/0011_trade_posts.ts";
 import * as m0012 from "../migrations/0012_card_outbox_reconcile.ts";
 import * as m0013 from "../migrations/0013_wallet_transfers.ts";
 import * as m0014 from "../migrations/0014_perpl_funds.ts";
+import * as m0015 from "../migrations/0015_prediction_pivot.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -55,6 +56,7 @@ export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [
   m0012,
   m0013,
   m0014,
+  m0015,
 ];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */

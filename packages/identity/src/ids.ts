@@ -24,10 +24,8 @@ export const ids = {
   splToken: (mint: string): EntityId => `token:solana:${mint}`,
   /** `native:143:MON` */
   native: (chainRef: number | string, symbol: string): EntityId => `native:${chainRef}:${symbol}`,
-  /** `market:senryo:143:0` — our engine's onchain market id. */
-  engineMarket: (chainId: number, marketId: number): EntityId => `market:senryo:${chainId}:${marketId}`,
-  /** `market:perpl:143:1` — Perpl's market id from `/v1/pub/context`. */
-  perplMarket: (chainId: number, marketId: number): EntityId => `market:perpl:${chainId}:${marketId}`,
+  /** `market:BTC` — a prediction market from the catalogue (`packages/config/src/catalog.ts`, D-268). */
+  market: (symbol: string): EntityId => `market:${symbol}`,
   /** `fx:EURUSD` — the FX pair identity until each pair has an onchain market id (W6). */
   fxPair: (base: string, quote: string): EntityId => `fx:${base}${quote}`,
   /** `equity:NVDA` — the underlying company, until an instrument for it has a venue market id. */
@@ -37,8 +35,3 @@ export const ids = {
   exchange: (slug: string): EntityId => `exchange:${slug}`,
   brand: (slug: string): EntityId => `brand:${slug}`,
 } as const;
-
-/** Artwork key of a J11 spot token's logo from Monad's token list (its folder there, slugged: "BTC.b" → "tokenlist-btc-b"). */
-export function spotArtKey(listDir: string): string {
-  return `tokenlist-${listDir.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-}

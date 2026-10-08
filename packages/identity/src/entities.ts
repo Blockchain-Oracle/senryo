@@ -2,18 +2,12 @@
  * Every known entity, keyed canonically (./ids.ts), bound to one artwork record (./art) or to a recorded gap. Label,
  * symbol, role, network/venue and artwork live on the same row, so a ticker can never borrow another entity's mark.
  * Practice (testnet) rows carry the real identity and say `practice: true`; the surface names the mode.
+ * Prediction markets are keyed by catalogue symbol (`ids.market`, D-268); stock logos come through the scripted
+ * pipeline (scripts/catalog.ts), never by hand.
  */
-import {
-  ENGINE_MARKETS,
-  type EngineSymbol,
-  MAINNET_CHAIN_ID,
-  MAINNET_EXTERNAL,
-  PERPL_ASSET_NAMES,
-  SPOT_TOKENS,
-  TESTNET_CHAIN_ID,
-} from "@senryo/config";
-import { EXTERNAL_CHAIN_IDS, PERPL_MARKETS, PRACTICE_TOKENS, USDC_ELSEWHERE } from "./constants.ts";
-import { CAIP2, ids, spotArtKey } from "./ids.ts";
+import { MAINNET_CHAIN_ID, MAINNET_USDC, TESTNET_CHAIN_ID } from "@senryo/config";
+import { EXTERNAL_CHAIN_IDS, USDC_ELSEWHERE } from "./constants.ts";
+import { CAIP2, ids } from "./ids.ts";
 import type { Entity } from "./types.ts";
 
 const MONAD_NETWORKS = [
@@ -21,36 +15,16 @@ const MONAD_NETWORKS = [
   { chainId: TESTNET_CHAIN_ID, practice: true },
 ] as const;
 
-/**
- * Our engine's markets → their original art: commodities as koban / chōgin (never an issuer's token art: XAU is not
- * Tether Gold), FX majors (S8.23) as the same flag-pair discs as their `fx:` pair identities.
- */
-const ENGINE_ART: Readonly<Record<EngineSymbol, string>> = {
-  XAU: "xau-koban",
-  XAG: "xag-chogin",
-  EUR: "fx-eur-usd",
-  GBP: "fx-gbp-usd",
-  JPY: "fx-jpy-usd",
-  CHF: "fx-chf-usd",
-  CAD: "fx-cad-usd",
+/** Crypto price markets by ticker: artwork key (undefined = no artwork on file, see `gap`). */
+const CRYPTO: Readonly<Record<string, { name: string; art?: string; gap?: string }>> = {
+  BTC: { name: "Bitcoin", art: "bitcoin" },
+  ETH: { name: "Ethereum", art: "ethereum" },
+  SOL: { name: "Solana", art: "solana" },
+  MON: { name: "Monad", art: "monad" },
 };
 
-/**
- * Crypto assets by ticker: artwork key (undefined = no artwork on file, see `gap`); display names come with the Perpl
- * registry (`PERPL_ASSET_NAMES`).
- */
-const CRYPTO: Readonly<Record<string, { art?: string; gap?: string }>> = {
-  BTC: { art: "bitcoin" },
-  ETH: { art: "ethereum" },
-  SOL: { art: "solana" },
-  MON: { art: "monad" },
-  HYPE: { art: "hyperliquid" },
-  ZEC: { art: "zcash" },
-  LIT: { art: "lighter" },
-  VVV: { art: "venice" },
-  PUMP: { art: "pump" },
-  NEAR: { art: "near" },
-};
+/** Gold priced as a market (original koban art, never an issuer's token art). */
+const COMMODITY_MARKETS = [{ symbol: "XAU", name: "Gold", art: "xau-koban" }] as const;
 
 /** Chains the any-asset bridges reach that no Senryo config needs elsewhere (EIP-155 ids). */
 const OPTIMISM_CHAIN_ID = 10;
@@ -69,9 +43,7 @@ function monadRows(): Entity[] {
   return MONAD_NETWORKS.flatMap(({ chainId, practice }) => {
     const chain = ids.evmChain(chainId);
     const flag = practice ? { practice } : {};
-    const tokens = practice ? PRACTICE_TOKENS : { ausd: MAINNET_EXTERNAL.ausd, usdc: MAINNET_EXTERNAL.usdc };
-    const venue = { network: chain, venue: ids.venue("senryo"), role: "asset" as const };
-    return [
+    const rows: Entity[] = [
       network(chain, practice ? "Monad Testnet" : "Monad", "monad", practice),
       {
         id: ids.native(chainId, "MON"),
@@ -83,58 +55,42 @@ function monadRows(): Entity[] {
         art: "monad",
         ...flag,
       },
-      {
-        id: ids.token(chainId, tokens.ausd),
-        name: "Agora USD",
-        symbol: "AUSD",
-        role: "asset",
-        instrument: "stablecoin",
-        network: chain,
-        art: "ausd",
-        ...flag,
-      },
-      {
-        id: ids.token(chainId, tokens.usdc),
+    ];
+    // Practice's Test USD joins with its address after the S2 deploy (the `identity-provenance` invariant checks it).
+    if (!practice) {
+      rows.push({
+        id: ids.token(chainId, MAINNET_USDC),
         name: "USD Coin",
         symbol: "USDC",
         role: "asset",
         instrument: "stablecoin",
         network: chain,
         art: "usdc",
-        ...flag,
-      },
-      ...ENGINE_MARKETS.map((m) => ({
-        id: ids.engineMarket(chainId, m.id),
-        name: m.name,
-        symbol: m.symbol,
-        art: ENGINE_ART[m.symbol],
-        instrument: m.category === "fx" ? ("fx-pair" as const) : ("commodity" as const),
-        ...venue,
-        ...flag,
-      })),
-    ];
+      });
+    }
+    return rows;
   });
 }
 
-function perplRows(): Entity[] {
-  return Object.entries(PERPL_MARKETS).flatMap(([chainId, markets]) =>
-    Object.entries(markets).map(([symbol, marketId]) => {
-      const asset = CRYPTO[symbol];
-      const practice = Number(chainId) === TESTNET_CHAIN_ID;
-      return {
-        id: ids.perplMarket(Number(chainId), marketId),
-        name: PERPL_ASSET_NAMES[symbol] ?? symbol,
-        symbol,
-        role: "asset",
-        instrument: "perp",
-        network: ids.evmChain(Number(chainId)),
-        venue: ids.venue("perpl"),
-        ...(asset?.art ? { art: asset.art } : { gap: asset?.gap ?? "first-party artwork not acquired yet" }),
-        ...(practice ? { practice } : {}),
-      } satisfies Entity;
-    }),
-  );
-}
+/** The prediction markets (crypto and gold); stocks are `equityRows`, FX `fxRows`. */
+const marketRows = (): Entity[] => [
+  ...Object.entries(CRYPTO).map(([symbol, c]) => ({
+    id: ids.market(symbol),
+    name: c.name,
+    symbol,
+    role: "asset" as const,
+    instrument: "crypto" as const,
+    ...(c.art ? { art: c.art } : { gap: c.gap ?? "artwork not acquired yet" }),
+  })),
+  ...COMMODITY_MARKETS.map((m) => ({
+    id: ids.market(m.symbol),
+    name: m.name,
+    symbol: m.symbol,
+    role: "asset" as const,
+    instrument: "commodity" as const,
+    art: m.art,
+  })),
+];
 
 function externalRows(): Entity[] {
   const { ethereum, base, arbitrum, bnb, polygon } = EXTERNAL_CHAIN_IDS;
@@ -193,35 +149,6 @@ function externalRows(): Entity[] {
   ];
 }
 
-/**
- * J11 spot tokens (the generated `SPOT_TOKENS`), each keyed by chain + contract with its own logo from Monad's token
- * list (`scripts/catalog.ts`). Native MON is the Monad row above, so it is not repeated here.
- */
-const spotRows = (): Entity[] =>
-  SPOT_TOKENS.filter((t) => !t.native).map((t) => ({
-    id: ids.token(MAINNET_CHAIN_ID, t.address),
-    name: t.name,
-    symbol: t.symbol,
-    role: "asset",
-    instrument: "token",
-    network: ids.evmChain(MAINNET_CHAIN_ID),
-    art: spotArtKey(t.list.dir),
-  }));
-
-/** Owned assets beyond the spot list (D-248): Tether Gold on Monad, bought and held as a token (not the XAU perp). */
-const XAUT0_ADDRESS = "0x01bFF41798a0BcF287b996046Ca68b395DbC1071";
-const ownedRows = (): Entity[] => [
-  {
-    id: ids.token(MAINNET_CHAIN_ID, XAUT0_ADDRESS),
-    name: "Tether Gold",
-    symbol: "XAUt0",
-    role: "asset",
-    instrument: "token",
-    network: ids.evmChain(MAINNET_CHAIN_ID),
-    art: spotArtKey("XAUt0"),
-  },
-];
-
 const FX_PAIRS = [
   { base: "EUR", name: "Euro / US Dollar", art: "fx-eur-usd" },
   { base: "GBP", name: "British Pound / US Dollar", art: "fx-gbp-usd" },
@@ -237,7 +164,6 @@ const fxRows = (): Entity[] =>
     symbol: `${p.base}/USD`,
     role: "asset",
     instrument: "fx-pair",
-    venue: ids.venue("senryo"),
     art: p.art,
   }));
 
@@ -252,24 +178,12 @@ const org = (id: string, name: string, role: Entity["role"], art?: string, gap?:
 
 const orgRows = (): Entity[] => [
   org(ids.brand("senryo"), "Senryo", "brand", "senryo-seal"),
-  org(ids.venue("senryo"), "Senryo", "venue", "senryo-venue"),
-  org(ids.venue("perpl"), "Perpl", "venue", "perpl"),
+  org(ids.provider("pyth"), "Pyth", "oracle", undefined, "first-party artwork via scripts/catalog.ts (S2)"),
+  // The MON market's labelled second source on mainnet (D-258, S9).
   org(ids.provider("chainlink"), "Chainlink", "oracle", "chainlink"),
   org(ids.provider("envio"), "Envio", "indexer", "envio"),
   org(ids.provider("db-ip"), "DB-IP", "data-provider", "db-ip"),
   org(ids.provider("aurora"), "Aurora", "route-provider", "aurora"),
-  org(ids.provider("uniswap"), "Uniswap", "route-provider", "uniswap"),
-  // Any-asset routes (D-239): the swap aggregators and bridges a quote can take.
-  org(ids.provider("monorail"), "Monorail", "route-provider", "monorail"),
-  org(ids.provider("kyberswap"), "KyberSwap", "route-provider", "kyberswap"),
-  org(ids.provider("relay"), "Relay", "route-provider", "relay"),
-  org(ids.provider("across"), "Across", "route-provider", "across"),
-  org(ids.provider("lifi"), "LI.FI", "route-provider", "lifi"),
-  org(ids.provider("cctp"), "Circle CCTP", "route-provider", "circle-cctp"),
-  org(ids.provider("ramp"), "Ramp Network", "route-provider", "ramp"),
-  // Card wallets (E5): named on the Add to Wallet row.
-  org(ids.provider("apple-wallet"), "Apple Wallet", "wallet", "apple-pay"),
-  org(ids.provider("google-wallet"), "Google Wallet", "wallet", "google-pay"),
   org(ids.provider("passkey"), "Passkey", "auth-provider", "passkey"),
   org(ids.exchange("coinbase"), "Coinbase", "exchange", "coinbase"),
   org(ids.exchange("binance"), "Binance", "exchange", "binance"),
@@ -277,9 +191,9 @@ const orgRows = (): Entity[] => [
 ];
 
 /**
- * Underlyings by ticker: the calculated equity feeds (`CALCULATED_EQUITIES`) and NVDA's arriving market. A company
- * shows its own mark, a fund its issuer's brand (SPDR, Invesco, iShares) — never the xStocks wrapper's art, whatever
- * the feed prices. Sources and the researched dead ends: scripts/catalog.ts.
+ * Stocks and ETFs called on as price markets (Pyth equity feeds, regular hours, D-265). A company shows its own mark,
+ * a fund its issuer's brand (SPDR, Invesco) — never a wrapper's art. Sources and the researched dead ends:
+ * scripts/catalog.ts.
  */
 const EQUITIES: Readonly<Record<string, { name: string; art?: string; gap?: string }>> = {
   SPY: {
@@ -292,8 +206,11 @@ const EQUITIES: Readonly<Record<string, { name: string; art?: string; gap?: stri
   },
   NVDA: { name: "Nvidia", art: "nvidia" },
   TSLA: { name: "Tesla", art: "tesla" },
-  SPCX: { name: "SpaceX", art: "spacex" },
-  EWY: { name: "iShares MSCI South Korea ETF", art: "ishares" },
+  AAPL: { name: "Apple", gap: "Simple Icons (CC0) mark via scripts/catalog.ts (S7)" },
+  MSFT: { name: "Microsoft", gap: "mark via scripts/catalog.ts (S7)" },
+  META: { name: "Meta", gap: "Simple Icons (CC0) mark via scripts/catalog.ts (S7)" },
+  AMZN: { name: "Amazon", gap: "mark via scripts/catalog.ts (S7)" },
+  GOOGL: { name: "Alphabet", gap: "Simple Icons (CC0) mark via scripts/catalog.ts (S7)" },
 };
 
 const equityRows = (): Entity[] =>
@@ -306,29 +223,11 @@ const equityRows = (): Entity[] =>
     ...(e.art ? { art: e.art } : { gap: e.gap ?? "artwork not acquired yet" }),
   }));
 
-/**
- * Crude oil (`UNPRICED_INSTRUMENTS`, no feed on Monad yet): a commodity no owner's mark identifies, so a neutral glyph
- * (Material Symbols `oil_barrel`). Keyed `ids.equity` like the other arriving rows until it has a venue market id.
- */
-const commodityRows = (): Entity[] => [
-  {
-    id: ids.equity("OIL"),
-    name: "Crude oil (WTI / Brent)",
-    symbol: "OIL",
-    role: "asset",
-    instrument: "commodity",
-    art: "oil-barrel",
-  },
-];
-
 export const ENTITIES: readonly Entity[] = [
   ...monadRows(),
-  ...spotRows(),
-  ...ownedRows(),
-  ...perplRows(),
+  ...marketRows(),
   ...externalRows(),
   ...fxRows(),
   ...orgRows(),
   ...equityRows(),
-  ...commodityRows(),
 ];

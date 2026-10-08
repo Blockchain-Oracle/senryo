@@ -18,7 +18,6 @@
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
     "@senryo/identity": "workspace:*",
-    "@senryo/indexer-client": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "react": "catalog:"
   },

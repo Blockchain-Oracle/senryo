@@ -1,66 +1,25 @@
-import type { ChainId } from "@senryo/config";
-import {
-  accessManagerAbi,
-  aggregatorV3InterfaceAbi,
-  collateralSwapperAbi,
-  inboxFactoryAbi,
-  intentRouterAbi,
-  lpVaultAbi,
-  marketCalendarAbi,
-  mirrorAggregatorAbi,
-  mockAUSDAbi,
-  mockUSDCAbi,
-  practiceSwapAbi,
-  pythBoundaryOracleAbi,
-  senryoBinaryV1Abi,
-  senryoCoreAbi,
-  sessionOracleAbi,
-  starterDripAbi,
-} from "@senryo/contracts/abis";
+import { type ChainId, MAINNET_CHAIN_ID, MAINNET_USDC } from "@senryo/config";
+import { accessManagerAbi, marketCalendarAbi, pythBoundaryOracleAbi } from "@senryo/contracts/abis";
 import { addressBooks } from "@senryo/contracts/addresses";
-import { perplExchangeAbi } from "@senryo/contracts/external";
 import { type Abi, type Address, getAddress, getContract } from "viem";
 import type { ReadClient } from "./clients.ts";
 
-/** Deployed-contract name (key in `addresses/<chainId>.json`) → ABI. */
+/**
+ * Deployed-contract name (key in `addresses/<chainId>.json`) → ABI. The prediction-market contracts
+ * (Windows, BandReserve, SessionGrants, TestUSD) join this map with the S2 deploy (D-256).
+ */
 export const CONTRACT_ABIS = {
   AccessManager: accessManagerAbi,
-  SenryoCore: senryoCoreAbi,
-  SessionOracle: sessionOracleAbi,
   MarketCalendar: marketCalendarAbi,
-  LpVault: lpVaultAbi,
-  StarterDrip: starterDripAbi,
-  IntentRouter: intentRouterAbi,
-  InboxFactory: inboxFactoryAbi,
-  CollateralSwapper: collateralSwapperAbi,
-  MirrorXAU: mirrorAggregatorAbi,
-  MirrorXAG: mirrorAggregatorAbi,
-  /** FX mirrors on 10143 (S8.23, `AddMarkets.s.sol`). */
-  MirrorEUR: mirrorAggregatorAbi,
-  MirrorGBP: mirrorAggregatorAbi,
-  MirrorJPY: mirrorAggregatorAbi,
-  MirrorCHF: mirrorAggregatorAbi,
-  MirrorCAD: mirrorAggregatorAbi,
-  MockAUSD: mockAUSDAbi,
-  MockUSDC: mockUSDCAbi,
-  /** Practice AUSD ↔ USDC at par on 10143 (D-252, `PracticeSwap.s.sol`). */
-  PracticeSwap: practiceSwapAbi,
+  PythBoundaryOracle: pythBoundaryOracleAbi,
 } as const;
 
 export type ContractName = keyof typeof CONTRACT_ABIS;
 
-export { aggregatorV3InterfaceAbi };
-
-/**
- * Every custom error any of our contracts — or the external venue the app sends to directly (Perpl's Exchange) — can
- * revert with, for decoding reverts from raw calls.
- */
-export const ALL_ERRORS_ABI: Abi = [
-  ...Object.values(CONTRACT_ABIS).flat(),
-  ...perplExchangeAbi,
-  ...senryoBinaryV1Abi,
-  ...pythBoundaryOracleAbi,
-].filter((item) => item.type === "error");
+/** Every custom error any of our contracts can revert with, for decoding reverts from raw calls. */
+export const ALL_ERRORS_ABI: Abi = Object.values(CONTRACT_ABIS)
+  .flat()
+  .filter((item) => item.type === "error");
 
 export class NotDeployedError extends Error {
   constructor(
@@ -92,4 +51,19 @@ export function startBlockOf(chainId: ChainId, name: ContractName): bigint {
 /** Typed read-only contract instance (`.read.<fn>(args, { blockTag })`). */
 export function readContract<N extends ContractName>(chainId: ChainId, name: N, client: ReadClient) {
   return getContract({ address: addressOf(chainId, name), abi: CONTRACT_ABIS[name], client });
+}
+
+/**
+ * The dollar every bet uses (D-258): Circle USDC on mainnet, our Test USD (address book, after the S2 deploy) on
+ * testnet. `undefined` until the testnet token is deployed — callers show "Coming with the next deploy", never $0.
+ */
+export function dollarTokenOf(chainId: ChainId): Address | undefined {
+  if (chainId === MAINNET_CHAIN_ID) return getAddress(MAINNET_USDC);
+  const entry = addressBooks[chainId]?.contracts.TestUSD;
+  return entry ? getAddress(entry.address) : undefined;
+}
+
+/** The prediction-market contracts on a network (S2 testnet, S9 mainnet); false until they're in the address book. */
+export function marketsDeployed(chainId: ChainId): boolean {
+  return Boolean(addressBooks[chainId]?.contracts.BandReserve);
 }

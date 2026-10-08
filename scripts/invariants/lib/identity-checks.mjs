@@ -10,10 +10,9 @@
  *   permits the colourway; a tintable glyph carries no colour of its own (the caller supplies one flat ink).
  * - The generated components are current: `src/generated/manifest.json` pins the same hashes, and every variant has a
  *   native and a web component.
- * - Every entity resolves to an artwork record or states a gap; ids are unique; practice token addresses equal the
- *   address book, so a redeploy can't silently orphan their marks.
- * - Every J11 spot token (the generated `SPOT_TOKENS`) names an entity that has artwork on file — a token never ships
- *   without its own logo.
+ * - Every entity resolves to an artwork record or states a gap; ids are unique.
+ * - Once Practice's Test USD is deployed (S2), the address book's `TestUSD` has an entity with artwork, so a redeploy
+ *   can't silently orphan the practice dollar's mark (D-258).
  */
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -30,7 +29,7 @@ const PROVENANCE = new Set(["first-party", "public-domain", "senryo-original", "
 /** A paint value other than none/currentColor on fill, stroke or a gradient stop. */
 const OWN_COLOUR = /(?:fill|stroke|stop-color)(?:\s*=\s*["']|\s*:\s*)(?!none\b|currentColor\b)[#a-z(]/i;
 const ADDRESS_BOOK = "packages/contracts/src/addresses/10143.json";
-const SPOT_LIST = "packages/config/src/generated/spot-tokens.ts";
+const TESTNET_CHAIN_ID = 10143;
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const posix = (p) => p.split(sep).join("/");
@@ -117,10 +116,9 @@ export async function identityProvenance(rule, ctx) {
   const root = ctx.root;
   if (!existsSync(join(root, PKG, "src/art/index.ts"))) return { findings: [], skipped: "identity package not landed" };
   const load = (rel) => import(pathToFileURL(join(root, PKG, rel)).href);
-  const [{ ART_SOURCES }, { ENTITIES }, { PRACTICE_TOKENS }, { deriveSvg }] = await Promise.all([
+  const [{ ART_SOURCES }, { ENTITIES }, { deriveSvg }] = await Promise.all([
     load("src/art/index.ts"),
     load("src/entities.ts"),
-    load("src/constants.ts"),
     load("src/derive.ts"),
   ]);
   const manifestPath = join(root, PKG, "src/generated/manifest.json");
@@ -154,23 +152,13 @@ export async function identityProvenance(rule, ctx) {
     if (e.art === undefined && !(e.gap ?? "").trim())
       findings.push(finding(rule, `${e.id}: no artwork and no recorded gap`, `${PKG}/src/entities.ts`));
   }
-  if (existsSync(join(root, SPOT_LIST))) {
-    const { SPOT_TOKENS } = await import(pathToFileURL(join(root, SPOT_LIST)).href);
-    const byId = new Map(ENTITIES.map((e) => [e.id, e]));
-    for (const t of SPOT_TOKENS) {
-      const e = byId.get(t.mark);
-      if (!e) findings.push(finding(rule, `spot token ${t.symbol}: mark ${t.mark} is not an entity`, SPOT_LIST));
-      else if (e.art === undefined || !keys.has(e.art))
-        findings.push(finding(rule, `spot token ${t.symbol}: no artwork on file for ${t.mark}`, SPOT_LIST));
-    }
-  }
-  const book = JSON.parse(readFileSync(join(root, ADDRESS_BOOK), "utf8")).contracts ?? {};
-  const mocks = { ausd: book.MockAUSD?.address, usdc: book.MockUSDC?.address };
-  for (const [name, address] of Object.entries(PRACTICE_TOKENS)) {
-    if (String(mocks[name]).toLowerCase() !== address.toLowerCase())
-      findings.push(
-        finding(rule, `practice ${name} ${address} ≠ address book ${mocks[name]}`, `${PKG}/src/constants.ts`),
-      );
+  const testUsd = JSON.parse(readFileSync(join(root, ADDRESS_BOOK), "utf8")).contracts?.TestUSD?.address;
+  if (testUsd) {
+    const id = `token:${TESTNET_CHAIN_ID}:${testUsd.toLowerCase()}`;
+    const e = ENTITIES.find((x) => x.id === id);
+    if (!e) findings.push(finding(rule, `Test USD ${testUsd} has no entity`, `${PKG}/src/entities.ts`));
+    else if (e.art === undefined)
+      findings.push(finding(rule, "Test USD has no artwork on file", `${PKG}/src/entities.ts`));
   }
   return { findings };
 }

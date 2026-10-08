@@ -2,7 +2,6 @@ import { createApiClient, type MyProfile, myProfileSchema } from "@senryo/api-cl
 import { TESTNET_CHAIN_ID } from "@senryo/config";
 import { storage } from "~/lib/storage";
 import { DEV_ORIGIN, requireDevWorkspace } from "./config";
-import { devHoldings } from "./holdings";
 
 let profile: MyProfile | undefined;
 const PROFILE_KEY = "senryo.dev-profile.v1";
@@ -55,11 +54,8 @@ export const devApi = createApiClient({
         : url.pathname;
     let response: unknown;
     switch (path) {
-      case "/v1/holdings":
-        response = await devHoldings(url);
-        break;
       case "/v1/geo":
-        response = { country: null, mainnetTradingAllowed: false, perplAllowed: true, reason: "Local fork" };
+        response = { country: null, realMoneyAllowed: false, reason: "Local workspace" };
         break;
       case "/v1/profile":
         if (method === "PUT" && profile) {

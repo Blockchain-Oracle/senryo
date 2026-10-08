@@ -19,7 +19,6 @@ import {
   noSecretsInTree,
   noUiTests,
   pnpmOnly,
-  riskMirrorConstants,
   solNoMagicNumbers,
 } from "./lib/repo-checks.mjs";
 
@@ -199,11 +198,6 @@ export const rules = [
     id: "address-drift",
     description: "deployed addresses agree between contracts export and indexer",
     check: addressDrift,
-  },
-  {
-    id: "risk-mirror-constants",
-    description: "the core risk mirror's constants equal Constants.sol by name",
-    check: riskMirrorConstants,
   },
   {
     id: "indexer-docs-chain-filter",

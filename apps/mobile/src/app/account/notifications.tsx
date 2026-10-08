@@ -24,25 +24,14 @@ import {
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 const CHANNELS: ReadonlyArray<{ key: PushChannel; title: string; detail: string }> = [
+  { key: "results", title: "Call results", detail: "When a call wins, loses or is refunded, with what was paid." },
+  { key: "deposits", title: "Money arrived", detail: "When test dollars or a deposit from another chain arrive." },
   {
-    key: "fills",
-    title: "Trades and stop losses",
-    detail: "When a stop loss or take profit closes a position.",
+    key: "priceAlerts",
+    title: "Markets and alerts",
+    detail: "When a stock market you watch opens, or a price you set is crossed.",
   },
-  {
-    key: "liquidation",
-    title: "Liquidation warnings",
-    detail: "When your account gets close to liquidation, and if a position is liquidated.",
-  },
-  { key: "priceAlerts", title: "Price alerts", detail: "When a market crosses a price you set." },
-  { key: "deposits", title: "Deposits", detail: "When money you sent arrives." },
-  { key: "card", title: "Kinpaku card", detail: "Payments and declines on your card." },
-  { key: "social", title: "Followers and replies", detail: "New followers, and likes and replies on your theses." },
-  {
-    key: "followedTrades",
-    title: "Traders you follow",
-    detail: "When someone you follow opens a position. Off unless you turn it on.",
-  },
+  { key: "social", title: "People and invites", detail: "New followers and invite rewards." },
 ];
 
 /**

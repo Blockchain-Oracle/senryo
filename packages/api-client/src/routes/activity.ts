@@ -62,7 +62,7 @@ export const walletActivityItemSchema = z.object({
   /** Who sent the transaction (null when the scan didn't see it). */
   sender: addressSchema.nullable(),
   /**
-   * Every movement was with a Senryo contract (trading account, pool, starter, intent router, Perpl): the indexer's
+   * Every movement was with a Senryo contract: the indexer's
    * event or this phone's journal tells that story, so Activity doesn't add a second "Sent" row.
    */
   internal: z.boolean(),

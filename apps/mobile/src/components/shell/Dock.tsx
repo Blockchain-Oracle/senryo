@@ -5,7 +5,7 @@ import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { UsersRound, Wallet } from "~/components/kit/symbols";
+import { Wallet } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { dockBottom, EASE, SIZE, SPACE, TIMING, TYPE, useTheme } from "~/theme";
 import { TABS, type TabName } from "./constants";
@@ -13,7 +13,7 @@ import { type ShellContext, useDock } from "./dock-context";
 
 const DOCK_HIDDEN_OFFSET = 120;
 
-/** Retain all five registered stacks; the visible dock groups them into three reference contexts. */
+/** Retain every registered stack; the visible dock groups them into two contexts until S5 (D-268). */
 export function useFocusedTab(): TabName {
   const { getTrigger } = useTabTrigger({ name: TABS[0] });
   return TABS.find((tab) => getTrigger(tab)?.isFocused) ?? TABS[0];
@@ -31,7 +31,7 @@ export function Dock() {
   const offset = useSharedValue(shown ? 0 : DOCK_HIDDEN_OFFSET);
   useEffect(() => {
     if (focused === "you") return; // Profile keeps the context it was opened from.
-    setContext(focused === "markets" ? "trade" : focused === "social" ? "social" : "money");
+    setContext(focused === "markets" ? "trade" : "money");
   }, [focused, setContext]);
   useEffect(() => {
     const show = Keyboard.addListener("keyboardDidShow", () => setTyping(true));
@@ -51,7 +51,7 @@ export function Dock() {
   const select = (next: ShellContext) => {
     if (next !== context) fire("tick");
     setContext(next);
-    switchTab(next === "money" ? "home" : next === "trade" ? "markets" : "social", {});
+    switchTab(next === "money" ? "home" : "markets", {});
   };
   return (
     <Animated.View
@@ -65,16 +65,6 @@ export function Dock() {
         accessibilityRole="tablist"
         accessibilityLabel="App context"
       >
-        <Pressable
-          onPress={() => select("social")}
-          accessibilityRole="tab"
-          accessibilityLabel="Social"
-          accessibilityState={{ selected: context === "social" }}
-          style={styles.side}
-        >
-          <UsersRound size={24} color={context === "social" ? color.ink : color.text3} />
-          <Text style={[TYPE.micro, { color: context === "social" ? color.ink : color.text3 }]}>Social</Text>
-        </Pressable>
         <Pressable
           onPress={() => select("trade")}
           accessibilityRole="tab"

@@ -22,16 +22,11 @@ export const SERVER_SCOPE: readonly Line[] = [
     title: "Profile and username",
     info: `Username, name, bio and avatar. The username stays on hold for ${HANDLE_TOMBSTONE_DAYS} days so nobody can pose as you; only you can take it back.`,
   },
-  { title: "Follows, blocks and mutes" },
-  { title: "Posts, likes and reports", info: "With the replies and likes on your posts, and reports about them." },
-  { title: "Trades in the feed" },
-  { title: "Price alerts" },
   { title: "Notifications", info: "This phone's push token and what your notifications said." },
   {
     title: "Backup passkey copy",
     info: "The encrypted recovery copy a backup passkey opens. Your main passkey still opens the account.",
   },
-  { title: "Deposit watches" },
   { title: "Synced settings" },
 ];
 
@@ -46,15 +41,11 @@ export const DEVICE_SCOPE: readonly Line[] = [
 export const KEPT_SCOPE: readonly Line[] = [
   {
     title: "Onchain history",
-    info: "Your trades, deposits, withdrawals and balances on Monad are public and permanent; nobody can delete them. Your money stays at your address.",
+    info: "Your calls, deposits, withdrawals and balances on Monad are public and permanent; nobody can delete them. Your money stays at your address.",
   },
   {
     title: "Your passkey",
     info: "It lives with Apple, Google or your password manager and still opens this account. Remove it there if you want it gone.",
-  },
-  {
-    title: "Others’ blocks of you",
-    info: "Blocks and mutes other people set, and moderation decisions, are their safety records.",
   },
   {
     title: "Transactions in flight",
@@ -86,17 +77,9 @@ export function DeletedSummary({ outcome }: { outcome: SocialDelete }) {
   const until = outcome.handleHeldUntil ? dayLabel(outcome.handleHeldUntil) : undefined;
   const rows: readonly [string, string][] = [
     ["Profile", d.profile ? "Deleted" : "None"],
-    ["Follows", String(d.follows)],
-    ["Blocks and mutes", String(d.blocks + d.mutes)],
-    ["Posts and replies", String(d.posts)],
-    ["Likes", String(d.likes)],
-    ["Reports", String(d.reports)],
-    ["Trades in the feed", String(d.feedEvents)],
-    ["Price alerts", String(d.alerts)],
     ["Push tokens", String(d.pushTokens)],
     ["Notifications", String(d.notifications)],
     ["Backup passkey copies", String(d.vaults)],
-    ["Deposit watches", String(d.inboxWatches)],
     ["Synced settings", d.prefs ? "Deleted" : "None"],
   ];
   return (

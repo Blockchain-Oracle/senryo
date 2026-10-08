@@ -7,21 +7,16 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "typecheck": "tsc --noEmit -p .",
-    "social-check": "tsx scripts/social-check.ts",
-    "notify-check": "tsx scripts/notify-check.ts",
-    "predictions-check": "tsx scripts/predictions-check.ts"
+    "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",
     "@fastify/rate-limit": "11.2.0",
-    "@fastify/websocket": "11.3.1",
     "@maxmind/geoip2-node": "7.1.0",
     "@senryo/api-client": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
-    "@senryo/indexer-client": "workspace:*",
     "@senryo/service-common": "workspace:*",
     "fastify": "5.12.5",
     "zod": "catalog:"

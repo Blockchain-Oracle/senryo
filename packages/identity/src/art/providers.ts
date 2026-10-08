@@ -1,5 +1,5 @@
 /**
- * Stablecoins, venues and providers: USDC, AUSD, Chainlink, Uniswap, Perpl, Aurora, Envio, DB-IP.
+ * Stablecoins and providers: USDC, Chainlink, Aurora, Envio, DB-IP.
  * First-party files kept byte-for-byte in packages/identity/sources/ (retrieved 2026-09-30); codegen only
  * normalises them for rendering. Gaps and licence flags are named in each record, never papered over.
  */
@@ -30,27 +30,6 @@ export const PROVIDER_ART: readonly ArtSource[] = [
         sha256: "fe4f9d5f34ef4ebeb5d80e1f5ff63dcaf5a0d5495f4adf206e4c3011d1f5c57d",
         viewBox: "0 0 96 96",
         insetPermille: 10,
-        surface: "any",
-        shape: "disc",
-      },
-    },
-  },
-  {
-    key: "ausd",
-    owner: "Agora (token art from Monad's official token list)",
-    provenance: "first-party",
-    pageUrl: "https://github.com/monad-crypto/token-list/tree/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/AUSD",
-    licence:
-      "monad-crypto/token-list (Monad's official token list), mainnet/AUSD/logo.svg at commit 20779d2c; the repo has no LICENSE and says inclusion \"does not imply endorsement\". AUSD is Agora's trademark, used nominatively. Agora's own kit (agora.finance/agora-brandkit.zip) holds only corporate marks, not token art.",
-    retrieved: "2026-09-30",
-    usage: "Token art, never Agora's corporate wordmark. No mono token variant exists.",
-    variants: {
-      disc: {
-        path: "packages/identity/sources/ausd/ausd-token-monad-tokenlist.svg",
-        url: "https://raw.githubusercontent.com/monad-crypto/token-list/20779d2ccf0e5d305d3790a21dcef4cb73342c60/mainnet/AUSD/logo.svg",
-        sha256: "948fc6e899e04755e96507200860130569980d1bd135904f74e7d13d388bcadb",
-        viewBox: "0 0 256 256",
-        insetPermille: 0,
         surface: "any",
         shape: "disc",
       },
@@ -104,101 +83,6 @@ export const PROVIDER_ART: readonly ArtSource[] = [
         },
         sha256: "1928411ba63045ad971cd13a72c3d884c2f208275c7db1d083aa9aa9d200191b",
         viewBox: "0 0 247 284",
-        insetPermille: 0,
-        surface: "light",
-        shape: "free",
-      },
-    },
-  },
-  {
-    key: "uniswap",
-    owner: "Uniswap Labs",
-    provenance: "first-party",
-    pageUrl: "https://github.com/Uniswap/brand-assets",
-    noContainer: true,
-    licence:
-      'Uniswap Labs Trademark Guidelines (17 June 2025, https://uniswap.org/trademark): "Do not use the Uniswap logos without prior written permission." Brand Guidelines (Jan 2024): do not alter; do not combine with other graphics without written consent. Written permission is open (flagged).',
-    retrieved: "2026-09-30",
-    usage: "Only where the actual route uses Uniswap; never inside a container (no plate is ever drawn).",
-    variants: {
-      symbol: {
-        path: "packages/identity/sources/uniswap/Uniswap_icon_pink.svg",
-        url: "https://raw.githubusercontent.com/Uniswap/brand-assets/1d829912a8b1c154b700984f88baa83142ee1a1b/Uniswap%20Brand%20Assets/Uniswap_icon_pink.svg",
-        archive: {
-          url: "https://raw.githubusercontent.com/Uniswap/brand-assets/1d829912a8b1c154b700984f88baa83142ee1a1b/Uniswap%20Brand%20Assets.zip",
-          sha256: "4feba448b14b56ea50903187cec7a92aa5d4091d0bfac1b7fdc7a5d4d142a2ed",
-          path: "Uniswap Brand Assets/Uniswap_icon_pink.svg",
-        },
-        sha256: "47b703cb5ea86969c1b14b75c094f18cffbfa57a1b6e219a8db571aab087022c",
-        viewBox: "0 0 400 434",
-        insetPermille: 0,
-        surface: "any",
-        shape: "free",
-      },
-      monoLight: {
-        path: "packages/identity/sources/uniswap/Uniswap_icon_white.svg",
-        url: "https://raw.githubusercontent.com/Uniswap/brand-assets/1d829912a8b1c154b700984f88baa83142ee1a1b/Uniswap%20Brand%20Assets/Uniswap_icon_white.svg",
-        archive: {
-          url: "https://raw.githubusercontent.com/Uniswap/brand-assets/1d829912a8b1c154b700984f88baa83142ee1a1b/Uniswap%20Brand%20Assets.zip",
-          sha256: "4feba448b14b56ea50903187cec7a92aa5d4091d0bfac1b7fdc7a5d4d142a2ed",
-          path: "Uniswap Brand Assets/Uniswap_icon_white.svg",
-        },
-        sha256: "18ffd691a7dc988e0282d8b177524edf4d2b6a5eaf175a1c428e0fd9c9b613b2",
-        viewBox: "0 0 400 434",
-        insetPermille: 0,
-        surface: "dark",
-        shape: "free",
-      },
-      monoDark: {
-        path: "packages/identity/sources/uniswap/Uniswap_icon_black.svg",
-        url: "https://raw.githubusercontent.com/Uniswap/brand-assets/1d829912a8b1c154b700984f88baa83142ee1a1b/Uniswap%20Brand%20Assets/Uniswap_icon_black.svg",
-        archive: {
-          url: "https://raw.githubusercontent.com/Uniswap/brand-assets/1d829912a8b1c154b700984f88baa83142ee1a1b/Uniswap%20Brand%20Assets.zip",
-          sha256: "4feba448b14b56ea50903187cec7a92aa5d4091d0bfac1b7fdc7a5d4d142a2ed",
-          path: "Uniswap Brand Assets/Uniswap_icon_black.svg",
-        },
-        sha256: "522ba5ef8c33c677b2e3b0a323c525ca6b85989e2e0ca083a8d28039bea1cbd8",
-        viewBox: "0 0 400 434",
-        insetPermille: 0,
-        surface: "light",
-        shape: "free",
-      },
-    },
-  },
-  {
-    key: "perpl",
-    owner: "Perpl",
-    provenance: "first-party",
-    pageUrl: "https://aionex.notion.site/perpl-brand-kit",
-    licence:
-      "Perpl Brand Kit (linked as 'BRAND KIT' from https://perpl.xyz): \"Use these to represent Perpl accurately.\" No explicit licence; used nominatively to identify Perpl as the execution venue.",
-    retrieved: "2026-09-30",
-    usage:
-      "The kit ships the colour and white logomarks as PNG only (used as delivered); the black vector is perpl.xyz's own favicon.",
-    variants: {
-      symbol: {
-        path: "packages/identity/sources/perpl/perpl-logomark-purple.png",
-        url: "https://aionex.notion.site/image/attachment%3A54b35a15-3ed5-42df-b59b-35cbb9f245d0%3ALogo_Mark_-_Purple.png?table=block&id=21b44269-b6d2-8038-807a-ed55e10eb880&spaceId=1b644158-99f0-44b7-b896-4d52c5145f61&cache=v2",
-        sha256: "7556e2f5642408200717fa3cd272a7f09e3f4f9433b018705e057899c8fa9fcb",
-        viewBox: "0 0 844 1140",
-        insetPermille: 0,
-        surface: "any",
-        shape: "free",
-      },
-      monoLight: {
-        path: "packages/identity/sources/perpl/perpl-logomark-white.png",
-        url: "https://aionex.notion.site/image/attachment%3A496f2a86-d400-4be8-ac73-1ec0498c6271%3ALogo_Mark_-_White.png?table=block&id=21b44269-b6d2-80ac-9bc3-e398fc5c44a6&spaceId=1b644158-99f0-44b7-b896-4d52c5145f61&cache=v2",
-        sha256: "02de5916fcaad3f42de4fcad2493d2ebda6ebe07b1bb7887d1c0fd3636c07b15",
-        viewBox: "0 0 844 1140",
-        insetPermille: 0,
-        surface: "dark",
-        shape: "free",
-      },
-      monoDark: {
-        path: "packages/identity/sources/perpl/perpl-mark-favicon-black.svg",
-        url: "https://perpl.xyz/assets/favicon-CoMr19_2.svg",
-        sha256: "c60eac6bd53fc09b35da33cb98d5861609c677fdf4dc3f2ff2285de8f2136231",
-        viewBox: "0 0 32 32",
         insetPermille: 0,
         surface: "light",
         shape: "free",

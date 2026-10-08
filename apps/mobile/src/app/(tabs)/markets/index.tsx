@@ -1,10 +1,27 @@
-import { MarketsScreen } from "~/features/markets/MarketsScreen";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EmptyState } from "~/components/kit/states";
+import { ContextTabs } from "~/components/shell/ContextTabs";
+import { SIZE, SPACE, useTheme } from "~/theme";
 
 /**
- * Markets tab root (J3/J11; Fomo F09–F12; flow book C1): Watchlist · Tokens · Perps with their chips and one
- * FlashList of rows. Browsable without an account. On Mainnet before the engine deploy the engine rows stay listed
- * with live Chainlink prices and "Soon" — there is no full-screen prelaunch page. A row opens its detail on this stack.
+ * Markets between the pivot cleanup (S1) and the phone loop (S5, D-256). S5 builds it from the market catalogue
+ * (D-268): Crypto · Stocks · Hot, live prices, countdowns and the window chips.
  */
 export default function Markets() {
-  return <MarketsScreen />;
+  const { color } = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.fill, { backgroundColor: color.ground, paddingTop: insets.top }]}>
+      <ContextTabs />
+      <View style={styles.content}>
+        <EmptyState why="Live markets are on their way" detail="BTC, ETH, SOL, MON, TSLA, NVDA and more." />
+      </View>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.lg },
+});

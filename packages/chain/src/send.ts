@@ -1,4 +1,3 @@
-import type { BinaryEnvironment, BinaryManifest } from "@senryo/config";
 import { type ChainId, GAS_HEADROOM_BPS, GAS_LIMITS, type GasAction } from "@senryo/config";
 import type { TxStage } from "@senryo/core";
 import {
@@ -9,7 +8,6 @@ import {
   type SignedAuthorization,
   type TransactionReceipt,
 } from "viem";
-import { verifyBinarySource } from "./binary-reads.ts";
 import { createBroadcastClients, createReadClient, type ReadClient, type RpcOverrides } from "./clients.ts";
 import { type Confirmation, confirmFinalized } from "./confirm.ts";
 import { BPS, POLL_INTERVAL_MS, RECEIPT_TIMEOUT_MS, SEND_SYNC_TIMEOUT_MS } from "./constants.ts";
@@ -67,8 +65,6 @@ export function createSender(options: CreateSenderOptions): Sender {
 }
 
 export interface TxRequest {
-  /** Explicit activated source for canonical binary facts; never inferred from a chain ID. */
-  binaryReceiptContext?: { manifest: BinaryManifest; environment: BinaryEnvironment; owner: Address };
   to: Address;
   data: Hex;
   value?: bigint | undefined;
@@ -156,18 +152,6 @@ async function broadcast(sender: Sender, raw: Hex, hash: Hex): Promise<Transacti
 
 /** Sign, journal and broadcast one tx; resolves at `proposed` (or `reverted`). */
 export async function sendTx(sender: Sender, req: TxRequest): Promise<SentTx> {
-  const validateBinary = async () => {
-    const b = req.binaryReceiptContext;
-    if (!b) return;
-    if (
-      sender.chainId !== b.manifest.chainId ||
-      sender.account.address.toLowerCase() !== b.owner.toLowerCase() ||
-      req.to.toLowerCase() !== b.manifest.contract.toLowerCase()
-    )
-      throw new Error("binary: sender/source mismatch");
-    await verifyBinarySource(sender.read, b.manifest, b.environment);
-  };
-  await validateBinary();
   const gas = await planGas(sender, req);
   const fees = await sender.fees.get();
   assertReviewedNetworkFee(req.reviewedNetworkFeeWei, gas * fees.maxFeePerGas);
@@ -183,14 +167,12 @@ export async function sendTx(sender: Sender, req: TxRequest): Promise<SentTx> {
       maxFeePerGas: fees.maxFeePerGas,
       maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
     };
-    await validateBinary();
     await req.validate?.();
     const raw = await sender.account.signTransaction(
       req.authorizationList
         ? { ...common, type: "eip7702", authorizationList: [...req.authorizationList] }
         : { ...common, type: "eip1559" },
     );
-    await validateBinary();
     await req.validate?.();
     const hash = keccak256(raw);
     const now = Date.now();

@@ -3,18 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "services/keeper (D-035): liquidations, observe pokes, TP/SL triggers, hold expiry, deposit inbox sweeps, testnet MirrorAggregator relay, price alerts, wallet floors, user pushes through Expo (receipts checked).",
+  "description": "services/keeper: user pushes through Expo (receipts checked) and retention; S3 adds finalize, settle, automatic payouts and void-stale for the markets (D-264).",
   "license": "MIT",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "typecheck": "tsc --noEmit -p .",
-    "sweep-check": "tsx scripts/sweep-check.ts"
+    "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
-    "@senryo/indexer-client": "workspace:*",
     "@senryo/service-common": "workspace:*",
     "zod": "catalog:"
   },

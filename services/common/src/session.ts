@@ -7,8 +7,8 @@ import { HTTP_STATUS, MS_PER_SECOND } from "./constants.ts";
 import { HttpError } from "./http.ts";
 
 /**
- * API session token (D-111): HS256 JWT issued by services/api after a verified SIWE signature and accepted by
- * services/card. Secret `API_SESSION_SECRET` (≥ 32 bytes, runtime env, shared by api + card). Subject = the address.
+ * API session token (D-111): HS256 JWT issued by services/api after a verified SIWE signature. Secret
+ * `API_SESSION_SECRET` (≥ 32 bytes, runtime env). Subject = the address.
  */
 const ISSUER = "senryo-api";
 const AUDIENCE = "senryo";

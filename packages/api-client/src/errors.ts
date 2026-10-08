@@ -16,29 +16,18 @@ export const API_ERROR_CODES = [
   "NOT_DEPLOYED",
   "SIGNATURE_INVALID",
   "SIGNATURE_EXPIRED",
+  // Practice dollars and the relay (S3): one grant per account, session budgets, the sponsor's lanes.
   "ALREADY_CLAIMED",
-  "NOT_ELIGIBLE",
-  "NOT_NEEDED",
   "BUDGET_EXHAUSTED",
-  "VOUCHER_INVALID",
-  "VOUCHER_USED",
-  "VOUCHER_CAP_REACHED",
   "RELAYER_BUSY",
   "RELAY_REVERTED",
-  "TURNSTILE_FAILED",
   "UPSTREAM_UNAVAILABLE",
-  // Card issuer (Lithic) not configured on this deployment, or not answering (E1 "issuer unavailable", named).
-  "ISSUER_UNAVAILABLE",
-  // S12b social: handle claims, content filter, follows.
+  // Handles and profile text.
   "HANDLE_INVALID",
   "HANDLE_RESERVED",
   "HANDLE_TAKEN",
   "HANDLE_HELD",
   "CONTENT_BLOCKED",
-  "FOLLOW_LIMIT",
-  "BLOCKED",
-  // S12b.6: posting needs the author's profile listed on that network.
-  "NOT_LISTED",
   "INTERNAL",
 ] as const;
 

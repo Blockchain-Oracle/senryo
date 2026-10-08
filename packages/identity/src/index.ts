@@ -3,14 +3,12 @@
  * Components: `@senryo/identity/native` (react-native-svg) and `@senryo/identity/web` (inline SVG).
  */
 export { ART, ART_SOURCES } from "./art/index.ts";
-export { EXTERNAL_CHAIN_IDS, PERPL_MARKETS, PRACTICE_TOKENS } from "./constants.ts";
+export { EXTERNAL_CHAIN_IDS } from "./constants.ts";
 export { ENTITIES } from "./entities.ts";
-export { CAIP2, type EntityId, ids, spotArtKey } from "./ids.ts";
+export { CAIP2, type EntityId, ids } from "./ids.ts";
 export { type MarkStatus, markLabel } from "./labels.ts";
 export {
-  type Collateral,
-  collateralId,
-  perplMarketId,
+  marketId,
   ROUTE_CHAIN_ID,
   type RouteChain,
   routeAssetId,

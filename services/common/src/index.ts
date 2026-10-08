@@ -3,7 +3,6 @@ export * from "./db.ts";
 export * from "./env.ts";
 export * from "./expo.ts";
 export * from "./http.ts";
-export * from "./inbox.ts";
 export * from "./keys.ts";
 export * from "./latency.ts";
 export * from "./logger.ts";

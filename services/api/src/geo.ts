@@ -1,12 +1,6 @@
 import type { GeoResponse } from "@senryo/api-client";
 import type { FastifyRequest } from "fastify";
-import {
-  type COUNTRY_HEADERS,
-  IPV4_PREFIX_OCTETS,
-  IPV6_PREFIX_GROUPS,
-  PERPL_BLOCKED,
-  SANCTIONED,
-} from "./constants.ts";
+import { type COUNTRY_HEADERS, REAL_MONEY_BLOCKED, SANCTIONED } from "./constants.ts";
 import type { GeoDb } from "./geo-db.ts";
 
 const COUNTRY_RE = /^[A-Z]{2}$/;
@@ -36,17 +30,10 @@ export function countryOf(request: FastifyRequest, sources: GeoSources = {}): st
 export function geoOf(request: FastifyRequest, sources: GeoSources = {}): GeoResponse {
   const country = countryOf(request, sources);
   const sanctioned = country !== null && (SANCTIONED as readonly string[]).includes(country);
-  const perplBlocked = country !== null && (PERPL_BLOCKED as readonly string[]).includes(country);
+  const restricted = country !== null && (REAL_MONEY_BLOCKED as readonly string[]).includes(country);
   return {
     country,
-    mainnetTradingAllowed: !sanctioned && !perplBlocked,
-    perplAllowed: !perplBlocked,
-    reason: sanctioned ? "sanctioned jurisdiction" : perplBlocked ? "Perpl restricted region" : null,
+    realMoneyAllowed: !sanctioned && !restricted,
+    reason: sanctioned ? "sanctioned jurisdiction" : restricted ? "real-money predictions aren't offered here" : null,
   };
-}
-
-/** Rate-limit key for a client network: IPv4 /24 or IPv6 /48. */
-export function networkPrefix(ip: string): string {
-  if (ip.includes(":")) return `${ip.split(":").slice(0, IPV6_PREFIX_GROUPS).join(":")}::/48`;
-  return `${ip.split(".").slice(0, IPV4_PREFIX_OCTETS).join(".")}.0/24`;
 }

@@ -14,7 +14,7 @@ import type { ChainId } from "@senryo/config";
 import { type Address, fromQuery, type Reading } from "@senryo/core";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useQueryEnv } from "./env.tsx";
-import type { SessionRunner } from "./social.ts";
+import type { SessionRunner } from "./profiles.ts";
 
 /** A push arriving while the app is open is the usual refresh; this is the fallback. */
 export const NOTIFICATIONS_STALE_MS = 30_000;

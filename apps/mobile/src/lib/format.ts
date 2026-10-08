@@ -10,3 +10,11 @@ export function clockTime(ms: number): string {
 export function shortAddress(address: string, head = 6, tail = 4): string {
   return address.length <= head + tail ? address : `${address.slice(0, head)}…${address.slice(-tail)}`;
 }
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+
+/** "30 Sep" — a day label for lists and axes. */
+export function dayLabel(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getDate()} ${MONTHS[d.getMonth()] ?? ""}`;
+}

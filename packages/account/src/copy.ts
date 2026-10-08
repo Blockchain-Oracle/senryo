@@ -80,22 +80,16 @@ export function authFailureCopy(kind: AuthFailure, surface: Surface): Copy {
 
 export function scopeCopy(reason: RejectReason): Copy {
   switch (reason) {
-    case "over-trade-cap":
-    case "over-session-total":
-    case "over-move-cap":
-    case "over-leverage":
-      return { title: "Above your session limit", body: "Confirm this one with a fresh passkey check." };
     case "rate":
-      return { title: "Lots of orders in a minute", body: "Confirm this one with a fresh passkey check." };
-    case "destination":
+      return { title: "Lots of calls in a minute", body: "Confirm this one with Face ID." };
     case "send":
     case "value":
-      return { title: "Sending money out", body: "Sends to other addresses always ask for a fresh passkey check." };
-    case "card-setting":
-      return { title: "Card limits", body: "Changing what your card may spend always asks for a fresh passkey check." };
+      return { title: "Sending money out", body: "Sends to other addresses always ask for Face ID." };
+    case "approve":
+      return { title: "Allow spending", body: "Letting a contract spend your dollars always asks for Face ID." };
     case "context-unavailable":
-      return { title: "Balances are still loading", body: "Confirm with a fresh passkey check, or wait a moment." };
+      return { title: "Balances are still loading", body: "Confirm with Face ID, or wait a moment." };
     default:
-      return { title: "Needs a fresh check", body: "This action is outside the trading session." };
+      return { title: "Needs a fresh check", body: "This action is outside your one-tap session." };
   }
 }

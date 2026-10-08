@@ -1,7 +1,7 @@
 {
   "name": "senryo",
   "private": true,
-  "description": "Senryo 千両 — one risk-accounted balance for gold/silver perps, Perpl crypto perps and the Kinpaku card on Monad.",
+  "description": "Senryo 千両 — live Up/Down calls on crypto and stock prices, in dollars, on Monad (Practice test dollars on testnet, USDC on mainnet).",
   "license": "MIT",
   "packageManager": "pnpm@11.24.0",
   "engines": {
@@ -10,7 +10,6 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:mobile": "node scripts/mobile-dev.mjs",
     "typecheck": "turbo run typecheck",
     "lint": "biome check .",
     "format": "biome format --write .",

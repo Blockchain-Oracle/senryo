@@ -350,9 +350,6 @@ export default function Welcome() {
             <Link href={ROUTES.judges} prefetch={false}>
               Judge guide
             </Link>
-            <Link href={ROUTES.stats} prefetch={false}>
-              Public stats
-            </Link>
             <Link href="/terms/" prefetch={false}>
               Terms
             </Link>

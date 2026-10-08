@@ -5,7 +5,7 @@ export default function StatusScreen() {
     <ShellScreen
       title="Status"
       why="Service status arrives with the API"
-      detail="RPC, oracle ages, indexer lag, Perpl, intents and the card service, each with its last check."
+      detail="The price source, Monad, the relayer, indexer lag and deposits, each with its last check."
     />
   );
 }

@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { AppState } from "react-native";
 import { fire } from "~/feedback/fire";
 import { prepareSounds, releaseSounds } from "~/feedback/sound";
-import { useIndexedTradeFeedback } from "~/feedback/useIndexedTradeFeedback";
 import { storage } from "~/lib/storage";
 
 function consume(feedback: ConfirmedFeedback, live = true) {
@@ -11,18 +10,11 @@ function consume(feedback: ConfirmedFeedback, live = true) {
   if (storage.getBoolean(key)) return;
   storage.set(key, true);
   if (!live || AppState.currentState !== "active") return;
-  const sound =
-    feedback.semantic === "deposit"
-      ? "deposit"
-      : feedback.semantic === "send" || feedback.semantic === "close" || feedback.semantic === "reduce"
-        ? "send"
-        : "fill";
-  fire("filled", { sound });
+  fire("filled", { sound: feedback.semantic });
 }
 
 /** Operation outcomes own feedback; mounting a historical receipt never replays it. */
 export function FeedbackHost() {
-  useIndexedTradeFeedback(consume);
   useEffect(() => {
     void prepareSounds();
     const unsubscribe = subscribeOperations((record, live) => {

@@ -1,20 +1,18 @@
 /**
  * Prints presence (never values) of the environment each stage needs. Reads process env plus ~/.config/senryo/*.env.
- * Usage: pnpm env:check [--stage S7]
+ * Usage: pnpm env:check [--stage S3]
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-/** Variables grouped by the stage that first needs them (see docs/plan/00-plan.md §4). */
+/** Variables grouped by the stage that first needs them (see docs/plan/pivot-2026-10-08.md). */
 const REQUIRED_BY_STAGE = {
+  S1b: ["EXPO_TOKEN", "APPLE_TEAM_ID"],
   S2: ["DEPLOYER_PK"],
-  S3: ["SPONSOR_PK", "OPERATOR_PK_1", "OPERATOR_PK_2", "KEEPER_PK", "DATABASE_URL"],
+  S3: ["SPONSOR_PK", "KEEPER_PK", "DATABASE_URL", "API_SESSION_SECRET", "ALCHEMY_API_KEY", "PYTH_API_KEY"],
   S4: ["ENVIO_API_TOKEN"],
-  S5: ["EXPO_TOKEN"],
-  S6: ["APPLE_TEAM_ID", "RP_ID"],
   S9: ["AURORA_API_KEY"],
-  S10: ["LITHIC_SANDBOX_KEY", "LITHIC_ASA_SECRET"],
 };
 
 const CONFIG_DIR = join(homedir(), ".config", "senryo");

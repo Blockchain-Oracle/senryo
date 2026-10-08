@@ -13,12 +13,10 @@ import { TxRecoveryHost } from "~/components/shell/TxRecoveryHost";
 import { ToastHost } from "~/components/toast/ToastHost";
 import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
 import { TermsHost } from "~/features/legal/TermsHost";
-import { WatchlistSync } from "~/features/markets/WatchlistSync";
 import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
-import { WorkspaceHost } from "~/lib/dev/WorkspaceHost";
-import { MarketDataProvider } from "~/lib/market-data";
 import { PushHost } from "~/lib/notifications/PushHost";
+import { QueryEnvHost } from "~/lib/query-env";
 import { FONT, ThemeProvider, useTheme } from "~/theme";
 import { useAppFonts } from "~/theme/fonts";
 
@@ -32,27 +30,7 @@ const sheet = {
   contentStyle: { backgroundColor: "transparent" },
 } as const;
 
-const SHEETS = [
-  "add-money",
-  "step-up",
-  "risk-explainer",
-  "eligibility",
-  "receipt",
-  "session",
-  "card-reveal",
-  "card-payment",
-  "account-required",
-  "network",
-  "receive",
-  "balance-details",
-  "display-balance",
-  "transfer",
-  "voucher",
-  "compose-thesis",
-  "social-actions",
-  "leaderboard-info",
-  "terms",
-];
+const SHEETS = ["step-up", "session", "account-required", "network", "receive", "terms"];
 
 export default function RootLayout() {
   const [client] = useState(
@@ -69,9 +47,9 @@ export default function RootLayout() {
         <QueryClientProvider client={client}>
           <ThemeProvider>
             <AccountProvider>
-              <MarketDataProvider>
+              <QueryEnvHost>
                 <RootStack />
-              </MarketDataProvider>
+              </QueryEnvHost>
             </AccountProvider>
           </ThemeProvider>
         </QueryClientProvider>
@@ -81,9 +59,9 @@ export default function RootLayout() {
 }
 
 /**
- * The stack over the five-tab shell (S1b.7: `(tabs)` is the Living Lacquer dock on headless tabs), plus the headless
+ * The stack over the tab shell (S1b.7: `(tabs)` is the dock on headless tabs; S5 sets the prediction places), plus the headless
  * hosts mounted once (ported pattern): feedback (sound pool), toasts and the offline banner, the privacy plate (S6),
- * TxRecovery (S8.24) and pushes (S1b.13). Root pages (account, positions, funding) push over the shell; sheets are
+ * TxRecovery (S8.24) and pushes (S1b.13). Root pages (account, notifications) push over the shell; sheets are
  * transparent modals.
  */
 function RootStack() {
@@ -107,7 +85,6 @@ function RootStack() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
         <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
-        <Stack.Screen name="alerts" options={{ headerShown: false }} />
         {SHEETS.map((route) => (
           <Stack.Screen key={route} name={`(sheets)/${route}`} options={sheet} />
         ))}
@@ -118,10 +95,8 @@ function RootStack() {
       <ToastHost />
       <TxRecoveryHost />
       <PushHost />
-      <WatchlistSync />
       <TermsHost />
       <PrivacyPlate />
-      <WorkspaceHost />
     </>
   );
 }

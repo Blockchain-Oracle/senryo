@@ -1,28 +1,21 @@
 import { router } from "expo-router";
-import { Share, StyleSheet, View } from "react-native";
-import { Settings, Share2 } from "~/components/kit/symbols";
+import { StyleSheet, View } from "react-native";
+import { Settings } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
-import { ActivityButton, UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
+import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { CompactAvatar, ProfileHeader } from "~/features/profile/ProfileHeader";
-import { ProfileResult } from "~/features/profile/ProfileResult";
-import { ProfileTabs } from "~/features/profile/ProfileTabs";
 import { QuietState } from "~/features/profile/QuietState";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
-import { useNetwork } from "~/lib/network";
-import { watchLink } from "~/lib/share-link";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 /**
- * The own profile (F2; Fomo F16): Share · History · Settings circles in the bar; the person — avatar (edit), name,
- * @handle, bio, follows, a meta line, "Make public on Mainnet" when private here; the period result with its chart;
- * then Positions · Trades. No settings rows here (they are behind the gear). Share sends the canonical watch link with
- * this network's chainId. A guest gets the tab's title and one way in.
+ * The own profile (F2; Fomo F16): Settings in the bar; the person — avatar (edit), name, @handle,
+ * bio. Calls, stats and the leaderboard place return with S5/S8 (D-256). A guest gets the tab's title and one way in.
  */
 export default function You() {
   const account = useAccount();
-  const network = useNetwork();
   const { color } = useTheme();
   const guest = account.ready && !account.hint;
   const address = account.hint?.address;
@@ -37,20 +30,9 @@ export default function You() {
         )
       }
       utilities={
-        <>
-          {address ? (
-            <UtilityButton
-              label="Share profile"
-              onPress={() => void Share.share({ message: watchLink(address, network.chainId) })}
-            >
-              <Share2 size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
-            </UtilityButton>
-          ) : null}
-          <ActivityButton />
-          <UtilityButton label="Settings" onPress={() => router.push(ROUTES.accountSettings)}>
-            <Settings size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
-          </UtilityButton>
-        </>
+        <UtilityButton label="Settings" onPress={() => router.push(ROUTES.accountSettings)}>
+          <Settings size={UTILITY_ICON} strokeWidth={SIZE.iconStroke} color={color.ink} />
+        </UtilityButton>
       }
     >
       {guest ? (
@@ -59,15 +41,13 @@ export default function You() {
           action={{
             label: "Create account",
             variant: "primary",
-            onPress: () => router.push(accountRequiredRoute("follow")),
+            onPress: () => router.push(accountRequiredRoute("make a call")),
           }}
         />
       ) : null}
       {address ? (
         <View style={styles.page}>
           <ProfileHeader />
-          <ProfileResult address={address} />
-          <ProfileTabs address={address} />
         </View>
       ) : null}
     </CollapsingScreen>

@@ -22,16 +22,9 @@ import ArtZcashSymbol from "./zcash-symbol.tsx";
 import ArtZcashMonoLight from "./zcash-monolight.tsx";
 import ArtZcashMonoDark from "./zcash-monodark.tsx";
 import ArtUsdcDisc from "./usdc-disc.tsx";
-import ArtAusdDisc from "./ausd-disc.tsx";
 import ArtChainlinkSymbol from "./chainlink-symbol.tsx";
 import ArtChainlinkMonoLight from "./chainlink-monolight.tsx";
 import ArtChainlinkMonoDark from "./chainlink-monodark.tsx";
-import ArtUniswapSymbol from "./uniswap-symbol.tsx";
-import ArtUniswapMonoLight from "./uniswap-monolight.tsx";
-import ArtUniswapMonoDark from "./uniswap-monodark.tsx";
-import ArtPerplSymbol from "./perpl-symbol.tsx";
-import ArtPerplMonoLight from "./perpl-monolight.tsx";
-import ArtPerplMonoDark from "./perpl-monodark.tsx";
 import ArtAuroraDisc from "./aurora-disc.tsx";
 import ArtAuroraSymbol from "./aurora-symbol.tsx";
 import ArtEnvioSymbol from "./envio-symbol.tsx";
@@ -59,11 +52,8 @@ import ArtFxChfUsdDisc from "./fx-chf-usd-disc.tsx";
 import ArtFxCadUsdDisc from "./fx-cad-usd-disc.tsx";
 import ArtSenryoSealSymbol from "./senryo-seal-symbol.tsx";
 import ArtSenryoSealMonoLight from "./senryo-seal-monolight.tsx";
-import ArtSenryoVenueSymbol from "./senryo-venue-symbol.tsx";
 import ArtXauKobanDisc from "./xau-koban-disc.tsx";
 import ArtXauKobanSymbol from "./xau-koban-symbol.tsx";
-import ArtXagChoginDisc from "./xag-chogin-disc.tsx";
-import ArtXagChoginSymbol from "./xag-chogin-symbol.tsx";
 import ArtSceneBalanceSymbol from "./scene-balance-symbol.tsx";
 import ArtScenePasskeySymbol from "./scene-passkey-symbol.tsx";
 import ArtSceneMarketsSymbol from "./scene-markets-symbol.tsx";
@@ -110,28 +100,12 @@ import ArtAvalancheDisc from "./avalanche-disc.tsx";
 import ArtAvalancheSymbol from "./avalanche-symbol.tsx";
 import ArtAvalancheMonoLight from "./avalanche-monolight.tsx";
 import ArtAvalancheMonoDark from "./avalanche-monodark.tsx";
-import ArtApplePayMonoDark from "./apple-pay-monodark.tsx";
-import ArtApplePaySymbol from "./apple-pay-symbol.tsx";
-import ArtApplePayMonoLight from "./apple-pay-monolight.tsx";
-import ArtGooglePayMonoDark from "./google-pay-monodark.tsx";
-import ArtGooglePaySymbol from "./google-pay-symbol.tsx";
-import ArtGooglePayMonoLight from "./google-pay-monolight.tsx";
-import ArtLighterDisc from "./lighter-disc.tsx";
-import ArtVeniceDisc from "./venice-disc.tsx";
-import ArtPumpDisc from "./pump-disc.tsx";
 import ArtNvidiaMonoDark from "./nvidia-monodark.tsx";
 import ArtNvidiaSymbol from "./nvidia-symbol.tsx";
 import ArtNvidiaMonoLight from "./nvidia-monolight.tsx";
 import ArtTeslaMonoDark from "./tesla-monodark.tsx";
 import ArtTeslaSymbol from "./tesla-symbol.tsx";
 import ArtTeslaMonoLight from "./tesla-monolight.tsx";
-import ArtSpacexMonoDark from "./spacex-monodark.tsx";
-import ArtSpacexSymbol from "./spacex-symbol.tsx";
-import ArtSpacexMonoLight from "./spacex-monolight.tsx";
-import ArtIsharesSymbol from "./ishares-symbol.tsx";
-import ArtIsharesMonoLight from "./ishares-monolight.tsx";
-import ArtOilBarrelSymbol from "./oil-barrel-symbol.tsx";
-import ArtOilBarrelMonoLight from "./oil-barrel-monolight.tsx";
 import ArtLibMonadMonoLight from "./lib-monad-monolight.tsx";
 import ArtLibMonadMonoDark from "./lib-monad-monodark.tsx";
 import ArtLibBitcoinSymbol from "./lib-bitcoin-symbol.tsx";
@@ -154,22 +128,6 @@ import ArtLibBinanceMonoLight from "./lib-binance-monolight.tsx";
 import ArtLibBinanceMonoDark from "./lib-binance-monodark.tsx";
 import ArtLibKrakenMonoLight from "./lib-kraken-monolight.tsx";
 import ArtLibKrakenMonoDark from "./lib-kraken-monodark.tsx";
-import ArtTokenlistGhoDisc from "./tokenlist-gho-disc.tsx";
-import ArtTokenlistUsdt0Disc from "./tokenlist-usdt0-disc.tsx";
-import ArtTokenlistWbtcDisc from "./tokenlist-wbtc-disc.tsx";
-import ArtTokenlistWethDisc from "./tokenlist-weth-disc.tsx";
-import ArtTokenlistCbbtcDisc from "./tokenlist-cbbtc-disc.tsx";
-import ArtTokenlistMusdDisc from "./tokenlist-musd-disc.tsx";
-import ArtTokenlistShmonDisc from "./tokenlist-shmon-disc.tsx";
-import ArtTokenlistSyrupusdcDisc from "./tokenlist-syrupusdc-disc.tsx";
-import ArtTokenlistXaut0Disc from "./tokenlist-xaut0-disc.tsx";
-import ArtRelayDisc from "./relay-disc.tsx";
-import ArtAcrossDisc from "./across-disc.tsx";
-import ArtLifiDisc from "./lifi-disc.tsx";
-import ArtCircleCctpDisc from "./circle-cctp-disc.tsx";
-import ArtKyberswapDisc from "./kyberswap-disc.tsx";
-import ArtMonorailDisc from "./monorail-disc.tsx";
-import ArtRampSymbol from "./ramp-symbol.tsx";
 
 export type ArtComponent = ComponentType<SvgProps>;
 
@@ -183,10 +141,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "hyperliquid": { symbol: ArtHyperliquidSymbol, monoLight: ArtHyperliquidMonoLight, monoDark: ArtHyperliquidMonoDark },
   "zcash": { disc: ArtZcashDisc, symbol: ArtZcashSymbol, monoLight: ArtZcashMonoLight, monoDark: ArtZcashMonoDark },
   "usdc": { disc: ArtUsdcDisc },
-  "ausd": { disc: ArtAusdDisc },
   "chainlink": { symbol: ArtChainlinkSymbol, monoLight: ArtChainlinkMonoLight, monoDark: ArtChainlinkMonoDark },
-  "uniswap": { symbol: ArtUniswapSymbol, monoLight: ArtUniswapMonoLight, monoDark: ArtUniswapMonoDark },
-  "perpl": { symbol: ArtPerplSymbol, monoLight: ArtPerplMonoLight, monoDark: ArtPerplMonoDark },
   "aurora": { disc: ArtAuroraDisc, symbol: ArtAuroraSymbol },
   "envio": { symbol: ArtEnvioSymbol, wordmark: ArtEnvioWordmark, wordmarkLight: ArtEnvioWordmarkLight },
   "db-ip": { wordmark: ArtDbIpWordmark, wordmarkLight: ArtDbIpWordmarkLight },
@@ -206,9 +161,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "fx-chf-usd": { disc: ArtFxChfUsdDisc },
   "fx-cad-usd": { disc: ArtFxCadUsdDisc },
   "senryo-seal": { symbol: ArtSenryoSealSymbol, monoLight: ArtSenryoSealMonoLight },
-  "senryo-venue": { symbol: ArtSenryoVenueSymbol },
   "xau-koban": { disc: ArtXauKobanDisc, symbol: ArtXauKobanSymbol },
-  "xag-chogin": { disc: ArtXagChoginDisc, symbol: ArtXagChoginSymbol },
   "scene-balance": { symbol: ArtSceneBalanceSymbol },
   "scene-passkey": { symbol: ArtScenePasskeySymbol },
   "scene-markets": { symbol: ArtSceneMarketsSymbol },
@@ -237,16 +190,8 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
-  "apple-pay": { monoDark: ArtApplePayMonoDark, symbol: ArtApplePaySymbol, monoLight: ArtApplePayMonoLight },
-  "google-pay": { monoDark: ArtGooglePayMonoDark, symbol: ArtGooglePaySymbol, monoLight: ArtGooglePayMonoLight },
-  "lighter": { disc: ArtLighterDisc },
-  "venice": { disc: ArtVeniceDisc },
-  "pump": { disc: ArtPumpDisc },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
-  "spacex": { monoDark: ArtSpacexMonoDark, symbol: ArtSpacexSymbol, monoLight: ArtSpacexMonoLight },
-  "ishares": { symbol: ArtIsharesSymbol, monoLight: ArtIsharesMonoLight },
-  "oil-barrel": { symbol: ArtOilBarrelSymbol, monoLight: ArtOilBarrelMonoLight },
   "lib-monad": { monoLight: ArtLibMonadMonoLight, monoDark: ArtLibMonadMonoDark },
   "lib-bitcoin": { symbol: ArtLibBitcoinSymbol, monoLight: ArtLibBitcoinMonoLight, monoDark: ArtLibBitcoinMonoDark },
   "lib-ethereum": { monoLight: ArtLibEthereumMonoLight, monoDark: ArtLibEthereumMonoDark },
@@ -256,20 +201,4 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "lib-coinbase": { symbol: ArtLibCoinbaseSymbol, monoLight: ArtLibCoinbaseMonoLight, monoDark: ArtLibCoinbaseMonoDark },
   "lib-binance": { disc: ArtLibBinanceDisc, monoLight: ArtLibBinanceMonoLight, monoDark: ArtLibBinanceMonoDark },
   "lib-kraken": { monoLight: ArtLibKrakenMonoLight, monoDark: ArtLibKrakenMonoDark },
-  "tokenlist-gho": { disc: ArtTokenlistGhoDisc },
-  "tokenlist-usdt0": { disc: ArtTokenlistUsdt0Disc },
-  "tokenlist-wbtc": { disc: ArtTokenlistWbtcDisc },
-  "tokenlist-weth": { disc: ArtTokenlistWethDisc },
-  "tokenlist-cbbtc": { disc: ArtTokenlistCbbtcDisc },
-  "tokenlist-musd": { disc: ArtTokenlistMusdDisc },
-  "tokenlist-shmon": { disc: ArtTokenlistShmonDisc },
-  "tokenlist-syrupusdc": { disc: ArtTokenlistSyrupusdcDisc },
-  "tokenlist-xaut0": { disc: ArtTokenlistXaut0Disc },
-  "relay": { disc: ArtRelayDisc },
-  "across": { disc: ArtAcrossDisc },
-  "lifi": { disc: ArtLifiDisc },
-  "circle-cctp": { disc: ArtCircleCctpDisc },
-  "kyberswap": { disc: ArtKyberswapDisc },
-  "monorail": { disc: ArtMonorailDisc },
-  "ramp": { symbol: ArtRampSymbol },
 };

@@ -1,18 +1,19 @@
 /**
- * Shell constants (S1b.7, D-176/D-193): the five dock destinations in dock order, the contextual money sheet's four actions, and
+ * Shell constants (S1b.7, D-176/D-193): the dock destinations in dock order, the contextual money sheet's actions, and
  * the material strengths the tokens leave to the renderer. Geometry and motion live in the theme (DOCK, SPRING,
  * TIMING); these are shell choices only.
  */
 
-/** Dock order (C15, direction §5): Home · Markets · Card · Social · You. Route names = the `(tabs)` folders. */
-export const TABS = ["home", "markets", "card", "social", "you"] as const;
+/**
+ * Dock destinations after the pivot (D-256). S5 replaces this with the shared navigation source (D-268):
+ * Home · Markets · [seal = Trade] · Calls · More. Route names = the `(tabs)` folders.
+ */
+export const TABS = ["home", "markets", "you"] as const;
 export type TabName = (typeof TABS)[number];
 
 export const TAB_LABEL: Record<TabName, string> = {
   home: "Home",
   markets: "Markets",
-  card: "Card",
-  social: "Social",
   you: "Profile",
 };
 
@@ -20,20 +21,15 @@ export const TAB_LABEL: Record<TabName, string> = {
 export const TAB_HREF = {
   home: "/home",
   markets: "/markets",
-  card: "/card",
-  social: "/social",
   you: "/you",
 } as const satisfies Record<TabName, string>;
 
-/** Phantom fan order, top to bottom (C18/P19): Send leads; "Swap" replaces Phantom's ambiguous "Trade" (direction §5). */
-export const FAN_ACTIONS = ["send", "receive", "addMoney", "swap"] as const;
+/** Money fan actions; Add money (test dollars, Aurora any-chain) and Withdraw join in S5 (D-266). */
+export const FAN_ACTIONS = ["receive"] as const;
 export type FanAction = (typeof FAN_ACTIONS)[number];
 
 export const FAN_LABEL: Record<FanAction, string> = {
-  send: "Send",
   receive: "Receive",
-  addMoney: "Add money",
-  swap: "Swap",
 };
 
 /** The collapsed header's compact balance fades in over the last part of the collapse (fraction of the distance). */

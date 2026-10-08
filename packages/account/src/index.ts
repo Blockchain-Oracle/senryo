@@ -9,7 +9,6 @@ export { createPasskey, getPasskey, type PromptListener } from "./ceremony.ts";
 export { AccountClient, type AccountClientOptions, type PendingSignIn } from "./client.ts";
 export * from "./constants.ts";
 export { authFailureCopy, biometricWord, type Copy, type Surface, scopeCopy } from "./copy.ts";
-export { clearDelegation, DELEGATES, type DelegationRequest, signDelegation } from "./delegation.ts";
 export {
   isValidMnemonic,
   mnemonicToSeed,
@@ -64,20 +63,3 @@ export {
 } from "./session/manager.ts";
 export { enqueue, isBusy, type NonceSourceLike, queuedNonces } from "./session/queue.ts";
 export { UNLOCK_PROMPT } from "./session/signer.ts";
-export { signStarterClaim, signStarterTopUp, signVoucher } from "./starter/sign.ts";
-export {
-  CLAIM_TYPES,
-  canonicalVoucherCode,
-  claimTypedData,
-  type SignedClaim,
-  type SignedTopUp,
-  type SignedVoucher,
-  STARTER_DOMAIN,
-  starterDeadline,
-  TOPUP_TYPES,
-  topUpTypedData,
-  VOUCHER_CODE,
-  VOUCHER_TYPES,
-  voucherCodeBytes,
-  voucherTypedData,
-} from "./starter/typed-data.ts";

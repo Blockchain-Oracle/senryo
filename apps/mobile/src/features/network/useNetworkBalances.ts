@@ -1,36 +1,35 @@
-/** Selector balances share Home's estimated portfolio basis, including the Mainnet wallet before core deployment. */
-import { readPortfolio } from "@senryo/chain";
+/**
+ * The mode sheet's balance per network: the account's dollars there (USDC on Real, Test USD on Practice; D-258).
+ * A network without its dollar token yet (Practice before the S2 deploy) reads as undefined, never a fabricated $0.
+ */
+import { dollarTokenOf, erc20Abi } from "@senryo/chain";
 import { type ChainId, MAINNET, TESTNET } from "@senryo/config";
-import { keys, ownLpRequests, useQueryEnv } from "@senryo/query";
+import { keys } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "~/lib/account/provider";
 import { sharedRead } from "~/lib/account/sender";
 import { BALANCE_STALE_MS } from "./constants";
 
-function useValue(chainId: ChainId) {
+function useDollars(chainId: ChainId) {
   const address = useAccount().hint?.address;
-  const env = useQueryEnv();
+  const token = dollarTokenOf(chainId);
   return useQuery({
-    queryKey: [...keys.account(chainId, address ?? "0x"), "portfolio"],
+    queryKey: [...keys.account(chainId, address ?? "0x"), "dollars"],
     queryFn: () =>
-      readPortfolio(sharedRead(chainId), chainId, address ?? "0x", (block) =>
-        ownLpRequests(env.indexer, chainId, address ?? "0x", block),
-      ),
-    enabled: address !== undefined,
+      sharedRead(chainId).readContract({
+        address: token as `0x${string}`,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [address ?? "0x"],
+        blockTag: "finalized",
+      }),
+    enabled: address !== undefined && token !== undefined,
     staleTime: BALANCE_STALE_MS,
   });
 }
+
 export function useNetworkBalances() {
-  const practice = useValue(TESTNET.chainId);
-  const mainnet = useValue(MAINNET.chainId);
-  const value = (reading: ReturnType<typeof useValue>) =>
-    reading.data?.components.some((c) => c.supported !== false && c.valueUsd6 !== undefined)
-      ? reading.data.totalUsd6
-      : undefined;
-  return {
-    practice: value(practice),
-    mainnet: value(mainnet),
-    practicePartial: practice.data?.quality === "partial",
-    mainnetPartial: mainnet.data?.quality === "partial",
-  };
+  const practice = useDollars(TESTNET.chainId);
+  const mainnet = useDollars(MAINNET.chainId);
+  return { practice: practice.data, mainnet: mainnet.data, practicePartial: false, mainnetPartial: false };
 }

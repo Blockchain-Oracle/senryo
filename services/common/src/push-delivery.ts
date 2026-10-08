@@ -19,13 +19,10 @@ import { followedTradeVisible } from "./social-visibility.ts";
  */
 
 export const PUSH_CHANNEL_COLUMNS: Readonly<Record<PushChannel, string>> = {
-  fills: "ch_fills",
-  liquidation: "ch_liquidation",
+  results: "ch_results",
   deposits: "ch_deposits",
-  card: "ch_card",
   priceAlerts: "ch_price_alerts",
   social: "ch_social",
-  followedTrades: "ch_followed_trades",
 };
 
 /** What sends the messages: `ExpoPush` in production, a stand-in in checks. */

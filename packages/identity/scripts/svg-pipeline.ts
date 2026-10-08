@@ -130,7 +130,7 @@ export async function svgComponent(svg: string, component: string, platform: Pla
 }
 
 /**
- * A raster original (an owner that ships PNG only: Perpl's kit, Coinbase's and Binance's site icons), shown exactly as
+ * A raster original (an owner that ships PNG only: Coinbase's and Binance's site icons), shown exactly as
  * delivered: RN `Image` from the bundled asset, or `<img>` on the web. Same props surface as the SVG components.
  */
 export function rasterComponent(component: string, assetPath: string, platform: Platform): string {

@@ -47,7 +47,7 @@ export function WelcomeActions() {
     try {
       await action();
       // A new account owes setup (handle, terms) from the passkey on (A2); a returning one goes Home.
-      router.push(flow === "create" ? ROUTES.setup : ROUTES.home);
+      router.push(flow === "create" ? ROUTES.setup : ROUTES.app);
     } catch (error) {
       const failure = classifyAuthError(error);
       setPhase(isSilent(failure) ? { kind: "idle" } : { kind: "failed", flow, failure });
@@ -92,7 +92,7 @@ export function WelcomeActions() {
             Continue · {shortAddress(hint.address)}
           </Button>
           <Button asChild variant="secondary" size="xl" className="w-full">
-            <Link href={ROUTES.home}>
+            <Link href={ROUTES.app}>
               Open Home
               <ArrowRight />
             </Link>
@@ -111,7 +111,7 @@ export function WelcomeActions() {
             I have an account
           </Button>
           <Button asChild variant="ghost" className="w-full font-sans">
-            <Link href={ROUTES.home}>Look around</Link>
+            <Link href={ROUTES.app}>Look around</Link>
           </Button>
         </>
       )}
@@ -125,7 +125,7 @@ export function WelcomeActions() {
         Recover with a backup
       </button>
       {recoverOpen ? (
-        <RecoverSheet open onOpenChange={setRecoverOpen} onRecovered={() => router.push(ROUTES.home)} />
+        <RecoverSheet open onOpenChange={setRecoverOpen} onRecovered={() => router.push(ROUTES.app)} />
       ) : null}
     </div>
   );

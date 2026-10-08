@@ -3,21 +3,20 @@
  * `e8` (Chainlink 8 decimals); rates are basis points. The bigint algorithm lives in `@senryo/core`; this file owns
  * mobile's glyphs (true minus sign, ▲/▼).
  */
-import { ENGINE_MARKETS } from "@senryo/config";
 import { DECIMALS, formatUnits } from "@senryo/core";
 import { activeNetwork, type NetworkKey } from "~/lib/network";
 
 export { formatUnits, toPlot } from "@senryo/core";
 
-/** The money glyph per network (S8.22, Living Lacquer §5.6): paper money is never written as plain dollars. */
-const MONEY_SYMBOL: Record<NetworkKey, string> = { testnet: "P$", mainnet: "$" };
+/** Dollars on both networks (D-258); Practice says so through its tint and chip, never through the glyph. */
+const MONEY_SYMBOL: Record<NetworkKey, string> = { testnet: "$", mainnet: "$" };
 
-/** "P$" in practice, "$" on mainnet — for amounts typed by the user (the ticket's margin). */
+/** The money glyph for amounts typed by the user. */
 export function moneySymbol(network: NetworkKey = activeNetwork().key): string {
   return MONEY_SYMBOL[network];
 }
 
-/** $12,480.52 on mainnet, P$12,480.52 in practice (account money only — market prices use `price18`). */
+/** $12,480.52 — account money (market prices use `price`). */
 export function usd(value6: bigint, shown: number = DECIMALS.cents, network: NetworkKey = activeNetwork().key): string {
   const text = formatUnits(value6, DECIMALS.usd6, shown);
   const symbol = MONEY_SYMBOL[network];
@@ -39,12 +38,7 @@ export function price(valueE8: bigint, shown: number = DECIMALS.cents): string {
   return formatUnits(valueE8, DECIMALS.e8, shown);
 }
 
-/** A market's display precision (S8.23): metals in cents, FX majors to 5 places, JPY/USD to 7. */
-export function priceDecimalsOf(marketId: number): number {
-  return ENGINE_MARKETS.find((m) => m.id === marketId)?.priceDecimals ?? DECIMALS.cents;
-}
-
-/** 4,189.06 from an engine price (1e18 USD per unit, risk-math.md units); pass `priceDecimalsOf(id)` for a market. */
+/** 4,189.06 from a 1e18 price. */
 export function price18(value18: bigint, shown: number = DECIMALS.cents): string {
   return formatUnits(value18, DECIMALS.e18, shown);
 }

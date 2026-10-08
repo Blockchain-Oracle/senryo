@@ -1,39 +1,40 @@
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { formatUnits } from "@senryo/core";
+import { useDollarBalance } from "@senryo/query";
+import { router } from "expo-router";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AmountHero } from "~/components/kit/AmountHero";
+import { Button } from "~/components/kit/Button";
 import { usePullRefresh } from "~/components/kit/PullRefresh";
-import { ArrowLeftRight } from "~/components/kit/symbols";
+import { EmptyState } from "~/components/kit/states";
 import { ContextTabs } from "~/components/shell/ContextTabs";
 import { useDockInset } from "~/components/shell/dock-context";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
-import { AccountStrip } from "~/features/auth/AccountStrip";
-import { CardFace } from "~/features/card/CardFace";
-import { GuestHome } from "~/features/home/GuestHome";
-import { HomeBalance } from "~/features/home/HomeHeader";
-import { HomeTabs } from "~/features/home/HomeTabs";
-import { TopTrades } from "~/features/home/TopTrades";
 import { NotificationsBell } from "~/features/notifications/NotificationsBell";
-import { RiskBanner } from "~/features/portfolio/RiskBanner";
 import { ContextualFaceId } from "~/features/setup/ContextualFaceId";
 import { SetupResume } from "~/features/setup/SetupResume";
 import { useAccount } from "~/lib/account/provider";
-import { ROUTES } from "~/lib/constants/routes";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
-/** U04/U14 hierarchy, with genuine account data and all retained money/trading entry points. */
+const DOLLAR_DECIMALS = 6;
+const CENTS = 2;
+
+/**
+ * Home between the pivot cleanup (S1) and the phone loop (S5, D-256): the dollar balance on the active network, the
+ * setup resume and Receive. S5 replaces it with the UGLYCASH balance card, the featured live window and open calls.
+ */
 export default function Home() {
-  const { open } = useLocalSearchParams<{ open?: string }>();
   const address = useAccount().hint?.address;
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const bottom = useDockInset();
   const refresh = usePullRefresh();
-  useEffect(() => {
-    if (open !== "add-money") return;
-    router.setParams({ open: undefined });
-    router.push(ROUTES.addMoney);
-  }, [open]);
+  const balance = useDollarBalance(address);
+  const text =
+    balance.status === "fresh" || balance.status === "stale"
+      ? `$${formatUnits(balance.value, DOLLAR_DECIMALS, CENTS)}`
+      : "$—";
   return (
     <View style={[styles.fill, { backgroundColor: color.ground, paddingTop: insets.top }]}>
       <View style={styles.utilities}>
@@ -51,57 +52,27 @@ export default function Home() {
       >
         {address ? (
           <>
-            <HomeBalance />
+            <AmountHero text={text} accessibilityLabel={`Balance ${text}`} />
             <SetupResume />
-            <AccountStrip />
-            <RiskBanner />
-            <View style={[styles.portfolio, { backgroundColor: color.card }]}>
-              <View style={styles.portfolioHeading}>
-                <View style={styles.text}>
-                  <Text style={[TYPE.rowTitle, { color: color.ink }]}>Your portfolio</Text>
-                  <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Assets and open positions</Text>
-                </View>
-                <Pressable
-                  onPress={() => router.navigate(ROUTES.markets)}
-                  accessibilityRole="button"
-                  style={[styles.trade, { backgroundColor: color.action, boxShadow: `0px 0px 16px 0px ${color.glow}` }]}
-                >
-                  <Text style={[TYPE.buttonCompact, { color: color.actionInk }]}>Trade</Text>
-                </Pressable>
-              </View>
-              <HomeTabs />
-            </View>
-            <Pressable
-              onPress={() => router.push(ROUTES.transfer)}
-              accessibilityRole="button"
-              style={[styles.transfer, { backgroundColor: color.card }]}
-            >
-              <ArrowLeftRight size={SIZE.icon} color={color.ink} />
-              <Text style={[TYPE.rowTitle, { color: color.ink }]}>Send, receive or swap</Text>
-            </Pressable>
-            <Text accessibilityRole="header" style={[TYPE.rowTitle, styles.more, { color: color.ink }]}>
-              More for you
-            </Text>
-            <Pressable
-              onPress={() => router.navigate(ROUTES.card)}
-              accessibilityRole="button"
-              accessibilityLabel="Explore Kinpaku card"
-              style={[styles.card, { backgroundColor: color.card }]}
-            >
-              <Text style={[TYPE.rowDetail, { color: color.text2 }]}>Kinpaku</Text>
-              <Text style={[TYPE.sectionTitle, { color: color.ink }]}>Your card, connected.</Text>
-              <CardFace />
-            </Pressable>
-            <TopTrades />
+            <Button label="Receive" variant="secondary" onPress={() => router.push(ROUTES.receive)} />
+            <EmptyState
+              why="Live markets are on their way"
+              detail="Up or Down calls on crypto and stocks arrive with the next update."
+            />
           </>
         ) : (
-          <GuestHome />
+          <EmptyState
+            why="Call the next move"
+            detail="Up or Down on live prices, in dollars."
+            action={{ label: "Create account", onPress: () => router.push(accountRequiredRoute("make a call")) }}
+          />
         )}
       </ScrollView>
       <ContextualFaceId key={address} />
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   utilities: {
@@ -113,18 +84,4 @@ const styles = StyleSheet.create({
   },
   utilityActions: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   content: { paddingHorizontal: SIZE.gutter, gap: SPACE.md },
-  portfolio: { borderRadius: 30, padding: SPACE.lg, gap: SPACE.md },
-  portfolioHeading: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
-  text: { flex: 1, gap: SPACE.xs },
-  trade: { borderRadius: RADIUS.pill, minHeight: SIZE.touch, paddingHorizontal: SPACE.lg, justifyContent: "center" },
-  transfer: {
-    borderRadius: RADIUS.lg,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: SPACE.lg,
-    gap: SPACE.md,
-    minHeight: SIZE.rowMinHeight,
-  },
-  more: { paddingTop: SPACE.lg },
-  card: { borderRadius: 30, padding: SPACE.lg, gap: SPACE.sm },
 });

@@ -32,7 +32,7 @@ export interface NetworkConfig {
   chainId: ChainId;
   name: string;
   /** Label shown on every surface (D-008: each surface names its network). */
-  modeLabel: "Mainnet" | "Practice";
+  modeLabel: "Real" | "Practice";
   nativeCurrency: { name: string; symbol: string; decimals: number };
   /** Ordered by preference. Senders fan out to the first two (card path, D-027). */
   rpcHttp: readonly [string, ...string[]];
@@ -51,7 +51,7 @@ export const MAINNET: NetworkConfig = {
   key: "mainnet",
   chainId: MAINNET_CHAIN_ID,
   name: "Monad",
-  modeLabel: "Mainnet",
+  modeLabel: "Real",
   nativeCurrency: MON,
   rpcHttp: ["https://rpc.monad.xyz", "https://rpc1.monad.xyz", "https://rpc3.monad.xyz"],
   rpcWs: ["wss://rpc.monad.xyz", "wss://rpc1.monad.xyz"],

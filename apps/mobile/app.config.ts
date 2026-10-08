@@ -100,8 +100,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     ["expo-audio", { microphonePermission: false }],
     "react-native-quick-crypto",
-    // Runtime 0.2.0 natives (Part E5): image prefetch for the welcome story, QR scanning in Send, hosted provider pages
-    // (Ramp, Lithic), and sharing trade / receipt cards.
+    // Runtime 0.2.0 natives (Part E5): image prefetch for the welcome story, QR scanning (withdraw addresses), hosted
+    // provider pages, and sharing result / receipt cards.
     "expo-image",
     "expo-web-browser",
     "expo-sharing",

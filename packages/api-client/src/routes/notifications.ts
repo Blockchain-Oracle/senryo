@@ -1,12 +1,12 @@
 import { z } from "zod";
+import { MARKET_ID_PATTERN } from "../handles.ts";
 import { addressSchema, chainIdSchema, isoTimeSchema } from "../primitives.ts";
 import { defineRoute } from "./define.ts";
 import { PUSH_CHANNELS } from "./engagement.ts";
-import { marketIdSchema } from "./posts.ts";
 
 /**
- * Notifications inbox (G1, D7): every push the account was sent on one network — fills, TP/SL, liquidation, money
- * arrived, card, price alerts, social — newest first, from the server's push ledger (kept 30 days). Session routes:
+ * Notifications inbox (G1, D7): every push the account was sent on one network — call results, money arrived,
+ * price alerts, social — newest first, from the server's push ledger (kept 30 days). Session routes:
  * a session lists and marks its own network only (S8.22). Each response carries the unread count for the bell badge.
  */
 
@@ -20,14 +20,14 @@ const NOTIFICATION_ID = /^[\x21-\x7e]+$/;
 /** `<sent_at in µs>:<id>` — a keyset on (time, id), newest first. */
 const NOTIFICATION_CURSOR = /^\d{1,20}:[\x21-\x7e]{1,512}$/;
 const SYMBOL_MAX_CHARS = 32;
+const marketIdSchema = z.string().regex(MARKET_ID_PATTERN);
 
 export const notificationIdSchema = z.string().max(NOTIFICATION_ID_MAX_CHARS).regex(NOTIFICATION_ID);
 export const notificationCursorSchema = z.string().regex(NOTIFICATION_CURSOR, "expected a notifications cursor");
 
 /**
- * What the row is about, so the app draws its mark: a market (indexer id, `ours-0` = engine XAU), a token (by
- * address, never symbol), a person (avatar; `marketId` when it's about their trade), the card, or the account as a
- * whole (dollars credited, a warning across positions).
+ * What the row is about, so the app draws its mark: a market (catalogue id, `BTC`), a token (by address, never
+ * symbol), a person (avatar; `marketId` when it's about their call), or the account as a whole (dollars credited).
  */
 export const notificationSubjectSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("market"), marketId: marketIdSchema }),
@@ -37,7 +37,6 @@ export const notificationSubjectSchema = z.discriminatedUnion("kind", [
     symbol: z.string().max(SYMBOL_MAX_CHARS).optional(),
   }),
   z.object({ kind: z.literal("person"), address: addressSchema, marketId: marketIdSchema.optional() }),
-  z.object({ kind: z.literal("card") }),
   z.object({ kind: z.literal("account") }),
 ]);
 
