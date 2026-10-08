@@ -2,14 +2,22 @@
   "version": 2,
   "project": {
     "name": "@senryo/mobile",
-    "productType": "fintech trading app (Senryo 千両 + Kinpaku 金箔 card, Monad)",
-    "stack": ["expo-57", "react-native-0.86", "expo-router", "reanimated-4", "skia", "victory-native"]
+    "productType": "real-time Up/Down prediction market (Senryo 千両, Monad): Practice on testnet, Real in USDC",
+    "stack": [
+      "expo-57",
+      "react-native-0.86",
+      "expo-router",
+      "reanimated-4",
+      "skia",
+      "@senryo/live (one SSE over expo/fetch)"
+    ]
   },
   "direction": {
     "name": "Living Lacquer",
     "summary": "Slush Home/Card hierarchy with quiet balance cents and account/investment disclosure; Fomo Markets/Profile/Social; Phantom action fan; Senryo seal, gold leaf and lacquer. Existing native controls and operation flows retained.",
     "approved": "D-253 (user, 4 Oct 2026); docs/plan/reference-followthrough-2026-10-04.md",
-    "supersedes": "D2 Desk (D-004, design/DIRECTIONS.md, design/screens/d2-*) — history only"
+    "supersedes": "D2 Desk (D-004, design/DIRECTIONS.md, design/screens/d2-*) — history only",
+    "behaviour": "Tradash (tradash.xyz) for the live loop — chart motion, controls, sounds, reactions — as Owarine's web terminal re-implements it (canton-season3 context/13-revamp/TRADASH-FIDELITY.md); UGLYCASH keeps Senryo's identity (docs/design/reference-study-2026-10-07-uglycash/tradash.md)."
   },
   "authority": {
     "direction": "docs/design/senryo-v2/direction.md",
@@ -34,10 +42,21 @@
       "packages/tokens/src/fonts.ts",
       "apps/mobile/src/theme/"
     ],
-    "components": ["apps/mobile/src/components", "apps/mobile/src/features"],
-    "assets": ["brand/", "brand/art/", "packages/identity/sources/", "apps/mobile/assets/fonts/"],
+    "components": [
+      "apps/mobile/src/components",
+      "apps/mobile/src/features"
+    ],
+    "assets": [
+      "brand/",
+      "brand/art/",
+      "packages/identity/sources/",
+      "apps/mobile/assets/fonts/"
+    ],
     "icons": "native symbols: SF Symbols (iOS, expo-symbols) and vendored Material Symbols (Android) via src/components/kit/symbols.tsx (D-237)",
-    "instructions": ["docs/plan/00-plan.md §0", "docs/plan/stage-01b-design-v2.md"]
+    "instructions": [
+      "docs/plan/00-plan.md §0",
+      "docs/plan/stage-01b-design-v2.md"
+    ]
   },
   "design": {
     "colorMode": "dark-default-with-light",
@@ -542,7 +561,15 @@
       {
         "name": "entity-mark",
         "source": "reference-native reconstruction (no 21st source)",
-        "evidence": ["LG01-LG38", "F21", "F22", "F32", "S24", "S27", "reference-study 08 Asset-delivery contract"],
+        "evidence": [
+          "LG01-LG38",
+          "F21",
+          "F22",
+          "F32",
+          "S24",
+          "S27",
+          "reference-study 08 Asset-delivery contract"
+        ],
         "port": "@senryo/identity EntityMark: first-party mark from the provenance registry, contextual badge as a separate cut-out layer, labelled dashed fallback for loading/failed/gap/unidentified (never a letter disc)",
         "deviations": "Senryo-original koban/chōgin/FX-pair art for XAU/XAG/FX (LG38; never Tether Gold, LG19)",
         "status": "built (S1b.1) — packages/identity/src/native/EntityMark.tsx, app wrapper src/components/identity/EntityMark.tsx"
@@ -550,22 +577,34 @@
       {
         "name": "venue-chip",
         "source": "reference-native reconstruction (no 21st source)",
-        "evidence": ["F32", "LG06", "LG07"],
+        "evidence": [
+          "F32",
+          "LG06",
+          "LG07"
+        ],
         "port": "pill: venue's own mark + name on ticket/position/receipt, separate from asset, network and status",
         "deviations": "Senryo / Perpl only; never Fomo's Hyperliquid badge (v2-plan §5.12)",
-        "status": "built (S1b.4) — src/components/identity/VenueChip.tsx"
+        "status": "built (S1b.4) — src/components/identity/VenueChip.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "mark-cluster",
         "source": "reference-native reconstruction (no 21st source)",
-        "evidence": ["F29", "LG32", "S24"],
+        "evidence": [
+          "F29",
+          "LG32",
+          "S24"
+        ],
         "port": "overlapping real marks with ground-colour cut-out rings (route source networks, swap pairs)",
-        "status": "built (S1b.4) — src/components/identity/MarkCluster.tsx"
+        "status": "built (S1b.4) — src/components/identity/MarkCluster.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "slide-to-confirm",
         "source": "21st.dev starc007/slide-action-button (id 29304), retrieved 2026-10-02 via `21st get 29304`",
-        "evidence": ["D-235", "F37 (Fomo commit rail)", "flow book C3/C3a, B5–B10"],
+        "evidence": [
+          "D-235",
+          "F37 (Fomo commit rail)",
+          "flow book C3/C3a, B5–B10"
+        ],
         "port": "React Native SlideToConfirm: Reanimated travel on the UI thread (Gesture Handler pan), travelled fill behind the thumb, label fade 35%→65%, chevron→check path morph via animated SVG path, press scale 0.94, haptic detent when release would commit; tone primary/up/down; busy spinner state",
         "deviations": "commit on release past 90% (D-235) instead of 82% auto-complete; no auto-reset timer (the reviewed intent's resetKey resets it); explicit VoiceOver review action; reduced motion removes decorative travel",
         "status": "built — apps/mobile/src/components/trade/SlideToConfirm.tsx (HoldToConfirm is a legacy alias)"
@@ -573,7 +612,10 @@
       {
         "name": "native-symbols",
         "source": "platform icon sets (SF Symbols via expo-symbols on iOS; Google Material Symbols, vendored face, on Android) — no 21st source: utility icons must be the platform's own (D-237 rule 4)",
-        "evidence": ["D-237", "user feedback 2 Oct: web icon set reads as vibe-coded"],
+        "evidence": [
+          "D-237",
+          "user feedback 2 Oct: web icon set reads as vibe-coded"
+        ],
         "port": "components/kit/symbols.tsx: same component names/props the screens used; Android glyph drawn as text in the preloaded face (no per-mount load)",
         "deviations": "Android filled variants unavailable (outlined face)",
         "status": "built — 2602ae2"
@@ -581,149 +623,302 @@
       {
         "name": "amount-hero",
         "source": "21st.dev number-ticker (id 21513), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/trading.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
         "status": "built — apps/mobile/src/components/kit/AmountHero.tsx"
       },
       {
         "name": "card-tilt",
         "source": "21st.dev ibelick/tilt (id 1448), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/card-notifications.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
-        "status": "built — apps/mobile/src/features/card/CardHero.tsx"
+        "status": "built — apps/mobile/src/features/card/CardHero.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "action-circle (card)",
         "source": "21st.dev Codehagen/action-button (id 1051), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/card-notifications.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
-        "status": "built — apps/mobile/src/features/card/ActionCircle.tsx"
+        "status": "built — apps/mobile/src/features/card/ActionCircle.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "notification-inbox",
         "source": "21st.dev uvain/notification-panel (id 27135), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/card-notifications.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
         "status": "built — apps/mobile/src/features/notifications/InboxList.tsx"
       },
       {
         "name": "notifications-bell",
         "source": "21st.dev ruixen.ui/notification-button (id 7914), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/card-notifications.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/card-notifications.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/card-notifications.md",
         "status": "built — apps/mobile/src/features/notifications/NotificationsBell.tsx"
       },
       {
         "name": "market-row",
         "source": "21st.dev ssychui Market Watchlist (id 20110), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/trading.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
-        "status": "built — apps/mobile/src/features/markets/RowShell.tsx"
+        "status": "built — apps/mobile/src/features/markets/RowShell.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "disclosure",
         "source": "21st.dev ibelick Disclosure (id 851), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/trading.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
-        "status": "built — apps/mobile/src/features/markets/Disclosure.tsx"
+        "status": "built — apps/mobile/src/features/markets/Disclosure.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "ticket-details",
         "source": "21st.dev ssychui Swap Ticket (id 27122), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/trading.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/trading.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/trading.md",
-        "status": "built — apps/mobile/src/features/trade/TicketChildren.tsx"
+        "status": "built — apps/mobile/src/features/trade/TicketChildren.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "dotted-qr",
         "source": "21st.dev tom_ui/qr-code (id 12248), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/fund/DottedQr.tsx"
+        "status": "built — apps/mobile/src/features/fund/DottedQr.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "swap-cards",
         "source": "21st.dev ssychui/swap-ticket (id 27122), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/swap/SwapCards.tsx"
+        "status": "built — apps/mobile/src/features/swap/SwapCards.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "bridge-timeline",
         "source": "21st.dev sean0205/vertical-titled-stepper (id 29815), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/money/BridgeTimeline.tsx"
+        "status": "built — apps/mobile/src/features/money/BridgeTimeline.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "action-circle (money)",
         "source": "21st.dev radiumcoders/grid-button (id 13564), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/money/ActionCircle.tsx"
+        "status": "built — apps/mobile/src/features/money/ActionCircle.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "search-field",
         "source": "21st.dev santoshvarmaaddala/search-bar (id 1645), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/money/SearchField.tsx"
+        "status": "built — apps/mobile/src/features/money/SearchField.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "chain-grid",
         "source": "21st.dev preetsuthar17/selector-chips (id 1963), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/money/ChainGrid.tsx"
+        "status": "built — apps/mobile/src/features/money/ChainGrid.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "network-pill",
         "source": "21st.dev haydenbleasel/pill (id 1600), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/fund/ReceiveCard.tsx"
+        "status": "built — apps/mobile/src/features/fund/ReceiveCard.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "activity-row + receipt",
         "source": "21st.dev hari/transaction-list (id 2943), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
-        "status": "built — apps/mobile/src/features/activity/FeedRow.tsx"
+        "status": "built — apps/mobile/src/features/activity/FeedRow.tsx — retired by the pivot (S1/S5): its screens were removed"
       },
       {
         "name": "keypad",
         "source": "21st.dev bankkroll/number-pad (id 3711), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/money.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/money.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/money.md",
         "status": "built — apps/mobile/src/components/trade/Keypad.tsx"
       },
       {
         "name": "setup-progress",
         "source": "21st.dev sean0205 Multi-Step Progress (id 29469), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/identity.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/identity.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/identity.md",
         "status": "built — apps/mobile/src/features/setup/SetupProgress.tsx"
       },
       {
         "name": "settings-row",
         "source": "21st.dev uiable List Group Badge (id 29345), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/identity.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/identity.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/identity.md",
         "status": "built — apps/mobile/src/features/profile/SettingsRow.tsx"
       },
       {
         "name": "terms-agree-row",
         "source": "21st.dev originui Checkbox (id 661), retrieved 2026-10-02 via `21st get`",
-        "evidence": ["flow book §0.9", "docs/product/provenance/identity.md"],
+        "evidence": [
+          "flow book §0.9",
+          "docs/product/provenance/identity.md"
+        ],
         "port": "React Native port; what was taken and every deviation is recorded in docs/product/provenance/identity.md",
         "status": "built — apps/mobile/src/features/legal/AgreeRow.tsx"
+      },
+      {
+        "name": "live-chart",
+        "source": "Tradash shipped bundle behaviour (chart/feed chunks, SPEC-chart §2–4) via Owarine web/src/features/terminal/chart (engine.ts, chart-engine.ts, chart-draw.ts, dot-grid.ts); 21st #28470 Market Chart consulted for layout only",
+        "evidence": [
+          "tradash.xyz /trade/BTC 390×844 (7 Oct)",
+          "TRADASH-FIDELITY.md Chart and motion rows",
+          "Phantom P15/P16 prediction detail"
+        ],
+        "port": "Skia picture recorded per frame on the UI thread (immediate mode) from worklet state: 600-sample eased ring at a fixed 60 Hz clock, ±7.5 nice steps, Catmull-Rom line with 6 px glow, left 32 % erased, parallax dot field, rolling pill, K line + entry tags, your side's zone; zero React renders per tick",
+        "deviations": "K line (open print) replaces Tradash's liquidation line; colour by the open call's side, else up; 千両 watermark",
+        "status": "built (S5.9) — src/features/terminal/chart/{engine,state,draw,LiveChart}.ts(x)"
+      },
+      {
+        "name": "countdown-ring",
+        "source": "21st #1737 Circle Progress (hihahihahoho/circle-progress)",
+        "evidence": [
+          "pivot craft list: countdown ring on every window chip"
+        ],
+        "port": "Skia arc driven by the server clock offset in a frame callback (no per-second render); last 10 s in the warning colour",
+        "deviations": "counter-clockwise to the moment calls close (−20 s)",
+        "status": "built (S5.9) — src/components/kit/CountdownRing.tsx"
+      },
+      {
+        "name": "odometer",
+        "source": "21st #20071 Animate Digits (unlumen/animate-digits) behaviour + Tradash CanvasOdometer",
+        "evidence": [
+          "TRADASH-FIDELITY.md Head + pill",
+          "pivot craft list: odometers for price, cash-out value, balance"
+        ],
+        "port": "worklet roll state (mod-10 slots, up on a rise, down on a fall) drawn with Skia; one implementation for the chart pill, cash-out and balance",
+        "deviations": "no blur (Skia text), tabular digit advance",
+        "status": "built (S5.9) — src/components/kit/{odometer.ts,LiveOdometer.tsx}"
+      },
+      {
+        "name": "call-panel",
+        "source": "reference-native reconstruction (no 21st source): Tradash phone UP/DOWN ↔ CLOSE",
+        "evidence": [
+          "TRADASH-FIDELITY.md Core loop",
+          "Phantom P18 Buy Up ticket"
+        ],
+        "port": "stake presets ($1/5/10/25/Max), UP/DOWN pills with live odds (ReText on shared values), CASH OUT with the rolling value; honest states",
+        "deviations": "one call per window; odds in words instead of leverage",
+        "status": "built (S5.9) — src/features/terminal/CallPanel.tsx"
+      },
+      {
+        "name": "phone-dock",
+        "source": "reference-native reconstruction: Fomo icon-only glass dock (D-196) with the Senryo seal",
+        "evidence": [
+          "R3 Fomo dock frames",
+          "D-268 nav source"
+        ],
+        "port": "Home · Markets · [seal = Trade] · Calls · More from packages/config/src/nav.ts; press scale 0.97; no labels on screen",
+        "deviations": "five destinations (the pivot plan)",
+        "status": "built (S5.6) — src/components/shell/Dock.tsx"
+      },
+      {
+        "name": "markets-sheet",
+        "source": "Tradash asset chip → Markets sheet; kit Sheet",
+        "evidence": [
+          "TRADASH-FIDELITY.md Markets sheet"
+        ],
+        "port": "real marks, live prices (one render per frame while open)",
+        "deviations": "crypto only until S7 adds stocks",
+        "status": "built (S5.9) — src/features/terminal/MarketsSheet.tsx"
+      },
+      {
+        "name": "withdraw-sheet",
+        "source": "reference-native: Polymarket withdraw pattern (pivot how-tree); kit Sheet",
+        "evidence": [
+          "pivot plan Withdraw"
+        ],
+        "port": "recipient + exact amount (Max), frozen review, one Face ID signing EIP-3009, receipt until Send again",
+        "deviations": "Monad address only until Aurora withdrawals (S9)",
+        "status": "built (S5.12) — src/features/wallet/WithdrawSheet.tsx"
+      },
+      {
+        "name": "trade-sounds",
+        "source": "Tradash cue map re-synthesised (measured contours, Owarine voices); nothing of theirs shipped",
+        "evidence": [
+          "tradash/SOUND-analysis.txt",
+          "owarine web/src/lib/sound/trade.ts"
+        ],
+        "port": "WAVs rendered by scripts/gen-trade-sounds.mjs; pooled expo-audio players; pre-rendered pentatonic profit ladder",
+        "deviations": "no music bed yet",
+        "status": "built (S5.13) — src/feedback/trade-sound.ts, assets/sounds/trade/"
       }
     ],
     "planned": [
       {
         "id": "C15",
         "name": "floating glass dock",
-        "evidence": ["F09", "F12", "F16", "M09", "M10", "P12"],
+        "evidence": [
+          "F09",
+          "F12",
+          "F16",
+          "M09",
+          "M10",
+          "P12"
+        ],
         "journey": "SH",
         "route": "expo-router/ui headless tabs (spike D-193)",
         "port": "D-196: icon-only 56 pt glass capsule 28 pt from the left, low in the home-indicator band; active bubble on a spring; the plus (P12) is a 48 pt disc beside it. Adapted: no visible labels (reference has none; accessible names kept), content scrolls behind the glass",
@@ -732,21 +927,43 @@
       {
         "id": "C16",
         "name": "collapsing header + chips",
-        "evidence": ["F09", "F10", "F11", "F12", "M09"],
+        "evidence": [
+          "F09",
+          "F10",
+          "F11",
+          "F12",
+          "M09"
+        ],
         "journey": "SH",
         "status": "pending S1b.7"
       },
       {
         "id": "C18",
         "name": "Phantom action fan",
-        "evidence": ["P19", "M06", "M07"],
+        "evidence": [
+          "P19",
+          "M06",
+          "M07"
+        ],
         "journey": "SH",
         "status": "pending S1b.7"
       },
       {
         "id": "C39–C43",
         "name": "order ticket, ruler, keypad↔chart, TP/SL child, hold pill",
-        "evidence": ["F37", "F38", "F39", "F40", "F41", "F42", "F43", "F44", "F45", "M14", "M15"],
+        "evidence": [
+          "F37",
+          "F38",
+          "F39",
+          "F40",
+          "F41",
+          "F42",
+          "F43",
+          "F44",
+          "F45",
+          "M14",
+          "M15"
+        ],
         "journey": "J4",
         "status": "pending S1b.8"
       }
@@ -1173,6 +1390,11 @@
       "date": "2026-10-01",
       "decision": "Navigation shell spike (expo-router/ui headless tabs)",
       "ref": "D-193"
+    },
+    {
+      "date": "2026-10-08",
+      "decision": "Pivot to Up/Down calls: Tradash behaviour on Senryo's UGLYCASH identity; the terminal, dock, markets, wallet and sounds rebuilt; trading-era screens retired",
+      "ref": "pivot-2026-10-08.md, D-280"
     }
   ],
   "rules": [
