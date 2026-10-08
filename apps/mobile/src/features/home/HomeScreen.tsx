@@ -3,14 +3,16 @@
  * markets to call on. A guest gets the promise and one way in. Setup resume and the Face ID prompt stay on Home.
  */
 import { formatUnits } from "@senryo/core";
-import { useCatalog, useMarketAccount, useTickets } from "@senryo/query";
+import { marketKeys, useCatalog, useMarketAccount, useTickets } from "@senryo/query";
 import { useFont } from "@shopify/react-native-skia";
+import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "~/components/kit/Button";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
 import { EmptyState } from "~/components/kit/states";
 import { useDockInset } from "~/components/shell/dock-context";
@@ -41,6 +43,7 @@ export function HomeScreen() {
   const account = useMarketAccount(address);
   const tickets = useTickets(address);
   const catalog = useCatalog();
+  const client = useQueryClient();
   const [, setSymbol] = useMMKVString(STORAGE_KEYS.terminalSymbol, storage);
   const font = useFont(require("../../../assets/fonts/InterDisplay-SemiBold.ttf"), BALANCE_SIZE);
   const balance = useSharedValue<LiveFigure>({ text: "$—", trend: 0 });
@@ -104,11 +107,17 @@ export function HomeScreen() {
             ) : null}
             <View style={styles.section}>
               <SectionHeading>Call the next move</SectionHeading>
-              {"value" in catalog
-                ? catalog.value.markets.map((m) => (
-                    <MarketRow key={m.symbol} symbol={m.symbol} name={m.name} onOpen={() => watch(m.symbol)} />
-                  ))
-                : null}
+              {"value" in catalog ? (
+                catalog.value.markets.map((m) => (
+                  <MarketRow key={m.symbol} symbol={m.symbol} name={m.name} onOpen={() => watch(m.symbol)} />
+                ))
+              ) : catalog.status === "failed" ? (
+                <Button
+                  label="Markets didn't load · Try again"
+                  variant="ghost"
+                  onPress={() => void client.invalidateQueries({ queryKey: marketKeys.all })}
+                />
+              ) : null}
             </View>
           </>
         ) : (

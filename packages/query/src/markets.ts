@@ -39,6 +39,10 @@ export const marketKeys = {
   loads: (chainId: ChainId) => ["markets", chainId, "load"] as const,
 };
 
+const CATALOG_RETRIES = 3;
+/** While the catalogue is failing, it is asked for again this often. */
+const CATALOG_RETRY_MS = 15_000;
+
 /** Other callers move a window's load too: the terminal reads it this often while the window is on screen. */
 export const LOAD_POLL_MS = 5_000;
 
@@ -64,6 +68,9 @@ export function useCatalog() {
     queryKey: marketKeys.catalog(env.chainId),
     queryFn: ({ signal }) => env.api.call(catalogRoute, { query: { chainId: env.chainId } }, { signal }),
     staleTime: Number.POSITIVE_INFINITY,
+    // Everything rests on it: a failed read keeps trying rather than leaving the app without markets.
+    retry: CATALOG_RETRIES,
+    refetchInterval: (q) => (q.state.status === "error" ? CATALOG_RETRY_MS : false),
   });
   return fromQuery(query);
 }
