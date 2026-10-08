@@ -16,8 +16,12 @@ COPY src ./src
 # `envio start` re-runs codegen into .envio/, so the runtime user owns the work dir.
 RUN chown -R node:node /envio-indexer
 
-ENV ENVIO_TUI=false NODE_ENV=production ENVIO_HASURA=false ENVIO_PG_SCHEMA=envio \
+ENV ENVIO_TUI=false NODE_ENV=production ENVIO_HASURA=false ENVIO_PG_SCHEMA=envio ENVIO_PG_SSL_MODE=false \
   ENVIO_INDEXER_HOST=0.0.0.0 ENVIO_INDEXER_PORT=9898
+# NODE_ENV=production drops Envio's dev fallbacks, so everything it reads is set: its own throttles (Envio's
+# defaults), and the Hasura settings it parses even when Hasura is off — inert, nothing calls them.
+ENV ENVIO_THROTTLE_CHAIN_METADATA_INTERVAL_MILLIS=500 ENVIO_THROTTLE_PRUNE_STALE_DATA_INTERVAL_MILLIS=30000 \
+  HASURA_GRAPHQL_ENDPOINT=http://hasura.off/v1/metadata HASURA_GRAPHQL_ROLE=admin HASURA_GRAPHQL_ADMIN_SECRET=off
 EXPOSE 9898
 # Liveness on the indexer's own observability server.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=120s --retries=5 \
