@@ -103,6 +103,8 @@
   "tesla/monoDark": "4b94d9eaf23849d6feec7a9c819e3699a35cbb76045ba7d482d17cbcc97414a5",
   "tesla/symbol": "0a4fd5f20aea8430e25a3e9bb9be4ab00b1bdac6751ea48dd6e39e40ae9098b7",
   "tesla/monoLight": "6cee3bea541af410a75cd519aa7ffffdc15e1b08ae80412b5b1ad86b9fd44bf1",
+  "test-usd/symbol": "d342d04a990b7f94deb9bf235f96ba014868277851f44c414ae7949a559c154e",
+  "test-usd/monoLight": "2a23177679012df06614437f0f50b1e74876fbf07714593cf9152bcd1b3eddb7",
   "lib-monad/monoLight": "0e0b523647a5c016a7a47576ce4ec6ecb7043be38c52ae002484e9dbefc6931d",
   "lib-monad/monoDark": "2f18d8a1b10fdd4052a4b9af12f0ad16c074787900eff086a32887523e6c815e",
   "lib-bitcoin/symbol": "aa5942098cc7801a7ed96266c95496c0044b418bd765fd2d6ef3569852c1f3ff",

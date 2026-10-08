@@ -6,7 +6,7 @@
  * pipeline (scripts/catalog.ts), never by hand.
  */
 import { MAINNET_CHAIN_ID, MAINNET_USDC, TESTNET_CHAIN_ID } from "@senryo/config";
-import { EXTERNAL_CHAIN_IDS, USDC_ELSEWHERE } from "./constants.ts";
+import { EXTERNAL_CHAIN_IDS, PRACTICE_DOLLAR, USDC_ELSEWHERE } from "./constants.ts";
 import { CAIP2, ids } from "./ids.ts";
 import type { Entity } from "./types.ts";
 
@@ -56,8 +56,19 @@ function monadRows(): Entity[] {
         ...flag,
       },
     ];
-    // Practice's Test USD joins with its address after the S2 deploy (the `identity-provenance` invariant checks it).
-    if (!practice) {
+    // Practice calls in Test USD (D-258), Real in Circle USDC.
+    if (practice) {
+      rows.push({
+        id: ids.token(chainId, PRACTICE_DOLLAR),
+        name: "Test USD",
+        symbol: "tUSD",
+        role: "asset",
+        instrument: "stablecoin",
+        network: chain,
+        art: "test-usd",
+        ...flag,
+      });
+    } else {
       rows.push({
         id: ids.token(chainId, MAINNET_USDC),
         name: "USD Coin",

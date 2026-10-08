@@ -26,8 +26,8 @@ export interface ApiContext {
   geo: GeoDb;
 }
 
-/** The market contracts on a network (S2); until then every network reads as not deployed. */
-const MARKETS_CONTRACT = "PythBoundaryOracle";
+/** A network has markets once its reserve is deployed (S2 testnet; S9 mainnet). */
+const MARKETS_CONTRACT = "BandReserve";
 
 export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId, ChainContext>> {
   const chains = new Map<ChainId, ChainContext>();

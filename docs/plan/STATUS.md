@@ -20,12 +20,36 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0 and S1 done; next is S1b (native build 0.4.0 → TestFlight + Play internal).
+**Where we are:** S0, S1 and S2 done; S1b's store builds are running on EAS; next is S3 (services).
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
 - Agari's new key is live on `agari-ops`.
 - Owarine's ops env now uses Senryo's key.
+
+## S2 handoff (contracts, 8 Oct)
+
+The markets are live on Monad testnet (`ids-and-txs.md` → "Markets deploy (S2)"): `Windows`, `PythPrintVerifier`,
+`BandReserve` (with `SessionGrants`) and `TestUSD`, ported from CWF `d7b576b` (windows, prints, range reserve, payouts)
+and re-based on commit-then-fill at the unique Pyth print (D-261, D-275). Checked by exit code: `forge test` 35/35
+(fill, settlement, sessions, plus a solvency invariant suite: 4,096 random opens/cash-outs/rolls, balance = liabilities,
+exposure ≤ 60 %, band totals = tickets), `pnpm gate` 0. A real keyed Pyth print was recorded on chain through the
+deployed verifier, and a mainnet keyed payload verified against both mainnet receivers (D-274).
+
+**Built:**
+- `packages/config/src/catalog.ts` (D-268): BTC/ETH/SOL × 1m/5m/15m/1h, Pyth ids, σ, band menus from σ√τ, pool terms
+  and session ceilings per network; `scripts/catalog-export.mjs` → `contracts/script/catalog/<chainId>.json` →
+  `contracts/script/DeployMarkets.s.sol`.
+- ABIs for the six contracts in `@senryo/contracts`; `CONTRACT_ABIS` and the api's deployed check follow `BandReserve`.
+- Test USD has its own neutral mark (Material Symbols `paid`, fetched by script), pinned by `PRACTICE_DOLLAR`.
+- `PythBoundaryOracle` and `predictions/` are gone (one verifier).
+
+**Carried forward on purpose:**
+- The address book marks every contract `indexed: false` until S4 adds them to the indexer (the `address-drift` guard).
+- Supplier shares ("Earn") are S7 (D-276); S2's pool is house-funded.
+- Equities need their calendar weeks and a 50 bps verifier (S7); MON waits for S9.
+- The relayer, keeper jobs, Test USD grant and `/v1/stream` are S3; the TypeScript pricing mirror with shared vectors
+  lands with the client runtime (S3/S5).
 
 ## S1 handoff (cleanup, 8 Oct)
 

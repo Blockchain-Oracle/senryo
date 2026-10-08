@@ -12,7 +12,7 @@
  *   page records it public domain or CC0 (a {{PD-textlogo}} wordmark with {{Trademarked}}), pinned by its version's
  *   SHA-1, with the page's licence fields read into the record — for fund brands no icon library carries (none on file since the D-256 pivot).
  * - Google's Material Symbols (github.com/google/material-design-icons, Apache-2.0, pinned by `MATERIAL_COMMIT`, the
- *   passkey glyph's pin): neutral glyphs for an instrument no owner's mark identifies (none on file since the pivot).
+ *   passkey glyph's pin): neutral glyphs for an instrument no owner's mark identifies (Practice's Test USD).
  * Researched and not usable (1 Oct 2026), so SPY and QQQ are recorded gaps in src/entities.ts: SPDR and Invesco have
  * no Simple Icons or Iconify entry (every collection searched), no Commons file and no Wikidata logo (P154); Brandfetch
  * forbids programmatic download ("Programmatic access to logo images is not permitted"); nvstly/icons has no licence
@@ -58,6 +58,12 @@ const STANDALONE: readonly CatalogEntry[] = [
   { key: "avalanche", owner: "Ava Labs", spec: { from: "web3icons", group: "networks", name: "avalanche", take: ALL } },
   { key: "nvidia", owner: "NVIDIA Corporation", spec: { from: "simple-icons", slug: "nvidia" } },
   { key: "tesla", owner: "Tesla, Inc.", spec: { from: "simple-icons", slug: "tesla" } },
+  {
+    // Practice's dollar (D-258): ours, with no issuer — a neutral coin glyph, never USDC's mark.
+    key: "test-usd",
+    owner: "Google — Material Symbols (github.com/google/material-design-icons)",
+    spec: { from: "material-symbols", name: "paid", style: "rounded", filled: true },
+  },
 ];
 
 /**

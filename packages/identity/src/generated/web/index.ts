@@ -106,6 +106,8 @@ import ArtNvidiaMonoLight from "./nvidia-monolight.tsx";
 import ArtTeslaMonoDark from "./tesla-monodark.tsx";
 import ArtTeslaSymbol from "./tesla-symbol.tsx";
 import ArtTeslaMonoLight from "./tesla-monolight.tsx";
+import ArtTestUsdSymbol from "./test-usd-symbol.tsx";
+import ArtTestUsdMonoLight from "./test-usd-monolight.tsx";
 import ArtLibMonadMonoLight from "./lib-monad-monolight.tsx";
 import ArtLibMonadMonoDark from "./lib-monad-monodark.tsx";
 import ArtLibBitcoinSymbol from "./lib-bitcoin-symbol.tsx";
@@ -192,6 +194,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
+  "test-usd": { symbol: ArtTestUsdSymbol, monoLight: ArtTestUsdMonoLight },
   "lib-monad": { monoLight: ArtLibMonadMonoLight, monoDark: ArtLibMonadMonoDark },
   "lib-bitcoin": { symbol: ArtLibBitcoinSymbol, monoLight: ArtLibBitcoinMonoLight, monoDark: ArtLibBitcoinMonoDark },
   "lib-ethereum": { monoLight: ArtLibEthereumMonoLight, monoDark: ArtLibEthereumMonoDark },

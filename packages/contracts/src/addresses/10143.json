@@ -1,4 +1,41 @@
 {
   "chainId": 10143,
-  "contracts": {}
+  "contracts": {
+    "AccessManager": {
+      "address": "0x4b860aC358C9030b6B608ab484c4BF2728643A5D",
+      "indexed": false,
+      "initCodeHash": "0xf7438704d2184530fa36a14533ae6c81a04b463fa1aa5b626d7c0241b201a88a",
+      "startBlock": 69306230
+    },
+    "BandReserve": {
+      "address": "0xbcf5E007DBFd1BF579fFD17CbA0e3885906230D4",
+      "indexed": false,
+      "initCodeHash": "0xeab76511538db13e878cc4a6d4a1b5de3b0ddabe915722ae99d42e9a448612e8",
+      "startBlock": 69306230
+    },
+    "MarketCalendar": {
+      "address": "0x068ddE517bb332C089aBde3028D5714eC45E2A4c",
+      "indexed": false,
+      "initCodeHash": "0x34f048201b1dd74ec78ff8319f2665a6f5bb45c5513beb123cfd514efc89bf7f",
+      "startBlock": 69306230
+    },
+    "PythPrintVerifier": {
+      "address": "0x06C766c57c88124db9D302cD2050bEbAD9c1b5Df",
+      "indexed": false,
+      "initCodeHash": "0xf56a7c3a10a8bfc6fc208585df8a025ef9fe5d2f9fd1e94e7952b83a0a752f14",
+      "startBlock": 69306230
+    },
+    "TestUSD": {
+      "address": "0xeA23d6884b7861d2b9324C6A542020e8995cd3D3",
+      "indexed": false,
+      "initCodeHash": "0x411f7ff8f071b63b13b42cc8970e8d886449210e5b2c2f82b9113d6cd9a5b214",
+      "startBlock": 69306230
+    },
+    "Windows": {
+      "address": "0x6f4Cc798951f889b9f2a7029C1D8D7749860dF69",
+      "indexed": false,
+      "initCodeHash": "0x016b1aa6ba8f1c31735ea37e2b15e45b6450988224ef417125f1392a4ce7f009",
+      "startBlock": 69306230
+    }
+  }
 }

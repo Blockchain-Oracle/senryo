@@ -1,17 +1,24 @@
 import { type ChainId, MAINNET_CHAIN_ID, MAINNET_USDC } from "@senryo/config";
-import { accessManagerAbi, marketCalendarAbi, pythBoundaryOracleAbi } from "@senryo/contracts/abis";
+import {
+  accessManagerAbi,
+  bandReserveAbi,
+  marketCalendarAbi,
+  pythPrintVerifierAbi,
+  testUSDAbi,
+  windowsAbi,
+} from "@senryo/contracts/abis";
 import { addressBooks } from "@senryo/contracts/addresses";
 import { type Abi, type Address, getAddress, getContract } from "viem";
 import type { ReadClient } from "./clients.ts";
 
-/**
- * Deployed-contract name (key in `addresses/<chainId>.json`) → ABI. The prediction-market contracts
- * (Windows, BandReserve, SessionGrants, TestUSD) join this map with the S2 deploy (D-256).
- */
+/** Deployed-contract name (key in `addresses/<chainId>.json`) → ABI: the prediction markets (S2, D-256). */
 export const CONTRACT_ABIS = {
   AccessManager: accessManagerAbi,
+  BandReserve: bandReserveAbi,
   MarketCalendar: marketCalendarAbi,
-  PythBoundaryOracle: pythBoundaryOracleAbi,
+  PythPrintVerifier: pythPrintVerifierAbi,
+  TestUSD: testUSDAbi,
+  Windows: windowsAbi,
 } as const;
 
 export type ContractName = keyof typeof CONTRACT_ABIS;

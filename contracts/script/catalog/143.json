@@ -1,0 +1,448 @@
+{
+  "chainId": 143,
+  "collateral": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+  "params": {
+    "halfSpreadE6": 20000,
+    "maxExpiryReserved": "250000000",
+    "maxExposureBps": 6000,
+    "maxProbE6": 970000,
+    "maxStake": "25000000",
+    "maxSurchargeE6": 10000,
+    "minProbE6": 30000,
+    "minStake": "1000000"
+  },
+  "poolSeed": "0",
+  "pyth": "0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d",
+  "series": [
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 3,
+          "kind": 3,
+          "lowBps": 3
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 7
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 7
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      "market": "0x4254430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 8904,
+      "symbol": "BTC"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 8,
+          "kind": 3,
+          "lowBps": 8
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 15
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 15
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      "market": "0x4254430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 8904,
+      "symbol": "BTC"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 13,
+          "kind": 3,
+          "lowBps": 13
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 27
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 27
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      "market": "0x4254430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 8904,
+      "symbol": "BTC"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 27,
+          "kind": 3,
+          "lowBps": 27
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 53
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 53
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      "market": "0x4254430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 8904,
+      "symbol": "BTC"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 4,
+          "kind": 3,
+          "lowBps": 4
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 9
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "market": "0x4554480000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "ETH"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 10,
+          "kind": 3,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 20
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 20
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "market": "0x4554480000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "ETH"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 17,
+          "kind": 3,
+          "lowBps": 17
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 35
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 35
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "market": "0x4554480000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "ETH"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 35,
+          "kind": 3,
+          "lowBps": 35
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 69
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 69
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "market": "0x4554480000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "ETH"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 6,
+          "kind": 3,
+          "lowBps": 6
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 12
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 12
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+      "market": "0x534f4c0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15136,
+      "symbol": "SOL"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 13,
+          "kind": 3,
+          "lowBps": 13
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 26
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 26
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+      "market": "0x534f4c0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15136,
+      "symbol": "SOL"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 23,
+          "kind": 3,
+          "lowBps": 23
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 45
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 45
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+      "market": "0x534f4c0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15136,
+      "symbol": "SOL"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 45,
+          "kind": 3,
+          "lowBps": 45
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 91
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 91
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+      "market": "0x534f4c0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15136,
+      "symbol": "SOL"
+    }
+  ],
+  "session": {
+    "maxPerCallCap": "25000000",
+    "maxSessionCap": "100000000",
+    "maxSessionSec": 900
+  },
+  "verifier": {
+    "admissionSec": 300,
+    "graceSec": 5,
+    "maxConfBps": 25
+  }
+}

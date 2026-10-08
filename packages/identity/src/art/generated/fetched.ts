@@ -433,6 +433,41 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "test-usd",
+    "owner": "Google — Material Symbols (github.com/google/material-design-icons)",
+    "provenance": "open-library",
+    "pageUrl": "https://fonts.google.com/icons?selected=Material+Symbols+Rounded:paid",
+    "licence": "Apache License 2.0 (https://github.com/google/material-design-icons/blob/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/LICENSE), google/material-design-icons at commit bd8cb85b. README: \"We have made these icons available for you to incorporate into your products under the Apache License Version 2.0 … Feel free to remix and re-share these icons and documentation in your products.\" The licence text ships beside the files (LICENSE-material-design-icons.txt, §4a); credited in About & sources.",
+    "retrieved": "2026-10-08",
+    "usage": "A neutral glyph for an instrument with no owner's mark — never an issuer's or a venue's logo, always beside its ticker and type.",
+    "variants": {
+      "symbol": {
+        "path": "packages/identity/sources/test-usd/material-symbols-rounded-paid-fill1-24px.svg",
+        "url": "https://raw.githubusercontent.com/google/material-design-icons/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/symbols/web/paid/materialsymbolsrounded/paid_fill1_24px.svg",
+        "sha256": "d342d04a990b7f94deb9bf235f96ba014868277851f44c414ae7949a559c154e",
+        "viewBox": "0 -960 960 960",
+        "insetPermille": 83,
+        "shape": "free",
+        "surface": "light"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/test-usd/material-symbols-rounded-paid-fill1-24px-light.svg",
+        "url": "https://raw.githubusercontent.com/google/material-design-icons/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/symbols/web/paid/materialsymbolsrounded/paid_fill1_24px.svg",
+        "sha256": "2a23177679012df06614437f0f50b1e74876fbf07714593cf9152bcd1b3eddb7",
+        "viewBox": "0 -960 960 960",
+        "insetPermille": 83,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/test-usd/material-symbols-rounded-paid-fill1-24px.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "Apache License 2.0 (https://github.com/google/material-design-icons/blob/bd8cb85bd4bad964fe6918f79665bb40c3a8efef/LICENSE) §2: \"a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display … and distribute the Work\" — the one-ink glyph filled white for dark grounds."
+        }
+      }
+    }
+  },
+  {
     "key": "lib-monad",
     "owner": "Monad Foundation",
     "provenance": "open-library",

@@ -3,6 +3,12 @@
 /** External EVM chains shown in funding routes (EIP-155 ids). */
 export const EXTERNAL_CHAIN_IDS = { ethereum: 1, base: 8453, arbitrum: 42161, bnb: 56, polygon: 137 } as const;
 
+/**
+ * Practice's dollar on Monad testnet (S2 deploy, 8 Oct 2026). The `identity-provenance` invariant fails if the address
+ * book's `TestUSD` moves without this, so a redeploy can't silently orphan the mark.
+ */
+export const PRACTICE_DOLLAR = "0xeA23d6884b7861d2b9324C6A542020e8995cd3D3" as const;
+
 /** Circle-issued USDC outside Monad (developers.circle.com/stablecoins/usdc-contract-addresses, read 2026-09-30). */
 export const USDC_ELSEWHERE = {
   base: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",

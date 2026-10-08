@@ -379,3 +379,13 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   - zero client RPC; Hasura off;
   - a Postgres intents queue; memory and latency budgets as gates.
   - Every library was chosen from Context7 docs.
+- **D-273** 2026-10-08 · **Real-money regions.** Real calls are refused from the US, GB, CA, AU, BY and RU plus the sanctioned set (CU, IR, KP, SY): the api's `REAL_MONEY_BLOCKED` + `SANCTIONED`, mirrored by the phone's self-attestation list. Practice is never gated; moving your own money never is.
+- **D-274** 2026-10-08 · **Pyth receivers.** Testnet `0xFC6bd9F9…d379`; mainnet `0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d` (Pyth's own table). A keyed Hermes boundary payload (BTC, publish = T, prev = T−1) verified by `eth_call` on both mainnet candidates (different implementations, fee 0) and on testnet with the same bytes, so Practice settles on the same real prints as Real.
+- **D-275** 2026-10-08 · **Market contracts as built (S2).**
+  - Prints are stored once per `(verifier, feed, instant)`: back-to-back windows share the boundary print with no copy step, and fills read the same store. Quality, grace and admission are the verifier's immutables (one verifier per quality class).
+  - Anyone may open the current or a coming window (it is fully determined by the series and the clock); no roller role.
+  - A fill is only possible while its window runs: after expiry a pending call is refunded, so nobody can wait for the close and then choose whether to fill.
+  - A window settles once for all its bands (per-band totals), so the pool's result is final the moment the verdict lands; payouts follow by `claimFor` batches anyone may crank. Refunds go to the owner, winnings and proceeds to the recipient (the owner for a session).
+  - Close bid = probability − half-spread; the basis leaving a partial close is ceiled. Every money path ends in `balance ≥ liabilities` (D-264).
+- **D-276** 2026-10-08 · **House-funded pool until Earn.** In S2 only the pool role funds and defunds (testnet: 10M Test USD; mainnet: the owner's seed at S9). Outside suppliers arrive with Earn in S7, priced at settled epochs as D-260 says; no share accounting ships before that design.
+- **D-277** 2026-10-08 · **Solady for `lnWad`.** `contracts/lib/solady` pinned at v0.1.26 (`acd959a`, the commit CWF uses) rather than copying its assembly into `src/`; the client mirror ports CWF's tested TypeScript `lnWad`.

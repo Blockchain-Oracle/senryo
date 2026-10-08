@@ -1,4 +1,5 @@
 export * from "./aurora.ts";
+export * from "./catalog.ts";
 export * from "./env.ts";
 export * from "./gas.ts";
 export * from "./hosts.ts";

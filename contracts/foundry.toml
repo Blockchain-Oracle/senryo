@@ -10,13 +10,17 @@ evm_version = "osaka"
 network = "monad"                # Monad gas model (limit charged), 128 KB code limit, MIP-8 page gas, precompiles
 optimizer = true
 optimizer_runs = 200
-via_ir = true                    # SenryoCore events/structs exceed the legacy stack (D-052)
+via_ir = true                    # the markets' intent/ticket structs exceed the legacy stack (D-052)
 # Defaults kept on purpose: bytecode_hash = "ipfs" + cbor_metadata = true give Sourcify exact matches (D-024 verify).
 use_literal_content = true
-fs_permissions = [{ access = "read-write", path = "../packages/contracts/src/addresses" }]
+fs_permissions = [
+  { access = "read-write", path = "../packages/contracts/src/addresses" },
+  { access = "read", path = "./script/catalog" },
+]
 remappings = [
   "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
   "forge-std/=lib/forge-std/src/",
+  "solady/=lib/solady/src/",
 ]
 
 [fuzz]
