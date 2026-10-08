@@ -10,6 +10,8 @@ Status: **approved by the user (“lgtm”), 7 October**. The first implementati
 
 **Final scope clarification, 7 October:** substantial cleanup is authorized as part of the revamp. The user explicitly includes usernames, all forms, receive, profiles and onboarding loading. All 89 supplied screens have now had a second visual pass. The [forms and states contract](../design/reference-study-2026-10-07-uglycash/forms-and-states.md) is part of implementation acceptance, including each of the 19 onboarding screens, actual username validation/save rules and states absent from the reference.
 
+**Physical-phone feedback, 8 October:** the user reports repeated credential-provider prompts while expecting Face ID, failed Practice trade, unavailable Card and a selectable testnet USDC deposit ending at a Mainnet-only button. They authorize architecture and ecosystem changes that improve trading and request a bounded status as credits end. The next priority is verifying and repairing the complete phone funding → trade → close → withdraw/auth journey, with truthful Card/provider/testnet routing. All approved scope remains retained; further prediction source is checkpointed, not completed. [Diagnosis and continuation order](../design/reviews/2026-10-08-core-trading-feedback.md).
+
 ## 1. Product and authority lock
 
 ### Development and functional iteration amendment — 7 October
