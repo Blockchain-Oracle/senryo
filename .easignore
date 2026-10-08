@@ -76,8 +76,12 @@ design/preview/.env*
 design/preview/next-env.d.ts
 
 # ---- part 2: not part of the phone build (the workspace packages stay, so the frozen lockfile still matches) ----
-contracts/
-design/
-docs/
-context/
-indexer/
+# Anchored with a leading slash: an unanchored `contracts/` also matches packages/contracts and breaks the bundle.
+/contracts/
+/design/
+/docs/
+/context/
+/indexer/
+# Local tool and agent state (hidden from git by their own ignore files, which EAS doesn't read).
+/.superpowers/
+/.claude/
