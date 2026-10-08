@@ -566,15 +566,15 @@ importers:
       '@senryo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@senryo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@senryo/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@senryo/query':
         specifier: workspace:*
         version: link:../../packages/query
-      '@senryo/service-common':
-        specifier: workspace:*
-        version: link:../../services/common
       viem:
         specifier: 'catalog:'
         version: 2.57.0(typescript@6.0.3)(zod@4.6.5)

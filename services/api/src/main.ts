@@ -24,6 +24,7 @@ import { openLanes } from "./relay/lanes.ts";
 import { MarketRelay } from "./relay/relay.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
+import { registerHistoryRoutes } from "./routes/history.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
 import { registerMarketRoutes } from "./routes/markets.ts";
 import { registerNotificationRoutes } from "./routes/notifications.ts";
@@ -117,6 +118,7 @@ registerEngagementRoutes(app, ctx);
 registerNotificationRoutes(app, ctx);
 registerProfileRoutes(app, ctx);
 registerMarketRoutes(app, ctx);
+registerHistoryRoutes(app, ctx);
 registerPriceRoutes(app, gateway);
 registerStreamRoute(app, {
   bus,

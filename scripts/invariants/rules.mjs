@@ -9,7 +9,7 @@
 
 import { fontProvenance } from "./lib/font-checks.mjs";
 import { identityProvenance } from "./lib/identity-checks.mjs";
-import { indexerDocsChainFilter } from "./lib/indexer-checks.mjs";
+import { indexerReadsChainFilter } from "./lib/indexer-checks.mjs";
 import {
   addressDrift,
   designJsonPresent,
@@ -206,8 +206,8 @@ export const rules = [
     check: addressDrift,
   },
   {
-    id: "indexer-docs-chain-filter",
-    description: "every indexer document filters on chainId (rows exist once per chain, D-173)",
-    check: indexerDocsChainFilter,
+    id: "indexer-reads-chain-filter",
+    description: "every indexer read filters on chainId (rows exist once per chain, D-173)",
+    check: indexerReadsChainFilter,
   },
 ];

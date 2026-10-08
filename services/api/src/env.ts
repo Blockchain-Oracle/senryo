@@ -3,6 +3,7 @@ import { API_ORIGIN, type ChainId, isChainId, RP_ID, WEB_ORIGIN } from "@senryo/
 import { baseEnvSchema, csvSchema, parseEnv, portSchema, readSecret } from "@senryo/service-common";
 import { z } from "zod";
 import { API_PORT, COUNTRY_HEADERS, MIN_APP_VERSION } from "./constants.ts";
+import { DEFAULT_INDEXER_SCHEMA } from "./history/constants.ts";
 
 export const apiEnvSchema = baseEnvSchema.extend({
   PORT: portSchema.default(API_PORT),
@@ -21,6 +22,11 @@ export const apiEnvSchema = baseEnvSchema.extend({
   /** The contact point /v1/config publishes for reports and safety questions (App Store 1.2, S12b.6). */
   SUPPORT_EMAIL: z.email().default(SUPPORT_EMAIL),
   SUPPORT_URL: z.url().optional(),
+  /** The Postgres schema the indexer writes (Envio `ENVIO_PG_SCHEMA`); history routes read it (S4). */
+  INDEXER_SCHEMA: z
+    .string()
+    .regex(/^[a-z_][a-z0-9_]*$/)
+    .default(DEFAULT_INDEXER_SCHEMA),
   /** Feature flags served by /v1/config, e.g. `earn=1,games=0`. */
   FEATURES: csvSchema.transform((list) =>
     Object.fromEntries((list ?? []).map((pair) => [pair.split("=")[0] ?? pair, pair.split("=")[1] !== "0"])),

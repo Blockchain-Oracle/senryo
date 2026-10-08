@@ -20,12 +20,50 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0, S1 and S2 done; S1b's store builds are running on EAS; next is S3 (services).
+**Where we are:** S0–S3 done (S1b's builds submitted to TestFlight and Play internal); next is S4 (indexer).
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
 - Agari's new key is live on `agari-ops`.
 - Owarine's ops env now uses Senryo's key.
+
+## S3 handoff (services, 8 Oct)
+
+The markets run end to end on Monad testnet through the deployed api and keeper (`ids-and-txs.md` → "Services
+deploy (S3)"). The gate journey `scripts/drive/src/markets-public-check.ts` (a brand-new wallet, public api only)
+passed three times — twice against local services, once against production: sign-in → Practice dollars → BTC 1m Up
+with a gas-free permit → fill at the unique print (tap → fill 2.2 s on production, ~3.2 s from a laptop on a phone
+hotspot) → half cash-out → Down → automatic settlement and payout → a capped session → a call signed by the session
+key. `pnpm gate` 0.
+
+**Built (D-278):**
+- api: the one Pyth gateway (raw Hermes SSE, key in a header, watchdog, rotation, unique-print ring, `pyth_prints`
+  archive of every minute boundary and every pending fill instant, 1-minute candles); the one `/v1/stream` (coalesced
+  ticks serialised once, `prints`, ticketed `user:` topics, server-time beat, `Last-Event-ID` replay); the relay
+  (digest-keyed intents queue, sponsor lanes with a Postgres journal, lazy windows in one Multicall3 tx, fills batched
+  per print the moment it streams); session grant/revoke; Practice grant; catalogue, account, tickets, prices routes.
+- keeper: `sync` (the ticket book follows the chain), `settle` (close print + resolve + settle + payouts in one tx,
+  void and refund when no print), backup fills/expire, result pushes ("You won $x").
+- `@senryo/chain` holds every market id, typed-data definition, calldata builder and receipt decoder (services never
+  import viem).
+
+**Carried forward:**
+- One relay lane (the sponsor). A second (`SPONSOR_2_PK`) and ≥ 12 MON per lane need more testnet MON: sponsor 5.2,
+  keeper ≈ 3.8, deployer ≈ 1.0 MON. Each call costs about 0.05 MON (commit + fill + its share of settlement).
+- Container memory limits, the Cloudflare cache rule and the `/status` page's prices component wait for S10's ops
+  pass; `/v1/stream` is behind Traefik only.
+- History, leaderboard and crowd split come from the indexer (S4); the ticket book stays the keeper's work list.
+
+## S1b handoff (native build 0.4.0, 8 Oct)
+
+- One native build per platform on runtime 0.4.0 (Ramp, JitPack and `victory-native` out; Expo SDK 57 patch
+  releases in), then over-the-air only (D-270). iOS build 11 is submitted to TestFlight, Android versionCode 5 to the
+  Play internal track (`ids-and-txs.md`). Internal TestFlight testers install without review.
+- Found on the way: an unanchored `.easignore` rule dropped `packages/contracts` from the upload; it is anchored now,
+  checked by building the exact archive (`eas build:inspect`) and bundling iOS from it, and an invariant keeps
+  `.easignore` covering every `.gitignore` rule.
+- **Waiting on the user:** add testers to the internal TestFlight group and the Play internal testers list (Apple /
+  Google consoles), then install. External Beta App Review is planned for a build after S5 (D-270).
 
 ## S2 handoff (contracts, 8 Oct)
 

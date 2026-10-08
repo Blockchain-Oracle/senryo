@@ -7,6 +7,7 @@ export * from "./routes/activity.ts";
 export * from "./routes/auth.ts";
 export * from "./routes/define.ts";
 export * from "./routes/engagement.ts";
+export * from "./routes/history.ts";
 export * from "./routes/info.ts";
 export * from "./routes/markets.ts";
 export * from "./routes/notifications.ts";

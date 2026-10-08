@@ -1,5 +1,51 @@
-# Senryo indexer — rebuilt in S4 (pivot D-256, D-272) against the prediction-market contracts deployed in S2:
-# Windows, BandReserve, SessionGrants and Test USD on 10143 (and 143 at S9). Envio HyperIndex 3.14 with HyperSync,
-# preload on, Hasura off (the API reads Envio's tables over SQL with a read-only role), shared Postgres schema `envio`.
-# The trading-era config (SenryoCore, LP vault, inboxes, feed mirrors, Perpl) was removed in S1; see git history.
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+# Senryo indexer (S4, D-272): the prediction markets' history — windows and their prints, every call from commit to
+# payout, accounts (PnL, wins, streaks), daily stats and the pool — for Proof, Calls history, the leaderboard and
+# the crowd split. Envio HyperIndex 3.14 on HyperSync; Hasura off (ENVIO_HASURA=false): the api reads these tables
+# over SQL in the shared Postgres's `envio` schema (ENVIO_PG_SCHEMA=envio). Event signatures are generated from the
+# deployed ABIs (contracts/out). Mainnet (143) joins at S9.
 name: senryo-indexer
+description: Senryo prediction markets on Monad
+handlers: src/handlers
+address_format: lowercase
+
+field_selection:
+  transaction_fields:
+    - hash
+    - from
+
+contracts:
+  - name: Windows
+    events:
+      - event: "SeriesRegistered(bytes32 indexed seriesId, bytes32 indexed market, uint32 cadenceSec, uint8 calendarId)"
+      - event: "WindowOpened(bytes32 indexed windowId, bytes32 indexed seriesId, uint40 start, uint40 expiry, uint8 policyVersion, address by)"
+      - event: "PrintRecorded(bytes32 indexed printKey, address indexed verifier, bytes32 indexed feedId, uint40 t, int64 priceE8, uint64 confE8, uint40 publishTime, address by)"
+      - event: "WindowResolved(bytes32 indexed windowId, uint8 state, uint8 voidReason, int64 openE8, int64 closeE8, address by)"
+  - name: BandReserve
+    events:
+      - event: "Committed(uint256 indexed ticketId, address indexed owner, bytes32 indexed windowId, uint8 band, uint64 stake, uint64 minPayout, uint40 target, bool viaSession)"
+      - event: "Filled(uint256 indexed ticketId, uint64 payout, uint64 stake, int64 entryE8, uint32 probE6, uint32 priceE6, uint64 reserve)"
+      - event: "Refused(uint256 indexed ticketId, uint8 reason, uint64 refunded)"
+      - event: "CloseCommitted(uint256 indexed ticketId, uint64 shares, uint64 minProceeds, uint40 target, bool viaSession)"
+      - event: "Closed(uint256 indexed ticketId, uint64 shares, uint64 proceeds, uint64 basisOut, int64 exitE8, uint32 bidE6)"
+      - event: "CloseRefused(uint256 indexed ticketId, uint8 reason)"
+      - event: "WindowSettled(bytes32 indexed windowId, uint16 wonMask, uint16 refundMask, uint16 lostMask, uint256 toPool, uint256 toHolders)"
+      - event: "Claimed(uint256 indexed ticketId, address indexed to, uint8 outcome, uint256 amount, bool paid, address by)"
+      - event: "PoolFunded(address indexed by, uint256 amount, uint256 liquid)"
+      - event: "PoolDefunded(address indexed to, uint256 amount, uint256 liquid)"
+      - event: "SessionGranted(address indexed owner, address indexed delegate, uint64 perCallCap, uint64 sessionCap, uint40 expiry, uint32 epoch)"
+      - event: "EpochBumped(address indexed owner, uint32 epoch)"
+
+chains:
+  - id: 10143
+    # The S2 deploy block (packages/contracts/src/addresses/10143.json startBlock).
+    start_block: 69306230
+    rpc:
+      - url: ${ENVIO_RPC_URL_10143:-https://testnet-rpc.monad.xyz}
+        ws: ${ENVIO_WS_URL_10143:-wss://testnet-rpc.monad.xyz}
+        for: realtime
+    contracts:
+      - name: Windows
+        address: "0x6f4Cc798951f889b9f2a7029C1D8D7749860dF69"
+      - name: BandReserve
+        address: "0xbcf5E007DBFd1BF579fFD17CbA0e3885906230D4"

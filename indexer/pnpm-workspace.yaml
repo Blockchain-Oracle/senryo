@@ -1,8 +1,3 @@
 # The indexer is its own pnpm root (invariant `indexer-isolated`): this file stops pnpm from walking up to the
-# repo workspace, so `indexer/` keeps its own pnpm-lock.yaml and Docker build context (Coolify base dir /indexer).
+# repo workspace, so `indexer/` keeps its own pnpm-lock.yaml and Docker build context (the images workflow builds it).
 packages: []
-
-# Native/binary builds are opt-in (same policy as the repo root). envio ships prebuilt binaries as optional
-# dependencies; esbuild (via tsx) installs its platform binary in a postinstall.
-allowBuilds:
-  esbuild: true

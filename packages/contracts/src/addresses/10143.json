@@ -9,7 +9,7 @@
     },
     "BandReserve": {
       "address": "0xbcf5E007DBFd1BF579fFD17CbA0e3885906230D4",
-      "indexed": false,
+      "indexed": true,
       "initCodeHash": "0xeab76511538db13e878cc4a6d4a1b5de3b0ddabe915722ae99d42e9a448612e8",
       "startBlock": 69306230
     },
@@ -33,7 +33,7 @@
     },
     "Windows": {
       "address": "0x6f4Cc798951f889b9f2a7029C1D8D7749860dF69",
-      "indexed": false,
+      "indexed": true,
       "initCodeHash": "0x016b1aa6ba8f1c31735ea37e2b15e45b6450988224ef417125f1392a4ce7f009",
       "startBlock": 69306230
     }

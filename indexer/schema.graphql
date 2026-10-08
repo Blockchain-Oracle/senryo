@@ -1,3 +1,153 @@
-# Senryo indexer schema — rebuilt in S4 (pivot D-256): Window, Position, Account (volume, PnL, wins, streak),
-# DailyAccountStat, MarketStat, VaultEpoch, SupplierPosition and a derived Leaderboard, with indexed foreign keys
-# instead of @derivedFrom (Hasura is off, D-272). The trading-era schema was removed in S1; see git history.
+# Senryo indexer schema (S4, D-272). Ids are `<chainId>_<on-chain id>`; references are plain indexed fields (no
+# @derivedFrom: Hasura is off and the api queries these tables over SQL). Money is in dollar base units (6 decimals),
+# prices e-8.
+
+"One catalogue series (market × cadence) as registered on chain."
+type Market {
+  id: ID!
+  chainId: Int! @index
+  seriesId: String! @index
+  marketKey: String!
+  cadenceSec: Int!
+  calls: Int!
+  volume: BigInt!
+  paidOut: BigInt!
+}
+
+"A price window: its prints, verdict, and the calls in it (crowd split from bandStake)."
+type Window {
+  id: ID!
+  chainId: Int! @index
+  windowId: String! @index
+  seriesId: String! @index
+  start: Int! @index
+  expiry: Int!
+  state: String!
+  voidReason: Int!
+  openE8: BigInt
+  closeE8: BigInt
+  calls: Int!
+  volume: BigInt!
+  "Stake filled per band index (0 Up, 1 Down, 2 Range, 3 Moonshot, 4 Crash, …)."
+  bandStake: [BigInt!]!
+  settled: Boolean!
+  wonMask: Int!
+  refundMask: Int!
+  lostMask: Int!
+  toPool: BigInt!
+  toHolders: BigInt!
+  openedTx: String!
+  resolvedTx: String
+  settledTx: String
+}
+
+"A unique Pyth print recorded on chain (a window boundary or a fill instant)."
+type Print {
+  id: ID!
+  chainId: Int! @index
+  feedId: String! @index
+  t: Int! @index
+  priceE8: BigInt!
+  confE8: BigInt!
+  publishTime: Int!
+  txHash: String!
+}
+
+"One call from commit to payout."
+type Ticket {
+  id: ID!
+  chainId: Int! @index
+  ticketId: BigInt! @index
+  owner: String! @index
+  windowId: String! @index
+  band: Int!
+  status: String! @index
+  originalStake: BigInt!
+  stake: BigInt!
+  payout: BigInt!
+  entryE8: BigInt
+  probE6: Int
+  priceE6: Int
+  target: Int!
+  viaSession: Boolean!
+  committedAt: Int! @index
+  committedTx: String!
+  committedBy: String!
+  filledAt: Int
+  fillTx: String
+  closedShares: BigInt!
+  proceeds: BigInt!
+  refunded: BigInt!
+  paid: BigInt!
+  outcome: String
+  refuseReason: Int
+  settledAt: Int
+  claimTx: String
+}
+
+"Everything that happened to a ticket, in order (the Calls timeline and receipts)."
+type TicketEvent {
+  id: ID!
+  chainId: Int! @index
+  ticketId: BigInt! @index
+  owner: String! @index
+  kind: String!
+  amount: BigInt!
+  priceE8: BigInt
+  timestamp: Int! @index
+  txHash: String!
+}
+
+"A caller's record on one network (Practice and Real are separate rows, D-270)."
+type Account {
+  id: ID!
+  chainId: Int! @index
+  owner: String! @index
+  calls: Int!
+  staked: BigInt!
+  returned: BigInt!
+  "Realised: returned − stake over finished tickets."
+  pnl: BigInt! @index
+  wins: Int!
+  losses: Int!
+  refunds: Int!
+  streak: Int!
+  bestStreak: Int!
+  lastActiveAt: Int! @index
+}
+
+type DailyAccountStat {
+  id: ID!
+  chainId: Int! @index
+  owner: String! @index
+  day: Int! @index
+  calls: Int!
+  "Tickets that finished as wins that day (the day/week boards)."
+  wins: Int!
+  staked: BigInt!
+  pnl: BigInt! @index
+}
+
+"The shared pool on one network (house-funded until Earn, D-276)."
+type Pool {
+  id: ID!
+  chainId: Int! @index
+  funded: BigInt!
+  defunded: BigInt!
+  "Σ toPool − Σ reserve paid out to winners: the pool's realised result."
+  settledToPool: BigInt!
+  settledToHolders: BigInt!
+  heldPayouts: BigInt!
+}
+
+type Session {
+  id: ID!
+  chainId: Int! @index
+  owner: String! @index
+  delegate: String!
+  perCallCap: BigInt!
+  sessionCap: BigInt!
+  expiry: Int!
+  epoch: Int!
+  grantedTx: String!
+}
