@@ -43,7 +43,7 @@ const INFO = {
   ttl: "Trading locks after this long, however active you are. Leaving the app always locks.",
   idle: "Trading also locks after this long without a signature.",
   gate: `Off by default in Practice. On Mainnet, trades of ${threshold} or more always ask, whatever is chosen here.`,
-  rule: `Tightening applies at once. Loosening asks for ${UNLOCK_WORD} first. Withdrawals, sends, card limits and your recovery phrase always ask for ${UNLOCK_WORD} again.`,
+  rule: `Tightening applies at once. Loosening asks for ${UNLOCK_WORD} first. Withdrawals, one-tap calls and your recovery phrase always ask for ${UNLOCK_WORD} again.`,
 } as const;
 
 function Row({ title, info, children }: { title: string; info: string; children: ReactNode }) {
@@ -112,8 +112,8 @@ export default function SecurityScreen() {
         <SessionPanel onSwitch={() => setSwitching(true)} />
         <View style={styles.section}>
           <View style={styles.title}>
-            <SectionHeading>Trading session</SectionHeading>
-            <InfoTip title="Trading session" body={INFO.rule} />
+            <SectionHeading>Unlocked session</SectionHeading>
+            <InfoTip title="Unlocked session" body={INFO.rule} />
           </View>
           <Panel style={styles.panel}>
             <Row title="Session length" info={INFO.ttl}>

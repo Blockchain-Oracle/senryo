@@ -1,5 +1,5 @@
 /**
- * "Show my trades" per network (A2 step 1, decision 11; f-social "Visibility per mode"): one row with a Practice chip
+ * "Show my calls" per network (A2 step 1, decision 11; f-social "Visibility per mode"): one row with a Practice chip
  * and a Mainnet chip — chips, never switches (D-196) — and an ⓘ that says the one thing people must know: the same
  * address is on both networks and onchain activity is public. A chip on lists the profile there and shares its trades
  * (trades are only shared from a listed profile); off turns both off. Defaults: Practice on, Mainnet off.
@@ -33,7 +33,7 @@ export function ShowTrades({ value, onChange }: { value: Visibility; onChange: (
   return (
     <View style={styles.row}>
       <View style={styles.title}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Show my trades</Text>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>Show my calls</Text>
         <InfoTip title={SHARED_ADDRESS.title} body={SHARED_ADDRESS.body} />
       </View>
       <View style={styles.chips}>
@@ -75,7 +75,7 @@ function ModeChip({
     <Animated.View style={press.style}>
       <Pressable
         accessibilityRole="switch"
-        accessibilityLabel={`Show my trades in ${label}`}
+        accessibilityLabel={`Show my calls in ${label}`}
         accessibilityState={{ checked: on }}
         hitSlop={(SIZE.touch - SIZE.chipRowHeight) / 2}
         onPressIn={press.onPressIn}

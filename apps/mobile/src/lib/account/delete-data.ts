@@ -7,7 +7,7 @@
 import type { Address } from "@senryo/account";
 import { measureStore } from "~/lib/account/measure";
 import { PENDING_LINK } from "~/lib/incoming-link";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { RETIRED_KEYS, STORAGE_KEYS, storage } from "~/lib/storage";
 
 /** Everything on this phone that is about the person or their account. */
 const ACCOUNT_KEYS = [
@@ -19,10 +19,6 @@ const ACCOUNT_KEYS = [
   STORAGE_KEYS.termsAccepted,
   "senryo.risk-explained.v1",
   "senryo.short-risk-explained.v1",
-  STORAGE_KEYS.eligibilityAccepted,
-  STORAGE_KEYS.cardIntroSeen,
-  STORAGE_KEYS.markets,
-  STORAGE_KEYS.watchlistAt,
   STORAGE_KEYS.push,
   STORAGE_KEYS.identityCache,
   STORAGE_KEYS.lastAccount,
@@ -30,11 +26,9 @@ const ACCOUNT_KEYS = [
 ] as const;
 /** Stored once per network or account (`key:…`), so they are found by prefix. */
 const ACCOUNT_KEY_PREFIXES = [
-  STORAGE_KEYS.riskExplained,
-  STORAGE_KEYS.shortRiskExplained,
-  STORAGE_KEYS.liquidationSeen,
-  STORAGE_KEYS.liquidationDismissed,
   "senryo.welcome-complete:",
+  // Retired keys were written per network or account too; every one of them goes, whatever its suffix.
+  ...RETIRED_KEYS,
 ] as const;
 const OPERATION_PREFIX = "senryo.operation.v1:";
 const IN_FLIGHT = ["preparing", "pending"];

@@ -24,7 +24,7 @@ const SAID: Record<Outcome, { text: string; tone: PrimerTone }> = {
 
 /**
  * Setup — the notification primer (A2: art, one title, one line, Turn on / Not now) (FT008, C07; Solflare S14 adapted): what Senryo will tell you — fills, stop
- * losses, liquidation warnings, deposits and your own price alerts — before iOS asks. "Turn on" raises the OS prompt
+ * results (wins, payouts, refunds), deposits and your own price alerts — before iOS asks. "Turn on" raises the OS prompt
  * and, when allowed, registers this phone for every kind (each can be switched off in You → Notifications). A phone
  * that already answered is told what it chose, with Settings one tap away; a build without the module says so.
  */

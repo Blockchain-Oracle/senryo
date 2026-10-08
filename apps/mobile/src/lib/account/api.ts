@@ -85,8 +85,6 @@ export function policyContext(address: Address, faceId: PolicyContext["faceId"] 
       chainId: network.chainId,
       self: address,
       faceId: effectiveFaceId(network.key, faceId),
-      marketRoomUsd6: () => undefined,
-      equityUsd6: () => undefined,
     };
   };
 }

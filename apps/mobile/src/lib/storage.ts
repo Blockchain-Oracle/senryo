@@ -12,10 +12,7 @@ export const STORAGE_KEYS = {
   /** The last stake, in dollar base units (S5: "last stake remembered"). */
   lastStake: "senryo.terminal.stake.v1",
   theme: "senryo.theme.v1",
-  privacyMark: "senryo.privacy-mark.v1",
   setupOrder: "senryo.setup-order.v2",
-  /** Home's last tab (Positions / Assets / Earn) — a per-viewer convenience. */
-  homeTab: "senryo.home-tab.v1",
   sounds: "senryo.sounds.v1",
   tradeReactions: "senryo.trade-reactions.v1",
   /** The ElevenLabs cue variant chosen per sound in Preferences (by ear); absent = the bundled default. */
@@ -28,29 +25,12 @@ export const STORAGE_KEYS = {
   measure: "senryo.measure.v1",
   /** Per-install id for the starter relay's rate limit (`x-senryo-device`) — not an identity. */
   device: "senryo.device.v1",
-  /** F10: the risk explainer was accepted before the first trade — per network (`…:testnet` / `…:mainnet`). */
-  riskExplained: "senryo.risk-explained.v2",
-  /** F12: the newest liquidation id the user has seen (haptic once) and dismissed (post-mortem card hidden). */
-  liquidationSeen: "senryo.liquidation-seen.v1",
-  liquidationDismissed: "senryo.liquidation-dismissed.v1",
   /** S8.22 (F06/F49): the selected network — Practice (testnet) or Mainnet; fresh installs start in Practice. */
   network: "senryo.network.v1",
   /** J1: each new account's first-run setup step (handle → … → terms → primers → done), by address. */
   setup: "senryo.setup.v1",
   /** J1 terms step: the `LEGAL_VERSION` each account acknowledged, by address (a newer version asks again). */
   termsAccepted: "senryo.terms-accepted.v1",
-  /** C21: the Kinpaku first-use tutorial was finished (or skipped) on this device. */
-  cardIntroSeen: "senryo.card-intro-seen.v1",
-  /** FT106: the ticket chart's candle style (body, colour pair, colour by previous close) — saved on "Save" only. */
-  candles: "senryo.candles.v1",
-  /** J3 Markets: what the Markets tab keeps on this phone, per network — starred markets and recent searches. */
-  markets: "senryo.markets.v1",
-  /** FT101: the eligibility version each account confirmed before its first Mainnet trade, by address. */
-  eligibilityAccepted: "senryo.eligibility-accepted.v1",
-  /** FT072: the Perps list's "Go long or short" intro was dismissed on this phone. */
-  perpsIntroDismissed: "senryo.perps-intro-dismissed.v1",
-  /** When the watchlist last changed on this phone (unix ms): the sync's last-writer-wins clock. */
-  watchlistAt: "senryo.watchlist-at.v1",
   /** S1b.13: this phone's push registration — the Expo token, the account it was sent for, and the chosen channels. */
   push: "senryo.push.v1",
   /**
@@ -63,18 +43,31 @@ export const STORAGE_KEYS = {
   identityCache: "senryo.identity-cache.v1",
   /** A3: the address this phone last had signed in (kept after sign-out) — a different, empty account is warned. */
   lastAccount: "senryo.last-account.v1",
-  /** A9: an account whose server-side delete didn't reach Senryo; retried at its next unlock on this phone. */
-  pendingDelete: "senryo.pending-delete.v1",
   /** A10: show "••••" for amounts on Home, Assets and Card. */
   hideBalances: "senryo.hide-balances.v1",
-  /** Flow book C3a: the short-specific risk card was accepted before the first short — per network, like the above. */
-  shortRiskExplained: "senryo.short-risk-explained.v2",
-  /** B14: tokens this account hid, per network and account (server-side storage arrives with BD-5). */
-  hiddenTokens: "senryo.hidden-tokens.v1",
-  /** B13: saved destinations (name, address, chain, mark) per network and account, until BD-5's server copy. */
-  savedDestinations: "senryo.saved-destinations.v1",
-  /** B5/B4: purchases and bridges this phone started that have not landed yet ("Arriving"). */
-  arrivals: "senryo.arrivals.v1",
-  /** B4: the open deposit address issued per route (other chain + asset), per network and account — reused on reopen. */
-  depositAddresses: "senryo.deposit-addresses.v1",
+  /** A9: an account whose server-side delete didn't reach Senryo; retried at its next unlock on this phone. */
+  pendingDelete: "senryo.pending-delete.v1",
 } as const;
+
+/**
+ * Keys earlier builds wrote that nothing reads any more (the trading era: risk cards, liquidations, card intro, candle
+ * style, saved destinations, arrivals…). Kept only so "Delete my data" still wipes them from phones that have them.
+ */
+export const RETIRED_KEYS = [
+  "senryo.privacy-mark.v1",
+  "senryo.home-tab.v1",
+  "senryo.risk-explained.v2",
+  "senryo.liquidation-seen.v1",
+  "senryo.liquidation-dismissed.v1",
+  "senryo.card-intro-seen.v1",
+  "senryo.candles.v1",
+  "senryo.markets.v1",
+  "senryo.eligibility-accepted.v1",
+  "senryo.perps-intro-dismissed.v1",
+  "senryo.watchlist-at.v1",
+  "senryo.short-risk-explained.v2",
+  "senryo.hidden-tokens.v1",
+  "senryo.saved-destinations.v1",
+  "senryo.arrivals.v1",
+  "senryo.deposit-addresses.v1",
+] as const;

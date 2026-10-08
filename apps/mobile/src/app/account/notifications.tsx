@@ -99,7 +99,7 @@ export default function NotificationsScreen() {
         <Stack.Screen options={{ title: "Notifications" }} />
         <QuietState
           line="Notifications are about your account"
-          detail="Create one and Senryo tells you when a stop loss fills, a price alert crosses or money arrives."
+          detail="Create one and Senryo tells you when a call settles, a price alert crosses or money arrives."
           action={{ label: "Create account", variant: "primary", onPress: () => router.push(ROUTES.accountRequired) }}
         />
       </Screen>
@@ -125,7 +125,7 @@ export default function NotificationsScreen() {
         <Panel style={styles.ask}>
           <Text style={[TYPE.rowTitle, { color: color.ink }]}>Notifications are off</Text>
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-            Turn them on to hear about fills, liquidation warnings, deposits and your price alerts. iOS asks once.
+            Turn them on to hear about results, payouts, deposits and your price alerts. iOS asks once.
           </Text>
           <Button label="Turn on notifications" size="sm" onPress={() => void turnOn()} loading={saving === "all"} />
         </Panel>

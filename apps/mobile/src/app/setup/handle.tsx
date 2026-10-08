@@ -24,7 +24,7 @@ const HANDLE_MAX = 20;
 /**
  * Setup step 1 — the @username (A2; Fomo F04/F05): a suggested name to start from, checked as it is typed, every state
  * in the field's own line (Checking… · @kai is available · Taken · Reserved · On hold ⓘ · 4–20 characters · Not
- * allowed · Couldn't check · Retry). Under it, "Show my trades" with Practice (on) and Mainnet (off) chips and the
+ * allowed · Couldn't check · Retry). Under it, "Show my calls" with Practice (on) and Mainnet (off) chips and the
  * shared-address ⓘ (decision 11): Continue saves the name and all four visibility flags explicitly. Skip leaves the
  * account without a name (Home offers "Pick a username").
  */

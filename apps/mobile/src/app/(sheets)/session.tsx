@@ -38,7 +38,7 @@ function Body() {
   }
   return (
     <>
-      <SheetHeading title="Trading session" />
+      <SheetHeading title="Unlocked session" />
       <SessionPanel onSwitch={() => setAsking(true)} />
       <Button label="Sign out" variant="ghost" size="sm" onPress={() => setSigningOut(true)} />
       {signingOut ? <SignOutConfirm onClose={() => setSigningOut(false)} /> : null}

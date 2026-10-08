@@ -36,9 +36,12 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
 ### Shell and cleanup
 - [x] S5.6 `packages/config/src/nav.ts` (pure data, `iconKey`): dock Home · Markets · [seal = Trade] · Calls · More; the
       More grid; route-coverage check
-- [ ] S5.7 Setup order: passkey → handle → terms → test dollars (auto, with sound) → first call → one-tap → notifications;
-      fix the broken `follow`/`money` steps; new story copy and art for the six scenes
-- [ ] S5.8 Delete what the pivot left: dead `Stack.Screen`s, unused trading modules, stale copy (leverage, liquidation,
+- [x] S5.7 Setup order: passkey → handle → terms → test dollars (auto, with sound) → first call → one-tap → notifications
+      → Face ID; the broken `follow`/`money` steps retired (they resume at test dollars); story copy rewritten, keeping
+      the three scenes whose art is true (passkey, the pool, Practice)
+  - [ ] S5.7a New story art (brand/scripts/onboarding.py): "call the next move" on a live line, "payouts land on
+        their own" — then back to six scenes
+- [x] S5.8 Delete what the pivot left: dead `Stack.Screen`s, unused trading modules, stale copy (leverage, liquidation,
       card limits, "trades"), dead storage keys, the liquidation sound, `policyContext` trading fields
 
 ### The loop

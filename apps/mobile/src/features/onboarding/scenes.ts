@@ -1,6 +1,7 @@
 /**
- * The six story scenes (J1; direction §12 "one balance, passkeys, commodities/FX/crypto, LP liquidity, Kinpaku and
- * Practice↔Mainnet"; review 1 Oct §4). Each scene is authored artwork in layers (brand/art/onboarding, rasterised by
+ * The story scenes (J1, reworded for the prediction market, pivot S5.7): the passkey, the pool on the other side of
+ * every call, and Practice first. The card, the money chest (it shows the card) and the gold/FX market scenes left with
+ * the pivot; new art for "call the next move" on a live line and "payouts land on their own" is S5.7's open item. Each scene is authored artwork in layers (brand/art/onboarding, rasterised by
  * `scripts/onboarding-art.mjs`) plus one headline and one sentence. The copy states only what the product does today:
  * no returns, no rates, no promise about where a card works or how passkeys sync.
  */
@@ -44,19 +45,6 @@ export interface Scene {
 
 export const SCENES: readonly Scene[] = [
   {
-    key: "balance",
-    title: "One balance. More possibilities.",
-    body: "See what is free to trade and free to spend, from one account.",
-    art: "A lacquer money chest with a gold koban and the Kinpaku card.",
-    field: require("../../../assets/onboarding/scene-balance-field.webp"),
-    layers: {
-      shadow: require("../../../assets/onboarding/scene-balance-shadow.webp"),
-      back: require("../../../assets/onboarding/scene-balance-back.webp"),
-      main: require("../../../assets/onboarding/scene-balance-main.webp"),
-      fore: require("../../../assets/onboarding/scene-balance-fore.webp"),
-    },
-  },
-  {
     key: "passkey",
     title: "Your account, with a passkey.",
     body: "Your phone creates it and unlocks it. There is no password to remember.",
@@ -70,21 +58,9 @@ export const SCENES: readonly Scene[] = [
     },
   },
   {
-    key: "markets",
-    title: "Explore beyond one market.",
-    body: "Gold, silver, currencies and crypto. What you can trade depends on the market and the mode.",
-    art: "A gold koban and a silver chōgin on a tray, with Bitcoin, Monad and currency pair marks.",
-    field: require("../../../assets/onboarding/scene-markets-field.webp"),
-    layers: {
-      shadow: require("../../../assets/onboarding/scene-markets-shadow.webp"),
-      main: require("../../../assets/onboarding/scene-markets-main.webp"),
-    },
-    labels: LABELS.scenes.markets as readonly SceneLabel[],
-  },
-  {
     key: "lp",
-    title: "Explore the liquidity pool.",
-    body: "See how the pool works, and its risks, before you add money.",
+    title: "One pool takes the other side.",
+    body: "Call Up or Down on a live price. A shared pool is your counterparty.",
     art: "A lacquer basin holding one shared pool, its lid open beside it.",
     field: require("../../../assets/onboarding/scene-lp-field.webp"),
     layers: {
@@ -95,22 +71,9 @@ export const SCENES: readonly Scene[] = [
     },
   },
   {
-    key: "kinpaku",
-    title: "Meet Kinpaku.",
-    body: "A card that spends only what your positions don’t need. It is in preview.",
-    art: "A black lacquer card half covered in gold leaf, beside a book of gold leaf.",
-    field: require("../../../assets/onboarding/scene-kinpaku-field.webp"),
-    layers: {
-      shadow: require("../../../assets/onboarding/scene-kinpaku-shadow.webp"),
-      back: require("../../../assets/onboarding/scene-kinpaku-back.webp"),
-      main: require("../../../assets/onboarding/scene-kinpaku-main.webp"),
-      fore: require("../../../assets/onboarding/scene-kinpaku-fore.webp"),
-    },
-  },
-  {
     key: "modes",
-    title: "Start with paper money.",
-    body: "Practice first. Mainnet uses real money.",
+    title: "Start with test dollars.",
+    body: "Practice is free, and payouts land on their own. Real money starts only when you switch to Real.",
     art: "Paper practice notes in front, with a gold koban set apart on its own dish.",
     field: require("../../../assets/onboarding/scene-modes-field.webp"),
     layers: {

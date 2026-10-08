@@ -36,7 +36,7 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
         glyph="faceId"
         tone="gold"
         title={`Confirm with ${UNLOCK_WORD}`}
-        body={`Withdrawals, sends, card limits, your recovery phrase and looser security settings always ask for ${UNLOCK_WORD} again.`}
+        body={`Withdrawals, one-tap calls, your recovery phrase and looser security settings always ask for ${UNLOCK_WORD} again.`}
       >
         <Button label="Close" variant="outline" onPress={() => close()} />
       </AuthCard>
