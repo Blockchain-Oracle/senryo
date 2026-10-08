@@ -6,7 +6,6 @@
 import { formatUnits } from "@senryo/core";
 import { useMarketAccount, usePracticeGrant } from "@senryo/query";
 import { router } from "expo-router";
-import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AmountHero } from "~/components/kit/AmountHero";
 import { ArrowUp, Coins, Globe, Lock, QrCode, Wallet } from "~/components/kit/symbols";
@@ -18,7 +17,6 @@ import { useSessionRunner } from "~/lib/account/use-session-runner";
 import { ROUTES } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { WithdrawSheet } from "./WithdrawSheet";
 
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
@@ -35,7 +33,6 @@ export function WalletScreen() {
   const account = useMarketAccount(owner);
   const session = useSessionRunner();
   const grant = usePracticeGrant(owner, session);
-  const [withdrawing, setWithdrawing] = useState(false);
   const balance = "value" in account ? account.value.balance : undefined;
   const text = balance === undefined ? "$—" : `$${formatUnits(balance, DOLLAR_DECIMALS, CENTS)}`;
 
@@ -72,31 +69,15 @@ export function WalletScreen() {
             {...(grant.isPending ? {} : { onPress: getDollars })}
           />
           <SettingsRow title="Receive" icon={QrCode} onPress={() => router.push(ROUTES.receive)} />
-          <SettingsRow title="Withdraw" icon={ArrowUp} onPress={() => setWithdrawing(true)} />
+          <SettingsRow title="Withdraw" icon={ArrowUp} onPress={() => router.push(ROUTES.withdraw)} />
         </View>
         <View>
           <SectionHeading detail="Opens with Real">Add real money</SectionHeading>
-          <SettingsRow
-            title="From any chain"
-            icon={Globe}
-            value="Real money only"
-            control={<Lock size={SIZE.iconSm} color={color.text3} />}
-          />
-          <SettingsRow
-            title="USDC on Monad"
-            icon={Wallet}
-            value="Real money only"
-            control={<Lock size={SIZE.iconSm} color={color.text3} />}
-          />
-          <SettingsRow
-            title="Pay with MON"
-            icon={Coins}
-            value="Real money only"
-            control={<Lock size={SIZE.iconSm} color={color.text3} />}
-          />
+          <SettingsRow title="From any chain" icon={Globe} control={<Lock size={SIZE.iconSm} color={color.text3} />} />
+          <SettingsRow title="USDC on Monad" icon={Wallet} control={<Lock size={SIZE.iconSm} color={color.text3} />} />
+          <SettingsRow title="Pay with MON" icon={Coins} control={<Lock size={SIZE.iconSm} color={color.text3} />} />
         </View>
       </ScrollView>
-      {withdrawing ? <WithdrawSheet balance={balance} onClose={() => setWithdrawing(false)} /> : null}
     </View>
   );
 }

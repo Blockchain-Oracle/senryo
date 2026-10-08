@@ -8,10 +8,10 @@ import { classifyAuthError, isSilent } from "@senryo/account";
 import { freshAuthNonce, transferAuthRequest } from "@senryo/chain";
 import { explorerTxUrl } from "@senryo/config";
 import { formatUnits, parseUnits, shortAddress } from "@senryo/core";
-import { useQueryEnv, useWithdraw } from "@senryo/query";
+import { useMarketAccount, useQueryEnv, useWithdraw } from "@senryo/query";
 import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
-import { Linking, StyleSheet, Text, TextInput, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Sheet } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
@@ -32,15 +32,19 @@ type Stage =
   | { kind: "sent"; to: `0x${string}`; value: bigint; txHash: string }
   | { kind: "failed"; message: string };
 
-export function WithdrawSheet({ balance, onClose }: { balance: bigint | undefined; onClose: () => void }) {
+export function WithdrawSheet({ onClose }: { onClose: () => void }) {
   const { color } = useTheme();
   const env = useQueryEnv();
   const { client, hint } = useAccount();
   const owner = hint?.address;
+  const account = useMarketAccount(owner);
+  const balance = "value" in account ? account.value.balance : undefined;
   const withdraw = useWithdraw(owner);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [stage, setStage] = useState<Stage>({ kind: "edit" });
+  // A field can't elide: while not being edited, the address shows on one line with its middle elided.
+  const [editingTo, setEditingTo] = useState(false);
 
   const parsed = parseUnits(amount, DOLLAR_DECIMALS);
   const value = parsed.ok ? parsed.value : undefined;
@@ -92,40 +96,62 @@ export function WithdrawSheet({ balance, onClose }: { balance: bigint | undefine
       <View style={styles.body}>
         {stage.kind === "edit" ? (
           <>
-            <TextInput
-              value={to}
-              onChangeText={setTo}
-              placeholder="0x… recipient"
-              placeholderTextColor={color.text3}
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={[TYPE.body, styles.input, { color: color.ink, backgroundColor: color.raised2 }]}
-              accessibilityLabel="Recipient address"
-            />
-            <Button
-              label="Paste"
-              variant="ghost"
-              size="sm"
-              block={false}
-              onPress={async () => setTo((await Clipboard.getStringAsync()).trim())}
-            />
-            <TextInput
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="0.00"
-              placeholderTextColor={color.text3}
-              keyboardType="decimal-pad"
-              style={[TYPE.numLg, styles.input, { color: color.ink, backgroundColor: color.raised2 }]}
-              accessibilityLabel="Amount in dollars"
-            />
-            <Button
-              label="Max"
-              variant="ghost"
-              size="sm"
-              block={false}
-              disabled={balance === undefined}
-              onPress={() => balance !== undefined && setAmount(formatUnits(balance, DOLLAR_DECIMALS, DOLLAR_DECIMALS))}
-            />
+            <View style={[styles.field, { backgroundColor: color.raised2 }]}>
+              {editingTo || to === "" ? (
+                <TextInput
+                  value={to}
+                  onChangeText={setTo}
+                  onFocus={() => setEditingTo(true)}
+                  onBlur={() => setEditingTo(false)}
+                  autoFocus={editingTo}
+                  placeholder="0x… recipient"
+                  placeholderTextColor={color.text3}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  style={[TYPE.body, styles.input, { color: color.ink }]}
+                  accessibilityLabel="Recipient address"
+                />
+              ) : (
+                <Pressable
+                  style={[styles.input, styles.shown]}
+                  onPress={() => setEditingTo(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Recipient ${to}. Edit`}
+                >
+                  <Text style={[TYPE.body, { color: color.ink }]} numberOfLines={1} ellipsizeMode="middle">
+                    {to}
+                  </Text>
+                </Pressable>
+              )}
+              <Button
+                label="Paste"
+                variant="ghost"
+                size="sm"
+                block={false}
+                onPress={async () => setTo((await Clipboard.getStringAsync()).trim())}
+              />
+            </View>
+            <View style={[styles.field, { backgroundColor: color.raised2 }]}>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="0.00"
+                placeholderTextColor={color.text3}
+                keyboardType="decimal-pad"
+                style={[TYPE.numLg, styles.input, { color: color.ink }]}
+                accessibilityLabel="Amount in dollars"
+              />
+              <Button
+                label="Max"
+                variant="ghost"
+                size="sm"
+                block={false}
+                disabled={balance === undefined}
+                onPress={() =>
+                  balance !== undefined && setAmount(formatUnits(balance, DOLLAR_DECIMALS, DOLLAR_DECIMALS))
+                }
+              />
+            </View>
             {problem ? <Text style={[TYPE.caption, { color: color.down }]}>{problem}</Text> : null}
             <Button
               label="Review"
@@ -182,5 +208,14 @@ export function WithdrawSheet({ balance, onClose }: { balance: bigint | undefine
 
 const styles = StyleSheet.create({
   body: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter, paddingBottom: SPACE.lg },
-  input: { minHeight: SIZE.touch + SPACE.sm, borderRadius: SPACE.md, paddingHorizontal: SPACE.md },
+  field: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: SIZE.touch + SPACE.sm,
+    borderRadius: SPACE.md,
+    paddingLeft: SPACE.md,
+    paddingRight: SPACE.xs,
+  },
+  input: { flex: 1, minHeight: SIZE.touch },
+  shown: { justifyContent: "center" },
 });

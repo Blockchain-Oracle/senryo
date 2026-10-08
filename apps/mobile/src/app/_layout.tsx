@@ -33,7 +33,7 @@ const sheet = {
   contentStyle: { backgroundColor: "transparent" },
 } as const;
 
-const SHEETS = ["step-up", "session", "account-required", "network", "receive", "terms"];
+const SHEETS = ["step-up", "session", "account-required", "network", "receive", "terms", "withdraw"];
 
 export default function RootLayout() {
   const [client] = useState(

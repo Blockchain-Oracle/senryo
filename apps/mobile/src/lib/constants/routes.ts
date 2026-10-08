@@ -42,6 +42,8 @@ export const ROUTES = {
   notifications: "/notifications",
   /** A11: the terms sheet — setup's last step over Home, and the gate before the first money action. */
   termsSheet: "/terms",
+  /** S5.12: Withdraw, a sheet over the Wallet (an EIP-3009 transfer the relay submits). */
+  withdraw: "/withdraw",
 } as const;
 
 /** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
