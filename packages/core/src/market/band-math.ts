@@ -12,8 +12,8 @@ export const MIN_SECONDS_LEFT = 5n;
 
 const Z_STEP_E4 = 500n;
 const Z_MAX_E4 = 40_000n;
-const WAD = 10n ** 18n;
-const Z_DIVISOR_SCALE = 10n ** 10n;
+const WAD = 1_000_000_000_000_000_000n;
+const Z_DIVISOR_SCALE = 10_000_000_000n;
 const ROOT_SCALE = 10_000n;
 const ROOT_DIVISOR = 100n;
 const HALF = 2n;
