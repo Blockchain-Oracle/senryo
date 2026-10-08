@@ -21,8 +21,6 @@ import {
 /** Samples on screen; ~10 s at the 60 Hz sample clock. */
 export const SAMPLE_CAPACITY = 600;
 export const SAMPLE_MS = MS_PER_SECOND / SAMPLE_HZ;
-/** Per-sample approach of the eased price to the latest tick (τ ≈ 84 ms). */
-export const PRICE_EASE = 0.18;
 /** The plot spans this many grid steps top to bottom. */
 export const SPAN_STEPS = 15;
 /** One step ≈ this fraction of price before rounding to a nice number. */
@@ -33,12 +31,6 @@ export const FADE_FRACTION = 0.32;
 export const EDGE_FADE_PX = 14;
 const MAX_TICKS = 400;
 const MINOR_PER_MAJOR = 5;
-
-/** `k` per frame of `dtMs`, equivalent to `perSample` applied once per 60 Hz sample. */
-export function easeFor(perSample: number, dtMs: number): number {
-  "worklet";
-  return 1 - (1 - perSample) ** (Math.max(0, dtMs) / SAMPLE_MS);
-}
 
 /** Tradash's nice step: 1, 2, 5 or 10 × 10ⁿ. */
 export function niceStep(x: number): number {

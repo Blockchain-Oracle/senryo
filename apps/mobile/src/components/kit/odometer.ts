@@ -1,4 +1,6 @@
 /**
+ * Worklets capture what they call when they are defined: a helper must come before the worklet that calls it.
+ *
  * Rolling digits on the UI thread (Tradash's `CanvasOdometer` as Owarine re-implements it; 21st.dev #20071 Animate
  * Digits' "only changed digits move, up on a rise, down on a fall"): every digit position, counted from the right, is a
  * slot rolling to its new digit while `$ , . + −` stay still. One implementation for the chart's pill and every live
@@ -25,7 +27,10 @@ export interface Odometer {
   target: number[];
 }
 
-export const emptyOdometer = (): Odometer => ({ text: "", value: Number.NaN, cur: [], target: [] });
+export function emptyOdometer(): Odometer {
+  "worklet";
+  return { text: "", value: Number.NaN, cur: [], target: [] };
+}
 
 const isDigit = (c: string | undefined): boolean => {
   "worklet";
@@ -39,15 +44,6 @@ export function rollTarget(cur: number, digitNow: number, digitNext: number, dir
   const back = fwd === 0 ? 0 : fwd - DIGITS;
   const delta = direction > 0 ? fwd : direction < 0 ? back : Math.abs(back) < fwd ? back : fwd;
   return cur + delta;
-}
-
-/** The odometer's text; `value` gives the roll direction (a rise rolls up). */
-export function setOdometer(o: Odometer, text: string, value: number): void {
-  "worklet";
-  if (text === o.text) return;
-  const direction = Number.isFinite(o.value) && Number.isFinite(value) ? Math.sign(value - o.value) : 0;
-  setOdometerTrend(o, text, direction);
-  o.value = value;
 }
 
 /** The odometer's text with its roll direction given outright (money figures compare as bigints on the JS thread). */
@@ -77,6 +73,15 @@ export function setOdometerTrend(o: Odometer, text: string, direction: number): 
   o.text = text;
   o.cur = cur;
   o.target = target;
+}
+
+/** The odometer's text; `value` gives the roll direction (a rise rolls up). */
+export function setOdometer(o: Odometer, text: string, value: number): void {
+  "worklet";
+  if (text === o.text) return;
+  const direction = Number.isFinite(o.value) && Number.isFinite(value) ? Math.sign(value - o.value) : 0;
+  setOdometerTrend(o, text, direction);
+  o.value = value;
 }
 
 /** Advances every slot by one frame of `dtMs`; true while anything is still rolling. */

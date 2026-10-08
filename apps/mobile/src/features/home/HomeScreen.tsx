@@ -82,7 +82,9 @@ export function HomeScreen() {
                 font={font}
                 color={color.ink}
                 height={BALANCE_HEIGHT}
-                accessibilityLabel={`Balance ${balance.value.text}`}
+                accessibilityLabel={
+                  value === undefined ? "Balance" : `Balance $${formatUnits(value, DOLLAR_DECIMALS, CENTS)}`
+                }
               />
               <OneTapChip />
             </View>

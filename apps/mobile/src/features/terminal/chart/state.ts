@@ -4,7 +4,8 @@
  * (`dot-grid.ts`). `advance` runs once per display frame inside `useFrameCallback`; nothing here touches React.
  */
 import { emptyOdometer, type Odometer, stepOdometer } from "~/components/kit/odometer";
-import { easeFor, PRICE_EASE, SAMPLE_CAPACITY, SAMPLE_MS, stepFor } from "./engine";
+import { BASE_TAU_MS, MAX_TICK_GAP_MS, TICK_EMA, TICK_FOLLOW } from "./constants";
+import { SAMPLE_CAPACITY, SAMPLE_MS, stepFor } from "./engine";
 
 /** At most this many samples catch up in one frame (a stalled frame never smears the line). */
 const MAX_SAMPLES_PER_FRAME = 8;
@@ -31,6 +32,9 @@ export interface ChartState {
   lastFrame: number;
   /** The last tick taken from `incoming` (its sequence number). */
   seenSeq: number;
+  /** When the last tick arrived (frame clock), and the average interval between ticks. */
+  lastTickAt: number;
+  tickMs: number;
   velocitySteps: number;
   price: Odometer;
   pnl: Odometer;
@@ -52,6 +56,8 @@ export function createChartState(): ChartState {
     sampleDebt: 0,
     lastFrame: 0,
     seenSeq: 0,
+    lastTickAt: 0,
+    tickMs: 0,
     velocitySteps: 0,
     price: emptyOdometer(),
     pnl: emptyOdometer(),
@@ -77,10 +83,13 @@ function ringPush(s: ChartState, v: number): void {
   }
 }
 
-/** A tick. The first one seeds a flat line at it (the chart grows movement from the right). */
-export function takePrice(s: ChartState, price: number): void {
+/** A tick at frame time `nowMs`. The first one seeds a flat line at it (the chart grows movement from the right). */
+export function takePrice(s: ChartState, price: number, nowMs: number): void {
   "worklet";
   if (!(price > 0) || !Number.isFinite(price)) return;
+  const gap = s.lastTickAt === 0 ? 0 : nowMs - s.lastTickAt;
+  if (gap > 0 && gap < MAX_TICK_GAP_MS) s.tickMs = s.tickMs === 0 ? gap : s.tickMs + TICK_EMA * (gap - s.tickMs);
+  s.lastTickAt = nowMs;
   s.latest = price;
   if (!s.ready) {
     s.ready = true;
@@ -120,7 +129,8 @@ export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: n
   let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(s.sampleDebt));
   const pushed = pushes;
   s.sampleDebt -= Math.floor(s.sampleDebt);
-  const k = reduced ? 1 : easeFor(PRICE_EASE, SAMPLE_MS);
+  const tau = Math.max(BASE_TAU_MS, TICK_FOLLOW * s.tickMs);
+  const k = reduced ? 1 : 1 - Math.exp(-SAMPLE_MS / tau);
   while (pushes > 0) {
     const d = s.target - s.eased;
     s.eased = Math.abs(d) < SETTLE_FRACTION * Math.abs(s.eased) ? s.target : s.eased + d * k;

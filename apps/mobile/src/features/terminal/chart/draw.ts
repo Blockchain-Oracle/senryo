@@ -305,7 +305,10 @@ export function drawFrame(
     c.drawLine(TICK_INSET, y, TICK_INSET + len, y, tick);
     c.drawLine(w - TICK_INSET, y, w - TICK_INSET - len, y, tick);
     if (!t.major) continue;
-    const alpha = edge * edgeAlpha(Math.abs(y - headY) - (pillH / HALF + EDGE_FADE_PX / HALF));
+    // Labels give way to the pill and to the level tags (K, entry), as Tradash's fade near the pill.
+    let clear = Math.abs(y - headY) - (pillH / HALF + EDGE_FADE_PX / HALF);
+    for (const level of o?.levels ?? []) clear = Math.min(clear, Math.abs(y - yOf(level.price, win)) - TAG_H);
+    const alpha = edge * edgeAlpha(clear);
     if (alpha > 0)
       textRight(c, k, `$${formatFixed(t.value, decimals)}`, w - LABEL_RIGHT, y, k.fonts.axis, k.colors.helper, alpha);
   }

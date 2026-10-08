@@ -83,7 +83,9 @@ export function TerminalTop({
             color={color.ink}
             height={BALANCE_HEIGHT}
             align="right"
-            accessibilityLabel={`Balance ${balance.value.text}`}
+            accessibilityLabel={
+              t.balance === undefined ? "Balance" : `Balance $${formatUnits(t.balance, DOLLAR_DECIMALS, CENTS)}`
+            }
           />
         </View>
       </View>

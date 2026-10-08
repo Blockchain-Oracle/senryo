@@ -24,4 +24,15 @@ export const HALF_PIXEL = 0.5;
 /** Catmull-Rom → Bézier control-point divisor (tension 1/6). */
 export const CATMULL = 6;
 export const LEVEL_DASH = { line: [2, 3], entry: [4, 4] } as const;
+/**
+ * The eased price follows the tick cadence it measures (Pyth Starter prints about once a second, D-272: "the chart
+ * breathes through client easing, not tick rate"): τ = max(Tradash's 84 ms, 0.5 × the tick interval), so a 1 s feed
+ * glides across each second instead of stepping, and a fast feed keeps Tradash's snap.
+ */
+export const BASE_TAU_MS = 84;
+export const TICK_FOLLOW = 0.5;
+/** Weight of the newest interval in the tick-cadence average. */
+export const TICK_EMA = 0.3;
+/** Gaps longer than this (a background, a reconnect) don't count as cadence. */
+export const MAX_TICK_GAP_MS = 5000;
 export const LEVEL_ALPHA = { line: 0.7, entry: 0.55 } as const;

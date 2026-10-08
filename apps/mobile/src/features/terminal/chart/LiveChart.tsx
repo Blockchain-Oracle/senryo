@@ -111,7 +111,7 @@ export function LiveChart({ symbol, overlay, waiting }: LiveChartProps) {
       const tick = incoming.value;
       if (tick.seq !== s.seenSeq) {
         s.seenSeq = tick.seq;
-        takePrice(s, tick.price);
+        takePrice(s, tick.price, frame.timestamp);
       }
       advance(s, frame.timestamp, reduced, plotW);
       if (s.ready) setOdometer(s.price, formatUsd(s.latest, priceDecimals(s.latest)), s.latest);

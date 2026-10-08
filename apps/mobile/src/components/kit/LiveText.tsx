@@ -15,10 +15,10 @@ export function LiveText({ text, style }: { text: SharedValue<string>; style?: T
       underlineColorAndroid="transparent"
       style={[styles.reset, style]}
       animatedProps={props}
-      defaultValue={text.value}
       accessibilityRole="text"
     />
   );
 }
 
-const styles = StyleSheet.create({ reset: { padding: 0, margin: 0 } });
+/** Full width and centred: a TextInput keeps its first measured width, so a growing text would be clipped. */
+const styles = StyleSheet.create({ reset: { padding: 0, margin: 0, alignSelf: "stretch", textAlign: "center" } });
