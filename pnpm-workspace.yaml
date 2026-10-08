@@ -12,6 +12,13 @@ allowBuilds:
   # Copies Skia's prebuilt xcframeworks/.so from react-native-skia-{apple,android} into libs/ (read in S5; no network).
   "@shopify/react-native-skia": true
 
+# pnpm 11.24 names the private-hoist link for expo-modules-core after a peer variant it never writes (the lockfile
+# has one snapshot; the link and the folder disagree on the hash), so type declarations that import it through
+# hoisting (expo-audio's AudioPlayer) lose their base class. A public hoist gives resolution a real link to land on.
+# Metro and autolinking resolve through `expo`'s own (correct) link and are unaffected.
+publicHoistPattern:
+  - expo-modules-core
+
 # One version per shared dependency across apps, packages and services (D-043 pnpm 11.24; D-046 TypeScript 6).
 catalog:
   typescript: ~6.0.3
@@ -42,5 +49,3 @@ minimumReleaseAgeExclude:
   - expo-router@57.0.24
   - expo@57.0.26
 
-patchedDependencies:
-  '@ramp-network/react-native-sdk@1.0.3': patches/@ramp-network__react-native-sdk@1.0.3.patch

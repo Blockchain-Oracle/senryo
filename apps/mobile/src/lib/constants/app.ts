@@ -11,8 +11,9 @@ export const APP = {
   scheme: "senryo",
   // Runtime version (appVersion policy): 0.2.0 adds expo-image, expo-camera, expo-web-browser, expo-sharing and
   // react-native-view-shot, so OTA updates for it never reach 0.1.0 binaries that lack those modules.
-  // Runtime 0.3.0 adds Ramp native presentation and PDF receipt export (expo-print).
-  version: "0.3.0",
+  // Runtime 0.3.0 adds PDF receipt export (expo-print). Runtime 0.4.0 is the prediction-market pivot's one native
+  // build (D-270): Ramp and victory-native removed, nothing added; every later change ships over the air on 0.4.0.
+  version: "0.4.0",
   bundleId: IOS_BUNDLE_ID,
   androidPackage: ANDROID_PACKAGE,
 } as const;
