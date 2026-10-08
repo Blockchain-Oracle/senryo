@@ -13,6 +13,7 @@ import { indexerDocsChainFilter } from "./lib/indexer-checks.mjs";
 import {
   addressDrift,
   designJsonPresent,
+  easignoreCoversGitignore,
   fileLength,
   indexerIsolated,
   mobileTightLeading,
@@ -184,6 +185,11 @@ export const rules = [
     check: indexerIsolated,
   },
   { id: "design-json-present", description: "each app keeps its 21st design record", check: designJsonPresent },
+  {
+    id: "easignore-covers-gitignore",
+    description: "EAS uploads honour every .gitignore rule (.easignore replaces it)",
+    check: easignoreCoversGitignore,
+  },
   {
     id: "identity-provenance",
     description: "every mark has a source, licence and matching sha256; generated components are current (S1b.1)",

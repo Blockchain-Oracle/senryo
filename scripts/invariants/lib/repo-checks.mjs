@@ -187,3 +187,22 @@ export function addressDrift(rule, ctx) {
   }
   return { findings };
 }
+
+/**
+ * `.easignore` replaces `.gitignore` for EAS Build uploads (docs.expo.dev/build-reference/easignore), so every root
+ * `.gitignore` rule must appear in it too — otherwise a new secret pattern (an `.env.*`, a key file) would be uploaded.
+ */
+export function easignoreCoversGitignore(rule, ctx) {
+  const eas = join(ctx.root, ".easignore");
+  if (!existsSync(eas)) return { findings: [], skipped: "no .easignore" };
+  const rules = (text) =>
+    text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"));
+  const covered = new Set(rules(readFileSync(eas, "utf8")));
+  const findings = rules(readFileSync(join(ctx.root, ".gitignore"), "utf8"))
+    .filter((line) => !covered.has(line))
+    .map((line) => finding(rule, `.gitignore rule "${line}" is missing from .easignore`, ".easignore"));
+  return { findings };
+}

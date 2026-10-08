@@ -1,0 +1,83 @@
+# EAS Build upload rules. When this file exists EAS uses it INSTEAD of .gitignore (docs.expo.dev/build-reference/easignore),
+# so part 1 repeats every .gitignore in the repo (secrets included) and part 2 drops what a phone build never reads.
+# Keep part 1 in sync with the .gitignore files.
+
+# ---- part 1: /.gitignore ----
+# dependencies / build
+node_modules/
+.pnpm-store/
+dist/
+out/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/31337/
+# Ackee Wake build + detections (S8.5 raw reports live in docs/security/raw/)
+contracts/.wake/
+
+# envio
+indexer/generated/
+indexer/.envio/
+
+# secrets — never committed (examples are allowed)
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.keystore
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# local research clones (pinned in docs/plan/references.md)
+references/
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/
+*.log
+.firecrawl/
+
+# login-gated portal capture (kept local; may show personal account views) — D-048
+context/_portal/
+
+# agent worktrees
+.claude/worktrees/
+# forge script dry runs (simulations; real broadcasts are kept)
+contracts/broadcast/**/dry-run/
+
+# The user's reference study (other apps' recordings + study docs) stays local until Q-021 decides what is committed.
+docs/design/reference-study-2026-09-30/
+
+# J1 art review contact sheets (brand/scripts/sheets.py): review aids, regenerated on demand
+brand/review/
+
+# ---- part 1: nested .gitignore files ----
+apps/mobile/expo-env.d.ts
+brand/.fonts/
+brand/**/__pycache__/
+design/preview/node_modules/
+design/preview/.next/
+design/preview/out/
+design/preview/build/
+design/preview/.env*
+design/preview/next-env.d.ts
+
+# ---- part 2: not part of the phone build (the workspace packages stay, so the frozen lockfile still matches) ----
+contracts/
+design/
+docs/
+context/
+indexer/
