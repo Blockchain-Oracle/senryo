@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # Senryo — real trading on Monad (mainnet + testnet), rebuilt on existing protocols
 
 ## Context

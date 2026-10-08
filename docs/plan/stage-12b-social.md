@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # S12b — Social: handles, avatars, follow, leaderboard, trade feed (wave C/D)
 
 **Goal:** the user-approved add-ons work end to end on both networks, with privacy and moderation that hold up to real money

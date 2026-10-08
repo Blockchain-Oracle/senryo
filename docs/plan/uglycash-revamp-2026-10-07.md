@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Its **design direction (UGLYCASH look and flows) still applies**; its trading/card product scope does not.
+
 # Senryo × UGLYCASH revamp — approved plan, 7 October 2026
 
 **Recommendation: adopt the supplied UGLYCASH native visual and interaction system across Senryo, with explicit adaptations for Senryo's accounts, trading, networks and providers. This includes the background colors.** Implement in complete journeys on the existing Expo/React Native stack. Treat this as a new product-wide direction, not another Home-only palette adjustment.

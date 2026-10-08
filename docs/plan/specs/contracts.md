@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # Spec: contracts (SenryoCore and friends)
 
 Source of truth for S2. Plan: `00-plan.md` §2.1, decisions D-005/006/009/010/032/036/039. Risk maths: `risk-math.md`.

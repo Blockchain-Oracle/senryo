@@ -1,3 +1,5 @@
+> **SUPERSEDED as a product definition by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** The working rules in §0 still apply; the product scope (perps, card, vault) does not.
+
 # Plan: Senryo 千両, a mobile-first RWA + crypto trading app with a Kinpaku card (Monad Metropolis, Track 01)
 
 ## 0. Context

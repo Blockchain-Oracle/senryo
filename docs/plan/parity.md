@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # Feature matrix (parity)
 
 Status: Pending → Shell → Partial → Done (or Blocked + resolution). Rows only advance, and only at stage gates. Evidence = an `acceptance.md` row, commit or route check. Legend: AG Agora · MR Mera · AU Aurora · EN Envio · T1 Track 01 rubric.

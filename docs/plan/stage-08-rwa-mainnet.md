@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # S8 — RWA mainnet: gold/silver trading on our engine (wave C, first)
 
 **Goal:** a user trades gold and silver end to end on the phone — Markets with session badges and oracle age → risk

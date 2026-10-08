@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # Predictions, on-ramp and notifications — 4 October 2026
 
 [Complete work register](reference-followthrough-2026-10-04.md) · [Prior mainnet plan](stage-08-rwa-mainnet.md)

@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # Senryo mobile rebuild — approved 2 October 2026
 
 This is the current implementation contract for the user-approved reference-led rebuild. It supersedes the earlier mobile remediation scope in v2-plan and S1b, while retaining the roadmap and D-194/D-195 exclusions. Earlier acceptance remains historical evidence of its recorded revision, not acceptance of the rebuilt journey.

@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # Stage 14 — Product interrogation, premium rebuild and feature completion (Claude Code lead, from 2 Oct 2026)
 
 **Goal:** implement the [flow book](../product/README.md) end to end: every capability card works, every surface matches its §0.9 before → after, integrations ship real. Plan: `~/.claude/plans/jiggly-munching-island.md` (approved 2 Oct).

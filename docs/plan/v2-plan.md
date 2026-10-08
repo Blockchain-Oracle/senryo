@@ -1,3 +1,5 @@
+> **SUPERSEDED by the prediction-market pivot (D-256, [pivot-2026-10-08.md](pivot-2026-10-08.md)).** Kept for history only; don't build from it.
+
 # Senryo v2 — fix the practice loop, runtime Practice↔Mainnet, real identity, the reference-led redesign, social, full market breadth, mainnet
 
 > **2 October authority update (D-234–236):** The user approved implementation of the [reference-led mobile rebuild](mobile-rebuild-2026-10-02.md). Its complete-journey hierarchy, total portfolio, native slide confirmation and original quiet sounds supersede conflicting remediation/design details below. The broader roadmap and exclusions remain. Historical checks are revision-specific; rebuilt phone acceptance is pending.

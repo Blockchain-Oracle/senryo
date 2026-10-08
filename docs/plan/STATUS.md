@@ -1,3 +1,41 @@
+# Pivot to a real-time prediction market (8 October 2026, Claude Code)
+
+**Current plan:** [pivot-2026-10-08.md](pivot-2026-10-08.md), approved by the user on 8 Oct. Decisions are D-256…D-272 in [decisions.md](decisions.md).
+
+Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. A shared pool takes the other side; you can cash out any time; payouts land automatically. Practice runs on testnet with free test dollars, Real on mainnet with USDC. It ships on the phone (the existing Senryo app) and as a full web app. The trading product (perps, card, KYC, venues) is superseded.
+
+**Stages, in order (one checkout, no worktrees):**
+- S0 record
+- S1 cleanup
+- S1b native build 0.4.0 → TestFlight + Play internal
+- S2 contracts
+- S3 services
+- S4 indexer
+- S5 phone loop
+- S6 web app
+- S7 stocks, bands, Earn
+- S8 social, games, exits, events
+- S8b agents
+- S9 mainnet + Aurora
+- S10 ship
+- CRE is optional, after S10.
+
+**Where we are:** S0 in progress.
+
+**Done while planning:**
+- Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
+- Agari's new key is live on `agari-ops`.
+- Owarine's ops env now uses Senryo's key.
+
+**Research notes:** [docs/research/pivot/](../research/pivot/).
+**Product how-tree:** [docs/product/predictions/](../product/predictions/).
+**Parity ledger:** [parity-predictions.md](parity-predictions.md).
+
+**Waiting on the user:**
+- an Aurora Studio API key (`AURORA_API_KEY`);
+- finishing the CRE login in Codex (optional item);
+- the mainnet pool seed plus about $30 for the Aurora demo (at S9).
+
 # Real venues on Monad: Stage 1 (8 October 2026, Claude Code)
 
 Perpl now works for real on public Monad testnet, through the app's own code. A brand-new wallet ran the whole journey:

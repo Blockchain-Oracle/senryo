@@ -316,3 +316,66 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 - **D-253** 2026-10-04 · **Slush Home/Card + Fomo trading/social**, selected by the user in this chat. Phantom fan and Senryo identity/art retained. Home: quiet cents, explicit paper-money context, round money actions, account/investment disclosure before Top Trades. Card: art → controls → Available/On hold, using real risk/issuer data and preserving secure issuance/reveal/repay/payment flows. Source pass integrates on the latest premium baseline, not the older Oct2 Codex branch. User authorized TestFlight upload; no production App Store promotion or GitHub push. [Contract](reference-followthrough-2026-10-04.md).
 - **D-254** 2026-10-04 · **Predictions reopened for research/evaluation.** Castora's published Monad address has bytecode on chain 143, but its numeric price contest is not a verified binary exchange. ABI/implementation, live pools, settlement, fees, trust, licensing and account compatibility remain gates. Sports remains excluded. Ramp remains the selected fiat provider; existing followed-trade notifications are recognized rather than rebuilt blindly. Momentum and the complete notification acceptance/recovery gaps remain tracked. [Evidence and contract](predictions-onramp-notifications-2026-10-04.md).
 - **D-255** 2026-10-08 · **Face ID is enough on the phone; the passkey is for signing in.** Native step-up (sends, withdrawals, card limits, over-cap trades, recovery phrase, loosening settings) reads the biometric-gated unlock item with a fresh Face ID — the same root the passkey's PRF yields, so the passkey sheet added no factor, only the iOS credential-provider/password-manager hop the user kept hitting. The pinned passkey ceremony runs only when that item is absent, invalidated or opens another account, and always on web. Every native Face ID/passkey prompt also waits until iOS reports the app `active` again before signing continues: the post-sign scope guard had been rejecting approved trades with "The account, network or app state changed" while the app was still `inactive` after Face ID. Guard kept; check `packages/account/checks/step-up.check.ts`. User feedback, 8 Oct.
+
+## Pivot to a real-time prediction market (8 Oct 2026) — plan: [pivot-2026-10-08.md](pivot-2026-10-08.md), approved by the user
+
+- **D-256** 2026-10-08 · **Senryo is a real-time Up/Down prediction market on Monad.**
+  - Removed: perps/Perpl, HelloTrade, swap venues, SenryoCore/FX engine, LP vault, card/KYC/Ramp, the social feed, and Polymarket/Castora discovery.
+  - Kept: the phone app, onboarding, Mera/Face ID, the design system.
+  - Supersedes D-001, D-005, D-010, D-015, D-194 and D-254, plus `real-venues-2026-10-08.md` and `predictions-onramp-notifications-2026-10-04.md`.
+  - User decision: "too much stuff… go through the prediction market route".
+- **D-257** 2026-10-08 · **Bounties:** Track 01 plus Mera UX, Envio and Aurora Intents.
+  - Agora Mobile Trading is dropped (it needs a Perpl trade); user decision.
+  - Chainlink CRE is optional, after S10: it is invisible to users and adds no safety, because Pyth is verified on chain and settlement is permissionless.
+- **D-258** 2026-10-08 · **Bets are in dollars.**
+  - Mainnet: Circle USDC `0x754704Bc059F8C67012fEd69BC8A327a5aafb603` (permit and EIP-3009 verified).
+  - Testnet: our own Test USD (6 decimals, permit and 3009, minted by the sponsor).
+  - MON: gas is sponsored; "Pay with MON" on mainnet; a featured MON market.
+  - User choice from options.
+- **D-259** 2026-10-08 · **One price source: Pyth Core, for both the chart and settlement.**
+  - Settlement: `parsePriceFeedUpdatesUnique` over `[T, T+5s]`; no print means void and refund.
+  - Receiver on 10143: `0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379`. Mainnet is decided by eth_call against `0xB754…508d` and `0x2880…7B43`.
+  - MON/USD is not entitled on our key, so the MON market settles on a labelled push feed.
+  - Keys: Agari and Senryo keys verified 8 Oct (BTC and TSLA, live and 1-minute boundary).
+- **D-260** 2026-10-08 · **A shared pool takes the other side.**
+  - Testnet: seeded with Test USD.
+  - Mainnet: a small seed the user funds, with caps so it can never lose more than it holds. Suppliers ("Earn") join and leave at settled epochs.
+  - User choice from options.
+- **D-261** 2026-10-08 · **Commit, then fill at the next unique print** (stake escrowed; target = commit + 1 s; fill in `[target, target+5s]`).
+  - Finalize is permissionless; no print means a refund.
+  - Close needs ≥ 3 s held. Opens and closes stop at expiry − 20 s.
+  - Codex adversarial review: stale-print picking.
+- **D-262** 2026-10-08 · **Pricing:** band probability `Φ(ln(H/S)/v) − Φ(ln(L/S)/v)`, `v = σ√τ`.
+  - Versioned σ; half-spread 2 pp plus an inventory surcharge.
+  - Refused outside 3–97%, never clamped. Payouts floor, debits ceil.
+  - The TypeScript mirror and Solidity share test vectors (the CWF `packages/core/src/{fair,range}` pattern).
+- **D-263** 2026-10-08 · **One position shape: a fixed band around the window's open print K.**
+  - Up and Down refund at exactly K; Range is inclusive; Moonshot excludes its strike.
+  - Band menu per feed; the original basis is kept through partial closes.
+- **D-264** 2026-10-08 · **Solvency by full reservation** (vault USDC ≥ unpaid credits + Σ reserved, rechecked after every open, close and settle).
+  - Total exposure ≤ 60% of the pool, plus a per-expiry cap (from CWF `RangeReserve`).
+  - Automatic `claimFor` payouts shown as "pending" until the receipt.
+- **D-265** 2026-10-08 · **Stocks follow the exchange calendar** (`MarketCalendar.sol` kept). A window may not cross the close, a holiday or an early close. Agari halt-watch rule.
+- **D-266** 2026-10-08 · **Gasless by signature.**
+  - EIP-712 intents with unordered nonces, relayed by the journaled sender after an exact simulation.
+  - Money moves by permit / EIP-3009; finite allowances.
+  - Replaces StarterDrip MON drips and `topup.ts`.
+- **D-267** 2026-10-08 · **Enforceable session.**
+  - One Face ID signs a `SessionGrant` (delegate key, caps per call and per session, expiry, epoch); the contract enforces it.
+  - Real: $25 / $100 / 15 min. Practice: $1,000 / $10,000 / 60 min.
+  - Withdraw, send and grant changes always need Face ID.
+- **D-268** 2026-10-08 · **One market catalogue** (`packages/config/src/catalog.ts`) and **one navigation source** (`packages/config/src/nav.ts`, with `iconKey`) feed the contracts deploy, keeper, indexer, API and both apps.
+- **D-269** 2026-10-08 · **The web is a full app.**
+  - The CWF S22 shell (rail, Everything drawer in the URL, Sound & Vibration) plus the Owarine terminal.
+  - Passkey first; Reown AppKit loaded only on "Use a wallet".
+  - Right drawers and centred modals on web (no bottom sheets); the phone keeps its bottom sheets (UGLYCASH).
+- **D-270** 2026-10-08 · **One native build (0.4.0), cut right after cleanup (S1b), then over-the-air updates only.**
+  - Release paths: TestFlight (internal plus a public link through Beta App Review) and Google Play internal testing plus the APK.
+  - Real money stays on iPhone too (user choice, 8 Oct), opt-in behind terms and an 18+ confirmation with small caps.
+  - Copy says "predictions", never "options".
+- **D-271** 2026-10-08 · **Uncommitted Codex work** (binary indexer 4C1b, Predict UI, landing revamp, CardIssued) is absorbed or deleted in S1. The landing revamp is kept and rewritten in S6.
+- **D-272** 2026-10-08 · **Stack and performance**, binding, as in the plan's "Stack and performance" section:
+  - one Pyth gateway plus the `pyth_prints` archive; SSE only (WsHub deleted);
+  - zero client RPC; Hasura off;
+  - a Postgres intents queue; memory and latency budgets as gates.
+  - Every library was chosen from Context7 docs.
