@@ -4,6 +4,7 @@ export * from "./errors.ts";
 export * from "./primitives.ts";
 export * from "./routes/activity.ts";
 export * from "./routes/auth.ts";
+export * from "./routes/binary-predictions.ts";
 export * from "./routes/bridge.ts";
 export * from "./routes/card.ts";
 export * from "./routes/define.ts";

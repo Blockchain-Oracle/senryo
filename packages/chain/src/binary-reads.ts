@@ -88,6 +88,17 @@ export async function readBinaryRound(
   binaryBytes32(roundId);
   binaryAddress(owner);
   const source = await verifyBinarySource(read, m, e);
+  return readBinaryRoundAt(read, m, e, roundId, owner, source);
+}
+
+async function readBinaryRoundAt(
+  read: ReadClient,
+  m: BinaryManifest,
+  e: BinaryEnvironment,
+  roundId: Hex,
+  owner: Address,
+  source: Awaited<ReturnType<typeof verifyBinarySource>>,
+) {
   const c = { address: m.contract, abi: senryoBinaryV1Abi, blockNumber: source.blockNumber } as const;
   const [round, position, creditWei, riskPaused, walletMonWei] = await Promise.all([
     read.readContract({ ...c, functionName: "round", args: [roundId] }),
@@ -179,4 +190,56 @@ export function binaryMaxBuy(
   return [available, BINARY_POLICY.buyMaxWei, supplyRoomWei].reduce((a, b) => (a < b ? a : b)) > 0n
     ? [available, BINARY_POLICY.buyMaxWei, supplyRoomWei].reduce((a, b) => (a < b ? a : b))
     : 0n;
+}
+
+/** Consensus-time discovery of the current, previous and creatable scheduled slots.
+ * Old held rounds use readBinaryRound by their immutable id; rollover never rewrites them.
+ * All returned rounds, positions and credits share a verified block, with no indexer dependency.
+ */
+export async function readBinaryScheduledRounds(
+  read: ReadClient,
+  manifest: BinaryManifest,
+  environment: BinaryEnvironment,
+  asset: "BTC" | "ETH",
+  duration: 300 | 900,
+) {
+  const m = Object.freeze({ ...manifest }),
+    e = Object.freeze({ ...environment });
+  if (!BINARY_POLICY.durations.includes(duration) || !["BTC", "ETH"].includes(asset))
+    throw new Error("binary: invalid schedule");
+  const source = await verifyBinarySource(read, m, e);
+  const step = BigInt(duration),
+    current = (source.timestamp / step) * step;
+  const feed = asset === "BTC" ? BINARY_POLICY.btcFeed : BINARY_POLICY.ethFeed;
+  const starts: bigint[] = [];
+  for (
+    let start = current >= step ? current - step : 0n;
+    start <= source.timestamp + BigInt(BINARY_POLICY.creationLeadMax);
+    start += step
+  )
+    starts.push(start);
+  const rounds = await Promise.all(
+    starts.map(async (start) => {
+      const id = keccak256(
+        encodeAbiParameters(
+          [
+            { type: "uint256" },
+            { type: "address" },
+            { type: "bytes32" },
+            { type: "bytes32" },
+            { type: "uint32" },
+            { type: "uint64" },
+          ],
+          [BigInt(m.chainId), m.contract, m.configHash, feed, duration, start],
+        ),
+      );
+      try {
+        return await readBinaryRoundAt(read, m, e, id, m.liquidityBeneficiary, source);
+      } catch (error) {
+        if (error instanceof Error && error.message === "binary: missing round") return null;
+        throw error;
+      }
+    }),
+  );
+  return { source, rounds: rounds.filter((r) => r !== null) };
 }

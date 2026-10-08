@@ -8,8 +8,10 @@ import { type ApiContext, openChains, oracleMarks } from "./context.ts";
 import { loadApiEnv } from "./env.ts";
 import { GeoDb } from "./geo-db.ts";
 import { EnvioIndexerBridge, NullIndexerBridge } from "./indexer.ts";
+import { createBinaryPredictions } from "./predictions/binary.ts";
 import { registerAnyAssetRoutes } from "./routes/anyasset.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
+import { registerBinaryPredictionRoutes } from "./routes/binary-predictions.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerFollowRoutes } from "./routes/follow.ts";
 import { registerHolderRoutes } from "./routes/holders.ts";
@@ -105,6 +107,7 @@ registerHolderRoutes(app, ctx);
 registerModerationRoutes(app, ctx);
 registerAnyAssetRoutes(app, log, anyAsset);
 registerPredictionRoutes(app, log);
+registerBinaryPredictionRoutes(app, createBinaryPredictions(chains));
 // Rows left non-terminal by a previous process (restart mid-claim) get their real stage; never re-sent (S8.16e).
 void reconcilePendingRelays(ctx).catch((err) => log.warn({ err: String(err) }, "relay reconcile failed"));
 const hub = new WsHub(ctx);
