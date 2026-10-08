@@ -19,6 +19,10 @@
     "./sync": {
       "react-native": "./src/platform/sync.native.ts",
       "default": "./src/platform/sync.web.ts"
+    },
+    "./delegate-store": {
+      "react-native": "./src/platform/delegate-store.native.ts",
+      "default": "./src/platform/delegate-store.web.ts"
     }
   },
   "scripts": {

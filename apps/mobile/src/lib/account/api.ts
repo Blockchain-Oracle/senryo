@@ -24,6 +24,25 @@ let client: ApiClient | undefined;
 let session: { token: string; address: Address; chainId: ChainId; expiresAt: number } | undefined;
 /** The sign-in in flight, shared by every caller for the same (address, chain). */
 let signingIn: { key: string; done: Promise<void> } | undefined;
+/** Told when an API session starts or ends (the live stream adds or drops the user's topic, D-280). */
+const sessionListeners = new Set<(scope: { address: Address; chainId: ChainId } | undefined) => void>();
+
+/** The account and chain an API session is live for right now, without signing in (no prompt). */
+export function apiSessionScope(): { address: Address; chainId: ChainId } | undefined {
+  return session && session.expiresAt > Date.now() ? { address: session.address, chainId: session.chainId } : undefined;
+}
+
+export function onApiSession(listener: (scope: { address: Address; chainId: ChainId } | undefined) => void) {
+  sessionListeners.add(listener);
+  return () => {
+    sessionListeners.delete(listener);
+  };
+}
+
+function announceSession(): void {
+  const scope = apiSessionScope();
+  for (const l of sessionListeners) l(scope);
+}
 
 /** Per-install id for the relay's rate limit (`x-senryo-device`): random, MMKV, not an identity. */
 function deviceId(): string {
@@ -103,11 +122,13 @@ async function signIn(account: AccountClient, address: Address, chainId: ChainId
   // A switch or sign-out while this was in flight: never adopt a token for a scope the app has left.
   if (account.hint?.address !== address || activeNetwork().chainId !== chainId) return;
   session = { token: verified.token, address, chainId, expiresAt: Date.parse(verified.expiresAt) };
+  announceSession();
 }
 
 export function clearApiSession(): void {
   session = undefined;
   signingIn = undefined;
+  announceSession();
 }
 
 /** Runs a session route; a token the server no longer knows (restart, expiry) is replaced once, then retried. */

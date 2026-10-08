@@ -9,6 +9,7 @@ export { createPasskey, getPasskey, type PromptListener } from "./ceremony.ts";
 export { AccountClient, type AccountClientOptions, type PendingSignIn } from "./client.ts";
 export * from "./constants.ts";
 export { authFailureCopy, biometricWord, type Copy, type Surface, scopeCopy } from "./copy.ts";
+export { DelegateKeys } from "./delegate.ts";
 export {
   isValidMnemonic,
   mnemonicToSeed,
@@ -30,6 +31,7 @@ export {
 export { type Flow, formatMeasure, type MeasureEvent, type MeasureSink, ttftMs } from "./measure.ts";
 export type {
   AccountHint,
+  DelegateStore,
   LockReason,
   PasskeyPlatform,
   PlatformKind,

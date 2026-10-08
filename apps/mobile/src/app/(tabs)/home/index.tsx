@@ -1,5 +1,5 @@
 import { formatUnits } from "@senryo/core";
-import { useDollarBalance } from "@senryo/query";
+import { useMarketAccount } from "@senryo/query";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,10 +30,10 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const bottom = useDockInset();
   const refresh = usePullRefresh();
-  const balance = useDollarBalance(address);
+  const account = useMarketAccount(address);
   const text =
-    balance.status === "fresh" || balance.status === "stale"
-      ? `$${formatUnits(balance.value, DOLLAR_DECIMALS, CENTS)}`
+    account.status === "fresh" || account.status === "stale"
+      ? `$${formatUnits(account.value.balance, DOLLAR_DECIMALS, CENTS)}`
       : "$—";
   return (
     <View style={[styles.fill, { backgroundColor: color.ground, paddingTop: insets.top }]}>

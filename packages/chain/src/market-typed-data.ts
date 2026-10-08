@@ -2,9 +2,9 @@
  * EIP-712 for the markets (D-266, D-267), field for field as `contracts/src/markets/SessionGrants.sol` hashes them, so
  * the phone, the web and the relay sign and check one definition. Domain: "Senryo Markets" v1 on the reserve.
  */
-import type { ChainId } from "@senryo/config";
-import { type Address, bytesToBigInt, type Hex, hashTypedData } from "viem";
-import { addressOf } from "./contracts.ts";
+import { type ChainId, MAINNET_CHAIN_ID, TEST_USD_DOMAIN, USDC_DOMAIN } from "@senryo/config";
+import { type Address, bytesToBigInt, type Hex, hashTypedData, parseSignature } from "viem";
+import { addressOf, dollarTokenOf } from "./contracts.ts";
 
 export const MARKETS_DOMAIN_NAME = "Senryo Markets";
 export const MARKETS_DOMAIN_VERSION = "1";
@@ -104,3 +104,65 @@ export function sessionGrantDigest(chainId: ChainId, grant: MarketSessionGrant):
 export function freshNonce(): bigint {
   return bytesToBigInt(crypto.getRandomValues(new Uint8Array(NONCE_BYTES)));
 }
+
+// ------------------------------------------------------------------------------------------------ signing requests
+// What the apps hand a signer (`signTypedData`): the owner's passkey under Face ID, or the session delegate.
+
+export const PERMIT_TYPES = {
+  Permit: [
+    { name: "owner", type: "address" },
+    { name: "spender", type: "address" },
+    { name: "value", type: "uint256" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+} as const;
+
+/** The dollar's EIP-712 domain: Circle USDC on mainnet, Test USD on Practice. */
+export function dollarDomain(chainId: ChainId) {
+  if (chainId === MAINNET_CHAIN_ID) return USDC_DOMAIN;
+  const token = dollarTokenOf(chainId);
+  if (!token) throw new Error(`no dollar token on ${chainId}`);
+  return { ...TEST_USD_DOMAIN, chainId, verifyingContract: token } as const;
+}
+
+export interface PermitMessage {
+  owner: Address;
+  spender: Address;
+  value: bigint;
+  nonce: bigint;
+  deadline: bigint;
+}
+
+/** EIP-2612: let the reserve pull `value` dollars (the allowance a call or a session spends). */
+export const permitRequest = (chainId: ChainId, message: PermitMessage) =>
+  ({ domain: dollarDomain(chainId), types: PERMIT_TYPES, primaryType: "Permit", message }) as const;
+
+export const intentRequest = (chainId: ChainId, message: MarketIntent) =>
+  ({ domain: marketsDomain(chainId), types: INTENT_TYPES, primaryType: "Intent", message }) as const;
+
+export const sessionGrantRequest = (chainId: ChainId, grant: MarketSessionGrant) =>
+  ({
+    domain: marketsDomain(chainId),
+    types: SESSION_GRANT_TYPES,
+    primaryType: "SessionGrant",
+    message: { ...grant, expiry: Number(grant.expiry) },
+  }) as const;
+
+export interface MarketRevoke {
+  owner: Address;
+  epoch: number;
+  nonce: bigint;
+  deadline: bigint;
+}
+
+export const revokeRequest = (chainId: ChainId, message: MarketRevoke) =>
+  ({ domain: marketsDomain(chainId), types: REVOKE_TYPES, primaryType: "Revoke", message }) as const;
+
+/** A 65-byte signature as the permit argument `{ v, r, s }` the relay forwards. */
+export function permitParts(signature: Hex): { v: number; r: Hex; s: Hex } {
+  const p = parseSignature(signature);
+  return { v: Number(p.v ?? BigInt(p.yParity + V_OFFSET)), r: p.r, s: p.s };
+}
+
+const V_OFFSET = 27;

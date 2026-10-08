@@ -19,6 +19,7 @@
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
     "@senryo/identity": "workspace:*",
+    "@senryo/live": "workspace:*",
     "@senryo/query": "workspace:*",
     "@senryo/tokens": "workspace:*",
     "@shopify/flash-list": "2.0.2",

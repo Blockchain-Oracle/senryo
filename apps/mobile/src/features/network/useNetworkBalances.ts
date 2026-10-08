@@ -1,29 +1,27 @@
 /**
- * The mode sheet's balance per network: the account's dollars there (USDC on Real, Test USD on Practice; D-258).
- * A network without its dollar token yet (Practice before the S2 deploy) reads as undefined, never a fabricated $0.
+ * The mode sheet's balance per network, read by the api (the app makes no RPC calls, D-280): Practice's Test USD from
+ * `/v1/markets/account`. Real reads as undefined until the mainnet markets deploy (S9) — never a fabricated $0.
  */
-import { dollarTokenOf, erc20Abi } from "@senryo/chain";
-import { type ChainId, MAINNET, TESTNET } from "@senryo/config";
-import { keys } from "@senryo/query";
+import { marketAccountRoute } from "@senryo/api-client";
+import { MAINNET, TESTNET } from "@senryo/config";
+import { marketKeys } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
+import { api } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
-import { sharedRead } from "~/lib/account/sender";
 import { BALANCE_STALE_MS } from "./constants";
 
-function useDollars(chainId: ChainId) {
-  const address = useAccount().hint?.address;
-  const token = dollarTokenOf(chainId);
+/** Networks whose markets the api serves (Practice now; Real joins at S9). */
+const SERVED = new Set<number>([TESTNET.chainId]);
+
+function useDollars(chainId: typeof TESTNET.chainId | typeof MAINNET.chainId) {
+  const owner = useAccount().hint?.address;
   return useQuery({
-    queryKey: [...keys.account(chainId, address ?? "0x"), "dollars"],
-    queryFn: () =>
-      sharedRead(chainId).readContract({
-        address: token as `0x${string}`,
-        abi: erc20Abi,
-        functionName: "balanceOf",
-        args: [address ?? "0x"],
-        blockTag: "finalized",
-      }),
-    enabled: address !== undefined && token !== undefined,
+    queryKey: marketKeys.account(chainId, owner ?? "0x"),
+    queryFn: async () => {
+      if (!owner) throw new Error("no account");
+      return (await api().call(marketAccountRoute, { query: { chainId, owner } })).balance;
+    },
+    enabled: owner !== undefined && SERVED.has(chainId),
     staleTime: BALANCE_STALE_MS,
   });
 }

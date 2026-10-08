@@ -48,6 +48,8 @@ export const STORAGE = {
   hint: "senryo.account.v1",
   unlock: "senryo.unlock.v1",
   channel: "senryo.session.v1",
+  /** The one-tap delegate key per owner and network (`<prefix>.<chainId>.<owner>`, D-280). */
+  delegate: "senryo.delegate.v1",
 } as const;
 
 /** HKDF info strings for keys derived from the PRF output (never the signing key). */

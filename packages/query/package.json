@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "TanStack Query keys + hooks, the engine price store and WS client, and the send lifecycle for Senryo's apps. No react-native, no react-dom.",
+  "description": "TanStack Query keys + hooks for Senryo's apps: the markets, history, profiles and notifications over the api, kept true by the user's live stream events, and the send lifecycle. No react-native, no react-dom.",
   "license": "MIT",
   "sideEffects": false,
   "exports": {
@@ -18,6 +18,7 @@
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
     "@senryo/identity": "workspace:*",
+    "@senryo/live": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "react": "catalog:"
   },

@@ -112,6 +112,8 @@ export const intentStatusSchema = z.object({
   reason: z.string().nullable(),
 });
 
+export type IntentStatus = z.output<typeof intentStatusSchema>;
+
 export const submitIntentRoute = defineRoute({
   method: "POST",
   path: "/v1/markets/intents",

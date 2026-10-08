@@ -20,3 +20,7 @@ export const USDC_DOMAIN = {
   chainId: MAINNET_CHAIN_ID,
   verifyingContract: MAINNET_USDC,
 } as const;
+
+/** Test USD's EIP-712 domain on Practice (OpenZeppelin `ERC20Permit("Test USD")`, version "1"); its address comes from
+ *  the address book. */
+export const TEST_USD_DOMAIN = { name: "Test USD", version: "1" } as const;

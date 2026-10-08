@@ -90,6 +90,9 @@ importers:
       '@senryo/identity':
         specifier: workspace:*
         version: link:../../packages/identity
+      '@senryo/live':
+        specifier: workspace:*
+        version: link:../../packages/live
       '@senryo/query':
         specifier: workspace:*
         version: link:../../packages/query
@@ -548,6 +551,9 @@ importers:
       '@senryo/identity':
         specifier: workspace:*
         version: link:../identity
+      '@senryo/live':
+        specifier: workspace:*
+        version: link:../live
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.104.0(react@19.2.8)

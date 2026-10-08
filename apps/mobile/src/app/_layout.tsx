@@ -1,3 +1,4 @@
+import { LiveProvider } from "@senryo/live/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -8,13 +9,14 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { DeferredLinkHost } from "~/components/shell/DeferredLinkHost";
 import { FeedbackHost } from "~/components/shell/FeedbackHost";
+import { LiveHost } from "~/components/shell/LiveHost";
 import { OfflineBanner } from "~/components/shell/OfflineBanner";
-import { TxRecoveryHost } from "~/components/shell/TxRecoveryHost";
 import { ToastHost } from "~/components/toast/ToastHost";
 import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
 import { TermsHost } from "~/features/legal/TermsHost";
 import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
+import { appLive } from "~/lib/live";
 import { PushHost } from "~/lib/notifications/PushHost";
 import { QueryEnvHost } from "~/lib/query-env";
 import { FONT, ThemeProvider, useTheme } from "~/theme";
@@ -48,7 +50,9 @@ export default function RootLayout() {
           <ThemeProvider>
             <AccountProvider>
               <QueryEnvHost>
-                <RootStack />
+                <LiveProvider live={appLive()}>
+                  <RootStack />
+                </LiveProvider>
               </QueryEnvHost>
             </AccountProvider>
           </ThemeProvider>
@@ -90,10 +94,10 @@ function RootStack() {
         ))}
       </Stack>
       <FeedbackHost />
+      <LiveHost />
       <DeferredLinkHost />
       <OfflineBanner />
       <ToastHost />
-      <TxRecoveryHost />
       <PushHost />
       <TermsHost />
       <PrivacyPlate />

@@ -23,11 +23,12 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
       subscriber, kept 5 s across routes, closed after 60 s hidden, `Last-Event-ID`, reseeded from `/v1/prices/recent`),
       server-time offset from `time` frames, per-feed stores (Float64 rings, per-frame batched flush, plain `subscribe`
       for the chart and odometers), user topic via a stream ticket
-- [ ] S5.3 `@senryo/query` markets hooks: catalogue (`staleTime: Infinity`), account (balance, allowance, epoch,
+- [x] S5.3 `@senryo/query` markets hooks: catalogue (`staleTime: Infinity`), account (balance, allowance, epoch,
       session), calls/history/timeline/stats/leaderboard/window proof, submit intent + status, practice grant, session
       grant/revoke — invalidated by the user's stream events (`ticket`, `intent`, `session`, `dollars`), no polling
-- [ ] S5.4 Zero RPC from the app: balance from `/v1/markets/account`; retire `useDollarBalance` RPC polling,
-      `useNetworkBalances`, the RPC half of `account-check`, and the app-side sender for markets
+- [x] S5.4 Zero RPC from the app: balance from `/v1/markets/account`; retire `useDollarBalance` RPC polling,
+      `useNetworkBalances`, the RPC half of `account-check`, and the app-side sender for markets — done: the app holds
+      no chain client; the sender and transaction recovery are deleted (the web's journal modules leave with S6)
 - [ ] S5.5 Signing: an open/close intent signed by the session key when a grant is live (no Face ID), else by the
       passkey owner with Face ID; the session grant ("Turn on one-tap calls": caps, length) and revoke; permit for the
       first call's allowance; the account policy allows exactly these typed-data shapes

@@ -1,6 +1,6 @@
 /**
- * The query layer's clients for the app (`@senryo/query`): the selected network, the shared viem read client (until
- * S5 serves balances over the stream, D-272) and our API client. Mounted once under the QueryClientProvider and the
+ * The query layer's clients for the app (`@senryo/query`): the selected network and our API client (the app makes no
+ * RPC calls, D-280). Mounted once under the QueryClientProvider and the
  * AccountProvider, so every hook (profiles, notifications, the wallet balance, sends) finds its env.
  *
  * It also wires the two send-safety hooks: the operation journal persists in MMKV (TxRecovery resumes it after a
@@ -11,7 +11,6 @@ import type { ReactNode } from "react";
 import { AppState } from "react-native";
 import { api } from "~/lib/account/api";
 import { useAccount } from "~/lib/account/provider";
-import { sharedRead } from "~/lib/account/sender";
 import { activeNetwork, useNetwork } from "~/lib/network";
 import { storage } from "~/lib/storage";
 
@@ -34,7 +33,7 @@ export function QueryEnvHost({ children }: { children: ReactNode }) {
       throw new Error("The account, network or app state changed. Review again.");
   });
   return (
-    <QueryEnvProvider chainId={network.chainId} read={sharedRead(network.chainId)} api={api()}>
+    <QueryEnvProvider chainId={network.chainId} api={api()}>
       {children}
     </QueryEnvProvider>
   );

@@ -61,3 +61,10 @@ export interface SessionSync {
   subscribe(listener: (event: SyncEvent) => void): () => void;
   close(): void;
 }
+
+/** Where the one-tap delegate key lives (`delegate-store.native.ts` / `.web.ts`, D-280). */
+export interface DelegateStore {
+  read(key: string): Promise<string | null>;
+  write(key: string, value: string): Promise<void>;
+  remove(key: string): Promise<void>;
+}
