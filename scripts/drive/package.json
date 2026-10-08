@@ -15,6 +15,7 @@
     "@senryo/config": "workspace:*",
     "@senryo/contracts": "workspace:*",
     "@senryo/core": "workspace:*",
+    "@senryo/live": "workspace:*",
     "@senryo/query": "workspace:*",
     "viem": "catalog:",
     "zod": "catalog:"

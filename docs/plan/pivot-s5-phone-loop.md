@@ -19,7 +19,7 @@ the terminal (profiler) · chart ≤ 2 ms per frame · 1 SSE connection · 0 RPC
 ### Foundations (no UI)
 - [x] S5.1 Pricing mirror `@senryo/core/market` (BandMath + quotes, Solady `lnWad` via CWF) — **bit for bit with the
       deployed `quoteOpen` over 7,300 random cases** (`scripts/drive/src/band-quote-check.ts`)
-- [ ] S5.2 `packages/live`: one SSE client (`expo/fetch` streaming on native, `fetch` on web; opened by the first
+- [x] S5.2 `packages/live`: one SSE client (`expo/fetch` streaming on native, `fetch` on web; opened by the first
       subscriber, kept 5 s across routes, closed after 60 s hidden, `Last-Event-ID`, reseeded from `/v1/prices/recent`),
       server-time offset from `time` frames, per-feed stores (Float64 rings, per-frame batched flush, plain `subscribe`
       for the chart and odometers), user topic via a stream ticket

@@ -1,0 +1,25 @@
+{
+  "name": "@senryo/live",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The one live stream (D-272): an SSE client over a fetch that can stream (expo/fetch on native, the browser's on web), the server clock, per-market price stores batched per frame, and the user's events. No react-native, no react-dom.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@senryo/config": "workspace:*",
+    "eventsource-parser": "4.1.1",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  }
+}
