@@ -90,6 +90,15 @@ export interface PerplProtectionIntent {
 export function nextProtectionRequest(lastForwarded: number, persisted: number): number {
   return exact(Math.max(lastForwarded, persisted) + 1);
 }
+/** No provider observation sequence is documented. Preserve definitive outcomes and never restore
+ * replacement eligibility after execution has started merely because an older active snapshot arrives.
+ */
+function preserveProtectionState(prior: PerplProtectionState, observed: PerplProtectionState): PerplProtectionState {
+  if (["filled", "canceled", "expired", "failed", "executed"].includes(prior)) return prior;
+  if (["partial", "triggered"].includes(prior) && ["pending", "untriggered", "open", "unknown"].includes(observed))
+    return prior;
+  return observed;
+}
 export function reconcileProtection(
   intent: PerplProtectionIntent,
   snapshot: {
@@ -100,7 +109,7 @@ export function reconcileProtection(
   },
 ): PerplProtectionIntent {
   if (!snapshot.authenticated || snapshot.account !== intent.spec.acc || snapshot.request !== intent.spec.rq)
-    return { ...intent, state: "unknown" };
+    return { ...intent, state: preserveProtectionState(intent.state, "unknown") };
   const states: Record<number, PerplProtectionState> = {
     1: "pending",
     2: "open",
@@ -113,7 +122,7 @@ export function reconcileProtection(
     9: "triggered",
     10: "executed",
   };
-  return { ...intent, state: states[snapshot.status] ?? "unknown" };
+  return { ...intent, state: preserveProtectionState(intent.state, states[snapshot.status] ?? "unknown") };
 }
 /** Admission is insufficient; old protection may retire only after authoritative new active state. */
 export function mayRetireProtection(intent: PerplProtectionIntent): boolean {
@@ -183,6 +192,8 @@ export class PerplProtectionJournal {
     return intent;
   }
   save(intent: PerplProtectionIntent): void {
+    const prior = this.read(intent.spec.rq);
+    if (prior) intent = { ...intent, state: preserveProtectionState(prior.state, intent.state) };
     const raw = JSON.stringify(intent, (_, value: unknown) => (typeof value === "bigint" ? value.toString() : value));
     this.storage.set(`${this.scope}:${intent.spec.rq}`, raw);
     const latest = this.read();
