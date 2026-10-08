@@ -20,6 +20,7 @@ import { windowsAbi } from "@senryo/contracts/abis";
 import { applyTicketChanges, type Db, type Logger, nowSec, type TicketNotice } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
 import type { StreamBus } from "../stream/bus.ts";
+import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
 import { OPEN_PRINT_WAIT_MS } from "./constants.ts";
 import { FillBatcher } from "./fills.ts";
 import { type CheckedIntent, checkIntent, type IntentRequest } from "./gates.ts";
@@ -124,11 +125,16 @@ export class MarketRelay {
         openProof: printProof(open.updates),
         commitData,
       };
-      await this.simulateCommitInBatch(sender.account.address, openAndCommitData(this.d.chainId, batch, true));
+      await untilChainReaches(open.publishTime);
+      await retryWhileEarly(() =>
+        this.simulateCommitInBatch(sender.account.address, openAndCommitData(this.d.chainId, batch, true)),
+      );
       to = MULTICALL3;
       data = openAndCommitData(this.d.chainId, batch);
     }
-    const sent = await sendTx(sender, { to, data, action: "marketCommit", meta: { digest: c.digest } });
+    const sent = await retryWhileEarly(() =>
+      sendTx(sender, { to, data, action: "marketCommit", meta: { digest: c.digest } }),
+    );
     if (sent.stage === "reverted") throw new Error(`commit reverted in ${sent.hash}`);
     const changes = ticketChanges(sent.receipt.logs, reserve);
     const window = { windowId: req.intent.windowId, seriesId: c.seriesId, start: c.start, expiry: c.expiry };

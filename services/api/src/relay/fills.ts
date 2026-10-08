@@ -3,6 +3,7 @@ import { type ChainId, MARKET_BATCH_MAX } from "@senryo/config";
 import { applyTicketChanges, type Db, type Logger, type WindowRef } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
 import type { StreamBus } from "../stream/bus.ts";
+import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
 import type { Lane } from "./lanes.ts";
 
 /**
@@ -65,15 +66,18 @@ export class FillBatcher {
     const windows = new Map(all.map((p) => [p.window.windowId, p.window]));
     const reserve = addressOf(this.d.chainId, "BandReserve");
     const lane = this.d.lanes[batch.target % this.d.lanes.length] as Lane;
+    await untilChainReaches(print.publishTime);
     for (let i = 0; i < all.length; i += MARKET_BATCH_MAX) {
       const ids = all.slice(i, i + MARKET_BATCH_MAX).map((p) => p.ticketId);
-      const sent = await lane.run((sender) =>
-        sendTx(sender, {
-          to: reserve,
-          data: finalizeCallData(batch.target, ids, proof),
-          action: "marketFinalize",
-          meta: { job: "fill", target: String(batch.target) },
-        }),
+      const sent = await retryWhileEarly(() =>
+        lane.run((sender) =>
+          sendTx(sender, {
+            to: reserve,
+            data: finalizeCallData(batch.target, ids, proof),
+            action: "marketFinalize",
+            meta: { job: "fill", target: String(batch.target) },
+          }),
+        ),
       );
       const changes = ticketChanges(sent.receipt.logs, reserve);
       await applyTicketChanges(

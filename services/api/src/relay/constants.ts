@@ -12,3 +12,8 @@ export const PRACTICE_GRANT = 1_000_000_000n;
 export const PRACTICE_TOPUP_EVERY_MS = 86_400_000;
 /** Most of an owner's tickets returned at once. */
 export const TICKETS_PAGE = 100;
+/** One Monad block: how far before a second's end the relay may already use a print published in it. */
+export const CHAIN_CLOCK_SLACK_MS = 300;
+/** A simulation refused only because the chain's clock trails the print is retried this often, this far apart. */
+export const FUTURE_PRINT_RETRIES = 4;
+export const FUTURE_PRINT_RETRY_MS = 300;
