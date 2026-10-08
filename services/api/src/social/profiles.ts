@@ -137,7 +137,7 @@ export async function saveProfile(db: Db, address: string, update: ProfileUpdate
         handle_changed_at: changing ? new Date() : (current?.handle_changed_at ?? null),
       };
       const now = new Date();
-      // Sharing restarts its clock whenever it turns on: the feed never publishes a fill from before that moment.
+      // Sharing restarts its clock whenever it turns on: nothing shows a call from before that moment.
       const since = (on: boolean, was: boolean | undefined, at: Date | null | undefined) =>
         on ? (was ? (at ?? now) : now) : null;
       const sharing = {
@@ -163,14 +163,7 @@ export async function saveProfile(db: Db, address: string, update: ProfileUpdate
           public_trades_mainnet_since = EXCLUDED.public_trades_mainnet_since, updated_at = now()
         RETURNING *`;
       if (!saved) throw new HttpError(HTTP_STATUS.internal, "INTERNAL", "profile not stored");
-      if (current) return saved;
-      // A new profile for an address an operator already hid (e.g. after "delete my data") stays hidden.
-      const [rehidden] = await tx<ProfileRow[]>`
-        UPDATE profiles SET hidden = true
-         WHERE address = ${address} AND EXISTS (SELECT 1 FROM moderation_reviews r
-                WHERE r.target_kind = 'profile' AND r.target_id = ${address} AND r.decision = 'hide')
-        RETURNING *`;
-      return rehidden ?? saved;
+      return saved;
     });
   } catch (error) {
     const pg = pgErrorOf(error);
@@ -196,14 +189,7 @@ export async function publicProfile(db: Db, chainId: ChainId, lookup: string): P
   const key = byAddress ? lookup.toLowerCase() : normalizeHandle(lookup);
   if (!byAddress && handleSyntaxIssue(key)) return undefined;
   const where = byAddress ? db`p.address = ${key}` : db`lower(p.handle) = ${key}`;
-  const [row] = await db<(ProfileRow & { followers: number; following: number })[]>`
-    SELECT p.*,
-      (SELECT count(*)::int FROM follows f JOIN profiles q ON q.address = f.follower
-        WHERE f.followee = p.address AND ${visibleOn(db, "q", chainId)}) AS followers,
-      (SELECT count(*)::int FROM follows f JOIN profiles q ON q.address = f.followee
-        WHERE f.follower = p.address AND ${visibleOn(db, "q", chainId)}) AS following
-      FROM profiles p
-     WHERE ${where} AND ${visibleOn(db, "p", chainId)}`;
+  const [row] = await db<ProfileRow[]>`SELECT p.* FROM profiles p WHERE ${where} AND ${visibleOn(db, "p", chainId)}`;
   if (!row) return undefined;
   return {
     chainId,
@@ -213,8 +199,6 @@ export async function publicProfile(db: Db, chainId: ChainId, lookup: string): P
     bio: row.bio,
     avatar: row.avatar,
     publicTrades: row[publicTradesColumn(chainId)],
-    followers: row.followers,
-    following: row.following,
     createdAt: row.created_at.toISOString(),
   };
 }

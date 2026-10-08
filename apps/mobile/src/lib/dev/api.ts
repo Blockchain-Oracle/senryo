@@ -82,8 +82,6 @@ export const devApi = createApiClient({
           bio: shown.bio,
           avatar: shown.avatar,
           publicTrades: shown.publicTradesPractice,
-          followers: 0,
-          following: 0,
           createdAt: shown.createdAt,
         };
         break;
@@ -95,12 +93,6 @@ export const devApi = createApiClient({
           reason: null,
           heldUntil: null,
         };
-        break;
-      case "/v1/me/follow-counts":
-        response = { followers: 0, following: 0 };
-        break;
-      case "/v1/feed":
-        response = { items: [], nextCursor: null };
         break;
       case "/v1/prefs":
         response = { blob: null };

@@ -19,7 +19,7 @@ export async function advisoryLock(tx: Tx, ns: string, key: string): Promise<voi
   await tx`SELECT pg_advisory_xact_lock(hashtextextended(${ns + key}, 0))`;
 }
 
-export { listedColumn, publicTradesColumn, sharingOn, sharingSinceColumn, visibleOn } from "@senryo/service-common";
+export { listedColumn, publicTradesColumn, visibleOn } from "@senryo/service-common";
 
 /**
  * The session when a valid bearer token came with the request; anonymous otherwise (an expired token on a public read

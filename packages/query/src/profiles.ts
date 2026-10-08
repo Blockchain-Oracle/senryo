@@ -97,8 +97,6 @@ export function useProfile(handleOrAddress: string | undefined): Reading<PublicP
   return fromQuery(query);
 }
 
-/** The session account's relationship with `other` (following, followsYou, blocked). */
-
 function noSession<T>(): Promise<T> {
   return Promise.reject(new Error("sign in first (no API session)"));
 }

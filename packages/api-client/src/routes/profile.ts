@@ -77,7 +77,7 @@ export const myProfileSchema = z.object({
 
 export const myProfileResponseSchema = z.object({ profile: myProfileSchema.nullable() });
 
-/** What anyone sees for a profile listed on `chainId`. Counts include only accounts listed on that network. */
+/** What anyone sees for a profile listed on `chainId`. */
 export const publicProfileSchema = z.object({
   chainId: chainIdSchema,
   address: addressSchema,
@@ -85,10 +85,8 @@ export const publicProfileSchema = z.object({
   displayName: z.string().nullable(),
   bio: z.string().nullable(),
   avatar: avatarIdSchema.nullable(),
-  /** The owner shares this network's trades in the feed. */
+  /** "Show my calls" on this network: the owner's calls appear on their profile and in the recent-calls ticker. */
   publicTrades: z.boolean(),
-  followers: z.int().nonnegative(),
-  following: z.int().nonnegative(),
   createdAt: isoTimeSchema,
 });
 

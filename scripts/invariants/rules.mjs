@@ -23,6 +23,7 @@ import {
   pnpmOnly,
   solNoMagicNumbers,
 } from "./lib/repo-checks.mjs";
+import { sqlNoDroppedTables } from "./lib/sql-checks.mjs";
 
 const TS = [".ts", ".tsx"];
 const JS_TS = [".ts", ".tsx", ".mjs", ".js"];
@@ -215,5 +216,10 @@ export const rules = [
     id: "indexer-reads-chain-filter",
     description: "every indexer read filters on chainId (rows exist once per chain, D-173)",
     check: indexerReadsChainFilter,
+  },
+  {
+    id: "sql-no-dropped-tables",
+    description: "no service SQL reads or writes a table a migration dropped (0015 pivot)",
+    check: sqlNoDroppedTables,
   },
 ];

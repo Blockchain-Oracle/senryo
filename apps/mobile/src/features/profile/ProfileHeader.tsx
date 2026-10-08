@@ -1,9 +1,8 @@
 /**
  * The person at the top of the own profile (F2; Fomo F16): the avatar with its pencil (tap to edit), the display name,
- * @handle, the bio or "Add a bio", "3 Following · 0 Followers" (each opens its list), and one meta line with symbols —
- * trades and joined. When the profile isn't public on this network, a chip "Make public on Mainnet" opens Edit profile
- * on its visibility (with the shared-address ⓘ there). Everything sits bare on the page; the address is on Wallet &
- * address. Counts come from the public view of this network and are never invented.
+ * @handle, the bio or "Add a bio", and one meta line with symbols — calls and joined. When the profile isn't public on
+ * this network, a chip opens Edit profile on its visibility (with the shared-address ⓘ there). Everything sits bare on
+ * the page; the address is on Wallet.
  */
 import type { Address } from "@senryo/account";
 import { shortAddress } from "@senryo/core";

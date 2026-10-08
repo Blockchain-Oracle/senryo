@@ -3,7 +3,6 @@ export * from "./constants.ts";
 export * from "./errors.ts";
 export * from "./handles.ts";
 export * from "./primitives.ts";
-export * from "./routes/activity.ts";
 export * from "./routes/auth.ts";
 export * from "./routes/define.ts";
 export * from "./routes/engagement.ts";

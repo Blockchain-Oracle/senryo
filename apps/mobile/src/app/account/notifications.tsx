@@ -31,7 +31,11 @@ const CHANNELS: ReadonlyArray<{ key: PushChannel; title: string; detail: string 
     title: "Markets and alerts",
     detail: "When a stock market you watch opens, or a price you set is crossed.",
   },
-  { key: "social", title: "People and invites", detail: "New followers and invite rewards." },
+  {
+    key: "social",
+    title: "Invites and leaderboard",
+    detail: "When an invite earns you test dollars, or you place on the leaderboard.",
+  },
 ];
 
 /**

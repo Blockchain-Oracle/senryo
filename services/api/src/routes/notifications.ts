@@ -10,7 +10,6 @@ import {
 import type { ChainId } from "@senryo/config";
 import {
   type Db,
-  followedTradeVisible,
   HTTP_STATUS,
   HttpError,
   type HttpServer,
@@ -65,8 +64,7 @@ function cursorParts(cursor: string): { micros: string; key: string } {
 
 /** The inbox rows of one account on one network: rows written before 0009 have no title and are left out. */
 function inboxOf(db: Db, chainId: ChainId, user: string) {
-  return db`chain_id = ${chainId} AND user_address = ${user} AND title IS NOT NULL AND channel IN ${db(PUSH_CHANNELS)}
-    AND ${followedTradeVisible(db, chainId, "push_sends")}`;
+  return db`chain_id = ${chainId} AND user_address = ${user} AND title IS NOT NULL AND channel IN ${db(PUSH_CHANNELS)}`;
 }
 
 async function unreadCount(db: Db, chainId: ChainId, user: string): Promise<number> {

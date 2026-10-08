@@ -26,11 +26,7 @@ export const eventsRequestSchema = z.object({
 });
 export const eventsResponseSchema = z.object({ accepted: z.int().nonnegative() });
 
-/**
- * Kinds of news a device can turn on or off (one `push_tokens` column each). `deposits` is "money arrived" (inbox
- * credits, starter money, any asset arriving); `social` is new followers, likes and replies; `followedTrades` is "a
- * trader you follow opened a position".
- */
+/** Kinds of news a device can turn on or off (one `push_tokens` column each). */
 export const PUSH_CHANNELS = [
   /** A call's result: won, lost, refunded (with the payout). */
   "results",
@@ -38,7 +34,7 @@ export const PUSH_CHANNELS = [
   "deposits",
   /** A watched stock market opens, a price alert crosses. */
   "priceAlerts",
-  /** Followed people and referrals (S8). */
+  /** Referrals and leaderboard places (S8). */
   "social",
 ] as const;
 
