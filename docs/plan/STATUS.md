@@ -20,12 +20,27 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0–S6 done (S6's signed-in walk on senryo.xyz waits on a person at a passkey prompt); S7 (stocks, bands, baskets, Earn, Proof) is under way — [pivot-s7-markets.md](pivot-s7-markets.md), D-284…D-289.
+**Where we are:** S0–S6 done; S7 (stocks, more coins, Range/Moonshot, baskets, Earn, Proof) is built and committed — S7.9 (on chain + deploy) waits on testnet MON for the deployer; S8 is being planned. See the S7 interim note below.
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
 - Agari's new key is live on `agari-ops`.
 - Owarine's ops env now uses Senryo's key.
+
+## S7 interim (9 Oct) — built, waiting to go on chain
+
+- **Built and committed** (`pivot-s7-markets.md`, D-284…D-290): 34 markets / 136 series (Pyth, RedStone, four
+  baskets), real trading hours (`MarketCalendar` from each feed's Pyth schedule; keeper keeps them current), Range and
+  Moonshot on both apps, baskets in points, Earn (`PoolShares`: hourly rolls, relayed requests, keeper delivery),
+  public Proof pages with in-browser re-verify. 61 contract tests; the gate is green.
+- **Waiting on the user:** (1) **testnet MON** — the deployer `0x52d205731e97c90aab738ae66371449f585c0e6a` holds 0.94;
+  listing everything (124 new series, five verifiers, `PoolShares`, calendars) needs ~15–16 MON at 104 gwei, so ~20 MON.
+  Until then no service deploys (the catalogue names markets the chain doesn't have). (2) **A RedStone API key**
+  (RedStone issues it on request) → `REDSTONE_GATEWAYS` on Coolify `senryo-api`; until 29 Oct the public gateways serve
+  outside their refusal windows.
+- **Then S7.9:** `KEEPER=0xf6a3… forge script script/AddMarkets.s.sol --broadcast` (idempotent — a partial run resumes),
+  `pnpm contracts:export`, indexer with PoolShares, images, deploy api/keeper/indexer/web, phone OTA after a sim run,
+  acceptance rows.
 
 ## S6 handoff (web app, 9 Oct)
 
