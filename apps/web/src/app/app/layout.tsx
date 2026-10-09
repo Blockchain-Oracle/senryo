@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { StepUpProvider } from "@/components/auth/step-up";
 import { AppShell } from "@/components/shell/AppShell";
+import { AccountProvider } from "@/lib/account/provider";
 import { AppProviders } from "./providers";
 import "@/styles/app-shell.css";
 import "@/styles/shell-parts.css";
@@ -15,8 +17,12 @@ export const metadata: Metadata = {
 /** `/app` (pivot S6): the S22 shell around every app page, inside the app's clients. */
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <AppProviders>
-      <AppShell>{children}</AppShell>
-    </AppProviders>
+    <AccountProvider>
+      <StepUpProvider>
+        <AppProviders>
+          <AppShell>{children}</AppShell>
+        </AppProviders>
+      </StepUpProvider>
+    </AccountProvider>
   );
 }

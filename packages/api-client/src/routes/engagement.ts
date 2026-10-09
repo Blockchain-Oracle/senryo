@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { isoTimeSchema } from "../primitives.ts";
 import { defineRoute } from "./define.ts";
 

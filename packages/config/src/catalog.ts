@@ -19,6 +19,9 @@ export type CadenceSec = (typeof CADENCES_SEC)[number];
 
 /** Call timing, mirrored from contracts/src/markets/MarketTypes.sol (D-261). */
 export const LOCKOUT_SEC = 20;
+/** An intent's action (contracts MarketTypes.sol): open a call, or cash one out. */
+export const ACTION_OPEN = 1;
+export const ACTION_CLOSE = 2;
 export const FILL_DELAY_SEC = 1;
 export const MIN_HOLD_SEC = 3;
 /** Most tickets one `finalize`, `expire` or `claimFor` takes. */

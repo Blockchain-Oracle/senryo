@@ -9,8 +9,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { Caller } from "./caller.ts";
 import { ONE_TAP_DEFAULTS, SECONDS_PER_MINUTE, SESSION_MARGIN_SEC, USD } from "./constants.ts";
-import { appDelegates } from "./delegates.ts";
-import { type OneTapTerms, signOneTap, signRevoke } from "./one-tap.ts";
+import type { OneTapTerms } from "./one-tap.ts";
+
+/**
+ * The delegate key store and the grant signing load when they are first needed — reading this device's key for the
+ * status, or turning one-tap on or off — so a screen that only shows the chip carries no signing code.
+ */
+const delegates = () => import("./delegates.ts").then((m) => m.appDelegates());
+const signing = () => import("./one-tap.ts");
 
 export type OneTapState =
   | { on: false }
@@ -41,7 +47,7 @@ export function useOneTap({ client, hint }: Caller) {
   const revoke = useRevokeSession(owner);
   const delegate = useQuery({
     queryKey: ["one-tap", "delegate", env.chainId, owner],
-    queryFn: async () => (await appDelegates().get(owner ?? "0x", env.chainId))?.address.toLowerCase() ?? null,
+    queryFn: async () => (await (await delegates()).get(owner ?? "0x", env.chainId))?.address.toLowerCase() ?? null,
     enabled: owner !== undefined,
   });
 
@@ -58,12 +64,12 @@ export function useOneTap({ client, hint }: Caller) {
         }
       : { on: false };
 
-  const deps = useCallback(() => {
+  const deps = useCallback(async () => {
     if (!client || !owner || !("value" in catalog) || !("value" in account)) throw new Error("Not ready");
     return {
       chainId: env.chainId,
       client,
-      delegates: appDelegates(),
+      delegates: await delegates(),
       reserve: catalog.value.contracts.reserve,
       owner,
       account: account.value,
@@ -73,9 +79,10 @@ export function useOneTap({ client, hint }: Caller) {
 
   const turnOn = useCallback(
     async (terms?: OneTapTerms): Promise<"on" | "cancelled"> => {
-      const d = deps();
+      const d = await deps();
       if (!("value" in catalog)) throw new Error("Not ready");
       try {
+        const { signOneTap } = await signing();
         const signed = await signOneTap(d, terms ?? defaultOneTapTerms(catalog.value.terms.session));
         await grant.mutateAsync({ grant: signed.grant, signature: signed.signature, permit: signed.permit });
         await delegate.refetch();
@@ -89,11 +96,12 @@ export function useOneTap({ client, hint }: Caller) {
   );
 
   const turnOff = useCallback(async (): Promise<"off" | "cancelled"> => {
-    const d = deps();
+    const d = await deps();
     try {
+      const { signRevoke } = await signing();
       const signed = await signRevoke(d);
       await revoke.mutateAsync({ owner: d.owner, ...signed });
-      await appDelegates().forget(d.owner, d.chainId);
+      await d.delegates.forget(d.owner, d.chainId);
       await delegate.refetch();
       return "off";
     } catch (error) {

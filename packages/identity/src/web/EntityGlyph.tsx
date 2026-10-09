@@ -4,6 +4,7 @@
  * Presentation follows FIDO's Passkey Icon Usage Guidelines: one flat colour, never below 24 px (the file's `minPx`),
  * aria-hidden when a visible label names the action.
  */
+import { Suspense } from "react";
 import { ART_COMPONENTS } from "../generated/web/index.ts";
 import { glyphFor } from "../registry.ts";
 
@@ -30,14 +31,16 @@ export function EntityGlyph({ id, size, color = "currentColor", label, className
       style={{ display: "inline-flex", flexShrink: 0, width: edge, height: edge, color }}
     >
       {/* Inline size: a host's descendant-svg rule (e.g. a button's `[&_svg]:size-4`) must not shrink it below 24 px. */}
-      <Component
-        width={edge}
-        height={edge}
-        style={{ width: edge, height: edge }}
-        fill="currentColor"
-        aria-hidden
-        focusable={false}
-      />
+      <Suspense fallback={null}>
+        <Component
+          width={edge}
+          height={edge}
+          style={{ width: edge, height: edge }}
+          fill="currentColor"
+          aria-hidden
+          focusable={false}
+        />
+      </Suspense>
     </span>
   );
 }

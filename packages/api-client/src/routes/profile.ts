@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import {
   AVATAR_ID_PATTERN,
   BIO_MAX_CHARS,

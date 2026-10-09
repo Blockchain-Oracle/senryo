@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import type * as z from "zod";
 import { DEVICE_HEADER } from "./constants.ts";
 import { ApiError, apiErrorBodySchema } from "./errors.ts";
 import type { RouteDef } from "./routes/define.ts";

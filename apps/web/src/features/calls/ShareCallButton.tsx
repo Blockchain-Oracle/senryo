@@ -8,7 +8,6 @@ import type { ShareCall } from "@senryo/calls";
 import { ids, marketId } from "@senryo/identity";
 import { QR } from "@senryo/tokens";
 import { Share2 } from "lucide-react";
-import QRCode from "qrcode";
 import { useRef, useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
@@ -33,8 +32,9 @@ export function ShareCallButton({ card }: { card: ShareCall }) {
       const styles = getComputedStyle(document.documentElement);
       const v = (name: string) => styles.getPropertyValue(name).trim();
       const sans = `${v("--font-inter") || "Inter"}, system-ui`;
+      const { toDataURL } = await import("qrcode");
       const qr = await imageFrom(
-        await QRCode.toDataURL(card.url, { width: QR_PX, margin: QR_MARGIN, color: { dark: QR.ink, light: QR.paper } }),
+        await toDataURL(card.url, { width: QR_PX, margin: QR_MARGIN, color: { dark: QR.ink, light: QR.paper } }),
       );
       const blob = await drawShareCard(card, {
         mark: await svgImage(box?.querySelector('[data-mark="market"] svg') ?? null),

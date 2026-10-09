@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { StepUpProvider } from "@/components/auth/step-up";
 import { ThemeProvider } from "@/components/shell/theme-provider";
-import { AccountProvider } from "@/lib/account/provider";
 import { BRAND } from "@/lib/constants/brand";
 import { inter, interDisplay, notoSansJp } from "./fonts";
 import "./globals.css";
@@ -29,11 +27,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body className="min-h-dvh">
-        <ThemeProvider>
-          <AccountProvider>
-            <StepUpProvider>{children}</StepUpProvider>
-          </AccountProvider>
-        </ThemeProvider>
+        {/* The account runtime lives where accounts are used: the app's layout and the landing's sign-in island. */}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

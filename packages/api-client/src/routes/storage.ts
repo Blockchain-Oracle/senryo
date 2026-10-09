@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { PREFS_BLOB_MAX_CHARS, VAULT_LABEL_MAX_CHARS, VAULT_MAX_CHARS } from "../constants.ts";
 import { addressSchema, base64UrlSchema, isoTimeSchema } from "../primitives.ts";
 import { defineRoute } from "./define.ts";

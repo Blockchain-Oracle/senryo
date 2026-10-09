@@ -18,6 +18,22 @@ const nextConfig: NextConfig = {
     "@senryo/query",
     "@senryo/tokens",
   ],
+  // Our packages are barrels (one index per package): import only the modules a page uses, so a page that never signs
+  // never ships viem or the passkey crypto.
+  experimental: {
+    optimizePackageImports: [
+      "@senryo/account",
+      "@senryo/api-client",
+      "@senryo/calls",
+      "@senryo/chain",
+      "@senryo/config",
+      "@senryo/core",
+      "@senryo/identity",
+      "@senryo/live",
+      "@senryo/query",
+      "@senryo/tokens",
+    ],
+  },
   reactStrictMode: true,
   devIndicators: false,
 };

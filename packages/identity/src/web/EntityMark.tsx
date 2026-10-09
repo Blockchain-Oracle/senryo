@@ -2,7 +2,7 @@
  * `<EntityMark id size variant badge status />` for the web: the same plan as the native mark (../registry.ts), drawn
  * with inline SVG components. Colours come in through `theme` as CSS values (usually `var(--…)` tokens).
  */
-import type { CSSProperties } from "react";
+import { type CSSProperties, type ReactNode, Suspense } from "react";
 import {
   BADGE_OUTSET_RATIO,
   BADGE_RATIO,
@@ -90,13 +90,27 @@ function Fallback({
   );
 }
 
+/** The art loads with its page (each component is lazy); until then the same box holds its place. */
+function Hold({ width, height, children }: { width: number; height: number; children: ReactNode }) {
+  return <Suspense fallback={<span style={{ ...center, width, height }} />}>{children}</Suspense>;
+}
+
 function Art({ plan, size, theme }: { plan: Extract<MarkPlan, { kind: "art" }>; size: number; theme: IdentityTheme }) {
   const Component = ART_COMPONENTS[plan.source.key]?.[plan.variant];
   if (!Component) return <Fallback size={size} text={plan.entity.symbol ?? plan.entity.name} theme={theme} dashed />;
-  if (plan.wordmark) return <Component width={size * plan.aspect} height={size} aria-hidden focusable={false} />;
+  if (plan.wordmark)
+    return (
+      <Hold width={size * plan.aspect} height={size}>
+        <Component width={size * plan.aspect} height={size} aria-hidden focusable={false} />
+      </Hold>
+    );
   // A one-colour glyph (passkey) takes the theme's secondary-text ink; EntityGlyph lets a caller match its label.
   if (plan.file.tintable)
-    return <Component width={size} height={size} fill={theme.fallbackInk} aria-hidden focusable={false} />;
+    return (
+      <Hold width={size} height={size}>
+        <Component width={size} height={size} fill={theme.fallbackInk} aria-hidden focusable={false} />
+      </Hold>
+    );
   const fill = plateColor(plan.plate, theme);
   const inner = innerSize(size, plan.file.insetPermille, fill !== undefined, plan.file.shape !== "free");
   const plate: CSSProperties =
@@ -109,7 +123,9 @@ function Art({ plan, size, theme }: { plan: Extract<MarkPlan, { kind: "art" }>; 
         };
   return (
     <span style={{ ...center, width: size, height: size, ...plate }}>
-      <Component width={inner} height={inner} aria-hidden focusable={false} />
+      <Hold width={inner} height={inner}>
+        <Component width={inner} height={inner} aria-hidden focusable={false} />
+      </Hold>
     </span>
   );
 }

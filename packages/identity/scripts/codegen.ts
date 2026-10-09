@@ -131,17 +131,31 @@ async function generate(): Promise<void> {
   console.log(`generated ${made.length} marks × ${PLATFORMS.length} platforms`);
 }
 
+/**
+ * The art index per platform. Native imports every component (Metro bundles them anyway). Web makes each one a
+ * `React.lazy` import: a page's JavaScript carries only the marks it shows, and the static prerender still writes every
+ * mark into the HTML (React resolves lazy components before the export), so nothing pops in.
+ */
 function writeIndex(platform: Platform, made: Generated[], propsImport: string, propsType: string): void {
   const byKey = new Map<string, Generated[]>();
   for (const g of made) byKey.set(g.key, [...(byKey.get(g.key) ?? []), g]);
+  const lazy = platform === "web";
   const lines = [
     HEADER,
-    'import type { ComponentType } from "react";',
+    lazy
+      ? 'import { type ComponentType, type LazyExoticComponent, lazy } from "react";'
+      : 'import type { ComponentType } from "react";',
     propsImport,
     'import type { MarkVariant } from "../../types.ts";',
-    ...made.map((g) => `import ${g.component} from "./${g.stem}.tsx";`),
+    ...made.map((g) =>
+      lazy
+        ? `const ${g.component} = lazy(() => import("./${g.stem}.tsx"));`
+        : `import ${g.component} from "./${g.stem}.tsx";`,
+    ),
     "",
-    `export type ArtComponent = ComponentType<${propsType}>;`,
+    lazy
+      ? `export type ArtComponent = ComponentType<${propsType}> | LazyExoticComponent<ComponentType<${propsType}>>;`
+      : `export type ArtComponent = ComponentType<${propsType}>;`,
     "",
     "export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant, ArtComponent>>>> = {",
     ...[...byKey].map(

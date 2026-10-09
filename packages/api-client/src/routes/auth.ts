@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { SIWE_MESSAGE_MAX_CHARS } from "../constants.ts";
 import { addressSchema, chainIdSchema, isoTimeSchema, signatureSchema } from "../primitives.ts";
 import { defineRoute } from "./define.ts";

@@ -1,9 +1,9 @@
 import { ArrowRight, ArrowUpRight, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { WelcomeActions } from "@/components/auth/welcome-actions";
 import { LandingMenu } from "@/components/public/landing-menu";
 import { LiveHeroIsland } from "@/features/landing/LiveHeroIsland";
+import { SignInIsland } from "@/features/landing/SignInIsland";
 import { BRAND } from "@/lib/constants/brand";
 import { ROUTES } from "@/lib/constants/routes";
 import pageStyles from "./welcome.module.css";
@@ -249,7 +249,7 @@ export default function Welcome() {
           </div>
           <div className={styles.betaAccess}>
             <div className={styles.accountActions}>
-              <WelcomeActions />
+              <SignInIsland />
             </div>
             <a href={BETA_REQUEST} className={styles.textLink}>
               Ask for the iPhone beta <ArrowUpRight size={18} aria-hidden />

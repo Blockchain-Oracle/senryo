@@ -1,5 +1,5 @@
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "@senryo/config";
-import { z } from "zod";
+import * as z from "zod";
 
 /**
  * Wire primitives. JSON has no bigint, so every integer amount (usd6, wei, 1e18 prices, block numbers) travels as a

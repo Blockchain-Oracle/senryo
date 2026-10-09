@@ -5,15 +5,21 @@
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
 import type { IntentStatus } from "@senryo/api-client";
-import { ACTION_CLOSE, ACTION_OPEN } from "@senryo/chain";
+import { ACTION_CLOSE, ACTION_OPEN } from "@senryo/config";
 import { withTolerance } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useCatalog, useMarketAccount, useQueryEnv, useSubmitIntent } from "@senryo/query";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPTS, TOLERANCE_BPS } from "./constants.ts";
-import { appDelegates } from "./delegates.ts";
-import { type CallDraft, type SignDeps, signCall } from "./sign.ts";
+import type { CallDraft, SignDeps } from "./sign.ts";
+
+/**
+ * Signing (viem, the passkey crypto, the delegate keys) is fetched just after the terminal mounts, so it is never in
+ * the page's first load and is in hand before the first tap.
+ */
+const signing = () => Promise.all([import("./sign.ts"), import("./delegates.ts")]);
+
 import type { CallWindow } from "./window.ts";
 
 export type CallResult = { kind: "sent"; status: IntentStatus; via: "one-tap" | "face-id" } | { kind: "cancelled" };
@@ -44,11 +50,15 @@ export function useCallActions({ client, hint }: Caller) {
   const catalog = useCatalog();
   const account = useMarketAccount(owner);
   const submit = useSubmitIntent();
+  useEffect(() => {
+    void signing().catch(() => undefined);
+  }, []);
   const ready = Boolean(client && owner && "value" in catalog && "value" in account);
 
   const send = useCallback(
     async (w: CallWindow, draft: Omit<CallDraft, "owner" | "configVersion">, prompt: string): Promise<CallResult> => {
       if (!client || !owner || !("value" in catalog) || !("value" in account)) throw new Error("Not ready to call");
+      const [{ signCall }, { appDelegates }] = await signing();
       const deps: SignDeps = {
         chainId: env.chainId,
         client,

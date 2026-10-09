@@ -58,8 +58,7 @@ export const REVOKE_TYPES = {
 
 const NONCE_BYTES = 32;
 
-export const ACTION_OPEN = 1;
-export const ACTION_CLOSE = 2;
+export { ACTION_CLOSE, ACTION_OPEN } from "@senryo/config";
 
 export interface MarketIntent {
   action: number;

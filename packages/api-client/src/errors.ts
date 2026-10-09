@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 
 /**
  * Every non-2xx response body: `{ error: { code, message, retryAfterSec?, details? } }`.

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { API_ORIGIN, INDEXER_ORIGIN } from "./hosts.ts";
 
 /**
