@@ -228,12 +228,12 @@
   white-space: pre;
 }
 
-/* ── the terminal (S6.5): the screen is the workspace — no top line or dock; the stage holds it edge to edge. ──── */
+/* ── the terminal (S6.5): the screen is the workspace — no top line; the stage holds it edge to edge (the phone dock
+ * stays under 768 px, as on the native terminal). ─────────────────────────────────────────────────────────────── */
 .app-column:has(.terminal-surface) {
   padding: 0;
 }
-.app-column:has(.terminal-surface) > .app-topline,
-.app-shell:has(.terminal-surface) .app-dock {
+.app-column:has(.terminal-surface) > .app-topline {
   display: none;
 }
 .app-stage:has(> .terminal-surface) {
@@ -283,4 +283,14 @@
   .health-chip.is-waiting .health-dot {
     animation: none;
   }
+}
+
+/* The win burst (components/shell/ConfettiHost.tsx): over everything, never in the way. */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  width: 100vw;
+  height: 100dvh;
+  pointer-events: none;
 }

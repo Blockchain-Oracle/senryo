@@ -6,6 +6,7 @@
  * Native calls are the cost (≤ 2 ms gate): the line and the axis ticks are each one path parsed from a string, the
  * dots one picture, and paints come pre-set from the kit (`kit.ts`).
  */
+import type { ChartLevel, ChartOverlay } from "@senryo/calls";
 import { type SkCanvas, type SkColor, Skia, type SkPicture, TileMode } from "@shopify/react-native-skia";
 import { drawOdometer } from "~/components/kit/odometer";
 import { HALF_PIXEL, LEVEL_ALPHA } from "./constants";
@@ -67,27 +68,7 @@ const HALF = 2;
 /** Coordinates in the path strings keep a tenth of a pixel. */
 const PX_TENTHS = 10;
 
-export type LevelKind = "line" | "entry";
-
-export interface ChartLevel {
-  kind: LevelKind;
-  price: number;
-  label: string;
-}
-
-/** What the chart overlays for the open call (set from React on events; read every frame). */
-export interface ChartOverlay {
-  /** Winning (≥ 0) keeps the up tone; losing turns everything the down tone. Null when flat. */
-  winning: boolean | null;
-  /** The pill's second row ("+$1.24"), when a call is open. */
-  pnlText: string | null;
-  /** Which way the result just moved (the pill's second row rolls up or down). */
-  pnlTrend: number;
-  /** K and the call's side: the zone above K (Up) or below it (Down) is shaded. */
-  line: number | null;
-  zone: "above" | "below" | null;
-  levels: ChartLevel[];
-}
+export type { ChartLevel, ChartOverlay, LevelKind } from "@senryo/calls";
 
 /** A coordinate for a path string, to a tenth of a pixel. */
 function px(v: number): number {

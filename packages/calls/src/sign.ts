@@ -6,7 +6,7 @@
 import type { AccountClient, DelegateKeys, Hex, LocalAccount } from "@senryo/account";
 import { ACTION_OPEN, freshNonce, intentRequest, type MarketIntent, permitParts, permitRequest } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
-import { INTENT_TTL_SEC, PERMIT_TTL_SEC, SESSION_MARGIN_SEC } from "./constants";
+import { INTENT_TTL_SEC, PERMIT_TTL_SEC, SESSION_MARGIN_SEC } from "./constants.ts";
 
 /** What `/v1/markets/account` says about the caller (balance, allowance, permit nonce, epoch, session). */
 export interface AccountView {

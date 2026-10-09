@@ -1,6 +1,7 @@
 "use client";
 
-// 21st: shadcn/sonner (#886). Re-tokenized: square D2 corners, hairline border, mono title, no shadow.
+// 21st: shadcn/sonner (#886). Re-tokenized for Living Lacquer: a filled plate (no border), the stage radius, a plain
+// semibold title.
 import { useTheme } from "next-themes";
 import type { ComponentProps } from "react";
 import { Toaster as Sonner } from "sonner";
@@ -17,8 +18,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast rounded-lg group-[.toaster]:border group-[.toaster]:border-border group-[.toaster]:bg-popover group-[.toaster]:text-popover-foreground group-[.toaster]:shadow-none",
-          title: "font-mono text-caption",
+            "group toast rounded-xl group-[.toaster]:border-0 group-[.toaster]:bg-popover group-[.toaster]:text-popover-foreground group-[.toaster]:shadow-sheet",
+          title: "font-semibold text-body",
           description: "group-[.toast]:text-muted-foreground",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",

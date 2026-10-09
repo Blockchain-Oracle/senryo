@@ -1,12 +1,13 @@
+import { defaultOneTapTerms, useOneTap } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { ids } from "@senryo/identity";
 import { useCatalog } from "@senryo/query";
 import { useState } from "react";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { defaultOneTapTerms, useOneTap } from "~/features/calls/useOneTap";
 import { PRIMER_ART, PrimerScreen, type PrimerTone } from "~/features/setup/PrimerScreen";
 import { useSetupNav } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
+import { useAccount } from "~/lib/account/provider";
 import { notify } from "~/lib/notify";
 
 const DOLLAR_DECIMALS = 6;
@@ -18,7 +19,7 @@ const SECONDS_PER_MINUTE = 60;
  */
 export default function OneTapStep() {
   const { next, back } = useSetupNav("one-tap");
-  const oneTap = useOneTap();
+  const oneTap = useOneTap(useAccount());
   const catalog = useCatalog();
   const [status, setStatus] = useState<{ text: string; tone: PrimerTone }>();
   const terms = "value" in catalog ? defaultOneTapTerms(catalog.value.terms.session) : undefined;

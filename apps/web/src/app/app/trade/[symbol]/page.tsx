@@ -22,5 +22,5 @@ export async function generateMetadata({ params }: { params: Promise<{ symbol: s
 export default async function TradePage({ params }: { params: Promise<{ symbol: string }> }) {
   const market = marketOf((await params).symbol);
   if (!market) notFound();
-  return <TerminalScreen symbol={market.symbol} name={market.name} />;
+  return <TerminalScreen symbol={market.symbol} />;
 }

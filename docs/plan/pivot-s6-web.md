@@ -45,10 +45,17 @@ on `/app` · the wallet chunk is 0 bytes before its click · ≤ 1 SSE per tab �
       _Done: 21st #382 (cmdk), word-match filter, lazy on first open._
 
 ### The loop
-- [ ] S6.5 Terminal `/app/trade/[symbol]`: Owarine's canvas chart on `@senryo/live` (600 samples, adaptive easing,
+- [x] S6.5 Terminal `/app/trade/[symbol]`: Owarine's canvas chart on `@senryo/live` (600 samples, adaptive easing,
       K / entry levels, zone, rolling pill, dot grid), window chips and countdown ring, odds in words with the load
       surcharge and capacity, presets + keypad, Up/Down → Cash out (partial), lockout, reactions and confetti,
       sounds, one-tap line, crowd split
+      _Done: the call flow is one package for both apps, `@senryo/calls` (window, signing, one-tap, delegate keys,
+      the per-tick `quoteTick`, the reaction engine, `useCallFlow` — the panel's states and guarded open / cash-out —
+      and `useResults`, with each app's effects injected); the phone runs on it unchanged (bundles; typecheck 0).
+      The web chart is Owarine's canvas engine with the phone's Senryo rules (zone on your side of K, K/entry tags
+      clear of the pill and stacked at the edges, adaptive easing, 千両); odds, distance and cash-out paint from live
+      values, never a render per tick; reactions and the win confetti are CSS/canvas, no motion runtime; keys ↑ ↓ C;
+      the dock stays on the terminal under 768 px. The signed-in call from the web waits for S6.7's passkey sign-in._
 - [ ] S6.6 Markets, Calls (record, filters, receipt drawer with the timeline and the window proof, share card),
       Home/Overview
 - [ ] S6.7 Sign-in and money: passkey on the rpId host (create, sign in, recover), setup (handle, terms, test

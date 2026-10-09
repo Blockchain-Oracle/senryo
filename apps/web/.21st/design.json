@@ -746,6 +746,15 @@
         "use": "centred modal at every width (replaces responsive-sheet: vaul on phones broke D-190)",
         "path": "src/components/ui/modal.tsx",
         "added": "2026-10-09"
+      },
+      {
+        "name": "terminal",
+        "source": "reference port: Owarine web/src/features/terminal (Tradash SPEC-chart/SPEC-flow) + the phone S5 terminal",
+        "id": null,
+        "use": "/app/trade/[symbol]: canvas chart, lanes, call panel, reactions, confetti",
+        "path": "src/features/terminal/",
+        "added": "2026-10-09",
+        "note": "reference fidelity over a 21st substitute; no 21st chart or trade component reproduces the Tradash renderer"
       }
     ],
     "considered": [

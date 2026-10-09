@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@senryo/account",
     "@senryo/api-client",
+    "@senryo/calls",
     "@senryo/chain",
     "@senryo/config",
     "@senryo/contracts",

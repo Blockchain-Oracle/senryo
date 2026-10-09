@@ -1,6 +1,6 @@
 /**
  * The terminal's actions (S5): open a call or cash one out at the quote the user saw. The limit is that quote less
- * TOLERANCE_BPS; one-tap signs with no prompt, otherwise one Face ID (cancel returns quietly). The relay answers with
+ * TOLERANCE_BPS; one-tap signs with no prompt, otherwise one passkey prompt (cancel returns quietly). The relay answers with
  * the call's digest at once; its status then arrives on the stream (`useIntentStatus`).
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
@@ -10,11 +10,11 @@ import { withTolerance } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useCatalog, useMarketAccount, useQueryEnv, useSubmitIntent } from "@senryo/query";
 import { useCallback } from "react";
-import { useAccount } from "~/lib/account/provider";
-import { appDelegates } from "~/lib/delegates";
-import { PROMPTS, TOLERANCE_BPS } from "./constants";
-import { type CallDraft, type SignDeps, signCall } from "./sign";
-import type { CallWindow } from "./window";
+import type { Caller } from "./caller.ts";
+import { PROMPTS, TOLERANCE_BPS } from "./constants.ts";
+import { appDelegates } from "./delegates.ts";
+import { type CallDraft, type SignDeps, signCall } from "./sign.ts";
+import type { CallWindow } from "./window.ts";
 
 export type CallResult = { kind: "sent"; status: IntentStatus; via: "one-tap" | "face-id" } | { kind: "cancelled" };
 
@@ -37,10 +37,9 @@ export interface CloseArgs {
   proceedsQuote: bigint;
 }
 
-export function useCallActions() {
+export function useCallActions({ client, hint }: Caller) {
   const env = useQueryEnv();
   const live = useLive();
-  const { client, hint } = useAccount();
   const owner = hint?.address;
   const catalog = useCatalog();
   const account = useMarketAccount(owner);

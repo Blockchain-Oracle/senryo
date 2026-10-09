@@ -5,10 +5,11 @@
  * mega move its flourish and edge glow, a slump the down flourish, and callouts ride the price head. Silent with sounds
  * off (`fire` gates it); the overlay is visual only.
  */
+
+import { ReactionEngine } from "@senryo/calls";
 import { type RefObject, useEffect, useRef } from "react";
 import { fire } from "~/feedback/fire";
 import type { ReactionOverlayHandle } from "./ReactionOverlay";
-import { ReactionEngine } from "./reactions";
 import type { QuoteTick } from "./useLiveQuote";
 
 const LADDER_TOP = 10;

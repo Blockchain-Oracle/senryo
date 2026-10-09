@@ -1,0 +1,31 @@
+{
+  "name": "@senryo/calls",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The call flow both apps share (S5 → S6): the window a call goes into, signing it (one-tap delegate or the owner under one passkey prompt), one-tap grants and revokes, the per-tick quote pass behind the terminal, and the reaction engine. React hooks take the app's account; no react-native, no react-dom.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@senryo/account": "workspace:*",
+    "@senryo/api-client": "workspace:*",
+    "@senryo/chain": "workspace:*",
+    "@senryo/config": "workspace:*",
+    "@senryo/core": "workspace:*",
+    "@senryo/live": "workspace:*",
+    "@senryo/query": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

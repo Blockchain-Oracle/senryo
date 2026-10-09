@@ -7,10 +7,10 @@ import { useLive, useServerSeconds } from "@senryo/live/react";
 import { useCatalog, useGrantSession, useMarketAccount, useQueryEnv, useRevokeSession } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useAccount } from "~/lib/account/provider";
-import { appDelegates } from "~/lib/delegates";
-import { ONE_TAP_DEFAULTS, SECONDS_PER_MINUTE, SESSION_MARGIN_SEC, USD } from "./constants";
-import { type OneTapTerms, signOneTap, signRevoke } from "./one-tap";
+import type { Caller } from "./caller.ts";
+import { ONE_TAP_DEFAULTS, SECONDS_PER_MINUTE, SESSION_MARGIN_SEC, USD } from "./constants.ts";
+import { appDelegates } from "./delegates.ts";
+import { type OneTapTerms, signOneTap, signRevoke } from "./one-tap.ts";
 
 export type OneTapState =
   | { on: false }
@@ -30,11 +30,10 @@ export function defaultOneTapTerms(limits: {
   };
 }
 
-export function useOneTap() {
+export function useOneTap({ client, hint }: Caller) {
   const env = useQueryEnv();
   const live = useLive();
   const now = useServerSeconds();
-  const { client, hint } = useAccount();
   const owner = hint?.address;
   const catalog = useCatalog();
   const account = useMarketAccount(owner);

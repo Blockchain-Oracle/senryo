@@ -4,6 +4,8 @@
  * two, each living by its tone (good/bad 1.5 s, great 1.8 s, epic 2.2 s, warn 2.6 s), springing in (bouncier for epic)
  * and lifting out. The head comes from the chart's frame on the UI thread, so following it never renders React.
  */
+
+import { CALLOUT_LIFETIME_MS, type CalloutTone } from "@senryo/calls";
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -20,7 +22,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import type { Head } from "./chart/draw";
-import { CALLOUT_LIFETIME_MS, type CalloutTone } from "./reactions";
 
 const MAX_SHOWN = 2;
 const FLASH_MS = 900;

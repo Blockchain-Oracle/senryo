@@ -2,10 +2,12 @@
  * The session chip (pivot craft list): "One-tap on · 12 min · $76 left" while this phone's capped key is live, else
  * "Turn on one-tap". Turning it on or off is one Face ID; the caps are enforced on chain.
  */
+
+import { useOneTap } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { useOneTap } from "~/features/calls/useOneTap";
 import { fire } from "~/feedback/fire";
+import { useAccount } from "~/lib/account/provider";
 import { notify } from "~/lib/notify";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -14,7 +16,7 @@ const SECONDS_PER_MINUTE = 60;
 
 export function OneTapChip() {
   const { color } = useTheme();
-  const oneTap = useOneTap();
+  const oneTap = useOneTap(useAccount());
   const s = oneTap.state;
   const label = s.on
     ? `One-tap on · ${Math.ceil(s.secondsLeft / SECONDS_PER_MINUTE)} min · $${formatUnits(s.left, DOLLAR_DECIMALS, 0)} left`

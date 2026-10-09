@@ -20,6 +20,7 @@
     "@radix-ui/react-tooltip": "1.2.16",
     "@senryo/account": "workspace:*",
     "@senryo/api-client": "workspace:*",
+    "@senryo/calls": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",

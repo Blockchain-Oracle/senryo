@@ -9,6 +9,9 @@ const ROWS: readonly (readonly [string, string])[] = [
   ["/", "Search"],
   ...RAIL.map((item, i) => [String(i + 1), `Go to ${item.label}`] as const),
   [EVERYTHING_KEY, "Everything"],
+  ["↑", "Call Up (on Trade)"],
+  ["↓", "Call Down (on Trade)"],
+  ["C", "Cash out (on Trade)"],
   ["?", "This list"],
   ["esc", "Close a drawer or a dialog"],
 ];

@@ -1,12 +1,12 @@
 /**
  * The terminal (S5; Tradash's phone workspace on Senryo's windows): top bar, the full-bleed live chart with K, the
  * distance to the line, and the call panel. Ticks never render React here (`useLiveQuote` → shared values); the screen
- * renders on events and once a second for the countdown. A call is followed from tap to fill on the stream.
+ * renders on events and once a second for the countdown. The call flow — the panel's states, open and cash out with
+ * their guards, following a call to its fill — is `@senryo/calls` `useCallFlow`, the same on the web.
  */
-import type { IntentStatus } from "@senryo/api-client";
-import { clockText, formatUnits, proceedsFor } from "@senryo/core";
+import { useCallFlow } from "@senryo/calls/react";
 import { useLive } from "@senryo/live/react";
-import { useIntentStatus, useRefreshCaller, useWindowLoad } from "@senryo/query";
+import { useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -17,12 +17,12 @@ import { Button } from "~/components/kit/Button";
 import { LiveText } from "~/components/kit/LiveText";
 import { useDockInset } from "~/components/shell/dock-context";
 import { fire } from "~/feedback/fire";
+import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { useCallActions } from "../calls/useCall";
-import { CallPanel, type PanelState } from "./CallPanel";
+import { CallPanel } from "./CallPanel";
 import { CashOutSheet } from "./CashOutSheet";
 import { CrowdLine } from "./CrowdLine";
 import type { Head } from "./chart/draw";
@@ -38,10 +38,6 @@ import { useTerminal } from "./useTerminal";
 const DEFAULT_STAKE = 5_000_000;
 const MIN_STAKE = 1_000_000n;
 const CLOCK_SYNC_MS = 5_000;
-const DOLLAR_DECIMALS = 6;
-const CENTS = 2;
-const SETTLED = new Set(["filled", "refused", "failed"]);
-const WHOLE = 100n;
 
 export interface TerminalProps {
   /** First run: a title over the terminal and its one action (Skip before the call, Continue once it is live). */
@@ -63,16 +59,29 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const head = useSharedValue<Head | null>(null);
   const reactions = useRef<ReactionOverlayHandle>(null);
   useReactions(t.symbol, q.onTick, reactions);
-  const actions = useCallActions();
+  const account = useAccount();
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<"stake" | "part" | null>(null);
-  // Between the tap and the relay's answer: the signature (one-tap, or the passkey — maybe behind Face ID).
-  const [signing, setSigning] = useState(false);
-  const [pending, setPending] = useState<{ digest: `0x${string}`; label: string; kind: "open" | "close" } | null>(null);
-  const intent = useIntentStatus(pending?.digest);
-  const pendingRef = useRef(pending);
-  pendingRef.current = pending;
   const offsetMs = useSharedValue(live.clock.offset);
+  const flow = useCallFlow({
+    view: t,
+    caller: account,
+    stake,
+    latest: q.latest,
+    upBand: q.upBand,
+    downBand: q.downBand,
+    effects: {
+      cue: (c) =>
+        c === "press"
+          ? fire("press")
+          : c === "fail"
+            ? fire("fail", { sound: "error" })
+            : fire("filled", { cue: c === "filled-close" ? "close" : "open" }),
+      notify: (n) => notify({ ...n, tone: "warning" }),
+      needAccount: () => router.push(accountRequiredRoute("make a call")),
+      ...(onFilled ? { onFilled } : {}),
+    },
+  });
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -80,123 +89,6 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     }, CLOCK_SYNC_MS);
     return () => clearInterval(id);
   }, [live, offsetMs]);
-
-  // A call settles into a result: filled (sound and haptic), refused or failed (said plainly).
-  const status: IntentStatus | null = "value" in intent ? intent.value : null;
-  const refresh = useRefreshCaller(t.owner);
-  useEffect(() => {
-    if (!status || !SETTLED.has(status.state)) return;
-    refresh();
-    if (status.state === "filled") {
-      fire("filled", { cue: pendingRef.current?.kind === "close" ? "close" : "open" });
-      onFilled?.();
-    } else {
-      fire("fail", { sound: "error" });
-      notify({
-        title: status.state === "refused" ? "Call refused" : "Call didn't go through",
-        description: status.reason ?? "Your stake was not taken.",
-        tone: "warning",
-      });
-    }
-    setPending(null);
-  }, [status, onFilled, refresh]);
-
-  const stale = live.prices.isStale(t.symbol, Date.now());
-  const holding = t.position !== undefined && t.position.state !== "committed";
-  // Opens and cash-outs both stop 20 s before expiry (D-261): a holder is waiting for the result, not the next window.
-  const lockText = holding
-    ? `Cash-out closed · result in ${clockText(t.window.expiry - t.now)}`
-    : `Calls closed · next opens in ${clockText(t.window.expiry - t.now)}`;
-  const panel: PanelState = pending
-    ? { kind: "pending", status, label: pending.label }
-    : signing
-      ? { kind: "pending", status: null, label: "Signing…" }
-      : !t.window.trading
-        ? { kind: "locked", text: lockText }
-        : stale
-          ? { kind: "stale" }
-          : t.k === undefined
-            ? { kind: "no-price" }
-            : { kind: "ready" };
-
-  const guard = (): boolean => {
-    if (!t.owner) {
-      router.push(accountRequiredRoute("make a call"));
-      return false;
-    }
-    if (!actions.ready) return false;
-    return true;
-  };
-
-  const open = async (side: "up" | "down") => {
-    if (!guard()) return;
-    const band = side === "up" ? q.upBand : q.downBand;
-    const quote = side === "up" ? q.latest.current.up : q.latest.current.down;
-    if (quote?.refusal === "capacity") {
-      notify({
-        title: "This window is full",
-        description: `The pool has no more room on it. The next opens in ${clockText(t.window.expiry - t.now)}.`,
-        tone: "warning",
-      });
-      return;
-    }
-    if (!band || !quote || quote.refusal) {
-      notify({ title: "Not priced right now", description: "Try the next window.", tone: "warning" });
-      return;
-    }
-    if (t.balance !== undefined && t.balance < stake) {
-      notify({
-        title: "Not enough dollars",
-        description: `You have $${formatUnits(t.balance, DOLLAR_DECIMALS, CENTS)}.`,
-        tone: "warning",
-      });
-      return;
-    }
-    const label = side === "up" ? "Up" : "Down";
-    fire("press");
-    setSigning(true);
-    try {
-      const r = await actions.open({
-        window: t.window,
-        band: band.index,
-        bandLabel: label,
-        stake,
-        payoutQuote: quote.payout,
-      });
-      if (r.kind === "sent") setPending({ digest: r.status.digest, label: `Opening ${label}…`, kind: "open" });
-    } catch (error) {
-      fire("fail");
-      notify({ title: "Couldn't place the call", description: (error as Error).message, tone: "warning" });
-    } finally {
-      setSigning(false);
-    }
-  };
-
-  const close = async (percent: bigint = WHOLE) => {
-    const position = t.position;
-    const quote = q.latest.current.close;
-    if (!guard() || !position || !quote || quote.refusal) return;
-    fire("press");
-    // A part sells that share of the call at the live bid (proceeds are linear in shares, BandBook `_fillClose`).
-    const shares = (position.payout * percent) / WHOLE;
-    setSigning(true);
-    try {
-      const r = await actions.close({
-        window: t.window,
-        ticketId: position.ticketId,
-        band: position.band,
-        shares,
-        proceedsQuote: percent === WHOLE ? quote.proceeds : proceedsFor(shares, quote.bidE6),
-      });
-      const label = percent === WHOLE ? "Cashing out…" : `Cashing out ${percent}%…`;
-      if (r.kind === "sent") setPending({ digest: r.status.digest, label, kind: "close" });
-    } catch (error) {
-      fire("fail");
-      notify({ title: "Couldn't cash out", description: (error as Error).message, tone: "warning" });
-    } finally {
-      setSigning(false);
-    }
-  };
 
   return (
     <View style={[styles.fill, { backgroundColor: color.ground, paddingTop: insets.top + SPACE.sm }]}>
@@ -215,17 +107,17 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       <CrowdLine windowId={t.window.windowId} />
       <View style={{ paddingBottom: bottom }}>
         <CallPanel
-          state={panel}
+          state={flow.panel}
           stake={stake}
           balance={t.balance}
           onStake={(s) => setStoredStake(Number(s))}
           upOdds={q.upLine}
           downOdds={q.downLine}
-          holding={holding}
+          holding={flow.holding}
           cashOut={q.cashOut}
-          onUp={() => void open("up")}
-          onDown={() => void open("down")}
-          onClose={() => void close()}
+          onUp={() => void flow.open("up")}
+          onDown={() => void flow.open("down")}
+          onClose={() => void flow.close()}
           onCustom={() => setSheet("stake")}
           onClosePart={() => setSheet("part")}
         />
@@ -244,7 +136,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
         <CashOutSheet
           shares={t.position.payout}
           bidE6={q.latest.current.close.bidE6}
-          onPick={(pct) => void close(pct)}
+          onPick={(pct) => void flow.close(pct)}
           onClose={() => setSheet(null)}
         />
       ) : null}

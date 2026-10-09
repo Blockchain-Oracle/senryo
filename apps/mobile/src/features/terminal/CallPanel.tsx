@@ -3,7 +3,7 @@
  * Max), then UP and DOWN each with its live odds ("pays 1.92× · about 52%"), or — holding a call in this window — one
  * CLOSE with the cash-out value rolling. Honest states: calls closed for the lockout, a stale price, a call in flight.
  */
-import type { IntentStatus } from "@senryo/api-client";
+import type { PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -26,12 +26,7 @@ const CASH_SIZE = 20;
 const CASH_HEIGHT = 26;
 const CASH_WIDTH = 120;
 
-export type PanelState =
-  | { kind: "ready" }
-  | { kind: "pending"; status: IntentStatus | null; label: string }
-  | { kind: "locked"; text: string }
-  | { kind: "stale" }
-  | { kind: "no-price" };
+export type { PanelState } from "@senryo/calls/react";
 
 function CallButton({
   label,

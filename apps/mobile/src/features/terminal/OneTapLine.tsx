@@ -4,9 +4,10 @@
  * Turn on" — the next call then asks for the passkey, and this line says why before it does. A leaf: its once-a-second
  * countdown never re-renders the terminal. Nothing for a guest.
  */
+
+import { useOneTap } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { useOneTap } from "~/features/calls/useOneTap";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { notify } from "~/lib/notify";
@@ -17,8 +18,9 @@ const SECONDS_PER_MINUTE = 60;
 
 export function OneTapLine() {
   const { color } = useTheme();
-  const owner = useAccount().hint?.address;
-  const oneTap = useOneTap();
+  const account = useAccount();
+  const owner = account.hint?.address;
+  const oneTap = useOneTap(account);
   if (!owner) return null;
   const s = oneTap.state;
   if (s.on) {

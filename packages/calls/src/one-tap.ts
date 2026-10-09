@@ -13,8 +13,8 @@ import {
   sessionGrantRequest,
 } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
-import { INTENT_TTL_SEC, PERMIT_TTL_SEC, PROMPTS } from "./constants";
-import type { AccountView, Permit } from "./sign";
+import { INTENT_TTL_SEC, PERMIT_TTL_SEC, PROMPTS } from "./constants.ts";
+import type { AccountView, Permit } from "./sign.ts";
 
 export interface OneTapTerms {
   perCallCap: bigint;
