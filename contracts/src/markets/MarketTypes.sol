@@ -17,6 +17,10 @@ uint256 constant BPS = 10_000;
 int8 constant PRINT_EXPO = -8;
 int8 constant MIN_SOURCE_EXPO = -18;
 uint256 constant DECIMAL_BASE = 10;
+/// @dev Baskets (D-286, D-124): a basket starts at 1,000 points (× 1e8) at its frozen base prices; 2–8 members.
+uint256 constant BASKET_BASE_POINTS_E8 = 100_000_000_000;
+uint256 constant BASKET_MIN_MEMBERS = 2;
+uint256 constant BASKET_MAX_MEMBERS = 8;
 
 // ---------------------------------------------------------------------------------------------------------------
 // Windows (D-261, D-265)

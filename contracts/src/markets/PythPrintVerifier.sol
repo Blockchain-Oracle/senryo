@@ -42,7 +42,7 @@ contract PythPrintVerifier is IPrintVerifier {
     }
 
     /// @inheritdoc IPrintVerifier
-    function fee(bytes calldata proof) external view returns (uint256) {
+    function fee(bytes calldata proof) external view virtual returns (uint256) {
         return pyth.getUpdateFee(abi.decode(proof, (bytes[])));
     }
 
@@ -51,6 +51,7 @@ contract PythPrintVerifier is IPrintVerifier {
     function verifyPrint(bytes calldata proof, bytes32 feedId, uint40 t)
         external
         payable
+        virtual
         returns (int64 priceE8, uint64 confE8, uint40 publishTime)
     {
         bytes[] memory updates = abi.decode(proof, (bytes[]));
@@ -61,7 +62,16 @@ contract PythPrintVerifier is IPrintVerifier {
         IPyth.PriceFeed[] memory feeds =
             pyth.parsePriceFeedUpdatesUnique{value: msg.value}(updates, ids, uint64(t), uint64(t) + graceSec);
         if (feeds.length != 1 || feeds[0].id != feedId) revert NotUnique(feedId, t);
-        IPyth.Price memory p = feeds[0].price;
+        return _checked(feeds[0].price, t);
+    }
+
+    /// @dev One print's quality and time, normalised: inside `[t, t + grace]` and not in the future, positive, its
+    ///      confidence within `maxConfBps` of the price.
+    function _checked(IPyth.Price memory p, uint40 t)
+        internal
+        view
+        returns (int64 priceE8, uint64 confE8, uint40 publishTime)
+    {
         // Block time only refuses a future print; it never selects one.
         // forge-lint: disable-next-line(block-timestamp)
         if (p.publishTime < t || p.publishTime > uint256(t) + graceSec || p.publishTime > block.timestamp) {
