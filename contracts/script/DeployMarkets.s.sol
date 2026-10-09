@@ -10,6 +10,7 @@ import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {IMarketCalendar} from "../src/oracle/interfaces/IMarketCalendar.sol";
 import {DuelArena} from "../src/games/DuelArena.sol";
 import {DuelClocks, DuelTier} from "../src/games/DuelTypes.sol";
+import {EventBook} from "../src/events/EventBook.sol";
 import {BandReserve} from "../src/markets/BandReserve.sol";
 import {Windows} from "../src/markets/Windows.sol";
 import {IWindows} from "../src/markets/interfaces/IWindows.sol";
@@ -30,6 +31,8 @@ contract DeployMarkets is MarketsBase {
     uint64 internal constant MINTER_ROLE = 1;
     /// @dev AccessManager role that pairs duel entries (`DuelArena.openMatch`): the api's matchmaker, on the sponsor (D-294).
     uint64 internal constant DUEL_ROLE = 5;
+    /// @dev AccessManager role that lists yes/no events (`EventBook.listEvent`): the keeper (D-296).
+    uint64 internal constant EVENTS_ROLE = 6;
 
     function run() external {
         _readCatalog();
@@ -74,6 +77,7 @@ contract DeployMarkets is MarketsBase {
         _listSeries(windows, reserve);
         _seedPool(reserve, collateral, admin);
         _earn(manager, reserve, admin, true);
+        _events(manager, reserve, keeper);
         vm.stopBroadcast();
 
         _writeBook(false);
@@ -162,5 +166,35 @@ contract DeployMarkets is MarketsBase {
         manager.labelRole(DUEL_ROLE, "DUEL");
         manager.setTargetFunctionRole(address(arena), fns, DUEL_ROLE);
         manager.grantRole(DUEL_ROLE, sponsor, 0);
+    }
+
+    /// @dev The yes/no book (D-296) on this reserve, when the catalogue's `.events` is enabled (Practice only): its
+    ///      limits, its one committee, `listEvent` for the keeper, and the pool's way in for its fees (after `_earn`).
+    function _events(AccessManager manager, BandReserve reserve, address keeper) internal {
+        if (!_json.readBool(".events.enabled")) return;
+        uint32 wait = uint32(_json.readUint(".events.dissentWaitSec"));
+        uint64 minStake = uint64(_json.readUint(".events.minStake"));
+        uint64 maxStake = uint64(_json.readUint(".events.maxStake"));
+        EventBook book = new EventBook(address(manager), reserve, wait, minStake, maxStake);
+        _record(
+            "EventBook",
+            address(book),
+            abi.encodePacked(
+                type(EventBook).creationCode, abi.encode(address(manager), address(reserve), wait, minStake, maxStake)
+            ),
+            true
+        );
+        book.setCommittee(
+            uint16(_json.readUint(".events.committeeId")),
+            _json.readAddressArray(".events.members"),
+            uint8(_json.readUint(".events.quorum")),
+            _json.readStringArray(".events.names")
+        );
+        bytes4[] memory fns = new bytes4[](1);
+        fns[0] = EventBook.listEvent.selector;
+        manager.labelRole(EVENTS_ROLE, "EVENTS");
+        manager.setTargetFunctionRole(address(book), fns, EVENTS_ROLE);
+        manager.grantRole(EVENTS_ROLE, keeper, 0);
+        manager.grantRole(FUND_ROLE, address(book), 0);
     }
 }

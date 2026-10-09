@@ -34,8 +34,10 @@ abstract contract MarketsBase is Script {
     string[5] internal CLASSES = ["crypto", "equity", "basket", "redstone", "redstone-basket"];
     /// @dev AccessManager role that keeps market calendars current (the keeper's job, D-289); the admin holds it too.
     uint64 internal constant CALENDAR_ROLE = 2;
-    /// @dev AccessManager role on the pool's money doors (`fund`, `defund`): held by `PoolShares` alone (D-287).
+    /// @dev AccessManager role on the pool's way out (`defund`): held by `PoolShares` alone (D-287).
     uint64 internal constant POOL_ROLE = 3;
+    /// @dev AccessManager role on the pool's way in (`fund`): `PoolShares`, and the event book sweeping its fees (D-296).
+    uint64 internal constant FUND_ROLE = 7;
     /// @dev AccessManager role that may fire a trail (`fireTrail`): the api's exit watcher, beside the live prices,
     ///      times the ratcheting stop and fires from the sponsor's lane (D-292).
     uint64 internal constant EXIT_ROLE = 4;
@@ -209,7 +211,8 @@ abstract contract MarketsBase is Script {
 
     // ------------------------------------------------------------------------------------------------ Earn
 
-    /// @dev `PoolShares` on the reserve (D-287), once: the pool's money doors under POOL_ROLE held by it alone, and the
+    /// @dev `PoolShares` on the reserve (D-287), once: the pool's way out under POOL_ROLE held by it alone, its way in
+    ///      under FUND_ROLE (which the event book shares, D-296), and the
     ///      pool's value minted as the house's shares (`house`) — on mainnet that waits for the owner's seed (S9).
     ///      Skipped when the book already has it, unless `fresh` (a new network ignores the old book).
     function _earn(AccessManager manager, BandReserve reserve, address house, bool fresh) internal {
@@ -221,12 +224,15 @@ abstract contract MarketsBase is Script {
             abi.encodePacked(type(PoolShares).creationCode, abi.encode(address(manager), address(reserve))),
             true
         );
-        bytes4[] memory doors = new bytes4[](2);
-        doors[0] = reserve.fund.selector;
-        doors[1] = reserve.defund.selector;
+        bytes4[] memory way = new bytes4[](1);
+        way[0] = reserve.defund.selector;
         manager.labelRole(POOL_ROLE, "POOL");
-        manager.setTargetFunctionRole(address(reserve), doors, POOL_ROLE);
+        manager.setTargetFunctionRole(address(reserve), way, POOL_ROLE);
         manager.grantRole(POOL_ROLE, address(shares), 0);
+        way[0] = reserve.fund.selector;
+        manager.labelRole(FUND_ROLE, "FUND");
+        manager.setTargetFunctionRole(address(reserve), way, FUND_ROLE);
+        manager.grantRole(FUND_ROLE, address(shares), 0);
         if (shares.poolValue() > 0) shares.seed(house);
     }
 

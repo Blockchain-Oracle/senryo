@@ -28,6 +28,7 @@ const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 const CONTRACTS = [
   ["BandReserve.sol", "BandReserve"],
   ["DuelArena.sol", "DuelArena"],
+  ["EventBook.sol", "EventBook"],
   ["Windows.sol", "Windows"],
   ["PythPrintVerifier.sol", "PythPrintVerifier"],
   ["BasketPrintVerifier.sol", "BasketPrintVerifier"],

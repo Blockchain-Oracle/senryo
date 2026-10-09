@@ -91,6 +91,24 @@
     ],
     "revealWindowSec": 120
   },
+  "events": {
+    "committeeId": 1,
+    "dissentWaitSec": 600,
+    "enabled": true,
+    "maxStake": "1000000000",
+    "members": [
+      "0xC1Ce51ff6D7FAA5828d4F79C283d2E59bFb54DB9",
+      "0x7AE4eD9435c5a201f6e991a6a3FAD6f143A3f190",
+      "0xeAC40F60b343329C747F1403910E27aEb091db34"
+    ],
+    "minStake": "1000000",
+    "names": [
+      "League feed",
+      "ESPN",
+      "theScore"
+    ],
+    "quorum": 2
+  },
   "params": {
     "halfSpreadE6": 20000,
     "maxExpiryReserved": "500000000000",

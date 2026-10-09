@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { CALENDARS } from "../packages/config/src/calendars.ts";
 import { BAND_KIND_CODE, bandMenu, feedIdOf, MARKETS, marketsOn, sigmaE8Of } from "../packages/config/src/catalog.ts";
 import { DUEL, DUEL_TIERS } from "../packages/config/src/duel.ts";
+import { EVENT_COMMITTEES, EVENT_LIMITS, EVENTS } from "../packages/config/src/events.ts";
 import { MAINNET_USDC } from "../packages/config/src/money.ts";
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "../packages/config/src/networks.ts";
 import {
@@ -67,6 +68,23 @@ function calendarsOf(markets, nowSec) {
   });
 }
 
+/** Yes/no events (D-296): the book's limits and dissent wait, and its one committee; `enabled: false` deploys none. */
+function eventsOf(chainId) {
+  const limits = EVENT_LIMITS[chainId];
+  const committee = EVENT_COMMITTEES[chainId];
+  const on = limits !== null && committee !== null;
+  return sorted({
+    committeeId: committee?.id ?? 0,
+    dissentWaitSec: EVENTS.dissentWaitSec,
+    enabled: on,
+    maxStake: (limits?.maxStake ?? 0n).toString(),
+    members: committee?.members.map((m) => m.address) ?? [],
+    minStake: (limits?.minStake ?? 0n).toString(),
+    names: committee?.members.map((m) => m.name) ?? [],
+    quorum: committee?.quorum ?? 0,
+  });
+}
+
 function exportChain(chainId) {
   const terms = POOL_TERMS[chainId];
   const markets = marketsOn(chainId);
@@ -109,6 +127,7 @@ function exportChain(chainId) {
       pots: DUEL_TIERS[chainId].map((t) => t.pot.toString()),
       revealWindowSec: DUEL.revealWindowSec,
     }),
+    events: eventsOf(chainId),
     poolSeed: chainId === TESTNET_CHAIN_ID ? TESTNET_POOL_SEED.toString() : "0",
     pyth: PYTH_RECEIVER[chainId],
     series,

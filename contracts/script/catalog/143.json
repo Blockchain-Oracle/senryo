@@ -89,6 +89,16 @@
     ],
     "revealWindowSec": 120
   },
+  "events": {
+    "committeeId": 0,
+    "dissentWaitSec": 600,
+    "enabled": false,
+    "maxStake": "0",
+    "members": [],
+    "minStake": "0",
+    "names": [],
+    "quorum": 0
+  },
   "params": {
     "halfSpreadE6": 20000,
     "maxExpiryReserved": "250000000",
