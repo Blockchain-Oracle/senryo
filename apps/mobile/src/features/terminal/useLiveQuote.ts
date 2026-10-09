@@ -1,14 +1,16 @@
 /**
  * Every tick, on the JS thread and without rendering React (D-272): the shared quote pass (`@senryo/calls`
- * `quoteTick`: Up and Down for the current stake with the contracts' own maths, the open call's cash-out, the distance
+ * `quoteTick`: the mode's two bands for the current stake with the contracts' own maths, the open call's cash-out, the distance
  * to K, the chart's overlay) written into shared values the chart, the odometers and the quote lines read. The latest
  * quotes stay readable synchronously for the tap (the limit is the quote the user saw).
  */
 import type { WindowLoad } from "@senryo/api-client";
 import {
+  type CallMode,
   type QuoteTick as CallsQuoteTick,
   type ChartOverlay,
   dollars,
+  offerOf,
   type PoolTerms,
   pricingFor,
   type Quotes,
@@ -24,16 +26,16 @@ import type { TerminalView } from "./useTerminal";
 
 export type QuoteTick = CallsQuoteTick;
 
-export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | undefined) {
+export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | undefined, mode: CallMode) {
   const live = useLive();
-  const upLine = useSharedValue("");
-  const downLine = useSharedValue("");
+  const firstLine = useSharedValue("");
+  const secondLine = useSharedValue("");
   const lineText = useSharedValue("");
   const cashOut = useSharedValue<LiveFigure>({ text: "", trend: 0 });
   const overlay = useSharedValue<ChartOverlay | null>(null);
   const lastProceeds = useRef<bigint | null>(null);
   const lastPnl = useRef<bigint | null>(null);
-  const latest = useRef<Quotes>({ up: null, down: null, close: null });
+  const latest = useRef<Quotes>({ first: null, second: null, close: null });
   // Tick listeners (the reactions): fed from the same pass as the quotes, so nothing is computed twice.
   const listeners = useRef(new Set<(tick: QuoteTick) => void>());
   const onTick = useCallback((listener: (tick: QuoteTick) => void) => {
@@ -44,8 +46,7 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
   }, []);
 
   const bands = t.series?.bands;
-  const upBand = bands?.find((b) => b.kind === "up");
-  const downBand = bands?.find((b) => b.kind === "down");
+  const offer = useMemo(() => offerOf(mode, bands, t.k), [mode, bands, t.k]);
   const position = t.position;
   const positionBand = position ? bands?.[position.band] : undefined;
   // The load surcharge and the pool's room come from `/v1/markets/load` (polled; refreshed on the user's fills).
@@ -55,9 +56,9 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
     const run = () => {
       const tick = live.prices.latest(t.symbol);
       if (!tick || !t.series || !pricing || t.k === undefined) {
-        upLine.value = downLine.value = lineText.value = "";
+        firstLine.value = secondLine.value = lineText.value = "";
         overlay.value = null;
-        latest.current = { up: null, down: null, close: null };
+        latest.current = { first: null, second: null, close: null };
         return;
       }
       const pass = quoteTick({
@@ -68,12 +69,11 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
         sigmaE8: t.series.sigmaE8,
         pricing,
         stake,
-        up: upBand,
-        down: downBand,
+        offer: [offer[0]?.band, offer[1]?.band],
         position: position && positionBand ? { call: position, band: positionBand } : undefined,
       });
-      upLine.value = pass.upLine;
-      downLine.value = pass.downLine;
+      firstLine.value = pass.firstLine;
+      secondLine.value = pass.secondLine;
       lineText.value = pass.lineText;
       if (pass.proceeds !== null && pass.pnl !== null) {
         cashOut.value = { text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) };
@@ -83,7 +83,7 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
       } else {
         overlay.value = pass.overlay;
       }
-      latest.current = { up: pass.up, down: pass.down, close: pass.close };
+      latest.current = { first: pass.first, second: pass.second, close: pass.close };
       const reactionTick: QuoteTick = {
         t: performance.now(),
         price: priceFromE8(tick.priceE8),
@@ -100,17 +100,16 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
     t.k,
     t.window.expiry,
     stake,
-    upBand,
-    downBand,
+    offer,
     position,
     positionBand,
     pricing,
-    upLine,
-    downLine,
+    firstLine,
+    secondLine,
     lineText,
     cashOut,
     overlay,
   ]);
 
-  return { upLine, downLine, lineText, cashOut, overlay, latest, upBand, downBand, onTick };
+  return { firstLine, secondLine, lineText, cashOut, overlay, latest, offer, onTick };
 }

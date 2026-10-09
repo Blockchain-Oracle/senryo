@@ -6,6 +6,7 @@
  * never render React (`useLiveQuote` → live values and the chart's ref); the screen renders once a second for the
  * countdown and on events. The call flow is `@senryo/calls` `useCallFlow`, the phone's own.
  */
+import { type CallMode, isCallMode } from "@senryo/calls";
 import { DEFAULT_CADENCE, useCallFlow, useCallWindow, useMarketLine } from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec } from "@senryo/config";
 import { useWindowLoad } from "@senryo/query";
@@ -40,11 +41,14 @@ const WHOLE_NUMBER = /^\d+$/;
 function useTerminalChoices() {
   const [storedCadence, setCadence] = useStoredString(TERMINAL_STORAGE.cadence);
   const [storedStake, setStake] = useStoredString(TERMINAL_STORAGE.stake);
+  const [storedMode, setMode] = useStoredString(TERMINAL_STORAGE.mode);
   const cadence = CADENCES_SEC.find((c) => String(c) === storedCadence) ?? DEFAULT_CADENCE;
   const stake = storedStake && WHOLE_NUMBER.test(storedStake) ? BigInt(storedStake) : DEFAULT_STAKE;
   return {
     cadence,
     stake,
+    mode: isCallMode(storedMode) ? storedMode : ("updown" as CallMode),
+    setMode: (m: CallMode) => setMode(m),
     setCadence: (c: CadenceSec) => setCadence(String(c)),
     setStake: (s: bigint) => setStake(String(s)),
   };
@@ -57,7 +61,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   // Nothing is asked of the api before the server clock has synced (the static HTML renders at second 0).
   const synced = t.now > 0;
   const load = useWindowLoad(synced ? t.window.expiry : undefined);
-  const q = useLiveQuote(t, choices.stake, "value" in load ? load.value : undefined);
+  const q = useLiveQuote(t, choices.stake, "value" in load ? load.value : undefined, choices.mode);
   const session = useMarketLine(symbol);
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
@@ -68,8 +72,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
     caller: account,
     stake: choices.stake,
     latest: q.latest,
-    upBand: q.upBand,
-    downBand: q.downBand,
+    offer: q.offer,
     effects: {
       cue: (c) =>
         c === "press"
@@ -97,7 +100,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
     },
   });
 
-  // ↑ Up, ↓ Down, C cash out — when nothing else holds the keyboard.
+  // ↑ the first button (Up, Range, Moonshot), ↓ the second (Down, Crash), C cash out — when nothing else holds the keyboard.
   const keys = useRef({ flow, holding: flow.holding, trading: session.trading });
   keys.current = { flow, holding: flow.holding, trading: session.trading };
   useEffect(() => {
@@ -106,7 +109,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
       const { flow: f, holding } = keys.current;
       if (!holding && keys.current.trading && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
         event.preventDefault();
-        void f.open(event.key === "ArrowUp" ? "up" : "down");
+        void f.open(event.key === "ArrowUp" ? 0 : 1);
       } else if (holding && event.key.toLowerCase() === "c") {
         event.preventDefault();
         void f.close();
@@ -148,12 +151,14 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
           stake={choices.stake}
           balance={t.balance}
           onStake={choices.setStake}
-          upOdds={q.upLine}
-          downOdds={q.downLine}
+          mode={choices.mode}
+          onMode={choices.setMode}
+          offer={q.offer}
+          firstOdds={q.firstLine}
+          secondOdds={q.secondLine}
           holding={flow.holding}
           cashOut={q.cashOut}
-          onUp={() => void flow.open("up")}
-          onDown={() => void flow.open("down")}
+          onPick={(slot) => void flow.open(slot)}
           onClose={() => void flow.close()}
           onCustom={() => setOpen("stake")}
           onClosePart={() => setOpen("part")}

@@ -1,6 +1,7 @@
 "use client";
 /**
- * The terminal's remembered choices on this device (the phone keeps them in MMKV): the lane and the last stake. Read
+ * The terminal's remembered choices on this device (the phone keeps them in MMKV): the lane, the last stake and the
+ * way to call. Read
  * through `useSyncExternalStore`; the static HTML uses the defaults and the client corrects at once.
  */
 import { useCallback, useSyncExternalStore } from "react";
@@ -8,6 +9,7 @@ import { useCallback, useSyncExternalStore } from "react";
 export const TERMINAL_STORAGE = {
   cadence: "senryo.terminal.cadence.v1",
   stake: "senryo.terminal.stake.v1",
+  mode: "senryo.terminal.mode.v1",
 } as const;
 
 const listeners = new Set<() => void>();

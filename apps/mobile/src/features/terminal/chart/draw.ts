@@ -1,7 +1,7 @@
 /**
  * One frame of the live chart, recorded into a Skia picture on the UI thread (immediate mode: the number of ticks,
  * labels and tags changes every frame). Tradash's order (Owarine `chart-engine.ts`/`chart-draw.ts`): dots and the 千両
- * watermark behind; then on one layer the grid, your side's zone against K, the line's 6 px glow and 2 px stroke, and
+ * watermark behind; then on one layer the grid, your band's winning zone, the line's 6 px glow and 2 px stroke, and
  * the left 32 % erased with a gradient; then the axis, the K and entry levels, the head dot and the rolling pill.
  * Native calls are the cost (≤ 2 ms gate): the line and the axis ticks are each one path parsed from a string, the
  * dots one picture, and paints come pre-set from the kit (`kit.ts`).
@@ -146,7 +146,7 @@ function drawLevel(
   const p = k.paints.level;
   p.setColor(color);
   p.setAlphaf(LEVEL_ALPHA[level.kind]);
-  p.setPathEffect(level.kind === "line" ? k.dash.line : k.dash.entry);
+  p.setPathEffect(k.dash[level.kind]);
   const ry = Math.round(y) + HALF_PIXEL;
   c.drawLine(0, ry, plotW, ry, p);
   const top = y - TAG_H / HALF;
@@ -200,10 +200,11 @@ export function drawFrame(
     const y = Math.round(yOf(t.value, win)) + HALF_PIXEL;
     c.drawLine(0, y, plotW, y, grid);
   }
-  if (o?.line !== null && o?.line !== undefined && o.zone) {
-    const ky = Math.min(win.bottom + PAD_Y, Math.max(win.top - PAD_Y, yOf(o.line, win)));
-    const top = o.zone === "above" ? 0 : ky;
-    const bottom = o.zone === "above" ? ky : h;
+  if (o?.zone) {
+    // The held band's winning prices; an open end runs off the chart (higher prices sit higher).
+    const at = (price: number) => Math.min(win.bottom + PAD_Y, Math.max(win.top - PAD_Y, yOf(price, win)));
+    const top = o.zone.to === null ? 0 : at(o.zone.to);
+    const bottom = o.zone.from === null ? h : at(o.zone.from);
     if (bottom > top) c.drawRect(Skia.XYWHRect(0, top, plotW, bottom - top), fill(k, tone, ZONE_ALPHA));
   }
   // The line as one path string: about one point per pixel (the ring holds more samples than the plot has pixels,

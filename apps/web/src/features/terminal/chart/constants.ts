@@ -74,8 +74,9 @@ export const MARK = "千両";
 export const MARK_ALPHA = 0.07;
 export const MARK_MAX_W = 260;
 export const MARK_PLOT_SHARE = 0.5;
-export const LEVEL_ALPHA = { line: 0.7, entry: 0.55 } as const;
-export const LEVEL_DASH = { line: [2, 3], entry: [4, 4] } as const;
+/** K (fine dash), the entry, and a band's edge or strike (long dash: where Range and Moonshot are decided). */
+export const LEVEL_ALPHA = { line: 0.7, entry: 0.55, edge: 0.6 } as const;
+export const LEVEL_DASH = { line: [2, 3], entry: [4, 4], edge: [8, 4] } as const;
 export const HALF_PIXEL = 0.5;
 
 /** Canvas fonts (the phone's sizes; Inter with tabular figures stands in for the phone's monospace). */

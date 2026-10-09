@@ -1,8 +1,9 @@
 /**
  * The terminal's call flow, both apps (S5 → S6): what the panel shows — ready, a call in flight ("Signing…", then
  * "Opening Up…" until the stream says filled), calls closed for the lockout (D-261: opens and cash-outs both stop 20 s
- * before expiry), a stale price, no K yet — and the two actions with their guards: open Up or Down at the quote the
- * user saw (window full, not priced, not enough dollars said plainly), cash out all or part (proceeds are linear in
+ * before expiry), a stale price, no K yet — and the two actions with their guards: open the mode's first or second
+ * band (Up / Down, Range, Moonshot / Crash — S7.4) at the quote the user saw (window full, not priced, not enough
+ * dollars said plainly), cash out all or part (proceeds are linear in
  * shares, BandBook `_fillClose`). The platform supplies the effects: feedback, notices, the sign-in prompt.
  */
 import type { IntentStatus } from "@senryo/api-client";
@@ -11,6 +12,7 @@ import { useLive } from "@senryo/live/react";
 import { useIntentStatus, useRefreshCaller } from "@senryo/query";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
+import type { Offer } from "./modes.ts";
 import type { Quotes } from "./quote.ts";
 import { useCallActions } from "./use-call.ts";
 import type { CallWindowView } from "./use-call-window.ts";
@@ -46,12 +48,15 @@ export interface CallFlowInput {
   caller: Caller;
   stake: bigint;
   latest: RefObject<Quotes>;
-  upBand: { index: number } | undefined;
-  downBand: { index: number } | undefined;
+  /** The mode's two buttons (`offerOf`). */
+  offer: Offer;
   effects: CallFlowEffects;
 }
 
-export function useCallFlow({ view: t, caller, stake, latest, upBand, downBand, effects }: CallFlowInput) {
+/** Which offered button a tap places: the first (Up, Range, Moonshot) or the second (Down, Crash). */
+export type OfferSlot = 0 | 1;
+
+export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: CallFlowInput) {
   const live = useLive();
   const actions = useCallActions(caller);
   // Between the tap and the relay's answer: the signature (one-tap, or the passkey prompt).
@@ -109,11 +114,11 @@ export function useCallFlow({ view: t, caller, stake, latest, upBand, downBand, 
     return actions.ready;
   };
 
-  const open = async (side: "up" | "down") => {
+  const open = async (slot: OfferSlot) => {
     if (!guard()) return;
     const fx = effectsRef.current;
-    const band = side === "up" ? upBand : downBand;
-    const quote = side === "up" ? latest.current?.up : latest.current?.down;
+    const band = offer[slot];
+    const quote = slot === 0 ? latest.current?.first : latest.current?.second;
     if (quote?.refusal === "capacity") {
       fx.notify({
         title: "This window is full",
@@ -132,7 +137,7 @@ export function useCallFlow({ view: t, caller, stake, latest, upBand, downBand, 
       });
       return;
     }
-    const label = side === "up" ? "Up" : "Down";
+    const label = band.label;
     fx.cue("press");
     setSigning(true);
     try {

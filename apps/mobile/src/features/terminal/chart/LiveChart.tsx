@@ -70,6 +70,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
         {
           line: Skia.PathEffect.MakeDash([...LEVEL_DASH.line], 0),
           entry: Skia.PathEffect.MakeDash([...LEVEL_DASH.entry], 0),
+          edge: Skia.PathEffect.MakeDash([...LEVEL_DASH.edge], 0),
         },
         {
           solid: Skia.Color(CHART_ERASER.solid),

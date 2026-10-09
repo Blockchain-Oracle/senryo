@@ -6,8 +6,10 @@
  */
 import type { WindowLoad } from "@senryo/api-client";
 import {
+  type CallMode,
   type ChartOverlay,
   dollars,
+  offerOf,
   type PoolTerms,
   pricingFor,
   type Quotes,
@@ -26,19 +28,24 @@ export interface CashOutFigure {
   trend: number;
 }
 
-export function useLiveQuote(t: CallWindowView, stake: bigint, load: WindowLoad | undefined) {
+export function useLiveQuote(
+  t: CallWindowView,
+  stake: bigint,
+  load: WindowLoad | undefined,
+  mode: CallMode = "updown",
+) {
   const live = useLive();
   const values = useMemo(
     () => ({
-      upLine: liveValue(""),
-      downLine: liveValue(""),
+      firstLine: liveValue(""),
+      secondLine: liveValue(""),
       lineText: liveValue(""),
       cashOut: liveValue<CashOutFigure>({ text: "", trend: 0 }),
     }),
     [],
   );
   const overlay = useRef<ChartOverlay | null>(null);
-  const latest = useRef<Quotes>({ up: null, down: null, close: null });
+  const latest = useRef<Quotes>({ first: null, second: null, close: null });
   const lastProceeds = useRef<bigint | null>(null);
   const lastPnl = useRef<bigint | null>(null);
   const listeners = useRef(new Set<(tick: QuoteTick) => void>());
@@ -50,8 +57,7 @@ export function useLiveQuote(t: CallWindowView, stake: bigint, load: WindowLoad 
   }, []);
 
   const bands = t.series?.bands;
-  const upBand = bands?.find((b) => b.kind === "up");
-  const downBand = bands?.find((b) => b.kind === "down");
+  const offer = useMemo(() => offerOf(mode, bands, t.k), [mode, bands, t.k]);
   const position = t.position;
   const positionBand = position ? bands?.[position.band] : undefined;
   const pricing = useMemo(() => (t.terms ? pricingFor(t.terms as PoolTerms, load) : undefined), [t.terms, load]);
@@ -60,11 +66,11 @@ export function useLiveQuote(t: CallWindowView, stake: bigint, load: WindowLoad 
     const run = () => {
       const tick = live.prices.latest(t.symbol);
       if (!tick || !t.series || !pricing || t.k === undefined) {
-        values.upLine.set("");
-        values.downLine.set("");
+        values.firstLine.set("");
+        values.secondLine.set("");
         values.lineText.set("");
         overlay.current = null;
-        latest.current = { up: null, down: null, close: null };
+        latest.current = { first: null, second: null, close: null };
         return;
       }
       const pass = quoteTick({
@@ -75,12 +81,11 @@ export function useLiveQuote(t: CallWindowView, stake: bigint, load: WindowLoad 
         sigmaE8: t.series.sigmaE8,
         pricing,
         stake,
-        up: upBand,
-        down: downBand,
+        offer: [offer[0]?.band, offer[1]?.band],
         position: position && positionBand ? { call: position, band: positionBand } : undefined,
       });
-      values.upLine.set(pass.upLine);
-      values.downLine.set(pass.downLine);
+      values.firstLine.set(pass.firstLine);
+      values.secondLine.set(pass.secondLine);
       values.lineText.set(pass.lineText);
       if (pass.proceeds !== null && pass.pnl !== null) {
         values.cashOut.set({ text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) });
@@ -90,26 +95,13 @@ export function useLiveQuote(t: CallWindowView, stake: bigint, load: WindowLoad 
       } else {
         overlay.current = pass.overlay;
       }
-      latest.current = { up: pass.up, down: pass.down, close: pass.close };
+      latest.current = { first: pass.first, second: pass.second, close: pass.close };
       const reaction: QuoteTick = { t: performance.now(), price: priceFromE8(tick.priceE8), position: pass.reading };
       for (const listener of listeners.current) listener(reaction);
     };
     run();
     return live.prices.subscribe(t.symbol, run);
-  }, [
-    live,
-    t.symbol,
-    t.series,
-    t.k,
-    t.window.expiry,
-    stake,
-    upBand,
-    downBand,
-    position,
-    positionBand,
-    pricing,
-    values,
-  ]);
+  }, [live, t.symbol, t.series, t.k, t.window.expiry, stake, offer, position, positionBand, pricing, values]);
 
-  return { ...values, overlay, latest, upBand, downBand, onTick };
+  return { ...values, overlay, latest, offer, onTick };
 }

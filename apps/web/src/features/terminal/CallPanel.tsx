@@ -1,16 +1,20 @@
 "use client";
 /**
- * The call panel (the phone's `CallPanel`; Tradash's UP/DOWN ↔ CLOSE, Owarine's web buttons): the stake (the last one
- * remembered; $1 · $5 · $10 · $25 · any amount · Max), then UP and DOWN each with its live odds ("pays 1.92× · about
- * 52%"), or — holding a call in this window — CASH OUT with the value it returns now, and a part (25 / 50 %). Honest
+ * The call panel (the phone's `CallPanel`; Tradash's UP/DOWN ↔ CLOSE, Owarine's web buttons): the way to call (Up /
+ * Down · Range · Moonshot, S7.4), the stake (the last one remembered; $1 · $5 · $10 · $25 · any amount · Max), then the
+ * mode's buttons — UP and DOWN, RANGE between its edges, MOONSHOT ▲ and CRASH ▼ beyond their strikes — each with
+ * where it wins and its live odds ("pays 2.61× · about 37%"), or — holding a call in this window — CASH OUT with the
+ * value it returns now, and a part (25 / 50 %). Honest
  * states: calls closed for the lockout, a stale price, a call in flight, and a market outside its session ("TSLA is
  * closed · Opens Mon 09:30 ET", D-289). Keys: ↑ Up, ↓ Down, C cash out.
  */
-import type { MarketLine } from "@senryo/calls";
-import type { PanelState } from "@senryo/calls/react";
+import { CALL_MODES, type CallMode, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
+import type { OfferSlot, PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
-import { ArrowDown, ArrowDownUp, ArrowUp, Ellipsis } from "lucide-react";
+import { ArrowDown, ArrowDownUp, ArrowUp, Ellipsis, MoveVertical, Rocket, TrendingDown } from "lucide-react";
+import type { ComponentType } from "react";
 import { LiveText } from "@/components/kit/live-text";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { fire } from "@/lib/feedback";
 import type { LiveValue } from "@/lib/terminal/live-value";
 import { cn } from "@/lib/utils";
@@ -39,15 +43,49 @@ export interface CallPanelProps {
   stake: bigint;
   balance: bigint | undefined;
   onStake: (stake: bigint) => void;
-  upOdds: LiveValue<string>;
-  downOdds: LiveValue<string>;
+  mode: CallMode;
+  onMode: (mode: CallMode) => void;
+  offer: Offer;
+  firstOdds: LiveValue<string>;
+  secondOdds: LiveValue<string>;
   holding: boolean;
   cashOut: LiveValue<CashOutFigure>;
-  onUp: () => void;
-  onDown: () => void;
+  onPick: (slot: OfferSlot) => void;
   onClose: () => void;
   onCustom: () => void;
   onClosePart: () => void;
+}
+
+const ICON: Readonly<Record<OfferedBand["band"]["kind"], ComponentType<{ className?: string; strokeWidth?: number }>>> =
+  { up: ArrowUp, down: ArrowDown, range: MoveVertical, moonshot: Rocket, crash: TrendingDown };
+const TONE_CLASS = { up: "is-up", down: "is-down", neutral: "is-neutral" } as const;
+
+function CallButton(p: {
+  offered: OfferedBand;
+  odds: LiveValue<string>;
+  disabled: boolean;
+  onPick: () => void;
+  shortcut: string;
+}) {
+  const Icon = ICON[p.offered.band.kind];
+  const directional = p.offered.band.kind === "up" || p.offered.band.kind === "down";
+  return (
+    <button
+      type="button"
+      className={cn("terminal-call", TONE_CLASS[p.offered.tone])}
+      disabled={p.disabled}
+      onClick={p.onPick}
+      aria-label={`Call ${p.offered.label}${directional ? "" : `, ${p.offered.where}`}`}
+      aria-keyshortcuts={p.shortcut}
+    >
+      <span className="terminal-call-label">
+        <Icon aria-hidden className="size-5" strokeWidth={3} />
+        {p.offered.label}
+      </span>
+      {directional ? null : <span className="terminal-call-where">{p.offered.where}</span>}
+      <LiveText value={p.odds} className="terminal-call-odds" />
+    </button>
+  );
 }
 
 function ClosedPanel({ symbol, when }: { symbol: string; when: string }) {
@@ -73,6 +111,18 @@ export function CallPanel(p: CallPanelProps) {
   };
   return (
     <div className="terminal-panel">
+      {p.holding ? null : (
+        <SegmentedControl
+          options={CALL_MODES}
+          label="Way to call"
+          value={p.mode}
+          onValueChange={(v) => {
+            fire("tick", { cue: "tap" });
+            p.onMode(v as CallMode);
+          }}
+          fill
+        />
+      )}
       {p.holding ? null : (
         <fieldset className="terminal-presets">
           <legend className="sr-only">Stake</legend>
@@ -144,35 +194,25 @@ export function CallPanel(p: CallPanelProps) {
           </button>
         </div>
       ) : (
-        <div className="terminal-calls">
-          <button
-            type="button"
-            className={cn("terminal-call", "is-up")}
-            disabled={blocked}
-            onClick={p.onUp}
-            aria-label="Call Up"
-            aria-keyshortcuts="ArrowUp"
-          >
-            <span className="terminal-call-label">
-              <ArrowUp aria-hidden className="size-5" strokeWidth={3} />
-              Up
-            </span>
-            <LiveText value={p.upOdds} className="terminal-call-odds" />
-          </button>
-          <button
-            type="button"
-            className={cn("terminal-call", "is-down")}
-            disabled={blocked}
-            onClick={p.onDown}
-            aria-label="Call Down"
-            aria-keyshortcuts="ArrowDown"
-          >
-            <span className="terminal-call-label">
-              <ArrowDown aria-hidden className="size-5" strokeWidth={3} />
-              Down
-            </span>
-            <LiveText value={p.downOdds} className="terminal-call-odds" />
-          </button>
+        <div className={cn("terminal-calls", !p.offer[1] && "is-one")}>
+          {p.offer[0] ? (
+            <CallButton
+              offered={p.offer[0]}
+              odds={p.firstOdds}
+              disabled={blocked}
+              onPick={() => p.onPick(0)}
+              shortcut="ArrowUp"
+            />
+          ) : null}
+          {p.offer[1] ? (
+            <CallButton
+              offered={p.offer[1]}
+              odds={p.secondOdds}
+              disabled={blocked}
+              onPick={() => p.onPick(1)}
+              shortcut="ArrowDown"
+            />
+          ) : null}
         </div>
       )}
     </div>

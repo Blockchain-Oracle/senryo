@@ -4,13 +4,14 @@
  * renders on events and once a second for the countdown. The call flow — the panel's states, open and cash out with
  * their guards, following a call to its fill — is `@senryo/calls` `useCallFlow`, the same on the web.
  */
+import { type CallMode, isCallMode } from "@senryo/calls";
 import { useCallFlow, useMarketLine } from "@senryo/calls/react";
 import { useLive } from "@senryo/live/react";
 import { useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useMMKVNumber } from "react-native-mmkv";
+import { useMMKVNumber, useMMKVString } from "react-native-mmkv";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
@@ -54,8 +55,10 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const t = useTerminal();
   const [storedStake, setStoredStake] = useMMKVNumber(STORAGE_KEYS.lastStake, storage);
   const stake = BigInt(storedStake ?? DEFAULT_STAKE);
+  const [storedMode, setMode] = useMMKVString(STORAGE_KEYS.terminalMode, storage);
+  const mode: CallMode = isCallMode(storedMode) ? storedMode : "updown";
   const load = useWindowLoad(t.window.expiry > 0 ? t.window.expiry : undefined);
-  const q = useLiveQuote(t, stake, "value" in load ? load.value : undefined);
+  const q = useLiveQuote(t, stake, "value" in load ? load.value : undefined, mode);
   const head = useSharedValue<Head | null>(null);
   const reactions = useRef<ReactionOverlayHandle>(null);
   useReactions(t.symbol, q.onTick, reactions);
@@ -69,8 +72,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     caller: account,
     stake,
     latest: q.latest,
-    upBand: q.upBand,
-    downBand: q.downBand,
+    offer: q.offer,
     effects: {
       cue: (c) =>
         c === "press"
@@ -114,12 +116,14 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           stake={stake}
           balance={t.balance}
           onStake={(s) => setStoredStake(Number(s))}
-          upOdds={q.upLine}
-          downOdds={q.downLine}
+          mode={mode}
+          onMode={setMode}
+          offer={q.offer}
+          firstOdds={q.firstLine}
+          secondOdds={q.secondLine}
           holding={flow.holding}
           cashOut={q.cashOut}
-          onUp={() => void flow.open("up")}
-          onDown={() => void flow.open("down")}
+          onPick={(slot) => void flow.open(slot)}
           onClose={() => void flow.close()}
           onCustom={() => setSheet("stake")}
           onClosePart={() => setSheet("part")}

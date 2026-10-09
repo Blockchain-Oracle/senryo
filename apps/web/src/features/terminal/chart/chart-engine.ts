@@ -2,7 +2,7 @@
  * The live chart on a canvas (Owarine `chart-engine.ts`, Tradash's renderer, SPEC-chart §§2–4) with Senryo's rules
  * from the phone: each animation frame ease the price toward the latest tick on a fixed 60 Hz sample clock — τ adapts
  * to the feed's cadence, so Pyth's ~1 s ticks glide (D-272) — push it into the 600-sample ring, centre the y-axis on
- * it at ±7.5 frozen steps, then draw: grid, your side's zone against K, the line's glow and stroke, the left 32 %
+ * it at ±7.5 frozen steps, then draw: grid, your band's winning zone, the line's glow and stroke, the left 32 %
  * erased, the 千両 mark, the axis, K and the entry, the head dot and the rolling pill. The tone is the up line unless
  * the open call is losing.
  */
@@ -207,10 +207,11 @@ export class ChartEngine {
     const headY = this.ys[n - 1] ?? h / HALF;
     drawGrid(ctx, theme, win, this.step, plotW);
     const o = this.overlay;
-    if (o?.line != null && o.zone) {
-      const ky = Math.min(win.bottom + PAD_Y, Math.max(win.top - PAD_Y, yOf(o.line, win)));
-      const top = o.zone === "above" ? 0 : ky;
-      const bottom = o.zone === "above" ? ky : h;
+    if (o?.zone) {
+      // The held band's winning prices; an open end runs off the chart (higher prices sit higher).
+      const at = (price: number) => Math.min(win.bottom + PAD_Y, Math.max(win.top - PAD_Y, yOf(price, win)));
+      const top = o.zone.to === null ? 0 : at(o.zone.to);
+      const bottom = o.zone.from === null ? h : at(o.zone.from);
       if (bottom > top) {
         ctx.globalAlpha = ZONE_ALPHA;
         ctx.fillStyle = tone;

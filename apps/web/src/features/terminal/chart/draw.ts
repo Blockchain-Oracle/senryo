@@ -164,7 +164,10 @@ function tag(ctx: CanvasRenderingContext2D, t: ChartTheme, text: string, right: 
   ctx.fillText(text, right - TAG_PAD, y + TAG_H / HALF + HALF_PIXEL);
 }
 
-/** K (ink, fine dash) or the entry (helper, longer dash): the line and its tag, or off-screen a tag at the edge. */
+/**
+ * K (ink, fine dash), the entry (helper) or a band's edge or strike (helper, long dash): the line and its tag, or
+ * off-screen a tag at the edge.
+ */
 export function drawLevel(
   ctx: CanvasRenderingContext2D,
   t: ChartTheme,

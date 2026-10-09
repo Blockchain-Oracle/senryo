@@ -47,11 +47,11 @@ function Hero() {
       <div className="live-hero-calls">
         <Link href="/app/trade/btc/" className="live-hero-call is-up">
           <strong>Up</strong>
-          <LiveText value={q.upLine} />
+          <LiveText value={q.firstLine} />
         </Link>
         <Link href="/app/trade/btc/" className="live-hero-call is-down">
           <strong>Down</strong>
-          <LiveText value={q.downLine} />
+          <LiveText value={q.secondLine} />
         </Link>
       </div>
       <p className="live-hero-note">On $5 · the dashed line is where this window opened</p>

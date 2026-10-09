@@ -3,14 +3,15 @@
  * Max), then UP and DOWN each with its live odds ("pays 1.92× · about 52%"), or — holding a call in this window — one
  * CLOSE with the cash-out value rolling. Honest states: calls closed for the lockout, a stale price, a call in flight.
  */
-import type { MarketLine } from "@senryo/calls";
-import type { PanelState } from "@senryo/calls/react";
+import { CALL_MODES, type CallMode, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
+import type { OfferSlot, PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
 import { LiveText } from "~/components/kit/LiveText";
+import { Segmented } from "~/components/kit/Segmented";
 import { ArrowDownUp } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
@@ -30,20 +31,22 @@ const CASH_WIDTH = 120;
 export type { PanelState } from "@senryo/calls/react";
 
 function CallButton({
-  label,
-  tone,
+  offered,
   odds,
   disabled,
   onPress,
 }: {
-  label: string;
-  tone: string;
+  offered: OfferedBand;
   odds: SharedValue<string>;
   disabled: boolean;
   onPress: () => void;
 }) {
   const { color } = useTheme();
   const press = usePressScale();
+  // Up and Moonshot in the up colour, Down and Crash in the down colour, Range on the ink plate (neither direction).
+  const plate = offered.tone === "up" ? color.chartUp : offered.tone === "down" ? color.chartDown : color.ink;
+  const ink = offered.tone === "neutral" ? color.ground : color.paperInk;
+  const directional = offered.band.kind === "up" || offered.band.kind === "down";
   return (
     <Pressable
       style={styles.flex}
@@ -52,14 +55,19 @@ function CallButton({
       onPressOut={press.onPressOut}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={`Call ${label}`}
+      accessibilityLabel={`Call ${offered.label}${directional ? "" : `, ${offered.where}`}`}
       accessibilityState={{ disabled }}
     >
       <Animated.View
-        style={[styles.call, { backgroundColor: tone, opacity: disabled ? DISABLED_OPACITY : 1 }, press.style]}
+        style={[styles.call, { backgroundColor: plate, opacity: disabled ? DISABLED_OPACITY : 1 }, press.style]}
       >
-        <Text style={[TYPE.buttonLabel, { color: color.paperInk }]}>{label}</Text>
-        <LiveText text={odds} style={[TYPE.micro, { color: color.paperInk }]} />
+        <Text style={[TYPE.buttonLabel, { color: ink }]}>{offered.label}</Text>
+        {directional ? null : (
+          <Text style={[TYPE.micro, { color: ink }]} numberOfLines={1}>
+            {offered.where}
+          </Text>
+        )}
+        <LiveText text={odds} style={[TYPE.micro, { color: ink }]} />
       </Animated.View>
     </Pressable>
   );
@@ -89,12 +97,14 @@ function OpenPanel({
   stake,
   balance,
   onStake,
-  upOdds,
-  downOdds,
+  mode,
+  onMode,
+  offer,
+  firstOdds,
+  secondOdds,
   holding,
   cashOut,
-  onUp,
-  onDown,
+  onPick,
   onClose,
   onCustom,
   onClosePart,
@@ -103,12 +113,14 @@ function OpenPanel({
   stake: bigint;
   balance: bigint | undefined;
   onStake: (stake: bigint) => void;
-  upOdds: SharedValue<string>;
-  downOdds: SharedValue<string>;
+  mode: CallMode;
+  onMode: (mode: CallMode) => void;
+  offer: Offer;
+  firstOdds: SharedValue<string>;
+  secondOdds: SharedValue<string>;
   holding: boolean;
   cashOut: SharedValue<LiveFigure>;
-  onUp: () => void;
-  onDown: () => void;
+  onPick: (slot: OfferSlot) => void;
   onClose: () => void;
   /** The keypad for any other stake. */
   onCustom: () => void;
@@ -134,6 +146,17 @@ function OpenPanel({
 
   return (
     <View style={styles.wrap}>
+      {holding ? null : (
+        <Segmented
+          options={CALL_MODES}
+          value={mode}
+          onChange={(m) => {
+            fire("tick");
+            onMode(m);
+          }}
+          label="Way to call"
+        />
+      )}
       {holding ? null : (
         <View style={styles.presets} accessibilityRole="radiogroup" accessibilityLabel="Stake">
           {STAKE_PRESETS_USD.map((usd) => {
@@ -232,8 +255,12 @@ function OpenPanel({
         </Pressable>
       ) : (
         <View style={styles.calls}>
-          <CallButton label="Up" tone={color.chartUp} odds={upOdds} disabled={blocked} onPress={onUp} />
-          <CallButton label="Down" tone={color.chartDown} odds={downOdds} disabled={blocked} onPress={onDown} />
+          {offer[0] ? (
+            <CallButton offered={offer[0]} odds={firstOdds} disabled={blocked} onPress={() => onPick(0)} />
+          ) : null}
+          {offer[1] ? (
+            <CallButton offered={offer[1]} odds={secondOdds} disabled={blocked} onPress={() => onPick(1)} />
+          ) : null}
         </View>
       )}
     </View>

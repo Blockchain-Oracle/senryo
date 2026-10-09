@@ -19,7 +19,8 @@ export const THOUSANDS = 3;
 /** A 1 px line centred on a pixel row. */
 export const HALF_PIXEL = 0.5;
 /** Catmull-Rom → Bézier control-point divisor (tension 1/6). */
-export const LEVEL_DASH = { line: [2, 3], entry: [4, 4] } as const;
+/** K (fine dash), the entry, and a band's edge or strike (long dash: where Range and Moonshot are decided). */
+export const LEVEL_DASH = { line: [2, 3], entry: [4, 4], edge: [8, 4] } as const;
 /**
  * The eased price follows the tick cadence it measures (Pyth Starter prints about once a second, D-272: "the chart
  * breathes through client easing, not tick rate"): τ = max(Tradash's 84 ms, 0.5 × the tick interval), so a 1 s feed
@@ -31,4 +32,4 @@ export const TICK_FOLLOW = 0.5;
 export const TICK_EMA = 0.3;
 /** Gaps longer than this (a background, a reconnect) don't count as cadence. */
 export const MAX_TICK_GAP_MS = 5000;
-export const LEVEL_ALPHA = { line: 0.7, entry: 0.55 } as const;
+export const LEVEL_ALPHA = { line: 0.7, entry: 0.55, edge: 0.6 } as const;

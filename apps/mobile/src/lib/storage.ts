@@ -11,6 +11,8 @@ export const STORAGE_KEYS = {
   terminalCadence: "senryo.terminal.cadence.v1",
   /** The last stake, in dollar base units (S5: "last stake remembered"). */
   lastStake: "senryo.terminal.stake.v1",
+  /** The way to call: Up / Down, Range or Moonshot (S7.4). */
+  terminalMode: "senryo.terminal.mode.v1",
   theme: "senryo.theme.v1",
   setupOrder: "senryo.setup-order.v2",
   sounds: "senryo.sounds.v1",

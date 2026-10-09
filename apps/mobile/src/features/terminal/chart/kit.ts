@@ -5,6 +5,7 @@
  * picture per size, drawn translated. Measured on the simulator's dev build before this: 4.1 ms a frame (axis 1.8,
  * line 1.4, dots 0.37).
  */
+import type { ChartLevel } from "@senryo/calls";
 import {
   BlendMode,
   PaintStyle,
@@ -40,7 +41,7 @@ export interface DrawKit {
     helperClear: SkColor;
     onLine: SkColor;
   };
-  dash: { line: ReturnType<typeof Skia.PathEffect.MakeDash>; entry: ReturnType<typeof Skia.PathEffect.MakeDash> };
+  dash: Record<ChartLevel["kind"], ReturnType<typeof Skia.PathEffect.MakeDash>>;
   /** The fade's erasing gradient stops (opaque → clear). */
   fade: { solid: SkColor; mid: SkColor; clear: SkColor };
   mark: string;

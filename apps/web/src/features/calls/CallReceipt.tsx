@@ -5,7 +5,16 @@
  * proof, all in the shared words (`@senryo/calls` `receipt.ts`). A live call says what it is waiting for and opens the
  * terminal; a finished one shares its card. `publicView` is the shared link's page: no account needed.
  */
-import { callLink, callTitle, proofCloseE8, receiptFacts, receiptHero, receiptSteps, shareOf } from "@senryo/calls";
+import {
+  callLink,
+  callTitle,
+  callWhere,
+  proofCloseE8,
+  receiptFacts,
+  receiptHero,
+  receiptSteps,
+  shareOf,
+} from "@senryo/calls";
 import { type ChainId, networkOf } from "@senryo/config";
 import { stateWord, whenText } from "@senryo/core";
 import { marketId } from "@senryo/identity";
@@ -96,12 +105,14 @@ export function CallReceipt({
         </div>
       </header>
       <dl className="flex flex-col">
-        {receiptFacts(t).map(([label, value]) => (
-          <div key={label} className="flex min-h-12 items-center justify-between gap-3">
-            <dt className="text-body text-text-2">{label}</dt>
-            <dd className="tnum font-semibold text-row-title">{value}</dd>
-          </div>
-        ))}
+        {receiptFacts(t, callWhere(t.call, "value" in proof ? proof.value?.open?.priceE8 : undefined)).map(
+          ([label, value]) => (
+            <div key={label} className="flex min-h-12 items-center justify-between gap-3">
+              <dt className="text-body text-text-2">{label}</dt>
+              <dd className="tnum font-semibold text-row-title">{value}</dd>
+            </div>
+          ),
+        )}
       </dl>
       <CallTimeline steps={receiptSteps(t)} chainId={chainId} />
       <WindowProof windowId={c.windowId} chainId={chainId} />

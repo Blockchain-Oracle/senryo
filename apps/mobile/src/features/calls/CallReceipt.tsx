@@ -3,7 +3,16 @@
  * result in dollars, the facts that made it (stake, what it paid if right, what came back, entry → exit), every step
  * with its transaction, and the window's proof. A live call says what it is waiting for and opens the terminal.
  */
-import { callLink, callTitle, proofCloseE8, receiptFacts, receiptHero, receiptSteps, shareOf } from "@senryo/calls";
+import {
+  callLink,
+  callTitle,
+  callWhere,
+  proofCloseE8,
+  receiptFacts,
+  receiptHero,
+  receiptSteps,
+  shareOf,
+} from "@senryo/calls";
 import { stateWord, whenText } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useCallTimeline, useQueryEnv, useWindowProof } from "@senryo/query";
@@ -95,7 +104,7 @@ export function CallReceipt({ ticketId }: { ticketId: bigint }) {
           />
         ) : null}
       </View>
-      <Facts rows={receiptFacts(t)} />
+      <Facts rows={receiptFacts(t, callWhere(t.call, "value" in proof ? proof.value?.open?.priceE8 : undefined))} />
       <CallTimeline steps={receiptSteps(t)} chainId={env.chainId} />
       <WindowProof windowId={c.windowId} chainId={env.chainId} />
     </ScrollView>

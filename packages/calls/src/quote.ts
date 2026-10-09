@@ -1,13 +1,16 @@
 /**
- * The terminal's per-tick pass, one copy for both apps (D-272): price Up and Down for the current stake with the
- * contracts' own maths (`@senryo/core/market`, bit for bit with `quoteOpen`), value the open call's cash-out, measure
- * the distance to K, and describe what the chart overlays. Pure: each app writes the result where its screen reads
- * it — shared values on the phone, refs and the canvas on the web — without rendering React per tick.
+ * The terminal's per-tick pass, one copy for both apps (D-272): price the mode's two offered bands (Up and Down, Range,
+ * or Moonshot and Crash — S7.4) for the current stake with the contracts' own maths (`@senryo/core/market`, bit for bit
+ * with `quoteOpen`), value the open call's cash-out, measure the distance to K, and describe what the chart overlays:
+ * the offered band's edges before a call, the held band's winning zone after. Pure: each app writes the result where
+ * its screen reads it — shared values on the phone, refs and the canvas on the web — without rendering React per tick.
  */
 import type { WindowLoad } from "@senryo/api-client";
 import { FILL_DELAY_SEC } from "@senryo/config";
 import {
   type BandShape,
+  bandEdgesE8,
+  bandOutcome,
   type CloseQuote,
   fitOpen,
   formatUnits,
@@ -33,7 +36,8 @@ const PERCENT_DECIMALS = 3;
 /** Basis points: the reaction engine reads a call's result as a share of its stake. */
 const BPS = 10_000n;
 
-export type LevelKind = "line" | "entry";
+/** K, the call's entry, and a band's edge or strike. */
+export type LevelKind = "line" | "entry" | "edge";
 
 export interface ChartLevel {
   kind: LevelKind;
@@ -49,9 +53,10 @@ export interface ChartOverlay {
   pnlText: string | null;
   /** Which way the result just moved (the pill's second row rolls up or down). */
   pnlTrend: number;
-  /** K and the call's side: the zone above K (Up) or below it (Down) is shaded. */
+  /** K. */
   line: number | null;
-  zone: "above" | "below" | null;
+  /** The held band's winning prices (null ends run off the chart): above K for Up, between the edges for Range… */
+  zone: { from: number | null; to: number | null } | null;
   levels: ChartLevel[];
 }
 
@@ -114,16 +119,16 @@ export interface QuoteInput {
   sigmaE8: number;
   pricing: Pricing;
   stake: bigint;
-  up: BandSpecLike | undefined;
-  down: BandSpecLike | undefined;
+  /** The mode's two buttons' bands (`offerOf`); the second is absent for Range. */
+  offer: readonly [BandSpecLike | undefined, BandSpecLike | undefined];
   /** The open call and its band's shape, when there is one. */
   position: { call: QuotePosition; band: BandSpecLike } | undefined;
 }
 
 /** The latest quotes, readable synchronously for the tap (the limit is the quote the user saw). */
 export interface Quotes {
-  up: OpenQuote | null;
-  down: OpenQuote | null;
+  first: OpenQuote | null;
+  second: OpenQuote | null;
   close: CloseQuote | null;
 }
 
@@ -135,11 +140,11 @@ export interface QuoteTick {
 }
 
 export interface QuotePass {
-  up: OpenQuote | null;
-  down: OpenQuote | null;
+  first: OpenQuote | null;
+  second: OpenQuote | null;
   close: CloseQuote | null;
-  upLine: string;
-  downLine: string;
+  firstLine: string;
+  secondLine: string;
   /** "▲ $12.40 (0.015%) above the line". */
   lineText: string;
   /** What cashing out returns now, and the result against the stake. */
@@ -162,23 +167,53 @@ export function oddsLine(q: OpenQuote | null, stake: bigint): string {
   return `pays ${formatUnits(x, CENTS, CENTS)}× · about ${pct}%`;
 }
 
-const lineLevel = (k: bigint): ChartLevel => ({ kind: "line", price: Number(k) / E8, label: "Line" });
+const toPrice = (e8: bigint) => Number(e8) / E8;
+const lineLevel = (k: bigint): ChartLevel => ({ kind: "line", price: toPrice(k), label: "Line" });
+
+/** A band's edges or strike as chart levels (Up and Down have none beyond K). */
+function edgeLevels(band: BandSpecLike, k: bigint): ChartLevel[] {
+  if (band.kind === "up" || band.kind === "down") return [];
+  const e = bandEdgesE8(band, k);
+  const label = band.kind === "range" ? "Range" : "Strike";
+  return [e.low, e.high]
+    .filter((v): v is bigint => v !== null)
+    .map((v) => ({ kind: "edge", price: toPrice(v), label }));
+}
+
+/**
+ * How the reaction engine reads a held band: the side that pays and the level that loses it — K for Up and Down, the
+ * strike for Moonshot and Crash, and for Range the nearer edge, facing the range's middle.
+ */
+function bandReading(band: BandSpecLike, k: bigint, spot: bigint): { side: 1 | -1; line: number } {
+  const e = bandEdgesE8(band, k);
+  if (band.kind === "range" && e.low !== null && e.high !== null) {
+    const below = spot * 2n < e.low + e.high;
+    return { side: below ? 1 : -1, line: toPrice(below ? e.low : e.high) };
+  }
+  if (band.kind === "moonshot" && e.low !== null) return { side: 1, line: toPrice(e.low) };
+  if (band.kind === "crash" && e.high !== null) return { side: -1, line: toPrice(e.high) };
+  return { side: band.kind === "down" ? -1 : 1, line: toPrice(k) };
+}
 
 export function quoteTick(i: QuoteInput): QuotePass {
   const spot = BigInt(Math.round(i.priceE8));
   const tauSec = BigInt(Math.max(0, i.expiry - (i.nowSec + FILL_DELAY_SEC)));
   const w = { openE8: i.k, sigmaE8: BigInt(i.sigmaE8), tauSec };
   const { terms, capacity } = i.pricing;
-  const up = i.up ? fitOpen(quoteOpen(i.up, w, spot, i.stake, terms), i.stake, capacity) : null;
-  const down = i.down ? fitOpen(quoteOpen(i.down, w, spot, i.stake, terms), i.stake, capacity) : null;
+  const price = (b: BandSpecLike | undefined) =>
+    b ? fitOpen(quoteOpen(b, w, spot, i.stake, terms), i.stake, capacity) : null;
+  const [a, b] = i.offer;
+  const first = price(a);
+  const second = price(b);
 
   const diff = spot - i.k;
   const pct = i.k > 0n ? (diff * PERCENT_E3) / i.k : 0n;
   const lineText = `${diff >= 0n ? "▲" : "▼"} $${formatUnits(diff < 0n ? -diff : diff, PRICE_DECIMALS, CENTS)} (${formatUnits(pct < 0n ? -pct : pct, PERCENT_DECIMALS, PERCENT_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
-  const base = { up, down, upLine: oddsLine(up, i.stake), downLine: oddsLine(down, i.stake), lineText };
+  const base = { first, second, firstLine: oddsLine(first, i.stake), secondLine: oddsLine(second, i.stake), lineText };
 
   const p = i.position;
   if (!p || p.call.state === "committed") {
+    const preview = [a, b].flatMap((band) => (band && i.k > 0n ? edgeLevels(band, i.k) : []));
     return {
       ...base,
       close: null,
@@ -189,16 +224,17 @@ export function quoteTick(i: QuoteInput): QuotePass {
         winning: null,
         pnlText: null,
         pnlTrend: 0,
-        line: Number(i.k) / E8,
+        line: toPrice(i.k),
         zone: null,
-        levels: [lineLevel(i.k)],
+        levels: [lineLevel(i.k), ...preview],
       },
     };
   }
   const close = quoteClose(p.band, w, spot, p.call.payout, terms);
   const pnl = close.proceeds - p.call.stake;
   const roiBps = p.call.stake > 0n ? (pnl * BPS) / p.call.stake : 0n;
-  const isDown = p.band.kind === "down";
+  const edges = bandEdgesE8(p.band, i.k);
+  const reading = bandReading(p.band, i.k, spot);
   return {
     ...base,
     close,
@@ -206,22 +242,26 @@ export function quoteTick(i: QuoteInput): QuotePass {
     pnl,
     reading: {
       key: String(p.call.ticketId),
-      side: isDown ? -1 : 1,
+      side: reading.side,
       pnl: Number(roiBps),
       margin: Number(BPS),
-      entry: p.call.entryE8 === null ? i.priceE8 / E8 : Number(p.call.entryE8) / E8,
-      line: Number(i.k) / E8,
+      entry: p.call.entryE8 === null ? i.priceE8 / E8 : toPrice(p.call.entryE8),
+      line: reading.line,
     },
     overlay: {
-      winning: isDown ? spot < i.k : spot > i.k,
+      winning: bandOutcome(p.band, i.k, spot) === "win",
       pnlText: signedDollars(pnl),
       pnlTrend: 0,
-      line: Number(i.k) / E8,
-      zone: isDown ? "below" : "above",
+      line: toPrice(i.k),
+      zone: {
+        from: edges.low === null ? null : toPrice(edges.low),
+        to: edges.high === null ? null : toPrice(edges.high),
+      },
       levels: [
         lineLevel(i.k),
+        ...edgeLevels(p.band, i.k),
         ...(p.call.entryE8 !== null
-          ? [{ kind: "entry" as const, price: Number(p.call.entryE8) / E8, label: "Entry" }]
+          ? [{ kind: "entry" as const, price: toPrice(p.call.entryE8), label: "Entry" }]
           : []),
       ],
     },

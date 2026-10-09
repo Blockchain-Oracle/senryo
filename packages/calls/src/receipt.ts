@@ -5,7 +5,9 @@
  * transactions that posted them, where the close landed, and how the crowd called it. Facts only.
  */
 import type { CallTimeline, WindowProof } from "@senryo/api-client";
+import { bandMenu, MARKETS } from "@senryo/config";
 import {
+  bandWhere,
   gapText,
   lane,
   OPEN_STATES,
@@ -21,8 +23,6 @@ import {
 
 const FAILED_KINDS = new Set(["refused", "close refused", "settled: lose"]);
 const PERCENT = 100n;
-const UP = 0;
-const DOWN = 1;
 const MS = 1_000;
 
 export interface Step {
@@ -56,12 +56,25 @@ export function receiptSteps(t: CallTimeline): Step[] {
   return steps;
 }
 
-export function receiptFacts(t: CallTimeline): [label: string, value: string][] {
+/**
+ * Where a Range, Moonshot or Crash call wins ("between $81,700.12 and $81,760.40") — its band from the catalogue's menu
+ * (the one on chain), its edges from the window's line once known. Null for Up and Down (the title says it).
+ */
+export function callWhere(c: CallTimeline["call"], kE8: bigint | undefined): string | null {
+  const m = MARKETS.find((x) => x.symbol === c.symbol);
+  const cadence = m?.cadences.find((x) => x === c.cadenceSec);
+  const band = m && cadence ? bandMenu(m, cadence)[c.band] : undefined;
+  if (!band || band.kind === "up" || band.kind === "down") return null;
+  return bandWhere(band, kE8);
+}
+
+export function receiptFacts(t: CallTimeline, where: string | null = null): [label: string, value: string][] {
   const c = t.call;
   const filled = t.events.find((e) => e.kind === "filled");
   const exit = t.events.findLast((e) => e.kind === "cashed out");
   return [
     ["Stake", usd(c.stake)],
+    ...(where ? ([["Wins if", `it closes ${where}`]] as [string, string][]) : []),
     ["Pays if right", filled ? usd(filled.amount) : "—"],
     ...(OPEN_STATES.has(c.status) ? [] : ([["Came back", usd(c.returned)]] as [string, string][])),
     ["Entry", c.entryE8 === null ? "At the next print" : priceText(c.entryE8)],
@@ -123,11 +136,22 @@ export interface ProofFact {
   tx?: string | null;
 }
 
-/** "Up 62% · Down 38%" from the stake on each band; "No calls" when nobody called. */
+/**
+ * "Up 52% · Down 31% · Range 17%": every band holding stake, in menu order, as whole percents that add to 100 (largest
+ * remainder); "No calls" when nobody called.
+ */
 export function crowdText(p: WindowProof): string {
   const total = p.bandStake.reduce((a, b) => a + b, 0n);
   if (total === 0n) return "No calls";
-  return [UP, DOWN].map((band) => `${SIDE[band]} ${((p.bandStake[band] ?? 0n) * PERCENT) / total}%`).join(" · ");
+  const held = p.bandStake.map((stake, band) => ({ band, stake })).filter((b) => b.stake > 0n);
+  const shares = held.map((b) => ({ ...b, pct: (b.stake * PERCENT) / total, rest: (b.stake * PERCENT) % total }));
+  let left = PERCENT - shares.reduce((a, b) => a + b.pct, 0n);
+  for (const s of [...shares].sort((a, b) => (b.rest > a.rest ? 1 : b.rest < a.rest ? -1 : 0))) {
+    if (left <= 0n) break;
+    s.pct += 1n;
+    left -= 1n;
+  }
+  return shares.map((s) => `${SIDE[s.band] ?? `Band ${s.band}`} ${s.pct}%`).join(" · ");
 }
 
 function whereText(gap: bigint, lineE8: bigint): string {
