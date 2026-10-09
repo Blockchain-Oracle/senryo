@@ -1,10 +1,13 @@
 /**
- * Lookups over the entity table and the artwork records, and the one place that decides how a mark is drawn (which
+ * Lookups over the entity table and the drawing table, and the one place that decides how a mark is drawn (which
  * file, whether it needs a plate, which ground). Platform-free: the native and web `EntityMark` both call `planMark`.
+ * It reads `DRAW` (generated from the artwork records by `drawOf`), never the records themselves: provenance stays out
+ * of the apps (./provenance.ts has it).
  */
-import { ART } from "./art/index.ts";
+import type { DrawFile, DrawSource } from "./draw.ts";
 import { ENTITIES } from "./entities.ts";
-import type { ArtFile, ArtShape, ArtSource, ContrastSurface, Entity, MarkVariant } from "./types.ts";
+import { DRAW } from "./generated/draw.ts";
+import type { ArtShape, ContrastSurface, Entity, MarkVariant } from "./types.ts";
 
 export const ENTITY: Readonly<Record<string, Entity>> = Object.fromEntries(ENTITIES.map((e) => [e.id, e]));
 
@@ -52,9 +55,9 @@ export type MarkPlan =
   | {
       kind: "art";
       entity: Entity;
-      source: ArtSource;
+      source: DrawSource;
       variant: MarkVariant;
-      file: ArtFile;
+      file: DrawFile;
       plate: Plate;
       /** The drawn shape (plate or the art's own), so badges and rims follow it. */
       shape: Exclude<ArtShape, "free">;
@@ -71,16 +74,16 @@ function plateFor(surface: ContrastSurface, scheme: Scheme, needsDisc: boolean):
 }
 
 /** The record that holds a variant's file: the entity's own, else its supplement (a fetched library record). */
-function holderOf(source: ArtSource, variant: MarkVariant): ArtSource | undefined {
+function holderOf(source: DrawSource, variant: MarkVariant): DrawSource | undefined {
   if (source.variants[variant]) return source;
-  const extra = source.supplement === undefined ? undefined : ART[source.supplement];
+  const extra = source.supplement === undefined ? undefined : DRAW[source.supplement];
   return extra?.variants[variant] ? extra : undefined;
 }
 
 export function planMark(id: string | undefined, request: VariantRequest, scheme: Scheme): MarkPlan {
   const e = entity(id);
   if (!e) return { kind: "unidentified", id };
-  const own = e.art === undefined ? undefined : ART[e.art];
+  const own = e.art === undefined ? undefined : DRAW[e.art];
   if (!own) return { kind: "gap", entity: e, reason: e.gap ?? `artwork "${e.art}" is not on file` };
   for (const variant of FALLBACKS[wantedFor(request, scheme)]) {
     const source = holderOf(own, variant);
@@ -99,15 +102,15 @@ export function planMark(id: string | undefined, request: VariantRequest, scheme
 
 export interface GlyphPlan {
   entity: Entity;
-  source: ArtSource;
+  source: DrawSource;
   variant: MarkVariant;
-  file: ArtFile;
+  file: DrawFile;
 }
 
 /** The entity's one-colour glyph (an `ArtFile.tintable` symbol, e.g. the passkey icon), or undefined if it has none. */
 export function glyphFor(id: string | undefined): GlyphPlan | undefined {
   const e = entity(id);
-  const source = e?.art === undefined ? undefined : ART[e.art];
+  const source = e?.art === undefined ? undefined : DRAW[e.art];
   const file = source?.variants.symbol;
   return e && source && file?.tintable ? { entity: e, source, variant: "symbol", file } : undefined;
 }
@@ -115,12 +118,4 @@ export function glyphFor(id: string | undefined): GlyphPlan | undefined {
 /** True when the entity's real artwork is on file (a caller can omit an optional mark rather than show a fallback). */
 export function hasArt(id: string | undefined): boolean {
   return planMark(id, "symbol", "dark").kind === "art";
-}
-
-/** The flattened record for one entity: identity, role, network/venue and its artwork provenance (study 08). */
-export function describeEntity(id: string): (Entity & { artwork?: ArtSource }) | undefined {
-  const e = entity(id);
-  if (!e) return undefined;
-  const artwork = e.art === undefined ? undefined : ART[e.art];
-  return artwork ? { ...e, artwork } : e;
 }

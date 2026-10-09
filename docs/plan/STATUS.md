@@ -39,7 +39,7 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
   results, receipts, withdraw); shared words/clocks in `@senryo/core` market, sound and layout in `@senryo/tokens`
   (D-282). The phone runs on it (typecheck, bundle export); its OTA waits for S7's first phone change and a sim run.
 - **Gate (acceptance.md, 9 Oct):** `pnpm gate` 0 · 1 SSE per tab · wallet chunks only on click · TBT ≤ 120 ms, CLS
-  ≤ 0.01 · bundles per D-283: `/` 143, `/call` 233, terminal 293 within; `/app` 254 is **7 KB over** · LCP **misses
+  ≤ 0.01 · bundles per D-283 all within (`/` 143, `/app` 238, `/call` 217, terminal 277, after the drawing-table cut) · LCP **misses
   2.5 s**: `/` 2.64, `/app` 2.96, terminal 6.1–8.1 s (its LCP is live text that needs the first price).
 - **Open on the user:** walk sign-in → setup → test dollars → a call → its receipt on senryo.xyz.
 - **Fixed on the way:** pnpm's dangling `expo-modules-core` hoist (postinstall repair); the proof polled 404s for

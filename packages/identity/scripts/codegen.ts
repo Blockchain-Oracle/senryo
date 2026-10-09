@@ -13,6 +13,8 @@
  *    raster only) → an image component.
  * 3. `src/generated/{native,web}/index.ts` map key → variant → component; `manifest.json` pins what was generated, so
  *    the invariant `identity-provenance` catches a registry change that wasn't regenerated.
+ * 4. `src/generated/draw.ts` is every record projected by `drawOf` (../src/draw.ts): the planner's only table, so the
+ *    apps carry no provenance strings.
  */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -20,6 +22,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ART_SOURCES } from "../src/art/index.ts";
 import { deriveSvg } from "../src/derive.ts";
+import { drawOf } from "../src/draw.ts";
 import type { ArtFile, ArtSource, MarkVariant } from "../src/types.ts";
 import { cropToDisc, optimise, type Platform, rasterComponent, svgComponent } from "./svg-pipeline.ts";
 
@@ -128,6 +131,7 @@ async function generate(): Promise<void> {
   writeIndex("native", made, 'import type { SvgProps } from "react-native-svg";', "SvgProps");
   writeIndex("web", made, 'import type { SVGProps } from "react";', "SVGProps<SVGSVGElement>");
   writeFileSync(join(OUT, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  writeDraw();
   console.log(`generated ${made.length} marks × ${PLATFORMS.length} platforms`);
 }
 
@@ -165,6 +169,18 @@ function writeIndex(platform: Platform, made: Generated[], propsImport: string, 
     "",
   ];
   writeFileSync(join(OUT, platform, "index.ts"), lines.join("\n"));
+}
+
+function writeDraw(): void {
+  const table = Object.fromEntries(ART_SOURCES.map((s) => [s.key, drawOf(s)]));
+  const lines = [
+    HEADER,
+    'import type { DrawSource } from "../draw.ts";',
+    "",
+    `export const DRAW: Readonly<Record<string, DrawSource>> = ${JSON.stringify(table, null, 2)};`,
+    "",
+  ];
+  writeFileSync(join(OUT, "draw.ts"), lines.join("\n"));
 }
 
 await generate();

@@ -4,6 +4,7 @@
  */
 export { ART, ART_SOURCES } from "./art/index.ts";
 export { EXTERNAL_CHAIN_IDS } from "./constants.ts";
+export { type DrawFile, type DrawSource, drawOf } from "./draw.ts";
 export { ENTITIES } from "./entities.ts";
 export { CAIP2, type EntityId, ids } from "./ids.ts";
 export { type MarkStatus, markLabel } from "./labels.ts";
@@ -14,7 +15,6 @@ export {
   routeAssetId,
 } from "./lookup.ts";
 export {
-  describeEntity,
   ENTITY,
   entity,
   entityLabel,

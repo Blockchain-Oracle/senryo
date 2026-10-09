@@ -100,15 +100,15 @@ the apex; the app-link files are served as `application/json` with no redirect.
 - `pnpm gate` 0 · ≤ 1 SSE per tab (one `/v1/stream` across in-app navigation) · the wallet's chunks load on their
   click only · TBT ≤ 120 ms and CLS ≤ 0.01 everywhere.
 - **Bundles** re-based by D-283 (the framework alone is 127 KB, so the plan's 120 / 220 could not hold): `/` 143 ✓
-  (≤ 147), `/judges` 137 ✓, `/call` 233 ✓, terminal 293 ✓ (≤ 297), `/app` and `/app/calls` 254 — **7 KB over 247**.
+  (≤ 147), `/judges` 137 ✓, `/call` 217 ✓, terminal 277 ✓ (≤ 297), `/app` 238 ✓ and `/app/calls` 238 ✓ (≤ 247) — after
+  the drawing-table cut (D-283 update; it was 254, 7 KB over).
 - **LCP misses 2.5 s** (Lighthouse mobile medians): `/` 2.64 s, `/app` 2.96 s, the terminal 6.1–8.1 s. The terminal's
   LCP node is the live distance text, which cannot exist before the first price over the stream; the canvas chart
   does not count. Not hidden behind a placeholder trick.
 - **Open, waiting on the user:** walk sign-in → setup → test dollars → a call → its receipt on senryo.xyz (WebAuthn
   needs a person). The call flow is `@senryo/calls`, the same code the phone ran on chain at S5.
 
-**Next cuts (D-283), carried:** split the identity registry's entity table out of `/app`'s first load; move the api
-response schemas to `zod/mini`; the terminal's LCP is bounded by the stream's first price, so its fix is a faster
+**Next cuts (D-283), carried:** move the api response schemas to `zod/mini`; the terminal's LCP is bounded by the stream's first price, so its fix is a faster
 first price (the stream's opening snapshot), not a placeholder.
 
 **Shared with the phone now:** `@senryo/calls` (the whole call flow, receipts, withdraw, handle copy), `@senryo/core`

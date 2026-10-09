@@ -9,7 +9,7 @@
  * - A derived variant names a registered source and equals `deriveSvg(source)` byte for byte, with the clause that
  *   permits the colourway; a tintable glyph carries no colour of its own (the caller supplies one flat ink).
  * - The generated components are current: `src/generated/manifest.json` pins the same hashes, and every variant has a
- *   native and a web component.
+ *   native and a web component; `src/generated/draw.ts` equals `drawOf` over every record (the planner's table).
  * - Every entity resolves to an artwork record or states a gap; ids are unique.
  * - Once Practice's Test USD is deployed (S2), the address book's `TestUSD` has an entity with artwork, so a redeploy
  *   can't silently orphan the practice dollar's mark (D-258).
@@ -116,10 +116,12 @@ export async function identityProvenance(rule, ctx) {
   const root = ctx.root;
   if (!existsSync(join(root, PKG, "src/art/index.ts"))) return { findings: [], skipped: "identity package not landed" };
   const load = (rel) => import(pathToFileURL(join(root, PKG, rel)).href);
-  const [{ ART_SOURCES }, { ENTITIES }, { deriveSvg }] = await Promise.all([
+  const [{ ART_SOURCES }, { ENTITIES }, { deriveSvg }, { drawOf }, drawn] = await Promise.all([
     load("src/art/index.ts"),
     load("src/entities.ts"),
     load("src/derive.ts"),
+    load("src/draw.ts"),
+    load("src/generated/draw.ts").catch(() => ({ DRAW: {} })),
   ]);
   const manifestPath = join(root, PKG, "src/generated/manifest.json");
   const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : {};
@@ -138,6 +140,9 @@ export async function identityProvenance(rule, ctx) {
         finding(rule, `${source.key}: supplement "${source.supplement}" is not registered`, `${PKG}/src/art`),
       );
   }
+  const projected = JSON.stringify(Object.fromEntries(ART_SOURCES.map((s) => [s.key, drawOf(s)])));
+  if (projected !== JSON.stringify(drawn.DRAW))
+    findings.push(finding(rule, "the drawing table is stale — run codegen", `${PKG}/src/generated/draw.ts`));
   for (const dir of SOURCE_DIRS) {
     for (const rel of listSvgs(root, dir)) {
       if (!registered.has(rel)) findings.push(finding(rule, "artwork file is not in the registry", rel));
