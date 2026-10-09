@@ -7,6 +7,8 @@
 import { useSearchParams } from "next/navigation";
 
 export const DRAWER_PARAM = "d";
+/** A drawer's own params (a call's id), dropped with it. */
+const DRAWER_EXTRAS = ["id"] as const;
 
 /** Every drawer the app opens by name. */
 export const DRAWERS = {
@@ -22,7 +24,10 @@ export const DRAWERS = {
 function urlWith(name: string | null, extra?: Record<string, string>): string {
   const url = new URL(window.location.href);
   if (name) url.searchParams.set(DRAWER_PARAM, name);
-  else url.searchParams.delete(DRAWER_PARAM);
+  else {
+    url.searchParams.delete(DRAWER_PARAM);
+    for (const k of DRAWER_EXTRAS) url.searchParams.delete(k);
+  }
   for (const [k, v] of Object.entries(extra ?? {})) url.searchParams.set(k, v);
   return `${url.pathname}${url.search}${url.hash}`;
 }
@@ -47,6 +52,11 @@ export function closeDrawer(): void {
 /** The drawer named in the URL. */
 export function useDrawerParam(): string | null {
   return useSearchParams().get(DRAWER_PARAM);
+}
+
+/** One of the open drawer's own params (`?d=call&id=42` → "42"). */
+export function useDrawerArg(key: (typeof DRAWER_EXTRAS)[number]): string | null {
+  return useSearchParams().get(key);
 }
 
 /** Before a link inside a drawer navigates: drop the param in place, so Back from the new page doesn't reopen it. */

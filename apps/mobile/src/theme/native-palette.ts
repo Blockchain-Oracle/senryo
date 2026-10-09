@@ -1,4 +1,4 @@
-import { DARK, LIGHT, type Palette } from "@senryo/tokens";
+import { DARK, LIGHT, type Palette, WELCOME } from "@senryo/tokens";
 
 /** UGLYCASH native evidence U04/U14/U16. Kept separate from the web's historical palette. */
 export const NATIVE_LIGHT: Palette = {
@@ -91,8 +91,8 @@ export const NATIVE_DARK: Palette = {
 
 /** Scene roles used on the source's black account header and magenta context anchor. */
 export const NATIVE_SCENE = {
-  welcomeSky: "#428FC8",
-  welcomeInk: "#FFFFFF",
+  welcomeSky: WELCOME.sky,
+  welcomeInk: WELCOME.ink,
   welcomeShade: "#00253D",
   welcomeTrack: "#FFFFFF66",
   account: "#000000",

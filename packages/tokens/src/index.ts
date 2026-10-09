@@ -1,5 +1,5 @@
 export { FONT_SOURCES, type FontFile, type FontSource } from "./fonts.ts";
-export { KINPAKU, MATERIAL, QR, SCENE_FIELD } from "./marks.ts";
+export { KINPAKU, MATERIAL, QR, SCENE_FIELD, WELCOME } from "./marks.ts";
 export { type ColorRole, DARK, DEFAULT_THEME, LIGHT, PALETTES, type Palette, type ThemeName } from "./palette.ts";
 export {
   DISPLAY_MIN_SIZE,

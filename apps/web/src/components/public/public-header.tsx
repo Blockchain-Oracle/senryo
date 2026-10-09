@@ -11,7 +11,7 @@ const PAGES = [{ id: "judges", label: "Judge guide", href: ROUTES.judges }] as c
  * The public pages' top line (outside the app shell, like the legal pages): the wordmark home, the two public pages
  * as quiet text links (the current one in ink), and the theme toggle.
  */
-export function PublicHeader({ current }: { current: (typeof PAGES)[number]["id"] }) {
+export function PublicHeader({ current }: { current?: (typeof PAGES)[number]["id"] }) {
   return (
     <header className="flex items-center justify-between gap-3 pt-4">
       {/* No prefetch: the welcome's payload preloads the seal art, which this page never shows (a console warning). */}

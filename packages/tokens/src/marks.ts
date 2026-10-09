@@ -28,6 +28,9 @@ export const KINPAKU = {
 
 export const QR = { ink: "#000000", paper: "#FFFFFF" } as const;
 
+/** The welcome sky (the story's ground) and its ink: also the share card's background, on both apps. */
+export const WELCOME = { sky: "#428FC8", ink: "#FFFFFF" } as const;
+
 /** Solflare's onboarding scene fields: artwork backgrounds only, never trading semantics or page grounds (direction §2). */
 export const SCENE_FIELD = {
   yellow: "#FAF543",

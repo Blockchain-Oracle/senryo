@@ -5,9 +5,10 @@
  * Every row opens its receipt. Pull to refresh; the user's stream keeps both lists true.
  */
 
-import { lane, OPEN_STATES, sideName, signedUsd, stateWord, type Tone, toneOf, usd } from "@senryo/core";
+import { CALL_FILTERS, type CallFilter, filterRows, type CallRow as Row, useCallRows } from "@senryo/calls/react";
+import { lane, sideName, signedUsd, toneOf, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
-import { useCallerStats, useCalls, useTickets } from "@senryo/query";
+import { useCallerStats } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
@@ -24,29 +25,7 @@ import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const MARK = 36;
 
-const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "open", label: "Open" },
-  { value: "won", label: "Won" },
-  { value: "lost", label: "Lost" },
-  { value: "refunded", label: "Refunded" },
-] as const;
-type Filter = (typeof FILTERS)[number]["value"];
-
-interface Row {
-  key: string;
-  ticketId: bigint;
-  symbol: string;
-  cadenceSec: number;
-  band: number;
-  stake: bigint;
-  status: string;
-  result: string;
-  tone: Tone;
-  group: Exclude<Filter, "all">;
-}
-
-function CallRow({ row }: { row: Row }) {
+function CallRowView({ row }: { row: Row }) {
   const { color } = useTheme();
   const tint = row.tone === "up" ? color.up : row.tone === "down" ? color.down : color.inkMuted;
   const title = `${row.symbol} ${sideName(row.band)}`;
@@ -98,52 +77,14 @@ function Record({ owner }: { owner: `0x${string}` }) {
 
 export function CallsScreen() {
   const owner = useAccount().hint?.address;
-  const tickets = useTickets(owner);
-  const calls = useCalls(owner);
+  const list = useCallRows(owner);
   const client = useQueryClient();
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<CallFilter>("all");
   const refresh = () =>
     client.invalidateQueries({ predicate: (q) => q.queryKey[0] === "markets" || q.queryKey[0] === "history" });
   const { color } = useTheme();
-
-  const open: Row[] =
-    "value" in tickets
-      ? tickets.value.tickets
-          .filter((t) => OPEN_STATES.has(t.state))
-          .map((t) => ({
-            key: `open-${t.ticketId}`,
-            ticketId: t.ticketId,
-            symbol: t.symbol,
-            cadenceSec: t.cadenceSec,
-            band: t.band,
-            stake: t.stake,
-            status: stateWord({ status: t.state, outcome: null }),
-            result: t.state === "committed" ? "…" : `pays ${usd(t.payout)}`,
-            tone: "muted" as const,
-            group: "open" as const,
-          }))
-      : [];
-  const past: Row[] = (calls.data?.pages ?? [])
-    .flatMap((p) => p.calls)
-    .filter((c) => !OPEN_STATES.has(c.status))
-    .map((c) => {
-      const pnl = c.pnl === null ? null : BigInt(c.pnl);
-      const refunded = c.status === "refunded" || c.outcome === "refund";
-      return {
-        key: `call-${c.ticketId}`,
-        ticketId: c.ticketId,
-        symbol: c.symbol,
-        cadenceSec: c.cadenceSec,
-        band: c.band,
-        stake: c.stake,
-        status: stateWord(c),
-        result: pnl === null ? "—" : signedUsd(pnl),
-        tone: toneOf(pnl),
-        group: refunded ? ("refunded" as const) : pnl !== null && pnl > 0n ? ("won" as const) : ("lost" as const),
-      };
-    });
-  const all = [...open, ...past];
-  const rows = filter === "all" ? all : all.filter((r) => r.group === filter);
+  const all = list.rows;
+  const rows = filterRows(all, filter);
 
   if (!owner)
     return (
@@ -158,7 +99,7 @@ export function CallsScreen() {
 
   return (
     <CollapsingScreen left={<TabTitle>Calls</TabTitle>} onRefresh={refresh}>
-      {calls.isPending && all.length === 0 ? (
+      {list.pending && all.length === 0 ? (
         <LoadingState />
       ) : all.length === 0 ? (
         <EmptyState
@@ -169,22 +110,22 @@ export function CallsScreen() {
       ) : (
         <View style={styles.body}>
           <Record owner={owner} />
-          <Segmented options={FILTERS} value={filter} onChange={setFilter} label="Show calls" />
+          <Segmented options={CALL_FILTERS} value={filter} onChange={setFilter} label="Show calls" />
           {rows.length === 0 ? (
             <Text style={[TYPE.caption, styles.none, { color: color.inkMuted }]}>None here yet.</Text>
           ) : (
-            rows.map((r) => <CallRow key={r.key} row={r} />)
+            rows.map((r) => <CallRowView key={r.key} row={r} />)
           )}
-          {calls.hasNextPage ? (
+          {list.hasMore ? (
             <Pressable
               accessibilityRole="button"
               onPress={() => {
-                if (!calls.isFetchingNextPage) void calls.fetchNextPage();
+                list.loadMore();
               }}
               style={styles.more}
             >
               <Text style={[TYPE.rowTitle, { color: color.link }]}>
-                {calls.isFetchingNextPage ? "Loading…" : "Show older calls"}
+                {list.loadingMore ? "Loading…" : "Show older calls"}
               </Text>
             </Pressable>
           ) : null}

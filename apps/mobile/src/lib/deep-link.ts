@@ -30,7 +30,7 @@ export function currentPath(path: string): string {
   const [base = "/", query] = path.split("?", 2);
   const local = inAppPath(base);
   const suffix = query ? `?${query}` : "";
-  // The web's static export shares a call as `/call?id=<ticketId>` (`share-link.ts`); in the app it is its receipt.
+  // The web's static export shares a call as `/call?id=<ticketId>` (`@senryo/calls` `callLink`); in the app it is its receipt.
   const call = local === "/call" ? new URLSearchParams(query ?? "").get("id") : null;
   if (call && TICKET_ID.test(call)) return `/calls/${call}`;
   for (const [pattern, to] of LEGACY_PATHS) {

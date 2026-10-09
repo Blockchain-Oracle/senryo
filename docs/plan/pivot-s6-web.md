@@ -56,8 +56,14 @@ on `/app` · the wallet chunk is 0 bytes before its click · ≤ 1 SSE per tab �
       clear of the pill and stacked at the edges, adaptive easing, 千両); odds, distance and cash-out paint from live
       values, never a render per tick; reactions and the win confetti are CSS/canvas, no motion runtime; keys ↑ ↓ C;
       the dock stays on the terminal under 768 px. The signed-in call from the web waits for S6.7's passkey sign-in._
-- [ ] S6.6 Markets, Calls (record, filters, receipt drawer with the timeline and the window proof, share card),
+- [x] S6.6 Markets, Calls (record, filters, receipt drawer with the timeline and the window proof, share card),
       Home/Overview
+      _Done: Calls (record, the 21st segmented filters re-tokenized without the motion runtime, rows → the receipt in
+      the wide drawer `?d=call&id=`), the receipt (facts, the cubby-ui timeline as plain markup, the window proof with
+      its transactions), the share card drawn on a canvas at 1080 × 1350 (system share sheet, else saved with the
+      link copied), the public `/call?id=&chainId=` page for shared links, Home (balance, one-tap chip, open calls,
+      markets). Shared with the phone in `@senryo/calls`: `useCallRows`, `receipt.ts` (steps, facts, hero, share
+      words, proof facts) and `callLink`; the welcome sky moved to `@senryo/tokens` `WELCOME`._
 - [ ] S6.7 Sign-in and money: passkey on the rpId host (create, sign in, recover), setup (handle, terms, test
       dollars), the Wallet drawers (test dollars, Receive, Withdraw via EIP-3009), one-tap grant/revoke; AppKit
       only behind a click (Real's wallet deposit arrives with S9)

@@ -3,8 +3,9 @@
  * line, the step's words, its time, and the transaction one tap away. Done steps carry a check, a refusal a cross,
  * the step still running a hollow disc, so state never rests on colour alone. Borderless rows (no cards).
  */
+
+import type { Step } from "@senryo/calls";
 import { type ChainId, explorerTxUrl } from "@senryo/config";
-import type { Tone } from "@senryo/core";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Check, X } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
@@ -14,15 +15,7 @@ const DOT = 22;
 const GLYPH = 12;
 const RULE = 2;
 
-export interface Step {
-  key: string;
-  title: string;
-  when: string;
-  /** done: happened · failed: refused/lost · running: waiting for the next fact. */
-  state: "done" | "failed" | "running";
-  tone?: Tone;
-  txHash?: string;
-}
+export type { Step } from "@senryo/calls";
 
 export function CallTimeline({ steps, chainId }: { steps: readonly Step[]; chainId: ChainId }) {
   const { color } = useTheme();

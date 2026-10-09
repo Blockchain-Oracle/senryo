@@ -1,19 +1,16 @@
 "use client";
 
-import { MOTION } from "@senryo/tokens";
 // 21st: ddoemonn/segmented-control (#23552) — https://21st.dev/@ddoemonn/components/segmented-control
-// D2 re-tokenized: secondary well + hairline, foreground thumb with background ink, mono label-size caps by default.
-// Motion: the original spring → a 160 ms desk tween (D2 "nothing bounces"); reduced motion jumps.
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
-import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+// Living Lacquer: a borderless pill well, the foreground thumb with background ink, sentence-case labels. The thumb and
+// its inverted mask slide by a CSS transform on the base motion token (no motion runtime in the route chunk); reduced
+// motion jumps (globals.css).
+import { type CSSProperties, type KeyboardEvent, useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-const MS_PER_S = 1000;
 const PERCENT = 100;
-const THUMB_TWEEN = { duration: MOTION.baseMs / MS_PER_S, ease: MOTION.easing } as const;
 
-const SEG =
-  "flex min-h-9 items-center justify-center px-3 text-center font-mono text-label font-medium uppercase whitespace-nowrap";
+const SEG = "flex min-h-9 items-center justify-center px-3 text-center text-meta font-semibold whitespace-nowrap";
+const SLIDE = "transition-transform duration-(--motion-base) ease-lacquer";
 
 export type SegmentedOption = {
   value: string;
@@ -55,20 +52,6 @@ export function SegmentedControl({
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
   const emit = useRef(onValueChange);
   emit.current = onValueChange;
-
-  const reduced = useReducedMotion();
-  const pos = useMotionValue(index);
-  const thumbX = useTransform(pos, (v) => `${v * PERCENT}%`);
-  const maskX = useTransform(pos, (v) => `${-v * PERCENT}%`);
-
-  useEffect(() => {
-    if (reduced) {
-      pos.set(index);
-      return;
-    }
-    const controls = animate(pos, index, THUMB_TWEEN);
-    return () => controls.stop();
-  }, [index, reduced, pos]);
 
   const select = useCallback(
     (next: string) => {
@@ -120,7 +103,7 @@ export function SegmentedControl({
       role="radiogroup"
       aria-label={label}
       className={cn(
-        "relative select-none rounded-xl border border-border bg-secondary p-0.5",
+        "relative select-none rounded-full bg-secondary p-0.5",
         fill ? "block w-full" : "inline-block",
         className,
       )}
@@ -144,13 +127,15 @@ export function SegmentedControl({
           </span>
         ))}
 
-        <motion.div
+        <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 overflow-hidden rounded-lg bg-foreground"
-          style={{ width: `${PERCENT / count}%`, x: thumbX }}
-          initial={false}
+          className={cn(
+            "pointer-events-none absolute inset-y-0 left-0 overflow-hidden rounded-full bg-foreground",
+            SLIDE,
+          )}
+          style={{ width: `${PERCENT / count}%`, transform: `translateX(${index * PERCENT}%)` } as CSSProperties}
         >
-          <motion.div className="absolute inset-0" style={{ x: maskX }} initial={false}>
+          <div className={cn("absolute inset-0", SLIDE)} style={{ transform: `translateX(${-index * PERCENT}%)` }}>
             <div
               className="absolute inset-y-0 left-0 grid"
               style={{ width: `${count * PERCENT}%`, gridTemplateColumns: template }}
@@ -161,8 +146,8 @@ export function SegmentedControl({
                 </span>
               ))}
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         <div
           className="absolute inset-0 grid"
@@ -184,7 +169,7 @@ export function SegmentedControl({
               onClick={() => !option.disabled && select(option.value)}
               onKeyDown={(e) => onKeyDown(e, i)}
               onPointerEnter={() => !option.disabled && setHovered(i)}
-              className="cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
             >
               <span className="sr-only">{option.label}</span>
             </button>

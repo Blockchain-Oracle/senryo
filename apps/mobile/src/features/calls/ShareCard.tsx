@@ -5,6 +5,7 @@
  * the seal, the line and the link with its QR. Fixed paper colours in either theme: it is an image, not a screen.
  * Rendered off-screen at 360 × 450 and captured at 3× (1080 × 1350).
  */
+import type { ShareCall } from "@senryo/calls";
 import { ids, marketId } from "@senryo/identity";
 import { forwardRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -29,17 +30,7 @@ const BRAND_SIZE = 22;
 const KANJI_ALPHA = 0.12;
 const DETAIL_ALPHA = 0.65;
 
-export interface ShareCall {
-  symbol: string;
-  call: string;
-  result: string;
-  won: boolean;
-  entry: string | null;
-  exit: string | null;
-  exitLabel: string;
-  mode: string;
-  url: string;
-}
+export type { ShareCall } from "@senryo/calls";
 
 export const ShareCard = forwardRef<View, { card: ShareCall }>(function ShareCard({ card }, ref) {
   const { color } = useTheme();
