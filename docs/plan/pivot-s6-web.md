@@ -76,8 +76,14 @@ on `/app` · the wallet chunk is 0 bytes before its click · ≤ 1 SSE per tab �
       (a passkey prompt needs a person). No AppKit yet: Real's deposit is S9._
 
 ### Front door and ship
-- [ ] S6.8 The landing rewritten for predictions (hero with the live line, how it works, Practice → Real, proof,
+- [x] S6.8 The landing rewritten for predictions (hero with the live line, how it works, Practice → Real, proof,
       download), the judges page updated
+      _Done: the hero is the live BTC line with this window's K, the countdown and what Up / Down pay on $5 (the
+      terminal's own chart and quote pass, an island after first paint in a fixed-size frame); How it works in the
+      story's art (call, payout, passkey), Practice → Real (the modes scene, its labels printed in by
+      `apps/web/scripts/website-art.mjs`), Proof, questions, and sign-in at the foot. The trading-era landing, its art
+      module, images and copy are gone; `docs/judges.md` (the /judges page) rewritten: a call in two minutes, how to
+      check any call, the contracts from the live catalogue, how it is built, what is not yet._
 - [ ] S6.9 Static export to Coolify (`senryo-web` image), the gate measured (Lighthouse, bundle sizes, SSE count),
       a walked journey on the live site, acceptance rows, STATUS handoff
 

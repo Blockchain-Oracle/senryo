@@ -4,11 +4,11 @@ import { Plus } from "lucide-react";
 import { useRef } from "react";
 
 const ITEMS = [
-  ["Product", "#product"],
+  ["How it works", "#how"],
   ["Practice", "#practice"],
-  ["Predictions", "#predictions"],
+  ["Proof", "#proof"],
   ["Questions", "#questions"],
-  ["Get the iOS beta", "#start"],
+  ["Make your first call", "#start"],
 ] as const;
 
 /** Native disclosure semantics, with dismissal after selecting a destination or pressing Escape. */

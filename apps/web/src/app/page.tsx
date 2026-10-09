@@ -3,45 +3,81 @@ import Image from "next/image";
 import Link from "next/link";
 import { WelcomeActions } from "@/components/auth/welcome-actions";
 import { LandingMenu } from "@/components/public/landing-menu";
+import { LiveHeroIsland } from "@/features/landing/LiveHeroIsland";
 import { BRAND } from "@/lib/constants/brand";
 import { ROUTES } from "@/lib/constants/routes";
 import pageStyles from "./welcome.module.css";
-import artStyles from "./welcome-art.module.css";
 import chromeStyles from "./welcome-chrome.module.css";
 import mobileStyles from "./welcome-mobile.module.css";
 import productStyles from "./welcome-product.module.css";
 import questionStyles from "./welcome-questions.module.css";
 
-const styles = { ...pageStyles, ...chromeStyles, ...productStyles, ...artStyles, ...questionStyles, ...mobileStyles };
+const styles = { ...pageStyles, ...chromeStyles, ...productStyles, ...questionStyles, ...mobileStyles };
 
-const QUESTIONS = [
+const SCENE = { width: 756, height: 940 } as const;
+
+/** How a call works, in the story's own art (the phone's onboarding scenes). */
+const STEPS = [
   {
-    question: "What can I do in Practice?",
-    answer:
-      "Try supported gold, silver and FX markets with paper funds. Open a position, follow its movement and close it when you’re ready. Practice funds have no cash value. Market hours and availability still apply.",
+    key: "call",
+    eyebrow: "01 / Call",
+    title: ["Call the next move.", "Up or Down."],
+    body: "Pick a market and a window — 1, 5 or 15 minutes, or an hour. The window opens on a Pyth price print: that's the line. Call whether the close lands above it or below.",
+    art: "/brand/website/scene-call.webp",
+    alt: "A gold line climbing past a dashed line on a lacquer tablet, with Up and Down dishes",
+    caption: "The line is the window's opening print.",
   },
   {
-    question: "Can I use real money yet?",
-    answer:
-      "You can browse Mainnet tokens and markets in Senryo. Mainnet trading is not enabled in this beta. Start in Practice to explore the trading experience with paper funds.",
+    key: "payout",
+    eyebrow: "02 / Paid",
+    title: ["Payouts land", "on their own."],
+    body: "When the window closes, its closing print settles every call in it, on Monad. Right, and the payout is in your balance — nothing to claim. Change your mind before the last 20 seconds and cash out at the live price.",
+    art: "/brand/website/scene-payout.webp",
+    alt: "Gold koban falling into a lacquer senryō-bako chest",
+    caption: "Settled on chain. Nothing to claim.",
   },
   {
-    question: "Is Kinpaku a live payment card?",
-    answer:
-      "Kinpaku is currently a sandbox card in the mobile beta. You can set a daily limit, freeze it and review test receipts. It cannot pay for goods or be added to Apple Wallet yet.",
-  },
-  {
-    question: "How do I get the mobile app?",
-    answer:
-      "Request an iOS TestFlight invitation below. In the app, look around before creating an account, then use a passkey to start in Practice. The browser preview remains available for exploring Senryo on a computer.",
+    key: "passkey",
+    eyebrow: "03 / Yours",
+    title: ["A passkey is", "your account."],
+    body: "No seed phrase and no extension: a passkey makes your account and signs your calls. Turn on one-tap and small calls need no prompt at all, with caps the contracts enforce.",
+    art: "/brand/website/scene-passkey.webp",
+    alt: "A lacquer tablet with a passkey tag",
+    caption: "Face ID or Touch ID. Your keys, your device.",
   },
 ] as const;
 
-const BETA_REQUEST = "mailto:support@senryo.xyz?subject=Senryo%20iOS%20beta%20access";
+const QUESTIONS = [
+  {
+    question: "What is a call?",
+    answer:
+      "A call says where a price will be when a window closes: above its opening price (Up) or below it (Down). What a call pays is quoted before you make it, from the price and the time left; a right call pays that, a wrong one loses its stake.",
+  },
+  {
+    question: "Where do the prices come from?",
+    answer:
+      "Pyth. Each window opens and closes on a Pyth price print that is posted on chain, and every receipt links to the transactions that posted them, so anyone can check how a call settled.",
+  },
+  {
+    question: "Who pays the winners?",
+    answer:
+      "A pool on Monad takes the other side of every call within limits the contracts enforce: how much one window can carry and how much the pool can owe at once. When a window is full, it says so.",
+  },
+  {
+    question: "Is this real money?",
+    answer:
+      "Practice uses free test dollars on Monad's test network: real prices, no value. Real uses USDC on Monad and opens with mainnet. A call can lose its whole stake — only call with what you can lose.",
+  },
+  {
+    question: "How do I get the app?",
+    answer:
+      "Open the web app in any browser, or ask for the iPhone beta on TestFlight. Make an account with a passkey, take your test dollars, and make your first call in under a minute.",
+  },
+] as const;
 
-const PORTRAITS = ["avatar-01-topknot", "avatar-03-kanzashi", "avatar-05-curls", "avatar-11-kasa"] as const;
+const BETA_REQUEST = "mailto:support@senryo.xyz?subject=Senryo%20iPhone%20beta%20access";
 
-/** Public product story. Authentication stays in its existing client boundary; all art is owned Senryo artwork. */
+/** The public product story: predictions on live prices. Sign-in stays in its client boundary; the art is Senryo's. */
 export default function Welcome() {
   return (
     <div id="top" className={styles.site}>
@@ -57,234 +93,125 @@ export default function Welcome() {
           </span>
         </a>
         <nav className={styles.desktopNav} aria-label="Main navigation">
-          <a href="#product">Product</a>
-          <a href="#predictions">Predictions</a>
+          <a href="#how">How it works</a>
+          <a href="#practice">Practice</a>
           <a href="#questions">Questions</a>
         </nav>
         <div className={styles.headerActions}>
           <LandingMenu className={styles.mobileMenu} />
-          <a href="#start" className={styles.smallButton}>
-            Get the beta <ArrowUpRight size={17} aria-hidden />
-          </a>
+          <Link href={ROUTES.app} prefetch={false} className={styles.smallButton}>
+            Open the app <ArrowUpRight size={17} aria-hidden />
+          </Link>
         </div>
       </header>
 
       <main id="main">
         <section className={styles.hero} aria-labelledby="hero-title">
           <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>Senryo for iPhone · Built on Monad</p>
+            <p className={styles.eyebrow}>Live on Monad · Prices by Pyth</p>
             <h1 id="hero-title">
-              Markets. Predictions.
+              Call the
               <br />
-              In your pocket.
+              next move.
             </h1>
             <p className={styles.intro}>
-              Trade gold, silver and currency pairs with paper funds. Explore crypto markets, follow predictions and
-              manage your money in one mobile app on Monad.
+              Up or Down on Bitcoin, Ethereum and Solana, a minute to an hour at a time. One tap to call, paid out on
+              its own when the window closes.
             </p>
             <div className={styles.actions}>
-              <a className={styles.primaryButton} href="#start">
-                Get the iOS beta <ArrowRight size={19} aria-hidden />
-              </a>
-              <a href="#product" className={styles.textLink}>
-                See the app <ArrowRight size={18} aria-hidden />
+              <Link className={styles.primaryButton} href="/app/trade/btc/" prefetch={false}>
+                Make a call <ArrowRight size={19} aria-hidden />
+              </Link>
+              <a href="#how" className={styles.textLink}>
+                How it works <ArrowRight size={18} aria-hidden />
               </a>
             </div>
-            <p className={styles.betaNote}>iOS beta via TestFlight · Practice funds have no cash value</p>
+            <p className={styles.betaNote}>Practice with free test dollars · no seed phrase</p>
           </div>
-          <figure className={styles.mobileHero}>
-            <div className={styles.phoneBack}>
-              <Image
-                src="/brand/website/mobile-markets.png"
-                alt="Senryo iOS beta: gold, silver, currency and crypto market pairs"
-                width={1206}
-                height={2622}
-                preload
-                className={styles.phoneScreen}
-              />
-            </div>
-            <div className={styles.phoneFront}>
-              <Image
-                src="/brand/website/mobile-predict.png"
-                alt="Senryo iOS beta: prediction questions with indicative Yes and No prices"
-                width={1206}
-                height={2622}
-                preload
-                className={styles.phoneScreen}
-              />
-            </div>
-            <figcaption>Actual iOS beta screens · Market prices change</figcaption>
-          </figure>
+          <LiveHeroIsland />
         </section>
 
-        <section id="product" className={styles.product} aria-labelledby="product-title">
+        <section id="how" className={styles.product} aria-labelledby="how-title">
           <div className={styles.sectionIntro}>
-            <p className={styles.eyebrow}>The product</p>
-            <h2 id="product-title">
-              Your markets.
+            <p className={styles.eyebrow}>How it works</p>
+            <h2 id="how-title">
+              A window opens.
               <br />
-              Your money. One app.
+              You call it.
             </h2>
           </div>
-          <div className={styles.feature}>
-            <div className={styles.walletArt}>
-              <span className={styles.artCaption}>A place for what’s yours.</span>
-              <Image
-                src="/brand/website/balance.webp"
-                alt="Senryo’s gold and lacquer wallet chest"
-                width={1134}
-                height={1410}
-                className={styles.chest}
-              />
-              <span className={styles.artSignature}>{BRAND.kanji}</span>
+          {STEPS.map((step) => (
+            <div key={step.key} className={styles.feature}>
+              <div className={styles.walletArt}>
+                <span className={styles.artCaption}>{step.caption}</span>
+                <Image
+                  src={step.art}
+                  alt={step.alt}
+                  width={SCENE.width}
+                  height={SCENE.height}
+                  className={styles.chest}
+                />
+                <span className={styles.artSignature}>{BRAND.kanji}</span>
+              </div>
+              <div className={styles.featureCopy}>
+                <p className={styles.eyebrow}>{step.eyebrow}</p>
+                <h3>
+                  {step.title[0]}
+                  <br />
+                  {step.title[1]}
+                </h3>
+                <p>{step.body}</p>
+              </div>
             </div>
-            <div className={styles.featureCopy}>
-              <p className={styles.eyebrow}>01 / Your account</p>
-              <h3>
-                See what you hold.
-                <br />
-                Know where it sits.
-              </h3>
-              <p>
-                Your wallet, trading positions and activity live together. Send, receive or swap from the plus button,
-                and open any transaction for its details and a Senryo receipt.
-              </p>
-              <a href="#start" className={styles.textLink}>
-                Try the mobile beta <ArrowRight size={18} aria-hidden />
-              </a>
-              <p className={styles.smallNote}>Sign in with a passkey. Keep a backup for another way back in.</p>
-            </div>
-          </div>
+          ))}
         </section>
 
         <section id="practice" className={styles.practice} aria-labelledby="practice-title">
           <div className={styles.featureCopy}>
-            <p className={styles.eyebrow}>02 / Practice first</p>
+            <p className={styles.eyebrow}>Practice → Real</p>
             <h2 id="practice-title">
-              Make a move.
+              Start with
               <br />
-              Make it Practice.
+              test dollars.
             </h2>
             <p>
-              Start with paper funds on Monad Testnet. Go long or short on supported pairs, set take-profit and
-              stop-loss, and follow your position from entry to close.
+              Practice runs on Monad's test network with free dollars and the same live prices — every call, cash-out
+              and payout works as it will with money. Real uses USDC on Monad and opens with mainnet.
             </p>
-            <a href="#start" className={`${styles.whiteButton} ${styles.practiceAction}`}>
-              Try Practice on iOS <ArrowRight size={19} aria-hidden />
-            </a>
-            <p className={styles.smallNote}>Paper funds. Real market movements. No cash value.</p>
+            <Link href="/app/trade/btc/" prefetch={false} className={`${styles.whiteButton} ${styles.practiceAction}`}>
+              Make a Practice call <ArrowRight size={19} aria-hidden />
+            </Link>
+            <p className={styles.smallNote}>Test dollars have no value. A call can lose its whole stake.</p>
           </div>
-          <div className={styles.marketList}>
-            <p className={styles.listCaption}>Find your first market</p>
-            <a href="#start">
-              <span className={styles.marketNumber}>01</span>
-              <span>
-                Gold <small>XAU</small>
-              </span>
-              <ArrowUpRight size={26} aria-hidden />
-            </a>
-            <a href="#start">
-              <span className={styles.marketNumber}>02</span>
-              <span>
-                Silver <small>XAG</small>
-              </span>
-              <ArrowUpRight size={26} aria-hidden />
-            </a>
-            <a href="#start">
-              <span className={styles.marketNumber}>03</span>
-              <span>
-                Currencies <small>FX</small>
-              </span>
-              <ArrowUpRight size={26} aria-hidden />
-            </a>
-            <p className={styles.listNote}>Availability depends on the market and its trading hours.</p>
-          </div>
-        </section>
-
-        <section id="predictions" className={styles.predictionSection} aria-labelledby="predict-title">
-          <div className={styles.featureCopy}>
-            <p className={styles.eyebrow}>03 / Predictions</p>
-            <h2 id="predict-title">
-              Where will
-              <br />
-              the price go?
-            </h2>
-            <p>
-              Explore Bitcoin and Ethereum price events. See the outcomes, follow their price history and read how each
-              market resolves.
-            </p>
-            <p className={styles.smallNote}>
-              Binary markets use Polymarket on Polygon. Numerical price contests use Castora on Monad. Discovery is
-              live; trading, contest entry and claims are still being built.
-            </p>
-            <a href="#start" className={styles.textLink}>
-              Explore in the iOS beta <ArrowRight size={18} aria-hidden />
-            </a>
-          </div>
-          <figure className={styles.predictionPreview}>
+          <div className={styles.walletArt}>
+            <span className={styles.artCaption}>Practice is free. Real starts when you switch.</span>
             <Image
-              src="/brand/website/mobile-predict.png"
-              alt="The native Predict screen: readable market questions, outcome prices and filters in a drawer"
-              width={1206}
-              height={2622}
-              className={styles.predictionPhone}
+              src="/brand/website/scene-modes.webp"
+              alt="Practice notes in front and a gold koban set apart on its own dish: Practice · Test dollars and Real · USDC"
+              width={SCENE.width}
+              height={SCENE.height}
+              className={styles.chest}
             />
-            <figcaption>iOS beta · View-only discovery</figcaption>
-          </figure>
+            <span className={styles.artSignature}>{BRAND.kanji}</span>
+          </div>
         </section>
 
-        <section className={`${styles.feature} ${styles.people}`} aria-labelledby="people-title">
-          <div className={styles.portraits} aria-hidden>
-            {PORTRAITS.map((portrait) => (
-              <div key={portrait}>
-                <Image src={`/brand/website/${portrait}.svg`} width={256} height={256} alt="" />
-              </div>
-            ))}
-            <span className={styles.portraitCaption}>Your own point of view.</span>
-          </div>
+        <section id="proof" className={styles.predictionSection} aria-labelledby="proof-title">
           <div className={styles.featureCopy}>
-            <p className={styles.eyebrow}>04 / People & perspectives</p>
-            <h2 id="people-title">
-              There’s a person
+            <p className={styles.eyebrow}>Proof</p>
+            <h2 id="proof-title">
+              Every call
               <br />
-              behind every move.
+              has a receipt.
             </h2>
             <p>
-              Find people, follow their public activity and share your profile. See how others approach the same
-              markets, then make your own decisions.
+              Each call shows its steps — placed, filled, cashed out or settled — each with its transaction on Monad,
+              and the window it lived in: the opening and closing prints from Pyth, where the close landed against the
+              line, and how the crowd called it.
             </p>
-            <a href="#start" className={styles.textLink}>
-              Find people in the app <ArrowRight size={18} aria-hidden />
-            </a>
-          </div>
-        </section>
-
-        <section className={styles.cardSection} aria-labelledby="card-title">
-          <div className={styles.featureCopy}>
-            <p className={styles.eyebrow}>05 / Kinpaku 金箔</p>
-            <h2 id="card-title">
-              A little gold.
-              <br />A limit you choose.
-            </h2>
-            <p>
-              A card with a place in your wallet. In the mobile beta, set a daily limit, freeze your sandbox card and
-              review your test receipts.
-            </p>
-            <a href="#start" className={styles.textLink}>
-              Try Kinpaku on iOS <ArrowRight size={18} aria-hidden />
-            </a>
-            <p className={styles.smallNote}>Sandbox only. Live purchases and Apple Wallet are not available yet.</p>
-          </div>
-          <div className={styles.cardArt}>
-            <span className={styles.sandboxBadge}>The Kinpaku sandbox</span>
-            <Image
-              src="/brand/website/kinpaku.png"
-              alt="Kinpaku’s gold-leaf card with Senryo seal on dark lacquer"
-              width={1200}
-              height={758}
-              className={styles.cardImage}
-            />
-            <span className={styles.cardCaption}>金箔 / Gold leaf</span>
+            <Link href={ROUTES.judges} prefetch={false} className={styles.textLink}>
+              Contracts and how to check them <ArrowRight size={18} aria-hidden />
+            </Link>
           </div>
         </section>
 
@@ -310,29 +237,23 @@ export default function Welcome() {
           <div>
             <p className={styles.eyebrow}>Welcome to Senryo</p>
             <h2 id="start-title">
-              Take Senryo
+              Make your
               <br />
-              with you.
+              first call.
             </h2>
             <p>
-              The iOS beta is available through TestFlight invitations.
+              A passkey makes your account. Test dollars arrive on their own.
               <br />
-              Request access, then start in Practice.
+              The iPhone app is on TestFlight.
             </p>
           </div>
           <div className={styles.betaAccess}>
-            <a href={BETA_REQUEST} className={styles.whiteButton}>
-              Request iOS beta access <ArrowUpRight size={18} aria-hidden />
+            <div className={styles.accountActions}>
+              <WelcomeActions />
+            </div>
+            <a href={BETA_REQUEST} className={styles.textLink}>
+              Ask for the iPhone beta <ArrowUpRight size={18} aria-hidden />
             </a>
-            <p>Opens an email to support@senryo.xyz</p>
-            <details className={styles.browserPreview}>
-              <summary>
-                Or open the browser preview <Plus size={18} aria-hidden />
-              </summary>
-              <div className={styles.accountActions}>
-                <WelcomeActions />
-              </div>
-            </details>
           </div>
         </section>
       </main>
@@ -359,8 +280,8 @@ export default function Welcome() {
           </nav>
         </div>
         <p className={styles.footerNote}>
-          Senryo is a mobile beta. Practice funds have no cash value. Mainnet trading, prediction execution and live
-          card spending are not enabled. Trading involves risk.
+          Senryo is in beta. Practice uses test dollars with no value; Real opens with mainnet. Calls on prices can lose
+          their whole stake.
         </p>
         <span className={styles.footerWordmark} aria-hidden>
           Senryo

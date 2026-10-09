@@ -3,11 +3,9 @@ export const BRAND = {
   name: "Senryo",
   kanji: "千両",
   wordmark: "SENRYO",
-  card: "Kinpaku",
-  cardKanji: "金箔",
-  title: "Senryo 千両 — markets and predictions, in your pocket",
+  title: "Senryo 千両 — call the next move",
   description:
-    "A mobile app for pair trading on Monad, predictions, money and Kinpaku. Start gold, silver and FX trading with paper funds in the iOS beta.",
+    "Up or Down on live prices, a minute to an hour at a time, paid out on its own on Monad. Practice with free test dollars; a passkey is your account.",
   network: "MONAD",
 } as const;
 

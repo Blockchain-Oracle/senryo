@@ -9,7 +9,7 @@ import { REPO } from "@/lib/constants/brand";
 export const metadata: Metadata = {
   title: "Judge guide",
   description:
-    "The fastest way through Senryo: Practice in five minutes, the stateless test, Mainnet on Perpl, watch mode.",
+    "The fastest way through Senryo: a call in two minutes, checking any call yourself, the contracts and how it is built.",
 };
 
 /** The guide's place in the repo; `next build` and `next dev` run from apps/web (the Dockerfile builds the whole repo). */
