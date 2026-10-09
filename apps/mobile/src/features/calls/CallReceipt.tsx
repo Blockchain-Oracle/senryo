@@ -50,7 +50,7 @@ export function CallReceipt({ ticketId }: { ticketId: bigint }) {
   const network = useNetwork();
   const windowId = "value" in timeline ? timeline.value.call.windowId : undefined;
   const proof = useWindowProof(windowId);
-  const proofClose = proofCloseE8("value" in proof ? proof.value : undefined);
+  const proofClose = proofCloseE8("value" in proof ? (proof.value ?? undefined) : undefined);
 
   if (!("value" in timeline)) {
     if (timeline.status !== "failed") return <LoadingState />;

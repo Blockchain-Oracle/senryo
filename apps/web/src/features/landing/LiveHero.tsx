@@ -23,7 +23,7 @@ const STAKE = 5_000_000n;
 
 function Hero() {
   const t = useCallWindow(SYMBOL, DEFAULT_CADENCE, undefined);
-  const load = useWindowLoad(t.window.expiry > 0 ? t.window.expiry : undefined);
+  const load = useWindowLoad(t.now > 0 ? t.window.expiry : undefined);
   const q = useLiveQuote(t, STAKE, "value" in load ? load.value : undefined);
   useEffect(() => appLive().stream.acquire(), []);
   return (

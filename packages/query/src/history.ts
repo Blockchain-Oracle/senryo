@@ -4,6 +4,7 @@
  * stream says a ticket changed (`live-sync.ts`); public reads are cached briefly at the edge as well.
  */
 import {
+  ApiError,
   callerStatsRoute,
   callsRoute,
   callTimelineRoute,
@@ -22,6 +23,7 @@ export const HISTORY_STALE_MS = 60_000;
 /** A settled window's proof never changes; an open one fills in as prints and settlement land. */
 export const OPEN_WINDOW_STALE_MS = 5_000;
 export const LEADERBOARD_STALE_MS = 30_000;
+const HTTP_NOT_FOUND = 404;
 
 export type LeaderboardPeriod = (typeof LEADERBOARD_PERIODS)[number];
 
@@ -68,14 +70,27 @@ export function useCallTimeline(ticketId: bigint | undefined) {
   return fromQuery(query);
 }
 
-/** A window's proof: its open and close prints with their transactions, state, calls and the crowd split. */
+/**
+ * A window's proof: its open and close prints with their transactions, state, calls and the crowd split. `null` while
+ * nobody has called in it (the indexer only knows windows with calls; the api answers 404), so a live crowd line polls
+ * quietly instead of retrying an error.
+ */
 export function useWindowProof(windowId: `0x${string}` | undefined, options: { live?: boolean } = {}) {
   const env = useQueryEnv();
   const query = useQuery({
     queryKey: historyKeys.window(env.chainId, windowId ?? "0x"),
-    queryFn: ({ signal }) => {
+    queryFn: async ({ signal }) => {
       if (!windowId) throw new Error("no window");
-      return env.api.call(windowProofRoute, { params: { windowId }, query: { chainId: env.chainId } }, { signal });
+      try {
+        return await env.api.call(
+          windowProofRoute,
+          { params: { windowId }, query: { chainId: env.chainId } },
+          { signal },
+        );
+      } catch (error) {
+        if (error instanceof ApiError && error.status === HTTP_NOT_FOUND) return null;
+        throw error;
+      }
     },
     enabled: windowId !== undefined,
     staleTime: (q) => (q.state.data?.settled ? Number.POSITIVE_INFINITY : OPEN_WINDOW_STALE_MS),

@@ -63,10 +63,14 @@ function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
 
 export function WindowProof({ windowId, chainId }: { windowId: `0x${string}`; chainId: ChainId }) {
   const proof = useWindowProof(windowId);
-  if (!("value" in proof))
+  if (!("value" in proof) || !proof.value)
     return (
       <p className="text-meta text-text-3">
-        {proof.status === "failed" ? "Couldn't load the window's prints." : "Loading the window's prints…"}
+        {proof.status === "failed"
+          ? "Couldn't load the window's prints."
+          : "value" in proof
+            ? "The window's prints appear a few seconds after its first call."
+            : "Loading the window's prints…"}
       </p>
     );
   return <ProofBody p={proof.value} chainId={chainId} />;

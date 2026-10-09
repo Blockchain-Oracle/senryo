@@ -83,7 +83,7 @@ export function CallReceipt({
               card={shareOf(
                 t,
                 mode,
-                proofCloseE8("value" in proof ? proof.value : undefined),
+                proofCloseE8("value" in proof ? (proof.value ?? undefined) : undefined),
                 callLink(c.ticketId, chainId),
               )}
             />

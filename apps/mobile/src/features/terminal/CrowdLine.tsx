@@ -16,7 +16,7 @@ const WHOLE = 100;
 export function CrowdLine({ windowId }: { windowId: `0x${string}` }) {
   const { color } = useTheme();
   const proof = useWindowProof(windowId, { live: true });
-  if (!("value" in proof)) return null;
+  if (!("value" in proof) || !proof.value) return null;
   const p = proof.value;
   const up = p.bandStake[UP] ?? 0n;
   const down = p.bandStake[DOWN] ?? 0n;

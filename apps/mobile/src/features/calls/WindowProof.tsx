@@ -58,12 +58,16 @@ function Fact({
 export function WindowProof({ windowId, chainId }: { windowId: `0x${string}`; chainId: ChainId }) {
   const { color } = useTheme();
   const proof = useWindowProof(windowId);
-  if (!("value" in proof)) {
+  if (!("value" in proof) || !proof.value) {
     return (
       <View style={styles.wrap}>
         <SectionHeading>The window</SectionHeading>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          {proof.status === "failed" ? "Couldn’t load the window’s prints." : "Loading the window’s prints…"}
+          {proof.status === "failed"
+            ? "Couldn’t load the window’s prints."
+            : "value" in proof
+              ? "The window’s prints appear a few seconds after its first call."
+              : "Loading the window’s prints…"}
         </Text>
       </View>
     );

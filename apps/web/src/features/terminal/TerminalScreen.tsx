@@ -54,7 +54,9 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const account = useAccount();
   const choices = useTerminalChoices();
   const t = useCallWindow(symbol, choices.cadence, account.hint?.address);
-  const load = useWindowLoad(t.window.expiry > 0 ? t.window.expiry : undefined);
+  // Nothing is asked of the api before the server clock has synced (the static HTML renders at second 0).
+  const synced = t.now > 0;
+  const load = useWindowLoad(synced ? t.window.expiry : undefined);
   const q = useLiveQuote(t, choices.stake, "value" in load ? load.value : undefined);
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
@@ -134,7 +136,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
             placeholder="Waiting for this window’s opening price"
             className="terminal-distance tnum"
           />
-          <CrowdLine windowId={t.window.windowId} />
+          <CrowdLine windowId={synced ? t.window.windowId : undefined} />
         </div>
       </section>
       <aside className="terminal-side" aria-label="Call">
