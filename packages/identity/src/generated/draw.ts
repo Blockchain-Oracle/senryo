@@ -1008,6 +1008,23 @@ export const DRAW: Readonly<Record<string, DrawSource>> = {
       }
     }
   },
+  "basket": {
+    "key": "basket",
+    "variants": {
+      "symbol": {
+        "viewBox": "0 -960 960 960",
+        "insetPermille": 83,
+        "surface": "light",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 -960 960 960",
+        "insetPermille": 83,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
   "test-usd": {
     "key": "test-usd",
     "variants": {

@@ -23,6 +23,7 @@ import { accountRequiredRoute } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { BasketMembers } from "./BasketMembers";
 import { CallPanel } from "./CallPanel";
 import { CashOutSheet } from "./CashOutSheet";
 import { CrowdLine } from "./CrowdLine";
@@ -108,6 +109,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       </View>
       <LiveText text={q.lineText} style={[TYPE.caption, styles.line, { color: color.inkMuted }]} />
       <CrowdLine windowId={t.window.windowId} />
+      <BasketMembers symbol={t.symbol} />
       <View style={{ paddingBottom: bottom }}>
         <CallPanel
           symbol={t.symbol}

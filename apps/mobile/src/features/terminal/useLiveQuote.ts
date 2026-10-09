@@ -16,6 +16,7 @@ import {
   type Quotes,
   quoteTick,
   trendOf,
+  unitOf,
 } from "@senryo/calls";
 import { priceFromE8 } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
@@ -46,7 +47,8 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
   }, []);
 
   const bands = t.series?.bands;
-  const offer = useMemo(() => offerOf(mode, bands, t.k), [mode, bands, t.k]);
+  const unit = unitOf(t.symbol);
+  const offer = useMemo(() => offerOf(mode, bands, t.k, unit), [mode, bands, t.k, unit]);
   const position = t.position;
   const positionBand = position ? bands?.[position.band] : undefined;
   // The load surcharge and the pool's room come from `/v1/markets/load` (polled; refreshed on the user's fills).
@@ -70,6 +72,7 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
         pricing,
         stake,
         offer: [offer[0]?.band, offer[1]?.band],
+        unit,
         position: position && positionBand ? { call: position, band: positionBand } : undefined,
       });
       firstLine.value = pass.firstLine;
@@ -101,6 +104,7 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
     t.window.expiry,
     stake,
     offer,
+    unit,
     position,
     positionBand,
     pricing,

@@ -5,7 +5,15 @@
  * opens it, records its open print and commits in one Multicall3 transaction; settlement records the close print,
  * resolves, settles and pays the first batch in another. Every step is permissionless, so the batch needs no contract.
  */
-import { type CadenceSec, type ChainId, LOCKOUT_SEC, MARKETS, type MarketSpec } from "@senryo/config";
+import {
+  basketMembers,
+  type CadenceSec,
+  type ChainId,
+  feedIdOf,
+  LOCKOUT_SEC,
+  MARKETS,
+  type MarketSpec,
+} from "@senryo/config";
 import { bandReserveAbi, windowsAbi } from "@senryo/contracts/abis";
 import {
   type Address,
@@ -89,6 +97,34 @@ export function seriesOf(chainId: ChainId, seriesId: Hex): { market: MarketSpec;
 /** A print proof as the verifier takes it: `abi.encode(bytes[] updateData)`. */
 export function printProof(updates: readonly Hex[]): Hex {
   return encodeAbiParameters(parseAbiParameters("bytes[]"), [updates]);
+}
+
+const BASKET_PROOF = parseAbiParameters("(bytes32[] ids, uint16[] weightsBps, int64[] basesE8), bytes[]");
+const BASKET_ID = parseAbiParameters("bytes32[] ids, uint16[] weightsBps, int64[] basesE8");
+
+function basketDefinition(market: MarketSpec) {
+  const members = basketMembers(market);
+  return {
+    ids: members.map((m) => feedIdOf(m.market)),
+    weightsBps: members.map((m) => m.member.weightBps),
+    basesE8: members.map((m) => m.member.baseE8),
+  };
+}
+
+/** A basket's on-chain feed id from its definition (`BasketPrintVerifier.basketId`). */
+export function basketIdOf(market: MarketSpec): Hex {
+  const d = basketDefinition(market);
+  return keccak256(encodeAbiParameters(BASKET_ID, [d.ids, d.weightsBps, d.basesE8]));
+}
+
+/**
+ * The proof a market's verifier takes for its print: the feed's update bytes (`PythPrintVerifier`), or a basket's
+ * definition with every member's update in member order (`BasketPrintVerifier`, D-286) — the archive stores a
+ * basket's print with exactly those updates.
+ */
+export function proofOf(market: MarketSpec, updates: readonly Hex[]): Hex {
+  if (market.source.kind !== "basket") return printProof(updates);
+  return encodeAbiParameters(BASKET_PROOF, [basketDefinition(market), updates]);
 }
 
 interface Call {

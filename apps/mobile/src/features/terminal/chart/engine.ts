@@ -81,6 +81,12 @@ export function formatUsd(price: number, decimals: number = priceDecimals(price)
   return `$${formatFixed(price, decimals)}`;
 }
 
+/** A value in its unit: "$81,234.56", or "1,003.12 pts" for a basket (D-286). */
+export function formatValue(price: number, decimals: number, points: boolean): string {
+  "worklet";
+  return points ? `${formatFixed(price, decimals)} pts` : `$${formatFixed(price, decimals)}`;
+}
+
 /** "+$1,234.56" / "−$3.20". */
 export function formatSignedUsd(value: number, decimals = 2): string {
   "worklet";

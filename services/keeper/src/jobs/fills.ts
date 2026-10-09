@@ -4,7 +4,7 @@ import {
   expireCallData,
   finalizeCallData,
   type Hex,
-  printProof,
+  proofOf,
   sendTx,
   seriesOf,
   ticketChanges,
@@ -56,7 +56,7 @@ async function fillGroup(ctx: KeeperContext, rows: TicketRow[], now: number): Pr
     const ids = rows.slice(i, i + MARKET_BATCH_MAX).map((r) => r.ticket_id);
     let data: Hex;
     if (print && !windowOver) {
-      data = finalizeCallData(target, ids, printProof(print.updates));
+      data = finalizeCallData(target, ids, proofOf(series.market, print.updates));
     } else if (windowOver) {
       data = expireCallData(ids);
     } else {

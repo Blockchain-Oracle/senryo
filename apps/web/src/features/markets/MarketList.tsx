@@ -5,7 +5,7 @@
  * in words while it doesn't ("Opens Mon 09:30 ET", `@senryo/calls` `marketLine`), and the price as it streams — the
  * last print, dimmed, when closed. A row opens the terminal. Prices re-render at most once a frame.
  */
-import { groupMarkets, MARKET_FILTERS, type MarketFilter } from "@senryo/calls";
+import { groupMarkets, MARKET_FILTERS, type MarketFilter, unitOf } from "@senryo/calls";
 import { useMarketLine } from "@senryo/calls/react";
 import { formatPrice, priceFromE8 } from "@senryo/core";
 import { marketId } from "@senryo/identity";
@@ -28,7 +28,7 @@ export const tradeHref = (symbol: string) => `/app/trade/${symbol.toLowerCase()}
 function MarketRow({ symbol, name }: { symbol: string; name: string }) {
   const priceE8 = useLivePrice(symbol);
   const line = useMarketLine(symbol);
-  const price = formatPrice(priceE8 === undefined ? undefined : priceFromE8(priceE8));
+  const price = formatPrice(priceE8 === undefined ? undefined : priceFromE8(priceE8), undefined, unitOf(symbol));
   return (
     <Link
       href={tradeHref(symbol)}

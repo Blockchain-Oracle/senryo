@@ -45,6 +45,8 @@ export interface DrawKit {
   /** The fade's erasing gradient stops (opaque → clear). */
   fade: { solid: SkColor; mid: SkColor; clear: SkColor };
   mark: string;
+  /** The value reads in points (a basket), not dollars. */
+  points: boolean;
 }
 
 const mid = (font: SkFont) => {
@@ -58,6 +60,7 @@ export function makeKit(
   dash: DrawKit["dash"],
   fade: DrawKit["fade"],
   mark: string,
+  points: boolean,
 ): DrawKit {
   const fill = Skia.Paint();
   fill.setAntiAlias(true);
@@ -88,6 +91,7 @@ export function makeKit(
     dash,
     fade,
     mark,
+    points,
   };
 }
 

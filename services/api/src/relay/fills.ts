@@ -1,5 +1,5 @@
-import { type Address, addressOf, finalizeCallData, type Hex, printProof, sendTx, ticketChanges } from "@senryo/chain";
-import { type ChainId, MARKET_BATCH_MAX } from "@senryo/config";
+import { type Address, addressOf, finalizeCallData, type Hex, proofOf, sendTx, ticketChanges } from "@senryo/chain";
+import { type ChainId, MARKET_BATCH_MAX, marketByFeedId } from "@senryo/config";
 import { applyTicketChanges, type Db, type Logger, type WindowRef } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
 import type { StreamBus } from "../stream/bus.ts";
@@ -61,7 +61,9 @@ export class FillBatcher {
       this.d.log.warn({ feedId: batch.feedId, target: batch.target }, "no print yet for fill; left to the keeper");
       return;
     }
-    const proof = printProof(print.updates);
+    const market = marketByFeedId(batch.feedId);
+    if (!market) return;
+    const proof = proofOf(market, print.updates);
     const all = [...batch.tickets.values()];
     const windows = new Map(all.map((p) => [p.window.windowId, p.window]));
     const reserve = addressOf(this.d.chainId, "BandReserve");

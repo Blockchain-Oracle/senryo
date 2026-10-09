@@ -8,7 +8,7 @@ import {
   type Hex,
   MULTICALL3,
   openAndCommitData,
-  printProof,
+  proofOf,
   type ReadClient,
   revertReason,
   SimulationRevertedError,
@@ -123,7 +123,7 @@ export class MarketRelay {
         start: c.start,
         verifier: verifierOf(this.d.chainId, c.market),
         feedId: feedIdOf(c.market),
-        openProof: printProof(open.updates),
+        openProof: proofOf(c.market, open.updates),
         commitData,
       };
       await untilChainReaches(open.publishTime);

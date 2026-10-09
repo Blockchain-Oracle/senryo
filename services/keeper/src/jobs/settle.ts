@@ -4,7 +4,7 @@ import {
   describeError,
   type Hex,
   MULTICALL3,
-  printProof,
+  proofOf,
   sendTx,
   seriesOf,
   settleAndClaimData,
@@ -60,7 +60,7 @@ async function settleOne(
       expiry,
       verifier: verifierOf(ctx.chainId, series.market),
       feedId: feedIdOf(series.market),
-      closeProof: printProof(print.updates),
+      closeProof: proofOf(series.market, print.updates),
       ticketIds: first ?? [],
     });
   } else if (now > expiry + admission) {

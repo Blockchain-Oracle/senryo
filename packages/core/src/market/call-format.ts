@@ -4,7 +4,7 @@
  * time. Money stays bigint until the text.
  */
 import { formatUnits } from "../money/format.ts";
-import { formatPrice, priceDecimals } from "./price-format.ts";
+import { formatPrice, type PriceUnit, priceDecimals } from "./price-format.ts";
 import { laneLabel } from "./window-clock.ts";
 
 const DOLLAR_DECIMALS = 6;
@@ -36,11 +36,12 @@ export type Tone = "up" | "down" | "muted";
 export const toneOf = (v: bigint | null): Tone => (v === null || v === 0n ? "muted" : v > 0n ? "up" : "down");
 
 /** A print or an entry price (e-8) as the terminal shows it. */
-export const priceText = (e8: bigint) => formatPrice(Number(e8) / E8);
+export const priceText = (e8: bigint, unit: PriceUnit = "usd") =>
+  formatPrice(Number(e8) / E8, priceDecimals(Number(e8) / E8), unit);
 
 /** A distance between two prices, at the precision of the price it is measured from (`$16.97`, not `$16.965`). */
-export const gapText = (gapE8: bigint, fromE8: bigint) =>
-  formatPrice(Number(gapE8 < 0n ? -gapE8 : gapE8) / E8, priceDecimals(Number(fromE8) / E8));
+export const gapText = (gapE8: bigint, fromE8: bigint, unit: PriceUnit = "usd") =>
+  formatPrice(Number(gapE8 < 0n ? -gapE8 : gapE8) / E8, priceDecimals(Number(fromE8) / E8), unit);
 
 /** One word for where a finished or live call stands. */
 export function stateWord(c: CallState): string {

@@ -14,8 +14,7 @@ import {
   EDGE_FADE_PX,
   edgeAlpha,
   FADE_FRACTION,
-  formatFixed,
-  formatUsd,
+  formatValue,
   gridTicks,
   labelDecimals,
   priceDecimals,
@@ -136,7 +135,7 @@ function drawLevel(
   const right = w - LABEL_RIGHT;
   if (y < win.top - HALF || y > win.bottom + HALF) {
     const up = y < win.top;
-    const text = `${up ? "▲" : "▼"} ${level.label} $${formatFixed(level.price, priceDecimals(level.price))}`;
+    const text = `${up ? "▲" : "▼"} ${level.label} ${formatValue(level.price, priceDecimals(level.price), k.points)}`;
     const slot = up ? edges.up++ : edges.down++;
     const step = slot * (TAG_H + EDGE_TAG_GAP);
     const at = up ? win.top - PAD_Y + EDGE_TAG_INSET + step : win.bottom + PAD_Y - EDGE_TAG_INSET - TAG_H - step;
@@ -179,7 +178,7 @@ export function drawFrame(
     return null;
   }
   const tone = o?.winning === false ? k.colors.down : k.colors.up;
-  const priceText = formatUsd(s.latest, priceDecimals(s.latest));
+  const priceText = formatValue(s.latest, priceDecimals(s.latest), k.points);
   const pillTextW = Math.max(
     k.fonts.pill.getTextWidth(priceText),
     o?.pnlText ? k.fonts.pillSmall.getTextWidth(o.pnlText) : 0,
@@ -258,7 +257,7 @@ export function drawFrame(
     for (const level of o?.levels ?? []) clear = Math.min(clear, Math.abs(y - yOf(level.price, win)) - TAG_H);
     const alpha = edge * edgeAlpha(clear);
     if (alpha > 0) {
-      const label = `$${formatFixed(t.value, decimals)}`;
+      const label = formatValue(t.value, decimals, k.points);
       textRight(c, k, label, w - LABEL_RIGHT, y, k.fonts.axis, k.mids.axis, k.colors.helper, alpha);
     }
   }

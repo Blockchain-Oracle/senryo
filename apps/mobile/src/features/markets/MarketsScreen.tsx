@@ -4,7 +4,7 @@
  * session in words while it doesn't (`@senryo/calls` `marketLine`), and the live price — the last print, muted, when
  * closed. Tapping one opens the terminal there. Prices render at most once a frame (lists, not the terminal).
  */
-import { groupMarkets, MARKET_FILTERS, type MarketFilter } from "@senryo/calls";
+import { groupMarkets, MARKET_FILTERS, type MarketFilter, unitOf } from "@senryo/calls";
 import { useMarketLine } from "@senryo/calls/react";
 import { marketId } from "@senryo/identity";
 import { useLivePrice } from "@senryo/live/react";
@@ -22,7 +22,7 @@ import { TabTitle } from "~/components/shell/TabTitle";
 import { fire } from "~/feedback/fire";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { formatUsd } from "../terminal/chart/engine";
+import { formatValue, priceDecimals } from "../terminal/chart/engine";
 
 const MARK = 40;
 const E8 = 1e8;
@@ -32,11 +32,13 @@ export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: stri
   const { color } = useTheme();
   const price = useLivePrice(symbol);
   const line = useMarketLine(symbol);
+  const points = unitOf(symbol) === "points";
+  const text = price ? formatValue(price / E8, priceDecimals(price / E8), points) : undefined;
   return (
     <Pressable
       onPress={onOpen}
       accessibilityRole="button"
-      accessibilityLabel={`${name}${price ? `, ${formatUsd(price / E8)}` : ""}. ${line.trading ? "" : `${line.text}. `}Open the terminal`}
+      accessibilityLabel={`${name}${text ? `, ${text}` : ""}. ${line.trading ? "" : `${line.text}. `}Open the terminal`}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: color.rowPressed }]}
     >
       <EntityMark id={marketId(symbol)} size={MARK} decorative />
@@ -46,9 +48,7 @@ export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: stri
           {name} · {line.text}
         </Text>
       </View>
-      <Text style={[TYPE.rowTitle, { color: line.trading ? color.ink : color.inkMuted }]}>
-        {price ? formatUsd(price / E8) : "—"}
-      </Text>
+      <Text style={[TYPE.rowTitle, { color: line.trading ? color.ink : color.inkMuted }]}>{text ?? "—"}</Text>
     </Pressable>
   );
 }

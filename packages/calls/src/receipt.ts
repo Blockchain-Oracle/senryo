@@ -20,6 +20,7 @@ import {
   usd,
   whenText,
 } from "@senryo/core";
+import { unitOf } from "./markets.ts";
 
 const FAILED_KINDS = new Set(["refused", "close refused", "settled: lose"]);
 const PERCENT = 100n;
@@ -65,7 +66,7 @@ export function callWhere(c: CallTimeline["call"], kE8: bigint | undefined): str
   const cadence = m?.cadences.find((x) => x === c.cadenceSec);
   const band = m && cadence ? bandMenu(m, cadence)[c.band] : undefined;
   if (!band || band.kind === "up" || band.kind === "down") return null;
-  return bandWhere(band, kE8);
+  return bandWhere(band, kE8, unitOf(c.symbol));
 }
 
 export function receiptFacts(t: CallTimeline, where: string | null = null): [label: string, value: string][] {
@@ -77,8 +78,8 @@ export function receiptFacts(t: CallTimeline, where: string | null = null): [lab
     ...(where ? ([["Wins if", `it closes ${where}`]] as [string, string][]) : []),
     ["Pays if right", filled ? usd(filled.amount) : "—"],
     ...(OPEN_STATES.has(c.status) ? [] : ([["Came back", usd(c.returned)]] as [string, string][])),
-    ["Entry", c.entryE8 === null ? "At the next print" : priceText(c.entryE8)],
-    ...(exit?.priceE8 ? ([["Cashed out at", priceText(exit.priceE8)]] as [string, string][]) : []),
+    ["Entry", c.entryE8 === null ? "At the next print" : priceText(c.entryE8, unitOf(c.symbol))],
+    ...(exit?.priceE8 ? ([["Cashed out at", priceText(exit.priceE8, unitOf(c.symbol))]] as [string, string][]) : []),
     ["Signed with", c.viaSession ? "One-tap" : "Your passkey"],
   ];
 }
@@ -119,8 +120,8 @@ export function shareOf(t: CallTimeline, modeLabel: string, closeE8: bigint | nu
     call: callTitle(c),
     result: signedUsd(pnl),
     won: pnl > 0n,
-    entry: c.entryE8 === null ? null : priceText(c.entryE8),
-    exit: exit === null || exit === undefined ? null : priceText(exit),
+    entry: c.entryE8 === null ? null : priceText(c.entryE8, unitOf(c.symbol)),
+    exit: exit === null || exit === undefined ? null : priceText(exit, unitOf(c.symbol)),
     exitLabel: cashed ? "Cashed out at" : "Closed at",
     mode: modeLabel === "Practice" ? "Practice · test dollars" : "Real · USDC",
     url,
@@ -154,9 +155,9 @@ export function crowdText(p: WindowProof): string {
   return shares.map((s) => `${SIDE[s.band] ?? `Band ${s.band}`} ${s.pct}%`).join(" · ");
 }
 
-function whereText(gap: bigint, lineE8: bigint): string {
+function whereText(gap: bigint, lineE8: bigint, symbol: string): string {
   if (gap === 0n) return "Closed on the line";
-  return `Closed ${gapText(gap, lineE8)} ${gap > 0n ? "above" : "below"} the line`;
+  return `Closed ${gapText(gap, lineE8, unitOf(symbol))} ${gap > 0n ? "above" : "below"} the line`;
 }
 
 /**
@@ -190,17 +191,17 @@ export function proofFacts(
   const facts: ProofFact[] = [
     {
       label: "Line",
-      value: open ? priceText(open.priceE8) : "—",
+      value: open ? priceText(open.priceE8, unitOf(p.symbol)) : "—",
       detail: open ? `Pyth print · ${whenText(open.publishTime)}` : "Set by the first print",
       tx: open?.txHash ?? null,
     },
     {
       label: "Close",
-      value: closeE8 !== null ? priceText(closeE8) : "—",
+      value: closeE8 !== null ? priceText(closeE8, unitOf(p.symbol)) : "—",
       detail: closeDetail,
       tx: p.close?.txHash ?? null,
     },
-    ...(gap !== null && open ? [{ label: "Result", value: whereText(gap, open.priceE8) }] : []),
+    ...(gap !== null && open ? [{ label: "Result", value: whereText(gap, open.priceE8, p.symbol) }] : []),
     {
       label: "Crowd",
       value: crowdText(p),

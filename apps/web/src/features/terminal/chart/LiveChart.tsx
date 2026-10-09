@@ -6,6 +6,7 @@
  * reactions.
  */
 import type { ChartOverlay } from "@senryo/calls";
+import { unitOf } from "@senryo/calls";
 import { priceFromE8 } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { memo, type RefObject, useEffect, useRef } from "react";
@@ -32,6 +33,8 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, onF
   const engineRef = useRef<ChartEngine | null>(null);
   const waitingRef = useRef(waiting);
   waitingRef.current = waiting;
+  const symbolRef = useRef(symbol);
+  symbolRef.current = symbol;
 
   useEffect(() => {
     const box = boxRef.current;
@@ -40,6 +43,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, onF
     if (!box || !dotsCanvas || !lineCanvas) return;
     let theme = readChartTheme(box);
     const engine = new ChartEngine(lineCanvas, theme.chart, waitingRef.current);
+    engine.setUnit(unitOf(symbolRef.current));
     const dots = new DotGrid(dotsCanvas, theme.dots);
     engineRef.current = engine;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -75,6 +79,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, onF
 
   useEffect(() => {
     engineRef.current?.reset(waitingRef.current);
+    engineRef.current?.setUnit(unitOf(symbol));
     const feed = () => {
       const tick = live.prices.latest(symbol);
       if (tick) engineRef.current?.setPrice(priceFromE8(tick.priceE8), performance.now());

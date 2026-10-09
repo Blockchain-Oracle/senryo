@@ -12,22 +12,17 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CALENDARS } from "../packages/config/src/calendars.ts";
+import { BAND_KIND_CODE, bandMenu, feedIdOf, MARKETS, marketsOn, sigmaE8Of } from "../packages/config/src/catalog.ts";
+import { MAINNET_USDC } from "../packages/config/src/money.ts";
+import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "../packages/config/src/networks.ts";
 import {
-  BAND_KIND_CODE,
-  bandMenu,
-  CALENDARS,
-  feedIdOf,
-  MARKETS,
-  marketsOn,
   POOL_TERMS,
   PRINT_CLASS_OF,
   PRINT_CLASSES,
   PYTH_RECEIVER,
-  sigmaE8Of,
   TESTNET_POOL_SEED,
-} from "../packages/config/src/catalog.ts";
-import { MAINNET_USDC } from "../packages/config/src/money.ts";
-import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "../packages/config/src/networks.ts";
+} from "../packages/config/src/pool-terms.ts";
 import { easternOffsetSec, holidayWindows, parseSchedule, weekBits } from "../packages/core/src/market/index.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");

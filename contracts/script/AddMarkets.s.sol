@@ -12,7 +12,7 @@ import {MarketsBase} from "./MarketsBase.s.sol";
 /// @notice `node scripts/catalog-export.mjs` first, then:
 ///         `KEEPER=<keeper address> forge script script/AddMarkets.s.sol --rpc-url monad_testnet \
 ///          --account senryo-deployer --broadcast`
-///         Deploys a print class's verifier the first time a series needs it, sets the market calendars, and registers
+///         Deploys a print class's verifier (crypto, equity, basket) the first time a series needs it, sets the market calendars, and registers
 ///         every series not yet on chain with its σ and menu. Existing series, weeks and holidays are left as they are;
 ///         the address book keeps every entry and gains the new verifier.
 contract AddMarkets is MarketsBase {
@@ -21,16 +21,14 @@ contract AddMarkets is MarketsBase {
         Windows windows = Windows(_need("Windows"));
         BandReserve reserve = BandReserve(_need("BandReserve"));
         MarketCalendar calendar = MarketCalendar(_need("MarketCalendar"));
-        address cryptoVerifier = _need(CRYPTO_VERIFIER);
         AccessManager manager = AccessManager(_need("AccessManager"));
         address keeper = vm.envAddress("KEEPER");
 
         vm.startBroadcast();
         _calendarRole(manager, calendar, keeper);
-        address equityVerifier = _bookAddress(EQUITY_VERIFIER);
-        if (equityVerifier == address(0) && _needsEquity()) equityVerifier = _deployVerifier("equity", EQUITY_VERIFIER);
+        _verifiers(false);
         _configureCalendars(calendar);
-        uint256 listed = _listSeries(windows, reserve, cryptoVerifier, equityVerifier);
+        uint256 listed = _listSeries(windows, reserve);
         vm.stopBroadcast();
 
         _writeBook(true);

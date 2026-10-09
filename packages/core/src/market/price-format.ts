@@ -25,10 +25,14 @@ export function priceDecimals(price: number): number {
 
 const formatters = new Map<number, Intl.NumberFormat>();
 
-/** `$81,234.5` from a price at its own precision (or `decimals`); `undefined` → "—". */
+/** What a market's value is measured in: dollars, or points for a basket (D-286, "1,003.12 pts"). */
+export type PriceUnit = "usd" | "points";
+
+/** `$81,234.5` (or `1,003.12 pts`) from a value at its own precision (or `decimals`); `undefined` → "—". */
 export function formatPrice(
   price: number | undefined,
   decimals = price === undefined ? 0 : priceDecimals(price),
+  unit: PriceUnit = "usd",
 ): string {
   if (price === undefined) return "—";
   let f = formatters.get(decimals);
@@ -36,7 +40,8 @@ export function formatPrice(
     f = new Intl.NumberFormat("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     formatters.set(decimals, f);
   }
-  return `${price < 0 ? "−" : ""}$${f.format(Math.abs(price))}`;
+  const sign = price < 0 ? "−" : "";
+  return unit === "points" ? `${sign}${f.format(Math.abs(price))} pts` : `${sign}$${f.format(Math.abs(price))}`;
 }
 
 /** The stream's prices are × 1e8 (Pyth's exponent −8). */

@@ -59,7 +59,9 @@ export const catalogResponseSchema = z.object({
     z.object({
       symbol: symbolSchema,
       name: z.string(),
-      kind: z.enum(["crypto", "equity", "metal", "fx"]),
+      kind: z.enum(["crypto", "equity", "metal", "fx", "basket"]),
+      /** A basket's members and weights (D-286); empty for a single feed. */
+      members: z.array(z.object({ symbol: symbolSchema, weightBps: z.int().positive() })),
       feedId: bytes32Schema,
       series: z.array(
         z.object({ cadenceSec: z.int(), seriesId: bytes32Schema, sigmaE8: z.int(), bands: z.array(bandSchema) }),

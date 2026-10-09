@@ -61,6 +61,12 @@ const STANDALONE: readonly CatalogEntry[] = [
   { key: "nvidia", owner: "NVIDIA Corporation", spec: { from: "simple-icons", slug: "nvidia" } },
   { key: "tesla", owner: "Tesla, Inc.", spec: { from: "simple-icons", slug: "tesla" } },
   {
+    // Baskets (D-286): several markets in points — no owner's mark exists, so a neutral glyph for "a stack of them".
+    key: "basket",
+    owner: "Google — Material Symbols (github.com/google/material-design-icons)",
+    spec: { from: "material-symbols", name: "stacks", style: "rounded", filled: true },
+  },
+  {
     // Practice's dollar (D-258): ours, with no issuer — a neutral coin glyph, never USDC's mark.
     key: "test-usd",
     owner: "Google — Material Symbols (github.com/google/material-design-icons)",

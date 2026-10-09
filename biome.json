@@ -22,7 +22,8 @@
       "!packages/tokens/src/tokens.css",
       "!packages/identity/sources",
       "!brand/art",
-      "!apps/mobile/assets/onboarding/labels.json"
+      "!apps/mobile/assets/onboarding/labels.json",
+      "!packages/config/src/market-order.json"
     ]
   },
   "formatter": {

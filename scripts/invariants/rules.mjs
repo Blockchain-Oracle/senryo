@@ -7,7 +7,7 @@
  * Rules whose files have not landed yet are `optional` / return `skipped`.
  */
 
-import { catalogAppendOnly } from "./lib/catalog-checks.mjs";
+import { catalogAppendOnly, catalogBasketIds } from "./lib/catalog-checks.mjs";
 import { fontProvenance } from "./lib/font-checks.mjs";
 import { identityProvenance } from "./lib/identity-checks.mjs";
 import { indexerReadsChainFilter } from "./lib/indexer-checks.mjs";
@@ -227,5 +227,10 @@ export const rules = [
     id: "catalog-append-only",
     description: "markets only append to the catalogue (live ticks name a market by its index)",
     check: catalogAppendOnly,
+  },
+  {
+    id: "catalog-basket-ids",
+    description: "each basket's feed id is the hash of its definition (BasketPrintVerifier.basketId)",
+    check: catalogBasketIds,
   },
 ];

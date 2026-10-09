@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 // ⌘K (pivot S6.4): 21st.dev 382 originui/command (cmdk over the Radix Dialog the modal already uses), in a centred
 // modal (D-190). Live markets first — the real mark, the price as it streams, the 1-minute window's countdown — then the
 // places, every Everything destination, and the actions (hide balances, sound, haptics, theme). Loaded on first open.
+import { unitOf } from "@senryo/calls";
 import { CADENCES_SEC, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, formatPrice, laneLabel, priceFromE8, windowCountdown } from "@senryo/core";
 import { marketId } from "@senryo/identity";
@@ -65,7 +66,7 @@ function MarketRow({ symbol, name, onOpen }: { symbol: string; name: string; onO
         </small>
       </span>
       <span className="command-price tnum">
-        {formatPrice(priceE8 === undefined ? undefined : priceFromE8(priceE8))}
+        {formatPrice(priceE8 === undefined ? undefined : priceFromE8(priceE8), undefined, unitOf(symbol))}
       </span>
     </Row>
   );

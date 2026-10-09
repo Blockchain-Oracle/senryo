@@ -7,7 +7,7 @@
  * the open call is losing.
  */
 import type { ChartOverlay } from "@senryo/calls";
-import { formatPrice } from "@senryo/core";
+import { formatPrice, type PriceUnit } from "@senryo/core";
 import {
   BASE_TAU_MS,
   FADE_FRACTION,
@@ -68,6 +68,7 @@ export class ChartEngine {
   private sampleDebt = 0;
   private lastTickAt = 0;
   private tickMs = 0;
+  private unit: PriceUnit = "usd";
   private width = 0;
   private height = 0;
   private dpr = 1;
@@ -84,6 +85,11 @@ export class ChartEngine {
 
   setTheme(theme: ChartTheme): void {
     this.theme = theme;
+  }
+
+  /** Dollars, or points for a basket (D-286): the pill, the axis and the tags read in it. */
+  setUnit(unit: PriceUnit): void {
+    this.unit = unit;
   }
 
   /** Every tick, unthrottled; the first seeds a flat line. The tick cadence sets how softly the line follows. */
@@ -161,7 +167,7 @@ export class ChartEngine {
 
     const o = this.overlay;
     const tone = o?.winning === false ? theme.down : theme.up;
-    const priceText = formatPrice(this.latest);
+    const priceText = formatPrice(this.latest, undefined, this.unit);
     this.priceOdo.set(priceText, this.latest);
     this.priceOdo.step(dt);
     this.pnlOdo.step(dt);
@@ -174,7 +180,7 @@ export class ChartEngine {
     const headY = this.drawLine(win, plotW, tone);
 
     drawMark(ctx, theme, plotW, h);
-    drawAxis(ctx, theme, win, this.step, w, headY, pillH, o?.levels ?? []);
+    drawAxis(ctx, theme, win, this.step, w, headY, pillH, o?.levels ?? [], this.unit);
     const pill = {
       x: w - PILL_RIGHT - pillW,
       y: Math.min(h - pillH - HALF, Math.max(HALF, headY - pillH / HALF)),
@@ -182,7 +188,7 @@ export class ChartEngine {
       h: pillH,
     };
     const space = { pillTop: pill.y, pillBottom: pill.y + pillH, up: 0, down: 0 };
-    for (const level of o?.levels ?? []) drawLevel(ctx, theme, level, win, plotW, w, space);
+    for (const level of o?.levels ?? []) drawLevel(ctx, theme, level, win, plotW, w, space, this.unit);
     ctx.fillStyle = tone;
     ctx.beginPath();
     ctx.arc(plotW, headY, HEAD_R, 0, Math.PI * HALF);

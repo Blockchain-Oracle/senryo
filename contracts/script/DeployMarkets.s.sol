@@ -47,8 +47,7 @@ contract DeployMarkets is MarketsBase {
             false
         );
 
-        address cryptoVerifier = _deployVerifier("crypto", CRYPTO_VERIFIER);
-        address equityVerifier = _needsEquity() ? _deployVerifier("equity", EQUITY_VERIFIER) : address(0);
+        _verifiers(true);
         Windows windows = new Windows(address(manager), IMarketCalendar(address(calendar)));
         _record(
             "Windows",
@@ -61,7 +60,7 @@ contract DeployMarkets is MarketsBase {
         BandReserve reserve = _deployReserve(manager, collateral, windows);
         _calendarRole(manager, calendar, keeper);
         _configureCalendars(calendar);
-        _listSeries(windows, reserve, cryptoVerifier, equityVerifier);
+        _listSeries(windows, reserve);
         _seedPool(reserve, collateral, admin);
         vm.stopBroadcast();
 

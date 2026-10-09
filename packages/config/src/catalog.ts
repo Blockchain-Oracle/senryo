@@ -14,9 +14,10 @@
  * no overnight gap) and scaled ×1.5 — the same margin BTC, ETH and SOL carry over their measured 0.35, 0.44 and 0.53:
  * a quiet week understates tails, and an underpriced σ lets Moonshot and Range take the pool.
  */
+import type { CalendarId } from "./calendars.ts";
 import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "./networks.ts";
 
-export type MarketKind = "crypto" | "equity" | "metal" | "fx";
+export type MarketKind = "crypto" | "equity" | "metal" | "fx" | "basket";
 export type BandKind = "up" | "down" | "range" | "moonshot" | "crash";
 
 /** Window lengths the terminal offers (1m · 5m · 15m · 1h); each divides one hour (contracts `CADENCE_DIVIDES_SEC`). */
@@ -47,8 +48,21 @@ export interface BandSpec {
   highBps: number;
 }
 
-/** Where a market's price is proven (D-284). RedStone and baskets join in S7.8 / S7.5. */
-export type PriceSource = { kind: "pyth"; feedId: `0x${string}` };
+/** A basket member: a listed market, its weight and its price when the basket was 1,000 points (D-286). */
+export interface BasketMember {
+  symbol: string;
+  weightBps: number;
+  baseE8: bigint;
+}
+
+/**
+ * Where a market's price is proven (D-284, D-286): one Pyth feed, or a basket of listed markets in points — its
+ * on-chain feed id is the hash of the definition (`BasketPrintVerifier.basketId`, re-derived by the invariant
+ * `catalog-basket-ids`). RedStone joins in S7.8.
+ */
+export type PriceSource =
+  | { kind: "pyth"; feedId: `0x${string}` }
+  | { kind: "basket"; basketId: `0x${string}`; members: readonly BasketMember[] };
 
 export interface MarketSpec {
   /** Catalogue symbol; on chain the series market key is these ASCII bytes, left-aligned in a bytes32. */
@@ -66,37 +80,23 @@ export interface MarketSpec {
 
 /** The bytes32 a market's prints are keyed by on chain and in the archive. */
 export function feedIdOf(m: MarketSpec): `0x${string}` {
-  return m.source.feedId;
+  return m.source.kind === "basket" ? m.source.basketId : m.source.feedId;
 }
 
-// --------------------------------------------------------------------------------------------- sessions (D-289)
-
-export type CalendarId = 0 | 1 | 2 | 3;
-
-export interface CalendarSpec {
-  name: string;
-  /**
-   * The feed's own Pyth schedule (`America/New_York;Mon,…,Sun;MMDD/day,…`): the price moves only while it publishes,
-   * so this is the session. Dated entries cover about a year ahead; refresh from Hermes before the last one passes.
-   */
-  schedule: string;
+/** The market whose prints are keyed by this feed id (a single feed or a basket). */
+export function marketByFeedId(feedId: string): MarketSpec | undefined {
+  return MARKETS.find((m) => feedIdOf(m) === feedId);
 }
 
-/** Calendar ids are `MarketCalendar` ids on chain; 0 is never configured there (always open). */
-export const CALENDARS: Readonly<Record<CalendarId, CalendarSpec>> = {
-  0: { name: "Always open", schedule: "America/New_York;O,O,O,O,O,O,O;" },
-  1: {
-    name: "US stocks",
-    schedule:
-      "America/New_York;0930-1600,0930-1600,0930-1600,0930-1600,0930-1600,C,C;0907/C,1126/C,1127/0930-1300,1224/0930-1300,1225/C,0101/C,0118/C,0215/C,0326/C,0531/C,0618/C,0705/C",
-  },
-  2: {
-    name: "Metals",
-    schedule:
-      "America/New_York;0000-1700&1800-2400,0000-1700&1800-2400,0000-1700&1800-2400,0000-1700&1800-2400,0000-1700,C,1800-2400;0907/0000-1430&1800-2400,1126/0000-1430&1800-2400,1127/0000-1445,1224/0000-1345,1225/C,1231/0000-1700,0101/C,0118/0000-1430&1800-2400,0215/0000-1430&1800-2400,0325/0000-1700,0326/C,0531/0000-1430&1800-2400,0618/0000-1300,0705/0000-1430&1800-2400",
-  },
-  3: { name: "Currencies", schedule: "America/New_York;O,O,O,O,0000-1700,C,1700-2400;1224/0000-1700,1231/0000-1700" },
-};
+/** A basket's members as markets, in its definition's order (empty for a single feed). */
+export function basketMembers(m: MarketSpec): { member: BasketMember; market: MarketSpec }[] {
+  if (m.source.kind !== "basket") return [];
+  return m.source.members.map((member) => {
+    const market = MARKETS.find((x) => x.symbol === member.symbol);
+    if (!market) throw new Error(`${m.symbol}: member ${member.symbol} is not listed`);
+    return { member, market };
+  });
+}
 
 const SECONDS_PER_YEAR = 365 * 86_400;
 const E8 = 100_000_000;
@@ -226,6 +226,62 @@ export const MARKETS: readonly MarketSpec[] = [
     calendarId: 3,
     chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
   },
+  // Baskets (D-286): equal weights, 1,000 points at the members' prints of 2026-10-09T14:00:00Z; σ measured like the
+  // single markets (the basket's own 1-minute index over five days, ×1.5).
+  {
+    symbol: "MAJORS",
+    name: "Crypto majors",
+    kind: "basket",
+    source: {
+      kind: "basket",
+      basketId: "0x4e3e3c889b6c0c7d808f86efc9bad05c5a47cd1f10fe97967a80194302a2a83c",
+      members: [
+        { symbol: "BTC", weightBps: 3334, baseE8: 8_255_901_409_615n },
+        { symbol: "ETH", weightBps: 3333, baseE8: 248_247_898_562n },
+        { symbol: "SOL", weightBps: 3333, baseE8: 10_952_339_683n },
+      ],
+    },
+    annualVol: 0.61,
+    cadences: CADENCES_SEC,
+    calendarId: 0,
+    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
+  },
+  {
+    symbol: "ALTS",
+    name: "Alt coins",
+    kind: "basket",
+    source: {
+      kind: "basket",
+      basketId: "0x8d72fb569fec73eed386cde5bf50b36da75cd28f167067da8ec09b8ce6c57e01",
+      members: [
+        { symbol: "DOGE", weightBps: 2500, baseE8: 8_440_963n },
+        { symbol: "XRP", weightBps: 2500, baseE8: 137_902_450n },
+        { symbol: "BNB", weightBps: 2500, baseE8: 73_843_159_515n },
+        { symbol: "HYPE", weightBps: 2500, baseE8: 8_500_953_452n },
+      ],
+    },
+    annualVol: 0.7,
+    cadences: CADENCES_SEC,
+    calendarId: 0,
+    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
+  },
+  {
+    symbol: "METALS",
+    name: "Metals",
+    kind: "basket",
+    source: {
+      kind: "basket",
+      basketId: "0xac73fa5dd455b02b64be95124bb0fb1ce639e7c7301a37838166aa1432864c30",
+      members: [
+        { symbol: "XAU", weightBps: 5000, baseE8: 419_035_200_000n },
+        { symbol: "XAG", weightBps: 5000, baseE8: 6_105_866_000n },
+      ],
+    },
+    annualVol: 0.45,
+    cadences: CADENCES_SEC,
+    calendarId: 2,
+    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
+  },
 ];
 
 /** σ per √second × 1e8 (the contracts' `sigmaE8`). */
@@ -255,91 +311,3 @@ export function bandMenu(m: MarketSpec, cadence: CadenceSec): BandSpec[] {
 export function marketsOn(chainId: ChainId): MarketSpec[] {
   return MARKETS.filter((m) => m.chains.includes(chainId));
 }
-
-// --------------------------------------------------------------------------------------------- per-network terms
-
-/** How a print is proven (contracts `PythPrintVerifier` immutables): one verifier per quality class. */
-export interface PrintClass {
-  graceSec: number;
-  maxConfBps: number;
-  admissionSec: number;
-}
-
-export type PrintClassKey = "crypto" | "equity";
-
-export const PRINT_CLASSES: Readonly<Record<PrintClassKey, PrintClass>> = {
-  crypto: { graceSec: 5, maxConfBps: 25, admissionSec: 300 },
-  equity: { graceSec: 5, maxConfBps: 50, admissionSec: 300 },
-};
-
-/**
- * Metals and the euro quote far inside crypto's 25 bps (0.3–2 bps measured 9 Oct), so they share its verifier; a stock
- * gets the wider equity class (its open can print a wide band).
- */
-export const PRINT_CLASS_OF: Readonly<Record<MarketKind, PrintClassKey>> = {
-  crypto: "crypto",
-  metal: "crypto",
-  fx: "crypto",
-  equity: "equity",
-};
-
-/** Each class's verifier, by its address-book name. */
-export const PRINT_VERIFIER: Readonly<Record<PrintClassKey, string>> = {
-  crypto: "PythPrintVerifier",
-  equity: "PythPrintVerifierEquity",
-};
-
-export function printClassOf(m: MarketSpec): PrintClass {
-  return PRINT_CLASSES[PRINT_CLASS_OF[m.kind]];
-}
-
-/** Pyth Core receivers. Mainnet: Pyth's own table; both candidates verified a keyed boundary payload on 8 Oct (D-274). */
-export const PYTH_RECEIVER: Readonly<Record<ChainId, `0x${string}`>> = {
-  [TESTNET_CHAIN_ID]: "0xFC6bd9F9f0c6481c6Af3A7Eb46b296A5B85ed379",
-  [MAINNET_CHAIN_ID]: "0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d",
-};
-
-/** Dollars are 6-decimal on both networks (Test USD, Circle USDC). */
-const USD = 1_000_000;
-
-/** The pool's terms (contracts `Params`, D-262/D-264) and the chain's session ceilings (D-267). */
-export interface PoolTerms {
-  halfSpreadE6: number;
-  maxSurchargeE6: number;
-  minProbE6: number;
-  maxProbE6: number;
-  maxExposureBps: number;
-  maxExpiryReserved: bigint;
-  minStake: bigint;
-  maxStake: bigint;
-  session: { perCallCap: bigint; sessionCap: bigint; maxSessionSec: number };
-}
-
-const PRICING = {
-  halfSpreadE6: 20_000,
-  maxSurchargeE6: 10_000,
-  minProbE6: 30_000,
-  maxProbE6: 970_000,
-  maxExposureBps: 6000,
-} as const;
-
-export const POOL_TERMS: Readonly<Record<ChainId, PoolTerms>> = {
-  [TESTNET_CHAIN_ID]: {
-    ...PRICING,
-    maxExpiryReserved: BigInt(500_000 * USD),
-    minStake: BigInt(USD),
-    maxStake: BigInt(1000 * USD),
-    session: { perCallCap: BigInt(1000 * USD), sessionCap: BigInt(10_000 * USD), maxSessionSec: 3600 },
-  },
-  [MAINNET_CHAIN_ID]: {
-    ...PRICING,
-    // Sized to the seed at S9; a fraction of a small pool so one print never decides much of it.
-    maxExpiryReserved: BigInt(250 * USD),
-    minStake: BigInt(USD),
-    maxStake: BigInt(25 * USD),
-    session: { perCallCap: BigInt(25 * USD), sessionCap: BigInt(100 * USD), maxSessionSec: 900 },
-  },
-};
-
-/** Practice's pool seed in Test USD (minted at deploy; D-260). */
-export const TESTNET_POOL_SEED = BigInt(10_000_000 * USD);

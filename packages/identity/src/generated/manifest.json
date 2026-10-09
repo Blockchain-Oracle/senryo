@@ -112,6 +112,8 @@
   "tesla/monoDark": "4b94d9eaf23849d6feec7a9c819e3699a35cbb76045ba7d482d17cbcc97414a5",
   "tesla/symbol": "0a4fd5f20aea8430e25a3e9bb9be4ab00b1bdac6751ea48dd6e39e40ae9098b7",
   "tesla/monoLight": "6cee3bea541af410a75cd519aa7ffffdc15e1b08ae80412b5b1ad86b9fd44bf1",
+  "basket/symbol": "241536572123319e87a66a073d4e8b92e263736a2625a35cc43e6362ae084250",
+  "basket/monoLight": "cd3118231b0cc1b7104842a76b96748134ec325dd63042721e5f748ce8d1a4e4",
   "test-usd/symbol": "d342d04a990b7f94deb9bf235f96ba014868277851f44c414ae7949a559c154e",
   "test-usd/monoLight": "2a23177679012df06614437f0f50b1e74876fbf07714593cf9152bcd1b3eddb7",
   "lib-monad/monoLight": "0e0b523647a5c016a7a47576ce4ec6ecb7043be38c52ae002484e9dbefc6931d",

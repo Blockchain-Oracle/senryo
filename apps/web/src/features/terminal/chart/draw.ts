@@ -5,7 +5,7 @@
  * Nothing here keeps state.
  */
 import type { ChartLevel } from "@senryo/calls";
-import { formatPrice } from "@senryo/core";
+import { formatPrice, type PriceUnit } from "@senryo/core";
 import {
   EDGE_FADE_PX,
   EDGE_TAG_GAP,
@@ -106,6 +106,7 @@ export function drawAxis(
   headY: number,
   pillH: number,
   levels: readonly ChartLevel[],
+  unit: PriceUnit = "usd",
 ): void {
   const decimals = labelDecimals(win.center, step);
   ctx.lineWidth = 1;
@@ -130,7 +131,7 @@ export function drawAxis(
     let clear = Math.abs(y - headY) - (pillH / HALF + EDGE_FADE_PX / HALF);
     for (const level of levels) clear = Math.min(clear, Math.abs(y - yOf(level.price, win)) - TAG_H);
     ctx.globalAlpha = edge * edgeAlpha(clear);
-    if (ctx.globalAlpha > 0) ctx.fillText(formatPrice(tick.value, decimals), w - LABEL_RIGHT, y);
+    if (ctx.globalAlpha > 0) ctx.fillText(formatPrice(tick.value, decimals, unit), w - LABEL_RIGHT, y);
   }
   ctx.globalAlpha = 1;
 }
@@ -176,6 +177,7 @@ export function drawLevel(
   plotW: number,
   w: number,
   space: TagSpace,
+  unit: PriceUnit = "usd",
 ): void {
   const colour = level.kind === "line" ? t.ink : t.helper;
   const y = yOf(level.price, win);
@@ -186,7 +188,7 @@ export function drawLevel(
     const slot = up ? space.up++ : space.down++;
     const offset = slot * (TAG_H + EDGE_TAG_GAP);
     const at = up ? win.top - PAD_Y + EDGE_TAG_INSET + offset : win.bottom + PAD_Y - EDGE_TAG_INSET - TAG_H - offset;
-    tag(ctx, t, `${up ? "▲" : "▼"} ${level.label} ${formatPrice(level.price)}`, right, at, colour);
+    tag(ctx, t, `${up ? "▲" : "▼"} ${level.label} ${formatPrice(level.price, undefined, unit)}`, right, at, colour);
     return;
   }
   ctx.save();

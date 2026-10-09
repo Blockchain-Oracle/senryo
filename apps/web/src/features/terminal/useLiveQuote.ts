@@ -16,6 +16,7 @@ import {
   type QuoteTick,
   quoteTick,
   trendOf,
+  unitOf,
 } from "@senryo/calls";
 import type { CallWindowView } from "@senryo/calls/react";
 import { priceFromE8 } from "@senryo/core";
@@ -57,7 +58,8 @@ export function useLiveQuote(
   }, []);
 
   const bands = t.series?.bands;
-  const offer = useMemo(() => offerOf(mode, bands, t.k), [mode, bands, t.k]);
+  const unit = unitOf(t.symbol);
+  const offer = useMemo(() => offerOf(mode, bands, t.k, unit), [mode, bands, t.k, unit]);
   const position = t.position;
   const positionBand = position ? bands?.[position.band] : undefined;
   const pricing = useMemo(() => (t.terms ? pricingFor(t.terms as PoolTerms, load) : undefined), [t.terms, load]);
@@ -82,6 +84,7 @@ export function useLiveQuote(
         pricing,
         stake,
         offer: [offer[0]?.band, offer[1]?.band],
+        unit,
         position: position && positionBand ? { call: position, band: positionBand } : undefined,
       });
       values.firstLine.set(pass.firstLine);

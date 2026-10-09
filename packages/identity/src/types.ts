@@ -20,7 +20,7 @@ export type EntityRole =
 /** `token`: an ERC-20 held and traded spot on Monad (J11), whatever it tracks. */
 export type InstrumentType =
   /** A crypto asset called on as a price market (BTC, ETH, SOL, MON). */
-  "crypto" | "native-token" | "stablecoin" | "token" | "commodity" | "fx-pair" | "equity" | "none";
+  "crypto" | "native-token" | "stablecoin" | "token" | "commodity" | "fx-pair" | "equity" | "basket" | "none";
 
 /**
  * Artwork variants. `disc` is the contained asset presentation (market rows, pickers); `symbol` the uncontained mark;

@@ -5,7 +5,7 @@
  * below. Edges are K ± `offsetE8`, so they exist once K does; before that the words use the band's distance in %.
  */
 import { type BandShape, offsetE8 } from "./band-math.ts";
-import { formatPrice, priceDecimals } from "./price-format.ts";
+import { formatPrice, type PriceUnit, priceDecimals } from "./price-format.ts";
 
 const E8 = 1e8;
 /** Basis points → percent with two decimals (7 bps → "0.07%"). */
@@ -45,7 +45,7 @@ const pct = (bps: number) => `${(bps / BPS_PER_PERCENT).toFixed(PERCENT_DECIMALS
  * Where it wins, in words: "above the line", "between $81,700.12 and $81,760.40", "above $81,800.00" — or, before K,
  * "within ±0.03% of the line", "0.07% above the line or more".
  */
-export function bandWhere(band: BandShape, k: bigint | undefined): string {
+export function bandWhere(band: BandShape, k: bigint | undefined, unit: PriceUnit = "usd"): string {
   if (band.kind === "up") return "above the line";
   if (band.kind === "down") return "below the line";
   if (k === undefined) {
@@ -57,7 +57,7 @@ export function bandWhere(band: BandShape, k: bigint | undefined): string {
     return `${pct(band.lowBps)} ${band.kind === "moonshot" ? "above" : "below"} the line or more`;
   }
   const decimals = priceDecimals(Number(k) / E8);
-  const price = (v: bigint) => formatPrice(Number(v) / E8, decimals);
+  const price = (v: bigint) => formatPrice(Number(v) / E8, decimals, unit);
   const e = bandEdgesE8(band, k);
   if (band.kind === "range" && e.low !== null && e.high !== null) return `between ${price(e.low)} and ${price(e.high)}`;
   if (band.kind === "moonshot" && e.low !== null) return `above ${price(e.low)}`;

@@ -14,10 +14,12 @@ import {
   type CloseQuote,
   fitOpen,
   formatUnits,
+  gapText,
   loadSurchargeE6,
   multiplierE2,
   type OpenQuote,
   P_ONE,
+  type PriceUnit,
   type QuoteTerms,
   quoteClose,
   quoteOpen,
@@ -26,7 +28,6 @@ import {
 import type { ReactionPosition } from "./reactions.ts";
 
 const E8 = 1e8;
-const PRICE_DECIMALS = 8;
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const PERCENT = 100n;
@@ -121,6 +122,8 @@ export interface QuoteInput {
   stake: bigint;
   /** The mode's two buttons' bands (`offerOf`); the second is absent for Range. */
   offer: readonly [BandSpecLike | undefined, BandSpecLike | undefined];
+  /** Dollars, or points for a basket (the distance to the line reads in it). */
+  unit?: PriceUnit;
   /** The open call and its band's shape, when there is one. */
   position: { call: QuotePosition; band: BandSpecLike } | undefined;
 }
@@ -208,7 +211,7 @@ export function quoteTick(i: QuoteInput): QuotePass {
 
   const diff = spot - i.k;
   const pct = i.k > 0n ? (diff * PERCENT_E3) / i.k : 0n;
-  const lineText = `${diff >= 0n ? "▲" : "▼"} $${formatUnits(diff < 0n ? -diff : diff, PRICE_DECIMALS, CENTS)} (${formatUnits(pct < 0n ? -pct : pct, PERCENT_DECIMALS, PERCENT_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
+  const lineText = `${diff >= 0n ? "▲" : "▼"} ${gapText(diff, i.k, i.unit)} (${formatUnits(pct < 0n ? -pct : pct, PERCENT_DECIMALS, PERCENT_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
   const base = { first, second, firstLine: oddsLine(first, i.stake), secondLine: oddsLine(second, i.stake), lineText };
 
   const p = i.position;

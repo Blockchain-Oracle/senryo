@@ -22,6 +22,7 @@ import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { TERMINAL_STORAGE, useStoredString } from "@/lib/terminal/stored";
+import { BasketMembers } from "./BasketMembers";
 import { CallPanel } from "./CallPanel";
 import { CashOutModal } from "./CashOutModal";
 import { CrowdLine } from "./CrowdLine";
@@ -141,6 +142,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
             className="terminal-distance tnum"
           />
           <CrowdLine windowId={synced ? t.window.windowId : undefined} />
+          <BasketMembers symbol={symbol} />
         </div>
       </section>
       <aside className="terminal-side" aria-label="Call">

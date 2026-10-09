@@ -3,6 +3,7 @@
  * the UI thread eases, samples and rolls the digits; a picture is re-recorded each frame from that state. React renders
  * only on layout and when the market changes — never per tick (the overlay is a shared value too).
  */
+import { unitOf } from "@senryo/calls";
 import { useLive, useLiveStream } from "@senryo/live/react";
 import { Canvas, matchFont, Picture, Skia, useFont } from "@shopify/react-native-skia";
 import { memo, useEffect, useMemo } from "react";
@@ -19,7 +20,7 @@ import { useTheme } from "~/theme";
 import { CHART_ERASER } from "~/theme/palette";
 import { LEVEL_DASH } from "./constants";
 import { type ChartOverlay, drawFrame, type Head } from "./draw";
-import { formatUsd, priceDecimals } from "./engine";
+import { formatValue, priceDecimals } from "./engine";
 import { type DrawKit, makeDotPicture, makeKit } from "./kit";
 import { advance, createChartState, resetChart, takePrice } from "./state";
 
@@ -49,6 +50,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
   const reduced = useReducedMotion();
   const markFont = useFont(require("../../../../assets/fonts/NotoSansJP-Bold-subset.ttf"), MARK_FONT_SIZE);
 
+  const points = unitOf(symbol) === "points";
   const kit = useMemo<DrawKit>(
     () =>
       makeKit(
@@ -78,8 +80,9 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
           clear: Skia.Color(CHART_ERASER.clear),
         },
         MARK,
+        points,
       ),
-    [color, markFont],
+    [color, markFont, points],
   );
   const recorder = useMemo(() => Skia.PictureRecorder(), []);
   const state = useSharedValue(createChartState());
@@ -117,7 +120,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
         takePrice(s, tick.price, frame.timestamp);
       }
       advance(s, frame.timestamp, reduced, plotW);
-      if (s.ready) setOdometer(s.price, formatUsd(s.latest, priceDecimals(s.latest)), s.latest);
+      if (s.ready) setOdometer(s.price, formatValue(s.latest, priceDecimals(s.latest), points), s.latest);
       const o = overlayValue.value;
       if (o?.pnlText) setOdometerTrend(s.pnl, o.pnlText, o.pnlTrend);
       return s;

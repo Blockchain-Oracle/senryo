@@ -33,6 +33,13 @@ const COMMODITY_MARKETS = [
   { symbol: "XAG", name: "Silver", art: "xag-chogin" },
 ] as const;
 
+/** Baskets of listed markets in points (D-286): one neutral glyph; the members' own marks show on the basket screen. */
+const BASKET_MARKETS = [
+  { symbol: "MAJORS", name: "Crypto majors" },
+  { symbol: "ALTS", name: "Alt coins" },
+  { symbol: "METALS", name: "Metals" },
+] as const;
+
 /** Chains the any-asset bridges reach that no Senryo config needs elsewhere (EIP-155 ids). */
 const OPTIMISM_CHAIN_ID = 10;
 const AVALANCHE_CHAIN_ID = 43114;
@@ -107,6 +114,14 @@ const marketRows = (): Entity[] => [
     role: "asset" as const,
     instrument: "commodity" as const,
     art: m.art,
+  })),
+  ...BASKET_MARKETS.map((m) => ({
+    id: ids.market(m.symbol),
+    name: m.name,
+    symbol: m.symbol,
+    role: "asset" as const,
+    instrument: "basket" as const,
+    art: "basket",
   })),
 ];
 

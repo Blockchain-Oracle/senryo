@@ -88,6 +88,8 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         name: m.name,
         kind: m.kind,
         feedId: feedIdOf(m),
+        members:
+          m.source.kind === "basket" ? m.source.members.map(({ symbol, weightBps }) => ({ symbol, weightBps })) : [],
         series: m.cadences.map((cadenceSec) => ({
           cadenceSec,
           seriesId: seriesIdOf(m.symbol, cadenceSec),

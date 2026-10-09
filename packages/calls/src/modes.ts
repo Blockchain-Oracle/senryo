@@ -4,7 +4,7 @@
  * strikes). Each button is a menu index the call is placed on.
  */
 import { BAND_INDEX } from "@senryo/config";
-import { bandName, bandWhere } from "@senryo/core";
+import { bandName, bandWhere, type PriceUnit } from "@senryo/core";
 import type { BandSpecLike } from "./quote.ts";
 
 export type CallMode = "updown" | "range" | "moonshot";
@@ -45,11 +45,16 @@ const TONE: Readonly<Record<BandSpecLike["kind"], OfferedBand["tone"]>> = {
   range: "neutral",
 };
 
-export function offerOf(mode: CallMode, menu: readonly BandSpecLike[] | undefined, k: bigint | undefined): Offer {
+export function offerOf(
+  mode: CallMode,
+  menu: readonly BandSpecLike[] | undefined,
+  k: bigint | undefined,
+  unit: PriceUnit = "usd",
+): Offer {
   const one = (index: number | null): OfferedBand | undefined => {
     const band = index === null ? undefined : menu?.[index];
     if (index === null || !band) return undefined;
-    return { index, band, label: bandName(band.kind), where: bandWhere(band, k), tone: TONE[band.kind] };
+    return { index, band, label: bandName(band.kind), where: bandWhere(band, k, unit), tone: TONE[band.kind] };
   };
   const [a, b] = MODE_OFFER[mode];
   return [one(a), one(b)];

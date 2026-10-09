@@ -115,6 +115,8 @@ const ArtNvidiaMonoLight = lazy(() => import("./nvidia-monolight.tsx"));
 const ArtTeslaMonoDark = lazy(() => import("./tesla-monodark.tsx"));
 const ArtTeslaSymbol = lazy(() => import("./tesla-symbol.tsx"));
 const ArtTeslaMonoLight = lazy(() => import("./tesla-monolight.tsx"));
+const ArtBasketSymbol = lazy(() => import("./basket-symbol.tsx"));
+const ArtBasketMonoLight = lazy(() => import("./basket-monolight.tsx"));
 const ArtTestUsdSymbol = lazy(() => import("./test-usd-symbol.tsx"));
 const ArtTestUsdMonoLight = lazy(() => import("./test-usd-monolight.tsx"));
 const ArtLibMonadMonoLight = lazy(() => import("./lib-monad-monolight.tsx"));
@@ -205,6 +207,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
+  "basket": { symbol: ArtBasketSymbol, monoLight: ArtBasketMonoLight },
   "test-usd": { symbol: ArtTestUsdSymbol, monoLight: ArtTestUsdMonoLight },
   "lib-monad": { monoLight: ArtLibMonadMonoLight, monoDark: ArtLibMonadMonoDark },
   "lib-bitcoin": { symbol: ArtLibBitcoinSymbol, monoLight: ArtLibBitcoinMonoLight, monoDark: ArtLibBitcoinMonoDark },
