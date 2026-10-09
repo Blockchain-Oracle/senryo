@@ -9,7 +9,9 @@ import {
 import {
   accessManagerAbi,
   bandReserveAbi,
+  basketPrintVerifierAbi,
   marketCalendarAbi,
+  poolSharesAbi,
   pythPrintVerifierAbi,
   testUSDAbi,
   windowsAbi,
@@ -26,6 +28,10 @@ export const CONTRACT_ABIS = {
   PythPrintVerifier: pythPrintVerifierAbi,
   /** The equity print class (D-284): the same contract with a wider confidence bound. */
   PythPrintVerifierEquity: pythPrintVerifierAbi,
+  /** Baskets as one print in points (D-286). */
+  BasketPrintVerifier: basketPrintVerifierAbi,
+  /** Earn: supply the shared pool at settled hours (D-287). */
+  PoolShares: poolSharesAbi,
   TestUSD: testUSDAbi,
   Windows: windowsAbi,
 } as const;

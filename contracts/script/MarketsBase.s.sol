@@ -9,6 +9,7 @@ import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {BandReserve} from "../src/markets/BandReserve.sol";
 import {BasketPrintVerifier} from "../src/markets/BasketPrintVerifier.sol";
 import {PythPrintVerifier} from "../src/markets/PythPrintVerifier.sol";
+import {ISharedPool, PoolShares} from "../src/markets/PoolShares.sol";
 import {Windows} from "../src/markets/Windows.sol";
 import {IPyth} from "../src/markets/interfaces/IPyth.sol";
 import "../src/markets/MarketTypes.sol";
@@ -28,6 +29,8 @@ abstract contract MarketsBase is Script {
     string[3] internal CLASSES = ["crypto", "equity", "basket"];
     /// @dev AccessManager role that keeps market calendars current (the keeper's job, D-289); the admin holds it too.
     uint64 internal constant CALENDAR_ROLE = 2;
+    /// @dev AccessManager role on the pool's money doors (`fund`, `defund`): held by `PoolShares` alone (D-287).
+    uint64 internal constant POOL_ROLE = 3;
 
     struct Entry {
         string name;
@@ -143,6 +146,29 @@ abstract contract MarketsBase is Script {
             }
             if (!have) calendar.addHoliday(id, uint64(starts[h]), uint64(ends[h]));
         }
+    }
+
+    // ------------------------------------------------------------------------------------------------ Earn
+
+    /// @dev `PoolShares` on the reserve (D-287), once: the pool's money doors under POOL_ROLE held by it alone, and the
+    ///      pool's value minted as the house's shares (`house`) — on mainnet that waits for the owner's seed (S9).
+    ///      Skipped when the book already has it, unless `fresh` (a new network ignores the old book).
+    function _earn(AccessManager manager, BandReserve reserve, address house, bool fresh) internal {
+        if (!fresh && _bookAddress("PoolShares") != address(0)) return;
+        PoolShares shares = new PoolShares(address(manager), ISharedPool(address(reserve)));
+        _record(
+            "PoolShares",
+            address(shares),
+            abi.encodePacked(type(PoolShares).creationCode, abi.encode(address(manager), address(reserve))),
+            true
+        );
+        bytes4[] memory doors = new bytes4[](2);
+        doors[0] = reserve.fund.selector;
+        doors[1] = reserve.defund.selector;
+        manager.labelRole(POOL_ROLE, "POOL");
+        manager.setTargetFunctionRole(address(reserve), doors, POOL_ROLE);
+        manager.grantRole(POOL_ROLE, address(shares), 0);
+        if (shares.poolValue() > 0) shares.seed(house);
     }
 
     // ------------------------------------------------------------------------------------------------ series

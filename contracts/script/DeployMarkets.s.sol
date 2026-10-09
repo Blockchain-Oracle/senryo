@@ -62,6 +62,7 @@ contract DeployMarkets is MarketsBase {
         _configureCalendars(calendar);
         _listSeries(windows, reserve);
         _seedPool(reserve, collateral, admin);
+        _earn(manager, reserve, admin, true);
         vm.stopBroadcast();
 
         _writeBook(false);

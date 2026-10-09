@@ -14,7 +14,8 @@ import {MarketsBase} from "./MarketsBase.s.sol";
 ///          --account senryo-deployer --broadcast`
 ///         Deploys a print class's verifier (crypto, equity, basket) the first time a series needs it, sets the market calendars, and registers
 ///         every series not yet on chain with its σ and menu. Existing series, weeks and holidays are left as they are;
-///         the address book keeps every entry and gains the new verifier.
+///         Earn's `PoolShares` arrives once (the house's capital as the first shares). The address book keeps every
+///         entry and gains what was deployed.
 contract AddMarkets is MarketsBase {
     function run() external {
         _readCatalog();
@@ -29,6 +30,7 @@ contract AddMarkets is MarketsBase {
         _verifiers(false);
         _configureCalendars(calendar);
         uint256 listed = _listSeries(windows, reserve);
+        _earn(manager, reserve, msg.sender, false);
         vm.stopBroadcast();
 
         _writeBook(true);

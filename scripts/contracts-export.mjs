@@ -29,6 +29,8 @@ const CONTRACTS = [
   ["BandReserve.sol", "BandReserve"],
   ["Windows.sol", "Windows"],
   ["PythPrintVerifier.sol", "PythPrintVerifier"],
+  ["BasketPrintVerifier.sol", "BasketPrintVerifier"],
+  ["PoolShares.sol", "PoolShares"],
   ["TestUSD.sol", "TestUSD"],
   ["MarketCalendar.sol", "MarketCalendar"],
   ["AccessManager.sol", "AccessManager"],
