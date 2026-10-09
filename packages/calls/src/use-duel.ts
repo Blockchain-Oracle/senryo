@@ -6,6 +6,7 @@
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { type DuelView, printRoute } from "@senryo/api-client";
+import { isDeployed } from "@senryo/chain";
 import { DUEL, duelEntryCost, duelTierOf, FILL_DELAY_SEC } from "@senryo/config";
 import { multiplierE2, type QuoteTerms, quoteOpen, withTolerance } from "@senryo/core";
 import { useLive, useServerSeconds } from "@senryo/live/react";
@@ -96,10 +97,12 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
   const env = useQueryEnv();
   const live = useLive();
   const owner = caller.hint?.address;
+  /** Duels open once the arena is on this network (the markets v2 deploy, D-291); until then the tiers are read-only. */
+  const arenaLive = isDeployed(env.chainId, "DuelArena");
   const catalog = useCatalog();
   const account = useMarketAccount(owner);
-  const queue = useDuelQueue(owner);
-  const duels = useDuels(owner);
+  const queue = useDuelQueue(arenaLive ? owner : undefined);
+  const duels = useDuels(arenaLive ? owner : undefined);
   const enterMutation = useEnterDuel(owner);
   const cancelMutation = useCancelDuel(owner);
   const pickMutation = useDuelPick();
@@ -231,6 +234,8 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
   };
 
   return {
+    live: arenaLive,
+    chainId: env.chainId,
     owner,
     entry,
     match,

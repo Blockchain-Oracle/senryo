@@ -16,7 +16,8 @@ export type NavIcon =
   | "receive"
   | "status"
   | "earn"
-  | "parlay";
+  | "parlay"
+  | "duel";
 
 export interface NavItem {
   key: string;
@@ -39,6 +40,7 @@ export type DockKey = (typeof DOCK_NAV)[number]["key"];
 /** The More grid (phone) and the rail's secondary group (web), in order. */
 export const MORE_NAV = [
   { key: "parlay", label: "Parlay", icon: "parlay", path: "/parlay" },
+  { key: "duel", label: "Duel", icon: "duel", path: "/duel" },
   { key: "wallet", label: "Wallet", icon: "wallet", path: "/wallet" },
   { key: "earn", label: "Earn", icon: "earn", path: "/earn" },
   { key: "profile", label: "Profile", icon: "profile", path: "/account/profile" },
@@ -69,7 +71,8 @@ export type WebIcon =
   | "proof"
   | "download"
   | "earn"
-  | "parlay";
+  | "parlay"
+  | "duel";
 
 export interface WebNavItem {
   key: string;
@@ -135,6 +138,14 @@ export const WEB_EVERYTHING = [
         href: "/app/parlay/",
         description: "Two to four calls that must all come true; the odds multiply.",
         keywords: "combo accumulator multi legs",
+      },
+      {
+        key: "duel",
+        label: "Duel",
+        icon: "duel",
+        href: "/app/duel/",
+        description: "Head to head: the same three cards, the better total takes the pot.",
+        keywords: "versus game pvp match head to head",
       },
     ],
   },

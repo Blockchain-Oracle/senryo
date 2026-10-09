@@ -71,6 +71,7 @@ export const ANDROID_CODEPOINTS = {
   support: 0xef73,
   swap_horiz: 0xe8d4,
   swap_vert: 0xe8d5,
+  swords: 0xf889,
   tune: 0xe429,
   verified_user: 0xe8e8,
   view_list: 0xe8ef,

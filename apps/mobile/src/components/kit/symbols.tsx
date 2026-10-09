@@ -167,6 +167,7 @@ export const Snowflake = symbol({ ios: "snowflake", android: "ac_unit" }, "Snowf
 export const Wallet = symbol({ ios: "wallet.pass", android: "account_balance_wallet" }, "Wallet");
 export const Landmark = symbol({ ios: "building.columns", android: "account_balance" }, "Landmark");
 export const Layers = symbol({ ios: "square.stack.3d.up", android: "layers" }, "Layers");
+export const Swords = symbol({ ios: "figure.fencing", android: "swords" }, "Swords");
 export const Receipt = symbol(
   { ios: "list.bullet.rectangle.portrait", iosFilled: "list.bullet.rectangle.portrait.fill", android: "receipt_long" },
   "Receipt",

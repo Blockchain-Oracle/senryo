@@ -9,6 +9,7 @@ import {
   QrCode,
   Settings,
   Signal,
+  Swords,
   type SymbolIcon,
   Wallet,
 } from "~/components/kit/symbols";
@@ -24,6 +25,7 @@ import { SIZE, SPACE, useTheme } from "~/theme";
 
 const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
   parlay: Layers,
+  duel: Swords,
   wallet: Wallet,
   earn: Landmark,
   profile: CircleUserRound,

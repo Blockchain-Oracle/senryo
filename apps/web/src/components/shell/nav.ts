@@ -17,6 +17,7 @@ import {
   ScrollText,
   Settings,
   Smartphone,
+  Swords,
   TrendingUp,
   Zap,
 } from "lucide-react";
@@ -36,6 +37,7 @@ export const NAV_ICON: Record<WebIcon, LucideIcon> = {
   download: Smartphone,
   earn: Landmark,
   parlay: Layers,
+  duel: Swords,
 };
 
 export const RAIL: readonly WebNavItem[] = WEB_RAIL;

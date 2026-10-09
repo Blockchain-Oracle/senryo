@@ -71,7 +71,14 @@ leaderboard, a public profile and the ticker live on both apps · a referral pai
       leg windows opened in the commit's batch, the multi-feed fill), `market_parlays`/`market_parlay_legs`, the keeper's
       `parlays` job (backup fills, leg verdicts, settle), the indexer's `Parlay` and records; Parlay on both apps (picker,
       slip with the 21st Odds Display #36173, your parlays) in More / Everything → Play. On chain with S8.9._
-- [ ] S8.6 `DuelArena` (D-294) with tests; matchmaking, deck, relay, keeper, indexer Elo; Duel on both apps
+- [x] S8.6 `DuelArena` (D-294) with tests; matchmaking, deck, relay, keeper, indexer Elo; Duel on both apps
+      _Done: `DuelArena` + `DuelLedger` (`openMatch` for the DUEL role, `revealDeck`, `pick` as an ERC-1271 open at the
+      reserve, `lockPicks`, `settleCard`, `finalize`, `refundUnrevealed`; 10 Foundry tests, 90 in all), listed by
+      `DeployMarkets` from the catalogue's `.duel`; the api's queue, deck and relay (`duel/*`, `duel_entries`,
+      `duel_matches`, `duel_picks`), the keeper's `duels` job, the indexer's `Duel`/`DuelPick`/`DuelRating` (Elo; a pick's
+      ticket is the player's); Duel on both apps (tiers, queue, the swipe deck — 21st Swipe Deck #23568 — with the pick
+      clock — 21st Progress Bar #23549 — cards, result, your duels and rating) in More / Everything → Play. Read-only
+      until the arena is on chain with S8.9; the match view is unrendered until then and the phone has had no sim pass._
 - [ ] S8.7 Events (D-296): committee verifier + `EventBook` with tests; the first events (Practice, Senryo-run
       committee); events on both apps, honestly labelled
 

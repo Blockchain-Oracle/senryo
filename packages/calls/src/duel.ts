@@ -83,3 +83,19 @@ export function outcomeText(m: DuelView, me: string | undefined): { title: strin
 
 /** A pick's side in words. */
 export const sideLabel = (band: number) => DUEL_SIDES.find((s) => s.band === band)?.label ?? "—";
+
+/** The pick clock's tone: calm, then near in the last minute, late in the last 20 seconds. */
+const NEAR_SEC = 60;
+const LATE_SEC = 20;
+export const clockTone = (leftSec: number): "calm" | "near" | "late" =>
+  leftSec > NEAR_SEC ? "calm" : leftSec > LATE_SEC ? "near" : "late";
+
+/** The other seat's address. */
+export function opponentOf(m: DuelView, me: string | undefined): string | null {
+  const seat = seatOf(m, me);
+  return seat === null ? null : m.players[seat === 0 ? 1 : 0];
+}
+
+/** A seat's pick on a card, if placed. */
+export const pickOn = (m: DuelView, seat: 0 | 1, card: number) =>
+  m.picks.find((p) => p.seat === seat && p.card === card) ?? null;

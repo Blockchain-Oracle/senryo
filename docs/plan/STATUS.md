@@ -20,7 +20,7 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0–S6 done; S7 built and committed; S8 under way ([pivot-s8-social-games.md](pivot-s8-social-games.md), D-291…D-297) — S7 and S8 go on chain together as markets v2 (D-291), which waits on ~25–30 testnet MON. S8.4 exits and S8.5 parlays built (exits fire with the app closed; parlays of 2–4 legs paid by the shared pool, priced with a correlation floor per asset class; both apps) — 80 contract tests, gate green.
+**Where we are:** S0–S6 done; S7 built and committed; S8 under way ([pivot-s8-social-games.md](pivot-s8-social-games.md), D-291…D-297) — S7 and S8 go on chain together as markets v2 (D-291), which waits on ~25–30 testnet MON. S8.4 exits, S8.5 parlays and S8.6 duels built (exits fire with the app closed; parlays of 2–4 legs paid by the shared pool, priced with a correlation floor per asset class; duels: a sealed deck of three, picks as real calls the arena owns, the better total takes the pot, Elo on the indexer; both apps) — 90 contract tests, gate green. Next: S8.7 events.
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.

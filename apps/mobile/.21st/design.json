@@ -871,6 +871,26 @@
         "port": "OddsButton: a pressable price (\"1.92×\") with its side's label, pressed when picked, an up/down arrow when it moved since the pick (not animated); the slip a sheet over a bottom bar (legs · multiplier · chance · Review)",
         "deviations": "decimal only; the theme's raised2 plate; the press scale is the kit's",
         "status": "built (S8.5) — src/components/kit/OddsButton.tsx, src/features/parlay/*"
+      },
+      {
+        "name": "duel-deck",
+        "source": "21st #23568 ddoemonn/swipe-deck; searched \"swipe card stack\" (29187 Wallet Card, 35044 Card Stack, 24669 Card stack, 23568 Swipe Deck) and \"tinder swipe cards\" (23568, 4833 Tinder Like Swipe — images only, no keyboard path, 2484 Image Swiper)",
+        "evidence": [
+          "pivot plan S8 Duel (D-294); Owarine mobile/src/features/games/duel/DuelPicking.tsx: the swipe deck with money behind it, the pick window draining full width in the clock's colour"
+        ],
+        "port": "Gesture Handler pan on the top card (activeOffsetX ±8, failOffsetY ±14) driving a Reanimated translateX with rotate, decision badges fading in with the drag, the next card rising to meet it, a tick haptic at the threshold, flick or release past 92 pt decides, early release springs back; ← Down / Up → buttons; VoiceOver actions",
+        "deviations": "controlled by the match (a card leaves when its pick lands), no undo (a pick is final), the theme's card plate and up/down washes",
+        "status": "built (S8.6) — src/components/kit/SwipeDeck.tsx, src/features/duel/DuelMatch.tsx"
+      },
+      {
+        "name": "duel-clock",
+        "source": "21st #23549 ddoemonn/progress-bar; searched \"countdown progress bar\" (1737 Circle Progress, 23549, 9659 Progress Bar)",
+        "evidence": [
+          "Owarine DuelPicking: the pick window drains full width in the clock's colour (calm → near → late)"
+        ],
+        "port": "Reanimated width spring to the value, label left and the time in words right, tone by time left",
+        "deviations": "no indeterminate shimmer; the theme's raised2 track",
+        "status": "built (S8.6) — src/components/kit/ProgressBar.tsx"
       }
     ],
     "planned": [

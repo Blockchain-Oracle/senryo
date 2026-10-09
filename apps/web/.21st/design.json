@@ -773,6 +773,24 @@
         "use": "parlay slip: each leg's Up / Down odds, the picked side pressed, drift since the pick flagged (S8.5)",
         "path": "src/components/ui/odds-display.tsx",
         "retokenized": true
+      },
+      {
+        "name": "swipe-deck",
+        "source": "21st:ddoemonn/swipe-deck",
+        "id": 23568,
+        "url": "https://21st.dev/@ddoemonn/components/swipe-deck",
+        "use": "duel picking: your undecided cards, drag or ←/→ (Down ← · → Up), controlled by the match (S8.6)",
+        "path": "src/components/ui/swipe-deck.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "progress-bar",
+        "source": "21st:ddoemonn/progress-bar",
+        "id": 23549,
+        "url": "https://21st.dev/@ddoemonn/components/progress-bar",
+        "use": "duel pick clock: time left with a calm/near/late tone (S8.6)",
+        "path": "src/components/ui/progress-bar.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -915,6 +933,16 @@
         "id": 35042,
         "name": "Chip Group",
         "verdict": "rejected for the parlay picker: filter chips, not a per-row side choice"
+      },
+      {
+        "id": 4833,
+        "name": "Tinder Like Swipe",
+        "verdict": "rejected: images only, no keyboard path; Swipe Deck #23568 has drag, keys and a render prop"
+      },
+      {
+        "id": 29468,
+        "name": "Leaderboard Table",
+        "verdict": "rejected for the duel's you-vs-them totals (a table for many rows); the versus strip is hand-written from the terminal's tokens — no 21st match for a two-sided scoreboard"
       }
     ],
     "removed": [
