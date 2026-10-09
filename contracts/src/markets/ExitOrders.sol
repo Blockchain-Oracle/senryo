@@ -59,14 +59,9 @@ abstract contract ExitOrders is SessionGrants {
 
     /// @dev Checks the order's signature and prices and stores it under the owner's current epoch.
     function _takeExit(ExitOrder calldata o, bytes calldata sig) internal {
-        // forge-lint: disable-next-line(block-timestamp)
-        if (block.timestamp > o.deadline) revert SignatureExpired(o.deadline);
-        uint32 epoch = epochOf[o.owner];
-        if (o.epoch != epoch) revert WrongEpoch(epoch, o.epoch);
-        bool viaSession = _signedBy(o.owner, hashExit(o), sig, epoch);
-        _useNonce(o.owner, o.nonce);
+        bool viaSession = _authorizeSigned(Signed(o.owner, o.deadline, o.nonce, o.epoch, o.owner), hashExit(o), sig, 0);
         if (!_validExit(o)) revert BadExit();
-        _exits[o.ticketId] = Exit(o.takeProfitE6, o.stopLossE6, o.floorE6, o.trailE6, epoch, EXIT_NONE);
+        _exits[o.ticketId] = Exit(o.takeProfitE6, o.stopLossE6, o.floorE6, o.trailE6, o.epoch, EXIT_NONE);
         emit ExitSet(o.ticketId, o.takeProfitE6, o.stopLossE6, o.floorE6, o.trailE6, viaSession);
     }
 

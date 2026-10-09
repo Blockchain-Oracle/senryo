@@ -26,6 +26,15 @@ abstract contract SessionGrants is EIP712 {
     bytes32 public constant REVOKE_TYPEHASH =
         keccak256("Revoke(address owner,uint32 epoch,uint256 nonce,uint64 deadline)");
     uint256 private constant NONCE_WORD_BITS = 8;
+
+    /// @dev What every signed order shares, for `_authorizeSigned`.
+    struct Signed {
+        address owner;
+        uint64 deadline;
+        uint256 nonce;
+        uint32 epoch;
+        address recipient;
+    }
     uint256 private constant NONCE_BIT_MASK = 0xff;
 
     /// @notice The chain's ceilings for any grant (D-267: Real $25 / $100 / 15 min; Practice $1,000 / $10,000 / 60 min).
@@ -124,21 +133,32 @@ abstract contract SessionGrants is EIP712 {
     /// @dev Checks deadline, epoch and signature, burns the nonce, and for a delegate also its caps (an open spends
     ///      `amount` of the session). Returns whether the session delegate signed.
     function _authorize(Intent calldata it, bytes calldata sig) internal returns (bool viaSession) {
-        if (block.timestamp > it.deadline) revert SignatureExpired(it.deadline);
-        uint32 epoch = epochOf[it.owner];
-        if (it.epoch != epoch) revert WrongEpoch(epoch, it.epoch);
-        viaSession = _signedBy(it.owner, _hashTypedDataV4(_intentStruct(it)), sig, epoch);
+        Signed memory s = Signed(it.owner, it.deadline, it.nonce, it.epoch, it.recipient);
+        return _authorizeSigned(s, _hashTypedDataV4(_intentStruct(it)), sig, it.action == ACTION_OPEN ? it.amount : 0);
+    }
+
+    /// @dev Any signed order (a call, a parlay, an exit): deadline, epoch, signer, the nonce burnt; for a delegate the
+    ///      recipient must be the owner and `spend` comes out of the session's caps.
+    function _authorizeSigned(Signed memory s, bytes32 digest, bytes calldata sig, uint64 spend)
+        internal
+        returns (bool viaSession)
+    {
+        // forge-lint: disable-next-line(block-timestamp)
+        if (block.timestamp > s.deadline) revert SignatureExpired(s.deadline);
+        uint32 epoch = epochOf[s.owner];
+        if (s.epoch != epoch) revert WrongEpoch(epoch, s.epoch);
+        viaSession = _signedBy(s.owner, digest, sig, epoch);
         if (viaSession) {
-            Session storage s = _sessions[it.owner];
-            if (it.recipient != it.owner) revert RecipientNotOwner(it.recipient);
-            if (it.action == ACTION_OPEN) {
-                if (it.amount > s.perCallCap) revert OverCallCap(it.amount, s.perCallCap);
-                uint64 wouldBe = s.spent + it.amount;
-                if (wouldBe > s.sessionCap) revert OverSessionCap(wouldBe, s.sessionCap);
-                s.spent = wouldBe;
+            if (s.recipient != s.owner) revert RecipientNotOwner(s.recipient);
+            if (spend != 0) {
+                Session storage session = _sessions[s.owner];
+                if (spend > session.perCallCap) revert OverCallCap(spend, session.perCallCap);
+                uint64 wouldBe = session.spent + spend;
+                if (wouldBe > session.sessionCap) revert OverSessionCap(wouldBe, session.sessionCap);
+                session.spent = wouldBe;
             }
         }
-        _useNonce(it.owner, it.nonce);
+        _useNonce(s.owner, s.nonce);
     }
 
     /// @dev The owner signed `digest`, or their session delegate did while the session is live (returns true).

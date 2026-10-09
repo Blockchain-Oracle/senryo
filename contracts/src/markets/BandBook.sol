@@ -184,7 +184,7 @@ abstract contract BandBook is BandPool, ExitOrders {
     }
 
     /// @dev Open, not settled, before the lockout (D-261: opens and closes stop at expiry − 20 s).
-    function _tradingWindow(bytes32 windowId) private view returns (Window memory w) {
+    function _tradingWindow(bytes32 windowId) internal view returns (Window memory w) {
         w = windows.windowOf(windowId);
         // forge-lint: disable-next-line(block-timestamp)
         if (

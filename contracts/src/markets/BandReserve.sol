@@ -13,6 +13,7 @@ import {BandBook} from "./BandBook.sol";
 import {BandMath} from "./BandMath.sol";
 import {BandPool} from "./BandPool.sol";
 import {IWindows} from "./interfaces/IWindows.sol";
+import {ParlayBook} from "./ParlayBook.sol";
 import {SessionGrants} from "./SessionGrants.sol";
 import "./MarketTypes.sol";
 
@@ -22,7 +23,7 @@ import "./MarketTypes.sol";
 ///         holds (D-264). When the window's verdict lands, `settleWindow` decides every band at once and `claimFor`
 ///         pays winners and refunds ties and voids to the owners. Settlement and payouts are permissionless and never
 ///         pause; a late keeper is never a lost window.
-contract BandReserve is BandBook {
+contract BandReserve is ParlayBook {
     string public constant NAME = "Senryo Markets";
     string public constant VERSION = "1";
 

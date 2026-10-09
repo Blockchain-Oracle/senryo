@@ -144,6 +144,19 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "PARLAY_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "REVOKE_TYPEHASH",
     "inputs": [],
     "outputs": [
@@ -454,6 +467,114 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "commitParlay",
+    "inputs": [
+      {
+        "name": "it",
+        "type": "tuple",
+        "internalType": "struct ParlayIntent",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "windowIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "bands",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          },
+          {
+            "name": "stake",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "minPayout",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "recipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configVersion",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "permit",
+        "type": "tuple",
+        "internalType": "struct Permit",
+        "components": [
+          {
+            "name": "value",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "v",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "r",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "s",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "committedStakes",
     "inputs": [],
     "outputs": [
@@ -650,6 +771,19 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "expireParlay",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "finalize",
     "inputs": [
       {
@@ -666,6 +800,24 @@ export const bandReserveAbi = [
         "name": "proof",
         "type": "bytes",
         "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "finalizeParlay",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "proofs",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
       }
     ],
     "outputs": [],
@@ -946,6 +1098,77 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "hashParlay",
+    "inputs": [
+      {
+        "name": "it",
+        "type": "tuple",
+        "internalType": "struct ParlayIntent",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "windowIds",
+            "type": "bytes32[]",
+            "internalType": "bytes32[]"
+          },
+          {
+            "name": "bands",
+            "type": "uint8[]",
+            "internalType": "uint8[]"
+          },
+          {
+            "name": "stake",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "minPayout",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "recipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configVersion",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "invalidateNonces",
     "inputs": [
       {
@@ -1163,6 +1386,127 @@ export const bandReserveAbi = [
         "name": "maxStake",
         "type": "uint64",
         "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "parlayCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "parlayOf",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Parlay",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "legCount",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "target",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "recipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configVersion",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "addOnE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "stake",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "payout",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "limit",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct ParlayLeg[]",
+        "components": [
+          {
+            "name": "windowId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "expiry",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "band",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "group",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "outcome",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "probE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -1512,6 +1856,19 @@ export const bandReserveAbi = [
         "name": "sigmaE8",
         "type": "uint64",
         "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "settleParlay",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -2200,6 +2557,173 @@ export const bandReserveAbi = [
   },
   {
     "type": "event",
+    "name": "ParlayCommitted",
+    "inputs": [
+      {
+        "name": "parlayId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "stake",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "minPayout",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "target",
+        "type": "uint40",
+        "indexed": false,
+        "internalType": "uint40"
+      },
+      {
+        "name": "viaSession",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ParlayFilled",
+    "inputs": [
+      {
+        "name": "parlayId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "payout",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "chanceE6",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "priceE6",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "reserve",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ParlayLegDecided",
+    "inputs": [
+      {
+        "name": "parlayId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "leg",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "outcome",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ParlayRefused",
+    "inputs": [
+      {
+        "name": "parlayId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "reason",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "refunded",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ParlaySettled",
+    "inputs": [
+      {
+        "name": "parlayId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "outcome",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "paid",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "PausedSet",
     "inputs": [
       {
@@ -2499,6 +3023,11 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "BadLegs",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "BadParams",
     "inputs": []
   },
@@ -2563,6 +3092,11 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "FailedCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "HeldTooShort",
     "inputs": [
       {
@@ -2588,6 +3122,22 @@ export const bandReserveAbi = [
       },
       {
         "name": "owed",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InsufficientBalance",
+    "inputs": [
+      {
+        "name": "balance",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "needed",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -2755,6 +3305,17 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "ParlayNotPending",
+    "inputs": [
+      {
+        "name": "parlayId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "RecipientMismatch",
     "inputs": [
       {
@@ -2879,6 +3440,17 @@ export const bandReserveAbi = [
         "name": "band",
         "type": "uint8",
         "internalType": "uint8"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "UnknownParlay",
+    "inputs": [
+      {
+        "name": "parlayId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ]
   },

@@ -88,6 +88,18 @@ uint8 constant REFUSE_WINDOW = 5; // the window settled first
 uint8 constant REFUSE_NO_PRINT = 6; // no print inside the fill window
 uint8 constant REFUSE_EXIT = 7; // the fill print's bid missed the exit's prices (the exit stands)
 
+/// @dev Parlays (D-293): 2–4 legs, one per market; legs in one asset class (one trading calendar) are priced as
+///      correlated — their joint chance is at least `PARLAY_CORRELATION_BPS` of the least likely of them.
+uint256 constant MIN_PARLAY_LEGS = 2;
+uint256 constant MAX_PARLAY_LEGS = 4;
+uint256 constant PARLAY_CORRELATION_BPS = 8500;
+
+uint8 constant LEG_PENDING = 0;
+uint8 constant LEG_WON = 1;
+uint8 constant LEG_TIED = 2; // dropped: the parlay pays on the other legs
+uint8 constant LEG_LOST = 3;
+uint8 constant LEG_VOID = 4; // the whole parlay is refunded
+
 /// @dev What a pending close was fired for (D-292).
 uint8 constant EXIT_NONE = 0;
 uint8 constant EXIT_PRICE = 1; // take-profit or stop-loss: their prices decide at the fill print, so anyone may fire
@@ -227,6 +239,44 @@ struct ExitOrder {
     uint64 deadline;
     uint256 nonce;
     uint32 epoch;
+}
+
+/// @dev A signed parlay (D-293): legs in close order (expiry non-decreasing), `minPayout` the least it accepts.
+struct ParlayIntent {
+    address owner;
+    bytes32[] windowIds;
+    uint8[] bands;
+    uint64 stake;
+    uint64 minPayout;
+    address recipient;
+    uint32 configVersion;
+    uint64 deadline;
+    uint256 nonce;
+    uint32 epoch;
+}
+
+/// @dev One parlay. `addOnE6` is what the fill priced on top of the legs' joint chance (the spread and surcharge),
+///      kept so a tied leg can drop out at the same terms.
+struct Parlay {
+    address owner;
+    uint8 status;
+    uint8 legCount;
+    uint40 target;
+    address recipient;
+    uint32 configVersion;
+    uint32 addOnE6;
+    uint64 stake;
+    uint64 payout;
+    uint64 limit;
+}
+
+struct ParlayLeg {
+    bytes32 windowId;
+    uint40 expiry;
+    uint8 band;
+    uint8 group; // the series' calendar: legs sharing one are priced as correlated
+    uint8 outcome;
+    uint32 probE6; // the band's probability at the fill print
 }
 
 /// @dev The owner's one-Face-ID grant to an ephemeral delegate key (D-267).
