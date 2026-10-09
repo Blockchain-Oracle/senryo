@@ -27,6 +27,17 @@ export const earnViewSchema = z.object({
       maxExposureBps: z.int().nonnegative(),
     })
     .nullable(),
+  /** The last hourly rolls, newest first: the value and supply each settled at (indexed). */
+  hours: z.array(
+    z.object({
+      hour: unixSecondsSchema,
+      value: uintCodec,
+      supply: uintCodec,
+      supplied: uintCodec,
+      withdrawn: uintCodec,
+      deferred: z.boolean(),
+    }),
+  ),
   account: z
     .object({
       shares: uintCodec,

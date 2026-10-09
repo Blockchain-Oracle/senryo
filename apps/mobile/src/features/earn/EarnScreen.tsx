@@ -3,7 +3,7 @@
  * and how much of it is ready, when the next hour settles, what you've asked for (take it back until then), and Supply
  * / Withdraw by an exact amount — one Face ID each, relayed (`@senryo/calls` `useEarnFlow`). Risk in words.
  */
-import { earnWords, sharesFor } from "@senryo/calls";
+import { earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
 import { useServerSeconds } from "@senryo/live/react";
 import { useMarketAccount } from "@senryo/query";
@@ -92,6 +92,24 @@ export function EarnScreen() {
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>{words.ready}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>{words.next}</Text>
       </View>
+      {view.hours.length > 1 ? (
+        <View style={styles.block}>
+          <Text style={[TYPE.sectionTitle, { color: color.ink }]}>Hour by hour</Text>
+          {hourLines(view).map((h) => (
+            <View key={h.key} style={styles.hour}>
+              <Text style={[TYPE.caption, { color: color.inkMuted }]}>{h.time}</Text>
+              <Text
+                style={[
+                  TYPE.caption,
+                  { color: h.tone === "up" ? color.up : h.tone === "down" ? color.down : color.inkMuted },
+                ]}
+              >
+                {h.change}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
       {words.supplying ? (
         <View style={styles.pending}>
           <Text style={[TYPE.body, styles.flex, { color: color.ink }]}>{words.supplying}</Text>
@@ -177,6 +195,7 @@ const styles = StyleSheet.create({
   pad: { padding: SIZE.gutter },
   block: { gap: SPACE.sm },
   flex: { flex: 1 },
+  hour: { flexDirection: "row", justifyContent: "space-between", minHeight: SIZE.touch - SPACE.md },
   pending: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: SIZE.touch },
   field: {
     flexDirection: "row",

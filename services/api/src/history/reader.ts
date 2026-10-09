@@ -2,7 +2,14 @@ import { WINDOW_CALLS_MAX } from "@senryo/api-client";
 import { type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
 import { type ChainId, feedIdOf, marketsOn, TESTNET_CHAIN_ID } from "@senryo/config";
 import { type Db, nowSec } from "@senryo/service-common";
-import { CALLS_PAGE, DAYS_PER_WEEK, LEADERBOARD_SIZE, SECONDS_PER_DAY, WINDOWS_PAGE } from "./constants.ts";
+import {
+  CALLS_PAGE,
+  DAYS_PER_WEEK,
+  EPOCHS_SHOWN,
+  LEADERBOARD_SIZE,
+  SECONDS_PER_DAY,
+  WINDOWS_PAGE,
+} from "./constants.ts";
 
 /**
  * The indexer's tables over SQL (S4, D-272): Envio writes them in its own schema of the shared Postgres (Hasura is
@@ -154,6 +161,15 @@ export class IndexerReader {
       return s ? [{ ...r, symbol: s.market.symbol, cadenceSec: s.cadenceSec }] : [];
     });
     return { windows, next: rows.length === WINDOWS_PAGE ? (rows.at(-1)?.start ?? null) : null };
+  }
+
+  /** Earn's last hourly rolls (D-287), newest first. */
+  async epochs(chainId: ChainId) {
+    return this.db<
+      { hour: number; value: bigint; supply: bigint; supplied: bigint; withdrawn: bigint; deferred: boolean }[]
+    >`SELECT hour, value::int8 AS value, supply::int8 AS supply,
+             supplied::int8 AS supplied, withdrawn::int8 AS withdrawn, deferred
+      FROM ${this.t("PoolEpoch")} WHERE "chainId" = ${chainId} ORDER BY hour DESC LIMIT ${EPOCHS_SHOWN}`;
   }
 
   /** Practice and Real boards are separate (`chainId`); handles only for profiles listed on that network. */

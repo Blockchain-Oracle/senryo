@@ -4,6 +4,7 @@ import type { ChainId } from "@senryo/config";
 import { bandReserveAbi, poolSharesAbi, testUSDAbi } from "@senryo/contracts/abis";
 import { HTTP_STATUS, HttpError, type HttpServer, nowSec, parseRoute, sendRoute } from "@senryo/service-common";
 import type { ApiContext } from "../context.ts";
+import { IndexerReader } from "../history/reader.ts";
 
 /**
  * Earn over HTTP (S7.6, D-287): the pool and one account read on chain in two multicalls (a few seconds of cache for
@@ -88,16 +89,20 @@ function chainOrThrow(ctx: ApiContext, chainId: ChainId) {
 }
 
 export function registerEarnRoutes(app: HttpServer, ctx: ApiContext): void {
+  const reader = new IndexerReader(ctx.db, ctx.env.INDEXER_SCHEMA);
   app.get(earnRoute.path, async (request, reply) => {
     const { query } = parseRoute(earnRoute, request);
-    if (!earnDeployed(query.chainId))
-      return sendRoute(reply, earnRoute, { deployed: false, pool: null, account: null });
-    const [pool, account] = await Promise.all([
+    if (!earnDeployed(query.chainId)) {
+      return sendRoute(reply, earnRoute, { deployed: false, pool: null, account: null, hours: [] });
+    }
+    const [pool, account, hours] = await Promise.all([
       readPool(ctx, query.chainId),
       query.owner ? readAccount(ctx, query.chainId, query.owner) : Promise.resolve(null),
+      // Hours appear once the indexer has PoolShares; until then the screen simply has none to list.
+      reader.epochs(query.chainId).catch(() => []),
     ]);
     reply.header("cache-control", "no-store");
-    return sendRoute(reply, earnRoute, { deployed: true, pool, account });
+    return sendRoute(reply, earnRoute, { deployed: true, pool, account, hours });
   });
 
   app.post(earnRequestRoute.path, async (request, reply) => {

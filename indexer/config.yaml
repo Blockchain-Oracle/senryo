@@ -35,6 +35,9 @@ contracts:
       - event: "PoolDefunded(address indexed to, uint256 amount, uint256 liquid)"
       - event: "SessionGranted(address indexed owner, address indexed delegate, uint64 perCallCap, uint64 sessionCap, uint40 expiry, uint32 epoch)"
       - event: "EpochBumped(address indexed owner, uint32 epoch)"
+  - name: PoolShares
+    events:
+      - event: "EpochRolled(uint40 indexed hour, uint256 value, uint256 supply, uint256 suppliedAssets, uint256 withdrawnAssets, bool deferred)"
 
 chains:
   - id: 10143

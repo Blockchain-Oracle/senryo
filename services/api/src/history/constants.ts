@@ -13,3 +13,6 @@ export const LEADERBOARD_MAX_AGE = "public, s-maxage=30, max-age=10";
 
 /** Windows per page of the Proof feed. */
 export const WINDOWS_PAGE = 30;
+
+/** Earn's hourly results shown (a day). */
+export const EPOCHS_SHOWN = 24;

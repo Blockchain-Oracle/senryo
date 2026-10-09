@@ -56,3 +56,19 @@ indexer.onEvent({ contract: "BandReserve", event: "EpochBumped" }, async ({ even
   const s = await context.Session.get(key(event.chainId, event.params.owner));
   if (s) context.Session.set({ ...s, expiry: 0, epoch: Number(event.params.epoch) });
 });
+
+/** Earn's hourly roll (contracts/src/markets/PoolShares.sol, D-287): each hour's value, supply and flows. */
+indexer.onEvent({ contract: "PoolShares", event: "EpochRolled" }, async ({ event, context }) => {
+  const p = event.params;
+  context.PoolEpoch.set({
+    id: key(event.chainId, String(p.hour)),
+    chainId: event.chainId,
+    hour: Number(p.hour),
+    value: p.value,
+    supply: p.supply,
+    supplied: p.suppliedAssets,
+    withdrawn: p.withdrawnAssets,
+    deferred: p.deferred,
+    rolledTx: event.transaction.hash,
+  });
+});

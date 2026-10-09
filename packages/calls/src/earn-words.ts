@@ -27,6 +27,32 @@ export function sharesFor(dollars: bigint, pool: NonNullable<EarnView["pool"]>):
   return pool.value === 0n ? 0n : (dollars * (pool.supply + 1n)) / (pool.value + 1n);
 }
 
+const PRICE_SCALE = 1_000_000_000_000n;
+const PCT_SCALE = 1_000_000n;
+const PCT_PER_UNIT = 10_000;
+const PCT_DECIMALS = 3;
+const HHMM = 5;
+const TIME_START = 11;
+const MS = 1000;
+
+/** Hour by hour: what a share's value did in each settled hour ("16:00 UTC · +0.012%"), newest first. */
+export function hourLines(
+  view: EarnView,
+): { key: number; time: string; change: string; tone: "up" | "down" | "muted" }[] {
+  const perShare = (h: EarnView["hours"][number]) => ((h.value + 1n) * PRICE_SCALE) / (h.supply + 1n);
+  return view.hours.slice(0, -1).map((h, i) => {
+    const before = view.hours[i + 1];
+    const was = before ? perShare(before) : 0n;
+    const pct = was === 0n ? 0 : Number(((perShare(h) - was) * PCT_SCALE) / was) / PCT_PER_UNIT;
+    return {
+      key: h.hour,
+      time: `${new Date(h.hour * MS).toISOString().slice(TIME_START, TIME_START + HHMM)} UTC`,
+      change: `${pct > 0 ? "+" : pct < 0 ? "−" : ""}${Math.abs(pct).toFixed(PCT_DECIMALS)}%${h.deferred ? " · withdrawals waited" : ""}`,
+      tone: pct > 0 ? "up" : pct < 0 ? "down" : "muted",
+    };
+  });
+}
+
 export function earnWords(view: EarnView, nowSec: number): EarnWords | null {
   const pool = view.pool;
   if (!view.deployed || !pool) return null;

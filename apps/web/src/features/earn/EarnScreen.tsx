@@ -4,7 +4,7 @@
  * and how much of it is ready, when the next hour settles, what you've asked for (take it back until then), and Supply
  * / Withdraw by an exact amount — one passkey prompt each, relayed (`@senryo/calls` `useEarnFlow`). Risk in words.
  */
-import { earnWords, sharesFor } from "@senryo/calls";
+import { earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
 import { useServerSeconds } from "@senryo/live/react";
 import { useMarketAccount } from "@senryo/query";
@@ -108,6 +108,27 @@ export function EarnScreen() {
         <span className="text-meta text-text-3">{words.ready}</span>
         <span className="tnum text-meta text-text-3">{words.next}</span>
       </section>
+
+      {view.hours.length > 1 ? (
+        <section aria-label="Hour by hour" className="flex flex-col gap-1">
+          <h2 className="font-semibold text-section-title">Hour by hour</h2>
+          <ul className="flex flex-col">
+            {hourLines(view).map((h) => (
+              <li key={h.key} className="flex min-h-10 items-center justify-between gap-3">
+                <span className="tnum text-meta text-text-3">{h.time}</span>
+                <span
+                  className={cn(
+                    "tnum text-meta",
+                    h.tone === "up" ? "text-up" : h.tone === "down" ? "text-down" : "text-text-2",
+                  )}
+                >
+                  {h.change}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {words.supplying || words.withdrawing ? (
         <section aria-label="Your requests" className="flex flex-col">
