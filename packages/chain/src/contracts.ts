@@ -10,6 +10,7 @@ import {
   accessManagerAbi,
   bandReserveAbi,
   basketPrintVerifierAbi,
+  duelArenaAbi,
   marketCalendarAbi,
   poolSharesAbi,
   pythPrintVerifierAbi,
@@ -24,6 +25,8 @@ import type { ReadClient } from "./clients.ts";
 export const CONTRACT_ABIS = {
   AccessManager: accessManagerAbi,
   BandReserve: bandReserveAbi,
+  /** Duel (D-294): two seats, a sealed deck, picks as calls the arena owns. */
+  DuelArena: duelArenaAbi,
   MarketCalendar: marketCalendarAbi,
   PythPrintVerifier: pythPrintVerifierAbi,
   /** The equity print class (D-284): the same contract with a wider confidence bound. */

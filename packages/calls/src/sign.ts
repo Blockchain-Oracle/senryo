@@ -6,9 +6,15 @@
 import type { AccountClient, DelegateKeys, Hex, LocalAccount } from "@senryo/account";
 import {
   ACTION_OPEN,
+  addressOf,
+  duelEntryRequest,
+  duelPickRequest,
   exitOrderRequest,
   freshNonce,
+  freshSeed,
   intentRequest,
+  type MarketDuelEntry,
+  type MarketDuelPick,
   type MarketExitOrder,
   type MarketIntent,
   type MarketParlayIntent,
@@ -16,7 +22,7 @@ import {
   permitParts,
   permitRequest,
 } from "@senryo/chain";
-import type { ChainId } from "@senryo/config";
+import { type ChainId, DUEL } from "@senryo/config";
 import { INTENT_TTL_SEC, PERMIT_TTL_SEC, SESSION_MARGIN_SEC } from "./constants.ts";
 
 /** What `/v1/markets/account` says about the caller (balance, allowance, permit nonce, epoch, session). */
@@ -165,6 +171,69 @@ export async function signExit(d: SignDeps, draft: ExitDraft, prompt: string): P
     async (owner) => ({
       order,
       signature: await owner.signTypedData(exitOrderRequest(d.chainId, order)),
+      via: "face-id" as const,
+    }),
+    prompt,
+  );
+}
+
+export interface SignedDuelEntry {
+  entry: MarketDuelEntry;
+  signature: Hex;
+  permit: Permit;
+}
+
+/**
+ * Sign a duel entry (D-294): it spends the pot and every card's stake, so always the owner — one Face ID for the
+ * entry and a permit of exactly `cost` to the arena, good as long as the entry. The seat's key is this device's
+ * delegate (made now if there is none), so the swipes need no prompt.
+ */
+export async function signDuelEntry(
+  d: SignDeps,
+  draft: { owner: `0x${string}`; tier: number; cost: bigint },
+  prompt: string,
+): Promise<SignedDuelEntry> {
+  const key = (await d.delegates.get(draft.owner, d.chainId)) ?? (await d.delegates.create(draft.owner, d.chainId));
+  const deadline = BigInt(d.nowSec + DUEL.entryTtlSec);
+  const entry: MarketDuelEntry = {
+    owner: draft.owner,
+    tier: draft.tier,
+    delegate: key.address,
+    seed: freshSeed(),
+    deadline,
+    nonce: freshNonce(),
+    epoch: d.account.epoch,
+  };
+  const arena = addressOf(d.chainId, "DuelArena");
+  return d.client.stepUp(async (signer) => {
+    const permitSig = await signer.signTypedData(
+      permitRequest(d.chainId, {
+        owner: draft.owner,
+        spender: arena,
+        value: draft.cost,
+        nonce: d.account.permitNonce,
+        deadline,
+      }),
+    );
+    const signature = await signer.signTypedData(duelEntryRequest(d.chainId, entry));
+    return { entry, signature, permit: { value: draft.cost, deadline, ...permitParts(permitSig) } };
+  }, prompt);
+}
+
+/** Sign a swipe: this device's seat key when the entry named it, else the owner under one Face ID. */
+export async function signDuelPick(
+  d: Pick<SignDeps, "chainId" | "client" | "delegates">,
+  pick: MarketDuelPick,
+  seatKey: string | null,
+  prompt: string,
+): Promise<{ signature: Hex; via: "one-tap" | "face-id" }> {
+  const key = await d.delegates.get(pick.player, d.chainId);
+  if (key && seatKey && key.address.toLowerCase() === seatKey.toLowerCase()) {
+    return { signature: await key.signTypedData(duelPickRequest(d.chainId, pick)), via: "one-tap" };
+  }
+  return d.client.stepUp(
+    async (owner) => ({
+      signature: await owner.signTypedData(duelPickRequest(d.chainId, pick)),
       via: "face-id" as const,
     }),
     prompt,

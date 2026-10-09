@@ -1,5 +1,6 @@
 export * from "./constants.ts";
 export * from "./db.ts";
+export * from "./duels.ts";
 export * from "./env.ts";
 export * from "./expo.ts";
 export * from "./http.ts";

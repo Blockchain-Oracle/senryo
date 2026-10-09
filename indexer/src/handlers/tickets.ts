@@ -100,6 +100,7 @@ indexer.onEvent({ contract: "BandReserve", event: "Committed" }, async ({ event,
     exitTrailE6: 0,
     exitFiring: undefined,
     closedBy: undefined,
+    duelMatch: undefined,
   };
   context.Ticket.set(t);
   timeline(

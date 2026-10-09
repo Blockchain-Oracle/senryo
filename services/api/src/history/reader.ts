@@ -33,6 +33,7 @@ interface TicketRow {
   fillTx: string | null;
   claimTx: string | null;
   closedBy: string | null;
+  duelMatch: string | null;
   seriesId: string;
   start: number;
 }
@@ -49,7 +50,7 @@ function seriesIdsOf(chainId: ChainId, symbol: string): Hex[] {
 const TICKET_COLUMNS = `t."ticketId"::int8 AS "ticketId", t."windowId", t.band, t.status,
   t."originalStake"::int8 AS "originalStake", t.payout::int8 AS payout, t."entryE8"::int8 AS "entryE8",
   t.proceeds::int8 AS proceeds, t.paid::int8 AS paid, t.refunded::int8 AS refunded, t.outcome, t."viaSession",
-  t."committedAt", t."committedTx", t."fillTx", t."claimTx", t."closedBy", w."seriesId", w.start`;
+  t."committedAt", t."committedTx", t."fillTx", t."claimTx", t."closedBy", t."duelMatch", w."seriesId", w.start`;
 
 export class IndexerReader {
   constructor(
@@ -237,6 +238,7 @@ export class IndexerReader {
         fillTx: r.fillTx as Hex | null,
         settleTx: r.claimTx as Hex | null,
         closedBy: r.closedBy as "trail" | null,
+        duelMatch: r.duelMatch as Hex | null,
       },
     ];
   }

@@ -82,17 +82,12 @@ export interface LegWindow {
 }
 
 /**
- * A parlay's first call, in one transaction: each leg window opened and its open print recorded (both allowed to
- * fail — someone may have done it), then the commit (must succeed; `commitMayFail` for a simulation that reads it).
+ * Each window opened and its open print recorded, both allowed to fail (someone may have done it): what a parlay's
+ * commit or a duel's reveal needs first.
  */
-export function openLegsAndCommitParlayData(
-  chainId: ChainId,
-  legs: readonly LegWindow[],
-  commitData: Hex,
-  commitMayFail = false,
-): Hex {
+export function openWindowCalls(chainId: ChainId, legs: readonly LegWindow[]): Call[] {
   const windows = addressOf(chainId, "Windows");
-  const calls: Call[] = legs.flatMap((l) => [
+  return legs.flatMap((l) => [
     {
       target: windows,
       allowFailure: true,
@@ -108,6 +103,19 @@ export function openLegsAndCommitParlayData(
       }),
     },
   ]);
+}
+
+/**
+ * A parlay's first call, in one transaction: each leg window opened with its line, then the commit (must succeed;
+ * `commitMayFail` for a simulation that reads it).
+ */
+export function openLegsAndCommitParlayData(
+  chainId: ChainId,
+  legs: readonly LegWindow[],
+  commitData: Hex,
+  commitMayFail = false,
+): Hex {
+  const calls = openWindowCalls(chainId, legs);
   calls.push({ target: addressOf(chainId, "BandReserve"), allowFailure: commitMayFail, callData: commitData });
   return aggregate(calls);
 }

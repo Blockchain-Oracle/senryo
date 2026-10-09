@@ -40,6 +40,8 @@ export const callSchema = z.object({
   settleTx: txHashSchema.nullable(),
   /** The exit that sold its last shares (D-292), when one did. */
   closedBy: z.enum(["take-profit", "stop-loss", "trail"]).nullable(),
+  /** A duel card (D-294): the match it was picked in. The arena holds it, so it has no cash-out. */
+  duelMatch: bytes32Schema.nullable(),
 });
 
 /** One call as history reads it (`/v1/markets/calls` rows, the timeline's `call`). */

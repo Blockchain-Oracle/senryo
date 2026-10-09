@@ -4,6 +4,7 @@ export * from "./clients.ts";
 export * from "./confirm.ts";
 export * from "./constants.ts";
 export * from "./contracts.ts";
+export * from "./duels.ts";
 export * from "./earn.ts";
 export * from "./errors.ts";
 export * from "./fees.ts";

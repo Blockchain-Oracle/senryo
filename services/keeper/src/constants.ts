@@ -20,6 +20,10 @@ export const FILL_STALE_SEC = 10;
 export const FILLS_INTERVAL_MS = 3_000;
 /** Parlays: backup fills and the legs' verdicts (S8.5). */
 export const PARLAYS_INTERVAL_MS = 2_000;
+/** Duels (S8.6): refunds, locks, card settlement and pots; matches looked at per tick; a pairing left `opening`. */
+export const DUELS_INTERVAL_MS = 3_000;
+export const DUEL_WORK_BATCH = 16;
+export const DUEL_OPENING_STALE_SEC = 120;
 /** The book follows the chain: new ticket ids and quiet open tickets re-read every few seconds, in batches. */
 export const SYNC_INTERVAL_MS = 4_000;
 export const SYNC_STALE_SEC = 20;

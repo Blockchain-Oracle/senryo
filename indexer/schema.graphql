@@ -92,6 +92,8 @@ type Ticket {
   exitFiring: Int
   "take-profit · stop-loss · trail, when an exit sold the last shares."
   closedBy: String
+  "A duel card (D-294): the match it was picked in. The arena owns it on chain; `owner` is the player."
+  duelMatch: String
 }
 
 "A parlay (D-293): 2–4 legs that must all come true; legs are read from the chain by the api, outcomes here."
@@ -113,6 +115,65 @@ type Parlay {
   committedTx: String!
   settledAt: Int
   settleTx: String
+}
+
+"A duel (D-294): two players, a sealed deck of three windows, one call per card each; the better total takes both pots."
+type Duel {
+  id: ID!
+  chainId: Int! @index
+  matchId: String! @index
+  tier: Int!
+  playerA: String! @index
+  playerB: String! @index
+  pot: BigInt!
+  cardStake: BigInt!
+  "sealed · picking · settling · forfeited · refunded · finalized"
+  state: String! @index
+  deckHash: String!
+  "The three card windows and the server's seed, once revealed (the commitment can be re-checked)."
+  cards: [String!]!
+  serverSeed: String
+  pickDeadline: Int
+  forfeitedBy: String
+  winner: String
+  resultA: BigInt!
+  resultB: BigInt!
+  "Each player's rating change when the pot was decided."
+  ratingDeltaA: Int
+  ratingDeltaB: Int
+  openedAt: Int! @index
+  openTx: String!
+  revealTx: String
+  finishedAt: Int
+  finishTx: String
+}
+
+"A player's call on one duel card: the reserve ticket and what it returned."
+type DuelPick {
+  id: ID!
+  chainId: Int! @index
+  matchId: String! @index
+  player: String! @index
+  card: Int!
+  band: Int!
+  ticketId: BigInt!
+  returned: BigInt
+  result: BigInt
+  pickedAt: Int!
+  pickTx: String!
+}
+
+"A player's duel rating on one network (Elo from 1000; K 48 for the first 10 duels, then 24)."
+type DuelRating {
+  id: ID!
+  chainId: Int! @index
+  owner: String! @index
+  rating: Int! @index
+  played: Int!
+  wins: Int!
+  losses: Int!
+  ties: Int!
+  updatedAt: Int!
 }
 
 "Everything that happened to a ticket, in order (the Calls timeline and receipts)."

@@ -1,4 +1,5 @@
 export * from "./constants.ts";
+export * from "./duels.ts";
 export * from "./earn.ts";
 export * from "./env.tsx";
 export * from "./gas.ts";

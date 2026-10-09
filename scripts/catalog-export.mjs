@@ -13,8 +13,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CALENDARS } from "../packages/config/src/calendars.ts";
-import { DUEL, DUEL_TIERS } from "../packages/config/src/duel.ts";
 import { BAND_KIND_CODE, bandMenu, feedIdOf, MARKETS, marketsOn, sigmaE8Of } from "../packages/config/src/catalog.ts";
+import { DUEL, DUEL_TIERS } from "../packages/config/src/duel.ts";
 import { MAINNET_USDC } from "../packages/config/src/money.ts";
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "../packages/config/src/networks.ts";
 import {

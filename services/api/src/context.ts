@@ -1,6 +1,8 @@
 import { createReadClient, createWsClient, HeadTracker, isDeployed, type ReadClient } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import { type Db, HTTP_STATUS, HttpError, type Logger, type SessionKeys } from "@senryo/service-common";
+import type { DuelQueue } from "./duel/queue.ts";
+import type { DuelRelay } from "./duel/relay.ts";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { GeoDb } from "./geo-db.ts";
 import type { PythGateway } from "./prices/gateway.ts";
@@ -30,8 +32,17 @@ export interface ApiContext {
   /** The one Pyth gateway and the one stream's bus (D-272). */
   gateway: PythGateway;
   bus: StreamBus;
-  /** The relay per network where the markets are live (needs a sponsor key). */
-  markets: Map<ChainId, { relay: MarketRelay; accounts: AccountRelay; exits: ExitWatcher; parlays: ParlayRelay }>;
+  /** The relay per network where the markets are live (needs a sponsor key); duels where the arena is deployed. */
+  markets: Map<
+    ChainId,
+    {
+      relay: MarketRelay;
+      accounts: AccountRelay;
+      exits: ExitWatcher;
+      parlays: ParlayRelay;
+      duels: { queue: DuelQueue; relay: DuelRelay } | undefined;
+    }
+  >;
 }
 
 /** A network has markets once its reserve is deployed (S2 testnet; S9 mainnet). */

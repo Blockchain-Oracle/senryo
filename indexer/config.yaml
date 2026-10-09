@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
 # Senryo indexer (S4, D-272): the prediction markets' history — windows and their prints, every call from commit to
 # payout, accounts (PnL, wins, streaks), daily stats and the pool — for Proof, Calls history, the leaderboard and
-# the crowd split. Envio HyperIndex 3.14 on HyperSync; Hasura off (ENVIO_HASURA=false): the api reads these tables
+# the crowd split, and duels with their ratings. Envio HyperIndex 3.14 on HyperSync; Hasura off (ENVIO_HASURA=false): the api reads these tables
 # over SQL in the shared Postgres's `envio` schema (ENVIO_PG_SCHEMA=envio). Event signatures are generated from the
 # deployed ABIs (contracts/out). Mainnet (143) joins at S9.
 name: senryo-indexer
@@ -42,6 +42,15 @@ contracts:
       - event: "PoolDefunded(address indexed to, uint256 amount, uint256 liquid)"
       - event: "SessionGranted(address indexed owner, address indexed delegate, uint64 perCallCap, uint64 sessionCap, uint40 expiry, uint32 epoch)"
       - event: "EpochBumped(address indexed owner, uint32 epoch)"
+  - name: DuelArena
+    events:
+      - event: "MatchOpened(bytes32 indexed matchId, address indexed playerA, address indexed playerB, uint8 tier, uint64 pot, uint64 cardStake, bytes32 deckHash, uint40 revealBy)"
+      - event: "DeckRevealed(bytes32 indexed matchId, bytes32 serverSeed, bytes32[3] cards, uint40 pickDeadline)"
+      - event: "PickPlaced(bytes32 indexed matchId, address indexed player, uint8 card, uint8 band, uint256 ticketId, bool viaKey)"
+      - event: "PicksLocked(bytes32 indexed matchId, uint8 status, address forfeitedBy)"
+      - event: "CardSettled(bytes32 indexed matchId, address indexed player, uint8 card, uint64 returned, int256 result)"
+      - event: "MatchFinalized(bytes32 indexed matchId, address winner, int256 resultA, int256 resultB, uint256 pot)"
+      - event: "MatchRefunded(bytes32 indexed matchId, uint8 reason, uint256 perSeat)"
   - name: PoolShares
     events:
       - event: "EpochRolled(uint40 indexed hour, uint256 value, uint256 supply, uint256 suppliedAssets, uint256 withdrawnAssets, bool deferred)"

@@ -4,11 +4,12 @@
  * call's status is written straight into its query; a session or dollar event refreshes the account.
  */
 
-import type { IntentStatus } from "@senryo/api-client";
+import type { DuelQueueView, IntentStatus } from "@senryo/api-client";
 import type { Address } from "@senryo/core";
 import type { Live } from "@senryo/live";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
+import { duelKeys } from "./duels.ts";
 import { earnKeys } from "./earn.ts";
 import { useQueryEnv } from "./env.tsx";
 import { historyKeys } from "./history.ts";
@@ -87,6 +88,19 @@ export function useLiveSync(live: Live, owner: Address | undefined): void {
       live.onUser("parlay", () => {
         void account();
         void client.invalidateQueries({ queryKey: parlayKeys.of(env.chainId, owner) });
+      }),
+      live.onUser<DuelQueueView>("duelQueue", (entry) => {
+        client.setQueryData(duelKeys.queue(env.chainId, owner), entry);
+        void account();
+      }),
+      live.onUser<{ chainId: number; matchId: string; change: string }>("duel", (d) => {
+        if (d.chainId !== env.chainId) return;
+        void client.invalidateQueries({ queryKey: duelKeys.match(env.chainId, d.matchId) });
+        void client.invalidateQueries({ queryKey: duelKeys.of(env.chainId, owner) });
+        void account();
+        // A card's call settling shows in the caller's history once the indexer has it.
+        if (d.change === "cardSettled")
+          later(() => client.invalidateQueries({ queryKey: historyKeys.owner(env.chainId, owner) }));
       }),
     ];
     return () => {

@@ -42,6 +42,15 @@ export const GAS_LIMITS = {
   /** Exits (D-292): a relayed `setExit` (one slot and its signature), and firing one (`fireExit` / `fireTrail`). */
   exitSet: 200_000n,
   exitFire: 250_000n,
+  /**
+   * Duel (D-294), measured in the Foundry gas report (max): `openMatch` 518k (two entries, permits, pulls); the reveal
+   * 214k plus opening up to three card windows with their line; a `pick` 495k (the arena's own commit at the reserve);
+   * the keeper's steps — a lock 147k, three `settleCard`s at 303k and the pot 140k — in one batch.
+   */
+  duelOpen: 800_000n,
+  duelReveal: 2_000_000n,
+  duelPick: 800_000n,
+  duelSettle: 2_500_000n,
 };
 export type GasAction = keyof typeof GAS_LIMITS;
 

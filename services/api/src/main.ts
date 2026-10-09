@@ -1,10 +1,13 @@
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
+import { isDeployed } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import {
   createDb,
   createHttpServer,
   createLogger,
+  DUEL_CHANNEL,
+  type DuelNotice,
   listen,
   loadOptionalSigner,
   migrate,
@@ -17,8 +20,11 @@ import {
 } from "@senryo/service-common";
 import { CORS_METHODS } from "./constants.ts";
 import { type ApiContext, openChains } from "./context.ts";
+import { DuelQueue } from "./duel/queue.ts";
+import { DuelRelay } from "./duel/relay.ts";
 import { loadApiEnv } from "./env.ts";
 import { GeoDb } from "./geo-db.ts";
+import { DuelReader } from "./history/duel-reader.ts";
 import { ARCHIVE_PENDING_MS } from "./prices/constants.ts";
 import { PythGateway } from "./prices/gateway.ts";
 import { AccountRelay } from "./relay/accounts.ts";
@@ -27,6 +33,7 @@ import { type Lane, openLanes } from "./relay/lanes.ts";
 import { ParlayRelay } from "./relay/parlays.ts";
 import { MarketRelay } from "./relay/relay.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
+import { registerDuelRoutes } from "./routes/duels.ts";
 import { registerEarnRoutes } from "./routes/earn.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerHistoryRoutes } from "./routes/history.ts";
@@ -97,7 +104,33 @@ for (const chain of chains.values()) {
     db,
     log,
   });
-  markets.set(chain.chainId, { relay, accounts, exits, parlays });
+  // Duels (D-294) once the arena is deployed: the matchmaker opens from the first lane (`SPONSOR` holds DUEL).
+  let duels: { queue: DuelQueue; relay: DuelRelay } | undefined;
+  if (isDeployed(chain.chainId, "DuelArena")) {
+    const ratings = new DuelReader(db, env.INDEXER_SCHEMA);
+    const duelRelay = new DuelRelay({
+      chainId: chain.chainId as ChainId,
+      lane: lanes[0] as Lane,
+      relay,
+      gateway,
+      bus,
+      db,
+      log,
+    });
+    const queue = new DuelQueue({
+      chainId: chain.chainId as ChainId,
+      read: chain.read,
+      relay: duelRelay,
+      gateway,
+      bus,
+      db,
+      log,
+      ratings: (owners) => ratings.ratings(chain.chainId as ChainId, owners),
+    });
+    queue.start();
+    duels = { queue, relay: duelRelay };
+  }
+  markets.set(chain.chainId, { relay, accounts, exits, parlays, duels });
   log.info({ chainId: chain.chainId, lanes: sponsors.map((s) => s.address) }, "relay ready");
 }
 if (sponsors.length === 0) log.warn("no SPONSOR_PK — calls, sessions and Practice dollars answer 503");
@@ -107,6 +140,10 @@ await db.listen(TICKET_CHANNEL, (payload) => {
   const notice = JSON.parse(payload) as TicketNotice;
   bus.emit(`user:${notice.owner}`, "ticket", notice);
   markets.get(notice.chainId)?.exits.onTicket(notice);
+  void markets
+    .get(notice.chainId)
+    ?.duels?.relay.onTicket(notice)
+    .catch((error) => log.warn({ err: (error as Error).message }, "duel update from a ticket notice failed"));
   void markets
     .get(notice.chainId)
     ?.relay.onTicket(notice)
@@ -121,6 +158,12 @@ await db.listen(PARLAY_CHANNEL, (payload) => {
     .get(notice.chainId)
     ?.parlays.onParlay(notice)
     .catch((error) => log.warn({ err: (error as Error).message }, "intent update from a parlay notice failed"));
+});
+
+// Every duel change reaches both players' streams; the apps re-read the match.
+await db.listen(DUEL_CHANNEL, (payload) => {
+  const notice = JSON.parse(payload) as DuelNotice;
+  for (const player of notice.players) bus.emit(`user:${player}`, "duel", notice);
 });
 
 const ctx: ApiContext = {
@@ -157,6 +200,7 @@ registerProfileRoutes(app, ctx);
 registerMarketRoutes(app, ctx);
 registerEarnRoutes(app, ctx);
 registerParlayRoutes(app, ctx);
+registerDuelRoutes(app, ctx);
 registerHistoryRoutes(app, ctx);
 registerPriceRoutes(app, gateway);
 registerStreamRoute(app, {
@@ -169,7 +213,10 @@ registerStreamRoute(app, {
 await listen(app, env.PORT, env.HOST, async () => {
   geo.stop();
   clearInterval(archiveTimer);
-  for (const m of markets.values()) m.exits.stop();
+  for (const m of markets.values()) {
+    m.exits.stop();
+    m.duels?.queue.stop();
+  }
   gateway.stop();
   for (const chain of chains.values()) await chain.heads.stop();
   await db.end();
