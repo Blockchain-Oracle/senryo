@@ -1,7 +1,8 @@
-import { type Hex, seriesOf } from "@senryo/chain";
-import { type ChainId, feedIdOf, TESTNET_CHAIN_ID } from "@senryo/config";
+import { WINDOW_CALLS_MAX } from "@senryo/api-client";
+import { type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
+import { type ChainId, feedIdOf, marketsOn, TESTNET_CHAIN_ID } from "@senryo/config";
 import { type Db, nowSec } from "@senryo/service-common";
-import { CALLS_PAGE, DAYS_PER_WEEK, LEADERBOARD_SIZE, SECONDS_PER_DAY } from "./constants.ts";
+import { CALLS_PAGE, DAYS_PER_WEEK, LEADERBOARD_SIZE, SECONDS_PER_DAY, WINDOWS_PAGE } from "./constants.ts";
 
 /**
  * The indexer's tables over SQL (S4, D-272): Envio writes them in its own schema of the shared Postgres (Hasura is
@@ -29,6 +30,12 @@ interface TicketRow {
 }
 
 const FINISHED = new Set(["closed", "settled", "refunded"]);
+
+/** Every series id of a market on this network (one per cadence). */
+function seriesIdsOf(chainId: ChainId, symbol: string): Hex[] {
+  const m = marketsOn(chainId).find((x) => x.symbol === symbol);
+  return m ? m.cadences.map((c) => seriesIdOf(symbol, c)) : [];
+}
 
 /** Envio stores BigInt as `numeric`; money fits int8, which the client reads as bigint. */
 const TICKET_COLUMNS = `t."ticketId"::int8 AS "ticketId", t."windowId", t.band, t.status,
@@ -86,15 +93,23 @@ export class IndexerReader {
         bandStake: string[];
         openedTx: string;
         settledTx: string | null;
+        resolvedTx: string | null;
+        voidReason: number;
+        wonMask: number;
+        refundMask: number;
+        lostMask: number;
+        toPool: bigint;
+        toHolders: bigint;
       }[]
     >`SELECT "seriesId", start, expiry, state, settled, calls, volume::int8 AS volume, "bandStake"::text[] AS "bandStake",
-             "openedTx", "settledTx"
+             "openedTx", "settledTx", "resolvedTx", "voidReason", "wonMask", "refundMask", "lostMask",
+             "toPool"::int8 AS "toPool", "toHolders"::int8 AS "toHolders"
       FROM ${this.t("Window")} WHERE id = ${`${chainId}_${windowId.toLowerCase()}`}`;
     if (!w) return undefined;
     const series = seriesOf(chainId, w.seriesId as Hex);
     if (!series) return undefined;
-    const prints = await this.db<{ t: number; priceE8: bigint; publishTime: number; txHash: string }[]>`
-      SELECT t, "priceE8"::int8 AS "priceE8", "publishTime", "txHash" FROM ${this.t("Print")}
+    const prints = await this.db<{ t: number; priceE8: bigint; confE8: bigint; publishTime: number; txHash: string }[]>`
+      SELECT t, "priceE8"::int8 AS "priceE8", "confE8"::int8 AS "confE8", "publishTime", "txHash" FROM ${this.t("Print")}
       WHERE "chainId" = ${chainId} AND "feedId" = ${feedIdOf(series.market)} AND t IN (${w.start}, ${w.expiry})`;
     const at = (t: number) => prints.find((p) => p.t === t) ?? null;
     // Calls still riding the window: settlement runs only while there are some (a window every call cashed out of
@@ -103,7 +118,42 @@ export class IndexerReader {
       SELECT count(*)::int AS n FROM ${this.t("Ticket")}
       WHERE "chainId" = ${chainId} AND "windowId" = ${windowId.toLowerCase()}
         AND status IN ('committed', 'open', 'closing')`;
-    return { ...w, series, open: at(w.start), close: at(w.expiry), liveCalls: live?.n ?? 0 };
+    const rows = await this.db<TicketRow[]>`
+      SELECT ${this.db.unsafe(TICKET_COLUMNS)}
+      FROM ${this.t("Ticket")} t JOIN ${this.t("Window")} w ON w.id = t."chainId" || '_' || t."windowId"
+      WHERE t."chainId" = ${chainId} AND t."windowId" = ${windowId.toLowerCase()}
+      ORDER BY t."ticketId" LIMIT ${WINDOW_CALLS_MAX}`;
+    const callList = rows.flatMap((r) => this.toCall(chainId, r));
+    return { ...w, series, open: at(w.start), close: at(w.expiry), liveCalls: live?.n ?? 0, callList };
+  }
+
+  /** Recent windows anyone called in, newest first (the Proof feed), optionally one market's. */
+  async windows(chainId: ChainId, symbol: string | undefined, before: number | undefined) {
+    const series = symbol ? seriesIdsOf(chainId, symbol) : undefined;
+    const rows = await this.db<
+      {
+        windowId: string;
+        seriesId: string;
+        start: number;
+        expiry: number;
+        state: string;
+        openE8: bigint | null;
+        closeE8: bigint | null;
+        calls: number;
+        volume: bigint;
+      }[]
+    >`SELECT "windowId", "seriesId", start, expiry, state, "openE8"::int8 AS "openE8", "closeE8"::int8 AS "closeE8",
+             calls, volume::int8 AS volume
+      FROM ${this.t("Window")}
+      WHERE "chainId" = ${chainId} AND calls > 0
+        ${before === undefined ? this.db`` : this.db`AND start < ${before}`}
+        ${series ? this.db`AND "seriesId" IN ${this.db(series)}` : this.db``}
+      ORDER BY start DESC LIMIT ${WINDOWS_PAGE}`;
+    const windows = rows.flatMap((r) => {
+      const s = seriesOf(chainId, r.seriesId as Hex);
+      return s ? [{ ...r, symbol: s.market.symbol, cadenceSec: s.cadenceSec }] : [];
+    });
+    return { windows, next: rows.length === WINDOWS_PAGE ? (rows.at(-1)?.start ?? null) : null };
   }
 
   /** Practice and Real boards are separate (`chainId`); handles only for profiles listed on that network. */

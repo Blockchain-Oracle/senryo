@@ -10,3 +10,6 @@ export const DEFAULT_INDEXER_SCHEMA = "envio";
 /** History is a few seconds behind the chain at most; a short edge cache absorbs bursts of the same read. */
 export const HISTORY_MAX_AGE = "public, max-age=2";
 export const LEADERBOARD_MAX_AGE = "public, s-maxage=30, max-age=10";
+
+/** Windows per page of the Proof feed. */
+export const WINDOWS_PAGE = 30;

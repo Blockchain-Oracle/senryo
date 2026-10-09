@@ -12,6 +12,7 @@ import {
   leaderboardRoute,
   printRoute,
   windowProofRoute,
+  windowsRoute,
 } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
 import { type Address, fromQuery } from "@senryo/core";
@@ -36,6 +37,7 @@ export const historyKeys = {
   window: (chainId: ChainId, windowId: string) => ["history", chainId, "window", windowId.toLowerCase()] as const,
   leaderboard: (chainId: ChainId, period: LeaderboardPeriod) => ["history", chainId, "leaderboard", period] as const,
   print: (symbol: string, t: number) => ["history", "print", symbol, t] as const,
+  windows: (chainId: ChainId, symbol: string | undefined) => ["history", chainId, "windows", symbol ?? "all"] as const,
 };
 
 /** A caller's calls, newest first, a page at a time. */
@@ -98,6 +100,30 @@ export function useWindowProof(windowId: `0x${string}` | undefined, options: { l
     refetchInterval: (q) => (options.live && !q.state.data?.settled ? OPEN_WINDOW_STALE_MS : false),
   });
   return fromQuery(query);
+}
+
+/** The Proof feed: recent windows anyone called in, newest first (one market's, or all), a page at a time. */
+export function useWindows(symbol: string | undefined) {
+  const env = useQueryEnv();
+  const query = useInfiniteQuery({
+    queryKey: historyKeys.windows(env.chainId, symbol),
+    initialPageParam: undefined as number | undefined,
+    queryFn: ({ pageParam, signal }) =>
+      env.api.call(
+        windowsRoute,
+        {
+          query: {
+            chainId: env.chainId,
+            ...(symbol ? { symbol } : {}),
+            ...(pageParam === undefined ? {} : { before: pageParam }),
+          },
+        },
+        { signal },
+      ),
+    getNextPageParam: (last) => last.next ?? undefined,
+    staleTime: OPEN_WINDOW_STALE_MS,
+  });
+  return query;
 }
 
 /**

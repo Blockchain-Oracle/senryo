@@ -4,6 +4,7 @@ import {
   callTimelineRoute,
   leaderboardRoute,
   windowProofRoute,
+  windowsRoute,
 } from "@senryo/api-client";
 import type { Hex } from "@senryo/chain";
 import type { HttpServer } from "@senryo/service-common";
@@ -48,7 +49,7 @@ export function registerHistoryRoutes(app: HttpServer, ctx: ApiContext): void {
     const w = await reader.window(query.chainId, params.windowId);
     if (!w) throw notFound("window");
     const print = (p: typeof w.open) =>
-      p && { priceE8: p.priceE8, publishTime: p.publishTime, txHash: p.txHash as Hex };
+      p && { priceE8: p.priceE8, confE8: p.confE8, publishTime: p.publishTime, txHash: p.txHash as Hex };
     reply.header("cache-control", HISTORY_MAX_AGE);
     return sendRoute(reply, windowProofRoute, {
       windowId: params.windowId,
@@ -66,6 +67,24 @@ export function registerHistoryRoutes(app: HttpServer, ctx: ApiContext): void {
       bandStake: w.bandStake.map(BigInt),
       openedTx: w.openedTx as Hex,
       settledTx: w.settledTx as Hex | null,
+      voidReason: w.voidReason,
+      wonMask: w.wonMask,
+      refundMask: w.refundMask,
+      lostMask: w.lostMask,
+      toPool: w.toPool,
+      toHolders: w.toHolders,
+      resolvedTx: w.resolvedTx as Hex | null,
+      callList: w.callList,
+    });
+  });
+
+  app.get(windowsRoute.path, async (request, reply) => {
+    const { query } = parseRoute(windowsRoute, request);
+    const page = await reader.windows(query.chainId, query.symbol, query.before);
+    reply.header("cache-control", HISTORY_MAX_AGE);
+    return sendRoute(reply, windowsRoute, {
+      windows: page.windows.map((w) => ({ ...w, windowId: w.windowId as Hex, state: w.state as "open" })),
+      next: page.next,
     });
   });
 

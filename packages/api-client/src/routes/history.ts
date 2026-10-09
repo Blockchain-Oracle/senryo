@@ -79,6 +79,17 @@ export const callTimelineRoute = defineRoute({
   }),
 });
 
+/** A print on chain: the e-8 price, its confidence, its publish time and the transaction that recorded it. */
+const printSchema = z.object({
+  priceE8: uintCodec,
+  confE8: uintCodec,
+  publishTime: unixSecondsSchema,
+  txHash: txHashSchema,
+});
+
+/** The most calls a window's proof lists. */
+export const WINDOW_CALLS_MAX = 50;
+
 export const windowProofRoute = defineRoute({
   method: "GET",
   path: "/v1/markets/windows/:windowId",
@@ -94,8 +105,8 @@ export const windowProofRoute = defineRoute({
     expiry: unixSecondsSchema,
     state: z.enum(["open", "resolved", "voided"]),
     settled: z.boolean(),
-    open: z.object({ priceE8: uintCodec, publishTime: unixSecondsSchema, txHash: txHashSchema }).nullable(),
-    close: z.object({ priceE8: uintCodec, publishTime: unixSecondsSchema, txHash: txHashSchema }).nullable(),
+    open: printSchema.nullable(),
+    close: printSchema.nullable(),
     calls: z.int(),
     /** Calls still riding it. Settlement posts the close only while some are: 0 after expiry means it never will. */
     liveCalls: z.int().nonnegative(),
@@ -104,9 +115,52 @@ export const windowProofRoute = defineRoute({
     bandStake: z.array(uintCodec),
     openedTx: txHashSchema,
     settledTx: txHashSchema.nullable(),
+    /** The verdict (S7.7): why it voided (0 none, 1 no print, 2 the cross-check diverged), and which bands won,
+     *  refunded or lost (bit i = band i), what went to the pool and to holders, and the resolve transaction. */
+    voidReason: z.int().nonnegative(),
+    wonMask: z.int().nonnegative(),
+    refundMask: z.int().nonnegative(),
+    lostMask: z.int().nonnegative(),
+    toPool: uintCodec,
+    toHolders: uintCodec,
+    resolvedTx: txHashSchema.nullable(),
+    /** Every call in the window (owners are not listed), oldest first, at most `WINDOW_CALLS_MAX`. */
+    callList: z.array(callSchema),
   }),
 });
 
+export const windowsRoute = defineRoute({
+  method: "GET",
+  path: "/v1/markets/windows",
+  auth: "none",
+  params: undefined,
+  query: z.object({
+    chainId: z.coerce.number().pipe(chainIdSchema),
+    symbol: symbolSchema.optional(),
+    /** Page backwards from this window start (exclusive). */
+    before: z.coerce.number().int().optional(),
+  }),
+  body: undefined,
+  response: z.object({
+    windows: z.array(
+      z.object({
+        windowId: bytes32Schema,
+        symbol: symbolSchema,
+        cadenceSec: z.int(),
+        start: unixSecondsSchema,
+        expiry: unixSecondsSchema,
+        state: z.enum(["open", "resolved", "voided"]),
+        openE8: uintCodec.nullable(),
+        closeE8: uintCodec.nullable(),
+        calls: z.int(),
+        volume: uintCodec,
+      }),
+    ),
+    next: z.int().nullable(),
+  }),
+});
+
+export type WindowsPage = z.output<typeof windowsRoute.response>;
 export type CallTimeline = z.output<typeof callTimelineRoute.response>;
 export type WindowProof = z.output<typeof windowProofRoute.response>;
 export type CallerStats = z.output<typeof callerStatsRoute.response>;

@@ -8,3 +8,9 @@ export function callLink(ticketId: bigint, chainId: ChainId): string {
   const query = new URLSearchParams({ id: String(ticketId), chainId: String(chainId) });
   return `${WEB_ORIGIN}/call?${query.toString()}`;
 }
+
+/** A window's public proof (S7.7): its prints, every band's verdict and the in-browser re-verify. */
+export function proofLink(windowId: string, chainId: ChainId): string {
+  const query = new URLSearchParams({ id: windowId, chainId: String(chainId) });
+  return `${WEB_ORIGIN}/proof/w/?${query.toString()}`;
+}

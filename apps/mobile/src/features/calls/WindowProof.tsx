@@ -4,7 +4,7 @@
  * close landed against the line, and how the crowd called it. Facts only: no winner is inferred beyond the prints.
  */
 import type { WindowProof as Proof } from "@senryo/api-client";
-import { closeUnposted, proofFacts } from "@senryo/calls";
+import { closeUnposted, proofFacts, proofLink } from "@senryo/calls";
 import { type ChainId, explorerTxUrl } from "@senryo/config";
 import { usePrint, useWindowProof } from "@senryo/query";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
@@ -76,6 +76,7 @@ export function WindowProof({ windowId, chainId }: { windowId: `0x${string}`; ch
 }
 
 function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
+  const { color } = useTheme();
   const archived = usePrint(p.symbol, closeUnposted(p) ? p.expiry : undefined);
   const { heading, facts } = proofFacts(p, "value" in archived ? archived.value : undefined);
   return (
@@ -84,6 +85,17 @@ function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
       {facts.map((f) => (
         <Fact key={f.label} {...f} chainId={chainId} />
       ))}
+      <Pressable
+        accessibilityRole="link"
+        accessibilityHint="Opens the window's proof in your browser, where you can re-verify its prints"
+        onPress={() => {
+          fire("tick");
+          void Linking.openURL(proofLink(p.windowId, chainId));
+        }}
+        style={styles.full}
+      >
+        <Text style={[TYPE.rowTitle, { color: color.link }]}>Full proof and re-verify ›</Text>
+      </Pressable>
     </View>
   );
 }
@@ -92,4 +104,5 @@ const styles = StyleSheet.create({
   wrap: { gap: SPACE.xs },
   fact: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: SIZE.touch + SPACE.sm },
   flex: { flex: 1 },
+  full: { minHeight: SIZE.touch, justifyContent: "center" },
 });

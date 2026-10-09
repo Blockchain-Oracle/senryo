@@ -7,6 +7,7 @@ export * from "./links.ts";
 export * from "./markets.ts";
 export * from "./modes.ts";
 export * from "./one-tap.ts";
+export * from "./proof.ts";
 export * from "./quote.ts";
 export * from "./reactions.ts";
 export * from "./receipt.ts";

@@ -9,6 +9,7 @@ import { closeUnposted, proofFacts } from "@senryo/calls";
 import { type ChainId, explorerTxUrl } from "@senryo/config";
 import { usePrint, useWindowProof } from "@senryo/query";
 import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
   const archived = usePrint(p.symbol, closeUnposted(p) ? p.expiry : undefined);
@@ -57,6 +58,12 @@ function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
           </div>
         );
       })}
+      <Link
+        href={`/proof/w/?id=${p.windowId}&chainId=${chainId}`}
+        className="self-start pt-1 font-semibold text-link text-meta"
+      >
+        Full proof and re-verify ›
+      </Link>
     </section>
   );
 }
