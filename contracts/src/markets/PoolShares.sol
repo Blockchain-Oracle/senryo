@@ -5,7 +5,11 @@ import {AccessManaged} from "@openzeppelin/contracts/access/manager/AccessManage
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {SignatureChecker} from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Permit} from "./MarketTypes.sol";
 
 /// @dev The shared pool's books and its POOL-role money doors (`BandPool`).
 interface ISharedPool {
@@ -25,8 +29,10 @@ interface ISharedPool {
 ///         the same price, (value + 1) / (supply + 1). Supplies always settle; a withdrawal batch settles whole once the
 ///         pool's liquid covers it, or waits for the next roll whole. The house's capital is the first shares (`seed`,
 ///         1 share = 1 dollar unit), so no first depositor sets the price. Claims are lazy and anyone may push them.
+///         Users hold no gas (D-266): each request is also an EIP-712 `EarnRequest` the owner signs and the relayer
+///         sends (`requestFor`, with the dollar's permit for a supply).
 /// @dev Holds the POOL role on `fund`/`defund` (AccessManager): the only way money enters or leaves the pool.
-contract PoolShares is ERC20, AccessManaged, ReentrancyGuard {
+contract PoolShares is ERC20, AccessManaged, EIP712, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint40 public constant HOUR_SEC = 3600;
@@ -34,6 +40,22 @@ contract PoolShares is ERC20, AccessManaged, ReentrancyGuard {
     uint40 public constant EXPIRY_STEP_SEC = 60;
     /// @dev The +1 on both sides of the price (a virtual share and a virtual dollar unit).
     uint256 internal constant VIRTUAL = 1;
+
+    uint8 public constant SUPPLY = 1;
+    uint8 public constant WITHDRAW = 2;
+    uint8 public constant CANCEL_SUPPLY = 3;
+    uint8 public constant CANCEL_WITHDRAW = 4;
+    bytes32 public constant EARN_REQUEST_TYPEHASH =
+        keccak256("EarnRequest(uint8 kind,address owner,uint256 amount,uint64 deadline,uint256 nonce)");
+
+    /// @notice What the owner signs for the relayer: a supply, a withdrawal or a cancel, once (`nonce`), until `deadline`.
+    struct EarnRequest {
+        uint8 kind;
+        address owner;
+        uint256 amount;
+        uint64 deadline;
+        uint256 nonce;
+    }
 
     ISharedPool public immutable pool;
     IERC20 public immutable asset;
@@ -59,6 +81,7 @@ contract PoolShares is ERC20, AccessManaged, ReentrancyGuard {
     mapping(uint256 id => Batch) public withdrawBatch;
     mapping(address account => Request) public supplyOf;
     mapping(address account => Request) public withdrawOf;
+    mapping(address owner => mapping(uint256 nonce => bool)) public nonceUsed;
 
     event Seeded(address indexed to, uint256 shares);
     event SupplyRequested(address indexed account, uint256 indexed batch, uint256 assets);
@@ -77,10 +100,15 @@ contract PoolShares is ERC20, AccessManaged, ReentrancyGuard {
     error NothingToDo();
     error Settled();
     error ZeroAmount();
+    error SignatureExpired(uint64 deadline);
+    error SignatureInvalid();
+    error NonceUsed(address owner, uint256 nonce);
+    error BadKind(uint8 kind);
 
     constructor(address authority, ISharedPool pool_)
         ERC20("Senryo pool share", "SPS")
         AccessManaged(authority)
+        EIP712("Senryo Earn", "1")
     {
         pool = pool_;
         asset = pool_.collateral();
@@ -105,41 +133,85 @@ contract PoolShares is ERC20, AccessManaged, ReentrancyGuard {
 
     /// @notice Supply dollars at the next roll (they wait here, not at risk, until then).
     function requestSupply(uint256 assets) external nonReentrant {
-        if (assets == 0) revert ZeroAmount();
-        if (totalSupply() == 0) revert NotSeeded();
-        _claim(msg.sender);
-        Request storage r = supplyOf[msg.sender];
-        asset.safeTransferFrom(msg.sender, address(this), assets);
-        r.batch = openSupplyBatch;
-        r.amount += assets;
-        supplyBatch[openSupplyBatch].total += assets;
-        emit SupplyRequested(msg.sender, openSupplyBatch, assets);
+        _supply(msg.sender, assets);
     }
 
     /// @notice Withdraw shares at the next roll that can pay them (the shares wait here until then).
     function requestWithdraw(uint256 shares) external nonReentrant {
-        if (shares == 0) revert ZeroAmount();
-        _claim(msg.sender);
-        Request storage r = withdrawOf[msg.sender];
-        _transfer(msg.sender, address(this), shares);
-        r.batch = openWithdrawBatch;
-        r.amount += shares;
-        withdrawBatch[openWithdrawBatch].total += shares;
-        emit WithdrawRequested(msg.sender, openWithdrawBatch, shares);
+        _withdraw(msg.sender, shares);
     }
 
     /// @notice Takes back a request its roll hasn't settled.
     function cancel(bool supply) external nonReentrant {
-        Request storage r = supply ? supplyOf[msg.sender] : withdrawOf[msg.sender];
+        _cancel(msg.sender, supply);
+    }
+
+    /// @notice The relayed form of every request: the owner's signature instead of their gas (D-266); `permit`
+    ///         (optional) sets the supply's allowance in the same transaction.
+    function requestFor(EarnRequest calldata r, bytes calldata sig, Permit calldata permit) external nonReentrant {
+        if (block.timestamp > r.deadline) revert SignatureExpired(r.deadline);
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(abi.encode(EARN_REQUEST_TYPEHASH, r.kind, r.owner, r.amount, r.deadline, r.nonce))
+        );
+        if (!SignatureChecker.isValidSignatureNowCalldata(r.owner, digest, sig)) revert SignatureInvalid();
+        if (nonceUsed[r.owner][r.nonce]) revert NonceUsed(r.owner, r.nonce);
+        nonceUsed[r.owner][r.nonce] = true;
+        if (r.kind == SUPPLY) {
+            if (permit.deadline != 0) {
+                // A front-run permit only spends the same signature; the pull in `_supply` is what must succeed.
+                try IERC20Permit(address(asset))
+                    .permit(r.owner, address(this), permit.value, permit.deadline, permit.v, permit.r, permit.s) {}
+                    catch {}
+            }
+            _supply(r.owner, r.amount);
+        } else if (r.kind == WITHDRAW) {
+            _withdraw(r.owner, r.amount);
+        } else if (r.kind == CANCEL_SUPPLY || r.kind == CANCEL_WITHDRAW) {
+            _cancel(r.owner, r.kind == CANCEL_SUPPLY);
+        } else {
+            revert BadKind(r.kind);
+        }
+    }
+
+    /// @notice The EIP-712 domain separator requests are signed under.
+    function domainSeparator() external view returns (bytes32) {
+        return _domainSeparatorV4();
+    }
+
+    function _supply(address owner, uint256 assets) private {
+        if (assets == 0) revert ZeroAmount();
+        if (totalSupply() == 0) revert NotSeeded();
+        _claim(owner);
+        Request storage r = supplyOf[owner];
+        asset.safeTransferFrom(owner, address(this), assets);
+        r.batch = openSupplyBatch;
+        r.amount += assets;
+        supplyBatch[openSupplyBatch].total += assets;
+        emit SupplyRequested(owner, openSupplyBatch, assets);
+    }
+
+    function _withdraw(address owner, uint256 shares) private {
+        if (shares == 0) revert ZeroAmount();
+        _claim(owner);
+        Request storage r = withdrawOf[owner];
+        _transfer(owner, address(this), shares);
+        r.batch = openWithdrawBatch;
+        r.amount += shares;
+        withdrawBatch[openWithdrawBatch].total += shares;
+        emit WithdrawRequested(owner, openWithdrawBatch, shares);
+    }
+
+    function _cancel(address owner, bool supply) private {
+        Request storage r = supply ? supplyOf[owner] : withdrawOf[owner];
         Batch storage b = supply ? supplyBatch[r.batch] : withdrawBatch[r.batch];
         if (r.amount == 0) revert NothingToDo();
         if (b.done) revert Settled();
         uint256 amount = r.amount;
         b.total -= amount;
         r.amount = 0;
-        if (supply) asset.safeTransfer(msg.sender, amount);
-        else _transfer(address(this), msg.sender, amount);
-        emit RequestCancelled(msg.sender, supply, amount);
+        if (supply) asset.safeTransfer(owner, amount);
+        else _transfer(address(this), owner, amount);
+        emit RequestCancelled(owner, supply, amount);
     }
 
     /// @notice Delivers an account's settled requests (shares for a supply, dollars for a withdrawal).

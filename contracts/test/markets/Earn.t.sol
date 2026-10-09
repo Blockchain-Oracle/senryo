@@ -102,6 +102,46 @@ contract EarnTest is MarketsBase {
         assertEq(shares.totalSupply(), 0);
     }
 
+    function signed(uint8 kind, uint256 amount, uint256 nonce, uint256 pk)
+        internal
+        view
+        returns (PoolShares.EarnRequest memory r, bytes memory sig)
+    {
+        r = PoolShares.EarnRequest(kind, owner, amount, uint64(block.timestamp + 60), nonce);
+        bytes32 structHash =
+            keccak256(abi.encode(shares.EARN_REQUEST_TYPEHASH(), r.kind, r.owner, r.amount, r.deadline, r.nonce));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", shares.domainSeparator(), structHash));
+        (uint8 v, bytes32 rs, bytes32 ss) = vm.sign(pk, digest);
+        sig = abi.encodePacked(rs, ss, v);
+    }
+
+    function test_aSignedSupplyIsRelayedWithoutTheOwnersGas() public {
+        vm.prank(owner);
+        usd.approve(address(shares), SUPPLY);
+        (PoolShares.EarnRequest memory r, bytes memory sig) = signed(shares.SUPPLY(), SUPPLY, 1, OWNER_PK);
+        shares.requestFor(r, sig, noPermit()); // sent by this contract, signed by the owner
+        (, uint256 amount) = shares.supplyOf(owner);
+        assertEq(amount, SUPPLY);
+        vm.expectRevert(abi.encodeWithSelector(PoolShares.NonceUsed.selector, owner, 1));
+        shares.requestFor(r, sig, noPermit());
+    }
+
+    function test_onlyTheOwnersSignatureCounts() public {
+        (PoolShares.EarnRequest memory r, bytes memory sig) = signed(shares.SUPPLY(), SUPPLY, 2, DELEGATE_PK);
+        vm.expectRevert(PoolShares.SignatureInvalid.selector);
+        shares.requestFor(r, sig, noPermit());
+    }
+
+    function test_aSignedWithdrawalEscrowsTheOwnersShares() public {
+        shares.transfer(owner, SUPPLY);
+        (PoolShares.EarnRequest memory r, bytes memory sig) = signed(shares.WITHDRAW(), SUPPLY, 3, OWNER_PK);
+        shares.requestFor(r, sig, noPermit());
+        assertEq(shares.balanceOf(owner), 0);
+        shares.roll(T0);
+        shares.claim(owner);
+        assertEq(usd.balanceOf(owner), WALLET + SUPPLY, "paid at the pool's price (1)");
+    }
+
     function test_aRequestCanBeTakenBackUntilItsRoll() public {
         supply(SUPPLY);
         vm.prank(supplier);
