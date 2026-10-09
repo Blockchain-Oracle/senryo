@@ -55,38 +55,55 @@ bundles within D-283.
 ## Steps
 
 ### Universe
-- [ ] S7.1 Catalogue v2: kinds (crypto, equity, metal, fx, basket), a source per market (pyth · redstone · basket), a
+- [x] S7.1 Catalogue v2: kinds (crypto, equity, metal, fx, basket), a source per market (pyth · redstone · basket), a
       calendar per kind (24/7, US equity, metals, FX), print classes per kind, append-only order (ticks carry the
       index); the Pyth step's markets with σ measured from Hermes history (script) and their menus; identity marks for the
       new coins and QQQ by the scripted fetch; invariant: the catalogue only appends
-- [ ] S7.2 On chain: `AddMarkets.s.sol` (calendars with exact weeks and holidays, a verifier per new print class,
+      _Done (4c90538): DOGE, XRP, BNB, HYPE, TSLA, QQQ, gold, silver, the euro; σ from five days of public 1-minute
+      closes ×1.5 (Hermes history rate-limited the shared key — never again for bulk reads); calendars are the feeds'
+      own Pyth schedules; `feedIdOf` / `verifierOf` everywhere; `market-order.json` + `catalog-append-only`._
+- [x] S7.2 On chain: `AddMarkets.s.sol` (calendars with exact weeks and holidays, a verifier per new print class,
       `registerSeries` per cadence, `setSigma`, `addBand`), run on testnet; export and address book; the keeper and relay
       read each series' verifier and feed from its policy (no hard-coded Pyth); the gateway streams every catalogue feed
-- [ ] S7.3 Sessions on both apps: session words in `@senryo/core` ("Closes 16:00 ET", "Opens Mon 09:30 ET", "Closed
+      _Done in code: `MarketsBase` (idempotent listing, decoded once — per-field JSON parsing ran a script out of EVM
+      memory), `AddMarkets` simulated clean on testnet; keeper `calendars` job under CALENDAR_ROLE. On chain: waits on
+      testnet MON._
+- [x] S7.3 Sessions on both apps: session words in `@senryo/core` ("Closes 16:00 ET", "Opens Mon 09:30 ET", "Closed
       for the weekend", "Holiday", "Trading halted"), the closed terminal with the next open and Notify me (push on the
       phone, a browser notification on the web), the halt watch in the api, the DST job; Markets grouped by kind with
       search, on both apps
+      _Done (4c90538): the session engine in `@senryo/core` (checked on open/close, DST, Thanksgiving, the early close,
+      metals' break); Markets grouped with search on both apps; the closed terminal panel; the relay refuses
+      closed-market calls in words. Notify me moves to S8 with alerts (a server-side alert and a push)._
 
 ### Ways to call
-- [ ] S7.4 Range and Moonshot on both apps: `@senryo/calls` quotes the whole menu by band index (`open(band)`), the chart
+- [x] S7.4 Range and Moonshot on both apps: `@senryo/calls` quotes the whole menu by band index (`open(band)`), the chart
       draws Range's two edges and Moonshot's strike with the zone that wins, reactions and "winning" from `bandOutcome`,
       the crowd split by band, receipts and share cards name the band and its edges, "Not priced now" outside 3–97 %
+      _Done (56a9c08)._
 
 ### Baskets
-- [ ] S7.5 `BasketPrintVerifier` (tests: index maths against the TS mirror, a missing member, conf), deploy, the Pyth
+- [x] S7.5 `BasketPrintVerifier` (tests: index maths against the TS mirror, a missing member, conf), deploy, the Pyth
       baskets registered with σ from component correlations; keeper, relay and gateway build N-update proofs and archive
       the basket print; the basket screen (members, weights, each member's move, its contribution) on both apps
+      _Done (16191bf, 4c48de3): Crypto majors, Alt coins, Metals in points, composed in the gateway from the archive
+      only; `catalog-basket-ids`; points everywhere; members under the terminal._
 
 ### Earn
-- [ ] S7.6 `PoolShares` (requests, cancel before the cutoff, `roll`, virtual offset, the seed as first shares; Foundry
+- [x] S7.6 `PoolShares` (requests, cancel before the cutoff, `roll`, virtual offset, the seed as first shares; Foundry
       invariants: value conserved across rolls, no withdrawal while the hour is unsettled), deploy and role wiring; the
       keeper's roll job; indexer `PoolEpoch`; api `/v1/earn`; Earn on both apps (supply, withdraw at the next hour, your
       share and value, reserved vs liquid, each hour's result, risk in words)
+      _Done (154ce2d, dcaa9cc, d7aa463): hourly rolls, whole-batch withdrawals, relayed EIP-712 requests, the keeper's
+      roll and delivery, Earn on both apps. Each hour's result as a list waits for the indexer to index PoolShares
+      (with the deploy)._
 
 ### Proof
-- [ ] S7.7 The api serves a window's confidence, resolve tx, void reason, outcome masks and its calls, plus a windows
+- [x] S7.7 The api serves a window's confidence, resolve tx, void reason, outcome masks and its calls, plus a windows
       feed; public `/proof` and `/proof/[window]` on the web and a Proof screen on the phone; the in-browser re-verify
       (D-288) with every band's outcome recomputed
+      _Done (31e8a20): `/proof/` and `/proof/w/`; the phone's receipts open the web proof (re-verify runs in the
+      browser)._
 
 ### Second source
 - [ ] S7.8 RedStone: `RedStonePrintVerifier` (≥ 3 of the 5 signers at `ceil10(t)`, median, confidence = half the signers'
