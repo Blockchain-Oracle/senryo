@@ -31,6 +31,8 @@ const CONTRACTS = [
   ["PythPrintVerifier.sol", "PythPrintVerifier"],
   ["BasketPrintVerifier.sol", "BasketPrintVerifier"],
   ["PoolShares.sol", "PoolShares"],
+  ["RedStonePrintVerifier.sol", "RedStonePrintVerifier"],
+  ["RedStoneBasketVerifier.sol", "RedStoneBasketVerifier"],
   ["TestUSD.sol", "TestUSD"],
   ["MarketCalendar.sol", "MarketCalendar"],
   ["AccessManager.sol", "AccessManager"],

@@ -4,6 +4,8 @@ export { windowsAbi } from "./windowsAbi";
 export { pythPrintVerifierAbi } from "./pythPrintVerifierAbi";
 export { basketPrintVerifierAbi } from "./basketPrintVerifierAbi";
 export { poolSharesAbi } from "./poolSharesAbi";
+export { redStonePrintVerifierAbi } from "./redStonePrintVerifierAbi";
+export { redStoneBasketVerifierAbi } from "./redStoneBasketVerifierAbi";
 export { testUSDAbi } from "./testUSDAbi";
 export { marketCalendarAbi } from "./marketCalendarAbi";
 export { accessManagerAbi } from "./accessManagerAbi";
