@@ -4,20 +4,16 @@
  * name, with the one thing to know behind the heading's ⓘ (same address, onchain activity is public). Privacy first,
  * as the API has it: trades are only shared from a listed profile, so turning a listing off turns its trades off.
  */
+
+import { SHARED_ADDRESS, type Visibility } from "@senryo/calls";
 import { StyleSheet, Switch, Text, View } from "react-native";
 import { ListRow } from "~/components/kit/ListRow";
 import { Panel } from "~/components/kit/Surface";
 import { InfoTip } from "~/features/setup/InfoTip";
 import { fire } from "~/feedback/fire";
 import { SPACE, TYPE, useTheme } from "~/theme";
-import { SHARED_ADDRESS } from "./ShowTrades";
 
-export interface Visibility {
-  listedPractice: boolean;
-  listedMainnet: boolean;
-  publicTradesPractice: boolean;
-  publicTradesMainnet: boolean;
-}
+export type { Visibility } from "@senryo/calls";
 
 export const visibilityOf = (v: Visibility): Visibility => ({
   listedPractice: v.listedPractice,

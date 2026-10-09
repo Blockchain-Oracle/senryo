@@ -1,14 +1,14 @@
 /**
  * Withdraw (S5.12; the full money-action contract): a recipient (pasted or typed, checked), an exact amount with Max as
  * a convenience, a review that freezes the request, one Face ID signing an EIP-3009 transfer the relay submits (no MON
- * needed), and a receipt that stays until "Send again". A failure says so and moved nothing.
+ * needed), and a receipt that stays until "Send again". A failure says so and moved nothing. The check and the send are
+ * `@senryo/calls` (`checkWithdraw`, `useWithdrawFlow`), the web's too.
  */
 
-import { classifyAuthError, isSilent } from "@senryo/account";
-import { freshAuthNonce, transferAuthRequest } from "@senryo/chain";
+import { checkWithdraw, useWithdrawFlow } from "@senryo/calls/react";
 import { explorerTxUrl } from "@senryo/config";
-import { formatUnits, parseUnits, shortAddress } from "@senryo/core";
-import { useMarketAccount, useQueryEnv, useWithdraw } from "@senryo/query";
+import { formatUnits, shortAddress } from "@senryo/core";
+import { useMarketAccount, useQueryEnv } from "@senryo/query";
 import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -21,9 +21,6 @@ import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
-const AUTH_TTL_SEC = 3_600;
-const MS_PER_SECOND = 1_000;
-const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
 type Stage =
   | { kind: "edit" }
@@ -35,56 +32,30 @@ type Stage =
 export function WithdrawSheet({ onClose }: { onClose: () => void }) {
   const { color } = useTheme();
   const env = useQueryEnv();
-  const { client, hint } = useAccount();
-  const owner = hint?.address;
+  const caller = useAccount();
+  const owner = caller.hint?.address;
   const account = useMarketAccount(owner);
   const balance = "value" in account ? account.value.balance : undefined;
-  const withdraw = useWithdraw(owner);
+  const flow = useWithdrawFlow(caller);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [stage, setStage] = useState<Stage>({ kind: "edit" });
   // A field can't elide: while not being edited, the address shows on one line with its middle elided.
   const [editingTo, setEditingTo] = useState(false);
 
-  const parsed = parseUnits(amount, DOLLAR_DECIMALS);
-  const value = parsed.ok ? parsed.value : undefined;
-  const toOk = ADDRESS.test(to.trim()) && to.trim().toLowerCase() !== owner?.toLowerCase();
-  const enough = value !== undefined && balance !== undefined && value > 0n && value <= balance;
-  const problem = !to
-    ? null
-    : !toOk
-      ? "Enter a Monad address (0x…) other than yours"
-      : amount && !parsed.ok
-        ? "Enter an amount like 12.50"
-        : value !== undefined && balance !== undefined && value > balance
-          ? `You have $${formatUnits(balance, DOLLAR_DECIMALS, CENTS)}`
-          : null;
+  const { to: dest, value, ok, problem } = checkWithdraw(to, amount, owner, balance);
 
-  const send = async (dest: `0x${string}`, v: bigint) => {
-    if (!client || !owner) return;
-    setStage({ kind: "sending", to: dest, value: v });
+  const send = async (target: `0x${string}`, v: bigint) => {
+    setStage({ kind: "sending", to: target, value: v });
     try {
-      const authorization = {
-        from: owner,
-        to: dest,
-        value: v,
-        validAfter: 0n,
-        validBefore: BigInt(Math.floor(Date.now() / MS_PER_SECOND) + AUTH_TTL_SEC),
-        nonce: freshAuthNonce(),
-      };
-      const signature = await client.stepUp(
-        (signer) => signer.signTypedData(transferAuthRequest(env.chainId, authorization)),
-        `Send $${formatUnits(v, DOLLAR_DECIMALS, CENTS)}`,
-      );
-      const result = await withdraw.mutateAsync({ authorization, signature });
-      if (result.state === "reverted") throw new Error("The transfer was refused on chain. Nothing moved.");
-      fire("confirm", { sound: "send" });
-      setStage({ kind: "sent", to: dest, value: v, txHash: result.txHash });
-    } catch (error) {
-      if (isSilent(classifyAuthError(error))) {
-        setStage({ kind: "review", to: dest, value: v });
+      const result = await flow.send(target, v);
+      if (result.state === "cancelled") {
+        setStage({ kind: "review", to: target, value: v });
         return;
       }
+      fire("confirm", { sound: "send" });
+      setStage({ kind: "sent", to: target, value: v, txHash: result.txHash });
+    } catch (error) {
       fire("fail");
       setStage({ kind: "failed", message: (error as Error).message });
     }
@@ -155,8 +126,8 @@ export function WithdrawSheet({ onClose }: { onClose: () => void }) {
             {problem ? <Text style={[TYPE.caption, { color: color.down }]}>{problem}</Text> : null}
             <Button
               label="Review"
-              disabled={!toOk || !enough}
-              onPress={() => value !== undefined && setStage({ kind: "review", to: to.trim() as `0x${string}`, value })}
+              disabled={!ok}
+              onPress={() => dest && value !== undefined && setStage({ kind: "review", to: dest, value })}
             />
           </>
         ) : stage.kind === "review" || stage.kind === "sending" ? (

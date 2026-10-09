@@ -8,19 +8,15 @@ import { useEffect, useMemo, useState } from "react";
 import { SlideOver } from "@/components/ui/drawer";
 import { tapFeedback } from "@/lib/feedback";
 import { dropDrawerParam, openDrawer } from "@/lib/shell/drawer-param";
+import type { DrawerProps } from "./drawers/types";
 import { EVERYTHING, NAV_ICON, searchNav } from "./nav";
-
-export interface EverythingDrawerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
 
 /** `/app/?d=wallet` opens that drawer in place; any other href is a page. */
 function drawerOf(href: string): string | null {
   return href.startsWith("/app/?d=") ? href.slice("/app/?d=".length) : null;
 }
 
-export function EverythingDrawer({ open, onOpenChange }: EverythingDrawerProps) {
+export function EverythingDrawer({ open, onOpenChange }: DrawerProps) {
   const [query, setQuery] = useState("");
   useEffect(() => {
     if (open) setQuery("");

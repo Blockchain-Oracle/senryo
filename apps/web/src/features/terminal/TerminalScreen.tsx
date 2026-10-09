@@ -9,15 +9,17 @@
 import { DEFAULT_CADENCE, useCallFlow, useCallWindow } from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec } from "@senryo/config";
 import { useWindowLoad } from "@senryo/query";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { shortcutBlocked } from "@/components/shell/Rail";
 import { SlideOver } from "@/components/ui/drawer";
 import { MarketList } from "@/features/markets/MarketList";
 import { useAccount } from "@/lib/account/provider";
+import { hasAcknowledgedTerms } from "@/lib/account/terms";
+import { ROUTES } from "@/lib/constants/routes";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
+import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { TERMINAL_STORAGE, useStoredString } from "@/lib/terminal/stored";
 import { CallPanel } from "./CallPanel";
 import { CashOutModal } from "./CashOutModal";
@@ -49,7 +51,6 @@ function useTerminalChoices() {
 }
 
 export function TerminalScreen({ symbol }: { symbol: string }) {
-  const router = useRouter();
   const account = useAccount();
   const choices = useTerminalChoices();
   const t = useCallWindow(symbol, choices.cadence, account.hint?.address);
@@ -74,11 +75,21 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
             ? fire("fail")
             : fire("filled", { cue: c === "filled-close" ? "close" : "open" }),
       notify: (n) => notify({ ...n, tone: "warning" }),
+      gate: () => {
+        if (hasAcknowledgedTerms(account.hint?.address)) return true;
+        notify({
+          title: "Agree to the terms first",
+          description: "One step before any money moves.",
+          action: { label: "Open setup", onClick: () => window.location.assign(ROUTES.setup) },
+          tone: "warning",
+        });
+        return false;
+      },
       needAccount: () =>
         notify({
           title: "Sign in to make a call",
           description: "Your passkey is your account.",
-          action: { label: "Sign in", onClick: () => router.push("/") },
+          action: { label: "Sign in", onClick: () => openDrawer(DRAWERS.account) },
         }),
     },
   });

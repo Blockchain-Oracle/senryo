@@ -1,41 +1,44 @@
 "use client";
-// Mounts the drawer the URL names (`?d=<name>`, D-190): Back closes it, a link opens it. Each drawer is a lazy island —
-// Everything preloads when the browser is idle; a receipt loads when asked for. The wallet, Receive, Withdraw, settings
-// and one-tap drawers join with S6.7.
-import { type ComponentType, Suspense, useCallback, useEffect, useState } from "react";
-import { closeDrawer, DRAWERS, useDrawerArg, useDrawerParam } from "@/lib/shell/drawer-param";
+// Mounts the drawer the URL names (`?d=<name>`, D-190): Back closes it, a link opens it. Each drawer is a lazy island
+// loaded when first asked for — Everything preloads while the browser is idle — and stays mounted afterwards so it
+// can animate out.
+import { type ComponentType, Suspense, useEffect, useState } from "react";
+import { closeDrawer, DRAWERS, useDrawerParam } from "@/lib/shell/drawer-param";
 import { onIdle } from "@/lib/shell/idle";
-import type { CallDrawerProps } from "./CallDrawer";
-import type { EverythingDrawerProps } from "./EverythingDrawer";
+import type { DrawerProps } from "./drawers/types";
 
-let everything: Promise<ComponentType<EverythingDrawerProps>> | null = null;
-const loadEverything = () => {
-  everything ??= import("./EverythingDrawer").then((m) => m.EverythingDrawer);
-  return everything;
-};
-let call: Promise<ComponentType<CallDrawerProps>> | null = null;
-const loadCall = () => {
-  call ??= import("./CallDrawer").then((m) => m.CallDrawer);
-  return call;
+type Loader = () => Promise<ComponentType<DrawerProps>>;
+
+const LOADERS: Record<string, Loader> = {
+  [DRAWERS.everything]: () => import("./EverythingDrawer").then((m) => m.EverythingDrawer),
+  [DRAWERS.account]: () => import("./drawers/AccountDrawer").then((m) => m.AccountDrawer),
+  [DRAWERS.wallet]: () => import("./drawers/WalletDrawer").then((m) => m.WalletDrawer),
+  [DRAWERS.receive]: () => import("./drawers/ReceiveDrawer").then((m) => m.ReceiveDrawer),
+  [DRAWERS.withdraw]: () => import("./drawers/WithdrawDrawer").then((m) => m.WithdrawDrawer),
+  [DRAWERS.settings]: () => import("./drawers/SettingsDrawer").then((m) => m.SettingsDrawer),
+  [DRAWERS.oneTap]: () => import("./drawers/OneTapDrawer").then((m) => m.OneTapDrawer),
+  [DRAWERS.call]: () => import("./drawers/CallDrawer").then((m) => m.CallDrawer),
 };
 
 const close = (next: boolean) => (next ? undefined : closeDrawer());
 
 function Host() {
   const open = useDrawerParam();
-  const id = useDrawerArg("id");
-  const [Everything, setEverything] = useState<ComponentType<EverythingDrawerProps> | null>(null);
-  const [Call, setCall] = useState<ComponentType<CallDrawerProps> | null>(null);
-  const load = useCallback(() => void loadEverything().then((C) => setEverything(() => C)), []);
-  useEffect(() => onIdle(load), [load]);
+  const [loaded, setLoaded] = useState<Record<string, ComponentType<DrawerProps>>>({});
+  const load = (name: string) => {
+    const loader = LOADERS[name];
+    if (!loader) return;
+    void loader().then((C) => setLoaded((all) => (all[name] ? all : { ...all, [name]: C })));
+  };
+  useEffect(() => onIdle(() => load(DRAWERS.everything)), []);
   useEffect(() => {
-    if (open === DRAWERS.everything) load();
-    if (open === DRAWERS.call) void loadCall().then((C) => setCall(() => C));
-  }, [open, load]);
+    if (open) load(open);
+  }, [open]);
   return (
     <>
-      {Everything ? <Everything open={open === DRAWERS.everything} onOpenChange={close} /> : null}
-      {Call ? <Call open={open === DRAWERS.call} id={id} onOpenChange={close} /> : null}
+      {Object.entries(loaded).map(([name, Drawer]) => (
+        <Drawer key={name} open={open === name} onOpenChange={close} />
+      ))}
     </>
   );
 }

@@ -71,8 +71,8 @@ export function CallsScreen() {
       <div className="flex flex-col items-start gap-3 py-6">
         <p className="font-semibold text-row-title">Your calls live here</p>
         <p className="text-body text-text-2">Every call, its result and its receipt.</p>
-        <Button asChild size="xl">
-          <Link href="/">Create account</Link>
+        <Button size="xl" onClick={() => openDrawer(DRAWERS.account)}>
+          Create account
         </Button>
       </div>
     );

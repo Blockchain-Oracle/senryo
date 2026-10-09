@@ -37,6 +37,8 @@ export interface CallFlowEffects {
   needAccount(): void;
   /** One of this screen's calls filled (first-run setup moves on). */
   onFilled?: () => void;
+  /** A check before any call once signed in (the terms): say why and return false to stop. */
+  gate?: () => boolean;
 }
 
 export interface CallFlowInput {
@@ -103,6 +105,7 @@ export function useCallFlow({ view: t, caller, stake, latest, upBand, downBand, 
       effectsRef.current.needAccount();
       return false;
     }
+    if (effectsRef.current.gate && !effectsRef.current.gate()) return false;
     return actions.ready;
   };
 

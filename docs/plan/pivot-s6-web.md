@@ -64,9 +64,16 @@ on `/app` · the wallet chunk is 0 bytes before its click · ≤ 1 SSE per tab �
       link copied), the public `/call?id=&chainId=` page for shared links, Home (balance, one-tap chip, open calls,
       markets). Shared with the phone in `@senryo/calls`: `useCallRows`, `receipt.ts` (steps, facts, hero, share
       words, proof facts) and `callLink`; the welcome sky moved to `@senryo/tokens` `WELCOME`._
-- [ ] S6.7 Sign-in and money: passkey on the rpId host (create, sign in, recover), setup (handle, terms, test
+- [x] S6.7 Sign-in and money: passkey on the rpId host (create, sign in, recover), setup (handle, terms, test
       dollars), the Wallet drawers (test dollars, Receive, Withdraw via EIP-3009), one-tap grant/revoke; AppKit
       only behind a click (Real's wallet deposit arrives with S9)
+      _Done: the account drawer `?d=account` (create → setup, sign in / continue / recover stay on the page), `/app/setup/`
+      (handle with the first-save visibility, terms — the gate before any call, re-asked after a version bump — test
+      dollars granted on arrival, the first call, one-tap), drawers for the wallet (balance, daily test dollars),
+      Receive (dotted QR, copy), Withdraw (EIP-3009 through `@senryo/calls` `checkWithdraw` / `useWithdrawFlow`, the
+      phone's too), one-tap (caps, turn on/off) and settings (sound, vibration, hide balances, theme, the session — the
+      old session modal deleted; the chip opens settings). The signed-in journey is walked at S6.9 on the live site
+      (a passkey prompt needs a person). No AppKit yet: Real's deposit is S9._
 
 ### Front door and ship
 - [ ] S6.8 The landing rewritten for predictions (hero with the live line, how it works, Practice → Real, proof,

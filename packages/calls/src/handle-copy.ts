@@ -32,3 +32,24 @@ export function handleLine(known: HandleAvailability): { message: string; tone: 
       return { message: INVALID[known.reason ?? "charset"], tone: "bad" };
   }
 }
+
+/** Who sees a profile and its calls, per network (`/v1/profile` flags). */
+export interface Visibility {
+  listedPractice: boolean;
+  listedMainnet: boolean;
+  publicTradesPractice: boolean;
+  publicTradesMainnet: boolean;
+}
+
+/** First-save defaults, both apps: Practice listed and sharing, Real off. */
+export const DEFAULT_VISIBILITY: Visibility = {
+  listedPractice: true,
+  publicTradesPractice: true,
+  listedMainnet: false,
+  publicTradesMainnet: false,
+};
+
+export const SHARED_ADDRESS = {
+  title: "One address, two networks",
+  body: "Same address in Practice and Real. Onchain activity is public. Each chip lists your profile and shows your calls in that mode only.",
+} as const;

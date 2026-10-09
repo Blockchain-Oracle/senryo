@@ -1,16 +1,15 @@
 import { ApiError, normalizeHandle } from "@senryo/api-client";
+import { HELD_INFO, handleLine, suggestHandle } from "@senryo/calls";
 import { socialKeys, useHandleAvailability, useSaveProfile } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
-import { HELD_INFO, handleLine } from "~/features/profile/handle-copy";
 import { DEFAULT_VISIBILITY, ShowTrades } from "~/features/profile/ShowTrades";
 import type { Visibility } from "~/features/profile/VisibilitySettings";
 import { InfoTip } from "~/features/setup/InfoTip";
 import { type FieldTone, SetupField } from "~/features/setup/SetupField";
 import { SetupScreen } from "~/features/setup/SetupScreen";
-import { suggestHandle } from "~/features/setup/suggest-handle";
 import { useSetupNav } from "~/features/setup/useSetupNav";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";

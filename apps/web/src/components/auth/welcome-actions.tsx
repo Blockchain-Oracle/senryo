@@ -32,7 +32,11 @@ type Phase =
   | { kind: "running"; flow: CeremonyKind }
   | { kind: "failed"; flow: CeremonyKind; failure: AuthFailure };
 
-export function WelcomeActions() {
+/**
+ * `onSignedIn` (in the app's account drawer): an existing account came back — sign in, continue, recover — or the
+ * person chose "Not now"; without it these open Home.
+ */
+export function WelcomeActions({ onSignedIn }: { onSignedIn?: () => void } = {}) {
   const account = useAccount();
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
@@ -47,7 +51,9 @@ export function WelcomeActions() {
     try {
       await action();
       // A new account owes setup (handle, terms) from the passkey on (A2); a returning one goes Home.
-      router.push(flow === "create" ? ROUTES.setup : ROUTES.app);
+      if (flow === "create") router.push(ROUTES.setup);
+      else if (onSignedIn) onSignedIn();
+      else router.push(ROUTES.app);
     } catch (error) {
       const failure = classifyAuthError(error);
       setPhase(isSilent(failure) ? { kind: "idle" } : { kind: "failed", flow, failure });
@@ -110,9 +116,15 @@ export function WelcomeActions() {
           <Button variant="secondary" size="xl" className="w-full" onClick={() => void signIn()}>
             I have an account
           </Button>
-          <Button asChild variant="ghost" className="w-full font-sans">
-            <Link href={ROUTES.app}>Look around</Link>
-          </Button>
+          {onSignedIn ? (
+            <Button variant="ghost" className="w-full font-sans" onClick={onSignedIn}>
+              Not now
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" className="w-full font-sans">
+              <Link href={ROUTES.app}>Look around</Link>
+            </Button>
+          )}
         </>
       )}
       <p className="text-center text-meta text-text-3">Passkey · no seed phrase</p>
@@ -125,7 +137,11 @@ export function WelcomeActions() {
         Recover with a backup
       </button>
       {recoverOpen ? (
-        <RecoverSheet open onOpenChange={setRecoverOpen} onRecovered={() => router.push(ROUTES.app)} />
+        <RecoverSheet
+          open
+          onOpenChange={setRecoverOpen}
+          onRecovered={() => (onSignedIn ? onSignedIn() : router.push(ROUTES.app))}
+        />
       ) : null}
     </div>
   );

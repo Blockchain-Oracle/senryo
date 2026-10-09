@@ -15,6 +15,7 @@ import { useAccount } from "@/lib/account/provider";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { tapFeedback } from "@/lib/feedback";
 import { money } from "@/lib/format";
+import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { OneTapChip } from "./OneTapChip";
 
@@ -71,8 +72,8 @@ export function HomeScreen() {
         <section className="flex flex-col items-start gap-3">
           <h1 className="font-semibold text-page-title">Call the next move</h1>
           <p className="text-body text-text-2">Up or Down on live prices, in dollars.</p>
-          <Button asChild size="xl">
-            <Link href="/">Create account</Link>
+          <Button size="xl" onClick={() => openDrawer(DRAWERS.account)}>
+            Create account
           </Button>
         </section>
       )}

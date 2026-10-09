@@ -13,6 +13,7 @@ const DRAWER_EXTRAS = ["id"] as const;
 /** Every drawer the app opens by name. */
 export const DRAWERS = {
   everything: "everything",
+  account: "account",
   wallet: "wallet",
   receive: "receive",
   withdraw: "withdraw",

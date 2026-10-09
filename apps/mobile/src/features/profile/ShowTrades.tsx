@@ -4,6 +4,8 @@
  * address is on both networks and onchain activity is public. A chip on lists the profile there and shares its trades
  * (trades are only shared from a listed profile); off turns both off. Defaults: Practice on, Mainnet off.
  */
+
+import { SHARED_ADDRESS, type Visibility } from "@senryo/calls";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Check } from "~/components/kit/symbols";
@@ -11,20 +13,8 @@ import { usePressScale } from "~/components/kit/usePressScale";
 import { InfoTip } from "~/features/setup/InfoTip";
 import { fire } from "~/feedback/fire";
 import { BUTTON, CONTROL_FONT_SCALE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import type { Visibility } from "./VisibilitySettings";
 
-export const SHARED_ADDRESS = {
-  title: "One address, two networks",
-  body: "Same address in Practice and Real. Onchain activity is public. Each chip lists your profile and shows your calls in that mode only.",
-} as const;
-
-/** First-save defaults (`packages/api-client/src/handles.ts`): Practice listed and sharing, Real off. */
-export const DEFAULT_VISIBILITY: Visibility = {
-  listedPractice: true,
-  publicTradesPractice: true,
-  listedMainnet: false,
-  publicTradesMainnet: false,
-};
+export { DEFAULT_VISIBILITY, SHARED_ADDRESS } from "@senryo/calls";
 
 export function ShowTrades({ value, onChange }: { value: Visibility; onChange: (next: Visibility) => void }) {
   const { color } = useTheme();
