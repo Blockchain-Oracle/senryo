@@ -23,6 +23,7 @@ import { AccountRelay } from "./relay/accounts.ts";
 import { openLanes } from "./relay/lanes.ts";
 import { MarketRelay } from "./relay/relay.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
+import { registerEarnRoutes } from "./routes/earn.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerHistoryRoutes } from "./routes/history.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
@@ -118,6 +119,7 @@ registerEngagementRoutes(app, ctx);
 registerNotificationRoutes(app, ctx);
 registerProfileRoutes(app, ctx);
 registerMarketRoutes(app, ctx);
+registerEarnRoutes(app, ctx);
 registerHistoryRoutes(app, ctx);
 registerPriceRoutes(app, gateway);
 registerStreamRoute(app, {

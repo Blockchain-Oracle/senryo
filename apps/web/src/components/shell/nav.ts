@@ -10,6 +10,7 @@ import {
   CircleHelp,
   Coins,
   House,
+  Landmark,
   type LucideIcon,
   Receipt,
   ScrollText,
@@ -32,6 +33,7 @@ export const NAV_ICON: Record<WebIcon, LucideIcon> = {
   help: CircleHelp,
   proof: ScrollText,
   download: Smartphone,
+  earn: Landmark,
 };
 
 export const RAIL: readonly WebNavItem[] = WEB_RAIL;

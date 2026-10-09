@@ -41,3 +41,8 @@ export const PUSH_RECEIPTS_PER_RUN = 10_000;
 /** Market calendars (D-289): checked every 15 minutes; holidays kept 60 days ahead (≤ 32 per calendar on chain). */
 export const CALENDARS_INTERVAL_MS = 900_000;
 export const CALENDAR_HOLIDAY_DAYS = 60;
+/** Earn (D-287): the hourly roll is tried every minute after the hour until the hour's windows are settled. */
+export const EARN_INTERVAL_MS = 60_000;
+export const HOUR_SEC = 3600;
+/** Owners delivered per tick (each delivery is one `claim`). */
+export const EARN_CLAIMS_PER_TICK = 20;

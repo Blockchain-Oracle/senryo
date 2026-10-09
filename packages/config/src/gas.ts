@@ -35,6 +35,10 @@ export const GAS_LIMITS = {
   dollarMint: 150_000n,
   /** A market calendar's `setWeek` (three words) or `addHoliday` (prune + push), kept current by the keeper (D-289). */
   calendarUpdate: 400_000n,
+  /** Earn (D-287): a relayed request (with its permit), the hourly roll (60 expiry reads, a mint, fund/defund), a claim. */
+  earnRequest: 400_000n,
+  earnRoll: 1_500_000n,
+  earnClaim: 200_000n,
 };
 export type GasAction = keyof typeof GAS_LIMITS;
 

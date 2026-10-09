@@ -3,11 +3,13 @@
  * tickets and balance at once and their history once the indexer has it (it follows the chain within ~2 s, D-279); a
  * call's status is written straight into its query; a session or dollar event refreshes the account.
  */
+
 import type { IntentStatus } from "@senryo/api-client";
 import type { Address } from "@senryo/core";
 import type { Live } from "@senryo/live";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
+import { earnKeys } from "./earn.ts";
 import { useQueryEnv } from "./env.tsx";
 import { historyKeys } from "./history.ts";
 import { marketKeys } from "./markets.ts";
@@ -73,7 +75,14 @@ export function useLiveSync(live: Live, owner: Address | undefined): void {
         if (status.state === "filled" || status.state === "refused") void tickets();
       }),
       live.onUser("session", () => void account()),
-      live.onUser("dollars", () => void account()),
+      live.onUser("dollars", () => {
+        void account();
+        void client.invalidateQueries({ queryKey: earnKeys.all });
+      }),
+      live.onUser("earn", () => {
+        void account();
+        void client.invalidateQueries({ queryKey: earnKeys.all });
+      }),
     ];
     return () => {
       for (const off of offs) off();

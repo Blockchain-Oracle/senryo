@@ -2,6 +2,8 @@ import {
   type Address,
   addressOf,
   dollarTokenOf,
+  type EarnRequest,
+  earnRequestCallData,
   grantSessionCallData,
   type Hex,
   mintDollarsCallData,
@@ -82,6 +84,29 @@ export class AccountRelay {
       );
     const result = { txHash: sent.hash, state: sent.stage } as const;
     this.d.bus.emit(`user:${a.from.toLowerCase()}`, "dollars", { amount: -a.value, txHash: sent.hash });
+    return result;
+  }
+
+  /**
+   * Earn (D-287): the owner's signed request on the share contract from the owner's lane; the owner is remembered so
+   * the keeper delivers what each hourly roll settles.
+   */
+  async earn(r: EarnRequest, signature: Hex, permit: PermitArgs | null): Promise<RelayResult> {
+    const data = earnRequestCallData(r, signature, permit);
+    const sent = await this.d.laneFor(r.owner).run((sender) =>
+      sendTx(sender, {
+        to: addressOf(this.d.chainId, "PoolShares"),
+        data,
+        action: "earnRequest",
+        meta: { job: "earn" },
+      }),
+    );
+    const result = { txHash: sent.hash, state: sent.stage } as const;
+    if (sent.stage !== "reverted") {
+      await this.d.db`INSERT INTO earn_owners (chain_id, owner) VALUES (${this.d.chainId}, ${r.owner.toLowerCase()})
+        ON CONFLICT (chain_id, owner) DO UPDATE SET last_request_at = now(), delivered_at = NULL`;
+    }
+    this.d.bus.emit(`user:${r.owner.toLowerCase()}`, "earn", { kind: r.kind, amount: r.amount, ...result });
     return result;
   }
 

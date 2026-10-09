@@ -7,8 +7,8 @@ import { PrintBook } from "./prints.ts";
 import { LiveStream, type StreamStatus } from "./sse.ts";
 
 /** The user's durable events on `user:<address>` (fills, results, payouts, sessions, dollars). */
-export type UserEvent = "ticket" | "intent" | "session" | "dollars";
-const USER_EVENTS = new Set<string>(["ticket", "intent", "session", "dollars"]);
+export type UserEvent = "ticket" | "intent" | "session" | "dollars" | "earn";
+const USER_EVENTS = new Set<string>(["ticket", "intent", "session", "dollars", "earn"]);
 const PUBLIC_TOPICS = ["prices", "prints"] as const;
 
 export interface RecentPrices {

@@ -14,7 +14,8 @@ export type NavIcon =
   | "notifications"
   | "settings"
   | "receive"
-  | "status";
+  | "status"
+  | "earn";
 
 export interface NavItem {
   key: string;
@@ -37,6 +38,7 @@ export type DockKey = (typeof DOCK_NAV)[number]["key"];
 /** The More grid (phone) and the rail's secondary group (web), in order. */
 export const MORE_NAV = [
   { key: "wallet", label: "Wallet", icon: "wallet", path: "/wallet" },
+  { key: "earn", label: "Earn", icon: "earn", path: "/earn" },
   { key: "profile", label: "Profile", icon: "profile", path: "/account/profile" },
   { key: "receive", label: "Receive", icon: "receive", path: "/receive" },
   { key: "notifications", label: "Notifications", icon: "notifications", path: "/notifications" },
@@ -63,7 +65,8 @@ export type WebIcon =
   | "oneTap"
   | "help"
   | "proof"
-  | "download";
+  | "download"
+  | "earn";
 
 export interface WebNavItem {
   key: string;
@@ -144,6 +147,14 @@ export const WEB_EVERYTHING = [
         href: "/app/?d=withdraw",
         description: "Send dollars to a Monad address.",
         keywords: "send transfer",
+      },
+      {
+        key: "earn",
+        label: "Earn",
+        icon: "earn",
+        href: "/app/earn/",
+        description: "Supply the pool that takes the other side; withdraw at the hour.",
+        keywords: "pool supply yield house liquidity",
       },
     ],
   },
