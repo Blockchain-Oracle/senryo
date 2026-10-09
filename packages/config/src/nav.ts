@@ -15,7 +15,8 @@ export type NavIcon =
   | "settings"
   | "receive"
   | "status"
-  | "earn";
+  | "earn"
+  | "parlay";
 
 export interface NavItem {
   key: string;
@@ -37,6 +38,7 @@ export type DockKey = (typeof DOCK_NAV)[number]["key"];
 
 /** The More grid (phone) and the rail's secondary group (web), in order. */
 export const MORE_NAV = [
+  { key: "parlay", label: "Parlay", icon: "parlay", path: "/parlay" },
   { key: "wallet", label: "Wallet", icon: "wallet", path: "/wallet" },
   { key: "earn", label: "Earn", icon: "earn", path: "/earn" },
   { key: "profile", label: "Profile", icon: "profile", path: "/account/profile" },
@@ -66,7 +68,8 @@ export type WebIcon =
   | "help"
   | "proof"
   | "download"
-  | "earn";
+  | "earn"
+  | "parlay";
 
 export interface WebNavItem {
   key: string;
@@ -121,6 +124,20 @@ export interface WebNavSection {
 }
 
 export const WEB_EVERYTHING = [
+  {
+    key: "play",
+    label: "Play",
+    items: [
+      {
+        key: "parlay",
+        label: "Parlay",
+        icon: "parlay",
+        href: "/app/parlay/",
+        description: "Two to four calls that must all come true; the odds multiply.",
+        keywords: "combo accumulator multi legs",
+      },
+    ],
+  },
   {
     key: "money",
     label: "Money",

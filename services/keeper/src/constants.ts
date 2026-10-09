@@ -18,6 +18,8 @@ export const SETTLE_INTERVAL_MS = 2_000;
 /** A fill the relay has not done this long after its print instant is done here. */
 export const FILL_STALE_SEC = 10;
 export const FILLS_INTERVAL_MS = 3_000;
+/** Parlays: backup fills and the legs' verdicts (S8.5). */
+export const PARLAYS_INTERVAL_MS = 2_000;
 /** The book follows the chain: new ticket ids and quiet open tickets re-read every few seconds, in batches. */
 export const SYNC_INTERVAL_MS = 4_000;
 export const SYNC_STALE_SEC = 20;

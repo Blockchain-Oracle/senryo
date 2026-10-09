@@ -44,7 +44,7 @@ export interface IntentStatus {
 
 interface IntentRow {
   digest: string;
-  kind: "open" | "close";
+  kind: "open" | "close" | "parlay";
   owner: string;
   state: IntentStatus["state"];
   ticket_id: bigint | null;
@@ -95,12 +95,17 @@ export class MarketRelay {
    * while this process was restarting (its NOTIFY lost) still shows as filled or refused.
    */
   async status(digest: Hex): Promise<IntentStatus | undefined> {
-    const [row] = await this.d.db<(IntentRow & { ticket_state: string | null })[]>`
-      SELECT i.*, t.state AS ticket_state FROM market_intents i
-      LEFT JOIN market_tickets t ON t.chain_id = i.chain_id AND t.ticket_id = i.ticket_id
+    // A parlay's `ticket_id` is its parlay id (a separate numbering): it is read from the parlay book instead.
+    const [row] = await this.d.db<(IntentRow & { ticket_state: string | null; parlay_state: string | null })[]>`
+      SELECT i.*, t.state AS ticket_state, p.state AS parlay_state FROM market_intents i
+      LEFT JOIN market_tickets t ON t.chain_id = i.chain_id AND t.ticket_id = i.ticket_id AND i.kind <> 'parlay'
+      LEFT JOIN market_parlays p ON p.chain_id = i.chain_id AND p.parlay_id = i.ticket_id AND i.kind = 'parlay'
       WHERE i.digest = ${digest}`;
     if (!row) return undefined;
     const status = toStatus(row);
+    if (status.state === "committed" && row.kind === "parlay" && row.parlay_state && row.parlay_state !== "committed") {
+      return { ...status, state: row.parlay_state === "refunded" ? "refused" : "filled" };
+    }
     // Only an open is unambiguous in the book (a refused close and a partial one both leave the ticket open).
     if (status.state !== "committed" || row.kind !== "open" || !row.ticket_state || row.ticket_state === "committed") {
       return status;
@@ -177,7 +182,8 @@ export class MarketRelay {
     throw new SimulationRevertedError("marketCommit", { name: reason, args: [], message: reason }, undefined);
   }
 
-  private async openPrintRecorded(windowId: Hex): Promise<boolean> {
+  /** Whether a window is open on chain with its line recorded (a first call opens it in the same transaction). */
+  async openPrintRecorded(windowId: Hex): Promise<boolean> {
     const windows = addressOf(this.d.chainId, "Windows");
     const w = await this.d.read.readContract({
       address: windows,
@@ -204,7 +210,7 @@ export class MarketRelay {
     if (n.change !== "filled" && n.change !== "refused" && n.change !== "closed" && n.change !== "closeRefused") return;
     const [row] = await this.d.db<IntentRow[]>`
       SELECT * FROM market_intents WHERE chain_id = ${this.d.chainId} AND ticket_id = ${BigInt(n.ticketId)}
-      ORDER BY created_at DESC LIMIT 1`;
+        AND kind <> 'parlay' ORDER BY created_at DESC LIMIT 1`;
     if (!row || row.state === "filled" || row.state === "refused") return;
     const refused = n.change === "refused" || n.change === "closeRefused";
     await this.setState(row.digest as Hex, row.owner as Address, {
@@ -214,7 +220,8 @@ export class MarketRelay {
     });
   }
 
-  private async setState(
+  /** Moves an intent (a call's or a parlay's) and tells its owner's stream. */
+  async setState(
     digest: Hex,
     owner: Address,
     s: Partial<Pick<IntentStatus, "state" | "ticketId" | "txHash" | "target" | "reason">>,
@@ -231,7 +238,7 @@ export class MarketRelay {
     if (row) this.d.bus.emit(`user:${owner.toLowerCase()}`, "intent", toStatus(row));
   }
 
-  private async fail(digest: Hex, owner: string, reason: string): Promise<void> {
+  async fail(digest: Hex, owner: string, reason: string): Promise<void> {
     this.d.log.warn({ digest, reason }, "relayed call failed");
     await this.setState(digest, owner as Address, { state: "failed", reason }).catch(() => undefined);
   }

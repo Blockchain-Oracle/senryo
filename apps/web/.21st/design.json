@@ -764,6 +764,15 @@
         "use": "exit levels (take profit, stop, trail, never below) — S8.4",
         "path": "src/components/ui/quantity-stepper.tsx",
         "retokenized": true
+      },
+      {
+        "name": "odds-display",
+        "source": "21st:astralyxdev/odds-display",
+        "id": 36173,
+        "url": "https://21st.dev/@astralyxdev/components/odds-display",
+        "use": "parlay slip: each leg's Up / Down odds, the picked side pressed, drift since the pick flagged (S8.5)",
+        "path": "src/components/ui/odds-display.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -886,6 +895,26 @@
         "id": 28180,
         "name": "Number Field",
         "verdict": "rejected for exits (search \"price stepper input presets\"): plain field; Quantity Stepper #29940 chosen for the rolling digits and hold-to-repeat"
+      },
+      {
+        "id": 2537,
+        "name": "Prediction Market Card",
+        "verdict": "rejected for the parlay (search \"bet slip parlay legs\"): a boxed single-market card; the slip is rows with the Odds Display"
+      },
+      {
+        "id": 27122,
+        "name": "Swap Ticket",
+        "verdict": "rejected for the parlay (search \"betting slip multiplier stake\"): a token swap form"
+      },
+      {
+        "id": 1963,
+        "name": "Selector Chips",
+        "verdict": "rejected for the parlay picker (search \"selection list add remove chips toggle\"): the picker's Up / Down are the terminal's pressed pills, per market row"
+      },
+      {
+        "id": 35042,
+        "name": "Chip Group",
+        "verdict": "rejected for the parlay picker: filter chips, not a per-row side choice"
       }
     ],
     "removed": [

@@ -45,32 +45,55 @@ export interface CheckedIntent {
   expiry: number;
 }
 
-const bad = (message: string) => new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", message);
+export const bad = (message: string) => new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", message);
+export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-export function checkIntent(req: IntentRequest, nowSec: number): CheckedIntent {
-  const { intent } = req;
-  const market = MARKETS.find((m) => m.symbol === req.symbol && m.chains.includes(req.chainId));
-  if (!market) throw bad(`${req.symbol} is not listed on ${req.chainId}`);
-  const cadenceSec = market.cadences.find((c) => c === req.cadenceSec);
-  if (!cadenceSec) throw bad(`${req.symbol} has no ${req.cadenceSec}s windows`);
-  if (req.start % cadenceSec !== 0) throw bad("window start is not on the cadence");
+/** A window a call or a parlay leg names: listed, on the cadence, the right id, inside trading time. */
+export function checkWindow(
+  chainId: ChainId,
+  w: { symbol: string; cadenceSec: number; start: number; windowId: Hex },
+  nowSec: number,
+  opening: boolean,
+): Omit<CheckedIntent, "digest"> {
+  const market = MARKETS.find((m) => m.symbol === w.symbol && m.chains.includes(chainId));
+  if (!market) throw bad(`${w.symbol} is not listed on ${chainId}`);
+  const cadenceSec = market.cadences.find((c) => c === w.cadenceSec);
+  if (!cadenceSec) throw bad(`${w.symbol} has no ${w.cadenceSec}s windows`);
+  if (w.start % cadenceSec !== 0) throw bad("window start is not on the cadence");
   const seriesId = seriesIdOf(market.symbol, cadenceSec);
-  if (windowIdOf(seriesId, req.start) !== intent.windowId) throw bad("windowId is not this market's window");
-  const expiry = req.start + cadenceSec;
-  if (nowSec < req.start || nowSec + LOCKOUT_SEC >= expiry) {
+  if (windowIdOf(seriesId, w.start) !== w.windowId) throw bad("windowId is not this market's window");
+  const expiry = w.start + cadenceSec;
+  if (nowSec < w.start || nowSec + LOCKOUT_SEC >= expiry) {
     throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", "calls are closed for this window");
   }
-  const deadline = Number(intent.deadline);
-  if (deadline <= nowSec || deadline > nowSec + MAX_INTENT_TTL_SEC) throw bad("deadline must be within two minutes");
-  if (intent.recipient === "0x0000000000000000000000000000000000000000") throw bad("recipient is required");
-  if (intent.action === ACTION_OPEN) {
+  if (opening) {
     const schedule = scheduleOf(CALENDARS[market.calendarId].schedule);
-    if (!sessionCovers(schedule, req.start, expiry)) {
+    if (!sessionCovers(schedule, w.start, expiry)) {
       const when = sessionNow(schedule, nowSec).text ?? "Closed";
       throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", `${market.symbol} is closed · ${when}`);
     }
-    const terms = POOL_TERMS[req.chainId];
-    if (intent.amount < terms.minStake || intent.amount > terms.maxStake) throw bad("stake outside the pool's terms");
+  }
+  return { market, cadenceSec, seriesId, start: w.start, expiry };
+}
+
+export function checkDeadline(deadline: bigint, nowSec: number): void {
+  const d = Number(deadline);
+  if (d <= nowSec || d > nowSec + MAX_INTENT_TTL_SEC) throw bad("deadline must be within two minutes");
+}
+
+export function checkStake(chainId: ChainId, stake: bigint): void {
+  const terms = POOL_TERMS[chainId];
+  if (stake < terms.minStake || stake > terms.maxStake) throw bad("stake outside the pool's terms");
+}
+
+export function checkIntent(req: IntentRequest, nowSec: number): CheckedIntent {
+  const { intent } = req;
+  const opening = intent.action === ACTION_OPEN;
+  const w = checkWindow(req.chainId, { ...req, windowId: intent.windowId }, nowSec, opening);
+  checkDeadline(intent.deadline, nowSec);
+  if (intent.recipient === ZERO_ADDRESS) throw bad("recipient is required");
+  if (opening) {
+    checkStake(req.chainId, intent.amount);
     if (intent.ticketId !== 0n) throw bad("an open names no ticket");
   } else if (intent.action === ACTION_CLOSE) {
     if (intent.ticketId === 0n || intent.amount === 0n) throw bad("a close names a ticket and shares");
@@ -78,5 +101,5 @@ export function checkIntent(req: IntentRequest, nowSec: number): CheckedIntent {
     throw bad("unknown action");
   }
   if (req.permit && Number(req.permit.deadline) <= nowSec) throw bad("permit expired");
-  return { digest: intentDigest(req.chainId, intent), market, cadenceSec, seriesId, start: req.start, expiry };
+  return { digest: intentDigest(req.chainId, intent), ...w };
 }

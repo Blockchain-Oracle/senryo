@@ -13,6 +13,7 @@ export * from "./market-calls.ts";
 export * from "./market-typed-data.ts";
 export * from "./markets.ts";
 export * from "./nonce.ts";
+export * from "./parlays.ts";
 export * from "./pinned-read.ts";
 export * from "./reads.ts";
 export * from "./receipt-facts.ts";

@@ -84,6 +84,7 @@ function symbol(glyph: Glyph, displayName: string): SymbolIcon {
 }
 
 // The vocabulary (one line each). Names keep the call sites' existing identifiers.
+export const ArrowDown = symbol({ ios: "arrow.down", android: "arrow_downward" }, "ArrowDown");
 export const ArrowDownUp = symbol({ ios: "arrow.up.arrow.down", android: "swap_vert" }, "ArrowDownUp");
 export const ArrowLeftRight = symbol({ ios: "arrow.left.arrow.right", android: "swap_horiz" }, "ArrowLeftRight");
 export const ArrowRight = symbol({ ios: "arrow.right", android: "arrow_forward" }, "ArrowRight");
@@ -165,6 +166,7 @@ export const WifiOff = symbol({ ios: "wifi.slash", android: "wifi_off" }, "WifiO
 export const Snowflake = symbol({ ios: "snowflake", android: "ac_unit" }, "Snowflake");
 export const Wallet = symbol({ ios: "wallet.pass", android: "account_balance_wallet" }, "Wallet");
 export const Landmark = symbol({ ios: "building.columns", android: "account_balance" }, "Landmark");
+export const Layers = symbol({ ios: "square.stack.3d.up", android: "layers" }, "Layers");
 export const Receipt = symbol(
   { ios: "list.bullet.rectangle.portrait", iosFilled: "list.bullet.rectangle.portrait.fill", android: "receipt_long" },
   "Receipt",

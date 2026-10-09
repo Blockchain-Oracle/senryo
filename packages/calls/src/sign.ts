@@ -11,6 +11,8 @@ import {
   intentRequest,
   type MarketExitOrder,
   type MarketIntent,
+  type MarketParlayIntent,
+  parlayRequest,
   permitParts,
   permitRequest,
 } from "@senryo/chain";
@@ -59,14 +61,44 @@ async function liveDelegate(d: SignDeps, owner: `0x${string}`): Promise<LocalAcc
   return key && key.address.toLowerCase() === s.delegate.toLowerCase() ? key : undefined;
 }
 
-/** This device's delegate, if a live grant names it and `draft` fits what it may still sign. */
-export async function oneTapSigner(d: SignDeps, draft: CallDraft): Promise<LocalAccount | undefined> {
+/** This device's delegate, if a live grant names it and `spend` (0 for a close) fits what it may still sign. */
+async function oneTapFor(d: SignDeps, owner: `0x${string}`, spend: bigint): Promise<LocalAccount | undefined> {
   const s = d.account.session;
-  const key = await liveDelegate(d, draft.owner);
+  const key = await liveDelegate(d, owner);
   if (!key || !s) return undefined;
-  if (draft.action !== ACTION_OPEN) return key;
-  const fits = draft.amount <= s.perCallCap && s.spent + draft.amount <= s.sessionCap;
-  return fits && d.account.allowance >= draft.amount ? key : undefined;
+  if (spend === 0n) return key;
+  const fits = spend <= s.perCallCap && s.spent + spend <= s.sessionCap;
+  return fits && d.account.allowance >= spend ? key : undefined;
+}
+
+/** This device's delegate, if a live grant names it and `draft` fits what it may still sign. */
+export const oneTapSigner = (d: SignDeps, draft: CallDraft): Promise<LocalAccount | undefined> =>
+  oneTapFor(d, draft.owner, draft.action === ACTION_OPEN ? draft.amount : 0n);
+
+/**
+ * One signature for `spend` dollars: one-tap if it may, else the owner under one Face ID showing `prompt` — with, when
+ * the reserve's allowance is short, a permit for exactly `spend` in the same prompt.
+ */
+async function signSpend<T>(
+  d: SignDeps,
+  owner: `0x${string}`,
+  spend: bigint,
+  prompt: string,
+  sign: (signer: LocalAccount) => Promise<T>,
+): Promise<{ signed: T; permit: Permit | null; via: "one-tap" | "face-id" }> {
+  const delegate = await oneTapFor(d, owner, spend);
+  if (delegate) return { signed: await sign(delegate), permit: null, via: "one-tap" };
+  return d.client.stepUp(async (signer) => {
+    let permit: Permit | null = null;
+    if (spend > 0n && d.account.allowance < spend) {
+      const deadline = BigInt(d.nowSec + PERMIT_TTL_SEC);
+      const sig = await signer.signTypedData(
+        permitRequest(d.chainId, { owner, spender: d.reserve, value: spend, nonce: d.account.permitNonce, deadline }),
+      );
+      permit = { value: spend, deadline, ...permitParts(sig) };
+    }
+    return { signed: await sign(signer), permit, via: "face-id" as const };
+  }, prompt);
 }
 
 /** Sign a call: one-tap if it may, else the owner under one Face ID showing `prompt`. */
@@ -78,30 +110,35 @@ export async function signCall(d: SignDeps, draft: CallDraft, prompt: string): P
     nonce: freshNonce(),
     epoch: d.account.epoch,
   };
-  const delegate = await oneTapSigner(d, draft);
-  if (delegate) {
-    const signature = await delegate.signTypedData(intentRequest(d.chainId, intent));
-    return { intent, signature, permit: null, via: "one-tap" };
-  }
-  const needsPermit = draft.action === ACTION_OPEN && d.account.allowance < draft.amount;
-  return d.client.stepUp(async (owner) => {
-    let permit: Permit | null = null;
-    if (needsPermit) {
-      const deadline = BigInt(d.nowSec + PERMIT_TTL_SEC);
-      const sig = await owner.signTypedData(
-        permitRequest(d.chainId, {
-          owner: draft.owner,
-          spender: d.reserve,
-          value: draft.amount,
-          nonce: d.account.permitNonce,
-          deadline,
-        }),
-      );
-      permit = { value: draft.amount, deadline, ...permitParts(sig) };
-    }
-    const signature = await owner.signTypedData(intentRequest(d.chainId, intent));
-    return { intent, signature, permit, via: "face-id" as const };
-  }, prompt);
+  const spend = draft.action === ACTION_OPEN ? draft.amount : 0n;
+  const r = await signSpend(d, draft.owner, spend, prompt, (signer) =>
+    signer.signTypedData(intentRequest(d.chainId, intent)),
+  );
+  return { intent, signature: r.signed, permit: r.permit, via: r.via };
+}
+
+export type ParlayDraft = Omit<MarketParlayIntent, "deadline" | "nonce" | "epoch" | "recipient">;
+
+export interface SignedParlay {
+  intent: MarketParlayIntent;
+  signature: Hex;
+  permit: Permit | null;
+  via: "one-tap" | "face-id";
+}
+
+/** Sign a parlay (D-293): its stake spends like an open's — one-tap within the caps, else one Face ID. */
+export async function signParlay(d: SignDeps, draft: ParlayDraft, prompt: string): Promise<SignedParlay> {
+  const intent: MarketParlayIntent = {
+    ...draft,
+    recipient: draft.owner,
+    deadline: BigInt(d.nowSec + INTENT_TTL_SEC),
+    nonce: freshNonce(),
+    epoch: d.account.epoch,
+  };
+  const r = await signSpend(d, draft.owner, draft.stake, prompt, (signer) =>
+    signer.signTypedData(parlayRequest(d.chainId, intent)),
+  );
+  return { intent, signature: r.signed, permit: r.permit, via: r.via };
 }
 
 export type ExitDraft = Omit<MarketExitOrder, "deadline" | "nonce" | "epoch">;

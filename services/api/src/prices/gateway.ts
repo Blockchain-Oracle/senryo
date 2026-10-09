@@ -66,13 +66,18 @@ export class PythGateway {
   }
 
   /**
-   * Archives the print of every pending fill instant still in the ring (the relay's own and anyone else's), so the
-   * keeper can back-fill from the archive even if this process restarts between a commit and its fill.
+   * Archives the print of every pending fill instant still in the ring (calls and every parlay leg, the relay's own and
+   * anyone else's), so the keeper can back-fill from the archive even if this process restarts between commit and fill.
    */
   async archivePending(db: Db): Promise<void> {
+    const since = nowSec() - RING_KEEP_SEC;
     const rows = await db<{ series_id: string; target: bigint }[]>`
       SELECT DISTINCT series_id, target FROM market_tickets
-      WHERE state IN ('committed', 'closing') AND target IS NOT NULL AND target > ${nowSec() - RING_KEEP_SEC}`;
+      WHERE state IN ('committed', 'closing') AND target IS NOT NULL AND target > ${since}
+      UNION
+      SELECT DISTINCT l.series_id, p.target FROM market_parlays p
+      JOIN market_parlay_legs l ON l.chain_id = p.chain_id AND l.parlay_id = p.parlay_id
+      WHERE p.state = 'committed' AND p.target IS NOT NULL AND p.target > ${since}`;
     for (const r of rows) {
       const feed = this.feeds.find((f) =>
         f.market.cadences.some((c) => seriesIdOf(f.market.symbol, c) === r.series_id),

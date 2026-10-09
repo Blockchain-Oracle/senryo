@@ -5,6 +5,7 @@ import {
   Bell,
   CircleUserRound,
   Landmark,
+  Layers,
   QrCode,
   Settings,
   Signal,
@@ -22,6 +23,7 @@ import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
+  parlay: Layers,
   wallet: Wallet,
   earn: Landmark,
   profile: CircleUserRound,

@@ -8,6 +8,8 @@ import {
   listen,
   loadOptionalSigner,
   migrate,
+  PARLAY_CHANNEL,
+  type ParlayNotice,
   pingDb,
   SessionKeys,
   TICKET_CHANNEL,
@@ -22,6 +24,7 @@ import { PythGateway } from "./prices/gateway.ts";
 import { AccountRelay } from "./relay/accounts.ts";
 import { ExitWatcher } from "./relay/exits.ts";
 import { type Lane, openLanes } from "./relay/lanes.ts";
+import { ParlayRelay } from "./relay/parlays.ts";
 import { MarketRelay } from "./relay/relay.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEarnRoutes } from "./routes/earn.ts";
@@ -30,6 +33,7 @@ import { registerHistoryRoutes } from "./routes/history.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
 import { registerMarketRoutes } from "./routes/markets.ts";
 import { registerNotificationRoutes } from "./routes/notifications.ts";
+import { registerParlayRoutes } from "./routes/parlays.ts";
 import { registerPriceRoutes } from "./routes/prices.ts";
 import { registerProfileRoutes } from "./routes/profile.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
@@ -76,6 +80,15 @@ for (const chain of chains.values()) {
     log,
   });
   exits.start();
+  const parlays = new ParlayRelay({
+    chainId: chain.chainId as ChainId,
+    read: chain.read,
+    lanes,
+    gateway,
+    relay,
+    db,
+    log,
+  });
   const accounts = new AccountRelay({
     chainId: chain.chainId as ChainId,
     read: chain.read,
@@ -84,7 +97,7 @@ for (const chain of chains.values()) {
     db,
     log,
   });
-  markets.set(chain.chainId, { relay, accounts, exits });
+  markets.set(chain.chainId, { relay, accounts, exits, parlays });
   log.info({ chainId: chain.chainId, lanes: sponsors.map((s) => s.address) }, "relay ready");
 }
 if (sponsors.length === 0) log.warn("no SPONSOR_PK — calls, sessions and Practice dollars answer 503");
@@ -98,6 +111,16 @@ await db.listen(TICKET_CHANNEL, (payload) => {
     .get(notice.chainId)
     ?.relay.onTicket(notice)
     .catch((error) => log.warn({ err: (error as Error).message }, "intent update from a ticket notice failed"));
+});
+
+// Every parlay change reaches the owner's stream and the parlay's intent the same way.
+await db.listen(PARLAY_CHANNEL, (payload) => {
+  const notice = JSON.parse(payload) as ParlayNotice;
+  bus.emit(`user:${notice.owner}`, "parlay", notice);
+  void markets
+    .get(notice.chainId)
+    ?.parlays.onParlay(notice)
+    .catch((error) => log.warn({ err: (error as Error).message }, "intent update from a parlay notice failed"));
 });
 
 const ctx: ApiContext = {
@@ -133,6 +156,7 @@ registerNotificationRoutes(app, ctx);
 registerProfileRoutes(app, ctx);
 registerMarketRoutes(app, ctx);
 registerEarnRoutes(app, ctx);
+registerParlayRoutes(app, ctx);
 registerHistoryRoutes(app, ctx);
 registerPriceRoutes(app, gateway);
 registerStreamRoute(app, {

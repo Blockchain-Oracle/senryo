@@ -12,5 +12,6 @@ export * from "./routes/history.ts";
 export * from "./routes/info.ts";
 export * from "./routes/markets.ts";
 export * from "./routes/notifications.ts";
+export * from "./routes/parlays.ts";
 export * from "./routes/profile.ts";
 export * from "./routes/storage.ts";

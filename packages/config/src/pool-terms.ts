@@ -99,6 +99,12 @@ const PRICING = {
   maxExposureBps: 6000,
 } as const;
 
+/**
+ * Parlays (D-293, `MarketTypes.sol`): 2–4 legs, one per market; legs in one asset class (a trading calendar) are priced
+ * as correlated, their joint chance at least 85 % of the least likely of them.
+ */
+export const PARLAY = { minLegs: 2, maxLegs: 4, correlationBps: 8_500n } as const;
+
 export const POOL_TERMS: Readonly<Record<ChainId, PoolTerms>> = {
   [TESTNET_CHAIN_ID]: {
     ...PRICING,

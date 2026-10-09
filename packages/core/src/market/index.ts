@@ -5,6 +5,7 @@ export * from "./basket.ts";
 export * from "./call-format.ts";
 export * from "./exits.ts";
 export { lnWad } from "./lnwad.ts";
+export * from "./parlay.ts";
 export * from "./price-format.ts";
 export { type ClosedWindow, holidayWindows, weekBits } from "./session/calendar-bits.ts";
 export {

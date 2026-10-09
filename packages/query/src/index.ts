@@ -11,6 +11,7 @@ export * from "./notifications.ts";
 export * from "./operation-feedback.ts";
 export * from "./operation-progress.ts";
 export * from "./operations.ts";
+export * from "./parlays.ts";
 export * from "./profiles.ts";
 export * from "./reading.ts";
 export * from "./trace.ts";

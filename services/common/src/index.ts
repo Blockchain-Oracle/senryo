@@ -8,6 +8,7 @@ export * from "./keys.ts";
 export * from "./latency.ts";
 export * from "./logger.ts";
 export * from "./notifications.ts";
+export * from "./parlays.ts";
 export * from "./prints.ts";
 export * from "./push-delivery.ts";
 export * from "./session.ts";

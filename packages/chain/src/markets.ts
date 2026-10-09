@@ -129,13 +129,14 @@ export function proofOf(market: MarketSpec, updates: readonly Hex[]): Hex {
   return encodeAbiParameters(BASKET_PROOF, [basketDefinition(market), updates]);
 }
 
-interface Call {
+export interface Call {
   target: Address;
   allowFailure: boolean;
   callData: Hex;
 }
 
-function aggregate(calls: Call[]): Hex {
+/** A Multicall3 `aggregate3` of these calls. */
+export function aggregate(calls: Call[]): Hex {
   return encodeFunctionData({ abi: multicall3Abi, functionName: "aggregate3", args: [calls] });
 }
 

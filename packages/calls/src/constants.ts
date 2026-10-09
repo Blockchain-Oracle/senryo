@@ -19,6 +19,7 @@ export const PROMPTS = {
   call: (verb: string, symbol: string) => `${verb} ${symbol}`,
   close: "Cash out",
   exit: "Set the exit",
+  parlay: (legs: number) => `Parlay of ${legs}`,
   clearExit: "Remove the exit",
   oneTap: "Turn on one-tap calls",
   revoke: "Turn off one-tap calls",
@@ -39,3 +40,6 @@ export const EXIT_STEP_CENTS: readonly (readonly [underCents: number, stepCents:
 export const EXIT_DOLLAR_STEP_CENTS = 100;
 /** "Never below" starts at half of today's value (bps). */
 export const FLOOR_START_BPS = 5_000n;
+
+/** The parlay slip's stake presets, in dollars (S8.5). */
+export const PARLAY_STAKES_USD = [1, 5, 10, 25] as const;

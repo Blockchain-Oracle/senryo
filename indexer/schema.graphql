@@ -94,6 +94,27 @@ type Ticket {
   closedBy: String
 }
 
+"A parlay (D-293): 2–4 legs that must all come true; legs are read from the chain by the api, outcomes here."
+type Parlay {
+  id: ID!
+  chainId: Int! @index
+  parlayId: BigInt! @index
+  owner: String! @index
+  status: String! @index
+  stake: BigInt!
+  payout: BigInt!
+  chanceE6: Int
+  "Each leg's outcome in leg order: pending · won · tied · lost · void."
+  legOutcomes: [String!]!
+  outcome: String
+  returned: BigInt!
+  viaSession: Boolean!
+  committedAt: Int! @index
+  committedTx: String!
+  settledAt: Int
+  settleTx: String
+}
+
 "Everything that happened to a ticket, in order (the Calls timeline and receipts)."
 type TicketEvent {
   id: ID!

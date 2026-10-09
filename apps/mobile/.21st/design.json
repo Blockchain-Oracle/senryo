@@ -861,6 +861,16 @@
         "port": "Reanimated pill: − / rolling value (FadeInUp/FadeInDown by direction) / +, press squish via usePressScale(0.85), hold-to-repeat with acceleration, boundary shake + warn haptic, VoiceOver adjustable",
         "deviations": "value formatted (dollars, cents a share); the theme's raised2 plate instead of the source's shadowed white pill",
         "status": "built (S8.4) — src/components/kit/Stepper.tsx, src/features/terminal/ExitSheet.tsx"
+      },
+      {
+        "name": "parlay-slip",
+        "source": "21st #36173 astralyxdev/odds-display; searched \"bet slip parlay legs\" (36173, 2537 Prediction Market Card), \"betting slip multiplier stake\" (27122 Swap Ticket, 22007 Amount Slider) and \"selection list add remove chips toggle\" (1963, 35042, 22213, 28838 — none fit a per-row side)",
+        "evidence": [
+          "pivot plan S8 Parlay (D-293); Owarine's parlay slip: odds multiply, all-or-nothing, pre-funded payout"
+        ],
+        "port": "OddsButton: a pressable price (\"1.92×\") with its side's label, pressed when picked, an up/down arrow when it moved since the pick (not animated); the slip a sheet over a bottom bar (legs · multiplier · chance · Review)",
+        "deviations": "decimal only; the theme's raised2 plate; the press scale is the kit's",
+        "status": "built (S8.5) — src/components/kit/OddsButton.tsx, src/features/parlay/*"
       }
     ],
     "planned": [

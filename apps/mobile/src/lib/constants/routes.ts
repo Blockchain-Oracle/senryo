@@ -58,7 +58,7 @@ export const profileEditRoute = (focus: ProfileFocus) => `/account/profile?focus
  * A1: the account sheet for a guest's action — "Create an account to {verb}" — carrying the in-app path that resumes
  * it once the account exists and its setup is done or skipped.
  */
-export type AccountVerb = "make a call" | "add money" | "follow" | "set alerts" | "send" | "earn";
+export type AccountVerb = "make a call" | "add money" | "follow" | "set alerts" | "send" | "earn" | "place a parlay";
 export const accountRequiredRoute = (verb: AccountVerb, next?: string) =>
   `/account-required?verb=${encodeURIComponent(verb)}${next ? `&next=${encodeURIComponent(next)}` : ""}` as const;
 

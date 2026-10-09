@@ -13,6 +13,7 @@ import { earnKeys } from "./earn.ts";
 import { useQueryEnv } from "./env.tsx";
 import { historyKeys } from "./history.ts";
 import { marketKeys } from "./markets.ts";
+import { parlayKeys } from "./parlays.ts";
 
 /** The indexer trails a ticket notice by 0–2 s on production; history refetches after this. */
 export const HISTORY_LAG_MS = 2_500;
@@ -82,6 +83,10 @@ export function useLiveSync(live: Live, owner: Address | undefined): void {
       live.onUser("earn", () => {
         void account();
         void client.invalidateQueries({ queryKey: earnKeys.all });
+      }),
+      live.onUser("parlay", () => {
+        void account();
+        void client.invalidateQueries({ queryKey: parlayKeys.of(env.chainId, owner) });
       }),
     ];
     return () => {

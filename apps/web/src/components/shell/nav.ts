@@ -11,6 +11,7 @@ import {
   Coins,
   House,
   Landmark,
+  Layers,
   type LucideIcon,
   Receipt,
   ScrollText,
@@ -34,6 +35,7 @@ export const NAV_ICON: Record<WebIcon, LucideIcon> = {
   proof: ScrollText,
   download: Smartphone,
   earn: Landmark,
+  parlay: Layers,
 };
 
 export const RAIL: readonly WebNavItem[] = WEB_RAIL;

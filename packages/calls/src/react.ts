@@ -6,6 +6,7 @@ export * from "./use-earn.ts";
 export * from "./use-exit.ts";
 export * from "./use-market-session.ts";
 export * from "./use-one-tap.ts";
+export * from "./use-parlay.ts";
 export * from "./use-results.ts";
 export * from "./use-window-open.ts";
 export * from "./use-withdraw.ts";

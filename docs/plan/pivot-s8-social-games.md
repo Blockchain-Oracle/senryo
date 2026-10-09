@@ -66,7 +66,11 @@ leaderboard, a public profile and the ticker live on both apps · a referral pai
       tests (69 in all); the watcher is the api's (`relay/exits.ts`, live prices in memory, sponsor lane holds `EXIT`),
       `market_exits`, `/v1/markets/exits`, exits on tickets; the indexer's `ExitSet`/`ExitFired` and `closedBy`; the
       exit modal/sheet on both apps (21st Quantity Stepper #29940) and "Closed by" on receipts. On chain with S8.9._
-- [ ] S8.5 `ParlayBook` (D-293) with tests; relay, keeper settle of leg windows; Parlay builder and slips on both apps
+- [x] S8.5 `ParlayBook` (D-293) with tests; relay, keeper settle of leg windows; Parlay builder and slips on both apps
+      _Done: `ParlayBook` + `ParlayMath` inside the reserve (11 Foundry tests, 80 in all); `ParlayRelay` (gates per leg,
+      leg windows opened in the commit's batch, the multi-feed fill), `market_parlays`/`market_parlay_legs`, the keeper's
+      `parlays` job (backup fills, leg verdicts, settle), the indexer's `Parlay` and records; Parlay on both apps (picker,
+      slip with the 21st Odds Display #36173, your parlays) in More / Everything → Play. On chain with S8.9._
 - [ ] S8.6 `DuelArena` (D-294) with tests; matchmaking, deck, relay, keeper, indexer Elo; Duel on both apps
 - [ ] S8.7 Events (D-296): committee verifier + `EventBook` with tests; the first events (Practice, Senryo-run
       committee); events on both apps, honestly labelled
