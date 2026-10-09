@@ -27,6 +27,7 @@ const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 /** [artifact file, contract name] for every contract a client, service or the indexer talks to. */
 const CONTRACTS = [
   ["BandReserve.sol", "BandReserve"],
+  ["DuelArena.sol", "DuelArena"],
   ["Windows.sol", "Windows"],
   ["PythPrintVerifier.sol", "PythPrintVerifier"],
   ["BasketPrintVerifier.sol", "BasketPrintVerifier"],

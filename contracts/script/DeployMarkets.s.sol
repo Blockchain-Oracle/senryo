@@ -8,6 +8,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CALENDAR_WORD_COUNT} from "../src/libraries/Constants.sol";
 import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {IMarketCalendar} from "../src/oracle/interfaces/IMarketCalendar.sol";
+import {DuelArena} from "../src/games/DuelArena.sol";
+import {DuelClocks, DuelTier} from "../src/games/DuelTypes.sol";
 import {BandReserve} from "../src/markets/BandReserve.sol";
 import {Windows} from "../src/markets/Windows.sol";
 import {IWindows} from "../src/markets/interfaces/IWindows.sol";
@@ -26,6 +28,8 @@ contract DeployMarkets is MarketsBase {
 
     /// @dev AccessManager role that may mint Test USD (the sponsor's Practice grant, D-258).
     uint64 internal constant MINTER_ROLE = 1;
+    /// @dev AccessManager role that pairs duel entries (`DuelArena.openMatch`): the api's matchmaker, on the sponsor (D-294).
+    uint64 internal constant DUEL_ROLE = 5;
 
     function run() external {
         _readCatalog();
@@ -65,6 +69,7 @@ contract DeployMarkets is MarketsBase {
         BandReserve reserve = _deployReserve(manager, collateral, windows);
         _calendarRole(manager, calendar, keeper);
         _exitRole(manager, reserve, sponsor);
+        _duel(manager, reserve, sponsor);
         _configureCalendars(calendar);
         _listSeries(windows, reserve);
         _seedPool(reserve, collateral, admin);
@@ -131,5 +136,31 @@ contract DeployMarkets is MarketsBase {
         TestUSD(address(collateral)).mint(admin, seed);
         collateral.approve(address(reserve), seed);
         reserve.fund(seed);
+    }
+
+    /// @dev The duel arena (D-294) on this reserve: its clocks and tiers from `.duel`, `openMatch` for the matchmaker.
+    function _duel(AccessManager manager, BandReserve reserve, address sponsor) internal {
+        DuelClocks memory clocks = DuelClocks({
+            revealWindowSec: uint32(_json.readUint(".duel.revealWindowSec")),
+            pickWindowSec: uint32(_json.readUint(".duel.pickWindowSec")),
+            minCardLifeSec: uint32(_json.readUint(".duel.minCardLifeSec"))
+        });
+        DuelArena arena = new DuelArena(address(manager), reserve, clocks);
+        _record(
+            "DuelArena",
+            address(arena),
+            abi.encodePacked(type(DuelArena).creationCode, abi.encode(address(manager), address(reserve), clocks)),
+            true
+        );
+        uint256[] memory pots = _json.readUintArray(".duel.pots");
+        uint256[] memory stakes = _json.readUintArray(".duel.cardStakes");
+        for (uint256 i; i < pots.length; ++i) {
+            arena.setTier(uint8(i), DuelTier({pot: uint64(pots[i]), cardStake: uint64(stakes[i]), enabled: true}));
+        }
+        bytes4[] memory fns = new bytes4[](1);
+        fns[0] = DuelArena.openMatch.selector;
+        manager.labelRole(DUEL_ROLE, "DUEL");
+        manager.setTargetFunctionRole(address(arena), fns, DUEL_ROLE);
+        manager.grantRole(DUEL_ROLE, sponsor, 0);
     }
 }

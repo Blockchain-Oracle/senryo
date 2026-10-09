@@ -1,6 +1,7 @@
 export * from "./aurora.ts";
 export * from "./calendars.ts";
 export * from "./catalog.ts";
+export * from "./duel.ts";
 export * from "./env.ts";
 export * from "./gas.ts";
 export * from "./hosts.ts";

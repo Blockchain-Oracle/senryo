@@ -74,6 +74,21 @@
   ],
   "chainId": 143,
   "collateral": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+  "duel": {
+    "cardStakes": [
+      "1000000",
+      "2000000",
+      "5000000"
+    ],
+    "minCardLifeSec": 180,
+    "pickWindowSec": 120,
+    "pots": [
+      "0",
+      "5000000",
+      "10000000"
+    ],
+    "revealWindowSec": 120
+  },
   "params": {
     "halfSpreadE6": 20000,
     "maxExpiryReserved": "250000000",

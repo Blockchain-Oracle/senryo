@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CALENDARS } from "../packages/config/src/calendars.ts";
+import { DUEL, DUEL_TIERS } from "../packages/config/src/duel.ts";
 import { BAND_KIND_CODE, bandMenu, feedIdOf, MARKETS, marketsOn, sigmaE8Of } from "../packages/config/src/catalog.ts";
 import { MAINNET_USDC } from "../packages/config/src/money.ts";
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "../packages/config/src/networks.ts";
@@ -99,6 +100,14 @@ function exportChain(chainId) {
       maxSurchargeE6: terms.maxSurchargeE6,
       minProbE6: terms.minProbE6,
       minStake: terms.minStake.toString(),
+    }),
+    // Duel (D-294): the arena's clocks and its tiers by id (index = tier).
+    duel: sorted({
+      cardStakes: DUEL_TIERS[chainId].map((t) => t.cardStake.toString()),
+      minCardLifeSec: DUEL.minCardLifeSec,
+      pickWindowSec: DUEL.pickWindowSec,
+      pots: DUEL_TIERS[chainId].map((t) => t.pot.toString()),
+      revealWindowSec: DUEL.revealWindowSec,
     }),
     poolSeed: chainId === TESTNET_CHAIN_ID ? TESTNET_POOL_SEED.toString() : "0",
     pyth: PYTH_RECEIVER[chainId],
