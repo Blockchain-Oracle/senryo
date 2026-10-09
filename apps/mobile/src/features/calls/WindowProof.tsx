@@ -5,12 +5,12 @@
  */
 import type { WindowProof as Proof } from "@senryo/api-client";
 import { type ChainId, explorerTxUrl } from "@senryo/config";
+import { gapText, priceText, SIDE, usd, whenText } from "@senryo/core";
 import { usePrint, useWindowProof } from "@senryo/query";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { fire } from "~/feedback/fire";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { gapText, priceText, SIDE, usd, whenText } from "./format";
 
 const PERCENT = 100n;
 const UP = 0;

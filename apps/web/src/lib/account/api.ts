@@ -15,6 +15,25 @@ const HTTP_UNAUTHORIZED = 401;
 
 let client: ApiClient | undefined;
 let session: { token: string; address: Address; expiresAt: number } | undefined;
+/** Told when an API session starts or ends (the live stream adds or drops the user's topic, D-280). */
+const sessionListeners = new Set<(address: Address | undefined) => void>();
+
+/** The account an API session is live for right now, without signing in (no prompt). */
+export function apiSessionScope(): Address | undefined {
+  return session && session.expiresAt > Date.now() ? session.address : undefined;
+}
+
+export function onApiSession(listener: (address: Address | undefined) => void): () => void {
+  sessionListeners.add(listener);
+  return () => {
+    sessionListeners.delete(listener);
+  };
+}
+
+function announceSession(): void {
+  const scope = apiSessionScope();
+  for (const l of sessionListeners) l(scope);
+}
 
 export function api(): ApiClient {
   client ??= createApiClient({ origin: ENV.API_ORIGIN, deviceHash: deviceId(), getToken: () => session?.token });
@@ -27,8 +46,6 @@ export function policyContext(address: Address, faceId: PolicyContext["faceId"] 
     chainId: ACTIVE_NETWORK.chainId,
     self: address,
     faceId: faceId ?? defaultFaceIdMode(ACTIVE_NETWORK.key),
-    marketRoomUsd6: () => undefined,
-    equityUsd6: () => undefined,
   });
 }
 
@@ -41,10 +58,12 @@ export async function ensureApiSession(account: AccountClient, faceId?: PolicyCo
   const signature = await account.signer(policyContext(address, faceId)).signMessage({ message: challenge.message });
   const verified = await api().call(authVerifyRoute, { body: { message: challenge.message, signature } });
   session = { token: verified.token, address, expiresAt: Date.parse(verified.expiresAt) };
+  announceSession();
 }
 
 export function clearApiSession(): void {
   session = undefined;
+  announceSession();
 }
 
 /** Runs a session route; a token the server no longer knows (restart, expiry) is replaced once, then retried. */

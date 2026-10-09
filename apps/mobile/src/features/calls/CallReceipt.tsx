@@ -5,6 +5,18 @@
  */
 import type { CallTimeline as Timeline } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
+import {
+  lane,
+  OPEN_STATES,
+  priceText,
+  sideName,
+  signedUsd,
+  stateWord,
+  stepTitle,
+  toneOf,
+  usd,
+  whenText,
+} from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useCallTimeline, useQueryEnv, useWindowProof } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,18 +34,6 @@ import { callLink } from "~/lib/share-link";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { CallTimeline, type Step } from "./CallTimeline";
-import {
-  lane,
-  OPEN_STATES,
-  priceText,
-  sideName,
-  signedUsd,
-  stateWord,
-  stepTitle,
-  toneOf,
-  usd,
-  whenText,
-} from "./format";
 import { ShareCallButton } from "./ShareCallButton";
 import type { ShareCall } from "./ShareCard";
 import { WindowProof } from "./WindowProof";

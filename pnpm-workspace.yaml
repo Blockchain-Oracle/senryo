@@ -14,7 +14,8 @@ allowBuilds:
 
 # pnpm 11.24 names the private-hoist link for expo-modules-core after a peer variant it never writes (the lockfile
 # has one snapshot; the link and the folder disagree on the hash), so type declarations that import it through
-# hoisting (expo-audio's AudioPlayer) lose their base class. A public hoist gives resolution a real link to land on.
+# hoisting (expo-audio's AudioPlayer) lose their base class. A public hoist gives resolution a link to land on, and the
+# root `postinstall` (scripts/repair-hoist.mjs) re-points it when pnpm writes it dangling (it did again on 9 Oct).
 # Metro and autolinking resolve through `expo`'s own (correct) link and are unaffected.
 publicHoistPattern:
   - expo-modules-core

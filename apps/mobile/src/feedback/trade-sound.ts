@@ -4,6 +4,7 @@
  * surge / mega / slump flourishes. Two players per cue so a quick repeat overlaps; levels are the reference mix.
  * Players load on first use; every failure is swallowed — a sound never breaks a call.
  */
+import { SOUND_MASTER, SOUND_MIX } from "@senryo/tokens";
 import { type AudioPlayer, type AudioSource, createAudioPlayer } from "expo-audio";
 import { AppState } from "react-native";
 
@@ -35,20 +36,6 @@ const LADDER: readonly AudioSource[] = [
   require("../../assets/sounds/trade/profit-10.wav"),
 ];
 
-/** The reference mix (cue gain × voice level), under the app's master level. */
-const MASTER = 0.7;
-const GAIN: Record<TradeCue | "profit", number> = {
-  tap: 0.3,
-  open: 0.55,
-  close: 0.55,
-  win: 0.5,
-  loss: 0.4,
-  profit: 0.35,
-  adverse: 0.07,
-  slump: 0.14,
-  surge: 0.13,
-  mega: 0.16,
-};
 const POOL = 2;
 const pools = new Map<string, { players: AudioPlayer[]; next: number }>();
 
@@ -63,7 +50,7 @@ function play(key: string, source: AudioSource, gain: number): void {
     const player = entry.players[entry.next % POOL];
     entry.next += 1;
     if (!player) return;
-    player.volume = MASTER * gain;
+    player.volume = SOUND_MASTER * gain;
     void player.seekTo(0).then(() => player.play());
   } catch {
     // Audio is decoration; the call it accompanies never depends on it.
@@ -71,14 +58,14 @@ function play(key: string, source: AudioSource, gain: number): void {
 }
 
 export function playCue(cue: TradeCue): void {
-  play(cue, SOURCES[cue], GAIN[cue]);
+  play(cue, SOURCES[cue], SOUND_MIX[cue]);
 }
 
 /** The profit cue at ladder step `step` (clamped to the two octaves). */
 export function playProfitStep(step: number): void {
   const i = Math.max(0, Math.min(LADDER.length - 1, step));
   const source = LADDER[i];
-  if (source) play(`profit-${i}`, source, GAIN.profit);
+  if (source) play(`profit-${i}`, source, SOUND_MIX.profit);
 }
 
 export function releaseCues(): void {

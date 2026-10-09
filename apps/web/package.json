@@ -6,6 +6,7 @@
   "description": "Senryo 千両 web — Next 16 static export (D-011) with the D2 Desk 21st components.",
   "scripts": {
     "dev": "next dev --port 3460",
+    "dev:live": "node scripts/dev-live.mjs",
     "build": "next build",
     "typecheck": "tsc --noEmit -p .",
     "well-known": "node scripts/well-known.mjs"
@@ -23,11 +24,13 @@
     "@senryo/config": "workspace:*",
     "@senryo/core": "workspace:*",
     "@senryo/identity": "workspace:*",
+    "@senryo/live": "workspace:*",
     "@senryo/query": "workspace:*",
     "@senryo/tokens": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "cmdk": "1.1.1",
     "jsqr": "1.4.0",
     "lucide-react": "1.48.0",
     "motion": "catalog:",
@@ -37,8 +40,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "sonner": "2.0.8",
-    "tailwind-merge": "3.7.0",
-    "vaul": "1.1.2"
+    "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",

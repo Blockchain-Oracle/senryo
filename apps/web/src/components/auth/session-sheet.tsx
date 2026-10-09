@@ -12,7 +12,7 @@ import { useState } from "react";
 import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Button } from "@/components/ui/button";
 import { CopyCode } from "@/components/ui/copy-code-button";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { Modal } from "@/components/ui/modal";
 import { useAccount } from "@/lib/account/provider";
 import { useChip } from "@/lib/account/use-chip";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
@@ -44,7 +44,7 @@ export function SessionSheet({ open, onOpenChange }: { open: boolean; onOpenChan
   const unlocked = account.snapshot.status === "unlocked";
   const copy = failure ? authFailureCopy(failure, "web") : undefined;
   return (
-    <ResponsiveSheet
+    <Modal
       open={open}
       onOpenChange={onOpenChange}
       locked={busy}
@@ -112,6 +112,6 @@ export function SessionSheet({ open, onOpenChange }: { open: boolean; onOpenChan
           Account · security · recovery
         </Link>
       </div>
-    </ResponsiveSheet>
+    </Modal>
   );
 }

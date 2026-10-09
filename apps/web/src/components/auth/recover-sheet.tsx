@@ -12,7 +12,7 @@ import { useId, useState } from "react";
 import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ResponsiveSheet } from "@/components/ui/responsive-sheet";
+import { Modal } from "@/components/ui/modal";
 import { useAccount } from "@/lib/account/provider";
 
 type Source = "server" | "file";
@@ -78,7 +78,7 @@ export function RecoverSheet({
   };
 
   return (
-    <ResponsiveSheet
+    <Modal
       open={open}
       onOpenChange={onOpenChange}
       locked={busy}
@@ -137,6 +137,6 @@ export function RecoverSheet({
           </p>
         )}
       </div>
-    </ResponsiveSheet>
+    </Modal>
   );
 }

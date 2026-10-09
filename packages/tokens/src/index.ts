@@ -18,3 +18,14 @@ export {
   type TypeFace,
   type TypeRole,
 } from "./scale.ts";
+export {
+  SEMITONES_PER_OCTAVE,
+  SOUND_ATTACK_S,
+  SOUND_CUES,
+  SOUND_FLOOR,
+  SOUND_LADDER_SEMITONES,
+  SOUND_MASTER,
+  SOUND_MIX,
+  type SoundCue,
+  type Voice,
+} from "./sound.ts";

@@ -1,0 +1,286 @@
+/* The shell's parts (split from app-shell.css for length): the top line's chips, the stage, the phone dock, the keyboard
+ * map, the terminal's full stage, and reduced motion. Same tokens and aliases (`:root` in app-shell.css). */
+
+/* ── the chips ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+.mode-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px 0 10px;
+  border-radius: var(--r-md);
+  font: 600 13px / 1 var(--shell-font);
+  white-space: nowrap;
+}
+.mode-capsule.is-practice {
+  background: var(--practice-surface);
+  color: var(--practice);
+}
+.mode-capsule.is-real {
+  background: var(--mainnet-surface);
+  color: var(--mainnet);
+}
+.mode-money {
+  opacity: 0.8;
+  font-weight: 500;
+}
+.rail-mode .mode-money,
+.rail-balance {
+  display: none;
+}
+@media (min-width: 1200px) {
+  .rail-mode .mode-money {
+    display: inline;
+  }
+  .rail-balance {
+    display: inline-flex;
+  }
+}
+.rail-mode {
+  justify-content: center;
+}
+@media (max-width: 1199px) {
+  .rail-mode {
+    width: 44px;
+    padding: 0;
+  }
+  .rail-mode .mode-word {
+    display: none;
+  }
+}
+
+.balance-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 34px;
+  border-radius: var(--r-md);
+  background: var(--shell-raised);
+}
+.balance-amount {
+  padding: 0 4px 0 12px;
+  height: 100%;
+  color: var(--shell-ink);
+  font: 600 14px / 1 var(--shell-font);
+}
+.balance-eye {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-md);
+  color: var(--shell-ink-3);
+}
+.balance-eye:hover {
+  color: var(--shell-ink);
+}
+.balance-eye svg {
+  width: 16px;
+  height: 16px;
+}
+.balance-amount:focus-visible,
+.balance-eye:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--shell-focus);
+  border-radius: var(--r-md);
+}
+.rail-balance {
+  justify-content: space-between;
+}
+
+.health-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  color: var(--shell-ink-2);
+  font: 600 12px / 1 var(--shell-font);
+}
+.health-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.health-chip.is-live .health-dot {
+  background: var(--up);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--up) 60%, transparent);
+}
+.health-chip.is-waiting .health-dot {
+  background: var(--warn);
+  animation: health-pulse 900ms var(--motion-ease) infinite alternate;
+}
+@keyframes health-pulse {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── the stage: one filled plate holds the page ────────────────────────────────────────────────────────────────── */
+.app-stage {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--stage-radius);
+  background: var(--shell-plate);
+  outline: none;
+}
+@media (min-width: 640px) {
+  .app-stage {
+    padding: 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .app-stage {
+    padding: 32px;
+  }
+}
+
+/* ── the phone dock: the phone's Home · Markets · [seal] · Calls · More ────────────────────────────────────────── */
+.app-dock {
+  position: fixed;
+  inset: auto 0 max(12px, env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  padding: 0 12px;
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .app-dock {
+    display: none;
+  }
+}
+.dock-list {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 60px;
+  padding: 0 8px;
+  border-radius: 40px;
+  background: var(--glass-opaque);
+  box-shadow: var(--elevation-dock);
+  pointer-events: auto;
+}
+.dock-item {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 44px;
+  border-radius: var(--r-md);
+  color: var(--shell-ink-3);
+}
+.dock-item[aria-current="page"] {
+  color: var(--shell-ink);
+}
+.dock-icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.9;
+}
+.dock-item[aria-current="page"] .dock-icon {
+  fill: currentColor;
+}
+.dock-item:focus-visible,
+.dock-seal:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--shell-focus);
+}
+.dock-seal {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: -8px 4px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 55%, transparent);
+  transition: transform var(--motion-press) var(--motion-ease);
+}
+.dock-seal:active {
+  transform: scale(0.94);
+}
+
+/* ── the keyboard map ──────────────────────────────────────────────────────────────────────────────────────────── */
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+}
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+}
+.shortcut-row dt {
+  color: var(--text-2);
+}
+.shortcut-row kbd {
+  padding: 2px 8px;
+  border-radius: var(--r-xs);
+  background: var(--secondary);
+  font: 600 13px / 1.4 var(--shell-font);
+  white-space: pre;
+}
+
+/* ── the terminal (S6.5): the screen is the workspace — no top line or dock; the stage holds it edge to edge. ──── */
+.app-column:has(.terminal-surface) {
+  padding: 0;
+}
+.app-column:has(.terminal-surface) > .app-topline,
+.app-shell:has(.terminal-surface) .app-dock {
+  display: none;
+}
+.app-stage:has(> .terminal-surface) {
+  display: flex;
+  height: 100dvh;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0;
+}
+@media (min-width: 768px) {
+  .app-column:has(.terminal-surface) {
+    padding: var(--shell-inset) var(--shell-inset) var(--shell-inset) calc(var(--rail-compact) + var(--shell-inset) * 2);
+  }
+  .app-stage:has(> .terminal-surface) {
+    height: calc(100dvh - var(--shell-inset) * 2);
+    border-radius: var(--stage-radius);
+  }
+}
+@media (min-width: 1200px) {
+  .app-column:has(.terminal-surface) {
+    padding-left: calc(var(--rail-wide) + var(--shell-inset) * 2);
+  }
+}
+.terminal-surface {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* iOS's haptic: a hidden native switch (lib/feedback/haptics.ts). */
+.haptic-switch {
+  position: fixed;
+  left: -9999em;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-pill,
+  .rail-item,
+  .dock-seal {
+    transition: none;
+  }
+  .health-chip.is-waiting .health-dot {
+    animation: none;
+  }
+}

@@ -13,8 +13,8 @@ import { PASSKEY_TILE_EDGE, PasskeyGlyph } from "@/components/identity/passkey-g
 import { AuthCardHeader } from "@/components/ui/auth-card";
 import { Button } from "@/components/ui/button";
 
-/** The sheet (vaul/radix) loads on first use, keeping it out of the landing bundle. */
-const ResponsiveSheet = dynamic(() => import("@/components/ui/responsive-sheet").then((m) => m.ResponsiveSheet), {
+/** The modal loads on first use, keeping it out of the landing bundle. */
+const Modal = dynamic(() => import("@/components/ui/modal").then((m) => m.Modal), {
   ssr: false,
 });
 
@@ -85,7 +85,7 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
     <StepUpContext.Provider value={api}>
       {children}
       {pending === undefined ? null : (
-        <ResponsiveSheet
+        <Modal
           open={pending !== undefined}
           onOpenChange={(open) => {
             if (!open) close(undefined);
@@ -124,7 +124,7 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
               )}
             </div>
           ) : null}
-        </ResponsiveSheet>
+        </Modal>
       )}
     </StepUpContext.Provider>
   );

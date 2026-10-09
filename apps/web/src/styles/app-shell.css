@@ -1,0 +1,328 @@
+/* The app shell (Mitoshi S22 `styles/app-shell.css`, from Baku/roy-chain's Slush-measured structure): a floating rail,
+ * the top line, one stage, a phone dock — in Living Lacquer tokens, with the phone's Fomo rule (no bordered boxes: the
+ * stage, chips and dock are filled plates). Sizes are `@senryo/tokens` LAYOUT (`--rail-wide`, `--shell-inset` …).
+ * Breakpoints: dock < 768 ≤ 88 px icon rail < 1200 ≤ 248 px rail. */
+
+/* The shell's aliases on :root — drawers and ⌘K render in a portal outside `.app-shell`. Tailwind's `@theme inline`
+ * emits no variables, so these name the generated `@senryo/tokens` ones. */
+:root {
+  --shell-canvas: var(--background);
+  --shell-plate: var(--card);
+  --shell-raised: var(--secondary);
+  --shell-ink: var(--foreground);
+  --shell-ink-2: var(--text-2);
+  --shell-ink-3: var(--text-3);
+  --shell-focus: var(--ring);
+  --shell-font: var(--font-inter), var(--font-noto-jp), var(--font-sans-family);
+  --shell-display: var(--font-inter-display), var(--font-inter), var(--font-display-family);
+  --r-xs: var(--radius-step-xs);
+  --r-sm: var(--radius-step-sm);
+  --r-md: var(--radius-step-md);
+  --r-pill: var(--radius-step-pill);
+  --nav-item: 48px;
+  --nav-gap: 12px;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  background: var(--shell-canvas);
+  color: var(--shell-ink);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 80;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.skip-link:focus {
+  left: 8px;
+}
+
+/* ── the rail ──────────────────────────────────────────────────────────────────────────────────────────────────── */
+.app-rail {
+  display: none;
+}
+@media (min-width: 768px) {
+  .app-rail {
+    position: fixed;
+    top: var(--shell-inset);
+    bottom: var(--shell-inset);
+    left: var(--shell-inset);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    width: var(--rail-compact);
+    padding: 20px 12px;
+    border-radius: var(--stage-radius);
+    background: var(--shell-plate);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+}
+@media (min-width: 1200px) {
+  .app-rail {
+    width: var(--rail-wide);
+    align-items: stretch;
+    padding: 24px 20px;
+  }
+}
+@media (min-width: 768px) and (max-height: 820px) {
+  .app-rail {
+    gap: 12px;
+    padding-block: 14px;
+  }
+  :root {
+    --nav-gap: 4px;
+  }
+}
+
+.rail-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: var(--r-pill);
+  color: var(--shell-ink);
+}
+.rail-mark:focus-visible {
+  outline: 2px solid var(--shell-focus);
+  outline-offset: 2px;
+}
+.rail-seal,
+.topline-seal {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+.rail-word {
+  display: none;
+  font: 800 18px / 1 var(--shell-display);
+  letter-spacing: 0.14em;
+}
+@media (min-width: 1200px) {
+  .rail-word {
+    display: inline;
+  }
+}
+
+.rail-nav {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--nav-gap);
+}
+.rail-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: var(--nav-item);
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  color: var(--shell-ink-3);
+  font: 600 16px / 22px var(--shell-font);
+  text-align: left;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+.rail-item:hover {
+  color: var(--shell-ink);
+}
+.rail-item[aria-current="page"] {
+  color: var(--shell-ink);
+}
+.rail-item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--shell-focus);
+}
+.rail-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  stroke-width: 1.9;
+}
+.rail-label,
+.rail-key {
+  display: none;
+}
+@media (min-width: 1200px) {
+  .rail-item {
+    justify-content: flex-start;
+  }
+  .rail-label {
+    display: inline;
+  }
+  .rail-key {
+    display: inline;
+    margin-left: auto;
+    font: 500 12px / 1 var(--shell-font);
+    color: var(--shell-ink-3);
+    opacity: 0;
+    transition: opacity var(--motion-fast);
+  }
+  .rail-item:hover .rail-key,
+  .rail-item:focus-visible .rail-key {
+    opacity: 1;
+  }
+}
+/* The active pill: one element moved by a transform (Slush's sliding pill without a motion runtime). */
+.rail-pill {
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--nav-item);
+  border-radius: var(--r-md);
+  background: var(--shell-raised);
+  transform: translateY(calc(var(--rail-i, 0) * (var(--nav-item) + var(--nav-gap))));
+  opacity: 0;
+  transition:
+    transform var(--motion-dock-active) var(--motion-ease),
+    opacity var(--motion-base) var(--motion-ease);
+}
+.rail-pill[data-on] {
+  opacity: 1;
+}
+
+.rail-foot {
+  margin-top: auto;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+@media (min-width: 1200px) {
+  .rail-foot {
+    align-items: stretch;
+  }
+}
+
+/* ── the column: the top line and the stage ────────────────────────────────────────────────────────────────────── */
+.app-column {
+  display: flex;
+  min-width: 0;
+  min-height: 100dvh;
+  flex-direction: column;
+  padding: 0 12px calc(96px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .app-column {
+    padding: 0 var(--shell-inset) var(--shell-inset) calc(var(--rail-compact) + var(--shell-inset) * 2);
+  }
+}
+@media (min-width: 1200px) {
+  .app-column {
+    padding-left: calc(var(--rail-wide) + var(--shell-inset) * 2);
+  }
+}
+
+.app-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 68px;
+  padding: max(10px, env(safe-area-inset-top, 0px)) 0 10px;
+}
+.topline-lead,
+.topline-tools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+@media (min-width: 768px) {
+  .topline-seal {
+    display: none;
+  }
+}
+.topline-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--shell-ink-2);
+}
+.topline-icon:hover {
+  color: var(--shell-ink);
+  background: var(--shell-raised);
+}
+.topline-icon svg,
+.topline-search svg {
+  width: 20px;
+  height: 20px;
+}
+.topline-icon:focus-visible,
+.topline-search:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--shell-focus);
+}
+.topline-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  background: var(--shell-plate);
+  color: var(--shell-ink-3);
+  font: 500 15px / 1 var(--shell-font);
+}
+.topline-search:hover {
+  color: var(--shell-ink);
+}
+.topline-search-label,
+.topline-kbd {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .topline-search {
+    min-width: 280px;
+    padding: 0 16px;
+  }
+  .topline-search-label {
+    display: inline;
+  }
+  .topline-kbd {
+    display: inline;
+    margin-left: auto;
+    padding: 2px 6px;
+    border-radius: var(--r-xs);
+    background: var(--shell-raised);
+    font: 600 11px / 1.2 var(--shell-font);
+  }
+}
+/* Phones: no keyboard map; the rail foot's mode and balance move into the top line. */
+@media (max-width: 767px) {
+  .topline-keys,
+  .topline-health .health-word {
+    display: none;
+  }
+}
+@media (min-width: 1200px) {
+  .topline-mode,
+  .topline-balance {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .topline-mode .mode-money {
+    display: none;
+  }
+}

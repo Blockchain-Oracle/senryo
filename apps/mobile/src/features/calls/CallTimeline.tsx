@@ -4,11 +4,11 @@
  * the step still running a hollow disc, so state never rests on colour alone. Borderless rows (no cards).
  */
 import { type ChainId, explorerTxUrl } from "@senryo/config";
+import type { Tone } from "@senryo/core";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Check, X } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import type { Tone } from "./format";
 
 const DOT = 22;
 const GLYPH = 12;

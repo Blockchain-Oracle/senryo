@@ -1,5 +1,7 @@
 // React bindings for the live layer. Lists and labels use these (one render per frame at most); the terminal's chart
 // and odometers bypass React entirely through `live.prices.subscribe` into shared values (zero renders per tick).
+// Each store has a server snapshot for the web's static prerender: nothing has streamed there (no price, an idle
+// stream, second 0); the client takes over at hydration.
 import { createContext, createElement, type ReactNode, useContext, useEffect, useSyncExternalStore } from "react";
 import type { Live } from "./live.ts";
 import type { BoundaryPrint } from "./prints.ts";
@@ -31,6 +33,7 @@ export function useLivePrice(symbol: string): number | undefined {
   return useSyncExternalStore(
     (cb) => live.prices.subscribe(symbol, cb),
     () => live.prices.latest(symbol)?.priceE8,
+    () => undefined,
   );
 }
 
@@ -39,6 +42,7 @@ export function useStreamStatus(): StreamStatus {
   return useSyncExternalStore(
     (cb) => live.onStreamStatus(cb),
     () => live.streamStatus,
+    () => "idle" as const,
   );
 }
 
@@ -56,6 +60,7 @@ export function useServerSeconds(): number {
       return () => clearTimeout(timer);
     },
     () => live.clock.nowSec(),
+    () => 0,
   );
 }
 
@@ -65,5 +70,6 @@ export function useBoundaryPrint(symbol: string, t: number): BoundaryPrint | und
   return useSyncExternalStore(
     (cb) => live.prints.subscribe(cb),
     () => live.prints.at(symbol, t),
+    () => undefined,
   );
 }

@@ -232,5 +232,27 @@ export function navRouteCoverage(rule, ctx) {
   for (const [, path] of readText(navFile).matchAll(/path:\s*"(\/[^"]*)"/g))
     if (!routes.has(path))
       findings.push(finding(rule, `nav path ${path} has no route in ${appDir}`, "packages/config/src/nav.ts"));
+  // The web (S6): every `href` resolves to a page (route groups stripped, `[segment]` matches one segment; a `?d=`
+  // drawer link resolves through its page).
+  const webDir = "apps/web/src/app";
+  const pages = [];
+  for (const { rel } of walkFiles(ctx.root, webDir, [".tsx"])) {
+    if (!rel.endsWith("/page.tsx")) continue;
+    const segments = rel
+      .slice(webDir.length + 1)
+      .split("/")
+      .slice(0, -1)
+      .filter((seg) => !/^\(.*\)$/.test(seg));
+    pages.push(segments);
+  }
+  const matches = (path) => {
+    const want = path.split(/[?#]/)[0].split("/").filter(Boolean);
+    return pages.some(
+      (page) => page.length === want.length && page.every((seg, i) => /^\[.*\]$/.test(seg) || seg === want[i]),
+    );
+  };
+  for (const [, href] of readText(navFile).matchAll(/href:\s*"(\/[^"]*)"/g))
+    if (!matches(href))
+      findings.push(finding(rule, `web nav href ${href} has no page in ${webDir}`, "packages/config/src/nav.ts"));
   return { findings };
 }

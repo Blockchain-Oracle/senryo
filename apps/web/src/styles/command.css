@@ -1,0 +1,133 @@
+/* ⌘K (components/shell/CommandPalette.tsx; 21st.dev 382 originui/command over cmdk) in Living Lacquer tokens: a
+ * centred modal (D-190), rows ≥ 44 px, the input at 16 px (no iOS zoom), live prices in tabular figures. */
+.command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--sheet-scrim);
+}
+.command-backdrop[data-state="open"] {
+  animation: drawer-fade-in var(--motion-base) var(--motion-ease);
+}
+.command-panel {
+  position: fixed;
+  z-index: 71;
+  left: 50%;
+  top: max(12vh, env(safe-area-inset-top, 0px));
+  transform: translateX(-50%);
+  width: min(calc(100vw - 24px), 600px);
+  overflow: hidden;
+  border-radius: var(--stage-radius);
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--elevation-sheet);
+  outline: none;
+}
+.command-panel[data-state="open"] {
+  animation: command-in var(--motion-base) var(--motion-ease);
+}
+@keyframes command-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+.command-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+}
+.command-input svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--text-3);
+}
+.command-input input {
+  height: 56px;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: 500 16px / 1 var(--shell-font);
+  outline: none;
+}
+.command-input input::placeholder {
+  color: var(--text-3);
+}
+.command-input kbd {
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+  background: var(--secondary);
+  color: var(--text-3);
+  font: 600 11px / 1.2 var(--shell-font);
+}
+
+.command-list {
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 8px 10px;
+}
+.command-list [cmdk-group-heading] {
+  padding: 10px 10px 4px;
+  color: var(--text-3);
+  font: 600 12px / 16px var(--shell-font);
+}
+.command-item {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+  cursor: default;
+  outline: none;
+}
+.command-item[data-selected="true"] {
+  background: var(--secondary);
+}
+.command-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--text-2);
+}
+.command-item[data-selected="true"] .command-icon {
+  color: var(--foreground);
+}
+.command-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.command-copy strong {
+  font: 600 15px / 20px var(--shell-font);
+}
+.command-copy small {
+  overflow: hidden;
+  color: var(--text-3);
+  font: 400 13px / 18px var(--shell-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-price {
+  font: 600 15px / 20px var(--shell-font);
+}
+.command-empty {
+  padding: 28px 12px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .command-panel[data-state],
+  .command-backdrop[data-state] {
+    animation: none;
+  }
+}

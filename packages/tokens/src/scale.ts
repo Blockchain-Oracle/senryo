@@ -183,6 +183,26 @@ export const MOTION = {
   easing: [0.2, 0.8, 0.2, 1] as const,
 } as const;
 
+/**
+ * The web app's frame (S6; Mitoshi S22 / roy-chain measured from Slush): the floating rail wide and compact, the gutter
+ * around the one stage and its corner, right drawers (narrow and wide), and the drawer curve — the same curve the phone's
+ * sheets ride (`MOTION.sheetEasing`) — in and out.
+ */
+export const LAYOUT = {
+  railWide: 248,
+  railCompact: 88,
+  inset: 16,
+  stageRadius: 24,
+  drawer: 384,
+  drawerWide: 560,
+  drawerInMs: 380,
+  drawerOutMs: 240,
+  /** Below this the rail hides and the bottom dock takes its places. */
+  dockBelow: 768,
+  /** Below this the rail is compact (icons and digits only). */
+  railCompactBelow: 1200,
+} as const;
+
 /** Largest Dynamic Type multiplier for hero numbers (layout stays intact). */
 export const MAX_FONT_SCALE_HERO = 1.3;
 /**

@@ -4,6 +4,8 @@
  * Refunded (21st.dev ssychui/trade-journal-table #27124: outcome words with a check or cross, never colour alone).
  * Every row opens its receipt. Pull to refresh; the user's stream keeps both lists true.
  */
+
+import { lane, OPEN_STATES, sideName, signedUsd, stateWord, type Tone, toneOf, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useCallerStats, useCalls, useTickets } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,7 +21,6 @@ import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { lane, OPEN_STATES, sideName, signedUsd, stateWord, type Tone, toneOf, usd } from "./format";
 
 const MARK = 36;
 

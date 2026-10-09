@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     "@senryo/contracts",
     "@senryo/core",
     "@senryo/identity",
+    "@senryo/live",
     "@senryo/query",
     "@senryo/tokens",
   ],

@@ -2,24 +2,21 @@
  * Renders the terminal's sound cues to WAV (assets/sounds/trade/*.wav): Tradash's cue map re-synthesised to the pitch
  * contours and lengths measured from its clips (canton-season3 context/13-revamp/tradash/SOUND-analysis.txt), with
  * Owarine's synth voices (owarine web/src/lib/sound/trade.ts): exponential 5 ms attack, exponential decay to silence,
- * exponential pitch glides. Our own audio — nothing of theirs is shipped. Tables in `sound/constants.ts`. Run after
- * changing a voice:  node apps/mobile/scripts/gen-trade-sounds.mjs
+ * exponential pitch glides. Our own audio — nothing of theirs is shipped. The voices are `@senryo/tokens` `sound.ts`
+ * (the web synthesises the same table live); the WAV container is `sound/constants.ts`. Run after changing a voice:
+ *   node apps/mobile/scripts/gen-trade-sounds.mjs
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  ATTACK_S,
-  CUES,
-  FLOOR,
-  HEADROOM,
-  LADDER_SEMITONES,
-  PCM_MAX,
-  RATE,
+  SOUND_ATTACK_S as ATTACK_S,
+  SOUND_CUES as CUES,
+  SOUND_FLOOR as FLOOR,
+  SOUND_LADDER_SEMITONES as LADDER_SEMITONES,
   SEMITONES_PER_OCTAVE,
-  TAIL_S,
-  WAV,
-} from "./sound/constants.ts";
+} from "../../../packages/tokens/src/sound.ts";
+import { HEADROOM, PCM_MAX, RATE, TAIL_S, WAV } from "./sound/constants.ts";
 
 const TWO = 2;
 const HALF = 0.5;

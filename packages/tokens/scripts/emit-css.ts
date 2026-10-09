@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { KINPAKU, MATERIAL, QR, SCENE_FIELD } from "../src/marks.ts";
 import { DARK, LIGHT, type Palette } from "../src/palette.ts";
-import { ELEVATION, FONT, HAIRLINE_PX, MOTION, RADIUS, SPACE, TYPE } from "../src/scale.ts";
+import { ELEVATION, FONT, HAIRLINE_PX, LAYOUT, MOTION, RADIUS, SPACE, TYPE } from "../src/scale.ts";
 
 const toKebab = (role: string) => role.replace(/([a-z])([A-Z0-9])/g, "$1-$2").toLowerCase();
 
@@ -61,6 +61,15 @@ const shared = [
   ...motionLines(),
   `  --motion-ease: cubic-bezier(${e1}, ${e2}, ${e3}, ${e4});`,
   `  --header-collapse-distance: ${MOTION.headerCollapseDistance}px;`,
+  `  --rail-wide: ${LAYOUT.railWide}px;`,
+  `  --rail-compact: ${LAYOUT.railCompact}px;`,
+  `  --shell-inset: ${LAYOUT.inset}px;`,
+  `  --stage-radius: ${LAYOUT.stageRadius}px;`,
+  `  --drawer-w: ${LAYOUT.drawer}px;`,
+  `  --drawer-wide-w: ${LAYOUT.drawerWide}px;`,
+  `  --drawer-in: ${LAYOUT.drawerInMs}ms;`,
+  `  --drawer-out: ${LAYOUT.drawerOutMs}ms;`,
+  `  --ease-drawer: cubic-bezier(${MOTION.sheetEasing.join(", ")});`,
   ...Object.entries(SPACE).map(([k, v]) => `  --space-${toKebab(k)}: ${rem(v)};`),
   ...typeLines(),
   ...elevationLines,

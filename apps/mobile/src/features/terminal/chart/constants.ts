@@ -6,16 +6,13 @@ export const SAMPLE_HZ = 60;
 /** Nice steps: 1, 2, 5 or 10 × 10ⁿ with cut-offs 1.5 / 3.5 / 7.5. */
 export const NICE_CUTS = [1.5, 3.5, 7.5] as const;
 export const NICE_STEPS = [1, 2, 5, 10] as const;
-/** Display decimals by magnitude: ≥1e5 → 1, ≥1e3 → 2, ≥10 → 3, ≥0.01 → 4; smaller → enough for 3 significant. */
-export const DECIMAL_BANDS = [
-  { min: 1e5, decimals: 1 },
-  { min: 1e3, decimals: 2 },
-  { min: 10, decimals: 3 },
-  { min: 0.01, decimals: 4 },
-] as const;
-export const SIGNIFICANT = 3;
-export const ZERO_DECIMALS = 2;
-export const MAX_DECIMALS = 10;
+/** Display decimals by magnitude: the one table in `@senryo/core` `price-format.ts` (the engine's worklet reads it). */
+export {
+  PRICE_DECIMAL_BANDS as DECIMAL_BANDS,
+  PRICE_MAX_DECIMALS as MAX_DECIMALS,
+  PRICE_SIGNIFICANT as SIGNIFICANT,
+  PRICE_ZERO_DECIMALS as ZERO_DECIMALS,
+} from "@senryo/core";
 /** Float slack for grid arithmetic. */
 export const EPSILON = 1e-9;
 export const THOUSANDS = 3;

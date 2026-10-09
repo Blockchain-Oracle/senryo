@@ -4,7 +4,7 @@
  * renders on events and once a second for the countdown. A call is followed from tap to fill on the stream.
  */
 import type { IntentStatus } from "@senryo/api-client";
-import { formatUnits, proceedsFor } from "@senryo/core";
+import { clockText, formatUnits, proceedsFor } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useIntentStatus, useRefreshCaller, useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
@@ -30,7 +30,7 @@ import { LiveChart } from "./chart/LiveChart";
 import { MarketsSheet } from "./MarketsSheet";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { StakeSheet } from "./StakeSheet";
-import { clockText, TerminalTop } from "./TerminalTop";
+import { TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
 import { useReactions } from "./useReactions";
 import { useTerminal } from "./useTerminal";

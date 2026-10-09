@@ -3,6 +3,7 @@
  * countdown; tapping one opens the terminal there. Prices render at most once a frame (lists, not the terminal).
  */
 import { CADENCES_SEC, LOCKOUT_SEC } from "@senryo/config";
+import { clockText, laneLabel, windowCountdown } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useLivePrice, useServerSeconds } from "@senryo/live/react";
 import { useCatalog } from "@senryo/query";
@@ -17,7 +18,6 @@ import { fire } from "~/feedback/fire";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { formatUsd } from "../terminal/chart/engine";
-import { clockText, laneLabel } from "../terminal/TerminalTop";
 
 const MARK = 40;
 const E8 = 1e8;
@@ -27,9 +27,7 @@ export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: stri
   const { color } = useTheme();
   const price = useLivePrice(symbol);
   const now = useServerSeconds();
-  const closesIn = FIRST_CADENCE - LOCKOUT_SEC - (now % FIRST_CADENCE);
-  const open = closesIn > 0;
-  const reopensIn = FIRST_CADENCE - (now % FIRST_CADENCE);
+  const { open, closesIn, endsIn: reopensIn } = windowCountdown(now, FIRST_CADENCE, LOCKOUT_SEC);
   return (
     <Pressable
       onPress={onOpen}

@@ -21,7 +21,7 @@ import { ROUTES } from "@/lib/constants/routes";
 import type { CeremonyKind } from "./ceremony-card";
 import { HostNotAllowed } from "./host-not-allowed";
 
-// Loaded on first use: the ceremony trace (motion), failure card (QR) and recovery sheet (vaul/radix) stay out of the
+// Loaded on first use: the ceremony trace (motion), failure card (QR) and recovery modal stay out of the
 // landing bundle (plan §2.4 landing budget).
 const CeremonyCard = dynamic(() => import("./ceremony-card").then((m) => m.CeremonyCard), { ssr: false });
 const AuthFailureCard = dynamic(() => import("./auth-failure").then((m) => m.AuthFailureCard), { ssr: false });

@@ -536,48 +536,12 @@
         "retokenized": true
       },
       {
-        "name": "partition-bar",
-        "source": "21st:8starlabs/partition-bar",
-        "id": 26545,
-        "url": "https://21st.dev/@8starlabs/components/partition-bar",
-        "use": "bucket proportion bar",
-        "path": "src/components/ui/partition-bar.tsx",
-        "retokenized": true
-      },
-      {
         "name": "segmented-control",
         "source": "21st:ddoemonn/segmented-control",
         "id": 23552,
         "url": "https://21st.dev/@ddoemonn/components/segmented-control",
         "use": "asset filter, long/short",
         "path": "src/components/ui/segmented-control.tsx",
-        "retokenized": true
-      },
-      {
-        "name": "market-watchlist",
-        "source": "21st:ssychui/market-watchlist",
-        "id": 20110,
-        "url": "https://21st.dev/@ssychui/components/market-watchlist",
-        "use": "watchlist + sparklines",
-        "path": "src/components/ui/market-watchlist.tsx",
-        "retokenized": true
-      },
-      {
-        "name": "market-heatmap",
-        "source": "21st:ssychui/market-heatmap",
-        "id": 30551,
-        "url": "https://21st.dev/@ssychui/components/market-heatmap",
-        "use": "OI heatmap",
-        "path": "src/components/ui/market-heatmap.tsx",
-        "retokenized": true
-      },
-      {
-        "name": "candle-chart",
-        "source": "21st:ssychui/candle-chart",
-        "id": 22250,
-        "url": "https://21st.dev/@ssychui/components/candle-chart",
-        "use": "candles + volume (split scale/layers/crosshair/volume)",
-        "path": "src/components/ui/candle/",
         "retokenized": true
       },
       {
@@ -596,15 +560,6 @@
         "url": "https://21st.dev/@ddoemonn/components/task-steps",
         "use": "execution trace",
         "path": "src/components/ui/task-steps.tsx",
-        "retokenized": true
-      },
-      {
-        "name": "upstash-ratelimit",
-        "source": "21st:elements-/upstash-ratelimit",
-        "id": 29280,
-        "url": "https://21st.dev/@elements-/components/upstash-ratelimit",
-        "use": "FREE·SPEND meter",
-        "path": "src/components/ui/upstash-ratelimit.tsx",
         "retokenized": true
       },
       {
@@ -672,12 +627,13 @@
       },
       {
         "name": "drawer",
-        "source": "21st:shadcn/drawer",
-        "id": 1245,
-        "url": "https://21st.dev/@shadcn/components/drawer",
-        "use": "vaul sheets at phone widths",
+        "source": "21st:wensity/drawer via Mitoshi (crypto-world-fair web/src/components/ui/drawer.tsx)",
+        "id": 31360,
+        "url": "https://21st.dev/@wensity/components/drawer",
+        "use": "the right-edge drawer (D-190: no bottom sheets on web); Radix Dialog instead of Base UI, touch swipe-to-close, tokens in styles/drawer.css",
         "path": "src/components/ui/drawer.tsx",
-        "retokenized": true
+        "retokenized": true,
+        "replaced": "shadcn/drawer #1245 (vaul bottom sheet), 2026-10-09"
       },
       {
         "name": "auth-card",
@@ -705,15 +661,6 @@
         "url": "https://21st.dev/@ibelick/components/text-shimmer",
         "use": "'Waiting for your passkey…' shimmer",
         "path": "src/components/ui/text-shimmer.tsx",
-        "retokenized": true
-      },
-      {
-        "name": "encrypted-text",
-        "source": "21st:manuarora700/encrypted-text",
-        "id": 18575,
-        "url": "https://21st.dev/@manuarora700/components/encrypted-text",
-        "use": "recovery phrase words decrypt in place after the step-up (desk timing, crypto RNG, static under reduced motion)",
-        "path": "src/components/ui/encrypted-text.tsx",
         "retokenized": true
       },
       {
@@ -762,22 +709,43 @@
         "retokenized": true
       },
       {
-        "name": "pill",
-        "source": "21st:haydenbleasel/pill",
-        "id": 1600,
-        "url": "https://21st.dev/@haydenbleasel/components/pill",
-        "use": "network pill (Monad mark + name) on Receive",
-        "path": "src/components/money/receive-screen.tsx",
-        "retokenized": true
+        "name": "command",
+        "source": "21st:originui/command",
+        "id": 382,
+        "url": "https://21st.dev/@originui/components/command",
+        "use": "⌘K palette: live markets (price, countdown), places, Everything, actions; cmdk over Radix Dialog, centred modal",
+        "path": "src/components/shell/CommandPalette.tsx",
+        "retokenized": true,
+        "added": "2026-10-09",
+        "considered": [2075, 23522, 31802, 33493, 33492, 23173, 33510, 27378]
       },
       {
-        "name": "stacked-activity",
-        "source": "21st:eugeneshilow/stacked-activity",
-        "id": 29474,
-        "url": "https://21st.dev/@eugeneshilow/components/stacked-activity",
-        "use": "/stats/ per-day columns (new accounts, trades) as two small multiples with a shared hover day and a hatched partial today",
-        "path": "src/components/ui/daily-bars.tsx",
-        "retokenized": true
+        "name": "dock",
+        "source": "21st:starc007/dock via Baku → Mitoshi MobileDock",
+        "id": 15742,
+        "url": "https://21st.dev/@starc007/components/dock",
+        "use": "phone-width dock: the phone dock order with the centre seal, icons only",
+        "path": "src/components/shell/MobileDock.tsx",
+        "retokenized": true,
+        "added": "2026-10-09"
+      },
+      {
+        "name": "animated-sidebar",
+        "source": "21st:unlumen/animated-sidebar via Baku → Mitoshi Rail",
+        "id": 21517,
+        "url": "https://21st.dev/@unlumen/components/animated-sidebar",
+        "use": "the floating rail with its sliding active pill (CSS transform, no motion runtime)",
+        "path": "src/components/shell/Rail.tsx",
+        "retokenized": true,
+        "added": "2026-10-09"
+      },
+      {
+        "name": "modal",
+        "source": "composition over the installed shadcn dialog",
+        "id": null,
+        "use": "centred modal at every width (replaces responsive-sheet: vaul on phones broke D-190)",
+        "path": "src/components/ui/modal.tsx",
+        "added": "2026-10-09"
       }
     ],
     "considered": [
@@ -927,6 +895,94 @@
         "path": "src/components/ui/swap/",
         "retokenized": true,
         "removedIn": "web parity (claude/web): sample-data desk previews replaced by the phone's surfaces"
+      },
+      {
+        "name": "partition-bar",
+        "source": "21st:8starlabs/partition-bar",
+        "id": 26545,
+        "url": "https://21st.dev/@8starlabs/components/partition-bar",
+        "use": "bucket proportion bar",
+        "path": "src/components/ui/partition-bar.tsx",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
+      },
+      {
+        "name": "market-watchlist",
+        "source": "21st:ssychui/market-watchlist",
+        "id": 20110,
+        "url": "https://21st.dev/@ssychui/components/market-watchlist",
+        "use": "watchlist + sparklines",
+        "path": "src/components/ui/market-watchlist.tsx",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
+      },
+      {
+        "name": "market-heatmap",
+        "source": "21st:ssychui/market-heatmap",
+        "id": 30551,
+        "url": "https://21st.dev/@ssychui/components/market-heatmap",
+        "use": "OI heatmap",
+        "path": "src/components/ui/market-heatmap.tsx",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
+      },
+      {
+        "name": "candle-chart",
+        "source": "21st:ssychui/candle-chart",
+        "id": 22250,
+        "url": "https://21st.dev/@ssychui/components/candle-chart",
+        "use": "candles + volume (split scale/layers/crosshair/volume)",
+        "path": "src/components/ui/candle/",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
+      },
+      {
+        "name": "upstash-ratelimit",
+        "source": "21st:elements-/upstash-ratelimit",
+        "id": 29280,
+        "url": "https://21st.dev/@elements-/components/upstash-ratelimit",
+        "use": "FREE·SPEND meter",
+        "path": "src/components/ui/upstash-ratelimit.tsx",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
+      },
+      {
+        "name": "encrypted-text",
+        "source": "21st:manuarora700/encrypted-text",
+        "id": 18575,
+        "url": "https://21st.dev/@manuarora700/components/encrypted-text",
+        "use": "recovery phrase words decrypt in place after the step-up (desk timing, crypto RNG, static under reduced motion)",
+        "path": "src/components/ui/encrypted-text.tsx",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
+      },
+      {
+        "name": "pill",
+        "source": "21st:haydenbleasel/pill",
+        "id": 1600,
+        "url": "https://21st.dev/@haydenbleasel/components/pill",
+        "use": "network pill (Monad mark + name) on Receive",
+        "path": "src/components/money/receive-screen.tsx",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
+      },
+      {
+        "name": "stacked-activity",
+        "source": "21st:eugeneshilow/stacked-activity",
+        "id": 29474,
+        "url": "https://21st.dev/@eugeneshilow/components/stacked-activity",
+        "use": "/stats/ per-day columns (new accounts, trades) as two small multiples with a shared hover day and a hatched partial today",
+        "path": "src/components/ui/daily-bars.tsx",
+        "retokenized": true,
+        "removed": "2026-10-09",
+        "why": "S6.1: trading-era surface, superseded by the prediction pivot (D-256)"
       }
     ]
   },
@@ -950,6 +1006,11 @@
       "date": "2026-10-03",
       "decision": "Web parity round 3 (claude/web3): Practice swap at par, B4 deposit address + Arriving, Pay with on the ticket and the pool, the Mainnet network fee planned with every review. No new 21st installs: the searches returned boxed cards and payment forms; built from the installed dotted QR, action circles, stepper and a new AssetChip",
       "ref": "docs/product/provenance/web.md (round 3)"
+    },
+    {
+      "date": "2026-10-09",
+      "decision": "S6.3/S6.4: the S22 shell from Mitoshi (rail, top line, stage, dock, Everything) on Radix; ⌘K from 21st originui/command (cmdk); bottom sheets removed from web (vaul dropped)",
+      "ref": "docs/plan/pivot-s6-web.md, D-190"
     }
   ],
   "authority": {

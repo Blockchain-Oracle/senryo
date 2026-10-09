@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "postinstall": "node scripts/repair-hoist.mjs",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",

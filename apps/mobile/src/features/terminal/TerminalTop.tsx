@@ -3,8 +3,8 @@
  * the balance rolling on the right, and the lane chips — 1m · 5m · 15m · 1h — the selected one carrying the countdown
  * ring to the moment calls close, on the server's clock.
  */
-import { CADENCES_SEC, type CadenceSec, LOCKOUT_SEC } from "@senryo/config";
-import { formatUnits } from "@senryo/core";
+import { CADENCES_SEC, LOCKOUT_SEC } from "@senryo/config";
+import { clockText, formatUnits, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useFont } from "@shopify/react-native-skia";
 import { useEffect, useRef } from "react";
@@ -27,16 +27,6 @@ const RING = 18;
 const RING_STROKE = 2;
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
-const SECONDS_PER_MINUTE = 60;
-const MINUTES_PER_HOUR = 60;
-const PAD = 2;
-
-export const laneLabel = (c: CadenceSec) =>
-  c >= SECONDS_PER_MINUTE * MINUTES_PER_HOUR
-    ? `${c / SECONDS_PER_MINUTE / MINUTES_PER_HOUR}h`
-    : `${c / SECONDS_PER_MINUTE}m`;
-export const clockText = (sec: number) =>
-  `${Math.floor(sec / SECONDS_PER_MINUTE)}:${String(Math.max(0, sec % SECONDS_PER_MINUTE)).padStart(PAD, "0")}`;
 
 export function TerminalTop({
   t,
