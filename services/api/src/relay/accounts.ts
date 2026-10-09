@@ -6,16 +6,19 @@ import {
   earnRequestCallData,
   grantSessionCallData,
   type Hex,
+  type MarketExitOrder,
   mintDollarsCallData,
   type PermitArgs,
   type ReadClient,
   revokeCallData,
   sendTx,
+  setExitCallData,
+  ticketChanges,
   transferWithAuthorizationData,
 } from "@senryo/chain";
 import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
 import { testUSDAbi } from "@senryo/contracts/abis";
-import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
+import { applyTicketChanges, type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PRACTICE_GRANT, PRACTICE_TOPUP_EVERY_MS } from "./constants.ts";
 import type { Lane } from "./lanes.ts";
@@ -30,6 +33,11 @@ export interface RelayResult {
   txHash: Hex;
   state: "proposed" | "reverted";
 }
+
+/** `setExit` emits no commit, so no window is ever looked up. */
+const unknownWindow = (): never => {
+  throw new Error("an exit names no new window");
+};
 
 export class AccountRelay {
   constructor(
@@ -67,6 +75,22 @@ export class AccountRelay {
     const result = await this.send(owner, data, "sessionRevoke");
     this.d.bus.emit(`user:${owner.toLowerCase()}`, "session", { revoked: true, ...result });
     return result;
+  }
+
+  /**
+   * An exit (D-292): the owner's or their session's signed order on the reserve; the receipt's `ExitSet` lands in the
+   * ticket book, where the exit watcher picks it up.
+   */
+  async setExit(order: MarketExitOrder, signature: Hex): Promise<RelayResult> {
+    const reserve = addressOf(this.d.chainId, "BandReserve");
+    const sent = await this.d
+      .laneFor(order.owner)
+      .run((sender) => sendTx(sender, { to: reserve, data: setExitCallData(order, signature), action: "exitSet" }));
+    if (sent.stage !== "reverted") {
+      const changes = ticketChanges(sent.receipt.logs, reserve);
+      await applyTicketChanges(this.d.db, this.d.chainId, changes, unknownWindow, sent.hash);
+    }
+    return { txHash: sent.hash, state: sent.stage };
   }
 
   /** A withdrawal: the owner's signed EIP-3009 transfer, submitted on the dollar from the owner's lane. */

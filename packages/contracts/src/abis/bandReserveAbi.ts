@@ -92,6 +92,19 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "EXIT_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "GRANT_TYPEHASH",
     "inputs": [],
     "outputs": [
@@ -573,6 +586,57 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "exitOf",
+    "inputs": [
+      {
+        "name": "ticketId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Exit",
+        "components": [
+          {
+            "name": "takeProfitE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "stopLossE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "floorE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "trailE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "firing",
+            "type": "uint8",
+            "internalType": "uint8"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "expire",
     "inputs": [
       {
@@ -606,6 +670,32 @@ export const bandReserveAbi = [
     ],
     "outputs": [],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "fireExit",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "fireTrail",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -706,6 +796,72 @@ export const bandReserveAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "hashExit",
+    "inputs": [
+      {
+        "name": "o",
+        "type": "tuple",
+        "internalType": "struct ExitOrder",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "ticketId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "takeProfitE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "stopLossE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "floorE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "trailE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1205,6 +1361,71 @@ export const bandReserveAbi = [
         "name": "newAuthority",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setExit",
+    "inputs": [
+      {
+        "name": "o",
+        "type": "tuple",
+        "internalType": "struct ExitOrder",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "ticketId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "takeProfitE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "stopLossE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "floorE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "trailE6",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ],
     "outputs": [],
@@ -1751,6 +1972,80 @@ export const bandReserveAbi = [
   },
   {
     "type": "event",
+    "name": "ExitFired",
+    "inputs": [
+      {
+        "name": "ticketId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "kind",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "target",
+        "type": "uint40",
+        "indexed": false,
+        "internalType": "uint40"
+      },
+      {
+        "name": "by",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ExitSet",
+    "inputs": [
+      {
+        "name": "ticketId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "takeProfitE6",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "stopLossE6",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "floorE6",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "trailE6",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "viaSession",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Filled",
     "inputs": [
       {
@@ -2194,6 +2489,11 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "BadExit",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "BadGrant",
     "inputs": []
   },
@@ -2242,6 +2542,17 @@ export const bandReserveAbi = [
   {
     "type": "error",
     "name": "ClosePending",
+    "inputs": [
+      {
+        "name": "ticketId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ExitRevoked",
     "inputs": [
       {
         "name": "ticketId",
@@ -2311,6 +2622,17 @@ export const bandReserveAbi = [
   {
     "type": "error",
     "name": "MixedBatch",
+    "inputs": [
+      {
+        "name": "ticketId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NoExit",
     "inputs": [
       {
         "name": "ticketId",

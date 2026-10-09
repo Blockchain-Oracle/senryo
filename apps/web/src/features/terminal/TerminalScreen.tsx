@@ -6,9 +6,10 @@
  * never render React (`useLiveQuote` → live values and the chart's ref); the screen renders once a second for the
  * countdown and on events. The call flow is `@senryo/calls` `useCallFlow`, the phone's own.
  */
-import { type CallMode, isCallMode } from "@senryo/calls";
-import { DEFAULT_CADENCE, useCallFlow, useCallWindow, useMarketLine } from "@senryo/calls/react";
+import { type CallMode, exitLine, isCallMode } from "@senryo/calls";
+import { DEFAULT_CADENCE, useCallFlow, useCallWindow, useExitActions, useMarketLine } from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec } from "@senryo/config";
+import { type ExitPrices, hasExit } from "@senryo/core";
 import { useWindowLoad } from "@senryo/query";
 import { useEffect, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
@@ -29,6 +30,7 @@ import { CrowdLine } from "./CrowdLine";
 import type { ChartFrame } from "./chart/chart-engine";
 import { LiveChart } from "./chart/LiveChart";
 import { DEFAULT_STAKE, MIN_STAKE } from "./constants";
+import { ExitModal } from "./ExitModal";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { StakeModal } from "./StakeModal";
 import { TerminalTop } from "./TerminalTop";
@@ -67,7 +69,8 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
   useReactions(symbol, q.onTick, reactions);
-  const [open, setOpen] = useState<"stake" | "part" | "markets" | null>(null);
+  const [open, setOpen] = useState<"stake" | "part" | "exit" | "markets" | null>(null);
+  const exits = useExitActions(account);
   const flow = useCallFlow({
     view: t,
     caller: account,
@@ -121,6 +124,24 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   }, []);
 
   const closeQuote = q.latest.current.close;
+  const position = t.position;
+  const setExit = async (prices: ExitPrices) => {
+    if (!position) return;
+    try {
+      const r = await exits.set(position.ticketId, prices);
+      if (r.kind === "cancelled") return;
+      setOpen(null);
+      fire("snap");
+      notify(
+        hasExit(prices)
+          ? { title: "Exit set", description: "It runs with the app closed." }
+          : { title: "Exit removed", description: "Nothing sells on its own now." },
+      );
+    } catch (error) {
+      fire("fail");
+      notify({ title: "Couldn't set the exit", description: (error as Error).message, tone: "warning" });
+    }
+  };
   return (
     <div className="terminal-surface">
       <section className="terminal-stage" aria-label={`${symbol} live`}>
@@ -164,6 +185,8 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
           onClose={() => void flow.close()}
           onCustom={() => setOpen("stake")}
           onClosePart={() => setOpen("part")}
+          exitLine={position ? exitLine(position.exit, position.payout) : null}
+          onExit={() => setOpen("exit")}
         />
       </aside>
       {open === "stake" ? (
@@ -181,6 +204,17 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
           shares={t.position.payout}
           bidE6={closeQuote.bidE6}
           onPick={(pct) => void flow.close(pct)}
+          onClose={() => setOpen(null)}
+        />
+      ) : null}
+      {open === "exit" && position && closeQuote && !closeQuote.refusal && exits.bounds ? (
+        <ExitModal
+          shares={position.payout}
+          nowBidE6={Number(closeQuote.bidE6)}
+          exit={position.exit}
+          bounds={exits.bounds}
+          pending={exits.pending}
+          onSet={(prices) => void setExit(prices)}
           onClose={() => setOpen(null)}
         />
       ) : null}

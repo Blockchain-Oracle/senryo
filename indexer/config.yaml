@@ -29,6 +29,8 @@ contracts:
       - event: "CloseCommitted(uint256 indexed ticketId, uint64 shares, uint64 minProceeds, uint40 target, bool viaSession)"
       - event: "Closed(uint256 indexed ticketId, uint64 shares, uint64 proceeds, uint64 basisOut, int64 exitE8, uint32 bidE6)"
       - event: "CloseRefused(uint256 indexed ticketId, uint8 reason)"
+      - event: "ExitSet(uint256 indexed ticketId, uint32 takeProfitE6, uint32 stopLossE6, uint32 floorE6, uint32 trailE6, bool viaSession)"
+      - event: "ExitFired(uint256 indexed ticketId, uint8 kind, uint40 target, address by)"
       - event: "WindowSettled(bytes32 indexed windowId, uint16 wonMask, uint16 refundMask, uint16 lostMask, uint256 toPool, uint256 toHolders)"
       - event: "Claimed(uint256 indexed ticketId, address indexed to, uint8 outcome, uint256 amount, bool paid, address by)"
       - event: "PoolFunded(address indexed by, uint256 amount, uint256 liquid)"

@@ -89,7 +89,12 @@ contract PoolShares is ERC20, AccessManaged, EIP712, ReentrancyGuard {
     event RequestCancelled(address indexed account, bool supply, uint256 amount);
     event Claimed(address indexed account, uint256 shares, uint256 assets);
     event EpochRolled(
-        uint40 indexed hour, uint256 value, uint256 supply, uint256 suppliedAssets, uint256 withdrawnAssets, bool deferred
+        uint40 indexed hour,
+        uint256 value,
+        uint256 supply,
+        uint256 suppliedAssets,
+        uint256 withdrawnAssets,
+        bool deferred
     );
 
     error NotAnHour(uint40 hour);

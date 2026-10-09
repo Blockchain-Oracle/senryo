@@ -20,6 +20,7 @@ import {
   usd,
   whenText,
 } from "@senryo/core";
+import { CLOSED_BY_WORD } from "./exits.ts";
 import { unitOf } from "./markets.ts";
 
 const FAILED_KINDS = new Set(["refused", "close refused", "settled: lose"]);
@@ -80,6 +81,7 @@ export function receiptFacts(t: CallTimeline, where: string | null = null): [lab
     ...(OPEN_STATES.has(c.status) ? [] : ([["Came back", usd(c.returned)]] as [string, string][])),
     ["Entry", c.entryE8 === null ? "At the next print" : priceText(c.entryE8, unitOf(c.symbol))],
     ...(exit?.priceE8 ? ([["Cashed out at", priceText(exit.priceE8, unitOf(c.symbol))]] as [string, string][]) : []),
+    ...(c.closedBy ? ([["Closed by", CLOSED_BY_WORD[c.closedBy]]] as [string, string][]) : []),
     ["Signed with", c.viaSession ? "One-tap" : "Your passkey"],
   ];
 }
@@ -122,7 +124,7 @@ export function shareOf(t: CallTimeline, modeLabel: string, closeE8: bigint | nu
     won: pnl > 0n,
     entry: c.entryE8 === null ? null : priceText(c.entryE8, unitOf(c.symbol)),
     exit: exit === null || exit === undefined ? null : priceText(exit, unitOf(c.symbol)),
-    exitLabel: cashed ? "Cashed out at" : "Closed at",
+    exitLabel: c.closedBy ? `${CLOSED_BY_WORD[c.closedBy]} at` : cashed ? "Cashed out at" : "Closed at",
     mode: modeLabel === "Practice" ? "Practice · test dollars" : "Real · USDC",
     url,
   };

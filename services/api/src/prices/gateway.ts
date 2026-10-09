@@ -220,6 +220,12 @@ export class PythGateway {
     }
   }
 
+  /** A feed's newest price (e-8) and its publish time, for the exit watcher. */
+  latestE8(feedId: Hex): { priceE8: bigint; publishTime: number } | undefined {
+    const u = this.byId.get(feedId)?.ring.latest();
+    return u ? { priceE8: toE8(u.price, u.expo), publishTime: u.publishTime } : undefined;
+  }
+
   /** The latest tick per feed, as frames for a new subscriber. */
   snapshot(): string[] {
     const frames: string[] = [];

@@ -5,6 +5,7 @@ import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { GeoDb } from "./geo-db.ts";
 import type { PythGateway } from "./prices/gateway.ts";
 import type { AccountRelay } from "./relay/accounts.ts";
+import type { ExitWatcher } from "./relay/exits.ts";
 import type { MarketRelay } from "./relay/relay.ts";
 import type { StreamBus } from "./stream/bus.ts";
 
@@ -29,7 +30,7 @@ export interface ApiContext {
   gateway: PythGateway;
   bus: StreamBus;
   /** The relay per network where the markets are live (needs a sponsor key). */
-  markets: Map<ChainId, { relay: MarketRelay; accounts: AccountRelay }>;
+  markets: Map<ChainId, { relay: MarketRelay; accounts: AccountRelay; exits: ExitWatcher }>;
 }
 
 /** A network has markets once its reserve is deployed (S2 testnet; S9 mainnet). */

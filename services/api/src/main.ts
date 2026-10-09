@@ -20,7 +20,8 @@ import { GeoDb } from "./geo-db.ts";
 import { ARCHIVE_PENDING_MS } from "./prices/constants.ts";
 import { PythGateway } from "./prices/gateway.ts";
 import { AccountRelay } from "./relay/accounts.ts";
-import { openLanes } from "./relay/lanes.ts";
+import { ExitWatcher } from "./relay/exits.ts";
+import { type Lane, openLanes } from "./relay/lanes.ts";
 import { MarketRelay } from "./relay/relay.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerEarnRoutes } from "./routes/earn.ts";
@@ -64,6 +65,17 @@ for (const chain of chains.values()) {
   if (!chain.deployed || sponsors.length === 0) continue;
   const lanes = openLanes(chain.chainId, chain.read, chain.heads, db, sponsors);
   const relay = new MarketRelay({ chainId: chain.chainId, read: chain.read, lanes, gateway, bus, db, log });
+  // Exits fire from the first sponsor lane: `SPONSOR` holds the reserve's EXIT role for trails (D-292).
+  const exits = new ExitWatcher({
+    chainId: chain.chainId as ChainId,
+    read: chain.read,
+    lane: lanes[0] as Lane,
+    gateway,
+    fills: relay.fills,
+    db,
+    log,
+  });
+  exits.start();
   const accounts = new AccountRelay({
     chainId: chain.chainId as ChainId,
     read: chain.read,
@@ -72,7 +84,7 @@ for (const chain of chains.values()) {
     db,
     log,
   });
-  markets.set(chain.chainId, { relay, accounts });
+  markets.set(chain.chainId, { relay, accounts, exits });
   log.info({ chainId: chain.chainId, lanes: sponsors.map((s) => s.address) }, "relay ready");
 }
 if (sponsors.length === 0) log.warn("no SPONSOR_PK — calls, sessions and Practice dollars answer 503");
@@ -81,6 +93,7 @@ if (sponsors.length === 0) log.warn("no SPONSOR_PK — calls, sessions and Pract
 await db.listen(TICKET_CHANNEL, (payload) => {
   const notice = JSON.parse(payload) as TicketNotice;
   bus.emit(`user:${notice.owner}`, "ticket", notice);
+  markets.get(notice.chainId)?.exits.onTicket(notice);
   void markets
     .get(notice.chainId)
     ?.relay.onTicket(notice)
@@ -132,6 +145,7 @@ registerStreamRoute(app, {
 await listen(app, env.PORT, env.HOST, async () => {
   geo.stop();
   clearInterval(archiveTimer);
+  for (const m of markets.values()) m.exits.stop();
   gateway.stop();
   for (const chain of chains.values()) await chain.heads.stop();
   await db.end();

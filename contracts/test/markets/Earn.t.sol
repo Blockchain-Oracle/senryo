@@ -8,7 +8,7 @@ import {MarketsBase} from "./MarketsBase.t.sol";
 /// @notice Earn (D-287): the house as the first shares, supply and withdraw at settled hours, the shares' price.
 contract EarnTest is MarketsBase {
     uint64 internal constant POOL_ROLE = 3;
-    uint256 internal constant SUPPLY = 1_000e6;
+    uint256 internal constant SUPPLY = 1000e6;
     uint40 internal constant HOUR = 3600;
 
     PoolShares internal shares;

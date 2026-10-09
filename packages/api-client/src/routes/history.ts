@@ -38,6 +38,8 @@ export const callSchema = z.object({
   commitTx: txHashSchema,
   fillTx: txHashSchema.nullable(),
   settleTx: txHashSchema.nullable(),
+  /** The exit that sold its last shares (D-292), when one did. */
+  closedBy: z.enum(["take-profit", "stop-loss", "trail"]).nullable(),
 });
 
 /** One call as history reads it (`/v1/markets/calls` rows, the timeline's `call`). */

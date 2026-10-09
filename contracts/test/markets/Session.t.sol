@@ -10,34 +10,6 @@ contract SessionTest is MarketsBase {
     uint64 internal constant PER_CALL = 25e6;
     uint64 internal constant BUDGET = 60e6;
 
-    function grant(uint64 perCall, uint64 budget, uint40 expiry) internal {
-        (SessionGrant memory g, bytes memory sig) = signedGrant(perCall, budget, expiry);
-        reserve.grantSession(g, sig, noPermit());
-    }
-
-    function signedGrant(uint64 perCall, uint64 budget, uint40 expiry)
-        internal
-        returns (SessionGrant memory g, bytes memory sig)
-    {
-        g = SessionGrant({
-            owner: owner,
-            delegate: delegate,
-            perCallCap: perCall,
-            sessionCap: budget,
-            expiry: expiry,
-            epoch: reserve.epochOf(owner),
-            nonce: nextNonce++
-        });
-        bytes32 structHash = keccak256(
-            abi.encode(
-                reserve.GRANT_TYPEHASH(), g.owner, g.delegate, g.perCallCap, g.sessionCap, g.expiry, g.epoch, g.nonce
-            )
-        );
-        (uint8 v, bytes32 r, bytes32 s) =
-            vm.sign(OWNER_PK, keccak256(abi.encodePacked("\x19\x01", reserve.domainSeparator(), structHash)));
-        sig = abi.encodePacked(r, s, v);
-    }
-
     function openAs(uint256 pk, uint64 stake) internal returns (uint256) {
         Intent memory it = intent(ACTION_OPEN, UP, 0, stake, 0);
         return reserve.commit(it, sign(pk, it), noPermit());

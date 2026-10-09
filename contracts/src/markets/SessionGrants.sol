@@ -127,13 +127,9 @@ abstract contract SessionGrants is EIP712 {
         if (block.timestamp > it.deadline) revert SignatureExpired(it.deadline);
         uint32 epoch = epochOf[it.owner];
         if (it.epoch != epoch) revert WrongEpoch(epoch, it.epoch);
-        bytes32 digest = _hashTypedDataV4(_intentStruct(it));
-        if (!SignatureChecker.isValidSignatureNowCalldata(it.owner, digest, sig)) {
+        viaSession = _signedBy(it.owner, _hashTypedDataV4(_intentStruct(it)), sig, epoch);
+        if (viaSession) {
             Session storage s = _sessions[it.owner];
-            if (s.delegate == address(0) || !SignatureChecker.isValidSignatureNowCalldata(s.delegate, digest, sig)) {
-                revert SignatureInvalid();
-            }
-            if (s.epoch != epoch || block.timestamp >= s.expiry) revert SessionExpired(it.owner);
             if (it.recipient != it.owner) revert RecipientNotOwner(it.recipient);
             if (it.action == ACTION_OPEN) {
                 if (it.amount > s.perCallCap) revert OverCallCap(it.amount, s.perCallCap);
@@ -141,9 +137,24 @@ abstract contract SessionGrants is EIP712 {
                 if (wouldBe > s.sessionCap) revert OverSessionCap(wouldBe, s.sessionCap);
                 s.spent = wouldBe;
             }
-            viaSession = true;
         }
         _useNonce(it.owner, it.nonce);
+    }
+
+    /// @dev The owner signed `digest`, or their session delegate did while the session is live (returns true).
+    function _signedBy(address owner, bytes32 digest, bytes calldata sig, uint32 epoch)
+        internal
+        view
+        returns (bool viaSession)
+    {
+        if (SignatureChecker.isValidSignatureNowCalldata(owner, digest, sig)) return false;
+        Session storage s = _sessions[owner];
+        if (s.delegate == address(0) || !SignatureChecker.isValidSignatureNowCalldata(s.delegate, digest, sig)) {
+            revert SignatureInvalid();
+        }
+        // forge-lint: disable-next-line(block-timestamp)
+        if (s.epoch != epoch || block.timestamp >= s.expiry) revert SessionExpired(owner);
+        return true;
     }
 
     function _intentStruct(Intent calldata it) private pure returns (bytes32) {
@@ -166,7 +177,7 @@ abstract contract SessionGrants is EIP712 {
         );
     }
 
-    function _useNonce(address owner, uint256 nonce) private {
+    function _useNonce(address owner, uint256 nonce) internal {
         uint256 word = nonce >> NONCE_WORD_BITS;
         uint256 bit = 1 << (nonce & NONCE_BIT_MASK);
         uint256 bits = nonceBitmap[owner][word];

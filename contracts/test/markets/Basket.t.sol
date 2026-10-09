@@ -17,7 +17,7 @@ contract BasketTest is Test {
     bytes32 internal constant ETH = keccak256("ETH/USD");
     bytes32 internal constant SOL = keccak256("SOL/USD");
     int64 internal constant BTC_BASE = 80_000e8;
-    int64 internal constant ETH_BASE = 2_500e8;
+    int64 internal constant ETH_BASE = 2500e8;
     int64 internal constant SOL_BASE = 120e8;
     int32 internal constant EXPO = -8;
     uint16 internal constant GRACE = 5;
@@ -25,7 +25,7 @@ contract BasketTest is Test {
     uint32 internal constant ADMISSION = 300;
     uint40 internal constant T = 1_800_000_000 - (1_800_000_000 % 300);
     /// 1,000 points × 1e8.
-    int64 internal constant BASE_INDEX = 1_000e8;
+    int64 internal constant BASE_INDEX = 1000e8;
 
     MockPyth internal pyth;
     BasketPrintVerifier internal basket;
@@ -73,7 +73,7 @@ contract BasketTest is Test {
         // BTC +10 % at 40 % weight: +4 % → 1,040 points.
         bytes memory proof = proofAt(def, [int64(88_000e8), ETH_BASE, SOL_BASE], 1);
         (int64 price,,) = basket.verifyPrint{value: 3}(proof, basket.basketId(def), T);
-        assertEq(price, 1_040e8);
+        assertEq(price, 1040e8);
     }
 
     function test_aMissingMemberRefusesTheSlot() public {
@@ -125,6 +125,6 @@ contract BasketTest is Test {
         windows.registerSeries(bytes32("MAJORS"), 300, 0, v0);
         bytes memory proof = proofAt(def, [int64(88_000e8), ETH_BASE, SOL_BASE], 1);
         windows.recordPrint{value: 3}(address(basket), id, T, proof);
-        assertEq(windows.printOf(address(basket), id, T).priceE8, 1_040e8);
+        assertEq(windows.printOf(address(basket), id, T).priceE8, 1040e8);
     }
 }

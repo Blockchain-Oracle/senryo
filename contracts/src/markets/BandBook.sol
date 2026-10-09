@@ -14,11 +14,11 @@ import {BandMath} from "./BandMath.sol";
 import {BandPool} from "./BandPool.sol";
 import {IPrintVerifier} from "./interfaces/IPrintVerifier.sol";
 import {IWindows} from "./interfaces/IWindows.sol";
-import {SessionGrants} from "./SessionGrants.sol";
+import {ExitOrders} from "./ExitOrders.sol";
 import "./MarketTypes.sol";
 
-/// @title BandBook — calls from signature to fill, and cash-outs.
-abstract contract BandBook is BandPool, SessionGrants {
+/// @title BandBook — calls from signature to fill, cash-outs and the exits that cash out on their own.
+abstract contract BandBook is BandPool, ExitOrders {
     using SafeERC20 for IERC20;
 
     IWindows public immutable windows;
@@ -58,13 +58,13 @@ abstract contract BandBook is BandPool, SessionGrants {
     // ------------------------------------------------------------------------------------------------ commit
 
     /// @notice Escrows a signed open (stake pulled now) or registers a signed close; either fills at the unique print
-    ///         of the next second. `permit` (optional) sets the finite allowance in the same transaction (D-266).
+    ///         of the next second. `permit` (optional) sets the finite allowance in the same transaction (D-266). An
+    ///         open pins the pricing config it was quoted on; a close doesn't (its minimum proceeds guard it, D-292).
     function commit(Intent calldata it, bytes calldata sig, Permit calldata permit)
         external
         nonReentrant
         returns (uint256 ticketId)
     {
-        if (it.configVersion != configVersion) revert WrongConfig(configVersion, it.configVersion);
         if (it.action == ACTION_OPEN) ticketId = _commitOpen(it, sig, permit);
         else if (it.action == ACTION_CLOSE) ticketId = _commitClose(it, sig);
         else revert BadAction(it.action);
@@ -73,6 +73,7 @@ abstract contract BandBook is BandPool, SessionGrants {
 
     function _commitOpen(Intent calldata it, bytes calldata sig, Permit calldata permit) private returns (uint256 id) {
         if (paused) revert IsPaused();
+        if (it.configVersion != configVersion) revert WrongConfig(configVersion, it.configVersion);
         Params storage p = params;
         if (it.amount < p.minStake || it.amount > p.maxStake) revert BadStake(it.amount, p.minStake, p.maxStake);
         if (it.recipient == address(0)) revert ZeroAddress();
@@ -116,21 +117,70 @@ abstract contract BandBook is BandPool, SessionGrants {
         id = it.ticketId;
         Ticket storage t = _ticket(id);
         if (t.owner != it.owner) revert NotTicketOwner(id, it.owner);
-        if (t.status != TICKET_OPEN) revert TicketNotOpen(id, t.status);
-        if (t.closing != 0) revert ClosePending(id);
+        // The owner's own cash-out replaces a fired exit's pending close (one fired by anyone never blocks it).
+        if (_exits[id].firing != EXIT_NONE) {
+            t.closing = 0;
+            _exits[id].firing = EXIT_NONE;
+        }
+        _checkClosable(id, t);
         if (it.amount == 0 || it.amount > t.payout) revert BadShares(it.amount, t.payout);
         if (it.recipient != t.recipient) revert RecipientMismatch(it.recipient, t.recipient);
+        bool viaSession = _authorize(it, sig);
+        uint40 target = _pendClose(t, it.amount, it.limit);
+        emit CloseCommitted(id, it.amount, it.limit, target, viaSession);
+    }
+
+    /// @dev Filled, no close pending, the window trading and the position held long enough.
+    function _checkClosable(uint256 id, Ticket storage t) private view {
+        if (t.status != TICKET_OPEN) revert TicketNotOpen(id, t.status);
+        if (t.closing != 0) revert ClosePending(id);
         _tradingWindow(t.windowId);
         uint40 canCloseAt = t.filledAt + MIN_HOLD_SEC;
         // forge-lint: disable-next-line(block-timestamp)
         if (block.timestamp < canCloseAt) revert HeldTooShort(id, canCloseAt);
-        bool viaSession = _authorize(it, sig);
-        uint40 target = uint40(block.timestamp) + FILL_DELAY_SEC;
-        t.closing = it.amount;
-        t.limit = it.limit;
+    }
+
+    function _pendClose(Ticket storage t, uint64 shares, uint64 minProceeds) private returns (uint40 target) {
+        target = uint40(block.timestamp) + FILL_DELAY_SEC;
+        t.closing = shares;
+        t.limit = minProceeds;
         t.target = target;
-        t.configVersion = it.configVersion;
-        emit CloseCommitted(id, it.amount, it.limit, target, viaSession);
+    }
+
+    // ------------------------------------------------------------------------------------------------ exits (D-292)
+
+    /// @notice Sets, replaces or (every price 0) clears a ticket's exit, from the owner's or their session's signature.
+    function setExit(ExitOrder calldata o, bytes calldata sig) external nonReentrant {
+        Ticket storage t = _ticket(o.ticketId);
+        if (t.owner != o.owner) revert NotTicketOwner(o.ticketId, o.owner);
+        if (t.status != TICKET_COMMITTED && t.status != TICKET_OPEN) revert TicketNotOpen(o.ticketId, t.status);
+        if (t.closing != 0) revert ClosePending(o.ticketId);
+        _takeExit(o, sig);
+    }
+
+    /// @notice Sells every remaining share of a ticket with a take-profit or stop-loss at the next print. It fills only
+    ///         if that print's bid meets one of them, so anyone may fire it; a miss leaves the exit standing.
+    function fireExit(uint256 id) external nonReentrant {
+        Exit storage e = _exits[id];
+        if (e.takeProfitE6 == 0 && e.stopLossE6 == 0) revert NoExit(id);
+        _fire(id, e, EXIT_PRICE);
+    }
+
+    /// @notice The trail: the exit keeper's ratcheting stop decides when (restricted); the fill still needs the floor.
+    function fireTrail(uint256 id) external restricted nonReentrant {
+        Exit storage e = _exits[id];
+        if (e.trailE6 == 0) revert NoExit(id);
+        _fire(id, e, EXIT_TRAIL);
+    }
+
+    function _fire(uint256 id, Exit storage e, uint8 kind) private {
+        Ticket storage t = _ticket(id);
+        if (e.epoch != epochOf[t.owner]) revert ExitRevoked(id);
+        _checkClosable(id, t);
+        e.firing = kind;
+        uint40 target = _pendClose(t, t.payout, 0);
+        emit CloseCommitted(id, t.payout, 0, target, false);
+        emit ExitFired(id, kind, target, msg.sender);
     }
 
     /// @dev Open, not settled, before the lockout (D-261: opens and closes stop at expiry − 20 s).
@@ -225,7 +275,8 @@ abstract contract BandBook is BandPool, SessionGrants {
     }
 
     /// @dev Sells `closing` shares at the bid (probability − half-spread) of the close print; the pool keeps the rest
-    ///      of their escrow. The basis leaving is ceiled, so the remaining basis never exceeds the remaining shares.
+    ///      of their escrow. The basis leaving is ceiled, so the remaining basis never exceeds the remaining shares. A
+    ///      fired exit fills only at a bid that meets it, and a miss leaves it standing.
     function _fillClose(uint256 id, Ticket storage t, Print memory print) private {
         (Window memory w, uint8 reason) = _fillable(t);
         if (reason != 0) return _refuseClose(id, t, reason);
@@ -235,7 +286,12 @@ abstract contract BandBook is BandPool, SessionGrants {
         uint256 bidE6 = probE6 - p.halfSpreadE6;
         uint64 shares = t.closing;
         uint256 proceeds = BandMath.proceedsFor(shares, bidE6);
-        if (proceeds < t.limit) return _refuseClose(id, t, REFUSE_SLIPPAGE);
+        if (_exits[id].firing != EXIT_NONE) {
+            if (!_exitMet(_exits[id], bidE6)) return _refuseClose(id, t, REFUSE_EXIT);
+            _exits[id].firing = EXIT_NONE;
+        } else if (proceeds < t.limit) {
+            return _refuseClose(id, t, REFUSE_SLIPPAGE);
+        }
         uint256 basisOut = BandMath.basisPart(t.stake, shares, t.payout);
 
         _releaseEscrow(basisOut, shares - basisOut, w.expiry);
@@ -247,7 +303,10 @@ abstract contract BandBook is BandPool, SessionGrants {
         t.stake -= SafeCast.toUint64(basisOut);
         t.closing = 0;
         t.limit = 0;
-        if (t.payout == 0) t.status = TICKET_CLOSED;
+        if (t.payout == 0) {
+            t.status = TICKET_CLOSED;
+            delete _exits[id];
+        }
         emit Closed(
             id,
             shares,
@@ -260,14 +319,14 @@ abstract contract BandBook is BandPool, SessionGrants {
     }
 
     /// @dev A fill needs the window still running (no fill after expiry: nobody may wait for the close and then pick
-    ///      whether to fill) and the pricing config the caller signed.
+    ///      whether to fill), and an open the pricing config the caller signed.
     function _fillable(Ticket storage t) private view returns (Window memory w, uint8 reason) {
         w = windows.windowOf(t.windowId);
         // forge-lint: disable-next-line(block-timestamp)
         if (windowSettled[t.windowId] || w.state != STATE_OPEN || block.timestamp >= w.expiry) {
             return (w, REFUSE_WINDOW);
         }
-        if (t.configVersion != configVersion) return (w, REFUSE_CONFIG);
+        if (t.status == TICKET_COMMITTED && t.configVersion != configVersion) return (w, REFUSE_CONFIG);
     }
 
     function _probAt(Window memory w, Ticket storage t, int64 spotE8) private view returns (uint256) {
@@ -287,6 +346,7 @@ abstract contract BandBook is BandPool, SessionGrants {
     function _refuseClose(uint256 id, Ticket storage t, uint8 reason) internal {
         t.closing = 0;
         t.limit = 0;
+        _exits[id].firing = EXIT_NONE;
         emit CloseRefused(id, reason);
     }
 

@@ -42,6 +42,16 @@ function timeline(
   });
 }
 
+const EXIT_PRICE = 1;
+const EXIT_TRAIL = 2;
+
+/** Which exit sold the shares at `bidE6` (the bid that met take-profit, else the stop), or undefined for the owner. */
+function closedByOf(t: Ticket, bidE6: number): string | undefined {
+  if (t.exitFiring === EXIT_TRAIL) return "trail";
+  if (t.exitFiring !== EXIT_PRICE) return undefined;
+  return t.exitTakeProfitE6 > 0 && bidE6 >= t.exitTakeProfitE6 ? "take-profit" : "stop-loss";
+}
+
 /** A ticket that finished (fully cashed out or settled) realises its result on the caller's record. */
 async function finish(context: Ctx, chainId: number, t: Ticket, outcome: Outcome, at: number) {
   const { pnl } = realised(t);
@@ -84,6 +94,12 @@ indexer.onEvent({ contract: "BandReserve", event: "Committed" }, async ({ event,
     refuseReason: undefined,
     settledAt: undefined,
     claimTx: undefined,
+    exitTakeProfitE6: 0,
+    exitStopLossE6: 0,
+    exitFloorE6: 0,
+    exitTrailE6: 0,
+    exitFiring: undefined,
+    closedBy: undefined,
   };
   context.Ticket.set(t);
   timeline(
@@ -172,7 +188,8 @@ indexer.onEvent({ contract: "BandReserve", event: "Refused" }, async ({ event, c
 indexer.onEvent({ contract: "BandReserve", event: "CloseCommitted" }, async ({ event, context }) => {
   const t = await context.Ticket.get(key(event.chainId, event.params.ticketId));
   if (!t) return;
-  context.Ticket.set({ ...t, status: "closing", target: Number(event.params.target) });
+  // An exit's own close is followed by `ExitFired` in the same transaction; the owner's own close clears it.
+  context.Ticket.set({ ...t, status: "closing", target: Number(event.params.target), exitFiring: undefined });
   timeline(
     context,
     event.chainId,
@@ -190,6 +207,7 @@ indexer.onEvent({ contract: "BandReserve", event: "Closed" }, async ({ event, co
   const t = await context.Ticket.get(key(event.chainId, p.ticketId));
   if (!t) return;
   const payout = t.payout - p.shares;
+  const by = closedByOf(t, Number(p.bidE6));
   const closed: Ticket = {
     ...t,
     status: payout === 0n ? "closed" : "open",
@@ -197,6 +215,8 @@ indexer.onEvent({ contract: "BandReserve", event: "Closed" }, async ({ event, co
     stake: t.stake - p.basisOut,
     closedShares: t.closedShares + p.shares,
     proceeds: t.proceeds + p.proceeds,
+    exitFiring: undefined,
+    closedBy: by,
   };
   context.Ticket.set(closed);
   timeline(
@@ -222,7 +242,7 @@ indexer.onEvent({ contract: "BandReserve", event: "Closed" }, async ({ event, co
 indexer.onEvent({ contract: "BandReserve", event: "CloseRefused" }, async ({ event, context }) => {
   const t = await context.Ticket.get(key(event.chainId, event.params.ticketId));
   if (!t) return;
-  context.Ticket.set({ ...t, status: "open" });
+  context.Ticket.set({ ...t, status: "open", exitFiring: undefined });
   timeline(
     context,
     event.chainId,
@@ -269,4 +289,45 @@ indexer.onEvent({ contract: "BandReserve", event: "Claimed" }, async ({ event, c
     const m = (await context.Market.get(key(event.chainId, w.seriesId))) ?? newMarket(event.chainId, w.seriesId);
     context.Market.set({ ...m, paidOut: m.paidOut + p.amount });
   }
+});
+
+indexer.onEvent({ contract: "BandReserve", event: "ExitSet" }, async ({ event, context }) => {
+  const p = event.params;
+  const t = await context.Ticket.get(key(event.chainId, p.ticketId));
+  if (!t) return;
+  const set: Ticket = {
+    ...t,
+    exitTakeProfitE6: Number(p.takeProfitE6),
+    exitStopLossE6: Number(p.stopLossE6),
+    exitFloorE6: Number(p.floorE6),
+    exitTrailE6: Number(p.trailE6),
+  };
+  context.Ticket.set(set);
+  const cleared = set.exitTakeProfitE6 === 0 && set.exitStopLossE6 === 0 && set.exitTrailE6 === 0;
+  timeline(
+    context,
+    event.chainId,
+    set,
+    cleared ? "exit removed" : "exit set",
+    0n,
+    event.block.timestamp,
+    event.transaction.hash,
+    event.logIndex,
+  );
+});
+
+indexer.onEvent({ contract: "BandReserve", event: "ExitFired" }, async ({ event, context }) => {
+  const t = await context.Ticket.get(key(event.chainId, event.params.ticketId));
+  if (!t) return;
+  context.Ticket.set({ ...t, exitFiring: Number(event.params.kind) });
+  timeline(
+    context,
+    event.chainId,
+    t,
+    Number(event.params.kind) === EXIT_TRAIL ? "trail fired" : "exit fired",
+    0n,
+    event.block.timestamp,
+    event.transaction.hash,
+    event.logIndex,
+  );
 });

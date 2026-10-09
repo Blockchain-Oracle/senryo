@@ -127,6 +127,7 @@ export const IdCard = symbol({ ios: "person.text.rectangle", android: "badge" },
 export const Info = symbol({ ios: "info.circle", android: "info" }, "Info");
 export const KeyRound = symbol({ ios: "key", android: "key" }, "KeyRound");
 export const Lock = symbol({ ios: "lock", iosFilled: "lock.fill", android: "lock" }, "Lock");
+export const Minus = symbol({ ios: "minus", android: "remove" }, "Minus");
 export const Pin = symbol({ ios: "pin", iosFilled: "pin.fill", android: "push_pin" }, "Pin");
 export const Plus = symbol({ ios: "plus", android: "add" }, "Plus");
 export const QrCode = symbol({ ios: "qrcode", android: "qr_code" }, "QrCode");

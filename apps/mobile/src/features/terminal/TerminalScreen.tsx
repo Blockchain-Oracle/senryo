@@ -4,8 +4,9 @@
  * renders on events and once a second for the countdown. The call flow — the panel's states, open and cash out with
  * their guards, following a call to its fill — is `@senryo/calls` `useCallFlow`, the same on the web.
  */
-import { type CallMode, isCallMode } from "@senryo/calls";
-import { useCallFlow, useMarketLine } from "@senryo/calls/react";
+import { type CallMode, exitLine, isCallMode } from "@senryo/calls";
+import { useCallFlow, useExitActions, useMarketLine } from "@senryo/calls/react";
+import { type ExitPrices, hasExit } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
@@ -29,6 +30,7 @@ import { CashOutSheet } from "./CashOutSheet";
 import { CrowdLine } from "./CrowdLine";
 import type { Head } from "./chart/draw";
 import { LiveChart } from "./chart/LiveChart";
+import { ExitSheet } from "./ExitSheet";
 import { MarketsSheet } from "./MarketsSheet";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { StakeSheet } from "./StakeSheet";
@@ -66,7 +68,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const session = useMarketLine(t.symbol);
   const account = useAccount();
   const [picking, setPicking] = useState(false);
-  const [sheet, setSheet] = useState<"stake" | "part" | null>(null);
+  const [sheet, setSheet] = useState<"stake" | "part" | "exit" | null>(null);
+  const exits = useExitActions(account);
   const offsetMs = useSharedValue(live.clock.offset);
   const flow = useCallFlow({
     view: t,
@@ -86,6 +89,26 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       ...(onFilled ? { onFilled } : {}),
     },
   });
+
+  const position = t.position;
+  const closeQuote = q.latest.current.close;
+  const setExit = async (prices: ExitPrices) => {
+    if (!position) return;
+    try {
+      const r = await exits.set(position.ticketId, prices);
+      if (r.kind === "cancelled") return;
+      setSheet(null);
+      fire("confirm");
+      notify(
+        hasExit(prices)
+          ? { title: "Exit set", description: "It runs with the app closed." }
+          : { title: "Exit removed", description: "Nothing sells on its own now." },
+      );
+    } catch (error) {
+      fire("fail", { sound: "error" });
+      notify({ title: "Couldn't set the exit", description: (error as Error).message, tone: "warning" });
+    }
+  };
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -129,6 +152,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           onClose={() => void flow.close()}
           onCustom={() => setSheet("stake")}
           onClosePart={() => setSheet("part")}
+          exitLine={position ? exitLine(position.exit, position.payout) : null}
+          onExit={() => setSheet("exit")}
         />
       </View>
       {sheet === "stake" ? (
@@ -146,6 +171,17 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           shares={t.position.payout}
           bidE6={q.latest.current.close.bidE6}
           onPick={(pct) => void flow.close(pct)}
+          onClose={() => setSheet(null)}
+        />
+      ) : null}
+      {sheet === "exit" && position && closeQuote && !closeQuote.refusal && exits.bounds ? (
+        <ExitSheet
+          shares={position.payout}
+          nowBidE6={Number(closeQuote.bidE6)}
+          exit={position.exit}
+          bounds={exits.bounds}
+          pending={exits.pending}
+          onSet={(prices) => void setExit(prices)}
           onClose={() => setSheet(null)}
         />
       ) : null}

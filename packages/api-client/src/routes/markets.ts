@@ -247,6 +247,21 @@ export const withdrawRoute = defineRoute({
 
 export const TICKET_STATES = ["committed", "open", "closing", "closed", "settled", "refunded"] as const;
 
+/** A share's bid × 1e6 (0 = unset; a share never bids $1). */
+const SHARE_E6_MAX = 999_999;
+export const shareE6Schema = z.int().min(0).max(SHARE_E6_MAX);
+
+/** A ticket's standing exit (D-292); `trailStopE6` is the trail's stop now (its best bid less the trail). */
+export const exitStateSchema = z.object({
+  takeProfitE6: shareE6Schema,
+  stopLossE6: shareE6Schema,
+  floorE6: shareE6Schema,
+  trailE6: shareE6Schema,
+  trailStopE6: shareE6Schema.nullable(),
+  /** 1 take-profit or stop-loss, 2 the trail: what the watcher last fired. */
+  firedKind: z.int().nullable(),
+});
+
 export const ticketSchema = z.object({
   ticketId: uintCodec,
   windowId: bytes32Schema,
@@ -261,6 +276,7 @@ export const ticketSchema = z.object({
   /** What it paid or would pay out (winnings, refund or proceeds), once known. */
   result: uintCodec.nullable(),
   outcome: z.enum(["win", "lose", "refund"]).nullable(),
+  exit: exitStateSchema.nullable(),
   updatedAt: isoTimeSchema,
 });
 

@@ -39,6 +39,9 @@ export const GAS_LIMITS = {
   earnRequest: 400_000n,
   earnRoll: 1_500_000n,
   earnClaim: 200_000n,
+  /** Exits (D-292): a relayed `setExit` (one slot and its signature), and firing one (`fireExit` / `fireTrail`). */
+  exitSet: 200_000n,
+  exitFire: 250_000n,
 };
 export type GasAction = keyof typeof GAS_LIMITS;
 

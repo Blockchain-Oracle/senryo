@@ -56,6 +56,21 @@ export const REVOKE_TYPES = {
   ],
 } as const;
 
+/** A ticket's standing exit (D-292): take-profit, stop-loss, floor and trail as a share's bid × 1e6 (0 = unset). */
+export const EXIT_ORDER_TYPES = {
+  ExitOrder: [
+    { name: "owner", type: "address" },
+    { name: "ticketId", type: "uint256" },
+    { name: "takeProfitE6", type: "uint32" },
+    { name: "stopLossE6", type: "uint32" },
+    { name: "floorE6", type: "uint32" },
+    { name: "trailE6", type: "uint32" },
+    { name: "deadline", type: "uint64" },
+    { name: "nonce", type: "uint256" },
+    { name: "epoch", type: "uint32" },
+  ],
+} as const;
+
 const NONCE_BYTES = 32;
 
 export { ACTION_CLOSE, ACTION_OPEN } from "@senryo/config";
@@ -84,6 +99,24 @@ export interface MarketSessionGrant {
   epoch: number;
   nonce: bigint;
 }
+
+export interface MarketExitOrder {
+  owner: Address;
+  ticketId: bigint;
+  takeProfitE6: number;
+  stopLossE6: number;
+  floorE6: number;
+  trailE6: number;
+  deadline: bigint;
+  nonce: bigint;
+  epoch: number;
+}
+
+export const exitOrderRequest = (chainId: ChainId, message: MarketExitOrder) =>
+  ({ domain: marketsDomain(chainId), types: EXIT_ORDER_TYPES, primaryType: "ExitOrder", message }) as const;
+
+export const exitOrderDigest = (chainId: ChainId, order: MarketExitOrder): Hex =>
+  hashTypedData(exitOrderRequest(chainId, order));
 
 /** The digest the owner or session delegate signs; also the relay's idempotency key. */
 export function intentDigest(chainId: ChainId, intent: MarketIntent): Hex {

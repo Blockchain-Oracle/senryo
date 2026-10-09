@@ -60,8 +60,12 @@ leaderboard, a public profile and the ticker live on both apps · a referral pai
       `opens` job, push; the closed panel's button on both apps); the halt watch from S7.3
 
 ### Contracts (markets v2)
-- [ ] S8.4 Exits in `BandReserve` (D-292) with tests; keeper `exits` job (TP/SL/trail on live prices); exits UI on the
+- [x] S8.4 Exits in `BandReserve` (D-292) with tests; keeper `exits` job (TP/SL/trail on live prices); exits UI on the
       terminal and receipts of both apps
+      _Done: `ExitOrders` + `BandBook` (`setExit`, `fireExit`, `fireTrail`; closes no longer pin the config), 8 Foundry
+      tests (69 in all); the watcher is the api's (`relay/exits.ts`, live prices in memory, sponsor lane holds `EXIT`),
+      `market_exits`, `/v1/markets/exits`, exits on tickets; the indexer's `ExitSet`/`ExitFired` and `closedBy`; the
+      exit modal/sheet on both apps (21st Quantity Stepper #29940) and "Closed by" on receipts. On chain with S8.9._
 - [ ] S8.5 `ParlayBook` (D-293) with tests; relay, keeper settle of leg windows; Parlay builder and slips on both apps
 - [ ] S8.6 `DuelArena` (D-294) with tests; matchmaking, deck, relay, keeper, indexer Elo; Duel on both apps
 - [ ] S8.7 Events (D-296): committee verifier + `EventBook` with tests; the first events (Practice, Senryo-run

@@ -17,3 +17,12 @@ export const CHAIN_CLOCK_SLACK_MS = 300;
 /** A simulation refused only because the chain's clock trails the print is retried this often, this far apart. */
 export const FUTURE_PRINT_RETRIES = 4;
 export const FUTURE_PRINT_RETRY_MS = 300;
+/** Exits (D-292): how often the watcher prices every armed exit, and reloads them from the ticket book. */
+export const EXIT_TICK_MS = 1_000;
+export const EXIT_RELOAD_MS = 2_000;
+/** The chain is re-read for exits set by anyone (not only through this relay) this often. */
+export const EXIT_CHAIN_SYNC_MS = 30_000;
+/** After a fire, the exit waits this long before it may fire again (a miss leaves it standing). */
+export const EXIT_RETRY_MS = 3_000;
+/** A price older than this is not acted on. */
+export const EXIT_PRICE_STALE_SEC = 5;

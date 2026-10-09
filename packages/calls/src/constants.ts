@@ -18,6 +18,24 @@ export const USD = 1_000_000n;
 export const PROMPTS = {
   call: (verb: string, symbol: string) => `${verb} ${symbol}`,
   close: "Cash out",
+  exit: "Set the exit",
+  clearExit: "Remove the exit",
   oneTap: "Turn on one-tap calls",
   revoke: "Turn off one-tap calls",
 } as const;
+
+/** Exits (S8.4, D-292): one cent a share as a bid × 1e6; the trail's distances offered and its longest (cents a share). */
+export const CENT_E6 = 10_000;
+export const TRAIL_CENTS = [5, 10, 20] as const;
+export const TRAIL_MAX_CENTS = 50;
+/** Take-profit and stop presets as multiples of today's value (bps). */
+export const TAKE_PROFIT_STEPS_BPS = [12_500n, 15_000n, 20_000n] as const;
+export const STOP_STEPS_BPS = [7_500n, 5_000n, 2_500n] as const;
+/** The exit stepper's step (cents) for a value this size: 5¢ under $50, 25¢ under $250, else $1. */
+export const EXIT_STEP_CENTS: readonly (readonly [underCents: number, stepCents: number])[] = [
+  [5_000, 5],
+  [25_000, 25],
+];
+export const EXIT_DOLLAR_STEP_CENTS = 100;
+/** "Never below" starts at half of today's value (bps). */
+export const FLOOR_START_BPS = 5_000n;

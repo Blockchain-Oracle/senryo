@@ -35,7 +35,12 @@ contract DeployMarkets is MarketsBase {
         vm.startBroadcast();
         address admin = msg.sender;
         AccessManager manager = new AccessManager(admin);
-        _record("AccessManager", address(manager), abi.encodePacked(type(AccessManager).creationCode, abi.encode(admin)), false);
+        _record(
+            "AccessManager",
+            address(manager),
+            abi.encodePacked(type(AccessManager).creationCode, abi.encode(admin)),
+            false
+        );
 
         uint8[] memory noIds = new uint8[](0);
         uint256[CALENDAR_WORD_COUNT][] memory noWeeks = new uint256[CALENDAR_WORD_COUNT][](0);
@@ -59,6 +64,7 @@ contract DeployMarkets is MarketsBase {
         IERC20 collateral = _collateral(manager, sponsor);
         BandReserve reserve = _deployReserve(manager, collateral, windows);
         _calendarRole(manager, calendar, keeper);
+        _exitRole(manager, reserve, sponsor);
         _configureCalendars(calendar);
         _listSeries(windows, reserve);
         _seedPool(reserve, collateral, admin);
@@ -74,7 +80,9 @@ contract DeployMarkets is MarketsBase {
         address usdc = _json.readAddress(".collateral");
         if (usdc != address(0)) return IERC20(usdc);
         TestUSD usd = new TestUSD(address(manager));
-        _record("TestUSD", address(usd), abi.encodePacked(type(TestUSD).creationCode, abi.encode(address(manager))), true);
+        _record(
+            "TestUSD", address(usd), abi.encodePacked(type(TestUSD).creationCode, abi.encode(address(manager))), true
+        );
         bytes4[] memory mint = new bytes4[](1);
         mint[0] = TestUSD.mint.selector;
         manager.labelRole(MINTER_ROLE, "MINTER");
@@ -109,7 +117,8 @@ contract DeployMarkets is MarketsBase {
             "BandReserve",
             address(reserve),
             abi.encodePacked(
-                type(BandReserve).creationCode, abi.encode(address(manager), address(collateral), address(windows), p, caps)
+                type(BandReserve).creationCode,
+                abi.encode(address(manager), address(collateral), address(windows), p, caps)
             ),
             true
         );

@@ -5,6 +5,7 @@ import {
   marketAccountRoute,
   practiceGrantRoute,
   revokeSessionRoute,
+  setExitRoute,
   streamTicketRoute,
   submitIntentRoute,
   ticketsRoute,
@@ -15,7 +16,16 @@ import { addressOf, dollarTokenOf, type Hex, seriesIdOf, seriesOf } from "@senry
 import { bandMenu, type ChainId, feedIdOf, marketsOn, POOL_TERMS, sigmaE8Of } from "@senryo/config";
 import { bandReserveAbi, testUSDAbi } from "@senryo/contracts/abis";
 import type { HttpServer } from "@senryo/service-common";
-import { HTTP_STATUS, HttpError, nowSec, parseRoute, sendRoute, ticketsOf } from "@senryo/service-common";
+import {
+  type ExitRow,
+  exitsOf,
+  HTTP_STATUS,
+  HttpError,
+  nowSec,
+  parseRoute,
+  sendRoute,
+  ticketsOf,
+} from "@senryo/service-common";
 import { type ApiContext, chainOf } from "../context.ts";
 import { TICKETS_PAGE } from "../relay/constants.ts";
 import { mintStreamTicket } from "../stream/ticket.ts";
@@ -48,6 +58,19 @@ async function configVersion(ctx: ApiContext, chainId: ChainId): Promise<number>
   );
   configCache.set(chainId, { at: Date.now(), version });
   return version;
+}
+
+/** An exit as the apps show it: the trail's stop is its best bid less the trail, never under the floor. */
+function exitView(e: ExitRow) {
+  const trailStopE6 = e.trail_e6 > 0 && e.trail_peak_e6 > 0 ? Math.max(e.trail_peak_e6 - e.trail_e6, e.floor_e6) : null;
+  return {
+    takeProfitE6: e.take_profit_e6,
+    stopLossE6: e.stop_loss_e6,
+    floorE6: e.floor_e6,
+    trailE6: e.trail_e6,
+    trailStopE6,
+    firedKind: e.fired_kind,
+  };
 }
 
 function marketsOf(ctx: ApiContext, chainId: ChainId) {
@@ -136,6 +159,12 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
     return sendRoute(reply, revokeSessionRoute, result);
   });
 
+  app.post(setExitRoute.path, async (request, reply) => {
+    const { body } = parseRoute(setExitRoute, request);
+    const result = await marketsOf(ctx, body.chainId).accounts.setExit(body.order, body.signature);
+    return sendRoute(reply, setExitRoute, result);
+  });
+
   app.post(
     withdrawRoute.path,
     { config: { rateLimit: { max: WITHDRAW_PER_MINUTE, timeWindow: MINUTE_MS } } },
@@ -149,6 +178,15 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
   app.get(ticketsRoute.path, async (request, reply) => {
     const { query } = parseRoute(ticketsRoute, request);
     const rows = await ticketsOf(ctx.db, query.chainId, query.owner, TICKETS_PAGE);
+    const exits = new Map(
+      (
+        await exitsOf(
+          ctx.db,
+          query.chainId,
+          rows.map((r) => r.ticket_id),
+        )
+      ).map((e) => [e.ticket_id, exitView(e)]),
+    );
     return sendRoute(reply, ticketsRoute, {
       tickets: rows.flatMap((r) => {
         const series = seriesOf(query.chainId, r.series_id as Hex);
@@ -167,6 +205,7 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
             entryE8: r.entry_e8,
             result: r.result,
             outcome: r.outcome as "win" | null,
+            exit: exits.get(r.ticket_id) ?? null,
             updatedAt: r.updated_at.toISOString(),
           },
         ];

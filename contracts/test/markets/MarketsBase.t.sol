@@ -142,6 +142,36 @@ abstract contract MarketsBase is Test {
 
     function noPermit() internal pure returns (Permit memory p) {}
 
+    // ------------------------------------------------------------------------------------------------ sessions
+
+    function grant(uint64 perCall, uint64 budget, uint40 expiry) internal {
+        (SessionGrant memory g, bytes memory sig) = signedGrant(perCall, budget, expiry);
+        reserve.grantSession(g, sig, noPermit());
+    }
+
+    function signedGrant(uint64 perCall, uint64 budget, uint40 expiry)
+        internal
+        returns (SessionGrant memory g, bytes memory sig)
+    {
+        g = SessionGrant({
+            owner: owner,
+            delegate: delegate,
+            perCallCap: perCall,
+            sessionCap: budget,
+            expiry: expiry,
+            epoch: reserve.epochOf(owner),
+            nonce: nextNonce++
+        });
+        bytes32 structHash = keccak256(
+            abi.encode(
+                reserve.GRANT_TYPEHASH(), g.owner, g.delegate, g.perCallCap, g.sessionCap, g.expiry, g.epoch, g.nonce
+            )
+        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(OWNER_PK, keccak256(abi.encodePacked("\x19\x01", reserve.domainSeparator(), structHash)));
+        sig = abi.encodePacked(r, s, v);
+    }
+
     function open(uint8 band, uint64 stake) internal returns (uint256 id) {
         Intent memory it = intent(ACTION_OPEN, band, 0, stake, 0);
         id = reserve.commit(it, sign(OWNER_PK, it), noPermit());

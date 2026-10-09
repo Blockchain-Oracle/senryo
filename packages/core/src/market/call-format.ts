@@ -69,6 +69,9 @@ export function stepTitle(kind: string, amount: bigint, priceE8: bigint | null):
       return `Cashed out ${usd(amount)}${at}`;
     case "close refused":
       return "Cash-out refused · still live";
+    case "exit fired":
+    case "trail fired":
+      return `${kind === "trail fired" ? "Trail" : "Exit"} reached · cashing out`;
     case "settled: win":
       return `Won · ${usd(amount)} paid`;
     case "settled: refund":

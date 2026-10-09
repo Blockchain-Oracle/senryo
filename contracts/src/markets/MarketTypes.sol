@@ -86,6 +86,12 @@ uint8 constant REFUSE_CAPACITY = 3; // pool liquidity, exposure or per-expiry ca
 uint8 constant REFUSE_CONFIG = 4; // pricing config changed since the commit
 uint8 constant REFUSE_WINDOW = 5; // the window settled first
 uint8 constant REFUSE_NO_PRINT = 6; // no print inside the fill window
+uint8 constant REFUSE_EXIT = 7; // the fill print's bid missed the exit's prices (the exit stands)
+
+/// @dev What a pending close was fired for (D-292).
+uint8 constant EXIT_NONE = 0;
+uint8 constant EXIT_PRICE = 1; // take-profit or stop-loss: their prices decide at the fill print, so anyone may fire
+uint8 constant EXIT_TRAIL = 2; // the trail: the exit keeper's ratcheting stop decides when, above the owner's floor
 
 // ---------------------------------------------------------------------------------------------------------------
 // Bounds the admin can never exceed (D-262, D-264)
@@ -193,6 +199,31 @@ struct Intent {
     uint64 limit;
     address recipient;
     uint32 configVersion;
+    uint64 deadline;
+    uint256 nonce;
+    uint32 epoch;
+}
+
+/// @dev A ticket's standing exit (D-292): a share's bid × 1e6, 0 = unset. Take-profit fills at a bid ≥ `takeProfitE6`;
+///      stop-loss at `floorE6 ≤ bid ≤ stopLossE6`; the trail (the keeper's stop, `trailE6` below the best bid seen) at a
+///      bid ≥ `floorE6`. Per share, so a partial cash-out leaves it right; `epoch` is the owner's when it was set.
+struct Exit {
+    uint32 takeProfitE6;
+    uint32 stopLossE6;
+    uint32 floorE6;
+    uint32 trailE6;
+    uint32 epoch;
+    uint8 firing;
+}
+
+/// @dev Sets (all prices 0: clears) a ticket's exit, signed by the owner or their live session delegate.
+struct ExitOrder {
+    address owner;
+    uint256 ticketId;
+    uint32 takeProfitE6;
+    uint32 stopLossE6;
+    uint32 floorE6;
+    uint32 trailE6;
     uint64 deadline;
     uint256 nonce;
     uint32 epoch;

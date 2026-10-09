@@ -4,7 +4,16 @@
  * when the reserve's allowance is short, a permit for exactly this stake in the same prompt.
  */
 import type { AccountClient, DelegateKeys, Hex, LocalAccount } from "@senryo/account";
-import { ACTION_OPEN, freshNonce, intentRequest, type MarketIntent, permitParts, permitRequest } from "@senryo/chain";
+import {
+  ACTION_OPEN,
+  exitOrderRequest,
+  freshNonce,
+  intentRequest,
+  type MarketExitOrder,
+  type MarketIntent,
+  permitParts,
+  permitRequest,
+} from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import { INTENT_TTL_SEC, PERMIT_TTL_SEC, SESSION_MARGIN_SEC } from "./constants.ts";
 
@@ -42,12 +51,19 @@ export interface SignDeps {
   nowSec: number;
 }
 
+/** This device's delegate, if a live grant names it. */
+async function liveDelegate(d: SignDeps, owner: `0x${string}`): Promise<LocalAccount | undefined> {
+  const s = d.account.session;
+  if (!s || s.expiry - d.nowSec <= SESSION_MARGIN_SEC) return undefined;
+  const key = await d.delegates.get(owner, d.chainId);
+  return key && key.address.toLowerCase() === s.delegate.toLowerCase() ? key : undefined;
+}
+
 /** This device's delegate, if a live grant names it and `draft` fits what it may still sign. */
 export async function oneTapSigner(d: SignDeps, draft: CallDraft): Promise<LocalAccount | undefined> {
   const s = d.account.session;
-  if (!s || s.expiry - d.nowSec <= SESSION_MARGIN_SEC) return undefined;
-  const key = await d.delegates.get(draft.owner, d.chainId);
-  if (!key || key.address.toLowerCase() !== s.delegate.toLowerCase()) return undefined;
+  const key = await liveDelegate(d, draft.owner);
+  if (!key || !s) return undefined;
   if (draft.action !== ACTION_OPEN) return key;
   const fits = draft.amount <= s.perCallCap && s.spent + draft.amount <= s.sessionCap;
   return fits && d.account.allowance >= draft.amount ? key : undefined;
@@ -86,4 +102,34 @@ export async function signCall(d: SignDeps, draft: CallDraft, prompt: string): P
     const signature = await owner.signTypedData(intentRequest(d.chainId, intent));
     return { intent, signature, permit, via: "face-id" as const };
   }, prompt);
+}
+
+export type ExitDraft = Omit<MarketExitOrder, "deadline" | "nonce" | "epoch">;
+
+export interface SignedExit {
+  order: MarketExitOrder;
+  signature: Hex;
+  via: "one-tap" | "face-id";
+}
+
+/** Sign an exit (D-292): one-tap when this device's delegate is live — it stays after the session ends — else Face ID. */
+export async function signExit(d: SignDeps, draft: ExitDraft, prompt: string): Promise<SignedExit> {
+  const order: MarketExitOrder = {
+    ...draft,
+    deadline: BigInt(d.nowSec + INTENT_TTL_SEC),
+    nonce: freshNonce(),
+    epoch: d.account.epoch,
+  };
+  const delegate = await liveDelegate(d, draft.owner);
+  if (delegate) {
+    return { order, signature: await delegate.signTypedData(exitOrderRequest(d.chainId, order)), via: "one-tap" };
+  }
+  return d.client.stepUp(
+    async (owner) => ({
+      order,
+      signature: await owner.signTypedData(exitOrderRequest(d.chainId, order)),
+      via: "face-id" as const,
+    }),
+    prompt,
+  );
 }

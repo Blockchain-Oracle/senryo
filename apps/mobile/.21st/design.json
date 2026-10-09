@@ -853,6 +853,14 @@
         "port": "the 3×4 keypad under the amount, checked against the pool's min/max stake and the balance; \"Use $7.50\"",
         "deviations": "opened from a sixth preset chip that shows a custom stake once chosen",
         "status": "built (S5.9) — src/components/kit/Keypad.tsx, src/features/terminal/StakeSheet.tsx"
+      },
+      {
+        "name": "exit-stepper",
+        "source": "21st #29940 arihantcodes_1f7b8c4d/quantity-stepper (Spectrum UI); searched \"take profit stop loss order\" (29968 Depth Chart, 641 Order tracking, 27124 Trade Journal Table — none fit), \"trailing stop slider price level\" (329, 31347 Slider, 4533, 26539 Price Range Slider — a single exact cent is set, not a range) and \"price stepper input presets\" (29940 chosen; 766, 28180 Number Field, 29500 Pill Number Field)",
+        "evidence": ["pivot plan S8 exits: take-profit, stop-loss, trail (D-292); Tradash TP/SL on the position"],
+        "port": "Reanimated pill: − / rolling value (FadeInUp/FadeInDown by direction) / +, press squish via usePressScale(0.85), hold-to-repeat with acceleration, boundary shake + warn haptic, VoiceOver adjustable",
+        "deviations": "value formatted (dollars, cents a share); the theme's raised2 plate instead of the source's shadowed white pill",
+        "status": "built (S8.4) — src/components/kit/Stepper.tsx, src/features/terminal/ExitSheet.tsx"
       }
     ],
     "planned": [

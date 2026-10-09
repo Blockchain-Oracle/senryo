@@ -2,6 +2,7 @@ export * from "./caller.ts";
 export * from "./constants.ts";
 export * from "./delegates.ts";
 export * from "./earn-words.ts";
+export * from "./exits.ts";
 export * from "./handle-copy.ts";
 export * from "./links.ts";
 export * from "./markets.ts";

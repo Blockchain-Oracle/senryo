@@ -755,6 +755,15 @@
         "path": "src/features/terminal/",
         "added": "2026-10-09",
         "note": "reference fidelity over a 21st substitute; no 21st chart or trade component reproduces the Tradash renderer"
+      },
+      {
+        "name": "quantity-stepper",
+        "source": "21st:arihantcodes_1f7b8c4d/quantity-stepper",
+        "id": 29940,
+        "url": "https://21st.dev/@arihantcodes_1f7b8c4d/components/quantity-stepper",
+        "use": "exit levels (take profit, stop, trail, never below) — S8.4",
+        "path": "src/components/ui/quantity-stepper.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -852,6 +861,31 @@
         "id": 29866,
         "name": "Vertical Descriptive Stepper",
         "verdict": "not needed for the B4 timeline (search \"vertical timeline stepper status\"): the installed port of sean0205/vertical-titled-stepper #29815 now serves both directions as TimelineSteps (src/components/bridge/chain-grid.tsx)"
+      },
+      {
+        "id": 29968,
+        "name": "Depth Chart",
+        "verdict": "rejected for exits (search \"take profit stop loss order\"): an order-book chart, no order entry"
+      },
+      {
+        "id": 27124,
+        "name": "Trade Journal Table",
+        "verdict": "rejected for exits: a journal table"
+      },
+      {
+        "id": 31347,
+        "name": "Slider",
+        "verdict": "rejected for exits (search \"trailing stop slider price level\"): a slider can't land an exact cent; the stepper does"
+      },
+      {
+        "id": 26539,
+        "name": "Price Range Slider",
+        "verdict": "rejected for exits: dual-thumb range filter; an exit is one level"
+      },
+      {
+        "id": 28180,
+        "name": "Number Field",
+        "verdict": "rejected for exits (search \"price stepper input presets\"): plain field; Quantity Stepper #29940 chosen for the rolling digits and hold-to-repeat"
       }
     ],
     "removed": [

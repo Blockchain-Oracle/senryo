@@ -4,14 +4,14 @@
  * Down · Range · Moonshot, S7.4), the stake (the last one remembered; $1 · $5 · $10 · $25 · any amount · Max), then the
  * mode's buttons — UP and DOWN, RANGE between its edges, MOONSHOT ▲ and CRASH ▼ beyond their strikes — each with
  * where it wins and its live odds ("pays 2.61× · about 37%"), or — holding a call in this window — CASH OUT with the
- * value it returns now, and a part (25 / 50 %). Honest
+ * value it returns now, a part (25 / 50 %) and its exit (take profit, stop, trail — S8.4) with the armed exit's line. Honest
  * states: calls closed for the lockout, a stale price, a call in flight, and a market outside its session ("TSLA is
  * closed · Opens Mon 09:30 ET", D-289). Keys: ↑ Up, ↓ Down, C cash out.
  */
 import { CALL_MODES, type CallMode, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
 import type { OfferSlot, PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
-import { ArrowDown, ArrowDownUp, ArrowUp, Ellipsis, MoveVertical, Rocket, TrendingDown } from "lucide-react";
+import { ArrowDown, ArrowDownUp, ArrowUp, Crosshair, Ellipsis, MoveVertical, Rocket, TrendingDown } from "lucide-react";
 import type { ComponentType } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -54,6 +54,9 @@ export interface CallPanelProps {
   onClose: () => void;
   onCustom: () => void;
   onClosePart: () => void;
+  /** The armed exit in words ("Take profit $15.00 · Stop $8.00"), or null. */
+  exitLine: string | null;
+  onExit: () => void;
 }
 
 const ICON: Readonly<Record<OfferedBand["band"]["kind"], ComponentType<{ className?: string; strokeWidth?: number }>>> =
@@ -167,6 +170,7 @@ export function CallPanel(p: CallPanelProps) {
       ) : (
         <OneTapLine />
       )}
+      {p.holding && p.exitLine ? <p className="terminal-note tnum">{p.exitLine}</p> : null}
       {p.holding ? (
         <div className="terminal-cash">
           <button
@@ -191,6 +195,18 @@ export function CallPanel(p: CallPanelProps) {
             }}
           >
             <Ellipsis aria-hidden className="size-5" />
+          </button>
+          <button
+            type="button"
+            className="terminal-part"
+            aria-pressed={p.exitLine !== null}
+            aria-label={p.exitLine ? `Exit: ${p.exitLine}. Change` : "Set an exit: take profit, stop or trail"}
+            onClick={() => {
+              fire("snap", { cue: "tap" });
+              p.onExit();
+            }}
+          >
+            <Crosshair aria-hidden className="size-5" />
           </button>
         </div>
       ) : (

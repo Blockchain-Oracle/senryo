@@ -83,6 +83,15 @@ type Ticket {
   refuseReason: Int
   settledAt: Int
   claimTx: String
+  "The standing exit (D-292), a share's bid × 1e6 (0 = unset)."
+  exitTakeProfitE6: Int!
+  exitStopLossE6: Int!
+  exitFloorE6: Int!
+  exitTrailE6: Int!
+  "What fired the pending close: 1 take-profit or stop-loss, 2 the trail (null for the owner's own)."
+  exitFiring: Int
+  "take-profit · stop-loss · trail, when an exit sold the last shares."
+  closedBy: String
 }
 
 "Everything that happened to a ticket, in order (the Calls timeline and receipts)."

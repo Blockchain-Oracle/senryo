@@ -54,6 +54,7 @@ export const ANDROID_CODEPOINTS = {
   qr_code_scanner: 0xf206,
   receipt_long: 0xef6e,
   redeem: 0xe8b1,
+  remove: 0xe15b,
   restaurant: 0xe56c,
   search: 0xe8b6,
   send: 0xe163,

@@ -104,9 +104,52 @@ export async function applyTicketChanges(
                  result = COALESCE(result, 0) + ${c.amount}, updated_at = now()
                  WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
         break;
+      case "exitSet":
+        await saveExit(db, chainId, c);
+        break;
+      case "exitFired":
+        await db`UPDATE market_exits SET fired_at = now(), fired_kind = ${c.exitKind}, updated_at = now()
+                 WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
+        break;
     }
     await announce(db, chainId, c, txHash);
   }
+}
+
+/** A ticket's exit as the chain holds it; all prices 0 clears it. A changed trail restarts its peak. */
+export async function saveExit(
+  db: Db,
+  chainId: ChainId,
+  e: { ticketId: bigint; takeProfitE6: number; stopLossE6: number; floorE6: number; trailE6: number },
+): Promise<void> {
+  if (e.takeProfitE6 === 0 && e.stopLossE6 === 0 && e.trailE6 === 0) {
+    await db`DELETE FROM market_exits WHERE chain_id = ${chainId} AND ticket_id = ${e.ticketId}`;
+    return;
+  }
+  await db`
+    INSERT INTO market_exits (chain_id, ticket_id, take_profit_e6, stop_loss_e6, floor_e6, trail_e6)
+    VALUES (${chainId}, ${e.ticketId}, ${e.takeProfitE6}, ${e.stopLossE6}, ${e.floorE6}, ${e.trailE6})
+    ON CONFLICT (chain_id, ticket_id) DO UPDATE SET
+      take_profit_e6 = EXCLUDED.take_profit_e6, stop_loss_e6 = EXCLUDED.stop_loss_e6, floor_e6 = EXCLUDED.floor_e6,
+      trail_peak_e6 = CASE WHEN market_exits.trail_e6 = EXCLUDED.trail_e6 THEN market_exits.trail_peak_e6 ELSE 0 END,
+      trail_e6 = EXCLUDED.trail_e6, fired_at = NULL, fired_kind = NULL, updated_at = now()`;
+}
+
+export interface ExitRow {
+  ticket_id: bigint;
+  take_profit_e6: number;
+  stop_loss_e6: number;
+  floor_e6: number;
+  trail_e6: number;
+  trail_peak_e6: number;
+  fired_at: Date | null;
+  fired_kind: number | null;
+}
+
+/** The exits of these tickets (the apps show them on the position and its receipt). */
+export async function exitsOf(db: Db, chainId: ChainId, ticketIds: readonly bigint[]): Promise<ExitRow[]> {
+  if (ticketIds.length === 0) return [];
+  return db<ExitRow[]>`SELECT * FROM market_exits WHERE chain_id = ${chainId} AND ticket_id IN ${db([...ticketIds])}`;
 }
 
 export interface TicketRow {

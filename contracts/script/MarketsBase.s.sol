@@ -36,6 +36,9 @@ abstract contract MarketsBase is Script {
     uint64 internal constant CALENDAR_ROLE = 2;
     /// @dev AccessManager role on the pool's money doors (`fund`, `defund`): held by `PoolShares` alone (D-287).
     uint64 internal constant POOL_ROLE = 3;
+    /// @dev AccessManager role that may fire a trail (`fireTrail`): the api's exit watcher, beside the live prices,
+    ///      times the ratcheting stop and fires from the sponsor's lane (D-292).
+    uint64 internal constant EXIT_ROLE = 4;
 
     struct Entry {
         string name;
@@ -56,7 +59,10 @@ abstract contract MarketsBase is Script {
     }
 
     function _bookPath() internal view returns (string memory) {
-        return string.concat(vm.projectRoot(), "/../packages/contracts/src/addresses/", vm.toString(block.chainid), ".json");
+        return
+            string.concat(
+                vm.projectRoot(), "/../packages/contracts/src/addresses/", vm.toString(block.chainid), ".json"
+            );
     }
 
     // ------------------------------------------------------------------------------------------------ verifiers
@@ -113,7 +119,9 @@ abstract contract MarketsBase is Script {
         _record(
             REDSTONE_VERIFIER,
             addr,
-            abi.encodePacked(type(RedStonePrintVerifier).creationCode, abi.encode(signers, threshold, strict, admission)),
+            abi.encodePacked(
+                type(RedStonePrintVerifier).creationCode, abi.encode(signers, threshold, strict, admission)
+            ),
             false
         );
         _verifierOf[keccak256("redstone")] = addr;
@@ -153,6 +161,18 @@ abstract contract MarketsBase is Script {
         if (!admin) manager.grantRole(CALENDAR_ROLE, msg.sender, 0);
         (bool kept,) = manager.hasRole(CALENDAR_ROLE, keeper);
         if (!kept) manager.grantRole(CALENDAR_ROLE, keeper, 0);
+    }
+
+    /// @dev `fireTrail` under EXIT_ROLE, held by the sponsor (take-profit and stop-loss fire from anyone). Idempotent.
+    function _exitRole(AccessManager manager, BandReserve reserve, address sponsor) internal {
+        bytes4[] memory fns = new bytes4[](1);
+        fns[0] = reserve.fireTrail.selector;
+        if (manager.getTargetFunctionRole(address(reserve), fns[0]) != EXIT_ROLE) {
+            manager.labelRole(EXIT_ROLE, "EXIT");
+            manager.setTargetFunctionRole(address(reserve), fns, EXIT_ROLE);
+        }
+        (bool held,) = manager.hasRole(EXIT_ROLE, sponsor);
+        if (!held) manager.grantRole(EXIT_ROLE, sponsor, 0);
     }
 
     /// @dev Each catalogue calendar's week (set when it differs) and its coming holidays (added when missing).

@@ -1,7 +1,8 @@
 /**
  * The call panel (Tradash's UP/DOWN ↔ CLOSE, Senryo's windows): the stake (last one remembered; $1 · $5 · $10 · $25 ·
  * Max), then UP and DOWN each with its live odds ("pays 1.92× · about 52%"), or — holding a call in this window — one
- * CLOSE with the cash-out value rolling. Honest states: calls closed for the lockout, a stale price, a call in flight.
+ * CLOSE with the cash-out value rolling and, under it, its exit (take profit, stop, trail — S8.4). Honest states: calls
+ * closed for the lockout, a stale price, a call in flight.
  */
 import { CALL_MODES, type CallMode, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
 import type { OfferSlot, PanelState } from "@senryo/calls/react";
@@ -12,7 +13,7 @@ import Animated, { type SharedValue } from "react-native-reanimated";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
 import { LiveText } from "~/components/kit/LiveText";
 import { Segmented } from "~/components/kit/Segmented";
-import { ArrowDownUp } from "~/components/kit/symbols";
+import { ArrowDownUp, Crosshair } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { CONTROL_FONT_SCALE, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -108,6 +109,8 @@ function OpenPanel({
   onClose,
   onCustom,
   onClosePart,
+  exitLine,
+  onExit,
 }: {
   state: PanelState;
   stake: bigint;
@@ -126,6 +129,9 @@ function OpenPanel({
   onCustom: () => void;
   /** Long-press on Cash out: a part of the call (25 / 50 / 100 %). */
   onClosePart: () => void;
+  /** The armed exit in words, or null. */
+  exitLine: string | null;
+  onExit: () => void;
 }) {
   const { color } = useTheme();
   const font = useFont(require("../../../assets/fonts/Inter-SemiBold.ttf"), CASH_SIZE);
@@ -253,6 +259,25 @@ function OpenPanel({
             </View>
           </Animated.View>
         </Pressable>
+      ) : null}
+      {holding ? (
+        <Pressable
+          onPress={() => {
+            fire("snap");
+            onExit();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={exitLine ? `Exit: ${exitLine}. Change` : "Set an exit: take profit, stop or trail"}
+          style={({ pressed }) => [styles.exit, pressed && { opacity: DISABLED_OPACITY }]}
+        >
+          <Crosshair size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={exitLine ? color.ink : color.inkMuted} />
+          <Text
+            numberOfLines={1}
+            style={[TYPE.caption, styles.flexText, { color: exitLine ? color.ink : color.inkMuted }]}
+          >
+            {exitLine ?? "Set an exit · take profit, stop, trail"}
+          </Text>
+        </Pressable>
       ) : (
         <View style={styles.calls}>
           {offer[0] ? (
@@ -290,4 +315,6 @@ const styles = StyleSheet.create({
     gap: SPACE.sm,
   },
   cash: { width: CASH_WIDTH },
+  exit: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: SPACE.xs, minHeight: SIZE.touch },
+  flexText: { flexShrink: 1 },
 });

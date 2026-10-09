@@ -14,7 +14,7 @@ import {
   zeroHash,
 } from "viem";
 import { ALL_ERRORS_ABI } from "./contracts.ts";
-import { type MarketIntent, type MarketSessionGrant, permitParts } from "./market-typed-data.ts";
+import { type MarketExitOrder, type MarketIntent, type MarketSessionGrant, permitParts } from "./market-typed-data.ts";
 
 export interface PermitArgs {
   value: bigint;
@@ -55,6 +55,21 @@ export function addHolidayCallData(calendarId: number, start: number, end: numbe
     functionName: "addHoliday",
     args: [calendarId, BigInt(start), BigInt(end)],
   });
+}
+
+/** Sets (every price 0: clears) a ticket's exit from its signed order (D-292). */
+export function setExitCallData(order: MarketExitOrder, signature: Hex): Hex {
+  return encodeFunctionData({ abi: bandReserveAbi, functionName: "setExit", args: [order, signature] });
+}
+
+/** Take-profit or stop-loss: anyone may fire it; the fill print's bid decides. */
+export function fireExitCallData(ticketId: bigint): Hex {
+  return encodeFunctionData({ abi: bandReserveAbi, functionName: "fireExit", args: [ticketId] });
+}
+
+/** The trail: fired by a holder of the exit role (the relay's sponsor lane) when its ratcheting stop is crossed. */
+export function fireTrailCallData(ticketId: bigint): Hex {
+  return encodeFunctionData({ abi: bandReserveAbi, functionName: "fireTrail", args: [ticketId] });
 }
 
 export function claimForCallData(ids: readonly bigint[]): Hex {
@@ -111,7 +126,16 @@ export type TicketChange =
   | { kind: "closing"; ticketId: bigint; shares: bigint; target: number }
   | { kind: "closed"; ticketId: bigint; shares: bigint; proceeds: bigint; basisOut: bigint }
   | { kind: "closeRefused"; ticketId: bigint; reason: number }
-  | { kind: "claimed"; ticketId: bigint; outcome: number; amount: bigint };
+  | { kind: "claimed"; ticketId: bigint; outcome: number; amount: bigint }
+  | {
+      kind: "exitSet";
+      ticketId: bigint;
+      takeProfitE6: number;
+      stopLossE6: number;
+      floorE6: number;
+      trailE6: number;
+    }
+  | { kind: "exitFired"; ticketId: bigint; exitKind: number; target: number };
 
 /** The reserve's events in a receipt, in order, as ticket changes (other contracts' logs are ignored). */
 export function ticketChanges(logs: readonly Log[], reserve: Address): TicketChange[] {
@@ -167,6 +191,19 @@ export function ticketChanges(logs: readonly Log[], reserve: Address): TicketCha
         break;
       case "Claimed":
         out.push({ kind: "claimed", ticketId, outcome: Number(a.outcome), amount: a.amount as bigint });
+        break;
+      case "ExitSet":
+        out.push({
+          kind: "exitSet",
+          ticketId,
+          takeProfitE6: Number(a.takeProfitE6),
+          stopLossE6: Number(a.stopLossE6),
+          floorE6: Number(a.floorE6),
+          trailE6: Number(a.trailE6),
+        });
+        break;
+      case "ExitFired":
+        out.push({ kind: "exitFired", ticketId, exitKind: Number(a.kind), target: Number(a.target) });
         break;
       default:
         break;
