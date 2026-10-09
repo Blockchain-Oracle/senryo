@@ -106,9 +106,14 @@ bundles within D-283.
       browser)._
 
 ### Second source
-- [ ] S7.8 RedStone: `RedStonePrintVerifier` (≥ 3 of the 5 signers at `ceil10(t)`, median, confidence = half the signers'
+- [x] S7.8 RedStone: `RedStonePrintVerifier` (≥ 3 of the 5 signers at `ceil10(t)`, median, confidence = half the signers'
       spread) and its tests; the api's RedStone reader (one "latest" a second, shared; archive at window bounds and fill
       points within its ~24 h), the moving line between grid points; the stock and coin markets; the Magnificent 7 basket
+      _Done (4cbe571, bdeef34): RedStonePrintVerifier and RedStoneBasketVerifier, tested on live NVDA/AAPL packages
+      with the five production signers; NVDA, AAPL, MSFT, META, GOOGL, AMZN, PLTR, AMD, AVAX, LINK, SUI, TON, ADA, LTC,
+      DOT, NEAR, AAVE, UNI and Big tech (AAPL, MSFT, NVDA, GOOGL, AMZN, META — TSLA is a Pyth market, so the RedStone
+      basket is the other six); the api's RedStoneReader rebuilds payloads byte for byte. The line between grid points
+      moves every 10 s (no Alpaca). Microsoft and Amazon marks are recorded gaps._
 
 ### Ship
 - [ ] S7.9 Deploy (contracts on testnet, api, keeper, indexer, web), the phone's OTA after one simulator run, acceptance
