@@ -115,7 +115,7 @@ export const FONT_SOURCES: readonly FontSource[] = [
     ],
   },
   {
-    family: "Inter / Inter Display (web, Latin subset)",
+    family: "Inter (web variable, Latin subset; opsz covers Inter Display)",
     owner: "Rasmus Andersson / The Inter Project Authors",
     provenance: "derived",
     pageUrl: "https://github.com/rsms/inter/releases/tag/v4.1",
@@ -124,36 +124,16 @@ export const FONT_SOURCES: readonly FontSource[] = [
       sha256: "9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e",
     },
     licence:
-      "SIL Open Font License 1.1 (Inter Project Authors); subsetting is a permitted Modified Version and Inter has no Reserved Font Name.",
+      "SIL Open Font License 1.1 (Inter Project Authors); instancing and subsetting are a permitted Modified Version and Inter has no Reserved Font Name.",
     licenceFiles: ["apps/web/src/app/fonts/LICENSE-Inter.txt"],
-    retrieved: "2026-10-01",
+    retrieved: "2026-10-09",
     derivation:
-      "fontTools 4.66.1: subset.Subsetter of the release's web/*.woff2 to U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD,U+0100-024F,U+2020,U+20A0-20C0,U+2113,U+2190-21FF,U+2200-22FF,U+25A0-25FF,U+2713-2717,U+27E8-27E9 (Latin, Latin Extended-A/B, currency, arrows, math, geometric shapes, check marks, angle brackets), every OpenType feature kept (tnum, cv*, ss*), WOFF2. Keeps the web preload small (~48 KB per face instead of ~113 KB); the mobile TTFs stay complete.",
+      "fontTools 4.66.1: the release's web/InterVariable.woff2 saved as TTF, subset.Subsetter to U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD,U+0100-024F,U+2020,U+20A0-20C0,U+2113,U+2190-21FF,U+2200-22FF,U+25A0-25FF,U+2713-2717,U+27E8-27E9 with every OpenType feature and all name IDs kept, then varLib.instancer wght=(400,700) (opsz 14–32 kept: Inter Display at large sizes), recalcTimestamp=False, WOFF2. One 121 KB file replaces the five static web faces (245 KB) of 1 Oct; the mobile TTFs stay complete.",
     files: [
       {
-        path: "apps/web/src/app/fonts/Inter-Regular-latin.woff2",
-        sha256: "c11aaa47f424ae77301d9dbb9b29a2babb5adc2617666c6ed365cd365db3797d",
-        from: "web/Inter-Regular.woff2",
-      },
-      {
-        path: "apps/web/src/app/fonts/Inter-Medium-latin.woff2",
-        sha256: "76c31cb1ec753c737354b66ec636451fd0dec3a69340f5f52d96659ae851523f",
-        from: "web/Inter-Medium.woff2",
-      },
-      {
-        path: "apps/web/src/app/fonts/Inter-SemiBold-latin.woff2",
-        sha256: "ffc9e06a2ed4b0534a0fb866928bf15b09dcdec4eb85a5500b2b301a2933fd5e",
-        from: "web/Inter-SemiBold.woff2",
-      },
-      {
-        path: "apps/web/src/app/fonts/Inter-Bold-latin.woff2",
-        sha256: "1a834c862b099c1d81ecf0b9d465c7f0251b7027b3aa85ab45df5f718b67e5d5",
-        from: "web/Inter-Bold.woff2",
-      },
-      {
-        path: "apps/web/src/app/fonts/InterDisplay-SemiBold-latin.woff2",
-        sha256: "0b66332e31b33bf43f154b9bb8260fa2e545d0b38079db0dc532e1274c437613",
-        from: "web/InterDisplay-SemiBold.woff2",
+        path: "apps/web/src/app/fonts/InterVariable-latin.woff2",
+        sha256: "8c99bc5ed4c1f2a5a342bbc2d6f3b34d9ed974144c22a457903360c5f0d85b80",
+        from: "web/InterVariable.woff2",
       },
     ],
   },

@@ -129,7 +129,11 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
           <ReactionOverlay ref={reactions} />
         </div>
         <div className="terminal-under">
-          <LiveText value={q.lineText} className="terminal-distance tnum" />
+          <LiveText
+            value={q.lineText}
+            placeholder="Waiting for this window’s opening price"
+            className="terminal-distance tnum"
+          />
           <CrowdLine windowId={t.window.windowId} />
         </div>
       </section>

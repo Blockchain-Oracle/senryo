@@ -14,7 +14,7 @@
   --shell-ink-3: var(--text-3);
   --shell-focus: var(--ring);
   --shell-font: var(--font-inter), var(--font-noto-jp), var(--font-sans-family);
-  --shell-display: var(--font-inter-display), var(--font-inter), var(--font-display-family);
+  --shell-display: var(--font-inter), var(--font-display-family);
   --r-xs: var(--radius-step-xs);
   --r-sm: var(--radius-step-sm);
   --r-md: var(--radius-step-md);
