@@ -123,6 +123,8 @@ export function basketIdOf(market: MarketSpec): Hex {
  * basket's print with exactly those updates.
  */
 export function proofOf(market: MarketSpec, updates: readonly Hex[]): Hex {
+  // RedStone's verifier takes the wire payload itself (one per print).
+  if (market.source.kind === "redstone") return updates[0] ?? "0x";
   if (market.source.kind !== "basket") return printProof(updates);
   return encodeAbiParameters(BASKET_PROOF, [basketDefinition(market), updates]);
 }

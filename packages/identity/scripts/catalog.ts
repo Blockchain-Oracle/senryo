@@ -50,6 +50,18 @@ const STANDALONE: readonly CatalogEntry[] = [
   { key: "bnb", owner: "BNB Chain", spec: { from: "web3icons", group: "tokens", name: "BNB", take: ALL } },
   { key: "doge", owner: "Dogecoin Foundation", spec: { from: "web3icons", group: "tokens", name: "DOGE", take: ALL } },
   { key: "xrp", owner: "XRP Ledger Foundation", spec: { from: "web3icons", group: "tokens", name: "XRP", take: ALL } },
+  { key: "link", owner: "Chainlink Labs", spec: { from: "web3icons", group: "tokens", name: "LINK", take: ALL } },
+  { key: "sui", owner: "Sui Foundation", spec: { from: "web3icons", group: "tokens", name: "SUI", take: ALL } },
+  { key: "ton", owner: "TON Foundation", spec: { from: "web3icons", group: "tokens", name: "TON", take: ALL } },
+  { key: "ada", owner: "Cardano Foundation", spec: { from: "web3icons", group: "tokens", name: "ADA", take: ALL } },
+  { key: "ltc", owner: "Litecoin Foundation", spec: { from: "web3icons", group: "tokens", name: "LTC", take: ALL } },
+  {
+    key: "dot",
+    owner: "Web3 Foundation (Polkadot)",
+    spec: { from: "web3icons", group: "tokens", name: "DOT", take: ALL },
+  },
+  { key: "aave", owner: "Aave Companies", spec: { from: "web3icons", group: "tokens", name: "AAVE", take: ALL } },
+  { key: "uni", owner: "Uniswap Labs", spec: { from: "web3icons", group: "tokens", name: "UNI", take: ALL } },
   { key: "tron", owner: "TRON DAO", spec: { from: "web3icons", group: "networks", name: "tron", take: ALL } },
   { key: "polygon", owner: "Polygon Labs", spec: { from: "web3icons", group: "networks", name: "polygon", take: ALL } },
   {
@@ -60,6 +72,11 @@ const STANDALONE: readonly CatalogEntry[] = [
   { key: "avalanche", owner: "Ava Labs", spec: { from: "web3icons", group: "networks", name: "avalanche", take: ALL } },
   { key: "nvidia", owner: "NVIDIA Corporation", spec: { from: "simple-icons", slug: "nvidia" } },
   { key: "tesla", owner: "Tesla, Inc.", spec: { from: "simple-icons", slug: "tesla" } },
+  { key: "apple", owner: "Apple Inc.", spec: { from: "simple-icons", slug: "apple" } },
+  { key: "meta", owner: "Meta Platforms, Inc.", spec: { from: "simple-icons", slug: "meta" } },
+  { key: "google", owner: "Google LLC (Alphabet)", spec: { from: "simple-icons", slug: "google" } },
+  { key: "palantir", owner: "Palantir Technologies Inc.", spec: { from: "simple-icons", slug: "palantir" } },
+  { key: "amd", owner: "Advanced Micro Devices, Inc.", spec: { from: "simple-icons", slug: "amd" } },
   {
     // Baskets (D-286): several markets in points — no owner's mark exists, so a neutral glyph for "a stack of them".
     key: "basket",

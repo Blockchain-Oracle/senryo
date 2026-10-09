@@ -2,19 +2,21 @@
  * Per-network terms (D-262, D-264, D-267, D-284): how a print is proven (one verifier per class), Pyth's receivers,
  * the pool's pricing and caps, and the chain's session ceilings.
  */
-import type { MarketKind, MarketSpec } from "./catalog.ts";
+import { basketMembers, type MarketSpec } from "./catalog.ts";
 import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "./networks.ts";
 
-/** How a print is proven (contracts `PythPrintVerifier` immutables): one verifier per quality class. */
+/** How a Pyth print is proven (contracts `PythPrintVerifier` immutables): one verifier per quality class. */
 export interface PrintClass {
   graceSec: number;
   maxConfBps: number;
   admissionSec: number;
 }
 
-export type PrintClassKey = "crypto" | "equity" | "basket";
+/** Pyth's classes (by market kind), Pyth baskets, RedStone's single feeds and RedStone baskets (D-284, D-286). */
+export type PrintClassKey = "crypto" | "equity" | "basket" | "redstone" | "redstone-basket";
+export type PythClassKey = "crypto" | "equity" | "basket";
 
-export const PRINT_CLASSES: Readonly<Record<PrintClassKey, PrintClass>> = {
+export const PRINT_CLASSES: Readonly<Record<PythClassKey, PrintClass>> = {
   crypto: { graceSec: 5, maxConfBps: 25, admissionSec: 300 },
   equity: { graceSec: 5, maxConfBps: 50, admissionSec: 300 },
   /** Every member of a basket meets crypto's bound (metals quote far inside it). */
@@ -22,27 +24,50 @@ export const PRINT_CLASSES: Readonly<Record<PrintClassKey, PrintClass>> = {
 };
 
 /**
- * Metals and the euro quote far inside crypto's 25 bps (0.3–2 bps measured 9 Oct), so they share its verifier; a stock
- * gets the wider equity class (its open can print a wide band).
+ * RedStone (D-284): `redstone-primary-prod`'s five production signers (the gateway's and `PrimaryProdDataServiceConsumer
+ * Base`'s, recovered from live packages 9 Oct 2026); all five while a grid point is under a minute old, three after;
+ * prints admitted for 15 minutes (its gateway keeps about a day).
  */
-export const PRINT_CLASS_OF: Readonly<Record<MarketKind, PrintClassKey>> = {
-  crypto: "crypto",
-  metal: "crypto",
-  fx: "crypto",
-  equity: "equity",
-  basket: "basket",
-};
+export const REDSTONE = {
+  signers: [
+    "0x8BB8F32Df04c8b654987DAaeD53D6B6091e3B774",
+    "0xdEB22f54738d54976C4c0fe5ce6d408E40d88499",
+    "0x51Ce04Be4b3E32572C4Ec9135221d0691Ba7d202",
+    "0xDD682daEC5A90dD295d14DA4b0bec9281017b5bE",
+    "0x9c5AE89C4Af6aA32cE58588DBaF90d18a855B6de",
+  ],
+  threshold: 3,
+  strictSec: 60,
+  admissionSec: 900,
+  /** The signing grid: a print of t is the first grid point at or after t. */
+  gridSec: 10,
+} as const;
+
+/** A market's print class: by its source, and for Pyth by kind (metals and the euro quote inside crypto's bound). */
+export function printClassKeyOf(m: MarketSpec): PrintClassKey {
+  if (m.source.kind === "redstone") return "redstone";
+  if (m.source.kind === "basket") {
+    const sources = new Set(basketMembers(m).map((x) => x.market.source.kind));
+    if (sources.size !== 1) throw new Error(`${m.symbol}: a basket's members share one source`);
+    return sources.has("redstone") ? "redstone-basket" : "basket";
+  }
+  return m.kind === "equity" ? "equity" : "crypto";
+}
+
+/** Seconds after `t` a print for `t` may still be recorded (after that the window voids). */
+export function admissionSecOf(m: MarketSpec): number {
+  const k = printClassKeyOf(m);
+  return k === "redstone" || k === "redstone-basket" ? REDSTONE.admissionSec : PRINT_CLASSES[k].admissionSec;
+}
 
 /** Each class's verifier, by its address-book name. */
 export const PRINT_VERIFIER: Readonly<Record<PrintClassKey, string>> = {
   crypto: "PythPrintVerifier",
   equity: "PythPrintVerifierEquity",
   basket: "BasketPrintVerifier",
+  redstone: "RedStonePrintVerifier",
+  "redstone-basket": "RedStoneBasketVerifier",
 };
-
-export function printClassOf(m: MarketSpec): PrintClass {
-  return PRINT_CLASSES[PRINT_CLASS_OF[m.kind]];
-}
 
 /** Pyth Core receivers. Mainnet: Pyth's own table; both candidates verified a keyed boundary payload on 8 Oct (D-274). */
 export const PYTH_RECEIVER: Readonly<Record<ChainId, `0x${string}`>> = {

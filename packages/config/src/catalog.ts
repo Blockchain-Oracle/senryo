@@ -14,15 +14,18 @@
  * no overnight gap) and scaled ×1.5 — the same margin BTC, ETH and SOL carry over their measured 0.35, 0.44 and 0.53:
  * a quiet week understates tails, and an underpriced σ lets Moonshot and Range take the pool.
  */
+import type { CadenceSec } from "./cadences.ts";
 import type { CalendarId } from "./calendars.ts";
-import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "./networks.ts";
+import { PYTH_BASKETS, REDSTONE_BASKETS } from "./markets/baskets.ts";
+import { PYTH_MARKETS } from "./markets/pyth.ts";
+import { REDSTONE_MARKETS } from "./markets/redstone.ts";
+import type { ChainId } from "./networks.ts";
 
 export type MarketKind = "crypto" | "equity" | "metal" | "fx" | "basket";
 export type BandKind = "up" | "down" | "range" | "moonshot" | "crash";
 
 /** Window lengths the terminal offers (1m · 5m · 15m · 1h); each divides one hour (contracts `CADENCE_DIVIDES_SEC`). */
-export const CADENCES_SEC = [60, 300, 900, 3600] as const;
-export type CadenceSec = (typeof CADENCES_SEC)[number];
+export { CADENCES_SEC, type CadenceSec } from "./cadences.ts";
 
 /** Call timing, mirrored from contracts/src/markets/MarketTypes.sol (D-261). */
 export const LOCKOUT_SEC = 20;
@@ -58,10 +61,12 @@ export interface BasketMember {
 /**
  * Where a market's price is proven (D-284, D-286): one Pyth feed, or a basket of listed markets in points — its
  * on-chain feed id is the hash of the definition (`BasketPrintVerifier.basketId`, re-derived by the invariant
- * `catalog-basket-ids`). RedStone joins in S7.8.
+ * `catalog-basket-ids`).
  */
 export type PriceSource =
   | { kind: "pyth"; feedId: `0x${string}` }
+  /** RedStone's signed packages (D-284): `feed` is its data-feed id ("NVDA"), on chain its ASCII in a bytes32. */
+  | { kind: "redstone"; feed: string }
   | { kind: "basket"; basketId: `0x${string}`; members: readonly BasketMember[] };
 
 export interface MarketSpec {
@@ -80,7 +85,19 @@ export interface MarketSpec {
 
 /** The bytes32 a market's prints are keyed by on chain and in the archive. */
 export function feedIdOf(m: MarketSpec): `0x${string}` {
-  return m.source.kind === "basket" ? m.source.basketId : m.source.feedId;
+  if (m.source.kind === "basket") return m.source.basketId;
+  if (m.source.kind === "redstone") return asciiBytes32(m.source.feed);
+  return m.source.feedId;
+}
+
+const HEX_RADIX = 16;
+const BYTE_HEX = 2;
+const BYTES32_HEX = 64;
+
+/** ASCII left-aligned in a bytes32, as RedStone names a feed (`bytes32("NVDA")`). */
+export function asciiBytes32(text: string): `0x${string}` {
+  const hex = [...text].map((c) => c.charCodeAt(0).toString(HEX_RADIX).padStart(BYTE_HEX, "0")).join("");
+  return `0x${hex.padEnd(BYTES32_HEX, "0")}`;
 }
 
 /** The market whose prints are keyed by this feed id (a single feed or a basket). */
@@ -105,183 +122,15 @@ const BPS = 10_000;
 const RANGE_SIGMAS = 0.5;
 const STRIKE_SIGMAS = 1;
 
+/**
+ * Every market, in its permanent order (live ticks name a market by its index; `catalog-append-only`): the Pyth feeds,
+ * the Pyth baskets, then RedStone's feeds and baskets (D-284, D-286). The data lives per source in `./markets/`.
+ */
 export const MARKETS: readonly MarketSpec[] = [
-  {
-    symbol: "BTC",
-    name: "Bitcoin",
-    kind: "crypto",
-    source: { kind: "pyth", feedId: "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43" },
-    annualVol: 0.5,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "ETH",
-    name: "Ethereum",
-    kind: "crypto",
-    source: { kind: "pyth", feedId: "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace" },
-    annualVol: 0.65,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "SOL",
-    name: "Solana",
-    kind: "crypto",
-    source: { kind: "pyth", feedId: "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d" },
-    annualVol: 0.85,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "DOGE",
-    name: "Dogecoin",
-    kind: "crypto",
-    source: { kind: "pyth", feedId: "0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c" },
-    annualVol: 0.95,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "XRP",
-    name: "XRP",
-    kind: "crypto",
-    source: { kind: "pyth", feedId: "0xec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8" },
-    annualVol: 0.83,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "BNB",
-    name: "BNB",
-    kind: "crypto",
-    source: { kind: "pyth", feedId: "0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f" },
-    annualVol: 0.58,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "HYPE",
-    name: "Hyperliquid",
-    kind: "crypto",
-    source: { kind: "pyth", feedId: "0x4279e31cc369bbcc2faf022b382b080e32a8e689ff20fbc530d2a603eb6cd98b" },
-    annualVol: 0.95,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "TSLA",
-    name: "Tesla",
-    kind: "equity",
-    source: { kind: "pyth", feedId: "0x16dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e1bc0632f1" },
-    annualVol: 0.84,
-    cadences: CADENCES_SEC,
-    calendarId: 1,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "QQQ",
-    name: "Invesco QQQ",
-    kind: "equity",
-    source: { kind: "pyth", feedId: "0x9695e2b96ea7b3859da9ed25b7a46a920a776e2fdae19a7bcfdf2b219230452d" },
-    annualVol: 0.35,
-    cadences: CADENCES_SEC,
-    calendarId: 1,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "XAU",
-    name: "Gold",
-    kind: "metal",
-    source: { kind: "pyth", feedId: "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2" },
-    annualVol: 0.32,
-    cadences: CADENCES_SEC,
-    calendarId: 2,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "XAG",
-    name: "Silver",
-    kind: "metal",
-    source: { kind: "pyth", feedId: "0xf2fb02c32b055c805e7238d628e5e9dadef274376114eb1f012337cabe93871e" },
-    annualVol: 0.61,
-    cadences: CADENCES_SEC,
-    calendarId: 2,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "EUR",
-    name: "Euro",
-    kind: "fx",
-    source: { kind: "pyth", feedId: "0xa995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b" },
-    annualVol: 0.13,
-    cadences: CADENCES_SEC,
-    calendarId: 3,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  // Baskets (D-286): equal weights, 1,000 points at the members' prints of 2026-10-09T14:00:00Z; σ measured like the
-  // single markets (the basket's own 1-minute index over five days, ×1.5).
-  {
-    symbol: "MAJORS",
-    name: "Crypto majors",
-    kind: "basket",
-    source: {
-      kind: "basket",
-      basketId: "0x4e3e3c889b6c0c7d808f86efc9bad05c5a47cd1f10fe97967a80194302a2a83c",
-      members: [
-        { symbol: "BTC", weightBps: 3334, baseE8: 8_255_901_409_615n },
-        { symbol: "ETH", weightBps: 3333, baseE8: 248_247_898_562n },
-        { symbol: "SOL", weightBps: 3333, baseE8: 10_952_339_683n },
-      ],
-    },
-    annualVol: 0.61,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "ALTS",
-    name: "Alt coins",
-    kind: "basket",
-    source: {
-      kind: "basket",
-      basketId: "0x8d72fb569fec73eed386cde5bf50b36da75cd28f167067da8ec09b8ce6c57e01",
-      members: [
-        { symbol: "DOGE", weightBps: 2500, baseE8: 8_440_963n },
-        { symbol: "XRP", weightBps: 2500, baseE8: 137_902_450n },
-        { symbol: "BNB", weightBps: 2500, baseE8: 73_843_159_515n },
-        { symbol: "HYPE", weightBps: 2500, baseE8: 8_500_953_452n },
-      ],
-    },
-    annualVol: 0.7,
-    cadences: CADENCES_SEC,
-    calendarId: 0,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
-  {
-    symbol: "METALS",
-    name: "Metals",
-    kind: "basket",
-    source: {
-      kind: "basket",
-      basketId: "0xac73fa5dd455b02b64be95124bb0fb1ce639e7c7301a37838166aa1432864c30",
-      members: [
-        { symbol: "XAU", weightBps: 5000, baseE8: 419_035_200_000n },
-        { symbol: "XAG", weightBps: 5000, baseE8: 6_105_866_000n },
-      ],
-    },
-    annualVol: 0.45,
-    cadences: CADENCES_SEC,
-    calendarId: 2,
-    chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
-  },
+  ...PYTH_MARKETS,
+  ...PYTH_BASKETS,
+  ...REDSTONE_MARKETS,
+  ...REDSTONE_BASKETS,
 ];
 
 /** σ per √second × 1e8 (the contracts' `sigmaE8`). */

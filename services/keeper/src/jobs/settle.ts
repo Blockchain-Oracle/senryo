@@ -12,7 +12,7 @@ import {
   verifierOf,
   voidAndClaimData,
 } from "@senryo/chain";
-import { feedIdOf, MARKET_BATCH_MAX, printClassOf } from "@senryo/config";
+import { admissionSecOf, feedIdOf, MARKET_BATCH_MAX } from "@senryo/config";
 import { applyTicketChanges, archivedPrint, nowSec, windowsToSettle } from "@senryo/service-common";
 import { SETTLE_AFTER_SEC, SETTLE_INTERVAL_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
@@ -52,7 +52,7 @@ async function settleOne(
   const expiry = Number(w.window_expiry);
   const [first, ...rest] = chunk(w.ids, MARKET_BATCH_MAX);
   const print = await archivedPrint(ctx.db, feedIdOf(series.market), expiry);
-  const admission = printClassOf(series.market).admissionSec;
+  const admission = admissionSecOf(series.market);
   let data: Hex;
   if (print) {
     data = settleAndClaimData(ctx.chainId, {

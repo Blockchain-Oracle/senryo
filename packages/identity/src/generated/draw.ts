@@ -846,6 +846,238 @@ export const DRAW: Readonly<Record<string, DrawSource>> = {
       }
     }
   },
+  "link": {
+    "key": "link",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "sui": {
+    "key": "sui",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "ton": {
+    "key": "ton",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "ada": {
+    "key": "ada",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "ltc": {
+    "key": "ltc",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "dot": {
+    "key": "dot",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "aave": {
+    "key": "aave",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "uni": {
+    "key": "uni",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
   "tron": {
     "key": "tron",
     "variants": {
@@ -987,6 +1219,121 @@ export const DRAW: Readonly<Record<string, DrawSource>> = {
   },
   "tesla": {
     "key": "tesla",
+    "variants": {
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
+  "apple": {
+    "key": "apple",
+    "variants": {
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
+  "meta": {
+    "key": "meta",
+    "variants": {
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
+  "google": {
+    "key": "google",
+    "variants": {
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
+  "palantir": {
+    "key": "palantir",
+    "variants": {
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
+  "amd": {
+    "key": "amd",
     "variants": {
       "monoDark": {
         "viewBox": "0 0 24 24",

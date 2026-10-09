@@ -8,6 +8,8 @@ import {CALENDAR_WORD_COUNT} from "../src/libraries/Constants.sol";
 import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {BandReserve} from "../src/markets/BandReserve.sol";
 import {BasketPrintVerifier} from "../src/markets/BasketPrintVerifier.sol";
+import {RedStoneBasketVerifier} from "../src/markets/RedStoneBasketVerifier.sol";
+import {RedStonePrintVerifier} from "../src/markets/RedStonePrintVerifier.sol";
 import {PythPrintVerifier} from "../src/markets/PythPrintVerifier.sol";
 import {ISharedPool, PoolShares} from "../src/markets/PoolShares.sol";
 import {Windows} from "../src/markets/Windows.sol";
@@ -25,8 +27,11 @@ abstract contract MarketsBase is Script {
     string internal constant CRYPTO_VERIFIER = "PythPrintVerifier";
     string internal constant EQUITY_VERIFIER = "PythPrintVerifierEquity";
     string internal constant BASKET_VERIFIER = "BasketPrintVerifier";
-    /// @dev The print classes a catalogue may name, each with its address-book name (mirrors `PRINT_VERIFIER`).
-    string[3] internal CLASSES = ["crypto", "equity", "basket"];
+    string internal constant REDSTONE_VERIFIER = "RedStonePrintVerifier";
+    string internal constant REDSTONE_BASKET_VERIFIER = "RedStoneBasketVerifier";
+    /// @dev The print classes a catalogue may name (mirrors `PRINT_VERIFIER`); a RedStone basket wraps the RedStone
+    ///      verifier, so "redstone" comes before it and is deployed whenever either is named.
+    string[5] internal CLASSES = ["crypto", "equity", "basket", "redstone", "redstone-basket"];
     /// @dev AccessManager role that keeps market calendars current (the keeper's job, D-289); the admin holds it too.
     uint64 internal constant CALENDAR_ROLE = 2;
     /// @dev AccessManager role on the pool's money doors (`fund`, `defund`): held by `PoolShares` alone (D-287).
@@ -60,26 +65,58 @@ abstract contract MarketsBase is Script {
         bytes32 h = keccak256(bytes(cls));
         if (h == keccak256("equity")) return EQUITY_VERIFIER;
         if (h == keccak256("basket")) return BASKET_VERIFIER;
+        if (h == keccak256("redstone")) return REDSTONE_VERIFIER;
+        if (h == keccak256("redstone-basket")) return REDSTONE_BASKET_VERIFIER;
         return CRYPTO_VERIFIER;
     }
 
     /// @dev One verifier per class (`.verifiers.<cls>`): a `BasketPrintVerifier` for baskets, else a
     ///      `PythPrintVerifier`; recorded under its book name.
     function _deployVerifier(string memory cls) internal returns (address addr) {
+        bytes32 h = keccak256(bytes(cls));
+        if (h == keccak256("redstone")) return _deployRedStone();
+        if (h == keccak256("redstone-basket")) {
+            RedStonePrintVerifier single = RedStonePrintVerifier(_verifierOf[keccak256("redstone")]);
+            addr = address(new RedStoneBasketVerifier(single));
+            _record(
+                _bookName(cls),
+                addr,
+                abi.encodePacked(type(RedStoneBasketVerifier).creationCode, abi.encode(address(single))),
+                false
+            );
+            _verifierOf[h] = addr;
+            return addr;
+        }
         IPyth pyth = IPyth(_json.readAddress(".pyth"));
         string memory at = string.concat(".verifiers.", cls);
         uint16 grace = uint16(_json.readUint(string.concat(at, ".graceSec")));
         uint16 maxConf = uint16(_json.readUint(string.concat(at, ".maxConfBps")));
         uint32 admission = uint32(_json.readUint(string.concat(at, ".admissionSec")));
         bytes memory args = abi.encode(address(pyth), grace, maxConf, admission);
-        if (keccak256(bytes(cls)) == keccak256("basket")) {
+        if (h == keccak256("basket")) {
             addr = address(new BasketPrintVerifier(pyth, grace, maxConf, admission));
             _record(_bookName(cls), addr, abi.encodePacked(type(BasketPrintVerifier).creationCode, args), false);
         } else {
             addr = address(new PythPrintVerifier(pyth, grace, maxConf, admission));
             _record(_bookName(cls), addr, abi.encodePacked(type(PythPrintVerifier).creationCode, args), false);
         }
-        _verifierOf[keccak256(bytes(cls))] = addr;
+        _verifierOf[h] = addr;
+    }
+
+    /// @dev `RedStonePrintVerifier` from `.redstone` (D-284): the five production signers, threshold, strict, admission.
+    function _deployRedStone() internal returns (address addr) {
+        address[] memory signers = _json.readAddressArray(".redstone.signers");
+        uint8 threshold = uint8(_json.readUint(".redstone.threshold"));
+        uint32 strict = uint32(_json.readUint(".redstone.strictSec"));
+        uint32 admission = uint32(_json.readUint(".redstone.admissionSec"));
+        addr = address(new RedStonePrintVerifier(signers, threshold, strict, admission));
+        _record(
+            REDSTONE_VERIFIER,
+            addr,
+            abi.encodePacked(type(RedStonePrintVerifier).creationCode, abi.encode(signers, threshold, strict, admission)),
+            false
+        );
+        _verifierOf[keccak256("redstone")] = addr;
     }
 
     /// @dev Every class some series names: its verifier from the book, or deployed when the book has none (`fresh`
@@ -90,7 +127,9 @@ abstract contract MarketsBase is Script {
             string memory cls = CLASSES[c];
             bool used = keccak256(bytes(cls)) == keccak256("crypto");
             for (uint256 i; i < named.length && !used; ++i) {
-                used = keccak256(bytes(named[i])) == keccak256(bytes(cls));
+                bytes32 n = keccak256(bytes(named[i]));
+                used = n == keccak256(bytes(cls))
+                    || (keccak256(bytes(cls)) == keccak256("redstone") && n == keccak256("redstone-basket"));
             }
             if (!used) continue;
             address known = fresh ? address(0) : _bookAddress(_bookName(cls));

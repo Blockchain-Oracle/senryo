@@ -18,9 +18,10 @@ import { MAINNET_USDC } from "../packages/config/src/money.ts";
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "../packages/config/src/networks.ts";
 import {
   POOL_TERMS,
-  PRINT_CLASS_OF,
   PRINT_CLASSES,
   PYTH_RECEIVER,
+  printClassKeyOf,
+  REDSTONE,
   TESTNET_POOL_SEED,
 } from "../packages/config/src/pool-terms.ts";
 import { easternOffsetSec, holidayWindows, parseSchedule, weekBits } from "../packages/core/src/market/index.ts";
@@ -80,7 +81,7 @@ function exportChain(chainId) {
         market: marketKey(m.symbol),
         sigmaE8: sigmaE8Of(m),
         symbol: m.symbol,
-        verifierClass: PRINT_CLASS_OF[m.kind],
+        verifierClass: printClassKeyOf(m),
       }),
     ),
   );
@@ -106,6 +107,12 @@ function exportChain(chainId) {
       maxPerCallCap: terms.session.perCallCap.toString(),
       maxSessionCap: terms.session.sessionCap.toString(),
       maxSessionSec: terms.session.maxSessionSec,
+    }),
+    redstone: sorted({
+      admissionSec: REDSTONE.admissionSec,
+      signers: [...REDSTONE.signers],
+      strictSec: REDSTONE.strictSec,
+      threshold: REDSTONE.threshold,
     }),
     verifiers: Object.fromEntries(Object.entries(PRINT_CLASSES).map(([k, c]) => [k, sorted(c)])),
   });

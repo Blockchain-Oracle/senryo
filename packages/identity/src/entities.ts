@@ -25,6 +25,16 @@ const CRYPTO: Readonly<Record<string, { name: string; art?: string; gap?: string
   XRP: { name: "XRP", art: "xrp" },
   BNB: { name: "BNB", art: "bnb" },
   HYPE: { name: "Hyperliquid", art: "hyperliquid" },
+  AVAX: { name: "Avalanche", art: "avalanche" },
+  LINK: { name: "Chainlink", art: "link" },
+  SUI: { name: "Sui", art: "sui" },
+  TON: { name: "Toncoin", art: "ton" },
+  ADA: { name: "Cardano", art: "ada" },
+  LTC: { name: "Litecoin", art: "ltc" },
+  DOT: { name: "Polkadot", art: "dot" },
+  NEAR: { name: "NEAR", art: "near" },
+  AAVE: { name: "Aave", art: "aave" },
+  UNI: { name: "Uniswap", art: "uni" },
 };
 
 /** Gold and silver priced as markets (original koban and chōgin art, never an issuer's token art). */
@@ -38,6 +48,7 @@ const BASKET_MARKETS = [
   { symbol: "MAJORS", name: "Crypto majors" },
   { symbol: "ALTS", name: "Alt coins" },
   { symbol: "METALS", name: "Metals" },
+  { symbol: "TECH", name: "Big tech" },
 ] as const;
 
 /** Chains the any-asset bridges reach that no Senryo config needs elsewhere (EIP-155 ids). */
@@ -239,11 +250,19 @@ const EQUITIES: Readonly<Record<string, { name: string; art?: string; gap?: stri
   },
   NVDA: { name: "Nvidia", art: "nvidia" },
   TSLA: { name: "Tesla", art: "tesla" },
-  AAPL: { name: "Apple", gap: "Simple Icons (CC0) mark via scripts/catalog.ts (S7)" },
-  MSFT: { name: "Microsoft", gap: "mark via scripts/catalog.ts (S7)" },
-  META: { name: "Meta", gap: "Simple Icons (CC0) mark via scripts/catalog.ts (S7)" },
-  AMZN: { name: "Amazon", gap: "mark via scripts/catalog.ts (S7)" },
-  GOOGL: { name: "Alphabet", gap: "Simple Icons (CC0) mark via scripts/catalog.ts (S7)" },
+  AAPL: { name: "Apple", art: "apple" },
+  MSFT: {
+    name: "Microsoft",
+    gap: "Simple Icons has no Microsoft mark (removed at the owner's request); Commons holds the four squares as public domain (File:Microsoft logo.svg, sha1 5b170117…) but in four inks, and the Commons path takes only one-ink public-domain marks (researched 9 Oct 2026)",
+  },
+  META: { name: "Meta", art: "meta" },
+  AMZN: {
+    name: "Amazon",
+    gap: "Simple Icons 16.33 has no Amazon mark (removed at the owner's request), Commons holds none under a usable grant and Brandfetch forbids programmatic download (researched 9 Oct 2026)",
+  },
+  GOOGL: { name: "Alphabet", art: "google" },
+  PLTR: { name: "Palantir", art: "palantir" },
+  AMD: { name: "AMD", art: "amd" },
 };
 
 const equityRows = (): Entity[] =>

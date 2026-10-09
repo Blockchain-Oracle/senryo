@@ -223,6 +223,446 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "link",
+    "owner": "Chainlink Labs",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/link/web3icons-tokens-background-LINK.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/LINK.svg",
+        "sha256": "f12ffb51eafef62a559ea805a41a360e17f2b1d8ef72072ec376ef335c4fa087",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/link/web3icons-tokens-branded-LINK.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/LINK.svg",
+        "sha256": "858d196c3e00823890843f8b3dd94d3a30c15a1e8c488275cb71886c43c5747d",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/link/web3icons-tokens-mono-LINK.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/LINK.svg",
+        "sha256": "0fdcda9aa1949a8256e9ee85baeeee46fdc2459e0aff2c85c117901a3e90dfeb",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/link/web3icons-tokens-mono-LINK-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/LINK.svg",
+        "sha256": "b15f74e373e449214269ef0142c56bbbc58eae6ef12894fbce7851511e236024",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/link/web3icons-tokens-mono-LINK.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "sui",
+    "owner": "Sui Foundation",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/sui/web3icons-tokens-background-SUI.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/SUI.svg",
+        "sha256": "2cc05fdca1849dd76572dd79f3f7029d007e1e31d366598bbd7e866a7209d3a2",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/sui/web3icons-tokens-branded-SUI.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/SUI.svg",
+        "sha256": "cfe40b452d8d509abb9cfd54a515e1b467ad0338df553192a0cdcd3772108064",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/sui/web3icons-tokens-mono-SUI.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/SUI.svg",
+        "sha256": "13dd09ce23c97f9d226eb432d6282ef4cae1468ea7abd7bebe33e0978c502d96",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/sui/web3icons-tokens-mono-SUI-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/SUI.svg",
+        "sha256": "bf172d07d9a9e75c18b8e9063a55b9ebb7727c3fa000b7e6633960fd5f45c472",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/sui/web3icons-tokens-mono-SUI.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "ton",
+    "owner": "TON Foundation",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/ton/web3icons-tokens-background-TON.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/TON.svg",
+        "sha256": "34e2107e6c713497ba82936866e6e4fd9b0fb9718c845bac364db8c8eb7f1bc0",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/ton/web3icons-tokens-branded-TON.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/TON.svg",
+        "sha256": "3b9a5a2d86d2e30d462f0fe6c69a4de3a438de595294d1006beb1f15dad0abf1",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/ton/web3icons-tokens-mono-TON.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/TON.svg",
+        "sha256": "6e30c85028d43091b48dc5de70f33d85b2a8f8bf76440c6a85b5477a60142d83",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/ton/web3icons-tokens-mono-TON-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/TON.svg",
+        "sha256": "b85a30f1d4f8bc24359dcd6e4067983d0ebf8a88a827d67dc9e0b4d2af667b2b",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/ton/web3icons-tokens-mono-TON.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "ada",
+    "owner": "Cardano Foundation",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/ada/web3icons-tokens-background-ADA.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/ADA.svg",
+        "sha256": "1d8ba1050ea82210c61283df113e0859bd0a4e097e2f1cc58b98a457cb8d8d4d",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/ada/web3icons-tokens-branded-ADA.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/ADA.svg",
+        "sha256": "bb5474e45922ef1a5f122522b826e68a3589a38bc501cf767c39e83303d4194f",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/ada/web3icons-tokens-mono-ADA.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/ADA.svg",
+        "sha256": "3a25fbfe3ff35f65bf9871b417dd6eccb11e62683b7d49d89b343b0590a96c12",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/ada/web3icons-tokens-mono-ADA-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/ADA.svg",
+        "sha256": "6b4088071c05d2e713a711aed87a20f3111c519b18c6d82c3ea5624515ae759c",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/ada/web3icons-tokens-mono-ADA.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "ltc",
+    "owner": "Litecoin Foundation",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/ltc/web3icons-tokens-background-LTC.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/LTC.svg",
+        "sha256": "52606ba002046e5fe975a674f070bd505b3ccd28fb797119db53c2821f93528c",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/ltc/web3icons-tokens-branded-LTC.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/LTC.svg",
+        "sha256": "569e2187092ddc84b3a5409a0c6c99463c9d809cede1cb38809fe4c7aa50e0ce",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/ltc/web3icons-tokens-mono-LTC.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/LTC.svg",
+        "sha256": "e5eaacf91ef0073637563efe86e2cba3ad0fc914672d12cfff082577facdaf22",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/ltc/web3icons-tokens-mono-LTC-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/LTC.svg",
+        "sha256": "2ecb4c544f4cdca01bafce8434f61619284fc507d5dd8973d1ce2c0ed5a67979",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/ltc/web3icons-tokens-mono-LTC.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "dot",
+    "owner": "Web3 Foundation (Polkadot)",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/dot/web3icons-tokens-background-DOT.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/DOT.svg",
+        "sha256": "c9197085e5db1087b84b48e0c0acd186837d6cacfc56d3cece89b6c31f6ac2c2",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/dot/web3icons-tokens-branded-DOT.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/DOT.svg",
+        "sha256": "7223f75585db5ea98349346149c2edc2fe42ea1c68905a8674ec5f24e5e71b58",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/dot/web3icons-tokens-mono-DOT.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/DOT.svg",
+        "sha256": "aa572c7b2fdaf7f07445e4936ae88de45fb9e59e1cacde34e6f0b3073c7cb2a4",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/dot/web3icons-tokens-mono-DOT-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/DOT.svg",
+        "sha256": "2c61ebad2b8ece9416188ee05dda8b6af92bea3d87f01b72038165fac3d580e3",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/dot/web3icons-tokens-mono-DOT.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "aave",
+    "owner": "Aave Companies",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/aave/web3icons-tokens-background-AAVE.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/AAVE.svg",
+        "sha256": "92afff62097a60cecc874bc709a95ebb31dd3d24d56f90d19f8a1a004d9cd856",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/aave/web3icons-tokens-branded-AAVE.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/AAVE.svg",
+        "sha256": "deee95a7c355fbd1ab995d377bcdebc8f4cd51616d4770a302d1989fe098d3d1",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/aave/web3icons-tokens-mono-AAVE.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/AAVE.svg",
+        "sha256": "9da8b81ea9ed62deb434d7ca96f0c358ad2761e6d6ce0da680bd17c4406a4bba",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/aave/web3icons-tokens-mono-AAVE-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/AAVE.svg",
+        "sha256": "4e7c573d38c49a9aca8ca8685155e2ae9d8c53442785199d15835c4481c21c3c",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/aave/web3icons-tokens-mono-AAVE.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "uni",
+    "owner": "Uniswap Labs",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/uni/web3icons-tokens-background-UNI.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/UNI.svg",
+        "sha256": "9d03d489c2a29bb40bf6d289f0b3049d439b7b2b4c0144906751f03dc4bb2084",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/uni/web3icons-tokens-branded-UNI.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/UNI.svg",
+        "sha256": "b2a612c986fa02052e6addb37a7dd75a61d280a79f79fb1ce9776e810408c488",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/uni/web3icons-tokens-mono-UNI.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/UNI.svg",
+        "sha256": "b1d33c79e347c528d9ca1341c4100bf935f8e2a8033515be796104662049a182",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/uni/web3icons-tokens-mono-UNI-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/UNI.svg",
+        "sha256": "a1e3937e8dba3788ad8e911b429d9716922feab16d8a44098f679335bbb11677",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/uni/web3icons-tokens-mono-UNI.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
     "key": "tron",
     "owner": "TRON DAO",
     "provenance": "open-library",
@@ -535,6 +975,256 @@ export const FETCHED_ART: readonly ArtSource[] = [
         "surface": "dark",
         "derived": {
           "from": "packages/identity/sources/tesla/simple-icons-tesla.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "apple",
+    "owner": "Apple Inc.",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=apple",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #000000 is the value in the library's data file.",
+    "retrieved": "2026-10-09",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #000000.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/apple/simple-icons-apple.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/apple.svg",
+        "sha256": "2a1509dccd25e6d2bc7a11a8e52941077e1a48555e192ce638699b9f083c2a7c",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/apple/simple-icons-apple-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/apple.svg",
+        "sha256": "cbc36e6e70deb9764f033108a090de80df021a665b6209e4cf44f8bad06fd8db",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/apple/simple-icons-apple.svg",
+          "recolour": {},
+          "rootFill": "#000000",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/apple/simple-icons-apple-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/apple.svg",
+        "sha256": "b3ae4e57a61d141b1deaedb7328f49aeb94e109b2438eab2c83f33f0b987964f",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/apple/simple-icons-apple.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "meta",
+    "owner": "Meta Platforms, Inc.",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=meta",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #0467DF is the value in the library's data file.",
+    "retrieved": "2026-10-09",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #0467DF.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/meta/simple-icons-meta.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/meta.svg",
+        "sha256": "e3e9db62f59dc477e5917687349b8aa9685b841d40300c1afad60ad85075cd2e",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/meta/simple-icons-meta-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/meta.svg",
+        "sha256": "18e15e0cd6ef858aa8b054db472f83870e5e2ef15f9b19554480c89c93c264e1",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "any",
+        "derived": {
+          "from": "packages/identity/sources/meta/simple-icons-meta.svg",
+          "recolour": {},
+          "rootFill": "#0467DF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/meta/simple-icons-meta-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/meta.svg",
+        "sha256": "11c2d337a600c8e8d43bbbd7f81c0de91960ff432639aa2c3dc20c121f81079a",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/meta/simple-icons-meta.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "google",
+    "owner": "Google LLC (Alphabet)",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=google",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #4285F4 is the value in the library's data file.",
+    "retrieved": "2026-10-09",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #4285F4.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/google/simple-icons-google.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/google.svg",
+        "sha256": "d8cf9fb2d5e234e03254f1d6400d8cc8160c309b010d031a64f37084b5a21d01",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/google/simple-icons-google-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/google.svg",
+        "sha256": "147b64b183daad84440103815845150903f6175357419b0ccf2e5a6b622e62fa",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "any",
+        "derived": {
+          "from": "packages/identity/sources/google/simple-icons-google.svg",
+          "recolour": {},
+          "rootFill": "#4285F4",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/google/simple-icons-google-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/google.svg",
+        "sha256": "0eadc341619be6f37afa24bd3030d7ba56cbe2299a498e522d88e01da0ebcd65",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/google/simple-icons-google.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "palantir",
+    "owner": "Palantir Technologies Inc.",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=palantir",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #101113 is the value in the library's data file.",
+    "retrieved": "2026-10-09",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #101113.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/palantir/simple-icons-palantir.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/palantir.svg",
+        "sha256": "0ea58cb945cc09a7edbb96ca6de7ee3854f16d0a559014e9d3fcb4bdbbbb1cc7",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/palantir/simple-icons-palantir-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/palantir.svg",
+        "sha256": "f4d07e961cc941a530f8bbf0a14b20bd7d982274d811a0121c36fe9578249f7a",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/palantir/simple-icons-palantir.svg",
+          "recolour": {},
+          "rootFill": "#101113",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/palantir/simple-icons-palantir-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/palantir.svg",
+        "sha256": "ab569d68ce68c152406a1e61e3f479a3259262a035e0a495f215f957299c3d26",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/palantir/simple-icons-palantir.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "amd",
+    "owner": "Advanced Micro Devices, Inc.",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=amd",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #ED1C24 is the value in the library's data file.",
+    "retrieved": "2026-10-09",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #ED1C24.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/amd/simple-icons-amd.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/amd.svg",
+        "sha256": "c4c2f985dc1427aa7a54e3f80ef5ca35dba911bbed184a0dc6def148c1dfa420",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/amd/simple-icons-amd-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/amd.svg",
+        "sha256": "7f331fc622a549ee61f0c2288102738e6998842a626516a331da898055e0251f",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "any",
+        "derived": {
+          "from": "packages/identity/sources/amd/simple-icons-amd.svg",
+          "recolour": {},
+          "rootFill": "#ED1C24",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/amd/simple-icons-amd-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/amd.svg",
+        "sha256": "e58aceac0fe6c92a8e2368361370c1215284b3e8c7da566dd0adb71e602e6c52",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/amd/simple-icons-amd.svg",
           "recolour": {},
           "rootFill": "#FFFFFF",
           "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."

@@ -3,8 +3,8 @@ import {
   MAINNET_CHAIN_ID,
   MAINNET_USDC,
   type MarketSpec,
-  PRINT_CLASS_OF,
   PRINT_VERIFIER,
+  printClassKeyOf,
 } from "@senryo/config";
 import {
   accessManagerAbi,
@@ -65,7 +65,7 @@ export function addressOf(chainId: ChainId, name: ContractName): Address {
 
 /** The verifier a market's prints are proven by: its print class's (D-284). */
 export function verifierOf(chainId: ChainId, market: MarketSpec): Address {
-  return addressOf(chainId, PRINT_VERIFIER[PRINT_CLASS_OF[market.kind]] as ContractName);
+  return addressOf(chainId, PRINT_VERIFIER[printClassKeyOf(market)] as ContractName);
 }
 
 /** First block to consider for this deployment (indexer start block). */

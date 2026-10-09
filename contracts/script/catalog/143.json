@@ -86,6 +86,18 @@
   },
   "poolSeed": "0",
   "pyth": "0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d",
+  "redstone": {
+    "admissionSec": 900,
+    "signers": [
+      "0x8BB8F32Df04c8b654987DAaeD53D6B6091e3B774",
+      "0xdEB22f54738d54976C4c0fe5ce6d408E40d88499",
+      "0x51Ce04Be4b3E32572C4Ec9135221d0691Ba7d202",
+      "0xDD682daEC5A90dD295d14DA4b0bec9281017b5bE",
+      "0x9c5AE89C4Af6aA32cE58588DBaF90d18a855B6de"
+    ],
+    "strictSec": 60,
+    "threshold": 3
+  },
   "series": [
     {
       "bands": [
@@ -2246,6 +2258,2742 @@
       "sigmaE8": 8013,
       "symbol": "METALS",
       "verifierClass": "basket"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 4,
+          "kind": 3,
+          "lowBps": 4
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 9
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "NVDA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 10,
+          "kind": 3,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 20
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 20
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "NVDA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 17,
+          "kind": 3,
+          "lowBps": 17
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 35
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 35
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "NVDA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 35,
+          "kind": 3,
+          "lowBps": 35
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 69
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 69
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e56444100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11575,
+      "symbol": "NVDA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 4,
+          "kind": 3,
+          "lowBps": 4
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 9
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11397,
+      "symbol": "AAPL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 10,
+          "kind": 3,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 20
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 20
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11397,
+      "symbol": "AAPL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 17,
+          "kind": 3,
+          "lowBps": 17
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 34
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 34
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11397,
+      "symbol": "AAPL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 34,
+          "kind": 3,
+          "lowBps": 34
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 68
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 68
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141504c00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 11397,
+      "symbol": "AAPL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 5,
+          "kind": 3,
+          "lowBps": 5
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 10
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12643,
+      "symbol": "MSFT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 11,
+          "kind": 3,
+          "lowBps": 11
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 22
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 22
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12643,
+      "symbol": "MSFT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 19,
+          "kind": 3,
+          "lowBps": 19
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 38
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 38
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12643,
+      "symbol": "MSFT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 38,
+          "kind": 3,
+          "lowBps": 38
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 76
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 76
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d53465400000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12643,
+      "symbol": "MSFT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 5,
+          "kind": 3,
+          "lowBps": 5
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 11
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 11
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 13712,
+      "symbol": "META",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 12,
+          "kind": 3,
+          "lowBps": 12
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 24
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 24
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 13712,
+      "symbol": "META",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 21,
+          "kind": 3,
+          "lowBps": 21
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 41
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 41
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 13712,
+      "symbol": "META",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 41,
+          "kind": 3,
+          "lowBps": 41
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 82
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 82
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "market": "0x4d45544100000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 13712,
+      "symbol": "META",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 5,
+          "kind": 3,
+          "lowBps": 5
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 10
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "market": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12465,
+      "symbol": "GOOGL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 11,
+          "kind": 3,
+          "lowBps": 11
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 22
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 22
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "market": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12465,
+      "symbol": "GOOGL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 19,
+          "kind": 3,
+          "lowBps": 19
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 37
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 37
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "market": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12465,
+      "symbol": "GOOGL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 37,
+          "kind": 3,
+          "lowBps": 37
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 75
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 75
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "market": "0x474f4f474c000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12465,
+      "symbol": "GOOGL",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 5,
+          "kind": 3,
+          "lowBps": 5
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 10
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12287,
+      "symbol": "AMZN",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 11,
+          "kind": 3,
+          "lowBps": 11
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 21
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 21
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12287,
+      "symbol": "AMZN",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 18,
+          "kind": 3,
+          "lowBps": 18
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 37
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 37
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12287,
+      "symbol": "AMZN",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 37,
+          "kind": 3,
+          "lowBps": 37
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 74
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 74
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d5a4e00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 12287,
+      "symbol": "AMZN",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 10,
+          "kind": 3,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 21
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 21
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "market": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 26711,
+      "symbol": "PLTR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 23,
+          "kind": 3,
+          "lowBps": 23
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 46
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 46
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "market": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 26711,
+      "symbol": "PLTR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 40,
+          "kind": 3,
+          "lowBps": 40
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 80
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 80
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "market": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 26711,
+      "symbol": "PLTR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 80,
+          "kind": 3,
+          "lowBps": 80
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 160
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 160
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "market": "0x504c545200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 26711,
+      "symbol": "PLTR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 9,
+          "kind": 3,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 18
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 18
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22615,
+      "symbol": "AMD",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 20,
+          "kind": 3,
+          "lowBps": 20
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 39
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 39
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22615,
+      "symbol": "AMD",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 34,
+          "kind": 3,
+          "lowBps": 34
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 68
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 68
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22615,
+      "symbol": "AMD",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 68,
+          "kind": 3,
+          "lowBps": 68
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 136
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 136
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "market": "0x414d440000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22615,
+      "symbol": "AMD",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 9,
+          "kind": 3,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 18
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 18
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "market": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 23149,
+      "symbol": "AVAX",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 20,
+          "kind": 3,
+          "lowBps": 20
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 40
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 40
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "market": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 23149,
+      "symbol": "AVAX",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 35,
+          "kind": 3,
+          "lowBps": 35
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 69
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 69
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "market": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 23149,
+      "symbol": "AVAX",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 69,
+          "kind": 3,
+          "lowBps": 69
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 139
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 139
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "market": "0x4156415800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 23149,
+      "symbol": "AVAX",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 7,
+          "kind": 3,
+          "lowBps": 7
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 13
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 13
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 17273,
+      "symbol": "LINK",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 15,
+          "kind": 3,
+          "lowBps": 15
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 30
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 30
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 17273,
+      "symbol": "LINK",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 26,
+          "kind": 3,
+          "lowBps": 26
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 52
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 52
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 17273,
+      "symbol": "LINK",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 52,
+          "kind": 3,
+          "lowBps": 52
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 104
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 104
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c494e4b00000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 17273,
+      "symbol": "LINK",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 9,
+          "kind": 3,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 19
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 19
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24040,
+      "symbol": "SUI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 21,
+          "kind": 3,
+          "lowBps": 21
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 42
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 42
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24040,
+      "symbol": "SUI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 36,
+          "kind": 3,
+          "lowBps": 36
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 72
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 72
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24040,
+      "symbol": "SUI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 72,
+          "kind": 3,
+          "lowBps": 72
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 144
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 144
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x5355490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24040,
+      "symbol": "SUI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 8,
+          "kind": 3,
+          "lowBps": 8
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 17
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 17
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "market": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 21725,
+      "symbol": "TON",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 19,
+          "kind": 3,
+          "lowBps": 19
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 38
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 38
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "market": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 21725,
+      "symbol": "TON",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 33,
+          "kind": 3,
+          "lowBps": 33
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 65
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 65
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "market": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 21725,
+      "symbol": "TON",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 65,
+          "kind": 3,
+          "lowBps": 65
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 130
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 130
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "market": "0x544f4e0000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 21725,
+      "symbol": "TON",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 10,
+          "kind": 3,
+          "lowBps": 10
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 19
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 19
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24752,
+      "symbol": "ADA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 21,
+          "kind": 3,
+          "lowBps": 21
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 43
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 43
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24752,
+      "symbol": "ADA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 37,
+          "kind": 3,
+          "lowBps": 37
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 74
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 74
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24752,
+      "symbol": "ADA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 74,
+          "kind": 3,
+          "lowBps": 74
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 149
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 149
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4144410000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24752,
+      "symbol": "ADA",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 6,
+          "kind": 3,
+          "lowBps": 6
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 12
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 12
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15492,
+      "symbol": "LTC",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 13,
+          "kind": 3,
+          "lowBps": 13
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 27
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 27
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15492,
+      "symbol": "LTC",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 23,
+          "kind": 3,
+          "lowBps": 23
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 46
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 46
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15492,
+      "symbol": "LTC",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 46,
+          "kind": 3,
+          "lowBps": 46
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 93
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 93
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "market": "0x4c54430000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 15492,
+      "symbol": "LTC",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 11,
+          "kind": 3,
+          "lowBps": 11
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 21
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 21
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "market": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 27423,
+      "symbol": "DOT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 24,
+          "kind": 3,
+          "lowBps": 24
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 47
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 47
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "market": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 27423,
+      "symbol": "DOT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 41,
+          "kind": 3,
+          "lowBps": 41
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 82
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 82
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "market": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 27423,
+      "symbol": "DOT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 82,
+          "kind": 3,
+          "lowBps": 82
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 165
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 165
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "market": "0x444f540000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 27423,
+      "symbol": "DOT",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 15,
+          "kind": 3,
+          "lowBps": 15
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 30
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 30
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 39176,
+      "symbol": "NEAR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 34,
+          "kind": 3,
+          "lowBps": 34
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 68
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 68
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 39176,
+      "symbol": "NEAR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 59,
+          "kind": 3,
+          "lowBps": 59
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 118
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 118
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 39176,
+      "symbol": "NEAR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 118,
+          "kind": 3,
+          "lowBps": 118
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 235
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 235
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "market": "0x4e45415200000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 39176,
+      "symbol": "NEAR",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 9,
+          "kind": 3,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 17
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 17
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22259,
+      "symbol": "AAVE",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 19,
+          "kind": 3,
+          "lowBps": 19
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 39
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 39
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22259,
+      "symbol": "AAVE",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 33,
+          "kind": 3,
+          "lowBps": 33
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 67
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 67
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22259,
+      "symbol": "AAVE",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 67,
+          "kind": 3,
+          "lowBps": 67
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 134
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 134
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "market": "0x4141564500000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 22259,
+      "symbol": "AAVE",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 9,
+          "kind": 3,
+          "lowBps": 9
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 19
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 19
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 0,
+      "feedId": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24218,
+      "symbol": "UNI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 21,
+          "kind": 3,
+          "lowBps": 21
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 42
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 42
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 0,
+      "feedId": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24218,
+      "symbol": "UNI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 36,
+          "kind": 3,
+          "lowBps": 36
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 73
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 73
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 0,
+      "feedId": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24218,
+      "symbol": "UNI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 73,
+          "kind": 3,
+          "lowBps": 73
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 145
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 145
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 0,
+      "feedId": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "market": "0x554e490000000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 24218,
+      "symbol": "UNI",
+      "verifierClass": "redstone"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 3,
+          "kind": 3,
+          "lowBps": 3
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 6
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 6
+        }
+      ],
+      "cadenceSec": 60,
+      "calendarId": 1,
+      "feedId": "0xc10ae97914b1a77d97c30fafd6254032b768567ca82a379b8b25f397e909f2ef",
+      "market": "0x5445434800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 7301,
+      "symbol": "TECH",
+      "verifierClass": "redstone-basket"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 6,
+          "kind": 3,
+          "lowBps": 6
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 13
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 13
+        }
+      ],
+      "cadenceSec": 300,
+      "calendarId": 1,
+      "feedId": "0xc10ae97914b1a77d97c30fafd6254032b768567ca82a379b8b25f397e909f2ef",
+      "market": "0x5445434800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 7301,
+      "symbol": "TECH",
+      "verifierClass": "redstone-basket"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 11,
+          "kind": 3,
+          "lowBps": 11
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 22
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 22
+        }
+      ],
+      "cadenceSec": 900,
+      "calendarId": 1,
+      "feedId": "0xc10ae97914b1a77d97c30fafd6254032b768567ca82a379b8b25f397e909f2ef",
+      "market": "0x5445434800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 7301,
+      "symbol": "TECH",
+      "verifierClass": "redstone-basket"
+    },
+    {
+      "bands": [
+        {
+          "highBps": 0,
+          "kind": 1,
+          "lowBps": 0
+        },
+        {
+          "highBps": 0,
+          "kind": 2,
+          "lowBps": 0
+        },
+        {
+          "highBps": 22,
+          "kind": 3,
+          "lowBps": 22
+        },
+        {
+          "highBps": 0,
+          "kind": 4,
+          "lowBps": 44
+        },
+        {
+          "highBps": 0,
+          "kind": 5,
+          "lowBps": 44
+        }
+      ],
+      "cadenceSec": 3600,
+      "calendarId": 1,
+      "feedId": "0xc10ae97914b1a77d97c30fafd6254032b768567ca82a379b8b25f397e909f2ef",
+      "market": "0x5445434800000000000000000000000000000000000000000000000000000000",
+      "sigmaE8": 7301,
+      "symbol": "TECH",
+      "verifierClass": "redstone-basket"
     }
   ],
   "session": {

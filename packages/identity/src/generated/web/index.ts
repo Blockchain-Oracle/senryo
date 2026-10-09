@@ -93,6 +93,38 @@ const ArtXrpDisc = lazy(() => import("./xrp-disc.tsx"));
 const ArtXrpSymbol = lazy(() => import("./xrp-symbol.tsx"));
 const ArtXrpMonoLight = lazy(() => import("./xrp-monolight.tsx"));
 const ArtXrpMonoDark = lazy(() => import("./xrp-monodark.tsx"));
+const ArtLinkDisc = lazy(() => import("./link-disc.tsx"));
+const ArtLinkSymbol = lazy(() => import("./link-symbol.tsx"));
+const ArtLinkMonoLight = lazy(() => import("./link-monolight.tsx"));
+const ArtLinkMonoDark = lazy(() => import("./link-monodark.tsx"));
+const ArtSuiDisc = lazy(() => import("./sui-disc.tsx"));
+const ArtSuiSymbol = lazy(() => import("./sui-symbol.tsx"));
+const ArtSuiMonoLight = lazy(() => import("./sui-monolight.tsx"));
+const ArtSuiMonoDark = lazy(() => import("./sui-monodark.tsx"));
+const ArtTonDisc = lazy(() => import("./ton-disc.tsx"));
+const ArtTonSymbol = lazy(() => import("./ton-symbol.tsx"));
+const ArtTonMonoLight = lazy(() => import("./ton-monolight.tsx"));
+const ArtTonMonoDark = lazy(() => import("./ton-monodark.tsx"));
+const ArtAdaDisc = lazy(() => import("./ada-disc.tsx"));
+const ArtAdaSymbol = lazy(() => import("./ada-symbol.tsx"));
+const ArtAdaMonoLight = lazy(() => import("./ada-monolight.tsx"));
+const ArtAdaMonoDark = lazy(() => import("./ada-monodark.tsx"));
+const ArtLtcDisc = lazy(() => import("./ltc-disc.tsx"));
+const ArtLtcSymbol = lazy(() => import("./ltc-symbol.tsx"));
+const ArtLtcMonoLight = lazy(() => import("./ltc-monolight.tsx"));
+const ArtLtcMonoDark = lazy(() => import("./ltc-monodark.tsx"));
+const ArtDotDisc = lazy(() => import("./dot-disc.tsx"));
+const ArtDotSymbol = lazy(() => import("./dot-symbol.tsx"));
+const ArtDotMonoLight = lazy(() => import("./dot-monolight.tsx"));
+const ArtDotMonoDark = lazy(() => import("./dot-monodark.tsx"));
+const ArtAaveDisc = lazy(() => import("./aave-disc.tsx"));
+const ArtAaveSymbol = lazy(() => import("./aave-symbol.tsx"));
+const ArtAaveMonoLight = lazy(() => import("./aave-monolight.tsx"));
+const ArtAaveMonoDark = lazy(() => import("./aave-monodark.tsx"));
+const ArtUniDisc = lazy(() => import("./uni-disc.tsx"));
+const ArtUniSymbol = lazy(() => import("./uni-symbol.tsx"));
+const ArtUniMonoLight = lazy(() => import("./uni-monolight.tsx"));
+const ArtUniMonoDark = lazy(() => import("./uni-monodark.tsx"));
 const ArtTronDisc = lazy(() => import("./tron-disc.tsx"));
 const ArtTronSymbol = lazy(() => import("./tron-symbol.tsx"));
 const ArtTronMonoLight = lazy(() => import("./tron-monolight.tsx"));
@@ -115,6 +147,21 @@ const ArtNvidiaMonoLight = lazy(() => import("./nvidia-monolight.tsx"));
 const ArtTeslaMonoDark = lazy(() => import("./tesla-monodark.tsx"));
 const ArtTeslaSymbol = lazy(() => import("./tesla-symbol.tsx"));
 const ArtTeslaMonoLight = lazy(() => import("./tesla-monolight.tsx"));
+const ArtAppleMonoDark = lazy(() => import("./apple-monodark.tsx"));
+const ArtAppleSymbol = lazy(() => import("./apple-symbol.tsx"));
+const ArtAppleMonoLight = lazy(() => import("./apple-monolight.tsx"));
+const ArtMetaMonoDark = lazy(() => import("./meta-monodark.tsx"));
+const ArtMetaSymbol = lazy(() => import("./meta-symbol.tsx"));
+const ArtMetaMonoLight = lazy(() => import("./meta-monolight.tsx"));
+const ArtGoogleMonoDark = lazy(() => import("./google-monodark.tsx"));
+const ArtGoogleSymbol = lazy(() => import("./google-symbol.tsx"));
+const ArtGoogleMonoLight = lazy(() => import("./google-monolight.tsx"));
+const ArtPalantirMonoDark = lazy(() => import("./palantir-monodark.tsx"));
+const ArtPalantirSymbol = lazy(() => import("./palantir-symbol.tsx"));
+const ArtPalantirMonoLight = lazy(() => import("./palantir-monolight.tsx"));
+const ArtAmdMonoDark = lazy(() => import("./amd-monodark.tsx"));
+const ArtAmdSymbol = lazy(() => import("./amd-symbol.tsx"));
+const ArtAmdMonoLight = lazy(() => import("./amd-monolight.tsx"));
 const ArtBasketSymbol = lazy(() => import("./basket-symbol.tsx"));
 const ArtBasketMonoLight = lazy(() => import("./basket-monolight.tsx"));
 const ArtTestUsdSymbol = lazy(() => import("./test-usd-symbol.tsx"));
@@ -201,12 +248,25 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "bnb": { disc: ArtBnbDisc, symbol: ArtBnbSymbol, monoLight: ArtBnbMonoLight, monoDark: ArtBnbMonoDark },
   "doge": { disc: ArtDogeDisc, symbol: ArtDogeSymbol, monoLight: ArtDogeMonoLight, monoDark: ArtDogeMonoDark },
   "xrp": { disc: ArtXrpDisc, symbol: ArtXrpSymbol, monoLight: ArtXrpMonoLight, monoDark: ArtXrpMonoDark },
+  "link": { disc: ArtLinkDisc, symbol: ArtLinkSymbol, monoLight: ArtLinkMonoLight, monoDark: ArtLinkMonoDark },
+  "sui": { disc: ArtSuiDisc, symbol: ArtSuiSymbol, monoLight: ArtSuiMonoLight, monoDark: ArtSuiMonoDark },
+  "ton": { disc: ArtTonDisc, symbol: ArtTonSymbol, monoLight: ArtTonMonoLight, monoDark: ArtTonMonoDark },
+  "ada": { disc: ArtAdaDisc, symbol: ArtAdaSymbol, monoLight: ArtAdaMonoLight, monoDark: ArtAdaMonoDark },
+  "ltc": { disc: ArtLtcDisc, symbol: ArtLtcSymbol, monoLight: ArtLtcMonoLight, monoDark: ArtLtcMonoDark },
+  "dot": { disc: ArtDotDisc, symbol: ArtDotSymbol, monoLight: ArtDotMonoLight, monoDark: ArtDotMonoDark },
+  "aave": { disc: ArtAaveDisc, symbol: ArtAaveSymbol, monoLight: ArtAaveMonoLight, monoDark: ArtAaveMonoDark },
+  "uni": { disc: ArtUniDisc, symbol: ArtUniSymbol, monoLight: ArtUniMonoLight, monoDark: ArtUniMonoDark },
   "tron": { disc: ArtTronDisc, symbol: ArtTronSymbol, monoLight: ArtTronMonoLight, monoDark: ArtTronMonoDark },
   "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
+  "apple": { monoDark: ArtAppleMonoDark, symbol: ArtAppleSymbol, monoLight: ArtAppleMonoLight },
+  "meta": { monoDark: ArtMetaMonoDark, symbol: ArtMetaSymbol, monoLight: ArtMetaMonoLight },
+  "google": { monoDark: ArtGoogleMonoDark, symbol: ArtGoogleSymbol, monoLight: ArtGoogleMonoLight },
+  "palantir": { monoDark: ArtPalantirMonoDark, symbol: ArtPalantirSymbol, monoLight: ArtPalantirMonoLight },
+  "amd": { monoDark: ArtAmdMonoDark, symbol: ArtAmdSymbol, monoLight: ArtAmdMonoLight },
   "basket": { symbol: ArtBasketSymbol, monoLight: ArtBasketMonoLight },
   "test-usd": { symbol: ArtTestUsdSymbol, monoLight: ArtTestUsdMonoLight },
   "lib-monad": { monoLight: ArtLibMonadMonoLight, monoDark: ArtLibMonadMonoDark },

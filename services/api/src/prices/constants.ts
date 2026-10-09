@@ -24,3 +24,20 @@ export const ARCHIVE_PENDING_MS = 2_000;
 export const REST_TIMEOUT_MS = 4_000;
 /** Kept in `pyth_prints` (window boundaries and fills): the chain holds them forever; the archive serves proofs. */
 export const PRINT_RETENTION_DAYS = 14;
+
+// ------------------------------------------------------------------------------------------------ RedStone (D-284)
+
+/** RedStone's production data service and its public gateways (refusing in growing windows until 29 Oct 2026). */
+export const REDSTONE_SERVICE = "redstone-primary-prod";
+export const REDSTONE_PUBLIC_GATEWAYS = [
+  "https://oracle-gateway-2.a.redstone.finance",
+  "https://oracle-gateway-1.a.redstone.finance",
+];
+/** Packages are signed on a 10-second grid; read each one a little after it lands. */
+export const REDSTONE_GRID_MS = 10_000;
+export const REDSTONE_POLL_OFFSET_MS = 2_500;
+/** A fill's RedStone print can be up to one grid step away, plus the read. */
+export const REDSTONE_PRINT_WAIT_MS = 15_000;
+export const REDSTONE_FETCH_TIMEOUT_MS = 8_000;
+export const REDSTONE_BACKOFF_MIN_MS = 60_000;
+export const REDSTONE_BACKOFF_MAX_MS = 600_000;

@@ -34,7 +34,7 @@ export function routeAssetId(symbol: string, chain: RouteChain): EntityId | unde
 /** A prediction market's mark by catalogue symbol (`BTC`, `TSLA`, `XAU`, `EUR`). */
 export function marketId(symbol: string): EntityId {
   if (symbol === "EUR") return ids.fxPair("EUR", "USD");
-  return ["TSLA", "NVDA", "AAPL", "MSFT", "META", "AMZN", "GOOGL", "QQQ", "SPY"].includes(symbol)
+  return ["TSLA", "NVDA", "AAPL", "MSFT", "META", "AMZN", "GOOGL", "PLTR", "AMD", "QQQ", "SPY"].includes(symbol)
     ? ids.equity(symbol)
     : ids.market(symbol);
 }

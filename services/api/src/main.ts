@@ -49,7 +49,7 @@ const chains = await openChains(env, log);
 const geo = new GeoDb(log);
 geo.start();
 const bus = new StreamBus();
-const gateway = new PythGateway(db, bus, log, secrets.pythKey);
+const gateway = new PythGateway(db, bus, log, secrets.pythKey, secrets.redstoneGateways);
 gateway.start();
 const archiveTimer = setInterval(() => {
   void gateway

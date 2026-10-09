@@ -4,8 +4,9 @@ import { basketPointsE8 } from "@senryo/core";
 import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
-import { FRAME_GAP_MS, PRINT_WAIT_MS, RING_KEEP_SEC } from "./constants.ts";
+import { FRAME_GAP_MS, PRINT_WAIT_MS, REDSTONE_GRID_MS, REDSTONE_PRINT_WAIT_MS, RING_KEEP_SEC } from "./constants.ts";
 import { type HermesStatus, HermesStream } from "./hermes.ts";
+import { type RedStoneGateway, RedStoneReader } from "./redstone.ts";
 import { FeedRing, type PriceUpdate, toE8 } from "./ring.ts";
 
 /**
@@ -36,12 +37,14 @@ export class PythGateway {
   private readonly lastFrameAt = new Map<Hex, number>();
   private readonly pendingFrame = new Map<Hex, ReturnType<typeof setTimeout>>();
   private hermes: HermesStream | undefined;
+  private redstone: RedStoneReader | undefined;
 
   constructor(
     db: Db,
     private readonly bus: StreamBus,
     private readonly log: Logger,
     private readonly key: string | undefined,
+    private readonly redstoneGateways: RedStoneGateway[] | undefined = undefined,
   ) {
     this.archive = new PriceArchive(db, log);
     this.feeds = MARKETS.map((market, index) => ({
@@ -79,6 +82,13 @@ export class PythGateway {
   }
 
   start(): void {
+    const redstoneFeeds = new Map(
+      this.feeds.flatMap((f) =>
+        f.market.source.kind === "redstone" ? [[f.market.source.feed, feedIdOf(f.market)] as const] : [],
+      ),
+    );
+    this.redstone = new RedStoneReader(redstoneFeeds, (u) => this.onUpdate(u), this.log, this.redstoneGateways);
+    this.redstone.start();
     if (!this.key) {
       this.log.warn("PYTH_API_KEY unset — prices and prints are off");
       return;
@@ -94,6 +104,7 @@ export class PythGateway {
 
   stop(): void {
     this.hermes?.stop();
+    this.redstone?.stop();
   }
 
   status(): HermesStatus & { keyed: boolean } {
@@ -116,19 +127,30 @@ export class PythGateway {
    * (up to `waitMs` — a fill asks a second ahead), then the archive, then Hermes REST. Archived on the way, so the
    * keeper and Proof find it later.
    */
-  async printAt(feedId: Hex, t: number, waitMs: number = PRINT_WAIT_MS): Promise<PriceUpdate | undefined> {
+  async printAt(feedId: Hex, t: number, waitMs?: number): Promise<PriceUpdate | undefined> {
     const feed = this.byId.get(feedId);
-    if (feed && feed.members.length > 0) return this.basketPrintAt(feed, t, waitMs);
-    const streamed = feed ? await feed.ring.wait(t, waitMs) : undefined;
+    const redstone = feed?.market.source.kind === "redstone";
+    // A RedStone print of t is the next 10-second grid point: up to a grid step away, plus the read.
+    const wait = waitMs ?? (redstone ? REDSTONE_PRINT_WAIT_MS : PRINT_WAIT_MS);
+    if (feed && feed.members.length > 0) return this.basketPrintAt(feed, t, wait);
+    const streamed = feed ? await feed.ring.wait(t, wait) : undefined;
     if (streamed) {
       await this.archive.savePrint(streamed, t, "stream");
       return streamed;
     }
     const archived = await this.archive.printAt(feedId, t);
     if (archived) return archived;
-    const rest = await this.hermes?.printAt(feedId, t);
+    const rest = redstone ? await this.redstoneAt(feedId, t) : await this.hermes?.printAt(feedId, t);
     if (rest) await this.archive.savePrint(rest, t, "rest");
     return rest;
+  }
+
+  /** A RedStone print of t from the gateway's history (the grid point at or after t). */
+  private async redstoneAt(feedId: Hex, t: number): Promise<PriceUpdate | undefined> {
+    const gridSec = REDSTONE_GRID_MS / MS_PER_SECOND;
+    const at = Math.ceil(t / gridSec) * gridSec;
+    const updates = (await this.redstone?.historical(at * MS_PER_SECOND)) ?? [];
+    return updates.find((u) => u.feedId === feedId);
   }
 
   /** A basket's print of t: every member's print of t, composed and archived (none while any member has none). */

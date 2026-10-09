@@ -43,6 +43,20 @@ export interface ApiSecrets {
   auroraKey: string | undefined;
   /** Pyth key — the gateway is its only holder (D-272); header only, never logged. */
   pythKey: string | undefined;
+  /** RedStone's keyed gateways (D-284): JSON `[{ "url": "…", "apiKey": "…" }]`; unset → the public pair. */
+  redstoneGateways: { url: string; apiKey: string | null }[] | undefined;
+}
+
+function parseGateways(text: string | undefined): { url: string; apiKey: string | null }[] | undefined {
+  if (!text) return undefined;
+  try {
+    const list = JSON.parse(text) as { url?: unknown; apiKey?: unknown }[];
+    return list.flatMap((g) =>
+      typeof g.url === "string" ? [{ url: g.url, apiKey: typeof g.apiKey === "string" ? g.apiKey : null }] : [],
+    );
+  } catch {
+    return undefined;
+  }
 }
 
 export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
@@ -55,6 +69,7 @@ export function loadApiEnv(): { env: ApiEnv; secrets: ApiSecrets } {
       alchemyKey: readSecret("ALCHEMY_API_KEY"),
       auroraKey: readSecret("AURORA_API_KEY"),
       pythKey: readSecret("PYTH_API_KEY"),
+      redstoneGateways: parseGateways(readSecret("REDSTONE_GATEWAYS")),
     },
   };
 }
