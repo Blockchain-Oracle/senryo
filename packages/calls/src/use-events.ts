@@ -6,7 +6,7 @@
 import { classifyAuthError, isSilent } from "@senryo/account";
 import type { EventView } from "@senryo/api-client";
 import { type Hex, isDeployed } from "@senryo/chain";
-import { EVENT_LIMITS } from "@senryo/config";
+import { committeeView, EVENT_LIMITS } from "@senryo/config";
 import { usd } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import {
@@ -111,8 +111,9 @@ export function useEventsFlow(caller: Caller, effects: EventFlowEffects) {
     owner,
     limits,
     events: "value" in board ? board.value.events : [],
-    committee: "value" in board ? board.value.committee : null,
-    boardState: board,
+    committee: ("value" in board ? board.value.committee : null) ?? committeeView(env.chainId),
+    /** fresh · stale · failed · unknown (still reading). */
+    boardStatus: board.status,
     calls: "value" in calls ? calls.value : [],
     balance: "value" in account ? account.value.balance : undefined,
     busy,

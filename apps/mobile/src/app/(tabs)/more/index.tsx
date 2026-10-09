@@ -11,6 +11,7 @@ import {
   Signal,
   Swords,
   type SymbolIcon,
+  Trophy,
   Wallet,
 } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
@@ -26,6 +27,7 @@ import { SIZE, SPACE, useTheme } from "~/theme";
 const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
   parlay: Layers,
   duel: Swords,
+  events: Trophy,
   wallet: Wallet,
   earn: Landmark,
   profile: CircleUserRound,

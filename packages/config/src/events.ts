@@ -20,6 +20,8 @@ export const EVENTS = {
   listAheadSec: 36 * HOUR_SEC,
   /** An answer counts until this long after the start: a postponed game the committee can't call refunds after it. */
   answerSpanSec: 48 * HOUR_SEC,
+  /** Stake presets in dollars; any exact amount within the book's limits can be typed. */
+  stakePresetsUsd: [5, 10, 25, 100],
   /** Domain tag of a member's statement (Owarine's `agari-event-v1`, Senryo's own). */
   statementDomain: "senryo-event-v1",
 } as const;
@@ -78,6 +80,18 @@ export const EVENT_COMMITTEES: Readonly<Record<ChainId, CommitteeSpec | null>> =
   },
   [MAINNET_CHAIN_ID]: null,
 };
+
+/** A network's committee as the apps show it (who signs, what each reads); null where there are no events. */
+export function committeeView(chainId: ChainId) {
+  const c = EVENT_COMMITTEES[chainId];
+  if (!c) return null;
+  return {
+    id: c.id,
+    quorum: c.quorum,
+    runBy: c.runBy,
+    members: c.members.map((m) => ({ address: m.address, name: m.name, reads: m.reads })),
+  };
+}
 
 export type LeagueKey = "nhl" | "mlb" | "nfl" | "epl";
 

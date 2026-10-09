@@ -79,8 +79,18 @@ leaderboard, a public profile and the ticker live on both apps · a referral pai
       ticket is the player's); Duel on both apps (tiers, queue, the swipe deck — 21st Swipe Deck #23568 — with the pick
       clock — 21st Progress Bar #23549 — cards, result, your duels and rating) in More / Everything → Play. Read-only
       until the arena is on chain with S8.9; the match view is unrendered until then and the phone has had no sim pass._
-- [ ] S8.7 Events (D-296): committee verifier + `EventBook` with tests; the first events (Practice, Senryo-run
+- [x] S8.7 Events (D-296): committee verifier + `EventBook` with tests; the first events (Practice, Senryo-run
       committee); events on both apps, honestly labelled
+      _Done: `EventBook` (11 Foundry tests incl. a payout fuzz, 101 in all), listed by `DeployMarkets` from the
+      catalogue's `.events` with its committee and the EVENTS role for the keeper (full deploy simulates at 68.9M gas);
+      the keeper's `events` job (ESPN schedule → listings; three signers on the league's feed, ESPN and theScore —
+      checked against four finished games, all agree — statements, answers, verdicts, payouts, fee sweep, pushes);
+      `EventRelay` and routes in the api, `market_events`/`event_answers`/`event_calls`, the indexer's `EventMarket`,
+      `EventAnswer`, `EventCall`, `EventCommittee` (calls count on the caller's record); Events on both apps (the
+      board with the 21st Prediction Market Card #2537, the question page with each member's re-hashed statement) in
+      More / Everything → Play. Read-only until the book is on chain with S8.9; the card is unrendered until then and
+      the phone has had no sim pass. Committee keys: `EVENT_SIGNER_{1,2,3}_PK` in `.env.local`, to the keeper's env at
+      S8.9._
 
 ### Games without a contract
 - [ ] S8.8 Lucky (api draw + one call), Warm-up (client), Line Rider and Candle Hop (canvas/Skia, api score replay and

@@ -791,6 +791,15 @@
         "use": "duel pick clock: time left with a calm/near/late tone (S8.6)",
         "path": "src/components/ui/progress-bar.tsx",
         "retokenized": true
+      },
+      {
+        "name": "prediction-market-card",
+        "source": "21st:isaiahbjork/prediction-market-card",
+        "id": 2537,
+        "url": "https://21st.dev/@isaiahbjork/components/prediction-market-card",
+        "use": "events board and question page: the pool, each side's stakes, Yes's share as a split bar, Yes / No, the call view sliding up in place with an exact amount and presets, the receipt (S8.7); searched \"prediction market card\" (2537, 16240 BeUI Prediction Market, 22249 Market Snapshot), \"poll result bar\" (23544 Poll Results), \"yes no vote\" (28275 Vote Tally), \"amount input currency\" (28357)",
+        "path": "src/components/ui/prediction-market-card.tsx",
+        "retokenized": true
       }
     ],
     "considered": [

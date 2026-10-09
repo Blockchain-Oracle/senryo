@@ -17,7 +17,8 @@ export type NavIcon =
   | "status"
   | "earn"
   | "parlay"
-  | "duel";
+  | "duel"
+  | "events";
 
 export interface NavItem {
   key: string;
@@ -41,6 +42,7 @@ export type DockKey = (typeof DOCK_NAV)[number]["key"];
 export const MORE_NAV = [
   { key: "parlay", label: "Parlay", icon: "parlay", path: "/parlay" },
   { key: "duel", label: "Duel", icon: "duel", path: "/duel" },
+  { key: "events", label: "Events", icon: "events", path: "/events" },
   { key: "wallet", label: "Wallet", icon: "wallet", path: "/wallet" },
   { key: "earn", label: "Earn", icon: "earn", path: "/earn" },
   { key: "profile", label: "Profile", icon: "profile", path: "/account/profile" },
@@ -72,7 +74,8 @@ export type WebIcon =
   | "download"
   | "earn"
   | "parlay"
-  | "duel";
+  | "duel"
+  | "events";
 
 export interface WebNavItem {
   key: string;
@@ -146,6 +149,14 @@ export const WEB_EVERYTHING = [
         href: "/app/duel/",
         description: "Head to head: the same three cards, the better total takes the pot.",
         keywords: "versus game pvp match head to head",
+      },
+      {
+        key: "events",
+        label: "Events",
+        icon: "events",
+        href: "/app/events/",
+        description: "Yes or No on real games, settled by a named committee.",
+        keywords: "sports nhl mlb nfl premier league football hockey baseball yes no committee",
       },
     ],
   },

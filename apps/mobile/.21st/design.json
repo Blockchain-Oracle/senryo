@@ -891,6 +891,16 @@
         "port": "Reanimated width spring to the value, label left and the time in words right, tone by time left",
         "deviations": "no indeterminate shimmer; the theme's raised2 track",
         "status": "built (S8.6) — src/components/kit/ProgressBar.tsx"
+      },
+      {
+        "name": "event-card",
+        "source": "21st #2537 isaiahbjork/prediction-market-card; searched \"prediction market card\" (2537, 16240 BeUI Prediction Market, 22249 Market Snapshot), \"poll result bar\" (23544), \"yes no vote\" (28275 Vote Tally), \"amount input currency\" (28357)",
+        "evidence": [
+          "pivot plan S8 events (D-296); Owarine web/src/features/markets/events/EventCard.tsx and mobile EventCard/EventParts: the question card with the lean bar and Yes / No, a locked event saying when the committee answers"
+        ],
+        "port": "a panel one step above its ground; the split share bar with its skewed divider; Yes / No at the kit's button geometry with the 0.97 press; choosing a side springs the call view up inside the card (Reanimated, SPRING.tallDetail) over the question lifted, dimmed and shrunk; an exact amount (decimal pad, never truncated) and presets; the receipt in place",
+        "deviations": "the pools are the book's (no simulated votes), no badges or bordered boxes, both sides' marks, the closing bar counts to the close",
+        "status": "built (S8.7) — src/components/kit/PredictionMarketCard.tsx, src/features/events/*"
       }
     ],
     "planned": [

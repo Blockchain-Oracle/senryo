@@ -1,5 +1,4 @@
 import {
-  type CommitteeView,
   type EventView,
   eventBoardRoute,
   eventCallsRoute,
@@ -7,7 +6,7 @@ import {
   placeEventCallRoute,
 } from "@senryo/api-client";
 import type { Address, Hex } from "@senryo/chain";
-import { type ChainId, EVENT_COMMITTEES } from "@senryo/config";
+import { type ChainId, committeeView } from "@senryo/config";
 import {
   answersOf,
   type EventRow,
@@ -35,17 +34,6 @@ function eventsOn(ctx: ApiContext, chainId: ChainId) {
   const relay = ctx.markets.get(chainId)?.events;
   if (!relay) throw new HttpError(HTTP_STATUS.unavailable, "NOT_DEPLOYED", `events are not live on ${chainId}`);
   return relay;
-}
-
-function committeeOf(chainId: ChainId): CommitteeView | null {
-  const c = EVENT_COMMITTEES[chainId];
-  if (!c) return null;
-  return {
-    id: c.id,
-    quorum: c.quorum,
-    runBy: c.runBy,
-    members: c.members.map((m) => ({ address: m.address, name: m.name, reads: m.reads })),
-  };
 }
 
 export function toEventView(e: EventRow): EventView {
@@ -79,7 +67,10 @@ export function registerEventRoutes(app: HttpServer, ctx: ApiContext): void {
   app.get(eventBoardRoute.path, async (request, reply) => {
     const { query } = parseRoute(eventBoardRoute, request);
     const rows = await eventBoard(ctx.db, query.chainId, RECENT_SEC, BOARD_SIZE);
-    return sendRoute(reply, eventBoardRoute, { events: rows.map(toEventView), committee: committeeOf(query.chainId) });
+    return sendRoute(reply, eventBoardRoute, {
+      events: rows.map(toEventView),
+      committee: committeeView(query.chainId),
+    });
   });
 
   app.get(eventCallsRoute.path, async (request, reply) => {
@@ -107,7 +98,7 @@ export function registerEventRoutes(app: HttpServer, ctx: ApiContext): void {
       eventById(ctx.db, query.chainId, params.eventId),
       answersOf(ctx.db, query.chainId, params.eventId),
     ]);
-    const committee = committeeOf(query.chainId);
+    const committee = committeeView(query.chainId);
     if (!e || !committee) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such question");
     return sendRoute(reply, eventDetailRoute, {
       event: toEventView(e),

@@ -66,7 +66,8 @@ export type AccountVerb =
   | "send"
   | "earn"
   | "place a parlay"
-  | "duel";
+  | "duel"
+  | "call an event";
 export const accountRequiredRoute = (verb: AccountVerb, next?: string) =>
   `/account-required?verb=${encodeURIComponent(verb)}${next ? `&next=${encodeURIComponent(next)}` : ""}` as const;
 
