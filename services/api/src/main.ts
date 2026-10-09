@@ -8,6 +8,8 @@ import {
   createLogger,
   DUEL_CHANNEL,
   type DuelNotice,
+  EVENT_CHANNEL,
+  type EventNotice,
   listen,
   loadOptionalSigner,
   migrate,
@@ -23,6 +25,7 @@ import { type ApiContext, openChains } from "./context.ts";
 import { DuelQueue } from "./duel/queue.ts";
 import { DuelRelay } from "./duel/relay.ts";
 import { loadApiEnv } from "./env.ts";
+import { EventRelay } from "./events/relay.ts";
 import { GeoDb } from "./geo-db.ts";
 import { DuelReader } from "./history/duel-reader.ts";
 import { ARCHIVE_PENDING_MS } from "./prices/constants.ts";
@@ -36,6 +39,7 @@ import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerDuelRoutes } from "./routes/duels.ts";
 import { registerEarnRoutes } from "./routes/earn.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
+import { registerEventRoutes } from "./routes/events.ts";
 import { registerHistoryRoutes } from "./routes/history.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
 import { registerMarketRoutes } from "./routes/markets.ts";
@@ -130,7 +134,11 @@ for (const chain of chains.values()) {
     queue.start();
     duels = { queue, relay: duelRelay };
   }
-  markets.set(chain.chainId, { relay, accounts, exits, parlays, duels });
+  // Yes/no events (D-296) once the book is deployed: each call goes out on its caller's lane.
+  const events = isDeployed(chain.chainId, "EventBook")
+    ? new EventRelay({ chainId: chain.chainId as ChainId, read: chain.read, relay, db, log })
+    : undefined;
+  markets.set(chain.chainId, { relay, accounts, exits, parlays, duels, events });
   log.info({ chainId: chain.chainId, lanes: sponsors.map((s) => s.address) }, "relay ready");
 }
 if (sponsors.length === 0) log.warn("no SPONSOR_PK — calls, sessions and Practice dollars answer 503");
@@ -164,6 +172,13 @@ await db.listen(PARLAY_CHANNEL, (payload) => {
 await db.listen(DUEL_CHANNEL, (payload) => {
   const notice = JSON.parse(payload) as DuelNotice;
   for (const player of notice.players) bus.emit(`user:${player}`, "duel", notice);
+});
+
+// Every event change moves the board's pools for everyone; a call or a payout also reaches its caller's stream.
+await db.listen(EVENT_CHANNEL, (payload) => {
+  const notice = JSON.parse(payload) as EventNotice;
+  bus.emit("markets", "event", notice);
+  if (notice.owner) bus.emit(`user:${notice.owner}`, "eventCall", notice);
 });
 
 const ctx: ApiContext = {
@@ -201,6 +216,7 @@ registerMarketRoutes(app, ctx);
 registerEarnRoutes(app, ctx);
 registerParlayRoutes(app, ctx);
 registerDuelRoutes(app, ctx);
+registerEventRoutes(app, ctx);
 registerHistoryRoutes(app, ctx);
 registerPriceRoutes(app, gateway);
 registerStreamRoute(app, {

@@ -256,3 +256,74 @@ type Session {
   epoch: Int!
   grantedTx: String!
 }
+
+"A yes/no question (D-296): listed by the keeper, answered by a named committee, Yes stakes against No stakes."
+type EventMarket {
+  id: ID!
+  chainId: Int! @index
+  eventId: String! @index
+  committeeId: Int!
+  question: String!
+  rules: String!
+  termsHash: String!
+  feeBps: Int!
+  closesAt: Int! @index
+  answerFrom: Int!
+  answerBy: Int!
+  "open · decided · voided"
+  state: String! @index
+  "The committee's answer (true = Yes): once decided, or voided because nobody called it."
+  answer: Boolean
+  "disagreement · quorum · no-winners"
+  voidReason: String
+  yesPool: BigInt!
+  noPool: BigInt!
+  calls: Int!
+  fee: BigInt
+  prize: BigInt
+  listedAt: Int!
+  listedTx: String!
+  decidedAt: Int
+  decidedTx: String
+}
+
+"One committee member's signed answer on a question (the api keeps the statement; its hash is here)."
+type EventAnswer {
+  id: ID!
+  chainId: Int! @index
+  eventId: String! @index
+  member: String! @index
+  yes: Boolean!
+  statementHash: String!
+  attestedAt: Int!
+  answeredTx: String!
+}
+
+"One call on a yes/no question, from its stake to its payout; it counts on its caller's record like any call."
+type EventCall {
+  id: ID!
+  chainId: Int! @index
+  ticketId: BigInt! @index
+  eventId: String! @index
+  owner: String! @index
+  yes: Boolean!
+  stake: BigInt!
+  "open · won · lost · refunded"
+  status: String! @index
+  amount: BigInt
+  calledAt: Int! @index
+  callTx: String!
+  paidAt: Int
+  paidTx: String
+}
+
+"A committee as set on chain: its members (named in the log) and how many must agree. Never changed once set."
+type EventCommittee {
+  id: ID!
+  chainId: Int! @index
+  committeeId: Int!
+  members: [String!]!
+  names: [String!]!
+  quorum: Int!
+  enabled: Boolean!
+}

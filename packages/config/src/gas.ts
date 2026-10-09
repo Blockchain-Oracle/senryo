@@ -51,6 +51,16 @@ export const GAS_LIMITS = {
   duelReveal: 2_000_000n,
   duelPick: 800_000n,
   duelSettle: 2_500_000n,
+  /**
+   * Events (D-296), measured in the Foundry gas report (max): a `listEvent` 133k plus its text, eight to a batch; a
+   * relayed `placeCall` 329k (with its permit, more); an `answer` 136k and a `resolve` 75k, a game's answers and its
+   * verdict in one batch; `claimFor` 313k for six calls (up to 32 to a batch); `sweepFees` 159k.
+   */
+  eventList: 2_000_000n,
+  eventCall: 500_000n,
+  eventAnswer: 1_000_000n,
+  eventClaim: 2_500_000n,
+  eventSweep: 300_000n,
 };
 export type GasAction = keyof typeof GAS_LIMITS;
 

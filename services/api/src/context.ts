@@ -4,6 +4,7 @@ import { type Db, HTTP_STATUS, HttpError, type Logger, type SessionKeys } from "
 import type { DuelQueue } from "./duel/queue.ts";
 import type { DuelRelay } from "./duel/relay.ts";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
+import type { EventRelay } from "./events/relay.ts";
 import type { GeoDb } from "./geo-db.ts";
 import type { PythGateway } from "./prices/gateway.ts";
 import type { AccountRelay } from "./relay/accounts.ts";
@@ -32,7 +33,7 @@ export interface ApiContext {
   /** The one Pyth gateway and the one stream's bus (D-272). */
   gateway: PythGateway;
   bus: StreamBus;
-  /** The relay per network where the markets are live (needs a sponsor key); duels where the arena is deployed. */
+  /** The relay per network where the markets are live (needs a sponsor key); duels and events where deployed. */
   markets: Map<
     ChainId,
     {
@@ -41,6 +42,8 @@ export interface ApiContext {
       exits: ExitWatcher;
       parlays: ParlayRelay;
       duels: { queue: DuelQueue; relay: DuelRelay } | undefined;
+      /** Yes/no events (D-296) where the book is deployed (Practice only). */
+      events: EventRelay | undefined;
     }
   >;
 }

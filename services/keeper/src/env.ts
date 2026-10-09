@@ -4,8 +4,9 @@ import { KEEPER_PORT, KEEPER_STALE_SEC } from "./constants.ts";
 
 /**
  * Jobs: the ticket book's sync with the chain, settlement with automatic payouts and backup fills for the markets
- * (D-264, D-278), parlays' fills and legs (D-293), duels from lock to pot (D-294), the market calendars (D-289), Earn's
- * hourly roll and deliveries (D-287), push delivery, push receipts and retention.
+ * (D-264, D-278), parlays' fills and legs (D-293), duels from lock to pot (D-294), yes/no events from listing to payout
+ * (D-296), the market calendars (D-289), Earn's hourly roll and deliveries (D-287), push delivery, push receipts and
+ * retention.
  */
 export const KEEPER_JOBS = [
   "sync",
@@ -13,6 +14,7 @@ export const KEEPER_JOBS = [
   "fills",
   "parlays",
   "duels",
+  "events",
   "calendars",
   "earn",
   "retention",

@@ -11,6 +11,7 @@ import {
   bandReserveAbi,
   basketPrintVerifierAbi,
   duelArenaAbi,
+  eventBookAbi,
   marketCalendarAbi,
   poolSharesAbi,
   pythPrintVerifierAbi,
@@ -27,6 +28,8 @@ export const CONTRACT_ABIS = {
   BandReserve: bandReserveAbi,
   /** Duel (D-294): two seats, a sealed deck, picks as calls the arena owns. */
   DuelArena: duelArenaAbi,
+  /** Yes/no events (D-296): a named committee answers, Yes stakes against No stakes. */
+  EventBook: eventBookAbi,
   MarketCalendar: marketCalendarAbi,
   PythPrintVerifier: pythPrintVerifierAbi,
   /** The equity print class (D-284): the same contract with a wider confidence bound. */

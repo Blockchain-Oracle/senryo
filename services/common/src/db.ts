@@ -19,6 +19,7 @@ import * as m0017 from "../migrations/0017_earn.ts";
 import * as m0018 from "../migrations/0018_exits.ts";
 import * as m0019 from "../migrations/0019_parlays.ts";
 import * as m0020 from "../migrations/0020_duels.ts";
+import * as m0021 from "../migrations/0021_events.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -67,6 +68,7 @@ export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [
   m0018,
   m0019,
   m0020,
+  m0021,
 ];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */

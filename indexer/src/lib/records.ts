@@ -1,4 +1,4 @@
-import type { Account, DailyAccountStat, Market, Pool, Ticket } from "envio";
+import type { Account, DailyAccountStat, EvmOnEventContext, Market, Pool, Ticket } from "envio";
 
 /**
  * Ids, defaults and the account bookkeeping shared by the handlers. A call counts once it fills (a refused call never
@@ -82,3 +82,36 @@ export function finishOnAccount(a: Account, pnl: bigint, outcome: Outcome, at: n
 }
 
 export const dayOf = (timestamp: number) => Math.floor(timestamp / SECONDS_PER_DAY);
+
+/** A call that isn't a reserve ticket (a parlay, a yes/no call) counts on its caller's record once it is live. */
+export async function countCall(context: EvmOnEventContext, chainId: number, owner: string, stake: bigint, at: number) {
+  const accountId = key(chainId, owner);
+  const a = (await context.Account.get(accountId)) ?? newAccount(chainId, owner);
+  context.Account.set({
+    ...a,
+    calls: a.calls + 1,
+    staked: a.staked + stake,
+    lastActiveAt: Math.max(a.lastActiveAt, at),
+  });
+  const day = dayOf(at);
+  const d = (await context.DailyAccountStat.get(`${accountId}_${day}`)) ?? newDaily(chainId, owner, day);
+  context.DailyAccountStat.set({ ...d, calls: d.calls + 1, staked: d.staked + stake });
+}
+
+/** …and realises its result when it is paid: everything it returned against its stake. */
+export async function finishCall(
+  context: EvmOnEventContext,
+  chainId: number,
+  call: { owner: string; stake: bigint },
+  amount: bigint,
+  outcome: Outcome,
+  at: number,
+) {
+  const pnl = amount - call.stake;
+  const accountId = key(chainId, call.owner);
+  const a = (await context.Account.get(accountId)) ?? newAccount(chainId, call.owner);
+  context.Account.set(finishOnAccount({ ...a, returned: a.returned + amount }, pnl, outcome, at));
+  const day = dayOf(at);
+  const d = (await context.DailyAccountStat.get(`${accountId}_${day}`)) ?? newDaily(chainId, call.owner, day);
+  context.DailyAccountStat.set({ ...d, pnl: d.pnl + pnl, wins: d.wins + (outcome === "win" ? 1 : 0) });
+}

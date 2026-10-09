@@ -16,7 +16,8 @@ export type UserEvent =
   | "parlay"
   | "duel"
   | "duelQueue"
-  | "duelPick";
+  | "duelPick"
+  | "eventCall";
 const USER_EVENTS = new Set<string>([
   "ticket",
   "intent",
@@ -27,8 +28,12 @@ const USER_EVENTS = new Set<string>([
   "duel",
   "duelQueue",
   "duelPick",
+  "eventCall",
 ]);
-const PUBLIC_TOPICS = ["prices", "prints"] as const;
+/** Public market activity on `markets`: a yes/no question listed, called, answered or settled (D-296). */
+export type MarketEvent = "event";
+const MARKET_EVENTS = new Set<string>(["event"]);
+const PUBLIC_TOPICS = ["prices", "prints", "markets"] as const;
 
 export interface RecentPrices {
   serverTime: number;
@@ -55,6 +60,7 @@ export class Live {
   private status: StreamStatus = "idle";
   private readonly statusListeners = new Set<() => void>();
   private readonly userListeners = new Map<string, Set<Listener<unknown>>>();
+  private readonly marketListeners = new Map<string, Set<Listener<unknown>>>();
 
   constructor(private readonly o: LiveOptions) {
     this.stream = new LiveStream({
@@ -92,6 +98,14 @@ export class Live {
     return () => set.delete(listener as Listener<unknown>);
   }
 
+  /** Public market activity (the query layer invalidates the board on it). */
+  onMarket<T = unknown>(event: MarketEvent, listener: Listener<T>): () => void {
+    const set = this.marketListeners.get(event) ?? new Set();
+    set.add(listener as Listener<unknown>);
+    this.marketListeners.set(event, set);
+    return () => set.delete(listener as Listener<unknown>);
+  }
+
   /** Reseed prices (and the clock) from `/v1/prices/recent`. */
   async reseed(symbols: readonly string[] = this.prices.symbols): Promise<void> {
     const recent = await this.o.recent(symbols);
@@ -121,5 +135,6 @@ export class Live {
       return;
     }
     if (USER_EVENTS.has(event)) for (const l of this.userListeners.get(event) ?? []) l(data);
+    if (MARKET_EVENTS.has(event)) for (const l of this.marketListeners.get(event) ?? []) l(data);
   }
 }

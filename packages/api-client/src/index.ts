@@ -8,6 +8,7 @@ export * from "./routes/define.ts";
 export * from "./routes/duels.ts";
 export * from "./routes/earn.ts";
 export * from "./routes/engagement.ts";
+export * from "./routes/events.ts";
 export * from "./routes/exits.ts";
 export * from "./routes/history.ts";
 export * from "./routes/info.ts";

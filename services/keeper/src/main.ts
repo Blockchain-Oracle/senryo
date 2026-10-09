@@ -17,6 +17,7 @@ import { type KeeperJob, loadKeeperEnv } from "./env.ts";
 import { calendarsJob } from "./jobs/calendars.ts";
 import { duelsJob } from "./jobs/duels.ts";
 import { earnJob } from "./jobs/earn.ts";
+import { eventsJob } from "./jobs/events.ts";
 import { fillsJob } from "./jobs/fills.ts";
 import { parlaysJob } from "./jobs/parlays.ts";
 import { pushOutboxJob } from "./jobs/pushes.ts";
@@ -70,6 +71,7 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   fills: fillsJob,
   parlays: parlaysJob,
   duels: duelsJob,
+  events: eventsJob,
   calendars: calendarsJob,
   earn: earnJob,
   retention: retentionJob,

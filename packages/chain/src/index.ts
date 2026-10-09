@@ -7,6 +7,8 @@ export * from "./contracts.ts";
 export * from "./duels.ts";
 export * from "./earn.ts";
 export * from "./errors.ts";
+export * from "./event-changes.ts";
+export * from "./events.ts";
 export * from "./fees.ts";
 export * from "./heads.ts";
 export * from "./journal.ts";

@@ -22,6 +22,7 @@ export const PROMPTS = {
   parlay: (legs: number) => `Parlay of ${legs}`,
   duel: "Enter the duel",
   duelPick: "Your duel pick",
+  event: (side: string) => `Call ${side}`,
   clearExit: "Remove the exit",
   oneTap: "Turn on one-tap calls",
   revoke: "Turn off one-tap calls",

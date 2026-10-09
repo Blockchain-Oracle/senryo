@@ -52,3 +52,23 @@ export const EARN_INTERVAL_MS = 60_000;
 export const HOUR_SEC = 3600;
 /** Owners delivered per tick (each delivery is one `claim`). */
 export const EARN_CLAIMS_PER_TICK = 20;
+/** Events (S8.7, D-296): answers, verdicts and payouts every 30 s; new games listed every 10 minutes. */
+export const EVENTS_INTERVAL_MS = 30_000;
+export const EVENTS_LIST_EVERY_MS = 600_000;
+/** A game is listed only while calls have at least this long to run. */
+export const EVENT_MIN_LEAD_SEC = 900;
+/** Listings per transaction (each carries its question and rules as text). */
+export const EVENT_LIST_BATCH = 8;
+/** Events looked at per tick, answers relayed per batch, calls paid per `claimFor` (the book's `MAX_BATCH`). */
+export const EVENT_WORK_BATCH = 24;
+export const EVENT_ANSWER_BATCH = 24;
+export const EVENT_CLAIM_BATCH = 32;
+/** A listing row whose transaction hasn't landed after this is checked against the chain. */
+export const EVENT_LISTING_STALE_SEC = 300;
+/** Every source read gives up after this. */
+export const EVENT_SOURCE_TIMEOUT_MS = 10_000;
+/** Two sources' starts for one game may differ by this much (a feed rounding, a late correction). */
+export const EVENT_START_SLACK_SEC = 1800;
+/** Committee signers: `EVENT_SIGNER_1_PK` … in committee order. */
+export const EVENT_SIGNER_PREFIX = "EVENT_SIGNER";
+export const EVENT_SIGNERS_MAX = 16;

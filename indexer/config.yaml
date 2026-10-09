@@ -1,8 +1,9 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
 # Senryo indexer (S4, D-272): the prediction markets' history — windows and their prints, every call from commit to
 # payout, accounts (PnL, wins, streaks), daily stats and the pool — for Proof, Calls history, the leaderboard and
-# the crowd split, and duels with their ratings. Envio HyperIndex 3.14 on HyperSync; Hasura off (ENVIO_HASURA=false): the api reads these tables
-# over SQL in the shared Postgres's `envio` schema (ENVIO_PG_SCHEMA=envio). Event signatures are generated from the
+# the crowd split, duels with their ratings, and yes/no events with their committee's answers. Envio HyperIndex 3.14
+# on HyperSync; Hasura off (ENVIO_HASURA=false): the api reads these tables over SQL in the shared Postgres's `envio`
+# schema (ENVIO_PG_SCHEMA=envio). Event signatures are generated from the
 # deployed ABIs (contracts/out). Mainnet (143) joins at S9.
 name: senryo-indexer
 description: Senryo prediction markets on Monad
@@ -51,6 +52,16 @@ contracts:
       - event: "CardSettled(bytes32 indexed matchId, address indexed player, uint8 card, uint64 returned, int256 result)"
       - event: "MatchFinalized(bytes32 indexed matchId, address winner, int256 resultA, int256 resultB, uint256 pot)"
       - event: "MatchRefunded(bytes32 indexed matchId, uint8 reason, uint256 perSeat)"
+  - name: EventBook
+    events:
+      - event: "CommitteeSet(uint16 indexed committeeId, address[] members, uint8 quorum, string[] names)"
+      - event: "CommitteeEnabled(uint16 indexed committeeId, bool enabled)"
+      - event: "EventListed(bytes32 indexed eventId, uint16 indexed committeeId, uint16 feeBps, uint40 closesAt, uint40 answerFrom, uint40 answerBy, bytes32 termsHash, string question, string rules)"
+      - event: "Called(bytes32 indexed eventId, uint256 indexed ticketId, address indexed owner, bool yes, uint64 stake, uint128 yesPool, uint128 noPool)"
+      - event: "Answered(bytes32 indexed eventId, address indexed member, bool yes, bytes32 statementHash, uint40 attestedAt)"
+      - event: "EventDecided(bytes32 indexed eventId, bool yes, uint128 yesPool, uint128 noPool, uint256 fee, uint128 prize)"
+      - event: "EventVoided(bytes32 indexed eventId, uint8 reason, bool answer)"
+      - event: "CallPaid(uint256 indexed ticketId, bytes32 indexed eventId, address indexed owner, uint8 outcome, uint256 amount, bool paid)"
   - name: PoolShares
     events:
       - event: "EpochRolled(uint40 indexed hour, uint256 value, uint256 supply, uint256 suppliedAssets, uint256 withdrawnAssets, bool deferred)"

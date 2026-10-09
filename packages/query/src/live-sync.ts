@@ -12,6 +12,7 @@ import { useCallback, useEffect } from "react";
 import { duelKeys } from "./duels.ts";
 import { earnKeys } from "./earn.ts";
 import { useQueryEnv } from "./env.tsx";
+import { eventKeys } from "./events.ts";
 import { historyKeys } from "./history.ts";
 import { marketKeys } from "./markets.ts";
 import { parlayKeys } from "./parlays.ts";
@@ -48,6 +49,17 @@ export function useRefreshCaller(owner: Address | undefined): () => void {
 export function useLiveSync(live: Live, owner: Address | undefined): void {
   const env = useQueryEnv();
   const client = useQueryClient();
+
+  // Public: a question listed, called, answered or settled moves the board for everyone.
+  useEffect(
+    () =>
+      live.onMarket<{ chainId: number; eventId: string }>("event", (n) => {
+        if (n.chainId !== env.chainId) return;
+        void client.invalidateQueries({ queryKey: eventKeys.board(env.chainId) });
+        void client.invalidateQueries({ queryKey: eventKeys.detail(env.chainId, n.eventId) });
+      }),
+    [live, env.chainId, client],
+  );
 
   useEffect(() => {
     if (!owner) return;
@@ -91,6 +103,11 @@ export function useLiveSync(live: Live, owner: Address | undefined): void {
       }),
       live.onUser<DuelQueueView>("duelQueue", (entry) => {
         client.setQueryData(duelKeys.queue(env.chainId, owner), entry);
+        void account();
+      }),
+      live.onUser<{ chainId: number }>("eventCall", (n) => {
+        if (n.chainId !== env.chainId) return;
+        void client.invalidateQueries({ queryKey: eventKeys.calls(env.chainId, owner) });
         void account();
       }),
       live.onUser<{ chainId: number; matchId: string; change: string }>("duel", (d) => {

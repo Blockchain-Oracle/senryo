@@ -9,12 +9,14 @@ import {
   addressOf,
   duelEntryRequest,
   duelPickRequest,
+  eventCallRequest,
   exitOrderRequest,
   freshNonce,
   freshSeed,
   intentRequest,
   type MarketDuelEntry,
   type MarketDuelPick,
+  type MarketEventCall,
   type MarketExitOrder,
   type MarketIntent,
   type MarketParlayIntent,
@@ -22,7 +24,7 @@ import {
   permitParts,
   permitRequest,
 } from "@senryo/chain";
-import { type ChainId, DUEL } from "@senryo/config";
+import { type ChainId, DUEL, EVENTS } from "@senryo/config";
 import { INTENT_TTL_SEC, PERMIT_TTL_SEC, SESSION_MARGIN_SEC } from "./constants.ts";
 
 /** What `/v1/markets/account` says about the caller (balance, allowance, permit nonce, epoch, session). */
@@ -238,4 +240,42 @@ export async function signDuelPick(
     }),
     prompt,
   );
+}
+
+export interface SignedEventCall {
+  call: MarketEventCall;
+  signature: Hex;
+  permit: Permit;
+}
+
+/**
+ * Sign a yes/no call (D-296): the stake can't be cashed out, so always the owner — one Face ID for the call and a
+ * permit of exactly the stake to the event book (finite, D-266), both good for as long as the call.
+ */
+export async function signEventCall(
+  d: Pick<SignDeps, "chainId" | "client" | "account" | "nowSec">,
+  draft: { owner: `0x${string}`; eventId: Hex; yes: boolean; stake: bigint },
+  prompt: string,
+): Promise<SignedEventCall> {
+  const deadline = BigInt(d.nowSec + EVENTS.callTtlSec);
+  const call: MarketEventCall = {
+    ...draft,
+    deadline,
+    nonce: freshNonce(),
+    epoch: d.account.epoch,
+  };
+  const book = addressOf(d.chainId, "EventBook");
+  return d.client.stepUp(async (signer) => {
+    const permitSig = await signer.signTypedData(
+      permitRequest(d.chainId, {
+        owner: draft.owner,
+        spender: book,
+        value: draft.stake,
+        nonce: d.account.permitNonce,
+        deadline,
+      }),
+    );
+    const signature = await signer.signTypedData(eventCallRequest(d.chainId, call));
+    return { call, signature, permit: { value: draft.stake, deadline, ...permitParts(permitSig) } };
+  }, prompt);
 }

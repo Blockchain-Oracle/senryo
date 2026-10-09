@@ -4,6 +4,7 @@ export * from "./use-call-rows.ts";
 export * from "./use-call-window.ts";
 export * from "./use-duel.ts";
 export * from "./use-earn.ts";
+export * from "./use-events.ts";
 export * from "./use-exit.ts";
 export * from "./use-market-session.ts";
 export * from "./use-one-tap.ts";
