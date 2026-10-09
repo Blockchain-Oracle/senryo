@@ -9,7 +9,7 @@ import {
   seriesOf,
   ticketChanges,
 } from "@senryo/chain";
-import { MARKET_BATCH_MAX } from "@senryo/config";
+import { feedIdOf, MARKET_BATCH_MAX } from "@senryo/config";
 import { applyTicketChanges, archivedPrint, nowSec, pendingFills, type TicketRow } from "@senryo/service-common";
 import { FILL_STALE_SEC, FILLS_INTERVAL_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
@@ -50,7 +50,7 @@ async function fillGroup(ctx: KeeperContext, rows: TicketRow[], now: number): Pr
   if (!series) return;
   const target = Number(head.target);
   const reserve = addressOf(ctx.chainId, "BandReserve");
-  const print = await archivedPrint(ctx.db, series.market.pythFeedId, target);
+  const print = await archivedPrint(ctx.db, feedIdOf(series.market), target);
   const windowOver = now >= Number(head.window_expiry);
   for (let i = 0; i < rows.length; i += MARKET_BATCH_MAX) {
     const ids = rows.slice(i, i + MARKET_BATCH_MAX).map((r) => r.ticket_id);

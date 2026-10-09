@@ -1,4 +1,11 @@
-import { type ChainId, MAINNET_CHAIN_ID, MAINNET_USDC } from "@senryo/config";
+import {
+  type ChainId,
+  MAINNET_CHAIN_ID,
+  MAINNET_USDC,
+  type MarketSpec,
+  PRINT_CLASS_OF,
+  PRINT_VERIFIER,
+} from "@senryo/config";
 import {
   accessManagerAbi,
   bandReserveAbi,
@@ -17,6 +24,8 @@ export const CONTRACT_ABIS = {
   BandReserve: bandReserveAbi,
   MarketCalendar: marketCalendarAbi,
   PythPrintVerifier: pythPrintVerifierAbi,
+  /** The equity print class (D-284): the same contract with a wider confidence bound. */
+  PythPrintVerifierEquity: pythPrintVerifierAbi,
   TestUSD: testUSDAbi,
   Windows: windowsAbi,
 } as const;
@@ -46,6 +55,11 @@ export function addressOf(chainId: ChainId, name: ContractName): Address {
   const entry = addressBooks[chainId]?.contracts[name];
   if (!entry?.address) throw new NotDeployedError(chainId, name);
   return getAddress(entry.address);
+}
+
+/** The verifier a market's prints are proven by: its print class's (D-284). */
+export function verifierOf(chainId: ChainId, market: MarketSpec): Address {
+  return addressOf(chainId, PRINT_VERIFIER[PRINT_CLASS_OF[market.kind]] as ContractName);
 }
 
 /** First block to consider for this deployment (indexer start block). */

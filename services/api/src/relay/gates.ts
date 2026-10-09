@@ -7,14 +7,24 @@ import {
   seriesIdOf,
   windowIdOf,
 } from "@senryo/chain";
-import { type CadenceSec, type ChainId, LOCKOUT_SEC, MARKETS, type MarketSpec, POOL_TERMS } from "@senryo/config";
+import {
+  CALENDARS,
+  type CadenceSec,
+  type ChainId,
+  LOCKOUT_SEC,
+  MARKETS,
+  type MarketSpec,
+  POOL_TERMS,
+} from "@senryo/config";
+import { scheduleOf, sessionCovers, sessionNow } from "@senryo/core";
 import { HTTP_STATUS, HttpError } from "@senryo/service-common";
 import { MAX_INTENT_TTL_SEC } from "./constants.ts";
 
 /**
  * The relay's gates before anything is queued (CWF relay checklist, D-266): the chain is served, the window is the
  * clock's window for this market and cadence, calls are inside trading time, the deadline is near, the stake is within
- * the pool's terms. The chain re-checks everything; these only spare a doomed transaction its gas.
+ * the pool's terms, and a market with a session is open for the whole window (D-289). The chain re-checks everything;
+ * these only spare a doomed transaction its gas.
  */
 export interface IntentRequest {
   chainId: ChainId;
@@ -54,6 +64,11 @@ export function checkIntent(req: IntentRequest, nowSec: number): CheckedIntent {
   if (deadline <= nowSec || deadline > nowSec + MAX_INTENT_TTL_SEC) throw bad("deadline must be within two minutes");
   if (intent.recipient === "0x0000000000000000000000000000000000000000") throw bad("recipient is required");
   if (intent.action === ACTION_OPEN) {
+    const schedule = scheduleOf(CALENDARS[market.calendarId].schedule);
+    if (!sessionCovers(schedule, req.start, expiry)) {
+      const when = sessionNow(schedule, nowSec).text ?? "Closed";
+      throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", `${market.symbol} is closed · ${when}`);
+    }
     const terms = POOL_TERMS[req.chainId];
     if (intent.amount < terms.minStake || intent.amount > terms.maxStake) throw bad("stake outside the pool's terms");
     if (intent.ticketId !== 0n) throw bad("an open names no ticket");

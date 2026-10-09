@@ -38,3 +38,6 @@ export const PUSH_RECEIPT_DELAY_SEC = 900;
 export const PUSH_RECEIPT_TTL_SEC = 86_400;
 /** Tickets checked per `receipts` run (the rest wait for the next run). */
 export const PUSH_RECEIPTS_PER_RUN = 10_000;
+/** Market calendars (D-289): checked every 15 minutes; holidays kept 60 days ahead (≤ 32 per calendar on chain). */
+export const CALENDARS_INTERVAL_MS = 900_000;
+export const CALENDAR_HOLIDAY_DAYS = 60;

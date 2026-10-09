@@ -47,7 +47,7 @@ export function stepFor(price: number): number {
   return niceStep(STEP_FRACTION * Math.abs(price));
 }
 
-/** Display decimals by magnitude: ≥1e5 → 1, ≥1e3 → 2, ≥10 → 3, ≥0.01 → 4, smaller → 3 significant. */
+/** Display decimals by magnitude (`@senryo/core` `PRICE_DECIMAL_BANDS`): ≥1e5 → 1, ≥100 → 2, ≥10 → 3, ≥1 → 5, else 4 significant. */
 export function priceDecimals(price: number): number {
   "worklet";
   const a = Math.abs(price);

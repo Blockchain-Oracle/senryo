@@ -12,7 +12,7 @@ import {
   withdrawRoute,
 } from "@senryo/api-client";
 import { addressOf, dollarTokenOf, type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
-import { bandMenu, type ChainId, marketsOn, POOL_TERMS, sigmaE8Of } from "@senryo/config";
+import { bandMenu, type ChainId, feedIdOf, marketsOn, POOL_TERMS, sigmaE8Of } from "@senryo/config";
 import { bandReserveAbi, testUSDAbi } from "@senryo/contracts/abis";
 import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, HttpError, nowSec, parseRoute, sendRoute, ticketsOf } from "@senryo/service-common";
@@ -87,7 +87,7 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         symbol: m.symbol,
         name: m.name,
         kind: m.kind,
-        feedId: m.pythFeedId,
+        feedId: feedIdOf(m),
         series: m.cadences.map((cadenceSec) => ({
           cadenceSec,
           seriesId: seriesIdOf(m.symbol, cadenceSec),

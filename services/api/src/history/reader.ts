@@ -1,5 +1,5 @@
 import { type Hex, seriesOf } from "@senryo/chain";
-import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
+import { type ChainId, feedIdOf, TESTNET_CHAIN_ID } from "@senryo/config";
 import { type Db, nowSec } from "@senryo/service-common";
 import { CALLS_PAGE, DAYS_PER_WEEK, LEADERBOARD_SIZE, SECONDS_PER_DAY } from "./constants.ts";
 
@@ -95,7 +95,7 @@ export class IndexerReader {
     if (!series) return undefined;
     const prints = await this.db<{ t: number; priceE8: bigint; publishTime: number; txHash: string }[]>`
       SELECT t, "priceE8"::int8 AS "priceE8", "publishTime", "txHash" FROM ${this.t("Print")}
-      WHERE "chainId" = ${chainId} AND "feedId" = ${series.market.pythFeedId} AND t IN (${w.start}, ${w.expiry})`;
+      WHERE "chainId" = ${chainId} AND "feedId" = ${feedIdOf(series.market)} AND t IN (${w.start}, ${w.expiry})`;
     const at = (t: number) => prints.find((p) => p.t === t) ?? null;
     // Calls still riding the window: settlement runs only while there are some (a window every call cashed out of
     // is never resolved on chain, and its proof says so rather than waiting for a close that won't be posted).

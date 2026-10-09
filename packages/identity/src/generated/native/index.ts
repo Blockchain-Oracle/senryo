@@ -85,6 +85,14 @@ import ArtBnbDisc from "./bnb-disc.tsx";
 import ArtBnbSymbol from "./bnb-symbol.tsx";
 import ArtBnbMonoLight from "./bnb-monolight.tsx";
 import ArtBnbMonoDark from "./bnb-monodark.tsx";
+import ArtDogeDisc from "./doge-disc.tsx";
+import ArtDogeSymbol from "./doge-symbol.tsx";
+import ArtDogeMonoLight from "./doge-monolight.tsx";
+import ArtDogeMonoDark from "./doge-monodark.tsx";
+import ArtXrpDisc from "./xrp-disc.tsx";
+import ArtXrpSymbol from "./xrp-symbol.tsx";
+import ArtXrpMonoLight from "./xrp-monolight.tsx";
+import ArtXrpMonoDark from "./xrp-monodark.tsx";
 import ArtTronDisc from "./tron-disc.tsx";
 import ArtTronSymbol from "./tron-symbol.tsx";
 import ArtTronMonoLight from "./tron-monolight.tsx";
@@ -189,6 +197,8 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "avatar-12-kitsune": { symbol: ArtAvatar12KitsuneSymbol },
   "near": { disc: ArtNearDisc, symbol: ArtNearSymbol, monoLight: ArtNearMonoLight, monoDark: ArtNearMonoDark },
   "bnb": { disc: ArtBnbDisc, symbol: ArtBnbSymbol, monoLight: ArtBnbMonoLight, monoDark: ArtBnbMonoDark },
+  "doge": { disc: ArtDogeDisc, symbol: ArtDogeSymbol, monoLight: ArtDogeMonoLight, monoDark: ArtDogeMonoDark },
+  "xrp": { disc: ArtXrpDisc, symbol: ArtXrpSymbol, monoLight: ArtXrpMonoLight, monoDark: ArtXrpMonoDark },
   "tron": { disc: ArtTronDisc, symbol: ArtTronSymbol, monoLight: ArtTronMonoLight, monoDark: ArtTronMonoDark },
   "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },

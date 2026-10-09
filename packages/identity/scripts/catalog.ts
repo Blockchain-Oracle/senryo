@@ -48,6 +48,8 @@ const MONO: readonly Web3IconsTake[] = ["mono"];
 const STANDALONE: readonly CatalogEntry[] = [
   { key: "near", owner: "NEAR Foundation", spec: { from: "web3icons", group: "tokens", name: "NEAR", take: ALL } },
   { key: "bnb", owner: "BNB Chain", spec: { from: "web3icons", group: "tokens", name: "BNB", take: ALL } },
+  { key: "doge", owner: "Dogecoin Foundation", spec: { from: "web3icons", group: "tokens", name: "DOGE", take: ALL } },
+  { key: "xrp", owner: "XRP Ledger Foundation", spec: { from: "web3icons", group: "tokens", name: "XRP", take: ALL } },
   { key: "tron", owner: "TRON DAO", spec: { from: "web3icons", group: "networks", name: "tron", take: ALL } },
   { key: "polygon", owner: "Polygon Labs", spec: { from: "web3icons", group: "networks", name: "polygon", take: ALL } },
   {

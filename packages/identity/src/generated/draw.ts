@@ -788,6 +788,64 @@ export const DRAW: Readonly<Record<string, DrawSource>> = {
       }
     }
   },
+  "doge": {
+    "key": "doge",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
+  "xrp": {
+    "key": "xrp",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "dark",
+        "shape": "free"
+      },
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "light",
+        "shape": "free"
+      }
+    }
+  },
   "tron": {
     "key": "tron",
     "variants": {

@@ -4,7 +4,7 @@
  * renders on events and once a second for the countdown. The call flow — the panel's states, open and cash out with
  * their guards, following a call to its fill — is `@senryo/calls` `useCallFlow`, the same on the web.
  */
-import { useCallFlow } from "@senryo/calls/react";
+import { useCallFlow, useMarketLine } from "@senryo/calls/react";
 import { useLive } from "@senryo/live/react";
 import { useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
@@ -59,6 +59,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const head = useSharedValue<Head | null>(null);
   const reactions = useRef<ReactionOverlayHandle>(null);
   useReactions(t.symbol, q.onTick, reactions);
+  const session = useMarketLine(t.symbol);
   const account = useAccount();
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<"stake" | "part" | null>(null);
@@ -107,6 +108,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       <CrowdLine windowId={t.window.windowId} />
       <View style={{ paddingBottom: bottom }}>
         <CallPanel
+          symbol={t.symbol}
+          session={session}
           state={flow.panel}
           stake={stake}
           balance={t.balance}

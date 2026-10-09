@@ -1,16 +1,17 @@
 /**
- * Live prices in text (Tradash's precision, SPEC-chart §4, as Owarine re-implements it): decimals by magnitude —
- * ≥1e5 → 1, ≥1e3 → 2, ≥10 → 3, ≥0.01 → 4, smaller → enough for 3 significant figures. The phone's chart keeps a
- * worklet twin of `priceDecimals` (it runs on the UI thread) over this same table.
+ * Live prices in text: decimals by magnitude, tuned so a typical 1-minute move shows in every listed market (S7) —
+ * ≥1e5 → 1, ≥100 → 2 (BTC 81,234.56, ETH, gold, BNB, and every stock as brokers quote it: TSLA 384.72), ≥10 → 3
+ * (HYPE 84.823, silver 60.933), ≥1 → 5 (the euro 1.11927, XRP 1.37895), smaller → 4 significant figures (DOGE
+ * 0.084346). The phone's chart keeps a worklet twin of `priceDecimals` (it runs on the UI thread) over this same table.
  */
 
 export const PRICE_DECIMAL_BANDS = [
   { min: 1e5, decimals: 1 },
-  { min: 1e3, decimals: 2 },
+  { min: 100, decimals: 2 },
   { min: 10, decimals: 3 },
-  { min: 0.01, decimals: 4 },
+  { min: 1, decimals: 5 },
 ] as const;
-export const PRICE_SIGNIFICANT = 3;
+export const PRICE_SIGNIFICANT = 4;
 export const PRICE_ZERO_DECIMALS = 2;
 export const PRICE_MAX_DECIMALS = 10;
 const E8 = 1e8;

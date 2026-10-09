@@ -7,6 +7,7 @@
  * Rules whose files have not landed yet are `optional` / return `skipped`.
  */
 
+import { catalogAppendOnly } from "./lib/catalog-checks.mjs";
 import { fontProvenance } from "./lib/font-checks.mjs";
 import { identityProvenance } from "./lib/identity-checks.mjs";
 import { indexerReadsChainFilter } from "./lib/indexer-checks.mjs";
@@ -221,5 +222,10 @@ export const rules = [
     id: "sql-no-dropped-tables",
     description: "no service SQL reads or writes a table a migration dropped (0015 pivot)",
     check: sqlNoDroppedTables,
+  },
+  {
+    id: "catalog-append-only",
+    description: "markets only append to the catalogue (live ticks name a market by its index)",
+    check: catalogAppendOnly,
   },
 ];

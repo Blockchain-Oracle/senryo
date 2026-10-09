@@ -33,6 +33,8 @@ export const GAS_LIMITS = {
   sessionRevoke: 150_000n,
   /** Test USD `mint` for the Practice grant. */
   dollarMint: 150_000n,
+  /** A market calendar's `setWeek` (three words) or `addHoliday` (prune + push), kept current by the keeper (D-289). */
+  calendarUpdate: 400_000n,
 };
 export type GasAction = keyof typeof GAS_LIMITS;
 

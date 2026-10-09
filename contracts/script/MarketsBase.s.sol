@@ -1,0 +1,228 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.31;
+
+import {Script} from "forge-std/Script.sol";
+import {stdJson} from "forge-std/StdJson.sol";
+import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
+import {CALENDAR_WORD_COUNT} from "../src/libraries/Constants.sol";
+import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
+import {BandReserve} from "../src/markets/BandReserve.sol";
+import {PythPrintVerifier} from "../src/markets/PythPrintVerifier.sol";
+import {Windows} from "../src/markets/Windows.sol";
+import {IPyth} from "../src/markets/interfaces/IPyth.sol";
+import "../src/markets/MarketTypes.sol";
+
+/// @title MarketsBase — what `DeployMarkets` (a fresh network) and `AddMarkets` (the live one) share (D-284, D-289).
+/// @notice Reads `script/catalog/<chainId>.json` (`node scripts/catalog-export.mjs`): a verifier per print class, the
+///         market calendars (the week for the current US offset and the coming holidays), and every series with its
+///         σ and band menu. Listing is idempotent: a registered series, a set week and a known holiday are skipped.
+abstract contract MarketsBase is Script {
+    using stdJson for string;
+
+    /// @dev Address-book names of each print class's verifier (mirrors `PRINT_VERIFIER` in packages/config).
+    string internal constant CRYPTO_VERIFIER = "PythPrintVerifier";
+    string internal constant EQUITY_VERIFIER = "PythPrintVerifierEquity";
+    /// @dev AccessManager role that keeps market calendars current (the keeper's job, D-289); the admin holds it too.
+    uint64 internal constant CALENDAR_ROLE = 2;
+
+    struct Entry {
+        string name;
+        address addr;
+        bytes32 initCodeHash;
+        bool isIndexed;
+        uint256 startBlock;
+    }
+
+    Entry[] internal _entries;
+    string internal _json;
+
+    function _readCatalog() internal {
+        _json = vm.readFile(string.concat(vm.projectRoot(), "/script/catalog/", vm.toString(block.chainid), ".json"));
+        require(_json.readUint(".chainId") == block.chainid, "catalog is for another chain");
+    }
+
+    function _bookPath() internal view returns (string memory) {
+        return string.concat(vm.projectRoot(), "/../packages/contracts/src/addresses/", vm.toString(block.chainid), ".json");
+    }
+
+    // ------------------------------------------------------------------------------------------------ verifiers
+
+    /// @dev One `PythPrintVerifier` per class (`.verifiers.<cls>`), recorded under `name`.
+    function _deployVerifier(string memory cls, string memory name) internal returns (address) {
+        IPyth pyth = IPyth(_json.readAddress(".pyth"));
+        string memory at = string.concat(".verifiers.", cls);
+        uint16 grace = uint16(_json.readUint(string.concat(at, ".graceSec")));
+        uint16 maxConf = uint16(_json.readUint(string.concat(at, ".maxConfBps")));
+        uint32 admission = uint32(_json.readUint(string.concat(at, ".admissionSec")));
+        PythPrintVerifier verifier = new PythPrintVerifier(pyth, grace, maxConf, admission);
+        _record(
+            name,
+            address(verifier),
+            abi.encodePacked(type(PythPrintVerifier).creationCode, abi.encode(address(pyth), grace, maxConf, admission)),
+            false
+        );
+        return address(verifier);
+    }
+
+    /// @dev True when some catalogue series is priced through the equity class.
+    function _needsEquity() internal view returns (bool) {
+        string[] memory classes = abi.decode(_json.parseRaw(".series[*].verifierClass"), (string[]));
+        for (uint256 i; i < classes.length; ++i) {
+            if (keccak256(bytes(classes[i])) == keccak256("equity")) return true;
+        }
+        return false;
+    }
+
+    // ------------------------------------------------------------------------------------------------ calendars
+
+    /// @dev `setWeek` and `addHoliday` under CALENDAR_ROLE, held by the keeper (`KEEPER`) and the admin. Idempotent.
+    function _calendarRole(AccessManager manager, MarketCalendar calendar, address keeper) internal {
+        bytes4[] memory fns = new bytes4[](2);
+        fns[0] = MarketCalendar.setWeek.selector;
+        fns[1] = MarketCalendar.addHoliday.selector;
+        if (manager.getTargetFunctionRole(address(calendar), fns[0]) != CALENDAR_ROLE) {
+            manager.labelRole(CALENDAR_ROLE, "CALENDAR");
+            manager.setTargetFunctionRole(address(calendar), fns, CALENDAR_ROLE);
+        }
+        (bool admin,) = manager.hasRole(CALENDAR_ROLE, msg.sender);
+        if (!admin) manager.grantRole(CALENDAR_ROLE, msg.sender, 0);
+        (bool kept,) = manager.hasRole(CALENDAR_ROLE, keeper);
+        if (!kept) manager.grantRole(CALENDAR_ROLE, keeper, 0);
+    }
+
+    /// @dev Each catalogue calendar's week (set when it differs) and its coming holidays (added when missing).
+    function _configureCalendars(MarketCalendar calendar) internal {
+        uint256 count = abi.decode(_json.parseRaw(".calendars[*].id"), (uint256[])).length;
+        for (uint256 i; i < count; ++i) {
+            string memory at = string.concat(".calendars[", vm.toString(i), "]");
+            uint8 id = uint8(_json.readUint(string.concat(at, ".id")));
+            uint256[] memory words = _json.readUintArray(string.concat(at, ".week"));
+            uint256[CALENDAR_WORD_COUNT] memory bits;
+            for (uint256 w; w < CALENDAR_WORD_COUNT; ++w) {
+                bits[w] = words[w];
+            }
+            if (!calendar.configured(id) || keccak256(abi.encode(calendar.week(id))) != keccak256(abi.encode(bits))) {
+                calendar.setWeek(id, bits);
+            }
+            _addHolidays(calendar, id, at);
+        }
+    }
+
+    function _addHolidays(MarketCalendar calendar, uint8 id, string memory at) internal {
+        uint256[] memory starts = _json.readUintArray(string.concat(at, ".holidayStarts"));
+        uint256[] memory ends = _json.readUintArray(string.concat(at, ".holidayEnds"));
+        MarketCalendar.Window[] memory known = calendar.holidays(id);
+        for (uint256 h; h < starts.length; ++h) {
+            if (ends[h] <= block.timestamp) continue;
+            bool have;
+            for (uint256 k; k < known.length; ++k) {
+                if (known[k].start == starts[h] && known[k].end == ends[h]) have = true;
+            }
+            if (!have) calendar.addHoliday(id, uint64(starts[h]), uint64(ends[h]));
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------ series
+
+    /// @dev One catalogue series as forge decodes it: fields in key order (the export sorts keys).
+    struct BandJson {
+        uint256 highBps;
+        uint256 kind;
+        uint256 lowBps;
+    }
+
+    struct SeriesJson {
+        BandJson[] bands;
+        uint256 cadenceSec;
+        uint256 calendarId;
+        bytes32 feedId;
+        bytes32 market;
+        uint256 sigmaE8;
+        string symbol;
+        string verifierClass;
+    }
+
+    /// @dev Every catalogue series not yet registered: its policy (its class's verifier), σ and band menu. The series
+    ///      list is decoded once — each JSON cheatcode call copies the whole catalogue into memory, which a script
+    ///      never frees.
+    function _listSeries(Windows windows, BandReserve reserve, address cryptoVerifier, address equityVerifier)
+        internal
+        returns (uint256 listed)
+    {
+        SeriesJson[] memory all = abi.decode(vm.parseJson(_json, ".series"), (SeriesJson[]));
+        for (uint256 i; i < all.length; ++i) {
+            SeriesJson memory s = all[i];
+            uint32 cadence = uint32(s.cadenceSec);
+            if (windows.seriesOf(windows.seriesIdOf(s.market, cadence)).cadenceSec != 0) continue;
+            bool equity = keccak256(bytes(s.verifierClass)) == keccak256("equity");
+            PolicyVersion memory v0;
+            v0.validUntil = OPEN_ENDED;
+            v0.primary = PrintSource(equity ? equityVerifier : cryptoVerifier, s.feedId);
+            bytes32 seriesId = windows.registerSeries(s.market, cadence, uint8(s.calendarId), v0);
+            reserve.setSigma(seriesId, uint64(s.sigmaE8));
+            for (uint256 b; b < s.bands.length; ++b) {
+                BandJson memory d = s.bands[b];
+                reserve.addBand(seriesId, BandDef(uint8(d.kind), uint16(d.lowBps), uint16(d.highBps)));
+            }
+            ++listed;
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------ book
+
+    function _record(string memory name, address addr, bytes memory initCode, bool isIndexed) internal {
+        _entries.push(Entry(name, addr, keccak256(initCode), isIndexed, block.number));
+    }
+
+    /// @dev Writes the address book; `keep` carries the existing book's entries this run did not replace.
+    function _writeBook(bool keep) internal {
+        string memory path = _bookPath();
+        if (keep && vm.exists(path)) {
+            string memory book = vm.readFile(path);
+            string[] memory names = vm.parseJsonKeys(book, ".contracts");
+            for (uint256 i; i < names.length; ++i) {
+                if (!_replaced(names[i])) _carry(book, names[i]);
+            }
+        }
+        string memory out;
+        for (uint256 i; i < _entries.length; ++i) {
+            Entry memory e = _entries[i];
+            vm.serializeAddress(e.name, "address", e.addr);
+            vm.serializeBytes32(e.name, "initCodeHash", e.initCodeHash);
+            vm.serializeUint(e.name, "startBlock", e.startBlock);
+            string memory obj = vm.serializeBool(e.name, "indexed", e.isIndexed);
+            out = vm.serializeString("contracts", e.name, obj);
+        }
+        vm.serializeUint("root", "chainId", block.chainid);
+        vm.writeJson(vm.serializeString("root", "contracts", out), path);
+    }
+
+    function _replaced(string memory name) private view returns (bool) {
+        for (uint256 i; i < _entries.length; ++i) {
+            if (keccak256(bytes(_entries[i].name)) == keccak256(bytes(name))) return true;
+        }
+        return false;
+    }
+
+    function _carry(string memory book, string memory name) private {
+        string memory at = string.concat(".contracts.", name);
+        _entries.push(
+            Entry(
+                name,
+                book.readAddress(string.concat(at, ".address")),
+                book.readBytes32(string.concat(at, ".initCodeHash")),
+                book.readBool(string.concat(at, ".indexed")),
+                book.readUint(string.concat(at, ".startBlock"))
+            )
+        );
+    }
+
+    /// @dev An address from the existing book, or zero when it holds no such contract.
+    function _bookAddress(string memory name) internal view returns (address) {
+        string memory path = _bookPath();
+        if (!vm.exists(path)) return address(0);
+        string memory book = vm.readFile(path);
+        string memory key = string.concat(".contracts.", name, ".address");
+        return vm.keyExistsJson(book, key) ? book.readAddress(key) : address(0);
+    }
+}

@@ -14,8 +14,9 @@ import {
   SimulationRevertedError,
   sendTx,
   ticketChanges,
+  verifierOf,
 } from "@senryo/chain";
-import type { ChainId } from "@senryo/config";
+import { type ChainId, feedIdOf } from "@senryo/config";
 import { windowsAbi } from "@senryo/contracts/abis";
 import { applyTicketChanges, type Db, type Logger, nowSec, type TicketNotice } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
@@ -115,13 +116,13 @@ export class MarketRelay {
     let to: Address = reserve;
     let data: Hex = commitData;
     if (req.intent.action === ACTION_OPEN && !(await this.openPrintRecorded(req.intent.windowId))) {
-      const open = await this.d.gateway.printAt(c.market.pythFeedId, c.start, OPEN_PRINT_WAIT_MS);
+      const open = await this.d.gateway.printAt(feedIdOf(c.market), c.start, OPEN_PRINT_WAIT_MS);
       if (!open) throw new Error("the window's open print is not available yet");
       const batch = {
         seriesId: c.seriesId,
         start: c.start,
-        verifier: addressOf(this.d.chainId, "PythPrintVerifier"),
-        feedId: c.market.pythFeedId,
+        verifier: verifierOf(this.d.chainId, c.market),
+        feedId: feedIdOf(c.market),
         openProof: printProof(open.updates),
         commitData,
       };
@@ -159,7 +160,7 @@ export class MarketRelay {
       },
       "call committed",
     );
-    this.fills.add(c.market.pythFeedId, committed.target, {
+    this.fills.add(feedIdOf(c.market), committed.target, {
       ticketId: committed.ticketId,
       owner: req.intent.owner,
       window,

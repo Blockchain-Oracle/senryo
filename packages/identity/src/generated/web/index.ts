@@ -85,6 +85,14 @@ const ArtBnbDisc = lazy(() => import("./bnb-disc.tsx"));
 const ArtBnbSymbol = lazy(() => import("./bnb-symbol.tsx"));
 const ArtBnbMonoLight = lazy(() => import("./bnb-monolight.tsx"));
 const ArtBnbMonoDark = lazy(() => import("./bnb-monodark.tsx"));
+const ArtDogeDisc = lazy(() => import("./doge-disc.tsx"));
+const ArtDogeSymbol = lazy(() => import("./doge-symbol.tsx"));
+const ArtDogeMonoLight = lazy(() => import("./doge-monolight.tsx"));
+const ArtDogeMonoDark = lazy(() => import("./doge-monodark.tsx"));
+const ArtXrpDisc = lazy(() => import("./xrp-disc.tsx"));
+const ArtXrpSymbol = lazy(() => import("./xrp-symbol.tsx"));
+const ArtXrpMonoLight = lazy(() => import("./xrp-monolight.tsx"));
+const ArtXrpMonoDark = lazy(() => import("./xrp-monodark.tsx"));
 const ArtTronDisc = lazy(() => import("./tron-disc.tsx"));
 const ArtTronSymbol = lazy(() => import("./tron-symbol.tsx"));
 const ArtTronMonoLight = lazy(() => import("./tron-monolight.tsx"));
@@ -189,6 +197,8 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "avatar-12-kitsune": { symbol: ArtAvatar12KitsuneSymbol },
   "near": { disc: ArtNearDisc, symbol: ArtNearSymbol, monoLight: ArtNearMonoLight, monoDark: ArtNearMonoDark },
   "bnb": { disc: ArtBnbDisc, symbol: ArtBnbSymbol, monoLight: ArtBnbMonoLight, monoDark: ArtBnbMonoDark },
+  "doge": { disc: ArtDogeDisc, symbol: ArtDogeSymbol, monoLight: ArtDogeMonoLight, monoDark: ArtDogeMonoDark },
+  "xrp": { disc: ArtXrpDisc, symbol: ArtXrpSymbol, monoLight: ArtXrpMonoLight, monoDark: ArtXrpMonoDark },
   "tron": { disc: ArtTronDisc, symbol: ArtTronSymbol, monoLight: ArtTronMonoLight, monoDark: ArtTronMonoDark },
   "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },

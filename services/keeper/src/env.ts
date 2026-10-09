@@ -4,10 +4,9 @@ import { KEEPER_PORT, KEEPER_STALE_SEC } from "./constants.ts";
 
 /**
  * Jobs: the ticket book's sync with the chain, settlement with automatic payouts and backup fills for the markets
- * (D-264, D-278), push delivery, push
- * receipts and retention.
+ * (D-264, D-278), the market calendars (D-289), push delivery, push receipts and retention.
  */
-export const KEEPER_JOBS = ["sync", "settle", "fills", "retention", "receipts", "pushes"] as const;
+export const KEEPER_JOBS = ["sync", "settle", "fills", "calendars", "retention", "receipts", "pushes"] as const;
 export type KeeperJob = (typeof KEEPER_JOBS)[number];
 
 /**

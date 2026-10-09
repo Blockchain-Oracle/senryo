@@ -3,6 +3,7 @@
  * Max), then UP and DOWN each with its live odds ("pays 1.92× · about 52%"), or — holding a call in this window — one
  * CLOSE with the cash-out value rolling. Honest states: calls closed for the lockout, a stale price, a call in flight.
  */
+import type { MarketLine } from "@senryo/calls";
 import type { PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
@@ -64,7 +65,26 @@ function CallButton({
   );
 }
 
-export function CallPanel({
+/** A market outside its session (D-289): no new calls until it opens; the chart shows the last print. */
+function ClosedPanel({ symbol, when }: { symbol: string; when: string }) {
+  const { color } = useTheme();
+  return (
+    <View style={styles.wrap} accessibilityRole="summary">
+      <Text style={[TYPE.sectionTitle, { color: color.ink }]}>{symbol} is closed</Text>
+      <Text style={[TYPE.body, { color: color.inkMuted }]}>{when}</Text>
+      <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+        The price shown is its last print. Calls open with the market.
+      </Text>
+    </View>
+  );
+}
+
+export function CallPanel(props: Parameters<typeof OpenPanel>[0] & { symbol: string; session: MarketLine }) {
+  if (!props.session.trading && !props.holding) return <ClosedPanel symbol={props.symbol} when={props.session.text} />;
+  return <OpenPanel {...props} />;
+}
+
+function OpenPanel({
   state,
   stake,
   balance,

@@ -3,7 +3,7 @@
  * (invariant `viem-import-boundary`): commit, finalize, expire, claimFor, session grant / revoke, the Practice mint, and
  * the reserve's events as ticket changes (the services' ticket book follows exactly what the chain emitted).
  */
-import { bandReserveAbi, testUSDAbi } from "@senryo/contracts/abis";
+import { bandReserveAbi, marketCalendarAbi, testUSDAbi } from "@senryo/contracts/abis";
 import {
   type Address,
   decodeErrorResult,
@@ -40,6 +40,21 @@ export function finalizeCallData(target: number, ids: readonly bigint[], proof: 
 
 export function expireCallData(ids: readonly bigint[]): Hex {
   return encodeFunctionData({ abi: bandReserveAbi, functionName: "expire", args: [[...ids]] });
+}
+
+/** A market calendar's week (three 256-slot words) for `MarketCalendar.setWeek` (D-289). */
+export function setWeekCallData(calendarId: number, words: readonly bigint[]): Hex {
+  const bits = [words[0] ?? 0n, words[1] ?? 0n, words[2] ?? 0n] as const;
+  return encodeFunctionData({ abi: marketCalendarAbi, functionName: "setWeek", args: [calendarId, bits] });
+}
+
+/** A closed window (a holiday or an early close) for `MarketCalendar.addHoliday`. */
+export function addHolidayCallData(calendarId: number, start: number, end: number): Hex {
+  return encodeFunctionData({
+    abi: marketCalendarAbi,
+    functionName: "addHoliday",
+    args: [calendarId, BigInt(start), BigInt(end)],
+  });
 }
 
 export function claimForCallData(ids: readonly bigint[]): Hex {

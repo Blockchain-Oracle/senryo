@@ -9,9 +9,10 @@ import {
   seriesOf,
   settleAndClaimData,
   ticketChanges,
+  verifierOf,
   voidAndClaimData,
 } from "@senryo/chain";
-import { MARKET_BATCH_MAX, PRINT_CLASSES } from "@senryo/config";
+import { feedIdOf, MARKET_BATCH_MAX, printClassOf } from "@senryo/config";
 import { applyTicketChanges, archivedPrint, nowSec, windowsToSettle } from "@senryo/service-common";
 import { SETTLE_AFTER_SEC, SETTLE_INTERVAL_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
@@ -50,15 +51,15 @@ async function settleOne(
   const windowId = w.window_id as Hex;
   const expiry = Number(w.window_expiry);
   const [first, ...rest] = chunk(w.ids, MARKET_BATCH_MAX);
-  const print = await archivedPrint(ctx.db, series.market.pythFeedId, expiry);
-  const admission = PRINT_CLASSES[series.market.kind].admissionSec;
+  const print = await archivedPrint(ctx.db, feedIdOf(series.market), expiry);
+  const admission = printClassOf(series.market).admissionSec;
   let data: Hex;
   if (print) {
     data = settleAndClaimData(ctx.chainId, {
       windowId,
       expiry,
-      verifier: addressOf(ctx.chainId, "PythPrintVerifier"),
-      feedId: series.market.pythFeedId,
+      verifier: verifierOf(ctx.chainId, series.market),
+      feedId: feedIdOf(series.market),
       closeProof: printProof(print.updates),
       ticketIds: first ?? [],
     });

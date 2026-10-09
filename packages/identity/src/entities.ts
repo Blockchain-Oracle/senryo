@@ -21,10 +21,17 @@ const CRYPTO: Readonly<Record<string, { name: string; art?: string; gap?: string
   ETH: { name: "Ethereum", art: "ethereum" },
   SOL: { name: "Solana", art: "solana" },
   MON: { name: "Monad", art: "monad" },
+  DOGE: { name: "Dogecoin", art: "doge" },
+  XRP: { name: "XRP", art: "xrp" },
+  BNB: { name: "BNB", art: "bnb" },
+  HYPE: { name: "Hyperliquid", art: "hyperliquid" },
 };
 
-/** Gold priced as a market (original koban art, never an issuer's token art). */
-const COMMODITY_MARKETS = [{ symbol: "XAU", name: "Gold", art: "xau-koban" }] as const;
+/** Gold and silver priced as markets (original koban and chōgin art, never an issuer's token art). */
+const COMMODITY_MARKETS = [
+  { symbol: "XAU", name: "Gold", art: "xau-koban" },
+  { symbol: "XAG", name: "Silver", art: "xag-chogin" },
+] as const;
 
 /** Chains the any-asset bridges reach that no Senryo config needs elsewhere (EIP-155 ids). */
 const OPTIMISM_CHAIN_ID = 10;

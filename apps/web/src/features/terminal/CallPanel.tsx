@@ -3,8 +3,10 @@
  * The call panel (the phone's `CallPanel`; Tradash's UP/DOWN ↔ CLOSE, Owarine's web buttons): the stake (the last one
  * remembered; $1 · $5 · $10 · $25 · any amount · Max), then UP and DOWN each with its live odds ("pays 1.92× · about
  * 52%"), or — holding a call in this window — CASH OUT with the value it returns now, and a part (25 / 50 %). Honest
- * states: calls closed for the lockout, a stale price, a call in flight. Keys: ↑ Up, ↓ Down, C cash out.
+ * states: calls closed for the lockout, a stale price, a call in flight, and a market outside its session ("TSLA is
+ * closed · Opens Mon 09:30 ET", D-289). Keys: ↑ Up, ↓ Down, C cash out.
  */
+import type { MarketLine } from "@senryo/calls";
 import type { PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { ArrowDown, ArrowDownUp, ArrowUp, Ellipsis } from "lucide-react";
@@ -30,6 +32,9 @@ function noticeOf(state: PanelState): string | null {
 }
 
 export interface CallPanelProps {
+  symbol: string;
+  /** The market's session line; not trading means no new calls (a call already held can still cash out). */
+  session: MarketLine;
   state: PanelState;
   stake: bigint;
   balance: bigint | undefined;
@@ -45,7 +50,18 @@ export interface CallPanelProps {
   onClosePart: () => void;
 }
 
+function ClosedPanel({ symbol, when }: { symbol: string; when: string }) {
+  return (
+    <div className="terminal-panel" role="status">
+      <p className="font-semibold text-section-title">{symbol} is closed</p>
+      <p className="text-body text-text-2">{when}</p>
+      <p className="text-meta text-text-3">The price shown is its last print. Calls open with the market.</p>
+    </div>
+  );
+}
+
 export function CallPanel(p: CallPanelProps) {
+  if (!p.session.trading && !p.holding) return <ClosedPanel symbol={p.symbol} when={p.session.text} />;
   const blocked = p.state.kind !== "ready";
   const presets = STAKE_PRESETS_USD.map((usd) => BigInt(usd) * USD);
   const isMax = p.balance !== undefined && p.stake === p.balance;

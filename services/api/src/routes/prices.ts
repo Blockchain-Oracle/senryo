@@ -1,4 +1,5 @@
 import { candlesRoute, printRoute, recentPricesRoute } from "@senryo/api-client";
+import { feedIdOf } from "@senryo/config";
 import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, HttpError, nowSec, parseRoute, SECONDS_PER_DAY, sendRoute } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
@@ -37,7 +38,7 @@ export function registerPriceRoutes(app: HttpServer, gateway: PythGateway): void
     if (query.to < query.from || query.to - query.from > MAX_CANDLE_SPAN_SEC) {
       throw new HttpError(HTTP_STATUS.badRequest, "BAD_REQUEST", "range must be within 7 days");
     }
-    const rows = await gateway.candles(feed.market.pythFeedId, query.from, query.to);
+    const rows = await gateway.candles(feedIdOf(feed.market), query.from, query.to);
     const nowMinute = Math.floor(nowSec() / MINUTE) * MINUTE;
     if (query.to < nowMinute) reply.header("cache-control", IMMUTABLE);
     return sendRoute(reply, candlesRoute, {
@@ -57,7 +58,7 @@ export function registerPriceRoutes(app: HttpServer, gateway: PythGateway): void
     const feed = gateway.feedOf(query.symbol);
     if (!feed) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", `no market ${query.symbol}`);
     if (query.t > nowSec()) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "that instant is ahead");
-    const u = await gateway.printAt(feed.market.pythFeedId, query.t, 0);
+    const u = await gateway.printAt(feedIdOf(feed.market), query.t, 0);
     if (!u) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no print for that instant");
     reply.header("cache-control", IMMUTABLE);
     return sendRoute(reply, printRoute, {

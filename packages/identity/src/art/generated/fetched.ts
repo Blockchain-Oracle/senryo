@@ -113,6 +113,116 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "doge",
+    "owner": "Dogecoin Foundation",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/doge/web3icons-tokens-background-DOGE.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/DOGE.svg",
+        "sha256": "5350fe4042f2f084a6f7f536d7d15bdfdcbbf31fe6ee2e1c2cc1059d1d3975b7",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/doge/web3icons-tokens-branded-DOGE.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/DOGE.svg",
+        "sha256": "311042d0a5259b7a314aac7863680dc4b3204e8d295d41a9c007126cec4f4dbc",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/doge/web3icons-tokens-mono-DOGE.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/DOGE.svg",
+        "sha256": "1b44b97d5e9b4fbb9f53218357ec0586e3781ad92966a32c82ecb061fba4cef4",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/doge/web3icons-tokens-mono-DOGE-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/DOGE.svg",
+        "sha256": "f23d6fa26995f370bde57037e0025f97e4f510595c4b55e40932fe756e027c2e",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/doge/web3icons-tokens-mono-DOGE.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "xrp",
+    "owner": "XRP Ledger Foundation",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-09",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/xrp/web3icons-tokens-background-XRP.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/XRP.svg",
+        "sha256": "0a1e527d9b9b522189b780b54422f11375b793870e769cc832b51d1034d69beb",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/xrp/web3icons-tokens-branded-XRP.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/XRP.svg",
+        "sha256": "929ce10fdfdae8cc3bc118adb248fa543d1d2882c6a706114e38ba61c2db5583",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/xrp/web3icons-tokens-mono-XRP.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/XRP.svg",
+        "sha256": "929ce10fdfdae8cc3bc118adb248fa543d1d2882c6a706114e38ba61c2db5583",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/xrp/web3icons-tokens-mono-XRP-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/XRP.svg",
+        "sha256": "d1df47f9bed3b0f9394e35df9ebc8ad7a57cf3b31c725b721d1a3738418df0a6",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/xrp/web3icons-tokens-mono-XRP.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
     "key": "tron",
     "owner": "TRON DAO",
     "provenance": "open-library",
