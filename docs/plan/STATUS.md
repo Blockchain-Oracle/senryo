@@ -20,7 +20,7 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0–S6 done; S7 (stocks, more coins, Range/Moonshot, baskets, Earn, Proof) is built and committed — S7.9 (on chain + deploy) waits on testnet MON for the deployer; S8 is being planned. See the S7 interim note below.
+**Where we are:** S0–S6 done; S7 built and committed; S8 under way ([pivot-s8-social-games.md](pivot-s8-social-games.md), D-291…D-297) — S7 and S8 go on chain together as markets v2 (D-291), which waits on ~25–30 testnet MON.
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
