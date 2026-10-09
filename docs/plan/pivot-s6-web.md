@@ -84,8 +84,36 @@ on `/app` · the wallet chunk is 0 bytes before its click · ≤ 1 SSE per tab �
       `apps/web/scripts/website-art.mjs`), Proof, questions, and sign-in at the foot. The trading-era landing, its art
       module, images and copy are gone; `docs/judges.md` (the /judges page) rewritten: a call in two minutes, how to
       check any call, the contracts from the live catalogue, how it is built, what is not yet._
-- [ ] S6.9 Static export to Coolify (`senryo-web` image), the gate measured (Lighthouse, bundle sizes, SSE count),
+- [x] S6.9 Static export to Coolify (`senryo-web` image), the gate measured (Lighthouse, bundle sizes, SSE count),
       a walked journey on the live site, acceptance rows, STATUS handoff
+      _Done: deployed (`sha-93bb806`, `sha-b83c873`, `sha-1c03fab`); measured and recorded in
+      `acceptance.md` (S6 rows) — see the handoff for what passes and what does not. The signed-in walk is the one
+      line left open: it needs a person at a passkey prompt._
 
 ## Handoff
-(written at the end of the stage)
+
+**Live:** `https://senryo.xyz` (landing, `/judges`, `/call?id=`) and `/app` (Home · Trade · Markets · Calls, the
+Everything drawer, ⌘K, the drawers in the URL), a static export on Coolify `senryo-web` (`2zeju5a5…`). `www` 301s to
+the apex; the app-link files are served as `application/json` with no redirect.
+
+**The gate, honestly** (rows in `acceptance.md`, 9 Oct):
+- `pnpm gate` 0 · ≤ 1 SSE per tab (one `/v1/stream` across in-app navigation) · the wallet's chunks load on their
+  click only · TBT ≤ 120 ms and CLS ≤ 0.01 everywhere.
+- **Bundles** re-based by D-283 (the framework alone is 127 KB, so the plan's 120 / 220 could not hold): `/` 143 ✓
+  (≤ 147), `/judges` 137 ✓, `/call` 233 ✓, terminal 293 ✓ (≤ 297), `/app` and `/app/calls` 254 — **7 KB over 247**.
+- **LCP misses 2.5 s** (Lighthouse mobile medians): `/` 2.64 s, `/app` 2.96 s, the terminal 6.1–8.1 s. The terminal's
+  LCP node is the live distance text, which cannot exist before the first price over the stream; the canvas chart
+  does not count. Not hidden behind a placeholder trick.
+- **Open, waiting on the user:** walk sign-in → setup → test dollars → a call → its receipt on senryo.xyz (WebAuthn
+  needs a person). The call flow is `@senryo/calls`, the same code the phone ran on chain at S5.
+
+**Next cuts (D-283), carried:** split the identity registry's entity table out of `/app`'s first load; move the api
+response schemas to `zod/mini`; the terminal's LCP is bounded by the stream's first price, so its fix is a faster
+first price (the stream's opening snapshot), not a placeholder.
+
+**Shared with the phone now:** `@senryo/calls` (the whole call flow, receipts, withdraw, handle copy), `@senryo/core`
+market words and clocks, `@senryo/tokens` sound and layout. The phone builds on it (typecheck, iOS bundle export);
+no OTA yet: the refactor reaches phones with S7's first phone change, after one run on the simulator.
+
+**Carried to S7:** the D-281 universe on both apps (DOGE, XRP, BNB, HYPE, TSLA, QQQ, XAU, XAG), Range and Moonshot,
+baskets, Earn, the Proof page; the second price source for stocks is the user's money choice.

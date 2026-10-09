@@ -20,12 +20,31 @@ Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. 
 - S10 ship
 - CRE is optional, after S10.
 
-**Where we are:** S0–S5 done (S1b's builds on TestFlight and Play internal take S5 over the air); next is S6 (the web app).
+**Where we are:** S0–S6 done (S6's signed-in walk on senryo.xyz waits on a person at a passkey prompt); next is S7 (stocks, bands, baskets, Earn, Proof).
 
 **Done while planning:**
 - Senryo's Pyth key is runtime-only on Coolify `senryo-api` (`lzumxcf5…`) and `senryo-keeper` (`cskiutyj…`), and in the gitignored `.env.local`.
 - Agari's new key is live on `agari-ops`.
 - Owarine's ops env now uses Senryo's key.
+
+## S6 handoff (web app, 9 Oct)
+
+- **Live:** `senryo.xyz` (landing with the live BTC line, `/judges`, the public `/call?id=` receipt) and `/app`: rail
+  (Home · Trade · Markets · Calls, 5 = Everything), top line, ⌘K, the phone's dock under 768 px; the terminal
+  `/app/trade/[symbol]` (Owarine's canvas chart with Senryo's rules, odds in words, presets + keypad, Up/Down → Cash
+  out, lockout, reactions, confetti, sounds, one-tap line, crowd split); Calls with receipts, the window proof and
+  the share card; passkey sign-in and setup in drawers; the wallet, Receive, Withdraw, one-tap and settings drawers
+  (`?d=`). Static export on Coolify `senryo-web` (`2zeju5a5…`).
+- **One call flow for both apps:** `@senryo/calls` (window, signing, one-tap, quote pass, reactions, `useCallFlow`,
+  results, receipts, withdraw); shared words/clocks in `@senryo/core` market, sound and layout in `@senryo/tokens`
+  (D-282). The phone runs on it (typecheck, bundle export); its OTA waits for S7's first phone change and a sim run.
+- **Gate (acceptance.md, 9 Oct):** `pnpm gate` 0 · 1 SSE per tab · wallet chunks only on click · TBT ≤ 120 ms, CLS
+  ≤ 0.01 · bundles per D-283: `/` 143, `/call` 233, terminal 293 within; `/app` 254 is **7 KB over** · LCP **misses
+  2.5 s**: `/` 2.64, `/app` 2.96, terminal 6.1–8.1 s (its LCP is live text that needs the first price).
+- **Open on the user:** walk sign-in → setup → test dollars → a call → its receipt on senryo.xyz.
+- **Fixed on the way:** pnpm's dangling `expo-modules-core` hoist (postinstall repair); the proof polled 404s for
+  windows nobody called (now `null`); the first render asked for `load?expiry=60` before the clock synced; zod
+  imported whole (namespace import, −144 KB).
 
 ## S5 handoff (phone loop, 8–9 Oct)
 
