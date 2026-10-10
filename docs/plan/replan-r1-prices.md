@@ -290,7 +290,13 @@ live PnL at about 8 Hz. No contract change.
     100 %. Also seen in the browser at 120 Hz: the line moved on 481 of 481 frames. **Left for the simulator pass:**
     the phone's per-frame SVG-string path and gradient shaders (a reused `SkPath`/cached shaders trade allocations for
     native calls; it needs a frame-time measurement on the device build).
-- [ ] R1.22 The surge window is scaled to the measured tick interval, so surge, mega and slump fire on both apps.
+- [x] R1.22 The surge window is scaled to the measured tick interval, so surge, mega and slump fire on both apps.
+  - *As built (10 Oct):* `ReactionEngine` (shared by both apps) measures the tick interval and sizes the surge window
+    to Tradash's 7.5 ticks (never under 1.5 s: ~7.5 s at Pyth's 1 Hz); the minimum span is 60 % of it, the size floors
+    grow with √(window), the cooldown is two windows (Tradash's 3 s of 1.5 s), and inside it a same-way surge may still
+    grow into a mega. Check on the real engine, a 1 Hz BTC-like feed: before, nothing fired at all (1.5 s never held 4
+    points); after, 30 min of noise gave 1, and a +$90 / +$200 / −$90 move over 5 s gave surge / surge → mega / slump.
+    Exit 0.
 
 ### Checks
 - [ ] R1.23 G3 chaos and G6 abuse as `scripts/drive` checks; rows in `acceptance.md`. G1 load and G2 soak are run when

@@ -109,12 +109,24 @@ const COMBO_GREAT = 6;
 const COMBO_EPIC = 10;
 const COMBO_EPIC_EVERY = 5;
 const ADVERSE_CALLOUT = 3;
-/** Surges: a move far outside the noise inside the window. */
+/**
+ * Surges: a move far outside the noise inside the window. Tradash's window is 1.5 s of a ~5 Hz feed (7.5 ticks); a
+ * Pyth market ticks about once a second, where 1.5 s never holds the 4 points a surge needs, so surge, mega and slump
+ * never fired (04-pricing R1.22). The window is that many ticks at the measured interval — never shorter than 1.5 s —
+ * and the move-size floors grow with √(window), so a surge stays as rare as Tradash's.
+ */
 const WINDOW_MS = 1_500;
+const SURGE_WINDOW_TICKS = 7.5;
+/** The tick interval is an average of the gaps between prices; a gap longer than this (a pause) isn't counted. */
+const TICK_EMA_ALPHA = 0.2;
+const TICK_GAP_MAX_MS = 10_000;
+/** After a surge, quiet for two windows (Tradash: 3 s of a 1.5 s window), so one move reacts once. */
 const SURGE_COOLDOWN_MS = 3_000;
+const SURGE_COOLDOWN_WINDOWS = 2;
 const SURGE_MIN_SAMPLES = 12;
 const SURGE_MIN_POINTS = 4;
-const SURGE_MIN_SPAN_MS = 900;
+/** The window's points must span this share of it (Tradash: 900 ms of 1.5 s). */
+const SURGE_MIN_SPAN_SHARE = 0.6;
 const SURGE_Z = 3;
 const SURGE_SHARE = 2.5e-4;
 const MEGA_Z = 4.5;
@@ -150,8 +162,12 @@ export class ReactionEngine {
   private baseline = 0;
   private samples = 0;
   private lastPrice: number | null = null;
+  private lastAt = 0;
+  private tickMs = 0;
   private window: Array<{ t: number; p: number }> = [];
   private lastSurgeAt = Number.NEGATIVE_INFINITY;
+  /** The last surge's direction and size: inside the cooldown only a same-way surge growing into a mega may fire. */
+  private lastSurge: { sign: number; mega: boolean } | null = null;
   private lastCalloutAt = Number.NEGATIVE_INFINITY;
   private lastCalloutText = "";
   private pos: PositionState | null = null;
@@ -163,8 +179,11 @@ export class ReactionEngine {
     this.baseline = 0;
     this.samples = 0;
     this.lastPrice = null;
+    this.lastAt = 0;
+    this.tickMs = 0;
     this.window = [];
     this.lastSurgeAt = Number.NEGATIVE_INFINITY;
+    this.lastSurge = null;
     this.pos = null;
   }
 
@@ -218,19 +237,22 @@ export class ReactionEngine {
       }
     }
 
-    // Surges: a move far outside the noise inside 1.5 s.
-    if (this.samples >= SURGE_MIN_SAMPLES && t - this.lastSurgeAt >= SURGE_COOLDOWN_MS) {
-      const surge = this.detectSurge(price);
-      if (surge) {
-        this.lastSurgeAt = t;
-        const favorable = Math.sign(surge.delta) === position.side;
-        out.push({ kind: "surge", favorable, mega: surge.mega });
-        callouts.push(
-          favorable
-            ? { tone: "epic", pool: surge.mega ? CALLOUTS.mega : CALLOUTS.surge }
-            : { tone: "bad", pool: CALLOUTS.slump },
-        );
-      }
+    // Surges: a move far outside the noise inside the window (7.5 ticks, at least 1.5 s).
+    const cooldown = Math.max(SURGE_COOLDOWN_MS, SURGE_COOLDOWN_WINDOWS * this.windowMs());
+    const surge = this.samples >= SURGE_MIN_SAMPLES ? this.detectSurge(price) : null;
+    const rested = t - this.lastSurgeAt >= cooldown;
+    const grows =
+      surge?.mega === true && this.lastSurge?.mega === false && this.lastSurge.sign === Math.sign(surge.delta);
+    if (surge && (rested || grows)) {
+      this.lastSurgeAt = t;
+      this.lastSurge = { sign: Math.sign(surge.delta), mega: surge.mega };
+      const favorable = Math.sign(surge.delta) === position.side;
+      out.push({ kind: "surge", favorable, mega: surge.mega });
+      callouts.push(
+        favorable
+          ? { tone: "epic", pool: surge.mega ? CALLOUTS.mega : CALLOUTS.surge }
+          : { tone: "bad", pool: CALLOUTS.slump },
+      );
     }
 
     // ROI milestones, each once per call.
@@ -267,28 +289,42 @@ export class ReactionEngine {
     return out;
   }
 
+  /** The surge window: as many ticks as Tradash's 1.5 s held, at this market's measured interval. */
+  private windowMs(): number {
+    return Math.max(WINDOW_MS, SURGE_WINDOW_TICKS * this.tickMs);
+  }
+
   private observe(t: number, price: number): void {
     if (this.lastPrice !== null) {
       const d = Math.abs(price - this.lastPrice);
       this.baseline = this.samples === 0 ? d : this.baseline + EMA_ALPHA * (d - this.baseline);
       this.samples += 1;
+      const gap = t - this.lastAt;
+      if (gap > 0 && gap < TICK_GAP_MAX_MS) {
+        this.tickMs = this.tickMs === 0 ? gap : this.tickMs + TICK_EMA_ALPHA * (gap - this.tickMs);
+      }
     }
     this.lastPrice = price;
+    this.lastAt = t;
     this.window.push({ t, p: price });
-    while (this.window.length > 0 && t - (this.window[0]?.t ?? t) > WINDOW_MS) this.window.shift();
+    const span = this.windowMs();
+    while (this.window.length > 0 && t - (this.window[0]?.t ?? t) > span) this.window.shift();
   }
 
   private detectSurge(price: number): { delta: number; mega: boolean } | null {
     const w = this.window;
     const first = w[0];
     const last = w.at(-1);
-    if (!first || !last || w.length < SURGE_MIN_POINTS || last.t - first.t < SURGE_MIN_SPAN_MS || this.baseline <= 0)
-      return null;
+    const span = this.windowMs();
+    if (!first || !last || w.length < SURGE_MIN_POINTS || last.t - first.t < SURGE_MIN_SPAN_SHARE * span) return null;
+    if (this.baseline <= 0) return null;
     const delta = price - first.p;
     const rel = Math.abs(delta) / price;
     const z = Math.abs(delta) / (this.baseline * Math.sqrt(w.length - 1));
-    if (z >= MEGA_Z && rel >= MEGA_SHARE) return { delta, mega: true };
-    if (z >= SURGE_Z && rel >= SURGE_SHARE) return { delta, mega: false };
+    // A longer window sees larger ordinary moves: the size floors grow with √(window) to stay as rare.
+    const scale = Math.sqrt(span / WINDOW_MS);
+    if (z >= MEGA_Z && rel >= MEGA_SHARE * scale) return { delta, mega: true };
+    if (z >= SURGE_Z && rel >= SURGE_SHARE * scale) return { delta, mega: false };
     return null;
   }
 
