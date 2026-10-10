@@ -215,16 +215,22 @@ export function drawFrame(
   }
   // The line as one path string: about one point per pixel (the ring holds more samples than the plot has pixels,
   // so straight segments read as the curve), parsed natively in one call.
+  // Shifted left by the part-sample owed, then closed at the plot's edge by the head eased to now (R1.21).
   const n = s.size;
   const stride = Math.max(1, Math.floor((n - 1) / Math.max(1, plotW)));
+  const dx = plotW / (n - 1);
   let d = "";
   let headY = 0;
   for (let i = 0; ; i += stride) {
     const at = Math.min(i, n - 1);
     const y = yOf(ringAt(s, at), win);
-    d += `${at === 0 ? "M" : "L"}${px((at / (n - 1)) * plotW)} ${px(y)}`;
+    d += `${at === 0 ? "M" : "L"}${px((at - s.frac) * dx)} ${px(y)}`;
     headY = y;
     if (at === n - 1) break;
+  }
+  if (s.frac > 0) {
+    headY = yOf(s.head, win);
+    d += `L${px(plotW)} ${px(headY)}`;
   }
   const path = Skia.Path.MakeFromSVGString(d);
   if (path) {

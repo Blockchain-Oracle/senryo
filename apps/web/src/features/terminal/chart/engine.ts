@@ -97,20 +97,18 @@ export const yOf = (price: number, w: YWindow): number => {
   return mid - ((price - w.center) / w.half) * ((w.bottom - w.top) / 2);
 };
 
-/** Uniform Catmull-Rom → cubic Bézier control points for segment i→i+1, `[c1x, c1y, c2x, c2y]`. */
-export function catmullRom(xs: Float64Array, ys: Float64Array, i: number, n: number): [number, number, number, number] {
+/**
+ * Uniform Catmull-Rom → cubic Bézier control points for segment i→i+1, written into `out` as `[c1x, c1y, c2x, c2y]`
+ * (one buffer reused every segment of every frame: no per-frame allocation, 04-pricing R17).
+ */
+export function catmullRom(xs: Float64Array, ys: Float64Array, i: number, n: number, out: Float64Array): void {
   const a = Math.max(0, i - 1);
   const d = Math.min(n - 1, i + 2);
-  const b = i;
   const c = i + 1;
-  const x = (k: number) => xs[k] ?? 0;
-  const y = (k: number) => ys[k] ?? 0;
-  return [
-    x(b) + (x(c) - x(a)) / CATMULL,
-    y(b) + (y(c) - y(a)) / CATMULL,
-    x(c) - (x(d) - x(b)) / CATMULL,
-    y(c) - (y(d) - y(b)) / CATMULL,
-  ];
+  out[0] = (xs[i] ?? 0) + ((xs[c] ?? 0) - (xs[a] ?? 0)) / CATMULL;
+  out[1] = (ys[i] ?? 0) + ((ys[c] ?? 0) - (ys[a] ?? 0)) / CATMULL;
+  out[2] = (xs[c] ?? 0) - ((xs[d] ?? 0) - (xs[i] ?? 0)) / CATMULL;
+  out[3] = (ys[c] ?? 0) - ((ys[d] ?? 0) - (ys[i] ?? 0)) / CATMULL;
 }
 
 /** Grid ticks: a minor every step/5, a major every step, across `[lo, hi]`; empty past 400 ticks. */

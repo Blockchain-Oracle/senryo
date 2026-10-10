@@ -11,13 +11,16 @@ import {
   DRIFT_GAIN,
   DRIFT_WRAP,
   MAX_DPR,
+  SAMPLE_MS,
 } from "./constants";
 
 export interface FrameMotion {
   /** Eased price change this frame, in grid steps. */
   velocitySteps: number;
-  /** Pixels the line scrolled this frame. */
+  /** Pixels the line scrolled this frame (0 while it holds still: not live, or a closed market's session). */
   scrollX: number;
+  /** This frame's length, so the drift eases at the same speed at 60, 90, 120 or 144 Hz. */
+  dtMs: number;
 }
 
 export class DotGrid {
@@ -57,7 +60,9 @@ export class DotGrid {
       this.offsetX = (this.offsetX - DOT_SCROLL * motion.scrollX) % DOT_SPACING;
       this.targetY += Math.max(-DRIFT_CLAMP, Math.min(DRIFT_CLAMP, DRIFT_GAIN * motion.velocitySteps * DOT_SPACING));
       this.targetY %= DOT_SPACING * DRIFT_WRAP;
-      this.offsetY += (this.targetY - this.offsetY) * DRIFT_EASE;
+      // DRIFT_EASE is per 60 Hz sample; a frame of any length eases by the same amount per second.
+      const ease = 1 - (1 - DRIFT_EASE) ** (motion.dtMs / SAMPLE_MS);
+      this.offsetY += (this.targetY - this.offsetY) * ease;
     }
     const { ctx, width: w, height: h } = this;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);

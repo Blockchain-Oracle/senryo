@@ -46,6 +46,8 @@ import { catmullRom, niceStep, SampleRing, stepFor, type YWindow, yOf } from "./
 import { CanvasOdometer } from "./odometer";
 
 const HALF = 2;
+/** `[c1x, c1y, c2x, c2y]` for one Bézier segment. */
+const CONTROL_POINTS = 4;
 const MIN_SIZE = 40;
 
 /** Whether the price is live, and its age or state for the tag when it isn't (`PriceHealth`, R1.20). */
@@ -64,8 +66,12 @@ export interface ChartFrame extends FrameMotion {
 export class ChartEngine {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly ring = new SampleRing(SAMPLE_CAPACITY);
-  private readonly xs = new Float64Array(SAMPLE_CAPACITY);
-  private readonly ys = new Float64Array(SAMPLE_CAPACITY);
+  /** The ring's points plus the head at "now" (sub-sample scroll); `cp` is the control-point buffer. */
+  private readonly xs = new Float64Array(SAMPLE_CAPACITY + 1);
+  private readonly ys = new Float64Array(SAMPLE_CAPACITY + 1);
+  private readonly cp = new Float64Array(CONTROL_POINTS);
+  /** The tail's fade, made once per size. */
+  private fade: { w: number; h: number; gradient: CanvasGradient } | null = null;
   private readonly priceOdo = new CanvasOdometer();
   private readonly pnlOdo = new CanvasOdometer();
   private target: number | null = null;
@@ -207,7 +213,8 @@ export class ChartEngine {
     this.sampleDebt = this.health.live && !this.history ? this.sampleDebt + dt / SAMPLE_MS : 0;
     let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(this.sampleDebt));
     this.sampleDebt -= Math.floor(this.sampleDebt);
-    const k = reduced ? 1 : 1 - Math.exp(-SAMPLE_MS / Math.max(BASE_TAU_MS, TICK_FOLLOW * this.tickMs));
+    const tau = Math.max(BASE_TAU_MS, TICK_FOLLOW * this.tickMs);
+    const k = reduced ? 1 : 1 - Math.exp(-SAMPLE_MS / tau);
     while (pushes-- > 0) {
       const d = this.target - this.eased;
       this.eased = Math.abs(d) < SETTLE_FRACTION * Math.abs(this.eased) ? this.target : this.eased + d * k;
@@ -229,7 +236,15 @@ export class ChartEngine {
     const win: YWindow = hist
       ? { center: (hist.low + hist.high) / HALF, half: this.historyHalf, top: PAD_Y, bottom: h - PAD_Y }
       : { center: this.eased, half: (SPAN_STEPS * this.step) / HALF, top: PAD_Y, bottom: h - PAD_Y };
-    const headY = this.drawLine(win, plotW, tone);
+    // Sub-sample scroll (04-pricing R17): the line shifts by the part-sample owed, and its head eases to "now", so it
+    // moves on every frame of a 90, 120 or 144 Hz screen instead of only on frames that push a sample.
+    const moving = this.health.live && !this.history;
+    const frac = moving ? this.sampleDebt : 0;
+    const head =
+      reduced || !moving
+        ? this.eased
+        : this.eased + (this.target - this.eased) * (1 - Math.exp((-frac * SAMPLE_MS) / tau));
+    const headY = this.drawLine(win, plotW, tone, frac, head);
 
     drawMark(ctx, theme, plotW, h);
     // Axis labels give way to the pill — and to the health tag beside it when there is one.
@@ -255,17 +270,28 @@ export class ChartEngine {
       headX: plotW,
       headY,
       velocitySteps: this.step > 0 ? (this.eased - before) / this.step : 0,
-      scrollX: plotW / (SAMPLE_CAPACITY - 1),
+      scrollX: moving ? (dt / SAMPLE_MS) * (plotW / (SAMPLE_CAPACITY - 1)) : 0,
+      dtMs: dt,
     };
   }
 
-  /** Grid, zone, glow and line on the layer the fade erases; returns the head's y. */
-  private drawLine(win: YWindow, plotW: number, tone: string): number {
+  /**
+   * Grid, zone, glow and line on the layer the fade erases; returns the head's y. The ring is shifted left by `frac`
+   * of a sample and the head point (`head`, the price eased to now) closes the line at the plot's edge.
+   */
+  private drawLine(win: YWindow, plotW: number, tone: string, frac: number, head: number): number {
     const { ctx, theme, height: h } = this;
-    const n = this.ring.length;
-    for (let i = 0; i < n; i++) {
-      this.xs[i] = (i / (n - 1)) * plotW;
+    const samples = this.ring.length;
+    const dx = plotW / (samples - 1);
+    for (let i = 0; i < samples; i++) {
+      this.xs[i] = (i - frac) * dx;
       this.ys[i] = yOf(this.ring.at(i), win);
+    }
+    let n = samples;
+    if (frac > 0) {
+      this.xs[n] = plotW;
+      this.ys[n] = yOf(head, win);
+      n += 1;
     }
     const headY = this.ys[n - 1] ?? h / HALF;
     drawGrid(ctx, theme, win, this.step, plotW);
@@ -282,11 +308,13 @@ export class ChartEngine {
         ctx.globalAlpha = 1;
       }
     }
-    const path = new Path2D();
-    path.moveTo(this.xs[0] ?? 0, this.ys[0] ?? headY);
+    // The context's own path, rebuilt in place (no Path2D per frame) and stroked twice: glow, then line.
+    const cp = this.cp;
+    ctx.beginPath();
+    ctx.moveTo(this.xs[0] ?? 0, this.ys[0] ?? headY);
     for (let i = 0; i < n - 1; i++) {
-      const [c1x, c1y, c2x, c2y] = catmullRom(this.xs, this.ys, i, n);
-      path.bezierCurveTo(c1x, c1y, c2x, c2y, this.xs[i + 1] ?? 0, this.ys[i + 1] ?? 0);
+      catmullRom(this.xs, this.ys, i, n, cp);
+      ctx.bezierCurveTo(cp[0] ?? 0, cp[1] ?? 0, cp[2] ?? 0, cp[3] ?? 0, this.xs[i + 1] ?? 0, this.ys[i + 1] ?? 0);
     }
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
@@ -295,20 +323,23 @@ export class ChartEngine {
     const strength = this.health.live || this.history ? 1 : DIM_ALPHA;
     ctx.globalAlpha = GLOW_ALPHA * strength;
     ctx.lineWidth = GLOW_W;
-    ctx.stroke(path);
+    ctx.stroke();
     ctx.globalAlpha = strength;
     ctx.lineWidth = LINE_W;
-    ctx.stroke(path);
+    ctx.stroke();
     ctx.globalAlpha = 1;
     // The tail dissolves: erase the left 32 % with a gradient.
     const fadeW = plotW * FADE_FRACTION;
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
-    const fade = ctx.createLinearGradient(0, 0, fadeW, 0);
-    fade.addColorStop(0, "rgba(0,0,0,1)");
-    fade.addColorStop(FADE_MID, `rgba(0,0,0,${FADE_MID_ALPHA})`);
-    fade.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = fade;
+    if (this.fade?.w !== fadeW || this.fade.h !== h) {
+      const gradient = ctx.createLinearGradient(0, 0, fadeW, 0);
+      gradient.addColorStop(0, "rgba(0,0,0,1)");
+      gradient.addColorStop(FADE_MID, `rgba(0,0,0,${FADE_MID_ALPHA})`);
+      gradient.addColorStop(1, "rgba(0,0,0,0)");
+      this.fade = { w: fadeW, h, gradient };
+    }
+    ctx.fillStyle = this.fade.gradient;
     ctx.fillRect(0, 0, fadeW, h);
     ctx.restore();
     return headY;

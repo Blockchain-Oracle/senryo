@@ -274,11 +274,22 @@ live PnL at about 8 Hz. No contract change.
     Checked: `sessionHistory` drops the earlier session across an overnight gap; the real web engine drawing BTC's
     real last six hours as a closed market (05:33–11:34 UTC, $82,565–$82,877, close $82,742.74, "Closed"). In
     production TSLA still shows "Waiting" until the catalogue deploy (prod prices only BTC/ETH/SOL).
-- [ ] R1.21 Charts at any refresh rate (R17):
+- [x] R1.21 Charts at any refresh rate (R17):
   - sub-sample x scroll from `sampleDebt`;
   - a dt-correct dot drift;
   - no per-frame allocations (the web rebuilds its path in place; the phone reuses one `SkPath`);
   - the K side taken from the raw latest tick.
+  - *As built (10 Oct):* both engines shift the line left by the part-sample owed each frame and close it with a head
+    point eased to "now" (web `drawLine(…, frac, head)`; phone `s.frac`/`s.head` in `advance`, the path in `draw.ts`);
+    the dots scroll by elapsed time (still while the line holds still) and their drift eases per second, not per frame.
+    Web allocations per frame removed: no `Path2D` (the context path, stroked twice), control points in one reused
+    buffer, the fade gradient cached per size. The K side and winning tone already came from the raw price (the quote
+    pass's `bandOutcome(band, k, spot)`). Deterministic checks on the real code, frames that changed the drawn line
+    (web, mid-plot x and y): before 60/60/45/38 % at 60/90/120/144 Hz → after 96/100/100/100 % (the 60 Hz misses are
+    equal consecutive samples, the old engine's too); phone line and dots: before 85/67/50 % at 60/90/120 Hz → after
+    100 %. Also seen in the browser at 120 Hz: the line moved on 481 of 481 frames. **Left for the simulator pass:**
+    the phone's per-frame SVG-string path and gradient shaders (a reused `SkPath`/cached shaders trade allocations for
+    native calls; it needs a frame-time measurement on the device build).
 - [ ] R1.22 The surge window is scaled to the measured tick interval, so surge, mega and slump fire on both apps.
 
 ### Checks

@@ -41,6 +41,12 @@ export interface ChartState {
   dotX: number;
   dotY: number;
   dotTargetY: number;
+  /**
+   * Sub-sample scroll (04-pricing R17): the part-sample owed this frame (the line shifts left by it) and the price
+   * eased to "now" (the head closes the line at the plot's edge), so it moves on every frame at 90/120 Hz.
+   */
+  frac: number;
+  head: number;
   /** A closed market's session (0: none): drawn whole and still on its own scale. */
   historySeq: number;
   historyCenter: number;
@@ -68,6 +74,8 @@ export function createChartState(): ChartState {
     dotX: 0,
     dotY: 0,
     dotTargetY: 0,
+    frac: 0,
+    head: 0,
     historySeq: 0,
     historyCenter: 0,
     historyHalf: 0,
@@ -156,9 +164,9 @@ export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: n
   if (!s.ready) return;
   const before = s.eased;
   // A price that isn't live never scrolls as if it were: the line holds still (04-pricing R7).
-  s.sampleDebt = live && s.historySeq === 0 ? s.sampleDebt + dt / SAMPLE_MS : 0;
+  const moving = live && s.historySeq === 0;
+  s.sampleDebt = moving ? s.sampleDebt + dt / SAMPLE_MS : 0;
   let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(s.sampleDebt));
-  const pushed = pushes;
   s.sampleDebt -= Math.floor(s.sampleDebt);
   const tau = Math.max(BASE_TAU_MS, TICK_FOLLOW * s.tickMs);
   const k = reduced ? 1 : 1 - Math.exp(-SAMPLE_MS / tau);
@@ -168,12 +176,17 @@ export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: n
     ringPush(s, s.eased);
     pushes -= 1;
   }
+  s.frac = moving && !reduced ? s.sampleDebt : 0;
+  s.head = s.eased + (s.target - s.eased) * (1 - Math.exp((-s.frac * SAMPLE_MS) / tau));
   stepOdometer(s.price, dt);
   stepOdometer(s.pnl, dt);
   s.velocitySteps = s.step > 0 ? (s.eased - before) / s.step : 0;
   if (reduced) return;
-  s.dotX = (s.dotX - (DOT_SCROLL * pushed * plotW) / (SAMPLE_CAPACITY - 1)) % DOT_SPACING;
+  // The dots scroll with the line's time, not its pushes (smooth at any rate; still while the line holds still), and
+  // their drift eases by the same amount per second at 60 or 120 Hz.
+  const scrolled = moving ? dt / SAMPLE_MS : 0;
+  s.dotX = (s.dotX - (DOT_SCROLL * scrolled * plotW) / (SAMPLE_CAPACITY - 1)) % DOT_SPACING;
   s.dotTargetY += Math.max(-DRIFT_CLAMP, Math.min(DRIFT_CLAMP, DRIFT_GAIN * s.velocitySteps * DOT_SPACING));
   s.dotTargetY %= DOT_SPACING * DRIFT_WRAP;
-  s.dotY += (s.dotTargetY - s.dotY) * DRIFT_EASE;
+  s.dotY += (s.dotTargetY - s.dotY) * (1 - (1 - DRIFT_EASE) ** (dt / SAMPLE_MS));
 }
