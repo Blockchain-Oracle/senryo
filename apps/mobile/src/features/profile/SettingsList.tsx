@@ -39,7 +39,8 @@ import { SettingsRow } from "./SettingsRow";
 import { SignOutConfirm } from "./SignOutConfirm";
 
 const MS_PER_MINUTE = 60_000;
-const APPEARANCE: Record<string, string> = { dark: "Dark", light: "Light" };
+/** New installs start light (the theme provider): an unset preference reads Light, as the picker shows it. */
+const APPEARANCE: Record<string, string> = { dark: "Dark", light: "Light", system: "System" };
 
 const open = (href: string) => router.push(href as Href);
 
@@ -112,7 +113,7 @@ export function SettingsList() {
             title="Appearance"
             icon={SlidersHorizontal}
             tint={color.chart2}
-            value={APPEARANCE[theme ?? ""] ?? "System"}
+            value={APPEARANCE[theme ?? "light"] ?? "Light"}
             onPress={() => open(ROUTES.accountPreferences)}
           />
           <SettingsRow
