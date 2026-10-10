@@ -166,7 +166,12 @@ Tested to the money invariants. Not deployed until R4.
     (a long and a short on one move never net a gain; size floors; parts leaving ceil), the curve's bid > 0 and ask
     < $1 at every quoted probability, a ride filling only at its own instant, the minimum hold, a session spending
     margin + fee; Earn fairness and the mark's age in `Earn.t.sol`; σ marks in `SigmaMarks.t.sol`.
-- [ ] R3.18 A fork test on 10143 through `ensurePrint` with real Hermes payloads.
+- [x] R3.18 A fork test on 10143 through `ensurePrint` with real Hermes payloads.
+  - `test/fork/Fork10143.t.sol` (`FORK_TESTS=true forge test --match-contract Fork10143Test`; skipped otherwise): the v3
+    reserve against the live AccessManager, `Windows`, Pyth verifier and Test USD that v3 reuses, with two real Hermes
+    BTC updates (`fixtures/btc-hermes.json`, 10 Oct 22:30 and 22:31 UTC): a window opened on the first, a call filled
+    on a signed σ mark and a ride filled at the second, its bounds checked there, every unit at home. Passed at block
+    69,947,517.
 
 ### TypeScript and config
 - [ ] R3.19 TS mirror:

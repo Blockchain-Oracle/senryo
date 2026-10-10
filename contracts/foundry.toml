@@ -17,6 +17,7 @@ fs_permissions = [
   { access = "read-write", path = "../packages/contracts/src/addresses" },
   { access = "read", path = "./script/catalog" },
   { access = "read-write", path = "../packages/core/vectors" },
+  { access = "read", path = "./test/fork/fixtures" },
 ]
 remappings = [
   "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
