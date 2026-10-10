@@ -151,8 +151,16 @@ live PnL at about 8 Hz. No contract change.
     the real gateway on scratch Postgres → `/v1/stream` → `@senryo/live`): crypto and RedStone crypto live, Saturday's
     markets closed, `/v1/status` "19 live · 15 closed", event loop p99 2.5 ms (one 24 ms max at start-up), 136 boundary
     prints back-filled on start. Exit 0.
-- [ ] R1.10 The ticket is decoupled from prices: public topics connect at once, `user:` joins on a later reconnect, and a
+- [x] R1.10 The ticket is decoupled from prices: public topics connect at once, `user:` joins on a later reconnect, and a
   refused user topic gets `event: topic-error` (R8).
+  - *As built (10 Oct):* the api grants topics one by one: a bad ticket **or an unknown topic** is refused on its own
+    (`event: topic-error`), the rest stream; only a request with nothing grantable fails (so a client may ask for a
+    topic an older api lacks). `LiveStream` waits for a ticket at most 1.5 s, then connects the public topics and
+    restarts with `user:` once the ticket comes; a ticket is reused 45 s; a failed or refused one is retried after 30 s;
+    a whole-request 401 over a ticket (today's api) reconnects public-only at once. Scratch check (04 G3d) on the real
+    route and client: ticket route failing → first price in 136 ms; slow ticket → prices in 1.65 s, `user:` joined
+    after; refused ticket → prices on the same request + `topic-error`; an api that 401s → public reconnect, prices in
+    206 ms. Exit 0.
 - [ ] R1.11 Transport (R9):
   - a 5 s beat and 5 s client silence;
   - a jittered first retry of 0.5–1.5 s, then ×2 to 15 s;

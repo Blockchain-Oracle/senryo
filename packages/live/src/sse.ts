@@ -2,6 +2,9 @@
 // `expo/fetch` on native (no native module, D-270), the browser's fetch on web. Opened by the first subscriber, kept
 // LINGER_MS across route changes, closed after HIDDEN_CLOSE_MS in the background; reconnects with the server's
 // `retry` (jittered, capped) and `Last-Event-ID`, so durable events (fills, results, payouts) are never missed.
+// Prices never wait on the user's ticket (04-pricing R8, F9): a ticket is awaited at most TICKET_WAIT_MS, then the public
+// topics connect without it and `user:` joins once it arrives; a refused or failed ticket is retried later, never in
+// the way of a price.
 import { createParser, type EventSourceMessage } from "eventsource-parser";
 
 /** Kept open this long after the last subscriber leaves (a route change re-subscribes within it). */
@@ -14,6 +17,18 @@ const DEFAULT_RETRY_MS = 3_000;
 const MAX_RETRY_MS = 30_000;
 const BACKOFF_FACTOR = 2;
 const JITTER = 0.25;
+/** The longest a (re)connect waits for a stream ticket before the public topics go without it. */
+export const TICKET_WAIT_MS = 1_500;
+/** A ticket the api refused, or that failed to mint, isn't asked for again sooner than this. */
+export const TICKET_RETRY_MS = 30_000;
+/** Tickets live 60 s at the api; one is reused across reconnects for this long. */
+export const TICKET_REUSE_MS = 45_000;
+const UNAUTHORIZED = 401;
+const USER_PREFIX = "user:";
+const LATE = Symbol("late");
+
+/** The api refused the ticket for the whole request (an api before R1.10): reconnect public-only at once. */
+class TicketRefused extends Error {}
 
 export type StreamStatus = "idle" | "connecting" | "live" | "reconnecting";
 
@@ -41,6 +56,9 @@ export class LiveStream {
   private hiddenTimer: ReturnType<typeof setTimeout> | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private silenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private ticket: { value: string; at: number } | undefined;
+  private ticketFailedAt = 0;
+  private ticketPending: Promise<string | undefined> | undefined;
 
   constructor(private readonly o: StreamOptions) {}
 
@@ -141,18 +159,70 @@ export class LiveStream {
     const abort = new AbortController();
     this.abort = abort;
     if (this.status !== "reconnecting") this.setStatus("connecting");
-    void this.run(abort).catch(() => {
-      if (this.abort === abort) this.fail();
+    void this.run(abort).catch((error) => {
+      if (this.abort !== abort) return;
+      if (error instanceof TicketRefused) {
+        this.teardown();
+        this.connect();
+        return;
+      }
+      this.fail();
     });
   }
 
+  /** A ticket for the `user:` topic within TICKET_WAIT_MS, or none (the topic joins on a restart once it comes). */
+  private async ticketNow(): Promise<string | undefined> {
+    if (!this.o.ticket) return undefined;
+    const now = Date.now();
+    if (this.ticket && now - this.ticket.at < TICKET_REUSE_MS) return this.ticket.value;
+    if (now - this.ticketFailedAt < TICKET_RETRY_MS) return undefined;
+    const mint = this.o.ticket;
+    this.ticketPending ??= mint()
+      .then(
+        (value) => {
+          if (value) this.ticket = { value, at: Date.now() };
+          else this.ticketFailedAt = Date.now();
+          return value;
+        },
+        () => {
+          this.ticketFailedAt = Date.now();
+          return undefined;
+        },
+      )
+      .finally(() => {
+        this.ticketPending = undefined;
+      });
+    const pending = this.ticketPending;
+    const first = await Promise.race([
+      pending,
+      new Promise<typeof LATE>((r) => setTimeout(() => r(LATE), TICKET_WAIT_MS)),
+    ]);
+    if (first !== LATE) return first;
+    void pending.then((value) => {
+      if (value) this.restart();
+    });
+    return undefined;
+  }
+
+  private dropTicket(): void {
+    this.ticket = undefined;
+    this.ticketFailedAt = Date.now();
+  }
+
   private async run(abort: AbortController): Promise<void> {
-    const params = new URLSearchParams({ topics: this.o.topics().join(",") });
-    const ticket = this.o.topics().some((t) => t.startsWith("user:")) ? await this.o.ticket?.() : undefined;
+    const wanted = this.o.topics();
+    const ticket = wanted.some((t) => t.startsWith(USER_PREFIX)) ? await this.ticketNow() : undefined;
+    if (abort.signal.aborted) return;
+    const topics = ticket ? wanted : wanted.filter((t) => !t.startsWith(USER_PREFIX));
+    const params = new URLSearchParams({ topics: topics.join(",") });
     if (ticket) params.set("ticket", ticket);
     const headers: Record<string, string> = { accept: "text/event-stream" };
     if (this.lastEventId) headers["last-event-id"] = this.lastEventId;
     const res = await this.o.fetch(`${this.o.origin}/v1/stream?${params}`, { headers, signal: abort.signal });
+    if (res.status === UNAUTHORIZED && ticket) {
+      this.dropTicket();
+      throw new TicketRefused();
+    }
     if (!res.ok || !res.body) throw new Error(`stream ${res.status}`);
     const parser = createParser({
       onEvent: (m: EventSourceMessage) => this.dispatch(m),
@@ -174,6 +244,8 @@ export class LiveStream {
 
   private dispatch(m: EventSourceMessage): void {
     if (m.id) this.lastEventId = m.id;
+    // The api granted the rest but not the user topic (its ticket expired or was refused): mint a new one later.
+    if (m.event === "topic-error" && m.data.includes(USER_PREFIX)) this.dropTicket();
     if (this.status !== "live") {
       this.failures = 0;
       this.setStatus("live");

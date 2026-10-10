@@ -8,6 +8,9 @@ import { verifyStreamTicket } from "./ticket.ts";
  * `GET /v1/stream?topics=prices,prints,user:0x…&ticket=…` — the one SSE per app (D-272, CWF `http/stream.ts`).
  * Public topics: `prices` (compact ticks, ephemeral), `prints` (every boundary print the moment it streams — the K
  * line clients draw is the one the chain records), `markets` (public call activity). `user:<address>` needs a ticket.
+ * A topic that can't be granted (a bad or expired ticket, a topic this api doesn't know) is refused on its own with an
+ * `event: topic-error` — the rest still stream, so a broken session never costs anyone prices (04-pricing R8, F9).
+ * Only a request with nothing grantable is refused whole.
  * Every 15 s a `time` event carries the server clock (countdowns never trust the phone) and the price states' digest
  * (`h`, one letter per market; changes also go out at once as `h` on `prices`). A socket that can't keep up
  * skips ticks and is closed after 30 s blocked; a reconnect with `Last-Event-ID` replays durable events.
@@ -25,13 +28,19 @@ export interface StreamDeps {
   beatData: () => Record<string, unknown>;
 }
 
+export interface TopicGrant {
+  topics: string[];
+  refused: { topic: string; reason: string }[];
+  error: string | null;
+}
+
 export function grantTopics(
   raw: string | undefined,
   ticket: string | undefined,
   secret: string | undefined,
   nowSec: number,
-) {
-  const topics = [
+): TopicGrant {
+  const asked = [
     ...new Set(
       (raw ?? "")
         .split(",")
@@ -39,15 +48,21 @@ export function grantTopics(
         .filter(Boolean),
     ),
   ];
-  if (topics.length === 0 || topics.length > MAX_TOPICS) return { topics, error: "topics: 1 to 16 required" };
-  const user = ticket && secret ? verifyStreamTicket(secret, ticket, nowSec) : null;
-  for (const t of topics) {
-    if (PUBLIC_TOPICS.has(t)) continue;
-    const m = USER_TOPIC.exec(t);
-    if (!m) return { topics, error: `unknown topic ${t}` };
-    if (user !== m[1]?.toLowerCase()) return { topics, error: `${t} needs a valid ticket for that address` };
+  if (asked.length === 0 || asked.length > MAX_TOPICS) {
+    return { topics: [], refused: [], error: "topics: 1 to 16 required" };
   }
-  return { topics: topics.map((t) => (t.startsWith("user:") ? t.toLowerCase() : t)), error: null };
+  const user = ticket && secret ? verifyStreamTicket(secret, ticket, nowSec) : null;
+  const topics: string[] = [];
+  const refused: TopicGrant["refused"] = [];
+  for (const t of asked) {
+    const m = USER_TOPIC.exec(t);
+    if (PUBLIC_TOPICS.has(t)) topics.push(t);
+    else if (!m) refused.push({ topic: t, reason: "unknown topic" });
+    else if (user !== m[1]?.toLowerCase()) refused.push({ topic: t, reason: "needs a valid ticket for that address" });
+    else topics.push(t.toLowerCase());
+  }
+  const error = topics.length === 0 ? (refused[0] ? `${refused[0].topic} ${refused[0].reason}` : "no topic") : null;
+  return { topics, refused, error };
 }
 
 export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
@@ -75,6 +90,7 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
       "x-accel-buffering": "no",
     });
     res.write(`retry: ${RETRY_MS}\n\n`);
+    for (const r of grant.refused) res.write(`event: topic-error\ndata: ${JSON.stringify(r)}\n\n`);
 
     let blockedSince = 0;
     const write = (text: string, droppable: boolean) => {
