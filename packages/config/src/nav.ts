@@ -27,6 +27,8 @@ export interface NavItem {
   icon: NavIcon;
   /** The app path (expo-router strips route groups). */
   path: string;
+  /** Open to a guest, read-only: its actions ask for an account (R2.14). */
+  guest?: true;
 }
 
 export const DOCK_NAV = [
@@ -41,24 +43,24 @@ export type DockKey = (typeof DOCK_NAV)[number]["key"];
 
 /** The More grid (phone) and the rail's secondary group (web), in order. */
 export const MORE_NAV = [
-  { key: "games", label: "Games", icon: "games", path: "/games" },
-  { key: "parlay", label: "Parlay", icon: "parlay", path: "/parlay" },
-  { key: "duel", label: "Duel", icon: "duel", path: "/duel" },
-  { key: "events", label: "Events", icon: "events", path: "/events" },
-  { key: "wallet", label: "Wallet", icon: "wallet", path: "/wallet" },
-  { key: "earn", label: "Earn", icon: "earn", path: "/earn" },
+  { key: "games", label: "Games", icon: "games", path: "/games", guest: true },
+  { key: "parlay", label: "Parlay", icon: "parlay", path: "/parlay", guest: true },
+  { key: "duel", label: "Duel", icon: "duel", path: "/duel", guest: true },
+  { key: "events", label: "Events", icon: "events", path: "/events", guest: true },
+  { key: "wallet", label: "Wallet", icon: "wallet", path: "/wallet", guest: true },
+  { key: "earn", label: "Earn", icon: "earn", path: "/earn", guest: true },
   { key: "profile", label: "Profile", icon: "profile", path: "/account/profile" },
   { key: "receive", label: "Receive", icon: "receive", path: "/receive" },
   { key: "notifications", label: "Notifications", icon: "notifications", path: "/notifications" },
   { key: "settings", label: "Settings", icon: "settings", path: "/account/settings" },
-  { key: "status", label: "Status", icon: "status", path: "/status" },
+  { key: "status", label: "Status", icon: "status", path: "/status", guest: true },
 ] as const satisfies readonly NavItem[];
 
 /**
  * The web app (S6; Mitoshi S22's rail): its places with their keys (1, 2, 3 …; the next key opens Everything), then
- * Everything's groups (D-190: a right drawer, `?d=everything`). The places are the phone dock's, by key: under 768 px
- * the web's dock is `DOCK_NAV` in its order (the seal opens Trade, More opens Everything). Places arrive with their
- * stage — Earn at S7, Games and the Leaderboard at S8 — never as a placeholder. `href` is the web path (invariant
+ * Everything's groups (D-190: a right drawer, `?d=everything`). The rail reads Trade · Markets · Calls · Games · Earn
+ * (R2.14; the Leaderboard joins with R8), its seal is Home; under 768 px the web's dock is `DOCK_NAV` in its order (the
+ * seal opens Trade, More opens Everything). Places arrive with their stage, never as a placeholder. `href` is the web path (invariant
  * `nav-route-coverage` checks it against `apps/web/src/app`; a `?d=` drawer link checks its page).
  */
 export type WebIcon =
@@ -93,14 +95,6 @@ export interface WebNavItem {
 
 export const WEB_RAIL = [
   {
-    key: "home",
-    label: "Home",
-    icon: "home",
-    href: "/app/",
-    description: "Your balance, open calls and the markets.",
-    keywords: "overview balance",
-  },
-  {
     key: "trade",
     label: "Trade",
     icon: "trade",
@@ -124,7 +118,36 @@ export const WEB_RAIL = [
     description: "Open calls, results and their receipts.",
     keywords: "history receipts proof",
   },
+  {
+    key: "games",
+    label: "Games",
+    icon: "games",
+    href: "/app/games/",
+    description: "Lucky, Warm-up, Line Rider and Candle Hop.",
+    keywords: "lucky spin warm up arcade line rider candle hop play",
+  },
+  {
+    key: "earn",
+    label: "Earn",
+    icon: "earn",
+    href: "/app/earn/",
+    description: "Supply the pool that takes the other side; withdraw at the hour.",
+    keywords: "pool supply yield house liquidity",
+  },
 ] as const satisfies readonly WebNavItem[];
+
+/** Home: the rail's seal, the small-screen dock's first slot (it is no rail row, R2.14). */
+export const WEB_HOME = {
+  key: "home",
+  label: "Home",
+  icon: "home",
+  href: "/app/",
+  description: "Your balance, open calls and the markets.",
+  keywords: "overview balance",
+} as const satisfies WebNavItem;
+
+/** Every place with a Back target: Home and the rail's places. */
+export const WEB_PLACES: readonly WebNavItem[] = [WEB_HOME, ...WEB_RAIL];
 
 export interface WebNavSection {
   key: string;
@@ -137,14 +160,6 @@ export const WEB_EVERYTHING = [
     key: "play",
     label: "Play",
     items: [
-      {
-        key: "games",
-        label: "Games",
-        icon: "games",
-        href: "/app/games/",
-        description: "Lucky, Warm-up, Line Rider and Candle Hop.",
-        keywords: "lucky spin warm up arcade line rider candle hop play",
-      },
       {
         key: "parlay",
         label: "Parlay",
@@ -197,14 +212,6 @@ export const WEB_EVERYTHING = [
         href: "/app/?d=withdraw",
         description: "Send dollars to a Monad address.",
         keywords: "send transfer",
-      },
-      {
-        key: "earn",
-        label: "Earn",
-        icon: "earn",
-        href: "/app/earn/",
-        description: "Supply the pool that takes the other side; withdraw at the hour.",
-        keywords: "pool supply yield house liquidity",
       },
     ],
   },

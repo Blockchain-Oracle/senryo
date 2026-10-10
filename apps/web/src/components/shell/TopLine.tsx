@@ -13,7 +13,7 @@ import { EntityMark } from "@/components/identity/entity-mark";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { tapFeedback } from "@/lib/feedback";
 import { BalanceChip, HealthChip, ModeCapsule } from "./chips";
-import { placeOf } from "./nav";
+import { backOf } from "./nav";
 import { shortcutBlocked } from "./Rail";
 
 const CommandPalette = dynamic(() => import("./CommandPalette").then((m) => m.CommandPalette), { ssr: false });
@@ -24,14 +24,14 @@ const SEAL_SIZE = 26;
 function BackButton() {
   const pathname = usePathname();
   const router = useRouter();
-  const place = placeOf(pathname);
-  if (!place || pathname === place.href || place.key === "trade") return null;
+  const back = backOf(pathname);
+  if (!back) return null;
   return (
     <button
       type="button"
       className="topline-icon"
-      aria-label={`Back to ${place.label}`}
-      onClick={() => router.push(place.href)}
+      aria-label={`Back to ${back.label}`}
+      onClick={() => router.push(back.href)}
     >
       <ChevronLeft aria-hidden />
     </button>

@@ -122,10 +122,17 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     add a backup passkey since the 8 Oct cleanup: Settings → Recovery is back on the web (backup passkey with the
     encrypted copy and the recovery file, the phrase export behind a step-up; the 21st encrypted-text reveal restored),
     and the phone opens it in an in-app browser (a link to its own domain would come straight back to the app).
-- [ ] R2.14 Navigation:
+- [x] R2.14 Navigation:
   - Back on every sub-page (web `nav.ts` resolves every route's parent);
   - the rail reads Trade · Markets · Calls · Games · Earn · Leaderboard (Leaderboard appears in R8);
   - phone guests can reach Games, Events, Duel, Parlay, Earn and Wallet read-only.
+  - *As built (10 Oct):* the rail is Trade · Markets · Calls · Games · Earn (keys 1–5, Everything 6), its seal Home;
+    Games and Earn moved out of Everything; the small-screen dock keeps the phone's Home · Markets · Trade · Calls ·
+    More. `backOf` gives every page a Back: deeper in a place to that place (Lucky → Games), Parlay, Duel and Events to
+    Games (its hub lists them), an event to Events, setup to Home; none on a place's own page or on Trade. Checked in
+    the browser. Phone: guests see the places open to them under the sign-up line (a `guest` flag in the shared nav:
+    Games, Parlay, Duel, Events, Wallet, Earn, Status); the wallet is read-only for them (top-up, Receive and Withdraw
+    ask for an account first, then come back), and its top-up row is no longer green.
 - [ ] R2.15 Signed-out drawers and screens get a Sign in button. Every disabled button says why.
 - [ ] R2.16 Dead code: the 14 unused web components (06 §8), stale comments and route constants, and
   `lib/copy/diagnosis.ts` if still unused. The Everything drawer's search waits for R6.

@@ -2,7 +2,7 @@
  * The web's places and Everything from the one nav source (`@senryo/config` `nav.ts`, D-268): lucide glyphs for the
  * nav icons, which place a path belongs to, and Everything's search.
  */
-import { DOCK_NAV, WEB_EVERYTHING, WEB_RAIL, type WebIcon, type WebNavItem } from "@senryo/config";
+import { DOCK_NAV, WEB_EVERYTHING, WEB_PLACES, WEB_RAIL, type WebIcon, type WebNavItem } from "@senryo/config";
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -49,11 +49,11 @@ export const EVERYTHING = WEB_EVERYTHING;
 /** Rail keys 1…n jump to the places; the next key opens Everything. */
 export const EVERYTHING_KEY = String(RAIL.length + 1);
 
-/** The phone dock's order (`DOCK_NAV`) on the web's places; `more` opens Everything, the seal is Trade. */
+/** The phone dock's order (`DOCK_NAV`) on the web's places (Home included); `more` opens Everything, the seal is Trade. */
 export const DOCK = DOCK_NAV.map((d) => ({
   key: d.key,
   seal: d.icon === "seal",
-  place: RAIL.find((r) => r.key === d.key),
+  place: WEB_PLACES.find((r) => r.key === d.key),
 }));
 
 /** `/app/trade/btc/` → `/app/trade/`: the place a path belongs to (Home is its own path only). */
@@ -69,9 +69,37 @@ export function isActive(pathname: string | null, item: WebNavItem): boolean {
   return home ? path === "/app/" : path.startsWith(section(item.href));
 }
 
-/** Top-level places have no Back; anything deeper goes back to its place. */
+/** The place a path is under (Home or a rail place), if any. */
 export function placeOf(pathname: string | null): WebNavItem | undefined {
-  return RAIL.find((item) => isActive(pathname, item));
+  return WEB_PLACES.find((item) => isActive(pathname, item));
+}
+
+/**
+ * Pages outside the rail and where their Back goes (R2.14): the play pages to Games (its hub lists them), an event to
+ * Events, setup to Home. Keyed by the path's first two segments.
+ */
+const PARENTS: Readonly<Record<string, { label: string; href: string }>> = {
+  "/app/parlay/": { label: "Games", href: "/app/games/" },
+  "/app/duel/": { label: "Games", href: "/app/games/" },
+  "/app/events/": { label: "Games", href: "/app/games/" },
+  "/app/event/": { label: "Events", href: "/app/events/" },
+  "/app/setup/": { label: "Home", href: "/app/" },
+};
+
+/**
+ * Where Back goes from a path, or undefined at a place's own page (and on Trade, whose market is the page): deeper in
+ * a place, to that place; elsewhere, to its parent.
+ */
+export function backOf(pathname: string | null): { label: string; href: string } | undefined {
+  if (!pathname) return undefined;
+  const place = placeOf(pathname);
+  if (place) {
+    const own = section(place.href) === "/app/" ? "/app/" : section(place.href);
+    const path = pathname.endsWith("/") ? pathname : `${pathname}/`;
+    if (place.key === "trade" || path === own || path === place.href) return undefined;
+    return { label: place.label, href: place.href };
+  }
+  return PARENTS[section(pathname)];
 }
 
 export function searchNav(items: readonly WebNavItem[], query: string): WebNavItem[] {

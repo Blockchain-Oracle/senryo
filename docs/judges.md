@@ -18,7 +18,7 @@ Monad testnet with free test dollars; Real (USDC on mainnet) opens with the main
 6. When the window closes its result arrives wherever you are, with confetti on a win. **Calls** holds every call;
    open one for its receipt.
 
-Keys on the web: **⌘K** search · **1–4** places · **5** Everything · **↑ / ↓** call · **C** cash out · **?** the list.
+Keys on the web: **⌘K** search · **1–5** places · **6** Everything · **↑ / ↓** call · **C** cash out · **?** the list.
 
 ## 2. On a phone
 

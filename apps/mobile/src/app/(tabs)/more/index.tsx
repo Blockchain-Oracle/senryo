@@ -41,7 +41,7 @@ const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
 
 /**
  * More (D-268): the person on top — avatar (edit), name, @handle, bio — then every destination the dock doesn't hold,
- * from the shared navigation source. A guest gets the title and one way in.
+ * from the shared navigation source. A guest gets one way in, then every place open to it read-only (R2.14).
  */
 export default function More() {
   const account = useAccount();
@@ -65,14 +65,26 @@ export default function More() {
       }
     >
       {guest ? (
-        <QuietState
-          line="Create an account to have a profile"
-          action={{
-            label: "Create account",
-            variant: "primary",
-            onPress: () => router.push(accountRequiredRoute("make a call")),
-          }}
-        />
+        <View style={styles.page}>
+          <QuietState
+            line="Create an account to have a profile"
+            action={{
+              label: "Create account",
+              variant: "primary",
+              onPress: () => router.push(accountRequiredRoute("make a call")),
+            }}
+          />
+          <View>
+            {MORE_NAV.filter((item) => "guest" in item && item.guest).map((item) => (
+              <SettingsRow
+                key={item.key}
+                title={item.label}
+                {...(GLYPH[item.icon] ? { icon: GLYPH[item.icon] } : {})}
+                onPress={() => router.push(item.path as Href)}
+              />
+            ))}
+          </View>
+        </View>
       ) : null}
       {address ? (
         <View style={styles.page}>

@@ -14,7 +14,7 @@ import { SettingsRow } from "~/features/profile/SettingsRow";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
-import { ROUTES } from "~/lib/constants/routes";
+import { type AccountVerb, accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -36,6 +36,8 @@ export function WalletScreen() {
   const balance = "value" in account ? account.value.balance : undefined;
   const text = balance === undefined ? "$—" : `$${formatUnits(balance, DOLLAR_DECIMALS, CENTS)}`;
 
+  // A guest sees the wallet read-only (R2.14): each action asks for an account first.
+  const ask = (verb: AccountVerb) => () => router.push(accountRequiredRoute(verb, "/wallet"));
   const getDollars = () => {
     fire("tick");
     grant.mutate(undefined, {
@@ -65,11 +67,19 @@ export function WalletScreen() {
           <SettingsRow
             title={grant.isPending ? "Adding test dollars…" : "Get test dollars"}
             icon={Coins}
-            tint={color.up}
-            {...(grant.isPending ? {} : { onPress: getDollars })}
+            tint={color.ink}
+            {...(grant.isPending ? {} : { onPress: owner ? getDollars : ask("add money") })}
           />
-          <SettingsRow title="Receive" icon={QrCode} onPress={() => router.push(ROUTES.receive)} />
-          <SettingsRow title="Withdraw" icon={ArrowUp} onPress={() => router.push(ROUTES.withdraw)} />
+          <SettingsRow
+            title="Receive"
+            icon={QrCode}
+            onPress={owner ? () => router.push(ROUTES.receive) : ask("add money")}
+          />
+          <SettingsRow
+            title="Withdraw"
+            icon={ArrowUp}
+            onPress={owner ? () => router.push(ROUTES.withdraw) : ask("send")}
+          />
         </View>
         <View>
           <SectionHeading detail="Opens with Real">Add real money</SectionHeading>
