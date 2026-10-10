@@ -63,8 +63,14 @@ live PnL at about 8 Hz. No contract change.
     archived and past-admission ones skipped; a second pass asks nothing; an unservable expiry re-asked, counted once,
     flagged near admission; a 3-boundary gap × 12 Pyth markets asked only the 29 unarchived; a restart back-fills
     ≤ 900 s. Exit 0. Baskets and RedStone ride the ticket-driven pass (no gap pass of their own).
-- [ ] R1.4 `/v1/prices/print` is archive-only for anonymous callers, with a rate limit and a short-cached 404; `/recent`
+- [x] R1.4 `/v1/prices/print` is archive-only for anonymous callers, with a rate limit and a short-cached 404; `/recent`
   caps its symbols and is rate-limited (R4).
+  - *As built (10 Oct):* archive-only for **every** caller (the route has no signed-in callers, and `PrintWatch`
+    back-fills what positions need): `gateway.knownPrintAt` reads the ring then the archive, never waits, never goes
+    upstream. A miss is a 404 with `max-age=1` — not longer, because `use-window-open` retries K every second. Both
+    `print` and `recent` take 120 a minute per IP; `recent` splits at most the catalogue's 34 symbols. Scratch check
+    (Fastify inject on the real routes): 200 immutable / 404 `max-age=1`, 0 upstream calls, 429 from request 121 on
+    both (a 20 KB symbol list included). Exit 0.
 - [ ] R1.5 Hermes hardening (R5):
   - a timeout until the headers arrive;
   - `ignore_invalid_price_ids`, with one stream per entitlement class;

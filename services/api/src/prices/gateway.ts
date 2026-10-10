@@ -159,6 +159,16 @@ export class PythGateway {
     return rest;
   }
 
+  /**
+   * The print of t only if it is already known — the ring (single feeds) or the archive. Never waits and never asks
+   * upstream: the public print route reads this, so anonymous traffic can't spend the key's budget (04-pricing R4, F5).
+   */
+  async knownPrintAt(feedId: Hex, t: number): Promise<PriceUpdate | undefined> {
+    const feed = this.byId.get(feedId);
+    const streamed = feed && feed.members.length === 0 ? feed.ring.proving(t) : undefined;
+    return streamed ?? (await this.archive.printAt(feedId, t));
+  }
+
   /** A basket's print of t: every member's print of t, composed and archived (none while any member has none). */
   private async basketPrintAt(basket: GatewayFeed, t: number, waitMs: number): Promise<PriceUpdate | undefined> {
     const archived = await this.archive.printAt(feedIdOf(basket.market), t);
