@@ -83,8 +83,11 @@ function ringPush(s: ChartState, v: number): void {
   }
 }
 
-/** A tick at frame time `nowMs`. The first one seeds a flat line at it (the chart grows movement from the right). */
-export function takePrice(s: ChartState, price: number, nowMs: number): void {
+/**
+ * A tick at frame time `nowMs`. The first one seeds the line: from `line` (the last ~10 s of real history, `fillLine`,
+ * 04-pricing R15) when there is one, else flat at the price (the chart grows movement from the right).
+ */
+export function takePrice(s: ChartState, price: number, nowMs: number, line: readonly number[] | null): void {
   "worklet";
   if (!(price > 0) || !Number.isFinite(price)) return;
   const gap = s.lastTickAt === 0 ? 0 : nowMs - s.lastTickAt;
@@ -96,7 +99,8 @@ export function takePrice(s: ChartState, price: number, nowMs: number): void {
     s.target = price;
     s.eased = price;
     s.step = stepFor(price);
-    for (let i = 0; i < SAMPLE_CAPACITY; i += 1) s.ring[i] = price;
+    const seeded = line !== null && line.length === SAMPLE_CAPACITY;
+    for (let i = 0; i < SAMPLE_CAPACITY; i += 1) s.ring[i] = seeded ? (line[i] ?? price) : price;
     s.start = 0;
     s.size = SAMPLE_CAPACITY;
     return;

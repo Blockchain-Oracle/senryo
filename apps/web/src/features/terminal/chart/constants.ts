@@ -15,6 +15,8 @@ export const BASE_TAU_MS = 84;
 export const TICK_FOLLOW = 0.5;
 export const TICK_EMA = 0.3;
 export const MAX_TICK_GAP_MS = 5000;
+/** History that lands this soon after a cold-start terminal's first tick redraws its (still flat) line. */
+export const RESEED_WINDOW_MS = 1_000;
 
 /** Rolling digits: per-sample approach and snap. */
 export const DIGIT_EASE = 0.22;

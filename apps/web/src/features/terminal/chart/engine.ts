@@ -67,6 +67,13 @@ export class SampleRing {
     this.size = this.capacity;
   }
 
+  /** Loads a whole line, oldest first (a chart opening on real history, `fillLine`). */
+  load(values: ArrayLike<number>): void {
+    for (let i = 0; i < this.capacity; i += 1) this.buf[i] = values[i] ?? 0;
+    this.start = 0;
+    this.size = this.capacity;
+  }
+
   at(i: number): number {
     return this.buf[(this.start + i) % this.capacity] ?? 0;
   }

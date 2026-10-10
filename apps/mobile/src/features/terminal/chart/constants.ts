@@ -32,4 +32,6 @@ export const TICK_FOLLOW = 0.5;
 export const TICK_EMA = 0.3;
 /** Gaps longer than this (a background, a reconnect) don't count as cadence. */
 export const MAX_TICK_GAP_MS = 5000;
+/** History that lands this soon after a cold-start terminal's first tick redraws its (still flat) line. */
+export const RESEED_WINDOW_MS = 1_000;
 export const LEVEL_ALPHA = { line: 0.7, entry: 0.55, edge: 0.6 } as const;

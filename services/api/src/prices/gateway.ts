@@ -316,12 +316,17 @@ export class PythGateway {
     return u ? { priceE8: toE8(u.price, u.expo), publishTime: u.publishTime } : undefined;
   }
 
-  /** The states, then the latest tick per feed (one `pp` batch, or `p` frames for an app before R1.13). */
-  snapshot(batched: boolean): string[] {
-    const ticks = this.feeds.flatMap((f) => {
+  /** Every market's newest price as a tick (`/v1/prices/latest` and a new subscriber's snapshot). */
+  latestTicks(): Tick[] {
+    return this.feeds.flatMap((f) => {
       const u = f.ring.latest();
       return u ? [tickOf(f.index, u)] : [];
     });
+  }
+
+  /** The states, then the latest tick per feed (one `pp` batch, or `p` frames for an app before R1.13). */
+  snapshot(batched: boolean): string[] {
+    const ticks = this.latestTicks();
     const states = `event: h\ndata: ${JSON.stringify({ topic: "prices", data: { s: this.healthDigest() } })}\n\n`;
     if (ticks.length === 0) return [states];
     return [states, batched ? batchFrame(PRICES_TOPIC, ticks) : legacyFrames(PRICES_TOPIC, ticks)];

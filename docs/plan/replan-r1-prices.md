@@ -194,10 +194,22 @@ live PnL at about 8 Hz. No contract change.
     in `writev` at 5,000 sockets). Process guards report the event loop's p99/max per minute (`/status` `process`).
     G1 in `acceptance.md`: 1,000 and 5,000 clients pass the loop, fan-out and latency gates; RSS at 5,000 open (tsx).
     **Traefik's compress exclusion is done at the R1 deploy** (Coolify change, no approval needed per the 1 Oct rule).
-- [ ] R1.14 Reseed and first paint (R15):
+- [x] R1.14 Reseed and first paint (R15):
   - `/v1/prices/latest` on reconnect;
   - `/recent` pre-fills the open terminal with 5 minutes of real history;
   - a preconnect to the API origin.
+  - *As built (10 Oct):* `GET /v1/prices/latest` (`no-store`): server time, the states' digest and `[i, priceE8,
+    publish ms]` per market — 1.1 KB for 34 markets. `Live.reseed` uses it on every (re)connect (an older api's 404
+    falls back to `/recent` for all); `Live.loadHistory(symbol)` loads one market's `/recent` unless the ring already
+    spans 15 s (the stream ticks every market, so after the first seconds it rarely fetches). A chart shows ~10 s
+    (600 samples at 60 Hz), so "real history" means its line opens filled: `fillLine` (shared, `@senryo/live`)
+    interpolates the ring's 1 Hz points onto 600 samples; the web engine (`SampleRing.load`) and the phone's UI-thread
+    state (`takePrice(…, line)`) seed from it on the first tick, and a cold start's history landing within 1 s
+    redraws the line once. Web `LiveHost` preconnects to the api origin (`ReactDOM.preconnect`, anonymous, per the
+    Next 16 docs). Checks: `fillLine` shape; on the real gateway `/latest` 1,109 B and `no-store`, `reseed` and
+    `loadHistory` through it; in the preview against production's older api, `/latest` 404 → `/recent` fallback, and
+    the BTC terminal opens with its line across the full width. (The `live-stream-check` drive script now calls
+    `loadHistory`, as a terminal does.)
 - [ ] R1.15 Clock (R16): `GET /v1/time` (no-store), NTP-style offset taken from the minimum-RTT sample of the last 5,
   resampled every 60 s and on reconnect.
 

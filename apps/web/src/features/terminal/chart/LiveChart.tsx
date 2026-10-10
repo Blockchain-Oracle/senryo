@@ -8,9 +8,11 @@
 import type { ChartOverlay } from "@senryo/calls";
 import { unitOf } from "@senryo/calls";
 import { priceFromE8 } from "@senryo/core";
+import { fillLine } from "@senryo/live";
 import { useLive } from "@senryo/live/react";
 import { memo, type RefObject, useEffect, useRef } from "react";
 import { ChartEngine, type ChartFrame } from "./chart-engine";
+import { RESEED_WINDOW_MS, SAMPLE_CAPACITY, SAMPLE_MS } from "./constants";
 import { DotGrid } from "./dot-grid";
 import { readChartTheme } from "./theme";
 
@@ -77,15 +79,40 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, onF
     };
   }, [overlay, onFrame]);
 
+  // A new market opens on its last ~10 s of real history when the client holds it (04-pricing R15); on a cold start that
+  // history may land just after the first tick, and within the first second the line is redrawn from it.
   useEffect(() => {
     engineRef.current?.reset(waitingRef.current);
     engineRef.current?.setUnit(unitOf(symbol));
+    let firstAt = 0;
+    const history = () => {
+      const h = live.prices.history(symbol);
+      return fillLine(h.t, h.p, Date.now(), SAMPLE_CAPACITY, SAMPLE_MS)?.map(priceFromE8) ?? null;
+    };
     const feed = () => {
       const tick = live.prices.latest(symbol);
-      if (tick) engineRef.current?.setPrice(priceFromE8(tick.priceE8), performance.now());
+      if (!tick) return;
+      const now = performance.now();
+      const first = firstAt === 0;
+      if (first) firstAt = now;
+      engineRef.current?.setPrice(priceFromE8(tick.priceE8), now, first ? history() : null);
     };
     feed();
-    return live.prices.subscribe(symbol, feed);
+    let active = true;
+    void live
+      .loadHistory(symbol)
+      .then(() => {
+        if (!active || firstAt === 0 || performance.now() - firstAt > RESEED_WINDOW_MS) return;
+        engineRef.current?.reset(waitingRef.current);
+        firstAt = 0;
+        feed();
+      })
+      .catch(() => {});
+    const off = live.prices.subscribe(symbol, feed);
+    return () => {
+      active = false;
+      off();
+    };
   }, [live, symbol]);
 
   return (

@@ -1,6 +1,7 @@
 // The app's live layer, created once: one stream, the server clock, prices, boundary prints and the user's events.
-// The stream's topics follow the signed-in address (`setUser`); `/v1/prices/recent` reseeds on every (re)connect so a
-// chart never starts empty or jumps after a gap.
+// The stream's topics follow the signed-in address (`setUser`); `/v1/prices/latest` (about 1 KB) reseeds every market
+// and its state on each (re)connect, and a terminal loads its own market's recent history (`loadHistory`) so its line
+// opens on real movement (04-pricing R15).
 import { ServerClock } from "./clock.ts";
 import { PriceBook } from "./prices.ts";
 import { PrintBook } from "./prints.ts";
@@ -40,11 +41,22 @@ export interface RecentPrices {
   feeds: readonly { symbol: string; points: readonly (readonly [number, number])[] }[];
 }
 
+export interface LatestPrices {
+  serverTime: number;
+  states: string;
+  points: readonly (readonly [number, number, number])[];
+}
+
+/** A market whose ring already spans this much needs no history fetch (a chart shows ~10 s). */
+const HISTORY_SPAN_MS = 15_000;
+
 export interface LiveOptions {
   origin: string;
   fetch: typeof globalThis.fetch;
   /** `/v1/prices/recent` for these symbols. */
   recent: (symbols: readonly string[]) => Promise<RecentPrices>;
+  /** `/v1/prices/latest`: every market's newest price and state. */
+  latest: () => Promise<LatestPrices>;
   /** A stream ticket for the signed-in user (`POST /v1/stream/ticket`). */
   ticket: () => Promise<string | undefined>;
 }
@@ -116,10 +128,36 @@ export class Live {
     return () => this.resetListeners.delete(listener);
   }
 
-  /** Reseed prices (and the clock) from `/v1/prices/recent`. */
-  async reseed(symbols: readonly string[] = this.prices.symbols): Promise<void> {
+  /**
+   * Every market's newest price and state, after a (re)connect: `/v1/prices/latest`, or — from an api before it —
+   * `/v1/prices/recent` for every symbol.
+   */
+  async reseed(): Promise<void> {
+    let latest: LatestPrices;
+    try {
+      latest = await this.o.latest();
+    } catch {
+      return this.seedRecent(this.prices.symbols);
+    }
+    const now = Date.now();
+    this.clock.sample(latest.serverTime);
+    this.prices.setStates(latest.states, now);
+    for (const [i, priceE8, publishMs] of latest.points) {
+      this.prices.push(i, priceE8, publishMs, now - Math.max(0, latest.serverTime - publishMs));
+    }
+  }
+
+  /** A terminal's market: its recent points, unless the ring already holds a chart's worth. */
+  async loadHistory(symbol: string): Promise<void> {
+    const h = this.prices.history(symbol);
+    const first = h.t[0];
+    const last = h.t[h.t.length - 1];
+    if (first !== undefined && last !== undefined && last - first >= HISTORY_SPAN_MS) return;
+    await this.seedRecent([symbol]);
+  }
+
+  private async seedRecent(symbols: readonly string[]): Promise<void> {
     const recent = await this.o.recent(symbols);
-    this.clock.sample(recent.serverTime);
     const now = Date.now();
     for (const f of recent.feeds) this.prices.seed(f.symbol, f.points, now, recent.serverTime);
   }

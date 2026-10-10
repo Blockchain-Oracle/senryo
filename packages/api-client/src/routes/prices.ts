@@ -54,3 +54,23 @@ export const printRoute = defineRoute({
     prevPublishTime: unixSecondsSchema,
   }),
 });
+
+/**
+ * Every market's newest price and the price states, for a (re)connect (04-pricing R15): about 1 KB where `/recent` for
+ * every symbol was ~300 KB. Never cached — it carries the server time.
+ */
+export const latestPricesRoute = defineRoute({
+  method: "GET",
+  path: "/v1/prices/latest",
+  auth: "none",
+  params: undefined,
+  query: undefined,
+  body: undefined,
+  response: z.object({
+    serverTime: z.int(),
+    /** One state letter per catalogue index (`FEED_STATE_CODE`). */
+    states: z.string(),
+    /** `[catalogue index, priceE8, publish ms]` for every market with a price. */
+    points: z.array(z.tuple([z.int(), z.int(), z.int()])),
+  }),
+});

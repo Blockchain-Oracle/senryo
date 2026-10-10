@@ -8,11 +8,16 @@
 import { useLive } from "@senryo/live/react";
 import { useLiveSync } from "@senryo/query";
 import { useEffect } from "react";
+import { preconnect } from "react-dom";
 import { apiSessionScope, onApiSession } from "@/lib/account/api";
 import { useAccount } from "@/lib/account/provider";
+import { ENV } from "@/lib/env";
 import { preloadFeedback } from "@/lib/feedback";
 
 export function LiveHost() {
+  // The first price needs the API's connection: open it with the page (04-pricing R15; the terminal's LCP is that
+  // price). The api's CORS answers carry no credentials, so the hint is anonymous like the requests.
+  preconnect(ENV.API_ORIGIN, { crossOrigin: "anonymous" });
   const live = useLive();
   const address = useAccount().hint?.address;
   useLiveSync(live, address);

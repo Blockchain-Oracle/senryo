@@ -5,7 +5,7 @@
  *
  *   pnpm --filter @senryo/drive exec tsx src/live-stream-check.ts
  */
-import { createApiClient, recentPricesRoute } from "@senryo/api-client";
+import { createApiClient, latestPricesRoute, recentPricesRoute } from "@senryo/api-client";
 import { LINGER_MS, Live } from "@senryo/live";
 import { sleep } from "./lib.ts";
 
@@ -14,7 +14,7 @@ const DEFAULT_SECONDS = 12;
 const SECONDS = Number(process.env.SECONDS ?? DEFAULT_SECONDS);
 const E8 = 1e8;
 const SHOWN_DECIMALS = 2;
-/** `/recent` serves five minutes at one point a second; a seeded history holds far more than the live ticks alone. */
+/** A terminal's market loads `/recent` (five minutes at one point a second): far more than the live ticks alone. */
 const MIN_SEEDED = 100;
 const MS = 1000;
 const SYMBOLS = ["BTC", "ETH", "SOL"] as const;
@@ -25,6 +25,7 @@ const live = new Live({
   origin: ORIGIN,
   fetch: globalThis.fetch,
   recent: (symbols) => api.call(recentPricesRoute, { query: { symbols: symbols.join(",") } }),
+  latest: () => api.call(latestPricesRoute, {}),
   ticket: async () => undefined,
 });
 const statuses: string[] = [];
@@ -33,6 +34,8 @@ const notified = Object.fromEntries(SYMBOLS.map((s) => [s, 0]));
 for (const s of SYMBOLS) live.prices.subscribe(s, () => (notified[s] = (notified[s] ?? 0) + 1));
 
 const release = live.stream.acquire();
+// As each terminal does for its market (04-pricing R15); a reconnect only reseeds the newest prices.
+await Promise.all(SYMBOLS.map((s) => live.loadHistory(s)));
 await sleep(SECONDS * MS);
 const failures: string[] = [];
 for (const s of SYMBOLS) {
@@ -43,7 +46,7 @@ for (const s of SYMBOLS) {
   );
   if (!t || live.prices.isStale(s)) failures.push(`${s}: no live price`);
   if ((notified[s] ?? 0) < SECONDS / 2) failures.push(`${s}: only ${notified[s]} frames in ${SECONDS} s`);
-  if (h.p.length < MIN_SEEDED) failures.push(`${s}: history ${h.p.length} — /recent did not seed`);
+  if (h.p.length < MIN_SEEDED) failures.push(`${s}: history ${h.p.length} — loadHistory did not seed`);
 }
 console.log(`  status ${statuses.join(" → ")}  clock offset ${live.clock.offset} ms`);
 if (!statuses.includes("live")) failures.push("never reached live");

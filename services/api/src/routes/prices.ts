@@ -1,4 +1,4 @@
-import { candlesRoute, printRoute, recentPricesRoute } from "@senryo/api-client";
+import { candlesRoute, latestPricesRoute, printRoute, recentPricesRoute } from "@senryo/api-client";
 import { feedIdOf, MARKETS } from "@senryo/config";
 import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, HttpError, nowSec, parseRoute, SECONDS_PER_DAY, sendRoute } from "@senryo/service-common";
@@ -13,6 +13,8 @@ import { toE8 } from "../prices/ring.ts";
  * (04-pricing R4: an anonymous loop once could, F5).
  */
 const RECENT_MAX_AGE = "public, max-age=1, stale-while-revalidate=5";
+/** It carries the server time and the states: never from a cache. */
+const NO_STORE = "no-store";
 const IMMUTABLE = "public, max-age=31536000, immutable";
 /** A missing print may exist a second later; the apps retry every second (`use-window-open`), so never longer. */
 const MISS_MAX_AGE = "public, max-age=1";
@@ -35,6 +37,15 @@ export function registerPriceRoutes(app: HttpServer, gateway: PythGateway): void
         const feed = gateway.feedOf(symbol);
         return feed ? [{ symbol, points: feed.ring.recent() }] : [];
       }),
+    });
+  });
+
+  app.get(latestPricesRoute.path, { config: PRICE_READ_RATE }, async (_request, reply) => {
+    reply.header("cache-control", NO_STORE);
+    return sendRoute(reply, latestPricesRoute, {
+      serverTime: Date.now(),
+      states: gateway.healthDigest(),
+      points: gateway.latestTicks().map((t): [number, number, number] => [t[0], t[1], t[2]]),
     });
   });
 

@@ -92,8 +92,11 @@ export class ChartEngine {
     this.unit = unit;
   }
 
-  /** Every tick, unthrottled; the first seeds a flat line. The tick cadence sets how softly the line follows. */
-  setPrice(price: number, nowMs: number): void {
+  /**
+   * Every tick, unthrottled. The first seeds the line: from `line` (the last ~10 s of real history, `fillLine`) when
+   * there is one, else flat. The tick cadence sets how softly the line follows.
+   */
+  setPrice(price: number, nowMs: number, line: readonly number[] | null = null): void {
     if (!(price > 0) || !Number.isFinite(price)) return;
     const gap = this.lastTickAt === 0 ? 0 : nowMs - this.lastTickAt;
     if (gap > 0 && gap < MAX_TICK_GAP_MS)
@@ -104,7 +107,8 @@ export class ChartEngine {
       this.target = price;
       this.eased = price;
       this.step = stepFor(price);
-      this.ring.fill(price);
+      if (line?.length === SAMPLE_CAPACITY) this.ring.load(line);
+      else this.ring.fill(price);
       return;
     }
     this.target = price;

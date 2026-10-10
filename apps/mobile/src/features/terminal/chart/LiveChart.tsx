@@ -4,6 +4,7 @@
  * only on layout and when the market changes — never per tick (the overlay is a shared value too).
  */
 import { unitOf } from "@senryo/calls";
+import { fillLine } from "@senryo/live";
 import { useLive, useLiveStream } from "@senryo/live/react";
 import { Canvas, matchFont, Picture, Skia, useFont } from "@shopify/react-native-skia";
 import { memo, useEffect, useMemo } from "react";
@@ -18,9 +19,9 @@ import {
 import { setOdometer, setOdometerTrend } from "~/components/kit/odometer";
 import { useTheme } from "~/theme";
 import { CHART_ERASER } from "~/theme/palette";
-import { LEVEL_DASH } from "./constants";
+import { LEVEL_DASH, RESEED_WINDOW_MS } from "./constants";
 import { type ChartOverlay, drawFrame, type Head } from "./draw";
-import { formatValue, priceDecimals } from "./engine";
+import { formatValue, priceDecimals, SAMPLE_CAPACITY, SAMPLE_MS } from "./engine";
 import { type DrawKit, makeDotPicture, makeKit } from "./kit";
 import { advance, createChartState, resetChart, takePrice } from "./state";
 
@@ -86,12 +87,19 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
   );
   const recorder = useMemo(() => Skia.PictureRecorder(), []);
   const state = useSharedValue(createChartState());
-  const incoming = useSharedValue({ seq: 0, price: 0 });
+  // The newest tick for the UI thread; the first after a (re)start carries the history line and asks for a fresh chart.
+  const incoming = useSharedValue<{ seq: number; price: number; line: number[] | null; reset: boolean }>({
+    seq: 0,
+    price: 0,
+    line: null,
+    reset: false,
+  });
   const overlayValue = overlay;
   const size = useSharedValue({ w: 0, h: 0 });
   const clock = useSharedValue(0);
 
-  // A new market starts a fresh flat line at its first tick.
+  // A new market opens on its last ~10 s of real history when the client holds it (04-pricing R15), else flat; on a cold
+  // start that history may land just after the first tick, and within the first second the line is redrawn from it.
   useEffect(() => {
     state.modify((s) => {
       "worklet";
@@ -99,14 +107,32 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
       return s;
     });
     let seq = 0;
-    const push = () => {
+    let firstAt = 0;
+    const history = () => {
+      const h = live.prices.history(symbol);
+      return fillLine(h.t, h.p, Date.now(), SAMPLE_CAPACITY, SAMPLE_MS)?.map((v) => v / E8) ?? null;
+    };
+    const push = (reset = false) => {
       const t = live.prices.latest(symbol);
       if (!t) return;
       seq += 1;
-      incoming.value = { seq, price: t.priceE8 / E8 };
+      const first = firstAt === 0 || reset;
+      if (first) firstAt = Date.now();
+      incoming.value = { seq, price: t.priceE8 / E8, line: first ? history() : null, reset };
     };
     push();
-    return live.prices.subscribe(symbol, push);
+    let active = true;
+    void live
+      .loadHistory(symbol)
+      .then(() => {
+        if (active && firstAt !== 0 && Date.now() - firstAt <= RESEED_WINDOW_MS) push(true);
+      })
+      .catch(() => {});
+    const off = live.prices.subscribe(symbol, () => push());
+    return () => {
+      active = false;
+      off();
+    };
   }, [live, symbol, state, incoming]);
 
   useFrameCallback((frame) => {
@@ -117,7 +143,8 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
       const tick = incoming.value;
       if (tick.seq !== s.seenSeq) {
         s.seenSeq = tick.seq;
-        takePrice(s, tick.price, frame.timestamp);
+        if (tick.reset) resetChart(s);
+        takePrice(s, tick.price, frame.timestamp, tick.line);
       }
       advance(s, frame.timestamp, reduced, plotW);
       if (s.ready) setOdometer(s.price, formatValue(s.latest, priceDecimals(s.latest), points), s.latest);
