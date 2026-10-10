@@ -12,7 +12,7 @@ const RED_SHIFT = 16;
 const GREEN_SHIFT = 8;
 const HEX_BODY_START = 1;
 
-function withAlpha(hex: string, alpha: number): string {
+export function withAlpha(hex: string, alpha: number): string {
   const n = Number.parseInt(hex.slice(HEX_BODY_START), HEX_RADIX);
   return `rgba(${(n >> RED_SHIFT) & BYTE}, ${(n >> GREEN_SHIFT) & BYTE}, ${n & BYTE}, ${alpha})`;
 }

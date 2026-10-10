@@ -6,7 +6,7 @@
  * project's primary, reduced motion lands at once, and `onLand` fires when the motion ends so the deal can appear.
  */
 import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const ROWS = 3;
@@ -36,6 +36,8 @@ export function SlotReel(p: {
   label: string;
   onLand?: () => void;
   className?: string;
+  /** How a row draws (a market's mark beside its symbol, R2.8); the plain value otherwise. Keep it one text line high. */
+  face?: (item: string) => ReactNode;
 }) {
   const reduce = useReducedMotion();
   const y = useMotionValue(0);
@@ -46,10 +48,12 @@ export function SlotReel(p: {
 
   const track = useMemo(() => {
     const pool = p.items.length > 0 ? p.items : ["—"];
-    const lead = shuffled(pool).slice(0, centre);
-    const spins = Array.from({ length: CYCLES }, () => shuffled(pool)).flat();
+    // Before the first spin the reel is in order: the static HTML and the first client render must match (a shuffle
+    // during render broke hydration). A spin reshuffles; the target lands at index `centre`.
+    const order = (xs: readonly string[]) => (p.spinId === 0 ? [...xs] : shuffled(xs));
+    const lead = order(pool).slice(0, centre);
+    const spins = Array.from({ length: CYCLES }, () => order(pool)).flat();
     return [...lead, p.target ?? pool[0] ?? "—", ...spins];
-    // A new spin reshuffles; the target lands at index `centre`.
   }, [p.spinId, p.target, p.items]);
 
   useLayoutEffect(() => {
@@ -111,7 +115,7 @@ export function SlotReel(p: {
                 landed && i === centre ? "text-primary" : "text-text-3",
               )}
             >
-              {item}
+              {p.face ? p.face(item) : item}
             </div>
           ))}
         </motion.div>

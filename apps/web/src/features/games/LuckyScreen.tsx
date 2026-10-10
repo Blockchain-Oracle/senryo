@@ -8,14 +8,18 @@ import { LUCKY_STAKES_USD } from "@senryo/config";
  * the streak sit below.
  */
 import { clockText, LUCKY_REACHES, lane, usd } from "@senryo/core";
+import { marketId } from "@senryo/identity";
+import { PixelMark } from "@senryo/identity/web";
 import { Check, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { SignInPrompt } from "@/components/auth/sign-in-prompt";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { SlotReel } from "@/components/ui/slot-reel";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
+import { PIXEL_COLORS } from "@/lib/pixel-colors";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +27,8 @@ const USD = 1_000_000n;
 const STAKES = LUCKY_STAKES_USD.map((d) => BigInt(d) * USD);
 const DEFAULT_STAKE = STAKES[1] ?? USD;
 const SIDES = ["Up", "Down"];
+/** A reel row's mark: one text line high (the reel measures its rows by a line of text). */
+const FACE = 22;
 const REACHES = LUCKY_REACHES.map((r) => `${r}×`);
 const HUNDRED = 100n;
 
@@ -63,9 +69,37 @@ export function LuckyScreen() {
             target={r ? r.symbol : null}
             spinId={spinId}
             onLand={() => setLanded(spinId)}
+            face={(symbol) => (
+              <span className="flex items-center gap-2">
+                <EntityMark id={marketId(symbol)} size={FACE} decorative />
+                {symbol}
+              </span>
+            )}
           />
-          <SlotReel label="Side" items={SIDES} target={r ? (r.side === "up" ? "Up" : "Down") : null} spinId={spinId} />
-          <SlotReel label="Reach" items={REACHES} target={r ? `${r.reach}×` : null} spinId={spinId} />
+          <SlotReel
+            label="Side"
+            items={SIDES}
+            target={r ? (r.side === "up" ? "Up" : "Down") : null}
+            spinId={spinId}
+            face={(side) => (
+              <span className="flex items-center gap-2">
+                <PixelMark name={side === "Up" ? "bull" : "bear"} size={FACE} colors={PIXEL_COLORS} />
+                {side}
+              </span>
+            )}
+          />
+          <SlotReel
+            label="Reach"
+            items={REACHES}
+            target={r ? `${r.reach}×` : null}
+            spinId={spinId}
+            face={(reach) => (
+              <span className="flex items-center gap-2">
+                <PixelMark name="plate" size={FACE} colors={PIXEL_COLORS} />
+                {reach}
+              </span>
+            )}
+          />
         </div>
 
         {flow.phase === "dealt" && flow.dealt && !spinning ? (
@@ -169,9 +203,12 @@ export function LuckyScreen() {
         ) : (
           <ul className="flex flex-col divide-y divide-border">
             {flow.history.map((d) => (
-              <li key={d.drawId} className="flex items-baseline justify-between gap-3 py-2">
-                <span className="min-w-0 truncate text-row-title">
-                  {d.symbol} · {d.side === "up" ? "Up" : "Down"} · {d.reach}×
+              <li key={d.drawId} className="flex items-center justify-between gap-3 py-2">
+                <span className="flex min-w-0 items-center gap-2 text-row-title">
+                  <EntityMark id={marketId(d.symbol)} size={FACE} decorative />
+                  <span className="truncate">
+                    {d.symbol} · {d.side === "up" ? "Up" : "Down"} · {d.reach}×
+                  </span>
                 </span>
                 <span className="text-meta text-text-3">{d.ticketId === null ? "not called" : "called"}</span>
               </li>

@@ -4,7 +4,7 @@
  * is known, landing on `target` with the source's curve, the landed row lit, a tick haptic on landing, Reduce Motion
  * lands at once.
  */
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
   cancelAnimation,
@@ -43,6 +43,8 @@ export function SlotReel(p: {
   spinId: number;
   label: string;
   onLand?: () => void;
+  /** A row's leading mark (a market's, the bull or bear, the reach plate; R2.8), at most a row high. */
+  face?: (item: string) => ReactNode;
 }) {
   const { color } = useTheme();
   const reduce = useReducedMotion();
@@ -94,16 +96,18 @@ export function SlotReel(p: {
       >
         <Animated.View style={style}>
           {track.map((item, i) => (
-            <Text
-              key={i}
-              style={[
-                TYPE.sectionTitle,
-                styles.row,
-                { color: landed && i === centre ? color.primary : color.inkMuted },
-              ]}
-            >
-              {item}
-            </Text>
+            <View key={i} style={styles.face}>
+              {p.face?.(item)}
+              <Text
+                style={[
+                  TYPE.sectionTitle,
+                  styles.row,
+                  { color: landed && i === centre ? color.primary : color.inkMuted },
+                ]}
+              >
+                {item}
+              </Text>
+            </View>
           ))}
         </Animated.View>
       </View>
@@ -115,4 +119,5 @@ const styles = StyleSheet.create({
   reel: { flex: 1, alignItems: "center", gap: SPACE.xxs },
   window: { height: ROW_H * ROWS, alignSelf: "stretch", borderRadius: RADIUS.md, overflow: "hidden" },
   row: { height: ROW_H, lineHeight: ROW_H, textAlign: "center" },
+  face: { height: ROW_H, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: SPACE.xs },
 });

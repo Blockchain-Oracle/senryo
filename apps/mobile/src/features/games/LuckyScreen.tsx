@@ -6,10 +6,13 @@
 import { luckyBandWord, useLuckyFlow } from "@senryo/calls/react";
 import { LUCKY_STAKES_USD } from "@senryo/config";
 import { clockText, LUCKY_REACHES, lane, usd } from "@senryo/core";
+import { marketId } from "@senryo/identity";
+import { PixelMark } from "@senryo/identity/native";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
 import { SlotReel } from "~/components/kit/SlotReel";
 import { Panel } from "~/components/kit/Surface";
@@ -18,10 +21,13 @@ import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { pixelColors } from "~/theme/pixel-colors";
 
 const USD = 1_000_000n;
 const STAKES = LUCKY_STAKES_USD.map((d) => BigInt(d) * USD);
 const DEFAULT_STAKE = STAKES[1] ?? USD;
+/** A reel row's mark, inside its 36-point row. */
+const FACE = 22;
 const SIDES = ["Up", "Down"];
 const REACHES = LUCKY_REACHES.map((r) => `${r}×`);
 const HUNDRED = 100n;
@@ -30,6 +36,7 @@ const multipleText = (e2: bigint) => `${e2 / HUNDRED}.${(e2 % HUNDRED).toString(
 
 export function LuckyScreen() {
   const { color } = useTheme();
+  const pixels = pixelColors(color);
   const insets = useSafeAreaInsets();
   const account = useAccount();
   const [stake, setStake] = useState<bigint>(DEFAULT_STAKE);
@@ -60,9 +67,22 @@ export function LuckyScreen() {
           target={r ? r.symbol : null}
           spinId={spinId}
           onLand={() => setLanded(spinId)}
+          face={(symbol) => <EntityMark id={marketId(symbol)} size={FACE} decorative />}
         />
-        <SlotReel label="Side" items={SIDES} target={r ? (r.side === "up" ? "Up" : "Down") : null} spinId={spinId} />
-        <SlotReel label="Reach" items={REACHES} target={r ? `${r.reach}×` : null} spinId={spinId} />
+        <SlotReel
+          label="Side"
+          items={SIDES}
+          target={r ? (r.side === "up" ? "Up" : "Down") : null}
+          spinId={spinId}
+          face={(side) => <PixelMark name={side === "Up" ? "bull" : "bear"} size={FACE} colors={pixels} />}
+        />
+        <SlotReel
+          label="Reach"
+          items={REACHES}
+          target={r ? `${r.reach}×` : null}
+          spinId={spinId}
+          face={() => <PixelMark name="plate" size={FACE} colors={pixels} />}
+        />
       </View>
 
       {flow.phase === "dealt" && flow.dealt && !spinning ? (
@@ -161,6 +181,7 @@ export function LuckyScreen() {
         ) : (
           flow.history.map((d) => (
             <View key={d.drawId} style={[styles.row, { borderBottomColor: color.hairline }]}>
+              <EntityMark id={marketId(d.symbol)} size={FACE} decorative />
               <Text style={[TYPE.rowTitle, styles.flex, { color: color.ink }]}>
                 {d.symbol} · {d.side === "up" ? "Up" : "Down"} · {d.reach}×
               </Text>
