@@ -201,8 +201,9 @@
   height: 64px;
   margin: -8px 4px;
   border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 55%, transparent);
+  /* Trade: the phone's dock action — magenta with its soft glow (UGLYCASH: magenta marks trade controls). */
+  background: var(--accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent);
   transition: transform var(--motion-press) var(--motion-ease);
 }
 .dock-seal:active {

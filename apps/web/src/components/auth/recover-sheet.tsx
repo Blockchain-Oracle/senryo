@@ -126,7 +126,7 @@ export function RecoverSheet({
           </>
         ) : null}
         {state.kind === "error" ? (
-          <p role="alert" className="text-caption text-down">
+          <p role="alert" className="text-caption text-destructive">
             <span className="font-medium">{state.title}.</span> {state.body}
           </p>
         ) : (

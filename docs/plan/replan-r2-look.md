@@ -21,18 +21,33 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
 ## Steps
 
 ### Colour and type
-- [ ] R2.1 `@senryo/tokens`:
+- [x] R2.1 `@senryo/tokens`:
   - `NATIVE_LIGHT`/`NATIVE_DARK` move in as the one palette and are emitted as CSS vars for the web;
   - Living Lacquer roles deleted from `palette.ts` and `tokens.css`;
   - the phone imports the shared palette (`apps/mobile/src/theme/native-palette.ts` becomes a re-export or is
     deleted).
-- [ ] R2.2 Web:
+  - *As built (10 Oct):* `palette.ts` is generated from the phone's merged values (the phone looks the same) and is the
+    one source: `LIGHT` the default, `DARK` the adaptation; ten roles nobody used are gone (the Phantom fan's six,
+    `silver`, `chart1`, `chart5`, `chartCandleDown`) with the fan's motion and type tokens; the dark theme's violet ink
+    `#17151F` on up/down/destructive fills is black; a `seal` role (black in both) for the web's brand disc.
+    `native-palette.ts` is gone: the phone's theme and `app.config.ts` read `@senryo/tokens`, its scene roles live in
+    `theme/scene.ts`. `tokens.css` emits `:root, .light` and `.dark`. No `#414EF4` / `#B69DF8` / `#0A0911` in tokens;
+    the landing hero (R2.4) and the generated avatar/scene art (R2.8) still carry them.
+- [x] R2.2 Web:
   - light by default (next-themes, D-304), with the forced `dark` removed from `apps/web/src/app/layout.tsx:24`;
   - the theme provider's stale D2 comment goes;
   - `#FA00FF` with a black label on trade, selected and publish controls only;
   - green and red only for direction;
   - a black seal disc with no glow;
   - one Practice/Real tint shared with the phone.
+  - *As built (10 Oct):* light by default (no forced `dark`; next-themes `light`, `light dark` colour scheme; the D2
+    comment gone); `EntityMark` resolves light before hydration and takes the phone's `ground`. Magenta as on the
+    phone: the dock's Trade seal (`#FA00FF`, black-ground mark, the phone's 40 % glow), the focus ring and selected-row
+    tint; selected chips stay ink (black in light, white in dark), as the phone's. The rail and top-line brand seal is a
+    black disc with no glow. Green and red mean direction only, on both apps: errors use `destructive` (same red, right
+    meaning), success lines and countdown clocks read in ink, settings toggles are primary like the phone's switches.
+    Practice/Real tints are the shared palette's. Checked in the browser: light `#F5F5F5`, dark `#111`, rail seal
+    black, dock seal magenta; the one violet left in the rail is Monad's own logo in the Practice capsule.
 - [ ] R2.3 A condensed display face (the phone's Roboto Condensed Black, via `next/font`) for money and headings; canvas
   text uses it too.
 - [ ] R2.4 The landing (`welcome.module.css`, `live-hero.css`) joins the same tokens, with the BTC mark on the live hero.

@@ -43,7 +43,8 @@ export function SetupField({
 }) {
   const { color } = useTheme();
   const [focused, setFocused] = useState(false);
-  const ink = tone === "good" ? color.up : tone === "bad" ? color.down : color.text3;
+  // Green and red mean direction only (UGLYCASH): a good field reads in ink, a bad one in the error red.
+  const ink = tone === "good" ? color.ink : tone === "bad" ? color.destructive : color.text3;
   return (
     <View style={styles.wrap}>
       <View

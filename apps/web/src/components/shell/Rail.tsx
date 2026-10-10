@@ -104,7 +104,7 @@ export function Rail({ foot }: { foot?: ReactNode }) {
     <aside className="app-rail" aria-label="Senryo">
       <Link href="/app/" aria-label="Senryo home" className="rail-mark">
         <span className="rail-seal">
-          <EntityMark id={ids.brand("senryo")} size={SEAL_SIZE} variant="symbol" decorative />
+          <EntityMark id={ids.brand("senryo")} size={SEAL_SIZE} variant="symbol" decorative ground="var(--seal)" />
         </span>
         <span className="rail-word">SENRYO</span>
       </Link>

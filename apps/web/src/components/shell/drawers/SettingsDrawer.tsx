@@ -50,13 +50,14 @@ function Toggle({
         aria-hidden
         className={cn(
           "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-(--motion-base)",
-          on ? "bg-up" : "bg-row-pressed",
+          on ? "bg-primary" : "bg-row-pressed",
         )}
       >
         <span
           className={cn(
-            "absolute top-0.5 size-6 rounded-full bg-white transition-transform duration-(--motion-base) ease-lacquer",
-            on ? "translate-x-5.5" : "translate-x-0.5",
+            "absolute top-0.5 size-6 rounded-full transition-transform duration-(--motion-base) ease-lacquer",
+            // On: the primary's own ink (white on black in light, black on white in dark), as the phone's switch.
+            on ? "translate-x-5.5 bg-primary-foreground" : "translate-x-0.5 bg-white",
           )}
         />
       </span>

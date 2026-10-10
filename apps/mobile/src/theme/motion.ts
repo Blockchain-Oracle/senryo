@@ -49,13 +49,6 @@ export const TIMING = {
   compactSelector: MOTION.compactSelectorMs,
   tallDetail: MOTION.tallDetailMs,
   parentChild: MOTION.parentChildMs,
-  fanItem: MOTION.fanItemMs,
-  fanStagger: MOTION.fanStaggerMs,
-  fanBackdrop: MOTION.fanBackdropMs,
-  fanToggle: MOTION.fanToggleMs,
-  fanExit: MOTION.fanExitMs,
-  fanExitItem: MOTION.fanExitItemMs,
-  fanExitStagger: MOTION.fanExitStaggerMs,
   dockActive: MOTION.dockActiveMs,
   numberChange: MOTION.numberChangeMs,
   chartReveal: MOTION.chartRevealMs,
@@ -67,8 +60,7 @@ export const TIMING = {
   reducedMotion: MOTION.reducedMotionMs,
 } as const;
 
-/** The plus rotates into × by this many degrees; the Home header collapses over this scroll distance. */
-export const FAN_TOGGLE_DEG = MOTION.fanToggleDeg;
+/** The Home header collapses over this scroll distance. */
 export const HEADER_COLLAPSE_DISTANCE = MOTION.headerCollapseDistance;
 /** Press feedback scale on tappable plates (no bounce). */
 export const PRESS_SCALE = MOTION.pressScale;

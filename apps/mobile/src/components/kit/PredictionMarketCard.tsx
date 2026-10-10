@@ -131,7 +131,7 @@ export function PredictionMarketCard(p: {
           <Text numberOfLines={1} style={[TYPE.caption, styles.flex, { color: color.inkMuted }]}>
             {p.meta}
           </Text>
-          {p.clock ? <Text style={[TYPE.caption, styles.strong, { color: color.down }]}>{p.clock}</Text> : null}
+          {p.clock ? <Text style={[TYPE.caption, styles.strong, { color: color.ink }]}>{p.clock}</Text> : null}
         </View>
         <View style={styles.question}>
           <View style={styles.marks}>{p.marks}</View>
@@ -189,7 +189,7 @@ export function PredictionMarketCard(p: {
                   <ArrowLeft size={SIZE.iconSm} color={color.inkMuted} />
                   <Text style={[TYPE.caption, { color: color.inkMuted }]}>Back</Text>
                 </Pressable>
-                {p.clock ? <Text style={[TYPE.caption, styles.strong, { color: color.down }]}>{p.clock}</Text> : null}
+                {p.clock ? <Text style={[TYPE.caption, styles.strong, { color: color.ink }]}>{p.clock}</Text> : null}
               </View>
               <View style={styles.center}>
                 <Text style={[TYPE.caption, { color: color.inkMuted }]}>Your call</Text>

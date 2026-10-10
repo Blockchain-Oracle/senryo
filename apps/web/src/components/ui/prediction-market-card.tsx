@@ -102,7 +102,7 @@ export function PredictionMarketCard(p: {
       >
         <div className="flex items-center justify-between gap-3">
           <span className="truncate text-meta text-text-3">{p.meta}</span>
-          {p.clock ? <span className="tnum font-semibold text-meta text-down">{p.clock}</span> : null}
+          {p.clock ? <span className="tnum font-semibold text-meta text-foreground">{p.clock}</span> : null}
         </div>
         <div className="flex items-start gap-3">
           <div className="flex shrink-0 -space-x-2">{p.marks}</div>
@@ -177,7 +177,7 @@ export function PredictionMarketCard(p: {
                     <ArrowLeft aria-hidden className="size-4" />
                     Back
                   </button>
-                  {p.clock ? <span className="tnum font-semibold text-meta text-down">{p.clock}</span> : null}
+                  {p.clock ? <span className="tnum font-semibold text-meta text-foreground">{p.clock}</span> : null}
                 </div>
                 <div className="flex flex-col items-center gap-1 text-center">
                   <span className="text-meta text-text-3">Your call</span>

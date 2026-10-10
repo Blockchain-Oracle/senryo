@@ -102,8 +102,8 @@
   height: 44px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 45%, transparent);
+  /* The brand seal: a black disc in both themes, no glow (R2.2). */
+  background: var(--seal);
 }
 .rail-word {
   display: none;

@@ -49,7 +49,13 @@ function Dock({ pathname }: { pathname: string | null }) {
                   className="dock-seal"
                   onClick={tapFeedback}
                 >
-                  <EntityMark id={ids.brand("senryo")} size={SEAL_SIZE} variant="symbol" decorative />
+                  <EntityMark
+                    id={ids.brand("senryo")}
+                    size={SEAL_SIZE}
+                    variant="symbol"
+                    decorative
+                    ground="var(--accent)"
+                  />
                 </Link>
               </li>
             );

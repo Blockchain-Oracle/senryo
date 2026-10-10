@@ -71,7 +71,6 @@ export const TYPE = {
   modeLabel: { size: 13, lineHeight: 18, tracking: 0, weight: 600, font: "sans", numeric: false },
   chipCategory: { size: 14, lineHeight: 18, tracking: 0, weight: 600, font: "sans", numeric: false },
   sheetHeading: { size: 22, lineHeight: 28, tracking: 0, weight: 600, font: "sans", numeric: false },
-  fanLabel: { size: 24, lineHeight: 28, tracking: 0, weight: 600, font: "sans", numeric: false },
 } as const satisfies Record<string, TypeSpec>;
 export type TypeRole = keyof typeof TYPE;
 
@@ -143,14 +142,6 @@ export const MOTION = {
   compactSelectorMs: 420,
   tallDetailMs: 450,
   parentChildMs: 600,
-  fanItemMs: 200,
-  fanStaggerMs: 25,
-  fanBackdropMs: 160,
-  fanToggleMs: 180,
-  fanToggleDeg: 45,
-  fanExitMs: 180,
-  fanExitItemMs: 135,
-  fanExitStaggerMs: 15,
   dockActiveMs: 260,
   headerCollapseDistance: 132,
   numberChangeMs: 160,

@@ -16,12 +16,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  colorScheme: "dark light",
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${notoSansJp.variable} dark`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${notoSansJp.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh">
         {/* The account runtime lives where accounts are used: the app's layout and the landing's sign-in island. */}
         <ThemeProvider>{children}</ThemeProvider>

@@ -1,5 +1,5 @@
-import type { Palette as TokenPalette } from "@senryo/tokens";
-import { NATIVE_DARK as DARK_TOKENS, NATIVE_LIGHT as LIGHT_TOKENS, NATIVE_SCENE } from "./native-palette";
+import { DARK as DARK_TOKENS, LIGHT as LIGHT_TOKENS, type Palette as TokenPalette } from "@senryo/tokens";
+import { NATIVE_SCENE } from "./scene";
 
 /**
  * Native reference colors retain the shared role vocabulary plus the few washes

@@ -80,7 +80,7 @@ export function ReceiveCard({ address, onOtherChain }: { address: `0x${string}`;
       </View>
       <Button label={actions.copied ? "Copied" : "Copy wallet address"} onPress={actions.copy} />
       {actions.error ? (
-        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, styles.center, { color: color.down }]}>
+        <Text accessibilityLiveRegion="polite" style={[TYPE.rowDetail, styles.center, { color: color.destructive }]}>
           {actions.error}
         </Text>
       ) : null}

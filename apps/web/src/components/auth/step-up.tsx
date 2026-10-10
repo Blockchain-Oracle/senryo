@@ -114,7 +114,7 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
                 {pending.intent.detail}
               </AuthCardHeader>
               {copy ? (
-                <p role="alert" className="text-center text-caption text-down">
+                <p role="alert" className="text-center text-caption text-destructive">
                   <span className="font-medium">{copy.title}.</span> {copy.body}
                 </p>
               ) : (

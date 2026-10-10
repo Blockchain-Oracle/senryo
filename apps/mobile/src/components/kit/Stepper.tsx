@@ -163,7 +163,7 @@ export function Stepper({
       <StepButton kind="down" dim={current <= min} label={`Lower ${label}`} onIn={startHold(-step)} onOut={stop} />
       <Animated.View style={[styles.value, shakeStyle]}>
         <Animated.View key={current} {...(entering ? { entering } : {})} {...(exiting ? { exiting } : {})}>
-          <Text style={[TYPE.rowTitle, styles.digits, { color: flash ? color.down : color.ink }]}>{text}</Text>
+          <Text style={[TYPE.rowTitle, styles.digits, { color: flash ? color.destructive : color.ink }]}>{text}</Text>
         </Animated.View>
       </Animated.View>
       <StepButton kind="up" dim={current >= max} label={`Raise ${label}`} onIn={startHold(step)} onOut={stop} />

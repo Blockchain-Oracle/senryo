@@ -1,7 +1,7 @@
 /**
  * Emits `src/tokens.css` from the TypeScript tokens so web never hand-writes a colour, size or duration.
- * Shape follows shadcn/Tailwind 4 conventions (`--background`, `--chart-1`…) so 21st components drop in re-tokenized;
- * the Living Lacquer roles follow as `--text-2`, `--glass-tint`, `--fan-circle`… (D-168/D-191).
+ * Shape follows shadcn/Tailwind 4 conventions (`--background`, `--primary`…) so 21st components drop in re-tokenized;
+ * the app roles follow as `--text-2`, `--glass-tint`, `--practice-surface`… (UGLYCASH palette, D-304).
  * Run: pnpm --filter @senryo/tokens emit
  */
 import { writeFileSync } from "node:fs";
@@ -80,7 +80,7 @@ const shared = [
   `  --qr-paper: ${QR.paper};`,
   "}",
 ].join("\n");
-const css = [header, shared, block(":root, .dark", DARK), block(".light", LIGHT), ""].join("\n\n");
+const css = [header, shared, block(":root, .light", LIGHT), block(".dark", DARK), ""].join("\n\n");
 
 const target = fileURLToPath(new URL("../src/tokens.css", import.meta.url));
 writeFileSync(target, css);

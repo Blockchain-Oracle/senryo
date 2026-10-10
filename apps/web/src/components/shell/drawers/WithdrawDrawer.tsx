@@ -126,7 +126,7 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
               </Button>
             </span>
           </label>
-          <p className="min-h-5 text-meta text-down" role="status">
+          <p className="min-h-5 text-meta text-destructive" role="status">
             {check.problem ?? ""}
           </p>
           <Button type="submit" size="xl" disabled={!check.ok}>
@@ -149,7 +149,7 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
         </div>
       ) : stage.kind === "sent" ? (
         <div className="flex flex-col gap-4 pt-2">
-          <p className="font-semibold text-title text-up">
+          <p className="font-semibold text-title">
             Sent {usd(stage.value)} to {shortAddress(stage.to)}
           </p>
           <a
@@ -175,7 +175,7 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
       ) : (
         <div className="flex flex-col gap-4 pt-2">
           <p className="font-semibold text-title">Nothing moved</p>
-          <p className="text-meta text-down">{stage.message}</p>
+          <p className="text-meta text-destructive">{stage.message}</p>
           <Button variant="secondary" size="xl" onClick={() => setStage({ kind: "edit" })}>
             Try again
           </Button>

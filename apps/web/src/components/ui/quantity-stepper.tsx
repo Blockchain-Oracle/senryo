@@ -191,7 +191,7 @@ export function QuantityStepper({
         animate={shake}
         className={cn(
           "tnum flex h-8 min-w-16 items-center justify-center overflow-hidden px-1 font-semibold text-row-title transition-colors focus-visible:outline-2 focus-visible:outline-ring",
-          flash > 0 ? "text-down" : "text-foreground",
+          flash > 0 ? "text-destructive" : "text-foreground",
         )}
       >
         <AnimatePresence mode="popLayout" initial={false} custom={direction}>

@@ -41,9 +41,7 @@ export function OneTapDrawer({ open, onOpenChange }: DrawerProps) {
         <p className="text-body text-text-2">Sign in to turn on one-tap calls.</p>
       ) : s.on ? (
         <div className="flex flex-col gap-4 pt-2">
-          <p className="font-semibold text-title text-up">
-            On · {Math.ceil(s.secondsLeft / SECONDS_PER_MINUTE)} min left
-          </p>
+          <p className="font-semibold text-title">On · {Math.ceil(s.secondsLeft / SECONDS_PER_MINUTE)} min left</p>
           <dl className="flex flex-col">
             {[
               ["Left to call", usd(s.left)],

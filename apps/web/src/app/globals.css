@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "@senryo/tokens/tokens.css";
 
-/* Living Lacquer: dark is the default (`:root, .dark` in tokens.css); `.light` on <html> switches to the light theme. */
+/* UGLYCASH (D-304): light is the default (`:root, .light` in tokens.css); `.dark` on <html> switches to the dark theme. */
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));
 
@@ -36,14 +36,11 @@
   --color-down: var(--down);
   --color-gold: var(--gold);
   --color-warn: var(--warn);
-  --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --color-chart-up: var(--chart-up);
   --color-chart-down: var(--chart-down);
-  --color-chart-candle-down: var(--chart-candle-down);
   --color-qr-ink: var(--qr-ink);
   --color-qr-paper: var(--qr-paper);
   --color-kinpaku-lacquer: var(--kinpaku-lacquer);
@@ -52,20 +49,14 @@
   --color-kinpaku-foil-light: var(--kinpaku-foil-light);
   --color-kinpaku-foil-shade: var(--kinpaku-foil-shade);
 
-  /* Living Lacquer roles (S1b.6 step 2): text-text-2, bg-glass-tint, bg-practice-surface, … */
+  /* App roles (`@senryo/tokens` palette, UGLYCASH): text-text-2, bg-glass-tint, bg-practice-surface, … */
   --color-text-2: var(--text-2);
   --color-text-3: var(--text-3);
   --color-link: var(--link);
   --color-glass-tint: var(--glass-tint);
   --color-glass-rim: var(--glass-rim);
   --color-glass-opaque: var(--glass-opaque);
-  --color-fan-circle: var(--fan-circle);
-  --color-fan-text: var(--fan-text);
-  --color-fan-label: var(--fan-label);
-  --color-fan-circle-pressed: var(--fan-circle-pressed);
-  --color-fan-backdrop-opaque: var(--fan-backdrop-opaque);
   --color-sheet-scrim: var(--sheet-scrim);
-  --color-fan-scrim: var(--fan-scrim);
   --color-warning-surface: var(--warning-surface);
   --color-practice: var(--practice);
   --color-practice-surface: var(--practice-surface);
@@ -74,7 +65,6 @@
   --color-up-surface: var(--up-surface);
   --color-down-surface: var(--down-surface);
   --color-destructive-surface: var(--destructive-surface);
-  --color-silver: var(--silver);
   --color-raised-2: var(--raised-2);
   --color-row-pressed: var(--row-pressed);
   --color-selected-row: var(--selected-row);
@@ -155,8 +145,6 @@
   --text-button-compact--line-height: var(--type-button-compact-leading);
   --text-tab: var(--type-tab-label-size);
   --text-tab--line-height: var(--type-tab-label-leading);
-  --text-fan: var(--type-fan-label-size);
-  --text-fan--line-height: var(--type-fan-label-leading);
 
   --tracking-label: var(--type-label-tracking);
   --ease-lacquer: var(--motion-ease);

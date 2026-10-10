@@ -70,7 +70,7 @@ export function TopLine() {
           <BackButton />
         </Suspense>
         <Link href="/app/" aria-label="Senryo home" className="topline-seal">
-          <EntityMark id={ids.brand("senryo")} size={SEAL_SIZE} variant="symbol" decorative />
+          <EntityMark id={ids.brand("senryo")} size={SEAL_SIZE} variant="symbol" decorative ground="var(--seal)" />
         </Link>
         <button
           type="button"

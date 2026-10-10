@@ -123,7 +123,7 @@ export function WithdrawSheet({ onClose }: { onClose: () => void }) {
                 }
               />
             </View>
-            {problem ? <Text style={[TYPE.caption, { color: color.down }]}>{problem}</Text> : null}
+            {problem ? <Text style={[TYPE.caption, { color: color.destructive }]}>{problem}</Text> : null}
             <Button
               label="Review"
               disabled={!ok}
