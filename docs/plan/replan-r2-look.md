@@ -70,13 +70,21 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     plan and study; a D-304 entry in each decision log.
 
 ### Logos
-- [ ] R2.6 Registry gaps by script:
+- [x] R2.6 Registry gaps by script:
   - QQQ, MSFT, AMZN;
   - Pyth, RedStone;
   - ESPN, theScore;
   - NHL, MLB, NFL, EPL and their teams;
   - distinct basket glyphs (MAJORS, ALTS, METALS, TECH);
   - game art slots (bull, bear, coin, reach plate).
+  - *As built (10 Oct):* researched each route first (licences quoted in the records). In: Microsoft (Commons public
+    domain; its grey plate the tile, cleared for the symbol), Amazon (Commons), ESPN's wordmark (Commons), Pyth
+    (web3icons), RedStone (its own brand kit, "for press, partners, and integrations"), NHL, MLB and the Premier League
+    (Simple Icons). Recorded gaps with the owner's words: QQQ (Invesco's terms), theScore (its terms, no kit), the NFL
+    shield (its terms; never in Simple Icons, not on Commons). Teams: abbreviations for all (D-312). Baskets: each
+    mark is its members' own marks overlapped (a registry `cluster`), not a new glyph. Games: Owarine's pixel bull,
+    bear, coin and the reach plate as data with a `PixelMark` for each app. The Commons fetcher now takes multi-ink
+    marks, clears a background plate and takes a wordmark; a file without a viewBox reads its plain width and height.
 - [x] R2.7 `TeamMark` reads the registry (no ESPN hot-links); the keeper sends team keys, not image URLs.
   - *As built (10 Oct):* a team is `ids.team(league, abbr)` in `@senryo/identity`; `TeamMark` (both apps) draws its
     registry mark when one is on file, else its abbreviation on a round plate — no image from any feed. The keeper,
