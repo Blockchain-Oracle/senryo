@@ -24,7 +24,7 @@ export const WEB_SETUP_STEPS = ["handle", "terms", "dollars", "first-call", "one
 type Step = (typeof WEB_SETUP_STEPS)[number];
 
 const COPY: Record<Step, { title: string; body: string }> = {
-  handle: { title: "Pick your username", body: "How you show up on calls and the leaderboard." },
+  handle: { title: "Pick your username", body: "How you show up on your calls and profile." },
   terms: { title: "Before any money moves", body: "Senryo is a prediction market: a call can lose its whole stake." },
   dollars: { title: "Test dollars", body: "Free dollars to call with, on Monad's test network." },
   "first-call": { title: "Call the next move", body: "Up or Down on a live price; the window closes on its own." },

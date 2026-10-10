@@ -51,7 +51,7 @@ const SOURCES = [
     title: "Charts and history",
     mark: { id: ids.provider("envio"), variant: "wordmark" },
     name: "Envio",
-    about: "Your calls, results and the leaderboard, indexed by Envio from Monad.",
+    about: "Your calls and results, indexed by Envio from Monad.",
   },
   {
     title: "Region check",

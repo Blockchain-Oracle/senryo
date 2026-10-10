@@ -23,19 +23,13 @@ import {
 } from "~/lib/notifications/push";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
+/**
+ * The switches shown. Price alerts, watched markets, invites and the leaderboard don't exist yet (R2.11): their channels
+ * stay in the saved choices and come back here with their stage (R8).
+ */
 const CHANNELS: ReadonlyArray<{ key: PushChannel; title: string; detail: string }> = [
   { key: "results", title: "Call results", detail: "When a call wins, loses or is refunded, with what was paid." },
   { key: "deposits", title: "Money arrived", detail: "When test dollars or a deposit from another chain arrive." },
-  {
-    key: "priceAlerts",
-    title: "Markets and alerts",
-    detail: "When a stock market you watch opens, or a price you set is crossed.",
-  },
-  {
-    key: "social",
-    title: "Invites and leaderboard",
-    detail: "When an invite earns you test dollars, or you place on the leaderboard.",
-  },
 ];
 
 /**
@@ -103,7 +97,7 @@ export default function NotificationsScreen() {
         <Stack.Screen options={{ title: "Notifications" }} />
         <QuietState
           line="Notifications are about your account"
-          detail="Create one and Senryo tells you when a call settles, a price alert crosses or money arrives."
+          detail="Create one and Senryo tells you when a call settles or money arrives."
           action={{ label: "Create account", variant: "primary", onPress: () => router.push(ROUTES.accountRequired) }}
         />
       </Screen>
@@ -129,7 +123,7 @@ export default function NotificationsScreen() {
         <Panel style={styles.ask}>
           <Text style={[TYPE.rowTitle, { color: color.ink }]}>Notifications are off</Text>
           <Text style={[TYPE.rowDetail, { color: color.text2 }]}>
-            Turn them on to hear about results, payouts, deposits and your price alerts. iOS asks once.
+            Turn them on to hear about results, payouts and deposits. iOS asks once.
           </Text>
           <Button label="Turn on notifications" size="sm" onPress={() => void turnOn()} loading={saving === "all"} />
         </Panel>

@@ -15,12 +15,10 @@ import { type PushChannel, readPushPermission, registerPush, registrationOwed } 
 
 type NotificationResponse = import("expo-notifications").NotificationResponse;
 
-/** One Android channel per kind of news, named as You → Notifications names them. */
+/** One Android channel per kind of news shown in You → Notifications (alerts and people return with R8). */
 const ANDROID_CHANNELS: ReadonlyArray<{ id: PushChannel; name: string }> = [
   { id: "results", name: "Call results" },
   { id: "deposits", name: "Money arrived" },
-  { id: "priceAlerts", name: "Markets and alerts" },
-  { id: "social", name: "People and invites" },
 ];
 
 /** Where a tapped push goes, or undefined when it names nowhere this app knows. */

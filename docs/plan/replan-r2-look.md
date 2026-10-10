@@ -95,8 +95,12 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     claim them. Found on the way: the api rolled "prices overall" up as the worst source, so RedStone's public gateway
     refusing (403, its keyless window, D-310) made the whole service read "down" with BTC live; overall now follows
     its own rule over every market (degraded). Simulator view waits for the simulator pass.
-- [ ] R2.11 Settings and copy for absent features are hidden until their stage: leaderboard, invites, price alerts,
+- [x] R2.11 Settings and copy for absent features are hidden until their stage: leaderboard, invites, price alerts,
   "a stock market you watch".
+  - *As built (10 Oct):* the phone's notification settings show Call results and Money arrived only (the alerts and
+    people channels stay in the saved choices for R8, and aren't registered as Android channels); the signed-out and
+    permission copy, Help's Envio line and the web's username step no longer promise price alerts, invites or a
+    leaderboard. Nothing else in either app mentions them.
 - [ ] R2.12 `docs/judges.md` (rendered at `/judges`), the landing and the Calls copy match the screens: 34 markets, what
   is live and what is Practice.
 - [ ] R2.13 Links:
