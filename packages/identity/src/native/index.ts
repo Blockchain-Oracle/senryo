@@ -4,3 +4,4 @@ export { ART_COMPONENTS as NATIVE_ART } from "../generated/native/index.ts";
 export * from "../index.ts";
 export { EntityGlyph, type EntityGlyphProps } from "./EntityGlyph.tsx";
 export { EntityMark, type EntityMarkProps } from "./EntityMark.tsx";
+export { PixelMark, type PixelMarkProps } from "./PixelMark.tsx";

@@ -15,6 +15,16 @@ export {
   routeAssetId,
 } from "./lookup.ts";
 export {
+  PIXEL_MARKS,
+  PIXEL_PATHS,
+  type PixelColors,
+  type PixelMark as PixelMarkData,
+  type PixelMarkName,
+  type PixelRole,
+  pixelBox,
+  pixelFill,
+} from "./pixel.ts";
+export {
   ENTITY,
   entity,
   entityLabel,
