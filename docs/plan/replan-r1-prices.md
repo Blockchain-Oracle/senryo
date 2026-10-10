@@ -12,13 +12,13 @@ live PnL at about 8 Hz. No contract change.
 - every library read through its docs (Context7) before use.
 
 **Gate:**
-- `pnpm gate` 0;
-- G3 chaos (a)–(d) passes;
-- G6 abuse passes;
+- [x] `pnpm gate` 0;
+- [x] G3 chaos (a)–(d) passes;
+- [x] G6 abuse passes;
 - ~~the display line measured at ≥ 6 Hz for BTC in a browser~~ (dropped by D-311: the line stays on Pyth);
-- δ and autocorrelation numbers in `acceptance.md`;
-- api and keeper deployed;
-- web deployed; phone OTA after a simulator pass.
+- [ ] δ and autocorrelation numbers in `acceptance.md` (script built; needs a weekday run from the server — R1.18);
+- [x] api and keeper deployed (`sha-2f667bf`, 10 Oct);
+- [x] web deployed (`sha-4905dd2`); [ ] phone OTA after a simulator pass.
 
 ## Steps
 
