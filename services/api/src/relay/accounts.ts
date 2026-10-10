@@ -11,6 +11,7 @@ import {
   type PermitArgs,
   type ReadClient,
   revokeCallData,
+  rideChanges,
   sendTx,
   setExitCallData,
   ticketChanges,
@@ -18,7 +19,7 @@ import {
 } from "@senryo/chain";
 import { type ChainId, TESTNET_CHAIN_ID } from "@senryo/config";
 import { testUSDAbi } from "@senryo/contracts/abis";
-import { applyTicketChanges, type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
+import { applyRideChanges, applyTicketChanges, type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PRACTICE_GRANT, PRACTICE_TOPUP_EVERY_MS } from "./constants.ts";
 import type { Lane } from "./lanes.ts";
@@ -78,8 +79,8 @@ export class AccountRelay {
   }
 
   /**
-   * An exit (D-292): the owner's or their session's signed order on the reserve; the receipt's `ExitSet` lands in the
-   * ticket book, where the exit watcher picks it up.
+   * An exit (D-292, R3.12): the owner's or their session's signed order on the reserve, a call's or a ride's; the
+   * receipt's `ExitSet` lands in the ticket or ride book, where that book's watcher picks it up.
    */
   async setExit(order: MarketExitOrder, signature: Hex): Promise<RelayResult> {
     const reserve = addressOf(this.d.chainId, "BandReserve");
@@ -87,8 +88,14 @@ export class AccountRelay {
       .laneFor(order.owner)
       .run((sender) => sendTx(sender, { to: reserve, data: setExitCallData(order, signature), action: "exitSet" }));
     if (sent.stage !== "reverted") {
-      const changes = ticketChanges(sent.receipt.logs, reserve);
-      await applyTicketChanges(this.d.db, this.d.chainId, changes, unknownWindow, sent.hash);
+      await applyTicketChanges(
+        this.d.db,
+        this.d.chainId,
+        ticketChanges(sent.receipt.logs, reserve),
+        unknownWindow,
+        sent.hash,
+      );
+      await applyRideChanges(this.d.db, this.d.chainId, rideChanges(sent.receipt.logs, reserve), sent.hash);
     }
     return { txHash: sent.hash, state: sent.stage };
   }

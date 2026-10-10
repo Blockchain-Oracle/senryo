@@ -18,6 +18,8 @@ export function rideMarketSpec(marketId: number): MarketSpec | undefined {
 
 /** Dollars are 6-decimal on both networks. */
 const USD = 1_000_000;
+/** Leverage × 1e4 (contracts bps): 1× is the least a ride takes (contracts `MIN_LEVERAGE_BPS`). */
+export const RIDE_MIN_LEVERAGE_BPS = 10_000;
 
 export interface RideMarketTerms {
   maxLeverageBps: number;
@@ -47,7 +49,7 @@ export interface RideNetworkTerms {
 const MAJOR_FEE = { takerFeeBps: 5, makerFeeBps: 2 } as const;
 const OTHER_FEE = { takerFeeBps: 8, makerFeeBps: 2 } as const;
 /** Leverage × 1e4 (contracts bps): 40× is 400,000. */
-const X = 10_000;
+const X = RIDE_MIN_LEVERAGE_BPS;
 const SHARED = {
   maxLifeSec: 4 * 3600,
   minMargin: BigInt(USD),

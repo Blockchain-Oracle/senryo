@@ -79,7 +79,7 @@ async function rollIfDue(ctx: KeeperContext, now: number, minute: number): Promi
     const calls = await rideMarkCalls(ctx, minute);
     if (!calls) return;
     calls.push({ target: shares, allowFailure: false, callData: rollCallData(hour, minute) });
-    await send(ctx, MULTICALL3_ADDRESS, aggregate(calls), "earnRoll", `${hour}@${minute}`);
+    await send(ctx, MULTICALL3_ADDRESS, aggregate(calls), "earnRollMarked", `${hour}@${minute}`);
   } catch (error) {
     ctx.log.debug({ hour, err: describeError(error) }, "earn roll not due yet");
   }
@@ -166,7 +166,7 @@ async function send(
   ctx: KeeperContext,
   to: Hex,
   data: Hex,
-  action: "earnRoll" | "earnClaim",
+  action: "earnRoll" | "earnRollMarked" | "earnClaim",
   subject: string,
 ): Promise<void> {
   const sent = await sendTx(ctx.sender, { to, data, action, meta: { job: "earn", subject } });

@@ -1,7 +1,7 @@
 /**
  * Exits (S8.4, D-292, R3.12): a call's or a ride's take-profit, stop-loss and trail, keyed by `(book, id)`, signed by
  * the owner or their one-tap session and relayed gas-free. A call's levels are bids per share × 1e6 (under $1), a
- * ride's prices × 1e8. The chain keeps the exit; the api's watchers fire it on the live price.
+ * ride's prices × 1e8 with its trail in bps. The chain keeps the exit; the api's watchers fire it on the live price.
  */
 import * as z from "zod";
 import { addressSchema, chainIdSchema, signatureSchema, uintCodec } from "../primitives.ts";

@@ -129,6 +129,8 @@ export const intentStatusSchema = z.object({
   digest: bytes32Schema,
   state: z.enum(INTENT_STATES),
   ticketId: uintCodec.nullable(),
+  /** A ride's id once committed (ride intents only, R4.4). */
+  rideId: uintCodec.nullable().optional(),
   txHash: txHashSchema.nullable(),
   /** The fill instant the call waits for (commit + 1 s). */
   target: unixSecondsSchema.nullable(),

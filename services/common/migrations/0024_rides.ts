@@ -4,7 +4,7 @@
  *  - `market_rides`: each ride as the chain holds it, from the relay's receipts and the keeper's sync — its state, the
  *    pending fill instant and limit, the fill (entry, size, reserve, knock-out and cap prices) and how it ended. Sizes
  *    are uint128 and PnL int256 on chain, so they are `numeric`.
- *  - `ride_exits`: each ride's take-profit, stop-loss, floor and trail (prices × 1e8, the trail a distance), with the
+ *  - `ride_exits`: each ride's take-profit, stop-loss and floor (prices × 1e8) and trail (bps of the price), with the
  *    trail's best price seen (it only moves in the ride's favour) and the watcher's last fire.
  */
 export const id = "0024_rides";
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS ride_exits (
   take_profit_e8 bigint NOT NULL DEFAULT 0,
   stop_loss_e8 bigint NOT NULL DEFAULT 0,
   floor_e8 bigint NOT NULL DEFAULT 0,
-  trail_e8 bigint NOT NULL DEFAULT 0,
+  trail_bps int NOT NULL DEFAULT 0,
   trail_peak_e8 bigint NOT NULL DEFAULT 0,
   fired_at timestamptz,
   fired_kind int,

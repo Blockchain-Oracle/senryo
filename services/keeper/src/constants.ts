@@ -18,6 +18,15 @@ export const SETTLE_INTERVAL_MS = 2_000;
 /** A fill the relay has not done this long after its print instant is done here. */
 export const FILL_STALE_SEC = 10;
 export const FILLS_INTERVAL_MS = 3_000;
+/**
+ * Rides (R4.3): backup fills, expiries and ends every few seconds; the archive's crossings swept a little less often
+ * (the relay settles within a second), only while a print can still be recorded (its admission, less a margin for the
+ * transaction). A batch holds at most `RIDE_BATCH_MAX` (contracts `MAX_RIDE_BATCH`).
+ */
+export const RIDES_INTERVAL_MS = 3_000;
+export const BOUNDS_INTERVAL_MS = 5_000;
+export const BOUNDS_MARGIN_SEC = 15;
+export const RIDE_BATCH_MAX = 32;
 /** Parlays: backup fills and the legs' verdicts (S8.5). */
 export const PARLAYS_INTERVAL_MS = 2_000;
 /** Duels (S8.6): refunds, locks, card settlement and pots; matches looked at per tick; a pairing left `opening`. */

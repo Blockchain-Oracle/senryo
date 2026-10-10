@@ -27,6 +27,7 @@ import {
   HttpError,
   type Logger,
   nowSec,
+  type RideNotice,
   type TicketNotice,
 } from "@senryo/service-common";
 import type { SeriesListing } from "../listing.ts";
@@ -49,17 +50,24 @@ export interface IntentStatus {
   digest: Hex;
   state: "received" | "submitted" | "committed" | "filled" | "refused" | "failed";
   ticketId: bigint | null;
+  /** A ride's id once committed (ride intents only). */
+  rideId?: bigint | null;
   txHash: Hex | null;
   target: number | null;
   reason: string | null;
 }
 
+/** The ride changes that end a ride intent's wait: its fill or refusal, a close's exit or refusal. */
+const RIDE_INTENT_ENDS = new Set(["rideFilled", "rideRefused", "rideExited", "rideCloseRefused"]);
+
 interface IntentRow {
   digest: string;
   kind: "open" | "close" | "parlay";
+  book: "call" | "ride";
   owner: string;
   state: IntentStatus["state"];
   ticket_id: bigint | null;
+  ride_id: bigint | null;
   tx_hash: string | null;
   target: bigint | null;
   reason: string | null;
@@ -133,14 +141,24 @@ export class MarketRelay {
    * while this process was restarting (its NOTIFY lost) still shows as filled or refused.
    */
   async status(digest: Hex): Promise<IntentStatus | undefined> {
-    // A parlay's `ticket_id` is its parlay id (a separate numbering): it is read from the parlay book instead.
-    const [row] = await this.d.db<(IntentRow & { ticket_state: string | null; parlay_state: string | null })[]>`
-      SELECT i.*, t.state AS ticket_state, p.state AS parlay_state FROM market_intents i
-      LEFT JOIN market_tickets t ON t.chain_id = i.chain_id AND t.ticket_id = i.ticket_id AND i.kind <> 'parlay'
+    // A parlay's `ticket_id` is its parlay id (a separate numbering): it is read from the parlay book instead; a ride's
+    // is in `ride_id`, read from the ride book.
+    const [row] = await this.d.db<
+      (IntentRow & { ticket_state: string | null; parlay_state: string | null; ride_state: string | null })[]
+    >`
+      SELECT i.*, t.state AS ticket_state, p.state AS parlay_state, r.state AS ride_state FROM market_intents i
+      LEFT JOIN market_tickets t ON t.chain_id = i.chain_id AND t.ticket_id = i.ticket_id
+        AND i.kind <> 'parlay' AND i.book = 'call'
       LEFT JOIN market_parlays p ON p.chain_id = i.chain_id AND p.parlay_id = i.ticket_id AND i.kind = 'parlay'
+      LEFT JOIN market_rides r ON r.chain_id = i.chain_id AND r.ride_id = i.ride_id AND i.book = 'ride'
       WHERE i.digest = ${digest}`;
     if (!row) return undefined;
     const status = toStatus(row);
+    if (status.state === "committed" && row.book === "ride" && row.kind === "open" && row.ride_state) {
+      if (row.ride_state === "refunded") return { ...status, state: "refused" };
+      if (row.ride_state !== "committed") return { ...status, state: "filled" };
+      return status;
+    }
     if (status.state === "committed" && row.kind === "parlay" && row.parlay_state && row.parlay_state !== "committed") {
       return { ...status, state: row.parlay_state === "refunded" ? "refused" : "filled" };
     }
@@ -248,7 +266,7 @@ export class MarketRelay {
     if (n.change !== "filled" && n.change !== "refused" && n.change !== "closed" && n.change !== "closeRefused") return;
     const [row] = await this.d.db<IntentRow[]>`
       SELECT * FROM market_intents WHERE chain_id = ${this.d.chainId} AND ticket_id = ${BigInt(n.ticketId)}
-        AND kind <> 'parlay' ORDER BY created_at DESC LIMIT 1`;
+        AND kind <> 'parlay' AND book = 'call' ORDER BY created_at DESC LIMIT 1`;
     if (!row || row.state === "filled" || row.state === "refused") return;
     const refused = n.change === "refused" || n.change === "closeRefused";
     await this.setState(row.digest as Hex, row.owner as Address, {
@@ -258,16 +276,35 @@ export class MarketRelay {
     });
   }
 
-  /** Moves an intent (a call's or a parlay's) and tells its owner's stream. */
+  /**
+   * Every ride change, whoever made it (this relay's fill, the keeper's backup, a bound, an exit), arrives here from
+   * the ride book's NOTIFY: the ride's latest intent moves to filled or refused.
+   */
+  async onRide(n: RideNotice): Promise<void> {
+    if (!RIDE_INTENT_ENDS.has(n.change)) return;
+    const [row] = await this.d.db<IntentRow[]>`
+      SELECT * FROM market_intents WHERE chain_id = ${this.d.chainId} AND ride_id = ${BigInt(n.rideId)}
+        AND book = 'ride' ORDER BY created_at DESC LIMIT 1`;
+    if (row?.state !== "committed") return;
+    const refused = n.change === "rideRefused" || n.change === "rideCloseRefused";
+    await this.setState(row.digest as Hex, row.owner as Address, {
+      state: refused ? "refused" : "filled",
+      txHash: n.txHash as Hex | null,
+      reason: refused ? "refused" : null,
+    });
+  }
+
+  /** Moves an intent (a call's, a parlay's or a ride's) and tells its owner's stream. */
   async setState(
     digest: Hex,
     owner: Address,
-    s: Partial<Pick<IntentStatus, "state" | "ticketId" | "txHash" | "target" | "reason">>,
+    s: Partial<Pick<IntentStatus, "state" | "ticketId" | "rideId" | "txHash" | "target" | "reason">>,
   ): Promise<void> {
     const [row] = await this.d.db<IntentRow[]>`
       UPDATE market_intents SET
         state = COALESCE(${s.state ?? null}, state),
         ticket_id = COALESCE(${s.ticketId ?? null}, ticket_id),
+        ride_id = COALESCE(${s.rideId ?? null}, ride_id),
         tx_hash = COALESCE(${s.txHash ?? null}, tx_hash),
         target = COALESCE(${s.target ?? null}, target),
         reason = COALESCE(${s.reason ?? null}, reason),
@@ -287,6 +324,7 @@ function toStatus(row: IntentRow): IntentStatus {
     digest: row.digest as Hex,
     state: row.state,
     ticketId: row.ticket_id,
+    rideId: row.ride_id,
     txHash: row.tx_hash as Hex | null,
     target: row.target === null ? null : Number(row.target),
     reason: row.reason,

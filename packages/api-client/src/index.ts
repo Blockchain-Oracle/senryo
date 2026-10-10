@@ -18,4 +18,5 @@ export * from "./routes/notifications.ts";
 export * from "./routes/parlays.ts";
 export * from "./routes/prices.ts";
 export * from "./routes/profile.ts";
+export * from "./routes/rides.ts";
 export * from "./routes/storage.ts";

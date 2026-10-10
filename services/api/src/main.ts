@@ -17,6 +17,8 @@ import {
   PARLAY_CHANNEL,
   type ParlayNotice,
   pingDb,
+  RIDE_CHANNEL,
+  type RideNotice,
   SessionKeys,
   TICKET_CHANNEL,
   type TicketNotice,
@@ -32,10 +34,13 @@ import { DuelReader } from "./history/duel-reader.ts";
 import { PythGateway } from "./prices/gateway.ts";
 import { SigmaDesk } from "./prices/sigma.ts";
 import { AccountRelay } from "./relay/accounts.ts";
+import { BoundWatcher } from "./relay/bounds.ts";
 import { ExitWatcher } from "./relay/exits.ts";
 import { type Lane, openLanes } from "./relay/lanes.ts";
 import { ParlayRelay } from "./relay/parlays.ts";
 import { MarketRelay } from "./relay/relay.ts";
+import { RideExitWatcher } from "./relay/ride-exits.ts";
+import { RideRelay } from "./relay/rides.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
 import { registerDuelRoutes } from "./routes/duels.ts";
 import { registerEarnRoutes } from "./routes/earn.ts";
@@ -49,6 +54,7 @@ import { registerNotificationRoutes } from "./routes/notifications.ts";
 import { registerParlayRoutes } from "./routes/parlays.ts";
 import { registerPriceRoutes } from "./routes/prices.ts";
 import { registerProfileRoutes } from "./routes/profile.ts";
+import { registerRideRoutes } from "./routes/rides.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
 import { StreamBus } from "./stream/bus.ts";
 import { registerStreamRoute } from "./stream/route.ts";
@@ -155,10 +161,36 @@ for (const chain of chains.values()) {
   const events = isDeployed(chain.chainId, "EventBook")
     ? new EventRelay({ chainId: chain.chainId as ChainId, read: chain.read, relay, db, log })
     : undefined;
-  markets.set(chain.chainId, { relay, accounts, exits, parlays, duels, events });
+  // Rides (R4.4): relayed like calls; bounds and exits watched from the first lane (`SPONSOR` holds EXIT for trails).
+  const rides = new RideRelay({ chainId: chain.chainId as ChainId, relay, gateway, db, log });
+  const bounds = new BoundWatcher({ chainId: chain.chainId as ChainId, lane: lanes[0] as Lane, gateway, db, log });
+  bounds.start();
+  relay.fills.guardRides((feedId, until) => bounds.sweep(feedId, until));
+  const rideExits = new RideExitWatcher({
+    chainId: chain.chainId as ChainId,
+    read: chain.read,
+    lane: lanes[0] as Lane,
+    gateway,
+    fills: relay.fills,
+    db,
+    log,
+  });
+  rideExits.start();
+  markets.set(chain.chainId, { relay, accounts, exits, parlays, duels, events, rides, bounds, rideExits });
   log.info({ chainId: chain.chainId, lanes: sponsors.map((s) => s.address) }, "relay ready");
 }
 if (sponsors.length === 0) log.warn("no SPONSOR_PK — calls, sessions and Practice dollars answer 503");
+
+// Every ride change any service applies reaches the owner's stream, the relay's intents and the exit watcher (R4.4).
+await db.listen(RIDE_CHANNEL, (payload) => {
+  const notice = JSON.parse(payload) as RideNotice;
+  bus.emit(`user:${notice.owner}`, "ride", notice);
+  const m = markets.get(notice.chainId);
+  m?.rideExits.onRide();
+  void m?.relay
+    .onRide(notice)
+    .catch((error) => log.warn({ err: (error as Error).message }, "intent update from a ride notice failed"));
+});
 
 // Every ticket change any service applies reaches the owner's stream and the relay's intents (D-272).
 await db.listen(TICKET_CHANNEL, (payload) => {
@@ -234,6 +266,7 @@ registerProfileRoutes(app, ctx);
 registerMarketRoutes(app, ctx);
 registerEarnRoutes(app, ctx);
 registerParlayRoutes(app, ctx);
+registerRideRoutes(app, ctx);
 registerDuelRoutes(app, ctx);
 registerEventRoutes(app, ctx);
 registerGameRoutes(app, ctx);
@@ -252,6 +285,8 @@ await listen(app, env.PORT, env.HOST, async () => {
   sigma.stop();
   for (const m of markets.values()) {
     m.exits.stop();
+    m.bounds.stop();
+    m.rideExits.stop();
     m.duels?.queue.stop();
   }
   await gateway.stop();

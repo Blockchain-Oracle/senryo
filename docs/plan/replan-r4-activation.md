@@ -74,6 +74,16 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
   - a `BoundWatcher` beside the exits watcher that settles a crossing before any later close;
   - σ marks attached to `finalize`;
   - `@senryo/api-client` ride routes and zod contracts.
+  - **Built (11 Oct):** `RideRelay` (`POST /v1/rides/intents`: gates on the network's ride terms, queued by digest
+    in `market_intents` book `ride`, committed on the owner's lane), `GET /v1/rides` and `/v1/rides/catalog`; the
+    `FillBatcher` keyed by (book, feed, target) — `finalizeRides` in 32s, no mark; the `BoundWatcher` scans every
+    second's print from the ring against each open ride's knock-out and cap, settles the first crossing with
+    `settleBounds` (archiving the print), and the fill batcher sweeps a market through a ride close's second first;
+    the `RideExitWatcher` (take-profit, stop-loss, the trail in bps of the price, `rideExitDecision` in core) fires
+    on the EXIT lane and hands the close to the batcher; ride exits go through `/v1/markets/exits` (book 2); ride
+    notices on `market_ride` reach the owner's stream as `ride`. Keeper: `rides` (sync with `rideOf`, backup fills,
+    expiries, `settleEnds`) and `bounds` (the archive's crossings inside admission); the print watch archives every
+    ride's fill target and end of life.
 - [ ] R4.5 Indexer:
   - reads the v1 and v3 reserves;
   - ride entities (Ride, RideSide, records);

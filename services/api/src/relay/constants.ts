@@ -24,3 +24,11 @@ export const EXIT_RELOAD_MS = 2_000;
 export const EXIT_CHAIN_SYNC_MS = 30_000;
 /** After a fire, the exit waits this long before it may fire again (a miss leaves it standing). */
 export const EXIT_RETRY_MS = 3_000;
+/** Rides (R4.4): one `finalizeRides`/`settleBounds`/`settleEnds` takes at most this many (contracts `MAX_RIDE_BATCH`). */
+export const RIDE_BATCH_MAX = 32;
+/** The bound watcher (R4.4): live prices against every open ride's knock-out and cap, this often. */
+export const BOUND_TICK_MS = 1_000;
+/** A crossing the relay has tried to settle waits this long before another try (the keeper's sweep backs it up). */
+export const BOUND_RETRY_MS = 3_000;
+/** Ride owners' recent rides returned at once. */
+export const RIDES_PAGE = 100;

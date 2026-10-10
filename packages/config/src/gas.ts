@@ -43,6 +43,11 @@ export const GAS_LIMITS = {
    */
   earnRequest: 400_000n,
   earnRoll: 2_000_000n,
+  /**
+   * The roll with rides open, in one Multicall3 transaction: each ride market's print recorded (≈ 150k each, seven
+   * markets), every side's frontier refreshed (75k + ≈ 1k a ride) and the roll itself.
+   */
+  earnRollMarked: 6_000_000n,
   earnClaim: 200_000n,
   /** Exits (D-292, generic R3.12): a relayed `setExit`/`setRideExit` (two slots and a signature), and firing one. */
   exitSet: 300_000n,

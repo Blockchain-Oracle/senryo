@@ -1,5 +1,5 @@
 import { RIDE_STATE, type RideChange } from "@senryo/chain";
-import type { ChainId } from "@senryo/config";
+import { type ChainId, RIDE_TERMS } from "@senryo/config";
 import { rideShare } from "@senryo/core";
 import type { Db } from "./db.ts";
 
@@ -105,8 +105,8 @@ export async function applyRideChanges(
   chainId: ChainId,
   changes: readonly RideChange[],
   txHash: string | null = null,
-  maxLifeSecOf: (marketId: number) => number = () => 0,
 ): Promise<void> {
+  const life = RIDE_TERMS[chainId].maxLifeSec;
   for (const c of changes) {
     switch (c.kind) {
       case "rideCommitted":
@@ -117,15 +117,14 @@ export async function applyRideChanges(
                   ${c.margin}, ${c.leverageBps}, ${c.openFee}, ${c.target}, ${c.limitE8}, ${txHash}, ${txHash})
           ON CONFLICT (chain_id, ride_id) DO NOTHING`;
         break;
-      case "rideFilled": {
-        const life = maxLifeSecOf((await rideRow(db, chainId, c.rideId))?.market_id ?? -1);
+      case "rideFilled":
+        // A ride fills at its target and lives the network's `maxLifeSec` from there (contracts `RideMarket`).
         await db`UPDATE market_rides SET state = 'open', entry_e8 = ${c.entryE8}, size = ${c.size.toString()},
                  reserve = ${c.reserve}, open_fee = ${c.openFee}, ko_e8 = ${c.koE8}, cap_e8 = ${c.capE8},
-                 filled_at = target, end_at = CASE WHEN ${life} > 0 THEN target + ${life} ELSE NULL END,
-                 target = NULL, limit_e8 = NULL, last_tx = ${txHash}, updated_at = now()
+                 filled_at = target, end_at = target + ${life}, target = NULL, limit_e8 = NULL, last_tx = ${txHash},
+                 updated_at = now()
                  WHERE chain_id = ${chainId} AND ride_id = ${c.rideId} AND state = 'committed'`;
         break;
-      }
       case "rideRefused":
         await db`UPDATE market_rides SET state = 'refunded', refund_reason = ${c.reason}, paid = ${c.refunded},
                  target = NULL, limit_e8 = NULL, last_tx = ${txHash}, updated_at = now()
@@ -178,8 +177,8 @@ async function applyExit(
   if (last) await db`DELETE FROM ride_exits WHERE chain_id = ${chainId} AND ride_id = ${c.rideId}`;
 }
 
-/** A ride's exit as the chain holds it (prices × 1e8, the trail a distance); all 0 clears it. A changed trail restarts
- *  its peak. */
+/** A ride's exit as the chain holds it (prices × 1e8, the trail in bps of the price); all 0 clears it. A changed trail
+ *  restarts its peak. */
 export async function saveRideExit(
   db: Db,
   chainId: ChainId,
@@ -190,12 +189,12 @@ export async function saveRideExit(
     return;
   }
   await db`
-    INSERT INTO ride_exits (chain_id, ride_id, take_profit_e8, stop_loss_e8, floor_e8, trail_e8)
+    INSERT INTO ride_exits (chain_id, ride_id, take_profit_e8, stop_loss_e8, floor_e8, trail_bps)
     VALUES (${chainId}, ${e.rideId}, ${e.takeProfit}, ${e.stopLoss}, ${e.floor}, ${e.trail})
     ON CONFLICT (chain_id, ride_id) DO UPDATE SET
       take_profit_e8 = EXCLUDED.take_profit_e8, stop_loss_e8 = EXCLUDED.stop_loss_e8, floor_e8 = EXCLUDED.floor_e8,
-      trail_peak_e8 = CASE WHEN ride_exits.trail_e8 = EXCLUDED.trail_e8 THEN ride_exits.trail_peak_e8 ELSE 0 END,
-      trail_e8 = EXCLUDED.trail_e8, fired_at = NULL, updated_at = now()`;
+      trail_peak_e8 = CASE WHEN ride_exits.trail_bps = EXCLUDED.trail_bps THEN ride_exits.trail_peak_e8 ELSE 0 END,
+      trail_bps = EXCLUDED.trail_bps, fired_at = NULL, updated_at = now()`;
 }
 
 export async function ridesOf(db: Db, chainId: ChainId, owner: string, limit: number): Promise<RideRow[]> {
@@ -207,6 +206,16 @@ export async function ridesOf(db: Db, chainId: ChainId, owner: string, limit: nu
 export async function liveRides(db: Db, chainId: ChainId): Promise<RideRow[]> {
   return db<RideRow[]>`SELECT * FROM market_rides WHERE chain_id = ${chainId}
     AND state IN ${db([...LIVE_RIDE_STATES])} ORDER BY ride_id`;
+}
+
+/** Instants in (sinceSec, untilSec] whose print a live ride needs: pending fill targets and ends of life. */
+export async function rideInstantsAwaitingPrints(db: Db, sinceSec: number, untilSec: number) {
+  return db<{ market_id: number; t: bigint }[]>`
+    SELECT DISTINCT market_id, t FROM (
+      SELECT market_id, target AS t FROM market_rides WHERE state IN ('committed', 'closing') AND target IS NOT NULL
+      UNION ALL
+      SELECT market_id, end_at FROM market_rides WHERE state IN ('open', 'closing') AND end_at IS NOT NULL
+    ) wanted WHERE t > ${sinceSec} AND t <= ${untilSec}`;
 }
 
 /** Each market side's open rides (open or closing — both open on chain), ascending, for `refreshFrontier`. */

@@ -256,6 +256,12 @@ export class PythGateway {
     return rest;
   }
 
+  /** The print of t from a single feed's ring, if it is still there (the bound watcher's per-second scan). */
+  ringPrintAt(feedId: Hex, t: number): PriceUpdate | undefined {
+    const feed = this.byId.get(feedId);
+    return feed && feed.members.length === 0 ? feed.ring.proving(t) : undefined;
+  }
+
   /**
    * The print of t only if it is already known — the ring (single feeds) or the archive. Never waits and never asks
    * upstream: the public print route reads this, so anonymous traffic can't spend the key's budget (04-pricing R4, F5).

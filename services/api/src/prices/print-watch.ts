@@ -1,7 +1,15 @@
 import type { Hex } from "@senryo/chain";
-import { admissionSecOf, CALENDARS, feedIdOf, MARKETS, type MarketSpec } from "@senryo/config";
+import { admissionSecOf, CALENDARS, feedIdOf, MARKETS, type MarketSpec, rideMarketSpec } from "@senryo/config";
 import { isOpenAt, scheduleOf } from "@senryo/core";
-import { archivedKeys, type Db, instantsAwaitingPrints, type Logger, nowSec, printKey } from "@senryo/service-common";
+import {
+  archivedKeys,
+  type Db,
+  instantsAwaitingPrints,
+  type Logger,
+  nowSec,
+  printKey,
+  rideInstantsAwaitingPrints,
+} from "@senryo/service-common";
 import {
   BOUNDARY_SEC,
   GAP_RETRY_MAX_MS,
@@ -15,7 +23,7 @@ import type { PriceUpdate } from "./ring.ts";
  * PrintWatch (04-pricing R3, F6). The keeper settles only from the archive and voids a window once its admission
  * passes, so a boundary the stream missed (a reconnect, a deploy, a 429) used to become a refund for everyone in it.
  * - **Every 2 s:** each instant a live position needs — fill and close targets, window starts and expiries, parlay
- *   legs — with no archived print by t + 2 s is asked of the gateway (ring → archive → `PrintFetcher`), which archives
+ *   legs, rides' fills and ends of life — with no archived print by t + 2 s is asked of the gateway (ring → archive → `PrintFetcher`), which archives
  *   it. This replaces the fill-only `archivePending`.
  * - **After a Hermes gap** (a reconnect, or the first frame after a restart): every minute boundary in the gap, for
  *   each of that stream's markets open at the boundary, one boundary at a time, so the REST budget is never queued
@@ -110,11 +118,16 @@ export class PrintWatch {
     this.running = true;
     try {
       const now = nowSec();
-      const rows = await instantsAwaitingPrints(this.db, now - HORIZON_SEC, now - PRINT_GRACE_SEC);
+      const [rows, rides] = await Promise.all([
+        instantsAwaitingPrints(this.db, now - HORIZON_SEC, now - PRINT_GRACE_SEC),
+        rideInstantsAwaitingPrints(this.db, now - HORIZON_SEC, now - PRINT_GRACE_SEC),
+      ]);
       this.stats.checks += 1;
-      const wanted = rows.flatMap((r): Wanted[] => {
-        const market = this.feeds.marketOfSeries(r.series_id);
-        const t = Number(r.t);
+      const instants = [
+        ...rows.map((r) => ({ market: this.feeds.marketOfSeries(r.series_id), t: Number(r.t) })),
+        ...rides.map((r) => ({ market: rideMarketSpec(r.market_id), t: Number(r.t) })),
+      ];
+      const wanted = instants.flatMap(({ market, t }): Wanted[] => {
         if (!market || now - t > admissionSecOf(market)) return [];
         return [{ market, feedId: feedIdOf(market), t }];
       });

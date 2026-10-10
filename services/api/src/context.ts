@@ -17,9 +17,12 @@ import { SeriesListing } from "./listing.ts";
 import type { PythGateway } from "./prices/gateway.ts";
 import type { SigmaDesk } from "./prices/sigma.ts";
 import type { AccountRelay } from "./relay/accounts.ts";
+import type { BoundWatcher } from "./relay/bounds.ts";
 import type { ExitWatcher } from "./relay/exits.ts";
 import type { ParlayRelay } from "./relay/parlays.ts";
 import type { MarketRelay } from "./relay/relay.ts";
+import type { RideExitWatcher } from "./relay/ride-exits.ts";
+import type { RideRelay } from "./relay/rides.ts";
 import type { StreamBus } from "./stream/bus.ts";
 
 /** One served network: reads and commit-state heads; `deployed` once its reserve is in the address book (S2). */
@@ -59,6 +62,10 @@ export interface ApiContext {
       duels: { queue: DuelQueue; relay: DuelRelay } | undefined;
       /** Yes/no events (D-296) where the book is deployed (Practice only). */
       events: EventRelay | undefined;
+      /** Rides (R4.4): the relay, the bound watcher and the ride exit watcher. */
+      rides: RideRelay;
+      bounds: BoundWatcher;
+      rideExits: RideExitWatcher;
     }
   >;
 }

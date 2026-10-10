@@ -107,7 +107,7 @@ export interface MarketSessionGrant {
 
 /**
  * A call's or a ride's standing exit (v3, R3.12): keyed by `(book, id)`. A call's levels are bids per $1 share × 1e6,
- * a ride's are prices × 1e8 (the trail a distance); 0 leaves a level unset, all 0 clears the exit.
+ * a ride's are prices × 1e8 with its trail in bps of the price; 0 leaves a level unset, all 0 clears the exit.
  */
 export interface MarketExitOrder {
   owner: Address;

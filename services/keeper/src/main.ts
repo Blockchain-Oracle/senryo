@@ -15,6 +15,7 @@ import {
 } from "@senryo/service-common";
 import { type KeeperContext, RecentActions } from "./context.ts";
 import { type KeeperJob, loadKeeperEnv } from "./env.ts";
+import { boundsJob } from "./jobs/bounds.ts";
 import { calendarsJob } from "./jobs/calendars.ts";
 import { duelsJob } from "./jobs/duels.ts";
 import { earnJob } from "./jobs/earn.ts";
@@ -24,6 +25,7 @@ import { parlaysJob } from "./jobs/parlays.ts";
 import { pushOutboxJob } from "./jobs/pushes.ts";
 import { pushReceiptsJob } from "./jobs/receipts.ts";
 import { retentionJob } from "./jobs/retention.ts";
+import { ridesJob } from "./jobs/rides.ts";
 import { settleJob } from "./jobs/settle.ts";
 import { sigmaJob } from "./jobs/sigma.ts";
 import { syncJob } from "./jobs/sync.ts";
@@ -79,6 +81,8 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   calendars: calendarsJob,
   earn: earnJob,
   sigma: sigmaJob,
+  rides: ridesJob,
+  bounds: boundsJob,
   retention: retentionJob,
   receipts: pushReceiptsJob,
   pushes: pushOutboxJob,
