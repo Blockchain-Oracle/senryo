@@ -12,6 +12,7 @@ export * from "./events.ts";
 export * from "./fees.ts";
 export * from "./heads.ts";
 export * from "./journal.ts";
+export * from "./lucky.ts";
 export * from "./market-calls.ts";
 export * from "./market-typed-data.ts";
 export * from "./markets.ts";

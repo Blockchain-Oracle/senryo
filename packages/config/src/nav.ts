@@ -18,7 +18,8 @@ export type NavIcon =
   | "earn"
   | "parlay"
   | "duel"
-  | "events";
+  | "events"
+  | "games";
 
 export interface NavItem {
   key: string;
@@ -40,6 +41,7 @@ export type DockKey = (typeof DOCK_NAV)[number]["key"];
 
 /** The More grid (phone) and the rail's secondary group (web), in order. */
 export const MORE_NAV = [
+  { key: "games", label: "Games", icon: "games", path: "/games" },
   { key: "parlay", label: "Parlay", icon: "parlay", path: "/parlay" },
   { key: "duel", label: "Duel", icon: "duel", path: "/duel" },
   { key: "events", label: "Events", icon: "events", path: "/events" },
@@ -75,7 +77,8 @@ export type WebIcon =
   | "earn"
   | "parlay"
   | "duel"
-  | "events";
+  | "events"
+  | "games";
 
 export interface WebNavItem {
   key: string;
@@ -134,6 +137,14 @@ export const WEB_EVERYTHING = [
     key: "play",
     label: "Play",
     items: [
+      {
+        key: "games",
+        label: "Games",
+        icon: "games",
+        href: "/app/games/",
+        description: "Lucky, Warm-up, Line Rider and Candle Hop.",
+        keywords: "lucky spin warm up arcade line rider candle hop play",
+      },
       {
         key: "parlay",
         label: "Parlay",

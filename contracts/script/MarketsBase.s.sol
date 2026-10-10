@@ -7,6 +7,9 @@ import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManage
 import {CALENDAR_WORD_COUNT} from "../src/libraries/Constants.sol";
 import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {BandReserve} from "../src/markets/BandReserve.sol";
+import {EventBook} from "../src/events/EventBook.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {TestUSD} from "../src/markets/testnet/TestUSD.sol";
 import {BasketPrintVerifier} from "../src/markets/BasketPrintVerifier.sol";
 import {RedStoneBasketVerifier} from "../src/markets/RedStoneBasketVerifier.sol";
 import {RedStonePrintVerifier} from "../src/markets/RedStonePrintVerifier.sol";
@@ -38,6 +41,8 @@ abstract contract MarketsBase is Script {
     uint64 internal constant POOL_ROLE = 3;
     /// @dev AccessManager role on the pool's way in (`fund`): `PoolShares`, and the event book sweeping its fees (D-296).
     uint64 internal constant FUND_ROLE = 7;
+    /// @dev AccessManager role that lists yes/no events (`EventBook.listEvent`): the keeper (D-296).
+    uint64 internal constant EVENTS_ROLE = 6;
     /// @dev AccessManager role that may fire a trail (`fireTrail`): the api's exit watcher, beside the live prices,
     ///      times the ratcheting stop and fires from the sponsor's lane (D-292).
     uint64 internal constant EXIT_ROLE = 4;
@@ -216,7 +221,7 @@ abstract contract MarketsBase is Script {
     ///      pool's value minted as the house's shares (`house`) — on mainnet that waits for the owner's seed (S9).
     ///      Skipped when the book already has it, unless `fresh` (a new network ignores the old book).
     function _earn(AccessManager manager, BandReserve reserve, address house, bool fresh) internal {
-        if (!fresh && _bookAddress("PoolShares") != address(0)) return;
+        if (!fresh && _deployed("PoolShares")) return;
         PoolShares shares = new PoolShares(address(manager), ISharedPool(address(reserve)));
         _record(
             "PoolShares",
@@ -234,6 +239,46 @@ abstract contract MarketsBase is Script {
         manager.setTargetFunctionRole(address(reserve), way, FUND_ROLE);
         manager.grantRole(FUND_ROLE, address(shares), 0);
         if (shares.poolValue() > 0) shares.seed(house);
+    }
+
+    /// @dev Practice's pool in Test USD (D-260). Mainnet's seed waits for the owner's funding (S9).
+    function _seedPool(BandReserve reserve, IERC20 collateral, address admin) internal {
+        uint256 seed = _json.readUint(".poolSeed");
+        // Once only: a resumed deploy finds the pool already funded.
+        if (seed == 0 || reserve.liquid() != 0) return;
+        TestUSD(address(collateral)).mint(admin, seed);
+        collateral.approve(address(reserve), seed);
+        reserve.fund(seed);
+    }
+
+    /// @dev The yes/no book (D-296) on this reserve, when the catalogue's `.events` is enabled (Practice only): its
+    ///      limits, its one committee, `listEvent` for the keeper, and the pool's way in for its fees (after `_earn`).
+    function _events(AccessManager manager, BandReserve reserve, address keeper, bool fresh) internal {
+        if (!_json.readBool(".events.enabled") || (!fresh && _deployed("EventBook"))) return;
+        uint32 wait = uint32(_json.readUint(".events.dissentWaitSec"));
+        uint64 minStake = uint64(_json.readUint(".events.minStake"));
+        uint64 maxStake = uint64(_json.readUint(".events.maxStake"));
+        EventBook book = new EventBook(address(manager), reserve, wait, minStake, maxStake);
+        _record(
+            "EventBook",
+            address(book),
+            abi.encodePacked(
+                type(EventBook).creationCode, abi.encode(address(manager), address(reserve), wait, minStake, maxStake)
+            ),
+            true
+        );
+        book.setCommittee(
+            uint16(_json.readUint(".events.committeeId")),
+            _json.readAddressArray(".events.members"),
+            uint8(_json.readUint(".events.quorum")),
+            _json.readStringArray(".events.names")
+        );
+        bytes4[] memory fns = new bytes4[](1);
+        fns[0] = EventBook.listEvent.selector;
+        manager.labelRole(EVENTS_ROLE, "EVENTS");
+        manager.setTargetFunctionRole(address(book), fns, EVENTS_ROLE);
+        manager.grantRole(EVENTS_ROLE, keeper, 0);
+        manager.grantRole(FUND_ROLE, address(book), 0);
     }
 
     // ------------------------------------------------------------------------------------------------ series
@@ -264,17 +309,26 @@ abstract contract MarketsBase is Script {
         for (uint256 i; i < all.length; ++i) {
             SeriesJson memory s = all[i];
             uint32 cadence = uint32(s.cadenceSec);
-            if (windows.seriesOf(windows.seriesIdOf(s.market, cadence)).cadenceSec != 0) continue;
+            bytes32 known = windows.seriesIdOf(s.market, cadence);
+            if (windows.seriesOf(known).cadenceSec != 0) {
+                // A run stopped between a series' bands finishes its menu here (a rerun is idempotent).
+                _addBands(reserve, known, s.bands, reserve.menuOf(known).length);
+                continue;
+            }
             PolicyVersion memory v0;
             v0.validUntil = OPEN_ENDED;
             v0.primary = PrintSource(_verifierOf[keccak256(bytes(s.verifierClass))], s.feedId);
             bytes32 seriesId = windows.registerSeries(s.market, cadence, uint8(s.calendarId), v0);
             reserve.setSigma(seriesId, uint64(s.sigmaE8));
-            for (uint256 b; b < s.bands.length; ++b) {
-                BandJson memory d = s.bands[b];
-                reserve.addBand(seriesId, BandDef(uint8(d.kind), uint16(d.lowBps), uint16(d.highBps)));
-            }
+            _addBands(reserve, seriesId, s.bands, 0);
             ++listed;
+        }
+    }
+
+    function _addBands(BandReserve reserve, bytes32 seriesId, BandJson[] memory bands, uint256 from) internal {
+        for (uint256 b = from; b < bands.length; ++b) {
+            BandJson memory d = bands[b];
+            reserve.addBand(seriesId, BandDef(uint8(d.kind), uint16(d.lowBps), uint16(d.highBps)));
         }
     }
 
@@ -328,6 +382,11 @@ abstract contract MarketsBase is Script {
     }
 
     /// @dev An address from the existing book, or zero when it holds no such contract.
+    /// @dev In the book and on chain: a run that stopped before a deploy left its predicted address in the book.
+    function _deployed(string memory name) internal view returns (bool) {
+        return _bookAddress(name).code.length != 0;
+    }
+
     function _bookAddress(string memory name) internal view returns (address) {
         string memory path = _bookPath();
         if (!vm.exists(path)) return address(0);

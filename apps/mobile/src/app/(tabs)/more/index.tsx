@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import {
   Bell,
   CircleUserRound,
+  Gamepad,
   Landmark,
   Layers,
   QrCode,
@@ -25,6 +26,7 @@ import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
+  games: Gamepad,
   parlay: Layers,
   duel: Swords,
   events: Trophy,

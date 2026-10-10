@@ -40,6 +40,7 @@ import { registerDuelRoutes } from "./routes/duels.ts";
 import { registerEarnRoutes } from "./routes/earn.ts";
 import { registerEngagementRoutes } from "./routes/engagement.ts";
 import { registerEventRoutes } from "./routes/events.ts";
+import { registerGameRoutes } from "./routes/games.ts";
 import { registerHistoryRoutes } from "./routes/history.ts";
 import { registerInfoRoutes } from "./routes/info.ts";
 import { registerMarketRoutes } from "./routes/markets.ts";
@@ -217,6 +218,7 @@ registerEarnRoutes(app, ctx);
 registerParlayRoutes(app, ctx);
 registerDuelRoutes(app, ctx);
 registerEventRoutes(app, ctx);
+registerGameRoutes(app, ctx);
 registerHistoryRoutes(app, ctx);
 registerPriceRoutes(app, gateway);
 registerStreamRoute(app, {

@@ -1,4 +1,5 @@
 export * from "./address.ts";
+export * from "./games/index.ts";
 export * from "./lifecycle.ts";
 export * from "./market/index.ts";
 export * from "./money/format.ts";

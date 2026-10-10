@@ -68,6 +68,7 @@ export const ANDROID_CODEPOINTS = {
   shopping_cart: 0xe8cc,
   signal_cellular_alt: 0xe202,
   speed: 0xe9e4,
+  sports_esports: 0xea28,
   star: 0xe838,
   subdirectory_arrow_right: 0xe5da,
   support: 0xef73,

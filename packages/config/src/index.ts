@@ -4,6 +4,7 @@ export * from "./catalog.ts";
 export * from "./duel.ts";
 export * from "./env.ts";
 export * from "./events.ts";
+export * from "./games.ts";
 export * from "./gas.ts";
 export * from "./hosts.ts";
 export * from "./legal.ts";

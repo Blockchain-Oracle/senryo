@@ -9,6 +9,7 @@ import {
   ChartCandlestick,
   CircleHelp,
   Coins,
+  Gamepad2,
   House,
   Landmark,
   Layers,
@@ -40,6 +41,7 @@ export const NAV_ICON: Record<WebIcon, LucideIcon> = {
   parlay: Layers,
   duel: Swords,
   events: Trophy,
+  games: Gamepad2,
 };
 
 export const RAIL: readonly WebNavItem[] = WEB_RAIL;

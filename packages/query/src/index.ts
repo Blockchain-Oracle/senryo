@@ -3,6 +3,7 @@ export * from "./duels.ts";
 export * from "./earn.ts";
 export * from "./env.tsx";
 export * from "./events.ts";
+export * from "./games.ts";
 export * from "./gas.ts";
 export * from "./geo.ts";
 export * from "./history.ts";
