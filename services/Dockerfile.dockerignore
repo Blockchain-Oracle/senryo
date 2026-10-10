@@ -10,6 +10,8 @@
 # Workspace members outside the bundle keep their manifests so pnpm sees the same importers as the lockfile.
 !apps/*/package.json
 !scripts/drive/package.json
+# The root `postinstall` (pnpm's expo-modules-core hoist link; a no-op without the phone's packages).
+!scripts/repair-hoist.mjs
 **/node_modules
 **/dist
 **/.turbo
