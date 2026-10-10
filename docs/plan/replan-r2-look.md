@@ -82,8 +82,11 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
   landing hero, `/proof/w`, Lucky and Warm-up, the hub cards, and people (web avatars from `avatar.tsx`).
 
 ### Tells and dead ends
-- [ ] R2.9 Engineering copy ("the next markets deploy") becomes plain states until R4 makes those screens live. Earn
+- [x] R2.9 Engineering copy ("the next markets deploy") becomes plain states until R4 makes those screens live. Earn
   gets a failed state.
+  - *As built (10 Oct):* Earn, Duels and Events on both apps say "… isn't open yet" / "… aren't open yet"; the shared
+    "not here yet" diagnosis no longer says "deployed". Earn's failed read shows the app's error panel with Retry on
+    both apps (the phone used to sit on its loading skeleton forever after a failed read).
 - [ ] R2.10 The phone Status screen reads `/status` (prices per source, relay, keeper), or the route goes.
 - [ ] R2.11 Settings and copy for absent features are hidden until their stage: leaderboard, invites, price alerts,
   "a stock market you watch".

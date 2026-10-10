@@ -24,7 +24,7 @@ export const DIAGNOSIS_COPY: Record<DiagnosisKind, { headline: string; body: str
   },
   "not-deployed": {
     headline: "Not live on this network yet",
-    body: "This part of Senryo isn't deployed here. Switch network or check back soon.",
+    body: "This part of Senryo isn't open here yet. Switch network or check back soon.",
   },
   unknown: {
     headline: "Something went wrong",

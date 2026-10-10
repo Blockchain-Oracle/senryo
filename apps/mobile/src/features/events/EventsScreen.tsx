@@ -40,7 +40,7 @@ export function EventsScreen() {
   const rest = flow.events.filter((e) => eventPhase(e, now) !== "open");
   const blocked = flow.limits ? null : "Events are Practice only";
   const empty = !flow.live
-    ? "Events open when the event book is on chain (the next markets deploy)."
+    ? "Events aren't open yet."
     : flow.boardStatus === "failed"
       ? "The board can't be read right now · it retries on its own"
       : open.length === 0 && rest.length === 0

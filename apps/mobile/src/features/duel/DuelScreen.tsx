@@ -43,11 +43,7 @@ export function DuelScreen() {
   const dismissed = flow.phase === "done" && flow.match?.matchId === seen;
   const showMatch = flow.match && flow.phase !== "idle" && flow.phase !== "queued" && !dismissed;
   const short = flow.balance !== undefined && flow.balance < cost;
-  const why = !flow.live
-    ? "Duels open when the arena is on chain (the next markets deploy)"
-    : short
-      ? "Not enough dollars for this duel"
-      : null;
+  const why = !flow.live ? "Duels aren't open yet" : short ? "Not enough dollars for this duel" : null;
   return (
     <ScrollView
       style={{ backgroundColor: color.ground }}

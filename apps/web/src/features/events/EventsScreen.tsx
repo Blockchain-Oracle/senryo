@@ -40,7 +40,7 @@ export function EventsScreen() {
         </p>
         {!flow.live ? (
           <p className="text-body text-text-2" role="status">
-            Events open when the event book is on chain (the next markets deploy).
+            Events aren't open yet.
           </p>
         ) : flow.boardStatus === "failed" ? (
           <p className="text-body text-text-2" role="status">

@@ -7,8 +7,9 @@
 import { earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
 import { useServerSeconds } from "@senryo/live/react";
-import { useMarketAccount } from "@senryo/query";
+import { earnKeys, useMarketAccount } from "@senryo/query";
 import { useState } from "react";
+import { ErrorPanel, useRetry } from "@/components/ui/reading";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
@@ -53,12 +54,11 @@ export function EarnScreen() {
   const [amount, setAmount] = useState("");
   const view = "value" in flow.view ? flow.view.value : undefined;
   const words = view ? earnWords(view, now) : null;
+  const retry = useRetry(earnKeys.all);
 
-  if (flow.view.status === "failed") return <p className="text-body text-text-2">Earn didn't load.</p>;
+  if (flow.view.status === "failed") return <ErrorPanel diagnosis={flow.view.error} retry={retry} />;
   if (!view) return <div aria-busy className="h-48 animate-pulse rounded-lg bg-skeleton" />;
-  if (!words || !view.pool) {
-    return <p className="text-body text-text-2">Earn opens with the next deploy on this network.</p>;
-  }
+  if (!words || !view.pool) return <p className="text-body text-text-2">Earn isn't open yet.</p>;
   const pool = view.pool;
   const max = side === "supply" ? balance : view.account?.value;
   const check = checkEarnAmount(amount, max);

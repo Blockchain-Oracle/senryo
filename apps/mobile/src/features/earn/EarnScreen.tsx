@@ -6,13 +6,14 @@
 import { earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
 import { useServerSeconds } from "@senryo/live/react";
-import { useMarketAccount } from "@senryo/query";
+import { earnKeys, useMarketAccount } from "@senryo/query";
+import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
-import { LoadingState } from "~/components/kit/states";
+import { ErrorState, LoadingState } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
@@ -38,10 +39,19 @@ export function EarnScreen() {
   const [amount, setAmount] = useState("");
   const view = "value" in flow.view ? flow.view.value : undefined;
   const words = view ? earnWords(view, now) : null;
+  const queries = useQueryClient();
 
+  if (flow.view.status === "failed") {
+    return (
+      <ErrorState
+        diagnosis={flow.view.error}
+        retry={() => void queries.invalidateQueries({ queryKey: earnKeys.all })}
+      />
+    );
+  }
   if (!view) return <LoadingState />;
   if (!words || !view.pool) {
-    return <Text style={[TYPE.body, styles.pad, { color: color.inkMuted }]}>Earn opens with the next deploy.</Text>;
+    return <Text style={[TYPE.body, styles.pad, { color: color.inkMuted }]}>Earn isn't open yet.</Text>;
   }
   const pool = view.pool;
   const balance = "value" in wallet ? wallet.value.balance : undefined;

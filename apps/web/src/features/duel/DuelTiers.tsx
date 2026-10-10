@@ -22,11 +22,7 @@ export function DuelTiers(p: {
   const chosen = p.tiers.find((t) => t.id === p.tier) ?? p.tiers[0];
   const cost = chosen ? duelEntryCost(chosen) : 0n;
   const short = p.balance !== undefined && p.balance < cost;
-  const why = !p.live
-    ? "Duels open when the arena is on chain (the next markets deploy)"
-    : short
-      ? "Not enough dollars for this duel"
-      : null;
+  const why = !p.live ? "Duels aren't open yet" : short ? "Not enough dollars for this duel" : null;
   return (
     <section aria-label="Start a duel" className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
