@@ -11,7 +11,7 @@ import { verifyStreamTicket } from "./ticket.ts";
  * A topic that can't be granted (a bad or expired ticket, a topic this api doesn't know) is refused on its own with an
  * `event: topic-error` — the rest still stream, so a broken session never costs anyone prices (04-pricing R8, F9).
  * Only a request with nothing grantable is refused whole.
- * Every 15 s a `time` event carries the server clock (countdowns never trust the phone) and the price states' digest
+ * Every 5 s a `time` event carries the server clock (countdowns never trust the phone) and the price states' digest
  * (`h`, one letter per market; changes also go out at once as `h` on `prices`). A socket that can't keep up
  * skips ticks and is closed after 30 s blocked; a reconnect with `Last-Event-ID` replays durable events.
  */

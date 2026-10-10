@@ -161,10 +161,17 @@ live PnL at about 8 Hz. No contract change.
     route and client: ticket route failing → first price in 136 ms; slow ticket → prices in 1.65 s, `user:` joined
     after; refused ticket → prices on the same request + `topic-error`; an api that 401s → public reconnect, prices in
     206 ms. Exit 0.
-- [ ] R1.11 Transport (R9):
+- [x] R1.11 Transport (R9):
   - a 5 s beat and 5 s client silence;
   - a jittered first retry of 0.5–1.5 s, then ×2 to 15 s;
   - reconnect on visible/online/NetInfo when the last frame is over 2 s old.
+  - *As built (10 Oct):* api beat 15 → 5 s, `retry:` 3 → 1 s. `LiveStream`: 5 s silence with prices subscribed (12 s
+    without); retries 1 s × 2ⁿ jittered ×0.5–1.5, capped at 15 s; `nudge()` replaces a socket silent > 2 s at once (and
+    reopens an idle one) — called by `setVisible(true)`, the web's `online` event and the phone's `expo-network`
+    `addNetworkStateListener` (already in the native build, so OTA-safe; NetInfo isn't installed); `diagnostics()`
+    gives status, last frame and reconnects. The client trusts the states' digest 12 s (two beats). Scratch check on a
+    fake server: half-open socket replaced 5.6 s after its last frame; refusals back off 1.8 / 3.2 / 9.3 s inside their
+    bands (first retry 1.2 s); nudge leaves a talking socket alone and replaces a silent one in 7 ms. Exit 0.
 - [ ] R1.12 Replay epochs: ids `<epoch>-<seq>`, `event: reset`, and the client invalidating and reseeding (R10; Mitoshi
   `bus.ts`).
 - [ ] R1.13 Fan-out (R13):

@@ -1,7 +1,8 @@
 "use client";
 /**
  * Keeps the one live stream in step with the tab (the phone's `LiveHost`, D-272/D-280): the app holds the stream while
- * it is mounted; a hidden tab lets it close after its linger and a visible one reopens it; the user's topic follows
+ * it is mounted; a hidden tab lets it close after its linger and a visible one reopens it; back online, a silent socket
+ * is replaced at once (04-pricing R9); the user's topic follows
  * the API session for the signed-in account; their events keep the queries true; the sound engine warms when idle.
  */
 import { useLive } from "@senryo/live/react";
@@ -21,8 +22,13 @@ export function LiveHost() {
 
   useEffect(() => {
     const onVisibility = () => live.stream.setVisible(document.visibilityState === "visible");
+    const onOnline = () => live.stream.nudge();
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", onOnline);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", onOnline);
+    };
   }, [live]);
 
   useEffect(() => {

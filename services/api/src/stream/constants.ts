@@ -2,12 +2,15 @@
 
 /** Durable events kept for `Last-Event-ID` replay. */
 export const REPLAY_RING_SIZE = 2_000;
-/** `: ping` with the server time, so the client's countdown offset never trusts the phone clock. */
-export const HEARTBEAT_MS = 15_000;
+/**
+ * The `time` beat (server time and the price states' digest): every 5 s, so a client notices a dead socket in 5 s and
+ * a missed state change heals within one beat (04-pricing R9).
+ */
+export const HEARTBEAT_MS = 5_000;
 /** A socket that has not drained for this long is closed (it skips price frames while blocked). */
 export const SLOW_SOCKET_CLOSE_MS = 30_000;
 /** A user-topic ticket lives this long (EventSource can't send headers, so the session can't ride along). */
 export const STREAM_TICKET_TTL_SEC = 60;
 export const MAX_TOPICS = 16;
-/** Reconnect delay the client is told to use. */
-export const RETRY_MS = 3_000;
+/** The first reconnect delay the client is told to use (it jitters and doubles it, to 15 s). */
+export const RETRY_MS = 1_000;

@@ -11,12 +11,21 @@ import { createParser, type EventSourceMessage } from "eventsource-parser";
 export const LINGER_MS = 5_000;
 /** Closed after this long in the background. */
 export const HIDDEN_CLOSE_MS = 60_000;
-/** The server beats every 15 s; this long without any frame means the socket is dead. */
-export const SILENCE_MS = 20_000;
-const DEFAULT_RETRY_MS = 3_000;
-const MAX_RETRY_MS = 30_000;
+/**
+ * With prices subscribed a frame lands every second or so (and the api beats every 5 s), so 5 s of silence means a
+ * dead socket — a half-open one after a Wi-Fi ↔ LTE handover, a NAT expiry (04-pricing R9, F10). Without prices, two
+ * beats and a margin.
+ */
+export const SILENCE_MS = 5_000;
+export const QUIET_SILENCE_MS = 12_000;
+/** The first retry waits 0.5–1.5 s (this, jittered ±50%), then doubles to MAX_RETRY_MS. The api's `retry:` sets it. */
+const DEFAULT_RETRY_MS = 1_000;
+const MAX_RETRY_MS = 15_000;
 const BACKOFF_FACTOR = 2;
-const JITTER = 0.25;
+const JITTER = 0.5;
+/** Back in front, or back online: a socket that hasn't spoken for this long is replaced at once. */
+export const NUDGE_STALE_MS = 2_000;
+const PRICES_TOPIC = "prices";
 /** The longest a (re)connect waits for a stream ticket before the public topics go without it. */
 export const TICKET_WAIT_MS = 1_500;
 /** A ticket the api refused, or that failed to mint, isn't asked for again sooner than this. */
@@ -59,8 +68,32 @@ export class LiveStream {
   private ticket: { value: string; at: number } | undefined;
   private ticketFailedAt = 0;
   private ticketPending: Promise<string | undefined> | undefined;
+  private lastFrameAt = 0;
+  private reconnects = 0;
 
   constructor(private readonly o: StreamOptions) {}
+
+  /** For diagnostics: when the last frame arrived and how many reconnects this stream has made. */
+  diagnostics(): { status: StreamStatus; lastFrameAt: number; reconnects: number } {
+    return { status: this.status, lastFrameAt: this.lastFrameAt, reconnects: this.reconnects };
+  }
+
+  /**
+   * The app came to the front or the network came back: a socket that hasn't spoken for NUDGE_STALE_MS is replaced
+   * now rather than at its next retry (iOS kills sockets in the background without a word).
+   */
+  nudge(): void {
+    if (this.holders === 0 || !this.visible) return;
+    if (this.status === "idle") {
+      this.connect();
+      return;
+    }
+    if (this.status === "live" && Date.now() - this.lastFrameAt <= NUDGE_STALE_MS) return;
+    this.clear("retry");
+    this.teardown();
+    this.failures = 0;
+    this.connect();
+  }
 
   /** Hold the stream open; the returned function lets go. */
   acquire(): () => void {
@@ -81,7 +114,7 @@ export class LiveStream {
     this.visible = visible;
     if (visible) {
       this.clear("hidden");
-      if (this.holders > 0 && this.status === "idle") this.connect();
+      this.nudge();
     } else if (!this.hiddenTimer) {
       this.hiddenTimer = setTimeout(() => {
         this.hiddenTimer = null;
@@ -134,8 +167,10 @@ export class LiveStream {
   }
 
   private heard(): void {
+    this.lastFrameAt = Date.now();
     this.clear("silence");
-    this.silenceTimer = setTimeout(() => this.fail(), SILENCE_MS);
+    const silence = this.o.topics().includes(PRICES_TOPIC) ? SILENCE_MS : QUIET_SILENCE_MS;
+    this.silenceTimer = setTimeout(() => this.fail(), silence);
   }
 
   private fail(): void {
@@ -146,8 +181,9 @@ export class LiveStream {
     }
     this.setStatus("reconnecting");
     this.failures += 1;
+    this.reconnects += 1;
     const base = Math.min(MAX_RETRY_MS, this.retryMs * BACKOFF_FACTOR ** Math.max(0, this.failures - 1));
-    const wait = base * (1 - JITTER + Math.random() * 2 * JITTER);
+    const wait = Math.min(MAX_RETRY_MS, base * (1 - JITTER + Math.random() * 2 * JITTER));
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null;
       this.connect();

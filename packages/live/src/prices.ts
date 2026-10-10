@@ -7,10 +7,10 @@ import { frameScheduler } from "./frame.ts";
 /** Recent ticks kept per market (seeded from `/v1/prices/recent`, then the stream). */
 export const HISTORY = 512;
 /**
- * The server's states (`h`, 04-pricing R6) are trusted this long after the last digest: two 15 s beats and a margin
+ * The server's states (`h`, 04-pricing R6) are trusted this long after the last digest: two 5 s beats and a margin
  * (state changes also arrive at once). Older, or never sent (an older api): judged here from receipt time.
  */
-export const STATES_FRESH_MS = 35_000;
+export const STATES_FRESH_MS = 12_000;
 /** `state[i]`: 0 while unknown, else 1 + the state's index in `FEED_STATES`. */
 const UNKNOWN = 0;
 
