@@ -10,6 +10,7 @@ export * from "./use-lucky.ts";
 export * from "./use-market-session.ts";
 export * from "./use-one-tap.ts";
 export * from "./use-parlay.ts";
+export * from "./use-price-health.ts";
 export * from "./use-results.ts";
 export * from "./use-warm-up.ts";
 export * from "./use-window-open.ts";

@@ -2,6 +2,7 @@
 // and odometers bypass React entirely through `live.prices.subscribe` into shared values (zero renders per tick).
 // Each store has a server snapshot for the web's static prerender: nothing has streamed there (no price, an idle
 // stream, second 0); the client takes over at hydration.
+import type { FeedState } from "@senryo/config";
 import { createContext, createElement, type ReactNode, useContext, useEffect, useSyncExternalStore } from "react";
 import type { Live } from "./live.ts";
 import type { BoundaryPrint } from "./prints.ts";
@@ -34,6 +35,19 @@ export function useLivePrice(symbol: string): number | undefined {
     (cb) => live.prices.subscribe(symbol, cb),
     () => live.prices.latest(symbol)?.priceE8,
     () => undefined,
+  );
+}
+
+/**
+ * The market's price state (`PriceBook.stateOf`: the server's, or judged here from receipt time without one). A state
+ * is a string, so a tick that leaves it unchanged re-renders nothing.
+ */
+export function useFeedState(symbol: string): FeedState {
+  const live = useLive();
+  return useSyncExternalStore(
+    (cb) => live.prices.subscribe(symbol, cb),
+    () => live.prices.stateOf(symbol),
+    () => "stale" as const,
   );
 }
 

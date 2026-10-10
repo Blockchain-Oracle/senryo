@@ -13,6 +13,7 @@ import {
   GRID_ALPHA,
   HALF_PIXEL,
   HEAD_R,
+  HEALTH_TAG_GAP,
   LABEL_RIGHT,
   LABEL_SPAN,
   LEVEL_ALPHA,
@@ -230,4 +231,21 @@ export function drawPill(
   ctx.font = t.pillSmallFont;
   price.draw(ctx, right, mid - PILL_ROW_OFFSET, ROLL_PITCH_SMALL, box.y, mid);
   pnl.draw(ctx, right, mid + PILL_ROW_OFFSET, ROLL_PITCH_SMALL, mid, box.y + box.h);
+}
+
+/** While the price isn't live (R1.20): its age or state beside the pill — "12 s old", "Closed", "Halted". */
+export function drawHealthTag(
+  ctx: CanvasRenderingContext2D,
+  t: ChartTheme,
+  text: string,
+  pill: { x: number; y: number; w: number; h: number },
+  h: number,
+): void {
+  ctx.font = t.tagFont;
+  ctx.fillStyle = t.helper;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
+  const below = pill.y + pill.h + HEALTH_TAG_GAP;
+  const fits = below + TAG_H <= h;
+  ctx.fillText(text, pill.x + pill.w, fits ? below : pill.y - HEALTH_TAG_GAP - TAG_H);
 }

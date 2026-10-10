@@ -249,10 +249,21 @@ live PnL at about 8 Hz. No contract change.
     Exit 0. (No volume: the archive has none.)
 
 ### Charts and honest UI
-- [ ] R1.20 Honest UI (R7):
+- [x] R1.20 Honest UI (R7):
   - `HealthChip` and the phone twin say Live only when the stream and the viewed feed are live;
   - delayed and closed charts dim, stop the pulse and show an age tag;
   - call panel copy names the cause.
+  - *As built (10 Oct):* one vocabulary, `priceHealth` (`@senryo/calls`): paused → reconnecting → closed by the
+    client's own calendar (so a weekend stock reads "Closed" even from an api without states) → the server state
+    (live / "Delayed 3 s" / "No price 21 s" / "Halted"), each with a chart tag and a panel notice. `useFeedState`
+    (`@senryo/live/react`, re-renders only on a state change) and `usePriceHealth`. The call flow quotes only on a
+    live price and its `stale` panel carries the cause (both apps). Web chip: on a terminal, that market's health
+    ("Live" only when stream and price are live; `is-off` still dot for closed/halted/no price); elsewhere the
+    stream's. Both chart engines: not live → no samples pushed (the line freezes instead of scrolling a flat price),
+    line and head at 40 %, the tag beside the pill; back live resumes without a burst. The phone has no chip yet (R2
+    look); its chart tag and panel carry the state. Checks: the words for all seven cases; in the preview against
+    production, BTC's chip "Live" with a full-strength line and TSLA's "Closed" with its closed panel. **Not seen yet:**
+    a frozen, dimmed line — production had no stale market to show; it joins the R1 simulator pass.
 - [ ] R1.21 Charts at any refresh rate (R17):
   - sub-sample x scroll from `sampleDebt`;
   - a dt-correct dot drift;

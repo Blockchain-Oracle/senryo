@@ -8,7 +8,6 @@
  */
 import type { IntentStatus } from "@senryo/api-client";
 import { clockText, formatUnits, proceedsFor } from "@senryo/core";
-import { useLive } from "@senryo/live/react";
 import { useIntentStatus, useRefreshCaller } from "@senryo/query";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
@@ -16,6 +15,7 @@ import type { Offer } from "./modes.ts";
 import type { Quotes } from "./quote.ts";
 import { useCallActions } from "./use-call.ts";
 import type { CallWindowView } from "./use-call-window.ts";
+import { usePriceHealth } from "./use-price-health.ts";
 
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
@@ -26,7 +26,8 @@ export type PanelState =
   | { kind: "ready" }
   | { kind: "pending"; status: IntentStatus | null; label: string }
   | { kind: "locked"; text: string }
-  | { kind: "stale" }
+  /** Calls held for the price, with the cause in words (`priceHealth`: reconnecting, delayed, halted, no price). */
+  | { kind: "stale"; text: string }
   | { kind: "no-price" };
 
 export type FlowCue = "press" | "filled-open" | "filled-close" | "fail";
@@ -57,7 +58,6 @@ export interface CallFlowInput {
 export type OfferSlot = 0 | 1;
 
 export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: CallFlowInput) {
-  const live = useLive();
   const actions = useCallActions(caller);
   // Between the tap and the relay's answer: the signature (one-tap, or the passkey prompt).
   const [signing, setSigning] = useState(false);
@@ -88,7 +88,8 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
     setPending(null);
   }, [status, refresh]);
 
-  const stale = live.prices.isStale(t.symbol, Date.now());
+  // Quotable only on a live settlement price; otherwise the panel says why (04-pricing R7).
+  const health = usePriceHealth(t.symbol);
   const holding = t.position !== undefined && t.position.state !== "committed";
   const lockText = holding
     ? `Cash-out closed · result in ${clockText(t.window.expiry - t.now)}`
@@ -99,8 +100,8 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       ? { kind: "pending", status: null, label: "Signing…" }
       : !t.window.trading
         ? { kind: "locked", text: lockText }
-        : stale
-          ? { kind: "stale" }
+        : !health.live
+          ? { kind: "stale", text: health.notice ?? "Price paused" }
           : t.k === undefined
             ? { kind: "no-price" }
             : { kind: "ready" };

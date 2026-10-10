@@ -9,7 +9,7 @@
 import type { ChartLevel, ChartOverlay } from "@senryo/calls";
 import { type SkCanvas, type SkColor, Skia, type SkPicture, TileMode } from "@shopify/react-native-skia";
 import { drawOdometer } from "~/components/kit/odometer";
-import { HALF_PIXEL, LEVEL_ALPHA } from "./constants";
+import { type ChartHealth, DIM_ALPHA, HALF_PIXEL, HEALTH_TAG_GAP, LEVEL_ALPHA } from "./constants";
 import {
   EDGE_FADE_PX,
   edgeAlpha,
@@ -169,9 +169,12 @@ export function drawFrame(
   h: number,
   waiting: string,
   dots: SkPicture | null,
+  health: ChartHealth,
 ): Head | null {
   "worklet";
   drawDots(c, dots, s);
+  // A price that isn't live: the frozen line and its head drawn faint, the age or state beside the pill (R1.20).
+  const strength = health.live ? 1 : DIM_ALPHA;
   if (!s.ready || w < MIN_PLOT_LEFTOVER || h < PAD_Y * HALF) {
     const x = (w + k.fonts.tag.getTextWidth(waiting)) / HALF;
     textRight(c, k, waiting, x, h / HALF, k.fonts.tag, k.mids.tag, k.colors.helper, 1);
@@ -221,8 +224,8 @@ export function drawFrame(
   }
   const path = Skia.Path.MakeFromSVGString(d);
   if (path) {
-    c.drawPath(path, stroke(k, tone, GLOW_W, GLOW_ALPHA));
-    c.drawPath(path, stroke(k, tone, LINE_W));
+    c.drawPath(path, stroke(k, tone, GLOW_W, GLOW_ALPHA * strength));
+    c.drawPath(path, stroke(k, tone, LINE_W, strength));
   }
   const fadeW = plotW * FADE_FRACTION;
   const eraser = k.paints.eraser;
@@ -287,8 +290,13 @@ export function drawFrame(
   const edges: EdgeSlots = { up: 0, down: 0 };
   for (const level of o?.levels ?? []) drawLevel(c, k, level, win, plotW, w, box, edges);
 
-  c.drawCircle(plotW, headY, HEAD_R, fill(k, tone));
+  c.drawCircle(plotW, headY, HEAD_R, fill(k, tone, strength));
   c.drawRRect(Skia.RRectXY(Skia.XYWHRect(pillX, pillY, pillW, pillH), pillH / HALF, pillH / HALF), fill(k, tone));
+  if (health.tag) {
+    const below = pillY + pillH + HEALTH_TAG_GAP;
+    const top = below + TAG_H <= h ? below : pillY - HEALTH_TAG_GAP - TAG_H;
+    textRight(c, k, health.tag, pillX + pillW, top + TAG_H / HALF, k.fonts.tag, k.mids.tag, k.colors.helper, 1);
+  }
   const right = pillX + pillW - PILL_TEXT_RIGHT;
   if (!o?.pnlText) {
     drawOdometer(

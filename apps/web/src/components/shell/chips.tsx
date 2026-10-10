@@ -3,10 +3,13 @@
  * The top line's and the rail foot's chips (pivot S6.3): the mode capsule (the phone's `ModeCapsule`), the balance
  * with its eye (Slush's balance pill; the phone's hide-balances), and the live health (the one stream, D-272).
  */
+import { type HealthTone, marketOf } from "@senryo/calls";
+import { usePriceHealth } from "@senryo/calls/react";
 import { ids } from "@senryo/identity";
 import { useStreamStatus } from "@senryo/live/react";
 import { useMarketAccount } from "@senryo/query";
 import { Eye, EyeOff } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { useAccount } from "@/lib/account/provider";
 import { ACTIVE_NETWORK } from "@/lib/constants/auth";
@@ -20,7 +23,7 @@ const CHAIN_MARK = 16;
 const PRACTICE = ACTIVE_NETWORK.key === "testnet";
 
 /** "Practice · Test dollars" (violet) or "Real · USDC" (blue): every money surface says which money it is. */
-export function ModeCapsule({ className }: { className?: string }) {
+export function ModeCapsule({ className }: { className?: string | undefined }) {
   const money = PRACTICE ? "Test dollars" : "USDC";
   return (
     <span
@@ -35,7 +38,7 @@ export function ModeCapsule({ className }: { className?: string }) {
 }
 
 /** The balance (opens the wallet drawer) and the eye that hides every amount on this device. */
-export function BalanceChip({ className }: { className?: string }) {
+export function BalanceChip({ className }: { className?: string | undefined }) {
   const address = useAccount().hint?.address;
   const account = useMarketAccount(address);
   const hidden = usePrivacy();
@@ -70,19 +73,55 @@ export function BalanceChip({ className }: { className?: string }) {
   );
 }
 
-/** Live while the stream is open; "Connecting" while it (re)opens; nothing while the tab is hidden. */
-export function HealthChip({ className }: { className?: string }) {
+const TONE_CLASS: Record<HealthTone, string> = { live: "is-live", late: "is-waiting", off: "is-off" };
+const TRADE_PATH = /^\/app\/trade\/([a-z0-9]+)/;
+
+function Chip({
+  tone,
+  word,
+  title,
+  className,
+}: {
+  tone: HealthTone;
+  word: string;
+  title: string;
+  className?: string | undefined;
+}) {
+  return (
+    <span className={cn("health-chip", TONE_CLASS[tone], className)} role="status" title={title}>
+      <span aria-hidden className="health-dot" />
+      <span className="health-word">{word}</span>
+    </span>
+  );
+}
+
+/** On a terminal: that market's price health — "Live" only when the stream and its price are both live (R1.20). */
+function MarketHealthChip({ symbol, className }: { symbol: string; className?: string | undefined }) {
+  const h = usePriceHealth(symbol);
+  return <Chip tone={h.tone} word={h.word} title={h.notice ?? `${symbol} is live`} className={className} />;
+}
+
+/** Elsewhere: the stream's; nothing while the tab is hidden. */
+function StreamHealthChip({ className }: { className?: string | undefined }) {
   const status = useStreamStatus();
   if (status === "idle") return null;
   const live = status === "live";
   return (
-    <span
-      className={cn("health-chip", live ? "is-live" : "is-waiting", className)}
-      role="status"
+    <Chip
+      tone={live ? "live" : "late"}
+      word={live ? "Live" : "Connecting"}
       title={live ? "Prices are streaming" : "Reconnecting to prices"}
-    >
-      <span aria-hidden className="health-dot" />
-      <span className="health-word">{live ? "Live" : "Connecting"}</span>
-    </span>
+      className={className}
+    />
+  );
+}
+
+export function HealthChip({ className }: { className?: string | undefined }) {
+  const viewed = TRADE_PATH.exec(usePathname() ?? "")?.[1];
+  const symbol = viewed ? marketOf(viewed.toUpperCase())?.symbol : undefined;
+  return symbol ? (
+    <MarketHealthChip symbol={symbol} className={className} />
+  ) : (
+    <StreamHealthChip className={className} />
   );
 }

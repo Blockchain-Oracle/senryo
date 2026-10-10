@@ -17,6 +17,9 @@ export const TICK_EMA = 0.3;
 export const MAX_TICK_GAP_MS = 5000;
 /** History that lands this soon after a cold-start terminal's first tick redraws its (still flat) line. */
 export const RESEED_WINDOW_MS = 1_000;
+/** A price that isn't live (R1.20): the frozen line and its head at this strength, and the age tag this far off the pill. */
+export const DIM_ALPHA = 0.4;
+export const HEALTH_TAG_GAP = 6;
 
 /** Rolling digits: per-sample approach and snap. */
 export const DIGIT_EASE = 0.22;

@@ -7,7 +7,14 @@
  * countdown and on events. The call flow is `@senryo/calls` `useCallFlow`, the phone's own.
  */
 import { type CallMode, exitLine, isCallMode } from "@senryo/calls";
-import { DEFAULT_CADENCE, useCallFlow, useCallWindow, useExitActions, useMarketLine } from "@senryo/calls/react";
+import {
+  DEFAULT_CADENCE,
+  useCallFlow,
+  useCallWindow,
+  useExitActions,
+  useMarketLine,
+  usePriceHealth,
+} from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec } from "@senryo/config";
 import { type ExitPrices, hasExit } from "@senryo/core";
 import { useWindowLoad } from "@senryo/query";
@@ -66,6 +73,10 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const load = useWindowLoad(synced ? t.window.expiry : undefined);
   const q = useLiveQuote(t, choices.stake, "value" in load ? load.value : undefined, choices.mode);
   const session = useMarketLine(symbol);
+  // The chart reads it each frame: not live → its line freezes, dims and shows the age (R1.20).
+  const priceHealth = usePriceHealth(symbol);
+  const health = useRef({ live: priceHealth.live, tag: priceHealth.tag });
+  health.current = { live: priceHealth.live, tag: priceHealth.tag };
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
   useReactions(symbol, q.onTick, reactions);
@@ -152,6 +163,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
             overlay={q.overlay}
             waiting={`Waiting for ${symbol}…`}
             onFrame={onFrame}
+            health={health}
             label={`${symbol} live price`}
           />
           <ReactionOverlay ref={reactions} />

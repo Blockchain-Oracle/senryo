@@ -19,7 +19,7 @@ import {
 import { setOdometer, setOdometerTrend } from "~/components/kit/odometer";
 import { useTheme } from "~/theme";
 import { CHART_ERASER } from "~/theme/palette";
-import { LEVEL_DASH, RESEED_WINDOW_MS } from "./constants";
+import { type ChartHealth, LEVEL_DASH, LIVE, RESEED_WINDOW_MS } from "./constants";
 import { type ChartOverlay, drawFrame, type Head } from "./draw";
 import { formatValue, priceDecimals, SAMPLE_CAPACITY, SAMPLE_MS } from "./engine";
 import { type DrawKit, makeDotPicture, makeKit } from "./kit";
@@ -41,10 +41,12 @@ export interface LiveChartProps {
   waiting: string;
   /** Where the line's head is, written every frame (the reactions ride it; null while waiting). */
   head?: SharedValue<Head | null>;
+  /** The price's health (R1.20): not live → the line freezes, dims and shows its age or state. */
+  health?: SharedValue<ChartHealth>;
 }
 
 /** Memoised: its props are stable, so the terminal's once-a-second countdown render never reaches the chart. */
-export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, head }: LiveChartProps) {
+export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, head, health }: LiveChartProps) {
   const live = useLive();
   useLiveStream();
   const { color } = useTheme();
@@ -146,7 +148,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
         if (tick.reset) resetChart(s);
         takePrice(s, tick.price, frame.timestamp, tick.line);
       }
-      advance(s, frame.timestamp, reduced, plotW);
+      advance(s, frame.timestamp, reduced, plotW, health?.value.live ?? true);
       if (s.ready) setOdometer(s.price, formatValue(s.latest, priceDecimals(s.latest), points), s.latest);
       const o = overlayValue.value;
       if (o?.pnlText) setOdometerTrend(s.pnl, o.pnlText, o.pnlTrend);
@@ -164,7 +166,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
     const canvas = recorder.beginRecording(Skia.XYWHRect(0, 0, w, h));
     const at =
       clock.value > 0 && w > 0
-        ? drawFrame(canvas, kit, state.value, overlayValue.value, w, h, waiting, dots.value)
+        ? drawFrame(canvas, kit, state.value, overlayValue.value, w, h, waiting, dots.value, health?.value ?? LIVE)
         : null;
     if (head) head.value = at;
     return recorder.finishRecordingAsPicture();

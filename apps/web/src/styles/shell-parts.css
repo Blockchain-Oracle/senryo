@@ -111,6 +111,10 @@
   background: var(--warn);
   animation: health-pulse 900ms var(--motion-ease) infinite alternate;
 }
+/* Closed, halted or no price (R1.20): a still, neutral dot — never the live one. */
+.health-chip.is-off .health-dot {
+  background: color-mix(in srgb, var(--shell-ink-2) 55%, transparent);
+}
 @keyframes health-pulse {
   from {
     opacity: 0.35;

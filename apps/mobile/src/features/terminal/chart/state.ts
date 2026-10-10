@@ -123,13 +123,14 @@ export function resetChart(s: ChartState): void {
  * One display frame: ease and sample on the fixed 60 Hz clock, roll the digits, and move the dots — left at half the
  * line's speed per sample pushed (so a 120 Hz screen doesn't double it), and up or down with the price's velocity.
  */
-export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: number): void {
+export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: number, live: boolean): void {
   "worklet";
   const dt = s.lastFrame === 0 ? SAMPLE_MS : Math.min(MAX_FRAME_MS, nowMs - s.lastFrame);
   s.lastFrame = nowMs;
   if (!s.ready) return;
   const before = s.eased;
-  s.sampleDebt += dt / SAMPLE_MS;
+  // A price that isn't live never scrolls as if it were: the line holds still (04-pricing R7).
+  s.sampleDebt = live ? s.sampleDebt + dt / SAMPLE_MS : 0;
   let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(s.sampleDebt));
   const pushed = pushes;
   s.sampleDebt -= Math.floor(s.sampleDebt);

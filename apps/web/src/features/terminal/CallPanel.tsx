@@ -30,7 +30,7 @@ const dollars = (v: bigint) => `$${formatUnits(v, DOLLAR_DECIMALS, CENTS)}`;
 function noticeOf(state: PanelState): string | null {
   if (state.kind === "pending") return state.label;
   if (state.kind === "locked") return state.text;
-  if (state.kind === "stale") return "Reconnecting · price paused";
+  if (state.kind === "stale") return state.text;
   if (state.kind === "no-price") return "Waiting for the opening price";
   return null;
 }

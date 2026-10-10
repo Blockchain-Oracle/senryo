@@ -10,6 +10,7 @@ import type { ChartOverlay } from "@senryo/calls";
 import { formatPrice, type PriceUnit } from "@senryo/core";
 import {
   BASE_TAU_MS,
+  DIM_ALPHA,
   FADE_FRACTION,
   FADE_MID,
   FADE_MID_ALPHA,
@@ -37,12 +38,19 @@ import {
   ZONE_ALPHA,
 } from "./constants";
 import type { FrameMotion } from "./dot-grid";
-import { type ChartTheme, drawAxis, drawGrid, drawLevel, drawMark, drawPill, drawWaiting } from "./draw";
+import { type ChartTheme, drawAxis, drawGrid, drawHealthTag, drawLevel, drawMark, drawPill, drawWaiting } from "./draw";
 import { catmullRom, SampleRing, stepFor, type YWindow, yOf } from "./engine";
 import { CanvasOdometer } from "./odometer";
 
 const HALF = 2;
 const MIN_SIZE = 40;
+
+/** Whether the price is live, and its age or state for the tag when it isn't (`PriceHealth`, R1.20). */
+export interface ChartHealth {
+  live: boolean;
+  tag: string | null;
+}
+export const LIVE: ChartHealth = { live: true, tag: null };
 
 /** Where the head sits this frame (the reactions ride it) and how the line moved (the dots follow it). */
 export interface ChartFrame extends FrameMotion {
@@ -62,6 +70,8 @@ export class ChartEngine {
   private eased = 0;
   private step = 0;
   private overlay: ChartOverlay | null = null;
+  /** The price's health (R1.20): not live → the line freezes, dims and carries its age or state. */
+  private health: ChartHealth = LIVE;
   /** A running count of the result's moves: the pill's second row rolls the way the result just went. */
   private pnlMoves = 0;
   private lastFrame = 0;
@@ -114,6 +124,12 @@ export class ChartEngine {
     this.target = price;
   }
 
+  /** Read every frame. Back to live, the line resumes from now (no catch-up burst). */
+  setHealth(health: ChartHealth): void {
+    if (health.live && !this.health.live) this.sampleDebt = 0;
+    this.health = health;
+  }
+
   /** The overlay of the latest tick (read every frame; a new object per tick). */
   setOverlay(overlay: ChartOverlay | null): void {
     if (overlay === this.overlay) return;
@@ -159,7 +175,8 @@ export class ChartEngine {
       return null;
     }
     const before = this.eased;
-    this.sampleDebt += dt / SAMPLE_MS;
+    // A price that isn't live never scrolls as if it were: the line holds still (04-pricing R7).
+    this.sampleDebt = this.health.live ? this.sampleDebt + dt / SAMPLE_MS : 0;
     let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(this.sampleDebt));
     this.sampleDebt -= Math.floor(this.sampleDebt);
     const k = reduced ? 1 : 1 - Math.exp(-SAMPLE_MS / Math.max(BASE_TAU_MS, TICK_FOLLOW * this.tickMs));
@@ -194,10 +211,13 @@ export class ChartEngine {
     const space = { pillTop: pill.y, pillBottom: pill.y + pillH, up: 0, down: 0 };
     for (const level of o?.levels ?? []) drawLevel(ctx, theme, level, win, plotW, w, space, this.unit);
     ctx.fillStyle = tone;
+    ctx.globalAlpha = this.health.live ? 1 : DIM_ALPHA;
     ctx.beginPath();
     ctx.arc(plotW, headY, HEAD_R, 0, Math.PI * HALF);
     ctx.fill();
+    ctx.globalAlpha = 1;
     drawPill(ctx, theme, pill, tone, this.priceOdo, o?.pnlText ? this.pnlOdo : null);
+    if (this.health.tag) drawHealthTag(ctx, theme, this.health.tag, pill, h);
     return {
       headX: plotW,
       headY,
@@ -238,12 +258,14 @@ export class ChartEngine {
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
     ctx.strokeStyle = tone;
-    ctx.globalAlpha = GLOW_ALPHA;
+    const strength = this.health.live ? 1 : DIM_ALPHA;
+    ctx.globalAlpha = GLOW_ALPHA * strength;
     ctx.lineWidth = GLOW_W;
     ctx.stroke(path);
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = strength;
     ctx.lineWidth = LINE_W;
     ctx.stroke(path);
+    ctx.globalAlpha = 1;
     // The tail dissolves: erase the left 32 % with a gradient.
     const fadeW = plotW * FADE_FRACTION;
     ctx.save();

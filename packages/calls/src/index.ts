@@ -11,6 +11,7 @@ export * from "./markets.ts";
 export * from "./modes.ts";
 export * from "./one-tap.ts";
 export * from "./parlay.ts";
+export * from "./price-health.ts";
 export * from "./proof.ts";
 export * from "./quote.ts";
 export * from "./reactions.ts";

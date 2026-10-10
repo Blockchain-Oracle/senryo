@@ -144,7 +144,7 @@ function OpenPanel({
       : state.kind === "locked"
         ? state.text
         : state.kind === "stale"
-          ? "Reconnecting · price paused"
+          ? state.text
           : state.kind === "no-price"
             ? "Waiting for the opening price"
             : null;

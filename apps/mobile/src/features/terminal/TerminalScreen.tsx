@@ -5,7 +5,7 @@
  * their guards, following a call to its fill — is `@senryo/calls` `useCallFlow`, the same on the web.
  */
 import { type CallMode, exitLine, isCallMode } from "@senryo/calls";
-import { useCallFlow, useExitActions, useMarketLine } from "@senryo/calls/react";
+import { useCallFlow, useExitActions, useMarketLine, usePriceHealth } from "@senryo/calls/react";
 import { type ExitPrices, hasExit } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useWindowLoad } from "@senryo/query";
@@ -28,6 +28,7 @@ import { BasketMembers } from "./BasketMembers";
 import { CallPanel } from "./CallPanel";
 import { CashOutSheet } from "./CashOutSheet";
 import { CrowdLine } from "./CrowdLine";
+import { type ChartHealth, LIVE } from "./chart/constants";
 import type { Head } from "./chart/draw";
 import { LiveChart } from "./chart/LiveChart";
 import { ExitSheet } from "./ExitSheet";
@@ -66,6 +67,12 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const reactions = useRef<ReactionOverlayHandle>(null);
   useReactions(t.symbol, q.onTick, reactions);
   const session = useMarketLine(t.symbol);
+  // The chart reads it on the UI thread: not live → the line freezes, dims and shows its age or state (R1.20).
+  const priceHealth = usePriceHealth(t.symbol);
+  const health = useSharedValue<ChartHealth>(LIVE);
+  useEffect(() => {
+    health.value = { live: priceHealth.live, tag: priceHealth.tag };
+  }, [health, priceHealth.live, priceHealth.tag]);
   const account = useAccount();
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<"stake" | "part" | "exit" | null>(null);
@@ -127,7 +134,13 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       ) : null}
       <TerminalTop t={t} offsetMs={offsetMs} onPickMarket={() => setPicking(true)} />
       <View style={styles.chart}>
-        <LiveChart symbol={t.symbol} overlay={q.overlay} waiting={`Waiting for ${t.symbol}…`} head={head} />
+        <LiveChart
+          symbol={t.symbol}
+          overlay={q.overlay}
+          waiting={`Waiting for ${t.symbol}…`}
+          head={head}
+          health={health}
+        />
         <ReactionOverlay ref={reactions} head={head} />
       </View>
       <LiveText text={q.lineText} style={[TYPE.caption, styles.line, { color: color.inkMuted }]} />

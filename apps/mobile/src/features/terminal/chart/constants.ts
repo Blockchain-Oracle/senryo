@@ -34,4 +34,14 @@ export const TICK_EMA = 0.3;
 export const MAX_TICK_GAP_MS = 5000;
 /** History that lands this soon after a cold-start terminal's first tick redraws its (still flat) line. */
 export const RESEED_WINDOW_MS = 1_000;
+/** A price that isn't live (R1.20): the frozen line and its head at this strength, the age tag this far off the pill. */
+export const DIM_ALPHA = 0.4;
+export const HEALTH_TAG_GAP = 6;
+
+/** Whether the price is live, and its age or state for the tag when it isn't (`PriceHealth`, R1.20). */
+export interface ChartHealth {
+  live: boolean;
+  tag: string | null;
+}
+export const LIVE: ChartHealth = { live: true, tag: null };
 export const LEVEL_ALPHA = { line: 0.7, entry: 0.55, edge: 0.6 } as const;
