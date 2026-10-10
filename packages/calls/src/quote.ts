@@ -6,7 +6,7 @@
  * its screen reads it — shared values on the phone, refs and the canvas on the web — without rendering React per tick.
  */
 import type { WindowLoad } from "@senryo/api-client";
-import { FILL_DELAY_SEC } from "@senryo/config";
+import { type CadenceSec, FILL_DELAY_SEC, quoteCurve } from "@senryo/config";
 import {
   type BandShape,
   bandEdgesE8,
@@ -63,7 +63,8 @@ export interface ChartOverlay {
 
 /** The catalogue's pool terms (`/v1/markets/catalog` `terms`). */
 export interface PoolTerms {
-  halfSpreadE6: number;
+  /** The spread curve's floor (a series' h50 is its lane's, `H50_E6`). */
+  minHalfSpreadE6: number;
   minProbE6: number;
   maxProbE6: number;
   maxSurchargeE6: number;
@@ -87,18 +88,23 @@ export interface QuotePosition {
   entryE8: bigint | null;
 }
 
+/** What a quote reads of the pool's terms (the api's catalogue `terms`, or `POOL_TERMS`). */
+export type QuoteTermsSource = Pick<
+  PoolTerms,
+  "minHalfSpreadE6" | "minProbE6" | "maxProbE6" | "maxSurchargeE6" | "maxExpiryReserved" | "maxExposureBps"
+>;
+
 export interface Pricing {
   terms: QuoteTerms;
   capacity: ReturnType<typeof reserveCapacity> | undefined;
 }
 
-/** The terms a quote uses under the window's load (`/v1/markets/load`): the surcharge, and the room left to fill. */
-export function pricingFor(terms: PoolTerms, load: WindowLoad | undefined): Pricing {
+/** The terms a quote uses under the window's load (`/v1/markets/load`): the series' spread curve (its lane's h50),
+ *  the surcharge, and the room left to fill. */
+export function pricingFor(terms: QuoteTermsSource, cadenceSec: CadenceSec, load: WindowLoad | undefined): Pricing {
   return {
     terms: {
-      halfSpreadE6: BigInt(terms.halfSpreadE6),
-      minProbE6: BigInt(terms.minProbE6),
-      maxProbE6: BigInt(terms.maxProbE6),
+      ...quoteCurve(terms, cadenceSec),
       surchargeE6: load
         ? loadSurchargeE6(BigInt(terms.maxSurchargeE6), load.reservedByExpiry, terms.maxExpiryReserved)
         : 0n,

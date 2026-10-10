@@ -87,7 +87,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const account = useAccount();
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<"stake" | "part" | "exit" | null>(null);
-  const exits = useExitActions(account);
+  const exits = useExitActions(account, t.cadence);
   const offsetMs = useSharedValue(live.clock.offset);
   const flow = useCallFlow({
     view: t,

@@ -75,8 +75,11 @@ export interface MarketSpec {
   name: string;
   kind: MarketKind;
   source: PriceSource;
-  /** Annualised volatility the pool prices with (documentation of `sigmaE8`). */
-  annualVol: number;
+  /**
+   * Annualised realised volatility of 1-minute returns (D-300, D-313): band widths are sized from it, the keeper's σ
+   * marks are bounded around it, and a quote uses it until live marks are served (R5).
+   */
+  realisedVol: number;
   cadences: readonly CadenceSec[];
   /** `CALENDARS` id; 0 = always open (crypto). */
   calendarId: CalendarId;
@@ -135,7 +138,7 @@ export const MARKETS: readonly MarketSpec[] = [
 
 /** σ per √second × 1e8 (the contracts' `sigmaE8`). */
 export function sigmaE8Of(m: MarketSpec): number {
-  return Math.round((m.annualVol / Math.sqrt(SECONDS_PER_YEAR)) * E8);
+  return Math.round((m.realisedVol / Math.sqrt(SECONDS_PER_YEAR)) * E8);
 }
 
 /** σ√τ over one window, in basis points of the price. */

@@ -19,6 +19,7 @@ import {
   isWatchable,
   LOCKOUT_SEC,
   POOL_TERMS,
+  quoteCurve,
   sigmaE8Of,
 } from "@senryo/config";
 import { bandReserveAbi, windowsAbi } from "@senryo/contracts/abis";
@@ -206,12 +207,7 @@ export class ExitWatcher {
       },
       live.priceE8,
       a.shares,
-      {
-        halfSpreadE6: BigInt(terms.halfSpreadE6),
-        minProbE6: BigInt(terms.minProbE6),
-        maxProbE6: BigInt(terms.maxProbE6),
-        surchargeE6: 0n,
-      },
+      quoteCurve(terms, series.cadenceSec),
     );
     return q.refusal ? null : Number(q.bidE6);
   }

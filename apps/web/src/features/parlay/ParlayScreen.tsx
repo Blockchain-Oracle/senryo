@@ -32,7 +32,7 @@ export function ParlayScreen() {
       }),
   });
   const quote = useParlayQuote(flow.picks, stake);
-  const halfSpreadE6 = "value" in catalog ? catalog.value.terms.halfSpreadE6 : 0;
+  const minHalfSpreadE6 = "value" in catalog ? catalog.value.terms.minHalfSpreadE6 : 0;
   return (
     <div className="flex flex-col gap-8">
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
@@ -40,7 +40,7 @@ export function ParlayScreen() {
         <div className="lg:sticky lg:top-6 lg:self-start">
           <ParlaySlip
             quote={quote}
-            halfSpreadE6={halfSpreadE6}
+            minHalfSpreadE6={minHalfSpreadE6}
             stake={stake}
             onStake={setStake}
             onPick={flow.pick}

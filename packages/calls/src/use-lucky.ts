@@ -6,7 +6,7 @@
  */
 import type { LuckyRevealView, LuckySealView } from "@senryo/api-client";
 import { freshSeed, luckyVerifies } from "@senryo/chain";
-import { BAND_INDEX, type CadenceSec, type ChainId } from "@senryo/config";
+import { BAND_INDEX, type CadenceSec, type ChainId, quoteCurve } from "@senryo/config";
 import { LUCKY_CADENCES, luckyDrifted, luckyStreak, multiplierE2, quoteOpen } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useIntentStatus, useLuckyDesk, useLuckyDraws, useQueryEnv, useTickets } from "@senryo/query";
@@ -62,12 +62,7 @@ export function useLuckyFlow(caller: Caller, effects: LuckyFlowEffects) {
       { openE8: view.k, sigmaE8: BigInt(view.series.sigmaE8), tauSec: BigInt(Math.max(0, dealt.expiry - view.now)) },
       BigInt(Math.round(spot)),
       stake,
-      {
-        halfSpreadE6: BigInt(view.terms.halfSpreadE6),
-        minProbE6: BigInt(view.terms.minProbE6),
-        maxProbE6: BigInt(view.terms.maxProbE6),
-        surchargeE6: 0n,
-      },
+      quoteCurve(view.terms, dealt.cadenceSec as CadenceSec),
     );
     if (q.refusal) return null;
     return {

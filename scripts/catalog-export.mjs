@@ -7,7 +7,9 @@
  *
  * Keys are sorted alphabetically inside every object: forge's `parseJson` decodes objects into structs by key order.
  * Calendars (D-289) carry the week for the US Eastern offset in effect at export and the next `HOLIDAY_DAYS` of
- * holidays and early closes; the keeper keeps both current on chain after that.
+ * holidays and early closes; the keeper keeps both current on chain after that. v3 (D-300, D-306, D-313): each series
+ * lists its σ bounds and its lane's h50; mainnet lists 5m/15m/1h with Up and Down only (a listed band can never be
+ * removed, so Range, Moonshot and Crash wait for a table that passes on Pyth's history); rides list per network.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -19,13 +21,17 @@ import { EVENT_COMMITTEES, EVENT_LIMITS, EVENTS } from "../packages/config/src/e
 import { MAINNET_USDC } from "../packages/config/src/money.ts";
 import { MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "../packages/config/src/networks.ts";
 import {
+  H50_E6,
   POOL_TERMS,
   PRINT_CLASSES,
   PYTH_RECEIVER,
   printClassKeyOf,
   REDSTONE,
+  SIGMA_CAP_RATIO,
+  SIGMA_FLOOR_RATIO,
   TESTNET_POOL_SEED,
 } from "../packages/config/src/pool-terms.ts";
+import { RIDE_MARKETS, RIDE_TERMS } from "../packages/config/src/ride-terms.ts";
 import { easternOffsetSec, holidayWindows, parseSchedule, weekBits } from "../packages/core/src/market/index.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -85,24 +91,66 @@ function eventsOf(chainId) {
   });
 }
 
+/** Mainnet starts with the 5m/15m/1h lanes and Up/Down (D-300: 1m is Practice only; D-306). */
+const MAINNET_KINDS = new Set(["up", "down"]);
+const PRACTICE_ONLY_CADENCE = 60;
+
+function lanesOn(chainId, m) {
+  return chainId === MAINNET_CHAIN_ID ? m.cadences.filter((c) => c !== PRACTICE_ONLY_CADENCE) : m.cadences;
+}
+
+function menuOn(chainId, m, cadence) {
+  const menu = bandMenu(m, cadence);
+  return chainId === MAINNET_CHAIN_ID ? menu.filter((b) => MAINNET_KINDS.has(b.kind)) : menu;
+}
+
+/** Rides (D-299, D-301): the network's shared terms and each ride market's feed and terms, in on-chain order. */
+function ridesOf(chainId) {
+  const t = RIDE_TERMS[chainId];
+  return sorted({
+    markets: RIDE_MARKETS.map((symbol) => {
+      const m = MARKETS.find((x) => x.symbol === symbol);
+      if (!m || printClassKeyOf(m) !== "crypto") throw new Error(`ride market ${symbol} must be a Pyth crypto feed`);
+      return sorted({ feedId: feedIdOf(m), symbol, ...t.markets[symbol] });
+    }),
+    terms: sorted({
+      earlyFeeBps: t.earlyFeeBps,
+      earlyWindowSec: t.earlyWindowSec,
+      marketReserveBps: t.marketReserveBps,
+      marketReserveCap: t.marketReserveCap.toString(),
+      maxHourlyLossBps: t.maxHourlyLossBps,
+      maxLifeSec: t.maxLifeSec,
+      maxLinearBps: t.maxLinearBps,
+      maxMargin: t.maxMargin.toString(),
+      maxMoveBps: t.maxMoveBps,
+      maxProfitBps: t.maxProfitBps,
+      minMargin: t.minMargin.toString(),
+      skewCapBps: t.skewCapBps,
+    }),
+  });
+}
+
 function exportChain(chainId) {
   const terms = POOL_TERMS[chainId];
   const markets = marketsOn(chainId);
   const series = markets.flatMap((m) =>
-    m.cadences.map((cadence) =>
-      sorted({
-        bands: bandMenu(m, cadence).map((b) =>
+    lanesOn(chainId, m).map((cadence) => {
+      const sigma = sigmaE8Of(m);
+      return sorted({
+        bands: menuOn(chainId, m, cadence).map((b) =>
           sorted({ highBps: b.highBps, kind: BAND_KIND_CODE[b.kind], lowBps: b.lowBps }),
         ),
         cadenceSec: cadence,
         calendarId: m.calendarId,
         feedId: feedIdOf(m),
+        h50E6: H50_E6[cadence],
         market: marketKey(m.symbol),
-        sigmaE8: sigmaE8Of(m),
+        sigmaCapE8: Math.ceil(sigma * SIGMA_CAP_RATIO),
+        sigmaFloorE8: Math.max(1, Math.floor(sigma * SIGMA_FLOOR_RATIO)),
         symbol: m.symbol,
         verifierClass: printClassKeyOf(m),
-      }),
-    ),
+      });
+    }),
   );
   const doc = sorted({
     calendars: calendarsOf(markets, Math.floor(Date.now() / MS_PER_SECOND)),
@@ -110,7 +158,8 @@ function exportChain(chainId) {
     // Mainnet calls are in Circle USDC; testnet deploys its own Test USD (zero here = deploy it).
     collateral: chainId === MAINNET_CHAIN_ID ? MAINNET_USDC : `0x${"0".repeat(ADDRESS_HEX)}`,
     params: sorted({
-      halfSpreadE6: terms.halfSpreadE6,
+      fillDelaySec: terms.fillDelaySec,
+      minHalfSpreadE6: terms.minHalfSpreadE6,
       maxExpiryReserved: terms.maxExpiryReserved.toString(),
       maxExposureBps: terms.maxExposureBps,
       maxProbE6: terms.maxProbE6,
@@ -130,6 +179,7 @@ function exportChain(chainId) {
     events: eventsOf(chainId),
     poolSeed: chainId === TESTNET_CHAIN_ID ? TESTNET_POOL_SEED.toString() : "0",
     pyth: PYTH_RECEIVER[chainId],
+    rides: ridesOf(chainId),
     series,
     session: sorted({
       maxPerCallCap: terms.session.perCallCap.toString(),

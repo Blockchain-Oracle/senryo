@@ -6,7 +6,7 @@
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { type IntentStatus, printRoute } from "@senryo/api-client";
-import { FILL_DELAY_SEC, MARKETS, PARLAY } from "@senryo/config";
+import { type CadenceSec, FILL_DELAY_SEC, H50_E6, MARKETS, PARLAY, quoteCurve } from "@senryo/config";
 import { probE6, quoteParlay, withTolerance } from "@senryo/core";
 import { useLive, useServerSeconds } from "@senryo/live/react";
 import {
@@ -71,12 +71,8 @@ export function useParlayQuote(picks: readonly ParlayPick[], stake: bigint) {
       ? quoteParlay(
           legs.map((l) => ({ probE6: l.probE6 ?? 0n, group: l.group })),
           stake,
-          {
-            halfSpreadE6: BigInt(terms.halfSpreadE6),
-            minProbE6: BigInt(terms.minProbE6),
-            maxProbE6: BigInt(terms.maxProbE6),
-            surchargeE6: 0n,
-          },
+          // The spread once, on the joint chance, at the widest leg's lane (contracts `ParlayBook`).
+          quoteCurve(terms, widestLane(picks.map((p) => p.cadenceSec as CadenceSec))),
           PARLAY.correlationBps,
         )
       : null;
@@ -188,4 +184,9 @@ export function useParlayFlow(caller: Caller, effects: ParlayFlowEffects) {
   const pending = signing_ ? "Signing…" : digest ? "Placing the parlay…" : null;
   const balance = "value" in account ? account.value.balance : undefined;
   return { picks, pick, remove, clear: () => setPicks([]), place, pending, balance };
+}
+
+/** The lane whose curve is widest (the highest h50) among a parlay's legs. */
+function widestLane(lanes: readonly CadenceSec[]): CadenceSec {
+  return lanes.reduce((a, b) => (H50_E6[b] > H50_E6[a] ? b : a));
 }

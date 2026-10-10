@@ -1,7 +1,7 @@
 // A parlay's joint chance and quote (S8.5, D-293), line for line with `ParlayMath.chanceE6` and
 // `ParlayBook._fillParlay`: within one asset class (a trading calendar) the legs' product floored at 85 % of the least
 // likely of them, across classes the product, every rounding up; the spread and load surcharge once on top.
-import { BPS, P_ONE, payoutFor } from "./band-math.ts";
+import { BPS, halfSpreadE6, P_ONE, payoutFor } from "./band-math.ts";
 import type { QuoteTerms } from "./band-quote.ts";
 
 /** One leg: its band's probability × 1e6 at the fill print and its class (the market's calendar). */
@@ -46,7 +46,8 @@ export interface ParlayQuote {
   refusal: "price" | null;
 }
 
-/** A parlay of `stake` on these legs — refused exactly where the contract would refuse it for price. */
+/** A parlay of `stake` on these legs — refused exactly where the contract would refuse it for price. The spread is
+ *  charged once, on the joint chance, at the widest leg's curve (`t.h50E6`, contracts `ParlayBook._fillParlay`). */
 export function quoteParlay(
   legs: readonly ParlayLegChance[],
   stake: bigint,
@@ -55,7 +56,7 @@ export function quoteParlay(
 ): ParlayQuote {
   const outOfBand = legs.some((l) => l.probE6 < t.minProbE6 || l.probE6 > t.maxProbE6);
   const chanceE6 = parlayChanceE6(legs, correlationBps);
-  const priceE6 = chanceE6 + t.halfSpreadE6 + t.surchargeE6;
+  const priceE6 = chanceE6 + halfSpreadE6(chanceE6, t.h50E6, t.minHalfSpreadE6) + t.surchargeE6;
   const payout = priceE6 < P_ONE ? payoutFor(stake, priceE6) : 0n;
   const refused = outOfBand || chanceE6 < t.minProbE6 || priceE6 >= P_ONE || payout <= stake;
   return { chanceE6, priceE6, payout: refused ? 0n : payout, refusal: refused ? "price" : null };

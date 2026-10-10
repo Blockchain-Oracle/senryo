@@ -4,7 +4,8 @@
  * under it), the floor rounded up (never less). Bids survive a part cashed out; the words turn them back into dollars
  * for the shares still held. Only bids the pool prices can ever fill (its 3–97 % less the spread).
  */
-import { type ExitPrices, formatUnits, hasExit, P_ONE, trailStopE6 } from "@senryo/core";
+import { type CadenceSec, H50_E6 } from "@senryo/config";
+import { type ExitPrices, formatUnits, halfSpreadE6, hasExit, P_ONE, trailStopE6 } from "@senryo/core";
 import { CENT_E6, EXIT_DOLLAR_STEP_CENTS, EXIT_STEP_CENTS, FLOOR_START_BPS } from "./constants.ts";
 
 const DOLLAR_DECIMALS = 6;
@@ -28,14 +29,21 @@ export interface ExitState extends ExitPrices {
   firedKind: number | null;
 }
 
-/** The bids the pool prices a cash-out at: probability bounds less the half-spread (BandBook `_fillClose`). */
+/** The bids the pool prices a cash-out at: probability bounds less the curve's half-spread there (BandBook `_fillClose`,
+ *  D-300), for a series in `cadenceSec`'s lane. */
 export interface BidBounds {
   minBidE6: number;
   maxBidE6: number;
 }
 
-export function bidBoundsOf(terms: { halfSpreadE6: number; minProbE6: number; maxProbE6: number }): BidBounds {
-  return { minBidE6: terms.minProbE6 - terms.halfSpreadE6, maxBidE6: terms.maxProbE6 - terms.halfSpreadE6 };
+export function bidBoundsOf(
+  terms: { minHalfSpreadE6: number; minProbE6: number; maxProbE6: number },
+  cadenceSec: CadenceSec,
+): BidBounds {
+  const h50 = BigInt(H50_E6[cadenceSec]);
+  const floor = BigInt(terms.minHalfSpreadE6);
+  const bid = (p: number) => p - Number(halfSpreadE6(BigInt(p), h50, floor));
+  return { minBidE6: bid(terms.minProbE6), maxBidE6: bid(terms.maxProbE6) };
 }
 
 /** A cash-out value for `shares` as a share's bid; `up` makes the sale worth at least the value. */

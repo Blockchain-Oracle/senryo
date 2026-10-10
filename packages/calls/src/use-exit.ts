@@ -5,6 +5,7 @@
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { setExitRoute } from "@senryo/api-client";
+import type { CadenceSec } from "@senryo/config";
 import { type ExitPrices, hasExit } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { marketKeys, useCatalog, useMarketAccount, useQueryEnv } from "@senryo/query";
@@ -19,7 +20,8 @@ const signing = () => Promise.all([import("./sign.ts"), import("./delegates.ts")
 
 export type ExitResult = { kind: "sent"; via: "one-tap" | "face-id" } | { kind: "cancelled" };
 
-export function useExitActions({ client, hint }: Caller) {
+/** Exits for calls in `cadenceSec`'s lane (its spread curve sets the bids an exit can name). */
+export function useExitActions({ client, hint }: Caller, cadenceSec: CadenceSec) {
   const env = useQueryEnv();
   const live = useLive();
   const queries = useQueryClient();
@@ -29,8 +31,8 @@ export function useExitActions({ client, hint }: Caller) {
   const [pending, setPending] = useState(false);
   const ready = Boolean(client && owner && "value" in catalog && "value" in account);
   const bounds: BidBounds | null = useMemo(
-    () => ("value" in catalog ? bidBoundsOf(catalog.value.terms) : null),
-    [catalog],
+    () => ("value" in catalog ? bidBoundsOf(catalog.value.terms, cadenceSec) : null),
+    [catalog, cadenceSec],
   );
 
   const set = useCallback(

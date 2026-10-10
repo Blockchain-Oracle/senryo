@@ -1,6 +1,6 @@
 /**
  * Baskets (D-286): several listed markets of one source in points, 1,000 at their members' prices of one instant; σ
- * measured on the basket's own 1-minute index (×1.5). Pyth baskets price at 2026-10-09T14:00:00Z; Big tech at RedStone's
+ * measured on the basket's own 1-minute index (`realisedVol`, no margin). Pyth baskets price at 2026-10-09T14:00:00Z; Big tech at RedStone's
  * signed medians of 16:05:20Z (its members are RedStone feeds, so it is a RedStone basket).
  */
 import { CADENCES_SEC } from "../cadences.ts";
@@ -21,7 +21,7 @@ export const PYTH_BASKETS: readonly MarketSpec[] = [
         { symbol: "SOL", weightBps: 3333, baseE8: 10_952_339_683n },
       ],
     },
-    annualVol: 0.61,
+    realisedVol: 0.561,
     cadences: CADENCES_SEC,
     calendarId: 0,
     chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
@@ -40,7 +40,7 @@ export const PYTH_BASKETS: readonly MarketSpec[] = [
         { symbol: "HYPE", weightBps: 2500, baseE8: 8_500_953_452n },
       ],
     },
-    annualVol: 0.7,
+    realisedVol: 0.613,
     cadences: CADENCES_SEC,
     calendarId: 0,
     chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
@@ -57,7 +57,7 @@ export const PYTH_BASKETS: readonly MarketSpec[] = [
         { symbol: "XAG", weightBps: 5000, baseE8: 6_105_866_000n },
       ],
     },
-    annualVol: 0.45,
+    realisedVol: 0.3,
     cadences: CADENCES_SEC,
     calendarId: 2,
     chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],
@@ -81,7 +81,7 @@ export const REDSTONE_BASKETS: readonly MarketSpec[] = [
         { symbol: "META", weightBps: 1666, baseE8: 72_476_853_483n },
       ],
     },
-    annualVol: 0.41,
+    realisedVol: 0.273,
     cadences: CADENCES_SEC,
     calendarId: 1,
     chains: [TESTNET_CHAIN_ID, MAINNET_CHAIN_ID],

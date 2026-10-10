@@ -18,6 +18,7 @@ import {
   trendOf,
   unitOf,
 } from "@senryo/calls";
+import type { CadenceSec } from "@senryo/config";
 import { priceFromE8 } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -52,7 +53,11 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
   const position = t.position;
   const positionBand = position ? bands?.[position.band] : undefined;
   // The load surcharge and the pool's room come from `/v1/markets/load` (polled; refreshed on the user's fills).
-  const pricing = useMemo(() => (t.terms ? pricingFor(t.terms as PoolTerms, load) : undefined), [t.terms, load]);
+  const cadence = t.series?.cadenceSec as CadenceSec | undefined;
+  const pricing = useMemo(
+    () => (t.terms && cadence ? pricingFor(t.terms as PoolTerms, cadence, load) : undefined),
+    [t.terms, cadence, load],
+  );
 
   useEffect(() => {
     const run = () => {

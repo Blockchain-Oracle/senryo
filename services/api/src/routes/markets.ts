@@ -96,7 +96,7 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         dollar: dollarTokenOf(chain.chainId) ?? addressOf(chain.chainId, "BandReserve"),
       },
       terms: {
-        halfSpreadE6: terms.halfSpreadE6,
+        minHalfSpreadE6: terms.minHalfSpreadE6,
         minProbE6: terms.minProbE6,
         maxProbE6: terms.maxProbE6,
         maxSurchargeE6: terms.maxSurchargeE6,

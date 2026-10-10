@@ -23,8 +23,10 @@ export const GAS_LIMITS = {
   transferWithAuthorization: 120_000n,
   /** A commit, possibly batched with opening its window and recording the open print (Multicall3). */
   marketCommit: 900_000n,
-  /** One `finalize` of up to 32 tickets at one print. */
+  /** One `finalize` of up to 32 tickets at one print (v3: checking its σ mark adds about 15k). */
   marketFinalize: 4_000_000n,
+  /** `listSeries` (R3.1: 162,881 on 10143 for five bands). */
+  seriesList: 300_000n,
   /** Close print + resolve + settle + the first `claimFor` batch (Multicall3), or a further batch. */
   marketSettle: 5_000_000n,
   /** `expire` of up to 32 tickets. */
@@ -35,13 +37,27 @@ export const GAS_LIMITS = {
   dollarMint: 150_000n,
   /** A market calendar's `setWeek` (three words) or `addHoliday` (prune + push), kept current by the keeper (D-289). */
   calendarUpdate: 400_000n,
-  /** Earn (D-287): a relayed request (with its permit), the hourly roll (60 expiry reads, a mint, fund/defund), a claim. */
+  /**
+   * Earn (D-287, D-307): a relayed request (with its permit), the hourly roll (60 expiry reads, the rides' mark over
+   * seven markets, a mint, fund/defund, the withdrawal hold — 936k max in the gas report), a claim.
+   */
   earnRequest: 400_000n,
-  earnRoll: 1_500_000n,
+  earnRoll: 2_000_000n,
   earnClaim: 200_000n,
-  /** Exits (D-292): a relayed `setExit` (one slot and its signature), and firing one (`fireExit` / `fireTrail`). */
-  exitSet: 200_000n,
+  /** Exits (D-292, generic R3.12): a relayed `setExit`/`setRideExit` (two slots and a signature), and firing one. */
+  exitSet: 300_000n,
   exitFire: 250_000n,
+  /**
+   * Rides (D-299), from the Foundry gas report (one ride a batch: commit 294k, fill 359k, a bound or the end 293–309k,
+   * expire 142k; a frontier refresh 75k for two rides, about 1k a ride after the page loads): ceilings for a 32-ride
+   * batch and a 400-ride side.
+   */
+  rideCommit: 600_000n,
+  rideFinalize: 6_000_000n,
+  rideBounds: 6_000_000n,
+  rideEnds: 6_000_000n,
+  rideExpire: 2_000_000n,
+  rideFrontier: 1_500_000n,
   /**
    * Duel (D-294), measured in the Foundry gas report (max): `openMatch` 518k (two entries, permits, pulls); the reveal
    * 214k plus opening up to three card windows with their line; a `pick` 495k (the arena's own commit at the reserve);

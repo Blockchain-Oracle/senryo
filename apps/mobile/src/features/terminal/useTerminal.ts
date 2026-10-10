@@ -12,12 +12,9 @@ import { STORAGE_KEYS, storage } from "~/lib/storage";
 export function useTerminal() {
   const [storedSymbol, setSymbol] = useMMKVString(STORAGE_KEYS.terminalSymbol, storage);
   const [storedCadence, setCadence] = useMMKVNumber(STORAGE_KEYS.terminalCadence, storage);
-  const view = useCallWindow(
-    storedSymbol ?? DEFAULT_SYMBOL,
-    (storedCadence ?? DEFAULT_CADENCE) as CadenceSec,
-    useAccount().hint?.address,
-  );
-  return { ...view, setSymbol, setCadence: (c: CadenceSec) => setCadence(c) };
+  const cadence = (storedCadence ?? DEFAULT_CADENCE) as CadenceSec;
+  const view = useCallWindow(storedSymbol ?? DEFAULT_SYMBOL, cadence, useAccount().hint?.address);
+  return { ...view, cadence, setSymbol, setCadence: (c: CadenceSec) => setCadence(c) };
 }
 
 export type TerminalView = ReturnType<typeof useTerminal>;

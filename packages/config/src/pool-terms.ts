@@ -2,6 +2,7 @@
  * Per-network terms (D-262, D-264, D-267, D-284): how a print is proven (one verifier per class), Pyth's receivers,
  * the pool's pricing and caps, and the chain's session ceilings.
  */
+import type { CadenceSec } from "./cadences.ts";
 import { basketMembers, type MarketSpec } from "./catalog.ts";
 import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "./networks.ts";
 
@@ -78,9 +79,10 @@ export const PYTH_RECEIVER: Readonly<Record<ChainId, `0x${string}`>> = {
 /** Dollars are 6-decimal on both networks (Test USD, Circle USDC). */
 const USD = 1_000_000;
 
-/** The pool's terms (contracts `Params`, D-262/D-264) and the chain's session ceilings (D-267). */
+/** The pool's terms (contracts `Params`, D-262/D-264/D-300) and the chain's session ceilings (D-267). */
 export interface PoolTerms {
-  halfSpreadE6: number;
+  /** The spread curve's floor, h(p) = max(this, 4·h50·p(1−p)) (h50 by lane, `H50_E6`). */
+  minHalfSpreadE6: number;
   maxSurchargeE6: number;
   minProbE6: number;
   maxProbE6: number;
@@ -88,11 +90,14 @@ export interface PoolTerms {
   maxExpiryReserved: bigint;
   minStake: bigint;
   maxStake: bigint;
+  /** Seconds from a commit to its fill print (D-300: 1–3; R1.18 measured Pyth 0.2–0.4 s behind the exchanges, so 1). */
+  fillDelaySec: number;
   session: { perCallCap: bigint; sessionCap: bigint; maxSessionSec: number };
 }
 
 const PRICING = {
-  halfSpreadE6: 20_000,
+  minHalfSpreadE6: 2_500,
+  fillDelaySec: 1,
   maxSurchargeE6: 10_000,
   minProbE6: 30_000,
   maxProbE6: 970_000,
@@ -122,6 +127,36 @@ export const POOL_TERMS: Readonly<Record<ChainId, PoolTerms>> = {
     session: { perCallCap: BigInt(25 * USD), sessionCap: BigInt(100 * USD), maxSessionSec: 900 },
   },
 };
+
+/**
+ * The spread at p = ½ by lane (D-300): 1m 3.0 points (Practice only), 5m 2.0, 15m 1.5, 1h 1.0 — a series lists with
+ * its lane's (contracts `SeriesTerms.h50E6`).
+ */
+export const H50_E6: Readonly<Record<CadenceSec, number>> = { 60: 30_000, 300: 20_000, 900: 15_000, 3600: 10_000 };
+
+/**
+ * The bounds a series' σ marks are held to (D-300/D-313), as multiples of its `realisedVol`: wide sanity bounds against
+ * a bad or compromised signer — the keeper clamps into them, so no fill ever waits on a mark outside them.
+ */
+export const SIGMA_FLOOR_RATIO = 0.25;
+
+/**
+ * A quote's curve and bounds for a series in `cadenceSec`'s lane, with no load (`@senryo/core` `QuoteTerms`): the pool's
+ * floor and probability bounds and the lane's h50. One builder for the apps' and the api's quotes.
+ */
+export function quoteCurve(
+  t: { minHalfSpreadE6: number; minProbE6: number; maxProbE6: number },
+  cadenceSec: CadenceSec,
+): { minHalfSpreadE6: bigint; h50E6: bigint; minProbE6: bigint; maxProbE6: bigint; surchargeE6: bigint } {
+  return {
+    minHalfSpreadE6: BigInt(t.minHalfSpreadE6),
+    h50E6: BigInt(H50_E6[cadenceSec]),
+    minProbE6: BigInt(t.minProbE6),
+    maxProbE6: BigInt(t.maxProbE6),
+    surchargeE6: 0n,
+  };
+}
+export const SIGMA_CAP_RATIO = 4;
 
 /** Practice's pool seed in Test USD (minted at deploy; D-260). */
 export const TESTNET_POOL_SEED = BigInt(10_000_000 * USD);

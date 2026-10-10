@@ -86,7 +86,7 @@ export function ParlayScreen() {
   });
   const quote = useParlayQuote(flow.picks, stake);
   const markets = "value" in catalog ? catalog.value.markets : [];
-  const halfSpreadE6 = "value" in catalog ? catalog.value.terms.halfSpreadE6 : 0;
+  const minHalfSpreadE6 = "value" in catalog ? catalog.value.terms.minHalfSpreadE6 : 0;
   const q = quote.quote;
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
@@ -147,7 +147,7 @@ export function ParlayScreen() {
       {slip ? (
         <ParlaySlipSheet
           quote={quote}
-          halfSpreadE6={halfSpreadE6}
+          minHalfSpreadE6={minHalfSpreadE6}
           stake={stake}
           onStake={setStake}
           onPick={flow.pick}

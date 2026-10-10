@@ -7,7 +7,7 @@
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { type DuelView, printRoute } from "@senryo/api-client";
 import { isDeployed } from "@senryo/chain";
-import { DUEL, duelEntryCost, duelTierOf, FILL_DELAY_SEC } from "@senryo/config";
+import { type CadenceSec, DUEL, duelEntryCost, duelTierOf, FILL_DELAY_SEC, quoteCurve } from "@senryo/config";
 import { multiplierE2, type QuoteTerms, quoteOpen, withTolerance } from "@senryo/core";
 import { useLive, useServerSeconds } from "@senryo/live/react";
 import {
@@ -60,13 +60,8 @@ export function useDuelCardQuotes(m: DuelView | null) {
   });
   const markets = "value" in catalog ? catalog.value.markets : [];
   const t = "value" in catalog ? catalog.value.terms : undefined;
-  const terms: QuoteTerms | undefined = t && {
-    halfSpreadE6: BigInt(t.halfSpreadE6),
-    minProbE6: BigInt(t.minProbE6),
-    maxProbE6: BigInt(t.maxProbE6),
-    surchargeE6: 0n,
-  };
   return cards.map((c, i) => {
+    const terms: QuoteTerms | undefined = t && quoteCurve(t, c.cadenceSec as CadenceSec);
     const k = live.prints.at(c.symbol, c.start)?.priceE8 ?? archived[i]?.data;
     const series = markets.find((x) => x.symbol === c.symbol)?.series.find((s) => s.cadenceSec === c.cadenceSec);
     const spot = live.prices.latest(c.symbol)?.priceE8;

@@ -4,8 +4,8 @@
  * pool prices any band, the builder offers the two that read at a glance.
  */
 import type { ParlayView } from "@senryo/api-client";
-import type { CadenceSec } from "@senryo/config";
-import { lane, sideName, signedUsd, usd } from "@senryo/core";
+import { type CadenceSec, H50_E6 } from "@senryo/config";
+import { halfSpreadE6, lane, sideName, signedUsd, usd } from "@senryo/core";
 
 export interface ParlayPick {
   symbol: string;
@@ -34,9 +34,13 @@ export function chanceText(chanceE6: bigint | number | null): string {
   return `About ${pct}%`;
 }
 
-/** A single side's decimal odds (what $1 returns) at its chance plus the half-spread, for the odds buttons. */
-export const sideOdds = (chanceE6: bigint | null, halfSpreadE6: number): number | null =>
-  chanceE6 === null || chanceE6 <= 0n ? null : E6 / (Number(chanceE6) + halfSpreadE6);
+/** A single side's decimal odds (what $1 returns) at its chance plus its lane's curve there (D-300), for the odds
+ *  buttons. */
+export function sideOdds(chanceE6: bigint | null, minHalfSpreadE6: number, cadenceSec: CadenceSec): number | null {
+  if (chanceE6 === null || chanceE6 <= 0n) return null;
+  const h = halfSpreadE6(chanceE6, BigInt(H50_E6[cadenceSec]), BigInt(minHalfSpreadE6));
+  return E6 / Number(chanceE6 + h);
+}
 
 /** "pays 3.84×" from the payout per dollar × 100. */
 export const multiplierText = (stake: bigint, payout: bigint): string =>

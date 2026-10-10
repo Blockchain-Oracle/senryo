@@ -15,7 +15,7 @@ import {
   sideOdds,
 } from "@senryo/calls";
 import type { ParlayQuoteView } from "@senryo/calls/react";
-import { PARLAY } from "@senryo/config";
+import { type CadenceSec, PARLAY } from "@senryo/config";
 import { clockText, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { X } from "lucide-react";
@@ -30,7 +30,7 @@ const USD = 1_000_000n;
 
 export function ParlaySlip(p: {
   quote: ParlayQuoteView;
-  halfSpreadE6: number;
+  minHalfSpreadE6: number;
   stake: bigint;
   onStake: (stake: bigint) => void;
   onPick: (pick: ParlayPick) => void;
@@ -69,7 +69,7 @@ export function ParlaySlip(p: {
                 <span className="tnum text-meta text-text-3">Closes in {clockText(l.window.closesIn)}</span>
               </span>
               {PARLAY_SIDES.map((side, i) => {
-                const odds = sideOdds(l.sides[i] ?? null, p.halfSpreadE6);
+                const odds = sideOdds(l.sides[i] ?? null, p.minHalfSpreadE6, l.pick.cadenceSec as CadenceSec);
                 const key = `${l.pick.symbol}:${l.pick.cadenceSec}:${side.band}`;
                 if (!firstOdds.current.has(key) && odds !== null) firstOdds.current.set(key, odds);
                 return (

@@ -1,12 +1,14 @@
 // What a call would get, computed on the device every frame (D-272) with the contracts' own rules
 // (`BandBook._fillOpen` / `_fillClose`, `BandReserve.quoteOpen`); the relay re-checks and the fill print decides.
-import { type BandShape, BPS, P_ONE, payoutFor, probE6, proceedsFor } from "./band-math.ts";
+import { type BandShape, BPS, halfSpreadE6, P_ONE, payoutFor, probE6, proceedsFor } from "./band-math.ts";
 
 const HUNDRED = 100n;
 
-/** The pool's pricing terms (catalogue `terms`) plus the live load surcharge for the window's expiry. */
+/** The pool's pricing terms (catalogue `terms`), the series' spread at p = ½, and the live load surcharge. */
 export interface QuoteTerms {
-  halfSpreadE6: bigint;
+  /** The curve's floor and the series' h50: h(p) = max(floor, 4·h50·p(1−p)) (D-300). */
+  minHalfSpreadE6: bigint;
+  h50E6: bigint;
   minProbE6: bigint;
   maxProbE6: bigint;
   /** `maxSurchargeE6 × reservedByExpiry / maxExpiryReserved` for this expiry; 0 on an unloaded pool. */
@@ -25,7 +27,7 @@ export type QuoteRefusal = "price" | "capacity";
 
 export interface OpenQuote {
   probE6: bigint;
-  /** Price per share: probability + half-spread + surcharge. */
+  /** Price per share: probability + the curve's half-spread + surcharge. */
   priceE6: bigint;
   /** Shares the stake buys (what a win pays), 0 when refused. */
   payout: bigint;
@@ -35,7 +37,7 @@ export interface OpenQuote {
 /** An open of `stake` on `band` at `spotE8` — refused exactly where the contract would refuse it for price. */
 export function quoteOpen(band: BandShape, w: QuoteWindow, spotE8: bigint, stake: bigint, t: QuoteTerms): OpenQuote {
   const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.sigmaE8, w.tauSec);
-  const priceE6 = prob + t.halfSpreadE6 + t.surchargeE6;
+  const priceE6 = prob + halfSpreadE6(prob, t.h50E6, t.minHalfSpreadE6) + t.surchargeE6;
   const refused = prob < t.minProbE6 || prob > t.maxProbE6 || priceE6 >= P_ONE;
   const payout = refused ? 0n : payoutFor(stake, priceE6);
   // The pool must front something, or the call is not a bet against it.
@@ -45,7 +47,7 @@ export function quoteOpen(band: BandShape, w: QuoteWindow, spotE8: bigint, stake
 
 export interface CloseQuote {
   probE6: bigint;
-  /** The bid per share: probability − half-spread. */
+  /** The bid per share: probability − the curve's half-spread. */
   bidE6: bigint;
   proceeds: bigint;
   refusal: QuoteRefusal | null;
@@ -55,7 +57,7 @@ export interface CloseQuote {
 export function quoteClose(band: BandShape, w: QuoteWindow, spotE8: bigint, shares: bigint, t: QuoteTerms): CloseQuote {
   const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.sigmaE8, w.tauSec);
   if (prob < t.minProbE6 || prob > t.maxProbE6) return { probE6: prob, bidE6: 0n, proceeds: 0n, refusal: "price" };
-  const bidE6 = prob - t.halfSpreadE6;
+  const bidE6 = prob - halfSpreadE6(prob, t.h50E6, t.minHalfSpreadE6);
   return { probE6: prob, bidE6, proceeds: proceedsFor(shares, bidE6), refusal: null };
 }
 

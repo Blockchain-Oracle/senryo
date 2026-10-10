@@ -44,7 +44,8 @@ export const catalogResponseSchema = z.object({
     dollar: addressSchema,
   }),
   terms: z.object({
-    halfSpreadE6: z.int(),
+    /** The spread curve's floor; a series' h50 is its lane's (`@senryo/config` `H50_E6`, D-300). */
+    minHalfSpreadE6: z.int(),
     minProbE6: z.int(),
     maxProbE6: z.int(),
     /** The load surcharge at a full expiry, and the caps a fill must fit (BandPool `_hasCapacity`). */

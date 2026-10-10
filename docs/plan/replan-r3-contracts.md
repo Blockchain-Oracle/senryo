@@ -187,13 +187,21 @@ Tested to the money invariants. Not deployed until R4.
     signatures (`finalize` carries a mark, `quoteOpen` takes one, `Params`, exits); exporting before the v3 deploy
     would leave HEAD unable to serve the live v1 reserve. They land together in R4. Note that the apps' quote mirror
     has priced the v3 way since R3.3, so until R4 a production hotfix branches from `b0a455e3` (R2's deploy).
-- [ ] R3.20 Config:
+- [x] R3.20 Config:
   - ride terms per network in `packages/config/src/pool-terms.ts`;
   - ride markets in the catalogue (7 Pyth crypto);
   - h50 per lane;
   - σ floor and cap per series;
   - `contracts/script/catalog/143.json` cut to Up and Down (D-306);
   - gas limits for the new calls.
+  - Built: every market's `realisedVol` (the seven crypto from the 90-day fit, the rest S7's five-day σ without its
+    ×1.5) sizes the bands and bounds the marks (¼× to 4×, `SIGMA_FLOOR_RATIO`/`SIGMA_CAP_RATIO`); `H50_E6` by lane;
+    `PoolTerms.minHalfSpreadE6` and `fillDelaySec`; `quoteCurve` is the one builder of a quote's curve for the apps'
+    hooks, the exit sheet's bid bounds, parlays (the widest leg's lane) and the api's Lucky and exit watcher;
+    `ride-terms.ts` (`RIDE_MARKETS` in on-chain order, `RIDE_TERMS` per network, D-301); the catalogue export lists
+    each series' bounds and h50 and the rides, and cuts mainnet to 5m/15m/1h with Up and Down (102 series; testnet
+    136); ride gas budgets from the gas report. The api's catalogue `terms` renames `halfSpreadE6` →
+    `minHalfSpreadE6`, so R4 deploys the api before the phone's OTA.
 - [ ] R3.21 Deploy scripts:
   - `MarketsBase.s.sol`/`AddMarkets.s.sol` get a "fresh v3 reserve" route that reuses the surviving contracts from
     the partial book, lists through `listSeries` and wires the roles (σ signer, rides, bounds, FUND, EVENTS, DUEL,

@@ -91,7 +91,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
   useReactions(symbol, q.onTick, reactions);
   const [open, setOpen] = useState<"stake" | "part" | "exit" | "markets" | null>(null);
-  const exits = useExitActions(account);
+  const exits = useExitActions(account, choices.cadence);
   const flow = useCallFlow({
     view: t,
     caller: account,

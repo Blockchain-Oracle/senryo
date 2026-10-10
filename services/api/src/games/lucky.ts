@@ -21,6 +21,7 @@ import {
   type MarketSpec,
   marketsOn,
   POOL_TERMS,
+  quoteCurve,
   sigmaE8Of,
 } from "@senryo/config";
 import {
@@ -152,12 +153,6 @@ export class LuckyDesk {
     const spot = m && this.d.gateway.latestE8(feedIdOf(m));
     if (!m || !spot) return null;
     const terms = POOL_TERMS[this.d.chainId];
-    const quoteTerms = {
-      halfSpreadE6: BigInt(terms.halfSpreadE6),
-      minProbE6: BigInt(terms.minProbE6),
-      maxProbE6: BigInt(terms.maxProbE6),
-      surchargeE6: 0n,
-    };
     const quotes: (LuckyQuoted & { cadenceSec: number; start: number })[] = [];
     for (const cadence of LUCKY_CADENCES) {
       const w = this.window(m, cadence, now);
@@ -175,7 +170,7 @@ export class LuckyDesk {
         const band = BAND_INDEX[kind];
         const shape = menu[band];
         if (!shape) continue;
-        const q = quoteOpen(shape, window, spot.priceE8, UNIT_STAKE, quoteTerms);
+        const q = quoteOpen(shape, window, spot.priceE8, UNIT_STAKE, quoteCurve(terms, cadence as CadenceSec));
         if (q.refusal) continue;
         quotes.push({ windowId, band, expirySec: w.expiry, priceE6: q.priceE6, cadenceSec: cadence, start: w.start });
       }
