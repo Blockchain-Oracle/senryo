@@ -1088,6 +1088,119 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "microsoft",
+    "owner": "Microsoft Corporation",
+    "provenance": "public-domain",
+    "pageUrl": "https://commons.wikimedia.org/wiki/File:Microsoft_logo.svg",
+    "licence": "Wikimedia Commons, File:Microsoft logo.svg (version of 2021-07-29T02:10:49Z, sha1 5b170117926ae5a5e451aa24676b5a124c2fa122): the file page records Copyrighted \"False\", License \"pd\", LicenseShortName \"Public domain\", Restrictions \"trademarked\" — read from the MediaWiki API (imageinfo extmetadata). Credited there to Microsoft; source given: www.microsoft.com. Public domain covers the file only; the mark stays its owner's trademark and is used nominatively, to identify what it belongs to.",
+    "retrieved": "2026-10-10",
+    "usage": "Always beside the ticker and type it identifies, never as a venue badge or an endorsement; drawn whole as delivered, never cropped or re-set.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/microsoft/commons-microsoft-delivered.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
+        "sha256": "3d41251f93127b4b42c2f69fa423d204946cf9c307d786ea36b8d9bef4179282",
+        "viewBox": "0 0 23 23",
+        "insetPermille": 0,
+        "shape": "tile",
+        "surface": "any"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/microsoft/commons-microsoft.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
+        "sha256": "7ea55e102666ae49745b5f2ab4b386b9cd9fdb6021ea2e3eedf92c3bd643eccc",
+        "viewBox": "0 0 23 23",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "any",
+        "derived": {
+          "from": "packages/identity/sources/microsoft/commons-microsoft-delivered.svg",
+          "recolour": {
+            "#f3f3f3": "none"
+          },
+          "basis": "The file page records Copyrighted \"False\", License \"pd\", LicenseShortName \"Public domain\" (https://commons.wikimedia.org/wiki/File:Microsoft_logo.svg): no copyright condition limits a change. The file's background plate (#f3f3f3) is drawn as nothing; the mark's shapes and inks are untouched."
+        }
+      }
+    }
+  },
+  {
+    "key": "amazon",
+    "owner": "Amazon.com, Inc.",
+    "provenance": "public-domain",
+    "pageUrl": "https://commons.wikimedia.org/wiki/File:Amazon_icon.svg",
+    "licence": "Wikimedia Commons, File:Amazon icon.svg (version of 2021-07-20T18:07:28Z, sha1 8fff4ec727ab9280d2c966528fd1d3b2d17fcbdd): the file page records Copyrighted \"False\", License \"pd\", LicenseShortName \"Public domain\", Restrictions \"trademarked\" — read from the MediaWiki API (imageinfo extmetadata). Credited there to Amazon.com, Inc.; source given: Convert from Amazon website. Public domain covers the file only; the mark stays its owner's trademark and is used nominatively, to identify what it belongs to.",
+    "retrieved": "2026-10-10",
+    "usage": "Always beside the ticker and type it identifies, never as a venue badge or an endorsement; drawn whole as delivered, never cropped or re-set.",
+    "variants": {
+      "symbol": {
+        "path": "packages/identity/sources/amazon/commons-amazon.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg",
+        "sha256": "1d88dabb83080de94748c767e17b057546eca9cb33a552933cc0d191bc96ec81",
+        "viewBox": "2.167 .438 251.038 259.969",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/amazon/commons-amazon-light.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg",
+        "sha256": "524f12e7a405ea3d75879bd80a358d3cb434f812c66b9a864002ff84f5e925ab",
+        "viewBox": "2.167 .438 251.038 259.969",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/amazon/commons-amazon.svg",
+          "recolour": {
+            "#f90": "#FFFFFF",
+            "#000": "#FFFFFF"
+          },
+          "basis": "The file page records Copyrighted \"False\", License \"pd\", LicenseShortName \"Public domain\" (https://commons.wikimedia.org/wiki/File:Amazon_icon.svg): no copyright condition limits a colourway. The silhouette is the delivered file with every ink recoloured to one, its shapes untouched."
+        }
+      }
+    }
+  },
+  {
+    "key": "espn",
+    "owner": "ESPN, Inc.",
+    "provenance": "public-domain",
+    "pageUrl": "https://commons.wikimedia.org/wiki/File:ESPN_wordmark.svg",
+    "licence": "Wikimedia Commons, File:ESPN wordmark.svg (version of 2018-07-02T21:26:49Z, sha1 e1ac134512cbc4f1257612ebda9ec74a686d5b2b): the file page records Copyrighted \"False\", License \"pd\", LicenseShortName \"Public domain\", Restrictions \"trademarked\" — read from the MediaWiki API (imageinfo extmetadata). Credited there to The Walt Disney Company/Hearst Communications; source given: ESPN Brand Identity Guide website. Public domain covers the file only; the mark stays its owner's trademark and is used nominatively, to identify what it belongs to.",
+    "retrieved": "2026-10-10",
+    "usage": "Always beside the ticker and type it identifies, never as a venue badge or an endorsement; drawn whole as delivered, never cropped or re-set.",
+    "variants": {
+      "wordmark": {
+        "path": "packages/identity/sources/espn/commons-espn.svg",
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/ESPN_wordmark.svg",
+        "sha256": "945971e0bd0074581fa971c487eba22b7031b0e4e9cf77328f6bd5dd16a5d5ca",
+        "viewBox": "0 0 554 137",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "any"
+      }
+    }
+  },
+  {
+    "key": "redstone",
+    "owner": "RedStone Oracles",
+    "provenance": "first-party",
+    "pageUrl": "https://www.redstone.finance/brand-kit/",
+    "licence": "Served by its owner at https://www.redstone.finance/brand-kit/ (asset https://www.redstone.finance/images/RedStoneLogoSymbolRed.svg, sha256 06a689c9…). The owner's trademark, used nominatively to name its service beside its name; no endorsement implied. RedStone publishes this symbol in its brand kit, described as \"Official RedStone brand assets — logos, … and usage rules for press, partners, and integrations\"; Senryo integrates RedStone as a price source and names it beside its name. The kit's usage-rules PDF (Google Drive, over 10 MB) was not read; its rules govern if they differ.",
+    "retrieved": "2026-10-10",
+    "usage": "Beside the provider's name on the route that uses it (buy, cash-out), never as an asset or network.",
+    "variants": {
+      "symbol": {
+        "path": "packages/identity/sources/redstone/redstone-first-party.svg",
+        "url": "https://www.redstone.finance/images/RedStoneLogoSymbolRed.svg",
+        "sha256": "06a689c9e0b3d02d6265520096c1e33deabd2b594528a4ccaa7faafbc5e2122a",
+        "viewBox": "0 0 118 100",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      }
+    }
+  },
+  {
     "key": "nvidia",
     "owner": "NVIDIA Corporation",
     "provenance": "open-library",

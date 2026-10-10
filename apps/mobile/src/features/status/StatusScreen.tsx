@@ -23,7 +23,7 @@ type Health = StatusResponse["prices"]["state"];
 const MARK = 28;
 const SOURCE_NAMES: Readonly<Record<string, { name: string; id?: string }>> = {
   pyth: { name: "Pyth", id: ids.provider("pyth") },
-  redstone: { name: "RedStone" },
+  redstone: { name: "RedStone", id: ids.provider("redstone") },
   basket: { name: "Baskets", id: ids.market("MAJORS") },
 };
 const WORDS: Readonly<Record<Health, string>> = {

@@ -10,6 +10,7 @@ export const LIGHT_INK = "#FFFFFF";
 const FETCH_TIMEOUT_MS = 30_000;
 const HEX_RADIX = 16;
 const HEX_CHANNEL_CHARS = 2;
+const SHORT_HEX_CHARS = 3;
 const CHANNEL_MAX = 255;
 /** Rec. 601 luma weights; a brand colour darker / lighter than these bounds needs the opposite ground. */
 const LUMA_RED = 0.299;
@@ -89,9 +90,10 @@ export function soleInk(svg: string, label: string): string {
   return inks[0];
 }
 
-/** Which ground a flat colour (`RRGGBB`, with or without `#`) reads on. */
+/** Which ground a flat colour (`RRGGBB` or `RGB`, with or without `#`) reads on. */
 export function surfaceFor(hex: string): ArtFile["surface"] {
-  const digits = hex.replace(/^#/, "");
+  const bare = hex.replace(/^#/, "");
+  const digits = bare.length === SHORT_HEX_CHARS ? [...bare].map((c) => c + c).join("") : bare;
   const channel = (index: number) =>
     Number.parseInt(digits.slice(index * HEX_CHANNEL_CHARS, (index + 1) * HEX_CHANNEL_CHARS), HEX_RADIX) / CHANNEL_MAX;
   const luma = LUMA_RED * channel(0) + LUMA_GREEN * channel(1) + LUMA_BLUE * channel(2);

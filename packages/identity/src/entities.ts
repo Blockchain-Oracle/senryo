@@ -230,6 +230,16 @@ const org = (id: string, name: string, role: Entity["role"], art?: string, gap?:
 const orgRows = (): Entity[] => [
   org(ids.brand("senryo"), "Senryo", "brand", "senryo-seal"),
   org(ids.provider("pyth"), "Pyth", "oracle", "pyth"),
+  org(ids.provider("redstone"), "RedStone", "oracle", "redstone"),
+  // An events data source (D-296): one of the three committee readers.
+  org(ids.provider("espn"), "ESPN", "data-provider", "espn"),
+  org(
+    ids.provider("thescore"),
+    "theScore",
+    "data-provider",
+    undefined,
+    'theScore (Score Media and Gaming, PENN Entertainment) publishes no brand kit and its Terms of Use say "You agree not to display or use in any manner any theScore Mark without theScore\'s prior written consent"; Commons holds only the old Score TV Network wordmark (researched 10 Oct 2026)',
+  ),
   // The MON market's labelled second source on mainnet (D-258, S9).
   org(ids.provider("chainlink"), "Chainlink", "oracle", "chainlink"),
   org(ids.provider("envio"), "Envio", "indexer", "envio"),
@@ -243,6 +253,13 @@ const orgRows = (): Entity[] => [
   org(ids.league("nhl"), "NHL", "league", "nhl"),
   org(ids.league("mlb"), "MLB", "league", "mlb"),
   org(ids.league("epl"), "Premier League", "league", "premier-league"),
+  org(
+    ids.league("nfl"),
+    "NFL",
+    "league",
+    undefined,
+    "The NFL shield is in no icon library (Simple Icons never carried it) and not on Commons; English Wikipedia's copy is fair-use/contested, and the NFL's terms say \"you shall not use any of our Trademarks without our express prior written permission\" (researched 10 Oct 2026)",
+  ),
 ];
 
 /**
@@ -262,15 +279,9 @@ const EQUITIES: Readonly<Record<string, { name: string; art?: string; gap?: stri
   NVDA: { name: "Nvidia", art: "nvidia" },
   TSLA: { name: "Tesla", art: "tesla" },
   AAPL: { name: "Apple", art: "apple" },
-  MSFT: {
-    name: "Microsoft",
-    gap: "Simple Icons has no Microsoft mark (removed at the owner's request); Commons holds the four squares as public domain (File:Microsoft logo.svg, sha1 5b170117…) but in four inks, and the Commons path takes only one-ink public-domain marks (researched 9 Oct 2026)",
-  },
+  MSFT: { name: "Microsoft", art: "microsoft" },
   META: { name: "Meta", art: "meta" },
-  AMZN: {
-    name: "Amazon",
-    gap: "Simple Icons 16.33 has no Amazon mark (removed at the owner's request), Commons holds none under a usable grant and Brandfetch forbids programmatic download (researched 9 Oct 2026)",
-  },
+  AMZN: { name: "Amazon", art: "amazon" },
   GOOGL: { name: "Alphabet", art: "google" },
   PLTR: { name: "Palantir", art: "palantir" },
   AMD: { name: "AMD", art: "amd" },

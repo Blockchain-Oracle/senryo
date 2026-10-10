@@ -1292,6 +1292,62 @@ export const DRAW: Readonly<Record<string, DrawSource>> = {
       }
     }
   },
+  "microsoft": {
+    "key": "microsoft",
+    "variants": {
+      "disc": {
+        "viewBox": "0 0 23 23",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "tile"
+      },
+      "symbol": {
+        "viewBox": "0 0 23 23",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      }
+    }
+  },
+  "amazon": {
+    "key": "amazon",
+    "variants": {
+      "symbol": {
+        "viewBox": "2.167 .438 251.038 259.969",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "2.167 .438 251.038 259.969",
+        "insetPermille": 0,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
+  "espn": {
+    "key": "espn",
+    "variants": {
+      "wordmark": {
+        "viewBox": "0 0 554 137",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      }
+    }
+  },
+  "redstone": {
+    "key": "redstone",
+    "variants": {
+      "symbol": {
+        "viewBox": "0 0 118 100",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "free"
+      }
+    }
+  },
   "nvidia": {
     "key": "nvidia",
     "variants": {

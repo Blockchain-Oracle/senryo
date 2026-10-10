@@ -26,11 +26,18 @@ export type Web3IconsTake = "disc" | "symbol" | "mono";
 export type FetchSpec =
   | { from: "web3icons"; group: "tokens" | "networks" | "exchanges"; name: string; take: readonly Web3IconsTake[] }
   | { from: "simple-icons"; slug: string }
-  /** A mark served by its owner's own site (no library carries it), pinned by sha256 so a silent change fails. */
-  | { from: "first-party"; url: string; page: string; sha256: string }
+  /**
+   * A mark served by its owner's own site (no library carries it), pinned by sha256 so a silent change fails; `basis`
+   * records the owner's own words that allow the use (a brand kit's scope), quoted into the record.
+   */
+  | { from: "first-party"; url: string; page: string; sha256: string; basis?: string }
   /** LI.FI's open icon set (lifinance/types, Apache-2.0, pinned by commit): the bridges and aggregators it routes. */
-  /** `file` is the title without "File:"; `sha1` (Commons' own hash of the version) pins one upload. */
-  | { from: "wikimedia-commons"; file: string; sha1: string }
+  /**
+   * `file` is the title without "File:"; `sha1` (Commons' own hash of the version) pins one upload. `clear` names inks
+   * the file paints as a background plate (Microsoft's grey square), drawn as nothing in ours; `as: "wordmark"` takes a
+   * wordmark (ESPN's) as the entity's wordmark rather than its symbol.
+   */
+  | { from: "wikimedia-commons"; file: string; sha1: string; clear?: readonly string[]; as?: "wordmark" }
   | { from: "material-symbols"; name: string; style: "outlined" | "rounded" | "sharp"; filled: boolean };
 
 export interface CatalogEntry {
@@ -83,6 +90,46 @@ const STANDALONE: readonly CatalogEntry[] = [
     key: "premier-league",
     owner: "The Football Association Premier League Limited",
     spec: { from: "simple-icons", slug: "premierleague" },
+  },
+  // Public domain on Commons (R2.6), pinned by version sha1: Microsoft's four squares (its grey plate cleared for the
+  // symbol), Amazon's "a" and smile, ESPN's wordmark (an events data source).
+  {
+    key: "microsoft",
+    owner: "Microsoft Corporation",
+    spec: {
+      from: "wikimedia-commons",
+      file: "Microsoft logo.svg",
+      sha1: "5b170117926ae5a5e451aa24676b5a124c2fa122",
+      clear: ["#f3f3f3"],
+    },
+  },
+  {
+    key: "amazon",
+    owner: "Amazon.com, Inc.",
+    spec: { from: "wikimedia-commons", file: "Amazon icon.svg", sha1: "8fff4ec727ab9280d2c966528fd1d3b2d17fcbdd" },
+  },
+  {
+    key: "espn",
+    owner: "ESPN, Inc.",
+    spec: {
+      from: "wikimedia-commons",
+      file: "ESPN wordmark.svg",
+      sha1: "e1ac134512cbc4f1257612ebda9ec74a686d5b2b",
+      as: "wordmark",
+    },
+  },
+  {
+    // The second price oracle (D-284), from its own brand kit (R2.6; researched 10 Oct 2026).
+    key: "redstone",
+    owner: "RedStone Oracles",
+    spec: {
+      from: "first-party",
+      url: "https://www.redstone.finance/images/RedStoneLogoSymbolRed.svg",
+      page: "https://www.redstone.finance/brand-kit/",
+      sha256: "06a689c9e0b3d02d6265520096c1e33deabd2b594528a4ccaa7faafbc5e2122a",
+      basis:
+        'RedStone publishes this symbol in its brand kit, described as "Official RedStone brand assets — logos, … and usage rules for press, partners, and integrations"; Senryo integrates RedStone as a price source and names it beside its name. The kit\'s usage-rules PDF (Google Drive, over 10 MB) was not read; its rules govern if they differ.',
+    },
   },
   { key: "nvidia", owner: "NVIDIA Corporation", spec: { from: "simple-icons", slug: "nvidia" } },
   { key: "tesla", owner: "Tesla, Inc.", spec: { from: "simple-icons", slug: "tesla" } },

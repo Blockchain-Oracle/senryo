@@ -154,6 +154,12 @@ import ArtMlbMonoLight from "./mlb-monolight.tsx";
 import ArtPremierLeagueMonoDark from "./premier-league-monodark.tsx";
 import ArtPremierLeagueSymbol from "./premier-league-symbol.tsx";
 import ArtPremierLeagueMonoLight from "./premier-league-monolight.tsx";
+import ArtMicrosoftDisc from "./microsoft-disc.tsx";
+import ArtMicrosoftSymbol from "./microsoft-symbol.tsx";
+import ArtAmazonSymbol from "./amazon-symbol.tsx";
+import ArtAmazonMonoLight from "./amazon-monolight.tsx";
+import ArtEspnWordmark from "./espn-wordmark.tsx";
+import ArtRedstoneSymbol from "./redstone-symbol.tsx";
 import ArtNvidiaMonoDark from "./nvidia-monodark.tsx";
 import ArtNvidiaSymbol from "./nvidia-symbol.tsx";
 import ArtNvidiaMonoLight from "./nvidia-monolight.tsx";
@@ -277,6 +283,10 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "nhl": { monoDark: ArtNhlMonoDark, symbol: ArtNhlSymbol, monoLight: ArtNhlMonoLight },
   "mlb": { monoDark: ArtMlbMonoDark, symbol: ArtMlbSymbol, monoLight: ArtMlbMonoLight },
   "premier-league": { monoDark: ArtPremierLeagueMonoDark, symbol: ArtPremierLeagueSymbol, monoLight: ArtPremierLeagueMonoLight },
+  "microsoft": { disc: ArtMicrosoftDisc, symbol: ArtMicrosoftSymbol },
+  "amazon": { symbol: ArtAmazonSymbol, monoLight: ArtAmazonMonoLight },
+  "espn": { wordmark: ArtEspnWordmark },
+  "redstone": { symbol: ArtRedstoneSymbol },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
   "apple": { monoDark: ArtAppleMonoDark, symbol: ArtAppleSymbol, monoLight: ArtAppleMonoLight },

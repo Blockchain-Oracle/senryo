@@ -154,6 +154,12 @@ const ArtMlbMonoLight = lazy(() => import("./mlb-monolight.tsx"));
 const ArtPremierLeagueMonoDark = lazy(() => import("./premier-league-monodark.tsx"));
 const ArtPremierLeagueSymbol = lazy(() => import("./premier-league-symbol.tsx"));
 const ArtPremierLeagueMonoLight = lazy(() => import("./premier-league-monolight.tsx"));
+const ArtMicrosoftDisc = lazy(() => import("./microsoft-disc.tsx"));
+const ArtMicrosoftSymbol = lazy(() => import("./microsoft-symbol.tsx"));
+const ArtAmazonSymbol = lazy(() => import("./amazon-symbol.tsx"));
+const ArtAmazonMonoLight = lazy(() => import("./amazon-monolight.tsx"));
+const ArtEspnWordmark = lazy(() => import("./espn-wordmark.tsx"));
+const ArtRedstoneSymbol = lazy(() => import("./redstone-symbol.tsx"));
 const ArtNvidiaMonoDark = lazy(() => import("./nvidia-monodark.tsx"));
 const ArtNvidiaSymbol = lazy(() => import("./nvidia-symbol.tsx"));
 const ArtNvidiaMonoLight = lazy(() => import("./nvidia-monolight.tsx"));
@@ -277,6 +283,10 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "nhl": { monoDark: ArtNhlMonoDark, symbol: ArtNhlSymbol, monoLight: ArtNhlMonoLight },
   "mlb": { monoDark: ArtMlbMonoDark, symbol: ArtMlbSymbol, monoLight: ArtMlbMonoLight },
   "premier-league": { monoDark: ArtPremierLeagueMonoDark, symbol: ArtPremierLeagueSymbol, monoLight: ArtPremierLeagueMonoLight },
+  "microsoft": { disc: ArtMicrosoftDisc, symbol: ArtMicrosoftSymbol },
+  "amazon": { symbol: ArtAmazonSymbol, monoLight: ArtAmazonMonoLight },
+  "espn": { wordmark: ArtEspnWordmark },
+  "redstone": { symbol: ArtRedstoneSymbol },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
   "apple": { monoDark: ArtAppleMonoDark, symbol: ArtAppleSymbol, monoLight: ArtAppleMonoLight },

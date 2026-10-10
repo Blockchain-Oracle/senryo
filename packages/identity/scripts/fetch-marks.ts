@@ -67,13 +67,21 @@ function pngViewBox(png: Buffer): string {
   return `0 0 ${png.readUInt32BE(PNG_WIDTH_OFFSET)} ${png.readUInt32BE(PNG_HEIGHT_OFFSET)}`;
 }
 
+/**
+ * The root's viewBox; without one, a root sized in plain user units (`width="554" height="137"`) has the viewport
+ * `0 0 554 137` (SVG 2 §8.2) — the viewBox codegen's SVGO `removeDimensions` writes for it (ESPN's Commons wordmark).
+ */
 function viewBoxOf(svg: string, label: string): string {
   const declared = /<svg[^>]*\sviewBox="([^"]+)"/.exec(svg)?.[1];
-  if (!declared) throw new Error(`${label}: no viewBox`);
-  return declared
-    .trim()
-    .split(/[\s,]+/)
-    .join(" ");
+  if (declared)
+    return declared
+      .trim()
+      .split(/[\s,]+/)
+      .join(" ");
+  const width = /<svg[^>]*\swidth="([\d.]+)(?:px)?"/.exec(svg)?.[1];
+  const height = /<svg[^>]*\sheight="([\d.]+)(?:px)?"/.exec(svg)?.[1];
+  if (!width || !height) throw new Error(`${label}: no viewBox and no plain width/height`);
+  return `0 0 ${width} ${height}`;
 }
 
 async function fromWeb3Icons(key: string, spec: Extract<FetchSpec, { from: "web3icons" }>): Promise<Fetched> {
@@ -244,7 +252,7 @@ async function fromFirstParty(key: string, spec: Extract<FetchSpec, { from: "fir
   return {
     provenance: "first-party",
     pageUrl: spec.page,
-    licence: `Served by its owner at ${spec.page} (asset ${spec.url}, sha256 ${spec.sha256.slice(0, SHORT_SHA_CHARS)}…). The owner's trademark, used nominatively to name its service beside its name; no endorsement implied.`,
+    licence: `Served by its owner at ${spec.page} (asset ${spec.url}, sha256 ${spec.sha256.slice(0, SHORT_SHA_CHARS)}…). The owner's trademark, used nominatively to name its service beside its name; no endorsement implied.${spec.basis ? ` ${spec.basis}` : ""}`,
     usage: "Beside the provider's name on the route that uses it (buy, cash-out), never as an asset or network.",
     pieces: [
       {
