@@ -3,6 +3,7 @@
 // and the dock sits at the bottom. The frame is static; everything that reads the path, the account or the stream is a
 // client island inside it. The terminal takes the whole stage (`.terminal-surface`, no top line or dock).
 import type { ReactNode } from "react";
+import { AppUpdateHost } from "./AppUpdateHost";
 import { ConfettiHost } from "./ConfettiHost";
 import { BalanceChip, ModeCapsule } from "./chips";
 import { DrawerHost } from "./DrawerHost";
@@ -10,6 +11,7 @@ import { LiveHost } from "./LiveHost";
 import { MobileDock } from "./MobileDock";
 import { Rail } from "./Rail";
 import { ResultHost } from "./ResultHost";
+import { Splash } from "./Splash";
 import { ToasterHost } from "./ToasterHost";
 import { TopLine } from "./TopLine";
 
@@ -39,6 +41,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ResultHost />
       <ConfettiHost />
       <ToasterHost />
+      <AppUpdateHost />
+      <Splash />
     </div>
   );
 }

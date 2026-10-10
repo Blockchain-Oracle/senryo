@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev --port 3460",
     "dev:live": "node scripts/dev-live.mjs",
-    "build": "next build",
+    "build": "node scripts/build-id.mjs && next build",
     "typecheck": "tsc --noEmit -p .",
     "well-known": "node scripts/well-known.mjs"
   },

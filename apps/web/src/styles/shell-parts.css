@@ -282,3 +282,15 @@
   height: 100dvh;
   pointer-events: none;
 }
+
+/* The splash lifts at its 3.5 s cap even if the script never runs (Splash.tsx): the fade starts at 3 s, done by 3.5 s. */
+.app-splash {
+  animation: splash-lift 500ms ease 3000ms forwards;
+}
+@keyframes splash-lift {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}

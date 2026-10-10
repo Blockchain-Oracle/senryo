@@ -85,3 +85,5 @@ design/preview/next-env.d.ts
 # Local tool and agent state (hidden from git by their own ignore files, which EAS doesn't read).
 /.superpowers/
 /.claude/
+# The web build's id (apps/web/scripts/build-id.mjs), written at build time.
+apps/web/public/version.json

@@ -20,6 +20,7 @@ export const DRAWERS = {
   settings: "settings",
   oneTap: "one-tap",
   call: "call",
+  install: "install",
 } as const;
 
 function urlWith(name: string | null, extra?: Record<string, string>): string {

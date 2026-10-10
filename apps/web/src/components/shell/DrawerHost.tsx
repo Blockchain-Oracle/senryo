@@ -18,6 +18,7 @@ const LOADERS: Record<string, Loader> = {
   [DRAWERS.settings]: () => import("./drawers/SettingsDrawer").then((m) => m.SettingsDrawer),
   [DRAWERS.oneTap]: () => import("./drawers/OneTapDrawer").then((m) => m.OneTapDrawer),
   [DRAWERS.call]: () => import("./drawers/CallDrawer").then((m) => m.CallDrawer),
+  [DRAWERS.install]: () => import("./drawers/InstallDrawer").then((m) => m.InstallDrawer),
 };
 
 const close = (next: boolean) => (next ? undefined : closeDrawer());

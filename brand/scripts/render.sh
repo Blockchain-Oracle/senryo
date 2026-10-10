@@ -33,6 +33,9 @@ png senryo-seal.svg senryo-seal-512.png 512 512
 mkdir -p "$WEB_PUBLIC/brand"
 cp favicon.svg "$WEB_PUBLIC/icon.svg"
 rsvg-convert -w 180 -h 180 -o "$WEB_PUBLIC/apple-touch-icon.png" app-icon.svg
+# The web app's install icons (app/manifest.ts, R2.17): the same app icon at the sizes browsers install with.
+rsvg-convert -w 192 -h 192 -o "$WEB_PUBLIC/icon-192.png" app-icon.svg
+rsvg-convert -w 512 -h 512 -o "$WEB_PUBLIC/icon-512.png" app-icon.svg
 cp senryo-seal.svg "$WEB_PUBLIC/brand/seal.svg"
 cp senryo-wordmark.svg "$WEB_PUBLIC/brand/wordmark.svg"
 cp kinpaku-card.svg "$WEB_PUBLIC/brand/kinpaku-card.svg"

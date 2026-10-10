@@ -1,4 +1,12 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { NextConfig } from "next";
+
+/** The build id `scripts/build-id.mjs` wrote for this build (none under `next dev`: no update check there). */
+const VERSION_FILE = join(process.cwd(), "public", "version.json");
+const BUILD_ID = existsSync(VERSION_FILE)
+  ? (JSON.parse(readFileSync(VERSION_FILE, "utf8")) as { build: string }).build
+  : "";
 
 /** Static export served by nginx on the apex rpId (D-011). No server features, no API routes. */
 const nextConfig: NextConfig = {
@@ -34,6 +42,7 @@ const nextConfig: NextConfig = {
       "@senryo/tokens",
     ],
   },
+  env: { NEXT_PUBLIC_BUILD_ID: BUILD_ID },
   reactStrictMode: true,
   devIndicators: false,
 };

@@ -58,3 +58,5 @@ docs/design/reference-study-2026-09-30/
 
 # J1 art review contact sheets (brand/scripts/sheets.py): review aids, regenerated on demand
 brand/review/
+# The web build's id (apps/web/scripts/build-id.mjs), written at build time.
+apps/web/public/version.json

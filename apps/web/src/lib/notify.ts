@@ -28,12 +28,18 @@ export interface Notice {
   description?: string;
   tone?: "info" | "warning";
   action?: { label: string; onClick: () => void };
+  /** One toast per id: a second with the same id replaces it. */
+  id?: string;
+  /** Stays until acted on or dismissed (a new version is waiting). */
+  persistent?: true;
 }
 
-export function notify({ title, description, tone = "info", action }: Notice): void {
+export function notify({ title, description, tone = "info", action, id, persistent }: Notice): void {
   const options = {
     ...(description ? { description } : {}),
     ...(action ? { action: { label: action.label, onClick: action.onClick } } : {}),
+    ...(id ? { id } : {}),
+    ...(persistent ? { duration: Number.POSITIVE_INFINITY } : {}),
   };
   for (const w of wanted) w();
   void Promise.all([import("sonner"), mounted]).then(([{ toast }]) => {

@@ -257,6 +257,14 @@ export const WEB_EVERYTHING = [
         description: "Turn it on or off; caps are enforced on chain.",
         keywords: "session",
       },
+      {
+        key: "install",
+        label: "Install app",
+        icon: "download",
+        href: "/app/?d=install",
+        description: "Senryo on your home screen, full screen.",
+        keywords: "pwa home screen add download",
+      },
     ],
   },
   {

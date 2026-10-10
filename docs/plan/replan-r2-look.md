@@ -143,8 +143,16 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     `reading.tsx` and `diagnosis.ts` are live again (Earn's failed state); `avatar.tsx` stays for R2.8's people. The
     web's `/app/account/` route constant (no page) is gone; the stale comments say what is true (five welcome scenes,
     the real setup order, the dock, the Settings rows).
-- [ ] R2.17 Web shell: splash, PWA install sheet and a "new version" toast (Owarine `Splash.tsx`, `InstallSheet.tsx`,
+- [x] R2.17 Web shell: splash, PWA install sheet and a "new version" toast (Owarine `Splash.tsx`, `InstallSheet.tsx`,
   `useAppUpdate.ts`).
+  - *As built (10 Oct):* the splash on the first load of any `/app` page (the seal, SENRYO in the display face, a
+    rising line in the accent; Tradash's 1.4 s / 3.5 s), with a CSS cap so it lifts even if the script never runs.
+    Installable: `app/manifest.ts` (opens on `/app/`, the light ground, 192/512 icons from `brand/scripts/render.sh`)
+    and an Install drawer (`?d=install`, in Everything → Account): the browser's prompt where held, else the steps for
+    iOS or other browsers, or "Already installed". New version: the static export has no server routes, so the build
+    writes `version.json` and the same id into the bundle (`scripts/build-id.mjs`); the page checks every five minutes
+    and on return, and shows one persistent toast with Refresh when they differ. Checked: the export emits the
+    manifest (linked from every page) and matching ids; the splash shows and lifts; the drawer opens.
 - [x] R2.18 A11y: one h1 per page; `"use client"` where hooks are used; the HealthChip status dot replaced per D-237.
   - *As built (10 Oct):* every web route counted in the browser has exactly one h1 (20 routes): Home's duplicate
     "Call the next move" heading is "Markets" and a signed-in Home names itself; the terminal ("BTC · Bitcoin") and a
