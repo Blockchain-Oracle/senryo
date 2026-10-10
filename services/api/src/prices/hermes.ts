@@ -106,12 +106,19 @@ export class HermesStream {
   private controller: AbortController | undefined;
   private stopped = false;
   private attempt = 0;
+  /** The newest publish time streamed (0 until the first frame). */
+  private lastPublishSec = 0;
 
+  /**
+   * `onResume(lastPublishSec, firstPublishSec)` fires on each connection's first frame, so the boundaries in between
+   * can be back-filled (`lastPublishSec` is 0 after a restart: the gap is unknown).
+   */
   constructor(
     private readonly key: string,
     private readonly feedIds: readonly Hex[],
     private readonly onUpdate: (u: PriceUpdate) => void,
     private readonly log: Logger,
+    private readonly onResume: (lastPublishSec: number, firstPublishSec: number) => void,
   ) {}
 
   start(): void {
@@ -150,11 +157,20 @@ export class HermesStream {
         void this.connect(); // the new stream starts before this one is aborted, so no instant is missed
         setTimeout(() => controller.abort(), WATCHDOG_MS);
       }, ROTATE_AFTER_MS);
+      let resumed = false;
       const parser = createParser({
         onEvent: (event) => {
           this.status.lastFrameAt = Date.now();
           try {
-            for (const u of updatesOf(JSON.parse(event.data) as HermesMessage, Date.now())) this.onUpdate(u);
+            const updates = updatesOf(JSON.parse(event.data) as HermesMessage, Date.now());
+            if (!resumed && updates.length > 0) {
+              resumed = true;
+              this.onResume(this.lastPublishSec, Math.max(...updates.map((u) => u.publishTime)));
+            }
+            for (const u of updates) {
+              this.lastPublishSec = Math.max(this.lastPublishSec, u.publishTime);
+              this.onUpdate(u);
+            }
           } catch (error) {
             this.status.lastError = (error as Error).message;
           }

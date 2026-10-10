@@ -48,10 +48,21 @@ live PnL at about 8 Hz. No contract change.
     make no call; 7 asks at one t → 2 calls; 404 doesn't rest, 429 does; 12 instants at once → 8 calls in 3.0 s and 4
     refused; 4 RedStone asks → 1 history read; and **one real Hermes call** returned BTC/ETH/SOL prints with
     prev < t ≤ publish. Exit 0.
-- [ ] R1.3 `PrintWatch` (R3):
+- [x] R1.3 `PrintWatch` (R3):
   - every 2 s, back-fills any window start or expiry that has tickets and no archived print by t + 2 s;
   - on a Hermes reconnect, back-fills each minute boundary in the gap;
   - misses and back-fills counted on `/status`.
+  - *As built (10 Oct):* `prices/print-watch.ts` **replaces `archivePending`** (one implementation): every 2 s,
+    `instantsAwaitingPrints` (services/common `prints.ts`) lists fill/close targets, window starts and expiries of
+    non-final tickets and parlays (legs too); `archivedKeys` drops what the archive holds (one PK lookup); the rest go
+    through `gateway.printAt` (ring → archive → `PrintFetcher`) within each market's admission. `HermesStream` calls
+    `onResume(lastPublish, firstPublish)` on each connection's first frame; the watch back-fills every minute boundary
+    in the gap for every Pyth market, one boundary at a time (after a restart: the 900 s horizon). An instant still
+    missing at half its admission is logged as an error once. Stats in `gateway.status().watch` (R1.9 wires
+    `/status`). Scratch check on a throwaway Postgres (repo migrations): exactly the 9 needed instants asked; settled,
+    archived and past-admission ones skipped; a second pass asks nothing; an unservable expiry re-asked, counted once,
+    flagged near admission; a 3-boundary gap × 12 Pyth markets asked only the 29 unarchived; a restart back-fills
+    ≤ 900 s. Exit 0. Baskets and RedStone ride the ticket-driven pass (no gap pass of their own).
 - [ ] R1.4 `/v1/prices/print` is archive-only for anonymous callers, with a rate limit and a short-cached 404; `/recent`
   caps its symbols and is rate-limited (R4).
 - [ ] R1.5 Hermes hardening (R5):

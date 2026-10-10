@@ -1,12 +1,13 @@
 import { type Hex, seriesIdOf } from "@senryo/chain";
 import { basketMembers, feedIdOf, MARKETS, type MarketSpec } from "@senryo/config";
 import { basketPointsE8 } from "@senryo/core";
-import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
+import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
-import { FRAME_GAP_MS, PRINT_GRACE_SEC, PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS, RING_KEEP_SEC } from "./constants.ts";
+import { FRAME_GAP_MS, PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS } from "./constants.ts";
 import { type HermesStatus, HermesStream } from "./hermes.ts";
 import { PrintFetcher, type PrintFetchStats, type PrintSourceKind } from "./print-fetcher.ts";
+import { PrintWatch, type PrintWatchStats } from "./print-watch.ts";
 import { type RedStoneGateway, RedStoneReader } from "./redstone.ts";
 import { FeedRing, type PriceUpdate, toE8 } from "./ring.ts";
 
@@ -35,7 +36,9 @@ const PRINT_EXPO = -8;
 export class PythGateway {
   readonly feeds: GatewayFeed[];
   private readonly byId = new Map<Hex, GatewayFeed>();
+  private readonly bySeries = new Map<string, GatewayFeed>();
   private readonly archive: PriceArchive;
+  private readonly watch: PrintWatch;
   private readonly lastFrameAt = new Map<Hex, number>();
   private readonly pendingFrame = new Map<Hex, ReturnType<typeof setTimeout>>();
   private hermes: HermesStream | undefined;
@@ -57,7 +60,11 @@ export class PythGateway {
       members: [],
       baskets: [],
     }));
-    for (const f of this.feeds) this.byId.set(feedIdOf(f.market), f);
+    for (const f of this.feeds) {
+      this.byId.set(feedIdOf(f.market), f);
+      for (const c of f.market.cadences) this.bySeries.set(seriesIdOf(f.market.symbol, c), f);
+    }
+    this.watch = new PrintWatch(db, this, log);
     for (const f of this.feeds) {
       for (const { market } of basketMembers(f.market)) {
         const member = this.byId.get(feedIdOf(market));
@@ -68,28 +75,14 @@ export class PythGateway {
     }
   }
 
-  /**
-   * Archives the print of every pending fill instant still in the ring (calls and every parlay leg, the relay's own and
-   * anyone else's), so the keeper can back-fill from the archive even if this process restarts between commit and fill.
-   * Only instants that can have a print by now: a future target would only cost an upstream call (F2).
-   */
-  async archivePending(db: Db): Promise<void> {
-    const now = nowSec();
-    const since = now - RING_KEEP_SEC;
-    const until = now - PRINT_GRACE_SEC;
-    const rows = await db<{ series_id: string; target: bigint }[]>`
-      SELECT DISTINCT series_id, target FROM market_tickets
-      WHERE state IN ('committed', 'closing') AND target IS NOT NULL AND target > ${since} AND target <= ${until}
-      UNION
-      SELECT DISTINCT l.series_id, p.target FROM market_parlays p
-      JOIN market_parlay_legs l ON l.chain_id = p.chain_id AND l.parlay_id = p.parlay_id
-      WHERE p.state = 'committed' AND p.target IS NOT NULL AND p.target > ${since} AND p.target <= ${until}`;
-    for (const r of rows) {
-      const feed = this.feeds.find((f) =>
-        f.market.cadences.some((c) => seriesIdOf(f.market.symbol, c) === r.series_id),
-      );
-      if (feed) await this.printAt(feedIdOf(feed.market), Number(r.target), 0);
-    }
+  /** The market a series trades (the print watch's lookup). */
+  marketOfSeries(seriesId: string): MarketSpec | undefined {
+    return this.bySeries.get(seriesId)?.market;
+  }
+
+  /** Markets priced by the Hermes stream (a gap in it is back-filled for each). */
+  pythMarkets(): MarketSpec[] {
+    return this.feeds.filter((f) => f.market.source.kind === "pyth").map((f) => f.market);
   }
 
   start(): void {
@@ -101,6 +94,7 @@ export class PythGateway {
     this.redstone = new RedStoneReader(redstoneFeeds, (u) => this.onUpdate(u), this.log, this.redstoneGateways);
     this.redstone.start();
     this.fetcher = new PrintFetcher(this.key, this.redstone, this.log);
+    this.watch.start();
     if (!this.key) {
       this.log.warn("PYTH_API_KEY unset — prices and prints are off");
       return;
@@ -110,20 +104,27 @@ export class PythGateway {
       this.feeds.filter((f) => f.market.source.kind === "pyth").map((f) => feedIdOf(f.market)),
       (u) => this.onUpdate(u),
       this.log,
+      (from, to) => this.watch.onGap(from, to),
     );
     this.hermes.start();
   }
 
   stop(): void {
+    this.watch.stop();
     this.hermes?.stop();
     this.redstone?.stop();
   }
 
-  status(): HermesStatus & { keyed: boolean; rest: Record<PrintSourceKind, PrintFetchStats> | null } {
+  status(): HermesStatus & {
+    keyed: boolean;
+    rest: Record<PrintSourceKind, PrintFetchStats> | null;
+    watch: PrintWatchStats;
+  } {
     return {
       keyed: Boolean(this.key),
       ...(this.hermes?.status ?? { connected: false, lastFrameAt: 0, lastError: null, lastBadStatus: null }),
       rest: this.fetcher?.stats() ?? null,
+      watch: { ...this.watch.stats },
     };
   }
 

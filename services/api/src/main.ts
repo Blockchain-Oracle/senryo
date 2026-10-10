@@ -29,7 +29,6 @@ import { loadApiEnv } from "./env.ts";
 import { EventRelay } from "./events/relay.ts";
 import { GeoDb } from "./geo-db.ts";
 import { DuelReader } from "./history/duel-reader.ts";
-import { ARCHIVE_PENDING_MS } from "./prices/constants.ts";
 import { PythGateway } from "./prices/gateway.ts";
 import { AccountRelay } from "./relay/accounts.ts";
 import { ExitWatcher } from "./relay/exits.ts";
@@ -70,11 +69,6 @@ geo.start();
 const bus = new StreamBus();
 const gateway = new PythGateway(db, bus, log, secrets.pythKey, secrets.redstoneGateways);
 gateway.start();
-const archiveTimer = setInterval(() => {
-  void gateway
-    .archivePending(db)
-    .catch((error) => log.warn({ err: (error as Error).message }, "archive pending failed"));
-}, ARCHIVE_PENDING_MS);
 
 // Sponsor lanes (relayer keys, D-266): SPONSOR_PK, plus SPONSOR_2_PK for a second lane.
 const sponsors = [loadOptionalSigner("SPONSOR"), loadOptionalSigner("SPONSOR_2")].filter((s) => s !== undefined);
@@ -233,7 +227,6 @@ registerStreamRoute(app, {
 
 await listen(app, env.PORT, env.HOST, async () => {
   geo.stop();
-  clearInterval(archiveTimer);
   for (const m of markets.values()) {
     m.exits.stop();
     m.duels?.queue.stop();

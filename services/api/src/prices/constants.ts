@@ -18,8 +18,10 @@ export const ROTATE_AFTER_MS = (23 * 60 + 45) * 60 * 1000;
 export const BOUNDARY_SEC = 60;
 /** At most one price frame per feed per this many ms on `/v1/stream` (Owarine's coalescer). */
 export const FRAME_GAP_MS = 125;
-/** How often pending fill instants are archived for the keeper's backup. */
-export const ARCHIVE_PENDING_MS = 2_000;
+/** How often the print watch looks for instants a position needs that never archived (04-pricing R3). */
+export const PRINT_WATCH_MS = 2_000;
+/** A print still missing past this share of its market's admission is logged as an error: its windows will void. */
+export const PRINT_WATCH_NEARING_SHARE = 0.5;
 /** A REST lookup for a print that never streamed. */
 export const REST_TIMEOUT_MS = 4_000;
 /** Never ask upstream for the print of t before t + this: Pyth's first publish ≥ t lands about a second after t. */
