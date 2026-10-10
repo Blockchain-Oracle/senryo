@@ -96,6 +96,76 @@ type Ticket {
   duelMatch: String
 }
 
+"A ride (D-299, D-301): an isolated long or short with leverage on the shared pool, from its commit to its last exit."
+type Ride {
+  id: ID!
+  chainId: Int! @index
+  rideId: BigInt! @index
+  owner: String! @index
+  marketId: Int! @index
+  isLong: Boolean!
+  "committed · open · closing · closed · knocked_out · capped · ended · refunded"
+  status: String! @index
+  "The margin still in the ride (a part close takes its share out) and what it started with."
+  margin: BigInt!
+  originalMargin: BigInt!
+  leverageBps: Int!
+  openFee: BigInt!
+  size: BigInt!
+  reserve: BigInt!
+  entryE8: BigInt
+  koE8: BigInt
+  capE8: BigInt
+  "The pending fill instant (an open or a close)."
+  target: Int
+  viaSession: Boolean!
+  committedAt: Int! @index
+  committedTx: String!
+  filledAt: Int
+  fillTx: String
+  "Over every part closed: the PnL before fees, the fees, and what reached the rider."
+  pnl: BigInt!
+  fees: BigInt!
+  paid: BigInt!
+  refunded: BigInt!
+  exitE8: BigInt
+  refuseReason: Int
+  endedAt: Int
+  "The standing exit (prices e-8, the trail in bps of the price; 0 = unset)."
+  exitTakeProfitE8: BigInt!
+  exitStopLossE8: BigInt!
+  exitFloorE8: BigInt!
+  exitTrailBps: Int!
+  "What fired the pending close: 1 take-profit or stop-loss, 2 the trail."
+  exitFiring: Int
+}
+
+type RideEvent {
+  id: ID!
+  chainId: Int! @index
+  rideId: BigInt! @index
+  owner: String! @index
+  kind: String!
+  amount: BigInt!
+  priceE8: BigInt
+  timestamp: Int! @index
+  txHash: String!
+}
+
+"One ride market side's open rides, summed as the reserve sums them (`RideSide`), and its bound frontier."
+type RideSide {
+  id: ID!
+  chainId: Int! @index
+  marketId: Int! @index
+  isLong: Boolean!
+  count: Int!
+  size: BigInt!
+  margin: BigInt!
+  reserve: BigInt!
+  koEdgeE8: BigInt
+  capEdgeE8: BigInt
+}
+
 "A parlay (D-293): 2–4 legs that must all come true; legs are read from the chain by the api, outcomes here."
 type Parlay {
   id: ID!
@@ -230,6 +300,8 @@ type PoolEpoch {
   withdrawn: BigInt!
   "The withdrawal batch waited for the next roll (the pool's liquid could not cover it)."
   deferred: Boolean!
+  "What open rides owed their riders at the roll's mark (D-307), already out of `value`."
+  ridesOwed: BigInt!
   rolledTx: String!
 }
 

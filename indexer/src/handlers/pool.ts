@@ -69,6 +69,7 @@ indexer.onEvent({ contract: "PoolShares", event: "EpochRolled" }, async ({ event
     supplied: p.suppliedAssets,
     withdrawn: p.withdrawnAssets,
     deferred: p.deferred,
+    ridesOwed: p.ridesOwed,
     rolledTx: event.transaction.hash,
   });
 });

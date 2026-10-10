@@ -89,6 +89,12 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
   - ride entities (Ride, RideSide, records);
   - `PoolShares` v3;
   - codegen and tsc gate.
+  - **Built (11 Oct):** one `BandReserve` contract with v3's signatures (v1 never emitted exit events — exits came
+    with v2 — so both reserves share one event set and both addresses go in its list); `ExitSet`/`ExitFired` by
+    book (a ride's dispatched to `rides.ts`); `Ride`, `RideEvent`, `RideSide` (the reserve's side sums and frontier);
+    a ride counts on its rider's record once it fills and realises its result when its last part leaves;
+    `PoolEpoch.ridesOwed`. `envio codegen && tsc` 0. **Waits for R4.1:** the v3 addresses (reserve, Windows,
+    PoolShares, DuelArena, EventBook) in `config.yaml`.
 - [ ] R4.6 Common:
   - **Built (11 Oct):** 0023 `sigma_marks`, 0024 `market_rides` + `ride_exits` (+ `market_intents.book`, `ride_id`);
     `rides.ts` applies ride changes in order (a part close takes margin and reserve out ceiled, as `LinearMath.share`)

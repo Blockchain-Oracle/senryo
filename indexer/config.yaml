@@ -30,8 +30,15 @@ contracts:
       - event: "CloseCommitted(uint256 indexed ticketId, uint64 shares, uint64 minProceeds, uint40 target, bool viaSession)"
       - event: "Closed(uint256 indexed ticketId, uint64 shares, uint64 proceeds, uint64 basisOut, int64 exitE8, uint32 bidE6)"
       - event: "CloseRefused(uint256 indexed ticketId, uint8 reason)"
-      - event: "ExitSet(uint256 indexed ticketId, uint32 takeProfitE6, uint32 stopLossE6, uint32 floorE6, uint32 trailE6, bool viaSession)"
-      - event: "ExitFired(uint256 indexed ticketId, uint8 kind, uint40 target, address by)"
+      - event: "ExitSet(uint8 indexed book, uint256 indexed id, uint64 takeProfit, uint64 stopLoss, uint64 floor, uint64 trail, bool viaSession)"
+      - event: "ExitFired(uint8 indexed book, uint256 indexed id, uint8 kind, uint40 target, address by)"
+      - event: "RideCommitted(uint256 indexed rideId, address indexed owner, uint16 indexed marketId, bool isLong, uint64 margin, uint32 leverageBps, uint64 openFee, int64 worstPriceE8, uint40 target, bool viaSession)"
+      - event: "RideFilled(uint256 indexed rideId, int64 entryE8, uint128 size, uint64 reserve, uint64 openFee, int64 koE8, int64 capE8)"
+      - event: "RideRefused(uint256 indexed rideId, uint8 reason, uint64 refunded)"
+      - event: "RideCloseCommitted(uint256 indexed rideId, uint128 size, int64 worstPriceE8, uint40 target, bool viaSession)"
+      - event: "RideCloseRefused(uint256 indexed rideId, uint8 reason)"
+      - event: "RideExited(uint256 indexed rideId, uint8 how, uint128 size, int64 exitE8, int256 pnl, uint64 fees, uint64 paid, uint64 keeperFee, address by)"
+      - event: "FrontierRefreshed(uint16 indexed marketId, uint8 side, int64 koEdgeE8, int64 capEdgeE8)"
       - event: "ParlayCommitted(uint256 indexed parlayId, address indexed owner, uint64 stake, uint64 minPayout, uint40 target, bool viaSession)"
       - event: "ParlayFilled(uint256 indexed parlayId, uint64 payout, uint32 chanceE6, uint32 priceE6, uint64 reserve)"
       - event: "ParlayRefused(uint256 indexed parlayId, uint8 reason, uint64 refunded)"
@@ -64,7 +71,7 @@ contracts:
       - event: "CallPaid(uint256 indexed ticketId, bytes32 indexed eventId, address indexed owner, uint8 outcome, uint256 amount, bool paid)"
   - name: PoolShares
     events:
-      - event: "EpochRolled(uint40 indexed hour, uint256 value, uint256 supply, uint256 suppliedAssets, uint256 withdrawnAssets, bool deferred)"
+      - event: "EpochRolled(uint40 indexed hour, uint256 value, uint256 supply, uint256 suppliedAssets, uint256 withdrawnAssets, bool deferred, int256 ridesOwed)"
 
 chains:
   - id: 10143
