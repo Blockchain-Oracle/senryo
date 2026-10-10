@@ -216,7 +216,10 @@ export function ExitModal(p: {
         ) : null}
       </div>
       <p className={cn("min-h-5 pt-2 text-meta", problem ? "text-down" : "text-text-3")} role="status">
-        {problem ?? "Sells every share left at the next price. That price decides; nothing sells outside these."}
+        {problem ??
+          (hasExit(prices)
+            ? "Sells every share left at the next price. That price decides; nothing sells outside these."
+            : "Set a take profit, a stop or a trail first.")}
       </p>
       <div className="flex gap-2 pt-3">
         {armed ? (

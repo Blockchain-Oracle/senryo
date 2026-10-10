@@ -153,15 +153,17 @@ export function CallPanel(p: CallPanelProps) {
           >
             {custom ? dollars(p.stake) : <Ellipsis aria-hidden className="size-4" />}
           </button>
-          <button
-            type="button"
-            aria-pressed={isMax}
-            className="terminal-preset"
-            disabled={p.balance === undefined}
-            onClick={() => p.balance !== undefined && pick(p.balance)}
-          >
-            Max
-          </button>
+          {/* Max only with a balance to spend (R2.15: no disabled button without a reason; a guest has none). */}
+          {p.balance !== undefined ? (
+            <button
+              type="button"
+              aria-pressed={isMax}
+              className="terminal-preset"
+              onClick={() => p.balance !== undefined && pick(p.balance)}
+            >
+              Max
+            </button>
+          ) : null}
         </fieldset>
       )}
       {notice ? (

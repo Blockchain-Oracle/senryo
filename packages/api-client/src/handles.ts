@@ -7,6 +7,8 @@ export const HANDLE_MIN_CHARS = 4;
 export const HANDLE_MAX_CHARS = 20;
 /** `[a-z0-9_]{4,20}` — stored lower-case, unique case-insensitively. */
 export const HANDLE_PATTERN = new RegExp(`^[a-z0-9_]{${HANDLE_MIN_CHARS},${HANDLE_MAX_CHARS}}$`);
+/** The rule in words, for an empty username field (R2.15: why Claim waits). */
+export const HANDLE_RULE = `Type a username: ${HANDLE_MIN_CHARS} to ${HANDLE_MAX_CHARS} letters, digits or _`;
 /** Raw handle input before normalisation (a leading "@", spaces, capitals). */
 export const HANDLE_INPUT_MAX_CHARS = 64;
 /** A released handle is held for its previous owner this long. */

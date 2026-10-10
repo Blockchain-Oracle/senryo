@@ -1,4 +1,4 @@
-import { ApiError, normalizeHandle } from "@senryo/api-client";
+import { ApiError, HANDLE_RULE, normalizeHandle } from "@senryo/api-client";
 import { HELD_INFO, handleLine, suggestHandle } from "@senryo/calls";
 import { socialKeys, useHandleAvailability, useSaveProfile } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -71,7 +71,8 @@ function AccountHandle() {
     message = saveError;
     tone = "bad";
   } else if (text === "") {
-    message = undefined;
+    // Why Claim waits (R2.15): an empty field says what to type.
+    message = HANDLE_RULE;
   } else if (typing || check.status === "unknown") {
     message = "Checking…";
   } else if (check.status === "failed") {

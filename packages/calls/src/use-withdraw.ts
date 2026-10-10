@@ -23,6 +23,11 @@ export interface WithdrawCheck {
   ok: boolean;
   /** What to fix, in one line (null while there's nothing wrong to say). */
   problem: string | null;
+  /**
+   * Why Review waits while nothing is wrong yet (R2.15: a disabled button says why): the next field to fill, or the
+   * balance still loading. Null once ready or while `problem` speaks.
+   */
+  hint: string | null;
 }
 
 export function checkWithdraw(
@@ -45,7 +50,18 @@ export function checkWithdraw(
         : value !== undefined && balance !== undefined && value > balance
           ? `You have $${formatUnits(balance, DOLLAR_DECIMALS, CENTS)}`
           : null;
-  return { to: toOk ? (dest as `0x${string}`) : null, value, ok: toOk && enough, problem };
+  const ok = toOk && enough;
+  const hint =
+    ok || problem
+      ? null
+      : balance === undefined
+        ? "Reading your balance…"
+        : !dest
+          ? "Enter a Monad address"
+          : value === undefined || value === 0n
+            ? "Enter an amount"
+            : null;
+  return { to: toOk ? (dest as `0x${string}`) : null, value, ok, problem, hint };
 }
 
 export type WithdrawResult = { state: "sent"; txHash: string } | { state: "cancelled" };

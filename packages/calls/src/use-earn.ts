@@ -32,10 +32,15 @@ export interface EarnAmountCheck {
   value: bigint | undefined;
   ok: boolean;
   problem: string | null;
+  /** Why the button waits while nothing is wrong yet (R2.15): no maximum yet, nothing to spend, or no amount. */
+  hint: string | null;
 }
 
-/** An exact amount within what can be spent (dollars to supply, or shares' value to withdraw). */
-export function checkEarnAmount(amount: string, max: bigint | undefined): EarnAmountCheck {
+/**
+ * An exact amount within what can be spent (dollars to supply, or shares' value to withdraw). `noMax` says why there is
+ * no maximum yet on this side ("Reading your balance…", "Nothing supplied to withdraw").
+ */
+export function checkEarnAmount(amount: string, max: bigint | undefined, noMax: string): EarnAmountCheck {
   const parsed = parseUnits(amount, DOLLAR_DECIMALS);
   const value = parsed.ok ? parsed.value : undefined;
   const problem =
@@ -44,7 +49,18 @@ export function checkEarnAmount(amount: string, max: bigint | undefined): EarnAm
       : value !== undefined && max !== undefined && value > max
         ? `You have $${formatUnits(max, DOLLAR_DECIMALS, CENTS)}`
         : null;
-  return { value, ok: value !== undefined && value > 0n && max !== undefined && value <= max, problem };
+  const ok = value !== undefined && value > 0n && max !== undefined && value <= max;
+  const hint =
+    ok || problem
+      ? null
+      : max === undefined
+        ? noMax
+        : max === 0n
+          ? "Nothing to spend here yet"
+          : value === undefined || value === 0n
+            ? "Enter an amount"
+            : null;
+  return { value, ok, problem, hint };
 }
 
 export type EarnResult = { state: "sent"; txHash: string } | { state: "cancelled" };

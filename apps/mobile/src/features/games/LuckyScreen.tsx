@@ -147,9 +147,17 @@ export function LuckyScreen() {
           </Text>
         </View>
         {flow.history.length === 0 ? (
-          <Text style={[TYPE.body, { color: color.inkMuted }]}>
-            {flow.owner ? "Draws you spin show here." : "Sign in to spin."}
-          </Text>
+          flow.owner ? (
+            <Text style={[TYPE.body, { color: color.inkMuted }]}>Draws you spin show here.</Text>
+          ) : (
+            <Button
+              label="Sign in to spin"
+              variant="secondary"
+              size="sm"
+              block={false}
+              onPress={() => router.push(accountRequiredRoute("make a call", "/games/lucky"))}
+            />
+          )
         ) : (
           flow.history.map((d) => (
             <View key={d.drawId} style={[styles.row, { borderBottomColor: color.hairline }]}>

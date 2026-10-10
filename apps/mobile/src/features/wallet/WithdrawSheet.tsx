@@ -43,7 +43,7 @@ export function WithdrawSheet({ onClose }: { onClose: () => void }) {
   // A field can't elide: while not being edited, the address shows on one line with its middle elided.
   const [editingTo, setEditingTo] = useState(false);
 
-  const { to: dest, value, ok, problem } = checkWithdraw(to, amount, owner, balance);
+  const { to: dest, value, ok, problem, hint } = checkWithdraw(to, amount, owner, balance);
 
   const send = async (target: `0x${string}`, v: bigint) => {
     setStage({ kind: "sending", to: target, value: v });
@@ -124,6 +124,7 @@ export function WithdrawSheet({ onClose }: { onClose: () => void }) {
               />
             </View>
             {problem ? <Text style={[TYPE.caption, { color: color.destructive }]}>{problem}</Text> : null}
+            {!problem && hint ? <Text style={[TYPE.caption, { color: color.text3 }]}>{hint}</Text> : null}
             <Button
               label="Review"
               disabled={!ok}

@@ -190,6 +190,7 @@ export function ProfileEditor({
             {refusal.message}
           </Text>
         ) : null}
+        {changed ? null : <Text style={[TYPE.rowDetail, styles.center, { color: color.text3 }]}>No changes yet</Text>}
         <Button
           label="Save changes"
           disabled={!changed || !handle.ok}

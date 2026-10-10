@@ -29,7 +29,7 @@ import {
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { APP } from "~/lib/constants/app";
-import { ROUTES } from "~/lib/constants/routes";
+import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { useHideBalances } from "~/lib/hide-balances";
 import { useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -91,7 +91,20 @@ export function SettingsList() {
             />
           </Panel>
         </View>
-      ) : null}
+      ) : (
+        // A guest's way in (R2.15): the account rows appear once there is one.
+        <View style={styles.group}>
+          <SectionHeading>Account</SectionHeading>
+          <Panel>
+            <SettingsRow
+              title="Create account or sign in"
+              icon={QrCode}
+              tint={color.primary}
+              onPress={() => open(accountRequiredRoute("make a call", ROUTES.accountSettings))}
+            />
+          </Panel>
+        </View>
+      )}
       <View style={styles.group}>
         <SectionHeading>Preferences</SectionHeading>
         <Panel>

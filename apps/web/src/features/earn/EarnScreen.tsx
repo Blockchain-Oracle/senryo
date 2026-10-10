@@ -61,7 +61,15 @@ export function EarnScreen() {
   if (!words || !view.pool) return <p className="text-body text-text-2">Earn isn't open yet.</p>;
   const pool = view.pool;
   const max = side === "supply" ? balance : view.account?.value;
-  const check = checkEarnAmount(amount, max);
+  const check = checkEarnAmount(
+    amount,
+    max,
+    side === "supply"
+      ? "Reading your balance…"
+      : view.account
+        ? "Reading your position…"
+        : "Nothing supplied to withdraw",
+  );
   const busy = flow.pending !== null;
 
   const submit = async () => {
@@ -180,7 +188,8 @@ export function EarnScreen() {
             </button>
           ) : null}
         </label>
-        {check.problem ? <p className="text-meta text-down">{check.problem}</p> : null}
+        {check.problem ? <p className="text-meta text-destructive">{check.problem}</p> : null}
+        {!check.problem && check.hint && account.hint ? <p className="text-meta text-text-3">{check.hint}</p> : null}
         <button
           type="button"
           disabled={busy || (Boolean(account.hint) && !check.ok)}

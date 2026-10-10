@@ -1,7 +1,7 @@
 import { NATIVE_ART } from "@senryo/identity/native";
 import { type Href, router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
@@ -13,7 +13,7 @@ import { useAccount } from "~/lib/account/provider";
 import { setupRoute } from "~/lib/constants/routes";
 import { PENDING_LINK } from "~/lib/incoming-link";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
-import { SPACE, useTheme } from "~/theme";
+import { SPACE, TYPE, useTheme } from "~/theme";
 
 const Art = NATIVE_ART["scene-passkey"]?.symbol;
 /** The art is a compact accent in this sheet, not a scene. */
@@ -70,6 +70,10 @@ function Body() {
         />
         <Button label="I have an account" variant="secondary" disabled={!account.ready} onPress={flow.signIn} />
         <Button label="Keep browsing" variant="ghost" size="sm" onPress={() => close()} />
+        {account.ready ? null : (
+          // Why the two buttons wait (R2.15): the account runtime is still opening.
+          <Text style={[TYPE.caption, { color: color.text3, textAlign: "center" }]}>Opening Senryo…</Text>
+        )}
       </View>
     </>
   );

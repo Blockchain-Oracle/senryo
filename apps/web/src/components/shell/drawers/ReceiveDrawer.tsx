@@ -4,6 +4,7 @@
  * to copy, and which money it takes on this network.
  */
 import { shortAddress } from "@senryo/core";
+import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { DottedQr } from "@/components/kit/dotted-qr";
 import { CopyCode } from "@/components/ui/copy-code-button";
 import { SlideOver } from "@/components/ui/drawer";
@@ -33,7 +34,7 @@ export function ReceiveDrawer({ open, onOpenChange }: DrawerProps) {
           </p>
         </div>
       ) : (
-        <p className="text-body text-text-2">Sign in to see your address.</p>
+        <SignInPrompt line="Sign in to see your address." className="pt-2" />
       )}
     </SlideOver>
   );

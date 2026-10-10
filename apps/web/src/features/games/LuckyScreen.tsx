@@ -11,6 +11,7 @@ import { clockText, LUCKY_REACHES, lane, usd } from "@senryo/core";
 import { Check, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { SlotReel } from "@/components/ui/slot-reel";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
@@ -160,7 +161,11 @@ export function LuckyScreen() {
           </span>
         </div>
         {flow.history.length === 0 ? (
-          <p className="text-body text-text-2">{flow.owner ? "Draws you spin show here." : "Sign in to spin."}</p>
+          flow.owner ? (
+            <p className="text-body text-text-2">Draws you spin show here.</p>
+          ) : (
+            <SignInPrompt line="Sign in to spin." compact />
+          )
         ) : (
           <ul className="flex flex-col divide-y divide-border">
             {flow.history.map((d) => (

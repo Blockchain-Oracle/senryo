@@ -36,7 +36,7 @@ export function WarmUpScreen() {
           }}
           className="h-14 rounded-xl bg-primary font-semibold text-button text-primary-foreground transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
         >
-          {r.phase === "scored" ? "Deal again" : "Deal the cards"}
+          {!w.ready ? "Loading markets…" : r.phase === "scored" ? "Deal again" : "Deal the cards"}
         </button>
       ) : null}
 

@@ -38,7 +38,7 @@ export function OneTapChip() {
       accessibilityLabel={s.on ? `${label}. Turn off` : label}
       style={[styles.chip, { backgroundColor: s.on ? color.upWash : color.raised2 }]}
     >
-      <Text style={[TYPE.caption, { color: s.on ? color.up : color.ink }]}>{label}</Text>
+      <Text style={[TYPE.caption, { color: s.on ? color.up : color.ink }]}>{oneTap.busy ? "One moment…" : label}</Text>
     </Pressable>
   );
 }

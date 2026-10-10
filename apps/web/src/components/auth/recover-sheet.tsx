@@ -96,7 +96,7 @@ export function RecoverSheet({
             onClick={() => void recover()}
           >
             {busy ? <Loader2 className="animate-spin" /> : source === "server" ? <PasskeyGlyph /> : <FileKey2 />}
-            {busy ? "Waiting for your passkey…" : "Open my account"}
+            {busy ? "Waiting for your passkey…" : account.client ? "Open my account" : "Opening Senryo…"}
           </Button>
           <Button
             variant="ghost"

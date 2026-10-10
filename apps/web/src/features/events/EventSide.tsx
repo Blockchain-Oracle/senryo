@@ -7,6 +7,7 @@ import type { CommitteeView, EventCallView } from "@senryo/api-client";
 import { callResultText, committeeLine, feeLine, REFUND_RULE } from "@senryo/calls";
 import { shortAddress } from "@senryo/core";
 import Link from "next/link";
+import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { cn } from "@/lib/utils";
 import { eventHref } from "./EventCard";
 
@@ -43,7 +44,11 @@ export function YourEventCalls({ calls, signedIn }: { calls: readonly EventCallV
     <section aria-label="Your event calls" className="flex flex-col gap-2">
       <h2 className="font-semibold text-section-title">Your calls</h2>
       {calls.length === 0 ? (
-        <p className="text-body text-text-2">{signedIn ? "Calls you make show here." : "Sign in to call."}</p>
+        signedIn ? (
+          <p className="text-body text-text-2">Calls you make show here.</p>
+        ) : (
+          <SignInPrompt line="Sign in to call." compact />
+        )
       ) : (
         <ul className="flex flex-col divide-y divide-border">
           {calls.map((c) => (

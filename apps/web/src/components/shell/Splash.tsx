@@ -6,6 +6,7 @@
  * static HTML until the page's script runs, so CSS lifts it at the cap on its own (`.app-splash`): a slow or failed
  * script never leaves the app covered.
  */
+import { MOTION } from "@senryo/tokens";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -14,6 +15,12 @@ const MIN_MS = 1_400;
 const MAX_MS = 3_500;
 const SEAL = 96;
 const LOOP = { duration: 1.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" } as const;
+/** The line's resting opacity, and the head dot's resting scale, between beats. */
+const DIM = 0.4;
+const SMALL = 0.6;
+/** The seal settles from just under full size, on the app's own ease (`MOTION.easing`). */
+const SETTLE_FROM = 0.9;
+const SETTLE_S = 0.45;
 /** A rising close, seven prints, in a 160 × 44 box. */
 const PATH = "M4 36 L26 28 L50 32 L72 18 L98 24 L122 10 L156 13";
 
@@ -26,8 +33,8 @@ function Sparkline() {
         strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
-        initial={{ pathLength: 0, opacity: 0.4 }}
-        animate={{ pathLength: [0, 1, 1], opacity: [0.4, 1, 0.4] }}
+        initial={{ pathLength: 0, opacity: DIM }}
+        animate={{ pathLength: [0, 1, 1], opacity: [DIM, 1, DIM] }}
         transition={LOOP}
       />
       <motion.circle
@@ -35,8 +42,8 @@ function Sparkline() {
         cy={13}
         r={4}
         fill="currentColor"
-        initial={{ opacity: 0, scale: 0.6 }}
-        animate={{ opacity: [0, 0, 1, 1, 0], scale: [0.6, 0.6, 1, 1, 0.6] }}
+        initial={{ opacity: 0, scale: SMALL }}
+        animate={{ opacity: [0, 0, 1, 1, 0], scale: [SMALL, SMALL, 1, 1, SMALL] }}
         transition={LOOP}
       />
     </svg>
@@ -76,9 +83,9 @@ export function Splash() {
           transition={{ duration: 0.5, ease: "easeInOut" }}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: SETTLE_FROM, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: SETTLE_S, ease: [...MOTION.easing] }}
             className="flex flex-col items-center gap-3 motion-reduce:!transform-none motion-reduce:!opacity-100"
           >
             <Image src="/brand/seal.svg" width={SEAL} height={SEAL} alt="" priority />

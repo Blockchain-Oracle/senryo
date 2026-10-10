@@ -14,6 +14,7 @@ import { useServerSeconds } from "@senryo/live/react";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "~/components/kit/Button";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
@@ -117,9 +118,17 @@ function YourCalls({ calls, signedIn }: { calls: readonly EventCallView[]; signe
         Your calls
       </Text>
       {calls.length === 0 ? (
-        <Text style={[TYPE.body, { color: color.inkMuted }]}>
-          {signedIn ? "Calls you make show here." : "Sign in to call."}
-        </Text>
+        signedIn ? (
+          <Text style={[TYPE.body, { color: color.inkMuted }]}>Calls you make show here.</Text>
+        ) : (
+          <Button
+            label="Sign in to call"
+            variant="secondary"
+            size="sm"
+            block={false}
+            onPress={() => router.push(accountRequiredRoute("call an event", "/events"))}
+          />
+        )
       ) : (
         calls.map((c) => (
           <Pressable

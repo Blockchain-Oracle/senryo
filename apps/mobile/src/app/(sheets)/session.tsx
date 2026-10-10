@@ -8,7 +8,8 @@ import { SessionPanel } from "~/features/auth/SessionPanel";
 import { SwitchBody } from "~/features/auth/SwitchConfirm";
 import { useAuthFlow } from "~/features/auth/useAuthFlow";
 import { SignOutConfirm } from "~/features/profile/SignOutConfirm";
-import { ROUTES } from "~/lib/constants/routes";
+import { useAccount } from "~/lib/account/provider";
+import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 
 /**
  * The trading session (A4, A5, A9) as a sheet — opened by the "Unlock" of a locked state: who, unlocked until when or
@@ -17,6 +18,7 @@ import { ROUTES } from "~/lib/constants/routes";
  */
 function Body() {
   const close = useSheetClose();
+  const hint = useAccount().hint;
   const [asking, setAsking] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const flow = useAuthFlow({ switching: true, onDone: () => close(() => router.replace(ROUTES.home)) });
@@ -25,6 +27,18 @@ function Body() {
     if (phase.kind === "closing") reset();
   }, [phase.kind, reset]);
   if (showsOutcome(flow)) return <AuthFlowBody flow={flow} onClose={reset} />;
+  // A guest has no session to show (R2.15): one way in instead of an empty panel.
+  if (!hint) {
+    return (
+      <>
+        <SheetHeading title="No account on this phone" />
+        <Button
+          label="Create account or sign in"
+          onPress={() => close(() => router.push(accountRequiredRoute("make a call")))}
+        />
+      </>
+    );
+  }
   if (asking) {
     return (
       <SwitchBody

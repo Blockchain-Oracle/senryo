@@ -11,10 +11,12 @@ import { formatUnits, shortAddress } from "@senryo/core";
 import { useMarketAccount, useQueryEnv } from "@senryo/query";
 import { ExternalLink } from "lucide-react";
 import { useState } from "react";
+import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { Button } from "@/components/ui/button";
 import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
+import { cn } from "@/lib/utils";
 import type { DrawerProps } from "./types";
 
 const DOLLAR_DECIMALS = 6;
@@ -64,7 +66,7 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
       description="Send dollars to a Monad address"
     >
       {!owner ? (
-        <p className="text-body text-text-2">Sign in to send.</p>
+        <SignInPrompt line="Sign in to send dollars." className="pt-2" />
       ) : stage.kind === "edit" ? (
         <form
           className="flex flex-col gap-4 pt-2"
@@ -126,8 +128,8 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
               </Button>
             </span>
           </label>
-          <p className="min-h-5 text-meta text-destructive" role="status">
-            {check.problem ?? ""}
+          <p className={cn("min-h-5 text-meta", check.problem ? "text-destructive" : "text-text-3")} role="status">
+            {check.problem ?? check.hint ?? ""}
           </p>
           <Button type="submit" size="xl" disabled={!check.ok}>
             Review

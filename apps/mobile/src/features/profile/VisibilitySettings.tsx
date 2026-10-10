@@ -61,6 +61,7 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
               />
               <ListRow
                 title="Share my trades"
+                detail={listed ? undefined : "List your profile first"}
                 trailing={
                   <Switch
                     {...switchColors}

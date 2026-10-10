@@ -201,26 +201,21 @@ function OpenPanel({
               {custom ? dollars(stake) : "···"}
             </Text>
           </Pressable>
-          <Pressable
-            onPress={() => {
-              if (balance === undefined) return;
-              fire("tick");
-              onStake(balance);
-            }}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: balance !== undefined && stake === balance }}
-            accessibilityLabel="Max"
-            style={[
-              styles.preset,
-              { backgroundColor: balance !== undefined && stake === balance ? color.ink : color.raised2 },
-            ]}
-          >
-            <Text
-              style={[TYPE.rowTitle, { color: balance !== undefined && stake === balance ? color.ground : color.ink }]}
+          {/* Max only with a balance to spend (R2.15: no control that does nothing; a guest has none). */}
+          {balance !== undefined ? (
+            <Pressable
+              onPress={() => {
+                fire("tick");
+                onStake(balance);
+              }}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: stake === balance }}
+              accessibilityLabel="Max"
+              style={[styles.preset, { backgroundColor: stake === balance ? color.ink : color.raised2 }]}
             >
-              Max
-            </Text>
-          </Pressable>
+              <Text style={[TYPE.rowTitle, { color: stake === balance ? color.ground : color.ink }]}>Max</Text>
+            </Pressable>
+          ) : null}
         </View>
       )}
       {notice ? (

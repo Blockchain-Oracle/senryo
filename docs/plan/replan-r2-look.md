@@ -133,7 +133,16 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     the browser. Phone: guests see the places open to them under the sign-up line (a `guest` flag in the shared nav:
     Games, Parlay, Duel, Events, Wallet, Earn, Status); the wallet is read-only for them (top-up, Receive and Withdraw
     ask for an account first, then come back), and its top-up row is no longer green.
-- [ ] R2.15 Signed-out drawers and screens get a Sign in button. Every disabled button says why.
+- [x] R2.15 Signed-out drawers and screens get a Sign in button. Every disabled button says why.
+  - *As built (10 Oct):* audited both apps (every drawer and screen signed out; every `disabled` in feature code).
+    Web: a shared `SignInPrompt` replaces the bare sentences in Receive, Withdraw and One-tap, a guest's Settings, and
+    Lucky, Events and the arcade; the phone's Lucky and Events get Sign in buttons, a guest's Settings a "Create
+    account or sign in" row, and the session sheet a way in instead of an empty panel. Reasons: Withdraw and Earn say
+    what Review waits for (`hint` beside `problem` in the shared checks: balance loading, address, amount, nothing
+    supplied); the username field states the rule (`HANDLE_RULE`); Set exit says to set one first; Warm-up, One-tap
+    (web and setup) and notifications setup say what is loading; the phone's account sheet says "Opening Senryo…",
+    the profile editor "No changes yet", Share my trades "List your profile first", the one-tap chip "One moment…";
+    Max shows only with a balance to spend (the phone's did nothing for a guest). Errors on Earn use `destructive`.
 - [x] R2.16 Dead code: the 14 unused web components (06 §8), stale comments and route constants, and
   `lib/copy/diagnosis.ts` if still unused. The Everything drawer's search waits for R6.
   - *As built (10 Oct):* re-checked by import: 13 deleted (action-circle, amount-hero, list-row, page-header,

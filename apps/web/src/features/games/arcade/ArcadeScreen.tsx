@@ -25,6 +25,7 @@ import {
 import { useArcadeBoard, useArcadeDesk } from "@senryo/query";
 import { useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
@@ -204,13 +205,15 @@ export function ArcadeScreen({ game, title, how }: { game: ArcadeGame; title: st
               {result ? (
                 <>
                   <span className="tnum font-semibold text-page-title">{result.score}</span>
-                  <span className="text-meta text-text-2">
-                    {result.ranked
-                      ? `Checked by replay · your best ${result.best ?? result.score}`
-                      : signedIn
-                        ? "Not ranked this time"
-                        : "Sign in to rank your runs"}
-                  </span>
+                  {signedIn || result.ranked ? (
+                    <span className="text-meta text-text-2">
+                      {result.ranked
+                        ? `Checked by replay · your best ${result.best ?? result.score}`
+                        : "Not ranked this time"}
+                    </span>
+                  ) : (
+                    <SignInPrompt line="Sign in to rank your runs." compact />
+                  )}
                 </>
               ) : (
                 <span className="font-semibold text-section-title">{title}</span>

@@ -50,7 +50,7 @@ export default function OneTapStep() {
       status={status}
       granted={oneTap.state.on}
       primary={{
-        label: "Turn on",
+        label: terms ? "Turn on" : "Loading the caps…",
         onPress: () => void turnOn(),
         loading: oneTap.busy,
         disabled: oneTap.busy || !terms,

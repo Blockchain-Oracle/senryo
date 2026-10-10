@@ -8,6 +8,7 @@ import { defaultOneTapTerms, useOneTap } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { useCatalog } from "@senryo/query";
 import { Zap, ZapOff } from "lucide-react";
+import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { Button } from "@/components/ui/button";
 import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
@@ -38,7 +39,7 @@ export function OneTapDrawer({ open, onOpenChange }: DrawerProps) {
   return (
     <SlideOver open={open} onOpenChange={onOpenChange} title="One-tap calls" description="Caps enforced on chain">
       {!account.hint ? (
-        <p className="text-body text-text-2">Sign in to turn on one-tap calls.</p>
+        <SignInPrompt line="Sign in to turn on one-tap calls." className="pt-2" />
       ) : s.on ? (
         <div className="flex flex-col gap-4 pt-2">
           <p className="font-semibold text-title">On · {Math.ceil(s.secondsLeft / SECONDS_PER_MINUTE)} min left</p>
@@ -68,7 +69,7 @@ export function OneTapDrawer({ open, onOpenChange }: DrawerProps) {
           </p>
           <Button size="xl" disabled={oneTap.busy || !terms} onClick={() => void act(true)}>
             <Zap aria-hidden />
-            {oneTap.busy ? "Turning on…" : "Turn on"}
+            {oneTap.busy ? "Turning on…" : terms ? "Turn on" : "Loading the caps…"}
           </Button>
         </div>
       )}

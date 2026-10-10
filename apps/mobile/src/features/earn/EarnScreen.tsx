@@ -56,7 +56,15 @@ export function EarnScreen() {
   const pool = view.pool;
   const balance = "value" in wallet ? wallet.value.balance : undefined;
   const max = side === "supply" ? balance : view.account?.value;
-  const check = checkEarnAmount(amount, max);
+  const check = checkEarnAmount(
+    amount,
+    max,
+    side === "supply"
+      ? "Reading your balance…"
+      : view.account
+        ? "Reading your position…"
+        : "Nothing supplied to withdraw",
+  );
   const busy = flow.pending !== null;
 
   const submit = async () => {
@@ -181,7 +189,10 @@ export function EarnScreen() {
             />
           ) : null}
         </View>
-        {check.problem ? <Text style={[TYPE.caption, { color: color.down }]}>{check.problem}</Text> : null}
+        {check.problem ? <Text style={[TYPE.caption, { color: color.destructive }]}>{check.problem}</Text> : null}
+        {!check.problem && check.hint && account.hint ? (
+          <Text style={[TYPE.caption, { color: color.text3 }]}>{check.hint}</Text>
+        ) : null}
         <Button
           label={
             !account.hint

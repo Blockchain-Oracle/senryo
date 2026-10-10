@@ -8,6 +8,7 @@ import { shortAddress } from "@senryo/core";
 import { Lock, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
+import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Button } from "@/components/ui/button";
 import { CopyCode } from "@/components/ui/copy-code-button";
@@ -146,7 +147,11 @@ export function SettingsDrawer({ open, onOpenChange }: DrawerProps) {
           <Group title="Recovery">
             <RecoveryGroup />
           </Group>
-        ) : null}
+        ) : (
+          <Group title="Account">
+            <SignInPrompt line="Sign in for your account, its passkey and recovery." />
+          </Group>
+        )}
       </div>
     </SlideOver>
   );

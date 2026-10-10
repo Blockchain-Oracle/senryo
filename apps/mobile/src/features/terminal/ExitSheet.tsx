@@ -205,7 +205,10 @@ export function ExitSheet(p: {
           style={[TYPE.caption, styles.note, { color: problem ? color.down : color.inkMuted }]}
           accessibilityLiveRegion="polite"
         >
-          {problem ?? "Sells every share left at the next price. That price decides; nothing sells outside these."}
+          {problem ??
+            (hasExit(prices)
+              ? "Sells every share left at the next price. That price decides; nothing sells outside these."
+              : "Set a take profit, a stop or a trail first.")}
         </Text>
         <Button
           label={p.pending ? "Setting…" : armed ? "Update exit" : "Set exit"}

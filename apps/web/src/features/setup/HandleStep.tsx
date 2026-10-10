@@ -1,5 +1,5 @@
 "use client";
-import { ApiError, normalizeHandle } from "@senryo/api-client";
+import { ApiError, HANDLE_RULE, normalizeHandle } from "@senryo/api-client";
 /**
  * Setup · the @username (the phone's handle step, A2): a suggested name from the account's own address, checked as it
  * is typed, every state in the field's own line (Checking… · @kai is available · Taken · Reserved · On hold · 4–20
@@ -38,7 +38,8 @@ export function HandleStep({ onDone }: { onDone: () => void }) {
   let message = "";
   let tone: "quiet" | "good" | "bad" = "quiet";
   if (saveError) [message, tone] = [saveError, "bad"];
-  else if (text === "") message = "";
+  // Why Claim waits (R2.15): an empty field says what to type.
+  else if (text === "") message = HANDLE_RULE;
   else if (typing || check.status === "unknown") message = "Checking…";
   else if (check.status === "failed") [message, tone] = ["Couldn't check · Retry", "bad"];
   else if (known) ({ message, tone } = handleLine(known));

@@ -174,7 +174,12 @@ function AccountNotifications() {
       primary={
         outcome
           ? { label: "Continue", onPress: next }
-          : { label: "Turn on", onPress: () => void turnOn(), loading: busy, disabled: !permission }
+          : {
+              label: permission ? "Turn on" : "Checking notifications…",
+              onPress: () => void turnOn(),
+              loading: busy,
+              disabled: !permission,
+            }
       }
       secondary={outcome ? undefined : { label: "Not now", onPress: next, disabled: busy }}
       onBack={busy ? undefined : back}
