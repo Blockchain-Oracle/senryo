@@ -136,12 +136,17 @@ Tested to the money invariants. Not deployed until R4.
     hold refusing a new call).
 
 ### Tests (money only)
-- [ ] R3.16 07 §4 handler-based invariants:
+- [x] R3.16 07 §4 handler-based invariants:
   - **Rides done** (`RidesInvariant.t.sol`, 256 runs × 128 calls): opens filled like the relay, full and partial
     closes, lapses and expiry, knock-outs and cap-outs (a ±26 % shock action), ends, frontier refreshes, over a random
     walk with gaps — solvency to the unit with side sums == Σ rides, a conservative frontier, no rider paid past margin
-    + reserve, **zero panics recorded**. The run's end states are logged so a green run can't be an idle one. Still to
-    interleave: calls, parlays, exits and Earn (after R3.15).
+    + reserve, **zero panics recorded**. The run's end states are logged so a green run can't be an idle one.
+  - **Across books** (`PoolInvariant.t.sol`, 256 × 128): calls through the real window lifecycle (open with its print,
+    fill on a signed mark, settle, claim), rides opened and closed, Earn supplies and withdrawals, and the keeper's
+    hourly roll (bounds proved at the mark, frontiers refreshed) — the balance is every unit's home exactly, ride sums
+    == rides, Earn holds what it owes, zero panics; logged reach: tickets settled and refunded, rides open and closed,
+    16 rolls with rides marked. Parlays and call exits stay covered by their own suites (`Parlay.t.sol`,
+    `Exits.t.sol`).
   - solvency, and every unit has a home;
   - per-ride conservation;
   - bounds; caps at every fill;
@@ -150,13 +155,17 @@ Tested to the money invariants. Not deployed until R4.
   - session limits.
 
   Calls, parlays, rides, exits, bounds and Earn are interleaved over a random-walk print path with gaps.
-- [ ] R3.17 Fuzz and differential tests:
+- [x] R3.17 Fuzz and differential tests:
   - `markAt` against brute force;
   - Earn fairness (no gain from supplying and withdrawing across a roll; the cutoff; `withdrawHold`; mark age);
   - rounding;
   - timing (fill only at commit + delay, config refusals, no print → refund, minimum hold);
   - σ marks (stale, wrong signer, outside floor/cap → refused);
   - the spread curve at the probability bounds.
+  - `RideFuzz.t.sol`: the mark against brute force over random books (within a unit a ride, never under), rounding
+    (a long and a short on one move never net a gain; size floors; parts leaving ceil), the curve's bid > 0 and ask
+    < $1 at every quoted probability, a ride filling only at its own instant, the minimum hold, a session spending
+    margin + fee; Earn fairness and the mark's age in `Earn.t.sol`; σ marks in `SigmaMarks.t.sol`.
 - [ ] R3.18 A fork test on 10143 through `ensurePrint` with real Hermes payloads.
 
 ### TypeScript and config
