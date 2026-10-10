@@ -1,7 +1,7 @@
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
-import { isDeployed } from "@senryo/chain";
-import type { ChainId } from "@senryo/config";
+import { isDeployed, type Signer } from "@senryo/chain";
+import { type ChainId, marketsOn } from "@senryo/config";
 import {
   createDb,
   createHttpServer,
@@ -30,6 +30,7 @@ import { EventRelay } from "./events/relay.ts";
 import { GeoDb } from "./geo-db.ts";
 import { DuelReader } from "./history/duel-reader.ts";
 import { PythGateway } from "./prices/gateway.ts";
+import { SigmaDesk } from "./prices/sigma.ts";
 import { AccountRelay } from "./relay/accounts.ts";
 import { ExitWatcher } from "./relay/exits.ts";
 import { type Lane, openLanes } from "./relay/lanes.ts";
@@ -74,6 +75,8 @@ const gateway = new PythGateway(db, bus, log, {
   displayFeed: env.DISPLAY_FEED === "on",
 });
 gateway.start();
+const sigma = new SigmaDesk({ db, bus, log, markets: [...new Set(env.CHAIN_IDS.flatMap((c) => marketsOn(c)))] });
+sigma.start();
 
 // Sponsor lanes (relayer keys, D-266): SPONSOR_PK, plus SPONSOR_2_PK for a second lane.
 const sponsors = [loadOptionalSigner("SPONSOR"), loadOptionalSigner("SPONSOR_2")].filter((s) => s !== undefined);
@@ -88,6 +91,8 @@ for (const chain of chains.values()) {
     gateway,
     bus,
     listing: chain.listing,
+    sigma,
+    markSigner: sponsors[0] as Signer,
     db,
     log,
   });
@@ -97,6 +102,7 @@ for (const chain of chains.values()) {
     read: chain.read,
     lane: lanes[0] as Lane,
     gateway,
+    sigma,
     fills: relay.fills,
     db,
     log,
@@ -203,6 +209,7 @@ const ctx: ApiContext = {
   geo,
   gateway,
   bus,
+  sigma,
   markets,
 };
 if (!ctx.sessions) log.warn("API_SESSION_SECRET unset — session routes answer 503");
@@ -242,6 +249,7 @@ registerStreamRoute(app, {
 
 await listen(app, env.PORT, env.HOST, async () => {
   geo.stop();
+  sigma.stop();
   for (const m of markets.values()) {
     m.exits.stop();
     m.duels?.queue.stop();

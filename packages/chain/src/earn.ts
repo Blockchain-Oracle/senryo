@@ -58,8 +58,9 @@ export function earnRequestCallData(r: EarnRequest, signature: Hex, permit: Perm
   });
 }
 
-export function rollCallData(hour: number): Hex {
-  return encodeFunctionData({ abi: poolSharesAbi, functionName: "roll", args: [hour] });
+/** Rolls `hour` with open rides marked at `markAt` (their prints recorded there; not before the hour, ≤ 5 s old). */
+export function rollCallData(hour: number, markAt: number): Hex {
+  return encodeFunctionData({ abi: poolSharesAbi, functionName: "roll", args: [hour, markAt] });
 }
 
 export function claimEarnCallData(owner: Address): Hex {

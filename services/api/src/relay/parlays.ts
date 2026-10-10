@@ -187,6 +187,7 @@ export class ParlayRelay {
       return;
     }
     const proofs = legs.map((l, i) => proofOf(l.market, prints[i]?.updates ?? []));
+    const marks = await Promise.all(legs.map((l) => this.d.relay.fillMark(feedIdOf(l.market), target)));
     await untilChainReaches(Math.max(...prints.map((p) => p?.publishTime ?? 0)));
     const lane = this.d.lanes[target % this.d.lanes.length] as Lane;
     const reserve = addressOf(this.d.chainId, "BandReserve");
@@ -194,7 +195,7 @@ export class ParlayRelay {
       lane.run((sender) =>
         sendTx(sender, {
           to: reserve,
-          data: finalizeParlayCallData(parlayId, proofs),
+          data: finalizeParlayCallData(parlayId, proofs, marks),
           action: "marketFinalize",
           meta: { job: "parlay-fill", parlay: parlayId.toString() },
         }),

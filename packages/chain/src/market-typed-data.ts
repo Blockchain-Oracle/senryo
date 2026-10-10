@@ -60,16 +60,21 @@ export const REVOKE_TYPES = {
 export const EXIT_ORDER_TYPES = {
   ExitOrder: [
     { name: "owner", type: "address" },
-    { name: "ticketId", type: "uint256" },
-    { name: "takeProfitE6", type: "uint32" },
-    { name: "stopLossE6", type: "uint32" },
-    { name: "floorE6", type: "uint32" },
-    { name: "trailE6", type: "uint32" },
+    { name: "book", type: "uint8" },
+    { name: "id", type: "uint256" },
+    { name: "takeProfit", type: "uint64" },
+    { name: "stopLoss", type: "uint64" },
+    { name: "floor", type: "uint64" },
+    { name: "trail", type: "uint64" },
     { name: "deadline", type: "uint64" },
     { name: "nonce", type: "uint256" },
     { name: "epoch", type: "uint32" },
   ],
 } as const;
+
+/** Which book an exit belongs to (contracts `BOOK_CALL`, `BOOK_RIDE`). */
+export const EXIT_BOOK = { call: 1, ride: 2 } as const;
+export type ExitBook = (typeof EXIT_BOOK)[keyof typeof EXIT_BOOK];
 
 const NONCE_BYTES = 32;
 
@@ -100,13 +105,18 @@ export interface MarketSessionGrant {
   nonce: bigint;
 }
 
+/**
+ * A call's or a ride's standing exit (v3, R3.12): keyed by `(book, id)`. A call's levels are bids per $1 share × 1e6,
+ * a ride's are prices × 1e8 (the trail a distance); 0 leaves a level unset, all 0 clears the exit.
+ */
 export interface MarketExitOrder {
   owner: Address;
-  ticketId: bigint;
-  takeProfitE6: number;
-  stopLossE6: number;
-  floorE6: number;
-  trailE6: number;
+  book: ExitBook;
+  id: bigint;
+  takeProfit: bigint;
+  stopLoss: bigint;
+  floor: bigint;
+  trail: bigint;
   deadline: bigint;
   nonce: bigint;
   epoch: number;

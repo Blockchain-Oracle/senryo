@@ -22,4 +22,5 @@ export {
   sessionCovers,
 } from "./session/schedule.ts";
 export { easternWhen, type SessionNow, sessionNow } from "./session/words.ts";
+export * from "./sigma-mark.ts";
 export * from "./window-clock.ts";

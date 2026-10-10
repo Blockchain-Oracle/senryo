@@ -19,12 +19,17 @@ export const bandReserveAbi = [
         "internalType": "contract IWindows"
       },
       {
+        "name": "tailTable_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "params_",
         "type": "tuple",
         "internalType": "struct Params",
         "components": [
           {
-            "name": "halfSpreadE6",
+            "name": "minHalfSpreadE6",
             "type": "uint32",
             "internalType": "uint32"
           },
@@ -62,6 +67,11 @@ export const bandReserveAbi = [
             "name": "maxStake",
             "type": "uint64",
             "internalType": "uint64"
+          },
+          {
+            "name": "fillDelaySec",
+            "type": "uint8",
+            "internalType": "uint8"
           }
         ]
       },
@@ -170,6 +180,32 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "RIDE_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "SIGMA_MARK_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "VERSION",
     "inputs": [],
     "outputs": [
@@ -214,6 +250,97 @@ export const bandReserveAbi = [
       }
     ],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addRideMarket",
+    "inputs": [
+      {
+        "name": "m",
+        "type": "tuple",
+        "internalType": "struct RideMarket",
+        "components": [
+          {
+            "name": "verifier",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "enabled",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "maxLeverageBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "takerFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "makerFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "feedId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "maxProfitBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "maxMoveBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "marketReserveBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "skewCapBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxLifeSec",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "marketReserveCap",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "minMargin",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "maxMargin",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "id",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -575,6 +702,134 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "commitRide",
+    "inputs": [
+      {
+        "name": "it",
+        "type": "tuple",
+        "internalType": "struct RideIntent",
+        "components": [
+          {
+            "name": "action",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "marketId",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "isLong",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "rideId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "margin",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "leverageBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "size",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "worstPriceE8",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "recipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configVersion",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "permit",
+        "type": "tuple",
+        "internalType": "struct Permit",
+        "components": [
+          {
+            "name": "value",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "v",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "r",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "s",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "committedStakes",
     "inputs": [],
     "outputs": [
@@ -707,10 +962,39 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "exitKey",
+    "inputs": [
+      {
+        "name": "book",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "exitOf",
     "inputs": [
       {
-        "name": "ticketId",
+        "name": "book",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "id",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -722,24 +1006,24 @@ export const bandReserveAbi = [
         "internalType": "struct Exit",
         "components": [
           {
-            "name": "takeProfitE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "takeProfit",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "stopLossE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "stopLoss",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "floorE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "floor",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "trailE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "trail",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "epoch",
@@ -784,7 +1068,125 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "expireRides",
+    "inputs": [
+      {
+        "name": "ids",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "finalize",
+    "inputs": [
+      {
+        "name": "target",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "ids",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "proof",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "mark",
+        "type": "tuple",
+        "internalType": "struct SigmaMark",
+        "components": [
+          {
+            "name": "feedId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "minute",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "fastE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "slowE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      },
+      {
+        "name": "markSig",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "finalizeParlay",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "proofs",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      },
+      {
+        "name": "marks",
+        "type": "tuple[]",
+        "internalType": "struct SigmaMark[]",
+        "components": [
+          {
+            "name": "feedId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "minute",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "fastE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "slowE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      },
+      {
+        "name": "markSigs",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "finalizeRides",
     "inputs": [
       {
         "name": "target",
@@ -807,25 +1209,33 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
-    "name": "finalizeParlay",
+    "name": "fireExit",
     "inputs": [
       {
         "name": "id",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "proofs",
-        "type": "bytes[]",
-        "internalType": "bytes[]"
       }
     ],
     "outputs": [],
-    "stateMutability": "payable"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "fireExit",
+    "name": "fireRideExit",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "fireRideTrail",
     "inputs": [
       {
         "name": "id",
@@ -964,29 +1374,34 @@ export const bandReserveAbi = [
             "internalType": "address"
           },
           {
-            "name": "ticketId",
+            "name": "book",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "id",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "takeProfitE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "takeProfit",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "stopLossE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "stopLoss",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "floorE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "floor",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "trailE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "trail",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "deadline",
@@ -1169,6 +1584,138 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "hashRide",
+    "inputs": [
+      {
+        "name": "it",
+        "type": "tuple",
+        "internalType": "struct RideIntent",
+        "components": [
+          {
+            "name": "action",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "marketId",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "isLong",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "rideId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "margin",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "leverageBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "size",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "worstPriceE8",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "recipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configVersion",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hashSigmaMark",
+    "inputs": [
+      {
+        "name": "m",
+        "type": "tuple",
+        "internalType": "struct SigmaMark",
+        "components": [
+          {
+            "name": "feedId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "minute",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "fastE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "slowE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "invalidateNonces",
     "inputs": [
       {
@@ -1213,6 +1760,19 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
+    "name": "linearReserved",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "liquid",
     "inputs": [],
     "outputs": [
@@ -1220,6 +1780,140 @@ export const bandReserveAbi = [
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "listSeries",
+    "inputs": [
+      {
+        "name": "seriesId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "terms",
+        "type": "tuple",
+        "internalType": "struct SeriesTerms",
+        "components": [
+          {
+            "name": "sigmaFloorE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "sigmaCapE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "h50E6",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "menu",
+        "type": "tuple[]",
+        "internalType": "struct BandDef[]",
+        "components": [
+          {
+            "name": "kind",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "lowBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "highBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "lossHour",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lossThisHour",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "margins",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "markMinuteOf",
+    "inputs": [
+      {
+        "name": "target",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "markRides",
+    "inputs": [
+      {
+        "name": "t",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "owed",
+        "type": "int256",
+        "internalType": "int256"
       }
     ],
     "stateMutability": "view"
@@ -1275,7 +1969,7 @@ export const bandReserveAbi = [
     ],
     "outputs": [
       {
-        "name": "",
+        "name": "menu",
         "type": "tuple[]",
         "internalType": "struct BandDef[]",
         "components": [
@@ -1348,7 +2042,7 @@ export const bandReserveAbi = [
     "inputs": [],
     "outputs": [
       {
-        "name": "halfSpreadE6",
+        "name": "minHalfSpreadE6",
         "type": "uint32",
         "internalType": "uint32"
       },
@@ -1386,6 +2080,11 @@ export const bandReserveAbi = [
         "name": "maxStake",
         "type": "uint64",
         "internalType": "uint64"
+      },
+      {
+        "name": "fillDelaySec",
+        "type": "uint8",
+        "internalType": "uint8"
       }
     ],
     "stateMutability": "view"
@@ -1565,6 +2264,33 @@ export const bandReserveAbi = [
         "name": "at",
         "type": "uint40",
         "internalType": "uint40"
+      },
+      {
+        "name": "mark",
+        "type": "tuple",
+        "internalType": "struct SigmaMark",
+        "components": [
+          {
+            "name": "feedId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "minute",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "fastE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "slowE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
       }
     ],
     "outputs": [
@@ -1585,6 +2311,29 @@ export const bandReserveAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "refreshFrontier",
+    "inputs": [
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "side",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "ids",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -1645,6 +2394,341 @@ export const bandReserveAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "rideCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rideMarketCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rideMarketOf",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct RideMarket",
+        "components": [
+          {
+            "name": "verifier",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "enabled",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "maxLeverageBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "takerFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "makerFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "feedId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "maxProfitBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "maxMoveBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "marketReserveBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "skewCapBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxLifeSec",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "marketReserveCap",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "minMargin",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "maxMargin",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rideOf",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Ride",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "isLong",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "marketId",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "target",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "recipient",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "filledAt",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "updatedAt",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "configVersion",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "leverageBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "margin",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "reserve",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "openFee",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "size",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "closing",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "entryE8",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "koE8",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "capE8",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "limitE8",
+            "type": "int64",
+            "internalType": "int64"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rideSideOf",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "side",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct RideSide",
+        "components": [
+          {
+            "name": "size",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "margin",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "cost",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "reserve",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "count",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "koEdgeE8",
+            "type": "int64",
+            "internalType": "int64"
+          },
+          {
+            "name": "capEdgeE8",
+            "type": "int64",
+            "internalType": "int64"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "rideTerms",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "maxLinearBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "maxHourlyLossBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "earlyFeeBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "earlyWindowSec",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ridesOpen",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1725,29 +2809,34 @@ export const bandReserveAbi = [
             "internalType": "address"
           },
           {
-            "name": "ticketId",
+            "name": "book",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "id",
             "type": "uint256",
             "internalType": "uint256"
           },
           {
-            "name": "takeProfitE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "takeProfit",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "stopLossE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "stopLoss",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "floorE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "floor",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
-            "name": "trailE6",
-            "type": "uint32",
-            "internalType": "uint32"
+            "name": "trail",
+            "type": "uint64",
+            "internalType": "uint64"
           },
           {
             "name": "deadline",
@@ -1785,7 +2874,7 @@ export const bandReserveAbi = [
         "internalType": "struct Params",
         "components": [
           {
-            "name": "halfSpreadE6",
+            "name": "minHalfSpreadE6",
             "type": "uint32",
             "internalType": "uint32"
           },
@@ -1823,6 +2912,11 @@ export const bandReserveAbi = [
             "name": "maxStake",
             "type": "uint64",
             "internalType": "uint64"
+          },
+          {
+            "name": "fillDelaySec",
+            "type": "uint8",
+            "internalType": "uint8"
           }
         ]
       }
@@ -1845,7 +2939,202 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
-    "name": "setSigma",
+    "name": "setRideExit",
+    "inputs": [
+      {
+        "name": "o",
+        "type": "tuple",
+        "internalType": "struct ExitOrder",
+        "components": [
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "book",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "id",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "takeProfit",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "stopLoss",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "floor",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "trail",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "epoch",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setRideMarket",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "m",
+        "type": "tuple",
+        "internalType": "struct RideMarket",
+        "components": [
+          {
+            "name": "verifier",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "enabled",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "maxLeverageBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "takerFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "makerFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "feedId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "maxProfitBps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "maxMoveBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "marketReserveBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "skewCapBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxLifeSec",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "marketReserveCap",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "minMargin",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "maxMargin",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setRideTerms",
+    "inputs": [
+      {
+        "name": "t",
+        "type": "tuple",
+        "internalType": "struct RideTerms",
+        "components": [
+          {
+            "name": "maxLinearBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxHourlyLossBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "earlyFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "earlyWindowSec",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setSigmaBounds",
     "inputs": [
       {
         "name": "seriesId",
@@ -1853,13 +3142,108 @@ export const bandReserveAbi = [
         "internalType": "bytes32"
       },
       {
-        "name": "sigmaE8",
+        "name": "floorE8",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "capE8",
         "type": "uint64",
         "internalType": "uint64"
       }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setSigmaSigner",
+    "inputs": [
+      {
+        "name": "signer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setTailTable",
+    "inputs": [
+      {
+        "name": "table",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setWithdrawHold",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "settleBounds",
+    "inputs": [
+      {
+        "name": "t",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "ids",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "proof",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "settleEnds",
+    "inputs": [
+      {
+        "name": "end",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "ids",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "proof",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -1889,7 +3273,39 @@ export const bandReserveAbi = [
   },
   {
     "type": "function",
-    "name": "sigmaOf",
+    "name": "sigmaSigner",
+    "inputs": [
+      {
+        "name": "signer",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tailTable",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "termsOf",
     "inputs": [
       {
         "name": "seriesId",
@@ -1900,8 +3316,25 @@ export const bandReserveAbi = [
     "outputs": [
       {
         "name": "",
-        "type": "uint64",
-        "internalType": "uint64"
+        "type": "tuple",
+        "internalType": "struct SeriesTerms",
+        "components": [
+          {
+            "name": "sigmaFloorE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "sigmaCapE8",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "h50E6",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -2051,6 +3484,19 @@ export const bandReserveAbi = [
         "name": "",
         "type": "address",
         "internalType": "contract IWindows"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "withdrawHold",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -2332,7 +3778,13 @@ export const bandReserveAbi = [
     "name": "ExitFired",
     "inputs": [
       {
-        "name": "ticketId",
+        "name": "book",
+        "type": "uint8",
+        "indexed": true,
+        "internalType": "uint8"
+      },
+      {
+        "name": "id",
         "type": "uint256",
         "indexed": true,
         "internalType": "uint256"
@@ -2363,34 +3815,40 @@ export const bandReserveAbi = [
     "name": "ExitSet",
     "inputs": [
       {
-        "name": "ticketId",
+        "name": "book",
+        "type": "uint8",
+        "indexed": true,
+        "internalType": "uint8"
+      },
+      {
+        "name": "id",
         "type": "uint256",
         "indexed": true,
         "internalType": "uint256"
       },
       {
-        "name": "takeProfitE6",
-        "type": "uint32",
+        "name": "takeProfit",
+        "type": "uint64",
         "indexed": false,
-        "internalType": "uint32"
+        "internalType": "uint64"
       },
       {
-        "name": "stopLossE6",
-        "type": "uint32",
+        "name": "stopLoss",
+        "type": "uint64",
         "indexed": false,
-        "internalType": "uint32"
+        "internalType": "uint64"
       },
       {
-        "name": "floorE6",
-        "type": "uint32",
+        "name": "floor",
+        "type": "uint64",
         "indexed": false,
-        "internalType": "uint32"
+        "internalType": "uint64"
       },
       {
-        "name": "trailE6",
-        "type": "uint32",
+        "name": "trail",
+        "type": "uint64",
         "indexed": false,
-        "internalType": "uint32"
+        "internalType": "uint64"
       },
       {
         "name": "viaSession",
@@ -2446,6 +3904,37 @@ export const bandReserveAbi = [
         "type": "uint64",
         "indexed": false,
         "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FrontierRefreshed",
+    "inputs": [
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "side",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "koEdgeE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      },
+      {
+        "name": "capEdgeE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
       }
     ],
     "anonymous": false
@@ -2511,7 +4000,7 @@ export const bandReserveAbi = [
         "internalType": "struct Params",
         "components": [
           {
-            "name": "halfSpreadE6",
+            "name": "minHalfSpreadE6",
             "type": "uint32",
             "internalType": "uint32"
           },
@@ -2549,6 +4038,11 @@ export const bandReserveAbi = [
             "name": "maxStake",
             "type": "uint64",
             "internalType": "uint64"
+          },
+          {
+            "name": "fillDelaySec",
+            "type": "uint8",
+            "internalType": "uint8"
           }
         ]
       }
@@ -2837,6 +4331,373 @@ export const bandReserveAbi = [
   },
   {
     "type": "event",
+    "name": "RideCloseCommitted",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "size",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "worstPriceE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      },
+      {
+        "name": "target",
+        "type": "uint40",
+        "indexed": false,
+        "internalType": "uint40"
+      },
+      {
+        "name": "viaSession",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RideCloseRefused",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "reason",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RideCommitted",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "isLong",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "margin",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "leverageBps",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "openFee",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "worstPriceE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      },
+      {
+        "name": "target",
+        "type": "uint40",
+        "indexed": false,
+        "internalType": "uint40"
+      },
+      {
+        "name": "viaSession",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RideExited",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "how",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "size",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "exitE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      },
+      {
+        "name": "pnl",
+        "type": "int256",
+        "indexed": false,
+        "internalType": "int256"
+      },
+      {
+        "name": "fees",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "paid",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "keeperFee",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "by",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RideFilled",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "entryE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      },
+      {
+        "name": "size",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "reserve",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "openFee",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "koE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      },
+      {
+        "name": "capE8",
+        "type": "int64",
+        "indexed": false,
+        "internalType": "int64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RideMarketSet",
+    "inputs": [
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "feedId",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "enabled",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "configVersion",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RideRefused",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "reason",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "refunded",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RideTermsSet",
+    "inputs": [
+      {
+        "name": "terms",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct RideTerms",
+        "components": [
+          {
+            "name": "maxLinearBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "maxHourlyLossBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "earlyFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "earlyWindowSec",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "configVersion",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SeriesListed",
+    "inputs": [
+      {
+        "name": "seriesId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "sigmaFloorE8",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "sigmaCapE8",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "h50E6",
+        "type": "uint32",
+        "indexed": false,
+        "internalType": "uint32"
+      },
+      {
+        "name": "bands",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "SessionGranted",
     "inputs": [
       {
@@ -2880,7 +4741,7 @@ export const bandReserveAbi = [
   },
   {
     "type": "event",
-    "name": "SigmaSet",
+    "name": "SigmaBoundsSet",
     "inputs": [
       {
         "name": "seriesId",
@@ -2889,10 +4750,48 @@ export const bandReserveAbi = [
         "internalType": "bytes32"
       },
       {
-        "name": "sigmaE8",
+        "name": "sigmaFloorE8",
         "type": "uint64",
         "indexed": false,
         "internalType": "uint64"
+      },
+      {
+        "name": "sigmaCapE8",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SigmaSignerSet",
+    "inputs": [
+      {
+        "name": "signer",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TailTableSet",
+    "inputs": [
+      {
+        "name": "table",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       },
       {
         "name": "configVersion",
@@ -2939,6 +4838,19 @@ export const bandReserveAbi = [
       },
       {
         "name": "toHolders",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "WithdrawHoldSet",
+    "inputs": [
+      {
+        "name": "amount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -3018,6 +4930,22 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "BadFrontier",
+    "inputs": [
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "side",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "BadGrant",
     "inputs": []
   },
@@ -3033,6 +4961,32 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "BadRide",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadRideMarket",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadRideSize",
+    "inputs": [
+      {
+        "name": "size",
+        "type": "uint128",
+        "internalType": "uint128"
+      },
+      {
+        "name": "held",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "BadShares",
     "inputs": [
       {
@@ -3044,6 +4998,22 @@ export const bandReserveAbi = [
         "name": "held",
         "type": "uint64",
         "internalType": "uint64"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "BadSigmaMark",
+    "inputs": [
+      {
+        "name": "feedId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "minute",
+        "type": "uint40",
+        "internalType": "uint40"
       }
     ]
   },
@@ -3070,6 +5040,17 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "BadTailTable",
+    "inputs": [
+      {
+        "name": "table",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "ClosePending",
     "inputs": [
       {
@@ -3084,7 +5065,12 @@ export const bandReserveAbi = [
     "name": "ExitRevoked",
     "inputs": [
       {
-        "name": "ticketId",
+        "name": "book",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "id",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -3185,7 +5171,12 @@ export const bandReserveAbi = [
     "name": "NoExit",
     "inputs": [
       {
-        "name": "ticketId",
+        "name": "book",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "id",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -3209,17 +5200,6 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
-    "name": "NoVolatility",
-    "inputs": [
-      {
-        "name": "seriesId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ]
-  },
-  {
-    "type": "error",
     "name": "NonPositivePrice",
     "inputs": [
       {
@@ -3236,6 +5216,17 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "NonPositiveRidePrice",
+    "inputs": [
+      {
+        "name": "priceE8",
+        "type": "int64",
+        "internalType": "int64"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "NonceUsed",
     "inputs": [
       {
@@ -3247,6 +5238,22 @@ export const bandReserveAbi = [
         "name": "nonce",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NotRideOwner",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
       }
     ]
   },
@@ -3316,6 +5323,22 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "PastBound",
+    "inputs": [
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "side",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "RecipientMismatch",
     "inputs": [
       {
@@ -3348,6 +5371,60 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "RideClosePending",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "RideHeldTooShort",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "canCloseAt",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "RideMarketClosed",
+    "inputs": [
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "RideNotOpen",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "status",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "SafeCastOverflowedUintDowncast",
     "inputs": [
       {
@@ -3370,6 +5447,28 @@ export const bandReserveAbi = [
         "name": "token",
         "type": "address",
         "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "SeriesAlreadyListed",
+    "inputs": [
+      {
+        "name": "seriesId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "SeriesNotListed",
+    "inputs": [
+      {
+        "name": "seriesId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ]
   },
@@ -3429,6 +5528,22 @@ export const bandReserveAbi = [
   },
   {
     "type": "error",
+    "name": "TooEarly",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "at",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "UnknownBand",
     "inputs": [
       {
@@ -3451,6 +5566,28 @@ export const bandReserveAbi = [
         "name": "parlayId",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "UnknownRide",
+    "inputs": [
+      {
+        "name": "rideId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "UnknownRideMarket",
+    "inputs": [
+      {
+        "name": "marketId",
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ]
   },

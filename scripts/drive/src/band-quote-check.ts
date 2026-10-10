@@ -1,20 +1,17 @@
 /**
- * Money check (S5): the device's pricing mirror (`@senryo/core` band-math / band-quote) equals the deployed
- * `BandReserve.quoteOpen` bit for bit — probability, price per share and payout — over random bands, stakes, spots
- * (near K and far in the tails) and moments, on real windows with recorded open prints. Menu, σ, terms and the load
- * surcharge are read from the chain, not assumed. Exits 1 on any difference.
+ * Money check (S5, v3 R4): the device's pricing mirror (`@senryo/core` band-math / band-quote / sigma-mark) equals the
+ * deployed `BandReserve.quoteOpen` bit for bit — probability, price per share and payout — over random bands, stakes,
+ * spots (near K and far in the tails), moments and σ marks (inside the series' bounds and past them, so the clamp is
+ * checked too), on real windows with recorded open prints. Menu, σ bounds, h50, terms and the load surcharge are read
+ * from the chain, not assumed. Exits 1 on any difference. Offline, `pnpm mirror` pins the same maths to the vectors.
  *
  *   pnpm --filter @senryo/drive exec tsx src/band-quote-check.ts [cases]
- *
- * v3 (R3.3–R3.4) prices on a σ mark, the calibrated table and the spread curve, so this check runs again once the v3
- * reserve is deployed and exported (R3.19 moves it to `quoteOpen(…, mark)`, `termsOf` and `halfSpreadE6`); against the
- * abandoned v2 reserve (D-309) it reports differences by design. Offline, `band-math-vectors.ts` pins the mirror.
  */
 import { callsRoute, createApiClient, windowProofRoute } from "@senryo/api-client";
 import { addressOf, createReadClient, type Hex, seriesIdOf } from "@senryo/chain";
 import { TESTNET_CHAIN_ID } from "@senryo/config";
 import { bandReserveAbi } from "@senryo/contracts/abis";
-import { type BandShape, P_ONE, payoutFor, probE6 } from "@senryo/core";
+import { type BandShape, clampMark, halfSpreadE6, P_ONE, payoutFor, probE6 } from "@senryo/core";
 
 const CHAIN = TESTNET_CHAIN_ID;
 const ORIGIN = process.env.API_ORIGIN ?? "https://api.senryo.xyz";
@@ -37,6 +34,9 @@ const FAR_SHARE = 0.2;
 const BPS = 10_000;
 const MIN_STAKE = 1_000_000;
 const MAX_STAKE = 100_000_000;
+/** σ marks drawn from a quarter of the floor to twice the cap, both independently (fast and slow). */
+const MARK_LOW = 0.25;
+const MARK_HIGH = 2;
 
 const api = createApiClient({ origin: ORIGIN, getToken: () => undefined });
 const read = createReadClient(CHAIN);
@@ -61,12 +61,20 @@ for (const id of windowIds) {
 if (windows.length === 0) throw new Error("no window with an open print to quote against");
 
 const params = await read.readContract({ address: reserve, abi: bandReserveAbi, functionName: "params" });
-const [halfSpreadE6, maxSurchargeE6, , , , maxExpiryReserved] = params;
-const perWindow = new Map<Hex, { menu: BandShape[]; sigmaE8: bigint; surchargeE6: bigint }>();
+// The public getter returns `Params` as a tuple, in struct order.
+const [minHalfSpreadE6, maxSurchargeE6, , , , maxExpiryReserved] = params;
+interface Priced {
+  menu: BandShape[];
+  floorE8: bigint;
+  capE8: bigint;
+  h50E6: bigint;
+  surchargeE6: bigint;
+}
+const perWindow = new Map<Hex, Priced>();
 for (const w of windows) {
-  const [menu, sigmaE8, reserved] = await Promise.all([
+  const [menu, terms, reserved] = await Promise.all([
     read.readContract({ address: reserve, abi: bandReserveAbi, functionName: "menuOf", args: [w.seriesId] }),
-    read.readContract({ address: reserve, abi: bandReserveAbi, functionName: "sigmaOf", args: [w.seriesId] }),
+    read.readContract({ address: reserve, abi: bandReserveAbi, functionName: "termsOf", args: [w.seriesId] }),
     read.readContract({ address: reserve, abi: bandReserveAbi, functionName: "reservedByExpiry", args: [w.expiry] }),
   ]);
   const shapes = menu.map((d) => {
@@ -76,8 +84,10 @@ for (const w of windows) {
   });
   perWindow.set(w.id, {
     menu: shapes,
-    sigmaE8: BigInt(sigmaE8),
-    surchargeE6: (BigInt(maxSurchargeE6) * reserved) / BigInt(maxExpiryReserved),
+    floorE8: terms.sigmaFloorE8,
+    capE8: terms.sigmaCapE8,
+    h50E6: BigInt(terms.h50E6),
+    surchargeE6: (BigInt(maxSurchargeE6) * reserved) / maxExpiryReserved,
   });
 }
 
@@ -91,7 +101,10 @@ const samples = Array.from({ length: cases }, () => {
   const spot = (w.k * BigInt(Math.round(BPS * BPS + rand(-spread, spread) * BPS))) / BigInt(BPS * BPS);
   const at = Math.floor(rand(w.start, w.expiry));
   const stake = BigInt(Math.floor(rand(MIN_STAKE, MAX_STAKE)));
-  return { w, band, spot, at, stake };
+  const sigma = () =>
+    BigInt(Math.max(1, Math.round(rand(Number(shape.floorE8) * MARK_LOW, Number(shape.capE8) * MARK_HIGH))));
+  const mark = { feedId: w.seriesId, minute: 0, fastE8: sigma(), slowE8: sigma() };
+  return { w, band, spot, at, stake, mark };
 });
 
 let diffs = 0;
@@ -105,7 +118,7 @@ for (let i = 0; i < samples.length; i += BATCH) {
           address: reserve,
           abi: bandReserveAbi,
           functionName: "quoteOpen",
-          args: [s.w.id, s.band, s.stake, s.spot, s.at],
+          args: [s.w.id, s.band, s.stake, s.spot, s.at, s.mark],
         }) as const,
     ),
   });
@@ -114,8 +127,9 @@ for (let i = 0; i < samples.length; i += BATCH) {
     const shape = perWindow.get(s.w.id);
     const band = shape?.menu[s.band];
     if (!shape || !band) throw new Error("no band");
-    const prob = probE6(band, s.w.k, s.spot, shape.sigmaE8, shape.sigmaE8, BigInt(s.w.expiry - s.at));
-    const price = prob + BigInt(halfSpreadE6) + shape.surchargeE6;
+    const m = clampMark(s.mark, shape.floorE8, shape.capE8);
+    const prob = probE6(band, s.w.k, s.spot, m.fastE8, m.slowE8, BigInt(s.w.expiry - s.at));
+    const price = prob + halfSpreadE6(prob, shape.h50E6, BigInt(minHalfSpreadE6)) + shape.surchargeE6;
     const payout = price < P_ONE ? payoutFor(s.stake, price) : 0n;
     if (prob !== chainProb || price !== chainPrice || payout !== chainPayout) {
       diffs += 1;

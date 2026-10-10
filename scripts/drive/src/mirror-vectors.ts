@@ -1,13 +1,13 @@
 /**
  * Money check (R3.3, R3.19; D-300, D-299): the clients' mirrors compute exactly what the contracts do, against the
  * vectors Foundry writes (`BandMathVectors.t.sol`, `RideMathVectors.t.sol` pin the contracts to the same files):
- * band pricing (`band-math`), ride maths (`ride-math`), the spread curve, and the ride-intent and σ-mark EIP-712
- * digests (`@senryo/chain`). Offline — no chain, no network. Exits 1 on any difference.
+ * band pricing (`band-math`), ride maths (`ride-math`), the spread curve, and the ride-intent, σ-mark and exit-order
+ * EIP-712 digests (`@senryo/chain`). Offline — no chain, no network. Exits 1 on any difference.
  *
  *   pnpm --filter @senryo/drive exec tsx src/mirror-vectors.ts
  */
 import { readFileSync } from "node:fs";
-import { rideIntentRequest, sigmaMarkRequest } from "@senryo/chain";
+import { EXIT_BOOK, EXIT_ORDER_TYPES, rideIntentRequest, sigmaMarkRequest } from "@senryo/chain";
 import {
   type BandShape,
   halfSpreadE6,
@@ -102,6 +102,7 @@ const t = read<{
   feedId: Hex;
   rideIntent: Hex;
   sigmaMark: Hex;
+  exitOrder: Hex;
 }>("typed-data.json");
 const domain = {
   name: "Senryo Markets",
@@ -126,9 +127,27 @@ const ride = rideIntentRequest(domain, {
   epoch: 1,
 });
 const mark = sigmaMarkRequest(domain, { feedId: t.feedId, minute: 1_800_000_000, fastE8: 8900n, slowE8: 9100n });
+const exit = {
+  domain,
+  types: EXIT_ORDER_TYPES,
+  primaryType: "ExitOrder",
+  message: {
+    owner: t.owner,
+    book: EXIT_BOOK.ride,
+    id: 9n,
+    takeProfit: 7_000_000_000_000n,
+    stopLoss: 5_900_000_000_000n,
+    floor: 6_000_000_000_000n,
+    trail: 150n,
+    deadline: 1_800_000_060n,
+    nonce: 77n,
+    epoch: 2,
+  },
+} as const;
 for (const [what, got, want] of [
   ["RideIntent", hashTypedData(ride), t.rideIntent],
   ["SigmaMark", hashTypedData(mark), t.sigmaMark],
+  ["ExitOrder", hashTypedData(exit), t.exitOrder],
 ] as const) {
   checked++;
   if (got !== want) {

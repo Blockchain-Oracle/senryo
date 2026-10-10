@@ -6,6 +6,7 @@
 import type { ChainId } from "@senryo/config";
 import { type Address, type Hex, hashTypedData } from "viem";
 import { marketsDomain } from "./market-typed-data.ts";
+import type { Signer } from "./signer.ts";
 
 export const RIDE_INTENT_TYPES = {
   RideIntent: [
@@ -77,3 +78,14 @@ export const rideIntentDigest = (chainId: ChainId, it: RideIntent): Hex =>
 
 export const sigmaMarkDigest = (chainId: ChainId, m: SigmaMark): Hex =>
   hashTypedData(sigmaMarkRequest(marketsDomain(chainId), m));
+
+/** A σ mark with an allowed signer's signature, as `finalize` and `finalizeParlay` take it. */
+export interface SignedSigmaMark {
+  mark: SigmaMark;
+  signature: Hex;
+}
+
+/** Signs `mark` under `chainId`'s reserve domain (the keeper's and the relay's keys are allowed signers). */
+export async function signSigmaMark(signer: Signer, chainId: ChainId, mark: SigmaMark): Promise<SignedSigmaMark> {
+  return { mark, signature: await signer.signTypedData(sigmaMarkRequest(marketsDomain(chainId), mark)) };
+}

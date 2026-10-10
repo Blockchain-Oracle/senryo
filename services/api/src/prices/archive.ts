@@ -1,7 +1,8 @@
 import type { Hex } from "@senryo/chain";
+import { toE8 } from "@senryo/core";
 import { archivedPrint, type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import { BOUNDARY_SEC, CANDLE_CLOSE_GRACE_SEC } from "./constants.ts";
-import { type PriceUpdate, provesInstant, toE8 } from "./ring.ts";
+import { type PriceUpdate, provesInstant } from "./ring.ts";
 
 /**
  * The `pyth_prints` archive and the 1-minute candles (D-272). Every window boundary (each minute) is archived the

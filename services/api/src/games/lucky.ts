@@ -11,18 +11,18 @@ import {
 import {
   BAND_INDEX,
   type BandKind,
-  bandMenu,
   CALENDARS,
   type CadenceSec,
   type ChainId,
+  FILL_DELAY_SEC,
   feedIdOf,
   isQuotable,
   LOCKOUT_SEC,
   type MarketSpec,
   marketsOn,
+  menuOn,
   POOL_TERMS,
   quoteCurve,
-  sigmaE8Of,
 } from "@senryo/config";
 import {
   chooseLucky,
@@ -35,6 +35,7 @@ import {
   quoteOpen,
   scheduleOf,
   sessionCovers,
+  toE8,
 } from "@senryo/core";
 import {
   type Db,
@@ -47,7 +48,7 @@ import {
 } from "@senryo/service-common";
 import type { SeriesListing } from "../listing.ts";
 import type { PythGateway } from "../prices/gateway.ts";
-import { toE8 } from "../prices/ring.ts";
+import type { SigmaDesk } from "../prices/sigma.ts";
 import { bad } from "../relay/gates.ts";
 
 /**
@@ -91,7 +92,9 @@ export interface LuckyReveal {
 }
 
 export class LuckyDesk {
-  constructor(private readonly d: { chainId: ChainId; gateway: PythGateway; listing: SeriesListing; db: Db }) {}
+  constructor(
+    private readonly d: { chainId: ChainId; gateway: PythGateway; sigma: SigmaDesk; listing: SeriesListing; db: Db },
+  ) {}
 
   /** Markets a draw may land on now: a dealable window on chain, in session, on a quotable price (FeedStates). */
   private tradingNow(now: number): MarketSpec[] {
@@ -153,18 +156,15 @@ export class LuckyDesk {
     const spot = m && this.d.gateway.latestE8(feedIdOf(m));
     if (!m || !spot) return null;
     const terms = POOL_TERMS[this.d.chainId];
+    const mark = await this.d.sigma.quoteMark(m, now + FILL_DELAY_SEC);
     const quotes: (LuckyQuoted & { cadenceSec: number; start: number })[] = [];
     for (const cadence of LUCKY_CADENCES) {
       const w = this.window(m, cadence, now);
       if (!w) continue;
       const open = await this.d.gateway.printAt(feedIdOf(m), w.start, OPEN_PRINT_WAIT_MS);
       if (!open) continue;
-      const window = {
-        openE8: toE8(open.price, open.expo),
-        sigmaE8: BigInt(sigmaE8Of(m)),
-        tauSec: BigInt(w.expiry - now),
-      };
-      const menu = bandMenu(m, cadence as CadenceSec);
+      const window = { openE8: toE8(open.price, open.expo), mark, tauSec: BigInt(w.expiry - now) };
+      const menu = menuOn(this.d.chainId, m, cadence as CadenceSec);
       const windowId = windowIdOf(seriesIdOf(m.symbol, cadence), w.start);
       for (const kind of SIDE_BANDS[side]) {
         const band = BAND_INDEX[kind];

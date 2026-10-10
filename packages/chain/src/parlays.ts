@@ -12,6 +12,7 @@ import { addressOf } from "./contracts.ts";
 import { NO_PERMIT, type PermitArgs } from "./market-calls.ts";
 import { marketsDomain } from "./market-typed-data.ts";
 import { aggregate, type Call } from "./markets.ts";
+import type { SignedSigmaMark } from "./ride-typed-data.ts";
 
 export const PARLAY_TYPES = {
   ParlayIntent: [
@@ -57,8 +58,17 @@ export function commitParlayCallData(intent: MarketParlayIntent, signature: Hex,
 }
 
 /** The fill: one proof per leg, in leg order (the print of the parlay's instant on that leg's feed). */
-export function finalizeParlayCallData(parlayId: bigint, proofs: readonly Hex[]): Hex {
-  return encodeFunctionData({ abi: bandReserveAbi, functionName: "finalizeParlay", args: [parlayId, [...proofs]] });
+/** Fills a parlay at its target: each leg's proof and σ mark, in leg order. */
+export function finalizeParlayCallData(
+  parlayId: bigint,
+  proofs: readonly Hex[],
+  marks: readonly SignedSigmaMark[],
+): Hex {
+  return encodeFunctionData({
+    abi: bandReserveAbi,
+    functionName: "finalizeParlay",
+    args: [parlayId, [...proofs], marks.map((m) => m.mark), marks.map((m) => m.signature)],
+  });
 }
 
 export function expireParlayCallData(parlayId: bigint): Hex {

@@ -27,6 +27,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPTS, TOLERANCE_BPS } from "./constants.ts";
 import { DUEL_LIVE_STATES, DUEL_SIDES, phaseOf, picksOf, seatOf } from "./duel.ts";
+import { fillMark } from "./sigma.ts";
 import type { SignDeps } from "./sign.ts";
 
 const signing = () => Promise.all([import("./sign.ts"), import("./delegates.ts")]);
@@ -71,7 +72,7 @@ export function useDuelCardQuotes(m: DuelView | null) {
       if (!m || k === undefined || spot === undefined || !band || !series || !terms) {
         return { ...side, payout: null, multipleE2: null };
       }
-      const w = { openE8: k, sigmaE8: BigInt(series.sigmaE8), tauSec: tau };
+      const w = { openE8: k, mark: fillMark(live.sigma, c.symbol, series, now), tauSec: tau };
       const q = quoteOpen(band, w, BigInt(Math.round(spot)), m.cardStake, terms);
       if (q.refusal) return { ...side, payout: null, multipleE2: null };
       return { ...side, payout: q.payout, multipleE2: multiplierE2(m.cardStake, q.payout) };

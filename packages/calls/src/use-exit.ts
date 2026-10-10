@@ -5,6 +5,7 @@
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { setExitRoute } from "@senryo/api-client";
+import { callExitLevels } from "@senryo/chain";
 import type { CadenceSec } from "@senryo/config";
 import { type ExitPrices, hasExit } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
@@ -50,7 +51,7 @@ export function useExitActions({ client, hint }: Caller, cadenceSec: CadenceSec)
       setPending(true);
       try {
         const prompt = hasExit(prices) ? PROMPTS.exit : PROMPTS.clearExit;
-        const signed = await signExit(deps, { owner, ticketId, ...prices }, prompt);
+        const signed = await signExit(deps, { owner, ...callExitLevels(ticketId, prices) }, prompt);
         const r = await env.api.call(setExitRoute, {
           body: { chainId: env.chainId, order: signed.order, signature: signed.signature },
         });

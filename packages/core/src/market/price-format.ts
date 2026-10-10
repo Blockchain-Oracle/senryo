@@ -46,3 +46,12 @@ export function formatPrice(
 
 /** The stream's prices are × 1e8 (Pyth's exponent −8). */
 export const priceFromE8 = (priceE8: number): number => priceE8 / E8;
+
+const PRINT_EXPO = -8;
+const TEN = 10n;
+
+/** A Pyth price at any exponent → e-8 (the contracts' scale; floored when finer, as `PythPrintVerifier.normalize`). */
+export function toE8(price: bigint, expo: number): bigint {
+  if (expo >= PRINT_EXPO) return price * TEN ** BigInt(expo - PRINT_EXPO);
+  return price / TEN ** BigInt(PRINT_EXPO - expo);
+}

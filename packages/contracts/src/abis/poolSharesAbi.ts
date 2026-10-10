@@ -83,6 +83,19 @@ export const poolSharesAbi = [
   },
   {
     "type": "function",
+    "name": "MARK_MAX_AGE_SEC",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "SUPPLY",
     "inputs": [],
     "outputs": [
@@ -336,6 +349,19 @@ export const poolSharesAbi = [
   },
   {
     "type": "function",
+    "name": "nextHour",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "nonceUsed",
     "inputs": [
       {
@@ -354,32 +380,6 @@ export const poolSharesAbi = [
         "name": "",
         "type": "bool",
         "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "openSupplyBatch",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "openWithdrawBatch",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -521,6 +521,11 @@ export const poolSharesAbi = [
         "name": "hour",
         "type": "uint40",
         "internalType": "uint40"
+      },
+      {
+        "name": "markAt",
+        "type": "uint40",
+        "internalType": "uint40"
       }
     ],
     "outputs": [],
@@ -557,9 +562,9 @@ export const poolSharesAbi = [
     "name": "supplyBatch",
     "inputs": [
       {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "hour",
+        "type": "uint40",
+        "internalType": "uint40"
       }
     ],
     "outputs": [
@@ -582,6 +587,11 @@ export const poolSharesAbi = [
         "name": "done",
         "type": "bool",
         "internalType": "bool"
+      },
+      {
+        "name": "movedTo",
+        "type": "uint40",
+        "internalType": "uint40"
       }
     ],
     "stateMutability": "view"
@@ -598,9 +608,9 @@ export const poolSharesAbi = [
     ],
     "outputs": [
       {
-        "name": "batch",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "hour",
+        "type": "uint40",
+        "internalType": "uint40"
       },
       {
         "name": "amount",
@@ -713,9 +723,9 @@ export const poolSharesAbi = [
     "name": "withdrawBatch",
     "inputs": [
       {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "hour",
+        "type": "uint40",
+        "internalType": "uint40"
       }
     ],
     "outputs": [
@@ -738,6 +748,11 @@ export const poolSharesAbi = [
         "name": "done",
         "type": "bool",
         "internalType": "bool"
+      },
+      {
+        "name": "movedTo",
+        "type": "uint40",
+        "internalType": "uint40"
       }
     ],
     "stateMutability": "view"
@@ -754,9 +769,9 @@ export const poolSharesAbi = [
     ],
     "outputs": [
       {
-        "name": "batch",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "hour",
+        "type": "uint40",
+        "internalType": "uint40"
       },
       {
         "name": "amount",
@@ -874,6 +889,12 @@ export const poolSharesAbi = [
         "type": "bool",
         "indexed": false,
         "internalType": "bool"
+      },
+      {
+        "name": "ridesOwed",
+        "type": "int256",
+        "indexed": false,
+        "internalType": "int256"
       }
     ],
     "anonymous": false
@@ -933,10 +954,10 @@ export const poolSharesAbi = [
         "internalType": "address"
       },
       {
-        "name": "batch",
-        "type": "uint256",
+        "name": "hour",
+        "type": "uint40",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint40"
       },
       {
         "name": "assets",
@@ -983,10 +1004,10 @@ export const poolSharesAbi = [
         "internalType": "address"
       },
       {
-        "name": "batch",
-        "type": "uint256",
+        "name": "hour",
+        "type": "uint40",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "uint40"
       },
       {
         "name": "shares",
@@ -1208,6 +1229,22 @@ export const poolSharesAbi = [
   },
   {
     "type": "error",
+    "name": "RollOutOfOrder",
+    "inputs": [
+      {
+        "name": "hour",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "next",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "SafeERC20FailedOperation",
     "inputs": [
       {
@@ -1237,6 +1274,17 @@ export const poolSharesAbi = [
     "type": "error",
     "name": "SignatureInvalid",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StaleMark",
+    "inputs": [
+      {
+        "name": "markAt",
+        "type": "uint40",
+        "internalType": "uint40"
+      }
+    ]
   },
   {
     "type": "error",

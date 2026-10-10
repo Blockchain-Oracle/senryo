@@ -21,6 +21,8 @@ import * as m0019 from "../migrations/0019_parlays.ts";
 import * as m0020 from "../migrations/0020_duels.ts";
 import * as m0021 from "../migrations/0021_events.ts";
 import * as m0022 from "../migrations/0022_games.ts";
+import * as m0023 from "../migrations/0023_sigma_marks.ts";
+import * as m0024 from "../migrations/0024_rides.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -71,6 +73,8 @@ export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [
   m0020,
   m0021,
   m0022,
+  m0023,
+  m0024,
 ];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */

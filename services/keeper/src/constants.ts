@@ -37,6 +37,8 @@ export const RETENTION_DAYS = {
   pushSends: 30,
   /** Checked Expo push tickets (deleted by the `receipts` job, not the daily sweep). */
   pushTickets: 7,
+  /** σ marks: a fill's own mark is in its transaction; the rebuild window is three days. */
+  sigmaMarks: 7,
 } as const;
 
 /** Receipts are fetched this long after the send (Expo's recommendation) and are gone after Expo clears them (24 h). */
@@ -47,9 +49,24 @@ export const PUSH_RECEIPTS_PER_RUN = 10_000;
 /** Market calendars (D-289): checked every 15 minutes; holidays kept 60 days ahead (≤ 32 per calendar on chain). */
 export const CALENDARS_INTERVAL_MS = 900_000;
 export const CALENDAR_HOLIDAY_DAYS = 60;
-/** Earn (D-287): the hourly roll is tried every minute after the hour until the hour's windows are settled. */
-export const EARN_INTERVAL_MS = 60_000;
+/**
+ * σ marks (R4.3, D-313): a minute's marks are written once its boundary print is archived, from this long after the
+ * boundary, and by `SIGMA_WAIT_SEC` without one (a closed market carries its state); fills need them by 5 s.
+ */
+export const SIGMA_INTERVAL_MS = 500;
+export const SIGMA_AFTER_SEC = 1;
+export const SIGMA_WAIT_SEC = 4;
+/**
+ * Earn (D-287, D-307): the hourly roll is tried once a minute after the hour until the hour's windows are settled —
+ * `EARN_ROLL_AT_SEC` past a boundary, once its prints are archived; with rides open it is sent only while that
+ * boundary's print can still be at most 5 s old when mined. Deliveries run once a minute.
+ */
+export const EARN_INTERVAL_MS = 1_000;
+export const EARN_ROLL_AT_SEC = 1;
+export const EARN_MARK_SEND_BY_SEC = 2;
+export const EARN_DELIVER_EVERY_MS = 60_000;
 export const HOUR_SEC = 3600;
+export const MINUTE_SEC = 60;
 /** Owners delivered per tick (each delivery is one `claim`). */
 export const EARN_CLAIMS_PER_TICK = 20;
 /** Events (S8.7, D-296): answers, verdicts and payouts every 30 s; new games listed every 10 minutes. */

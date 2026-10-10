@@ -1,6 +1,7 @@
 // What a call would get, computed on the device every frame (D-272) with the contracts' own rules
 // (`BandBook._fillOpen` / `_fillClose`, `BandReserve.quoteOpen`); the relay re-checks and the fill print decides.
 import { type BandShape, BPS, halfSpreadE6, P_ONE, payoutFor, probE6, proceedsFor } from "./band-math.ts";
+import type { SigmaPair } from "./sigma-mark.ts";
 
 const HUNDRED = 100n;
 
@@ -15,10 +16,13 @@ export interface QuoteTerms {
   surchargeE6: bigint;
 }
 
-/** Where the window stands: its open print K, σ per √s, and the seconds from the fill print to expiry. */
+/**
+ * Where the window stands: its open print K, the σ mark the fill will carry (already held to the series' bounds,
+ * `clampMark`), and the seconds from the fill print to expiry.
+ */
 export interface QuoteWindow {
   openE8: bigint;
-  sigmaE8: bigint;
+  mark: SigmaPair;
   tauSec: bigint;
 }
 
@@ -36,7 +40,7 @@ export interface OpenQuote {
 
 /** An open of `stake` on `band` at `spotE8` — refused exactly where the contract would refuse it for price. */
 export function quoteOpen(band: BandShape, w: QuoteWindow, spotE8: bigint, stake: bigint, t: QuoteTerms): OpenQuote {
-  const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.sigmaE8, w.tauSec);
+  const prob = probE6(band, w.openE8, spotE8, w.mark.fastE8, w.mark.slowE8, w.tauSec);
   const priceE6 = prob + halfSpreadE6(prob, t.h50E6, t.minHalfSpreadE6) + t.surchargeE6;
   const refused = prob < t.minProbE6 || prob > t.maxProbE6 || priceE6 >= P_ONE;
   const payout = refused ? 0n : payoutFor(stake, priceE6);
@@ -55,7 +59,7 @@ export interface CloseQuote {
 
 /** Selling `shares` of a ticket on `band` at `spotE8`. */
 export function quoteClose(band: BandShape, w: QuoteWindow, spotE8: bigint, shares: bigint, t: QuoteTerms): CloseQuote {
-  const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.sigmaE8, w.tauSec);
+  const prob = probE6(band, w.openE8, spotE8, w.mark.fastE8, w.mark.slowE8, w.tauSec);
   if (prob < t.minProbE6 || prob > t.maxProbE6) return { probE6: prob, bidE6: 0n, proceeds: 0n, refusal: "price" };
   const bidE6 = prob - halfSpreadE6(prob, t.h50E6, t.minHalfSpreadE6);
   return { probE6: prob, bidE6, proceeds: proceedsFor(shares, bidE6), refusal: null };

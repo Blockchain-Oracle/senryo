@@ -1,4 +1,5 @@
 import type { Hex } from "@senryo/chain";
+import { toE8 } from "@senryo/core";
 import { MS_PER_SECOND } from "@senryo/service-common";
 import { PRINT_WAIT_MS, RECENT_WINDOW_SEC, RING_KEEP_SEC } from "./constants.ts";
 
@@ -106,13 +107,4 @@ export class FeedRing {
     const cutoff = ms - RECENT_WINDOW_SEC * MS_PER_SECOND;
     while (this.samples.length > 0 && (this.samples[0]?.[0] ?? 0) < cutoff) this.samples.shift();
   }
-}
-
-const PRINT_EXPO = -8;
-const TEN = 10n;
-
-/** A Pyth price at any exponent → e-8 (the contracts' scale; floored when finer, as `PythPrintVerifier.normalize`). */
-export function toE8(price: bigint, expo: number): bigint {
-  if (expo >= PRINT_EXPO) return price * TEN ** BigInt(expo - PRINT_EXPO);
-  return price / TEN ** BigInt(PRINT_EXPO - expo);
 }

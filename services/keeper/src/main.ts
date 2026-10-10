@@ -25,6 +25,7 @@ import { pushOutboxJob } from "./jobs/pushes.ts";
 import { pushReceiptsJob } from "./jobs/receipts.ts";
 import { retentionJob } from "./jobs/retention.ts";
 import { settleJob } from "./jobs/settle.ts";
+import { sigmaJob } from "./jobs/sigma.ts";
 import { syncJob } from "./jobs/sync.ts";
 import { LedgerNotifier } from "./notify.ts";
 import { notifyResults } from "./results.ts";
@@ -60,6 +61,7 @@ const ctx: KeeperContext = {
   chainId: env.CHAIN_ID,
   read,
   sender,
+  signer: account,
   db,
   log,
   notifier,
@@ -76,6 +78,7 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   events: eventsJob,
   calendars: calendarsJob,
   earn: earnJob,
+  sigma: sigmaJob,
   retention: retentionJob,
   receipts: pushReceiptsJob,
   pushes: pushOutboxJob,

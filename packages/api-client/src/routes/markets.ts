@@ -72,7 +72,16 @@ export const catalogResponseSchema = z.object({
        */
       listed: z.boolean().optional(),
       series: z.array(
-        z.object({ cadenceSec: z.int(), seriesId: bytes32Schema, sigmaE8: z.int(), bands: z.array(bandSchema) }),
+        z.object({
+          cadenceSec: z.int(),
+          seriesId: bytes32Schema,
+          /** The listed σ: a quote's mark until the market's first live one arrives. */
+          sigmaE8: z.int(),
+          /** The bounds the reserve holds every σ mark to (D-313). */
+          sigmaFloorE8: z.int().positive(),
+          sigmaCapE8: z.int().positive(),
+          bands: z.array(bandSchema),
+        }),
       ),
     }),
   ),
@@ -152,6 +161,28 @@ export const windowLoadRoute = defineRoute({
 });
 
 export type WindowLoad = z.output<typeof windowLoadRoute.response>;
+
+/**
+ * Every market's σ marks for the last two minute boundaries (R4.3, D-313): the fast mark and slow anchor a fill
+ * carries, `[symbol, fastE8, slowE8]` per minute. A reconnect reseeds from here; new minutes stream as `sigma` on the
+ * `prints` topic in the same shape.
+ */
+export const sigmaMarksRoute = defineRoute({
+  method: "GET",
+  path: "/v1/markets/sigma",
+  auth: "none",
+  params: undefined,
+  query: undefined,
+  body: undefined,
+  response: z.object({
+    frames: z.array(
+      z.object({
+        minute: unixSecondsSchema,
+        marks: z.array(z.tuple([symbolSchema, uintCodec, uintCodec])),
+      }),
+    ),
+  }),
+});
 
 export const submitIntentRoute = defineRoute({
   method: "POST",

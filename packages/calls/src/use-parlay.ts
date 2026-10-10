@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPTS, TOLERANCE_BPS } from "./constants.ts";
 import { PARLAY_SIDES, type ParlayPick } from "./parlay.ts";
+import { fillMark } from "./sigma.ts";
 import type { SignDeps } from "./sign.ts";
 import { windowFor } from "./window.ts";
 
@@ -53,10 +54,11 @@ export function useParlayQuote(picks: readonly ParlayPick[], stake: bigint) {
     const series = markets.find((m) => m.symbol === p.symbol)?.series.find((s) => s.cadenceSec === p.cadenceSec);
     const spot = live.prices.latest(p.symbol)?.priceE8;
     const tau = BigInt(Math.max(0, w.expiry - (now + FILL_DELAY_SEC)));
+    const mark = series ? fillMark(live.sigma, p.symbol, series, now) : undefined;
     const chanceOf = (index: number) => {
       const band = series?.bands[index];
-      return k !== undefined && spot !== undefined && band && series
-        ? probE6(band, k, BigInt(Math.round(spot)), BigInt(series.sigmaE8), BigInt(series.sigmaE8), tau)
+      return k !== undefined && spot !== undefined && band && mark
+        ? probE6(band, k, BigInt(Math.round(spot)), mark.fastE8, mark.slowE8, tau)
         : null;
     };
     const group = MARKETS.find((m) => m.symbol === p.symbol)?.calendarId ?? 0;

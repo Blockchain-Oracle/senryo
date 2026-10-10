@@ -1,9 +1,9 @@
 import { candlesRoute, dayPricesRoute, latestPricesRoute, printRoute, recentPricesRoute } from "@senryo/api-client";
 import { feedIdOf, MARKETS, marketByFeedId } from "@senryo/config";
+import { toE8 } from "@senryo/core";
 import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, HttpError, nowSec, parseRoute, SECONDS_PER_DAY, sendRoute } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
-import { toE8 } from "../prices/ring.ts";
 
 /**
  * Prices for first paint and history (D-272): `recent` from the gateway's ring (one point a second, short CDN cache),

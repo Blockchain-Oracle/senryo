@@ -3,7 +3,7 @@
  * the pool's pricing and caps, and the chain's session ceilings.
  */
 import type { CadenceSec } from "./cadences.ts";
-import { basketMembers, type MarketSpec } from "./catalog.ts";
+import { basketMembers, type MarketSpec, sigmaE8Of } from "./catalog.ts";
 import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "./networks.ts";
 
 /** How a Pyth print is proven (contracts `PythPrintVerifier` immutables): one verifier per quality class. */
@@ -136,9 +136,17 @@ export const H50_E6: Readonly<Record<CadenceSec, number>> = { 60: 30_000, 300: 2
 
 /**
  * The bounds a series' σ marks are held to (D-300/D-313), as multiples of its `realisedVol`: wide sanity bounds against
- * a bad or compromised signer — the keeper clamps into them, so no fill ever waits on a mark outside them.
+ * a bad or compromised signer. The reserve clamps each mark into them (`SeriesListing._priceBand`), and so does every
+ * quote that mirrors it.
  */
 export const SIGMA_FLOOR_RATIO = 0.25;
+export const SIGMA_CAP_RATIO = 4;
+
+/** A series' listed σ bounds (contracts `SeriesTerms`), the same for every lane of its market. */
+export function sigmaBoundsOf(m: MarketSpec): { floorE8: number; capE8: number } {
+  const sigma = sigmaE8Of(m);
+  return { floorE8: Math.max(1, Math.floor(sigma * SIGMA_FLOOR_RATIO)), capE8: Math.ceil(sigma * SIGMA_CAP_RATIO) };
+}
 
 /**
  * A quote's curve and bounds for a series in `cadenceSec`'s lane, with no load (`@senryo/core` `QuoteTerms`): the pool's
@@ -156,7 +164,6 @@ export function quoteCurve(
     surchargeE6: 0n,
   };
 }
-export const SIGMA_CAP_RATIO = 4;
 
 /** Practice's pool seed in Test USD (minted at deploy; D-260). */
 export const TESTNET_POOL_SEED = BigInt(10_000_000 * USD);

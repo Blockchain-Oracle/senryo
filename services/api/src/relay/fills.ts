@@ -1,7 +1,17 @@
-import { type Address, addressOf, finalizeCallData, type Hex, proofOf, sendTx, ticketChanges } from "@senryo/chain";
+import {
+  type Address,
+  addressOf,
+  finalizeCallData,
+  type Hex,
+  proofOf,
+  type Signer,
+  sendTx,
+  ticketChanges,
+} from "@senryo/chain";
 import { type ChainId, MARKET_BATCH_MAX, marketByFeedId } from "@senryo/config";
 import { applyTicketChanges, type Db, type Logger, type WindowRef } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
+import type { SigmaDesk } from "../prices/sigma.ts";
 import type { StreamBus } from "../stream/bus.ts";
 import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
 import type { Lane } from "./lanes.ts";
@@ -9,7 +19,8 @@ import type { Lane } from "./lanes.ts";
 /**
  * Fills (D-261, D-278): every pending open or close waits for the unique print of its instant (commit + 1 s). Calls
  * for the same feed and instant share one `finalize`; it goes out the moment the print streams in (≈ 1 s after the
- * commit), from the gateway's ring — so tap → fill stays near the 3 s budget. The keeper is the backup (archive).
+ * commit), from the gateway's ring — so tap → fill stays near the 3 s budget — with the σ mark its instant allows
+ * (D-313). The keeper is the backup (archive).
  */
 interface Pending {
   ticketId: bigint;
@@ -32,6 +43,8 @@ export class FillBatcher {
       lanes: Lane[];
       gateway: PythGateway;
       bus: StreamBus;
+      sigma: SigmaDesk;
+      markSigner: Signer;
       db: Db;
       log: Logger;
     },
@@ -64,6 +77,7 @@ export class FillBatcher {
     const market = marketByFeedId(batch.feedId);
     if (!market) return;
     const proof = proofOf(market, print.updates);
+    const mark = await this.d.sigma.signed(this.d.markSigner, this.d.chainId, batch.feedId, batch.target);
     const all = [...batch.tickets.values()];
     const windows = new Map(all.map((p) => [p.window.windowId, p.window]));
     const reserve = addressOf(this.d.chainId, "BandReserve");
@@ -75,7 +89,7 @@ export class FillBatcher {
         lane.run((sender) =>
           sendTx(sender, {
             to: reserve,
-            data: finalizeCallData(batch.target, ids, proof),
+            data: finalizeCallData(batch.target, ids, proof, mark),
             action: "marketFinalize",
             meta: { job: "fill", target: String(batch.target) },
           }),

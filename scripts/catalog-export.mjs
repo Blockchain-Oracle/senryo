@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CALENDARS } from "../packages/config/src/calendars.ts";
-import { BAND_KIND_CODE, bandMenu, feedIdOf, MARKETS, marketsOn, sigmaE8Of } from "../packages/config/src/catalog.ts";
+import { BAND_KIND_CODE, feedIdOf, lanesOn, MARKETS, marketsOn, menuOn } from "../packages/config/src/catalog.ts";
 import { DUEL, DUEL_TIERS } from "../packages/config/src/duel.ts";
 import { EVENT_COMMITTEES, EVENT_LIMITS, EVENTS } from "../packages/config/src/events.ts";
 import { MAINNET_USDC } from "../packages/config/src/money.ts";
@@ -27,8 +27,7 @@ import {
   PYTH_RECEIVER,
   printClassKeyOf,
   REDSTONE,
-  SIGMA_CAP_RATIO,
-  SIGMA_FLOOR_RATIO,
+  sigmaBoundsOf,
   TESTNET_POOL_SEED,
 } from "../packages/config/src/pool-terms.ts";
 import { RIDE_MARKETS, RIDE_TERMS } from "../packages/config/src/ride-terms.ts";
@@ -91,19 +90,6 @@ function eventsOf(chainId) {
   });
 }
 
-/** Mainnet starts with the 5m/15m/1h lanes and Up/Down (D-300: 1m is Practice only; D-306). */
-const MAINNET_KINDS = new Set(["up", "down"]);
-const PRACTICE_ONLY_CADENCE = 60;
-
-function lanesOn(chainId, m) {
-  return chainId === MAINNET_CHAIN_ID ? m.cadences.filter((c) => c !== PRACTICE_ONLY_CADENCE) : m.cadences;
-}
-
-function menuOn(chainId, m, cadence) {
-  const menu = bandMenu(m, cadence);
-  return chainId === MAINNET_CHAIN_ID ? menu.filter((b) => MAINNET_KINDS.has(b.kind)) : menu;
-}
-
 /** Rides (D-299, D-301): the network's shared terms and each ride market's feed and terms, in on-chain order. */
 function ridesOf(chainId) {
   const t = RIDE_TERMS[chainId];
@@ -136,7 +122,7 @@ function exportChain(chainId) {
   const markets = marketsOn(chainId);
   const series = markets.flatMap((m) =>
     lanesOn(chainId, m).map((cadence) => {
-      const sigma = sigmaE8Of(m);
+      const { floorE8, capE8 } = sigmaBoundsOf(m);
       return sorted({
         bands: menuOn(chainId, m, cadence).map((b) =>
           sorted({ highBps: b.highBps, kind: BAND_KIND_CODE[b.kind], lowBps: b.lowBps }),
@@ -146,8 +132,8 @@ function exportChain(chainId) {
         feedId: feedIdOf(m),
         h50E6: H50_E6[cadence],
         market: marketKey(m.symbol),
-        sigmaCapE8: Math.ceil(sigma * SIGMA_CAP_RATIO),
-        sigmaFloorE8: Math.max(1, Math.floor(sigma * SIGMA_FLOOR_RATIO)),
+        sigmaCapE8: capE8,
+        sigmaFloorE8: floorE8,
         symbol: m.symbol,
         verifierClass: printClassKeyOf(m),
       });

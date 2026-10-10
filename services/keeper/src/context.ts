@@ -1,4 +1,4 @@
-import type { ReadClient, Sender, TicketChange } from "@senryo/chain";
+import type { ReadClient, Sender, Signer, TicketChange } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import type { Db, Logger } from "@senryo/service-common";
 import type { KeeperEnv } from "./env.ts";
@@ -9,6 +9,8 @@ export interface KeeperContext {
   chainId: ChainId;
   read: ReadClient;
   sender: Sender;
+  /** The keeper's key: it sends, and signs σ marks (an allowed signer, D-313). */
+  signer: Signer;
   db: Db;
   log: Logger;
   notifier: Notifier;

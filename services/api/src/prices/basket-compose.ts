@@ -1,6 +1,6 @@
 import { basketMembers, feedIdOf, type MarketSpec } from "@senryo/config";
-import { basketPointsE8 } from "@senryo/core";
-import { type PriceUpdate, toE8 } from "./ring.ts";
+import { basketPointsE8, toE8 } from "@senryo/core";
+import type { PriceUpdate } from "./ring.ts";
 
 /** A basket's value is quoted in points × 1e8 (D-286). */
 const PRINT_EXPO = -8;

@@ -15,6 +15,8 @@ export * from "./parlays.ts";
 export * from "./prints.ts";
 export * from "./process-guards.ts";
 export * from "./push-delivery.ts";
+export * from "./rides.ts";
 export * from "./session.ts";
+export * from "./sigma-marks.ts";
 export * from "./social-visibility.ts";
 export * from "./tickets.ts";

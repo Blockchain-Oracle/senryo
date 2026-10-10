@@ -3,11 +3,18 @@
  * order — the contract names a ride market by index, so the list only ever grows) and each network's terms, inside the
  * contracts' compile-time bounds (`RideTypes.sol`). Real-money rides are web-only until S9 (D-305).
  */
+import { MARKETS, type MarketSpec } from "./catalog.ts";
 import { type ChainId, MAINNET_CHAIN_ID, TESTNET_CHAIN_ID } from "./networks.ts";
 
 /** Ride markets by on-chain id (append-only). */
 export const RIDE_MARKETS = ["BTC", "ETH", "SOL", "XRP", "BNB", "DOGE", "HYPE"] as const;
 export type RideSymbol = (typeof RIDE_MARKETS)[number];
+
+/** The catalogue market a ride market id rides (its feed and print verifier). */
+export function rideMarketSpec(marketId: number): MarketSpec | undefined {
+  const symbol = RIDE_MARKETS[marketId];
+  return symbol ? MARKETS.find((m) => m.symbol === symbol) : undefined;
+}
 
 /** Dollars are 6-decimal on both networks. */
 const USD = 1_000_000;

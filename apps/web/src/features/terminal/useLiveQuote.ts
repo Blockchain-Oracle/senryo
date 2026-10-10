@@ -9,6 +9,7 @@ import {
   type CallMode,
   type ChartOverlay,
   dollars,
+  fillMark,
   offerOf,
   type PoolTerms,
   pricingFor,
@@ -80,12 +81,13 @@ export function useLiveQuote(
         latest.current = { first: null, second: null, close: null };
         return;
       }
+      const nowSec = live.clock.nowSec();
       const pass = quoteTick({
         priceE8: tick.priceE8,
-        nowSec: live.clock.nowSec(),
+        nowSec,
         k: t.k,
         expiry: t.window.expiry,
-        sigmaE8: t.series.sigmaE8,
+        mark: fillMark(live.sigma, t.symbol, t.series, nowSec),
         pricing,
         stake,
         offer: [offer[0]?.band, offer[1]?.band],

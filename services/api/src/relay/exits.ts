@@ -2,6 +2,7 @@ import {
   type Address,
   addressOf,
   describeError,
+  EXIT_BOOK,
   fireExitCallData,
   fireTrailCallData,
   type Hex,
@@ -12,15 +13,14 @@ import {
   ticketChanges,
 } from "@senryo/chain";
 import {
-  bandMenu,
   type ChainId,
   FILL_DELAY_SEC,
   feedIdOf,
   isWatchable,
   LOCKOUT_SEC,
+  menuOn,
   POOL_TERMS,
   quoteCurve,
-  sigmaE8Of,
 } from "@senryo/config";
 import { bandReserveAbi, windowsAbi } from "@senryo/contracts/abis";
 import { type ExitFire, exitDecision, quoteClose } from "@senryo/core";
@@ -34,14 +34,15 @@ import {
   type TicketNotice,
 } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
+import type { SigmaDesk } from "../prices/sigma.ts";
 import { EXIT_CHAIN_SYNC_MS, EXIT_RELOAD_MS, EXIT_RETRY_MS, EXIT_TICK_MS } from "./constants.ts";
 import type { FillBatcher } from "./fills.ts";
 import type { Lane } from "./lanes.ts";
 
 /**
  * The exit watcher (D-292), beside the one price gateway (the only process with live prices): every second each armed
- * exit's bid at the live price — the contract's own close maths with the window's open print, the series' σ and the
- * seconds from the next print to expiry — and when take-profit or stop-loss is met, or the trail's stop is crossed, it
+ * exit's bid at the live price — the contract's own close maths with the window's open print, the σ mark the next
+ * print's fill would carry and the seconds from that print to expiry — and when take-profit or stop-loss is met, or the trail's stop is crossed, it
  * fires on the sponsor lane (the lane holding the trail's role) and hands the close to the fill batcher. The fill print
  * decides; a miss leaves the exit standing and it re-arms after a pause. Exits come from the ticket book (the relay's
  * own `setExit` receipts) and a periodic read of the chain for open tickets (anyone may set one directly).
@@ -73,6 +74,7 @@ export class ExitWatcher {
       read: ReadClient;
       lane: Lane;
       gateway: PythGateway;
+      sigma: SigmaDesk;
       fills: FillBatcher;
       db: Db;
       log: Logger;
@@ -136,16 +138,27 @@ export class ExitWatcher {
     if (open.length === 0) return;
     const reserve = addressOf(this.d.chainId, "BandReserve");
     const exits = await this.d.read.multicall({
-      // A reserve from before exits (markets v1) has no `exitOf`: those reads fail and are skipped.
       allowFailure: true,
       contracts: open.map(
-        (r) => ({ address: reserve, abi: bandReserveAbi, functionName: "exitOf", args: [r.ticket_id] }) as const,
+        (r) =>
+          ({
+            address: reserve,
+            abi: bandReserveAbi,
+            functionName: "exitOf",
+            args: [EXIT_BOOK.call, r.ticket_id],
+          }) as const,
       ),
     });
     const known = new Map(this.armed);
     for (const [i, read] of exits.entries()) {
       if (read.status !== "success") continue;
-      const e = read.result;
+      // A call's levels are bids under $1 × 1e6.
+      const e = {
+        takeProfitE6: Number(read.result.takeProfit),
+        stopLossE6: Number(read.result.stopLoss),
+        floorE6: Number(read.result.floor),
+        trailE6: Number(read.result.trail),
+      };
       const ticketId = (open[i] as { ticket_id: bigint }).ticket_id;
       const have = known.get(ticketId)?.exit;
       const same =
@@ -190,7 +203,7 @@ export class ExitWatcher {
   /** The bid per share now (× 1e6), as the next second's print would price it; null when not priced. */
   private async bidOf(a: Armed, now: number): Promise<number | null> {
     const series = seriesOf(this.d.chainId, a.seriesId);
-    const band = series ? bandMenu(series.market, series.cadenceSec)[a.band] : undefined;
+    const band = series ? menuOn(this.d.chainId, series.market, series.cadenceSec)[a.band] : undefined;
     if (!series || !band) return null;
     // Only a settlement price that is live or a little late, by its own source's cadence (FeedStates, 04-pricing R6).
     const live = this.d.gateway.latestE8(feedIdOf(series.market));
@@ -198,13 +211,10 @@ export class ExitWatcher {
     const k = await this.openPrint(a.windowId);
     if (k === 0n) return null;
     const terms = POOL_TERMS[this.d.chainId];
+    const fillAt = now + FILL_DELAY_SEC;
     const q = quoteClose(
       band,
-      {
-        openE8: k,
-        sigmaE8: BigInt(sigmaE8Of(series.market)),
-        tauSec: BigInt(a.expiry - (now + FILL_DELAY_SEC)),
-      },
+      { openE8: k, mark: await this.d.sigma.quoteMark(series.market, fillAt), tauSec: BigInt(a.expiry - fillAt) },
       live.priceE8,
       a.shares,
       quoteCurve(terms, series.cadenceSec),

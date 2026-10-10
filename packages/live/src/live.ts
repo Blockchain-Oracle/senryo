@@ -1,10 +1,12 @@
-// The app's live layer, created once: one stream, the server clock, prices, boundary prints and the user's events.
+// The app's live layer, created once: one stream, the server clock, prices, boundary prints, σ marks and the user's
+// events.
 // The stream's topics follow the signed-in address (`setUser`); `/v1/prices/latest` (about 1 KB) reseeds every market
 // and its state on each (re)connect, and a terminal loads its own market's recent history (`loadHistory`) so its line
 // opens on real movement (04-pricing R15).
 import { ServerClock } from "./clock.ts";
 import { PriceBook } from "./prices.ts";
 import { PrintBook } from "./prints.ts";
+import { SigmaBook, type SigmaFrame } from "./sigma.ts";
 import { LiveStream, type StreamStatus } from "./sse.ts";
 
 /** The user's durable events on `user:<address>` (fills, results, payouts, sessions, dollars). */
@@ -59,6 +61,8 @@ export interface LiveOptions {
   recent: (symbols: readonly string[]) => Promise<RecentPrices>;
   /** `/v1/prices/latest`: every market's newest price and state. */
   latest: () => Promise<LatestPrices>;
+  /** `GET /v1/markets/sigma`: every market's σ marks for the last two minutes. */
+  sigma: () => Promise<readonly SigmaFrame[]>;
   /** `GET /v1/time`: the server's clock in ms (never cached). */
   time: () => Promise<number>;
   /** A stream ticket for the signed-in user (`POST /v1/stream/ticket`). */
@@ -71,6 +75,7 @@ export class Live {
   readonly clock = new ServerClock();
   readonly prices = new PriceBook();
   readonly prints = new PrintBook();
+  readonly sigma = new SigmaBook();
   readonly stream: LiveStream;
   private user: string | null = null;
   private status: StreamStatus = "idle";
@@ -135,9 +140,15 @@ export class Live {
 
   /**
    * Every market's newest price and state, after a (re)connect: `/v1/prices/latest`, or — from an api before it —
-   * `/v1/prices/recent` for every symbol.
+   * `/v1/prices/recent` for every symbol. The σ marks reseed beside it.
    */
   async reseed(): Promise<void> {
+    void this.o
+      .sigma()
+      .then((frames) => {
+        for (const f of frames) this.sigma.add(f);
+      })
+      .catch(() => {});
     let latest: LatestPrices;
     try {
       latest = await this.o.latest();
@@ -211,6 +222,10 @@ export class Live {
     if (event === "print" && data && typeof data === "object") {
       const p = data as { symbol: string; t: number; priceE8: string; publishTime: number };
       this.prints.add({ symbol: p.symbol, t: p.t, priceE8: BigInt(p.priceE8), publishTime: p.publishTime });
+      return;
+    }
+    if (event === "sigma" && data && typeof data === "object") {
+      this.sigma.add(data as SigmaFrame);
       return;
     }
     if (event === "reset") {

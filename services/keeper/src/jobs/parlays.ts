@@ -25,6 +25,7 @@ import {
 } from "@senryo/service-common";
 import { FILL_STALE_SEC, PARLAYS_INTERVAL_MS, SETTLE_AFTER_SEC } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
+import { fillMark } from "../marks.ts";
 import type { Job } from "../runner.ts";
 
 /**
@@ -70,13 +71,15 @@ async function backupFill(ctx: KeeperContext, p: ParlayRow & { legs: ParlayLegRo
       return market ? { market, print: await archivedPrint(ctx.db, feedIdOf(market), target) } : null;
     }),
   );
-  const ready = !over && prints.every((x) => x?.print);
+  const printed = prints.flatMap((x) => (x?.print ? [{ market: x.market, print: x.print }] : []));
+  const ready = !over && printed.length === p.legs.length;
   const lapsed = prints.some((x) => x && !x.print && now > target + admissionSecOf(x.market));
   if (!ready && !over && !lapsed) return; // still printable: the gateway archives fill instants on demand
   const data = ready
     ? finalizeParlayCallData(
         p.parlay_id,
-        prints.map((x) => (x?.print ? proofOf(x.market, x.print.updates) : "0x")),
+        printed.map((x) => proofOf(x.market, x.print.updates)),
+        await Promise.all(printed.map((x) => fillMark(ctx, x.market, target))),
       )
     : expireParlayCallData(p.parlay_id);
   await send(ctx, addressOf(ctx.chainId, "BandReserve"), data, p, ready ? "backup fill" : "expire");

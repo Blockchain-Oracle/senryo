@@ -13,6 +13,7 @@ import { feedIdOf, MARKET_BATCH_MAX } from "@senryo/config";
 import { applyTicketChanges, archivedPrint, nowSec, pendingFills, type TicketRow } from "@senryo/service-common";
 import { FILL_STALE_SEC, FILLS_INTERVAL_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
+import { fillMark } from "../marks.ts";
 import type { Job } from "../runner.ts";
 
 /**
@@ -56,7 +57,12 @@ async function fillGroup(ctx: KeeperContext, rows: TicketRow[], now: number): Pr
     const ids = rows.slice(i, i + MARKET_BATCH_MAX).map((r) => r.ticket_id);
     let data: Hex;
     if (print && !windowOver) {
-      data = finalizeCallData(target, ids, proofOf(series.market, print.updates));
+      data = finalizeCallData(
+        target,
+        ids,
+        proofOf(series.market, print.updates),
+        await fillMark(ctx, series.market, target),
+      );
     } else if (windowOver) {
       data = expireCallData(ids);
     } else {

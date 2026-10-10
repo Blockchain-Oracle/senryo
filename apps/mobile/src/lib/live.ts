@@ -3,7 +3,13 @@
  * module, D-270). Public prices and prints always; the user's topic once this run has an API session — a stream ticket
  * never prompts on its own.
  */
-import { latestPricesRoute, recentPricesRoute, streamTicketRoute, timeRoute } from "@senryo/api-client";
+import {
+  latestPricesRoute,
+  recentPricesRoute,
+  sigmaMarksRoute,
+  streamTicketRoute,
+  timeRoute,
+} from "@senryo/api-client";
 import { Live } from "@senryo/live";
 import { fetch as expoFetch } from "expo/fetch";
 import { api, apiSessionScope } from "~/lib/account/api";
@@ -17,6 +23,7 @@ export function appLive(): Live {
     fetch: expoFetch as unknown as typeof globalThis.fetch,
     recent: (symbols) => api().call(recentPricesRoute, { query: { symbols: symbols.join(",") } }),
     latest: () => api().call(latestPricesRoute, {}),
+    sigma: async () => (await api().call(sigmaMarksRoute, {})).frames,
     time: async () => (await api().call(timeRoute, {})).t,
     ticket: async () => (apiSessionScope() ? (await api().call(streamTicketRoute, {})).ticket : undefined),
   });

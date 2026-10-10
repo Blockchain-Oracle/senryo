@@ -11,6 +11,8 @@ import {
   proofOf,
   type ReadClient,
   revertReason,
+  type SignedSigmaMark,
+  type Signer,
   SimulationRevertedError,
   sendTx,
   ticketChanges,
@@ -29,6 +31,7 @@ import {
 } from "@senryo/service-common";
 import type { SeriesListing } from "../listing.ts";
 import type { PythGateway } from "../prices/gateway.ts";
+import type { SigmaDesk } from "../prices/sigma.ts";
 import type { StreamBus } from "../stream/bus.ts";
 import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
 import { OPEN_PRINT_WAIT_MS } from "./constants.ts";
@@ -74,11 +77,19 @@ export class MarketRelay {
       bus: StreamBus;
       /** Which series are on chain (R1.24); parlays read it here too. */
       listing: SeriesListing;
+      /** The σ marks fills carry, signed by `markSigner` (an allowed signer: the first sponsor, D-313). */
+      sigma: SigmaDesk;
+      markSigner: Signer;
       db: Db;
       log: Logger;
     },
   ) {
     this.fills = new FillBatcher(d);
+  }
+
+  /** The σ mark a fill of `feedId` at `target` carries, signed (fills and parlay fills). */
+  fillMark(feedId: Hex, target: number): Promise<SignedSigmaMark> {
+    return this.d.sigma.signed(this.d.markSigner, this.d.chainId, feedId, target);
   }
 
   get listing(): SeriesListing {

@@ -1,5 +1,6 @@
 import { type Hex, seriesIdOf } from "@senryo/chain";
 import { basketMembers, type FeedState, feedIdOf, MARKETS, type MarketSpec, pauseOf } from "@senryo/config";
+import { toE8 } from "@senryo/core";
 import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import { batchFrame, legacyFrames, type StreamBus, type Tick } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
@@ -12,7 +13,7 @@ import { HERMES_CLASSES, type HermesClass, type HermesStatus, HermesStream, herm
 import { PrintFetcher, type PrintFetchStats, type PrintSourceKind } from "./print-fetcher.ts";
 import { PrintWatch, type PrintWatchStats } from "./print-watch.ts";
 import { type RedStoneGateway, RedStoneReader } from "./redstone.ts";
-import { FeedRing, type PriceUpdate, toE8 } from "./ring.ts";
+import { FeedRing, type PriceUpdate } from "./ring.ts";
 import { type SilenceStats, SilenceWatch } from "./silence-watch.ts";
 
 /**

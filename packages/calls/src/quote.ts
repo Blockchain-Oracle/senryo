@@ -24,6 +24,7 @@ import {
   quoteClose,
   quoteOpen,
   reserveCapacity,
+  type SigmaPair,
 } from "@senryo/core";
 import type { ReactionPosition } from "./reactions.ts";
 
@@ -123,7 +124,8 @@ export interface QuoteInput {
   nowSec: number;
   k: bigint;
   expiry: number;
-  sigmaE8: number;
+  /** The σ the fill would carry (`fillMark`). */
+  mark: SigmaPair;
   pricing: Pricing;
   stake: bigint;
   /** The mode's two buttons' bands (`offerOf`); the second is absent for Range. */
@@ -207,7 +209,7 @@ function bandReading(band: BandSpecLike, k: bigint, spot: bigint): { side: 1 | -
 export function quoteTick(i: QuoteInput): QuotePass {
   const spot = BigInt(Math.round(i.priceE8));
   const tauSec = BigInt(Math.max(0, i.expiry - (i.nowSec + FILL_DELAY_SEC)));
-  const w = { openE8: i.k, sigmaE8: BigInt(i.sigmaE8), tauSec };
+  const w = { openE8: i.k, mark: i.mark, tauSec };
   const { terms, capacity } = i.pricing;
   const price = (b: BandSpecLike | undefined) =>
     b ? fitOpen(quoteOpen(b, w, spot, i.stake, terms), i.stake, capacity) : null;

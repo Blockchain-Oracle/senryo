@@ -14,7 +14,14 @@ import {
   zeroHash,
 } from "viem";
 import { ALL_ERRORS_ABI } from "./contracts.ts";
-import { type MarketExitOrder, type MarketIntent, type MarketSessionGrant, permitParts } from "./market-typed-data.ts";
+import {
+  EXIT_BOOK,
+  type MarketExitOrder,
+  type MarketIntent,
+  type MarketSessionGrant,
+  permitParts,
+} from "./market-typed-data.ts";
+import type { SignedSigmaMark } from "./ride-typed-data.ts";
 
 export interface PermitArgs {
   value: bigint;
@@ -34,8 +41,13 @@ export function commitCallData(intent: MarketIntent, signature: Hex, permit: Per
   });
 }
 
-export function finalizeCallData(target: number, ids: readonly bigint[], proof: Hex): Hex {
-  return encodeFunctionData({ abi: bandReserveAbi, functionName: "finalize", args: [target, [...ids], proof] });
+/** Fills and closes at `target`'s print, priced on the σ mark its instant allows (`signSigmaMark`). */
+export function finalizeCallData(target: number, ids: readonly bigint[], proof: Hex, mark: SignedSigmaMark): Hex {
+  return encodeFunctionData({
+    abi: bandReserveAbi,
+    functionName: "finalize",
+    args: [target, [...ids], proof, mark.mark, mark.signature],
+  });
 }
 
 export function expireCallData(ids: readonly bigint[]): Hex {
@@ -57,9 +69,28 @@ export function addHolidayCallData(calendarId: number, start: number, end: numbe
   });
 }
 
-/** Sets (every price 0: clears) a ticket's exit from its signed order (D-292). */
+/** Sets (every level 0: clears) a call's or a ride's exit from its signed order (D-292, R3.12). */
 export function setExitCallData(order: MarketExitOrder, signature: Hex): Hex {
-  return encodeFunctionData({ abi: bandReserveAbi, functionName: "setExit", args: [order, signature] });
+  return encodeFunctionData({
+    abi: bandReserveAbi,
+    functionName: order.book === EXIT_BOOK.ride ? "setRideExit" : "setExit",
+    args: [order, signature],
+  });
+}
+
+/** A call's exit levels as an order's: bids per share × 1e6 (0 = unset). */
+export function callExitLevels(
+  ticketId: bigint,
+  p: { takeProfitE6: number; stopLossE6: number; floorE6: number; trailE6: number },
+): Pick<MarketExitOrder, "book" | "id" | "takeProfit" | "stopLoss" | "floor" | "trail"> {
+  return {
+    book: EXIT_BOOK.call,
+    id: ticketId,
+    takeProfit: BigInt(p.takeProfitE6),
+    stopLoss: BigInt(p.stopLossE6),
+    floor: BigInt(p.floorE6),
+    trail: BigInt(p.trailE6),
+  };
 }
 
 /** Take-profit or stop-loss: anyone may fire it; the fill print's bid decides. */
@@ -192,18 +223,22 @@ export function ticketChanges(logs: readonly Log[], reserve: Address): TicketCha
       case "Claimed":
         out.push({ kind: "claimed", ticketId, outcome: Number(a.outcome), amount: a.amount as bigint });
         break;
+      // Exits are keyed by (book, id): a call's are its ticket's (a ride's are `rideChanges`'). A call's levels are bids
+      // under $1 × 1e6.
       case "ExitSet":
+        if (Number(a.book) !== EXIT_BOOK.call) break;
         out.push({
           kind: "exitSet",
-          ticketId,
-          takeProfitE6: Number(a.takeProfitE6),
-          stopLossE6: Number(a.stopLossE6),
-          floorE6: Number(a.floorE6),
-          trailE6: Number(a.trailE6),
+          ticketId: a.id as bigint,
+          takeProfitE6: Number(a.takeProfit),
+          stopLossE6: Number(a.stopLoss),
+          floorE6: Number(a.floor),
+          trailE6: Number(a.trail),
         });
         break;
       case "ExitFired":
-        out.push({ kind: "exitFired", ticketId, exitKind: Number(a.kind), target: Number(a.target) });
+        if (Number(a.book) !== EXIT_BOOK.call) break;
+        out.push({ kind: "exitFired", ticketId: a.id as bigint, exitKind: Number(a.kind), target: Number(a.target) });
         break;
       default:
         break;

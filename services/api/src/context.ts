@@ -15,6 +15,7 @@ import type { EventRelay } from "./events/relay.ts";
 import type { GeoDb } from "./geo-db.ts";
 import { SeriesListing } from "./listing.ts";
 import type { PythGateway } from "./prices/gateway.ts";
+import type { SigmaDesk } from "./prices/sigma.ts";
 import type { AccountRelay } from "./relay/accounts.ts";
 import type { ExitWatcher } from "./relay/exits.ts";
 import type { ParlayRelay } from "./relay/parlays.ts";
@@ -45,6 +46,8 @@ export interface ApiContext {
   /** The one Pyth gateway and the one stream's bus (D-272). */
   gateway: PythGateway;
   bus: StreamBus;
+  /** σ marks (D-313): stored per feed and minute, streamed, signed for fills. */
+  sigma: SigmaDesk;
   /** The relay per network where the markets are live (needs a sponsor key); duels and events where deployed. */
   markets: Map<
     ChainId,

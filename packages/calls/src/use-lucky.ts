@@ -12,6 +12,7 @@ import { useLive } from "@senryo/live/react";
 import { useIntentStatus, useLuckyDesk, useLuckyDraws, useQueryEnv, useTickets } from "@senryo/query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
+import { fillMark } from "./sigma.ts";
 import { useCallActions } from "./use-call.ts";
 import { useCallWindow } from "./use-call-window.ts";
 
@@ -59,7 +60,11 @@ export function useLuckyFlow(caller: Caller, effects: LuckyFlowEffects) {
     if (!band || !view.series || !view.terms || view.k === undefined || spot === undefined) return null;
     const q = quoteOpen(
       band,
-      { openE8: view.k, sigmaE8: BigInt(view.series.sigmaE8), tauSec: BigInt(Math.max(0, dealt.expiry - view.now)) },
+      {
+        openE8: view.k,
+        mark: fillMark(live.sigma, dealt.symbol, view.series, view.now),
+        tauSec: BigInt(Math.max(0, dealt.expiry - view.now)),
+      },
       BigInt(Math.round(spot)),
       stake,
       quoteCurve(view.terms, dealt.cadenceSec as CadenceSec),

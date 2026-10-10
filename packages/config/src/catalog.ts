@@ -19,7 +19,7 @@ import type { CalendarId } from "./calendars.ts";
 import { PYTH_BASKETS, REDSTONE_BASKETS } from "./markets/baskets.ts";
 import { PYTH_MARKETS } from "./markets/pyth.ts";
 import { REDSTONE_MARKETS } from "./markets/redstone.ts";
-import type { ChainId } from "./networks.ts";
+import { type ChainId, MAINNET_CHAIN_ID } from "./networks.ts";
 
 export type MarketKind = "crypto" | "equity" | "metal" | "fx" | "basket";
 export type BandKind = "up" | "down" | "range" | "moonshot" | "crash";
@@ -162,4 +162,19 @@ export function bandMenu(m: MarketSpec, cadence: CadenceSec): BandSpec[] {
 
 export function marketsOn(chainId: ChainId): MarketSpec[] {
   return MARKETS.filter((m) => m.chains.includes(chainId));
+}
+
+/** Mainnet starts with the 5m/15m/1h lanes and Up/Down (D-300: 1m is Practice only; D-306). */
+const MAINNET_KINDS: ReadonlySet<BandSpec["kind"]> = new Set(["up", "down"]);
+const PRACTICE_ONLY_CADENCE: CadenceSec = 60;
+
+/** The lanes `m` is listed in on `chainId`. */
+export function lanesOn(chainId: ChainId, m: MarketSpec): CadenceSec[] {
+  return chainId === MAINNET_CHAIN_ID ? m.cadences.filter((c) => c !== PRACTICE_ONLY_CADENCE) : [...m.cadences];
+}
+
+/** A series' menu as listed on `chainId`, in on-chain order (Up and Down lead, so the cut keeps their indices). */
+export function menuOn(chainId: ChainId, m: MarketSpec, cadence: CadenceSec): BandSpec[] {
+  const menu = bandMenu(m, cadence);
+  return chainId === MAINNET_CHAIN_ID ? menu.filter((b) => MAINNET_KINDS.has(b.kind)) : menu;
 }

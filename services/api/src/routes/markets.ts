@@ -6,6 +6,7 @@ import {
   practiceGrantRoute,
   revokeSessionRoute,
   setExitRoute,
+  sigmaMarksRoute,
   streamTicketRoute,
   submitIntentRoute,
   ticketsRoute,
@@ -13,7 +14,16 @@ import {
   withdrawRoute,
 } from "@senryo/api-client";
 import { addressOf, dollarTokenOf, type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
-import { bandMenu, type ChainId, feedIdOf, marketsOn, POOL_TERMS, sigmaE8Of } from "@senryo/config";
+import {
+  type ChainId,
+  feedIdOf,
+  lanesOn,
+  marketsOn,
+  menuOn,
+  POOL_TERMS,
+  sigmaBoundsOf,
+  sigmaE8Of,
+} from "@senryo/config";
 import { bandReserveAbi, testUSDAbi } from "@senryo/contracts/abis";
 import type { HttpServer } from "@senryo/service-common";
 import {
@@ -115,14 +125,24 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         listed: chain.listing.marketListed(m),
         members:
           m.source.kind === "basket" ? m.source.members.map(({ symbol, weightBps }) => ({ symbol, weightBps })) : [],
-        series: m.cadences.map((cadenceSec) => ({
-          cadenceSec,
-          seriesId: seriesIdOf(m.symbol, cadenceSec),
-          sigmaE8: sigmaE8Of(m),
-          bands: bandMenu(m, cadenceSec).map((b, index) => ({ index, ...b })),
-        })),
+        series: lanesOn(chain.chainId, m).map((cadenceSec) => {
+          const { floorE8, capE8 } = sigmaBoundsOf(m);
+          return {
+            cadenceSec,
+            seriesId: seriesIdOf(m.symbol, cadenceSec),
+            sigmaE8: sigmaE8Of(m),
+            sigmaFloorE8: floorE8,
+            sigmaCapE8: capE8,
+            bands: menuOn(chain.chainId, m, cadenceSec).map((b, index) => ({ index, ...b })),
+          };
+        }),
       })),
     });
+  });
+
+  app.get(sigmaMarksRoute.path, async (request, reply) => {
+    parseRoute(sigmaMarksRoute, request);
+    return sendRoute(reply, sigmaMarksRoute, { frames: await ctx.sigma.frames() });
   });
 
   app.post(

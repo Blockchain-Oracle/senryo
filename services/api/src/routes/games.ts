@@ -37,7 +37,13 @@ async function sessionOf(ctx: ApiContext, request: Parameters<NonNullable<ApiCon
 export function registerGameRoutes(app: HttpServer, ctx: ApiContext): void {
   const arcade = new ArcadeDesk(ctx.db);
   const lucky = (chainId: Parameters<typeof luckyDrawsOf>[1]) =>
-    new LuckyDesk({ chainId, gateway: ctx.gateway, listing: chainOf(ctx, chainId).listing, db: ctx.db });
+    new LuckyDesk({
+      chainId,
+      gateway: ctx.gateway,
+      sigma: ctx.sigma,
+      listing: chainOf(ctx, chainId).listing,
+      db: ctx.db,
+    });
   const spins = { config: { rateLimit: { max: SPINS_PER_MINUTE, timeWindow: MINUTE_MS } } };
   const runs = { config: { rateLimit: { max: RUNS_PER_MINUTE, timeWindow: MINUTE_MS } } };
 
