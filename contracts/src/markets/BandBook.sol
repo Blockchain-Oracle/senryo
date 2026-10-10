@@ -11,76 +11,22 @@ import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC2
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {BandMath} from "./BandMath.sol";
-import {BandPool} from "./BandPool.sol";
+import {ExitOrders} from "./ExitOrders.sol";
+import {SeriesListing} from "./SeriesListing.sol";
 import {IPrintVerifier} from "./interfaces/IPrintVerifier.sol";
 import {IWindows} from "./interfaces/IWindows.sol";
-import {ExitOrders} from "./ExitOrders.sol";
 import "./MarketTypes.sol";
 
 /// @title BandBook — calls from signature to fill, cash-outs and the exits that cash out on their own.
-abstract contract BandBook is BandPool, ExitOrders {
+abstract contract BandBook is SeriesListing, ExitOrders {
     using SafeERC20 for IERC20;
 
-    IWindows public immutable windows;
-
-    /// @dev Each series' terms and fixed band menu (σ is per-√second volatility × 1e8, bounded).
-    mapping(bytes32 seriesId => SeriesBook) internal _books;
     Ticket[] internal _tickets;
     mapping(bytes32 windowId => mapping(uint8 band => BandTotals)) public bandTotals;
     mapping(bytes32 windowId => uint16) public bandsUsed;
     mapping(bytes32 windowId => bool) public windowSettled;
 
-    constructor(IWindows windows_) {
-        if (address(windows_) == address(0)) revert ZeroAddress();
-        windows = windows_;
-    }
-
-    // ------------------------------------------------------------------------------------------------ menu (PARAMS)
-
-    /// @notice Lists a registered series in one call (D-309): its pricing terms and its band menu, in order. Once.
-    function listSeries(bytes32 seriesId, SeriesTerms calldata terms, BandDef[] calldata menu) external restricted {
-        _requireSeries(seriesId);
-        SeriesBook storage book = _books[seriesId];
-        if (book.bandCount != 0) revert SeriesAlreadyListed(seriesId);
-        if (menu.length == 0 || menu.length > MAX_BANDS || !_validTerms(terms)) revert BadParams();
-        uint40[MAX_BANDS] memory packed;
-        for (uint256 i; i < menu.length; ++i) {
-            BandDef calldata d = menu[i];
-            if (!BandMath.isValid(d)) revert BadParams();
-            packed[i] = BandMath.pack(d);
-            // forge-lint: disable-next-line(unsafe-typecast)
-            emit BandAdded(seriesId, uint8(i), d.kind, d.lowBps, d.highBps);
-        }
-        // forge-lint: disable-next-line(unsafe-typecast)
-        uint8 count = uint8(menu.length);
-        _books[seriesId] = SeriesBook(terms.sigmaE8, terms.sigmaFloorE8, terms.sigmaCapE8, terms.h50E6, count, packed);
-        emit SeriesListed(seriesId, terms.sigmaE8, terms.sigmaFloorE8, terms.sigmaCapE8, terms.h50E6, count);
-    }
-
-    /// @notice Appends a band to a listed series' menu (D-306: mainnet adds Range, Moonshot and Crash once they are
-    ///         calibrated). Entries never change or leave: tickets name them by index.
-    function addBand(bytes32 seriesId, BandDef calldata d) external restricted {
-        SeriesBook storage book = _listed(seriesId);
-        uint8 index = book.bandCount;
-        if (index >= MAX_BANDS || !BandMath.isValid(d)) revert BadParams();
-        book.bands[index] = BandMath.pack(d);
-        book.bandCount = index + 1;
-        emit BandAdded(seriesId, index, d.kind, d.lowBps, d.highBps);
-    }
-
-    function setSigma(bytes32 seriesId, uint64 sigmaE8) external restricted {
-        SeriesBook storage book = _listed(seriesId);
-        if (sigmaE8 < book.sigmaFloorE8 || sigmaE8 > book.sigmaCapE8) revert BadParams();
-        book.sigmaE8 = sigmaE8;
-        configVersion += 1;
-        emit SigmaSet(seriesId, sigmaE8, configVersion);
-    }
-
-    /// @dev 0 < floor ≤ σ ≤ cap ≤ the chain's bound; a half-spread inside the chain's bound.
-    function _validTerms(SeriesTerms calldata t) private pure returns (bool) {
-        if (t.sigmaFloorE8 == 0 || t.sigmaE8 < t.sigmaFloorE8 || t.sigmaCapE8 < t.sigmaE8) return false;
-        return t.sigmaCapE8 <= MAX_SIGMA_E8 && t.h50E6 != 0 && t.h50E6 <= MAX_HALF_SPREAD_E6;
-    }
+    constructor(IWindows windows_, address tailTable_) SeriesListing(windows_, tailTable_) {}
 
     // ------------------------------------------------------------------------------------------------ commit
 
@@ -106,7 +52,7 @@ abstract contract BandBook is BandPool, ExitOrders {
         if (it.recipient == address(0)) revert ZeroAddress();
         Window memory w = _tradingWindow(it.windowId);
         if (windows.openPrintOf(it.windowId).publishTime == 0) revert NoOpenPrint(it.windowId);
-        if (it.band >= _books[w.seriesId].bandCount) revert UnknownBand(w.seriesId, it.band);
+        if (it.band >= _listed(w.seriesId).bandCount) revert UnknownBand(w.seriesId, it.band);
         bool viaSession = _authorize(it, sig);
         if (permit.deadline != 0) {
             // A front-run permit only spends the same signature; the pull below is what must succeed.
@@ -116,7 +62,7 @@ abstract contract BandBook is BandPool, ExitOrders {
         }
         collateral.safeTransferFrom(it.owner, address(this), it.amount);
         committedStakes += it.amount;
-        uint40 target = uint40(block.timestamp) + FILL_DELAY_SEC;
+        uint40 target = uint40(block.timestamp) + params.fillDelaySec;
         _tickets.push(
             Ticket({
                 owner: it.owner,
@@ -167,7 +113,7 @@ abstract contract BandBook is BandPool, ExitOrders {
     }
 
     function _pendClose(Ticket storage t, uint64 shares, uint64 minProceeds) private returns (uint40 target) {
-        target = uint40(block.timestamp) + FILL_DELAY_SEC;
+        target = uint40(block.timestamp) + params.fillDelaySec;
         t.closing = shares;
         t.limit = minProceeds;
         t.target = target;
@@ -224,19 +170,27 @@ abstract contract BandBook is BandPool, ExitOrders {
     // ------------------------------------------------------------------------------------------------ fill
 
     /// @notice Fills every pending open or close in `ids` at the unique print of `target` (recorded here if missing;
-    ///         send its fee only then). Permissionless; tickets not pending at `target` are skipped, so a repeat is a
-    ///         no-op. A batch shares one window source and one instant.
-    function finalize(uint40 target, uint256[] calldata ids, bytes calldata proof) external payable nonReentrant {
+    ///         send its fee only then), priced on the keeper's σ mark for that instant (D-300). Permissionless; tickets
+    ///         not pending at `target` are skipped, so a repeat is a no-op. A batch shares one window source, one
+    ///         instant and so one mark.
+    function finalize(
+        uint40 target,
+        uint256[] calldata ids,
+        bytes calldata proof,
+        SigmaMark calldata mark,
+        bytes calldata markSig
+    ) external payable nonReentrant {
         if (ids.length == 0 || ids.length > MAX_BATCH) revert BadBatch();
         PrintSource memory src = windows.primarySourceOf(_ticket(ids[0]).windowId);
+        _checkMark(mark, markSig, src.feedId, target);
         Print memory print = windows.ensurePrint{value: msg.value}(src.verifier, src.feedId, target, proof);
         for (uint256 i; i < ids.length; ++i) {
             Ticket storage t = _ticket(ids[i]);
             if (t.target != target) continue;
             PrintSource memory own = windows.primarySourceOf(t.windowId);
             if (own.verifier != src.verifier || own.feedId != src.feedId) revert MixedBatch(ids[i]);
-            if (t.status == TICKET_COMMITTED) _fillOpen(ids[i], t, print);
-            else if (t.status == TICKET_OPEN && t.closing != 0) _fillClose(ids[i], t, print);
+            if (t.status == TICKET_COMMITTED) _fillOpen(ids[i], t, print, mark);
+            else if (t.status == TICKET_OPEN && t.closing != 0) _fillClose(ids[i], t, print, mark);
         }
         _assertSolvent();
     }
@@ -269,15 +223,15 @@ abstract contract BandBook is BandPool, ExitOrders {
         return block.timestamp > deadline ? REFUSE_NO_PRINT : 0;
     }
 
-    /// @dev Prices the band at the fill print (D-262) and books the fill, or refuses and refunds.
-    function _fillOpen(uint256 id, Ticket storage t, Print memory print) private {
+    /// @dev Prices the band at the fill print (D-262, D-300) and books the fill, or refuses and refunds.
+    function _fillOpen(uint256 id, Ticket storage t, Print memory print, SigmaMark calldata mark) private {
         (Window memory w, uint8 reason) = _fillable(t);
         if (reason != 0) return _refuseOpen(id, t, reason);
         Params storage p = params;
-        uint256 probE6 = _probAt(w, t, print.priceE8);
+        uint256 probE6 = _probAt(w, t, print.priceE8, mark);
         if (probE6 < p.minProbE6 || probE6 > p.maxProbE6) return _refuseOpen(id, t, REFUSE_PRICE);
         uint256 surchargeE6 = uint256(p.maxSurchargeE6) * reservedByExpiry[w.expiry] / p.maxExpiryReserved;
-        uint256 priceE6 = probE6 + p.halfSpreadE6 + surchargeE6;
+        uint256 priceE6 = probE6 + _halfSpreadAt(w.seriesId, probE6) + surchargeE6;
         if (priceE6 >= P_ONE) return _refuseOpen(id, t, REFUSE_PRICE);
         uint256 payout = BandMath.payoutFor(t.stake, priceE6);
         // The pool must front something, or the call is not a bet against it (CWF `Underpriced`).
@@ -303,13 +257,13 @@ abstract contract BandBook is BandPool, ExitOrders {
     /// @dev Sells `closing` shares at the bid (probability − half-spread) of the close print; the pool keeps the rest
     ///      of their escrow. The basis leaving is ceiled, so the remaining basis never exceeds the remaining shares. A
     ///      fired exit fills only at a bid that meets it, and a miss leaves it standing.
-    function _fillClose(uint256 id, Ticket storage t, Print memory print) private {
+    function _fillClose(uint256 id, Ticket storage t, Print memory print, SigmaMark calldata mark) private {
         (Window memory w, uint8 reason) = _fillable(t);
         if (reason != 0) return _refuseClose(id, t, reason);
         Params storage p = params;
-        uint256 probE6 = _probAt(w, t, print.priceE8);
+        uint256 probE6 = _probAt(w, t, print.priceE8, mark);
         if (probE6 < p.minProbE6 || probE6 > p.maxProbE6) return _refuseClose(id, t, REFUSE_PRICE);
-        uint256 bidE6 = probE6 - p.halfSpreadE6;
+        uint256 bidE6 = probE6 - _halfSpreadAt(w.seriesId, probE6);
         uint64 shares = t.closing;
         uint256 proceeds = BandMath.proceedsFor(shares, bidE6);
         if (_exits[id].firing != EXIT_NONE) {
@@ -355,10 +309,13 @@ abstract contract BandBook is BandPool, ExitOrders {
         if (t.status == TICKET_COMMITTED && t.configVersion != configVersion) return (w, REFUSE_CONFIG);
     }
 
-    function _probAt(Window memory w, Ticket storage t, int64 spotE8) private view returns (uint256) {
+    function _probAt(Window memory w, Ticket storage t, int64 spotE8, SigmaMark calldata mark)
+        private
+        view
+        returns (uint256)
+    {
         int64 k = windows.openPrintOf(t.windowId).priceE8;
-        SeriesBook storage book = _books[w.seriesId];
-        return BandMath.probE6(BandMath.unpack(book.bands[t.band]), k, spotE8, book.sigmaE8, w.expiry - t.target);
+        return _priceBand(w.seriesId, t.band, k, spotE8, mark, w.expiry - t.target);
     }
 
     function _refuseOpen(uint256 id, Ticket storage t, uint8 reason) internal {
@@ -382,19 +339,5 @@ abstract contract BandBook is BandPool, ExitOrders {
     function _ticket(uint256 id) internal view returns (Ticket storage) {
         if (id == 0 || id > _tickets.length) revert UnknownTicket(id);
         return _tickets[id - 1];
-    }
-
-    function _requireSeries(bytes32 seriesId) internal view {
-        if (windows.seriesOf(seriesId).cadenceSec == 0) revert UnknownSeries(seriesId);
-    }
-
-    function _listed(bytes32 seriesId) internal view returns (SeriesBook storage book) {
-        book = _books[seriesId];
-        if (book.bandCount == 0) revert SeriesNotListed(seriesId);
-    }
-
-    /// @dev Band `index` of a series' menu (the caller has checked `index < bandCount`).
-    function _bandOf(bytes32 seriesId, uint8 index) internal view returns (BandDef memory) {
-        return BandMath.unpack(_books[seriesId].bands[index]);
     }
 }

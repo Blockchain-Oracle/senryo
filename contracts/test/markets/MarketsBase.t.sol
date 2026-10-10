@@ -5,7 +5,9 @@ import {Test} from "forge-std/Test.sol";
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IMarketCalendar} from "../../src/oracle/interfaces/IMarketCalendar.sol";
+import {SSTORE2} from "solady/utils/SSTORE2.sol";
 import {BandReserve} from "../../src/markets/BandReserve.sol";
+import {TailTableData} from "../../src/markets/TailTableData.sol";
 import {PythPrintVerifier} from "../../src/markets/PythPrintVerifier.sol";
 import {Windows} from "../../src/markets/Windows.sol";
 import {IPyth} from "../../src/markets/interfaces/IPyth.sol";
@@ -38,6 +40,7 @@ abstract contract MarketsBase is Test {
     uint8 internal constant MOON = 3;
     uint256 internal constant OWNER_PK = 0xA11CE;
     uint256 internal constant DELEGATE_PK = 0xDE1E;
+    uint256 internal constant SIGNER_PK = 0x516A;
 
     AccessManager internal manager;
     MockPyth internal pyth;
@@ -45,6 +48,7 @@ abstract contract MarketsBase is Test {
     Windows internal windows;
     BlockingUSD internal usd;
     BandReserve internal reserve;
+    address internal table;
     bytes32 internal seriesId;
     bytes32 internal windowId;
     address internal owner;
@@ -58,7 +62,11 @@ abstract contract MarketsBase is Test {
         verifier = new PythPrintVerifier(IPyth(address(pyth)), GRACE, MAX_CONF_BPS, ADMISSION);
         windows = new Windows(address(manager), IMarketCalendar(address(0)));
         usd = new BlockingUSD(address(manager));
-        reserve = new BandReserve(address(manager), IERC20(address(usd)), IWindows(address(windows)), params(), caps());
+        table = SSTORE2.write(TailTableData.BLOB);
+        reserve = new BandReserve(
+            address(manager), IERC20(address(usd)), IWindows(address(windows)), table, params(), caps()
+        );
+        reserve.setSigmaSigner(vm.addr(SIGNER_PK), true);
 
         PolicyVersion memory v0;
         v0.validUntil = OPEN_ENDED;
@@ -88,20 +96,43 @@ abstract contract MarketsBase is Test {
 
     function params() internal pure virtual returns (Params memory) {
         return Params({
-            halfSpreadE6: 20_000,
+            minHalfSpreadE6: 2500,
             maxSurchargeE6: 10_000,
             minProbE6: 30_000,
             maxProbE6: 970_000,
             maxExposureBps: 6000,
             maxExpiryReserved: 50_000e6,
             minStake: 1e6,
-            maxStake: 1000e6
+            maxStake: 1000e6,
+            fillDelaySec: 1
         });
     }
 
-    /// @dev Lists a series at `SIGMA`, with room to reprice it either way, and a 2-point half-spread at p = ½.
+    /// @dev Lists a series whose marks may run from half to twice `SIGMA`, with a 2-point half-spread at p = ½.
     function list(bytes32 series, BandDef[] memory menu) internal {
-        reserve.listSeries(series, SeriesTerms(SIGMA, SIGMA / 2, SIGMA * 2, H50), menu);
+        reserve.listSeries(series, SeriesTerms(SIGMA / 2, SIGMA * 2, H50), menu);
+    }
+
+    // ------------------------------------------------------------------------------------------------ σ marks
+
+    /// @dev The keeper's mark for `feed` that a fill at `target` carries: both σ at `SIGMA`, signed by the test signer.
+    function markOf(bytes32 feed, uint40 target) internal view returns (SigmaMark memory m, bytes memory sig) {
+        m = SigmaMark(feed, reserve.markMinuteOf(target), SIGMA, SIGMA);
+        sig = signMark(SIGNER_PK, m);
+    }
+
+    function signMark(uint256 pk, SigmaMark memory m) internal view returns (bytes memory) {
+        bytes32 structHash =
+            keccak256(abi.encode(reserve.SIGMA_MARK_TYPEHASH(), m.feedId, m.minute, m.fastE8, m.slowE8));
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(pk, keccak256(abi.encodePacked("\x19\x01", reserve.domainSeparator(), structHash)));
+        return abi.encodePacked(r, s, v);
+    }
+
+    /// @dev `finalize` on `feed`'s mark for `target`.
+    function finalizeOn(bytes32 feed, uint256 fee, uint40 target, uint256[] memory ids, bytes memory proof) internal {
+        (SigmaMark memory m, bytes memory sig) = markOf(feed, target);
+        reserve.finalize{value: fee}(target, ids, proof, m, sig);
     }
 
     function caps() internal pure returns (BandReserve.Caps memory) {
@@ -196,7 +227,7 @@ abstract contract MarketsBase is Test {
         bytes memory proof = printAt(target, price);
         uint256[] memory ids = new uint256[](1);
         ids[0] = id;
-        reserve.finalize{value: pyth.FEE()}(target, ids, proof);
+        finalizeOn(BTC_FEED, pyth.FEE(), target, ids, proof);
     }
 
     function settle(int64 closePrice) internal {

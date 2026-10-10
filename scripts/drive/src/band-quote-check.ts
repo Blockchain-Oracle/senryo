@@ -5,6 +5,10 @@
  * surcharge are read from the chain, not assumed. Exits 1 on any difference.
  *
  *   pnpm --filter @senryo/drive exec tsx src/band-quote-check.ts [cases]
+ *
+ * v3 (R3.3–R3.4) prices on a σ mark, the calibrated table and the spread curve, so this check runs again once the v3
+ * reserve is deployed and exported (R3.19 moves it to `quoteOpen(…, mark)`, `termsOf` and `halfSpreadE6`); against the
+ * abandoned v2 reserve (D-309) it reports differences by design. Offline, `band-math-vectors.ts` pins the mirror.
  */
 import { callsRoute, createApiClient, windowProofRoute } from "@senryo/api-client";
 import { addressOf, createReadClient, type Hex, seriesIdOf } from "@senryo/chain";
@@ -110,7 +114,7 @@ for (let i = 0; i < samples.length; i += BATCH) {
     const shape = perWindow.get(s.w.id);
     const band = shape?.menu[s.band];
     if (!shape || !band) throw new Error("no band");
-    const prob = probE6(band, s.w.k, s.spot, shape.sigmaE8, BigInt(s.w.expiry - s.at));
+    const prob = probE6(band, s.w.k, s.spot, shape.sigmaE8, shape.sigmaE8, BigInt(s.w.expiry - s.at));
     const price = prob + BigInt(halfSpreadE6) + shape.surchargeE6;
     const payout = price < P_ONE ? payoutFor(s.stake, price) : 0n;
     if (prob !== chainProb || price !== chainPrice || payout !== chainPayout) {

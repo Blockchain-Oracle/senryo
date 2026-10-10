@@ -2,6 +2,7 @@
 pragma solidity 0.8.31;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {BandMath} from "../../src/markets/BandMath.sol";
 import {ExitOrders} from "../../src/markets/ExitOrders.sol";
 import {SessionGrants} from "../../src/markets/SessionGrants.sol";
 import {IBandReserve} from "../../src/markets/interfaces/IBandReserve.sol";
@@ -12,7 +13,6 @@ import "../../src/markets/MarketTypes.sol";
 ///         keeper times the trail above the owner's floor, a miss leaves the exit standing, and closes no longer pin the
 ///         pricing config.
 contract ExitsTest is MarketsBase {
-    uint32 internal constant HALF_SPREAD = 20_000;
     uint32 internal constant TAKE_PROFIT = 750_000;
     uint32 internal constant STOP = 300_000;
     uint32 internal constant FLOOR = 100_000;
@@ -52,10 +52,16 @@ contract ExitsTest is MarketsBase {
         vm.warp(reserve.ticketOf(id).filledAt + MIN_HOLD_SEC);
     }
 
-    /// @dev Up's bid (probability − half-spread) at a print of `price` for instant `at`.
+    /// @dev Up's probability at a print of `price` for instant `at`.
+    function probAt(int64 price, uint40 at) internal view returns (uint256 probE6) {
+        (SigmaMark memory m,) = markOf(BTC_FEED, at);
+        (probE6,,) = reserve.quoteOpen(windowId, UP, STAKE, price, at, m);
+    }
+
+    /// @dev Up's bid (probability − the curve's half-spread) at a print of `price` for instant `at`.
     function bidAt(int64 price, uint40 at) internal view returns (uint256) {
-        (uint256 probE6,,) = reserve.quoteOpen(windowId, UP, STAKE, price, at);
-        return probE6 - HALF_SPREAD;
+        uint256 probE6 = probAt(price, at);
+        return probE6 - BandMath.halfSpreadE6(probE6, H50, params().minHalfSpreadE6);
     }
 
     function fireAsStranger(uint256 id) internal returns (uint40 target) {
@@ -72,9 +78,10 @@ contract ExitsTest is MarketsBase {
         uint256[] memory ids = new uint256[](1);
         ids[0] = id;
         uint256 fee = pyth.FEE();
+        (SigmaMark memory m, bytes memory msig) = markOf(BTC_FEED, target);
         vm.expectEmit(true, false, false, true, address(reserve));
         emit IBandReserve.CloseRefused(id, REFUSE_EXIT);
-        reserve.finalize{value: fee}(target, ids, proof);
+        reserve.finalize{value: fee}(target, ids, proof, m, msig);
     }
 
     // ------------------------------------------------------------------------------------------------ prices decide
@@ -113,7 +120,7 @@ contract ExitsTest is MarketsBase {
         target = fireAsStranger(id);
         uint256 crashed = bidAt(K - 120e8, target);
         assertLt(crashed, FLOOR, "through the floor");
-        assertGe(crashed + HALF_SPREAD, params().minProbE6, "still priced");
+        assertGe(probAt(K - 120e8, target), params().minProbE6, "still priced");
         miss(id, K - 120e8);
         assertEq(reserve.ticketOf(id).status, TICKET_OPEN, "never sold below the floor");
 
@@ -199,13 +206,13 @@ contract ExitsTest is MarketsBase {
         uint64 shares = reserve.ticketOf(id).payout;
         Intent memory it = intent(ACTION_CLOSE, 0, id, shares / 2, 0);
         bytes memory sig = sign(OWNER_PK, it);
-        reserve.setSigma(seriesId, SIGMA + 1); // a listing run reprices every series
+        reserve.setParams(params()); // the pool's terms moved after the close was signed
         reserve.commit(it, sig, noPermit());
         fill(id, K);
         assertEq(reserve.ticketOf(id).payout, shares - shares / 2, "a close signed before the change still fills");
 
         setExit(id, 0, 600_000, 0, 0);
-        reserve.setSigma(seriesId, SIGMA + 2);
+        reserve.setParams(params());
         fireAsStranger(id);
         fill(id, K);
         assertEq(reserve.ticketOf(id).status, TICKET_CLOSED, "so does an exit");

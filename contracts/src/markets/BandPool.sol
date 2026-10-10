@@ -90,13 +90,18 @@ abstract contract BandPool is AccessManaged, ReentrancyGuardTransient, IBandRese
         emit PausedSet(next);
     }
 
-    /// @dev Bounded so no admin can price outside the plan's rules (D-262: refuse outside 3–97 %, 2 pp half-spread).
+    /// @dev Bounded so no admin can price outside the plan's rules (D-262: refuse outside 3–97 %; D-300: the spread
+    ///      floor and the fill delay inside their bounds).
     function _setParams(Params memory p) internal {
-        if (p.halfSpreadE6 > MAX_HALF_SPREAD_E6 || p.maxSurchargeE6 > MAX_SURCHARGE_E6) revert BadParams();
+        if (p.minHalfSpreadE6 == 0 || p.minHalfSpreadE6 > MAX_HALF_SPREAD_E6 || p.maxSurchargeE6 > MAX_SURCHARGE_E6) {
+            revert BadParams();
+        }
+        if (p.fillDelaySec < MIN_FILL_DELAY_SEC || p.fillDelaySec > MAX_FILL_DELAY_SEC) revert BadParams();
         if (p.minProbE6 < MIN_PROB_FLOOR_E6 || p.maxProbE6 > MAX_PROB_CEIL_E6 || p.minProbE6 >= p.maxProbE6) {
             revert BadParams();
         }
-        if (p.minProbE6 <= p.halfSpreadE6) revert BadParams(); // a close bid must stay positive
+        // A close bid must stay positive: the curve at any p is under 4·h50·p ≤ 0.2·p, so the floor is what binds.
+        if (p.minProbE6 <= p.minHalfSpreadE6) revert BadParams();
         if (p.maxExposureBps == 0 || p.maxExposureBps > MAX_EXPOSURE_BPS || p.maxExpiryReserved == 0) {
             revert BadParams();
         }

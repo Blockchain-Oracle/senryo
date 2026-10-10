@@ -85,12 +85,16 @@ contract ParlayTest is MarketsBase {
         proofs[0] = pyth.push(ETH_FEED, pl.target, pl.target - 1, ethPrice, CONF, EXPO);
         proofs[1] = printAt(pl.target, btcPrice);
         uint256 fee = refusal == 0 || refusal == REFUSE_PRICE ? 2 * pyth.FEE() : 0;
+        SigmaMark[] memory marks = new SigmaMark[](2);
+        bytes[] memory sigs = new bytes[](2);
+        (marks[0], sigs[0]) = markOf(ETH_FEED, pl.target);
+        (marks[1], sigs[1]) = markOf(BTC_FEED, pl.target);
         uint256 before = address(this).balance;
         if (refusal != 0) {
             vm.expectEmit(true, false, false, true, address(reserve));
             emit ParlayBook.ParlayRefused(id, refusal, pl.stake);
         }
-        reserve.finalizeParlay{value: fee + EXTRA_FEE}(id, proofs);
+        reserve.finalizeParlay{value: fee + EXTRA_FEE}(id, proofs, marks, sigs);
         assertEq(before - address(this).balance, fee, "only the fees are kept");
     }
 
@@ -261,7 +265,7 @@ contract ParlayTest is MarketsBase {
 
     function test_aStaleConfigIsRefusedAtTheFill() public {
         uint256 id = commit(parlayIntent(UP, UP, STAKE));
-        reserve.setSigma(seriesId, SIGMA + 1);
+        reserve.setParams(params());
         fillParlay(id, KE, K, REFUSE_CONFIG);
         vm.expectRevert(abi.encodeWithSelector(ParlayBook.ParlayNotPending.selector, id));
         reserve.settleParlay(id);

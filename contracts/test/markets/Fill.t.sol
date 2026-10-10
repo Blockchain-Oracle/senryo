@@ -13,7 +13,7 @@ contract FillTest is MarketsBase {
         uint256 id = open(UP, STAKE);
         Ticket memory t = reserve.ticketOf(id);
         assertEq(t.status, TICKET_COMMITTED);
-        assertEq(t.target, uint40(block.timestamp) + FILL_DELAY_SEC);
+        assertEq(t.target, uint40(block.timestamp) + params().fillDelaySec);
         assertEq(usd.balanceOf(owner), WALLET - STAKE);
         assertEq(reserve.committedStakes(), STAKE);
         assertSolvent();
@@ -46,12 +46,13 @@ contract FillTest is MarketsBase {
         uint256[] memory ids = new uint256[](1);
         ids[0] = id;
         uint256 fee = pyth.FEE();
+        (SigmaMark memory m, bytes memory msig) = markOf(BTC_FEED, target);
         vm.expectRevert(MockPyth.PriceFeedNotFoundWithinRange.selector);
-        reserve.finalize{value: fee}(target, ids, later);
+        reserve.finalize{value: fee}(target, ids, later, m, msig);
         // An older print (before the target) can't be passed off either.
         bytes memory older = pyth.push(BTC_FEED, target - 1, target - 2, K - 500e8, CONF, EXPO);
         vm.expectRevert(MockPyth.PriceFeedNotFoundWithinRange.selector);
-        reserve.finalize{value: fee}(target, ids, older);
+        reserve.finalize{value: fee}(target, ids, older, m, msig);
         assertEq(reserve.ticketOf(id).status, TICKET_COMMITTED);
     }
 
@@ -104,7 +105,7 @@ contract FillTest is MarketsBase {
         vm.warp(T0 + CADENCE);
         uint256[] memory ids = new uint256[](1);
         ids[0] = id;
-        reserve.finalize{value: pyth.FEE()}(target, ids, proof);
+        finalizeOn(BTC_FEED, pyth.FEE(), target, ids, proof);
         assertEq(reserve.ticketOf(id).status, TICKET_REFUNDED, "late fill refused: nobody may wait for the close");
         assertEq(usd.balanceOf(owner), WALLET);
         assertSolvent();
@@ -133,7 +134,7 @@ contract FillTest is MarketsBase {
         uint40 target = reserve.ticketOf(id).target;
         uint256[] memory ids = new uint256[](1);
         ids[0] = id;
-        reserve.finalize(target, ids, ""); // print already recorded: no fee, no proof, no change
+        finalizeOn(BTC_FEED, 0, target, ids, ""); // print already recorded: no fee, no proof, no change
         assertEq(reserve.ticketOf(id).payout, payout);
         assertSolvent();
     }
@@ -157,9 +158,10 @@ contract FillTest is MarketsBase {
         uint256[] memory ids = new uint256[](1);
         ids[0] = id;
         uint256 fee = pyth.FEE();
+        (SigmaMark memory m, bytes memory msig) = markOf(BTC_FEED, target);
         vm.expectRevert(
             abi.encodeWithSelector(PythPrintVerifier.LowQuality.selector, K, uint64(uint256(int256(K)) / 100))
         );
-        reserve.finalize{value: fee}(target, ids, wide);
+        reserve.finalize{value: fee}(target, ids, wide, m, msig);
     }
 }

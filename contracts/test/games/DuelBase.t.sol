@@ -135,7 +135,7 @@ abstract contract DuelBase is MarketsBase {
         bytes memory proof = have ? bytes("") : pyth.push(feeds[card], target, target - 1, price, confOf(price), EXPO);
         uint256[] memory ids = new uint256[](1);
         ids[0] = id;
-        reserve.finalize{value: have ? 0 : pyth.FEE()}(target, ids, proof);
+        finalizeOn(feeds[card], have ? 0 : pyth.FEE(), target, ids, proof);
     }
 
     /// @dev Closes every card's window at its open price moved by `moveBps` (positive: up) and settles it.

@@ -71,7 +71,7 @@ abstract contract DuelLedger is AccessManaged, EIP712, ReentrancyGuardTransient,
 
     /// @notice Sets an entry price. The card stake must be a stake the reserve takes; a disabled tier opens no match.
     function setTier(uint8 tier, DuelTier calldata t) external restricted {
-        (,,,,,, uint64 minStake, uint64 maxStake) = reserve.params();
+        (,,,,,, uint64 minStake, uint64 maxStake,) = reserve.params();
         if (t.cardStake < minStake || t.cardStake > maxStake) revert BadTier(tier);
         tierOf[tier] = t;
         emit TierSet(tier, t.pot, t.cardStake, t.enabled);

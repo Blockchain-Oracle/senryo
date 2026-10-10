@@ -50,14 +50,36 @@ uint8 constant VOID_CROSS_CHECK_DIVERGENCE = 2;
 
 /// @dev Opens and closes stop this long before expiry.
 uint40 constant LOCKOUT_SEC = 20;
-/// @dev A commit fills at the unique print of `commit + FILL_DELAY_SEC` (or the first one after it, within grace).
-uint40 constant FILL_DELAY_SEC = 1;
+/// @dev A commit fills at the unique print of `commit + params.fillDelaySec` (D-300: a setting, 1–3 s).
+uint8 constant MIN_FILL_DELAY_SEC = 1;
+uint8 constant MAX_FILL_DELAY_SEC = 3;
+/// @dev σ marks (D-300): a fill carries the keeper's mark of the last minute boundary at least this long before it.
+uint40 constant SIGMA_MARK_LAG_SEC = 5;
+uint40 constant SIGMA_MARK_STEP_SEC = 60;
 /// @dev A close needs the position held this long and a newer print.
 uint40 constant MIN_HOLD_SEC = 3;
 /// @dev The last seconds before the close print never divide the volatility scale to zero (CWF FairValue).
 uint256 constant MIN_SECONDS_LEFT = 5;
 uint8 constant MAX_BANDS = 8;
 uint256 constant MAX_BATCH = 32;
+
+/// @dev The shape table's data contract (D-300, `TailTableData`; SSTORE2): a 22-byte header — format, horizon count,
+///      points per row (u16), z step × 1e4 (u16), the σ model's mark weight and fade per second (u64 × 1e18 each) —
+///      then the horizons (u16 seconds, ascending), then every row's F_τ(z) × 1e6 (three bytes an entry).
+uint8 constant TAIL_FORMAT = 1;
+uint256 constant TAIL_HEADER_BYTES = 22;
+uint256 constant TAIL_POINTS_AT = 2;
+uint256 constant TAIL_Z_STEP_AT = 4;
+uint256 constant TAIL_WEIGHT_AT = 6;
+uint256 constant TAIL_FADE_AT = 14;
+uint256 constant TAIL_U16_BYTES = 2;
+uint256 constant TAIL_U64_BYTES = 8;
+uint256 constant TAIL_ENTRY_BYTES = 3;
+uint256 constant TAIL_MIN_COUNT = 2;
+uint256 constant TAIL_MAX_TAUS = 16;
+uint256 constant TAIL_MAX_POINTS = 401;
+uint256 constant TAIL_MAX_WEIGHT_WAD = 1e18;
+uint256 constant TAIL_MAX_FADE_WAD = 1e15;
 
 /// @dev A menu packs each band into 40 bits — kind · lowBps · highBps — six to a slot, so a series' whole book sits in
 ///      one MIP-8 storage page and a five-band listing writes two slots (D-309).
@@ -117,6 +139,8 @@ uint8 constant EXIT_TRAIL = 2; // the trail: the exit keeper's ratcheting stop d
 // ---------------------------------------------------------------------------------------------------------------
 
 uint32 constant MAX_HALF_SPREAD_E6 = 50_000;
+/// @dev The spread curve h(p) = max(minHalfSpread, 4·h50·p(1−p)) (D-300): 4 / 1e6² in probability units.
+uint256 constant SPREAD_CURVE_FACTOR = 4;
 uint32 constant MAX_SURCHARGE_E6 = 50_000;
 uint32 constant MIN_PROB_FLOOR_E6 = 10_000;
 uint32 constant MAX_PROB_CEIL_E6 = 990_000;
@@ -176,9 +200,8 @@ struct BandDef {
     uint16 highBps;
 }
 
-/// @dev How one series is priced (D-300): its σ, the bounds a σ may take, and its half-spread at p = ½ (`h50`).
+/// @dev How one series is priced (D-300): the bounds its σ marks are held to, and its half-spread at p = ½ (`h50`).
 struct SeriesTerms {
-    uint64 sigmaE8;
     uint64 sigmaFloorE8;
     uint64 sigmaCapE8;
     uint32 h50E6;
@@ -187,7 +210,6 @@ struct SeriesTerms {
 /// @dev A series' listing in the reserve, laid out for MIP-8: the terms and the band count share slot 0, the packed
 ///      menu (`BandMath.pack`) takes the next two. `bandCount == 0` means not listed.
 struct SeriesBook {
-    uint64 sigmaE8;
     uint64 sigmaFloorE8;
     uint64 sigmaCapE8;
     uint32 h50E6;
@@ -195,9 +217,20 @@ struct SeriesBook {
     uint40[MAX_BANDS] bands;
 }
 
-/// @dev Pool pricing and risk terms (D-262, D-264); every change bumps `configVersion`.
+/// @dev The keeper's σ for one feed through one minute boundary (D-300), σ per √second × 1e8: `fastE8` the winsorised
+///      EWMA of 1-minute returns, `slowE8` the one-day anchor. Signed (EIP-712) by an allowed σ signer; a fill carries
+///      the mark of `SigmaMarks.markMinuteOf(target)` and nothing else.
+struct SigmaMark {
+    bytes32 feedId;
+    uint40 minute;
+    uint64 fastE8;
+    uint64 slowE8;
+}
+
+/// @dev Pool pricing and risk terms (D-262, D-264, D-300); every change bumps `configVersion`. `minHalfSpreadE6` is the
+///      spread curve's floor (h50 is per series); `fillDelaySec` the seconds from a commit to its fill print.
 struct Params {
-    uint32 halfSpreadE6;
+    uint32 minHalfSpreadE6;
     uint32 maxSurchargeE6;
     uint32 minProbE6;
     uint32 maxProbE6;
@@ -205,6 +238,7 @@ struct Params {
     uint64 maxExpiryReserved;
     uint64 minStake;
     uint64 maxStake;
+    uint8 fillDelaySec;
 }
 
 /// @dev One call. Money is in collateral base units; `payout` is the remaining $1-shares (each pays one unit).

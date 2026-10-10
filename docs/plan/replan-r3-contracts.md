@@ -41,21 +41,52 @@ Tested to the money invariants. Not deployed until R4.
     multiplier lower.
   - The deploy script still lists through `setSigma` + `addBand`; R3.20/R3.21 move it to `listSeries` with the
     catalogue's floors, caps and h50s.
-- [ ] R3.2 Calibration fit:
+- [x] R3.2 Calibration fit:
   - fit the fat-tailed probability table (per lane if needed) from archived `pyth_prints`, plus Binance 90-day 1-minute
     bars as the proxy (`scripts/calibrate/`; data in the scratchpad, the table committed);
   - a held-out check of Up/Down and Range within ±5 % of fair.
+  - **Built** (D-313): `fetch-binance.sh` (checksummed data.binance.vision bars), `fetch-archive.mjs` (Pyth minutes from
+    Senryo's own candles route — bulk Benchmarks pulls share the production key's quota and were refused after 30 min),
+    `record-recent.mjs` (Pyth per second from `/v1/prices/recent`), `series.py`/`samples.py`/`model.py`/`bands.py`,
+    `fit.py` (σ model and table tuned on real windows' band returns, two-fold cross-validation, prices mirrored),
+    `subminute.py`, `codegen.mjs`. The table is `scripts/calibrate/table.json`.
+  - **Result:** Up/Down within ±2.5 % of fair everywhere; Range within ±3.7 % on 5m/15m; **1h Range +7.7 % in one fold
+    (fails the bar)**; Moonshot/Crash over-priced 4–19 % (pool-safe). Found on the way: the plain 30-min EWMA is
+    conditionally biased (quiet minutes under-predict the next move by 55–90 %), and mid-window entries see narrower
+    moves than random-time samples, so the table is tuned on window outcomes, not on the move distribution alone.
+  - **On Pyth's own prints** (`check.py` on Senryo's archive, 52 h to 10 Oct 22:30 UTC, mostly a weekend): Up/Down
+    +1.1 % / −2.1 % / −5.1 % (5m / 15m / 1h, about 50 hourly windows a market, so noisy); **Range +10.2 % on 5m**,
+    +4.1 % on 15m, +1.1 % on 1h; Moonshot/Crash −30 % on 5m/15m. Pyth's aggregated minutes move less over short
+    horizons than Binance's trades, so the Binance-fitted table is too wide for Pyth there.
+  - **Open:** (1) refit the table on Pyth itself once the archive holds about two weeks (`fit.py` on archive minutes)
+    and swap it in with `setTailTable` before R9 — until then testnet's 5m Range favours the caller by about 10 % in
+    Practice money; (2) rows below a minute equal the 1-minute row until 12 h of the Pyth per-second record are in
+    (λ(τ) by `subminute.py`); (3) 1h Range rechecked on Pyth history before any mainnet Range listing (D-306).
 
 ### Calls
-- [ ] R3.3 `BandMath`: the calibrated table replaces the 81-point Φ table; the TS mirror (`packages/core/src/market/band-math.ts`) moves with it.
-- [ ] R3.4 σ marks (D-300):
+- [x] R3.3 `BandMath`: the calibrated table replaces the 81-point Φ table; the TS mirror (`packages/core/src/market/band-math.ts`) moves with it.
+  - The table (8 horizons × 101 points to z = 5, linear in z and in τ) and the σ model's weight and fade are a data
+    contract (`TailTableData.BLOB`, SSTORE2) the reserve names (`tailTable`, `setTailTable` checks every row, bumps the
+    version). `BandMath` reads only the bytes it needs. The mirror decodes the same blob (`decodeTailShape`) and ports
+    Solady's `expWad`. `BandMathVectors.t.sol` pins 600 vectors to `packages/core/vectors/band-math.json`;
+    `scripts/drive/src/band-math-vectors.ts` checks the mirror against them (600/600 bit-exact); the invariant
+    `tail-table-sync` keeps both blobs equal to `table.json`.
+- [x] R3.4 σ marks (D-300):
   - a keeper-signed `(series, sigma, minute)` carried in `finalize`'s calldata;
   - checks on the signer role, freshness (≤ 2 min) and the per-series floor and cap;
   - `setSigma` keeps the admin floor and cap only, with no global version bump.
-- [ ] R3.5 The spread curve: h(p) = max(0.25 pt, 4·h50·p(1−p)), with h50 per series. Bounds checked against
-  `MarketTypes` limits.
-- [ ] R3.6 `FILL_DELAY_SEC` becomes a bounded parameter (1–3 s).
-- [ ] R3.7 `listSeries(series, sigma, menu)`: one call per series. Band widths come from realised σ at listing.
+  - Built as `SigmaMarks.sol` + `SeriesListing.sol` (D-313): a fast and a slow σ per feed, exactly the mark of the last
+    minute boundary ≥ 5 s before the fill (not "≤ 2 min"), each σ clamped into the series' bounds, an allow-list of
+    signers; `setSigmaBounds` moves the bounds with no bump. `finalize` and `finalizeParlay` carry the marks;
+    `quoteOpen` takes one. Tests: `SigmaMarks.t.sol` (wrong minute either way, other feed, zero σ, forged and revoked
+    signers, the clamp).
+- [x] R3.5 The spread curve: h(p) = max(0.25 pt, 4·h50·p(1−p)), with h50 per series. Bounds checked against
+  `MarketTypes` limits. (`BandMath.halfSpreadE6`; `Params.minHalfSpreadE6` is the floor; parlays use the widest leg's
+  h50 on the joint chance.)
+- [x] R3.6 `FILL_DELAY_SEC` becomes a bounded parameter (1–3 s). (`Params.fillDelaySec`, checked in `_setParams`.)
+- [x] R3.7 `listSeries(series, sigma, menu)`: one call per series. Band widths come from realised σ at listing.
+  (Terms are the σ floor and cap and h50 — σ itself comes with each fill's mark. The widths are the catalogue's, R3.20;
+  `DeployMarkets`/`MarketsBase.s.sol` list through it.)
 
 ### Rides
 - [ ] R3.8 `RideTypes.sol`, `LinearMath.sol` (pure: entry, size, pnl, equity clamp, KO, cap, fees, side PnL; rounding

@@ -35,12 +35,19 @@ contract BandReserve is ParlayBook {
         uint40 maxSessionSec;
     }
 
-    constructor(address authority, IERC20 collateral_, IWindows windows_, Params memory params_, Caps memory caps)
+    constructor(
+        address authority,
+        IERC20 collateral_,
+        IWindows windows_,
+        address tailTable_,
+        Params memory params_,
+        Caps memory caps
+    )
         AccessManaged(authority)
         BandPool(collateral_, params_)
         EIP712(NAME, VERSION)
         SessionGrants(caps.maxPerCallCap, caps.maxSessionCap, caps.maxSessionSec)
-        BandBook(windows_)
+        BandBook(windows_, tailTable_)
     {}
 
     // ------------------------------------------------------------------------------------------------ sessions
@@ -67,7 +74,6 @@ contract BandReserve is ParlayBook {
         windowSettled[windowId] = true;
 
         uint16 used = bandsUsed[windowId];
-        SeriesBook storage book = _books[w.seriesId];
         uint16[OUTCOME_COUNT] memory masks; // indexed by outcome: lost, won, refunded
         uint256 toPool;
         uint256 toHolders;
@@ -75,7 +81,7 @@ contract BandReserve is ParlayBook {
             if (used & (uint16(1) << b) == 0) continue;
             uint8 outcome = w.state == STATE_VOIDED
                 ? OUTCOME_REFUND
-                : BandMath.outcome(BandMath.unpack(book.bands[b]), w.openE8, w.closeE8);
+                : BandMath.outcome(_bandOf(w.seriesId, b), w.openE8, w.closeE8);
             bandOutcome[windowId][b] = outcome;
             masks[outcome] |= uint16(1) << b;
             BandTotals memory tot = bandTotals[windowId][b];
@@ -138,36 +144,23 @@ contract BandReserve is ParlayBook {
         return _tickets.length;
     }
 
-    function menuOf(bytes32 seriesId) external view returns (BandDef[] memory menu) {
-        SeriesBook storage book = _books[seriesId];
-        menu = new BandDef[](book.bandCount);
-        for (uint8 i; i < menu.length; ++i) {
-            menu[i] = BandMath.unpack(book.bands[i]);
-        }
-    }
-
-    /// @notice A series' pricing terms (all zero until it is listed).
-    function termsOf(bytes32 seriesId) external view returns (SeriesTerms memory) {
-        SeriesBook storage book = _books[seriesId];
-        return SeriesTerms(book.sigmaE8, book.sigmaFloorE8, book.sigmaCapE8, book.h50E6);
-    }
-
-    /// @notice What `stake` on `band` would buy if the fill print were `spotE8` at `at` (no surcharge-free promise:
-    ///         the fill prices at its own print). Returns the band probability, the price per share and the payout.
-    function quoteOpen(bytes32 windowId, uint8 band, uint64 stake, int64 spotE8, uint40 at)
+    /// @notice What `stake` on `band` would buy if the fill print were `spotE8` at `at`, on a σ mark (no promise:
+    ///         the fill prices at its own print and mark). Returns the band probability, the price per share and the
+    ///         payout.
+    function quoteOpen(bytes32 windowId, uint8 band, uint64 stake, int64 spotE8, uint40 at, SigmaMark calldata mark)
         external
         view
         returns (uint256 probE6, uint256 priceE6, uint256 payout)
     {
         Window memory w = windows.windowOf(windowId);
         if (w.expiry == 0 || at >= w.expiry) revert WindowNotTrading(windowId);
-        SeriesBook storage book = _books[w.seriesId];
-        if (band >= book.bandCount) revert UnknownBand(w.seriesId, band);
+        if (band >= _listed(w.seriesId).bandCount) revert UnknownBand(w.seriesId, band);
         int64 k = windows.openPrintOf(windowId).priceE8;
         if (k <= 0) revert NoOpenPrint(windowId);
         Params storage p = params;
-        probE6 = BandMath.probE6(BandMath.unpack(book.bands[band]), k, spotE8, book.sigmaE8, w.expiry - at);
-        priceE6 = probE6 + p.halfSpreadE6 + uint256(p.maxSurchargeE6) * reservedByExpiry[w.expiry] / p.maxExpiryReserved;
+        probE6 = _priceBand(w.seriesId, band, k, spotE8, mark, w.expiry - at);
+        uint256 surchargeE6 = uint256(p.maxSurchargeE6) * reservedByExpiry[w.expiry] / p.maxExpiryReserved;
+        priceE6 = probE6 + _halfSpreadAt(w.seriesId, probE6) + surchargeE6;
         payout = priceE6 < P_ONE ? BandMath.payoutFor(stake, priceE6) : 0;
     }
 }

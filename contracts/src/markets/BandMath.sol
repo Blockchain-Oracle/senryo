@@ -1,74 +1,157 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.31;
 
-// Φ table, √ and σ√τ ported unchanged from CWF d7b576b:contracts/src/products/range/RangeMath.sol (itself Masayume
-// 68f7a09, bit-exact with its golden vectors); the log-distance z from CWF d7b576b:contracts/src/fair/FairValue.sol
+// √ and the log-distance z from CWF d7b576b:contracts/src/products/range/RangeMath.sol and src/fair/FairValue.sol
 // (Solady `lnWad`, `fullMulDiv`). New for Senryo: one band probability for every band kind around K (D-262/D-263), the
-// settlement rule per kind, and the money roundings (payouts floor, debits ceil). Mirrored bit for bit by the client
-// runtime in S3/S5 with shared vectors.
+// settlement rule per kind, and the money roundings (payouts floor, debits ceil). v3 (D-300): the normal Φ table is
+// replaced by the calibrated shape table (fitted and held-out-checked in R3.2), read from its own data contract so a
+// recalibration is a parameter change (`setTailTable`), and σ follows the keeper's marks with a weight and a fade into
+// the one-day anchor. Mirrored bit for bit by `packages/core/src/market/band-math.ts` with shared vectors.
 
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
+import {SSTORE2} from "solady/utils/SSTORE2.sol";
 import "./MarketTypes.sol";
 
 /// @title BandMath — what a band around the window's open print is worth now, and how it settles.
-/// @dev Fixed points: prices × 1e8, `sigmaE8` is σ per √second × 1e8, probabilities × 1e6, z × 1e4.
+/// @dev Fixed points: prices × 1e8, σ per √second × 1e8, probabilities × 1e6, z × 1e4, weights × 1e18.
 library BandMath {
-    int256 internal constant Z_STEP_E4 = 500;
-    int256 internal constant Z_MAX_E4 = 40_000;
-    uint256 internal constant TABLE_LAST = 80;
-    uint256 internal constant TABLE_ENTRY_BYTES = 3;
-    /// @dev Φ(z) × 1e6 for z = 0.00, 0.05 … 4.00 (81 entries, three bytes each); generated offline from erf.
-    bytes internal constant CDF =
-        hex"07a12007ef03083cb4088a0208d6bc0922b2096db709b79f0a003e0a476d0a8d060ad0e80b12f30b530a0b91140bccfd0c06b10c3e210c73440ca6100cd6810d04950d304e0d59b00d80c20da58e0dc8200de8840e06cb0e23070e3d490e55a50e6c310e81010e942b0ea5c50eb5e60ec4a30ed2130ede4c0ee9620ef36a0efc780f049e0f0bf10f12800f185c0f1d950f223a0f26590f29fe0f2d360f300b0f32870f34b50f369c0f38450f39b60f3af60f3c0b0f3cfa0f3dc80f3e780f3f100f3f910f3fff0f405d0f40ac0f40ef0f41280f41570f417f0f41a10f41bd0f41d40f41e80f41f80f42050f42100f42190f4220";
     uint256 internal constant WAD = 1e18;
+    /// @dev A z past every table's last point (an edge below 1e-18 of the spot).
+    int256 internal constant Z_BEYOND_E4 = 1e12;
     /// @dev z × 1e4 = ln(r)·1e18 · 1e4 / (std·1e10), std being σ√τ × 1e8.
     int256 internal constant Z_DIVISOR_SCALE = 1e10;
-    /// @dev σ√τ × 1e8 = σE8 · ⌊√(τ · 1e4)⌋ / 100 — two extra digits under the root.
-    uint256 internal constant ROOT_SCALE = 10_000;
-    uint256 internal constant ROOT_DIVISOR = 100;
     uint8 internal constant BYTE_BITS = 8;
     uint256 internal constant HALF = 2;
-    uint256 internal constant HI_BYTE = 2; // the third byte of an entry, and its shift in bytes
 
     error BadBand(uint8 kind);
     error NonPositivePrice(int256 edgeE8, int256 spotE8);
     error NoVolatility();
+    error BadTailTable(address table);
 
-    // ------------------------------------------------------------------------------------------------ Φ
-
-    /// @notice Φ(z) × 1e6, linear between table points, saturating past |z| = 4.
-    function cdfE6(int256 zE4) internal pure returns (uint256) {
-        if (zE4 < 0) return P_ONE - cdfE6(-zE4);
-        if (zE4 >= Z_MAX_E4) return P_ONE;
-        uint256 i = uint256(zE4 / Z_STEP_E4);
-        uint256 frac = uint256(zE4 % Z_STEP_E4);
-        uint256 lo = tableAt(i);
-        uint256 hi = tableAt(i + 1);
-        return lo + (hi - lo) * frac / uint256(Z_STEP_E4);
+    /// @dev A shape table's header and horizons, loaded once per pricing; its rows are read entry by entry.
+    struct Shape {
+        address table;
+        uint256 points;
+        int256 zStepE4;
+        int256 zMaxE4;
+        uint256 weightWad;
+        uint256 fadeWad;
+        uint256 rowsAt;
+        uint256[] taus;
     }
 
-    function tableAt(uint256 i) internal pure returns (uint256) {
-        bytes memory t = CDF;
-        uint256 at = i * TABLE_ENTRY_BYTES;
-        return (uint256(uint8(t[at])) << (HI_BYTE * BYTE_BITS)) | (uint256(uint8(t[at + 1])) << BYTE_BITS)
-            | uint256(uint8(t[at + HI_BYTE]));
-    }
+    // ------------------------------------------------------------------------------------------------ the table
 
-    /// @notice ⌊√x⌋.
-    function isqrt(uint256 x) internal pure returns (uint256 y) {
-        if (x == 0) return 0;
-        uint256 z = (x + 1) / HALF;
-        y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / HALF;
+    function shapeOf(address table) internal view returns (Shape memory s) {
+        bytes memory h = SSTORE2.read(table, 0, TAIL_HEADER_BYTES);
+        uint256 n = uint8(h[1]);
+        s.table = table;
+        s.points = _uint(h, TAIL_POINTS_AT, TAIL_U16_BYTES);
+        s.zStepE4 = int256(_uint(h, TAIL_Z_STEP_AT, TAIL_U16_BYTES));
+        s.zMaxE4 = int256(s.points - 1) * s.zStepE4;
+        s.weightWad = _uint(h, TAIL_WEIGHT_AT, TAIL_U64_BYTES);
+        s.fadeWad = _uint(h, TAIL_FADE_AT, TAIL_U64_BYTES);
+        s.rowsAt = TAIL_HEADER_BYTES + n * TAIL_U16_BYTES;
+        bytes memory t = SSTORE2.read(table, TAIL_HEADER_BYTES, s.rowsAt);
+        s.taus = new uint256[](n);
+        for (uint256 i; i < n; ++i) {
+            s.taus[i] = _uint(t, i * TAIL_U16_BYTES, TAIL_U16_BYTES);
         }
     }
 
-    /// @notice σ√τ × 1e8 over `tauSec` (floored at `MIN_SECONDS_LEFT`).
-    function stdE8(uint64 sigmaE8, uint256 tauSec) internal pure returns (uint256) {
+    /// @notice Refuses a table that isn't one: the format, the sizes inside their bounds, horizons ascending, every row
+    ///         a CDF from ½ (starting at ½, never falling, never past 1).
+    function checkShape(address table) internal view {
+        if (table.code.length <= TAIL_HEADER_BYTES) revert BadTailTable(table);
+        bytes memory b = SSTORE2.read(table);
+        uint256 n = uint8(b[1]);
+        uint256 points = _uint(b, TAIL_POINTS_AT, TAIL_U16_BYTES);
+        bool ok = uint8(b[0]) == TAIL_FORMAT && n >= TAIL_MIN_COUNT && n <= TAIL_MAX_TAUS && points >= TAIL_MIN_COUNT
+            && points <= TAIL_MAX_POINTS && _uint(b, TAIL_Z_STEP_AT, TAIL_U16_BYTES) != 0
+            && _uint(b, TAIL_WEIGHT_AT, TAIL_U64_BYTES) <= TAIL_MAX_WEIGHT_WAD
+            && _uint(b, TAIL_FADE_AT, TAIL_U64_BYTES) <= TAIL_MAX_FADE_WAD
+            && b.length == TAIL_HEADER_BYTES + n * TAIL_U16_BYTES + n * points * TAIL_ENTRY_BYTES;
+        if (!ok) revert BadTailTable(table);
+        uint256 last;
+        for (uint256 i; i < n; ++i) {
+            uint256 tau = _uint(b, TAIL_HEADER_BYTES + i * TAIL_U16_BYTES, TAIL_U16_BYTES);
+            if (tau <= last) revert BadTailTable(table);
+            last = tau;
+        }
+        uint256 at = TAIL_HEADER_BYTES + n * TAIL_U16_BYTES;
+        for (uint256 r; r < n; ++r) {
+            uint256 prev = _uint(b, at, TAIL_ENTRY_BYTES);
+            if (prev != P_ONE / HALF) revert BadTailTable(table);
+            for (uint256 i = 1; i < points; ++i) {
+                uint256 v = _uint(b, at + i * TAIL_ENTRY_BYTES, TAIL_ENTRY_BYTES);
+                if (v < prev || v > P_ONE) revert BadTailTable(table);
+                prev = v;
+            }
+            at += points * TAIL_ENTRY_BYTES;
+        }
+    }
+
+    function _uint(bytes memory b, uint256 at, uint256 len) private pure returns (uint256 v) {
+        for (uint256 i; i < len; ++i) {
+            v = (v << BYTE_BITS) | uint8(b[at + i]);
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------ σ
+
+    /// @notice σ_τ√τ × 1e8 over `tauSec` (floored at `MIN_SECONDS_LEFT`): the keeper's mark σ_m, trusted by a and faded
+    ///         into the series' long-run σ_L over the horizon — σ_τ² = σ_L² + (σ_m² − σ_L²)·a·g(κτ), g(x) = (1 − e^{−x})/x.
+    function stdE8(uint64 markE8, uint64 longE8, uint256 tauSec, Shape memory s) internal pure returns (uint256) {
         if (tauSec < MIN_SECONDS_LEFT) tauSec = MIN_SECONDS_LEFT;
-        return uint256(sigmaE8) * isqrt(tauSec * ROOT_SCALE) / ROOT_DIVISOR;
+        int256 longVar = int256(uint256(longE8) * longE8);
+        int256 gap = int256(uint256(markE8) * markE8) - longVar;
+        int256 varE16 = longVar + gap * int256(markShareWad(tauSec, s)) / int256(WAD);
+        return FixedPointMathLib.sqrt(uint256(varE16) * tauSec);
+    }
+
+    /// @notice a · g(κτ) × 1e18: the share of the mark's departure from the long run a horizon of `tauSec` keeps.
+    function markShareWad(uint256 tauSec, Shape memory s) internal pure returns (uint256) {
+        uint256 x = s.fadeWad * tauSec;
+        uint256 g = WAD;
+        if (x != 0) g = (WAD - uint256(FixedPointMathLib.expWad(-int256(x)))) * WAD / x;
+        return s.weightWad * g / WAD;
+    }
+
+    // ------------------------------------------------------------------------------------------------ the shape
+
+    /// @notice F_τ(z) × 1e6: the calibrated chance a move over `tauSec` ends below z standard deviations — linear in z
+    ///         between table points and in τ between table horizons (flat outside them), symmetric, 1 past the table.
+    function cdfE6(int256 zE4, uint256 tauSec, Shape memory s) internal view returns (uint256) {
+        if (zE4 < 0) return P_ONE - cdfE6(-zE4, tauSec, s);
+        if (zE4 >= s.zMaxE4) return P_ONE;
+        uint256 i = uint256(zE4 / s.zStepE4);
+        uint256 frac = uint256(zE4 % s.zStepE4);
+        (uint256 row, uint256 w) = rowOf(tauSec, s);
+        uint256 lo = rowAt(row, i, frac, s);
+        if (w == 0) return lo;
+        uint256 hi = rowAt(row + 1, i, frac, s);
+        return (lo * (WAD - w) + hi * w) / WAD;
+    }
+
+    /// @notice The table row at or below `tauSec` and the weight × 1e18 of the next one.
+    function rowOf(uint256 tauSec, Shape memory s) internal pure returns (uint256 row, uint256 w) {
+        uint256 last = s.taus.length - 1;
+        if (tauSec <= s.taus[0]) return (0, 0);
+        if (tauSec >= s.taus[last]) return (last, 0);
+        while (s.taus[row + 1] <= tauSec) ++row;
+        uint256 a = s.taus[row];
+        w = (tauSec - a) * WAD / (s.taus[row + 1] - a);
+    }
+
+    /// @notice Row `row` of the table at z point `i` plus `frac` of the step to the next (two adjacent entries, read
+    ///         in one copy).
+    function rowAt(uint256 row, uint256 i, uint256 frac, Shape memory s) internal view returns (uint256) {
+        uint256 at = s.rowsAt + (row * s.points + i) * TAIL_ENTRY_BYTES;
+        bytes memory e = SSTORE2.read(s.table, at, at + (frac == 0 ? 1 : HALF) * TAIL_ENTRY_BYTES);
+        uint256 lo = _uint(e, 0, TAIL_ENTRY_BYTES);
+        if (frac == 0) return lo;
+        uint256 hi = _uint(e, TAIL_ENTRY_BYTES, TAIL_ENTRY_BYTES);
+        return lo + (hi - lo) * frac / uint256(s.zStepE4);
     }
 
     /// @notice z × 1e4 of `edge` from `spot`: ln(edge / spot) in standard deviations.
@@ -77,14 +160,18 @@ library BandMath {
         if (std == 0) revert NoVolatility();
         uint256 ratioWad = FixedPointMathLib.fullMulDiv(uint256(edgeE8), WAD, uint256(spotE8));
         // An edge below 1e-18 of the spot is Φ(−∞); lnWad would refuse the zero ratio.
-        if (ratioWad == 0) return -Z_MAX_E4;
+        if (ratioWad == 0) return -Z_BEYOND_E4;
         int256 lnW = FixedPointMathLib.lnWad(int256(ratioWad));
         return lnW * int256(BPS) / (int256(std) * Z_DIVISOR_SCALE);
     }
 
-    /// @notice P(close > edge) × 1e6 when the price is `spot` now.
-    function aboveE6(int256 edgeE8, int256 spotE8, uint256 std) internal pure returns (uint256) {
-        return P_ONE - cdfE6(zOfE4(edgeE8, spotE8, std));
+    /// @notice P(close > edge) × 1e6 when the price is `spot` now, `tauSec` from the close.
+    function aboveE6(int256 edgeE8, int256 spotE8, uint256 std, uint256 tauSec, Shape memory s)
+        internal
+        view
+        returns (uint256)
+    {
+        return P_ONE - cdfE6(zOfE4(edgeE8, spotE8, std), tauSec, s);
     }
 
     // ------------------------------------------------------------------------------------------------ bands
@@ -117,23 +204,24 @@ library BandMath {
         return int256(k) * int256(uint256(bps)) / int256(BPS);
     }
 
-    /// @notice What the band pays out with, × 1e6, given the spot now and the seconds to expiry (D-262):
-    ///         Up `P(C > K)`, Down `P(C < K)`, Range `P(K−a ≤ C ≤ K+b)`, Moonshot `P(C > K+x)`, Crash `P(C < K−x)`.
-    function probE6(BandDef memory d, int64 k, int64 spot, uint64 sigmaE8, uint256 tauSec)
+    /// @notice What the band pays out with, × 1e6, given the spot now, the seconds to expiry and σ — the keeper's
+    ///         mark and the series' long run (D-262, D-300): Up `P(C > K)`, Down `P(C < K)`, Range `P(K−a ≤ C ≤ K+b)`,
+    ///         Moonshot `P(C > K+x)`, Crash `P(C < K−x)`.
+    function probE6(BandDef memory d, int64 k, int64 spot, uint64 markE8, uint64 longE8, uint256 tauSec, Shape memory s)
         internal
-        pure
+        view
         returns (uint256)
     {
-        uint256 std = stdE8(sigmaE8, tauSec);
-        if (d.kind == BAND_UP) return aboveE6(k, spot, std);
-        if (d.kind == BAND_DOWN) return P_ONE - aboveE6(k, spot, std);
+        uint256 std = stdE8(markE8, longE8, tauSec, s);
+        if (d.kind == BAND_UP) return aboveE6(k, spot, std, tauSec, s);
+        if (d.kind == BAND_DOWN) return P_ONE - aboveE6(k, spot, std, tauSec, s);
         if (d.kind == BAND_RANGE) {
-            uint256 lo = aboveE6(int256(k) - offsetE8(k, d.lowBps), spot, std);
-            uint256 hi = aboveE6(int256(k) + offsetE8(k, d.highBps), spot, std);
+            uint256 lo = aboveE6(int256(k) - offsetE8(k, d.lowBps), spot, std, tauSec, s);
+            uint256 hi = aboveE6(int256(k) + offsetE8(k, d.highBps), spot, std, tauSec, s);
             return lo > hi ? lo - hi : 0;
         }
-        if (d.kind == BAND_MOONSHOT) return aboveE6(int256(k) + offsetE8(k, d.lowBps), spot, std);
-        if (d.kind == BAND_CRASH) return P_ONE - aboveE6(int256(k) - offsetE8(k, d.lowBps), spot, std);
+        if (d.kind == BAND_MOONSHOT) return aboveE6(int256(k) + offsetE8(k, d.lowBps), spot, std, tauSec, s);
+        if (d.kind == BAND_CRASH) return P_ONE - aboveE6(int256(k) - offsetE8(k, d.lowBps), spot, std, tauSec, s);
         revert BadBand(d.kind);
     }
 
@@ -156,6 +244,13 @@ library BandMath {
     }
 
     // ------------------------------------------------------------------------------------------------ money
+
+    /// @notice The half-spread at probability `probE6` (D-300, Polymarket's and Kalshi's curve): max(`minE6`,
+    ///         4·h50·p(1−p)) — `h50E6` at p = ½, thinning toward the edges, never under the floor.
+    function halfSpreadE6(uint256 pE6, uint32 h50E6, uint32 minE6) internal pure returns (uint256) {
+        uint256 curve = SPREAD_CURVE_FACTOR * h50E6 * pE6 * (P_ONE - pE6) / (P_ONE * P_ONE);
+        return curve > minE6 ? curve : minE6;
+    }
 
     /// @notice Shares a stake buys at `qE6` per share: floored (payouts floor).
     function payoutFor(uint256 stake, uint256 qE6) internal pure returns (uint256) {

@@ -1,7 +1,10 @@
 // The client mirror of `contracts/src/markets/BandMath.sol`, bit for bit (BigInt for every uint/int step; `/` truncates
-// toward zero like the EVM's `div`/`sdiv`). The Φ table is the contract's own hex constant, decoded the same way.
-// Checked against the deployed `BandReserve.quoteOpen` by `scripts/drive/src/band-quote-check.ts`.
+// toward zero like the EVM's `div`/`sdiv`). The shape table is the contract's own generated constant (`tail-table.ts`,
+// from `scripts/calibrate/table.json`), decoded the same way. Checked against the deployed `BandReserve.quoteOpen` by
+// `scripts/drive/src/band-quote-check.ts` and against Foundry's vectors.
+import { expWad } from "./expwad.ts";
 import { lnWad } from "./lnwad.ts";
+import { TAIL_TABLE_HEX } from "./tail-table.ts";
 
 /** Probabilities × 1e6 (contracts `P_ONE`). */
 export const P_ONE = 1_000_000n;
@@ -10,21 +13,60 @@ export const BPS = 10_000n;
 /** σ√τ uses at least this many seconds (contracts `MIN_SECONDS_LEFT`). */
 export const MIN_SECONDS_LEFT = 5n;
 
-const Z_STEP_E4 = 500n;
-const Z_MAX_E4 = 40_000n;
 const WAD = 1_000_000_000_000_000_000n;
 const Z_DIVISOR_SCALE = 10_000_000_000n;
-const ROOT_SCALE = 10_000n;
-const ROOT_DIVISOR = 100n;
+/** A z past every table's last point (contracts `Z_BEYOND_E4`). */
+const Z_BEYOND_E4 = 1_000_000_000_000n;
 const HALF = 2n;
-const ENTRY_HEX = 6;
+const HEX_PER_BYTE = 2;
 const HEX_RADIX = 16;
-/** Φ(z) × 1e6 for z = 0.00, 0.05 … 4.00 — `BandMath.CDF`, three bytes per entry. */
-const CDF_HEX =
-  "07a12007ef03083cb4088a0208d6bc0922b2096db709b79f0a003e0a476d0a8d060ad0e80b12f30b530a0b91140bccfd0c06b10c3e210c73440ca6100cd6810d04950d304e0d59b00d80c20da58e0dc8200de8840e06cb0e23070e3d490e55a50e6c310e81010e942b0ea5c50eb5e60ec4a30ed2130ede4c0ee9620ef36a0efc780f049e0f0bf10f12800f185c0f1d950f223a0f26590f29fe0f2d360f300b0f32870f34b50f369c0f38450f39b60f3af60f3c0b0f3cfa0f3dc80f3e780f3f100f3f910f3fff0f405d0f40ac0f40ef0f41280f41570f417f0f41a10f41bd0f41d40f41e80f41f80f42050f42100f42190f4220";
-const CDF: readonly bigint[] = Array.from({ length: CDF_HEX.length / ENTRY_HEX }, (_, i) =>
-  BigInt(Number.parseInt(CDF_HEX.slice(i * ENTRY_HEX, (i + 1) * ENTRY_HEX), HEX_RADIX)),
-);
+/** The blob layout (contracts `MarketTypes` TAIL_*). */
+const TAIL_HEADER_BYTES = 22;
+const TAIL_POINTS_AT = 2;
+const TAIL_Z_STEP_AT = 4;
+const TAIL_WEIGHT_AT = 6;
+const TAIL_FADE_AT = 14;
+const U16_BYTES = 2;
+const U64_BYTES = 8;
+const ENTRY_BYTES = 3;
+
+/** A shape table decoded from its data contract's bytes (contracts `BandMath.Shape`). */
+export interface TailShape {
+  points: bigint;
+  zStepE4: bigint;
+  zMaxE4: bigint;
+  weightWad: bigint;
+  fadeWad: bigint;
+  taus: readonly bigint[];
+  /** Every row's F_τ(z) × 1e6, rows by horizon. */
+  cdf: readonly bigint[];
+}
+
+function uintAt(hex: string, at: number, bytes: number): bigint {
+  return BigInt(`0x${hex.slice(at * HEX_PER_BYTE, (at + bytes) * HEX_PER_BYTE)}`);
+}
+
+/** Decodes a table blob (`TailTableData.BLOB`, or the code of the reserve's `tailTable()` without its leading 00). */
+export function decodeTailShape(hex: string): TailShape {
+  const n = Number.parseInt(hex.slice(HEX_PER_BYTE, 2 * HEX_PER_BYTE), HEX_RADIX);
+  const points = uintAt(hex, TAIL_POINTS_AT, U16_BYTES);
+  const zStepE4 = uintAt(hex, TAIL_Z_STEP_AT, U16_BYTES);
+  const taus = Array.from({ length: n }, (_, i) => uintAt(hex, TAIL_HEADER_BYTES + i * U16_BYTES, U16_BYTES));
+  const rowsAt = TAIL_HEADER_BYTES + n * U16_BYTES;
+  const cdf = Array.from({ length: n * Number(points) }, (_, i) => uintAt(hex, rowsAt + i * ENTRY_BYTES, ENTRY_BYTES));
+  return {
+    points,
+    zStepE4,
+    zMaxE4: (points - 1n) * zStepE4,
+    weightWad: uintAt(hex, TAIL_WEIGHT_AT, U64_BYTES),
+    fadeWad: uintAt(hex, TAIL_FADE_AT, U64_BYTES),
+    taus,
+    cdf,
+  };
+}
+
+/** The table the reserve prices with (generated from `scripts/calibrate/table.json`). */
+export const TAIL_SHAPE: TailShape = decodeTailShape(TAIL_TABLE_HEX);
 
 export type BandKind = "up" | "down" | "range" | "moonshot" | "crash";
 /** One entry of a series' band menu (the catalogue's `BandSpec`; contracts `BandDef`). */
@@ -35,24 +77,7 @@ export interface BandShape {
 }
 export type BandOutcome = "lose" | "win" | "refund";
 
-function tableAt(i: bigint): bigint {
-  const value = CDF[Number(i)];
-  if (value === undefined) throw new Error(`no Φ table entry ${i}`);
-  return value;
-}
-
-/** Φ(z) × 1e6, linear between table points, saturating past |z| = 4. */
-export function cdfE6(zE4: bigint): bigint {
-  if (zE4 < 0n) return P_ONE - cdfE6(-zE4);
-  if (zE4 >= Z_MAX_E4) return P_ONE;
-  const i = zE4 / Z_STEP_E4;
-  const frac = zE4 % Z_STEP_E4;
-  const lo = tableAt(i);
-  const hi = tableAt(i + 1n);
-  return lo + ((hi - lo) * frac) / Z_STEP_E4;
-}
-
-/** ⌊√x⌋ (the contract's Babylonian steps). */
+/** ⌊√x⌋ (the contract uses Solady's `sqrt`; the floor root is unique). */
 export function isqrt(x: bigint): bigint {
   if (x === 0n) return 0n;
   let z = (x + 1n) / HALF;
@@ -64,10 +89,58 @@ export function isqrt(x: bigint): bigint {
   return y;
 }
 
-/** σ√τ × 1e8 over `tauSec`, floored at `MIN_SECONDS_LEFT`. */
-export function stdE8(sigmaE8: bigint, tauSec: bigint): bigint {
+/** a · g(κτ) × 1e18: the share of the mark's departure from the long run a horizon keeps (contracts `markShareWad`). */
+export function markShareWad(tauSec: bigint, s: TailShape = TAIL_SHAPE): bigint {
+  const x = s.fadeWad * tauSec;
+  const g = x === 0n ? WAD : ((WAD - expWad(-x)) * WAD) / x;
+  return (s.weightWad * g) / WAD;
+}
+
+/** σ_τ√τ × 1e8 over `tauSec` (floored at `MIN_SECONDS_LEFT`): the mark faded into the long run (contracts `stdE8`). */
+export function stdE8(markE8: bigint, longE8: bigint, tauSec: bigint, s: TailShape = TAIL_SHAPE): bigint {
   const tau = tauSec < MIN_SECONDS_LEFT ? MIN_SECONDS_LEFT : tauSec;
-  return (sigmaE8 * isqrt(tau * ROOT_SCALE)) / ROOT_DIVISOR;
+  const longVar = longE8 * longE8;
+  const gap = markE8 * markE8 - longVar;
+  const varE16 = longVar + (gap * markShareWad(tau, s)) / WAD;
+  return isqrt(varE16 * tau);
+}
+
+function at<T>(xs: readonly T[], i: number | bigint): T {
+  const v = xs[Number(i)];
+  if (v === undefined) throw new Error(`no shape table entry ${i}`);
+  return v;
+}
+
+/** The table row at or below `tauSec` and the weight × 1e18 of the next one (contracts `rowOf`). */
+function rowOf(tauSec: bigint, s: TailShape): [number, bigint] {
+  const last = s.taus.length - 1;
+  if (tauSec <= at(s.taus, 0)) return [0, 0n];
+  if (tauSec >= at(s.taus, last)) return [last, 0n];
+  let row = 0;
+  while (at(s.taus, row + 1) <= tauSec) row++;
+  const a = at(s.taus, row);
+  return [row, ((tauSec - a) * WAD) / (at(s.taus, row + 1) - a)];
+}
+
+function rowAt(row: number, i: bigint, frac: bigint, s: TailShape): bigint {
+  const base = BigInt(row) * s.points + i;
+  const lo = at(s.cdf, base);
+  if (frac === 0n) return lo;
+  const hi = at(s.cdf, base + 1n);
+  return lo + ((hi - lo) * frac) / s.zStepE4;
+}
+
+/** F_τ(z) × 1e6: the calibrated shape, linear in z and in τ between table points, symmetric (contracts `cdfE6`). */
+export function cdfE6(zE4: bigint, tauSec: bigint, s: TailShape = TAIL_SHAPE): bigint {
+  if (zE4 < 0n) return P_ONE - cdfE6(-zE4, tauSec, s);
+  if (zE4 >= s.zMaxE4) return P_ONE;
+  const i = zE4 / s.zStepE4;
+  const frac = zE4 % s.zStepE4;
+  const [row, w] = rowOf(tauSec, s);
+  const lo = rowAt(row, i, frac, s);
+  if (w === 0n) return lo;
+  const hi = rowAt(row + 1, i, frac, s);
+  return (lo * (WAD - w) + hi * w) / WAD;
 }
 
 /** z × 1e4 of `edge` from `spot`: ln(edge / spot) in standard deviations. */
@@ -75,34 +148,48 @@ export function zOfE4(edgeE8: bigint, spotE8: bigint, std: bigint): bigint {
   if (edgeE8 <= 0n || spotE8 <= 0n) throw new Error("NonPositivePrice");
   if (std === 0n) throw new Error("NoVolatility");
   const ratioWad = (edgeE8 * WAD) / spotE8;
-  if (ratioWad === 0n) return -Z_MAX_E4;
+  if (ratioWad === 0n) return -Z_BEYOND_E4;
   return (lnWad(ratioWad) * BPS) / (std * Z_DIVISOR_SCALE);
 }
 
-/** P(close > edge) × 1e6 with the price at `spot` now. */
-export const aboveE6 = (edgeE8: bigint, spotE8: bigint, std: bigint): bigint =>
-  P_ONE - cdfE6(zOfE4(edgeE8, spotE8, std));
+/** P(close > edge) × 1e6 with the price at `spot` now, `tauSec` from the close. */
+export const aboveE6 = (
+  edgeE8: bigint,
+  spotE8: bigint,
+  std: bigint,
+  tauSec: bigint,
+  s: TailShape = TAIL_SHAPE,
+): bigint => P_ONE - cdfE6(zOfE4(edgeE8, spotE8, std), tauSec, s);
 
 /** `K × bps / 10,000`, truncated (contracts `offsetE8`). */
 export const offsetE8 = (k: bigint, bps: number): bigint => (k * BigInt(bps)) / BPS;
 
-/** What the band pays with, × 1e6, at `spot` with `tauSec` to expiry (contracts `probE6`, D-262). */
-export function probE6(band: BandShape, k: bigint, spot: bigint, sigmaE8: bigint, tauSec: bigint): bigint {
-  const std = stdE8(sigmaE8, tauSec);
+/** What the band pays with, × 1e6, at `spot` with `tauSec` to expiry, σ the keeper's mark faded into the series' long
+ *  run (contracts `probE6`, D-262, D-300). */
+export function probE6(
+  band: BandShape,
+  k: bigint,
+  spot: bigint,
+  markE8: bigint,
+  longE8: bigint,
+  tauSec: bigint,
+  s: TailShape = TAIL_SHAPE,
+): bigint {
+  const std = stdE8(markE8, longE8, tauSec, s);
   switch (band.kind) {
     case "up":
-      return aboveE6(k, spot, std);
+      return aboveE6(k, spot, std, tauSec, s);
     case "down":
-      return P_ONE - aboveE6(k, spot, std);
+      return P_ONE - aboveE6(k, spot, std, tauSec, s);
     case "range": {
-      const lo = aboveE6(k - offsetE8(k, band.lowBps), spot, std);
-      const hi = aboveE6(k + offsetE8(k, band.highBps), spot, std);
+      const lo = aboveE6(k - offsetE8(k, band.lowBps), spot, std, tauSec, s);
+      const hi = aboveE6(k + offsetE8(k, band.highBps), spot, std, tauSec, s);
       return lo > hi ? lo - hi : 0n;
     }
     case "moonshot":
-      return aboveE6(k + offsetE8(k, band.lowBps), spot, std);
+      return aboveE6(k + offsetE8(k, band.lowBps), spot, std, tauSec, s);
     case "crash":
-      return P_ONE - aboveE6(k - offsetE8(k, band.lowBps), spot, std);
+      return P_ONE - aboveE6(k - offsetE8(k, band.lowBps), spot, std, tauSec, s);
   }
 }
 

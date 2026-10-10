@@ -128,7 +128,7 @@ contract SessionTest is MarketsBase {
     function test_staleConfigSignatureIsRefused() public {
         Intent memory it = intent(ACTION_OPEN, UP, 0, STAKE, 0);
         bytes memory sig = sign(OWNER_PK, it);
-        reserve.setSigma(seriesId, SIGMA + 1); // the pool repriced after the caller saw the quote
+        reserve.setParams(params()); // the pool's terms moved after the caller saw the quote
         vm.expectRevert();
         reserve.commit(it, sig, noPermit());
     }

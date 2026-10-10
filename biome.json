@@ -23,7 +23,8 @@
       "!packages/identity/sources",
       "!brand/art",
       "!apps/mobile/assets/onboarding/labels.json",
-      "!packages/config/src/market-order.json"
+      "!packages/config/src/market-order.json",
+      "!packages/core/vectors"
     ]
   },
   "formatter": {
@@ -72,7 +73,8 @@
         "apps/mobile/src/theme/**",
         "apps/mobile/src/lib/sample.ts",
         "scripts/invariants/**",
-        "packages/core/src/market/lnwad.ts"
+        "packages/core/src/market/lnwad.ts",
+        "packages/core/src/market/expwad.ts"
       ],
       "linter": {
         "rules": {

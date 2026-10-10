@@ -56,7 +56,7 @@ export function useParlayQuote(picks: readonly ParlayPick[], stake: bigint) {
     const chanceOf = (index: number) => {
       const band = series?.bands[index];
       return k !== undefined && spot !== undefined && band && series
-        ? probE6(band, k, BigInt(Math.round(spot)), BigInt(series.sigmaE8), tau)
+        ? probE6(band, k, BigInt(Math.round(spot)), BigInt(series.sigmaE8), BigInt(series.sigmaE8), tau)
         : null;
     };
     const group = MARKETS.find((m) => m.symbol === p.symbol)?.calendarId ?? 0;

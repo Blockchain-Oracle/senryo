@@ -295,40 +295,39 @@ abstract contract MarketsBase is Script {
         uint256 cadenceSec;
         uint256 calendarId;
         bytes32 feedId;
+        uint256 h50E6;
         bytes32 market;
-        uint256 sigmaE8;
+        uint256 sigmaCapE8;
+        uint256 sigmaFloorE8;
         string symbol;
         string verifierClass;
     }
 
-    /// @dev Every catalogue series not yet registered: its policy (its class's verifier), σ and band menu. The series
-    ///      list is decoded once — each JSON cheatcode call copies the whole catalogue into memory, which a script
-    ///      never frees.
+    /// @dev Every catalogue series not yet listed: its policy (its class's verifier) when not yet registered, then one
+    ///      `listSeries` with its σ bounds, h50 and band menu (D-309). The series list is decoded once — each JSON
+    ///      cheatcode call copies the whole catalogue into memory, which a script never frees.
     function _listSeries(Windows windows, BandReserve reserve) internal returns (uint256 listed) {
         SeriesJson[] memory all = abi.decode(vm.parseJson(_json, ".series"), (SeriesJson[]));
         for (uint256 i; i < all.length; ++i) {
             SeriesJson memory s = all[i];
             uint32 cadence = uint32(s.cadenceSec);
-            bytes32 known = windows.seriesIdOf(s.market, cadence);
-            if (windows.seriesOf(known).cadenceSec != 0) {
-                // A run stopped between a series' bands finishes its menu here (a rerun is idempotent).
-                _addBands(reserve, known, s.bands, reserve.menuOf(known).length);
-                continue;
+            bytes32 seriesId = windows.seriesIdOf(s.market, cadence);
+            if (windows.seriesOf(seriesId).cadenceSec == 0) {
+                PolicyVersion memory v0;
+                v0.validUntil = OPEN_ENDED;
+                v0.primary = PrintSource(_verifierOf[keccak256(bytes(s.verifierClass))], s.feedId);
+                windows.registerSeries(s.market, cadence, uint8(s.calendarId), v0);
             }
-            PolicyVersion memory v0;
-            v0.validUntil = OPEN_ENDED;
-            v0.primary = PrintSource(_verifierOf[keccak256(bytes(s.verifierClass))], s.feedId);
-            bytes32 seriesId = windows.registerSeries(s.market, cadence, uint8(s.calendarId), v0);
-            reserve.setSigma(seriesId, uint64(s.sigmaE8));
-            _addBands(reserve, seriesId, s.bands, 0);
+            // A rerun skips what is listed (listing is one call, so a series is never half listed).
+            if (reserve.menuOf(seriesId).length != 0) continue;
+            BandDef[] memory menu = new BandDef[](s.bands.length);
+            for (uint256 b; b < menu.length; ++b) {
+                menu[b] = BandDef(uint8(s.bands[b].kind), uint16(s.bands[b].lowBps), uint16(s.bands[b].highBps));
+            }
+            reserve.listSeries(
+                seriesId, SeriesTerms(uint64(s.sigmaFloorE8), uint64(s.sigmaCapE8), uint32(s.h50E6)), menu
+            );
             ++listed;
-        }
-    }
-
-    function _addBands(BandReserve reserve, bytes32 seriesId, BandJson[] memory bands, uint256 from) internal {
-        for (uint256 b = from; b < bands.length; ++b) {
-            BandJson memory d = bands[b];
-            reserve.addBand(seriesId, BandDef(uint8(d.kind), uint16(d.lowBps), uint16(d.highBps)));
         }
     }
 

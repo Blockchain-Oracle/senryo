@@ -72,7 +72,7 @@ abstract contract ParlayBook is BandBook {
         }
         collateral.safeTransferFrom(it.owner, address(this), it.stake);
         committedStakes += it.stake;
-        uint40 target = uint40(block.timestamp) + FILL_DELAY_SEC;
+        uint40 target = uint40(block.timestamp) + params.fillDelaySec;
         _parlays.push(
             Parlay({
                 owner: it.owner,
@@ -109,7 +109,7 @@ abstract contract ParlayBook is BandBook {
             }
             markets[i] = s.market;
             if (windows.openPrintOf(windowIds[i]).publishTime == 0) revert NoOpenPrint(windowIds[i]);
-            if (bands[i] >= _books[w.seriesId].bandCount) revert UnknownBand(w.seriesId, bands[i]);
+            if (bands[i] >= _listed(w.seriesId).bandCount) revert UnknownBand(w.seriesId, bands[i]);
             legs.push(ParlayLeg(windowIds[i], w.expiry, bands[i], s.calendarId, LEG_PENDING, 0));
         }
     }
@@ -136,13 +136,20 @@ abstract contract ParlayBook is BandBook {
 
     // ------------------------------------------------------------------------------------------------ fill
 
-    /// @notice Fills a committed parlay at the unique print of its instant on every leg's feed (`proofs` in leg order;
-    ///         a print already recorded needs no fee, and what is not spent goes back). Permissionless.
-    function finalizeParlay(uint256 id, bytes[] calldata proofs) external payable nonReentrant {
+    /// @notice Fills a committed parlay at the unique print of its instant on every leg's feed, each priced on its
+    ///         feed's σ mark for that instant (`proofs`, `marks` and `markSigs` in leg order; a print already recorded
+    ///         needs no fee, and what is not spent goes back). Permissionless.
+    function finalizeParlay(uint256 id, bytes[] calldata proofs, SigmaMark[] calldata marks, bytes[] calldata markSigs)
+        external
+        payable
+        nonReentrant
+    {
         Parlay storage pl = _parlay(id);
         if (pl.status != TICKET_COMMITTED) revert ParlayNotPending(id);
         ParlayLeg[] storage legs = _legs[id];
-        if (proofs.length != legs.length) revert BadLegs();
+        if (proofs.length != legs.length || marks.length != legs.length || markSigs.length != legs.length) {
+            revert BadLegs();
+        }
         uint8 reason = _parlayExpiryReason(pl, legs, false);
         if (reason == 0 && pl.configVersion != configVersion) reason = REFUSE_CONFIG;
         uint256 spent;
@@ -150,32 +157,35 @@ abstract contract ParlayBook is BandBook {
             _refuseParlay(id, pl, reason);
         } else {
             uint256[] memory probs;
-            (spent, probs) = _pricedLegs(pl, legs, proofs);
+            (spent, probs) = _pricedLegs(pl, legs, proofs, marks, markSigs);
             _fillParlay(id, pl, legs, probs);
         }
         if (msg.value > spent) Address.sendValue(payable(msg.sender), msg.value - spent);
         _assertSolvent();
     }
 
-    /// @dev Records each leg's print (its fee only when new) and prices its band; 0 for a leg outside the pool's band.
-    function _pricedLegs(Parlay storage pl, ParlayLeg[] storage legs, bytes[] calldata proofs)
-        private
-        returns (uint256 spent, uint256[] memory probs)
-    {
+    /// @dev Records each leg's print (its fee only when new) and prices its band on its checked mark; 0 for a leg
+    ///      outside the pool's band.
+    function _pricedLegs(
+        Parlay storage pl,
+        ParlayLeg[] storage legs,
+        bytes[] calldata proofs,
+        SigmaMark[] calldata marks,
+        bytes[] calldata markSigs
+    ) private returns (uint256 spent, uint256[] memory probs) {
         probs = new uint256[](legs.length);
         Params storage p = params;
         for (uint256 i; i < legs.length; ++i) {
             ParlayLeg storage leg = legs[i];
             PrintSource memory src = windows.primarySourceOf(leg.windowId);
+            _checkMark(marks[i], markSigs[i], src.feedId, pl.target);
             bool have = windows.printOf(src.verifier, src.feedId, pl.target).publishTime != 0;
             uint256 fee = have ? 0 : IPrintVerifier(src.verifier).fee(proofs[i]);
             spent += fee;
             Print memory print = windows.ensurePrint{value: fee}(src.verifier, src.feedId, pl.target, proofs[i]);
             Window memory w = windows.windowOf(leg.windowId);
             int64 k = windows.openPrintOf(leg.windowId).priceE8;
-            uint256 prob = BandMath.probE6(
-                _bandOf(w.seriesId, leg.band), k, print.priceE8, _books[w.seriesId].sigmaE8, w.expiry - pl.target
-            );
+            uint256 prob = _priceBand(w.seriesId, leg.band, k, print.priceE8, marks[i], w.expiry - pl.target);
             if (prob >= p.minProbE6 && prob <= p.maxProbE6) probs[i] = prob;
         }
     }
@@ -184,14 +194,18 @@ abstract contract ParlayBook is BandBook {
         Params storage p = params;
         uint8[] memory groups = new uint8[](legs.length);
         uint256 surchargeE6;
+        uint32 h50E6;
         for (uint256 i; i < legs.length; ++i) {
             if (probs[i] == 0) return _refuseParlay(id, pl, REFUSE_PRICE);
             groups[i] = legs[i].group;
             uint256 s = uint256(p.maxSurchargeE6) * reservedByExpiry[legs[i].expiry] / p.maxExpiryReserved;
             if (s > surchargeE6) surchargeE6 = s;
+            uint32 h = _books[windows.windowOf(legs[i].windowId).seriesId].h50E6;
+            if (h > h50E6) h50E6 = h;
         }
         uint256 chance = ParlayMath.chanceE6(probs, groups);
-        uint256 addOn = p.halfSpreadE6 + surchargeE6;
+        // The spread once, on the joint chance, at the widest leg's curve (D-293, D-300).
+        uint256 addOn = BandMath.halfSpreadE6(chance, h50E6, p.minHalfSpreadE6) + surchargeE6;
         uint256 priceE6 = chance + addOn;
         if (chance < p.minProbE6 || priceE6 >= P_ONE) return _refuseParlay(id, pl, REFUSE_PRICE);
         uint256 payout = BandMath.payoutFor(pl.stake, priceE6);

@@ -34,7 +34,7 @@ export interface OpenQuote {
 
 /** An open of `stake` on `band` at `spotE8` — refused exactly where the contract would refuse it for price. */
 export function quoteOpen(band: BandShape, w: QuoteWindow, spotE8: bigint, stake: bigint, t: QuoteTerms): OpenQuote {
-  const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.tauSec);
+  const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.sigmaE8, w.tauSec);
   const priceE6 = prob + t.halfSpreadE6 + t.surchargeE6;
   const refused = prob < t.minProbE6 || prob > t.maxProbE6 || priceE6 >= P_ONE;
   const payout = refused ? 0n : payoutFor(stake, priceE6);
@@ -53,7 +53,7 @@ export interface CloseQuote {
 
 /** Selling `shares` of a ticket on `band` at `spotE8`. */
 export function quoteClose(band: BandShape, w: QuoteWindow, spotE8: bigint, shares: bigint, t: QuoteTerms): CloseQuote {
-  const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.tauSec);
+  const prob = probE6(band, w.openE8, spotE8, w.sigmaE8, w.sigmaE8, w.tauSec);
   if (prob < t.minProbE6 || prob > t.maxProbE6) return { probE6: prob, bidE6: 0n, proceeds: 0n, refusal: "price" };
   const bidE6 = prob - t.halfSpreadE6;
   return { probE6: prob, bidE6, proceeds: proceedsFor(shares, bidE6), refusal: null };

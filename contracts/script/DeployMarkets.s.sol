@@ -10,7 +10,9 @@ import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {IMarketCalendar} from "../src/oracle/interfaces/IMarketCalendar.sol";
 import {DuelArena} from "../src/games/DuelArena.sol";
 import {DuelClocks, DuelTier} from "../src/games/DuelTypes.sol";
+import {SSTORE2} from "solady/utils/SSTORE2.sol";
 import {BandReserve} from "../src/markets/BandReserve.sol";
+import {TailTableData} from "../src/markets/TailTableData.sol";
 import {Windows} from "../src/markets/Windows.sol";
 import {IWindows} from "../src/markets/interfaces/IWindows.sol";
 import {TestUSD} from "../src/markets/testnet/TestUSD.sol";
@@ -104,27 +106,31 @@ contract DeployMarkets is MarketsBase {
         returns (BandReserve reserve)
     {
         Params memory p = Params({
-            halfSpreadE6: uint32(_json.readUint(".params.halfSpreadE6")),
+            minHalfSpreadE6: uint32(_json.readUint(".params.minHalfSpreadE6")),
             maxSurchargeE6: uint32(_json.readUint(".params.maxSurchargeE6")),
             minProbE6: uint32(_json.readUint(".params.minProbE6")),
             maxProbE6: uint32(_json.readUint(".params.maxProbE6")),
             maxExposureBps: uint16(_json.readUint(".params.maxExposureBps")),
             maxExpiryReserved: uint64(_json.readUint(".params.maxExpiryReserved")),
             minStake: uint64(_json.readUint(".params.minStake")),
-            maxStake: uint64(_json.readUint(".params.maxStake"))
+            maxStake: uint64(_json.readUint(".params.maxStake")),
+            fillDelaySec: uint8(_json.readUint(".params.fillDelaySec"))
         });
         BandReserve.Caps memory caps = BandReserve.Caps({
             maxPerCallCap: uint64(_json.readUint(".session.maxPerCallCap")),
             maxSessionCap: uint64(_json.readUint(".session.maxSessionCap")),
             maxSessionSec: uint40(_json.readUint(".session.maxSessionSec"))
         });
-        reserve = new BandReserve(address(manager), collateral, IWindows(address(windows)), p, caps);
+        // The calibrated shape table lives in its own data contract, so a recalibration is `setTailTable` (D-300).
+        address table = SSTORE2.write(TailTableData.BLOB);
+        _record("TailTable", table, TailTableData.BLOB, false);
+        reserve = new BandReserve(address(manager), collateral, IWindows(address(windows)), table, p, caps);
         _record(
             "BandReserve",
             address(reserve),
             abi.encodePacked(
                 type(BandReserve).creationCode,
-                abi.encode(address(manager), address(collateral), address(windows), p, caps)
+                abi.encode(address(manager), address(collateral), address(windows), table, p, caps)
             ),
             true
         );

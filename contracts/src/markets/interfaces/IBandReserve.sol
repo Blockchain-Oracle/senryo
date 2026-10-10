@@ -37,11 +37,8 @@ interface IBandReserve {
     event PoolFunded(address indexed by, uint256 amount, uint256 liquid);
     event PoolDefunded(address indexed to, uint256 amount, uint256 liquid);
     event ParamsSet(uint32 configVersion, Params params);
-    event SigmaSet(bytes32 indexed seriesId, uint64 sigmaE8, uint32 configVersion);
     event BandAdded(bytes32 indexed seriesId, uint8 index, uint8 kind, uint16 lowBps, uint16 highBps);
-    event SeriesListed(
-        bytes32 indexed seriesId, uint64 sigmaE8, uint64 sigmaFloorE8, uint64 sigmaCapE8, uint32 h50E6, uint8 bands
-    );
+    event SeriesListed(bytes32 indexed seriesId, uint64 sigmaFloorE8, uint64 sigmaCapE8, uint32 h50E6, uint8 bands);
     event PausedSet(bool paused);
 
     error IsPaused();
@@ -53,7 +50,6 @@ interface IBandReserve {
     error SeriesAlreadyListed(bytes32 seriesId);
     error SeriesNotListed(bytes32 seriesId);
     error UnknownBand(bytes32 seriesId, uint8 band);
-    error NoVolatility(bytes32 seriesId);
     error WindowNotTrading(bytes32 windowId);
     error NoOpenPrint(bytes32 windowId);
     error UnknownTicket(uint256 ticketId);

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.31;
 
+import {SSTORE2} from "solady/utils/SSTORE2.sol";
 import {BandMath} from "../../src/markets/BandMath.sol";
+import {TailTableData} from "../../src/markets/TailTableData.sol";
 import {IBandReserve} from "../../src/markets/interfaces/IBandReserve.sol";
 import "../../src/markets/MarketTypes.sol";
 import {MarketsBase} from "./MarketsBase.t.sol";
@@ -30,7 +32,7 @@ contract ListingTest is MarketsBase {
             assertEq(abi.encode(got[i]), abi.encode(menu[i]));
         }
         SeriesTerms memory t = reserve.termsOf(ethSeries);
-        assertEq(abi.encode(t), abi.encode(SeriesTerms(SIGMA, SIGMA / 2, SIGMA * 2, H50)));
+        assertEq(abi.encode(t), abi.encode(SeriesTerms(SIGMA / 2, SIGMA * 2, H50)));
 
         vm.expectRevert(abi.encodeWithSelector(IBandReserve.SeriesAlreadyListed.selector, ethSeries));
         list(ethSeries, menu);
@@ -39,20 +41,20 @@ contract ListingTest is MarketsBase {
     function test_refusesBadListings() public {
         BandDef[] memory menu = fullMenu();
         vm.expectRevert(abi.encodeWithSelector(IBandReserve.UnknownSeries.selector, bytes32("nope")));
-        reserve.listSeries(bytes32("nope"), SeriesTerms(SIGMA, SIGMA, SIGMA, H50), menu);
+        reserve.listSeries(bytes32("nope"), SeriesTerms(SIGMA, SIGMA, H50), menu);
 
         SeriesTerms[5] memory bad = [
-            SeriesTerms(SIGMA, 0, SIGMA, H50), // no floor
-            SeriesTerms(SIGMA, SIGMA + 1, SIGMA * 2, H50), // σ under its floor
-            SeriesTerms(SIGMA, SIGMA, SIGMA - 1, H50), // σ over its cap
-            SeriesTerms(SIGMA, SIGMA, MAX_SIGMA_E8 + 1, H50), // cap over the chain's bound
-            SeriesTerms(SIGMA, SIGMA, SIGMA, MAX_HALF_SPREAD_E6 + 1) // spread over the chain's bound
+            SeriesTerms(0, SIGMA, H50), // no floor
+            SeriesTerms(SIGMA, SIGMA - 1, H50), // cap under the floor
+            SeriesTerms(SIGMA, MAX_SIGMA_E8 + 1, H50), // cap over the chain's bound
+            SeriesTerms(SIGMA, SIGMA, 0), // no spread
+            SeriesTerms(SIGMA, SIGMA, MAX_HALF_SPREAD_E6 + 1) // spread over the chain's bound
         ];
         for (uint256 i; i < bad.length; ++i) {
             vm.expectRevert(IBandReserve.BadParams.selector);
             reserve.listSeries(ethSeries, bad[i], menu);
         }
-        SeriesTerms memory ok = SeriesTerms(SIGMA, SIGMA, SIGMA, H50);
+        SeriesTerms memory ok = SeriesTerms(SIGMA, SIGMA, H50);
         vm.expectRevert(IBandReserve.BadParams.selector);
         reserve.listSeries(ethSeries, ok, new BandDef[](0));
         vm.expectRevert(IBandReserve.BadParams.selector);
@@ -81,13 +83,41 @@ contract ListingTest is MarketsBase {
         reserve.addBand(ethSeries, BandDef(BAND_UP, 0, 0));
     }
 
-    function test_sigmaStaysInsideItsBounds() public {
+    function test_sigmaBoundsMoveWithoutABump() public {
+        uint32 version = reserve.configVersion();
         vm.expectRevert(IBandReserve.BadParams.selector);
-        reserve.setSigma(seriesId, SIGMA * 2 + 1);
+        reserve.setSigmaBounds(seriesId, SIGMA, SIGMA - 1);
         vm.expectRevert(IBandReserve.BadParams.selector);
-        reserve.setSigma(seriesId, SIGMA / 2 - 1);
-        reserve.setSigma(seriesId, SIGMA * 2);
-        assertEq(reserve.termsOf(seriesId).sigmaE8, SIGMA * 2);
+        reserve.setSigmaBounds(seriesId, 0, SIGMA);
+        vm.expectRevert(abi.encodeWithSelector(IBandReserve.SeriesNotListed.selector, ethSeries));
+        reserve.setSigmaBounds(ethSeries, SIGMA, SIGMA);
+        reserve.setSigmaBounds(seriesId, SIGMA, SIGMA * 3);
+        SeriesTerms memory t = reserve.termsOf(seriesId);
+        assertEq(t.sigmaFloorE8, SIGMA);
+        assertEq(t.sigmaCapE8, SIGMA * 3);
+        assertEq(reserve.configVersion(), version, "no global bump: nothing in flight is refused");
+    }
+
+    /// @dev D-300/D-306: a recalibrated table is a parameter change — refused unless every row is a CDF from ½, and
+    ///      a version bump when it lands (an open in flight was quoted on the old one).
+    function test_aTableSwapIsCheckedAndBumpsTheVersion() public {
+        bytes memory blob = TailTableData.BLOB;
+        bytes memory falls = bytes.concat(blob);
+        // The first row's second entry below its first (½): not a CDF.
+        uint256 at = TAIL_HEADER_BYTES + 8 * TAIL_U16_BYTES + TAIL_ENTRY_BYTES;
+        (falls[at], falls[at + 1], falls[at + 2]) = (bytes1(0), bytes1(0), bytes1(0));
+        address bad = SSTORE2.write(falls);
+        vm.expectRevert(abi.encodeWithSelector(BandMath.BadTailTable.selector, bad));
+        reserve.setTailTable(bad);
+        address short = SSTORE2.write(bytes.concat(blob, hex"00"));
+        vm.expectRevert(abi.encodeWithSelector(BandMath.BadTailTable.selector, short));
+        reserve.setTailTable(short);
+
+        uint32 version = reserve.configVersion();
+        address next = SSTORE2.write(blob);
+        reserve.setTailTable(next);
+        assertEq(reserve.tailTable(), next);
+        assertEq(reserve.configVersion(), version + 1);
     }
 
     function testFuzz_packRoundTrips(uint8 kind, uint16 lowBps, uint16 highBps) public pure {

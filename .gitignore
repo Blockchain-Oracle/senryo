@@ -60,3 +60,4 @@ docs/design/reference-study-2026-09-30/
 brand/review/
 # The web build's id (apps/web/scripts/build-id.mjs), written at build time.
 apps/web/public/version.json
+__pycache__/
