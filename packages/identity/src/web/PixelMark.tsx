@@ -23,8 +23,11 @@ export function PixelMark({ name, size, colors, label, className }: PixelMarkPro
       viewBox={`0 0 ${w} ${h}`}
       shapeRendering="crispEdges"
       className={className}
-      {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
+      role={label ? "img" : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
     >
+      <title>{label ?? name}</title>
       {PIXEL_PATHS[name].map((p) => (
         <path key={p.role} d={p.d} fill={pixelFill(p.role, colors)} />
       ))}

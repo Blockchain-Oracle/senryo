@@ -1,8 +1,7 @@
 /**
- * Every app path after the prediction-market pivot (D-256). S5 brings the prediction places — the trade terminal,
- * Calls, Wallet (add money, withdraw) and More — from the shared navigation source (`packages/config/src/nav.ts`,
- * D-268); until then the shell holds Home · Markets · Profile. Deep links on the rpId host map 1:1 onto these, and
- * retired paths are remapped in `lib/deep-link.ts` (`LEGACY_PATHS`).
+ * Every app path after the prediction-market pivot (D-256). The dock holds Home · Markets · Trade · Calls · More and
+ * More the rest, from the shared navigation source (`packages/config/src/nav.ts`, D-268). Links on the rpId host —
+ * the web's `/app/*` and `/call` included — and retired paths are mapped onto these in `lib/deep-link.ts`.
  */
 import type { Href } from "expo-router";
 
@@ -46,7 +45,7 @@ export const ROUTES = {
   withdraw: "/withdraw",
 } as const;
 
-/** A new account's first-run setup step (J1): `/setup/handle` … `/setup/done`. */
+/** A new account's first-run setup step (J1): its `/setup/<step>` page; terms and Face ID land on Home instead. */
 export const setupRoute = (step: string) =>
   step === "face-id" || step === "terms" ? ROUTES.home : (`/setup/${step}` as const);
 

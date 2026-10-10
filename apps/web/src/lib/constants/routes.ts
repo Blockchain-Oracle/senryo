@@ -9,8 +9,6 @@ export const ROUTES = {
   app: "/app/",
   /** First-run setup inside the app (S6). */
   setup: "/app/setup/",
-  /** Account and session settings inside the app (S6). */
-  account: "/app/account/",
   judges: "/judges/",
   terms: "/terms/",
   privacy: "/privacy/",

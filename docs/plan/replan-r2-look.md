@@ -134,8 +134,15 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     Games, Parlay, Duel, Events, Wallet, Earn, Status); the wallet is read-only for them (top-up, Receive and Withdraw
     ask for an account first, then come back), and its top-up row is no longer green.
 - [ ] R2.15 Signed-out drawers and screens get a Sign in button. Every disabled button says why.
-- [ ] R2.16 Dead code: the 14 unused web components (06 §8), stale comments and route constants, and
+- [x] R2.16 Dead code: the 14 unused web components (06 §8), stale comments and route constants, and
   `lib/copy/diagnosis.ts` if still unused. The Everything drawer's search waits for R6.
+  - *As built (10 Oct):* re-checked by import: 13 deleted (action-circle, amount-hero, list-row, page-header,
+    slide-to-confirm, alert-toast, input, interactive-empty-state, number-flow, slider and its tooltip, vercel-tabs,
+    mark-cluster — the basket cluster in `@senryo/identity` replaces it) with their three packages (`@number-flow/react`,
+    `@radix-ui/react-slider`, `@radix-ui/react-tooltip`; the lockfile only loses them and what only they used).
+    `reading.tsx` and `diagnosis.ts` are live again (Earn's failed state); `avatar.tsx` stays for R2.8's people. The
+    web's `/app/account/` route constant (no page) is gone; the stale comments say what is true (five welcome scenes,
+    the real setup order, the dock, the Settings rows).
 - [ ] R2.17 Web shell: splash, PWA install sheet and a "new version" toast (Owarine `Splash.tsx`, `InstallSheet.tsx`,
   `useAppUpdate.ts`).
 - [ ] R2.18 A11y: one h1 per page; `"use client"` where hooks are used; the HealthChip status dot replaced per D-237.

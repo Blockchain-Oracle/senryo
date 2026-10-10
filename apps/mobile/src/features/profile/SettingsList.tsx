@@ -1,6 +1,6 @@
 /**
  * Settings (A10; §0.9 "Settings"): one plain grouped list in the iOS Settings grammar — Account (Wallet & address,
- * Security, Recovery, Mode, Blocked & muted), Preferences (Appearance, Sounds & haptics, Notifications, Hide balances,
+ * Security, Recovery, Mode), Preferences (Appearance, Sounds & haptics, Notifications, Hide balances,
  * Replay welcome), About (Status, Help, Terms, Privacy), then Delete my data and Sign out (confirmed). A guest sees
  * Preferences and About. The version sits under it all; a long-press on it opens Diagnostics. Browsing here never
  * asks for Face ID; the pages that loosen something keep their own step-up.

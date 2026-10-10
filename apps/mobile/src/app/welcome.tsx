@@ -16,7 +16,7 @@ import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 /**
- * First launch and sign-in (A1–A3, A5; F01 / F02 / F03 / F08): the six-scene story with the account actions pinned
+ * First launch and sign-in (A1–A3, A5; F01 / F02 / F03 / F08): the five-scene story with the account actions pinned
  * below it and usable from the first frame. No timed intro: nobody waits for a logo. The passkey ceremony and its
  * outcome rise as a sheet over the story, which stays where it was. Welcome completes only on success or "Look around":
  * a new account continues into the setup it owes from the moment its passkey succeeded; a sign-in shows "Signed in as

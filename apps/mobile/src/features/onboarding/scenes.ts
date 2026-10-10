@@ -1,9 +1,9 @@
 /**
  * The story scenes (J1, reworded for the prediction market, pivot S5.7): the passkey, the pool on the other side of
  * every call, and Practice first. The card, the money chest (it shows the card) and the gold/FX market scenes left with
- * the pivot; new art for "call the next move" on a live line and "payouts land on their own" is S5.7's open item. Each scene is authored artwork in layers (brand/art/onboarding, rasterised by
- * `scripts/onboarding-art.mjs`) plus one headline and one sentence. The copy states only what the product does today:
- * no returns, no rates, no promise about where a card works or how passkeys sync.
+ * the pivot. Five scenes: the call, the payout, the passkey, the pool and the two modes. Each is authored artwork in
+ * layers (brand/art/onboarding, rasterised by `scripts/onboarding-art.mjs`) plus one headline and one sentence. The
+ * copy states only what the product does today: no returns, no rates, no promise about how passkeys sync.
  */
 import type { ImageSourcePropType } from "react-native";
 import LABELS from "../../../assets/onboarding/labels.json";
