@@ -16,37 +16,46 @@ import {
   pickOn,
   seatOf,
   sideLabel,
+  tierTitle,
 } from "@senryo/calls";
 import { type DuelCardQuote, type DuelFlow, useDuelCardQuotes } from "@senryo/calls/react";
-import { DUEL } from "@senryo/config";
+import { DUEL, duelTierOf } from "@senryo/config";
 import { clockText, shortAddress, signedUsd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useProfile } from "@senryo/query";
+import { Avatar } from "@/components/identity/avatar";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { SwipeDeck } from "@/components/ui/swipe-deck";
+import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { cn } from "@/lib/utils";
 
 const MARK = 28;
 const FACE_MARK = 40;
 const [DOWN, UP] = [DUEL_SIDES[1], DUEL_SIDES[0]];
+const AVATAR = 40;
 
-function useName(address: string | null): string {
+/** A seat's person: the handle (or the short address) and the chosen portrait (R2.8: people show as themselves). */
+function usePerson(address: string | null): { name: string; avatar: string | null; address: string | undefined } {
   const profile = useProfile(address ?? undefined);
-  if (!address) return "—";
-  return "value" in profile && profile.value.handle ? `@${profile.value.handle}` : shortAddress(address);
+  if (!address) return { name: "—", avatar: null, address: undefined };
+  const p = "value" in profile ? profile.value : undefined;
+  return { name: p?.handle ? `@${p.handle}` : shortAddress(address), avatar: p?.avatar ?? null, address };
 }
 
 export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => void }) {
   const m = flow.match;
   const now = useServerSeconds();
   const quotes = useDuelCardQuotes(m);
-  const them = useName(m ? opponentOf(m, flow.owner) : null);
+  const opponent = usePerson(m ? opponentOf(m, flow.owner) : null);
+  const me = usePerson(flow.owner ?? null);
+  const them = opponent.name;
   if (!m) return null;
   const seat = seatOf(m, flow.owner);
   if (seat === null) return null;
   const other = seat === 0 ? 1 : 0;
+  const tier = duelTierOf(ACTIVE_NETWORK.chainId, m.tier);
   const results = m.results;
   const picking = m.state === "picking";
   const left = m.pickDeadline === null ? 0 : Math.max(0, m.pickDeadline - now);
@@ -56,10 +65,13 @@ export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => vo
   const over = m.state === "finalized" || m.state === "refunded" || m.state === "failed";
   return (
     <section aria-label="Your duel" className="flex flex-col gap-5">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-baseline gap-3">
-        <Side name="You" total={results?.[seat] ?? null} align="start" />
-        <span className="text-meta text-text-3">vs</span>
-        <Side name={them} total={results?.[other] ?? null} align="end" />
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <Side name="You" person={me} total={results?.[seat] ?? null} align="start" />
+        <span className="flex flex-col items-center text-meta text-text-3">
+          vs
+          {tier ? <span className="tnum">{tierTitle(tier)}</span> : null}
+        </span>
+        <Side name={them} person={opponent} total={results?.[other] ?? null} align="end" />
       </div>
 
       {m.state === "opening" || m.state === "sealed" ? (
@@ -146,9 +158,20 @@ export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => vo
   );
 }
 
-function Side({ name, total, align }: { name: string; total: bigint | null; align: "start" | "end" }) {
+function Side({
+  name,
+  person,
+  total,
+  align,
+}: {
+  name: string;
+  person: { avatar: string | null; address: string | undefined };
+  total: bigint | null;
+  align: "start" | "end";
+}) {
   return (
-    <span className={cn("flex min-w-0 flex-col", align === "end" ? "items-end" : "items-start")}>
+    <span className={cn("flex min-w-0 flex-col gap-1", align === "end" ? "items-end" : "items-start")}>
+      <Avatar avatar={person.avatar} {...(person.address ? { address: person.address } : {})} size={AVATAR} />
       <span className="truncate text-meta text-text-2">{name}</span>
       <span
         className={cn(

@@ -9,10 +9,12 @@ import type { WindowProof } from "@senryo/api-client";
 import { bandVerdicts, callTitle, crowdText, OUTCOME_WORD, unitOf, utcClock, utcTime, windowRow } from "@senryo/calls";
 import { type ChainId, explorerTxUrl, feedIdOf, MARKETS } from "@senryo/config";
 import { priceText, signedUsd, usd } from "@senryo/core";
+import { ids, marketId } from "@senryo/identity";
 import { useWindowProof } from "@senryo/query";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { PublicQuery } from "@/components/public/public-query";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +65,22 @@ function Reverify({ p, print, t, chainId }: { p: WindowProof; print: Print; t: n
   );
 }
 
+const TITLE_MARK = 36;
+const SOURCE_MARK = 14;
+
+/** Whose print it is (R2.8): the market's own source with its mark — Pyth, RedStone, or a basket's members. */
+function PrintSource({ symbol }: { symbol: string }) {
+  const kind = MARKETS.find((m) => m.symbol === symbol)?.source.kind;
+  if (kind === "basket") return <>A basket print (from its members')</>;
+  const redstone = kind === "redstone";
+  return (
+    <span className="inline-flex items-center gap-1 align-middle">
+      <EntityMark id={ids.provider(redstone ? "redstone" : "pyth")} size={SOURCE_MARK} decorative />
+      {redstone ? "RedStone print" : "Pyth print"}
+    </span>
+  );
+}
+
 function PrintBlock(props: { label: string; p: WindowProof; print: Print | null; t: number; chainId: ChainId }) {
   const { label, p, print, t, chainId } = props;
   return (
@@ -74,7 +92,8 @@ function PrintBlock(props: { label: string; p: WindowProof; print: Print | null;
       {print ? (
         <>
           <p className="text-meta text-text-3">
-            Pyth print at {utcTime(print.publishTime)} · confidence ±{priceText(print.confE8, unitOf(p.symbol))} ·{" "}
+            <PrintSource symbol={p.symbol} /> at {utcTime(print.publishTime)} · confidence ±
+            {priceText(print.confE8, unitOf(p.symbol))} ·{" "}
             <a
               href={explorerTxUrl(chainId, print.txHash)}
               target="_blank"
@@ -104,7 +123,10 @@ function Window({ windowId, chainId }: { windowId: `0x${string}`; chainId: Chain
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
-        <h1 className="font-semibold text-page-title">{row.title}</h1>
+        <h1 className="flex items-center gap-3 font-semibold text-page-title">
+          <EntityMark id={marketId(p.symbol)} size={TITLE_MARK} decorative />
+          {row.title}
+        </h1>
         <p className="text-body text-text-2">{row.detail}</p>
       </div>
       <PrintBlock label="The line" p={p} print={p.open} t={p.start} chainId={chainId} />

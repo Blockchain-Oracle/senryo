@@ -15,18 +15,21 @@ import {
   pickOn,
   seatOf,
   sideLabel,
+  tierTitle,
 } from "@senryo/calls";
 import { type DuelCardQuote, type DuelFlow, useDuelCardQuotes } from "@senryo/calls/react";
-import { DUEL } from "@senryo/config";
+import { DUEL, duelTierOf } from "@senryo/config";
 import { clockText, shortAddress, signedUsd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useProfile } from "@senryo/query";
 import { StyleSheet, Text, View } from "react-native";
+import { Avatar } from "~/components/identity/Avatar";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
 import { ProgressBar } from "~/components/kit/ProgressBar";
 import { SwipeDeck } from "~/components/kit/SwipeDeck";
+import { useNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const MARK = 28;
@@ -35,18 +38,23 @@ const CARD_HEIGHT = 200;
 const CALL_WIDTH = 84;
 const [UP, DOWN] = DUEL_SIDES;
 
-function useName(address: string | null): string {
+/** A seat's person: the handle (or the short address) and the chosen portrait (R2.8; the web's `usePerson`). */
+function usePerson(address: string | null): { name: string; avatar: string | null; address: string | undefined } {
   const profile = useProfile(address ?? undefined);
-  if (!address) return "—";
-  return "value" in profile && profile.value.handle ? `@${profile.value.handle}` : shortAddress(address);
+  if (!address) return { name: "—", avatar: null, address: undefined };
+  const p = "value" in profile ? profile.value : undefined;
+  return { name: p?.handle ? `@${p.handle}` : shortAddress(address), avatar: p?.avatar ?? null, address };
 }
 
 export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => void }) {
   const { color } = useTheme();
+  const network = useNetwork();
   const m = flow.match;
   const now = useServerSeconds();
   const quotes = useDuelCardQuotes(m);
-  const them = useName(m ? opponentOf(m, flow.owner) : null);
+  const opponent = usePerson(m ? opponentOf(m, flow.owner) : null);
+  const me = usePerson(flow.owner ?? null);
+  const them = opponent.name;
   if (!m) return null;
   const seat = seatOf(m, flow.owner);
   if (seat === null) return null;
@@ -61,15 +69,25 @@ export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => vo
     t === null ? color.inkMuted : t > 0n ? color.up : t < 0n ? color.down : color.ink;
   const mine = m.results?.[seat] ?? null;
   const theirs = m.results?.[other] ?? null;
+  const tier = duelTierOf(network.chainId, m.tier);
   return (
     <View style={styles.wrap} accessibilityLabel="Your duel">
       <View style={styles.versus}>
         <View style={styles.flex}>
+          <Avatar avatar={me.avatar} {...(me.address ? { address: me.address } : {})} size={SIZE.avatarSm} />
           <Text style={[TYPE.caption, { color: color.inkMuted }]}>You</Text>
           <Text style={[TYPE.numMd, { color: totalTone(mine) }]}>{mine === null ? "—" : signedUsd(mine)}</Text>
         </View>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>vs</Text>
+        <View style={styles.middle}>
+          <Text style={[TYPE.caption, { color: color.inkMuted }]}>vs</Text>
+          {tier ? <Text style={[TYPE.caption, { color: color.inkMuted }]}>{tierTitle(tier)}</Text> : null}
+        </View>
         <View style={[styles.flex, styles.end]}>
+          <Avatar
+            avatar={opponent.avatar}
+            {...(opponent.address ? { address: opponent.address } : {})}
+            size={SIZE.avatarSm}
+          />
           <Text numberOfLines={1} style={[TYPE.caption, { color: color.inkMuted }]}>
             {them}
           </Text>
@@ -198,6 +216,7 @@ function CardFace({ q, stake }: { q: DuelCardQuote; stake: bigint }) {
 }
 
 const styles = StyleSheet.create({
+  middle: { alignItems: "center" },
   wrap: { gap: SPACE.md },
   flex: { flex: 1 },
   end: { alignItems: "flex-end" },
