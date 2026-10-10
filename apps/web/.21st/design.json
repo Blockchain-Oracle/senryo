@@ -6,11 +6,11 @@
     "stack": ["nextjs-16-static-export", "react-19", "tailwind-v4", "shadcn"]
   },
   "direction": {
-    "name": "Living Lacquer",
-    "summary": "Fomo's rounded trading interface and dark violet surfaces + Phantom's contextual action fan + Solflare's illustrated onboarding and material artwork; Senryo's seal, gold leaf and lacquer are the identity inside that language. The reference study is the minimum baseline.",
-    "approved": "D-168 (user, 30 Sep 2026); docs/design/senryo-v2/direction.md; docs/plan/v2-plan.md §5",
-    "supersedes": "D2 Desk (D-004, design/DIRECTIONS.md, design/screens/d2-*) — history only",
-    "web": "Web inherits the tokens now; its layouts follow in S11b with the same route/state contracts (desktop dock = declared adaptation, direction §11)."
+    "name": "UGLYCASH",
+    "summary": "The supplied UGLYCASH native system (89 screenshots, docs/design/reference-study-2026-10-07-uglycash/): a #F5F5F5 canvas, white cards, #ECECEC insets, black primary actions, #FA00FF only for trade, publish and selected controls (black label) and limited glow, green and red only for direction, strongly condensed display type for money and page titles. Senryo's seal and gold leaf are the identity inside it. Tradash sets the live loop's behaviour.",
+    "approved": "D-304 (user, 10 Oct 2026, replan plan default 6); docs/plan/uglycash-revamp-2026-10-07.md (user \"lgtm\", 7 Oct 2026); replan R2",
+    "supersedes": "Living Lacquer (D-168/D-191/D-253) and D2 Desk (D-004) — history only",
+    "web": "The web carries the same tokens and faces as the phone (replan R2); the desktop rail and drawers are declared adaptations of the phone's dock and sheets."
   },
   "sources": {
     "tokens": [
@@ -27,398 +27,277 @@
     "instructions": ["docs/plan/00-plan.md", "docs/plan/specs/client.md"]
   },
   "design": {
-    "colorMode": "dark-default-with-light",
+    "colorMode": "light-default-with-dark",
     "colors": {
       "--background": {
-        "dark": "#0A0911",
-        "light": "#F5F4F8",
+        "light": "#F5F5F5",
+        "dark": "#111111",
         "source": "packages/tokens/src/palette.ts"
       },
       "--foreground": {
-        "dark": "#F5F4FA",
-        "light": "#17151F",
+        "light": "#000000",
+        "dark": "#F5F5F5",
         "source": "packages/tokens/src/palette.ts"
       },
       "--card": {
-        "dark": "#13121A",
         "light": "#FFFFFF",
+        "dark": "#1C1C1C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--card-foreground": {
-        "dark": "#F5F4FA",
-        "light": "#17151F",
+        "light": "#000000",
+        "dark": "#F5F5F5",
         "source": "packages/tokens/src/palette.ts"
       },
       "--popover": {
-        "dark": "#191822",
-        "light": "#FFFFFF",
+        "light": "#F5F5F5",
+        "dark": "#171717",
         "source": "packages/tokens/src/palette.ts"
       },
       "--popover-foreground": {
-        "dark": "#F5F4FA",
-        "light": "#17151F",
+        "light": "#000000",
+        "dark": "#F5F5F5",
         "source": "packages/tokens/src/palette.ts"
       },
       "--primary": {
-        "dark": "#414EF4",
-        "light": "#414EF4",
+        "light": "#000000",
+        "dark": "#F5F5F5",
         "source": "packages/tokens/src/palette.ts"
       },
       "--primary-foreground": {
-        "dark": "#FFFFFF",
         "light": "#FFFFFF",
+        "dark": "#000000",
         "source": "packages/tokens/src/palette.ts"
       },
       "--secondary": {
-        "dark": "#201E2B",
-        "light": "#ECE9F2",
+        "light": "#ECECEC",
+        "dark": "#292929",
         "source": "packages/tokens/src/palette.ts"
       },
       "--secondary-foreground": {
-        "dark": "#F5F4FA",
-        "light": "#17151F",
+        "light": "#000000",
+        "dark": "#F5F5F5",
         "source": "packages/tokens/src/palette.ts"
       },
       "--muted": {
-        "dark": "#201E2B",
-        "light": "#ECE9F2",
+        "light": "#ECECEC",
+        "dark": "#292929",
         "source": "packages/tokens/src/palette.ts"
       },
       "--muted-foreground": {
-        "dark": "#B8B5C4",
-        "light": "#5F5B6B",
+        "light": "#666666",
+        "dark": "#B8B8B8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--accent": {
-        "dark": "#1B2040",
-        "light": "#E8EBFF",
+        "light": "#FA00FF",
+        "dark": "#FA00FF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--accent-foreground": {
-        "dark": "#8B95FF",
-        "light": "#3643D8",
+        "light": "#000000",
+        "dark": "#000000",
         "source": "packages/tokens/src/palette.ts"
       },
       "--destructive": {
-        "dark": "#FF5A48",
         "light": "#C83225",
+        "dark": "#FF5A48",
         "source": "packages/tokens/src/palette.ts"
       },
       "--destructive-foreground": {
-        "dark": "#17151F",
         "light": "#FFFFFF",
+        "dark": "#000000",
         "source": "packages/tokens/src/palette.ts"
       },
       "--border": {
-        "dark": "#2C2938",
-        "light": "#DEDBE6",
+        "light": "#D4D4D4",
+        "dark": "#414141",
         "source": "packages/tokens/src/palette.ts"
       },
       "--input": {
-        "dark": "#2C2938",
-        "light": "#DEDBE6",
+        "light": "#ECECEC",
+        "dark": "#292929",
         "source": "packages/tokens/src/palette.ts"
       },
       "--ring": {
-        "dark": "#8B95FF",
-        "light": "#3643D8",
+        "light": "#FA00FF",
+        "dark": "#FA00FF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--surface": {
-        "dark": "#13121A",
         "light": "#FFFFFF",
+        "dark": "#1C1C1C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--up": {
-        "dark": "#25CF68",
         "light": "#087F3C",
+        "dark": "#25CF68",
         "source": "packages/tokens/src/palette.ts"
       },
       "--down": {
-        "dark": "#FF5A48",
         "light": "#C83225",
+        "dark": "#FF5A48",
         "source": "packages/tokens/src/palette.ts"
       },
       "--gold": {
-        "dark": "#D4AE5B",
         "light": "#89611F",
+        "dark": "#D4AE5B",
         "source": "packages/tokens/src/palette.ts"
       },
       "--warn": {
-        "dark": "#F2B85C",
         "light": "#8A5800",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--chart-1": {
-        "dark": "#8B95FF",
-        "light": "#3643D8",
+        "dark": "#F2B85C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-2": {
-        "dark": "#B69DF8",
-        "light": "#7049C8",
+        "light": "#666666",
+        "dark": "#B8B8B8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-3": {
-        "dark": "#5CCAD8",
         "light": "#087A8A",
+        "dark": "#5CCAD8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-4": {
-        "dark": "#F18BB7",
         "light": "#AD3265",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--chart-5": {
-        "dark": "#C9D0DD",
-        "light": "#626D7E",
+        "dark": "#F18BB7",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-up": {
-        "dark": "#25CF68",
         "light": "#087F3C",
+        "dark": "#25CF68",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-down": {
-        "dark": "#FF5A48",
         "light": "#C83225",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--chart-candle-down": {
         "dark": "#FF5A48",
-        "light": "#C83225",
         "source": "packages/tokens/src/palette.ts"
       },
       "--practice": {
-        "dark": "#B69DF8",
-        "light": "#7049C8",
+        "light": "#666666",
+        "dark": "#B8B8B8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--mainnet": {
-        "dark": "#8B95FF",
-        "light": "#3643D8",
+        "light": "#000000",
+        "dark": "#F5F5F5",
+        "source": "packages/tokens/src/palette.ts"
+      },
+      "--seal": {
+        "light": "#000000",
+        "dark": "#000000",
         "source": "packages/tokens/src/palette.ts"
       },
       "--text-2": {
-        "dark": "#B8B5C4",
-        "light": "#5F5B6B",
+        "light": "#666666",
+        "dark": "#B8B8B8",
         "source": "packages/tokens/src/palette.ts"
       },
       "--text-3": {
-        "dark": "#8F8B9F",
-        "light": "#716C7F",
+        "light": "#6E6E6E",
+        "dark": "#A0A0A0",
         "source": "packages/tokens/src/palette.ts"
       },
       "--link": {
-        "dark": "#8B95FF",
-        "light": "#3643D8",
+        "light": "#99009C",
+        "dark": "#FF75FF",
         "source": "packages/tokens/src/palette.ts"
       },
       "--glass-tint": {
-        "dark": "#201E2BD9",
-        "light": "#FFFFFFD9",
+        "light": "#ECECECEB",
+        "dark": "#292929EB",
         "source": "packages/tokens/src/palette.ts"
       },
       "--glass-rim": {
-        "dark": "#FFFFFF24",
         "light": "#FFFFFFB3",
+        "dark": "#FFFFFF24",
         "source": "packages/tokens/src/palette.ts"
       },
       "--glass-opaque": {
-        "dark": "#201E2B",
-        "light": "#FFFFFF",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--fan-circle": {
-        "dark": "#C3B5F6",
-        "light": "#D5C8FF",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--fan-text": {
-        "dark": "#211A31",
-        "light": "#211A31",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--fan-label": {
-        "dark": "#F5F4FA",
-        "light": "#17151F",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--fan-circle-pressed": {
-        "dark": "#AE9BE8",
-        "light": "#C1B0F2",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--fan-backdrop-opaque": {
-        "dark": "#191822",
-        "light": "#F5F4F8",
+        "light": "#ECECEC",
+        "dark": "#292929",
         "source": "packages/tokens/src/palette.ts"
       },
       "--sheet-scrim": {
-        "dark": "#00000066",
-        "light": "#17151F38",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--fan-scrim": {
-        "dark": "#0A091180",
-        "light": "#17151F55",
+        "light": "#000000B3",
+        "dark": "#000000B3",
         "source": "packages/tokens/src/palette.ts"
       },
       "--warning-surface": {
-        "dark": "#332719",
         "light": "#FFF0D5",
+        "dark": "#332719",
         "source": "packages/tokens/src/palette.ts"
       },
       "--practice-surface": {
-        "dark": "#282038",
-        "light": "#EEE7FF",
+        "light": "#ECECEC",
+        "dark": "#292929",
         "source": "packages/tokens/src/palette.ts"
       },
       "--mainnet-surface": {
-        "dark": "#1B2040",
-        "light": "#E8EBFF",
+        "light": "#E2E2E2",
+        "dark": "#363636",
         "source": "packages/tokens/src/palette.ts"
       },
       "--up-surface": {
-        "dark": "#102A1C",
         "light": "#E4F4E9",
+        "dark": "#102A1C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--down-surface": {
-        "dark": "#35201F",
         "light": "#FBE8E5",
+        "dark": "#35201F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--destructive-surface": {
-        "dark": "#35201F",
         "light": "#FBE8E5",
-        "source": "packages/tokens/src/palette.ts"
-      },
-      "--silver": {
-        "dark": "#C9D0DD",
-        "light": "#626D7E",
+        "dark": "#35201F",
         "source": "packages/tokens/src/palette.ts"
       },
       "--raised-2": {
-        "dark": "#201E2B",
-        "light": "#ECE9F2",
+        "light": "#ECECEC",
+        "dark": "#292929",
         "source": "packages/tokens/src/palette.ts"
       },
       "--row-pressed": {
-        "dark": "#2C2938",
-        "light": "#E5E1EE",
+        "light": "#E2E2E2",
+        "dark": "#363636",
         "source": "packages/tokens/src/palette.ts"
       },
       "--selected-row": {
-        "dark": "#1B2040",
-        "light": "#E8EBFF",
+        "light": "#FCE3FC",
+        "dark": "#3C203C",
         "source": "packages/tokens/src/palette.ts"
       },
       "--skeleton": {
-        "dark": "#2C2938",
-        "light": "#DEDBE6",
+        "light": "#DEDEDE",
+        "dark": "#363636",
         "source": "packages/tokens/src/palette.ts"
       },
       "--primary-pressed": {
-        "dark": "#343ED3",
-        "light": "#343ED3",
+        "light": "#252525",
+        "dark": "#DEDEDE",
         "source": "packages/tokens/src/palette.ts"
       },
       "--up-foreground": {
-        "dark": "#17151F",
         "light": "#FFFFFF",
+        "dark": "#000000",
         "source": "packages/tokens/src/palette.ts"
       },
       "--down-foreground": {
-        "dark": "#17151F",
         "light": "#FFFFFF",
+        "dark": "#000000",
         "source": "packages/tokens/src/palette.ts"
       },
       "--chart-neutral": {
-        "dark": "#8F8B9F",
-        "light": "#716C7F",
+        "light": "#6E6E6E",
+        "dark": "#A0A0A0",
         "source": "packages/tokens/src/palette.ts"
       },
       "--sheet-handle": {
-        "dark": "#8F8B9F",
-        "light": "#716C7F",
+        "light": "#999999",
+        "dark": "#999999",
         "source": "packages/tokens/src/palette.ts"
-      },
-      "--kinpaku-lacquer": {
-        "value": "#17121B",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--kinpaku-lacquer-edge": {
-        "value": "#29212F",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--kinpaku-lacquer-highlight": {
-        "value": "#514357",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--kinpaku-foil-highlight": {
-        "value": "#FFF0BC",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--kinpaku-foil-light": {
-        "value": "#EACF8C",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--kinpaku-foil-mid": {
-        "value": "#D4AE5B",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--kinpaku-foil-shade": {
-        "value": "#AE8941",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--kinpaku-foil-deep": {
-        "value": "#886426",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--gold-leaf-shadow": {
-        "value": "#886426",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--gold-leaf-mid": {
-        "value": "#D4AE5B",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--gold-leaf-highlight": {
-        "value": "#FFF0BC",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--silver-shadow": {
-        "value": "#697383",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--silver-mid": {
-        "value": "#C9D0DD",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--silver-highlight": {
-        "value": "#F4F6FB",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--lacquer-shadow": {
-        "value": "#17121B",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--lacquer-mid": {
-        "value": "#29212F",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--lacquer-highlight": {
-        "value": "#514357",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--qr-ink": {
-        "value": "#000000",
-        "source": "packages/tokens/src/marks.ts"
-      },
-      "--qr-paper": {
-        "value": "#FFFFFF",
-        "source": "packages/tokens/src/marks.ts"
       }
     },
     "typography": {
@@ -1120,14 +999,19 @@
       "date": "2026-10-09",
       "decision": "S6.3/S6.4: the S22 shell from Mitoshi (rail, top line, stage, dock, Everything) on Radix; ⌘K from 21st originui/command (cmdk); bottom sheets removed from web (vaul dropped)",
       "ref": "docs/plan/pivot-s6-web.md, D-190"
+    },
+    {
+      "date": "2026-10-10",
+      "decision": "R2: one UGLYCASH palette for web and phone (@senryo/tokens takes the phone's values; Living Lacquer deleted); the web light by default; Roboto Condensed Black for money and page titles on both; the landing on the same tokens",
+      "ref": "D-304; docs/plan/replan-r2-look.md R2.1–R2.5"
     }
   ],
   "authority": {
-    "direction": "docs/design/senryo-v2/direction.md",
-    "baseline": "docs/design/reference-study-2026-09-30/ (local until Q-021)",
+    "direction": "docs/plan/uglycash-revamp-2026-10-07.md",
+    "baseline": "docs/design/reference-study-2026-10-07-uglycash/README.md",
     "handoff": "docs/design/senryo-v2/PROJECT-HANDOFF.md",
     "ledger": "docs/design/senryo-parity-ledger.json",
-    "tokenValues": "docs/design/senryo-v2/tokens-consult.md (Codex, D-191)",
+    "tokenValues": "packages/tokens/src/palette.ts (the phone's UGLYCASH values, D-304)",
     "order": [
       "user's latest words",
       "study evidence (screens, motion)",

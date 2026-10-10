@@ -64,7 +64,10 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     primary action is the app's black; the sign-in band scopes the dark tokens (a dark card on the light page, its
     buttons themed to match); the live hero is a dark card with the BTC mark beside "BTC · 1m". Checked in the
     browser top to bottom.
-- [ ] R2.5 `.21st/design.json` on both apps records UGLYCASH as the direction.
+- [x] R2.5 `.21st/design.json` on both apps records UGLYCASH as the direction.
+  - *As built (10 Oct):* both files name UGLYCASH (D-304, the 7 Oct plan) with Living Lacquer and D2 as history; colour
+    mode light-default-with-dark; the colour table regenerated from `palette.ts`; the authority points at the UGLYCASH
+    plan and study; a D-304 entry in each decision log.
 
 ### Logos
 - [ ] R2.6 Registry gaps by script:
