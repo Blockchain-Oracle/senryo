@@ -1,0 +1,114 @@
+# R1 — Prices that can't fail silently (replan stage 1)
+
+**Goal:** the price path never fails silently, and the line moves like Tradash's. The settlement plane (Pyth, RedStone)
+is complete, back-filled and honest about its state. The display plane (exchange trades) drives the line, the pill and
+live PnL at about 8 Hz. No contract change.
+
+**Authority:**
+- `replan-2026-10-10.md` R1; D-302, D-310;
+- research `docs/research/replan-2026-10-10/04-pricing.md` (§3 findings F1–F21, §6 target, §7 R1–R18, §8 G1–G6);
+- port sources `../owarine/services/ops/src/prices/{crypto-spot,crypto-rest,day-stats}.ts` and
+  `../crypto-world-fair/services/ops/src/display/*`;
+- every library read through its docs (Context7) before use.
+
+**Gate:**
+- `pnpm gate` 0;
+- G3 chaos (a)–(d) passes;
+- G6 abuse passes;
+- the display line measured at ≥ 6 Hz for BTC in a browser;
+- δ and autocorrelation numbers in `acceptance.md`;
+- api and keeper deployed;
+- web deployed; phone OTA after a simulator pass.
+
+## Steps
+
+### Settlement plane
+- [ ] R1.1 Process guards and RedStone body validation (04 R1):
+  - `services/common/src/process-guards.ts`, called from the api and keeper `main.ts`;
+  - a non-JSON 2xx counts as that gateway's failure;
+  - `try/catch` around `poll()` and `historical()`.
+- [ ] R1.2 `PrintFetcher` (R2):
+  - single-flight per (feed, t) and a token bucket per source (Hermes 1/s with a burst of 5; RedStone ≤ 0.5 rps);
+  - never asks for t > now − grace;
+  - one RedStone `historical` per grid point, cached 60 s;
+  - its own backoff, separate from the live poll.
+- [ ] R1.3 `PrintWatch` (R3):
+  - every 2 s, back-fills any window start or expiry that has tickets and no archived print by t + 2 s;
+  - on a Hermes reconnect, back-fills each minute boundary in the gap;
+  - misses and back-fills counted on `/status`.
+- [ ] R1.4 `/v1/prices/print` is archive-only for anonymous callers, with a rate limit and a short-cached 404; `/recent`
+  caps its symbols and is rate-limited (R4).
+- [ ] R1.5 Hermes hardening (R5):
+  - a timeout until the headers arrive;
+  - `ignore_invalid_price_ids`, with one stream per entitlement class;
+  - rotation that aborts the old stream only after the new one's first frame;
+  - backoff that resets only after 30 s healthy;
+  - a per-feed silence watchdog;
+  - `HERMES_ORIGIN` from env;
+  - an explicit `channel=fixed_rate@1000ms`;
+  - 401/403 counted and alerted.
+- [ ] R1.6 RedStone off the main loop: parse in a `worker_thread`, extracting only the wanted feeds (R14).
+- [ ] R1.7 R11/D-310: without `REDSTONE_GATEWAYS` after 29 Oct, the RedStone markets are read-only discovery with the
+  reason; they turn back on when the key is set.
+- [ ] R1.8 Hygiene (R18): delete the dead `pg_notify('pyth_print')`; close the open candle on a minute timer and on
+  shutdown.
+
+### State and transport
+- [ ] R1.9 `FeedState` end to end (R6):
+  - each catalogue market declares `cadenceMs`/`staleMs` per source;
+  - the gateway computes `live · delayed · stale · closed · halted · fallback` from server time and the calendar;
+  - a `health` topic, plus a digest in the beat;
+  - `/status` reports prices per source;
+  - `PriceBook` keeps the server state;
+  - the D-289 halts get two-observation hysteresis.
+- [ ] R1.10 The ticket is decoupled from prices: public topics connect at once, `user:` joins on a later reconnect, and a
+  refused user topic gets `event: topic-error` (R8).
+- [ ] R1.11 Transport (R9):
+  - a 5 s beat and 5 s client silence;
+  - a jittered first retry of 0.5–1.5 s, then ×2 to 15 s;
+  - reconnect on visible/online/NetInfo when the last frame is over 2 s old.
+- [ ] R1.12 Replay epochs: ids `<epoch>-<seq>`, `event: reset`, and the client invalidating and reseeding (R10; Mitoshi
+  `bus.ts`).
+- [ ] R1.13 Fan-out (R13):
+  - one batched `pp` frame every 100 ms;
+  - a per-socket byte cap and a per-IP connection cap;
+  - fan-out µs and event-loop p99 on `/status`;
+  - Traefik excludes `text/event-stream` from compression (a Coolify setting).
+- [ ] R1.14 Reseed and first paint (R15):
+  - `/v1/prices/latest` on reconnect;
+  - `/recent` pre-fills the open terminal with 5 minutes of real history;
+  - a preconnect to the API origin.
+- [ ] R1.15 Clock (R16): `GET /v1/time` (no-store), NTP-style offset taken from the minimum-RTT sample of the last 5,
+  resampled every 60 s and on reconnect.
+
+### Display plane
+- [ ] R1.16 Display feed (D-302):
+  - port `crypto-spot.ts` (Coinbase WS ticker) and `crypto-rest.ts` (5-venue REST median), adding a 20 s ping and a
+    forced reopen of a silent socket;
+  - coalesce to 125 ms on a `display` topic, basis-adjusted to Pyth (a rolling median of display − Pyth at each print);
+  - hysteresis on failover;
+  - read Coinbase's and Kraken's market-data terms first and record them in `docs/research/replan-2026-10-10/`.
+- [ ] R1.17 Clients: `@senryo/live` merges display ticks into the line and pill. Quotes and limits read only settlement
+  prices. Both charts draw a "Signed" marker at each Pyth print, and the chip says when the line is display.
+- [ ] R1.18 Measure δ (Pyth lag behind Coinbase) and Pyth's 1–3 s autocorrelation from the recorded tape beside
+  `pyth_prints` (`scripts/drive/price-lead-check.ts`). The result feeds `FILL_DELAY_SEC` in R3.
+- [ ] R1.19 `/v1/prices/day` (24 h change, ported from `day-stats.ts`), with its api-client route and query hook.
+
+### Charts and honest UI
+- [ ] R1.20 Honest UI (R7):
+  - `HealthChip` and the phone twin say Live only when the stream and the viewed feed are live;
+  - delayed and closed charts dim, stop the pulse and show an age tag;
+  - call panel copy names the cause.
+- [ ] R1.21 Charts at any refresh rate (R17):
+  - sub-sample x scroll from `sampleDebt`;
+  - a dt-correct dot drift;
+  - no per-frame allocations (the web rebuilds its path in place; the phone reuses one `SkPath`);
+  - the K side taken from the raw latest tick.
+- [ ] R1.22 The surge window is scaled to the measured tick interval, so surge, mega and slump fire on both apps.
+
+### Checks
+- [ ] R1.23 G3 chaos and G6 abuse as `scripts/drive` checks; rows in `acceptance.md`. G1 load and G2 soak are run when
+  staging allows, with their result recorded.
+
+## Handoff
+(written at the end of the stage)

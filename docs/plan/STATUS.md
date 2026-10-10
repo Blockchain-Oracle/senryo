@@ -1,6 +1,30 @@
+# Replan: Tradash at the core, two ways to play, one pool (10 October 2026, Claude Code)
+
+**Current plan:** [replan-2026-10-10.md](replan-2026-10-10.md), approved by the user on 10 Oct. Decisions are D-298…D-310. It
+replaces the open S8 steps (S8.1–S8.3, S8.8, S8.9) with stages, in order:
+
+- R1 [prices that can't fail silently](replan-r1-prices.md)
+- R2 [one look, real logos](replan-r2-look.md)
+- R3 [contracts v3: rides, calibrated calls, fair Earn](replan-r3-contracts.md)
+- R4 [activation](replan-r4-activation.md) (needs ~13 testnet MON on the deployer)
+- R5 [the live loop](replan-r5-live-loop.md)
+- R6 [⌘K and phone search](replan-r6-search.md)
+- R7 [games](replan-r7-games.md)
+- R8 [social](replan-r8-social.md)
+- R9 [acceptance](replan-r9-acceptance.md), then S8b → S9 → S10 from the pivot plan
+
+Parity: [parity-replan.md](parity-replan.md).
+
+**Where we are:** R0 recorded. Next: R1.1.
+
+**Not changed:** the pivot plan (product, stack, S8b–S10). The S8.8 games work in `b61d1932` (engines, api, first screens)
+carries into R7. The half-finished markets v2 deploy is abandoned (D-309).
+
+---
+
 # Pivot to a real-time prediction market (8 October 2026, Claude Code)
 
-**Current plan:** [pivot-2026-10-08.md](pivot-2026-10-08.md), approved by the user on 8 Oct. Decisions are D-256…D-272 in [decisions.md](decisions.md).
+**Plan:** [pivot-2026-10-08.md](pivot-2026-10-08.md), approved by the user on 8 Oct. Decisions are D-256…D-272 in [decisions.md](decisions.md).
 
 Senryo is now live Up/Down calls on crypto and stock price windows, in dollars. A shared pool takes the other side; you can cash out any time; payouts land automatically. Practice runs on testnet with free test dollars, Real on mainnet with USDC. It ships on the phone (the existing Senryo app) and as a full web app. The trading product (perps, card, KYC, venues) is superseded.
 

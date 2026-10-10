@@ -51,12 +51,12 @@ leaderboard, a public profile and the ticker live on both apps · a referral pai
 ## Steps
 
 ### Social (no contract)
-- [ ] S8.1 Leaderboard (podium, the field, "you" bar; day · week · all; listed accounts only) and public profiles
+- [→] S8.1 *(moved to R8.1–R8.2, `replan-r8-social.md`)* Leaderboard (podium, the field, "you" bar; day · week · all; listed accounts only) and public profiles
       (`/u?h=` web, `/u/[handle]` phone: identity, record, streak, public calls) on both apps; profile editing on the
       web; current streak beside best; the share card says "by @handle" and carries `?r=`
-- [ ] S8.2 Recent-calls ticker (the `markets` topic, first paint from the indexer) on Home and Markets; one crowd split
+- [→] S8.2 *(moved to R8.3)* Recent-calls ticker (the `markets` topic, first paint from the indexer) on Home and Markets; one crowd split
       helper for every band on the terminal
-- [ ] S8.3 Referral (`?r=` capture, claim, the bonus on the first fill, a push) and Notify me (alerts table, keeper
+- [→] S8.3 *(moved to R8.4–R8.5)* Referral (`?r=` capture, claim, the bonus on the first fill, a push) and Notify me (alerts table, keeper
       `opens` job, push; the closed panel's button on both apps); the halt watch from S7.3
 
 ### Contracts (markets v2)
@@ -93,11 +93,11 @@ leaderboard, a public profile and the ticker live on both apps · a referral pai
       S8.9._
 
 ### Games without a contract
-- [ ] S8.8 Lucky (api draw + one call), Warm-up (client), Line Rider and Candle Hop (canvas/Skia, api score replay and
+- [→] S8.8 *(engines, api and first screens in `b61d1932`; the rest moved to R7, `replan-r7-games.md`)* Lucky (api draw + one call), Warm-up (client), Line Rider and Candle Hop (canvas/Skia, api score replay and
       board); a Games hub on both apps
 
 ### Ship
-- [ ] S8.9 Markets v2 deploy (D-291) with every S7 and S8 contract; indexer on both reserves; services, web, phone OTA;
+- [→] S8.9 *(abandoned part-way, D-309; replaced by R4 on the v3 reserve, `replan-r4-activation.md`)* Markets v2 deploy (D-291) with every S7 and S8 contract; indexer on both reserves; services, web, phone OTA;
       acceptance rows for S7 and S8; STATUS handoff
 
 ## Handoff
