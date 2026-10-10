@@ -7,9 +7,14 @@ import type { WarmUpCard, WarmUpResult } from "@senryo/core";
  * and every card scored at one instant against a coin flip. No stake, no account, nothing on chain.
  */
 import { lane } from "@senryo/core";
+import { marketId } from "@senryo/identity";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { SwipeDeck } from "@/components/ui/swipe-deck";
 import { fire } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
+
+const CARD_MARK = 56;
+const ROW_MARK = 20;
 
 const E8 = 1e8;
 const PRICE_DIGITS = 2;
@@ -59,6 +64,7 @@ export function WarmUpScreen() {
               <span className="text-meta text-text-3">
                 Card {c.index + 1} of {r.cards.length} · {lane(c.cadenceSec)}
               </span>
+              <EntityMark id={marketId(c.symbol)} size={CARD_MARK} decorative />
               <span className="font-semibold text-page-title">{c.symbol}</span>
               <span className="tnum text-section-title text-text-2">{priceText(w.priceOf(c.symbol))}</span>
               <span className="text-meta text-text-3">Up or down in the next 30 seconds after the last card?</span>
@@ -81,8 +87,9 @@ export function WarmUpScreen() {
           </h2>
           <ul className="flex flex-col divide-y divide-border">
             {w.score.cards.map((c) => (
-              <li key={c.card.index} className="flex items-baseline justify-between gap-3 py-2">
-                <span className="text-row-title">
+              <li key={c.card.index} className="flex items-center justify-between gap-3 py-2">
+                <span className="flex items-center gap-2 text-row-title">
+                  <EntityMark id={marketId(c.card.symbol)} size={ROW_MARK} decorative />
                   {c.card.symbol} · you {c.side === "up" ? "Up" : "Down"} · coin {c.botSide === "up" ? "Up" : "Down"}
                 </span>
                 <span
