@@ -276,26 +276,35 @@ struct Intent {
     uint32 epoch;
 }
 
-/// @dev A ticket's standing exit (D-292): a share's bid × 1e6, 0 = unset. Take-profit fills at a bid ≥ `takeProfitE6`;
-///      stop-loss at `floorE6 ≤ bid ≤ stopLossE6`; the trail (the keeper's stop, `trailE6` below the best bid seen) at a
-///      bid ≥ `floorE6`. Per share, so a partial cash-out leaves it right; `epoch` is the owner's when it was set.
+/// @dev The books a standing exit can belong to (D-292 made generic, R3.12): a call's levels are a share's bid × 1e6,
+///      a ride's are prices × 1e8 (its trail a distance in bps). An exit's key is `book << EXIT_BOOK_SHIFT | id`.
+uint8 constant BOOK_CALL = 1;
+uint8 constant BOOK_RIDE = 2;
+uint256 constant EXIT_BOOK_SHIFT = 248;
+
+/// @dev A position's standing exit, 0 = unset. A call: take-profit fills at a bid ≥ `takeProfit`, stop-loss at
+///      `floor ≤ bid ≤ stopLoss`, the trail (the keeper's stop, `trail` below the best bid seen) at a bid ≥ `floor`.
+///      A ride: take-profit at a print past `takeProfit`, stop-loss at a print past `stopLoss` (a stop-market, bounded
+///      by the knock-out), the trail (the keeper's, `trail` bps behind the best print) at a print on the right side of
+///      `floor`. Per share or per unit of size, so a partial exit leaves it right; `epoch` is the owner's when set.
 struct Exit {
-    uint32 takeProfitE6;
-    uint32 stopLossE6;
-    uint32 floorE6;
-    uint32 trailE6;
+    uint64 takeProfit;
+    uint64 stopLoss;
+    uint64 floor;
+    uint64 trail;
     uint32 epoch;
     uint8 firing;
 }
 
-/// @dev Sets (all prices 0: clears) a ticket's exit, signed by the owner or their live session delegate.
+/// @dev Sets (every level 0: clears) a position's exit, signed by the owner or their live session delegate.
 struct ExitOrder {
     address owner;
-    uint256 ticketId;
-    uint32 takeProfitE6;
-    uint32 stopLossE6;
-    uint32 floorE6;
-    uint32 trailE6;
+    uint8 book;
+    uint256 id;
+    uint64 takeProfit;
+    uint64 stopLoss;
+    uint64 floor;
+    uint64 trail;
     uint64 deadline;
     uint256 nonce;
     uint32 epoch;

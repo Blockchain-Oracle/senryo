@@ -14,16 +14,19 @@ import {BandMath} from "./BandMath.sol";
 import {BandPool} from "./BandPool.sol";
 import {IWindows} from "./interfaces/IWindows.sol";
 import {ParlayBook} from "./ParlayBook.sol";
+import {RideBounds} from "./RideBounds.sol";
 import {SessionGrants} from "./SessionGrants.sol";
 import "./MarketTypes.sol";
 
-/// @title BandReserve — live calls on a window's close against a shared pool, fully reserved, paid automatically.
+/// @title BandReserve — live calls on a window's close and rides on the price, against one shared pool, fully
+///        reserved, paid automatically (D-299: rides are composed in, so one session, allowance and solvency check
+///        cover both).
 /// @notice A call is a band around the window's open print K (Up, Down, Range, Moonshot, Crash). It escrows the whole
 ///         payout when it fills — the caller's stake plus the pool's reserve — so the pool can never owe more than it
 ///         holds (D-264). When the window's verdict lands, `settleWindow` decides every band at once and `claimFor`
 ///         pays winners and refunds ties and voids to the owners. Settlement and payouts are permissionless and never
 ///         pause; a late keeper is never a lost window.
-contract BandReserve is ParlayBook {
+contract BandReserve is ParlayBook, RideBounds {
     string public constant NAME = "Senryo Markets";
     string public constant VERSION = "1";
 

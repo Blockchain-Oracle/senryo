@@ -58,6 +58,7 @@ interface IWindows {
     function policyOf(bytes32 seriesId, uint8 index) external view returns (PolicyVersion memory);
     function windowOf(bytes32 windowId) external view returns (Window memory);
     function printOf(address verifier, bytes32 feedId, uint40 t) external view returns (Print memory);
+    function knownVerifier(address verifier) external view returns (bool);
     function primarySourceOf(bytes32 windowId) external view returns (PrintSource memory);
     function openPrintOf(bytes32 windowId) external view returns (Print memory);
 

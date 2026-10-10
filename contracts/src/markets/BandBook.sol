@@ -90,9 +90,10 @@ abstract contract BandBook is SeriesListing, ExitOrders {
         Ticket storage t = _ticket(id);
         if (t.owner != it.owner) revert NotTicketOwner(id, it.owner);
         // The owner's own cash-out replaces a fired exit's pending close (one fired by anyone never blocks it).
-        if (_exits[id].firing != EXIT_NONE) {
+        Exit storage fired = _exits[exitKey(BOOK_CALL, id)];
+        if (fired.firing != EXIT_NONE) {
             t.closing = 0;
-            _exits[id].firing = EXIT_NONE;
+            fired.firing = EXIT_NONE;
         }
         _checkClosable(id, t);
         if (it.amount == 0 || it.amount > t.payout) revert BadShares(it.amount, t.payout);
@@ -123,36 +124,37 @@ abstract contract BandBook is SeriesListing, ExitOrders {
 
     /// @notice Sets, replaces or (every price 0) clears a ticket's exit, from the owner's or their session's signature.
     function setExit(ExitOrder calldata o, bytes calldata sig) external nonReentrant {
-        Ticket storage t = _ticket(o.ticketId);
-        if (t.owner != o.owner) revert NotTicketOwner(o.ticketId, o.owner);
-        if (t.status != TICKET_COMMITTED && t.status != TICKET_OPEN) revert TicketNotOpen(o.ticketId, t.status);
-        if (t.closing != 0) revert ClosePending(o.ticketId);
-        _takeExit(o, sig);
+        if (o.book != BOOK_CALL) revert BadExit();
+        Ticket storage t = _ticket(o.id);
+        if (t.owner != o.owner) revert NotTicketOwner(o.id, o.owner);
+        if (t.status != TICKET_COMMITTED && t.status != TICKET_OPEN) revert TicketNotOpen(o.id, t.status);
+        if (t.closing != 0) revert ClosePending(o.id);
+        _takeExit(o, sig, _validCallExit(o));
     }
 
     /// @notice Sells every remaining share of a ticket with a take-profit or stop-loss at the next print. It fills only
     ///         if that print's bid meets one of them, so anyone may fire it; a miss leaves the exit standing.
     function fireExit(uint256 id) external nonReentrant {
-        Exit storage e = _exits[id];
-        if (e.takeProfitE6 == 0 && e.stopLossE6 == 0) revert NoExit(id);
+        Exit storage e = _exits[exitKey(BOOK_CALL, id)];
+        if (e.takeProfit == 0 && e.stopLoss == 0) revert NoExit(BOOK_CALL, id);
         _fire(id, e, EXIT_PRICE);
     }
 
     /// @notice The trail: the exit keeper's ratcheting stop decides when (restricted); the fill still needs the floor.
     function fireTrail(uint256 id) external restricted nonReentrant {
-        Exit storage e = _exits[id];
-        if (e.trailE6 == 0) revert NoExit(id);
+        Exit storage e = _exits[exitKey(BOOK_CALL, id)];
+        if (e.trail == 0) revert NoExit(BOOK_CALL, id);
         _fire(id, e, EXIT_TRAIL);
     }
 
     function _fire(uint256 id, Exit storage e, uint8 kind) private {
         Ticket storage t = _ticket(id);
-        if (e.epoch != epochOf[t.owner]) revert ExitRevoked(id);
+        if (e.epoch != epochOf[t.owner]) revert ExitRevoked(BOOK_CALL, id);
         _checkClosable(id, t);
         e.firing = kind;
         uint40 target = _pendClose(t, t.payout, 0);
         emit CloseCommitted(id, t.payout, 0, target, false);
-        emit ExitFired(id, kind, target, msg.sender);
+        emit ExitFired(BOOK_CALL, id, kind, target, msg.sender);
     }
 
     /// @dev Open, not settled, before the lockout (D-261: opens and closes stop at expiry − 20 s).
@@ -266,9 +268,10 @@ abstract contract BandBook is SeriesListing, ExitOrders {
         uint256 bidE6 = probE6 - _halfSpreadAt(w.seriesId, probE6);
         uint64 shares = t.closing;
         uint256 proceeds = BandMath.proceedsFor(shares, bidE6);
-        if (_exits[id].firing != EXIT_NONE) {
-            if (!_exitMet(_exits[id], bidE6)) return _refuseClose(id, t, REFUSE_EXIT);
-            _exits[id].firing = EXIT_NONE;
+        Exit storage fired = _exits[exitKey(BOOK_CALL, id)];
+        if (fired.firing != EXIT_NONE) {
+            if (!_exitMet(fired, bidE6)) return _refuseClose(id, t, REFUSE_EXIT);
+            fired.firing = EXIT_NONE;
         } else if (proceeds < t.limit) {
             return _refuseClose(id, t, REFUSE_SLIPPAGE);
         }
@@ -285,7 +288,7 @@ abstract contract BandBook is SeriesListing, ExitOrders {
         t.limit = 0;
         if (t.payout == 0) {
             t.status = TICKET_CLOSED;
-            delete _exits[id];
+            delete _exits[exitKey(BOOK_CALL, id)];
         }
         emit Closed(
             id,
@@ -330,7 +333,7 @@ abstract contract BandBook is SeriesListing, ExitOrders {
     function _refuseClose(uint256 id, Ticket storage t, uint8 reason) internal {
         t.closing = 0;
         t.limit = 0;
-        _exits[id].firing = EXIT_NONE;
+        _exits[exitKey(BOOK_CALL, id)].firing = EXIT_NONE;
         emit CloseRefused(id, reason);
     }
 

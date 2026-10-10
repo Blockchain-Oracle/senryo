@@ -14,11 +14,13 @@ import {IBandReserve} from "./interfaces/IBandReserve.sol";
 import "./MarketTypes.sol";
 
 /// @title BandPool — where every unit of collateral the reserve holds belongs.
-/// @notice `balance ≥ liquid + reserved + escrowedStakes + committedStakes + payableTotal + totalOwed`:
+/// @notice `balance ≥ liquid + reserved + escrowedStakes + margins + committedStakes + payableTotal + totalOwed`:
 ///         - `liquid`: the pool's free capital;
-///         - `reserved`: the pool's part of open tickets' escrow (payout − stake), by expiry too (D-264);
+///         - `reserved`: the pool's part of open tickets' escrow (payout − stake), by expiry too (D-264), and the
+///           most open rides can win (`linearReserved`, D-299);
 ///         - `escrowedStakes`: the callers' part (their remaining basis);
-///         - `committedStakes`: stakes waiting for their fill print;
+///         - `margins`: open rides' margins;
+///         - `committedStakes`: stakes, margins and fees waiting for their fill print;
 ///         - `payableTotal`: winnings and refunds of settled windows not yet paid out;
 ///         - `totalOwed`: payouts a recipient could not receive, claimable with `claimOwed`.
 abstract contract BandPool is AccessManaged, ReentrancyGuardTransient, IBandReserve {
@@ -34,12 +36,17 @@ abstract contract BandPool is AccessManaged, ReentrancyGuardTransient, IBandRese
 
     uint256 public liquid;
     uint256 public reserved;
+    /// @dev The part of `reserved` open rides hold (capped at `rideTerms.maxLinearBps` of the pool).
+    uint256 public linearReserved;
     uint256 public escrowedStakes;
+    uint256 public margins;
     uint256 public committedStakes;
     uint256 public payableTotal;
     uint256 public totalOwed;
     mapping(uint40 expiry => uint256) public reservedByExpiry;
     mapping(address account => uint256) public owedOf;
+    /// @notice Liquidity an Earn withdrawal batch is waiting for (D-307): new calls and rides can't take it.
+    uint256 public withdrawHold;
 
     constructor(IERC20 collateral_, Params memory params_) {
         if (address(collateral_) == address(0)) revert ZeroAddress();
@@ -66,6 +73,12 @@ abstract contract BandPool is AccessManaged, ReentrancyGuardTransient, IBandRese
         collateral.safeTransfer(to, amount);
         emit PoolDefunded(to, amount, liquid);
         _assertSolvent();
+    }
+
+    /// @notice Earn (`PoolShares`, POOL role) holds what a deferred withdrawal batch needs, or releases it (0).
+    function setWithdrawHold(uint256 amount) external restricted {
+        withdrawHold = amount;
+        emit WithdrawHoldSet(amount);
     }
 
     /// @notice Collects everything the caller is owed after a held payout (pays the caller only, CWF AD-5).
@@ -113,13 +126,18 @@ abstract contract BandPool is AccessManaged, ReentrancyGuardTransient, IBandRese
 
     // ------------------------------------------------------------------------------------------------ ledger moves
 
-    /// @dev Liquidity first, then total exposure ≤ `maxExposureBps` of the pool, then the per-expiry cap (every band
-    ///      ending on one print is decided together).
+    /// @dev Liquidity first (less what a waiting withdrawal holds), then total exposure ≤ `maxExposureBps` of the
+    ///      pool, then the per-expiry cap (every band ending on one print is decided together).
     function _hasCapacity(uint256 reserve, uint40 expiry) internal view returns (bool) {
-        if (liquid < reserve) return false;
-        Params storage p = params;
-        if ((reserved + reserve) * BPS > (liquid + reserved) * p.maxExposureBps) return false;
-        return reservedByExpiry[expiry] + reserve <= p.maxExpiryReserved;
+        if (!_poolCanReserve(reserve)) return false;
+        return reservedByExpiry[expiry] + reserve <= params.maxExpiryReserved;
+    }
+
+    /// @dev The pool-wide part of every capacity check, calls and rides alike.
+    function _poolCanReserve(uint256 reserve) internal view returns (bool) {
+        uint256 free = liquid > withdrawHold ? liquid - withdrawHold : 0;
+        if (free < reserve) return false;
+        return (reserved + reserve) * BPS <= (liquid + reserved) * params.maxExposureBps;
     }
 
     /// @dev A fill: the stake moves from committed to escrowed; the pool reserves the rest of the payout.
@@ -151,7 +169,7 @@ abstract contract BandPool is AccessManaged, ReentrancyGuardTransient, IBandRese
 
     /// @notice Everything the reserve must be able to pay or return, against its balance.
     function liabilities() public view returns (uint256) {
-        return liquid + reserved + escrowedStakes + committedStakes + payableTotal + totalOwed;
+        return liquid + reserved + escrowedStakes + margins + committedStakes + payableTotal + totalOwed;
     }
 
     /// @dev D-264: rechecked after every open, close, settle and payout.

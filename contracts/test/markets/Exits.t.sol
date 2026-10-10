@@ -24,11 +24,12 @@ contract ExitsTest is MarketsBase {
     {
         o = ExitOrder({
             owner: owner,
-            ticketId: id,
-            takeProfitE6: tp,
-            stopLossE6: sl,
-            floorE6: floor,
-            trailE6: trail,
+            book: BOOK_CALL,
+            id: id,
+            takeProfit: tp,
+            stopLoss: sl,
+            floor: floor,
+            trail: trail,
             deadline: uint64(vm.getBlockTimestamp() + 60), // via-IR caches block.timestamp across a warp
             nonce: nextNonce++,
             epoch: reserve.epochOf(owner)
@@ -95,8 +96,8 @@ contract ExitsTest is MarketsBase {
         assertLt(bidAt(K + 30e8, target), TAKE_PROFIT, "not there yet");
         miss(id, K + 30e8);
         assertEq(reserve.ticketOf(id).payout, shares, "nothing sold");
-        assertEq(reserve.exitOf(id).takeProfitE6, TAKE_PROFIT, "the exit stands");
-        assertEq(reserve.exitOf(id).firing, EXIT_NONE);
+        assertEq(reserve.exitOf(BOOK_CALL, id).takeProfit, TAKE_PROFIT, "the exit stands");
+        assertEq(reserve.exitOf(BOOK_CALL, id).firing, EXIT_NONE);
 
         target = fireAsStranger(id);
         uint256 bid = bidAt(K + 90e8, target);
@@ -105,7 +106,7 @@ contract ExitsTest is MarketsBase {
         fill(id, K + 90e8);
         assertEq(reserve.ticketOf(id).status, TICKET_CLOSED);
         assertEq(usd.balanceOf(owner) - before, uint256(shares) * bid / P_ONE, "every share at the print's bid");
-        assertEq(reserve.exitOf(id).takeProfitE6, 0, "cleared once closed");
+        assertEq(reserve.exitOf(BOOK_CALL, id).takeProfit, 0, "cleared once closed");
         assertSolvent();
     }
 
@@ -140,7 +141,7 @@ contract ExitsTest is MarketsBase {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, STRANGER));
         reserve.fireTrail(id);
         vm.prank(STRANGER);
-        vm.expectRevert(abi.encodeWithSelector(ExitOrders.NoExit.selector, id));
+        vm.expectRevert(abi.encodeWithSelector(ExitOrders.NoExit.selector, BOOK_CALL, id));
         reserve.fireExit(id);
 
         reserve.fireTrail(id); // this test holds the admin role, as the keeper holds the exit role
@@ -178,7 +179,7 @@ contract ExitsTest is MarketsBase {
         setExit(id, TAKE_PROFIT, STOP, 0, 0);
         vm.prank(owner);
         reserve.bumpEpoch();
-        vm.expectRevert(abi.encodeWithSelector(ExitOrders.ExitRevoked.selector, id));
+        vm.expectRevert(abi.encodeWithSelector(ExitOrders.ExitRevoked.selector, BOOK_CALL, id));
         reserve.fireExit(id);
     }
 
@@ -192,7 +193,7 @@ contract ExitsTest is MarketsBase {
         fill(id, K);
         uint64 rest = reserve.ticketOf(id).payout;
         assertEq(rest, shares - shares / 2, "the owner's half sold");
-        assertEq(reserve.exitOf(id).stopLossE6, STOP, "the exit stands for the rest");
+        assertEq(reserve.exitOf(BOOK_CALL, id).stopLoss, STOP, "the exit stands for the rest");
 
         fireAsStranger(id);
         assertEq(reserve.ticketOf(id).closing, rest, "the exit sells what remains");

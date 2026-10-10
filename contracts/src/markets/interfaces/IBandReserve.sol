@@ -40,6 +40,7 @@ interface IBandReserve {
     event BandAdded(bytes32 indexed seriesId, uint8 index, uint8 kind, uint16 lowBps, uint16 highBps);
     event SeriesListed(bytes32 indexed seriesId, uint64 sigmaFloorE8, uint64 sigmaCapE8, uint32 h50E6, uint8 bands);
     event PausedSet(bool paused);
+    event WithdrawHoldSet(uint256 amount);
 
     error IsPaused();
     error BadAction(uint8 action);

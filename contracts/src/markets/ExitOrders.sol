@@ -3,39 +3,44 @@ pragma solidity 0.8.31;
 
 // New for Senryo (D-292). Mitoshi's exits (CWF D-193/D-209, contracts/src/products/vault/VaultExits.sol) let a keeper
 // pick the moment and the price above a fair-value floor; here every fill is already at a unique print nobody picks, so
-// the exit's own prices are checked at that print and only the trail's timing is the keeper's.
+// the exit's own levels are checked at that print and only the trail's timing is the keeper's. Made generic for rides
+// (R3.12): one book of exits keyed by (book, id), levels wide enough for a price.
 
 import {SessionGrants} from "./SessionGrants.sol";
 import "./MarketTypes.sol";
 
-/// @title ExitOrders — a ticket's standing take-profit, stop-loss and trail.
+/// @title ExitOrders — a call's or a ride's standing take-profit, stop-loss and trail.
 /// @notice Set by the owner's signature or, in one tap, their live session delegate's; it stays after the session ends
-///         and a revoke (the owner's epoch moving on) cancels it. Prices are a share's bid, so a partial cash-out
-///         leaves the exit right for the shares that remain.
+///         and a revoke (the owner's epoch moving on) cancels it.
 abstract contract ExitOrders is SessionGrants {
     bytes32 public constant EXIT_TYPEHASH = keccak256(
-        "ExitOrder(address owner,uint256 ticketId,uint32 takeProfitE6,uint32 stopLossE6,uint32 floorE6,uint32 trailE6,"
+        "ExitOrder(address owner,uint8 book,uint256 id,uint64 takeProfit,uint64 stopLoss,uint64 floor,uint64 trail,"
         "uint64 deadline,uint256 nonce,uint32 epoch)"
     );
 
-    mapping(uint256 ticketId => Exit) internal _exits;
+    mapping(uint256 key => Exit) internal _exits;
 
     event ExitSet(
-        uint256 indexed ticketId,
-        uint32 takeProfitE6,
-        uint32 stopLossE6,
-        uint32 floorE6,
-        uint32 trailE6,
+        uint8 indexed book,
+        uint256 indexed id,
+        uint64 takeProfit,
+        uint64 stopLoss,
+        uint64 floor,
+        uint64 trail,
         bool viaSession
     );
-    event ExitFired(uint256 indexed ticketId, uint8 kind, uint40 target, address by);
+    event ExitFired(uint8 indexed book, uint256 indexed id, uint8 kind, uint40 target, address by);
 
     error BadExit();
-    error NoExit(uint256 ticketId);
-    error ExitRevoked(uint256 ticketId);
+    error NoExit(uint8 book, uint256 id);
+    error ExitRevoked(uint8 book, uint256 id);
 
-    function exitOf(uint256 ticketId) external view returns (Exit memory) {
-        return _exits[ticketId];
+    function exitOf(uint8 book, uint256 id) external view returns (Exit memory) {
+        return _exits[exitKey(book, id)];
+    }
+
+    function exitKey(uint8 book, uint256 id) public pure returns (uint256) {
+        return (uint256(book) << EXIT_BOOK_SHIFT) | id;
     }
 
     function hashExit(ExitOrder calldata o) public view returns (bytes32) {
@@ -44,11 +49,12 @@ abstract contract ExitOrders is SessionGrants {
                 abi.encode(
                     EXIT_TYPEHASH,
                     o.owner,
-                    o.ticketId,
-                    o.takeProfitE6,
-                    o.stopLossE6,
-                    o.floorE6,
-                    o.trailE6,
+                    o.book,
+                    o.id,
+                    o.takeProfit,
+                    o.stopLoss,
+                    o.floor,
+                    o.trail,
                     o.deadline,
                     o.nonce,
                     o.epoch
@@ -57,25 +63,25 @@ abstract contract ExitOrders is SessionGrants {
         );
     }
 
-    /// @dev Checks the order's signature and prices and stores it under the owner's current epoch.
-    function _takeExit(ExitOrder calldata o, bytes calldata sig) internal {
+    /// @dev Checks the order's signature and stores it under the owner's current epoch; the book checks its levels.
+    function _takeExit(ExitOrder calldata o, bytes calldata sig, bool levelsOk) internal {
         bool viaSession = _authorizeSigned(Signed(o.owner, o.deadline, o.nonce, o.epoch, o.owner), hashExit(o), sig, 0);
-        if (!_validExit(o)) revert BadExit();
-        _exits[o.ticketId] = Exit(o.takeProfitE6, o.stopLossE6, o.floorE6, o.trailE6, o.epoch, EXIT_NONE);
-        emit ExitSet(o.ticketId, o.takeProfitE6, o.stopLossE6, o.floorE6, o.trailE6, viaSession);
+        if (!levelsOk) revert BadExit();
+        _exits[exitKey(o.book, o.id)] = Exit(o.takeProfit, o.stopLoss, o.floor, o.trail, o.epoch, EXIT_NONE);
+        emit ExitSet(o.book, o.id, o.takeProfit, o.stopLoss, o.floor, o.trail, viaSession);
     }
 
-    /// @dev Prices below $1 a share; the floor at or under the stop; take-profit above the stop.
-    function _validExit(ExitOrder calldata o) private pure returns (bool) {
-        if (o.takeProfitE6 >= P_ONE || o.stopLossE6 >= P_ONE || o.floorE6 >= P_ONE || o.trailE6 >= P_ONE) return false;
-        if (o.stopLossE6 != 0 && o.floorE6 > o.stopLossE6) return false;
-        return o.takeProfitE6 == 0 || o.takeProfitE6 > o.stopLossE6;
+    /// @dev A call's levels: bids below $1; the floor at or under the stop; take-profit above the stop.
+    function _validCallExit(ExitOrder calldata o) internal pure returns (bool) {
+        if (o.takeProfit >= P_ONE || o.stopLoss >= P_ONE || o.floor >= P_ONE || o.trail >= P_ONE) return false;
+        if (o.stopLoss != 0 && o.floor > o.stopLoss) return false;
+        return o.takeProfit == 0 || o.takeProfit > o.stopLoss;
     }
 
-    /// @dev Whether a fill at `bidE6` meets the exit it was fired for.
+    /// @dev Whether a call's fill at `bidE6` meets the exit it was fired for.
     function _exitMet(Exit storage e, uint256 bidE6) internal view returns (bool) {
-        if (e.takeProfitE6 != 0 && bidE6 >= e.takeProfitE6) return true;
-        if (e.stopLossE6 != 0 && bidE6 >= e.floorE6 && bidE6 <= e.stopLossE6) return true;
-        return e.firing == EXIT_TRAIL && bidE6 >= e.floorE6;
+        if (e.takeProfit != 0 && bidE6 >= e.takeProfit) return true;
+        if (e.stopLoss != 0 && bidE6 >= e.floor && bidE6 <= e.stopLoss) return true;
+        return e.firing == EXIT_TRAIL && bidE6 >= e.floor;
     }
 }

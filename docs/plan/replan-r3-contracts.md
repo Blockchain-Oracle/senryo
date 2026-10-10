@@ -89,14 +89,14 @@ Tested to the money invariants. Not deployed until R4.
   `DeployMarkets`/`MarketsBase.s.sol` list through it.)
 
 ### Rides
-- [ ] R3.8 `RideTypes.sol`, `LinearMath.sol` (pure: entry, size, pnl, equity clamp, KO, cap, fees, side PnL; rounding
+- [x] R3.8 `RideTypes.sol`, `LinearMath.sol` (pure: entry, size, pnl, equity clamp, KO, cap, fees, side PnL; rounding
   against the account as in `PerpMath`) and `IRideBook.sol`.
-- [ ] R3.9 `RideLedger.sol`:
+- [x] R3.9 `RideLedger.sol`:
   - side aggregates updated only with stored values (the D-182 rule);
   - the bound frontier (`koEdge`, `capEdge`);
   - the capacity checks (07 §2.8: liquid, the 60 % exposure cap, the 30 % linear share, a per-market reserve, skew with
     the reducing side allowed, `MAX_OPEN_PER_SIDE`, the hourly loss brake).
-- [ ] R3.10 `LinearBook.sol`:
+- [x] R3.10 `LinearBook.sol`:
   - `commitRide` (owner or session; margin + fee within the session caps);
   - `finalizeRides` and `expireRides`;
   - close/reduce at the next print;
@@ -105,19 +105,26 @@ Tested to the money invariants. Not deployed until R4.
   - `refreshFrontier`;
   - `markAt`;
   - views.
-- [ ] R3.11 Ride fees (D-301):
+  - Built as `LinearBook` (commit, fill, close/reduce, expire, the exit maths) and `RideBounds` (`settleBounds`,
+    `settleEnds`, `refreshFrontier`, `markRides`, rides' exits). D-301 over 07: no spread (the entry is the print), no
+    hold fee. A close whose own print is past the knock-out or cap settles as that. `markRides(t)` is Earn's mark: the
+    side sums at the recorded prints of t, reverting if a frontier edge reaches a bound.
+- [x] R3.11 Ride fees (D-301):
   - by class, with the maker rate when skew falls;
   - the early-close fee (profits only, capped at the profit);
   - the keeper fee on a knock-out.
-- [ ] R3.12 `ExitOrders` becomes generic: a key per (book, id) and `uint64` levels. Ride TP and SL can be fired by
+  - The maker rate applies to a close too (closing the heavy side reduces skew); the taker fee is escrowed at commit
+    and the difference refunded when the fill earns the maker rate.
+- [x] R3.12 `ExitOrders` becomes generic: a key per (book, id) and `uint64` levels. Ride TP and SL can be fired by
   anyone, the trail by the `EXIT` role; each is re-checked at the fill print.
 
 ### Pool and Earn
-- [ ] R3.13 `BandPool`:
+- [x] R3.13 `BandPool`:
   - a `margins` bucket, `linearReserved` and `withdrawHold`;
   - the liabilities sum gains margins;
   - `_hasCapacity` counts `liquid − withdrawHold`.
-- [ ] R3.14 `BandReserve` composes `LinearBook`; size checked against the limit.
+- [x] R3.14 `BandReserve` composes `LinearBook`; size checked against the limit. (75,166 B runtime against Monad's
+  131,072; the arena and events are unchanged.)
 - [ ] R3.15 `PoolShares` (D-307):
   - hour-keyed request batches (a request after H joins H + 1h);
   - the roll marks open rides at a print ≤ 5 s old with H ≤ m ≤ now, after the frontier checks;
@@ -125,6 +132,11 @@ Tested to the money invariants. Not deployed until R4.
 
 ### Tests (money only)
 - [ ] R3.16 07 §4 handler-based invariants:
+  - **Rides done** (`RidesInvariant.t.sol`, 256 runs × 128 calls): opens filled like the relay, full and partial
+    closes, lapses and expiry, knock-outs and cap-outs (a ±26 % shock action), ends, frontier refreshes, over a random
+    walk with gaps — solvency to the unit with side sums == Σ rides, a conservative frontier, no rider paid past margin
+    + reserve, **zero panics recorded**. The run's end states are logged so a green run can't be an idle one. Still to
+    interleave: calls, parlays, exits and Earn (after R3.15).
   - solvency, and every unit has a home;
   - per-ride conservation;
   - bounds; caps at every fill;
