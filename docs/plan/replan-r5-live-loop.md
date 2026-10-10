@@ -99,6 +99,14 @@
   - a DOM odometer for every changing web number (cash-out, balance, odds, equity);
   - the rolling price in the asset chip;
   - pill digits at 15 px; canvas text in the display face.
+- [ ] R5.24 Tab switches answer at once on the phone (found in R2's simulator pass, 10 Oct, Release build): the first
+  visit to a dock tab showed the old screen for ~0.5–2.5 s after the tap, highlight included (the JS thread is busy:
+  the tab mounts lazily — `expo-router/ui` screens default to `lazy` — and Markets re-renders 34 live rows).
+  - Measure first with a Hermes profile (screenshots can't time it; a screen recording shows the switch lands as one
+    frame but not when the touch did).
+  - Then: mount the other tabs in idle time after launch (`TabSlot`'s `renderFn` can render a not-yet-visited tab),
+    let the dock highlight paint before the new tab mounts, and keep the hidden tabs' live rows and chart from
+    rendering while blurred.
 
 ### After the trade
 - [ ] R5.19 Replay of a settled position (≤ 12 s) from its receipt.
