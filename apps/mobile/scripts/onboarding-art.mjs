@@ -30,8 +30,11 @@ const HEIGHT = 1410;
 const QUALITY = 88;
 const ALPHA_QUALITY = 90;
 const LAYER = /^scene-[a-z]+-(field|shadow|back|main|fore)\.svg$/;
-/** The masters' label inks are the light theme's text colours (the plates are light in both themes). */
-const INK_ROLE = { "#17151F": "paperInk", "#7049C8": "paperPractice", "#3643D8": "paperMainnet" };
+/**
+ * The masters' label inks are the light theme's text colours (the plates are light in both themes): kit.py's PRACTICE
+ * and MAINNET deep are LIGHT.practice and LIGHT.mainnet.
+ */
+const INK_ROLE = { "#666666": "paperPractice", "#000000": "paperMainnet" };
 /** Per scene, the master layer each band starts at (layers.json ids without the scene prefix). */
 // Only the scenes the story shows (scenes.ts); the retired masters (balance, markets, kinpaku) stay in brand/art.
 const BANDS = {
@@ -75,7 +78,7 @@ function writeBands(split, out) {
 const work = mkdtempSync(join(tmpdir(), "senryo-onboarding-"));
 try {
   const split = join(work, "layers");
-  execFileSync("uv", ["run", "-q", "--with", "fonttools", "python", "onboarding.py", "--layers", split], {
+  execFileSync("uv", ["run", "-q", "--no-project", "--python", "3.12", "--with", "fonttools", "python", "onboarding.py", "--layers", split], {
     cwd: join(ROOT, "brand/scripts"),
     stdio: ["ignore", "ignore", "inherit"],
   });
