@@ -15,7 +15,7 @@ live PnL at about 8 Hz. No contract change.
 - `pnpm gate` 0;
 - G3 chaos (a)–(d) passes;
 - G6 abuse passes;
-- the display line measured at ≥ 6 Hz for BTC in a browser;
+- ~~the display line measured at ≥ 6 Hz for BTC in a browser~~ (dropped by D-311: the line stays on Pyth);
 - δ and autocorrelation numbers in `acceptance.md`;
 - api and keeper deployed;
 - web deployed; phone OTA after a simulator pass.
@@ -234,8 +234,9 @@ live PnL at about 8 Hz. No contract change.
     gateway: the line sat within 0.1 bps of Pyth; a legacy app got no `dp`; with no socket the median carried
     BTC/ETH/SOL. **Coinbase trades gave BTC only 0.1–1.1 Hz on a Saturday**, so the R1 gate "≥ 6 Hz" can't come from
     trades. Owner choice pending: keep the line on Pyth / Pyth Pro for crypto / license exchange data.
-- [ ] R1.17 Clients: `@senryo/live` merges display ticks into the line and pill. Quotes and limits read only settlement
+- [—] R1.17 Clients: `@senryo/live` merges display ticks into the line and pill. Quotes and limits read only settlement
   prices. Both charts draw a "Signed" marker at each Pyth print, and the chip says when the line is display.
+  - *Dropped by D-311 (10 Oct):* the line stays on Pyth, so there are no display ticks to merge.
 - [ ] R1.18 Measure δ (Pyth lag behind Coinbase) and Pyth's 1–3 s autocorrelation from the recorded tape beside
   `pyth_prints` (`scripts/drive/price-lead-check.ts`). The result feeds `FILL_DELAY_SEC` in R3.
 - [x] R1.19 `/v1/prices/day` (24 h change, ported from `day-stats.ts`), with its api-client route and query hook.
