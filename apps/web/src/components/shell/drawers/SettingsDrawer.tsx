@@ -18,6 +18,7 @@ import { fire, setFeedback, useFeedback } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 import { setPrivacy, usePrivacy } from "@/lib/shell/privacy";
 import { cn } from "@/lib/utils";
+import { RecoveryGroup } from "./RecoveryGroup";
 import type { DrawerProps } from "./types";
 
 function Toggle({
@@ -139,6 +140,11 @@ export function SettingsDrawer({ open, onOpenChange }: DrawerProps) {
                 </Button>
               </div>
             </div>
+          </Group>
+        ) : null}
+        {address ? (
+          <Group title="Recovery">
+            <RecoveryGroup />
           </Group>
         ) : null}
       </div>

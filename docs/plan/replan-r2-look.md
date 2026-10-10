@@ -109,9 +109,19 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     calls (the other 31), what isn't open (Earn, duels, events, parlays), RedStone's keyless window, and Real. The
     walkthrough names Range, Moonshot and Crash. The landing's "Real starts when you switch" reads "Real opens with
     mainnet". The Calls copy already matched ("Call the next move on BTC, ETH or SOL").
-- [ ] R2.13 Links:
+- [x] R2.13 Links:
   - AASA and asset links name the current routes (`/app/*`, `/call`, `/proof`, `/u`);
   - the phone's `share-link.ts`, recovery link and `/trade` deep link are fixed.
+  - *As built (10 Oct):* the iOS link file names `/app`, `/app/*` and `/call` (it named the trading app's
+    `/portfolio`, `/positions`, `/card`…), with the web's Settings carved out; Android's already hands over every
+    `senryo.xyz` link. `/proof` stays on the web (the phone shows the proof inside each receipt) and `/u` waits for
+    people (R8). The phone maps every web route onto its own: `/app/trade/eth/` → the terminal on ETH (the trade tab
+    takes `?symbol=`), `/app/event?id=` → the event, web-only games → the hub, `/call?id=` → the receipt, the old
+    `/trade/BTC` → BTC (checked: 12 URLs). The share button sends the address (the `/watch` page is gone;
+    `share-link.ts` deleted). The recovery row pointed at the deleted `/account` page — and nothing on the web could
+    add a backup passkey since the 8 Oct cleanup: Settings → Recovery is back on the web (backup passkey with the
+    encrypted copy and the recovery file, the phrase export behind a step-up; the 21st encrypted-text reveal restored),
+    and the phone opens it in an in-app browser (a link to its own domain would come straight back to the app).
 - [ ] R2.14 Navigation:
   - Back on every sub-page (web `nav.ts` resolves every route's parent);
   - the rail reads Trade · Markets · Calls · Games · Earn · Leaderboard (Leaderboard appears in R8);

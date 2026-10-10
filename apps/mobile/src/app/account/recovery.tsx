@@ -2,8 +2,9 @@ import { vaultListRoute } from "@senryo/api-client";
 import { WEB_ORIGIN } from "@senryo/config";
 import { useQuery } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
-import { Linking, Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { Screen } from "~/components/kit/Screen";
 import { Panel } from "~/components/kit/Surface";
 import { KeyRound, Lock, ShieldCheck } from "~/components/kit/symbols";
@@ -108,7 +109,9 @@ export default function RecoveryScreen() {
           control={<InfoTip title="Backup passkey" body={INFO.backup} />}
           onPress={() => {
             if (gate.status === "locked") gate.open();
-            else void Linking.openURL(`${WEB_ORIGIN}/account/`);
+            // The web's Settings → Recovery adds it (R2.13), in an in-app browser: the app claims senryo.xyz links, so
+            // opening the URL itself would come straight back here.
+            else void WebBrowser.openBrowserAsync(`${WEB_ORIGIN}/app/?d=settings`);
           }}
         />
       </Panel>

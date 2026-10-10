@@ -32,24 +32,17 @@ const TEAM_ID = /^[A-Z0-9]{10}$/;
 const JSON_INDENT = 2;
 
 /**
- * Paths that open the app when tapped as a universal/app link (the same paths as the web, plan §2.4). The landing
- * page, judge guide and `.well-known` stay on the web. S12 adds the in-app allowlist (`isAppPath`) for push links.
+ * What opens the app when tapped as a universal link (R2.13: the web's current routes, which the phone maps onto its
+ * own in `lib/deep-link.ts`): the web app under `/app` and a shared call (`/call?id=…`). Settings stays on the web — it
+ * is where the phone sends you to add a backup passkey. The landing, the judge guide, proofs, terms and `.well-known`
+ * stay on the web. Components are read in order; an `exclude` must come before what it carves out.
  */
-const APP_LINK_PATHS = [
-  "/portfolio/*",
-  "/markets/*",
-  "/trade/*",
-  "/positions/*",
-  "/orders/*",
-  "/activity/*",
-  "/alerts/*",
-  "/card/*",
-  "/fund/*",
-  "/withdraw/*",
-  "/lp/*",
-  "/account/*",
-  "/status/*",
-  "/watch/*",
+const APP_LINK_COMPONENTS = [
+  { "/": "/app/*", "?": { d: "settings" }, exclude: true, comment: "Settings (backup passkey) opens on the web" },
+  { "/": "/app" },
+  { "/": "/app/*" },
+  { "/": "/call" },
+  { "/": "/call/*" },
 ];
 
 function readEnvFile(file, name) {
@@ -84,7 +77,7 @@ function appleAppSiteAssociation() {
   if (!TEAM_ID.test(APPLE_TEAM_ID)) throw new Error("APPLE_TEAM_ID in @senryo/config is not a 10-character Team ID");
   const appId = `${APPLE_TEAM_ID}.${IOS_BUNDLE_ID}`;
   return {
-    applinks: { details: [{ appIDs: [appId], components: APP_LINK_PATHS.map((path) => ({ "/": path })) }] },
+    applinks: { details: [{ appIDs: [appId], components: APP_LINK_COMPONENTS }] },
     webcredentials: { apps: [appId] },
   };
 }

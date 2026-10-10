@@ -1,7 +1,7 @@
 /**
  * Wallet & address (A10, B13; Receive grammar from Solflare S21 / Phantom): the account's avatar and @handle, the QR
  * of its address with Monad's mark in the middle, the address grouped in fours (tap for the short form), and Copy ·
- * Share circles — Share sends the canonical watch link with this network's chainId (F-D6). Under it the two networks
+ * Share circles — Share sends the address itself (a profile link comes with people, R8). Under it the two networks
  * the same address lives on — Monad's mark, mode, chain id — each opening the explorer, and the passkey behind the
  * account. No account → the way in, never a blank.
  */
@@ -28,7 +28,6 @@ import { COPIED_MS } from "~/lib/constants/auth";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { shortAddress } from "~/lib/format";
 import { useNetwork } from "~/lib/network";
-import { watchLink } from "~/lib/share-link";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { accountName, useAccountIdentity } from "./SignInOutcome";
 
@@ -118,7 +117,8 @@ export function IdentityPanel() {
           <ActionCircle
             label="Share"
             icon={Share2}
-            onPress={() => void Share.share({ message: watchLink(hint.address, network.chainId) })}
+            // The address itself (to receive dollars); a profile link comes with people (R8).
+            onPress={() => void Share.share({ message: hint.address })}
           />
         </View>
       </View>

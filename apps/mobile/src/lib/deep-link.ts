@@ -1,4 +1,4 @@
-import { isChainId, networkOf } from "@senryo/config";
+import { isChainId, MARKETS, networkOf } from "@senryo/config";
 import { ROUTES } from "~/lib/constants/routes";
 
 const SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
@@ -16,8 +16,28 @@ export function inAppPath(base: string): string {
  * Retired paths (D-256 pivot): the trading app's portfolio, trade, card and fund links land on Home or Markets; S5
  * maps `/m/<SYMBOL>-<cadence>` share links onto the terminal. A link written for the old app never dead-ends.
  */
+/** The terminal on a market the catalogue lists (any case), else the terminal as it was. */
+function tradeOn(symbol: string | undefined): string {
+  const known = MARKETS.find((m) => m.symbol === symbol?.toUpperCase());
+  return known ? `/trade?symbol=${known.symbol}` : "/trade";
+}
+
+/**
+ * The web app's routes (R2.13: the link files name `/app/*` and `/call`): the same places on the phone. A game only
+ * the web has opens the Games hub; anything else under `/app/` is the phone's path without the prefix.
+ */
+const WEB_APP_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) => string]> = [
+  [/^\/app\/?$/, () => ROUTES.home],
+  [/^\/app\/trade\/([^/]+)\/?$/, (m) => tradeOn(m[1])],
+  [/^\/app\/setup(\/.*)?$/, () => ROUTES.home],
+  [/^\/app\/games\/(warm-up|candle-hop|line-rider)\/?$/, () => "/games"],
+  [/^\/app\/(.+?)\/?$/, (m) => `/${m[1]}`],
+];
+
 const LEGACY_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) => string]> = [
+  ...WEB_APP_PATHS,
   [/^\/(portfolio|fund|card|lp|orders|positions|withdraw|activity)(\/.*)?$/, () => ROUTES.home],
+  [/^\/trade\/([^/]+)\/?$/, (m) => tradeOn(m[1])],
   [/^\/(trade|social|watch)(\/.*)?$/, () => ROUTES.markets],
   [/^\/account\/?$/, () => ROUTES.more],
 ];
@@ -31,8 +51,11 @@ export function currentPath(path: string): string {
   const local = inAppPath(base);
   const suffix = query ? `?${query}` : "";
   // The web's static export shares a call as `/call?id=<ticketId>` (`@senryo/calls` `callLink`); in the app it is its receipt.
-  const call = local === "/call" ? new URLSearchParams(query ?? "").get("id") : null;
+  const call = local === "/call" || local === "/call/" ? new URLSearchParams(query ?? "").get("id") : null;
   if (call && TICKET_ID.test(call)) return `/calls/${call}`;
+  // An event: the web's `/app/event?id=<id>` is the phone's `/events/<id>`.
+  const event = /^\/app\/event\/?$/.test(local) ? new URLSearchParams(query ?? "").get("id") : null;
+  if (event) return `/events/${encodeURIComponent(event)}`;
   for (const [pattern, to] of LEGACY_PATHS) {
     const match = local.match(pattern);
     if (match) {

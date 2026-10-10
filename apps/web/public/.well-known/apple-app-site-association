@@ -7,46 +7,24 @@
         ],
         "components": [
           {
-            "/": "/portfolio/*"
+            "/": "/app/*",
+            "?": {
+              "d": "settings"
+            },
+            "exclude": true,
+            "comment": "Settings (backup passkey) opens on the web"
           },
           {
-            "/": "/markets/*"
+            "/": "/app"
           },
           {
-            "/": "/trade/*"
+            "/": "/app/*"
           },
           {
-            "/": "/positions/*"
+            "/": "/call"
           },
           {
-            "/": "/orders/*"
-          },
-          {
-            "/": "/activity/*"
-          },
-          {
-            "/": "/alerts/*"
-          },
-          {
-            "/": "/card/*"
-          },
-          {
-            "/": "/fund/*"
-          },
-          {
-            "/": "/withdraw/*"
-          },
-          {
-            "/": "/lp/*"
-          },
-          {
-            "/": "/account/*"
-          },
-          {
-            "/": "/status/*"
-          },
-          {
-            "/": "/watch/*"
+            "/": "/call/*"
           }
         ]
       }
