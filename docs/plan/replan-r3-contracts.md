@@ -125,10 +125,15 @@ Tested to the money invariants. Not deployed until R4.
   - `_hasCapacity` counts `liquid − withdrawHold`.
 - [x] R3.14 `BandReserve` composes `LinearBook`; size checked against the limit. (75,166 B runtime against Monad's
   131,072; the arena and events are unchanged.)
-- [ ] R3.15 `PoolShares` (D-307):
+- [x] R3.15 `PoolShares` (D-307):
   - hour-keyed request batches (a request after H joins H + 1h);
   - the roll marks open rides at a print ≤ 5 s old with H ≤ m ≤ now, after the frontier checks;
   - `withdrawHold` set while a batch waits.
+  - Built: requests keyed by the hour they settle at (`nextHour()`; an earlier unsettled request moves with a new
+    one), rolls in order (`roll(H, markAt)`: a missed hour is rolled next, never stranded), `markRides(markAt)` off
+    the value with `StaleMark` for a mark before H or older than 5 s, a deferred withdrawal batch `movedTo` the next
+    hour whole with `setWithdrawHold`. Tests: `Earn.t.sol` (13, including the cutoff, the order, the mark and the
+    hold refusing a new call).
 
 ### Tests (money only)
 - [ ] R3.16 07 §4 handler-based invariants:
