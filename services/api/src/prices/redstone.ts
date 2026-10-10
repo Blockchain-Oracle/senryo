@@ -19,6 +19,9 @@ import type { PriceUpdate } from "./ring.ts";
  * and baskets work as for Pyth. Values are read from the response's exact decimal text (a float would change the
  * signed bytes). Keys (`REDSTONE_GATEWAYS`) travel only in `x-api-key`, never in a log; without one the public pair
  * answers outside RedStone's refusal windows (until 29 Oct 2026), and a refusal rests the reader, doubling to 10 min.
+ * A 2xx is trusted only when it is the gateway's JSON and decodes (04-pricing F1): gateway-1 answers unknown and
+ * `historical` paths with a 200 `text/html` "Hello! I am working correctly", which once threw out of the poll and
+ * would have exited the api.
  */
 export interface RedStoneGateway {
   url: string;
@@ -48,8 +51,16 @@ const MARKER = "000002ed57011e0000";
 const HEX = 16;
 const MS = 1000;
 const HALF = 2n;
+const JSON_CONTENT_TYPE = "application/json";
+/** Every RedStone route answers one JSON object keyed by feed. */
+const JSON_OBJECT_START = /^\s*\{/;
 
 const hexOf = (n: bigint, bytes: number) => n.toString(HEX).padStart(bytes * 2, "0");
+
+/** The gateway's JSON, not a placeholder page, a CDN interstitial or a refusal served as 200. */
+function isJsonObject(contentType: string | null, text: string): boolean {
+  return (contentType ?? "").toLowerCase().includes(JSON_CONTENT_TYPE) && JSON_OBJECT_START.test(text);
+}
 
 /** "229.57362253" → 22957362253 (× 1e8, exact); null for more than 8 decimals or a non-plain number. */
 export function decimalToE8(text: string): bigint | null {
@@ -133,23 +144,22 @@ export class RedStoneReader {
 
   /** Each feed's update at the grid point `ms` from the gateway's history (the print a fill or boundary missed). */
   async historical(ms: number): Promise<PriceUpdate[]> {
-    const text = await this.fetch(`data-packages/historical/${REDSTONE_SERVICE}/${ms}`);
-    return text ? this.updates(text) : [];
+    return (await this.read(`data-packages/historical/${REDSTONE_SERVICE}/${ms}`, (text) => this.updates(text))) ?? [];
   }
 
   private schedule(): void {
     const now = Date.now();
     const next = now - (now % REDSTONE_GRID_MS) + REDSTONE_GRID_MS + REDSTONE_POLL_OFFSET_MS;
-    this.timer = setTimeout(
-      () => void this.poll().finally(() => this.schedule()),
-      Math.max(next, this.restUntil) - now,
-    );
+    this.timer = setTimeout(() => {
+      void this.poll()
+        .catch((error) => this.log.warn({ err: (error as Error).message }, "redstone poll failed"))
+        .finally(() => this.schedule());
+    }, Math.max(next, this.restUntil) - now);
   }
 
   private async poll(): Promise<void> {
-    const text = await this.fetch(`data-packages/latest/${REDSTONE_SERVICE}`);
-    if (!text) return;
-    for (const u of this.updates(text)) this.onUpdate(u);
+    const updates = await this.read(`data-packages/latest/${REDSTONE_SERVICE}`, (text) => this.updates(text));
+    for (const u of updates ?? []) this.onUpdate(u);
   }
 
   private updates(text: string): PriceUpdate[] {
@@ -175,23 +185,35 @@ export class RedStoneReader {
     });
   }
 
-  /** One read across the gateways in order; a refusal (403/429/5xx) rests the reader with a doubling backoff. */
-  private async fetch(path: string): Promise<string | undefined> {
+  /**
+   * One read across the gateways in order. A gateway fails on a refusal (403/429/5xx), a timeout, a 2xx that isn't its
+   * JSON, or a body that doesn't decode; the next one is tried. When every gateway fails, the reader rests with a
+   * doubling backoff.
+   */
+  private async read<T>(path: string, decode: (text: string) => T | Promise<T>): Promise<T | undefined> {
     for (const g of this.gateways) {
+      const host = new URL(g.url).host;
       try {
         const res = await fetch(`${g.url.replace(/\/+$/, "")}/${path}`, {
           headers: g.apiKey ? { "x-api-key": g.apiKey } : {},
           signal: AbortSignal.timeout(REDSTONE_FETCH_TIMEOUT_MS),
         });
-        if (res.ok) {
-          this.lastOkAt = Date.now();
-          this.lastError = null;
-          this.backoffMs = REDSTONE_BACKOFF_MIN_MS;
-          return await res.text();
+        if (!res.ok) {
+          this.lastError = `HTTP ${res.status} from ${host}`;
+          continue;
         }
-        this.lastError = `HTTP ${res.status} from ${new URL(g.url).host}`;
+        const text = await res.text();
+        if (!isJsonObject(res.headers.get("content-type"), text)) {
+          this.lastError = `non-JSON ${res.status} from ${host}`;
+          continue;
+        }
+        const value = await decode(text);
+        this.lastOkAt = Date.now();
+        this.lastError = null;
+        this.backoffMs = REDSTONE_BACKOFF_MIN_MS;
+        return value;
       } catch (error) {
-        this.lastError = `${(error as Error).name} from ${new URL(g.url).host}`;
+        this.lastError = `${(error as Error).name} from ${host}`;
       }
     }
     this.restUntil = Date.now() + this.backoffMs;

@@ -13,6 +13,7 @@ export * from "./logger.ts";
 export * from "./notifications.ts";
 export * from "./parlays.ts";
 export * from "./prints.ts";
+export * from "./process-guards.ts";
 export * from "./push-delivery.ts";
 export * from "./session.ts";
 export * from "./social-visibility.ts";

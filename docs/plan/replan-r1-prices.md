@@ -23,10 +23,16 @@ live PnL at about 8 Hz. No contract change.
 ## Steps
 
 ### Settlement plane
-- [ ] R1.1 Process guards and RedStone body validation (04 R1):
+- [x] R1.1 Process guards and RedStone body validation (04 R1):
   - `services/common/src/process-guards.ts`, called from the api and keeper `main.ts`;
   - a non-JSON 2xx counts as that gateway's failure;
   - `try/catch` around `poll()` and `historical()`.
+  - *As built (10 Oct):* `installProcessGuards(log)` logs and counts `unhandledRejection` (kept running) and exits on
+    `uncaughtException`; the count shows on `/v1/status` `process` and `/v1/keeper/status`. `RedStoneReader.read(path,
+    decode)` trusts a 2xx only when it is `application/json`, starts with `{` and decodes; otherwise the next gateway
+    is tried. The scheduled poll catches. Probed live: gateway-1 answers `historical` with 200 `text/html` "Hello! I am
+    working correctly". Scratch check against a fake gateway (placeholder 200, truncated JSON, 429, a real payload, a
+    throwing ingest, a stray rejection): all pass, exit 0.
 - [ ] R1.2 `PrintFetcher` (R2):
   - single-flight per (feed, t) and a token bucket per source (Hermes 1/s with a burst of 5; RedStone ≤ 0.5 rps);
   - never asks for t > now − grace;

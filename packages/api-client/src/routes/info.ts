@@ -48,6 +48,8 @@ export const statusResponseSchema = z.object({
   /** The Pyth price service behind our key (401/403/429 are counted here, D-272). */
   prices: component,
   aurora: component,
+  /** Unhandled rejections the api survived (04-pricing R1): any non-zero count is a bug to find in the log. */
+  process: z.object({ unhandledRejections: z.int().nonnegative(), lastRejectionAt: isoTimeSchema.nullable() }),
 });
 
 export const configRoute = defineRoute({

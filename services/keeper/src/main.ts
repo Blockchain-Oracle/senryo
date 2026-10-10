@@ -4,6 +4,7 @@ import {
   createHttpServer,
   createLogger,
   expoClient,
+  installProcessGuards,
   listen,
   loadSigner,
   MS_PER_SECOND,
@@ -31,6 +32,7 @@ import { type Job, Runner } from "./runner.ts";
 
 const env = loadKeeperEnv();
 const log = createLogger("keeper", env.LOG_LEVEL);
+const guards = installProcessGuards(log);
 const db = createDb(env.DATABASE_URL, "senryo-keeper");
 await migrate(db, log);
 
@@ -99,6 +101,7 @@ app.get("/v1/keeper/status", async () => ({
   heads: Object.fromEntries(Object.entries(heads.current()).map(([k, v]) => [k, v.toString()])),
   jobs: runner.snapshot(),
   recent: ctx.recent.list(),
+  process: guards.faults(),
 }));
 
 await listen(app, env.PORT, env.HOST, async () => {

@@ -10,6 +10,7 @@ import {
   type DuelNotice,
   EVENT_CHANNEL,
   type EventNotice,
+  installProcessGuards,
   listen,
   loadOptionalSigner,
   migrate,
@@ -59,6 +60,7 @@ import { registerStreamRoute } from "./stream/route.ts";
  */
 const { env, secrets } = loadApiEnv();
 const log = createLogger("api", env.LOG_LEVEL);
+const guards = installProcessGuards(log);
 const db = createDb(env.DATABASE_URL, "senryo-api");
 await migrate(db, log);
 
@@ -187,6 +189,7 @@ const ctx: ApiContext = {
   secrets,
   db,
   log,
+  guards,
   chains,
   sessions: secrets.sessionSecret ? new SessionKeys(secrets.sessionSecret) : undefined,
   geo,

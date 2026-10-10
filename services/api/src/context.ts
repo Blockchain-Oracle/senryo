@@ -1,6 +1,13 @@
 import { createReadClient, createWsClient, HeadTracker, isDeployed, type ReadClient } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
-import { type Db, HTTP_STATUS, HttpError, type Logger, type SessionKeys } from "@senryo/service-common";
+import {
+  type Db,
+  HTTP_STATUS,
+  HttpError,
+  type Logger,
+  type ProcessGuards,
+  type SessionKeys,
+} from "@senryo/service-common";
 import type { DuelQueue } from "./duel/queue.ts";
 import type { DuelRelay } from "./duel/relay.ts";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
@@ -26,6 +33,8 @@ export interface ApiContext {
   secrets: ApiSecrets;
   db: Db;
   log: Logger;
+  /** Unhandled rejections the process survived, for `/v1/status` (04-pricing R1). */
+  guards: ProcessGuards;
   chains: Map<ChainId, ChainContext>;
   sessions: SessionKeys | undefined;
   /** DB-IP Lite country lookup (S8.15); null country until loaded. */

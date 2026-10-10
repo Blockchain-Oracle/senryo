@@ -61,6 +61,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
       chains,
       prices: NOT_WIRED,
       aurora: NOT_WIRED,
+      process: ctx.guards.faults(),
     });
   });
 }
