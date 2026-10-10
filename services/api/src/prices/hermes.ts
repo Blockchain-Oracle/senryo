@@ -5,6 +5,7 @@ import { createParser } from "eventsource-parser";
 import {
   BACKOFF_MAX_MS,
   BACKOFF_MIN_MS,
+  DEAD_PATH_BACKOFF_MAX_MS,
   HERMES_CHANNEL,
   HERMES_HEADERS_TIMEOUT_MS,
   HERMES_HEALTHY_RESET_MS,
@@ -18,7 +19,8 @@ import type { PriceUpdate } from "./ring.ts";
  * URL — `@pythnetwork/hermes-client` puts it in the query). One stream per entitlement class (04-pricing R5), each with:
  * - a timeout until the headers arrive (undici's own is 300 s);
  * - `ignore_invalid_price_ids` and an explicit `channel`;
- * - a frame watchdog, and a jittered backoff that resets only after 30 s of streaming;
+ * - a frame watchdog, and a jittered backoff that resets only after 30 s of streaming — up to 30 s after a refusal
+ *   (the key's budget), up to 5 s after a dead path (the line is frozen meanwhile);
  * - a rotation before Hermes closes the stream at 24 h that retires the old connection only once the new one has
  *   streamed its first frame (a rotation during a hiccup used to turn a healthy stream into an outage);
  * - 401/403 counted and logged as errors (the key or its entitlement), never just retried quietly.
@@ -111,6 +113,8 @@ export class HermesStream {
   private restartedAt = 0;
   /** The newest publish time streamed (0 until the first frame). */
   private lastPublishSec = 0;
+  /** The last attempt was refused (401/403/429), not lost: back off to the long ceiling. */
+  private refusedLast = false;
 
   constructor(private readonly o: HermesStreamOptions) {}
 
@@ -143,6 +147,7 @@ export class HermesStream {
     const controller = new AbortController();
     this.controller = controller;
     const headersTimer = setTimeout(() => controller.abort(new Error("no headers in time")), HERMES_HEADERS_TIMEOUT_MS);
+    this.refusedLast = false;
     let watchdog: ReturnType<typeof setInterval> | undefined;
     let rotate: ReturnType<typeof setTimeout> | undefined;
     try {
@@ -218,6 +223,7 @@ export class HermesStream {
 
   private refused(status: number): void {
     this.status.lastBadStatus = status;
+    this.refusedLast = isAuthRefusal(status) || status === HTTP_STATUS.tooMany;
     if (!isAuthRefusal(status)) return;
     this.status.authRefusals += 1;
     this.o.log.error({ stream: this.o.name, status }, "hermes refused the key or its entitlement");
@@ -225,7 +231,8 @@ export class HermesStream {
 
   private reconnect(): void {
     if (this.stopped) return;
-    const ceiling = Math.min(BACKOFF_MAX_MS, BACKOFF_MIN_MS * 2 ** this.attempt);
+    const max = this.refusedLast ? BACKOFF_MAX_MS : DEAD_PATH_BACKOFF_MAX_MS;
+    const ceiling = Math.min(max, BACKOFF_MIN_MS * 2 ** this.attempt);
     this.attempt += 1;
     this.status.reconnects += 1;
     const delay = BACKOFF_MIN_MS + Math.random() * (ceiling - BACKOFF_MIN_MS);

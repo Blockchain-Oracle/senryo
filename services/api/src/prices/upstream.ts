@@ -5,11 +5,14 @@ import { MS_PER_SECOND } from "@senryo/service-common";
  * own backoff, so a side path's refusals can never rest the live stream or the live poll (F2).
  */
 
-/** What one upstream call came to. `missing` is an answer (the source has no such print), never a failure. */
+/**
+ * What one upstream call came to. `missing` is an answer (the source has no such print), never a failure. `network`
+ * marks a failure with no answer at all (a timeout, a refused connection): the path, not the source's verdict.
+ */
 export type UpstreamOutcome<T> =
   | { kind: "ok"; value: T }
   | { kind: "missing" }
-  | { kind: "failed"; reason: string; rest: boolean };
+  | { kind: "failed"; reason: string; rest: boolean; network?: true };
 
 /**
  * A token bucket with reservations: a caller may take the next token ahead of time and wait for it, but never longer
@@ -68,6 +71,12 @@ export class Backoff {
   }
 
   ok(): void {
+    this.nextMs = this.minMs;
+  }
+
+  /** Stop resting now, and start the next rest from `minMs` (the reason for the rest is gone). */
+  clear(): void {
+    this.restUntil = 0;
     this.nextMs = this.minMs;
   }
 }

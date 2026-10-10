@@ -31,7 +31,7 @@ async function updatesAt(access: HermesAccess, path: string): Promise<UpstreamOu
     const updates = updatesOf((await res.json()) as HermesMessage, Date.now());
     return { kind: "ok", value: new Map(updates.map((u) => [u.feedId, u])) };
   } catch (error) {
-    return { kind: "failed", reason: (error as Error).name, rest: true };
+    return { kind: "failed", reason: (error as Error).name, rest: true, network: true };
   }
 }
 

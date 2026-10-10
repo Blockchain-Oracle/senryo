@@ -31,7 +31,9 @@ import { Backoff, sleep, TokenBucket, type UpstreamOutcome } from "./upstream.ts
  *   of it); one RedStone `historical` read serves every RedStone feed at its grid point, cached for a minute.
  * - **Rated.** A token bucket per source (Hermes 1/s, burst 5; RedStone 0.5/s). A caller waits at most 3 s for a token;
  *   past that it is refused and its own retry decides.
- * - **Its own backoff.** A refusal rests this source only — never the live stream or the live poll.
+ * - **Its own backoff.** A refusal rests this source only — never the live stream or the live poll. A rest for a dead
+ *   path (timeouts, no connection) ends when a Hermes stream streams again (`hermesReachable`): an outage's doubling
+ *   rests used to outlast it and drop the back-fill of the very boundaries it cost.
  * Undefined means no print now: not yet, refused, resting or missing — the counters say which.
  */
 export type PrintSourceKind = "pyth" | "redstone";
@@ -58,6 +60,8 @@ export interface PrintFetchStats {
 interface Source {
   bucket: TokenBucket;
   backoff: Backoff;
+  /** The current rest is for a dead path, not a refusal. */
+  restIsNetwork: boolean;
   stats: PrintFetchStats;
 }
 
@@ -80,6 +84,7 @@ function source(ratePerSec: number, burst: number): Source {
   return {
     bucket: new TokenBucket(ratePerSec, burst),
     backoff: new Backoff(PRINT_FETCH_BACKOFF_MIN_MS, PRINT_FETCH_BACKOFF_MAX_MS),
+    restIsNetwork: false,
     stats: {
       asked: 0,
       joined: 0,
@@ -110,6 +115,18 @@ export class PrintFetcher {
 
   stats(): Record<PrintSourceKind, PrintFetchStats> {
     return { pyth: { ...this.hermes.stats }, redstone: { ...this.redstone.stats } };
+  }
+
+  /**
+   * A Hermes stream is delivering again: the path is back, so a rest for a dead path ends now. A rest for a refusal
+   * (401/403/429/5xx) stands — the stream says nothing about the REST budget.
+   */
+  hermesReachable(): void {
+    const s = this.hermes;
+    if (!s.restIsNetwork || !s.backoff.resting()) return;
+    s.backoff.clear();
+    s.restIsNetwork = false;
+    this.log.info({ source: "hermes" }, "print fetch rest cleared: the stream is back");
   }
 
   /** The unique print of t for a single-feed market from upstream REST (a basket is composed by the gateway). */
@@ -229,6 +246,7 @@ export class PrintFetcher {
     s.stats.failed += 1;
     s.stats.lastFailure = outcome.reason;
     const restMs = outcome.rest ? s.backoff.fail() : 0;
+    if (outcome.rest) s.restIsNetwork = outcome.network === true;
     this.log.warn({ source: name, err: outcome.reason, restMs }, "print fetch failed");
     return undefined;
   }

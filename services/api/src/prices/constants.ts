@@ -33,9 +33,14 @@ export const HALT_CONF_BPS = 50;
 export const DISPLAY_FRESH_MS = 2_000;
 /** A display tick this fresh when a settlement update lands is a basis sample (display − settlement). */
 export const BASIS_FRESH_MS = 1_000;
-/** Jittered reconnect backoff bounds. */
+/** Jittered reconnect backoff bounds. The 30 s ceiling is for refusals (401/403/429): it spares the key. */
 export const BACKOFF_MIN_MS = 500;
 export const BACKOFF_MAX_MS = 30_000;
+/**
+ * A dead path (no answer, a silent stream, a 5xx) is retried within this at most: a connection attempt is cheap, and
+ * every second of it is a frozen line on every screen (the R1.23 cut check: 30 s of it after a 90 s outage).
+ */
+export const DEAD_PATH_BACKOFF_MAX_MS = 5_000;
 /** Hermes closes a stream at 24 h; open the next one first, at 23 h 45 m. */
 export const ROTATE_AFTER_MS = (23 * 60 + 45) * 60 * 1000;
 /** Window boundaries are archived on every minute (all cadences divide one hour). */
@@ -46,6 +51,8 @@ export const CANDLE_CLOSE_GRACE_SEC = 5;
 export const TICK_FLUSH_MS = 100;
 /** How often the print watch looks for instants a position needs that never archived (04-pricing R3). */
 export const PRINT_WATCH_MS = 2_000;
+/** A gap boundary still missing is retried on the watch's tick, its wait doubling from one tick up to this. */
+export const GAP_RETRY_MAX_MS = 30_000;
 /** A print still missing past this share of its market's admission is logged as an error: its windows will void. */
 export const PRINT_WATCH_NEARING_SHARE = 0.5;
 /** A REST lookup for a print that never streamed. */

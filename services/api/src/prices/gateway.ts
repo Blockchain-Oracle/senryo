@@ -184,7 +184,10 @@ export class PythGateway {
           silence.observe(u);
           this.onUpdate(u);
         },
-        onResume: (from, to) => this.watch.onGap(from, to, markets),
+        onResume: (from, to) => {
+          fetcher.hermesReachable();
+          this.watch.onGap(from, to, markets);
+        },
         log: this.log,
       });
       this.streams.set(name, stream);
