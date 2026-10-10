@@ -5,7 +5,7 @@
  *
  *   pnpm --filter @senryo/drive exec tsx src/live-stream-check.ts
  */
-import { createApiClient, latestPricesRoute, recentPricesRoute } from "@senryo/api-client";
+import { createApiClient, latestPricesRoute, recentPricesRoute, timeRoute } from "@senryo/api-client";
 import { LINGER_MS, Live } from "@senryo/live";
 import { sleep } from "./lib.ts";
 
@@ -26,6 +26,7 @@ const live = new Live({
   fetch: globalThis.fetch,
   recent: (symbols) => api.call(recentPricesRoute, { query: { symbols: symbols.join(",") } }),
   latest: () => api.call(latestPricesRoute, {}),
+  time: async () => (await api.call(timeRoute, {})).t,
   ticket: async () => undefined,
 });
 const statuses: string[] = [];

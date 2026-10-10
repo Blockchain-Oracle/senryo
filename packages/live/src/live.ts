@@ -49,6 +49,8 @@ export interface LatestPrices {
 
 /** A market whose ring already spans this much needs no history fetch (a chart shows ~10 s). */
 const HISTORY_SPAN_MS = 15_000;
+/** The clock is resampled this often (and on every reconnect). */
+const CLOCK_SYNC_MS = 60_000;
 
 export interface LiveOptions {
   origin: string;
@@ -57,6 +59,8 @@ export interface LiveOptions {
   recent: (symbols: readonly string[]) => Promise<RecentPrices>;
   /** `/v1/prices/latest`: every market's newest price and state. */
   latest: () => Promise<LatestPrices>;
+  /** `GET /v1/time`: the server's clock in ms (never cached). */
+  time: () => Promise<number>;
   /** A stream ticket for the signed-in user (`POST /v1/stream/ticket`). */
   ticket: () => Promise<string | undefined>;
 }
@@ -74,6 +78,7 @@ export class Live {
   private readonly userListeners = new Map<string, Set<Listener<unknown>>>();
   private readonly marketListeners = new Map<string, Set<Listener<unknown>>>();
   private readonly resetListeners = new Set<() => void>();
+  private clockTimer: ReturnType<typeof setInterval> | undefined;
 
   constructor(private readonly o: LiveOptions) {
     this.stream = new LiveStream({
@@ -147,6 +152,13 @@ export class Live {
     }
   }
 
+  /** One timed round trip to `/v1/time` (NTP-style, 04-pricing R16). */
+  async syncClock(): Promise<void> {
+    const t0 = Date.now();
+    const serverMs = await this.o.time();
+    this.clock.sync(serverMs, t0, Date.now());
+  }
+
   /** A terminal's market: its recent points, unless the ring already holds a chart's worth. */
   async loadHistory(symbol: string): Promise<void> {
     const h = this.prices.history(symbol);
@@ -164,7 +176,11 @@ export class Live {
 
   private onStatus(status: StreamStatus): void {
     this.status = status;
-    if (status === "live") void this.reseed().catch(() => {});
+    if (status === "live") {
+      void this.reseed().catch(() => {});
+      void this.syncClock().catch(() => {});
+      this.clockTimer ??= setInterval(() => void this.syncClock().catch(() => {}), CLOCK_SYNC_MS);
+    }
     for (const l of this.statusListeners) l();
   }
 

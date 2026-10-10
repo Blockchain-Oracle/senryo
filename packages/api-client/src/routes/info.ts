@@ -94,6 +94,17 @@ export const statusRoute = defineRoute({
   response: statusResponseSchema,
 });
 
+/** The server's clock for the apps' NTP-style sync (04-pricing R16): never cached. */
+export const timeRoute = defineRoute({
+  method: "GET",
+  path: "/v1/time",
+  auth: "none",
+  params: undefined,
+  query: undefined,
+  body: undefined,
+  response: z.object({ t: z.int() }),
+});
+
 export type ConfigResponse = z.output<typeof configResponseSchema>;
 export type GeoResponse = z.output<typeof geoResponseSchema>;
 export type StatusResponse = z.output<typeof statusResponseSchema>;

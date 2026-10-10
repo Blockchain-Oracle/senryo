@@ -1,4 +1,4 @@
-import { configRoute, geoRoute, statusRoute } from "@senryo/api-client";
+import { configRoute, geoRoute, statusRoute, timeRoute } from "@senryo/api-client";
 import { networkOf } from "@senryo/config";
 import { type HttpServer, MS_PER_SECOND, sendRoute } from "@senryo/service-common";
 import type { ApiContext } from "../context.ts";
@@ -30,6 +30,12 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
       contact: { email: ctx.env.SUPPORT_EMAIL, url: ctx.env.SUPPORT_URL ?? null },
     }),
   );
+
+  // Read as close to the send as possible: the client halves the round trip around it.
+  app.get(timeRoute.path, { config: READ_RATE }, async (_request, reply) => {
+    reply.header("cache-control", "no-store");
+    return sendRoute(reply, timeRoute, { t: Date.now() });
+  });
 
   app.get(geoRoute.path, async (request, reply) =>
     sendRoute(reply, geoRoute, geoOf(request, { db: ctx.geo, trustedHeader: ctx.env.TRUSTED_COUNTRY_HEADER })),

@@ -210,8 +210,14 @@ live PnL at about 8 Hz. No contract change.
     `loadHistory` through it; in the preview against production's older api, `/latest` 404 → `/recent` fallback, and
     the BTC terminal opens with its line across the full width. (The `live-stream-check` drive script now calls
     `loadHistory`, as a terminal does.)
-- [ ] R1.15 Clock (R16): `GET /v1/time` (no-store), NTP-style offset taken from the minimum-RTT sample of the last 5,
+- [x] R1.15 Clock (R16): `GET /v1/time` (no-store), NTP-style offset taken from the minimum-RTT sample of the last 5,
   resampled every 60 s and on reconnect.
+  - *As built (10 Oct):* `GET /v1/time` → `{ t }`, `no-store`, 120/min per IP. `ServerClock.sync(server, t0, t1)`
+    keeps the last five timed samples and uses the smallest round trip's offset (`uncertaintyMs` = its RTT/2); beats
+    and `/latest` give rough samples only until a timed one exists. `Live.syncClock()` runs on every `live` status and
+    each minute after. Scratch check: a server 2 s ahead behind an uneven 40–160 / 20–60 ms link — error 42 ms by
+    receipt time, 8 ms NTP-style (bound ±48 ms); a beat no longer moves a timed clock; the real route reads 0 ± 0.5 ms
+    on the same host. Exit 0.
 
 ### Display plane
 - [ ] R1.16 Display feed (D-302):
