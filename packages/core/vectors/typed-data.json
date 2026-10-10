@@ -1,0 +1,9 @@
+{
+  "chainId": 31337,
+  "exitOrder": "0x17822b59d4c1a9d2da380b411ed7e77960368150f3cf6c9f526be1239ac95931",
+  "feedId": "0xee62665949c883f9e0f6f002eac32e00bd59dfe6c34e92a91c37d6a8322d6489",
+  "owner": "0xe05fcC23807536bEe418f142D19fa0d21BB0cfF7",
+  "rideIntent": "0xe94b970580d532913023fc7d7be0b4d76bd67157ee5328431a0de6cdc97b3d7c",
+  "sigmaMark": "0x623cdd8ae34f8acda2be58ea6285a6f6d95006d453ee800fbdf87480d9f940d4",
+  "verifyingContract": "0x1d1499e622D69689cdf9004d05Ec547d650Ff211"
+}

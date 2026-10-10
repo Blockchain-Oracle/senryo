@@ -15,6 +15,8 @@ export const MIN_SECONDS_LEFT = 5n;
 
 const WAD = 1_000_000_000_000_000_000n;
 const Z_DIVISOR_SCALE = 10_000_000_000n;
+/** The spread curve's 4 (contracts `SPREAD_CURVE_FACTOR`). */
+const SPREAD_CURVE_FACTOR = 4n;
 /** A z past every table's last point (contracts `Z_BEYOND_E4`). */
 const Z_BEYOND_E4 = 1_000_000_000_000n;
 const HALF = 2n;
@@ -207,6 +209,12 @@ export function bandOutcome(band: BandShape, k: bigint, close: bigint): BandOutc
     case "crash":
       return close < k - offsetE8(k, band.lowBps) ? "win" : "lose";
   }
+}
+
+/** The spread curve h(p) = max(floor, 4·h50·p(1−p)) (contracts `BandMath.halfSpreadE6`, D-300). */
+export function halfSpreadE6(probE6: bigint, h50E6: bigint, minE6: bigint): bigint {
+  const curve = (SPREAD_CURVE_FACTOR * h50E6 * probE6 * (P_ONE - probE6)) / (P_ONE * P_ONE);
+  return curve > minE6 ? curve : minE6;
 }
 
 /** Shares a stake buys at `qE6` per share, floored. */

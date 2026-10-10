@@ -7,6 +7,7 @@ export * from "./exits.ts";
 export { lnWad } from "./lnwad.ts";
 export * from "./parlay.ts";
 export * from "./price-format.ts";
+export * from "./ride-math.ts";
 export { type ClosedWindow, holidayWindows, weekBits } from "./session/calendar-bits.ts";
 export {
   alwaysOpen,

@@ -23,6 +23,7 @@ export * from "./reads.ts";
 export * from "./receipt-facts.ts";
 export * from "./recovery.ts";
 export * from "./reverify.ts";
+export * from "./ride-typed-data.ts";
 export * from "./send.ts";
 export * from "./signer.ts";
 export * from "./siwe.ts";

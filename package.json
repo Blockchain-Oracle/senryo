@@ -1,7 +1,7 @@
 {
   "name": "senryo",
   "private": true,
-  "description": "Senryo 千両 — live Up/Down calls on crypto and stock prices, in dollars, on Monad (Practice test dollars on testnet, USDC on mainnet).",
+  "description": "Senryo \u5343\u4e21 \u2014 live Up/Down calls on crypto and stock prices, in dollars, on Monad (Practice test dollars on testnet, USDC on mainnet).",
   "license": "MIT",
   "packageManager": "pnpm@11.24.0",
   "engines": {
@@ -18,7 +18,8 @@
     "env:check": "node scripts/env-check.mjs",
     "contracts:check": "cd contracts && forge build && (test -z \"$(ls src)\" || forge fmt --check) && forge lint",
     "contracts:export": "node scripts/contracts-export.mjs",
-    "gate": "pnpm typecheck && pnpm lint && pnpm invariants"
+    "gate": "pnpm typecheck && pnpm lint && pnpm invariants && pnpm mirror",
+    "mirror": "pnpm --filter @senryo/drive exec tsx src/mirror-vectors.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",

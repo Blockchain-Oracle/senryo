@@ -174,10 +174,19 @@ Tested to the money invariants. Not deployed until R4.
     69,947,517.
 
 ### TypeScript and config
-- [ ] R3.19 TS mirror:
+- [x] R3.19 TS mirror:
   - `packages/core` ride maths, curve and σ, with shared vectors generated from Foundry (the `band-quote.ts` pattern);
   - `packages/chain` ride intents (EIP-712), decoders and `listSeries` data;
   - ABIs exported.
+  - Built: `packages/core/src/market/ride-math.ts` (LinearMath, bit for bit) and `halfSpreadE6`;
+    `packages/chain/src/ride-typed-data.ts` (`RideIntent`, `SigmaMark`); `RideMathVectors.t.sol` pins `LinearMath`,
+    the curve and the reserve's EIP-712 digests to `packages/core/vectors/{ride-math,typed-data}.json`;
+    `scripts/drive/src/mirror-vectors.ts` (`pnpm mirror`, now part of `pnpm gate`) checks 5,802 values bit-exact.
+  - **Moved to R4, on purpose:** the ABI export, the exit order's TS shape (`(book, id)`, `uint64` levels) and the
+    services' switch. The exported ABI is what HEAD's relay, keeper and indexer type against, and v3 changes core
+    signatures (`finalize` carries a mark, `quoteOpen` takes one, `Params`, exits); exporting before the v3 deploy
+    would leave HEAD unable to serve the live v1 reserve. They land together in R4. Note that the apps' quote mirror
+    has priced the v3 way since R3.3, so until R4 a production hotfix branches from `b0a455e3` (R2's deploy).
 - [ ] R3.20 Config:
   - ride terms per network in `packages/config/src/pool-terms.ts`;
   - ride markets in the catalogue (7 Pyth crypto);
