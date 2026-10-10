@@ -15,7 +15,7 @@ replaces the open S8 steps (S8.1–S8.3, S8.8, S8.9) with stages, in order:
 
 Parity: [parity-replan.md](parity-replan.md).
 
-**Where we are:** R1.1–R1.5 done (process guards, RedStone body validation, `PrintFetcher`, `PrintWatch`, archive-only print route, Hermes hardening). R1.6 done (RedStone parse in a worker: loop stall 24 → 1.9 ms). R1.7 done (RedStone markets pause with the reason after 29 Oct without a key). R1.8 done (settlement plane complete). Next: R1.9 `FeedState`.
+**Where we are:** R1.1–R1.5 done (process guards, RedStone body validation, `PrintFetcher`, `PrintWatch`, archive-only print route, Hermes hardening). R1.6 done (RedStone parse in a worker: loop stall 24 → 1.9 ms). R1.7 done (RedStone markets pause with the reason after 29 Oct without a key). R1.8 done (settlement plane complete). R1.9 done (`FeedState` end to end; RedStone read moved to +7 s). Next: R1.10 ticket decoupled from prices.
 
 **Not changed:** the pivot plan (product, stack, S8b–S10). The S8.8 games work in `b61d1932` (engines, api, first screens)
 carries into R7. The half-finished markets v2 deploy is abandoned (D-309).

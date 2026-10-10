@@ -87,7 +87,9 @@ export class RedStoneReader {
       return;
     }
     const now = Date.now();
-    const next = now - (now % REDSTONE_GRID_MS) + REDSTONE_GRID_MS + REDSTONE_POLL_OFFSET_MS;
+    // The next instant `REDSTONE_POLL_OFFSET_MS` after a grid point (this cycle's, if it is still ahead).
+    const thisCycle = now - (now % REDSTONE_GRID_MS) + REDSTONE_POLL_OFFSET_MS;
+    const next = thisCycle > now ? thisCycle : thisCycle + REDSTONE_GRID_MS;
     this.timer = setTimeout(() => {
       void this.poll()
         .catch((error) => this.log.warn({ err: (error as Error).message }, "redstone poll failed"))

@@ -22,12 +22,13 @@ export const PRINT_WAIT_MS = 8_000;
  * closed markets (their publish time frozen at the close — probed Saturday 10 Oct), so a quiet class is never idle.
  */
 export const WATCHDOG_MS = 10_000;
-/**
- * An open market whose publish time hasn't moved for this long is silent (04-pricing R5e): Pyth's 1 Hz plus jitter
- * (p95 1.04 s, max 1.4 s measured). R1.9 moves it into each market's declared cadence.
- */
-export const FEED_SILENCE_MS = 5_000;
 export const SILENCE_CHECK_MS = 1_000;
+/** Each market's state is judged this often (`FeedStates`, 04-pricing R6). */
+export const FEED_STATE_STEP_MS = 1_000;
+/** D-289: a Pyth price older than this while its market is open halts quoting and listing (never the chain). */
+export const HALT_STALE_MS = 15_000;
+/** D-289: a Pyth confidence wider than this share of the price (bps) halts it too. */
+export const HALT_CONF_BPS = 50;
 /** Jittered reconnect backoff bounds. */
 export const BACKOFF_MIN_MS = 500;
 export const BACKOFF_MAX_MS = 30_000;
@@ -58,11 +59,14 @@ export const REDSTONE_PUBLIC_GATEWAYS = [
   "https://oracle-gateway-2.a.redstone.finance",
   "https://oracle-gateway-1.a.redstone.finance",
 ];
-/** Packages are signed on a 10-second grid; read each one a little after it lands. */
+/**
+ * Packages are signed on a 10-second grid and appear on the gateway 4.2–6.5 s after their grid point (measured 10 Oct,
+ * gateway-2 sampled every 0.7 s); each is read 7 s after its point. (2.5 s, the old offset, always read the previous one.)
+ */
 export const REDSTONE_GRID_MS = 10_000;
-export const REDSTONE_POLL_OFFSET_MS = 2_500;
-/** A fill's RedStone print can be up to one grid step away, plus the read. */
-export const REDSTONE_PRINT_WAIT_MS = 15_000;
+export const REDSTONE_POLL_OFFSET_MS = 7_000;
+/** A fill's RedStone print can be up to one grid step away, plus its arrival and the read. */
+export const REDSTONE_PRINT_WAIT_MS = 20_000;
 export const REDSTONE_FETCH_TIMEOUT_MS = 8_000;
 export const REDSTONE_BACKOFF_MIN_MS = 60_000;
 export const REDSTONE_BACKOFF_MAX_MS = 600_000;

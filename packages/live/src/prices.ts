@@ -1,13 +1,18 @@
 // Per-market live prices (D-272 "per-key stores, Float64 rings, a plain subscribe for the chart and odometer"). Ticks
 // never enter React state or TanStack: the terminal reads them through `subscribe` into Reanimated shared values;
 // lists use `useLivePrice`, which re-renders at most once per frame.
-import { MARKETS } from "@senryo/config";
+import { FEED_STATES, type FeedState, feedStateOfCode, feedTimingOf, isQuotable, MARKETS } from "@senryo/config";
 import { frameScheduler } from "./frame.ts";
 
 /** Recent ticks kept per market (seeded from `/v1/prices/recent`, then the stream). */
 export const HISTORY = 512;
-/** A crypto feed prints about once a second; this long without a tick reads as stale. */
-export const STALE_MS = 5_000;
+/**
+ * The server's states (`h`, 04-pricing R6) are trusted this long after the last digest: two 15 s beats and a margin
+ * (state changes also arrive at once). Older, or never sent (an older api): judged here from receipt time.
+ */
+export const STATES_FRESH_MS = 35_000;
+/** `state[i]`: 0 while unknown, else 1 + the state's index in `FEED_STATES`. */
+const UNKNOWN = 0;
 
 export interface Tick {
   priceE8: number;
@@ -23,6 +28,8 @@ export class PriceBook {
   private readonly price = new Float64Array(this.symbols.length);
   private readonly publish = new Float64Array(this.symbols.length);
   private readonly received = new Float64Array(this.symbols.length);
+  private readonly state = new Uint8Array(this.symbols.length);
+  private statesAt = 0;
   private readonly ringT = this.symbols.map(() => new Float64Array(HISTORY));
   private readonly ringP = this.symbols.map(() => new Float64Array(HISTORY));
   private readonly ringStart = new Int32Array(this.symbols.length);
@@ -46,11 +53,47 @@ export class PriceBook {
     this.schedule();
   }
 
+  /** The server's digest: one state letter per catalogue index (changes notify that market's listeners). */
+  setStates(digest: string, receivedMs: number = Date.now()): void {
+    for (let i = 0; i < this.symbols.length; i += 1) {
+      const s = feedStateOfCode(digest[i] ?? "");
+      const next = s ? FEED_STATES.indexOf(s) + 1 : UNKNOWN;
+      if (next === this.state[i]) continue;
+      this.state[i] = next;
+      this.dirty.add(i);
+    }
+    this.statesAt = receivedMs;
+    if (this.dirty.size > 0) this.schedule();
+  }
+
+  /**
+   * A market's state: the server's while its digest is fresh; otherwise judged here from when the newest tick arrived,
+   * against the market's own source cadence (a RedStone price ticks every 10 s and is not stale at 5 s).
+   */
+  stateOf(symbol: string, nowMs: number = Date.now()): FeedState {
+    const i = this.index.get(symbol);
+    if (i === undefined) return "stale";
+    const code = this.state[i] ?? UNKNOWN;
+    if (code !== UNKNOWN && nowMs - this.statesAt <= STATES_FRESH_MS) return FEED_STATES[code - 1] ?? "stale";
+    const t = this.latest(symbol);
+    const market = MARKETS[i];
+    if (!t || !market) return "stale";
+    const timing = feedTimingOf(market);
+    const age = nowMs - t.receivedMs;
+    return age <= timing.delayedMs ? "live" : age <= timing.staleMs ? "delayed" : "stale";
+  }
+
   /**
    * Points `[ms, priceE8]` from `/v1/prices/recent`, merged with what the stream already delivered (the connect
-   * snapshot usually lands first): history is rebuilt in time order, and a point newer than the latest tick becomes it.
+   * snapshot usually lands first): history is rebuilt in time order, and a point newer than the latest tick becomes it —
+   * aged by how old it already was at the server (`serverMs`), so a stopped feed never looks fresh after a reseed.
    */
-  seed(symbol: string, points: readonly (readonly [number, number])[], receivedMs: number = Date.now()): void {
+  seed(
+    symbol: string,
+    points: readonly (readonly [number, number])[],
+    receivedMs: number = Date.now(),
+    serverMs: number = receivedMs,
+  ): void {
     const i = this.index.get(symbol);
     if (i === undefined || points.length === 0) return;
     const merged = new Map<number, number>();
@@ -65,7 +108,7 @@ export class PriceBook {
     if (newest && newest[0] > (this.publish[i] ?? 0)) {
       this.price[i] = newest[1];
       this.publish[i] = newest[0];
-      this.received[i] = receivedMs;
+      this.received[i] = receivedMs - Math.max(0, serverMs - newest[0]);
     }
     this.dirty.add(i);
     this.schedule();
@@ -77,10 +120,9 @@ export class PriceBook {
     return { priceE8: this.price[i] ?? 0, publishMs: this.publish[i] ?? 0, receivedMs: this.received[i] ?? 0 };
   }
 
-  /** No tick for `STALE_MS` (by local receipt time): the price must not be traded on. */
+  /** Not a live settlement price: nothing may be quoted on it (04 §6.3). */
   isStale(symbol: string, nowMs: number = Date.now()): boolean {
-    const t = this.latest(symbol);
-    return !t || nowMs - t.receivedMs > STALE_MS;
+    return !isQuotable(this.stateOf(symbol, nowMs));
   }
 
   /** The last `n` ticks, oldest first, as parallel arrays (a chart seed, a sparkline). */

@@ -95,6 +95,7 @@ Hermes were probed with `curl`.
 | `/v1/prices/recent` (asked for 34 symbols) | 200 in 678 ms (cold TLS), 26.3 KB decoded for **3** feeds × 301 points. `cache-control: public, max-age=1, stale-while-revalidate=5` |
 | Hermes without a key | `/v2/updates/price/latest` → **401**; `/v2/price_feeds` → 200 with `market_hours {is_open,next_open,next_close}` |
 | RedStone `latest` (both public gateways) | 200, 1,984,810–1,984,915 B, 0.41–0.48 s (Saturday 07:10 UTC: not in a refusal window) |
+| RedStone package arrival (added 10 Oct, R1.9) | a grid point's packages first appear **4.2–6.5 s after it** (gateway-2, sampled every 0.7 s). Senryo read at +2.5 s, so it always got the previous point (12.5–22.5 s old); the read moves to +7 s |
 | RedStone `historical/<ms>` | gateway-2: 200, 1.98 MB of packages. **gateway-1: 200 with the 29-byte body `Hello! I am working correctly`**, the same as for any unknown path |
 | Parsing RedStone's 2 MB JSON (Node 25, M1 Pro) | plain 3.8–5.7 ms; **with the source-text reviver Senryo uses: 20.8–24.9 ms** |
 | Chart frame (from acceptance, simulator dev build) | 1.23–1.28 ms average, max 2.1–2.6 ms; 1–7 of 600 frames over 2 ms |

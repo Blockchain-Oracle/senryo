@@ -45,8 +45,14 @@ export const statusResponseSchema = z.object({
       indexerLagBlocks: z.int().nullable(),
     }),
   ),
-  /** The Pyth price service behind our key (401/403/429 are counted here, D-272). */
+  /** Prices overall: ok when every open market is live, degraded when any is late or halted, down with none live. */
   prices: component,
+  /** Markets per price state, per source (`FeedStates`, 04-pricing R6). */
+  priceSources: z.array(
+    z.object({ source: z.string(), state: z.enum(HEALTH_STATES), counts: z.record(z.string(), z.int()) }),
+  ),
+  /** The gateway's own numbers for ops: each Hermes stream, the REST fetcher, the print watch, silences. */
+  priceDiagnostics: z.record(z.string(), z.unknown()),
   aurora: component,
   /** Unhandled rejections the api survived (04-pricing R1): any non-zero count is a bug to find in the log. */
   process: z.object({ unhandledRejections: z.int().nonnegative(), lastRejectionAt: isoTimeSchema.nullable() }),

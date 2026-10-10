@@ -16,6 +16,7 @@ import {
   type CadenceSec,
   type ChainId,
   feedIdOf,
+  isQuotable,
   LOCKOUT_SEC,
   type MarketSpec,
   marketsOn,
@@ -57,8 +58,6 @@ const SEED_BYTES = 32;
 /** A player may spin this often an hour (Owarine's limit). */
 const SPINS_PER_HOUR = 120;
 const HOUR_SEC = 3600;
-/** A price older than this leaves its market out of the list. */
-const PRICE_FRESH_SEC = 30;
 /** How long the reveal waits for a window's opening price. */
 const OPEN_PRINT_WAIT_MS = 1_500;
 /** Every band is priced for a one-dollar stake: the price per share is what the choice compares. */
@@ -92,11 +91,10 @@ export interface LuckyReveal {
 export class LuckyDesk {
   constructor(private readonly d: { chainId: ChainId; gateway: PythGateway; db: Db }) {}
 
-  /** Markets a draw may land on now: in session for a dealable window, with a fresh price. */
+  /** Markets a draw may land on now: in session for a dealable window, on a quotable price (FeedStates). */
   private tradingNow(now: number): MarketSpec[] {
     return marketsOn(this.d.chainId).filter((m) => {
-      const latest = this.d.gateway.latestE8(feedIdOf(m));
-      if (!latest || now - latest.publishTime > PRICE_FRESH_SEC) return false;
+      if (!isQuotable(this.d.gateway.feedState(feedIdOf(m)))) return false;
       return LUCKY_CADENCES.some((c) => this.window(m, c, now) !== null);
     });
   }

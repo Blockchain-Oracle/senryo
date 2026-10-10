@@ -1,10 +1,11 @@
 import { type Hex, seriesIdOf } from "@senryo/chain";
-import { basketMembers, feedIdOf, MARKETS, type MarketSpec, pauseOf } from "@senryo/config";
+import { basketMembers, type FeedState, feedIdOf, MARKETS, type MarketSpec, pauseOf } from "@senryo/config";
 import { basketPointsE8 } from "@senryo/core";
 import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
 import { FRAME_GAP_MS, PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS } from "./constants.ts";
+import { FeedStates } from "./feed-state.ts";
 import { HERMES_CLASSES, type HermesClass, type HermesStatus, HermesStream, hermesClassOf } from "./hermes.ts";
 import { PrintFetcher, type PrintFetchStats, type PrintSourceKind } from "./print-fetcher.ts";
 import { PrintWatch, type PrintWatchStats } from "./print-watch.ts";
@@ -44,6 +45,8 @@ export interface GatewayUpstream {
 
 export interface GatewayStatus {
   keyed: boolean;
+  /** Markets per state, per source. */
+  states: Record<string, Record<FeedState, number>>;
   hermes: Partial<Record<HermesClass, HermesStatus>>;
   silence: SilenceStats | null;
   rest: Record<PrintSourceKind, PrintFetchStats> | null;
@@ -56,6 +59,7 @@ export class PythGateway {
   private readonly bySeries = new Map<string, GatewayFeed>();
   private readonly archive: PriceArchive;
   private readonly watch: PrintWatch;
+  private readonly states: FeedStates;
   private readonly lastFrameAt = new Map<Hex, number>();
   private readonly pendingFrame = new Map<Hex, ReturnType<typeof setTimeout>>();
   private readonly streams = new Map<HermesClass, HermesStream>();
@@ -90,6 +94,26 @@ export class PythGateway {
         member.baskets.push(f);
       }
     }
+    this.states = new FeedStates(
+      this.feeds.map((f) => ({
+        index: f.index,
+        market: f.market,
+        latest: () => f.ring.latest(),
+        members: f.members.map((m) => m.index),
+      })),
+      (digest) => this.bus.tick("prices", "h", { s: digest }),
+    );
+  }
+
+  /** A market's state now (`FeedStates`): what exits, decks, the relay and `/status` read. */
+  feedState(feedId: Hex): FeedState {
+    const feed = this.byId.get(feedId);
+    return feed ? this.states.stateOf(feed.index) : "stale";
+  }
+
+  /** One letter per catalogue index; rides every beat. */
+  healthDigest(): string {
+    return this.states.digest();
   }
 
   /** Why a market takes no calls at all (no price source, D-310), or null — the catalogue and the relays ask here. */
@@ -117,6 +141,7 @@ export class PythGateway {
     this.redstone = new RedStoneReader(redstoneFeeds, (u) => this.onUpdate(u), this.log, redstoneGateways);
     this.redstone.start();
     this.archive.start();
+    this.states.start();
     const access = pythKey ? { origin: hermesOrigin, key: pythKey } : undefined;
     const fetcher = new PrintFetcher(access, this.redstone, this.log);
     this.fetcher = fetcher;
@@ -155,6 +180,7 @@ export class PythGateway {
 
   /** Stops the streams and timers, then writes the open candles. */
   async stop(): Promise<void> {
+    this.states.stop();
     this.watch.stop();
     this.silence?.stop();
     for (const stream of this.streams.values()) stream.stop();
@@ -165,6 +191,7 @@ export class PythGateway {
   status(): GatewayStatus {
     return {
       keyed: Boolean(this.upstream.pythKey),
+      states: this.states.counts(),
       hermes: Object.fromEntries([...this.streams].map(([name, s]) => [name, { ...s.status }])),
       silence: this.silence?.stats() ?? null,
       rest: this.fetcher?.stats() ?? null,
@@ -286,9 +313,9 @@ export class PythGateway {
     return u ? { priceE8: toE8(u.price, u.expo), publishTime: u.publishTime } : undefined;
   }
 
-  /** The latest tick per feed, as frames for a new subscriber. */
+  /** The states, then the latest tick per feed, as frames for a new subscriber. */
   snapshot(): string[] {
-    const frames: string[] = [];
+    const frames = [`event: h\ndata: ${JSON.stringify({ topic: "prices", data: { s: this.healthDigest() } })}\n\n`];
     for (const f of this.feeds) {
       const u = f.ring.latest();
       if (u) frames.push(`event: p\ndata: ${JSON.stringify({ topic: "prices", data: tickOf(f.index, u) })}\n\n`);

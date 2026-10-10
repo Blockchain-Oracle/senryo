@@ -24,5 +24,3 @@ export const EXIT_RELOAD_MS = 2_000;
 export const EXIT_CHAIN_SYNC_MS = 30_000;
 /** After a fire, the exit waits this long before it may fire again (a miss leaves it standing). */
 export const EXIT_RETRY_MS = 3_000;
-/** A price older than this is not acted on. */
-export const EXIT_PRICE_STALE_SEC = 5;

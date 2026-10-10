@@ -110,7 +110,8 @@ export class Live {
   async reseed(symbols: readonly string[] = this.prices.symbols): Promise<void> {
     const recent = await this.o.recent(symbols);
     this.clock.sample(recent.serverTime);
-    for (const f of recent.feeds) this.prices.seed(f.symbol, f.points);
+    const now = Date.now();
+    for (const f of recent.feeds) this.prices.seed(f.symbol, f.points, now, recent.serverTime);
   }
 
   private onStatus(status: StreamStatus): void {
@@ -126,7 +127,15 @@ export class Live {
       return;
     }
     if (event === "time" && data && typeof data === "object") {
-      this.clock.sample((data as { t: number }).t);
+      const beat = data as { t: number; h?: unknown };
+      this.clock.sample(beat.t);
+      if (typeof beat.h === "string") this.prices.setStates(beat.h);
+      return;
+    }
+    // The price states (04-pricing R6): sent on every change, repeated in each beat.
+    if (event === "h" && data && typeof data === "object") {
+      const s = (data as { s?: unknown }).s;
+      if (typeof s === "string") this.prices.setStates(s);
       return;
     }
     if (event === "print" && data && typeof data === "object") {

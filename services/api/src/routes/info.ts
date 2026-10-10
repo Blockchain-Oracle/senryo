@@ -3,6 +3,7 @@ import { networkOf } from "@senryo/config";
 import { type HttpServer, MS_PER_SECOND, sendRoute } from "@senryo/service-common";
 import type { ApiContext } from "../context.ts";
 import { geoOf } from "../geo.ts";
+import { priceStatus } from "../prices/health.ts";
 
 /** A fixed public line; the full error (which may carry a keyed RPC URL) only goes to the log (S8.5b #7). */
 function rpcDown(ctx: ApiContext, error: unknown): string {
@@ -13,7 +14,7 @@ function rpcDown(ctx: ApiContext, error: unknown): string {
 /** Unauthenticated reads that fan out to RPC are rate-limited per client IP (S8.5b #5). */
 const READ_RATE = { rateLimit: { max: 120, timeWindow: "1 minute" } } as const;
 
-/** Until S3 wires the Pyth gateway and S9 the Aurora client, both report "unknown" — never a fabricated "ok". */
+/** Until S9 wires the Aurora client it reports "unknown" — never a fabricated "ok". */
 const NOT_WIRED = { state: "unknown" as const, detail: "not wired yet" };
 
 export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
@@ -59,7 +60,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     return sendRoute(reply, statusRoute, {
       at: new Date().toISOString(),
       chains,
-      prices: NOT_WIRED,
+      ...priceStatus(ctx.gateway.status()),
       aurora: NOT_WIRED,
       process: ctx.guards.faults(),
     });

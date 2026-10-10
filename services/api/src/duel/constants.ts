@@ -4,8 +4,6 @@
 export const DECK_CADENCES = [300, 900] as const;
 /** Room beyond the arena's `minCardLifeSec` for the open and reveal transactions. */
 export const DECK_MARGIN_SEC = 20;
-/** A market whose newest price is older than this is left out of the deck. */
-export const DECK_PRICE_FRESH_SEC = 10;
 export const SEED_BYTES = 32;
 /** How often the matchmaker looks at the queue. */
 export const MATCHMAKER_TICK_MS = 1_000;

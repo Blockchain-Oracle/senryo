@@ -24,6 +24,8 @@ export const API_ERROR_CODES = [
   "UPSTREAM_UNAVAILABLE",
   // A market with no price source (D-310): listed for discovery, no calls.
   "MARKET_PAUSED",
+  // A market whose price is stale or too wide while open (D-289): no new calls until it steadies.
+  "MARKET_HALTED",
   // Handles and profile text.
   "HANDLE_INVALID",
   "HANDLE_RESERVED",

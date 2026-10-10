@@ -11,7 +11,16 @@ import {
   seriesOf,
   ticketChanges,
 } from "@senryo/chain";
-import { bandMenu, type ChainId, FILL_DELAY_SEC, feedIdOf, LOCKOUT_SEC, POOL_TERMS, sigmaE8Of } from "@senryo/config";
+import {
+  bandMenu,
+  type ChainId,
+  FILL_DELAY_SEC,
+  feedIdOf,
+  isWatchable,
+  LOCKOUT_SEC,
+  POOL_TERMS,
+  sigmaE8Of,
+} from "@senryo/config";
 import { bandReserveAbi, windowsAbi } from "@senryo/contracts/abis";
 import { type ExitFire, exitDecision, quoteClose } from "@senryo/core";
 import {
@@ -24,7 +33,7 @@ import {
   type TicketNotice,
 } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
-import { EXIT_CHAIN_SYNC_MS, EXIT_PRICE_STALE_SEC, EXIT_RELOAD_MS, EXIT_RETRY_MS, EXIT_TICK_MS } from "./constants.ts";
+import { EXIT_CHAIN_SYNC_MS, EXIT_RELOAD_MS, EXIT_RETRY_MS, EXIT_TICK_MS } from "./constants.ts";
 import type { FillBatcher } from "./fills.ts";
 import type { Lane } from "./lanes.ts";
 
@@ -182,8 +191,9 @@ export class ExitWatcher {
     const series = seriesOf(this.d.chainId, a.seriesId);
     const band = series ? bandMenu(series.market, series.cadenceSec)[a.band] : undefined;
     if (!series || !band) return null;
+    // Only a settlement price that is live or a little late, by its own source's cadence (FeedStates, 04-pricing R6).
     const live = this.d.gateway.latestE8(feedIdOf(series.market));
-    if (!live || now - live.publishTime > EXIT_PRICE_STALE_SEC) return null;
+    if (!live || !isWatchable(this.d.gateway.feedState(feedIdOf(series.market)))) return null;
     const k = await this.openPrint(a.windowId);
     if (k === 0n) return null;
     const terms = POOL_TERMS[this.d.chainId];

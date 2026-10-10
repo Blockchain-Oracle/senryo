@@ -1,14 +1,14 @@
 import type { Hex } from "@senryo/chain";
-import { CALENDARS, feedIdOf, type MarketSpec } from "@senryo/config";
+import { CALENDARS, feedIdOf, feedTimingOf, type MarketSpec } from "@senryo/config";
 import { isOpenAt, scheduleOf } from "@senryo/core";
 import { type Logger, MS_PER_SECOND } from "@senryo/service-common";
-import { FEED_SILENCE_MS, SILENCE_CHECK_MS } from "./constants.ts";
+import { SILENCE_CHECK_MS } from "./constants.ts";
 import type { PriceUpdate } from "./ring.ts";
 
 /**
  * Per-feed silence on the Hermes streams (04-pricing R5e). Hermes sends a frame a second for every feed of a class,
  * open or closed (a closed market's publish time stays frozen at its close), so a frame proves nothing. A market is
- * silent when its calendar says open and its publish time hasn't moved for `FEED_SILENCE_MS`. Each silence is probed
+ * silent when its calendar says open and its publish time hasn't moved for its source's stale age. Each silence is probed
  * once on Hermes REST `latest`:
  * - newer there → the stream stopped carrying the feed: that class's stream reconnects;
  * - not newer (or no answer) → the feed is stale upstream: counted and logged; R1.9's FeedState shows it to users.
@@ -71,7 +71,7 @@ export class SilenceWatch {
       const opened = this.openSince.get(id) ?? now;
       this.openSince.set(id, opened);
       const since = Math.max(this.clocks.get(id)?.movedAt ?? this.startedAt, opened);
-      if (now - since <= FEED_SILENCE_MS || this.silent.has(id)) continue;
+      if (now - since <= feedTimingOf(m).staleMs || this.silent.has(id)) continue;
       this.silent.set(id, m.symbol);
       this.stats_.episodes += 1;
       this.log.warn({ symbol: m.symbol, silentMs: now - since }, "feed silent while its market is open");

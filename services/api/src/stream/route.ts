@@ -8,7 +8,8 @@ import { verifyStreamTicket } from "./ticket.ts";
  * `GET /v1/stream?topics=prices,prints,user:0x…&ticket=…` — the one SSE per app (D-272, CWF `http/stream.ts`).
  * Public topics: `prices` (compact ticks, ephemeral), `prints` (every boundary print the moment it streams — the K
  * line clients draw is the one the chain records), `markets` (public call activity). `user:<address>` needs a ticket.
- * Every 15 s a `time` event carries the server clock, so countdowns never trust the phone. A socket that can't keep up
+ * Every 15 s a `time` event carries the server clock (countdowns never trust the phone) and the price states' digest
+ * (`h`, one letter per market; changes also go out at once as `h` on `prices`). A socket that can't keep up
  * skips ticks and is closed after 30 s blocked; a reconnect with `Last-Event-ID` replays durable events.
  */
 const PUBLIC_TOPICS = new Set(["prices", "prints", "markets"]);
@@ -18,8 +19,10 @@ export interface StreamDeps {
   bus: StreamBus;
   ticketSecret: string | undefined;
   corsOrigins: readonly string[];
-  /** Frames sent right after connecting, per topic (the latest price per feed). */
+  /** Frames sent right after connecting, per topic (the price states and the latest price per feed). */
   snapshot: (topic: string) => string[];
+  /** Fields every `time` beat carries besides the server time (`h`: the price states' digest). */
+  beatData: () => Record<string, unknown>;
 }
 
 export function grantTopics(
@@ -95,9 +98,9 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
         res.destroy();
         return;
       }
-      write(`event: time\ndata: ${JSON.stringify({ t: Date.now() })}\n\n`, true);
+      write(`event: time\ndata: ${JSON.stringify({ t: Date.now(), ...deps.beatData() })}\n\n`, true);
     }, HEARTBEAT_MS);
-    write(`event: time\ndata: ${JSON.stringify({ t: Date.now() })}\n\n`, false);
+    write(`event: time\ndata: ${JSON.stringify({ t: Date.now(), ...deps.beatData() })}\n\n`, false);
     request.raw.on("close", () => {
       clearInterval(beat);
       unsubscribe();

@@ -227,6 +227,7 @@ registerStreamRoute(app, {
   ticketSecret: secrets.sessionSecret,
   corsOrigins: env.CORS_ORIGINS,
   snapshot: (topic) => (topic === "prices" ? gateway.snapshot() : []),
+  beatData: () => ({ h: gateway.healthDigest() }),
 });
 
 await listen(app, env.PORT, env.HOST, async () => {

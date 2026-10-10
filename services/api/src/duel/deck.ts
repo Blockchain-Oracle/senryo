@@ -1,9 +1,18 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { type Hex, seriesIdOf, windowIdOf } from "@senryo/chain";
-import { CALENDARS, type CadenceSec, type ChainId, DUEL, feedIdOf, marketsOn } from "@senryo/config";
+import {
+  CALENDARS,
+  type CadenceSec,
+  type ChainId,
+  DUEL,
+  type FeedState,
+  feedIdOf,
+  isQuotable,
+  marketsOn,
+} from "@senryo/config";
 import { scheduleOf, sessionCovers } from "@senryo/core";
 import type { DuelCardRef } from "@senryo/service-common";
-import { DECK_CADENCES, DECK_MARGIN_SEC, DECK_PRICE_FRESH_SEC, SEED_BYTES } from "./constants.ts";
+import { DECK_CADENCES, DECK_MARGIN_SEC, SEED_BYTES } from "./constants.ts";
 
 /**
  * The deckmaster (D-294): three cards, each the running window of a different market, with room to play past the
@@ -14,8 +23,8 @@ import { DECK_CADENCES, DECK_MARGIN_SEC, DECK_PRICE_FRESH_SEC, SEED_BYTES } from
  * reveal.
  */
 export interface DeckSource {
-  /** The newest price the gateway has for a feed (a stale or missing one leaves the market out). */
-  latestE8(feedId: Hex): { publishTime: number } | undefined;
+  /** The market's price state (FeedStates): a card is dealt only on a quotable price. */
+  feedState(feedId: Hex): FeedState;
 }
 
 /** Every window a card could be right now, grouped by cadence in `DECK_CADENCES` order. */
@@ -28,8 +37,7 @@ export function candidates(chainId: ChainId, nowSec: number, prices: DeckSource)
       const expiry = start + cadenceSec;
       if (expiry - nowSec < need) return [];
       if (!sessionCovers(scheduleOf(CALENDARS[m.calendarId].schedule), start, expiry)) return [];
-      const latest = prices.latestE8(feedIdOf(m));
-      if (!latest || nowSec - latest.publishTime > DECK_PRICE_FRESH_SEC) return [];
+      if (!isQuotable(prices.feedState(feedIdOf(m)))) return [];
       const seriesId = seriesIdOf(m.symbol, cadenceSec);
       return [{ windowId: windowIdOf(seriesId, start), seriesId, symbol: m.symbol, cadenceSec, start, expiry }];
     }),

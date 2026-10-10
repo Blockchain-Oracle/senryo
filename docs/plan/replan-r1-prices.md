@@ -125,13 +125,32 @@ live PnL at about 8 Hz. No contract change.
     before; `savePrint` notifies nothing. Exit 0.
 
 ### State and transport
-- [ ] R1.9 `FeedState` end to end (R6):
+- [x] R1.9 `FeedState` end to end (R6):
   - each catalogue market declares `cadenceMs`/`staleMs` per source;
   - the gateway computes `live · delayed · stale · closed · halted · fallback` from server time and the calendar;
   - a `health` topic, plus a digest in the beat;
   - `/status` reports prices per source;
   - `PriceBook` keeps the server state;
   - the D-289 halts get two-observation hysteresis.
+  - *As built (10 Oct):* `@senryo/config` holds `FEED_STATES`, one-letter codes, `FEED_TIMING` per source
+    (`feedTimingOf`: a basket its slowest member's), `isQuotable` (live only) and `isWatchable` (live or delayed).
+    `prices/feed-state.ts` judges every market each second from server time: calendar → `closed`; a Pyth D-289 halt
+    (> 15 s or > 50 bps while open) confirmed over two observations (Owarine `confirmHalt`); then age vs its source's
+    timing — a live → delayed demotion also waits for a second look (Pyth stamps whole seconds); a basket takes its
+    worst member. **Deviation:** the digest rides the existing `prices` topic as event `h` (and every `time` beat), not
+    a new `health` topic — today's api 400s a request naming an unknown topic, so a new topic would break any client
+    that deploys first. `/v1/status` reports `prices` (ok / degraded / down), `priceSources` (counts per source) and
+    `priceDiagnostics` (streams, fetcher, watch, silences). Exits use `isWatchable`, Lucky and the duel deck
+    `isQuotable` (three ad-hoc freshness constants deleted); the relay refuses opens on a halted market
+    (`409 MARKET_HALTED`, cash-outs still allowed). The client `PriceBook` holds the server's states (trusted 35 s
+    after the last digest, else judged from receipt time at the source's timing); `isStale` = not quotable; a reseeded
+    point is aged by its age at the server (F8). **Finding:** RedStone packages appear 4.2–6.5 s after their grid point
+    (measured), so the read moved from +2.5 s (it always got the previous point) to +7 s, timing 20 s / 30 s, fill wait
+    20 s, and the poll scheduler no longer skips the current cycle. Checks: pure (halt and demotion hysteresis,
+    RedStone cadence, basket worst, Saturday closed, digest only on change) and **end to end** (live Hermes + RedStone →
+    the real gateway on scratch Postgres → `/v1/stream` → `@senryo/live`): crypto and RedStone crypto live, Saturday's
+    markets closed, `/v1/status` "19 live · 15 closed", event loop p99 2.5 ms (one 24 ms max at start-up), 136 boundary
+    prints back-filled on start. Exit 0.
 - [ ] R1.10 The ticket is decoupled from prices: public topics connect at once, `user:` joins on a later reconnect, and a
   refused user topic gets `event: topic-error` (R8).
 - [ ] R1.11 Transport (R9):

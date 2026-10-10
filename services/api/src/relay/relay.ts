@@ -87,6 +87,14 @@ export class MarketRelay {
     // No price source (D-310): no open can fill and no cash-out can price; the window refunds if none returns.
     const paused = this.d.gateway.pausedReason(checked.market);
     if (paused) throw new HttpError(HTTP_STATUS.conflict, "MARKET_PAUSED", paused);
+    // A halt (D-289) stops new calls, never a cash-out.
+    if (req.intent.action === ACTION_OPEN && this.d.gateway.feedState(feedIdOf(checked.market)) === "halted") {
+      throw new HttpError(
+        HTTP_STATUS.conflict,
+        "MARKET_HALTED",
+        `${checked.market.symbol} is halted while its price steadies. Calls reopen on their own.`,
+      );
+    }
     const owner = req.intent.owner.toLowerCase();
     const kind = req.intent.action === ACTION_OPEN ? "open" : "close";
     const body = JSON.stringify({ ...req, checked }, (_k, v) => (typeof v === "bigint" ? v.toString() : v));
