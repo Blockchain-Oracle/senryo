@@ -17,7 +17,7 @@ export function ListRow({
   trailing,
 }: {
   title: string;
-  detail?: string;
+  detail?: string | undefined;
   onPress?: () => void;
   leading?: ReactNode;
   trailing?: ReactNode;

@@ -5,7 +5,8 @@ import type { GatewayStatus } from "./gateway.ts";
 /**
  * `/status` from the price states (04-pricing R6, F7 — it used to say "not wired yet"): a source is ok when every open
  * market on it is live, down when none is even delayed, degraded otherwise; a closed market counts for nothing. A
- * display fallback is not live (it moves the line, never a quote).
+ * display fallback is not live (it moves the line, never a quote). Prices overall follow the same rule over every
+ * market: one source down with others live is degraded, not down (it read "down" with BTC live, 10 Oct).
  */
 type Health = "ok" | "degraded" | "down" | "unknown";
 
@@ -21,8 +22,6 @@ function words(counts: Record<FeedState, number>): string {
     .join(" · ");
 }
 
-const WORST: readonly Health[] = ["down", "degraded", "unknown", "ok"];
-
 export function priceStatus(g: GatewayStatus, stream: FanoutStats) {
   const priceSources = Object.entries(g.states).map(([source, counts]) => ({
     source,
@@ -31,7 +30,7 @@ export function priceStatus(g: GatewayStatus, stream: FanoutStats) {
   }));
   const total = Object.fromEntries(FEED_STATES.map((s) => [s, 0])) as Record<FeedState, number>;
   for (const { counts } of priceSources) for (const s of FEED_STATES) total[s] += counts[s];
-  const state = g.keyed ? (WORST.find((h) => priceSources.some((p) => p.state === h)) ?? "ok") : "down";
+  const state = g.keyed ? healthOf(total) : "down";
   return {
     prices: { state, detail: g.keyed ? words(total) : "no Pyth key" },
     priceSources,

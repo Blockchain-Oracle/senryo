@@ -87,7 +87,14 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
   - *As built (10 Oct):* Earn, Duels and Events on both apps say "… isn't open yet" / "… aren't open yet"; the shared
     "not here yet" diagnosis no longer says "deployed". Earn's failed read shows the app's error panel with Retry on
     both apps (the phone used to sit on its loading skeleton forever after a failed read).
-- [ ] R2.10 The phone Status screen reads `/status` (prices per source, relay, keeper), or the route goes.
+- [x] R2.10 The phone Status screen reads `/status` (prices per source, relay, keeper), or the route goes.
+  - *As built (10 Oct):* the placeholder is gone: Status (Settings → Status) reads `/v1/status` every 15 s through a new
+    `useStatus()` — prices overall and per source (Pyth and the baskets with their marks; "7 live · 5 closed"), each
+    network's connection with the latest block's age and how far history trails, and deposits; states in words
+    (Working, Partly delayed, Down), failures with Retry. Relay and keeper aren't in `/status`, so the screen doesn't
+    claim them. Found on the way: the api rolled "prices overall" up as the worst source, so RedStone's public gateway
+    refusing (403, its keyless window, D-310) made the whole service read "down" with BTC live; overall now follows
+    its own rule over every market (degraded). Simulator view waits for the simulator pass.
 - [ ] R2.11 Settings and copy for absent features are hidden until their stage: leaderboard, invites, price alerts,
   "a stock market you watch".
 - [ ] R2.12 `docs/judges.md` (rendered at `/judges`), the landing and the Calls copy match the screens: 34 markets, what
