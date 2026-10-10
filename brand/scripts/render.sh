@@ -56,5 +56,8 @@ rsvg-convert -w 600 -h 600 senryo-seal.svg | magick - -background none -gravity 
 uv run -q --no-project --python 3.12 python scripts/art.py
 uv run -q --no-project --python 3.12 python scripts/onboarding.py
 (cd "$BRAND/.." && pnpm --filter @senryo/identity codegen --rehash)
+# The scenes' flattened copies: the landing's WebPs and the phone story's layers (both drawn from the masters above).
+node "$BRAND/../apps/web/scripts/website-art.mjs"
+node "$BRAND/../apps/mobile/scripts/onboarding-art.mjs"
 
 ls -la "$BRAND"/*.png
