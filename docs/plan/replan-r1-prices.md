@@ -115,8 +115,14 @@ live PnL at about 8 Hz. No contract change.
     routes moved to `api-client/routes/prices.ts` (markets.ts hit 402 lines; three price routes come in R1.14–R1.19).
     Scratch check at a clock past the end: 19 paused (18 + TECH), 0 before it or with a key, 0 Pyth; the words; the
     keyless reader makes 0 requests, a keyed one still reads. Exit 0.
-- [ ] R1.8 Hygiene (R18): delete the dead `pg_notify('pyth_print')`; close the open candle on a minute timer and on
+- [x] R1.8 Hygiene (R18): delete the dead `pg_notify('pyth_print')`; close the open candle on a minute timer and on
   shutdown.
+  - *As built (10 Oct):* the NOTIFY is gone (no listener anywhere). `PriceArchive.start()` closes, 5 s after each
+    minute, any candle no next minute closed; `flush()` writes every open candle on shutdown (`gateway.stop()` is
+    async and awaited before `db.end()`). Candle writes **merge** (`ON CONFLICT DO UPDATE`: first open kept, high/low
+    widened, the later close), so a minute split by a restart is whole. Scratch check on the scratch Postgres: a split
+    minute reads open 100 / high 120 / low 95 / close 118; a quiet market's candle lands 5 s after its minute, not
+    before; `savePrint` notifies nothing. Exit 0.
 
 ### State and transport
 - [ ] R1.9 `FeedState` end to end (R6):

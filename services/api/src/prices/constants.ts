@@ -35,6 +35,8 @@ export const BACKOFF_MAX_MS = 30_000;
 export const ROTATE_AFTER_MS = (23 * 60 + 45) * 60 * 1000;
 /** Window boundaries are archived on every minute (all cadences divide one hour). */
 export const BOUNDARY_SEC = 60;
+/** A candle with no next minute is closed this long after its minute ends (late frames still fold in). */
+export const CANDLE_CLOSE_GRACE_SEC = 5;
 /** At most one price frame per feed per this many ms on `/v1/stream` (Owarine's coalescer). */
 export const FRAME_GAP_MS = 125;
 /** How often the print watch looks for instants a position needs that never archived (04-pricing R3). */

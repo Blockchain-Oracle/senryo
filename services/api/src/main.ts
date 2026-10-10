@@ -235,7 +235,7 @@ await listen(app, env.PORT, env.HOST, async () => {
     m.exits.stop();
     m.duels?.queue.stop();
   }
-  gateway.stop();
+  await gateway.stop();
   for (const chain of chains.values()) await chain.heads.stop();
   await db.end();
 });

@@ -116,6 +116,7 @@ export class PythGateway {
     const { pythKey, hermesOrigin, redstoneGateways } = this.upstream;
     this.redstone = new RedStoneReader(redstoneFeeds, (u) => this.onUpdate(u), this.log, redstoneGateways);
     this.redstone.start();
+    this.archive.start();
     const access = pythKey ? { origin: hermesOrigin, key: pythKey } : undefined;
     const fetcher = new PrintFetcher(access, this.redstone, this.log);
     this.fetcher = fetcher;
@@ -152,11 +153,13 @@ export class PythGateway {
     }
   }
 
-  stop(): void {
+  /** Stops the streams and timers, then writes the open candles. */
+  async stop(): Promise<void> {
     this.watch.stop();
     this.silence?.stop();
     for (const stream of this.streams.values()) stream.stop();
     this.redstone?.stop();
+    await this.archive.flush();
   }
 
   status(): GatewayStatus {
