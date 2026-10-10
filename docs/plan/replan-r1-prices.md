@@ -33,11 +33,21 @@ live PnL at about 8 Hz. No contract change.
     is tried. The scheduled poll catches. Probed live: gateway-1 answers `historical` with 200 `text/html` "Hello! I am
     working correctly". Scratch check against a fake gateway (placeholder 200, truncated JSON, 429, a real payload, a
     throwing ingest, a stray rejection): all pass, exit 0.
-- [ ] R1.2 `PrintFetcher` (R2):
+- [x] R1.2 `PrintFetcher` (R2):
   - single-flight per (feed, t) and a token bucket per source (Hermes 1/s with a burst of 5; RedStone ≤ 0.5 rps);
   - never asks for t > now − grace;
   - one RedStone `historical` per grid point, cached 60 s;
   - its own backoff, separate from the live poll.
+  - *As built (10 Oct):* `prices/print-fetcher.ts` is the only upstream REST path (`gateway.printAt`'s last step).
+    Hermes asks for one instant share **one call per entitlement class** (crypto · tradfi, `hermesClassOf`) with
+    `ignore_invalid_price_ids=true` (confirmed on the live OpenAPI), so single-flight per (feed, t) falls out of the
+    batch. `prices/upstream.ts` holds the reservation `TokenBucket` (a caller waits ≤ 3 s, else refused) and `Backoff`
+    (the RedStone poll now uses its own). 404 is "missing", never a rest; 401/403/429/5xx and network errors rest the
+    source 5 s → 120 s. `archivePending` asks only for `target ≤ now − 2 s`. Counters per source in
+    `gateway.status().rest` (wired to `/status` in R1.9). HermesStream is stream-only now. Scratch check: early asks
+    make no call; 7 asks at one t → 2 calls; 404 doesn't rest, 429 does; 12 instants at once → 8 calls in 3.0 s and 4
+    refused; 4 RedStone asks → 1 history read; and **one real Hermes call** returned BTC/ETH/SOL prints with
+    prev < t ≤ publish. Exit 0.
 - [ ] R1.3 `PrintWatch` (R3):
   - every 2 s, back-fills any window start or expiry that has tickets and no archived print by t + 2 s;
   - on a Hermes reconnect, back-fills each minute boundary in the gap;

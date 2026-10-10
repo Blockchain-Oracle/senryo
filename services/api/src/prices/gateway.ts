@@ -4,8 +4,9 @@ import { basketPointsE8 } from "@senryo/core";
 import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
-import { FRAME_GAP_MS, PRINT_WAIT_MS, REDSTONE_GRID_MS, REDSTONE_PRINT_WAIT_MS, RING_KEEP_SEC } from "./constants.ts";
+import { FRAME_GAP_MS, PRINT_GRACE_SEC, PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS, RING_KEEP_SEC } from "./constants.ts";
 import { type HermesStatus, HermesStream } from "./hermes.ts";
+import { PrintFetcher, type PrintFetchStats, type PrintSourceKind } from "./print-fetcher.ts";
 import { type RedStoneGateway, RedStoneReader } from "./redstone.ts";
 import { FeedRing, type PriceUpdate, toE8 } from "./ring.ts";
 
@@ -13,7 +14,8 @@ import { FeedRing, type PriceUpdate, toE8 } from "./ring.ts";
  * The one Pyth gateway (D-272): the only holder of the Pyth key. One Hermes stream for every catalogue feed fans out
  * as compact ticks on `/v1/stream` (one coalescer per feed for the whole process), folds 1-minute candles, archives
  * every minute boundary with its proof the moment it streams (`prints` topic + `pyth_prints`), and answers the relay's
- * "the unique print of t" from the ring, the stream, the archive, then Hermes REST — in that order. A basket (D-286)
+ * "the unique print of t" from the ring, the stream, the archive, then upstream REST through the `PrintFetcher` (its
+ * own rate and backoff, 04-pricing R2) — in that order. A basket (D-286)
  * is its members: its live value is recomputed on every member tick (chart, candles and ticks as for any market), and
  * its print of t is every member's print of t composed — the index, the members' updates in member order — archived
  * under the basket's id the moment the last member's arrives.
@@ -38,6 +40,7 @@ export class PythGateway {
   private readonly pendingFrame = new Map<Hex, ReturnType<typeof setTimeout>>();
   private hermes: HermesStream | undefined;
   private redstone: RedStoneReader | undefined;
+  private fetcher: PrintFetcher | undefined;
 
   constructor(
     db: Db,
@@ -68,16 +71,19 @@ export class PythGateway {
   /**
    * Archives the print of every pending fill instant still in the ring (calls and every parlay leg, the relay's own and
    * anyone else's), so the keeper can back-fill from the archive even if this process restarts between commit and fill.
+   * Only instants that can have a print by now: a future target would only cost an upstream call (F2).
    */
   async archivePending(db: Db): Promise<void> {
-    const since = nowSec() - RING_KEEP_SEC;
+    const now = nowSec();
+    const since = now - RING_KEEP_SEC;
+    const until = now - PRINT_GRACE_SEC;
     const rows = await db<{ series_id: string; target: bigint }[]>`
       SELECT DISTINCT series_id, target FROM market_tickets
-      WHERE state IN ('committed', 'closing') AND target IS NOT NULL AND target > ${since}
+      WHERE state IN ('committed', 'closing') AND target IS NOT NULL AND target > ${since} AND target <= ${until}
       UNION
       SELECT DISTINCT l.series_id, p.target FROM market_parlays p
       JOIN market_parlay_legs l ON l.chain_id = p.chain_id AND l.parlay_id = p.parlay_id
-      WHERE p.state = 'committed' AND p.target IS NOT NULL AND p.target > ${since}`;
+      WHERE p.state = 'committed' AND p.target IS NOT NULL AND p.target > ${since} AND p.target <= ${until}`;
     for (const r of rows) {
       const feed = this.feeds.find((f) =>
         f.market.cadences.some((c) => seriesIdOf(f.market.symbol, c) === r.series_id),
@@ -94,6 +100,7 @@ export class PythGateway {
     );
     this.redstone = new RedStoneReader(redstoneFeeds, (u) => this.onUpdate(u), this.log, this.redstoneGateways);
     this.redstone.start();
+    this.fetcher = new PrintFetcher(this.key, this.redstone, this.log);
     if (!this.key) {
       this.log.warn("PYTH_API_KEY unset — prices and prints are off");
       return;
@@ -112,10 +119,11 @@ export class PythGateway {
     this.redstone?.stop();
   }
 
-  status(): HermesStatus & { keyed: boolean } {
+  status(): HermesStatus & { keyed: boolean; rest: Record<PrintSourceKind, PrintFetchStats> | null } {
     return {
       keyed: Boolean(this.key),
       ...(this.hermes?.status ?? { connected: false, lastFrameAt: 0, lastError: null, lastBadStatus: null }),
+      rest: this.fetcher?.stats() ?? null,
     };
   }
 
@@ -129,8 +137,8 @@ export class PythGateway {
 
   /**
    * The unique print of `t` for a feed, with the bytes the chain verifies: the ring, then waiting for it to stream
-   * (up to `waitMs` — a fill asks a second ahead), then the archive, then Hermes REST. Archived on the way, so the
-   * keeper and Proof find it later.
+   * (up to `waitMs` — a fill asks a second ahead), then the archive, then upstream REST (catalogue feeds only).
+   * Archived on the way, so the keeper and Proof find it later.
    */
   async printAt(feedId: Hex, t: number, waitMs?: number): Promise<PriceUpdate | undefined> {
     const feed = this.byId.get(feedId);
@@ -145,17 +153,9 @@ export class PythGateway {
     }
     const archived = await this.archive.printAt(feedId, t);
     if (archived) return archived;
-    const rest = redstone ? await this.redstoneAt(feedId, t) : await this.hermes?.printAt(feedId, t);
+    const rest = feed ? await this.fetcher?.printAt(feed.market, t) : undefined;
     if (rest) await this.archive.savePrint(rest, t, "rest");
     return rest;
-  }
-
-  /** A RedStone print of t from the gateway's history (the grid point at or after t). */
-  private async redstoneAt(feedId: Hex, t: number): Promise<PriceUpdate | undefined> {
-    const gridSec = REDSTONE_GRID_MS / MS_PER_SECOND;
-    const at = Math.ceil(t / gridSec) * gridSec;
-    const updates = (await this.redstone?.historical(at * MS_PER_SECOND)) ?? [];
-    return updates.find((u) => u.feedId === feedId);
   }
 
   /** A basket's print of t: every member's print of t, composed and archived (none while any member has none). */

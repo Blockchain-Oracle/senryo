@@ -1,5 +1,6 @@
 import type { Hex } from "@senryo/chain";
-import type { Logger } from "@senryo/service-common";
+import type { MarketKind } from "@senryo/config";
+import { HTTP_STATUS, type Logger } from "@senryo/service-common";
 import { createParser } from "eventsource-parser";
 import {
   BACKOFF_MAX_MS,
@@ -10,11 +11,13 @@ import {
   WATCHDOG_MS,
 } from "./constants.ts";
 import type { PriceUpdate } from "./ring.ts";
+import type { UpstreamOutcome } from "./upstream.ts";
 
 /**
  * Hermes over raw `fetch` + `eventsource-parser` (D-272): the key travels only in the `Authorization` header (never a
  * URL — `@pythnetwork/hermes-client` puts it in the query), one stream for all feeds, a watchdog, jittered backoff and
- * an overlapping rotation before Hermes closes the stream at 24 h. Errors are counted by status for `/status`.
+ * an overlapping rotation before Hermes closes the stream at 24 h. Errors are counted by status for `/status`. Prints
+ * the stream missed come from `hermesPrintsAt`, called only by the `PrintFetcher` (its own rate and backoff).
  */
 
 interface HermesParsed {
@@ -54,6 +57,50 @@ function query(feedIds: readonly Hex[]): string {
   return feedIds.map((id) => `ids[]=${id.slice(2)}`).join("&");
 }
 
+/**
+ * The key's entitlement classes (04-pricing R5): a feed the key isn't entitled to makes Hermes refuse the whole request
+ * (403, D-281), so crypto and the rest (equities, metals, fx) never share one call.
+ */
+export type HermesClass = "crypto" | "tradfi";
+
+export function hermesClassOf(kind: MarketKind): HermesClass {
+  return kind === "crypto" ? "crypto" : "tradfi";
+}
+
+/** Statuses that mean the key, the entitlement, the rate or the service: the caller rests. Other 4xx are our asks. */
+function rests(status: number): boolean {
+  return (
+    status === HTTP_STATUS.unauthorized ||
+    status === HTTP_STATUS.forbidden ||
+    status === HTTP_STATUS.tooMany ||
+    status >= HTTP_STATUS.internal
+  );
+}
+
+/**
+ * Hermes REST: for each feed, the first update whose publish time is ≥ t (the unique print of t) — one call for many
+ * feeds of one class. Unknown ids are ignored rather than failing the call. 404 is "no such print", not a failure.
+ */
+export async function hermesPrintsAt(
+  key: string,
+  feedIds: readonly Hex[],
+  t: number,
+): Promise<UpstreamOutcome<Map<Hex, PriceUpdate>>> {
+  const url = `${HERMES_ORIGIN}/v2/updates/price/${t}?${query(feedIds)}&encoding=hex&parsed=true&ignore_invalid_price_ids=true`;
+  try {
+    const res = await fetch(url, {
+      headers: { authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(REST_TIMEOUT_MS),
+    });
+    if (res.status === HTTP_STATUS.notFound) return { kind: "missing" };
+    if (!res.ok) return { kind: "failed", reason: `HTTP ${res.status}`, rest: rests(res.status) };
+    const updates = updatesOf((await res.json()) as HermesMessage, Date.now());
+    return { kind: "ok", value: new Map(updates.map((u) => [u.feedId, u])) };
+  } catch (error) {
+    return { kind: "failed", reason: (error as Error).name, rest: true };
+  }
+}
+
 export class HermesStream {
   readonly status: HermesStatus = { connected: false, lastFrameAt: 0, lastError: null, lastBadStatus: null };
   private controller: AbortController | undefined;
@@ -74,20 +121,6 @@ export class HermesStream {
   stop(): void {
     this.stopped = true;
     this.controller?.abort();
-  }
-
-  /** The unique print of `t` from Hermes REST — only when the stream missed it (the gateway's break-glass). */
-  async printAt(feedId: Hex, t: number): Promise<PriceUpdate | undefined> {
-    const url = `${HERMES_ORIGIN}/v2/updates/price/${t}?${query([feedId])}&encoding=hex&parsed=true`;
-    const res = await fetch(url, {
-      headers: { authorization: `Bearer ${this.key}` },
-      signal: AbortSignal.timeout(REST_TIMEOUT_MS),
-    });
-    if (!res.ok) {
-      this.status.lastBadStatus = res.status;
-      return undefined;
-    }
-    return updatesOf((await res.json()) as HermesMessage, Date.now()).find((u) => u.feedId === feedId);
   }
 
   private async connect(): Promise<void> {

@@ -10,6 +10,7 @@ import {
   REDSTONE_SERVICE,
 } from "./constants.ts";
 import type { PriceUpdate } from "./ring.ts";
+import { Backoff } from "./upstream.ts";
 
 /**
  * RedStone's signed packages (D-284) for the markets it prices: one "latest" read a little after each 10-second grid
@@ -18,7 +19,8 @@ import type { PriceUpdate } from "./ring.ts";
  * and handed to the gateway as an update whose instant is its grid point — so archiving, boundary prints, candles, ticks
  * and baskets work as for Pyth. Values are read from the response's exact decimal text (a float would change the
  * signed bytes). Keys (`REDSTONE_GATEWAYS`) travel only in `x-api-key`, never in a log; without one the public pair
- * answers outside RedStone's refusal windows (until 29 Oct 2026), and a refusal rests the reader, doubling to 10 min.
+ * answers outside RedStone's refusal windows (until 29 Oct 2026), and a refusal rests the live poll, doubling to
+ * 10 min. `historical` never rests the poll: the `PrintFetcher` calls it under its own rate and backoff (R2, F2).
  * A 2xx is trusted only when it is the gateway's JSON and decodes (04-pricing F1): gateway-1 answers unknown and
  * `historical` paths with a 200 `text/html` "Hello! I am working correctly", which once threw out of the poll and
  * would have exited the api.
@@ -119,8 +121,7 @@ function parse(text: string, wanted: ReadonlySet<string>): Map<string, Package[]
 export class RedStoneReader {
   private readonly gateways: RedStoneGateway[];
   private timer: ReturnType<typeof setTimeout> | undefined;
-  private restUntil = 0;
-  private backoffMs = REDSTONE_BACKOFF_MIN_MS;
+  private readonly backoff = new Backoff(REDSTONE_BACKOFF_MIN_MS, REDSTONE_BACKOFF_MAX_MS);
   lastOkAt = 0;
   lastError: string | null = null;
 
@@ -142,9 +143,12 @@ export class RedStoneReader {
     if (this.timer) clearTimeout(this.timer);
   }
 
-  /** Each feed's update at the grid point `ms` from the gateway's history (the print a fill or boundary missed). */
-  async historical(ms: number): Promise<PriceUpdate[]> {
-    return (await this.read(`data-packages/historical/${REDSTONE_SERVICE}/${ms}`, (text) => this.updates(text))) ?? [];
+  /**
+   * Each feed's update at the grid point `ms` from the gateway's history (the print a fill or boundary missed), or
+   * undefined when every gateway failed (`lastError` says why).
+   */
+  async historical(ms: number): Promise<PriceUpdate[] | undefined> {
+    return this.read(`data-packages/historical/${REDSTONE_SERVICE}/${ms}`, (text) => this.updates(text));
   }
 
   private schedule(): void {
@@ -154,12 +158,18 @@ export class RedStoneReader {
       void this.poll()
         .catch((error) => this.log.warn({ err: (error as Error).message }, "redstone poll failed"))
         .finally(() => this.schedule());
-    }, Math.max(next, this.restUntil) - now);
+    }, Math.max(next, this.backoff.until) - now);
   }
 
   private async poll(): Promise<void> {
     const updates = await this.read(`data-packages/latest/${REDSTONE_SERVICE}`, (text) => this.updates(text));
-    for (const u of updates ?? []) this.onUpdate(u);
+    if (!updates) {
+      const restMs = this.backoff.fail();
+      this.log.warn({ err: this.lastError, restMs }, "redstone unavailable; resting");
+      return;
+    }
+    this.backoff.ok();
+    for (const u of updates) this.onUpdate(u);
   }
 
   private updates(text: string): PriceUpdate[] {
@@ -187,13 +197,13 @@ export class RedStoneReader {
 
   /**
    * One read across the gateways in order. A gateway fails on a refusal (403/429/5xx), a timeout, a 2xx that isn't its
-   * JSON, or a body that doesn't decode; the next one is tried. When every gateway fails, the reader rests with a
-   * doubling backoff.
+   * JSON, or a body that doesn't decode; the next one is tried. Undefined when every gateway failed.
    */
   private async read<T>(path: string, decode: (text: string) => T | Promise<T>): Promise<T | undefined> {
     for (const g of this.gateways) {
-      const host = new URL(g.url).host;
+      let host = g.url;
       try {
+        host = new URL(g.url).host;
         const res = await fetch(`${g.url.replace(/\/+$/, "")}/${path}`, {
           headers: g.apiKey ? { "x-api-key": g.apiKey } : {},
           signal: AbortSignal.timeout(REDSTONE_FETCH_TIMEOUT_MS),
@@ -210,15 +220,11 @@ export class RedStoneReader {
         const value = await decode(text);
         this.lastOkAt = Date.now();
         this.lastError = null;
-        this.backoffMs = REDSTONE_BACKOFF_MIN_MS;
         return value;
       } catch (error) {
         this.lastError = `${(error as Error).name} from ${host}`;
       }
     }
-    this.restUntil = Date.now() + this.backoffMs;
-    this.log.warn({ err: this.lastError, restMs: this.backoffMs }, "redstone unavailable; resting");
-    this.backoffMs = Math.min(this.backoffMs * 2, REDSTONE_BACKOFF_MAX_MS);
     return undefined;
   }
 }

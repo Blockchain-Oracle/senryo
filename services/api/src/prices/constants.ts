@@ -22,6 +22,8 @@ export const FRAME_GAP_MS = 125;
 export const ARCHIVE_PENDING_MS = 2_000;
 /** A REST lookup for a print that never streamed. */
 export const REST_TIMEOUT_MS = 4_000;
+/** Never ask upstream for the print of t before t + this: Pyth's first publish ≥ t lands about a second after t. */
+export const PRINT_GRACE_SEC = 2;
 /** Kept in `pyth_prints` (window boundaries and fills): the chain holds them forever; the archive serves proofs. */
 export const PRINT_RETENTION_DAYS = 14;
 
@@ -41,3 +43,21 @@ export const REDSTONE_PRINT_WAIT_MS = 15_000;
 export const REDSTONE_FETCH_TIMEOUT_MS = 8_000;
 export const REDSTONE_BACKOFF_MIN_MS = 60_000;
 export const REDSTONE_BACKOFF_MAX_MS = 600_000;
+
+// ------------------------------------------------------------------------------------- PrintFetcher (04-pricing R2)
+
+/** Hermes REST for prints the stream missed: 1 a second with bursts of 5 (`pivot-2026-10-08.md` "Stack"). */
+export const HERMES_REST_RATE_PER_SEC = 1;
+export const HERMES_REST_BURST = 5;
+/** RedStone's keyed gateway allows about 1 request a second per key; history reads take at most half of it. */
+export const REDSTONE_HISTORY_RATE_PER_SEC = 0.5;
+export const REDSTONE_HISTORY_BURST = 1;
+/** One `historical` read (~2 MB, every feed) serves every RedStone print at its grid point for this long. */
+export const REDSTONE_HISTORY_CACHE_MS = 60_000;
+/** A caller waits at most this long for a rate token; past it the call is refused (counted) and its own retry decides. */
+export const PRINT_FETCH_MAX_QUEUE_MS = 3_000;
+/** Asks for one instant arriving this close together share one Hermes call (one per entitlement class). */
+export const PRINT_BATCH_COLLECT_MS = 25;
+/** A failing REST source rests, doubling — its own backoff, apart from the live stream's and the live poll's. */
+export const PRINT_FETCH_BACKOFF_MIN_MS = 5_000;
+export const PRINT_FETCH_BACKOFF_MAX_MS = 120_000;
