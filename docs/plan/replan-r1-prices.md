@@ -264,6 +264,15 @@ live PnL at about 8 Hz. No contract change.
     look); its chart tag and panel carry the state. Checks: the words for all seven cases; in the preview against
     production, BTC's chip "Live" with a full-strength line and TSLA's "Closed" with its closed panel. **Not seen yet:**
     a frozen, dimmed line — production had no stale market to show; it joins the R1 simulator pass.
+  - *Owner, 10 Oct: "a closed market doesn't mean we can't see the chart".* A closed market now draws its **last
+    session** from our 1-minute candle archive (`useRecentCandles`, four days back; `sessionHistory` keeps the last
+    contiguous session — a gap over 15 min ends one — and spreads it over the chart's samples with `fillLine`): the
+    scale fitted to its low and high, the pill on its close, "Closed" beside it, at full strength (history is real;
+    only a live line gone stale is dimmed); frozen frames don't move it; on reopening the chart starts afresh. Both
+    engines (web `setHistory`, phone `loadHistory` on the UI thread). Axis labels now give way to the tag too.
+    Checked: `sessionHistory` drops the earlier session across an overnight gap; the real web engine drawing BTC's
+    real last six hours as a closed market (05:33–11:34 UTC, $82,565–$82,877, close $82,742.74, "Closed"). In
+    production TSLA still shows "Waiting" until the catalogue deploy (prod prices only BTC/ETH/SOL).
 - [ ] R1.21 Charts at any refresh rate (R17):
   - sub-sample x scroll from `sampleDebt`;
   - a dt-correct dot drift;

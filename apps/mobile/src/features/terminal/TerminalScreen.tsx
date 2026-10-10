@@ -4,11 +4,11 @@
  * renders on events and once a second for the countdown. The call flow — the panel's states, open and cash out with
  * their guards, following a call to its fill — is `@senryo/calls` `useCallFlow`, the same on the web.
  */
-import { type CallMode, exitLine, isCallMode } from "@senryo/calls";
+import { type CallMode, exitLine, isCallMode, sessionHistory } from "@senryo/calls";
 import { useCallFlow, useExitActions, useMarketLine, usePriceHealth } from "@senryo/calls/react";
 import { type ExitPrices, hasExit } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
-import { useWindowLoad } from "@senryo/query";
+import { useRecentCandles, useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -28,8 +28,9 @@ import { BasketMembers } from "./BasketMembers";
 import { CallPanel } from "./CallPanel";
 import { CashOutSheet } from "./CashOutSheet";
 import { CrowdLine } from "./CrowdLine";
-import { type ChartHealth, LIVE } from "./chart/constants";
+import { type ChartHealth, type ChartHistory, LIVE } from "./chart/constants";
 import type { Head } from "./chart/draw";
+import { SAMPLE_CAPACITY } from "./chart/engine";
 import { LiveChart } from "./chart/LiveChart";
 import { ExitSheet } from "./ExitSheet";
 import { MarketsSheet } from "./MarketsSheet";
@@ -73,6 +74,16 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   useEffect(() => {
     health.value = { live: priceHealth.live, tag: priceHealth.tag };
   }, [health, priceHealth.live, priceHealth.tag]);
+  // A closed market still shows its chart: its last session from our candle archive.
+  const closed = !session.trading && !session.paused;
+  const candles = useRecentCandles(t.symbol, t.now, closed);
+  const history = useSharedValue<ChartHistory | null>(null);
+  const historySeq = useRef(0);
+  useEffect(() => {
+    const past = closed && "value" in candles ? sessionHistory(candles.value.candles, SAMPLE_CAPACITY) : null;
+    if (past) historySeq.current += 1;
+    history.value = past ? { seq: historySeq.current, ...past } : null;
+  }, [closed, candles, history]);
   const account = useAccount();
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<"stake" | "part" | "exit" | null>(null);
@@ -140,6 +151,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           waiting={`Waiting for ${t.symbol}…`}
           head={head}
           health={health}
+          history={history}
         />
         <ReactionOverlay ref={reactions} head={head} />
       </View>

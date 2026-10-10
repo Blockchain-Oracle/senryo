@@ -19,6 +19,8 @@ export const MAX_TICK_GAP_MS = 5000;
 export const RESEED_WINDOW_MS = 1_000;
 /** A price that isn't live (R1.20): the frozen line and its head at this strength, and the age tag this far off the pill. */
 export const DIM_ALPHA = 0.4;
+/** A closed market's session fills this much more than its low-to-high range, so neither touches the edge. */
+export const HISTORY_PAD = 1.15;
 export const HEALTH_TAG_GAP = 6;
 
 /** Rolling digits: per-sample approach and snap. */

@@ -16,6 +16,7 @@ export * from "./proof.ts";
 export * from "./quote.ts";
 export * from "./reactions.ts";
 export * from "./receipt.ts";
+export * from "./session-history.ts";
 export * from "./sign.ts";
 export * from "./suggest-handle.ts";
 export * from "./window.ts";

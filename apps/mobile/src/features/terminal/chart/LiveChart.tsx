@@ -19,11 +19,11 @@ import {
 import { setOdometer, setOdometerTrend } from "~/components/kit/odometer";
 import { useTheme } from "~/theme";
 import { CHART_ERASER } from "~/theme/palette";
-import { type ChartHealth, LEVEL_DASH, LIVE, RESEED_WINDOW_MS } from "./constants";
+import { type ChartHealth, type ChartHistory, LEVEL_DASH, LIVE, RESEED_WINDOW_MS } from "./constants";
 import { type ChartOverlay, drawFrame, type Head } from "./draw";
 import { formatValue, priceDecimals, SAMPLE_CAPACITY, SAMPLE_MS } from "./engine";
 import { type DrawKit, makeDotPicture, makeKit } from "./kit";
-import { advance, createChartState, resetChart, takePrice } from "./state";
+import { advance, createChartState, loadHistory, resetChart, takePrice } from "./state";
 
 const E8 = 1e8;
 const MONO = Platform.select({ ios: "Menlo", default: "monospace" });
@@ -43,10 +43,12 @@ export interface LiveChartProps {
   head?: SharedValue<Head | null>;
   /** The price's health (R1.20): not live → the line freezes, dims and shows its age or state. */
   health?: SharedValue<ChartHealth>;
+  /** A closed market's last session (null while it trades): drawn whole and still on its own scale. */
+  history?: SharedValue<ChartHistory | null>;
 }
 
 /** Memoised: its props are stable, so the terminal's once-a-second countdown render never reaches the chart. */
-export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, head, health }: LiveChartProps) {
+export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, head, health, history }: LiveChartProps) {
   const live = useLive();
   useLiveStream();
   const { color } = useTheme();
@@ -142,6 +144,9 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
     const plotW = Math.max(0, size.value.w - PILL_ALLOWANCE);
     state.modify((s) => {
       "worklet";
+      const past = history?.value ?? null;
+      if (past && past.seq !== s.historySeq) loadHistory(s, past);
+      else if (!past && s.historySeq !== 0) resetChart(s);
       const tick = incoming.value;
       if (tick.seq !== s.seenSeq) {
         s.seenSeq = tick.seq;

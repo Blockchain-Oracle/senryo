@@ -6,7 +6,7 @@
  * never render React (`useLiveQuote` → live values and the chart's ref); the screen renders once a second for the
  * countdown and on events. The call flow is `@senryo/calls` `useCallFlow`, the phone's own.
  */
-import { type CallMode, exitLine, isCallMode } from "@senryo/calls";
+import { type CallMode, exitLine, isCallMode, sessionHistory } from "@senryo/calls";
 import {
   DEFAULT_CADENCE,
   useCallFlow,
@@ -17,8 +17,8 @@ import {
 } from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec } from "@senryo/config";
 import { type ExitPrices, hasExit } from "@senryo/core";
-import { useWindowLoad } from "@senryo/query";
-import { useEffect, useRef, useState } from "react";
+import { useRecentCandles, useWindowLoad } from "@senryo/query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { shortcutBlocked } from "@/components/shell/Rail";
 import { SlideOver } from "@/components/ui/drawer";
@@ -35,6 +35,7 @@ import { CallPanel } from "./CallPanel";
 import { CashOutModal } from "./CashOutModal";
 import { CrowdLine } from "./CrowdLine";
 import type { ChartFrame } from "./chart/chart-engine";
+import { SAMPLE_CAPACITY } from "./chart/constants";
 import { LiveChart } from "./chart/LiveChart";
 import { DEFAULT_STAKE, MIN_STAKE } from "./constants";
 import { ExitModal } from "./ExitModal";
@@ -77,6 +78,15 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const priceHealth = usePriceHealth(symbol);
   const health = useRef({ live: priceHealth.live, tag: priceHealth.tag });
   health.current = { live: priceHealth.live, tag: priceHealth.tag };
+  // A closed market still shows its chart: its last session from our candle archive.
+  const closed = !session.trading && !session.paused;
+  const candles = useRecentCandles(symbol, t.now, closed);
+  const sessionLine = useMemo(
+    () => (closed && "value" in candles ? sessionHistory(candles.value.candles, SAMPLE_CAPACITY) : null),
+    [closed, candles],
+  );
+  const history = useRef(sessionLine);
+  history.current = sessionLine;
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
   useReactions(symbol, q.onTick, reactions);
@@ -164,6 +174,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
             waiting={`Waiting for ${symbol}…`}
             onFrame={onFrame}
             health={health}
+            history={history}
             label={`${symbol} live price`}
           />
           <ReactionOverlay ref={reactions} />

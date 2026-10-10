@@ -36,6 +36,17 @@ export const MAX_TICK_GAP_MS = 5000;
 export const RESEED_WINDOW_MS = 1_000;
 /** A price that isn't live (R1.20): the frozen line and its head at this strength, the age tag this far off the pill. */
 export const DIM_ALPHA = 0.4;
+/** A closed market's session fills this much more than its low-to-high range, so neither touches the edge. */
+export const HISTORY_PAD = 1.15;
+
+/** A closed market's last session for the UI thread (`sessionHistory`), numbered so it is loaded once. */
+export interface ChartHistory {
+  seq: number;
+  line: number[];
+  low: number;
+  high: number;
+  close: number;
+}
 export const HEALTH_TAG_GAP = 6;
 
 /** Whether the price is live, and its age or state for the tag when it isn't (`PriceHealth`, R1.20). */

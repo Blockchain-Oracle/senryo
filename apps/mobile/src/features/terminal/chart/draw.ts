@@ -174,7 +174,9 @@ export function drawFrame(
   "worklet";
   drawDots(c, dots, s);
   // A price that isn't live: the frozen line and its head drawn faint, the age or state beside the pill (R1.20).
-  const strength = health.live ? 1 : DIM_ALPHA;
+  // History is real and labelled: drawn whole. Only a live line gone stale is dimmed.
+  const history = s.historySeq !== 0;
+  const strength = health.live || history ? 1 : DIM_ALPHA;
   if (!s.ready || w < MIN_PLOT_LEFTOVER || h < PAD_Y * HALF) {
     const x = (w + k.fonts.tag.getTextWidth(waiting)) / HALF;
     textRight(c, k, waiting, x, h / HALF, k.fonts.tag, k.mids.tag, k.colors.helper, 1);
@@ -188,7 +190,9 @@ export function drawFrame(
   );
   const pillW = pillTextW + PILL_PAD_X;
   const plotW = Math.min(w - PILL_RIGHT - pillW - PILL_GAP, w - MIN_PLOT_LEFTOVER);
-  const win: YWindow = { center: s.eased, half: (SPAN_STEPS * s.step) / HALF, top: PAD_Y, bottom: h - PAD_Y };
+  const win: YWindow = history
+    ? { center: s.historyCenter, half: s.historyHalf, top: PAD_Y, bottom: h - PAD_Y }
+    : { center: s.eased, half: (SPAN_STEPS * s.step) / HALF, top: PAD_Y, bottom: h - PAD_Y };
   drawMark(c, k, plotW, h);
 
   // The layer the fade erases: grid, zone, glow and line.
@@ -256,7 +260,9 @@ export function drawFrame(
     if (t.major) major += seg;
     else minor += seg;
     if (!t.major) continue;
-    let clear = Math.abs(y - headY) - (pillH / HALF + EDGE_FADE_PX / HALF);
+    // Labels give way to the pill — and to the health tag beside it when there is one.
+    const clearH = health.tag ? pillH + HALF * (HEALTH_TAG_GAP + TAG_H) : pillH;
+    let clear = Math.abs(y - headY) - (clearH / HALF + EDGE_FADE_PX / HALF);
     for (const level of o?.levels ?? []) clear = Math.min(clear, Math.abs(y - yOf(level.price, win)) - TAG_H);
     const alpha = edge * edgeAlpha(clear);
     if (alpha > 0) {

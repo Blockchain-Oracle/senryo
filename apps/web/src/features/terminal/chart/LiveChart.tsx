@@ -5,7 +5,7 @@
  * overlay is read from a ref each frame, so nothing here re-renders per tick (D-272). `onFrame` hands the head to the
  * reactions.
  */
-import type { ChartOverlay } from "@senryo/calls";
+import type { ChartOverlay, SessionHistory } from "@senryo/calls";
 import { unitOf } from "@senryo/calls";
 import { priceFromE8 } from "@senryo/core";
 import { fillLine } from "@senryo/live";
@@ -26,10 +26,20 @@ export interface LiveChartProps {
   onFrame?: RefObject<((frame: ChartFrame | null) => void) | null>;
   /** The price's health, read each frame: not live → the line freezes, dims and shows its age (R1.20). */
   health?: RefObject<ChartHealth | null>;
+  /** A closed market's last session, read each frame: drawn whole on its own scale. */
+  history?: RefObject<SessionHistory | null>;
   label: string;
 }
 
-export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, onFrame, health, label }: LiveChartProps) {
+export const LiveChart = memo(function LiveChart({
+  symbol,
+  overlay,
+  waiting,
+  onFrame,
+  health,
+  history,
+  label,
+}: LiveChartProps) {
   const live = useLive();
   const boxRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLCanvasElement>(null);
@@ -59,6 +69,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, onF
     const loop = (now: number) => {
       engine.setOverlay(overlay.current);
       engine.setHealth(health?.current ?? LIVE);
+      engine.setHistory(history?.current ?? null);
       const frame = engine.frame(now, reduced.matches);
       dots.frame(frame, reduced.matches);
       onFrame?.current?.(frame);
@@ -80,7 +91,7 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, onF
       mo.disconnect();
       engineRef.current = null;
     };
-  }, [overlay, onFrame, health]);
+  }, [overlay, onFrame, health, history]);
 
   // A new market opens on its last ~10 s of real history when the client holds it (04-pricing R15); on a cold start that
   // history may land just after the first tick, and within the first second the line is redrawn from it.

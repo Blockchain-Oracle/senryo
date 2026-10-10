@@ -6,7 +6,7 @@
  * erased, the 千両 mark, the axis, K and the entry, the head dot and the rolling pill. The tone is the up line unless
  * the open call is losing.
  */
-import type { ChartOverlay } from "@senryo/calls";
+import type { ChartOverlay, SessionHistory } from "@senryo/calls";
 import { formatPrice, type PriceUnit } from "@senryo/core";
 import {
   BASE_TAU_MS,
@@ -17,6 +17,8 @@ import {
   GLOW_ALPHA,
   GLOW_W,
   HEAD_R,
+  HEALTH_TAG_GAP,
+  HISTORY_PAD,
   LINE_W,
   MAX_DPR,
   MAX_FRAME_MS,
@@ -33,13 +35,14 @@ import {
   SAMPLE_MS,
   SETTLE_FRACTION,
   SPAN_STEPS,
+  TAG_H,
   TICK_EMA,
   TICK_FOLLOW,
   ZONE_ALPHA,
 } from "./constants";
 import type { FrameMotion } from "./dot-grid";
 import { type ChartTheme, drawAxis, drawGrid, drawHealthTag, drawLevel, drawMark, drawPill, drawWaiting } from "./draw";
-import { catmullRom, SampleRing, stepFor, type YWindow, yOf } from "./engine";
+import { catmullRom, niceStep, SampleRing, stepFor, type YWindow, yOf } from "./engine";
 import { CanvasOdometer } from "./odometer";
 
 const HALF = 2;
@@ -72,6 +75,9 @@ export class ChartEngine {
   private overlay: ChartOverlay | null = null;
   /** The price's health (R1.20): not live → the line freezes, dims and carries its age or state. */
   private health: ChartHealth = LIVE;
+  /** A closed market's last session, drawn whole and still on its own scale (null while it trades). */
+  private history: SessionHistory | null = null;
+  private historyHalf = 0;
   /** A running count of the result's moves: the pill's second row rolls the way the result just went. */
   private pnlMoves = 0;
   private lastFrame = 0;
@@ -107,7 +113,8 @@ export class ChartEngine {
    * there is one, else flat. The tick cadence sets how softly the line follows.
    */
   setPrice(price: number, nowMs: number, line: readonly number[] | null = null): void {
-    if (!(price > 0) || !Number.isFinite(price)) return;
+    // A closed market's frozen frames don't move its session chart.
+    if (this.history || !(price > 0) || !Number.isFinite(price)) return;
     const gap = this.lastTickAt === 0 ? 0 : nowMs - this.lastTickAt;
     if (gap > 0 && gap < MAX_TICK_GAP_MS)
       this.tickMs = this.tickMs === 0 ? gap : this.tickMs + TICK_EMA * (gap - this.tickMs);
@@ -122,6 +129,27 @@ export class ChartEngine {
       return;
     }
     this.target = price;
+  }
+
+  /**
+   * Read every frame. A closed market draws its last session on a scale fitted to it; when it opens again the chart
+   * starts afresh from its first live tick.
+   */
+  setHistory(history: SessionHistory | null): void {
+    if (history === this.history) return;
+    const had = this.history !== null;
+    this.history = history;
+    if (!history) {
+      if (had) this.reset(this.waiting);
+      return;
+    }
+    const range = history.high - history.low;
+    this.ring.load(history.line);
+    this.target = history.close;
+    this.eased = history.close;
+    this.latest = history.close;
+    this.step = range > 0 ? niceStep(range / SPAN_STEPS) : stepFor(history.close);
+    this.historyHalf = Math.max((range / HALF) * HISTORY_PAD, this.step * HALF);
   }
 
   /** Read every frame. Back to live, the line resumes from now (no catch-up burst). */
@@ -176,7 +204,7 @@ export class ChartEngine {
     }
     const before = this.eased;
     // A price that isn't live never scrolls as if it were: the line holds still (04-pricing R7).
-    this.sampleDebt = this.health.live ? this.sampleDebt + dt / SAMPLE_MS : 0;
+    this.sampleDebt = this.health.live && !this.history ? this.sampleDebt + dt / SAMPLE_MS : 0;
     let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(this.sampleDebt));
     this.sampleDebt -= Math.floor(this.sampleDebt);
     const k = reduced ? 1 : 1 - Math.exp(-SAMPLE_MS / Math.max(BASE_TAU_MS, TICK_FOLLOW * this.tickMs));
@@ -197,11 +225,16 @@ export class ChartEngine {
     const pillW = pillTextW + PILL_PAD_X;
     const plotW = Math.min(w - PILL_RIGHT - pillW - PILL_GAP, w - MIN_PLOT_LEFTOVER);
     const pillH = o?.pnlText ? PILL_H_POSITION : PILL_H;
-    const win: YWindow = { center: this.eased, half: (SPAN_STEPS * this.step) / HALF, top: PAD_Y, bottom: h - PAD_Y };
+    const hist = this.history;
+    const win: YWindow = hist
+      ? { center: (hist.low + hist.high) / HALF, half: this.historyHalf, top: PAD_Y, bottom: h - PAD_Y }
+      : { center: this.eased, half: (SPAN_STEPS * this.step) / HALF, top: PAD_Y, bottom: h - PAD_Y };
     const headY = this.drawLine(win, plotW, tone);
 
     drawMark(ctx, theme, plotW, h);
-    drawAxis(ctx, theme, win, this.step, w, headY, pillH, o?.levels ?? [], this.unit);
+    // Axis labels give way to the pill — and to the health tag beside it when there is one.
+    const clearH = this.health.tag ? pillH + HALF * (HEALTH_TAG_GAP + TAG_H) : pillH;
+    drawAxis(ctx, theme, win, this.step, w, headY, clearH, o?.levels ?? [], this.unit);
     const pill = {
       x: w - PILL_RIGHT - pillW,
       y: Math.min(h - pillH - HALF, Math.max(HALF, headY - pillH / HALF)),
@@ -211,7 +244,7 @@ export class ChartEngine {
     const space = { pillTop: pill.y, pillBottom: pill.y + pillH, up: 0, down: 0 };
     for (const level of o?.levels ?? []) drawLevel(ctx, theme, level, win, plotW, w, space, this.unit);
     ctx.fillStyle = tone;
-    ctx.globalAlpha = this.health.live ? 1 : DIM_ALPHA;
+    ctx.globalAlpha = this.health.live || this.history ? 1 : DIM_ALPHA;
     ctx.beginPath();
     ctx.arc(plotW, headY, HEAD_R, 0, Math.PI * HALF);
     ctx.fill();
@@ -258,7 +291,8 @@ export class ChartEngine {
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
     ctx.strokeStyle = tone;
-    const strength = this.health.live ? 1 : DIM_ALPHA;
+    // History is real and labelled: drawn whole. Only a live line gone stale is dimmed.
+    const strength = this.health.live || this.history ? 1 : DIM_ALPHA;
     ctx.globalAlpha = GLOW_ALPHA * strength;
     ctx.lineWidth = GLOW_W;
     ctx.stroke(path);

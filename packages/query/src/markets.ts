@@ -6,6 +6,7 @@
  */
 import {
   type CallInput,
+  candlesRoute,
   catalogRoute,
   dayPricesRoute,
   grantSessionRoute,
@@ -197,6 +198,29 @@ export function useDayPrices() {
     queryFn: ({ signal }) => env.api.call(dayPricesRoute, {}, { signal }),
     staleTime: DAY_STALE_MS,
     refetchInterval: DAY_STALE_MS,
+  });
+  return fromQuery(query);
+}
+
+const MINUTE_SEC = 60;
+const DAY_SEC = 86_400;
+const LOOKBACK_DAYS = 4;
+/** How far back a closed market's chart looks for its last session (a long weekend with a holiday fits). */
+const CANDLE_LOOKBACK_SEC = LOOKBACK_DAYS * DAY_SEC;
+
+/**
+ * A market's 1-minute candles over the last four days, from Senryo's archive, for a closed market's chart. The range
+ * is fixed when the hook mounts (a closed market's candles don't change); off while `enabled` is false.
+ */
+export function useRecentCandles(symbol: string, nowSec: number, enabled: boolean) {
+  const env = useQueryEnv();
+  const to = Math.floor(nowSec / MINUTE_SEC / MINUTE_SEC) * MINUTE_SEC * MINUTE_SEC;
+  const query = useQuery({
+    queryKey: ["prices", "candles", symbol, to] as const,
+    queryFn: ({ signal }) =>
+      env.api.call(candlesRoute, { query: { symbol, from: to - CANDLE_LOOKBACK_SEC, to } }, { signal }),
+    enabled,
+    staleTime: Number.POSITIVE_INFINITY,
   });
   return fromQuery(query);
 }

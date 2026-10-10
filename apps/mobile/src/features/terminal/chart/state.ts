@@ -4,8 +4,8 @@
  * (`dot-grid.ts`). `advance` runs once per display frame inside `useFrameCallback`; nothing here touches React.
  */
 import { emptyOdometer, type Odometer, stepOdometer } from "~/components/kit/odometer";
-import { BASE_TAU_MS, MAX_TICK_GAP_MS, TICK_EMA, TICK_FOLLOW } from "./constants";
-import { SAMPLE_CAPACITY, SAMPLE_MS, stepFor } from "./engine";
+import { BASE_TAU_MS, type ChartHistory, HISTORY_PAD, MAX_TICK_GAP_MS, TICK_EMA, TICK_FOLLOW } from "./constants";
+import { niceStep, SAMPLE_CAPACITY, SAMPLE_MS, SPAN_STEPS, stepFor } from "./engine";
 
 /** At most this many samples catch up in one frame (a stalled frame never smears the line). */
 const MAX_SAMPLES_PER_FRAME = 8;
@@ -41,6 +41,10 @@ export interface ChartState {
   dotX: number;
   dotY: number;
   dotTargetY: number;
+  /** A closed market's session (0: none): drawn whole and still on its own scale. */
+  historySeq: number;
+  historyCenter: number;
+  historyHalf: number;
 }
 
 export function createChartState(): ChartState {
@@ -64,7 +68,27 @@ export function createChartState(): ChartState {
     dotX: 0,
     dotY: 0,
     dotTargetY: 0,
+    historySeq: 0,
+    historyCenter: 0,
+    historyHalf: 0,
   };
+}
+
+/** A closed market's last session: loaded whole, scaled to its low and high, the pill on its close. */
+export function loadHistory(s: ChartState, h: ChartHistory): void {
+  "worklet";
+  const range = h.high - h.low;
+  for (let i = 0; i < SAMPLE_CAPACITY; i += 1) s.ring[i] = h.line[i] ?? h.close;
+  s.start = 0;
+  s.size = SAMPLE_CAPACITY;
+  s.ready = true;
+  s.target = h.close;
+  s.latest = h.close;
+  s.eased = h.close;
+  s.step = range > 0 ? niceStep(range / SPAN_STEPS) : stepFor(h.close);
+  s.historySeq = h.seq;
+  s.historyCenter = (h.low + h.high) / 2;
+  s.historyHalf = Math.max((range / 2) * HISTORY_PAD, s.step * 2);
 }
 
 export function ringAt(s: ChartState, i: number): number {
@@ -89,7 +113,8 @@ function ringPush(s: ChartState, v: number): void {
  */
 export function takePrice(s: ChartState, price: number, nowMs: number, line: readonly number[] | null): void {
   "worklet";
-  if (!(price > 0) || !Number.isFinite(price)) return;
+  // A closed market's frozen frames don't move its session chart.
+  if (s.historySeq !== 0 || !(price > 0) || !Number.isFinite(price)) return;
   const gap = s.lastTickAt === 0 ? 0 : nowMs - s.lastTickAt;
   if (gap > 0 && gap < MAX_TICK_GAP_MS) s.tickMs = s.tickMs === 0 ? gap : s.tickMs + TICK_EMA * (gap - s.tickMs);
   s.lastTickAt = nowMs;
@@ -112,6 +137,7 @@ export function takePrice(s: ChartState, price: number, nowMs: number, line: rea
 export function resetChart(s: ChartState): void {
   "worklet";
   s.ready = false;
+  s.historySeq = 0;
   s.start = 0;
   s.size = 0;
   s.step = 0;
@@ -130,7 +156,7 @@ export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: n
   if (!s.ready) return;
   const before = s.eased;
   // A price that isn't live never scrolls as if it were: the line holds still (04-pricing R7).
-  s.sampleDebt = live ? s.sampleDebt + dt / SAMPLE_MS : 0;
+  s.sampleDebt = live && s.historySeq === 0 ? s.sampleDebt + dt / SAMPLE_MS : 0;
   let pushes = Math.min(MAX_SAMPLES_PER_FRAME, Math.floor(s.sampleDebt));
   const pushed = pushes;
   s.sampleDebt -= Math.floor(s.sampleDebt);
