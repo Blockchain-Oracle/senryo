@@ -238,7 +238,15 @@ live PnL at about 8 Hz. No contract change.
   prices. Both charts draw a "Signed" marker at each Pyth print, and the chip says when the line is display.
 - [ ] R1.18 Measure δ (Pyth lag behind Coinbase) and Pyth's 1–3 s autocorrelation from the recorded tape beside
   `pyth_prints` (`scripts/drive/price-lead-check.ts`). The result feeds `FILL_DELAY_SEC` in R3.
-- [ ] R1.19 `/v1/prices/day` (24 h change, ported from `day-stats.ts`), with its api-client route and query hook.
+- [x] R1.19 `/v1/prices/day` (24 h change, ported from `day-stats.ts`), with its api-client route and query hook.
+  - *As built (10 Oct):* **from Senryo's own archive, not Coinbase** — `day-stats.ts` reads Coinbase `/stats`, which
+    `09-display-terms.md` rules out for display. `PriceArchive.daySince(minute)`: per feed, the first candle's open at
+    or after now − 24 h and the high and low since (two queries on the `(feed_id, minute)` key); the route maps feeds
+    to symbols, omits a market with no candles, caches a minute (`public, max-age=60`, and in-process); `useDayPrices`
+    in `@senryo/query`. The gateway's basket maths moved to `basket-compose.ts` (the gateway was over 400 lines).
+    Scratch check on scratch Postgres: open at exactly now − 24 h, high/low inside the window only (a spike just
+    before it ignored), ETH absent, the second read cached; `composeBasket` gives MAJORS 1,000 points at its bases.
+    Exit 0. (No volume: the archive has none.)
 
 ### Charts and honest UI
 - [ ] R1.20 Honest UI (R7):

@@ -1,9 +1,9 @@
 import { type Hex, seriesIdOf } from "@senryo/chain";
 import { basketMembers, type FeedState, feedIdOf, MARKETS, type MarketSpec, pauseOf } from "@senryo/config";
-import { basketPointsE8 } from "@senryo/core";
 import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import { batchFrame, legacyFrames, type StreamBus, type Tick } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
+import { composeBasket } from "./basket-compose.ts";
 import { PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS, TICK_FLUSH_MS } from "./constants.ts";
 import type { DisplayStatus } from "./display/display-feed.ts";
 import { DisplayLine } from "./display/display-line.ts";
@@ -35,8 +35,6 @@ export interface GatewayFeed {
   /** The baskets this feed is a member of. */
   baskets: GatewayFeed[];
 }
-
-const PRINT_EXPO = -8;
 
 /** Where prices come from: the Pyth key and Hermes's base, and RedStone's gateways (D-284). */
 export interface GatewayUpstream {
@@ -226,6 +224,11 @@ export class PythGateway {
     return this.archive.candles(feedId, from, to);
   }
 
+  /** Each feed's last 24 h from the archive: the open at `since` (a minute), and the high and low from then on. */
+  daySince(since: number) {
+    return this.archive.daySince(since);
+  }
+
   /**
    * The unique print of `t` for a feed, with the bytes the chain verifies: the ring, then waiting for it to stream
    * (up to `waitMs` — a fill asks a second ahead), then the archive, then upstream REST (catalogue feeds only).
@@ -265,32 +268,9 @@ export class PythGateway {
     if (archived) return archived;
     const prints = await Promise.all(basket.members.map((m) => this.printAt(feedIdOf(m.market), t, waitMs)));
     if (prints.some((p) => !p)) return undefined;
-    const composed = this.compose(basket, prints as PriceUpdate[]);
+    const composed = composeBasket(basket.market, prints as PriceUpdate[]);
     if (composed) await this.archive.savePrint(composed, t, "stream");
     return composed;
-  }
-
-  /** The basket's value from one update per member, in member order (`BasketPrintVerifier`'s maths). */
-  private compose(basket: GatewayFeed, prints: PriceUpdate[]): PriceUpdate | undefined {
-    const members = basketMembers(basket.market);
-    const terms = (pick: (p: PriceUpdate) => bigint) =>
-      members.map(({ member }, i) => {
-        const p = prints[i];
-        return { weightBps: member.weightBps, baseE8: member.baseE8, valueE8: p ? toE8(pick(p), p.expo) : undefined };
-      });
-    const price = basketPointsE8(terms((p) => p.price));
-    const conf = basketPointsE8(terms((p) => p.conf));
-    if (price === null || conf === null) return undefined;
-    return {
-      feedId: feedIdOf(basket.market),
-      publishTime: Math.max(...prints.map((p) => p.publishTime)),
-      prevPublishTime: Math.max(...prints.map((p) => p.prevPublishTime)),
-      price,
-      conf,
-      expo: PRINT_EXPO,
-      updates: prints.flatMap((p) => p.updates),
-      receivedAt: Math.max(...prints.map((p) => p.receivedAt)),
-    };
   }
 
   /** A member ticked: each basket it is in gets a new live value from its members' latest (display only). */
@@ -298,7 +278,7 @@ export class PythGateway {
     for (const basket of feed.baskets) {
       const latest = basket.members.map((m) => m.ring.latest());
       if (latest.some((u) => !u)) continue;
-      const value = this.compose(basket, latest as PriceUpdate[]);
+      const value = composeBasket(basket.market, latest as PriceUpdate[]);
       if (!value) continue;
       basket.ring.push(value);
       this.archive.foldCandle(value);
@@ -314,7 +294,7 @@ export class PythGateway {
     for (const basket of feed.baskets) {
       const prints = await Promise.all(basket.members.map((m) => this.archive.printAt(feedIdOf(m.market), t)));
       if (prints.some((p) => !p)) continue;
-      const u = this.compose(basket, prints as PriceUpdate[]);
+      const u = composeBasket(basket.market, prints as PriceUpdate[]);
       if (!u) continue;
       await this.archive.savePrint(u, t, "stream");
       this.bus.emit("prints", "print", {

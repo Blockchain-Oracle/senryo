@@ -74,3 +74,21 @@ export const latestPricesRoute = defineRoute({
     points: z.array(z.tuple([z.int(), z.int(), z.int()])),
   }),
 });
+
+/**
+ * Each market's last 24 hours (04-pricing R1.19): the open 24 h ago and the high and low since, in e-8, from Senryo's
+ * own archive of the settlement prices — never an exchange's data (09-display-terms). A market with no candles in the
+ * window is absent rather than guessed. Cached a minute.
+ */
+export const dayPricesRoute = defineRoute({
+  method: "GET",
+  path: "/v1/prices/day",
+  auth: "none",
+  params: undefined,
+  query: undefined,
+  body: undefined,
+  response: z.object({
+    from: unixSecondsSchema,
+    markets: z.record(z.string(), z.object({ openE8: z.int(), highE8: z.int(), lowE8: z.int() })),
+  }),
+});

@@ -89,6 +89,16 @@ export class PriceArchive {
     c.close = e8;
   }
 
+  /** Per feed: the first candle's open at or after `since` (a minute), and the high and low from then on. */
+  async daySince(since: number) {
+    return this.db<{ feed_id: string; open: bigint; high: bigint; low: bigint }[]>`
+      SELECT o.feed_id, o.open, r.high, r.low
+      FROM (SELECT DISTINCT ON (feed_id) feed_id, open FROM price_candles
+            WHERE minute >= ${since} ORDER BY feed_id, minute) o
+      JOIN (SELECT feed_id, max(high) AS high, min(low) AS low FROM price_candles
+            WHERE minute >= ${since} GROUP BY feed_id) r USING (feed_id)`;
+  }
+
   async candles(feedId: Hex, from: number, to: number) {
     return this.db<{ minute: bigint; open: bigint; high: bigint; low: bigint; close: bigint }[]>`
       SELECT minute, open, high, low, close FROM price_candles

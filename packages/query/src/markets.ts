@@ -7,6 +7,7 @@
 import {
   type CallInput,
   catalogRoute,
+  dayPricesRoute,
   grantSessionRoute,
   intentStatusRoute,
   marketAccountRoute,
@@ -184,4 +185,18 @@ export function useWithdraw(owner: Address | undefined) {
       env.api.call(withdrawRoute, { body: { ...body, chainId: env.chainId } }),
     onSuccess: () => owner && client.invalidateQueries({ queryKey: marketKeys.account(env.chainId, owner) }),
   });
+}
+
+/** The 24 h change source: the open 24 h ago and the high and low since, per market (R1.19, from Senryo's archive). */
+const DAY_STALE_MS = 60_000;
+
+export function useDayPrices() {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: ["prices", "day"] as const,
+    queryFn: ({ signal }) => env.api.call(dayPricesRoute, {}, { signal }),
+    staleTime: DAY_STALE_MS,
+    refetchInterval: DAY_STALE_MS,
+  });
+  return fromQuery(query);
 }

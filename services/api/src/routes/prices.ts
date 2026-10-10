@@ -1,5 +1,5 @@
-import { candlesRoute, latestPricesRoute, printRoute, recentPricesRoute } from "@senryo/api-client";
-import { feedIdOf, MARKETS } from "@senryo/config";
+import { candlesRoute, dayPricesRoute, latestPricesRoute, printRoute, recentPricesRoute } from "@senryo/api-client";
+import { feedIdOf, MARKETS, marketByFeedId } from "@senryo/config";
 import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, HttpError, nowSec, parseRoute, SECONDS_PER_DAY, sendRoute } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
@@ -15,6 +15,10 @@ import { toE8 } from "../prices/ring.ts";
 const RECENT_MAX_AGE = "public, max-age=1, stale-while-revalidate=5";
 /** It carries the server time and the states: never from a cache. */
 const NO_STORE = "no-store";
+/** The 24 h numbers move slowly: read from the archive at most once a minute, and cached as long. */
+const DAY_TTL_MS = 60_000;
+const DAY_MAX_AGE = "public, max-age=60";
+const DAY_SEC = SECONDS_PER_DAY;
 const IMMUTABLE = "public, max-age=31536000, immutable";
 /** A missing print may exist a second later; the apps retry every second (`use-window-open`), so never longer. */
 const MISS_MAX_AGE = "public, max-age=1";
@@ -27,6 +31,29 @@ const MAX_CANDLE_SPAN_SEC = MAX_CANDLE_SPAN_DAYS * SECONDS_PER_DAY;
 const MINUTE = 60;
 
 export function registerPriceRoutes(app: HttpServer, gateway: PythGateway): void {
+  type Day = Record<string, { openE8: number; highE8: number; lowE8: number }>;
+  let day: { at: number; body: Promise<{ from: number; markets: Day }> } | null = null;
+  const readDay = async (from: number): Promise<Day> =>
+    Object.fromEntries(
+      (await gateway.daySince(from)).flatMap((r) => {
+        const symbol = marketByFeedId(r.feed_id)?.symbol;
+        return symbol ? [[symbol, { openE8: Number(r.open), highE8: Number(r.high), lowE8: Number(r.low) }]] : [];
+      }),
+    );
+  app.get(dayPricesRoute.path, { config: PRICE_READ_RATE }, async (_request, reply) => {
+    const now = Date.now();
+    if (!day || now - day.at > DAY_TTL_MS) {
+      const from = Math.floor(nowSec() / MINUTE) * MINUTE - DAY_SEC;
+      day = { at: now, body: readDay(from).then((markets) => ({ from, markets })) };
+      // A failed read is not kept: the next request tries again.
+      day.body.catch(() => {
+        day = null;
+      });
+    }
+    reply.header("cache-control", DAY_MAX_AGE);
+    return sendRoute(reply, dayPricesRoute, await day.body);
+  });
+
   app.get(recentPricesRoute.path, { config: PRICE_READ_RATE }, async (request, reply) => {
     const { query } = parseRoute(recentPricesRoute, request);
     const symbols = [...new Set(query.symbols.split(",", MAX_RECENT_SYMBOLS))];
