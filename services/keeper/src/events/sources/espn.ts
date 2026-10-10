@@ -11,8 +11,6 @@ const DAY_SEC = 86_400;
 interface EspnTeam {
   displayName: string;
   abbreviation: string;
-  logo?: string;
-  logos?: { href: string }[];
 }
 
 interface EspnCompetitor {
@@ -36,7 +34,6 @@ interface EspnEvent {
 /** A played-out game: completed and final (a cancelled or abandoned game is "completed" too, and must not count). */
 const PLAYED = /^STATUS_(FINAL|FULL_TIME)/;
 const dateParam = (sec: number) => easternDate(sec).replaceAll("-", "");
-const logoOf = (t: EspnTeam) => t.logo ?? t.logos?.[0]?.href ?? null;
 
 function sides(c: EspnCompetition) {
   const home = c.competitors.find((x) => x.homeAway === "home");
@@ -65,8 +62,8 @@ export async function espnSchedule(
         league: league.key,
         key: e.id,
         startSec,
-        home: { name: s.home.team.displayName, abbr: s.home.team.abbreviation, logo: logoOf(s.home.team) },
-        away: { name: s.away.team.displayName, abbr: s.away.team.abbreviation, logo: logoOf(s.away.team) },
+        home: { name: s.home.team.displayName, abbr: s.home.team.abbreviation },
+        away: { name: s.away.team.displayName, abbr: s.away.team.abbreviation },
       });
     }
   }

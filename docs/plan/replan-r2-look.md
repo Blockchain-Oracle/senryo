@@ -77,7 +77,12 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
   - NHL, MLB, NFL, EPL and their teams;
   - distinct basket glyphs (MAJORS, ALTS, METALS, TECH);
   - game art slots (bull, bear, coin, reach plate).
-- [ ] R2.7 `TeamMark` reads the registry (no ESPN hot-links); the keeper sends team keys, not image URLs.
+- [x] R2.7 `TeamMark` reads the registry (no ESPN hot-links); the keeper sends team keys, not image URLs.
+  - *As built (10 Oct):* a team is `ids.team(league, abbr)` in `@senryo/identity`; `TeamMark` (both apps) draws its
+    registry mark when one is on file, else its abbreviation on a round plate — no image from any feed. The keeper,
+    the api schema and `EventTeam` carry name and abbreviation only (the key is the event's league plus it; nothing in
+    the terms hash changes). Which teams get a logo is the owner's call (R2.6): the leagues' terms forbid reuse, and
+    Commons holds public-domain files for 35 of 114 clubs (NHL 6, MLB 17, NFL 12, Premier League 0).
 - [ ] R2.8 Marks on every surface in 06 §5.3: Earn, the web wallet / Receive / Withdraw drawers, result toasts, the
   landing hero, `/proof/w`, Lucky and Warm-up, the hub cards, and people (web avatars from `avatar.tsx`).
 

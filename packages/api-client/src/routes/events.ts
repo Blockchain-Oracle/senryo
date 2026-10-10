@@ -30,10 +30,10 @@ export const eventCallSchema = z.object({
   epoch: z.int().nonnegative(),
 });
 
+/** A side: name and abbreviation; its mark is the registry's (`ids.team(league, abbr)`, R2.7), never a feed's URL. */
 export const eventTeamSchema = z.object({
   name: z.string().max(TEXT_MAX),
   abbr: z.string().max(TEXT_MAX),
-  logo: z.string().max(TEXT_MAX).nullable(),
 });
 
 export const EVENT_VIEW_STATES = ["open", "decided", "voided"] as const;

@@ -11,10 +11,13 @@ import type { Db } from "./db.ts";
 export const EVENT_CHANNEL = "market_event";
 
 /** A side of a game as the apps show it. */
+/**
+ * A side of a game: its name and the source's abbreviation. Its mark comes from the identity registry by league and
+ * abbreviation (`ids.team`, R2.7) — never an image URL from a feed (rows written before carry a `logo` nobody reads).
+ */
 export interface EventTeam {
   name: string;
   abbr: string;
-  logo: string | null;
 }
 
 export interface EventRow {

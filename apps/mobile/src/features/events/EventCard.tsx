@@ -31,8 +31,8 @@ export function EventCard(p: { event: EventView; flow: EventsFlow; now: number; 
     <PredictionMarketCard
       marks={
         <>
-          <TeamMark team={e.home} />
-          <TeamMark team={e.away} />
+          <TeamMark league={e.league} team={e.home} />
+          <TeamMark league={e.league} team={e.away} />
         </>
       }
       meta={`${leagueName(e.league)} · ${startText(e.startsAt)}`}

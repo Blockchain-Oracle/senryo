@@ -36,4 +36,6 @@ export const ids = {
   brand: (slug: string): EntityId => `brand:${slug}`,
   /** `league:nhl` — a competition events are about (`LeagueKey` in packages/config/src/events.ts). */
   league: (key: string): EntityId => `league:${key}`,
+  /** `team:nfl:KC` — a side in an event, by its league and the results feed's abbreviation (upper-cased). */
+  team: (league: string, abbr: string): EntityId => `team:${league}:${abbr.toUpperCase()}`,
 } as const;
