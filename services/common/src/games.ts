@@ -116,14 +116,15 @@ export async function insertArcadeScore(
 export interface ArcadeBoardRow {
   owner: string;
   handle: string | null;
+  avatar: string | null;
   score: number;
   calm: boolean;
   created_at: Date;
 }
 
-/** Each player's best run, top first (a handle when the player has one). */
+/** Each player's best run, top first (a handle and portrait when the player has a profile). */
 export async function arcadeBoard(db: Db, game: string, limit: number): Promise<ArcadeBoardRow[]> {
-  return db<ArcadeBoardRow[]>`SELECT DISTINCT ON (s.owner) s.owner, p.handle, s.score, s.calm, s.created_at
+  return db<ArcadeBoardRow[]>`SELECT DISTINCT ON (s.owner) s.owner, p.handle, p.avatar, s.score, s.calm, s.created_at
     FROM arcade_scores s LEFT JOIN profiles p ON p.address = s.owner
     WHERE s.game = ${game} ORDER BY s.owner, s.score DESC, s.created_at`.then((rows) =>
     rows.sort((a, b) => b.score - a.score || a.created_at.getTime() - b.created_at.getTime()).slice(0, limit),

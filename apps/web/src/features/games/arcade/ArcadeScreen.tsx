@@ -26,6 +26,7 @@ import { useArcadeBoard, useArcadeDesk } from "@senryo/query";
 import { useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SignInPrompt } from "@/components/auth/sign-in-prompt";
+import { Avatar } from "@/components/identity/avatar";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
@@ -38,6 +39,8 @@ const SEED_BYTES = 4;
 /** A frame that stalls (a background tab) steps at most this many ticks on return. */
 const MAX_CATCH_UP = 8;
 const KEY_STEP = 0.06;
+/** A board row's portrait (R2.8): the row's text height. */
+const BOARD_AVATAR = 24;
 
 type Phase = "ready" | "playing" | "over";
 
@@ -244,10 +247,14 @@ export function ArcadeScreen({ game, title, how }: { game: ArcadeGame; title: st
         ) : (
           <ol className="flex flex-col divide-y divide-border">
             {players.map((p, i) => (
-              <li key={p.owner} className="flex items-baseline justify-between gap-3 py-2">
-                <span className="min-w-0 truncate text-row-title">
-                  {i + 1}. {p.handle ? `@${p.handle}` : shortAddress(p.owner)}
-                  {p.calm ? " · calm" : ""}
+              <li key={p.owner} className="flex items-center justify-between gap-3 py-2">
+                <span className="flex min-w-0 items-center gap-2 text-row-title">
+                  <span className="tnum w-5 shrink-0 text-text-3">{i + 1}</span>
+                  <Avatar avatar={p.avatar} address={p.owner} size={BOARD_AVATAR} />
+                  <span className="truncate">
+                    {p.handle ? `@${p.handle}` : shortAddress(p.owner)}
+                    {p.calm ? " · calm" : ""}
+                  </span>
                 </span>
                 <span className="tnum font-semibold text-row-title">{p.score}</span>
               </li>

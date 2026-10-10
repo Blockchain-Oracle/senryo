@@ -139,6 +139,7 @@ export const arcadeBoardSchema = z.object({
     z.object({
       owner: addressSchema,
       handle: z.string().nullable(),
+      avatar: z.string().nullable(),
       score: z.int(),
       calm: z.boolean(),
       at: isoTimeSchema,

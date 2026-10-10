@@ -105,6 +105,7 @@ export function registerGameRoutes(app: HttpServer, ctx: ApiContext): void {
       players: rows.map((r) => ({
         owner: r.owner as Address,
         handle: r.handle,
+        avatar: r.avatar,
         score: r.score,
         calm: r.calm,
         at: r.created_at.toISOString(),
