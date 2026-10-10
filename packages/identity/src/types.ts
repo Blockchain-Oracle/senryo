@@ -141,4 +141,6 @@ export interface Entity {
   gap?: string;
   /** Practice (testnet) stand-ins keep the real identity and say so. */
   practice?: boolean;
+  /** A basket's member markets (ids), in definition order: its mark draws the first ones overlapped (R2.6). */
+  members?: readonly string[];
 }

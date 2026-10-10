@@ -21,6 +21,13 @@ export const USDC_ELSEWHERE = {
 
 /** Share of the mark's edge the badge takes, and how far it hangs past the corner. */
 export const BADGE_RATIO = 0.42;
+/** A basket's mark draws at most this many of its members, overlapped (R2.6). */
+export const CLUSTER_MAX = 3;
+/** A member's disc as a share of the mark, for two members and for three. */
+export const CLUSTER_PAIR_RATIO = 0.68;
+export const CLUSTER_TRIO_RATIO = 0.6;
+/** The ground ring that separates overlapped members, as a share of a member's disc (never under 1 px). */
+export const CLUSTER_RING_RATIO = 0.08;
 export const BADGE_OUTSET_RATIO = 0.06;
 /** The badge's cut-out ring: a share of the badge edge, never thinner than a hairline pair. */
 export const BADGE_RING_RATIO = 0.12;

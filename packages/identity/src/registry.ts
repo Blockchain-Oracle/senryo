@@ -4,6 +4,7 @@
  * It reads `DRAW` (generated from the artwork records by `drawOf`), never the records themselves: provenance stays out
  * of the apps (./provenance.ts has it).
  */
+import { CLUSTER_MAX } from "./constants.ts";
 import type { DrawFile, DrawSource } from "./draw.ts";
 import { ENTITIES } from "./entities.ts";
 import { DRAW } from "./generated/draw.ts";
@@ -65,6 +66,8 @@ export type MarkPlan =
       wordmark: boolean;
       aspect: number;
     }
+  /** A basket: its members' own marks, overlapped (R2.6). */
+  | { kind: "cluster"; entity: Entity; members: Extract<MarkPlan, { kind: "art" }>[] }
   | { kind: "gap"; entity: Entity; reason: string }
   | { kind: "unidentified"; id: string | undefined };
 
@@ -83,6 +86,13 @@ function holderOf(source: DrawSource, variant: MarkVariant): DrawSource | undefi
 export function planMark(id: string | undefined, request: VariantRequest, scheme: Scheme): MarkPlan {
   const e = entity(id);
   if (!e) return { kind: "unidentified", id };
+  if (e.members && request !== "wordmark" && request !== "wordmarkLight") {
+    const members = e.members
+      .slice(0, CLUSTER_MAX)
+      .map((m) => planMark(m, "disc", scheme))
+      .filter((p): p is Extract<MarkPlan, { kind: "art" }> => p.kind === "art");
+    if (members.length > 1) return { kind: "cluster", entity: e, members };
+  }
   const own = e.art === undefined ? undefined : DRAW[e.art];
   if (!own) return { kind: "gap", entity: e, reason: e.gap ?? `artwork "${e.art}" is not on file` };
   for (const variant of FALLBACKS[wantedFor(request, scheme)]) {
@@ -117,5 +127,6 @@ export function glyphFor(id: string | undefined): GlyphPlan | undefined {
 
 /** True when the entity's real artwork is on file (a caller can omit an optional mark rather than show a fallback). */
 export function hasArt(id: string | undefined): boolean {
-  return planMark(id, "symbol", "dark").kind === "art";
+  const kind = planMark(id, "symbol", "dark").kind;
+  return kind === "art" || kind === "cluster";
 }

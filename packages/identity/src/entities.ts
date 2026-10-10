@@ -5,9 +5,10 @@
  * Prediction markets are keyed by catalogue symbol (`ids.market`, D-268); stock logos come through the scripted
  * pipeline (scripts/catalog.ts), never by hand.
  */
-import { MAINNET_CHAIN_ID, MAINNET_USDC, TESTNET_CHAIN_ID } from "@senryo/config";
+import { basketMembers, MAINNET_CHAIN_ID, MAINNET_USDC, MARKETS, TESTNET_CHAIN_ID } from "@senryo/config";
 import { EXTERNAL_CHAIN_IDS, PRACTICE_DOLLAR, USDC_ELSEWHERE } from "./constants.ts";
 import { CAIP2, ids } from "./ids.ts";
+import { marketId } from "./lookup.ts";
 import type { Entity } from "./types.ts";
 
 const MONAD_NETWORKS = [
@@ -43,7 +44,10 @@ const COMMODITY_MARKETS = [
   { symbol: "XAG", name: "Silver", art: "xag-chogin" },
 ] as const;
 
-/** Baskets of listed markets in points (D-286): one neutral glyph; the members' own marks show on the basket screen. */
+/**
+ * Baskets of listed markets in points (D-286): the mark is the members' own marks overlapped (R2.6), so each basket
+ * reads as what it holds; the neutral glyph stays for a basket whose members have no art.
+ */
 const BASKET_MARKETS = [
   { symbol: "MAJORS", name: "Crypto majors" },
   { symbol: "ALTS", name: "Alt coins" },
@@ -133,6 +137,9 @@ const marketRows = (): Entity[] => [
     role: "asset" as const,
     instrument: "basket" as const,
     art: "basket",
+    members: basketMembers(MARKETS.find((x) => x.symbol === m.symbol) as (typeof MARKETS)[number]).map(({ market }) =>
+      marketId(market.symbol),
+    ),
   })),
 ];
 

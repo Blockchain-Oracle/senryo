@@ -21,7 +21,7 @@ import {
 import { ART_COMPONENTS } from "../generated/native/index.ts";
 import { type MarkStatus, markLabel } from "../labels.ts";
 import { entityLabel, type MarkPlan, type Plate, planMark, type VariantRequest } from "../registry.ts";
-import { fallbackFontSize, fallbackText, type IdentityTheme, innerSize, markBox } from "../theme.ts";
+import { clusterLayout, fallbackFontSize, fallbackText, type IdentityTheme, innerSize, markBox } from "../theme.ts";
 
 export interface EntityMarkProps {
   /** Canonical entity id (see `ids`); undefined renders the unidentified fallback. */
@@ -125,6 +125,46 @@ function Art({ plan, size, theme }: { plan: Extract<MarkPlan, { kind: "art" }>; 
   );
 }
 
+/** A basket: its members' marks overlapped, each in a ring of the ground it sits on (R2.6). */
+function Cluster({
+  plan,
+  size,
+  theme,
+}: {
+  plan: Extract<MarkPlan, { kind: "cluster" }>;
+  size: number;
+  theme: IdentityTheme;
+}) {
+  const slots = clusterLayout(size, plan.members.length);
+  return (
+    <View style={{ width: size, height: size }}>
+      {plan.members.map((member, i) => {
+        const slot = slots[i];
+        if (!slot) return null;
+        return (
+          <View
+            key={member.entity.id}
+            style={[
+              styles.center,
+              styles.badge,
+              {
+                left: slot.x,
+                top: slot.y,
+                width: slot.outer,
+                height: slot.outer,
+                borderRadius: slot.outer / 2,
+                backgroundColor: theme.ground,
+              },
+            ]}
+          >
+            <Art plan={member} size={slot.inner} theme={theme} />
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 function Body(props: {
   plan: MarkPlan | undefined;
   status: MarkStatus;
@@ -134,6 +174,7 @@ function Body(props: {
 }) {
   const { plan, status, size, text, theme } = props;
   if (status === "loading") return <Fallback size={size} text={text} theme={theme} dashed={false} />;
+  if (plan?.kind === "cluster" && status === "ready") return <Cluster plan={plan} size={size} theme={theme} />;
   if (status === "failed" || !plan || plan.kind !== "art") {
     return <Fallback size={size} text={text} theme={theme} dashed />;
   }

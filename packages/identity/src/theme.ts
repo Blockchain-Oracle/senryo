@@ -3,6 +3,10 @@
  * web passes CSS variables. Layout ratios live in ./constants.ts.
  */
 import {
+  CLUSTER_MAX,
+  CLUSTER_PAIR_RATIO,
+  CLUSTER_RING_RATIO,
+  CLUSTER_TRIO_RATIO,
   FALLBACK_FONT_RATIO,
   FALLBACK_FONT_RATIO_LONG,
   FALLBACK_MAX_CHARS,
@@ -62,4 +66,31 @@ export function markBox(plan: MarkPlan | undefined, size: number): { width: numb
   }
   const edge = Math.max(size, min);
   return { width: edge, height: edge };
+}
+
+/** Where each member of a basket's mark sits: discs of `outer` with the member drawn at `inner` inside a ground ring. */
+export interface ClusterSlot {
+  x: number;
+  y: number;
+  outer: number;
+  inner: number;
+}
+
+/** Two members on a diagonal, three in a triangle (drawn bottom-left, bottom-right, then the top one over them). */
+export function clusterLayout(size: number, count: number): ClusterSlot[] {
+  const trio = count >= CLUSTER_MAX;
+  const outer = Math.round(size * (trio ? CLUSTER_TRIO_RATIO : CLUSTER_PAIR_RATIO));
+  const ring = Math.max(1, Math.round(outer * CLUSTER_RING_RATIO));
+  const far = size - outer;
+  const spots: [number, number][] = trio
+    ? [
+        [0, far],
+        [far, far],
+        [far / 2, 0],
+      ]
+    : [
+        [0, 0],
+        [far, far],
+      ];
+  return spots.map(([x, y]) => ({ x, y, outer, inner: outer - ring * 2 }));
 }
