@@ -3,7 +3,7 @@
  * and how much of it is ready, when the next hour settles, what you've asked for (take it back until then), and Supply
  * / Withdraw by an exact amount — one Face ID each, relayed (`@senryo/calls` `useEarnFlow`). Risk in words.
  */
-import { earnWords, hourLines, sharesFor } from "@senryo/calls";
+import { EARN_NOT_OPEN, earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
 import { dollarId, ids } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
@@ -55,7 +55,12 @@ export function EarnScreen() {
   }
   if (!view) return <LoadingState />;
   if (!words || !view.pool) {
-    return <Text style={[TYPE.body, styles.pad, { color: color.inkMuted }]}>Earn isn't open yet.</Text>;
+    return (
+      <View style={[styles.pad, styles.closed]}>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{EARN_NOT_OPEN.title}</Text>
+        <Text style={[TYPE.body, { color: color.inkMuted }]}>{EARN_NOT_OPEN.detail}</Text>
+      </View>
+    );
   }
   const pool = view.pool;
   const balance = "value" in wallet ? wallet.value.balance : undefined;
@@ -225,6 +230,7 @@ const styles = StyleSheet.create({
   markRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   content: { padding: SIZE.gutter, gap: SPACE.xl },
   pad: { padding: SIZE.gutter },
+  closed: { gap: SPACE.xs },
   block: { gap: SPACE.sm },
   flex: { flex: 1 },
   hour: { flexDirection: "row", justifyContent: "space-between", minHeight: SIZE.touch - SPACE.md },

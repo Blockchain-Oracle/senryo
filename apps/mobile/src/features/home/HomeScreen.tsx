@@ -1,6 +1,7 @@
 /**
  * Home (S5.10): the balance rolling, the one-tap chip, your open calls (tap to watch them in the terminal) and the live
- * markets to call on. A guest gets the promise and one way in. Setup resume and the Face ID prompt stay on Home.
+ * markets to call on. A guest gets the promise, one way in and the same live markets to look around (R2 sim pass:
+ * "Look around" used to land on the promise alone). Setup resume and the Face ID prompt stay on Home.
  */
 import { formatUnits } from "@senryo/core";
 import { marketKeys, useCatalog, useMarketAccount, useTickets } from "@senryo/query";
@@ -66,6 +67,23 @@ export function HomeScreen() {
     router.navigate("/trade");
   };
 
+  const markets = (heading: string) => (
+    <View style={styles.section}>
+      <SectionHeading>{heading}</SectionHeading>
+      {"value" in catalog ? (
+        catalog.value.markets.map((m) => (
+          <MarketRow key={m.symbol} symbol={m.symbol} name={m.name} onOpen={() => watch(m.symbol)} />
+        ))
+      ) : catalog.status === "failed" ? (
+        <Button
+          label="Markets didn't load · Try again"
+          variant="ghost"
+          onPress={() => void client.invalidateQueries({ queryKey: marketKeys.all })}
+        />
+      ) : null}
+    </View>
+  );
+
   return (
     <View style={[styles.fill, { backgroundColor: color.ground, paddingTop: insets.top }]}>
       <View style={styles.utilities}>
@@ -105,27 +123,17 @@ export function HomeScreen() {
                 ))}
               </View>
             ) : null}
-            <View style={styles.section}>
-              <SectionHeading>Call the next move</SectionHeading>
-              {"value" in catalog ? (
-                catalog.value.markets.map((m) => (
-                  <MarketRow key={m.symbol} symbol={m.symbol} name={m.name} onOpen={() => watch(m.symbol)} />
-                ))
-              ) : catalog.status === "failed" ? (
-                <Button
-                  label="Markets didn't load · Try again"
-                  variant="ghost"
-                  onPress={() => void client.invalidateQueries({ queryKey: marketKeys.all })}
-                />
-              ) : null}
-            </View>
+            {markets("Call the next move")}
           </>
         ) : (
-          <EmptyState
-            why="Call the next move"
-            detail="Up or Down on live prices, in dollars."
-            action={{ label: "Create account", onPress: () => router.push(accountRequiredRoute("make a call")) }}
-          />
+          <>
+            <EmptyState
+              why="Call the next move"
+              detail="Up or Down on live prices, in dollars."
+              action={{ label: "Create account", onPress: () => router.push(accountRequiredRoute("make a call")) }}
+            />
+            {markets("Markets")}
+          </>
         )}
       </ScrollView>
       <ContextualFaceId key={address} />

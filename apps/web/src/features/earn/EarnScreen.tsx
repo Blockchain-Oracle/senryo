@@ -4,7 +4,7 @@
  * and how much of it is ready, when the next hour settles, what you've asked for (take it back until then), and Supply
  * / Withdraw by an exact amount — one passkey prompt each, relayed (`@senryo/calls` `useEarnFlow`). Risk in words.
  */
-import { earnWords, hourLines, sharesFor } from "@senryo/calls";
+import { EARN_NOT_OPEN, earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
 import { dollarId, ids } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
@@ -64,7 +64,14 @@ export function EarnScreen() {
 
   if (flow.view.status === "failed") return <ErrorPanel diagnosis={flow.view.error} retry={retry} />;
   if (!view) return <div aria-busy className="h-48 animate-pulse rounded-lg bg-skeleton" />;
-  if (!words || !view.pool) return <p className="text-body text-text-2">Earn isn't open yet.</p>;
+  if (!words || !view.pool) {
+    return (
+      <div className="flex max-w-prose flex-col gap-1">
+        <p className="font-semibold text-row-title">{EARN_NOT_OPEN.title}</p>
+        <p className="text-body text-text-2">{EARN_NOT_OPEN.detail}</p>
+      </div>
+    );
+  }
   const pool = view.pool;
   const max = side === "supply" ? balance : view.account?.value;
   const check = checkEarnAmount(

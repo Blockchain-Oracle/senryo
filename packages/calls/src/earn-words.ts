@@ -22,6 +22,14 @@ export interface EarnWords {
   risk: string;
 }
 
+/** Before the pool is on chain: what Earn is, so the page isn't a bare line (R2 simulator pass). */
+export const EARN_NOT_OPEN = {
+  title: "Earn isn't open yet.",
+  detail:
+    "Earn lets you supply dollars to the pool that takes the other side of every call. Your share rises and falls " +
+    "with the pool, so you can get back less than you put in; withdrawals settle on the hour.",
+} as const;
+
 /** Dollars of shares → shares at the pool's price (rounded down), for a withdrawal entered in dollars. */
 export function sharesFor(dollars: bigint, pool: NonNullable<EarnView["pool"]>): bigint {
   return pool.value === 0n ? 0n : (dollars * (pool.supply + 1n)) / (pool.value + 1n);

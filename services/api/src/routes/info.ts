@@ -14,8 +14,8 @@ function rpcDown(ctx: ApiContext, error: unknown): string {
 /** Unauthenticated reads that fan out to RPC are rate-limited per client IP (S8.5b #5). */
 const READ_RATE = { rateLimit: { max: 120, timeWindow: "1 minute" } } as const;
 
-/** Until S9 wires the Aurora client it reports "unknown" — never a fabricated "ok". */
-const NOT_WIRED = { state: "unknown" as const, detail: "not wired yet" };
+/** Until S9 wires the Aurora client it reports "unknown" — never a fabricated "ok" — in the Wallet's words. */
+const NOT_OPEN = { state: "unknown" as const, detail: "opens with Real" };
 
 export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
   app.get(configRoute.path, async (_request, reply) =>
@@ -67,7 +67,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
       at: new Date().toISOString(),
       chains,
       ...priceStatus(ctx.gateway.status(), ctx.bus.stats()),
-      aurora: NOT_WIRED,
+      aurora: NOT_OPEN,
       process: ctx.guards.faults(),
     });
   });

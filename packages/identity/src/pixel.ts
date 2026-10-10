@@ -6,7 +6,7 @@
  * square pixels (`crispEdges`), never as hundreds of nodes.
  */
 
-export type PixelRole = "up" | "down" | "gold" | "accent" | "ground" | "white" | "soft";
+export type PixelRole = "up" | "down" | "gold" | "ground" | "white" | "soft";
 
 export interface PixelMark {
   rows: readonly string[];
@@ -78,9 +78,9 @@ export const PIXEL_MARKS = {
       ".....VVVVVV.....",
     ],
   },
-  /** A bordered plate with the mark in its middle: Lucky's reach sits on it. */
+  /** A bordered plate with the mark in its middle: Lucky's reach sits on it (gold: `#FA00FF` is for actions only). */
   plate: {
-    roles: { B: "soft", V: "accent", W: "white" },
+    roles: { B: "soft", V: "gold", W: "white" },
     rows: [
       "BBBBBBBBBBBBBBBB",
       "B..............B",

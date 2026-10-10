@@ -71,6 +71,12 @@ export function WalletScreen() {
             </Text>
           </View>
           <AmountHero text={text} accessibilityLabel={`${network.modeLabel} balance ${text}`} />
+          {/* "$—" alone reads as loading forever: say why there is no figure (R2 simulator pass). */}
+          {!owner || account.status === "failed" ? (
+            <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+              {owner ? "Your balance didn't load · trying again" : "Sign in to see your balance"}
+            </Text>
+          ) : null}
         </View>
         <View>
           <SettingsRow

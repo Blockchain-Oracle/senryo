@@ -17,18 +17,19 @@ import {
   windowCountdown,
 } from "@senryo/core";
 
-export const MARKET_GROUPS: readonly { kind: MarketKind; label: string }[] = [
+/** Each kind's heading in the list; `filter` is a shorter word where the heading won't fit a phone's filter cell. */
+export const MARKET_GROUPS: readonly { kind: MarketKind; label: string; filter?: string }[] = [
   { kind: "crypto", label: "Crypto" },
   { kind: "equity", label: "Stocks" },
   { kind: "metal", label: "Metals" },
-  { kind: "fx", label: "Currencies" },
+  { kind: "fx", label: "Currencies", filter: "Forex" },
   { kind: "basket", label: "Baskets" },
 ];
 
 /** The Markets filter: every kind, or one. */
 export const MARKET_FILTERS = [
   { value: "all", label: "All" },
-  ...MARKET_GROUPS.map((g) => ({ value: g.kind, label: g.label })),
+  ...MARKET_GROUPS.map((g) => ({ value: g.kind, label: g.filter ?? g.label })),
 ] as const;
 export type MarketFilter = "all" | MarketKind;
 

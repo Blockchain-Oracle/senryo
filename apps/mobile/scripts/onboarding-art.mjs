@@ -78,7 +78,9 @@ function writeBands(split, out) {
 const work = mkdtempSync(join(tmpdir(), "senryo-onboarding-"));
 try {
   const split = join(work, "layers");
-  execFileSync("uv", ["run", "-q", "--no-project", "--python", "3.12", "--with", "fonttools", "python", "onboarding.py", "--layers", split], {
+  // Python 3.12+: the scene scripts nest quotes inside f-string expressions.
+  const python = ["run", "-q", "--no-project", "--python", "3.12", "--with", "fonttools", "python"];
+  execFileSync("uv", [...python, "onboarding.py", "--layers", split], {
     cwd: join(ROOT, "brand/scripts"),
     stdio: ["ignore", "ignore", "inherit"],
   });
