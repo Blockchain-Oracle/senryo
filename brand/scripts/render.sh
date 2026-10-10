@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Regenerates every brand asset: fetch OFL fonts → outline to SVG (build.py) → rasterise PNGs → copy web assets.
-# Needs: uv (python + fonttools), rsvg-convert, magick (ImageMagick 7). Run from anywhere.
+# Needs: uv (Python 3.12 + fonttools), rsvg-convert, magick (ImageMagick 7). Run from anywhere.
 set -euo pipefail
 
 BRAND="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,14 +8,16 @@ WEB_PUBLIC="$BRAND/../apps/web/public"
 export SENRYO_FONT_DIR="${SENRYO_FONT_DIR:-$BRAND/.fonts}"
 mkdir -p "$SENRYO_FONT_DIR"
 
-fetch() { # url file
-  [ -s "$SENRYO_FONT_DIR/$2" ] || curl -fsSL -o "$SENRYO_FONT_DIR/$2" "$1"
+fetch() { # url file — via a .part file, so a cut-off download is never taken for the font
+  [ -s "$SENRYO_FONT_DIR/$2" ] && return
+  curl -fsSL --retry 5 --retry-all-errors -C - -o "$SENRYO_FONT_DIR/$2.part" "$1"
+  mv "$SENRYO_FONT_DIR/$2.part" "$SENRYO_FONT_DIR/$2"
 }
 fetch https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/fonts/ttf/JetBrainsMono-Bold.ttf JetBrainsMono-Bold.ttf
 fetch https://raw.githubusercontent.com/google/fonts/main/ofl/zenoldmincho/ZenOldMincho-Black.ttf ZenOldMincho-Black.ttf
 
 cd "$BRAND/scripts"
-uv run -q --with fonttools python build.py
+uv run -q --no-project --python 3.12 --with fonttools python build.py
 
 cd "$BRAND"
 png() { # svg out width [height]
@@ -38,11 +40,6 @@ rsvg-convert -w 192 -h 192 -o "$WEB_PUBLIC/icon-192.png" app-icon.svg
 rsvg-convert -w 512 -h 512 -o "$WEB_PUBLIC/icon-512.png" app-icon.svg
 cp senryo-seal.svg "$WEB_PUBLIC/brand/seal.svg"
 cp senryo-wordmark.svg "$WEB_PUBLIC/brand/wordmark.svg"
-cp kinpaku-card.svg "$WEB_PUBLIC/brand/kinpaku-card.svg"
-cp kinpaku-card-back.svg "$WEB_PUBLIC/brand/kinpaku-card-back.svg"
-
-# Mobile card face: the Card tab draws this raster (1200 px = a 400 pt card at 3x). S1b.4.
-png kinpaku-card.svg "$BRAND/../apps/mobile/assets/images/kinpaku-card.png" 1200 757
 
 # Mobile app icon, splash seal and Android adaptive foreground (the seal at 600 px centred on a transparent 1024 px
 # canvas, inside the adaptive icon's safe zone): the same seal as everywhere else, so they never drift from it.
@@ -55,8 +52,9 @@ rsvg-convert -w 600 -h 600 senryo-seal.svg | magick - -background none -gravity 
 # Original identity art (S1b.3): koban, chōgin, FX pair discs, venue chip → brand/art/; then the J1 artwork that
 # composes them (six onboarding scenes, pending-passkey art, completion foil, twelve avatars) → brand/art/onboarding/
 # and brand/art/avatars/; then re-pin + regenerate. Contact sheets for review: python3 scripts/sheets.py.
-python3 scripts/art.py
-python3 scripts/onboarding.py
+# Python 3.12+: the scene scripts nest quotes inside f-string expressions.
+uv run -q --no-project --python 3.12 python scripts/art.py
+uv run -q --no-project --python 3.12 python scripts/onboarding.py
 (cd "$BRAND/.." && pnpm --filter @senryo/identity codegen --rehash)
 
 ls -la "$BRAND"/*.png

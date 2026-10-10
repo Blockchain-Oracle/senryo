@@ -13,7 +13,7 @@
         "y": 700,
         "width": 284,
         "height": 48,
-        "ink": "#7049C8"
+        "ink": "#666666"
       },
       {
         "id": "scene-modes-label-mainnet",
@@ -23,7 +23,7 @@
         "y": 376,
         "width": 284,
         "height": 48,
-        "ink": "#3643D8"
+        "ink": "#000000"
       }
     ]
   }

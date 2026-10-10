@@ -1,10 +1,10 @@
-"""Original Senryo identity art (S1b.3 first-pass masters, v2 direction §10): XAU koban, XAG chōgin, the five FX
-flag-pair discs and the Senryo venue chip. Deterministic: same input, byte-identical output.
+"""Original Senryo identity art (S1b.3 first-pass masters, v2 direction §10): XAU koban, XAG chōgin and the five FX
+flag-pair discs. Deterministic: same input, byte-identical output.
 
   python3 brand/scripts/art.py            # writes brand/art/*.svg
 
 - Materials: the Living Lacquer ramps (v2-plan §5.2). Gold leaf #886426/#D4AE5B/#FFF0BC, silver #697383/#C9D0DD/#F4F6FB,
-  lacquer #17121B/#29212F/#514357. Light comes from the upper left on every object (same viewpoint, same optical scale).
+  lacquer #141414/#242424/#474747. Light comes from the upper left on every object (same viewpoint, same optical scale).
 - The 千 is the seal's own outlined glyph (Zen Old Mincho Black, OFL; see brand/README.md), read from senryo-seal.svg,
   so there is no <text> and no font dependency anywhere.
 - React Native renders these through react-native-svg: gradients, clip paths, masks and opacity only — no filters,
@@ -32,7 +32,7 @@ FLAG_FILES = {
 
 GOLD = {"shadow": "#886426", "mid": "#D4AE5B", "light": "#FFF0BC"}
 SILVER = {"shadow": "#697383", "mid": "#C9D0DD", "light": "#F4F6FB"}
-LACQUER = {"shadow": "#17121B", "mid": "#29212F", "light": "#514357"}
+LACQUER = {"shadow": "#141414", "mid": "#242424", "light": "#474747"}
 INK = "#000000"
 
 BOX = 256  # every object master is a 256 square
@@ -341,34 +341,9 @@ def fx_pair(base: str, quote: str, key: str) -> None:
     write(f"{key}.svg", svg(key, title, bdefs + qdefs + mask, body))
 
 
-# --- Senryo venue chip -------------------------------------------------------------------------------------------
-CHIP = 64
-
-
-def venue_chip() -> None:
-    k = "senryo-venue"
-    g = GOLD
-    r = 14 * CHIP / 512  # the seal's corner radius at this size
-    defs = (
-        lin(f"{k}-field", [(0, g["light"], 1), (0.42, g["mid"], 1), (1, g["shadow"], 1)])
-        + lin(f"{k}-bevel", [(0, g["light"], 1), (0.5, g["light"], 0), (1, g["shadow"], 0.9)])
-        + lin(f"{k}-carve", [(0, LACQUER["mid"], 1), (1, LACQUER["shadow"], 1)], 0, 0, 0, 1)
-    )
-    t = fit(4.6, 5.2, 54.8, 54.8)
-    body = (
-        f'<rect width="{CHIP}" height="{CHIP}" rx="{r:.2f}" fill="url(#{k}-field)"/>'
-        f'<rect x=".75" y=".75" width="{CHIP - 1.5}" height="{CHIP - 1.5}" rx="{r - 0.5:.2f}" fill="none" '
-        f'stroke="url(#{k}-bevel)" stroke-width="1.5"/>'
-        f"{glyph(shift(t, 0.5, 0.6), g['light'], 34, ' opacity=\".55\"')}"
-        f"{glyph(t, f'url(#{k}-carve)', 34)}"
-    )
-    write(f"{k}.svg", svg(k, "Senryo venue chip (seal geometry, gold-leaf ramp)", defs, body, CHIP))
-
-
 if __name__ == "__main__":
     metal_files("xau-koban", "XAU koban", koban, GOLD)
     metal_files("xag-chogin", "XAG chōgin", chogin, SILVER)
-    venue_chip()
     for flag, currency in (("eu", "eur"), ("gb", "gbp"), ("jp", "jpy"), ("ch", "chf"), ("ca", "cad")):
         fx_pair(flag, "us", f"fx-{currency}-usd")
     for name in sorted(n for n in os.listdir(OUT) if n.endswith(".svg")):  # subfolders belong to onboarding.py

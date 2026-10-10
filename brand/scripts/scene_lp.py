@@ -13,8 +13,8 @@ SEED = 1404
 CX, TOP_Y, RX, RY = 372, 588, 268, 121  # the well's mouth (camera about 27° above the horizon)
 WALL, PLINTH, PLINTH_OUT = 190, 26, 9
 LIP = 30  # rim thickness seen from above
-# The pool takes the app's own blues, light on top and deep at the far wall (tokens: link, primary, mainnet surface).
-POOL = ("#DCE0FF", "#8B95FF", "#414EF4", "#1B2040")
+# The pool is water in the chart teal, light on top and deep at the far wall (chart3 in both themes).
+POOL = ("#DDF4F7", "#5CCAD8", "#087A8A", "#06262B")
 DOOR_R, DOOR_SQUASH, DOOR_TILT, DOOR_THICK = 258, 0.8, -7, 16  # the open door: radius, foreshortening, lean
 BOLTS, BOLT_W = 8, 20
 HINGE_DX = 92
@@ -51,9 +51,9 @@ def well(c: Canvas, rng: random.Random) -> str:
         f"M{CX - plinth_rx} {ledge_y}V{foot_y}A{plinth_rx} {n(plinth_ry)} 0 0 0 {CX + plinth_rx} {foot_y}V{ledge_y}"
         f"A{plinth_rx} {n(plinth_ry)} 0 0 1 {CX - plinth_rx} {ledge_y}Z"
     )
-    turn = [(0, "#2A2231"), (0.1, "#3B3044"), (0.2, "#6A5A73"), (0.27, "#40344A"), (0.5, "#241D2B"), (0.82, "#130F18"), (0.94, "#1B1521"), (1, "#2A2231")]
+    turn = [(0, "#252525"), (0.1, "#343434"), (0.2, "#6A5A73"), (0.27, "#383838"), (0.5, "#1F1F1F"), (0.82, "#111111"), (0.94, "#171717"), (1, "#252525")]
     wall = c.lin(turn, 0, 0, 1, 0)
-    ledge = c.lin([(0, "#4A3D54"), (0.4, "#2E2536"), (1, "#18121D")], 0, 0, 1, 0)
+    ledge = c.lin([(0, "#414141"), (0.4, "#282828"), (1, "#141414")], 0, 0, 1, 0)
     bounce = c.lin([(0, COLOR, 0), (0.7, COLOR, 0.02), (1, COLOR, 0.2)], 0, 0, 0, 1)
     side_glow = c.lin([(0, COLOR, 0), (0.88, COLOR, 0), (1, COLOR, 0.26)], 0, 0, 1, 0)
     clip = c.clip(f'<path d="{wall_d}"/>')
@@ -67,12 +67,12 @@ def well(c: Canvas, rng: random.Random) -> str:
         f'<rect x="{CX - 33}" y="{catch_y + 3}" width="70" height="58" rx="9" fill="{INK}" fill-opacity=".5"/>'
         f'<rect x="{CX - 35}" y="{catch_y}" width="70" height="58" rx="9" fill="{steel}"/>'
         f'<rect x="{CX - 35 + 1}" y="{catch_y + 1}" width="68" height="56" rx="8" fill="none"{stroke(WHITE, 1.6, 0.7)}/>'
-        f'<rect x="{CX - 15}" y="{catch_y + 16}" width="30" height="26" rx="6" fill="#2B2331"/>'
-        f'<rect x="{CX - 15}" y="{catch_y + 16}" width="30" height="8" rx="4" fill="#0C0910"/>'
+        f'<rect x="{CX - 15}" y="{catch_y + 16}" width="30" height="26" rx="6" fill="#262626"/>'
+        f'<rect x="{CX - 15}" y="{catch_y + 16}" width="30" height="8" rx="4" fill="#0A0A0A"/>'
     )
     in_rx, in_ry = RX - LIP, RY - LIP * 0.52
-    lip = c.lin([(0, "#6B5B74"), (0.3, "#40344A"), (0.75, "#1E1824"), (1, "#3A2F42")], 0, 0, 1, 0.6)
-    inner = c.lin([(0, "#0A070D"), (0.5, "#16111B"), (1, "#241D2B")], 0, 0, 1, 0)
+    lip = c.lin([(0, "#6B5B74"), (0.3, "#383838"), (0.75, "#1A1A1A"), (1, "#333333")], 0, 0, 1, 0.6)
+    inner = c.lin([(0, "#080808"), (0.5, "#131313"), (1, "#1F1F1F")], 0, 0, 1, 0)
     return (
         f'<g id="{KEY}-well-body"><path d="{plinth_d}" fill="{wall}"/><path d="{plinth_d}" fill="{INK}" fill-opacity=".3"/>'
         f"{ellipse(CX, ledge_y, plinth_rx, plinth_ry, ledge)}"
@@ -145,8 +145,8 @@ def door(c: Canvas) -> str:
     to foreshorten it; written as scale(), because the identity codegen's SVGO pass rounds a merged transform to the
     precision of any matrix() it finds). Lacquer face, a recessed panel, drawn-back steel bolts around the rim, the seal at its centre."""
     r = DOOR_R
-    face = c.lin([(0, "#6B5B74"), (0.3, "#3A2F42"), (1, "#18121D")], 0, 0, 1, 1)
-    panel = c.lin([(0, "#17111C"), (0.6, "#231C29"), (1, "#30273A")], 0, 0, 1, 1)
+    face = c.lin([(0, "#6B5B74"), (0.3, "#333333"), (1, "#141414")], 0, 0, 1, 1)
+    panel = c.lin([(0, "#131313"), (0.6, "#1E1E1E"), (1, "#2A2A2A")], 0, 0, 1, 1)
     steel = c.lin([(0, SILVER["light"]), (0.5, SILVER["mid"]), (1, SILVER["shadow"])], 0, 0, 1, 1)
     gold = c.lin([(0, GOLD["light"]), (0.45, GOLD["mid"]), (1, GOLD["shadow"])], 0, 0, 1, 1)
     ring = c.lin([(0, GOLD["light"]), (0.5, GOLD["mid"]), (1, GOLD["shadow"])], 0, 0, 1, 0)
@@ -160,7 +160,7 @@ def door(c: Canvas) -> str:
             f'<path d="M{n(x0)} {n(y0)}L{n(x1)} {n(y1)}" stroke="{steel}" stroke-width="{BOLT_W}" stroke-linecap="round"/>'
             f'<path d="M{n(x0)} {n(y0)}L{n(x1)} {n(y1)}" stroke="{WHITE}" stroke-opacity=".7" stroke-width="3" stroke-linecap="round" transform="translate(-4 -4)"/>'
         )
-    edge = "".join(f'<circle cx="{n(DOOR_THICK * k)}" cy="{n(DOOR_THICK * 0.8 * k)}" r="{r}" fill="{tone}"/>' for k, tone in ((1, "#09070C"), (0.66, "#120E17"), (0.33, "#1B1521")))
+    edge = "".join(f'<circle cx="{n(DOOR_THICK * k)}" cy="{n(DOOR_THICK * 0.8 * k)}" r="{r}" fill="{tone}"/>' for k, tone in ((1, "#080808"), (0.66, "#101010"), (0.33, "#171717")))
     streak = pts(arc_points(0, 0, r * 0.94, r * 0.94, 196, 250) + arc_points(0, 0, r * 0.82, r * 0.82, 250, 196))
     seal_r = r * 0.3
     glyph_t = glyph_in(-seal_r * 0.6, -seal_r * 0.62, seal_r * 1.2, seal_r * 1.2)

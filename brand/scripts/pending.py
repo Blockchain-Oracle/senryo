@@ -10,7 +10,7 @@ from props import sparkle
 KEY = "passkey-pending"
 SIZE = 640
 SEED = 1808
-TINT = "#8B95FF"  # the light the silver picks up: the app's own link blue on either theme
+TINT = "#F5F5F5"  # the light the silver picks up: the app's own white (DARK.foreground)
 TABLET_AT, TABLET_W, TABLET_H, TABLET_R, TABLET_TILT = (350, 300), 360, 388, 54, -7
 KEY_AT, KEY_TILT, KEY_SCALE = (158, 392), -43, 0.84
 TABLET_DEPTH = 0.4

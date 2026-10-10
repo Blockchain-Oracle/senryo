@@ -5,7 +5,8 @@
   opacity only, exactly like art.py, so react-native-svg and Skia draw the masters as authored.
 - Soft shadows are stacked translucent shapes or radial gradients (a filter would not survive react-native-svg).
 - Light comes from the upper left on every object; thickness always falls to the lower right (same as art.py).
-- Colours: the Living Lacquer material ramps (v2-plan §5.2) and the six scene fields (`SCENE_FIELD` in packages/tokens).
+- Colours: the material ramps (`MATERIAL` in packages/tokens), the UGLYCASH practice/mainnet roles (`palette.ts`) and
+  the six scene fields (`SCENE_FIELD`).
 """
 import math
 import os
@@ -26,8 +27,8 @@ FIELD = {
 }
 WHITE = "#FFFFFF"
 FOIL = (GOLD["shadow"], "#AE8941", GOLD["mid"], "#EACF8C", GOLD["light"])  # KINPAKU foil stops, deep → highlight
-PRACTICE = {"deep": "#7049C8", "mid": "#B69DF8", "pale": "#EEE7FF"}
-MAINNET = {"deep": "#3643D8", "mid": "#414EF4", "pale": "#8B95FF"}
+PRACTICE = {"deep": "#666666", "mid": "#B8B8B8", "pale": "#ECECEC"}  # LIGHT.practice, DARK.practice, LIGHT.practiceSurface
+MAINNET = {"deep": "#000000", "mid": "#363636", "pale": "#E2E2E2"}  # LIGHT.mainnet, DARK.mainnetSurface, LIGHT.mainnetSurface
 PAPER = {"light": "#FFFDF6", "mid": "#F6EFDF", "shade": "#D9CFBA"}
 SHADOW_INK = LACQUER["shadow"]
 # What each field's shadow deepens toward: its own hue, darker (a multiplied shadow), never a neutral grey.

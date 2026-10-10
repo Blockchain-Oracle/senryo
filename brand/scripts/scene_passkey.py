@@ -24,7 +24,7 @@ def phone(c: Canvas) -> tuple[str, str]:
     x, y = -w / 2, -h / 2
     outline = rrect(x, y, w, h, r)
     frame = c.lin([(0, SILVER["light"]), (0.4, SILVER["mid"]), (1, SILVER["shadow"])], 0, 0, 1, 1)
-    glass = c.lin([(0, "#2A2440"), (0.5, "#16121F"), (1, "#0B0910")], 0, 0, 1, 1)
+    glass = c.lin([(0, "#272727"), (0.5, "#141414"), (1, "#0A0A0A")], 0, 0, 1, 1)
     clip = c.clip(f'<path d="{rrect(x + 8, y + 8, w - 16, h - 16, r - 7)}"/>')
     edge = "".join(f'<path d="{rrect(x + k * 7, y + k * 12, w, h, r)}" fill="{tone}"/>' for k, tone in ((1, "#3F4654"), (0.6, "#586172"), (0.3, "#7A8597")))
     band = pts([(x + w * 0.5, y), (x + w * 0.95, y), (x + w * 0.35, y + h), (x - w * 0.1, y + h)])
@@ -32,10 +32,10 @@ def phone(c: Canvas) -> tuple[str, str]:
     return (
         f"{edge}"
         f'<path d="{outline}" fill="{frame}"/>'
-        f'<path d="{rrect(x + 5, y + 5, w - 10, h - 10, r - 4)}" fill="#0A080D"/>'
+        f'<path d="{rrect(x + 5, y + 5, w - 10, h - 10, r - 4)}" fill="#090909"/>'
         f'<path d="{rrect(x + 8, y + 8, w - 16, h - 16, r - 7)}" fill="{glass}"/>'
         f'<g clip-path="{clip}">{gloss(c, band, 0.16, 0, 0, 0.5, 1)}</g>'
-        f'<rect x="-30" y="{n(y + 22)}" width="60" height="18" rx="9" fill="#050407"/>'
+        f'<rect x="-30" y="{n(y + 22)}" width="60" height="18" rx="9" fill="#040404"/>'
         f"{seal_tile(c, -tile / 2, -tile / 2 - 6, tile)}"
         f'<rect x="-34" y="{n(y + h - 26)}" width="68" height="5" rx="2.5" fill="{WHITE}" fill-opacity=".5"/>',
         outline,

@@ -61,7 +61,7 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       symbol: {
         path: "brand/senryo-seal.svg",
         url: "brand/senryo-seal.svg",
-        sha256: "1026cff09c17d2466c0bb09f543d073bc381ec9c73d478c95e1d682cd48c003d",
+        sha256: "d39baee79481cc6b6857dc85730d3214ff0d5208b28e52c4695cadd459598fca",
         viewBox: "0 0 512 512",
         insetPermille: 0,
         surface: "any",
@@ -70,7 +70,7 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       monoLight: {
         path: "brand/senryo-seal-mono.svg",
         url: "brand/senryo-seal-mono.svg",
-        sha256: "db06ea2c49ceee05438f94ba24a2684a71d95a81a8cc17e81d5cfa94d44eb91c",
+        sha256: "d697c60a01d20bfe7a7cbe9fcb5cf0b3523a6eb7a7abf356d72ea7ad0b3e7a14",
         viewBox: "0 0 512 512",
         insetPermille: 0,
         surface: "dark",
@@ -90,7 +90,7 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       disc: {
         path: "brand/art/xau-koban-disc.svg",
         url: "brand/art/xau-koban-disc.svg",
-        sha256: "f62925a3ed26357fbdab5cbb61aacb9d5b402d10b1b483e17ec8cb3e7a702b0e",
+        sha256: "1a803ac269edf8bcd2be84ce72933ed1b69dea95d7cf04585be1927e88f28df2",
         viewBox: "0 0 256 256",
         insetPermille: 0,
         surface: "any",
@@ -119,7 +119,7 @@ export const ORIGINAL_ART: readonly ArtSource[] = [
       disc: {
         path: "brand/art/xag-chogin-disc.svg",
         url: "brand/art/xag-chogin-disc.svg",
-        sha256: "b2deeaf0219d8e9d693ad7068bd0869cc48148f11a547538c28d352b9120d00b",
+        sha256: "32f707e6efda147208de2e133687cf6dcb8d5a589144d4e731420bffed4949d6",
         viewBox: "0 0 256 256",
         insetPermille: 0,
         surface: "any",

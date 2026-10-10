@@ -32,9 +32,9 @@ LEAVES = ((-1, 21, 29), (1, 16, 25))  # each leaf: its side, how far it springs 
 SEAL = 62  # the gold seal tile inlaid in the lacquer
 SHADOW_DROP = 108  # the tube's shadow, this far below its axis
 FRAME_BOX, FRAME_ARM, FRAME_R, FRAME_W = (108, 112, 532, 520), 80, 15, 7.5  # the corners of light: box, arm, bend radius, width at the bend
-FRAME_INSET, FRAME_ACCENT, FRAME_TAPER = 7, 3.2, 0.35  # the blue line just inside each corner: inset, width; how late both thin out
+FRAME_INSET, FRAME_ACCENT, FRAME_TAPER = 7, 3.2, 0.35  # the pale line just inside each corner: inset, width; how late both thin out
 CORNER_STEPS = 10
-TINT = MAINNET["pale"]  # the light the gold and lacquer pick up: the app's link blue, as on the pending-passkey art
+TINT = MAINNET["pale"]  # the light the gold and lacquer pick up: a pale grey, as on the pending-passkey art
 
 
 def swell(x: float, r: float = BODY_R) -> float:
@@ -59,7 +59,7 @@ def round_paint(c: Canvas, stops) -> str:
 def body(c: Canvas, rng: random.Random) -> str:
     """The tube in its own frame: axis along +x, centre at the origin."""
     h, r = BODY_L / 2, BODY_R
-    lacquer = round_paint(c, [(0, "#7A6984"), (0.1, "#4A3D54"), (0.28, LACQUER["mid"]), (0.6, LACQUER["shadow"]), (0.8, "#08060A"), (0.94, "#1B1521"), (1, "#2E2538")])
+    lacquer = round_paint(c, [(0, "#7A6984"), (0.1, "#414141"), (0.28, LACQUER["mid"]), (0.6, LACQUER["shadow"]), (0.8, "#070707"), (0.94, "#171717"), (1, "#282828")])
     bounce = c.lin([(0, TINT, 0), (0.78, TINT, 0), (1, TINT, 0.3)], 0, 0, 0, 1)
     gold = round_paint(c, [(0, FOIL[3]), (0.1, WHITE), (0.2, FOIL[4]), (0.4, FOIL[2]), (0.66, FOIL[1]), (0.86, FOIL[0]), (1, FOIL[1])])
     tube = tube_outline(-h, h, r)
@@ -158,7 +158,7 @@ def boss(c: Canvas, x: float, y: float, hole: bool) -> str:
     hr = BOLT_W * 0.95  # the socket the bolt drops into: a dark bore with a lit far lip
     socket = (
         f'<ellipse cx="{n(x)}" cy="{n(top)}" rx="{n(hr + 2)}" ry="{n((hr + 2) * BOSS_SQUASH)}" fill="{FOIL[0]}"/>'
-        f'<ellipse cx="{n(x)}" cy="{n(top + 0.6)}" rx="{n(hr)}" ry="{n(hr * BOSS_SQUASH)}" fill="#08060A"/>'
+        f'<ellipse cx="{n(x)}" cy="{n(top + 0.6)}" rx="{n(hr)}" ry="{n(hr * BOSS_SQUASH)}" fill="#070707"/>'
         f'<path d="M{n(x - hr)} {n(top + 0.6)}A{n(hr)} {n(hr * BOSS_SQUASH)} 0 0 0 {n(x + hr)} {n(top + 0.6)}" fill="none" stroke="{GOLD["light"]}" stroke-opacity=".7" stroke-width="1.2"/>'
         if hole
         else ""
@@ -228,7 +228,7 @@ def corner_line(cx: float, cy: float, sx: int, sy: int, inset: float = 0.0) -> l
 
 def corners(c: Canvas) -> str:
     """Four corners of light round the lock, the frame a look is caught in: each a streak of gold widest at its bend
-    and drawn out to nothing along both arms, with a thread of the app's blue just inside it. Light caught, never a
+    and drawn out to nothing along both arms, with a thread of pale grey just inside it. Light caught, never a
     drawn bracket, and no face inside it."""
     x0, y0, x1, y1 = FRAME_BOX
     out = ""

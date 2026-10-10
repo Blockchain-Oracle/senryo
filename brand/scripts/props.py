@@ -92,7 +92,7 @@ def kinpaku_card(
     r = w * CARD_CORNER
     t = max(w * 0.011, 2.5)  # thickness
     outline = rrect(0, 0, w, h, r)
-    body = c.lin([(0, "#43364B"), (0.3, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
+    body = c.lin([(0, "#3A3A3A"), (0.3, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
     clip = c.clip(f'<path d="{outline}"/>')
     edge = "" if flat else "".join(
         f'<path d="{rrect(i * 0.8, i, w, h, r)}" fill="{mix_edge(i / t)}"/>' for i in (t, t * 0.66, t * 0.33)
@@ -139,7 +139,7 @@ def kinpaku_card(
 
 def mix_edge(t: float) -> str:
     """Card and dish edges: lacquer shadow at the far side, a touch lighter where it meets the face."""
-    return ramp(("#221B28", "#0D0A11"), t)
+    return ramp(("#1D1D1D", "#0B0B0B"), t)
 
 
 def dish(c: Canvas, r: float, rim: tuple[str, str, str], thick: float = 0.0) -> str:

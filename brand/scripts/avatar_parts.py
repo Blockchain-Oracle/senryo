@@ -121,7 +121,7 @@ def ponytail(c, hair: str, light: str):
         f'<path d="M158 52C204 30 232 74 214 124C208 146 196 160 184 168C196 140 196 106 176 86Z" fill="{hair}"/>'
         f"{shine(light, 'M190 62C208 76 212 100 204 124', 5, 0.45)}"
     )
-    lac = "#2B2331"
+    lac = "#262626"
     front = (
         f"{cap(c, hair, 0, 70)}{shine(light, 'M92 76C102 62 116 56 132 55')}"
         f'<circle cx="164" cy="56" r="8" fill="{PRACTICE["mid"]}"/>'

@@ -1,6 +1,6 @@
 """Scene 6 · Practice / Mainnet. Two states, two materials, two colours, each with a plate for its native label.
-In front, Practice: paper money (a banded bundle of washi notes and one loose note, printed in the practice violet).
-Apart and behind, Mainnet: real money, metal, in a lacquer tray lined in the mainnet blue. The tray and its blue carry
+In front, Practice: paper money (a banded bundle of washi notes and one loose note, printed in the practice grey).
+Apart and behind, Mainnet: real money, metal, in a lacquer tray lined in pale mainnet grey. The tray and its lining carry
 the mode; the koban and chōgin in it are only what "real" is made of (gold never means Mainnet). Nothing here shows a
 switch: the art never implies the account's mode changes by itself."""
 import math
@@ -18,7 +18,7 @@ LOOSE_AT, LOOSE_TILT = (214, 800), 6
 TRAY_AT, TRAY_W, TRAY_H, TRAY_R, TRAY_WALL, TRAY_TILT = (548, 238), 318, 232, 48, 16, 7
 KOBAN_AT, KOBAN_BOX = (-66, -2), 206  # tray coordinates
 CHOGIN_AT, CHOGIN_BOX = (64, 22), 190
-INKS = (PRACTICE["deep"], "#8B6BD6", PRACTICE["mid"])
+INKS = (PRACTICE["deep"], "#8C8C8C", PRACTICE["mid"])
 FIBRES = 46
 EDGE_TONES = ("#EFE7D3", "#E4DAC4")  # the bundle's page edges: two close paper tones, never a hard stripe
 LABEL_H = 48
@@ -26,7 +26,7 @@ MAINNET_DEPTH, BUNDLE_DEPTH = 0.4, 0.8
 MOTION = {"subject": "bundle", "mostMotion": ["note", "bundle"]}
 LABELS = (
     ("practice", "bundle", "Practice · Test dollars", (452, 700), 284, PRACTICE["pale"], PRACTICE["deep"]),
-    ("mainnet", "mainnet", "Real · USDC", (404, 376), 284, "#E8EBFF", MAINNET["deep"]),
+    ("mainnet", "mainnet", "Real · USDC", (404, 376), 284, MAINNET["pale"], MAINNET["deep"]),
 )
 
 
@@ -48,7 +48,7 @@ def wave(x0: float, x1: float, y: float, amp: float, period: float, phase: float
 
 
 def note(c: Canvas, rng: random.Random, edge: float = 1.0) -> tuple[str, str]:
-    """One practice note, origin at its centre: washi, engraved violet frame, rosettes, the seal as its vignette.
+    """One practice note, origin at its centre: washi, engraved grey frame, rosettes, the seal as its vignette.
     `edge` scales the sliver of thickness under it (a single loose sheet has almost none)."""
     w, h = NOTE_W, NOTE_H
     x, y = -w / 2, -h / 2
@@ -86,7 +86,7 @@ def note(c: Canvas, rng: random.Random, edge: float = 1.0) -> tuple[str, str]:
 
 
 def bundle(c: Canvas, rng: random.Random, sheet: str) -> str:
-    """A banded stack of notes: sheet edges stepping to the lower right, the top note, a violet paper band."""
+    """A banded stack of notes: sheet edges stepping to the lower right, the top note, a grey paper band."""
     w, h = NOTE_W, NOTE_H
     x, y = -w / 2, -h / 2
     edges = "".join(
@@ -95,7 +95,7 @@ def bundle(c: Canvas, rng: random.Random, sheet: str) -> str:
         for k in range(BUNDLE_SHEETS, 0, -1)
     )
     band_w = 74
-    band = c.lin([(0, PRACTICE["mid"]), (0.5, "#9A7BE6"), (1, PRACTICE["deep"])], 0, 0, 1, 1)
+    band = c.lin([(0, PRACTICE["mid"]), (0.5, "#8C8C8C"), (1, PRACTICE["deep"])], 0, 0, 1, 1)
     drop = BUNDLE_SHEETS * 3.4
     return (
         f"{edges}{sheet}"
@@ -106,47 +106,47 @@ def bundle(c: Canvas, rng: random.Random, sheet: str) -> str:
     )
 
 
-def blue_tray(c: Canvas) -> tuple[str, str]:
-    """The Mainnet object: a lacquer tray whose well is lined in the mainnet blue. Origin at its centre."""
+def mainnet_tray(c: Canvas) -> tuple[str, str]:
+    """The Mainnet object: a lacquer tray whose well is lined in pale mainnet grey. Origin at its centre."""
     w, h, r, wall = TRAY_W, TRAY_H, TRAY_R, TRAY_WALL
     x, y = -w / 2, -h / 2
     outline = rrect(x, y, w, h, r)
-    lip = c.lin([(0, "#5E4E67"), (0.35, "#3A2F42"), (1, "#1D1723")], 0, 0, 1, 1)
-    lining = c.lin([(0, "#2530A8"), (0.6, "#2F3BC6"), (1, MAINNET["deep"])], 0, 0, 1, 1)
+    lip = c.lin([(0, "#535353"), (0.35, "#333333"), (1, "#191919")], 0, 0, 1, 1)
+    lining = c.lin([(0, "#F5F5F5"), (0.6, MAINNET["pale"]), (1, PRACTICE["mid"])], 0, 0, 1, 1)
     rim = c.lin([(0, WHITE, 0.6), (0.4, WHITE, 0.04), (0.6, INK, 0.05), (1, INK, 0.55)], 0, 0, 1, 1)
     inner = rrect(x + wall, y + wall, w - 2 * wall, h - 2 * wall, r - wall)
     clip = c.clip(f'<path d="{inner}"/>')
     inner_rim = c.lin([(0, INK, 0.6), (0.45, INK, 0.05), (0.6, WHITE, 0.05), (1, WHITE, 0.5)], 0, 0, 1, 1)
     band = pts([(x + w * 0.36, y), (x + w * 0.52, y), (x + w * 0.3, y + h), (x + w * 0.14, y + h)])
-    blue_line = c.lin([(0, MAINNET["mid"]), (1, MAINNET["deep"])], 0, 0, 1, 1)
+    edge_line = c.lin([(0, MAINNET["mid"]), (1, MAINNET["deep"])], 0, 0, 1, 1)
     metals = (
-        f'<g id="{KEY}-koban-shadow">{soft_ellipse(c, KOBAN_AT[0] + 6, KOBAN_AT[1] + 9, KOBAN_BOX * 0.3, KOBAN_BOX * 0.44, "#0B1066", 0.6, -12)}</g>'
+        f'<g id="{KEY}-koban-shadow">{soft_ellipse(c, KOBAN_AT[0] + 6, KOBAN_AT[1] + 9, KOBAN_BOX * 0.3, KOBAN_BOX * 0.44, "#2A2A2A", 0.6, -12)}</g>'
         + f'<g id="{KEY}-koban">{embed(c, "brand/art/xau-koban.svg", KOBAN_AT[0] - KOBAN_BOX / 2, KOBAN_AT[1] - KOBAN_BOX / 2, KOBAN_BOX)}</g>'
-        + f'<g id="{KEY}-chogin-shadow">{soft_ellipse(c, CHOGIN_AT[0] + 6, CHOGIN_AT[1] + 9, CHOGIN_BOX * 0.47, CHOGIN_BOX * 0.2, "#0B1066", 0.6, -32)}</g>'
+        + f'<g id="{KEY}-chogin-shadow">{soft_ellipse(c, CHOGIN_AT[0] + 6, CHOGIN_AT[1] + 9, CHOGIN_BOX * 0.47, CHOGIN_BOX * 0.2, "#2A2A2A", 0.6, -32)}</g>'
         + f'<g id="{KEY}-chogin">{embed(c, "brand/art/xag-chogin.svg", CHOGIN_AT[0] - CHOGIN_BOX / 2, CHOGIN_AT[1] - CHOGIN_BOX / 2, CHOGIN_BOX)}</g>'
     )
     return (
-        f'<path d="{rrect(x + 8, y + 13, w, h, r)}" fill="#0C0910"/>'
+        f'<path d="{rrect(x + 8, y + 13, w, h, r)}" fill="#0A0A0A"/>'
         f'<path d="{outline}" fill="{lip}"/>'
         f'<path d="{inner}" fill="{lining}"/>'
-        f'<g clip-path="{clip}"><path d="{inner}" fill="none" stroke="#0B1066" stroke-opacity=".55" stroke-width="24" transform="translate(8 10)"/>'
+        f'<g clip-path="{clip}"><path d="{inner}" fill="none" stroke="#2A2A2A" stroke-opacity=".55" stroke-width="24" transform="translate(8 10)"/>'
         f"{gloss(c, band, 0.05, 0, 0, 0.4, 1)}</g>"
         f'<path d="{inner}" fill="none" stroke="{inner_rim}" stroke-width="2.4"/>'
-        f'<path d="{rrect(x + wall * 0.5, y + wall * 0.5, w - wall, h - wall, r - wall * 0.5)}" fill="none" stroke="{blue_line}" stroke-width="2"/>'
+        f'<path d="{rrect(x + wall * 0.5, y + wall * 0.5, w - wall, h - wall, r - wall * 0.5)}" fill="none" stroke="{edge_line}" stroke-width="2"/>'
         f'<path d="{rrect(x + 1, y + 1, w - 2, h - 2, r)}" fill="none" stroke="{rim}" stroke-width="2.2"/>{metals}',
         outline,
     )
 
 
 def build() -> tuple[str, str]:
-    c = Canvas(KEY, "Practice and Mainnet: paper notes in front, metal money in a blue-lined tray apart (Senryo original)")
+    c = Canvas(KEY, "Practice and Mainnet: paper notes in front, metal money in a pale-lined tray apart (Senryo original)")
     rng = random.Random(SEED)
     field(c, COLOR)
     dark = shade(COLOR, 0.8)
     sheet, outline = note(c, rng)
     bundle_t = f"translate({BUNDLE_AT[0]} {BUNDLE_AT[1]}) rotate({BUNDLE_TILT})"
     loose_t = f"translate({LOOSE_AT[0]} {LOOSE_AT[1]}) rotate({LOOSE_TILT})"
-    tray, tray_outline = blue_tray(c)
+    tray, tray_outline = mainnet_tray(c)
     tray_t = f"translate({TRAY_AT[0]} {TRAY_AT[1]}) rotate({TRAY_TILT})"
     # Practice in front travels most; Mainnet sits apart and behind. Each label plate rides in its own state's layer.
     c.put("mainnet-shadow", contact(tray_outline, dark, tray_t, 0.8), role="shadow", depth=MAINNET_DEPTH, of="mainnet")

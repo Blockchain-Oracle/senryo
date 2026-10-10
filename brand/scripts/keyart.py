@@ -104,14 +104,14 @@ def tag(c: Canvas) -> str:
     x, y = -w / 2, -18
     face = c.lin([(0, LACQUER["light"]), (0.4, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
     rim = c.lin([(0, WHITE, 0.6), (0.5, WHITE, 0.03), (1, INK, 0.5)], 0, 0, 1, 1)
-    edge = f'<path d="{rrect(x + 2, y + 3.4, w, h, r)}" fill="#0D0A11"/>'
+    edge = f'<path d="{rrect(x + 2, y + 3.4, w, h, r)}" fill="#0B0B0B"/>'
     tile = 52
     return (
         f"{edge}"
         f'<path d="{rrect(x, y, w, h, r)}" fill="{face}"/>'
         f'<path d="{rrect(x + 1, y + 1, w - 2, h - 2, r)}" fill="none" stroke="{rim}" stroke-width="2"/>'
         f'<path d="{rrect(x + 3.5, y + 3.5, w - 7, h - 7, r - 3)}" fill="none" stroke="{GOLD["mid"]}" stroke-width="2.4"/>'
-        f'<circle r="8.5" fill="#0A080D"/><circle r="8.5" fill="none" stroke="{GOLD["mid"]}" stroke-width="2.2"/>'
+        f'<circle r="8.5" fill="#090909"/><circle r="8.5" fill="none" stroke="{GOLD["mid"]}" stroke-width="2.2"/>'
         f"{seal_tile(c, -tile / 2, 30, tile)}"
     )
 
@@ -121,11 +121,11 @@ def tablet(c: Canvas, w: float, h: float, r: float, rng: random.Random, bounce: 
     edge along the lower right of its thickness, so the dark body keeps its outline on a dark ground."""
     x, y = -w / 2, -h / 2
     outline = rrect(x, y, w, h, r)
-    face = c.lin([(0, "#55465E"), (0.32, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
+    face = c.lin([(0, "#4B4B4B"), (0.32, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
     rim = c.lin([(0, WHITE, 0.6), (0.4, WHITE, 0.04), (0.6, INK, 0.05), (1, INK, 0.55)], 0, 0, 1, 1)
     glow = c.lin([(0, bounce, 0), (0.7, bounce, 0.03), (1, bounce, 0.26)], 0, 0, 1, 1)
     clip = c.clip(f'<path d="{outline}"/>')
-    edge = "".join(f'<path d="{rrect(x + k * 9, y + k * 15, w, h, r)}" fill="{tone}"/>' for k, tone in ((1, "#0A070D"), (0.66, "#120E17"), (0.33, "#1B1521")))
+    edge = "".join(f'<path d="{rrect(x + k * 9, y + k * 15, w, h, r)}" fill="{tone}"/>' for k, tone in ((1, "#080808"), (0.66, "#101010"), (0.33, "#171717")))
     band = pts([(x + w * 0.12, y), (x + w * 0.44, y), (x + w * 0.1, y + h), (x - w * 0.22, y + h)])
     dust = sprinkle(rng, 520, (x, y, x + w, y + h), GOLD["mid"], (0.5, 1.6), lambda px, py: ((px - x) / w) ** 2 * ((py - y) / h) ** 2.4)
     under = c.lin([(0.35, bounce, 0), (1, bounce, rim_light)], 0, 0, 1, 1)

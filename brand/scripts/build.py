@@ -20,11 +20,11 @@ DISPLAY = os.path.join(os.path.dirname(BRAND), "apps", "mobile", "assets", "font
 # --- tokens (packages/tokens) -------------------------------------------------
 # MATERIAL.goldLeaf (shadow, mid, highlight) with the KINPAKU foil intermediates (foilShade, foilLight).
 LEAF = {"shadow": "#886426", "shade": "#AE8941", "mid": "#D4AE5B", "light": "#EACF8C", "highlight": "#FFF0BC"}
-LACQUER = {"shadow": "#17121B", "mid": "#29212F"}  # MATERIAL.lacquer
+LACQUER = {"shadow": "#141414", "mid": "#242424"}  # MATERIAL.lacquer
 CARVE = LACQUER["shadow"]  # what the seal is carved in, and the inverse seal's field
-GROUND = "#0A0911"  # DARK.background — app icon, splash, logo
-PAPER = "#F5F4FA"  # DARK.foreground — wordmark and mono seal on dark grounds
-INK = "#17151F"  # LIGHT.foreground — wordmark on light grounds
+GROUND = "#111111"  # DARK.background — app icon, splash, logo
+PAPER = "#F5F5F5"  # DARK.foreground — wordmark and mono seal on dark grounds
+INK = "#000000"  # LIGHT.foreground — wordmark on light grounds
 
 
 def gradient(gid: str, stops: list[tuple], attrs: str = 'x1="0" y1="0" x2="1" y2="1"') -> str:

@@ -22,11 +22,12 @@ ART = os.path.join(BRAND, "art")
 FONTS = os.path.join(ROOT, "apps", "mobile", "assets", "fonts")
 PHONE_W, PHONE_H, SCALE = 402, 874, 2
 HERO_X, HERO_Y, HERO_W, HERO_H, HERO_R = 12, 58, 378, 470, 32
-THEMES = {
-    "dark": {"ground": "#0A0911", "text": "#F5F4FA", "text2": "#B8B5C4", "raised": "#201E2B", "link": "#8B95FF"},
-    "light": {"ground": "#F5F4F8", "text": "#17151F", "text2": "#5F5B6B", "raised": "#ECE9F2", "link": "#3643D8"},
+THEMES = {  # palette.ts (UGLYCASH): background, foreground, mutedForeground, card, link, primary and its label
+    "dark": {"ground": "#111111", "text": "#F5F5F5", "text2": "#B8B8B8", "raised": "#1C1C1C", "link": "#FF75FF",
+             "primary": "#F5F5F5", "on_primary": "#000000"},
+    "light": {"ground": "#F5F5F5", "text": "#000000", "text2": "#666666", "raised": "#FFFFFF", "link": "#99009C",
+              "primary": "#000000", "on_primary": "#FFFFFF"},
 }
-PRIMARY = "#414EF4"
 SCENES = (
     ("scene-balance", "One balance. More possibilities.", "See what is available to trade and spend."),
     ("scene-passkey", "Your account, with a passkey.", "Use your device to create and unlock\nyour account."),
@@ -86,10 +87,10 @@ def phone(index: int, key: str, title: str, body: str, theme: str) -> str:
         "-annotate", f"+0+{550 * s}", title,
         "-font", os.path.join(FONTS, "Inter-Regular.ttf"), "-pointsize", str(16 * s), "-fill", t["text2"], "-interline-spacing", str(4 * s),
         "-annotate", f"+0+{594 * s}", body,
-        "-fill", PRIMARY, "-draw", f"roundrectangle {bx0},{by1} {bx1},{by1 + bh} {26 * s},{26 * s}",
+        "-fill", t["primary"], "-draw", f"roundrectangle {bx0},{by1} {bx1},{by1 + bh} {26 * s},{26 * s}",
         "-fill", t["raised"], "-draw", f"roundrectangle {bx0},{by2} {bx1},{by2 + bh} {26 * s},{26 * s}",
         "-font", os.path.join(FONTS, "Inter-SemiBold.ttf"), "-pointsize", str(17 * s),
-        "-fill", "#FFFFFF", "-annotate", f"+0+{by1 + 15 * s}", "Create account",
+        "-fill", t["on_primary"], "-annotate", f"+0+{by1 + 15 * s}", "Create account",
         "-fill", t["text"], "-annotate", f"+0+{by2 + 15 * s}", "I already have an account",
         "-fill", t["link"], "-pointsize", str(15 * s), "-annotate", f"+0+{820 * s}", "Browse markets",
         out,
@@ -110,7 +111,7 @@ def grid(files: list[str], per_row: int, out: str, ground: str, pad: int = 0, re
 def scenes() -> None:
     for theme in THEMES:
         files = [phone(i, key, title, body, theme) for i, (key, title, body) in enumerate(SCENES)]
-        grid(files, 3, os.path.join(REVIEW, f"j1-scenes-{theme}.png"), "#3A3550", 24)
+        grid(files, 3, os.path.join(REVIEW, f"j1-scenes-{theme}.png"), "#383838", 24)
 
 
 def extras() -> None:
@@ -147,7 +148,7 @@ def avatars() -> None:
     big = [os.path.join(REVIEW, f".big-{name}.png") for name in names]
     for name, png in zip(names, big):
         raster(os.path.join(folder, name), png, 256)
-    grid(big, 6, os.path.join(REVIEW, "j1-avatars-256.png"), "#0A0911", 0, "100%")
+    grid(big, 6, os.path.join(REVIEW, "j1-avatars-256.png"), "#111111", 0, "100%")
 
 
 def brand_marks() -> None:
@@ -175,11 +176,11 @@ def brand_marks() -> None:
             holder = holder[:-2].rstrip() + "…"
         run(
             "magick", tiles[0],
-            "-gravity", "NorthWest", "-font", medium, "-pointsize", str(20 * s), "-fill", "#F5F4FA", "-annotate", f"+{left}+{top}", "•••• 4242",
+            "-gravity", "NorthWest", "-font", medium, "-pointsize", str(20 * s), "-fill", "#F5F5F5", "-annotate", f"+{left}+{top}", "•••• 4242",
             "-font", semi, "-pointsize", str(12 * s), "-fill", "#B8B5C4", "-annotate", f"+{left}+{bottom - 38 * s}", "CARD HOLDER",
-            "-font", medium, "-pointsize", str(16 * s), "-fill", "#F5F4FA", "-annotate", f"+{left}+{bottom - 20 * s}", holder,
+            "-font", medium, "-pointsize", str(16 * s), "-fill", "#F5F5F5", "-annotate", f"+{left}+{bottom - 20 * s}", holder,
             "-gravity", "NorthEast", "-font", semi, "-pointsize", str(12 * s), "-fill", "#B8B5C4", "-annotate", f"+{right}+{bottom - 38 * s}", "EXPIRES",
-            "-font", medium, "-pointsize", str(16 * s), "-fill", "#F5F4FA", "-annotate", f"+{right}+{bottom - 20 * s}", "08/29",
+            "-font", medium, "-pointsize", str(16 * s), "-fill", "#F5F5F5", "-annotate", f"+{right}+{bottom - 20 * s}", "08/29",
             tiles[0],
         )  # fmt: skip
         for size in seal_sizes:
@@ -198,10 +199,10 @@ def brand_marks() -> None:
         run("magick", *tiles, "-bordercolor", t["ground"], "-border", f"{10 * s}", "-background", t["ground"], "-gravity", "center",
             "+append", "-border", f"{10 * s}", row)  # fmt: skip
         rows.append(row)
-    run("magick", *rows, "-gravity", "west", "-background", "#3A3550", "-append", os.path.join(REVIEW, "brand-card-seal.png"))
+    run("magick", *rows, "-gravity", "west", "-background", "#383838", "-append", os.path.join(REVIEW, "brand-card-seal.png"))
 
 
-SEAL_SIZES, SEAL_GROUNDS = (24, 32, 48, 88), ("#0A0911", "#13121A")  # the app's seal sizes; ground and surface
+SEAL_SIZES, SEAL_GROUNDS = (24, 32, 48, 88), ("#111111", "#1C1C1C")  # the app's seal sizes; ground and surface
 
 
 def seal_sizes(seal: str = os.path.join(BRAND, "senryo-seal.svg"), out: str = "seal-sizes.png") -> None:

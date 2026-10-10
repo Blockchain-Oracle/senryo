@@ -18,9 +18,9 @@ JAWS = {
     "heart": "V120C178 146 148 177 128 177C108 177 78 146 78 120Z",
     "long": "V126C178 158 154 183 128 183C102 183 78 158 78 126Z",
 }
-LINE = "#1C1722"
+LINE = "#191919"
 BLUSH = "#F18BB7"  # chart4 rose
-PAPER_TOKEN, MUTED_TOKEN = "#F5F4F8", "#ECE9F2"  # light-theme background and muted surface (packages/tokens)
+PAPER_TOKEN, MUTED_TOKEN = "#F5F5F5", "#ECECEC"  # light-theme background and muted surface (packages/tokens)
 # Portrait pigments. skin: (lit, shaded); hair: (mass, highlight).
 SKIN = {
     "porcelain": ("#F8DCC8", "#E3B79E"),
@@ -30,25 +30,25 @@ SKIN = {
     "deep": ("#84512F", "#653A1F"),
 }
 INKS = {
-    "ink": ("#1C1722", "#5A4B63"),
+    "ink": ("#191919", "#505050"),
     "brown": ("#3F2B26", "#7A5548"),
     "auburn": ("#8A4528", "#C77B4E"),
     "silver": (SILVER["mid"], SILVER["light"]),
-    "plum": ("#3A2456", "#8B6BD6"),
-    "scarf": (FIELD["periwinkle"], "#A9B8F6"),
+    "rose": ("#6E1F42", "#D9649A"),
+    "scarf": ("#5CCAD8", "#A8E3EB"),
 }
 # The cast. scale/dy: how far the figure is enlarged about the head and moved down so headwear stays in the disc.
 CAST = (
-    dict(key="01-topknot", ground=FIELD["periwinkle"], skin="tan", jaw="square", nose="line", eye_dx=22, hair="topknot", ink="ink", eyes="sharp", brows="strong", mouth="smirk", robe="#1B2040", collar=MAINNET["pale"], scale=1.25, dy=24),
+    dict(key="01-topknot", ground=FIELD["periwinkle"], skin="tan", jaw="square", nose="line", eye_dx=22, hair="topknot", ink="ink", eyes="sharp", brows="strong", mouth="smirk", robe="#111111", collar=MAINNET["pale"], scale=1.25, dy=24),
     dict(key="02-bob", ground=FIELD["lime"], skin="porcelain", jaw="round", nose="dot", eye_dx=23, hair="bob", ink="ink", eyes="dot", brows=None, mouth="smile", robe=BLUSH, collar=PAPER["light"], extra=("blush",), scale=1.34, dy=10),
     dict(key="03-kanzashi", ground=FIELD["pink"], skin="light", jaw="heart", nose="line", eye_dx=20, hair="updo", ink="brown", eyes="happy", brows="soft", mouth="soft", robe=PRACTICE["deep"], collar=PRACTICE["pale"], scale=1.27, dy=18),
     dict(key="04-hachimaki", ground=FIELD["orange"], skin="brown", jaw="square", nose="wide", eye_dx=22, hair="spiky", ink="auburn", eyes="wide", brows="strong", mouth="grin", robe=LACQUER["mid"], collar=FIELD["orange"], scale=1.28, dy=14),
-    dict(key="05-curls", ground=FIELD["yellow"], skin="deep", jaw="oval", nose="wide", eye_dx=21, hair="curls", ink="brown", eyes="dot", brows="soft", mouth="smile", robe=MAINNET["deep"], collar="#E8EBFF", extra=("glasses",), scale=1.2, dy=18),
-    dict(key="06-elder", ground="#282038", skin="light", jaw="long", nose="line", eye_dx=21, hair="elder", ink="silver", eyes="content", brows=None, mouth="none", robe=LACQUER["mid"], collar=SILVER["mid"], extra=("glasses-dark",), scale=1.3, dy=4),
-    dict(key="07-buns", ground=PRACTICE["mid"], skin="porcelain", jaw="round", nose="dot", eye_dx=24, hair="buns", ink="plum", eyes="wink", brows="soft", mouth="grin", robe=PAPER_TOKEN, collar=PRACTICE["deep"], extra=("blush", "freckles"), scale=1.25, dy=20),
+    dict(key="05-curls", ground=FIELD["yellow"], skin="deep", jaw="oval", nose="wide", eye_dx=21, hair="curls", ink="brown", eyes="dot", brows="soft", mouth="smile", robe=MAINNET["deep"], collar=PRACTICE["pale"], extra=("glasses",), scale=1.2, dy=18),
+    dict(key="06-elder", ground="#232323", skin="light", jaw="long", nose="line", eye_dx=21, hair="elder", ink="silver", eyes="content", brows=None, mouth="none", robe=LACQUER["mid"], collar=SILVER["mid"], extra=("glasses-dark",), scale=1.3, dy=4),
+    dict(key="07-buns", ground=PRACTICE["mid"], skin="porcelain", jaw="round", nose="dot", eye_dx=24, hair="buns", ink="rose", eyes="wink", brows="soft", mouth="grin", robe=PAPER_TOKEN, collar=PRACTICE["deep"], extra=("blush", "freckles"), scale=1.25, dy=20),
     dict(key="08-sweep", ground=MAINNET["pale"], skin="brown", jaw="long", nose="line", eye_dx=21, hair="sweep", ink="silver", eyes="sharp", brows="flat", mouth="flat", robe=LACQUER["shadow"], collar=MAINNET["pale"], scale=1.33, dy=8),
     dict(key="09-ponytail", ground="#5CCAD8", skin="tan", jaw="oval", nose="dot", eye_dx=22, hair="ponytail", ink="ink", eyes="wide", brows="soft", mouth="smile", robe=FIELD["orange"], collar=PAPER["light"], scale=1.26, dy=14),
-    dict(key="10-scarf", ground=BLUSH, skin="brown", jaw="oval", nose="line", eye_dx=21, hair="scarf", ink="scarf", eyes="dot", brows="soft", mouth="smile", robe="#414EF4", collar=SILVER["mid"], extra=("blush",), scale=1.3, dy=10),
+    dict(key="10-scarf", ground=BLUSH, skin="brown", jaw="oval", nose="line", eye_dx=21, hair="scarf", ink="scarf", eyes="dot", brows="soft", mouth="smile", robe="#087A8A", collar=SILVER["mid"], extra=("blush",), scale=1.3, dy=10),
     dict(key="11-kasa", ground=LACQUER["mid"], skin="tan", jaw="square", nose="wide", eye_dx=22, hair="kasa", ink="ink", eyes="sharp", brows=None, mouth="smirk", robe=LACQUER["light"], collar=SILVER["mid"], scale=1.26, dy=16),
     dict(key="12-kitsune", ground=MUTED_TOKEN, skin="porcelain", jaw="heart", nose="dot", eye_dx=22, hair="fox", ink="ink", eyes="sleepy", brows=None, mouth="soft", robe=PRACTICE["deep"], collar=PAPER["light"], extra=("mole",), scale=1.25, dy=16),
 )

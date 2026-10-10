@@ -1,19 +1,19 @@
 # Brand — Senryo 千両 · Kinpaku 金箔
 
-Senryo (千両, "a thousand ryō") is the app; Kinpaku (金箔, "gold leaf") is the card (D-003, D-049). The look is Living Lacquer (D-168, `docs/design/senryo-v2/direction.md`): lacquer, gold leaf and silver as authored materials on a violet-black ground. The seal keeps its geometry and takes the gold-leaf ramp; the D2 lemon gold is retired. The wordmark is still the D2 `SENRYO` in JetBrains Mono (its redesign is not part of this pass). Every glyph is outlined to vector paths, so no SVG here contains a `<text>` element or depends on installed fonts.
+Senryo (千両, "a thousand ryō") is the app; Kinpaku (金箔, "gold leaf") is the card (D-003, D-049). The look is UGLYCASH (D-304): neutral grounds, black and white; the art keeps lacquer, gold leaf and silver as authored materials (Living Lacquer, D-168), with the lacquer a true black since R2.8. The seal keeps its geometry and takes the gold-leaf ramp; the D2 lemon gold is retired. The wordmark is still the D2 `SENRYO` in JetBrains Mono (its redesign is not part of this pass). Every glyph is outlined to vector paths, so no SVG here contains a `<text>` element or depends on installed fonts.
 
 ## Assets
 
 | File | Use | Size |
 |---|---|---|
-| `senryo-seal.svg` | Primary mark: square 角印 seal, gold-leaf field (the five-stop ramp from the lit upper-left corner to the far one, a soft round bloom of highlight off the lit corner, a bevel light on the lit edges and shade on the far ones), carved double border (heavy + hairline) and carved 千 in lacquer `#17121B`, a line of light caught under each carved edge. Gradients and opacity only, no filter: react-native-svg draws it | 512 × 512 viewBox |
+| `senryo-seal.svg` | Primary mark: square 角印 seal, gold-leaf field (the five-stop ramp from the lit upper-left corner to the far one, a soft round bloom of highlight off the lit corner, a bevel light on the lit edges and shade on the far ones), carved double border (heavy + hairline) and carved 千 in lacquer `#141414`, a line of light caught under each carved edge. Gradients and opacity only, no filter: react-native-svg draws it | 512 × 512 viewBox |
 | `senryo-seal-inverse.svg` | Seal on dark UI where a gold block is too loud: lacquer field (lit from the same corner), carving and edge inlaid with gold leaf (one ramp across the whole seal) | 512 |
-| `senryo-seal-mono.svg` | One-colour outline seal (`#F5F4FA` on transparent) for watermarks and embossing | 512 |
+| `senryo-seal-mono.svg` | One-colour outline seal (`#F5F5F5` on transparent) for watermarks and embossing | 512 |
 | `senryo-seal-512.png` | Raster of the primary seal | 512 × 512 |
 | `favicon.svg` | Simplified seal (no borders, heavier glyph) for 16–64 px | 64 viewBox |
 | `senryo-wordmark.svg` / `-ink.svg` | `SENRYO`, JetBrains Mono Bold, tracking −10 units: light for dark grounds, ink for light | cap height 100 |
 | `senryo-lockup.svg` / `-ink.svg` | Seal + wordmark. Seal edge = 1.9 × cap height, gap = 0.55 × cap | — |
-| `app-icon.svg`, `app-icon-1024.png` | iOS/Android icon: seal at 58 % on the app ground `#0A0911`, **opaque RGB** (App Store rejects alpha) | 1024 × 1024 |
+| `app-icon.svg`, `app-icon-1024.png` | iOS/Android icon: seal at 58 % on the app ground `#111111`, **opaque RGB** (App Store rejects alpha) | 1024 × 1024 |
 | `splash.svg`, `splash-1290x2796.png` | Launch screen: app ground, seal 240 + wordmark cap 56, centred | 1290 × 2796 |
 | `logo.png`, `logo-transparent.png` (+ `.svg`) | Submission logo (≤ 3 MB; actual ≈ 33 KB) | 2048 × 881 |
 | `kinpaku-card.svg`, `kinpaku-card-1536x969.png` | Card front: the same card as onboarding scene 5, drawn flat. Lacquer body, a torn field of thin gold leaf with one sheen direction on the left, the seal carved into the leaf, `Kinpaku` / `金箔` top right, `Senryo` pressed into the leaf. **The right half stays clear lacquer for the number and holder the app writes over it; the bottom right is left empty for the network mark.** No filter: it draws as SVG everywhere. | ISO ID-1 85.6 × 54 mm → 856 × 540 viewBox |
@@ -30,7 +30,6 @@ its sha256 in `packages/identity/src/art/originals.ts` (invariant `identity-prov
 | `art/xau-koban.svg` / `-disc.svg` | XAU: gold koban with hammer lines, kiri stamps and an embossed 千; the disc variant sits on a lacquer plate with a gold rim. Never Tether Gold. |
 | `art/xag-chogin.svg` / `-disc.svg` | XAG: cast silver chōgin bar with ripples and a 千 stamp; same viewpoint and optical scale as the koban. |
 | `art/fx-{eur,gbp,jpy,chf,cad}-usd.svg` | FX pair discs: base-currency flag overlapped by the US flag (public-domain Commons files in `packages/identity/sources/flag-*`); the pair text is always shown beside them. |
-| `art/senryo-venue.svg` | Senryo venue chip: the simplified seal geometry through the gold-leaf ramp, carved lacquer 千. |
 
 ### J1 onboarding artwork (`art/onboarding/`, `art/avatars/`, S1b.3 first-pass masters, pending design review — B12)
 
@@ -47,12 +46,12 @@ the upper left on every object and thickness falls to the lower right.
 | `art/onboarding/scene-payout.svg` | 2 · Payouts land on their own (orange): the lacquer senryō-bako with three XAU koban falling to it in an arc, the lowest landing on the lid in a small burst. No amounts, no claim. | 756 × 940 |
 | `art/onboarding/scene-passkey.svg` | 2 · Passkey (periwinkle): an original silver key (its bow is the seal's rounded square) hovering just over its bed in a lacquer tablet, a phone as the device cue, a seal tag. No scan, no progress. | 756 × 940 |
 | `art/onboarding/scene-lp.svg` | 4 · LP (lime): the vault as a lacquer well whose round, bolted door stands open on its hinges, one shared pool inside (far wall mirrored, a meniscus at the near wall), one drop above the point it disturbs. No rate. | 756 × 940 |
-| `art/onboarding/scene-modes.svg` | 6 · Practice / Mainnet (gray): washi notes printed in the practice violet in front; metal money in a lacquer tray lined in the mainnet blue, apart and behind; a plate beside each for its native mode label. The blue carries Mainnet, never the gold. | 756 × 940 |
+| `art/onboarding/scene-modes.svg` | 6 · Practice / Mainnet (gray): washi notes printed in the practice grey in front; metal money in a lacquer tray lined in pale mainnet grey, apart and behind; a plate beside each for its native mode label. The practice and mainnet roles of `palette.ts` carry the modes, never the gold. | 756 × 940 |
 | `art/onboarding/labels.json` | The label plates the app fills with native text (`EUR/USD`, `JPY/USD`, `Practice · Test dollars`, `Real · USDC`): id, the layer the plate rides in, box in master units, text, ink. Text is never outlined into a scene, so it stays localisable and readable by assistive technology. | — |
 | `art/onboarding/layers.json` | Every master's layers, back to front, with role, depth, subject and what moves most (see **Layers**). | — |
 | `art/onboarding/passkey-pending.svg` | Shown while the OS passkey sheet is open: the key over its bed, alone, transparent ground. It may sway and glint; it never counts, fills or scans. | 640 × 640 |
 | `art/onboarding/completion-foil.svg` | One square of beaten gold leaf with the seal pressed in. The sheet is a computed surface (broad bends, a lifted corner, a few creases): its outline, seal and creases are projected from it, and each bend's light is one continuous gradient across the whole sheet (no facets). The seal is shade over the leaf, so the gold under it still turns. Only after a verified outcome. | 640 × 640 |
-| `art/onboarding/primer-notifications.svg` | Notification primer hero (S1b.13): a gold fūrin seen from a little below, its mouth open on black lacquer, a lacquer band with gold dust round its waist, a holed gold coin for its clapper, and an uchigumori tanzaku (indigo washi, clouded lighter at the head and violet at the foot, gold dust and cut leaf) in a breeze from the left; arcs of light off its shoulders say it is ringing. The bell is laid in kinpaku (faint broken seams, a few creases). Layers: bell (swings about its cord loop), ring, tanzaku (sways most, about the coin's hole), clapper, glints; the pivots are in `layers.json`. Transparent ground. | 640 × 640 |
+| `art/onboarding/primer-notifications.svg` | Notification primer hero (S1b.13): a gold fūrin seen from a little below, its mouth open on black lacquer, a lacquer band with gold dust round its waist, a holed gold coin for its clapper, and an uchigumori tanzaku (sumi-dyed washi, clouded lighter at the head and grey at the foot, gold dust and cut leaf) in a breeze from the left; arcs of light off its shoulders say it is ringing. The bell is laid in kinpaku (faint broken seams, a few creases). Layers: bell (swings about its cord loop), ring, tanzaku (sways most, about the coin's hole), clapper, glints; the pivots are in `layers.json`. Transparent ground. | 640 × 640 |
 | `art/onboarding/primer-face-id.svg` | Face ID primer hero (S1b.13): an ebi-jō (Edo shrimp lock) opened: a barrel of black lacquer with gold dust, gold caps with a kiku (chrysanthemum-petal) edge, a finial and a keyhole, the seal inlaid; the gold shackle, bent like a shrimp's back, lifted out of its socket so the bolt's steel spring leaves show. Four tapered corners of gold light frame it: they suggest a look being framed and are not the system Face ID glyph, which stays on the control. Layers: shackle (lifts and swings about its fixed leg: pivot in `layers.json`), body, glints. Transparent ground. | 640 × 640 |
 | `art/avatars/avatar-NN-*.svg` | Twelve default avatars: one family (same collar, light and drawing), different people (jaw, nose, eye spacing, skin, hair or headwear, one accessory). The face fills about half the disc. Full-bleed squares; the app clips them to discs. | 256 × 256 |
 
@@ -104,17 +103,17 @@ B12 stays open until the user's design review passes.
 `render.sh` also writes `apps/mobile/assets/images/kinpaku-card.png` (the card face as the Card tab's raster) and re-runs
 `art.py`, `onboarding.py` and the identity codegen.
 
-Copied into the web app by `render.sh`: `apps/web/public/icon.svg` (favicon), `apps/web/public/apple-touch-icon.png` (180 × 180), `apps/web/public/brand/{seal,wordmark,kinpaku-card,kinpaku-card-back}.svg`.
+Copied into the web app by `render.sh`: `apps/web/public/icon.svg` (favicon), `apps/web/public/apple-touch-icon.png` (180 × 180), `apps/web/public/brand/{seal,wordmark}.svg`.
 
 ## Colour (from `packages/tokens`)
 
 | Role | Value | Token |
 |---|---|---|
 | Seal gold leaf (highlight / light / mid / shade / shadow) | `#FFF0BC` / `#EACF8C` / `#D4AE5B` / `#AE8941` / `#886426` | `MATERIAL.goldLeaf` with `KINPAKU.foilLight`, `foilShade` |
-| Seal carving, inverse field (shadow / lit corner) | `#17121B` / `#29212F` | `MATERIAL.lacquer.shadow` / `.mid` |
-| Ground (app icon, splash, logo) | `#0A0911` | `DARK.background` |
-| Wordmark light / ink | `#F5F4FA` / `#17151F` | `DARK.foreground` / `LIGHT.foreground` |
-| Card lacquer (highlight / mid / shadow) | `#514357` / `#29212F` / `#17121B` | `MATERIAL.lacquer` |
+| Seal carving, inverse field (shadow / lit corner) | `#141414` / `#242424` | `MATERIAL.lacquer.shadow` / `.mid` |
+| Ground (app icon, splash, logo) | `#111111` | `DARK.background` |
+| Wordmark light / ink | `#F5F5F5` / `#000000` | `DARK.foreground` / `LIGHT.foreground` |
+| Card lacquer (highlight / mid / shadow) | `#474747` / `#242424` / `#141414` | `MATERIAL.lacquer` |
 | Foil stops | `#FFF0BC` `#EACF8C` `#D4AE5B` `#AE8941` `#886426` | `KINPAKU.foilHighlight … foilDeep` |
 
 Change a colour in `packages/tokens/src/marks.ts` first, then mirror it in `scripts/build.py` (seal, grounds, type) and
@@ -122,7 +121,7 @@ Change a colour in `packages/tokens/src/marks.ts` first, then mirror it in `scri
 
 ## Usage rules
 - **Clear space:** half the seal's edge on every side of the seal or lockup. The wordmark alone takes one cap height.
-- **Minimum size:** full seal 32 device pixels (a 24 pt seal on a 2x or 3x screen is 48 or 72 px and keeps the full seal). Below that its hairline frame is a quarter of a pixel or less, so use the simplified geometry (`favicon.svg`, or `art/senryo-venue.svg` in the app). Lockup 96 px wide, wordmark cap height 9 px.
+- **Minimum size:** full seal 32 device pixels (a 24 pt seal on a 2x or 3x screen is 48 or 72 px and keeps the full seal). Below that its hairline frame is a quarter of a pixel or less, so use the simplified geometry (`favicon.svg`). Lockup 96 px wide, wordmark cap height 9 px.
 - Don't recolour the seal outside the three variants (gold leaf, inverse, mono), don't add shadows or outlines beyond what the files carry, don't rotate or stretch, and don't set 千 in a live font as a substitute.
 - On gold or busy imagery use the inverse seal. The seal sits left of the wordmark and never above it, except on the splash.
 - The card art carries no card number or name. The app renders those over the art (right half, above the network-mark area).

@@ -1,6 +1,6 @@
 """Notification primer art: a gold fūrin (wind bell) hung from a short silk cord, seen from a little below the way one
 hangs under the eaves, so its mouth opens as an ellipse onto the black lacquer inside. Its clapper is a holed gold
-coin; below it the tanzaku, indigo washi dusted with gold, catches the breeze from the left. Transparent ground.
+coin; below it the tanzaku, sumi-dyed washi dusted with gold, catches the breeze from the left. Transparent ground.
 
 Layers (back to front): shadows · bell (cord, body, mouth: swings about the cord's loop) · ring (arcs of light off
 its shoulders: they spread from the bell's waist as the clapper strikes) · tanzaku (its string and the paper: sways
@@ -32,11 +32,11 @@ TANZAKU_W, TANZAKU_L, TANZAKU_BEND, TANZAKU_TWIST = 60, 226, -9.0, 38.0  # the p
 TANZAKU_TOP, RIBBON_STEPS, EYELET_R = 14, 30, 6.6  # paper above the eyelet
 HEM, DECKLE, DECKLE_STEPS, MOTTLES = 0.05, 0.022, 90, 9  # the folded head, the torn washi edge, soft mottling in the dye
 DECKLE_FAR = 2.6  # the far edge was torn, not cut: rough enough to show at 132 pt
-# Indigo washi (ai-zome), lit → deep: the app's blues sunk toward the lacquer, so the paper reads as dyed, not lit.
+# Sumi-dyed washi, lit → deep: the mainnet greys sunk toward the lacquer, so the paper reads as dyed, not lit.
 AI = (mix(MAINNET["mid"], LACQUER["light"], 0.3), mix(MAINNET["deep"], LACQUER["mid"], 0.36), mix(MAINNET["deep"], LACQUER["shadow"], 0.56), mix(MAINNET["deep"], LACQUER["shadow"], 0.68))
 KIRIHAKU, DUST, FIBRES, LONG_FIBRES = 12, 460, 70, 8  # cut squares of gold leaf, grains of gold dust, fine and long fibres
 KOZO = ((-0.25, 0.3, 0.2, 0.32), (0.3, 0.4, 0.16, -0.26))  # two kozo fibres strong enough to hold at 132 pt: u, v, length, drift
-FOOT_TONE = mix(PRACTICE["mid"], LACQUER["light"], 0.35)  # the violet cloud at the foot, dulled as dyed paper is
+FOOT_TONE = mix(PRACTICE["mid"], LACQUER["light"], 0.35)  # the grey cloud at the foot, dulled as dyed paper is
 HEAD_CLOUD, FOOT_CLOUD, CLOUD_RAG = (0, 0.24), (0.72, 1), 0.035  # the uchigumori clouds (shares of the length), their raggedness
 SHADOW_AT = (12, 20)  # where the bell's shadow falls on the wall behind it
 SEAMS, SEAM_ROWS, CRINKLES = (-62, -30, 2, 34, 66), (0.25, 0.76), 9  # kinpaku laid in sheets: seams round and across, creases
@@ -44,7 +44,7 @@ CRINKLE_OPACITY = 0.5  # creases half as strong as on flat leaf: on a bell they 
 SEAM_BREAKS = "34 9 21 14 46 6 17 11"  # a seam between sheets of leaf comes and goes; it is never a drawn line
 # The ring: arcs of light off the bell's shoulders, as the clapper strikes (radius as a share of the mouth, from, to).
 RING = ((1.24, -64, -26, 6), (1.5, -58, -32, 4.6), (1.24, 206, 238, 4.6))
-TINT = MAINNET["pale"]  # the light the gold picks up: the app's link blue, as on the pending-passkey art
+TINT = MAINNET["pale"]  # the light the gold picks up: a pale grey, as on the pending-passkey art
 # The gold turning round the bell, left edge → right edge: a reflected edge, the lamp's streak, the body, the far side.
 TURN = (
     (0, FOIL[1]), (0.06, FOIL[2]), (0.16, FOIL[3]), (0.24, FOIL[4]), (0.3, WHITE), (0.36, FOIL[4]), (0.46, FOIL[3]),
@@ -123,7 +123,7 @@ def band(c: Canvas, rng: random.Random) -> str:
         f"M{line(side(t0, t1))}A{n(r1)} {n(r1 * SQUASH)} 0 0 0 {n(-r1)} {n(y1)}L{line(side(t0, t1, -1)[::-1])}"
         f"A{n(r0)} {n(r0 * SQUASH)} 0 0 1 {n(r0)} {n(y0)}Z"
     )
-    turn = c.lin([(0, "#3B3044"), (0.14, "#6A5A73"), (0.24, "#40344A"), (0.5, LACQUER["mid"]), (0.84, LACQUER["shadow"]), (0.95, "#120E17"), (1, "#2A2231")], 0, 0, 1, 0)
+    turn = c.lin([(0, "#343434"), (0.14, "#6A5A73"), (0.24, "#383838"), (0.5, LACQUER["mid"]), (0.84, LACQUER["shadow"]), (0.95, "#101010"), (1, "#252525")], 0, 0, 1, 0)
     clip = c.clip(f'<path d="{d}"/>')
     dust = sprinkle(rng, 260, (-r1, y0 - r0 * SQUASH, r1, y1), GOLD["mid"], (0.5, 1.3), lambda x, y: 0.25 + 0.75 * ((x + r1) / (2 * r1)) ** 1.6)
     bead = c.lin([(0, GOLD["shadow"]), (0.2, GOLD["light"]), (0.5, GOLD["mid"]), (1, GOLD["shadow"])], 0, 0, 1, 0)
@@ -151,7 +151,7 @@ def bell(c: Canvas, rng: random.Random) -> str:
     streak_paint = c.lin([(0, WHITE, 0), (0.25, WHITE, 0.75), (0.75, WHITE, 0.5), (1, WHITE, 0)], 0, 0, 0, 1)
     rim = c.lin([(0, GOLD["light"]), (0.3, FOIL[3]), (0.7, FOIL[1]), (1, FOIL[0])], 0, 0, 1, 0)
     ri = MOUTH_R - LIP_T
-    inside = c.rad([(0, "#3A2F42"), (0.45, LACQUER["mid"]), (1, "#0A070D")], 0.42, 0.95, 0.75)
+    inside = c.rad([(0, "#333333"), (0.45, LACQUER["mid"]), (1, "#080808")], 0.42, 0.95, 0.75)
     inside_clip = c.clip(f'<ellipse cy="{n(BELL_H)}" rx="{n(ri)}" ry="{n(ri * SQUASH)}"/>')
     far_glow = c.lin([(0.5, GOLD["mid"], 0), (1, GOLD["mid"], 0.4)], 0, 0, 0, 1)
     dust = sprinkle(rng, 90, (-ri, BELL_H - ri * SQUASH, ri, BELL_H + ri * SQUASH), GOLD["mid"], (0.5, 1.2), lambda x, y: (y - BELL_H + ri * SQUASH) / (2 * ri * SQUASH))
@@ -238,7 +238,7 @@ def ribbon(top, tilt: float):
 
 
 def tanzaku(c: Canvas, rng: random.Random, top) -> tuple[str, str]:
-    """Uchigumori washi: indigo paper clouded lighter at the head and violet at the foot, its fibres showing, gold dust
+    """Uchigumori washi: sumi-dyed paper clouded lighter at the head and grey at the foot, its fibres showing, gold dust
     and a few cut squares of leaf sown into both clouds; an eyelet near the top. Returns (markup, outline)."""
     at = ribbon(top, TANZAKU_TILT)
 

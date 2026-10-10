@@ -55,9 +55,9 @@ def chest(c: Canvas, rng: random.Random, at, bounce_color: str, name: str) -> st
     # --- body ---
     front = plane(EX, down, at(0, 0, BODY_H))
     side = plane(EY, down, at(LENGTH, 0, BODY_H))
-    front_fill = c.lin([(0, "#0F0B13"), (0.2, "#2D2434"), (0.65, "#241D2B"), (1, "#1A1420")])
+    front_fill = c.lin([(0, "#0C0C0C"), (0.2, "#272727"), (0.65, "#1F1F1F"), (1, "#161616")])
     front_light = c.lin([(0, WHITE, 0.1), (0.5, WHITE, 0.02), (1, WHITE, 0)], 0, 0, 1, 0)
-    side_fill = c.lin([(0, "#09070C"), (0.25, "#1B1520"), (1, "#120E17")])
+    side_fill = c.lin([(0, "#080808"), (0.25, "#171717"), (1, "#101010")])
     bounce = c.lin([(0, bounce_color, 0), (0.55, bounce_color, 0.05), (1, bounce_color, 0.34)], 0, 0, 0.9, 1)
     dust = sprinkle(rng, 300, (0, 40, LENGTH, BODY_H), GOLD["mid"], (0.5, 1.4), lambda x, y: (1 - x / LENGTH) ** 2 * (y / BODY_H) ** 1.5)
     plate_w, plate_h = 66, 74
@@ -91,9 +91,9 @@ def chest(c: Canvas, rng: random.Random, at, bounce_color: str, name: str) -> st
     lid_front = plane(EX, down, at(-LIP, -LIP, top_h))
     lid_side = plane(EY, down, at(LENGTH + LIP, -LIP, top_h))
     lid_top = plane(EX, (-EY[0], -EY[1]), at(-LIP, DEPTH + LIP, top_h))
-    lf_fill = c.lin([(0, "#4B3E54"), (0.12, "#372C3F"), (1, "#221B29")])
-    ls_fill = c.lin([(0, "#241D2B"), (1, "#110D15")])
-    top_fill = c.lin([(0, "#5A4B63"), (0.4, "#33293B"), (1, "#1E1824")], 0, 0, 1, 1)
+    lf_fill = c.lin([(0, "#424242"), (0.12, "#303030"), (1, "#1D1D1D")])
+    ls_fill = c.lin([(0, "#1F1F1F"), (1, "#0E0E0E")])
+    top_fill = c.lin([(0, "#505050"), (0.4, "#2C2C2C"), (1, "#1A1A1A")], 0, 0, 1, 1)
     horizon = c.lin([(0, bounce_color, 0.2), (0.35, bounce_color, 0)], 0, 0, 0, 1)
     cx, cy, seal_r = lw * 0.5, ld * 0.46, 54
     # From the seal, one line bends to each side and comes forward to the lid's front edge.
@@ -145,5 +145,5 @@ def chest(c: Canvas, rng: random.Random, at, bounce_color: str, name: str) -> st
         f'<path d="M{n(b[0])} {n(b[1])}L{n(f[0])} {n(f[1])}M{n(g[0])} {n(g[1] + 4)}L{n(h[0])} {n(h[1])}" stroke="{WHITE}" stroke-opacity=".2" stroke-width="1.8"/>'
     )
     hull = pts([at(0, 0, 0), at(LENGTH, 0, 0), at(LENGTH, DEPTH, 0), at(LENGTH + LIP, DEPTH + LIP, BODY_H), at(LENGTH + LIP, DEPTH + LIP, top_h), at(-LIP, DEPTH + LIP, top_h), at(-LIP, -LIP, top_h), at(-LIP, -LIP, BODY_H), at(0, 0, BODY_H)])
-    base = f'<path d="{hull}" fill="#100C14" stroke="#100C14" stroke-width="3" stroke-linejoin="round"/>'
+    base = f'<path d="{hull}" fill="#0D0D0D" stroke="#0D0D0D" stroke-width="3" stroke-linejoin="round"/>'
     return f'<g id="{name}">{base}{body_side}{body_front}{lid}{edges}</g>'

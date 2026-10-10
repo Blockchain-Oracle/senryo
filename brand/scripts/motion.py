@@ -25,7 +25,7 @@ ART = os.path.join(BRAND, "art", "onboarding")
 FPS = 30
 WIDTH = 378  # rendered at the hero's 1x width
 STRIP_FRAMES = 8
-GROUND = "#0A0911"
+GROUND = "#111111"
 
 
 def ease(t: float) -> float:

@@ -8,7 +8,7 @@
 export const MATERIAL = {
   goldLeaf: { shadow: "#886426", mid: "#D4AE5B", highlight: "#FFF0BC" },
   silver: { shadow: "#697383", mid: "#C9D0DD", highlight: "#F4F6FB" },
-  lacquer: { shadow: "#17121B", mid: "#29212F", highlight: "#514357" },
+  lacquer: { shadow: "#141414", mid: "#242424", highlight: "#474747" },
 } as const;
 
 /**

@@ -53,7 +53,7 @@ def back(names: dict, seal_group) -> str:
     c = Canvas("kinpaku-card-back", "Kinpaku 金箔 card (back)", W, H)
     rng = random.Random(BACK_SEED)
     outline = rrect(0, 0, W, H, R)
-    body = c.lin([(0, "#43364B"), (0.3, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
+    body = c.lin([(0, "#3A3A3A"), (0.3, LACQUER["mid"]), (1, LACQUER["shadow"])], 0, 0, 1, 1)
     clip = c.clip(f'<path d="{outline}"/>')
     # torn_edge runs top to bottom; the band's edges run left to right, so its points are turned.
     top = [(y, x) for x, y in torn_edge(rng, (BAND_Y, -2), (BAND_Y, W + 2), W * 0.004)]
