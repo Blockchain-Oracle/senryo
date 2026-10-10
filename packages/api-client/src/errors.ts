@@ -26,6 +26,8 @@ export const API_ERROR_CODES = [
   "MARKET_PAUSED",
   // A market whose price is stale or too wide while open (D-289): no new calls until it steadies.
   "MARKET_HALTED",
+  // A catalogue market whose series this chain hasn't registered yet (R1.24): its price is live, calls wait.
+  "NOT_LISTED",
   // Handles and profile text.
   "HANDLE_INVALID",
   "HANDLE_RESERVED",

@@ -26,6 +26,9 @@ export const GEO_DB_URL = "https://download.db-ip.com/free/dbip-country-lite-{mo
 export const GEO_DB_REFRESH_MS = 604_800_000;
 export const GEO_DB_TIMEOUT_MS = 60_000;
 
+/** How often the api re-reads which catalogue series are on chain (R1.24): a deploy opens its markets within this. */
+export const LISTING_REFRESH_MS = 600_000;
+
 /** Body limit for routes carrying encrypted blobs (prefs ≤ 64 KiB base64url + envelope). */
 export const BLOB_BODY_LIMIT_BYTES = 96 * 1024;
 

@@ -13,6 +13,7 @@ import type { DuelRelay } from "./duel/relay.ts";
 import type { ApiEnv, ApiSecrets } from "./env.ts";
 import type { EventRelay } from "./events/relay.ts";
 import type { GeoDb } from "./geo-db.ts";
+import { SeriesListing } from "./listing.ts";
 import type { PythGateway } from "./prices/gateway.ts";
 import type { AccountRelay } from "./relay/accounts.ts";
 import type { ExitWatcher } from "./relay/exits.ts";
@@ -26,6 +27,8 @@ export interface ChainContext {
   deployed: boolean;
   read: ReadClient;
   heads: HeadTracker;
+  /** Which catalogue series are on this chain (R1.24). */
+  listing: SeriesListing;
 }
 
 export interface ApiContext {
@@ -68,7 +71,9 @@ export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId,
     const heads = new HeadTracker(read, createWsClient(chainId, rpc));
     await heads.start();
     const deployed = isDeployed(chainId, MARKETS_CONTRACT);
-    chains.set(chainId, { chainId, deployed, read, heads });
+    const listing = new SeriesListing(chainId, read, log);
+    if (deployed) await listing.start();
+    chains.set(chainId, { chainId, deployed, read, heads, listing });
     log.info({ chainId, deployed }, "chain ready");
   }
   return chains;

@@ -239,6 +239,14 @@ live PnL at about 8 Hz. No contract change.
   - *Dropped by D-311 (10 Oct):* the line stays on Pyth, so there are no display ticks to merge.
 - [ ] R1.18 Measure δ (Pyth lag behind Coinbase) and Pyth's 1–3 s autocorrelation from the recorded tape beside
   `pyth_prints` (`scripts/drive/price-lead-check.ts`). The result feeds `FILL_DELAY_SEC` in R3.
+  - *Script built (10 Oct), measurement pending:* `scripts/drive/src/price-lead-check.ts` records the keyed Hermes
+    stream beside **Bitfinex's** public trades (its terms allow internal analysis; Coinbase's forbid even internal fair
+    values — `09-display-terms.md`), finds the tape shift that best lines up the one-second changes, and computes
+    Pyth's return autocorrelation at 1/2/3 s; both feeds reconnect after drops. Two Saturday runs from the build
+    machine were **not usable**: Bitfinex printed only ~17–27 trades per market in 20 min, and both connections died
+    after ~2 min on the hotspot (the reconnects were added after). The early autocorrelation hint (BTC/ETH −0.3 at
+    1 s, SOL +0.2) is noise at that size. **To do:** a 60-minute run on a weekday from the server, before R3 sets
+    `FILL_DELAY_SEC`.
 - [x] R1.19 `/v1/prices/day` (24 h change, ported from `day-stats.ts`), with its api-client route and query hook.
   - *As built (10 Oct):* **from Senryo's own archive, not Coinbase** — `day-stats.ts` reads Coinbase `/stats`, which
     `09-display-terms.md` rules out for display. `PriceArchive.daySince(minute)`: per feed, the first candle's open at
@@ -298,9 +306,42 @@ live PnL at about 8 Hz. No contract change.
     points); after, 30 min of noise gave 1, and a +$90 / +$200 / −$90 move over 5 s gave surge / surge → mega / slump.
     Exit 0.
 
+- [x] R1.24 Markets the chain doesn't have yet are read-only discovery, not a call that fails after "received".
+  - *Why (found at the R1 deploy check, 10 Oct):* the code's catalogue lists 34 markets (136 series); testnet 10143 has
+    the 12 BTC/ETH/SOL series of the S2 deploy until R4. Deployed as it was, every market offered calls; on the other
+    31 the api answered "received" and the call then failed in simulation (no verifier, no series). Lucky could deal
+    them and a parlay could take them as legs.
+  - *As built:* the api reads `Windows.seriesOf` for every catalogue series of a network in one multicall, on start
+    and every 10 minutes (`services/api/src/listing.ts`), so a contracts deploy opens its markets with no api release;
+    until the first read succeeds everything counts as listed (the simulation still guards). The relay and parlay
+    legs refuse an unlisted series up front (`NOT_LISTED`, in words); Lucky deals only listed windows; the catalogue
+    says `listed` per market. Both apps: `MarketLine.unlisted` — in session, "Not open for calls yet" on the row, the
+    parlay picker disabled, the call panel "Calls on NVDA aren't open yet · Its price is live", and the chart and
+    chip as live as the feed (a closed session still reads closed, with its last session).
+  - *At the deploy:* `KEEPER_JOBS` without `calendars` until R4 sets the calendars up (the S2 `MarketCalendar` has
+    none and the keeper has no calendar role there: three refused estimates every 15 minutes otherwise).
+
 ### Checks
-- [ ] R1.23 G3 chaos and G6 abuse as `scripts/drive` checks; rows in `acceptance.md`. G1 load and G2 soak are run when
+- [x] R1.23 G3 chaos and G6 abuse as `scripts/drive` checks; rows in `acceptance.md`. G1 load and G2 soak are run when
   staging allows, with their result recorded.
+  - *As built (10 Oct):* the chaos checks run the real price path, not a copy: `services/api/scripts/chaos/harness.ts`
+    assembles the gateway, the price, status and stream routes as `main.ts` does, on a `*_check` database (it refuses
+    any other), with live Hermes behind a proxy that can be cut like a dead network (open streams stop, new requests
+    hang) and a watcher that reads `/v1/stream` as an app does; `scripts/price-chaos-check.ts` runs (c), G6, (a) and
+    (b); (d) is `scripts/drive/src/stream-ticket-check.ts` against production. They live in the api package because the
+    harness imports its sources.
+  - *What the first run found, and the fixes:* (a) a 90 s cut left its boundary unarchived for good. Every silence
+    probe timed out during the cut, so the print fetcher's rest doubled to 80 s and outlived the outage; the gap
+    back-fill asked once, was refused by the rest, and never asked again. Now a rest for a dead path (timeouts, no
+    connection — `UpstreamOutcome.network`) ends the moment a Hermes stream streams again (`hermesReachable`), a
+    refusal's rest stands; `PrintWatch` retries a gap's missing boundaries on its 2 s tick, the wait doubling to 30 s,
+    until archived or past admission (`retrying` on `/status`). And the stream itself waited up to 30 s to reconnect
+    after the network came back: a dead path now reconnects within 5 s, a refusal (401/403/429) still backs off to 30 s.
+    (b) failed on a harness fault (the "down" api still served); it now answers 502 while down, as the proxy does.
+  - *Result:* all four pass (`acceptance.md`, 12:52Z): the cut flags "delayed" in 3.3 s, the line is live again 5.5 s
+    after the restore and the boundary back-filled with it; a restart reconnects in 1.0 s with a reset and back-fills t
+    in 1.3 s; RedStone's HTML and 429 leave the api up; 500 anonymous reads cost 0 upstream calls. G1 was measured
+    locally (R1.13); G2 (soak) waits for a staging box.
 
 ## Handoff
 (written at the end of the stage)

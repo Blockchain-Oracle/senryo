@@ -51,8 +51,9 @@ export function priceHealth(input: {
       notice: "Reconnecting · calls resume when prices return",
     };
   }
-  // Outside its session the market is closed, whatever its feed says (the calendar is the client's own).
-  if (!line.trading || state === "closed") {
+  // Outside its session the market is closed, whatever its feed says (the calendar is the client's own). A market not
+  // on chain yet is in session: its line is as live as its feed.
+  if ((!line.trading && !line.unlisted) || state === "closed") {
     return { live: false, tone: "off", word: "Closed", tag: "Closed", notice: line.text };
   }
   switch (state) {

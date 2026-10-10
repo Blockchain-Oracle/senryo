@@ -18,6 +18,7 @@ import {
 } from "@senryo/config";
 import { scheduleOf, sessionCovers, sessionNow } from "@senryo/core";
 import { HTTP_STATUS, HttpError } from "@senryo/service-common";
+import type { SeriesListing } from "../listing.ts";
 import { MAX_INTENT_TTL_SEC } from "./constants.ts";
 
 /**
@@ -74,6 +75,16 @@ export function checkWindow(
     }
   }
   return { market, cadenceSec, seriesId, start: w.start, expiry };
+}
+
+/** A window on a series the chain hasn't registered yet (R1.24): refused before anything is accepted. */
+export function checkListed(listing: SeriesListing, w: { market: MarketSpec; seriesId: Hex }): void {
+  if (listing.listed(w.seriesId)) return;
+  throw new HttpError(
+    HTTP_STATUS.conflict,
+    "NOT_LISTED",
+    `Calls on ${w.market.symbol} aren't open yet. Its price is live; calls open when it goes live on chain.`,
+  );
 }
 
 export function checkDeadline(deadline: bigint, nowSec: number): void {

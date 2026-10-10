@@ -34,7 +34,7 @@ import {
 import type { PythGateway } from "../prices/gateway.ts";
 import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
 import { OPEN_PRINT_WAIT_MS } from "./constants.ts";
-import { bad, type CheckedIntent, checkDeadline, checkStake, checkWindow, ZERO_ADDRESS } from "./gates.ts";
+import { bad, type CheckedIntent, checkDeadline, checkListed, checkStake, checkWindow, ZERO_ADDRESS } from "./gates.ts";
 import type { Lane } from "./lanes.ts";
 import type { IntentStatus, MarketRelay } from "./relay.ts";
 
@@ -92,6 +92,7 @@ export class ParlayRelay {
   async submit(req: ParlayRequest): Promise<IntentStatus> {
     const checked = checkParlay(req, nowSec());
     for (const leg of checked.legs) {
+      checkListed(this.d.relay.listing, leg);
       const paused = this.d.gateway.pausedReason(leg.market);
       if (paused) throw new HttpError(HTTP_STATUS.conflict, "MARKET_PAUSED", `${leg.market.symbol}: ${paused}`);
     }

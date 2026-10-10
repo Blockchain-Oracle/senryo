@@ -66,30 +66,51 @@ export function marketSession(symbol: string, nowSec: number): SessionNow {
 }
 
 export interface MarketLine {
-  /** False while the market is closed or paused: no calls, the price is the last print. */
+  /** False while the market is closed, paused or not yet on chain: no calls. */
   trading: boolean;
   text: string;
   /** No price source at all (D-310): read-only until it returns, unlike a session that opens on its own. */
   paused: boolean;
+  /**
+   * In session, but not on this network's chain yet (R1.24: the catalogue runs ahead of a deploy). Its price is live
+   * and its line moves; only calls wait.
+   */
+  unlisted: boolean;
 }
+
+const NOT_LISTED_TEXT = "Not open for calls yet";
 
 /**
  * "1m closes in 0:42" while trading (with "· Closes 16:00 ET" near a session's end), else the session words — or the
- * api's reason when the market is paused (`catalog.markets[].paused`).
+ * api's reason when the market is paused (`catalog.markets[].paused`), or "Not open for calls yet" when the api says
+ * it isn't on chain (`catalog.markets[].listed`). A closed session reads as closed either way.
  */
-export function marketLine(session: SessionNow, nowSec: number, pausedText: string | null = null): MarketLine {
-  if (pausedText) return { trading: false, text: pausedText, paused: true };
-  if (!session.open) return { trading: false, text: session.text ?? "Closed", paused: false };
+export function marketLine(
+  session: SessionNow,
+  nowSec: number,
+  pausedText: string | null = null,
+  listed = true,
+): MarketLine {
+  if (pausedText) return { trading: false, text: pausedText, paused: true, unlisted: false };
+  if (!session.open) return { trading: false, text: session.text ?? "Closed", paused: false, unlisted: false };
+  if (!listed) return { trading: false, text: NOT_LISTED_TEXT, paused: false, unlisted: true };
   const w = windowCountdown(nowSec, FIRST_CADENCE, LOCKOUT_SEC);
   const lane = `${laneLabel(FIRST_CADENCE)} ${w.open ? `closes in ${clockText(w.closesIn)}` : `calls reopen in ${clockText(w.endsIn)}`}`;
-  return { trading: true, text: session.text ? `${lane} · ${session.text}` : lane, paused: false };
+  return { trading: true, text: session.text ? `${lane} · ${session.text}` : lane, paused: false, unlisted: false };
 }
 
-/** The panel a market shows when it takes no calls: closed for its session, or paused without a price source. */
+/** The panel a market shows when it takes no calls: closed for its session, paused, or not on chain yet. */
 export function closedWords(symbol: string, line: MarketLine): { title: string; note: string } {
-  return line.paused
-    ? { title: `${symbol} is paused`, note: "Its price feed is offline. Calls come back when it returns." }
-    : { title: `${symbol} is closed`, note: "The price shown is its last print. Calls open with the market." };
+  if (line.paused) {
+    return { title: `${symbol} is paused`, note: "Its price feed is offline. Calls come back when it returns." };
+  }
+  if (line.unlisted) {
+    return {
+      title: `Calls on ${symbol} aren't open yet`,
+      note: "Its price is live. Calls open when this market goes live on chain.",
+    };
+  }
+  return { title: `${symbol} is closed`, note: "The price shown is its last print. Calls open with the market." };
 }
 
 /** A basket's members in definition order: symbol, name, weight and base (empty for a single market). */

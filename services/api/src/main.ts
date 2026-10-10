@@ -81,7 +81,16 @@ const markets: ApiContext["markets"] = new Map();
 for (const chain of chains.values()) {
   if (!chain.deployed || sponsors.length === 0) continue;
   const lanes = openLanes(chain.chainId, chain.read, chain.heads, db, sponsors);
-  const relay = new MarketRelay({ chainId: chain.chainId, read: chain.read, lanes, gateway, bus, db, log });
+  const relay = new MarketRelay({
+    chainId: chain.chainId,
+    read: chain.read,
+    lanes,
+    gateway,
+    bus,
+    listing: chain.listing,
+    db,
+    log,
+  });
   // Exits fire from the first sponsor lane: `SPONSOR` holds the reserve's EXIT role for trails (D-292).
   const exits = new ExitWatcher({
     chainId: chain.chainId as ChainId,
@@ -238,6 +247,9 @@ await listen(app, env.PORT, env.HOST, async () => {
     m.duels?.queue.stop();
   }
   await gateway.stop();
-  for (const chain of chains.values()) await chain.heads.stop();
+  for (const chain of chains.values()) {
+    chain.listing.stop();
+    await chain.heads.stop();
+  }
   await db.end();
 });

@@ -27,12 +27,13 @@ import {
   nowSec,
   type TicketNotice,
 } from "@senryo/service-common";
+import type { SeriesListing } from "../listing.ts";
 import type { PythGateway } from "../prices/gateway.ts";
 import type { StreamBus } from "../stream/bus.ts";
 import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
 import { OPEN_PRINT_WAIT_MS } from "./constants.ts";
 import { FillBatcher } from "./fills.ts";
-import { type CheckedIntent, checkIntent, type IntentRequest } from "./gates.ts";
+import { type CheckedIntent, checkIntent, checkListed, type IntentRequest } from "./gates.ts";
 import { type Lane, laneIndex } from "./lanes.ts";
 
 /**
@@ -71,11 +72,17 @@ export class MarketRelay {
       lanes: Lane[];
       gateway: PythGateway;
       bus: StreamBus;
+      /** Which series are on chain (R1.24); parlays read it here too. */
+      listing: SeriesListing;
       db: Db;
       log: Logger;
     },
   ) {
     this.fills = new FillBatcher(d);
+  }
+
+  get listing(): SeriesListing {
+    return this.d.listing;
   }
 
   laneFor(owner: Address): Lane {
@@ -84,6 +91,7 @@ export class MarketRelay {
 
   async submit(req: IntentRequest): Promise<IntentStatus> {
     const checked = checkIntent(req, nowSec());
+    checkListed(this.d.listing, checked);
     // No price source (D-310): no open can fill and no cash-out can price; the window refunds if none returns.
     const paused = this.d.gateway.pausedReason(checked.market);
     if (paused) throw new HttpError(HTTP_STATUS.conflict, "MARKET_PAUSED", paused);

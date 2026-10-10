@@ -65,6 +65,11 @@ export const catalogResponseSchema = z.object({
       feedId: bytes32Schema,
       /** Why the market takes no calls at all (no price source, D-310), or null; absent from an older api. */
       paused: z.string().nullable().optional(),
+      /**
+       * False while none of its series is on this network's chain (R1.24: the catalogue runs ahead of a deploy): its
+       * price is live, calls wait. Absent from an older api (listed).
+       */
+      listed: z.boolean().optional(),
       series: z.array(
         z.object({ cadenceSec: z.int(), seriesId: bytes32Schema, sigmaE8: z.int(), bands: z.array(bandSchema) }),
       ),

@@ -44,6 +44,7 @@ import {
   recentLuckySeals,
   recordLuckyReveal,
 } from "@senryo/service-common";
+import type { SeriesListing } from "../listing.ts";
 import type { PythGateway } from "../prices/gateway.ts";
 import { toE8 } from "../prices/ring.ts";
 import { bad } from "../relay/gates.ts";
@@ -89,9 +90,9 @@ export interface LuckyReveal {
 }
 
 export class LuckyDesk {
-  constructor(private readonly d: { chainId: ChainId; gateway: PythGateway; db: Db }) {}
+  constructor(private readonly d: { chainId: ChainId; gateway: PythGateway; listing: SeriesListing; db: Db }) {}
 
-  /** Markets a draw may land on now: in session for a dealable window, on a quotable price (FeedStates). */
+  /** Markets a draw may land on now: a dealable window on chain, in session, on a quotable price (FeedStates). */
   private tradingNow(now: number): MarketSpec[] {
     return marketsOn(this.d.chainId).filter((m) => {
       if (!isQuotable(this.d.gateway.feedState(feedIdOf(m)))) return false;
@@ -102,6 +103,8 @@ export class LuckyDesk {
   /** The running window of a cadence when it has room for a signature and the fill before its lockout. */
   private window(m: MarketSpec, cadence: number, now: number): { start: number; expiry: number } | null {
     if (!m.cadences.includes(cadence as CadenceSec)) return null;
+    // Only a series the chain has registered (R1.24): the catalogue runs ahead of a deploy.
+    if (!this.d.listing.listed(seriesIdOf(m.symbol, cadence as CadenceSec))) return null;
     const start = now - (now % cadence);
     const expiry = start + cadence;
     if (expiry - now < LUCKY_MIN_HEADROOM_SEC + LOCKOUT_SEC) return null;

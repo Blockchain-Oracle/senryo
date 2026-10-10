@@ -79,7 +79,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const health = useRef({ live: priceHealth.live, tag: priceHealth.tag });
   health.current = { live: priceHealth.live, tag: priceHealth.tag };
   // A closed market still shows its chart: its last session from our candle archive.
-  const closed = !session.trading && !session.paused;
+  const closed = !session.trading && !session.paused && !session.unlisted;
   const candles = useRecentCandles(symbol, t.now, closed);
   const sessionLine = useMemo(
     () => (closed && "value" in candles ? sessionHistory(candles.value.candles, SAMPLE_CAPACITY) : null),

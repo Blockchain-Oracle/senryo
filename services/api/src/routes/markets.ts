@@ -112,6 +112,7 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         kind: m.kind,
         feedId: feedIdOf(m),
         paused: ctx.gateway.pausedReason(m),
+        listed: chain.listing.marketListed(m),
         members:
           m.source.kind === "basket" ? m.source.members.map(({ symbol, weightBps }) => ({ symbol, weightBps })) : [],
         series: m.cadences.map((cadenceSec) => ({

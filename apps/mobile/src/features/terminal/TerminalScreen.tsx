@@ -75,7 +75,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     health.value = { live: priceHealth.live, tag: priceHealth.tag };
   }, [health, priceHealth.live, priceHealth.tag]);
   // A closed market still shows its chart: its last session from our candle archive.
-  const closed = !session.trading && !session.paused;
+  const closed = !session.trading && !session.paused && !session.unlisted;
   const candles = useRecentCandles(t.symbol, t.now, closed);
   const history = useSharedValue<ChartHistory | null>(null);
   const historySeq = useRef(0);
