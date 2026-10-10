@@ -2544,6 +2544,7 @@
     "maxSessionCap": "100000000",
     "maxSessionSec": 900
   },
+  "ticketBase": 0,
   "verifiers": {
     "crypto": {
       "admissionSec": 300,

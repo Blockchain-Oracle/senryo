@@ -64,7 +64,13 @@ abstract contract MarketsBase is Test {
         usd = new BlockingUSD(address(manager));
         table = SSTORE2.write(TailTableData.BLOB);
         reserve = new BandReserve(
-            address(manager), IERC20(address(usd)), IWindows(address(windows)), table, params(), caps()
+            address(manager),
+            IERC20(address(usd)),
+            IWindows(address(windows)),
+            table,
+            params(),
+            caps(),
+            firstTicketAfter()
         );
         reserve.setSigmaSigner(vm.addr(SIGNER_PK), true);
 
@@ -92,6 +98,11 @@ abstract contract MarketsBase is Test {
         windowId = windows.openWindow(seriesId, T0);
         vm.warp(T0 + 1);
         record(T0, K);
+    }
+
+    /// @dev The reserve's `ticketBase` (D-314): 0 here, testnet's v3 numbers after v1's.
+    function firstTicketAfter() internal pure virtual returns (uint256) {
+        return 0;
     }
 
     function params() internal pure virtual returns (Params memory) {

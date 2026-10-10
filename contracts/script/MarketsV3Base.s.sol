@@ -73,13 +73,15 @@ abstract contract MarketsV3Base is MarketsBase {
         // The calibrated shape table lives in its own data contract, so a recalibration is `setTailTable` (D-300).
         address table = SSTORE2.write(TailTableData.BLOB);
         _record("TailTable", table, TailTableData.BLOB, false);
-        reserve = new BandReserve(address(manager), collateral, IWindows(address(windows)), table, p, caps);
+        // Testnet's v3 numbers its tickets after v1's (D-314).
+        uint256 ticketBase = _json.readUint(".ticketBase");
+        reserve = new BandReserve(address(manager), collateral, IWindows(address(windows)), table, p, caps, ticketBase);
         _record(
             "BandReserve",
             address(reserve),
             abi.encodePacked(
                 type(BandReserve).creationCode,
-                abi.encode(address(manager), address(collateral), address(windows), table, p, caps)
+                abi.encode(address(manager), address(collateral), address(windows), table, p, caps, ticketBase)
             ),
             true
         );

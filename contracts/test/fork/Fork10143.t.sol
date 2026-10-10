@@ -55,7 +55,7 @@ contract Fork10143Test is Test {
         Params memory p = Params(2500, 10_000, 30_000, 970_000, 6000, 500_000e6, 1e6, 1000e6, 1);
         BandReserve.Caps memory caps = BandReserve.Caps(1000e6, 10_000e6, 3600);
         address table = SSTORE2.write(TailTableData.BLOB);
-        reserve = new BandReserve(MANAGER, IERC20(TEST_USD), IWindows(WINDOWS), table, p, caps);
+        reserve = new BandReserve(MANAGER, IERC20(TEST_USD), IWindows(WINDOWS), table, p, caps, 0);
         vm.startPrank(ADMIN);
         BandDef[] memory menu = new BandDef[](2);
         (menu[0], menu[1]) = (BandDef(BAND_UP, 0, 0), BandDef(BAND_DOWN, 0, 0));

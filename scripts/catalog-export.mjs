@@ -29,6 +29,7 @@ import {
   REDSTONE,
   sigmaBoundsOf,
   TESTNET_POOL_SEED,
+  TICKET_BASE,
 } from "../packages/config/src/pool-terms.ts";
 import { RIDE_MARKETS, RIDE_TERMS } from "../packages/config/src/ride-terms.ts";
 import { easternOffsetSec, holidayWindows, parseSchedule, weekBits } from "../packages/core/src/market/index.ts";
@@ -179,6 +180,7 @@ function exportChain(chainId) {
       strictSec: REDSTONE.strictSec,
       threshold: REDSTONE.threshold,
     }),
+    ticketBase: TICKET_BASE[chainId],
     verifiers: Object.fromEntries(Object.entries(PRINT_CLASSES).map(([k, c]) => [k, sorted(c)])),
   });
   writeFileSync(join(OUT, `${chainId}.json`), `${JSON.stringify(doc, null, 2)}\n`);

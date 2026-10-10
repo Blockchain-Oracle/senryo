@@ -26,7 +26,13 @@ abstract contract BandBook is SeriesListing, ExitOrders {
     mapping(bytes32 windowId => uint16) public bandsUsed;
     mapping(bytes32 windowId => bool) public windowSettled;
 
-    constructor(IWindows windows_, address tailTable_) SeriesListing(windows_, tailTable_) {}
+    /// @notice Ticket ids start after this one (D-314): testnet's v3 numbers after v1's tickets, so a ticket id is
+    ///         unique on its chain across both reserves (the services' book, the indexer and the apps key by it).
+    uint256 public immutable ticketBase;
+
+    constructor(IWindows windows_, address tailTable_, uint256 ticketBase_) SeriesListing(windows_, tailTable_) {
+        ticketBase = ticketBase_;
+    }
 
     // ------------------------------------------------------------------------------------------------ commit
 
@@ -81,7 +87,7 @@ abstract contract BandBook is SeriesListing, ExitOrders {
                 entryProbE6: 0
             })
         );
-        id = _tickets.length;
+        id = ticketBase + _tickets.length;
         emit Committed(id, it.owner, it.windowId, it.band, it.amount, it.limit, target, viaSession);
     }
 
@@ -340,7 +346,7 @@ abstract contract BandBook is SeriesListing, ExitOrders {
     // ------------------------------------------------------------------------------------------------ helpers
 
     function _ticket(uint256 id) internal view returns (Ticket storage) {
-        if (id == 0 || id > _tickets.length) revert UnknownTicket(id);
-        return _tickets[id - 1];
+        if (id <= ticketBase || id > ticketBase + _tickets.length) revert UnknownTicket(id);
+        return _tickets[id - ticketBase - 1];
     }
 }

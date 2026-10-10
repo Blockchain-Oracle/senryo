@@ -44,13 +44,14 @@ contract BandReserve is ParlayBook, RideBounds {
         IWindows windows_,
         address tailTable_,
         Params memory params_,
-        Caps memory caps
+        Caps memory caps,
+        uint256 ticketBase_
     )
         AccessManaged(authority)
         BandPool(collateral_, params_)
         EIP712(NAME, VERSION)
         SessionGrants(caps.maxPerCallCap, caps.maxSessionCap, caps.maxSessionSec)
-        BandBook(windows_, tailTable_)
+        BandBook(windows_, tailTable_, ticketBase_)
     {}
 
     // ------------------------------------------------------------------------------------------------ sessions
@@ -143,6 +144,7 @@ contract BandReserve is ParlayBook, RideBounds {
         return _ticket(id);
     }
 
+    /// @notice How many tickets this reserve holds (ids `ticketBase + 1` … `ticketBase + ticketCount()`).
     function ticketCount() external view returns (uint256) {
         return _tickets.length;
     }

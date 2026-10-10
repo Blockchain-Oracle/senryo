@@ -165,5 +165,11 @@ export function quoteCurve(
   };
 }
 
+/**
+ * Where a network's reserve starts numbering tickets (D-314, contracts `BandBook.ticketBase`): testnet's v1 reserve
+ * numbered 30 tickets and stays indexed, so v3 starts after 1,000 and a ticket id stays unique on its chain.
+ */
+export const TICKET_BASE: Readonly<Record<ChainId, number>> = { [TESTNET_CHAIN_ID]: 1_000, [MAINNET_CHAIN_ID]: 0 };
+
 /** Practice's pool seed in Test USD (minted at deploy; D-260). */
 export const TESTNET_POOL_SEED = BigInt(10_000_000 * USD);

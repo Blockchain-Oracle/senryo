@@ -96,6 +96,11 @@ export const bandReserveAbi = [
             "internalType": "uint40"
           }
         ]
+      },
+      {
+        "name": "ticketBase_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -3335,6 +3340,19 @@ export const bandReserveAbi = [
             "internalType": "uint32"
           }
         ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ticketBase",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
