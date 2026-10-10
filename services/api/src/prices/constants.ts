@@ -64,6 +64,10 @@ export const REDSTONE_PRINT_WAIT_MS = 15_000;
 export const REDSTONE_FETCH_TIMEOUT_MS = 8_000;
 export const REDSTONE_BACKOFF_MIN_MS = 60_000;
 export const REDSTONE_BACKOFF_MAX_MS = 600_000;
+/** A parse in the worker takes ~25 ms; one this late means the worker is stuck: it is restarted. */
+export const REDSTONE_PARSE_TIMEOUT_MS = 5_000;
+/** After this many worker deaths the parse moves back to the main thread (slow beats none). */
+export const REDSTONE_PARSE_WORKER_MAX_FAILURES = 3;
 
 // ------------------------------------------------------------------------------------- PrintFetcher (04-pricing R2)
 

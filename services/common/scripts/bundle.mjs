@@ -1,6 +1,7 @@
 // Bundle services/{api,keeper} into self-contained ESM files for the one-image, two-entrypoint container.
 //   node services/common/scripts/bundle.mjs <outdir>
-// Output: api.mjs · keeper.mjs · run.mjs (dispatches on SERVICE) · health.mjs (HEALTHCHECK → /health).
+// Output: api.mjs · keeper.mjs · run.mjs (dispatches on SERVICE) · health.mjs (HEALTHCHECK → /health) ·
+// redstone-parse.mjs (the api's RedStone parse worker, loaded from beside api.mjs).
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +21,7 @@ await build({
   entryPoints: {
     api: join(root, "services/api/src/main.ts"),
     keeper: join(root, "services/keeper/src/main.ts"),
+    "redstone-parse": join(root, "services/api/src/prices/redstone-parse.worker.ts"),
   },
   outdir,
   outExtension: { ".js": ".mjs" },

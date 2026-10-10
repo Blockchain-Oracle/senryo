@@ -94,7 +94,14 @@ live PnL at about 8 Hz. No contract change.
     the successor's first frame; 200-then-close kept backing off; BTC frozen-but-newer-upstream → restart, ETH
     frozen-upstream → stale. Real Hermes, both streams 8 s: crypto 7 publish times, tradfi frozen, 0 false
     silences. Exit 0.
-- [ ] R1.6 RedStone off the main loop: parse in a `worker_thread`, extracting only the wanted feeds (R14).
+- [x] R1.6 RedStone off the main loop: parse in a `worker_thread`, extracting only the wanted feeds (R14).
+  - *As built (10 Oct):* `redstone-packages.ts` (pure: parse, payload, median, the JSON check on bytes) is shared by
+    `redstone-parse.worker.ts` (a third esbuild entry, `redstone-parse.mjs` beside `api.mjs`, 1.9 KB) and
+    `redstone-parser.ts` (one long-lived worker; the response `ArrayBuffer` is **transferred**, zero copy; 5 s timeout
+    restarts it; after 3 deaths the parse returns to the main thread, logged). The reviver stays (exact decimal text).
+    Scratch check on the real 2 MB answer: event-loop delay max **24.1 ms in-thread → 1.9 ms via the worker** over 10
+    parses; results identical (18 feeds, signatures, values); the bundled worker answers the same; a truncated body
+    fails over to the next gateway; 3 deaths → in-thread fallback. Exit 0.
 - [ ] R1.7 R11/D-310: without `REDSTONE_GATEWAYS` after 29 Oct, the RedStone markets are read-only discovery with the
   reason; they turn back on when the key is set.
 - [ ] R1.8 Hygiene (R18): delete the dead `pg_notify('pyth_print')`; close the open candle on a minute timer and on
