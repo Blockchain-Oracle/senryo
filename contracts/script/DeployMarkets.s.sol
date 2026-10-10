@@ -8,16 +8,11 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CALENDAR_WORD_COUNT} from "../src/libraries/Constants.sol";
 import {MarketCalendar} from "../src/oracle/MarketCalendar.sol";
 import {IMarketCalendar} from "../src/oracle/interfaces/IMarketCalendar.sol";
-import {DuelArena} from "../src/games/DuelArena.sol";
-import {DuelClocks, DuelTier} from "../src/games/DuelTypes.sol";
-import {SSTORE2} from "solady/utils/SSTORE2.sol";
 import {BandReserve} from "../src/markets/BandReserve.sol";
-import {TailTableData} from "../src/markets/TailTableData.sol";
 import {Windows} from "../src/markets/Windows.sol";
-import {IWindows} from "../src/markets/interfaces/IWindows.sol";
 import {TestUSD} from "../src/markets/testnet/TestUSD.sol";
 import "../src/markets/MarketTypes.sol";
-import {MarketsBase} from "./MarketsBase.s.sol";
+import {MarketsV3Base} from "./MarketsV3Base.s.sol";
 
 /// @title DeployMarkets — the markets on one network, from `script/catalog/<chainId>.json` (D-268).
 /// @notice `node scripts/catalog-export.mjs` first, then:
@@ -25,13 +20,11 @@ import {MarketsBase} from "./MarketsBase.s.sol";
 ///         with `SPONSOR` set to the relayer that mints Practice dollars and `KEEPER` to the keeper. Writes `packages/contracts/src/addresses/
 ///         <chainId>.json` (address, init-code hash, start block, indexed) for `pnpm contracts:export`. Markets added
 ///         later go through `AddMarkets` on the live deployment (the same listing, in `MarketsBase`).
-contract DeployMarkets is MarketsBase {
+contract DeployMarkets is MarketsV3Base {
     using stdJson for string;
 
     /// @dev AccessManager role that may mint Test USD (the sponsor's Practice grant, D-258).
     uint64 internal constant MINTER_ROLE = 1;
-    /// @dev AccessManager role that pairs duel entries (`DuelArena.openMatch`): the api's matchmaker, on the sponsor (D-294).
-    uint64 internal constant DUEL_ROLE = 5;
 
     function run() external {
         _readCatalog();
@@ -71,9 +64,11 @@ contract DeployMarkets is MarketsBase {
         BandReserve reserve = _deployReserve(manager, collateral, windows);
         _calendarRole(manager, calendar, keeper);
         _exitRole(manager, reserve, sponsor);
+        _sigmaSigners(reserve, keeper, sponsor);
         _duel(manager, reserve, sponsor);
         _configureCalendars(calendar);
         _listSeries(windows, reserve);
+        _rides(reserve);
         _seedPool(reserve, collateral, admin);
         _earn(manager, reserve, admin, true);
         _events(manager, reserve, keeper, true);
@@ -99,66 +94,5 @@ contract DeployMarkets is MarketsBase {
         // The admin seeds (and can top up) Practice's pool.
         manager.grantRole(MINTER_ROLE, msg.sender, 0);
         return IERC20(address(usd));
-    }
-
-    function _deployReserve(AccessManager manager, IERC20 collateral, Windows windows)
-        internal
-        returns (BandReserve reserve)
-    {
-        Params memory p = Params({
-            minHalfSpreadE6: uint32(_json.readUint(".params.minHalfSpreadE6")),
-            maxSurchargeE6: uint32(_json.readUint(".params.maxSurchargeE6")),
-            minProbE6: uint32(_json.readUint(".params.minProbE6")),
-            maxProbE6: uint32(_json.readUint(".params.maxProbE6")),
-            maxExposureBps: uint16(_json.readUint(".params.maxExposureBps")),
-            maxExpiryReserved: uint64(_json.readUint(".params.maxExpiryReserved")),
-            minStake: uint64(_json.readUint(".params.minStake")),
-            maxStake: uint64(_json.readUint(".params.maxStake")),
-            fillDelaySec: uint8(_json.readUint(".params.fillDelaySec"))
-        });
-        BandReserve.Caps memory caps = BandReserve.Caps({
-            maxPerCallCap: uint64(_json.readUint(".session.maxPerCallCap")),
-            maxSessionCap: uint64(_json.readUint(".session.maxSessionCap")),
-            maxSessionSec: uint40(_json.readUint(".session.maxSessionSec"))
-        });
-        // The calibrated shape table lives in its own data contract, so a recalibration is `setTailTable` (D-300).
-        address table = SSTORE2.write(TailTableData.BLOB);
-        _record("TailTable", table, TailTableData.BLOB, false);
-        reserve = new BandReserve(address(manager), collateral, IWindows(address(windows)), table, p, caps);
-        _record(
-            "BandReserve",
-            address(reserve),
-            abi.encodePacked(
-                type(BandReserve).creationCode,
-                abi.encode(address(manager), address(collateral), address(windows), table, p, caps)
-            ),
-            true
-        );
-    }
-
-    /// @dev The duel arena (D-294) on this reserve: its clocks and tiers from `.duel`, `openMatch` for the matchmaker.
-    function _duel(AccessManager manager, BandReserve reserve, address sponsor) internal {
-        DuelClocks memory clocks = DuelClocks({
-            revealWindowSec: uint32(_json.readUint(".duel.revealWindowSec")),
-            pickWindowSec: uint32(_json.readUint(".duel.pickWindowSec")),
-            minCardLifeSec: uint32(_json.readUint(".duel.minCardLifeSec"))
-        });
-        DuelArena arena = new DuelArena(address(manager), reserve, clocks);
-        _record(
-            "DuelArena",
-            address(arena),
-            abi.encodePacked(type(DuelArena).creationCode, abi.encode(address(manager), address(reserve), clocks)),
-            true
-        );
-        uint256[] memory pots = _json.readUintArray(".duel.pots");
-        uint256[] memory stakes = _json.readUintArray(".duel.cardStakes");
-        for (uint256 i; i < pots.length; ++i) {
-            arena.setTier(uint8(i), DuelTier({pot: uint64(pots[i]), cardStake: uint64(stakes[i]), enabled: true}));
-        }
-        bytes4[] memory fns = new bytes4[](1);
-        fns[0] = DuelArena.openMatch.selector;
-        manager.labelRole(DUEL_ROLE, "DUEL");
-        manager.setTargetFunctionRole(address(arena), fns, DUEL_ROLE);
-        manager.grantRole(DUEL_ROLE, sponsor, 0);
     }
 }

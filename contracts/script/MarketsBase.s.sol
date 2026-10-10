@@ -65,11 +65,11 @@ abstract contract MarketsBase is Script {
         require(_json.readUint(".chainId") == block.chainid, "catalog is for another chain");
     }
 
+    /// @dev The address book: `<chainId>.json`, or `BOOK` (a file in the same folder — a rehearsal on a fork writes
+    ///      its own and leaves the live book alone).
     function _bookPath() internal view returns (string memory) {
-        return
-            string.concat(
-                vm.projectRoot(), "/../packages/contracts/src/addresses/", vm.toString(block.chainid), ".json"
-            );
+        string memory name = vm.envOr("BOOK", string.concat(vm.toString(block.chainid), ".json"));
+        return string.concat(vm.projectRoot(), "/../packages/contracts/src/addresses/", name);
     }
 
     // ------------------------------------------------------------------------------------------------ verifiers
@@ -170,10 +170,11 @@ abstract contract MarketsBase is Script {
         if (!kept) manager.grantRole(CALENDAR_ROLE, keeper, 0);
     }
 
-    /// @dev `fireTrail` under EXIT_ROLE, held by the sponsor (take-profit and stop-loss fire from anyone). Idempotent.
+    /// @dev `fireTrail` and `fireRideTrail` under EXIT_ROLE, held by the sponsor (take-profit and stop-loss fire from
+    ///      anyone). Idempotent.
     function _exitRole(AccessManager manager, BandReserve reserve, address sponsor) internal {
-        bytes4[] memory fns = new bytes4[](1);
-        fns[0] = reserve.fireTrail.selector;
+        bytes4[] memory fns = new bytes4[](2);
+        (fns[0], fns[1]) = (reserve.fireTrail.selector, reserve.fireRideTrail.selector);
         if (manager.getTargetFunctionRole(address(reserve), fns[0]) != EXIT_ROLE) {
             manager.labelRole(EXIT_ROLE, "EXIT");
             manager.setTargetFunctionRole(address(reserve), fns, EXIT_ROLE);
@@ -229,11 +230,13 @@ abstract contract MarketsBase is Script {
             abi.encodePacked(type(PoolShares).creationCode, abi.encode(address(manager), address(reserve))),
             true
         );
-        bytes4[] memory way = new bytes4[](1);
-        way[0] = reserve.defund.selector;
+        // The pool's way out and the withdrawal hold (D-307) are Earn's alone.
+        bytes4[] memory out = new bytes4[](2);
+        (out[0], out[1]) = (reserve.defund.selector, reserve.setWithdrawHold.selector);
         manager.labelRole(POOL_ROLE, "POOL");
-        manager.setTargetFunctionRole(address(reserve), way, POOL_ROLE);
+        manager.setTargetFunctionRole(address(reserve), out, POOL_ROLE);
         manager.grantRole(POOL_ROLE, address(shares), 0);
+        bytes4[] memory way = new bytes4[](1);
         way[0] = reserve.fund.selector;
         manager.labelRole(FUND_ROLE, "FUND");
         manager.setTargetFunctionRole(address(reserve), way, FUND_ROLE);

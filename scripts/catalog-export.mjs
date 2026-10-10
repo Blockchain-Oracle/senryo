@@ -117,14 +117,15 @@ function ridesOf(chainId) {
       earlyFeeBps: t.earlyFeeBps,
       earlyWindowSec: t.earlyWindowSec,
       marketReserveBps: t.marketReserveBps,
-      marketReserveCap: t.marketReserveCap.toString(),
+      // Numbers, not strings (all far below 2^53): the deploy script decodes the terms into a struct in one read.
+      marketReserveCap: Number(t.marketReserveCap),
       maxHourlyLossBps: t.maxHourlyLossBps,
       maxLifeSec: t.maxLifeSec,
       maxLinearBps: t.maxLinearBps,
-      maxMargin: t.maxMargin.toString(),
+      maxMargin: Number(t.maxMargin),
       maxMoveBps: t.maxMoveBps,
       maxProfitBps: t.maxProfitBps,
-      minMargin: t.minMargin.toString(),
+      minMargin: Number(t.minMargin),
       skewCapBps: t.skewCapBps,
     }),
   });

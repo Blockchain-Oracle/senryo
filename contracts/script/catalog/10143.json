@@ -190,14 +190,14 @@
       "earlyFeeBps": 20,
       "earlyWindowSec": 15,
       "marketReserveBps": 1500,
-      "marketReserveCap": "1500000000000",
+      "marketReserveCap": 1500000000000,
       "maxHourlyLossBps": 1000,
       "maxLifeSec": 14400,
       "maxLinearBps": 3000,
-      "maxMargin": "1000000000",
+      "maxMargin": 1000000000,
       "maxMoveBps": 2500,
       "maxProfitBps": 90000,
-      "minMargin": "1000000",
+      "minMargin": 1000000,
       "skewCapBps": 5000
     }
   },

@@ -202,11 +202,51 @@ Tested to the money invariants. Not deployed until R4.
     each series' bounds and h50 and the rides, and cuts mainnet to 5m/15m/1h with Up and Down (102 series; testnet
     136); ride gas budgets from the gas report. The api's catalogue `terms` renames `halfSpreadE6` →
     `minHalfSpreadE6`, so R4 deploys the api before the phone's OTA.
-- [ ] R3.21 Deploy scripts:
+- [x] R3.21 Deploy scripts:
   - `MarketsBase.s.sol`/`AddMarkets.s.sol` get a "fresh v3 reserve" route that reuses the surviving contracts from
     the partial book, lists through `listSeries` and wires the roles (σ signer, rides, bounds, FUND, EVENTS, DUEL,
     EXIT);
   - a simulated run on a fork, with the MON estimate recorded.
+  - Built: `MarketsV3Base.s.sol` (the table and reserve, the arena, σ signers for the keeper and the relay, the ride
+    terms and markets — decoded once, since each JSON cheatcode copies the catalogue into memory and Monad caps a
+    script at 8 MB), `ReplaceReserve.s.sol` (the route: survivors from the book; a v3 reserve in the book is kept on a
+    rerun, recognised by `tailTable()`; arena, Earn and the event book on it; `listSeries` for every series; roles —
+    EXIT on both trails, POOL on `defund` and `setWithdrawHold`), `DeployMarkets` on the same base, and `BOOK=` so a
+    rehearsal writes its own book.
+  - **Rehearsed 11 Oct on an anvil fork of 10143 (block 69,951,136), deployer unlocked:** 257 transactions, all
+    successful — the v3 reserve, 136 series listed, 7 ride markets, Practice's 10M seeded, Earn, the arena and the
+    event book, σ signers and roles. **Monad-model gas 70.1M → ≈ 7.6 MON** at 103 gwei with 1.05× limits (7.4–8.1
+    across base fees): creates 3.0, listings 2.3, registering the 82 new series 1.8, the rest 0.4. `listSeries`
+    averaged 159k, matching the live estimate (162,881). anvil estimates without Monad's rules and executes with them
+    (a `setSigmaSigner` estimated 23k, used 97k), so R4 broadcasts against the live RPC, whose estimates are Monad's.
+    The deployer holds 0.01 MON: R4 needs about 8 MON (9 with margin), not 13.
 
 ## Handoff
-(written at the end of the stage)
+
+**Built and gated (11 Oct); not deployed — that is R4.** Commits `33dbf6b9` (R3.1) … this one.
+
+- **Calls, pricing v3** (D-300, D-313): signed σ marks (a fast 30-min EWMA and a one-day anchor per feed and minute,
+  exactly one valid mark per fill, clamped to the series' bounds), the calibrated fat-tailed table in a swappable
+  data contract (`setTailTable`), the spread curve h(p) = max(0.25 pt, 4·h50·p(1−p)) by lane, a bounded fill delay,
+  `listSeries` (162,881 gas live). Calibration: Up/Down within ±2.5 % of fair out of sample on every lane; Range
+  within ±3.7 % on 5m/15m; **open:** 1h Range (+7.7 % in one fold) and 5m Range on Pyth's own prints (+10 %, a
+  weekend sample) — refit on the Pyth archive once it holds about two weeks, before R9; sub-minute rows refit from
+  the Pyth per-second record.
+- **Rides** (D-299, D-301): `LinearBook` + `RideBounds` + `RideLedger` + `LinearMath` in the reserve on the shared
+  pool — commit/fill at the next print, close/reduce, knock-outs and cap-outs at recorded prints, ends of life, TP/SL
+  and the trail, maker/taker and early-close fees, the frontier and `markRides`; generic `ExitOrders`.
+- **Earn v3** (D-307): hour-keyed requests, rolls in order with rides marked exactly, the withdrawal hold.
+- **Tests:** 136 (+ the fork test, `FORK_TESTS=true`), handler invariants across calls, rides and Earn (zero panics,
+  sums == rides, solvency to the unit), fuzz against brute force; `pnpm mirror` (in the gate) checks 5,802 mirror
+  values bit-exact. BandReserve 75,166 B of 131,072.
+- **Config:** realised σ per market, h50 by lane, σ bounds, ride terms per network, mainnet cut to 5m/15m/1h Up/Down.
+
+**For R4:**
+1. Fund the deployer (`0x52d2…0e6a`) with about 9 MON.
+2. Copy `~/.config/senryo/deploy/10143.partial-book.json` over `packages/contracts/src/addresses/10143.json`, run
+   `node scripts/catalog-export.mjs`, then `ReplaceReserve` against the live RPC (`--gas-estimate-multiplier 105`).
+3. `pnpm contracts:export` — and in the same change move the services to v3: the relay's fills carry σ marks (the
+   σ-mark signer: keeper and relay keys are already allowed signers), exits move to `(book, id)`, the keeper's roll
+   passes a mark, ride routes; the indexer reads the v1 and v3 reserves. Deploy the api before the phone OTA (the
+   catalogue's `terms` field is renamed).
+4. Until R4 ships, HEAD's apps and services price the v3 way: a production hotfix branches from `b0a455e3`.
