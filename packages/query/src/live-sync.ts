@@ -50,6 +50,9 @@ export function useLiveSync(live: Live, owner: Address | undefined): void {
   const env = useQueryEnv();
   const client = useQueryClient();
 
+  // Missed events the api couldn't replay (a restart, a long gap): refetch everything active rather than trust a gap.
+  useEffect(() => live.onReset(() => void client.invalidateQueries()), [live, client]);
+
   // Public: a question listed, called, answered or settled moves the board for everyone.
   useEffect(
     () =>

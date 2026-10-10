@@ -61,6 +61,7 @@ export class Live {
   private readonly statusListeners = new Set<() => void>();
   private readonly userListeners = new Map<string, Set<Listener<unknown>>>();
   private readonly marketListeners = new Map<string, Set<Listener<unknown>>>();
+  private readonly resetListeners = new Set<() => void>();
 
   constructor(private readonly o: LiveOptions) {
     this.stream = new LiveStream({
@@ -106,6 +107,15 @@ export class Live {
     return () => set.delete(listener as Listener<unknown>);
   }
 
+  /**
+   * The api couldn't replay what this client missed (it restarted, or the gap outran its ring, 04-pricing R10): every
+   * query the stream keeps true must be refetched.
+   */
+  onReset(listener: () => void): () => void {
+    this.resetListeners.add(listener);
+    return () => this.resetListeners.delete(listener);
+  }
+
   /** Reseed prices (and the clock) from `/v1/prices/recent`. */
   async reseed(symbols: readonly string[] = this.prices.symbols): Promise<void> {
     const recent = await this.o.recent(symbols);
@@ -141,6 +151,11 @@ export class Live {
     if (event === "print" && data && typeof data === "object") {
       const p = data as { symbol: string; t: number; priceE8: string; publishTime: number };
       this.prints.add({ symbol: p.symbol, t: p.t, priceE8: BigInt(p.priceE8), publishTime: p.publishTime });
+      return;
+    }
+    if (event === "reset") {
+      for (const l of this.resetListeners) l();
+      void this.reseed().catch(() => {});
       return;
     }
     if (USER_EVENTS.has(event)) for (const l of this.userListeners.get(event) ?? []) l(data);

@@ -13,7 +13,8 @@ import { verifyStreamTicket } from "./ticket.ts";
  * Only a request with nothing grantable is refused whole.
  * Every 5 s a `time` event carries the server clock (countdowns never trust the phone) and the price states' digest
  * (`h`, one letter per market; changes also go out at once as `h` on `prices`). A socket that can't keep up
- * skips ticks and is closed after 30 s blocked; a reconnect with `Last-Event-ID` replays durable events.
+ * skips ticks and is closed after 30 s blocked; a reconnect with `Last-Event-ID` replays durable events, or — when it
+ * can't (a restart, a gap longer than the ring) — gets `event: reset` and refetches.
  */
 const PUBLIC_TOPICS = new Set(["prices", "prints", "markets"]);
 const USER_TOPIC = /^user:(0x[0-9a-fA-F]{40})$/;
@@ -101,9 +102,12 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
       blockedSince = 0;
     });
 
-    const lastId = Number(request.headers["last-event-id"] ?? q.lastEventId ?? Number.NaN);
-    const replay = Number.isFinite(lastId) ? deps.bus.since(lastId, (t) => wanted.has(t)) : null;
-    for (const f of replay ?? []) write(f.text, false);
+    const lastId = request.headers["last-event-id"] ?? q.lastEventId;
+    if (typeof lastId === "string" && lastId !== "") {
+      const replay = deps.bus.since(lastId, (t) => wanted.has(t));
+      if (replay === null) write(`event: reset\ndata: ${JSON.stringify({ epoch: deps.bus.epoch })}\n\n`, false);
+      for (const f of replay ?? []) write(f.text, false);
+    }
     for (const topic of grant.topics) for (const text of deps.snapshot(topic)) write(text, true);
 
     const unsubscribe = deps.bus.subscribe((f) => {

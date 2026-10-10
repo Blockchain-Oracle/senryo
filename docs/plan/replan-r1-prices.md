@@ -172,8 +172,14 @@ live PnL at about 8 Hz. No contract change.
     gives status, last frame and reconnects. The client trusts the states' digest 12 s (two beats). Scratch check on a
     fake server: half-open socket replaced 5.6 s after its last frame; refusals back off 1.8 / 3.2 / 9.3 s inside their
     bands (first retry 1.2 s); nudge leaves a talking socket alone and replaces a silent one in 7 ms. Exit 0.
-- [ ] R1.12 Replay epochs: ids `<epoch>-<seq>`, `event: reset`, and the client invalidating and reseeding (R10; Mitoshi
+- [x] R1.12 Replay epochs: ids `<epoch>-<seq>`, `event: reset`, and the client invalidating and reseeding (R10; Mitoshi
   `bus.ts`).
+  - *As built (10 Oct):* `StreamBus.epoch` (start time, base 36); ids `<epoch>-<seq>`; `since(lastId)` is null for
+    another epoch, a bare number or past the ring, and the route then writes `event: reset`. `Live.onReset` reseeds
+    prices; `useLiveSync` invalidates every active query. (Replay, snapshot and subscribe run in one synchronous turn,
+    so nothing slips between them.) Scratch check on the real route and client: prints across a reconnect replayed
+    1,2,3,4 with no reset; a restart (new epoch), a gap past the 2,000-event ring, and an old numeric id each reset.
+    Exit 0.
 - [ ] R1.13 Fan-out (R13):
   - one batched `pp` frame every 100 ms;
   - a per-socket byte cap and a per-IP connection cap;
