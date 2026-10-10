@@ -4,7 +4,7 @@
  * CLOSE with the cash-out value rolling and, under it, its exit (take profit, stop, trail — S8.4). Honest states: calls
  * closed for the lockout, a stale price, a call in flight.
  */
-import { CALL_MODES, type CallMode, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
+import { CALL_MODES, type CallMode, closedWords, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
 import type { OfferSlot, PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
@@ -75,21 +75,20 @@ function CallButton({
 }
 
 /** A market outside its session (D-289): no new calls until it opens; the chart shows the last print. */
-function ClosedPanel({ symbol, when }: { symbol: string; when: string }) {
+function ClosedPanel({ symbol, line }: { symbol: string; line: MarketLine }) {
   const { color } = useTheme();
+  const words = closedWords(symbol, line);
   return (
     <View style={styles.wrap} accessibilityRole="summary">
-      <Text style={[TYPE.sectionTitle, { color: color.ink }]}>{symbol} is closed</Text>
-      <Text style={[TYPE.body, { color: color.inkMuted }]}>{when}</Text>
-      <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-        The price shown is its last print. Calls open with the market.
-      </Text>
+      <Text style={[TYPE.sectionTitle, { color: color.ink }]}>{words.title}</Text>
+      <Text style={[TYPE.body, { color: color.inkMuted }]}>{line.text}</Text>
+      <Text style={[TYPE.caption, { color: color.inkMuted }]}>{words.note}</Text>
     </View>
   );
 }
 
 export function CallPanel(props: Parameters<typeof OpenPanel>[0] & { symbol: string; session: MarketLine }) {
-  if (!props.session.trading && !props.holding) return <ClosedPanel symbol={props.symbol} when={props.session.text} />;
+  if (!props.session.trading && !props.holding) return <ClosedPanel symbol={props.symbol} line={props.session} />;
   return <OpenPanel {...props} />;
 }
 

@@ -1,7 +1,7 @@
 import { type Hex, seriesIdOf } from "@senryo/chain";
-import { basketMembers, feedIdOf, MARKETS, type MarketSpec } from "@senryo/config";
+import { basketMembers, feedIdOf, MARKETS, type MarketSpec, pauseOf } from "@senryo/config";
 import { basketPointsE8 } from "@senryo/core";
-import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
+import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
 import { FRAME_GAP_MS, PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS } from "./constants.ts";
@@ -90,6 +90,11 @@ export class PythGateway {
         member.baskets.push(f);
       }
     }
+  }
+
+  /** Why a market takes no calls at all (no price source, D-310), or null — the catalogue and the relays ask here. */
+  pausedReason(m: MarketSpec): string | null {
+    return pauseOf(m, nowSec(), Boolean(this.upstream.redstoneGateways?.length));
   }
 
   /** The market a series trades (the print watch's lookup). */

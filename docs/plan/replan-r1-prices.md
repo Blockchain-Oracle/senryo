@@ -102,8 +102,19 @@ live PnL at about 8 Hz. No contract change.
     Scratch check on the real 2 MB answer: event-loop delay max **24.1 ms in-thread → 1.9 ms via the worker** over 10
     parses; results identical (18 feeds, signatures, values); the bundled worker answers the same; a truncated body
     fails over to the next gateway; 3 deaths → in-thread fallback. Exit 0.
-- [ ] R1.7 R11/D-310: without `REDSTONE_GATEWAYS` after 29 Oct, the RedStone markets are read-only discovery with the
+- [x] R1.7 R11/D-310: without `REDSTONE_GATEWAYS` after 29 Oct, the RedStone markets are read-only discovery with the
   reason; they turn back on when the key is set.
+  - *As built (10 Oct):* one rule, `pauseOf(market, now, redstoneKeyed)` in `@senryo/config` (`price-sources.ts`):
+    from `REDSTONE_KEYLESS_END_SEC` (29 Oct 00:00Z) without a key, RedStone markets and baskets with a RedStone member
+    read "Paused · price feed offline". The api asks `gateway.pausedReason(m)`: the catalogue sends `paused` per market
+    (optional in the schema, for older apis); the relay refuses opens and cash-outs and the parlay relay any paused
+    leg with `409 MARKET_PAUSED`; Lucky and the duel deck already skip markets without a fresh price; the RedStone
+    reader schedules no poll and makes no request. In both apps `useMarketLine` reads the catalogue's reason
+    (`MarketLine.paused`), so every row (markets, parlay pickers) and the terminal show it; `closedWords` gives the
+    shared panel copy ("NVDA is paused" / "Its price feed is offline. Calls come back when it returns."). The price
+    routes moved to `api-client/routes/prices.ts` (markets.ts hit 402 lines; three price routes come in R1.14–R1.19).
+    Scratch check at a clock past the end: 19 paused (18 + TECH), 0 before it or with a key, 0 Pyth; the words; the
+    keyless reader makes 0 requests, a keyed one still reads. Exit 0.
 - [ ] R1.8 Hygiene (R18): delete the dead `pg_notify('pyth_print')`; close the open candle on a minute timer and on
   shutdown.
 

@@ -14,8 +14,8 @@ import { defineRoute } from "./define.ts";
 
 /**
  * The markets (S3, D-266…D-272): the catalogue as deployed, signed calls relayed gas-free, sessions, the caller's own
- * tickets, Practice dollars, and prices from the one Pyth gateway. Live prices and the caller's own events arrive on
- * the one `/v1/stream`; these routes are for first paint and for writes.
+ * tickets and Practice dollars (prices: `prices.ts`). Live prices and the caller's own events arrive on the one
+ * `/v1/stream`; these routes are for first paint and for writes.
  */
 
 const SYMBOL_RE = /^[A-Z0-9]{1,12}$/;
@@ -63,6 +63,8 @@ export const catalogResponseSchema = z.object({
       /** A basket's members and weights (D-286); empty for a single feed. */
       members: z.array(z.object({ symbol: symbolSchema, weightBps: z.int().positive() })),
       feedId: bytes32Schema,
+      /** Why the market takes no calls at all (no price source, D-310), or null; absent from an older api. */
+      paused: z.string().nullable().optional(),
       series: z.array(
         z.object({ cadenceSec: z.int(), seriesId: bytes32Schema, sigmaE8: z.int(), bands: z.array(bandSchema) }),
       ),
@@ -346,54 +348,5 @@ export const practiceGrantRoute = defineRoute({
     amount: uintCodec,
     txHash: txHashSchema.nullable(),
     nextAt: unixSecondsSchema.nullable(),
-  }),
-});
-
-// ------------------------------------------------------------------------------------------------ prices
-
-/** `[unix ms, priceE8]` pairs, oldest first (one per second at most). */
-const seriesPointsSchema = z.array(z.tuple([z.int(), z.int()]));
-
-export const recentPricesRoute = defineRoute({
-  method: "GET",
-  path: "/v1/prices/recent",
-  auth: "none",
-  params: undefined,
-  query: z.object({ symbols: z.string().min(1) }),
-  body: undefined,
-  response: z.object({
-    serverTime: z.int(),
-    feeds: z.array(z.object({ symbol: symbolSchema, points: seriesPointsSchema })),
-  }),
-});
-
-export const candleSchema = z.tuple([z.int(), z.int(), z.int(), z.int(), z.int()]);
-
-export const candlesRoute = defineRoute({
-  method: "GET",
-  path: "/v1/prices/candles",
-  auth: "none",
-  params: undefined,
-  query: z.object({ symbol: symbolSchema, from: z.coerce.number().int(), to: z.coerce.number().int() }),
-  body: undefined,
-  /** `[minute start (s), open, high, low, close]` in e-8, oldest first. */
-  response: z.object({ symbol: symbolSchema, candles: z.array(candleSchema) }),
-});
-
-/** The unique print at an instant (a window's K, a fill), as archived: the same bytes the chain verifies. */
-export const printRoute = defineRoute({
-  method: "GET",
-  path: "/v1/prices/print",
-  auth: "none",
-  params: undefined,
-  query: z.object({ symbol: symbolSchema, t: z.coerce.number().int().nonnegative() }),
-  body: undefined,
-  response: z.object({
-    symbol: symbolSchema,
-    t: unixSecondsSchema,
-    priceE8: z.int(),
-    confE8: z.int(),
-    publishTime: unixSecondsSchema,
-    prevPublishTime: unixSecondsSchema,
   }),
 });

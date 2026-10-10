@@ -8,7 +8,7 @@
  * states: calls closed for the lockout, a stale price, a call in flight, and a market outside its session ("TSLA is
  * closed · Opens Mon 09:30 ET", D-289). Keys: ↑ Up, ↓ Down, C cash out.
  */
-import { CALL_MODES, type CallMode, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
+import { CALL_MODES, type CallMode, closedWords, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
 import type { OfferSlot, PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { ArrowDown, ArrowDownUp, ArrowUp, Crosshair, Ellipsis, MoveVertical, Rocket, TrendingDown } from "lucide-react";
@@ -91,18 +91,19 @@ function CallButton(p: {
   );
 }
 
-function ClosedPanel({ symbol, when }: { symbol: string; when: string }) {
+function ClosedPanel({ symbol, line }: { symbol: string; line: MarketLine }) {
+  const words = closedWords(symbol, line);
   return (
     <div className="terminal-panel" role="status">
-      <p className="font-semibold text-section-title">{symbol} is closed</p>
-      <p className="text-body text-text-2">{when}</p>
-      <p className="text-meta text-text-3">The price shown is its last print. Calls open with the market.</p>
+      <p className="font-semibold text-section-title">{words.title}</p>
+      <p className="text-body text-text-2">{line.text}</p>
+      <p className="text-meta text-text-3">{words.note}</p>
     </div>
   );
 }
 
 export function CallPanel(p: CallPanelProps) {
-  if (!p.session.trading && !p.holding) return <ClosedPanel symbol={p.symbol} when={p.session.text} />;
+  if (!p.session.trading && !p.holding) return <ClosedPanel symbol={p.symbol} line={p.session} />;
   const blocked = p.state.kind !== "ready";
   const presets = STAKE_PRESETS_USD.map((usd) => BigInt(usd) * USD);
   const isMax = p.balance !== undefined && p.stake === p.balance;

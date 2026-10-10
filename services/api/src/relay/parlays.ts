@@ -24,6 +24,8 @@ import { type ChainId, feedIdOf, PARLAY } from "@senryo/config";
 import {
   applyParlayChanges,
   type Db,
+  HTTP_STATUS,
+  HttpError,
   type Logger,
   nowSec,
   type ParlayLegRef,
@@ -89,6 +91,10 @@ export class ParlayRelay {
 
   async submit(req: ParlayRequest): Promise<IntentStatus> {
     const checked = checkParlay(req, nowSec());
+    for (const leg of checked.legs) {
+      const paused = this.d.gateway.pausedReason(leg.market);
+      if (paused) throw new HttpError(HTTP_STATUS.conflict, "MARKET_PAUSED", `${leg.market.symbol}: ${paused}`);
+    }
     const owner = req.intent.owner.toLowerCase();
     const body = JSON.stringify(req, (_k, v) => (typeof v === "bigint" ? v.toString() : v));
     const inserted = await this.d.db`

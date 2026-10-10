@@ -22,6 +22,8 @@ export const API_ERROR_CODES = [
   "RELAYER_BUSY",
   "RELAY_REVERTED",
   "UPSTREAM_UNAVAILABLE",
+  // A market with no price source (D-310): listed for discovery, no calls.
+  "MARKET_PAUSED",
   // Handles and profile text.
   "HANDLE_INVALID",
   "HANDLE_RESERVED",

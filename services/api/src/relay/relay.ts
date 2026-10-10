@@ -18,7 +18,15 @@ import {
 } from "@senryo/chain";
 import { type ChainId, feedIdOf } from "@senryo/config";
 import { windowsAbi } from "@senryo/contracts/abis";
-import { applyTicketChanges, type Db, type Logger, nowSec, type TicketNotice } from "@senryo/service-common";
+import {
+  applyTicketChanges,
+  type Db,
+  HTTP_STATUS,
+  HttpError,
+  type Logger,
+  nowSec,
+  type TicketNotice,
+} from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
 import type { StreamBus } from "../stream/bus.ts";
 import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
@@ -76,6 +84,9 @@ export class MarketRelay {
 
   async submit(req: IntentRequest): Promise<IntentStatus> {
     const checked = checkIntent(req, nowSec());
+    // No price source (D-310): no open can fill and no cash-out can price; the window refunds if none returns.
+    const paused = this.d.gateway.pausedReason(checked.market);
+    if (paused) throw new HttpError(HTTP_STATUS.conflict, "MARKET_PAUSED", paused);
     const owner = req.intent.owner.toLowerCase();
     const kind = req.intent.action === ACTION_OPEN ? "open" : "close";
     const body = JSON.stringify({ ...req, checked }, (_k, v) => (typeof v === "bigint" ? v.toString() : v));

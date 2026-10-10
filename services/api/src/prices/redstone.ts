@@ -1,5 +1,6 @@
 import type { Hex } from "@senryo/chain";
-import type { Logger } from "@senryo/service-common";
+import { REDSTONE_KEYLESS_END_SEC } from "@senryo/config";
+import { type Logger, nowSec } from "@senryo/service-common";
 import {
   REDSTONE_BACKOFF_MAX_MS,
   REDSTONE_BACKOFF_MIN_MS,
@@ -39,6 +40,7 @@ export class RedStoneReader {
   private readonly gateways: RedStoneGateway[];
   private readonly wanted: ReadonlySet<string>;
   private readonly parser: RedStoneParser;
+  private readonly keyed: boolean;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private readonly backoff = new Backoff(REDSTONE_BACKOFF_MIN_MS, REDSTONE_BACKOFF_MAX_MS);
   lastOkAt = 0;
@@ -50,7 +52,8 @@ export class RedStoneReader {
     private readonly log: Logger,
     configured: RedStoneGateway[] | undefined,
   ) {
-    this.gateways = configured?.length ? configured : REDSTONE_PUBLIC_GATEWAYS.map((url) => ({ url, apiKey: null }));
+    this.keyed = Boolean(configured?.length);
+    this.gateways = this.keyed ? (configured ?? []) : REDSTONE_PUBLIC_GATEWAYS.map((url) => ({ url, apiKey: null }));
     this.wanted = new Set(feeds.keys());
     this.parser = new RedStoneParser(log);
   }
@@ -73,7 +76,16 @@ export class RedStoneReader {
     return this.read(`data-packages/historical/${REDSTONE_SERVICE}/${ms}`, (body) => this.updates(body));
   }
 
+  /** The public gateways are gone after 29 Oct (D-310): without a key there is nothing to call. */
+  private keylessEnded(): boolean {
+    return !this.keyed && nowSec() >= REDSTONE_KEYLESS_END_SEC;
+  }
+
   private schedule(): void {
+    if (this.keylessEnded()) {
+      this.log.warn("RedStone's keyless access has ended; its markets stay paused until REDSTONE_GATEWAYS is set");
+      return;
+    }
     const now = Date.now();
     const next = now - (now % REDSTONE_GRID_MS) + REDSTONE_GRID_MS + REDSTONE_POLL_OFFSET_MS;
     this.timer = setTimeout(() => {
@@ -123,6 +135,10 @@ export class RedStoneReader {
    * JSON, or a body that doesn't decode; the next one is tried. Undefined when every gateway failed.
    */
   private async read<T>(path: string, decode: (body: ArrayBuffer) => Promise<T>): Promise<T | undefined> {
+    if (this.keylessEnded()) {
+      this.lastError = "keyless access ended";
+      return undefined;
+    }
     for (const g of this.gateways) {
       let host = g.url;
       try {
