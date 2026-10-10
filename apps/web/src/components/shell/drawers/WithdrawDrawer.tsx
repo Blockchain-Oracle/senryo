@@ -8,16 +8,22 @@
 import { checkWithdraw, useWithdrawFlow } from "@senryo/calls/react";
 import { explorerTxUrl } from "@senryo/config";
 import { formatUnits, shortAddress } from "@senryo/core";
+import { dollarId } from "@senryo/identity";
 import { useMarketAccount, useQueryEnv } from "@senryo/query";
 import { ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { SignInPrompt } from "@/components/auth/sign-in-prompt";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
 import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
+import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { fire } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
 import type { DrawerProps } from "./types";
+
+const INLINE_MARK = 16;
+const TITLE_MARK = 24;
 
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
@@ -103,7 +109,8 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
             </span>
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-meta text-text-2">
+            <span className="flex items-center gap-1.5 text-meta text-text-2">
+              <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={INLINE_MARK} decorative />
               Amount{balance !== undefined ? ` · you have ${usd(balance)}` : ""}
             </span>
             <span className="flex gap-2">
@@ -137,7 +144,8 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
         </form>
       ) : stage.kind === "review" || stage.kind === "sending" ? (
         <div className="flex flex-col gap-4 pt-2">
-          <p className="font-semibold text-title">
+          <p className="flex items-center gap-2 font-semibold text-title">
+            <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={TITLE_MARK} decorative />
             {usd(stage.value)} to {shortAddress(stage.to)}
           </p>
           <p className="break-all text-meta text-text-3">{stage.to}</p>

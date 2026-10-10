@@ -1,4 +1,5 @@
 "use client";
+import { dollarId } from "@senryo/identity";
 /**
  * The wallet (`?d=wallet`; the phone's Wallet, S5.12): the balance in the mode's money, Practice's daily test dollars
  * (the relay mints them gas-free), and Receive and Withdraw. A guest is asked to sign in. Real's deposit from any
@@ -6,6 +7,7 @@
  */
 import { useMarketAccount, usePracticeGrant } from "@senryo/query";
 import { ArrowDownToLine, ArrowUpRight, Coins } from "lucide-react";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
 import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
@@ -19,6 +21,7 @@ import { masked, usePrivacy } from "@/lib/shell/privacy";
 import type { DrawerProps } from "./types";
 
 const PRACTICE = ACTIVE_NETWORK.key === "testnet";
+const DOLLAR_MARK = 36;
 
 function go(name: string) {
   fire("tick", { cue: "tap" });
@@ -48,8 +51,11 @@ export function WalletDrawer({ open, onOpenChange }: DrawerProps) {
         </div>
       ) : (
         <div className="flex flex-col gap-6 pt-2">
-          <p className="tnum font-semibold text-display-balance">
-            {masked("value" in account ? money(account.value.balance) : "—", hidden)}
+          <p className="flex items-center gap-3">
+            <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={DOLLAR_MARK} decorative />
+            <span className="tnum font-semibold text-display-balance">
+              {masked("value" in account ? money(account.value.balance) : "—", hidden)}
+            </span>
           </p>
           {PRACTICE ? (
             <Button

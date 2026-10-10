@@ -2,8 +2,8 @@
  * Id helpers for callers that hold a network and a symbol rather than an address (the dollar on a network, a
  * prediction market by catalogue symbol). They only build ids from the same constants the entity table is keyed by.
  */
-import { MAINNET_CHAIN_ID, MAINNET_USDC } from "@senryo/config";
-import { EXTERNAL_CHAIN_IDS, USDC_ELSEWHERE } from "./constants.ts";
+import { MAINNET_CHAIN_ID, MAINNET_USDC, TESTNET_CHAIN_ID } from "@senryo/config";
+import { EXTERNAL_CHAIN_IDS, PRACTICE_DOLLAR, USDC_ELSEWHERE } from "./constants.ts";
 import { CAIP2, type EntityId, ids } from "./ids.ts";
 
 /** Networks a funding route names (Aurora sources and the Monad destination). */
@@ -37,4 +37,9 @@ export function marketId(symbol: string): EntityId {
   return ["TSLA", "NVDA", "AAPL", "MSFT", "META", "AMZN", "GOOGL", "PLTR", "AMD", "QQQ", "SPY"].includes(symbol)
     ? ids.equity(symbol)
     : ids.market(symbol);
+}
+
+/** The dollar a network's calls use (R2.8): Test USD in Practice, USDC on Monad mainnet. */
+export function dollarId(chainId: number): EntityId {
+  return chainId === TESTNET_CHAIN_ID ? ids.token(chainId, PRACTICE_DOLLAR) : ids.token(chainId, MAINNET_USDC);
 }

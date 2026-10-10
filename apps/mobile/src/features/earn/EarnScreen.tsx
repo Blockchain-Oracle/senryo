@@ -5,18 +5,21 @@
  */
 import { earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
+import { dollarId, ids } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { earnKeys, useMarketAccount } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
 import { Segmented } from "~/components/kit/Segmented";
 import { ErrorState, LoadingState } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
+import { useNetwork } from "~/lib/network";
 import { notify } from "~/lib/notify";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -32,6 +35,7 @@ const CENTS = 2;
 export function EarnScreen() {
   const { color } = useTheme();
   const account = useAccount();
+  const network = useNetwork();
   const flow = useEarnFlow(account);
   const wallet = useMarketAccount(account.hint?.address);
   const now = useServerSeconds();
@@ -102,11 +106,17 @@ export function EarnScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.block}>
-        <Text style={[TYPE.displayBalance, { color: color.ink }]}>{words.hero}</Text>
+        <View style={styles.markRow}>
+          <EntityMark id={dollarId(network.chainId)} size={SIZE.markToken} decorative />
+          <Text style={[TYPE.displayBalance, { color: color.ink }]}>{words.hero}</Text>
+        </View>
         <Text style={[TYPE.body, { color: color.inkMuted }]}>{words.heroDetail}</Text>
       </View>
       <View style={styles.block}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{words.pool}</Text>
+        <View style={styles.markRow}>
+          <EntityMark id={ids.brand("senryo")} size={SIZE.markInline} variant="symbol" decorative />
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>{words.pool}</Text>
+        </View>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>{words.ready}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>{words.next}</Text>
       </View>
@@ -212,6 +222,7 @@ export function EarnScreen() {
 }
 
 const styles = StyleSheet.create({
+  markRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   content: { padding: SIZE.gutter, gap: SPACE.xl },
   pad: { padding: SIZE.gutter },
   block: { gap: SPACE.sm },

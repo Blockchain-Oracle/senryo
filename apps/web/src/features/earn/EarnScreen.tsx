@@ -6,16 +6,22 @@
  */
 import { earnWords, hourLines, sharesFor } from "@senryo/calls";
 import { checkEarnAmount, useEarnFlow } from "@senryo/calls/react";
+import { dollarId, ids } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { earnKeys, useMarketAccount } from "@senryo/query";
 import { useState } from "react";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { ErrorPanel, useRetry } from "@/components/ui/reading";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useAccount } from "@/lib/account/provider";
+import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { cn } from "@/lib/utils";
+
+const HERO_MARK = 40;
+const POOL_MARK = 24;
 
 const SIDES = [
   { value: "supply", label: "Supply" },
@@ -107,12 +113,18 @@ export function EarnScreen() {
   return (
     <div className="flex flex-col gap-6">
       <section aria-label="Your share" className="flex flex-col gap-1">
-        <span className="tnum font-semibold text-hero">{words.hero}</span>
+        <span className="flex items-center gap-3">
+          <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={HERO_MARK} decorative />
+          <span className="tnum font-semibold text-hero">{words.hero}</span>
+        </span>
         <span className="text-body text-text-2">{words.heroDetail}</span>
       </section>
 
       <section aria-label="The pool" className="flex flex-col gap-1">
-        <span className="font-semibold text-row-title">{words.pool}</span>
+        <span className="flex items-center gap-2 font-semibold text-row-title">
+          <EntityMark id={ids.brand("senryo")} size={POOL_MARK} variant="symbol" decorative />
+          {words.pool}
+        </span>
         <span className="text-meta text-text-3">{words.ready}</span>
         <span className="tnum text-meta text-text-3">{words.next}</span>
       </section>

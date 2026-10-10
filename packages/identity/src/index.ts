@@ -8,12 +8,7 @@ export { type DrawFile, type DrawSource, drawOf } from "./draw.ts";
 export { ENTITIES } from "./entities.ts";
 export { CAIP2, type EntityId, ids } from "./ids.ts";
 export { type MarkStatus, markLabel } from "./labels.ts";
-export {
-  marketId,
-  ROUTE_CHAIN_ID,
-  type RouteChain,
-  routeAssetId,
-} from "./lookup.ts";
+export { dollarId, marketId, ROUTE_CHAIN_ID, type RouteChain, routeAssetId } from "./lookup.ts";
 export {
   PIXEL_MARKS,
   PIXEL_PATHS,
