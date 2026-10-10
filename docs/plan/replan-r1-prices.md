@@ -356,11 +356,8 @@ Boundaries the stream misses are back-filled (`PrintWatch`, retried until admiss
 ~3 s and recovers ~5 s after the network does; an api restart resets clients in ~1 s.
 
 **Open:**
-- The phone's simulator pass and OTA. The Release simulator build of this stage is built (10 Oct); simulator access
-  wasn't granted while the owner was away. Nothing new is native since 0.4.0 (checked: `expo-network`,
-  `expo-sharing`, `react-native-view-shot` are in its Podfile.lock), so the OTA is safe once the pass is done. It
-  carries every phone change since 8 Oct, so the pass walks the whole loop, plus R1.20's frozen/dimmed line and the
-  phone chart's frame time.
+- ~~The phone's simulator pass and OTA~~ — done with R2's (10 Oct): the pass on a Release build, then OTA `bc0830c9`
+  (runtime 0.4.0) carrying every phone change since 8 Oct (`ids-and-txs.md`).
 - R1.18: a weekday run from the server to confirm BTC's δ before R3.6 (Saturday's says 1 s stays).
 - G2 soak, and G1's RSS at 5,000 clients on the bundled build (314 MB under `tsx`).
 

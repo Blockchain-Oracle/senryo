@@ -198,4 +198,38 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     `"use client"`. The HealthChip is its word alone, toned ink / warn / muted — no dot, no pulse, never green.
 
 ## Handoff
-(written at the end of the stage)
+**Live (10 Oct 21:00 UTC):** api + keeper `sha-8231091`, web `sha-3b73233`, phone OTA `bc0830c9` (runtime 0.4.0,
+source `f839dec`) — `ids-and-txs.md`. One look: `palette.ts` is the only palette (light the default, dark the
+adaptation), `#FA00FF` only on trade, selected and publish controls, green and red only for direction, the condensed
+display face for headings; every entity with an identity shows its real mark through `@senryo/identity`; the generated
+art has left violet; no engineering copy or dead ends; a guest sees everything read-only with a way in.
+
+**Gate, as met:**
+- `pnpm gate` 0 (with `identity-provenance` re-pinned to the re-rendered art).
+- Web: a computed-colour scan of 22 routes in light and dark at desktop width flags only Monad's and Aave's own marks;
+  a pixel scan of the landing's scenes (violet-indigo: call 35 % → 0.1 %, payout 10 % → 0 %; what remains in passkey
+  and modes is their `SCENE_FIELD`); screenshots in light and dark at desktop and phone width. Nothing outside `docs/`
+  carries `#414EF4`, `#0A0911` or `#B69DF8`.
+- The simulator pass on a Release build (A2 Senryo iPhone 17): welcome, Home, the terminal (light and dark), Markets,
+  Calls, More, Games, Lucky, Events, Wallet, Earn, Status, Settings. It found and fixed: a guest's Home with no
+  markets, "Currencies" breaking mid-word in the phone's filter (now Forex), Wallet's bare "$—", Earn's bare line, the
+  coin in the darkened text gold and the reach plate in `#FA00FF`, Settings naming the theme "System" on a new
+  install, and `/v1/status`'s "not wired yet". On the live web it found the seals at phone width without their gold
+  (duplicate SVG ids, a hidden first copy): the codegen now scopes web ids per render.
+
+**Open:**
+- The phone's recoloured app icon and splash ship with its next native build (an OTA can't change them).
+- R5.24: on the phone the first switch to each tab waits ~0.5–2.5 s for the tab to mount; profile before fixing.
+- The scene fields stay `SCENE_FIELD` tokens (periwinkle and the cool grey are the welcome's colour fields, not UI).
+- Marks the owner chose to leave out (D-312, R2.6): teams show abbreviations; QQQ, theScore and the NFL have none.
+- RedStone's key (D-310) is the owner's; the public gateways serve until 29 Oct.
+
+**Operational notes for later stages:**
+- `bash brand/scripts/render.sh` regenerates every brand asset: fonts fetched by script into `brand/.fonts`, the
+  scripts on Python 3.12 through uv, rasters, `codegen --rehash`, the landing's WebPs and the phone story's layers.
+  The scripts' colours follow `palette.ts` and `MATERIAL`: change the tokens first.
+- Web marks scope their SVG ids per render (`useId`): never rely on a fixed id inside a web mark.
+- Deploys: `coolify app update <uuid> --docker-tag sha-…` then `coolify deploy uuid <uuid>`; the api's custom Traefik
+  labels survive a tag change (checked each time).
+- OTA: `eas update --channel production --environment production --platform all` from `apps/mobile` (eas-cli
+  24.12, through npx).
