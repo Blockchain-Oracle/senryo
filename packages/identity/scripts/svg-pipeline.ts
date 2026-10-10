@@ -126,7 +126,30 @@ const NUMERIC_VALUES = /\bvalues=\{([\d.eE+-]+)\}/g;
 
 export async function svgComponent(svg: string, component: string, platform: Platform): Promise<string> {
   const code = await transform(svg, { ...SVGR, native: platform === "native" }, { componentName: component });
-  return code.replace(NUMERIC_VALUES, 'values="$1"');
+  const typed = code.replace(NUMERIC_VALUES, 'values="$1"');
+  return platform === "web" ? scopeIds(typed) : typed;
+}
+
+const ID_ATTR = / id="([^"]+)"/g;
+const URL_REF = /="url\(#([^)]+)\)"/g;
+const HREF_REF = / (href|xlinkHref)="#([^"]+)"/g;
+const ARROW_BODY = /=> (<svg[\s\S]*<\/svg>);/;
+
+/**
+ * The web only (react-native-svg resolves ids inside each `<Svg>`): the prefix keeps two different marks apart, but
+ * two copies of one mark on a page still shared ids, and a reference resolves to the first copy — when that copy is
+ * hidden (the desktop rail's seal at phone width) its gradients paint nothing. Each render suffixes its ids and
+ * references with `useId`.
+ */
+function scopeIds(code: string): string {
+  if (!code.match(ID_ATTR)) return code;
+  if (!ARROW_BODY.test(code)) throw new Error("scopeIds: unexpected SVGR output shape");
+  return code
+    .replace(ID_ATTR, " id={`$1${u}`}")
+    .replace(URL_REF, "={`url(#$1${u})`}")
+    .replace(HREF_REF, " $1={`#$2${u}`}")
+    .replace('import type { SVGProps } from "react";', 'import { type SVGProps, useId } from "react";')
+    .replace(ARROW_BODY, '=> {\n  const u = useId().replace(/[^\\w-]/g, "");\n  return $1;\n};');
 }
 
 /**
