@@ -97,6 +97,21 @@ library BandMath {
         return false;
     }
 
+    /// @notice A band as its 40-bit menu word (`SeriesBook.bands`).
+    function pack(BandDef memory d) internal pure returns (uint40) {
+        return uint40((uint256(d.kind) << BAND_KIND_SHIFT) | (uint256(d.lowBps) << BAND_LOW_SHIFT) | uint256(d.highBps));
+    }
+
+    function unpack(uint40 word) internal pure returns (BandDef memory d) {
+        uint256 w = word;
+        // forge-lint: disable-next-line(unsafe-typecast)
+        d.kind = uint8((w >> BAND_KIND_SHIFT) & BAND_KIND_MASK);
+        // forge-lint: disable-next-line(unsafe-typecast)
+        d.lowBps = uint16((w >> BAND_LOW_SHIFT) & BAND_FIELD_MASK);
+        // forge-lint: disable-next-line(unsafe-typecast)
+        d.highBps = uint16(w & BAND_FIELD_MASK);
+    }
+
     /// @notice `K × bps / 10,000`, floored.
     function offsetE8(int64 k, uint16 bps) internal pure returns (int256) {
         return int256(k) * int256(uint256(bps)) / int256(BPS);

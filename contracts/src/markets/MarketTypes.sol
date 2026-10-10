@@ -59,6 +59,13 @@ uint256 constant MIN_SECONDS_LEFT = 5;
 uint8 constant MAX_BANDS = 8;
 uint256 constant MAX_BATCH = 32;
 
+/// @dev A menu packs each band into 40 bits — kind · lowBps · highBps — six to a slot, so a series' whole book sits in
+///      one MIP-8 storage page and a five-band listing writes two slots (D-309).
+uint256 constant BAND_KIND_SHIFT = 32;
+uint256 constant BAND_LOW_SHIFT = 16;
+uint256 constant BAND_FIELD_MASK = 0xffff;
+uint256 constant BAND_KIND_MASK = 0xff;
+
 uint8 constant BAND_UP = 1; // (K, ∞); refund at exactly K
 uint8 constant BAND_DOWN = 2; // (0, K); refund at exactly K
 uint8 constant BAND_RANGE = 3; // [K − a, K + b], inclusive
@@ -167,6 +174,25 @@ struct BandDef {
     uint8 kind;
     uint16 lowBps;
     uint16 highBps;
+}
+
+/// @dev How one series is priced (D-300): its σ, the bounds a σ may take, and its half-spread at p = ½ (`h50`).
+struct SeriesTerms {
+    uint64 sigmaE8;
+    uint64 sigmaFloorE8;
+    uint64 sigmaCapE8;
+    uint32 h50E6;
+}
+
+/// @dev A series' listing in the reserve, laid out for MIP-8: the terms and the band count share slot 0, the packed
+///      menu (`BandMath.pack`) takes the next two. `bandCount == 0` means not listed.
+struct SeriesBook {
+    uint64 sigmaE8;
+    uint64 sigmaFloorE8;
+    uint64 sigmaCapE8;
+    uint32 h50E6;
+    uint8 bandCount;
+    uint40[MAX_BANDS] bands;
 }
 
 /// @dev Pool pricing and risk terms (D-262, D-264); every change bumps `configVersion`.

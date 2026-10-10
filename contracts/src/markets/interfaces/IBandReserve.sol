@@ -39,6 +39,9 @@ interface IBandReserve {
     event ParamsSet(uint32 configVersion, Params params);
     event SigmaSet(bytes32 indexed seriesId, uint64 sigmaE8, uint32 configVersion);
     event BandAdded(bytes32 indexed seriesId, uint8 index, uint8 kind, uint16 lowBps, uint16 highBps);
+    event SeriesListed(
+        bytes32 indexed seriesId, uint64 sigmaE8, uint64 sigmaFloorE8, uint64 sigmaCapE8, uint32 h50E6, uint8 bands
+    );
     event PausedSet(bool paused);
 
     error IsPaused();
@@ -47,6 +50,8 @@ interface IBandReserve {
     error WrongConfig(uint32 current, uint32 signed);
     error BadStake(uint64 amount, uint64 min, uint64 max);
     error UnknownSeries(bytes32 seriesId);
+    error SeriesAlreadyListed(bytes32 seriesId);
+    error SeriesNotListed(bytes32 seriesId);
     error UnknownBand(bytes32 seriesId, uint8 band);
     error NoVolatility(bytes32 seriesId);
     error WindowNotTrading(bytes32 windowId);

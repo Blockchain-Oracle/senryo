@@ -30,9 +30,10 @@ contract ParlayTest is MarketsBase {
         v0.validUntil = OPEN_ENDED;
         v0.primary = PrintSource(address(verifier), ETH_FEED);
         ethSeries = windows.registerSeries(ETH, ETH_CADENCE, 0, v0);
-        reserve.setSigma(ethSeries, SIGMA);
-        reserve.addBand(ethSeries, BandDef(BAND_UP, 0, 0));
-        reserve.addBand(ethSeries, BandDef(BAND_DOWN, 0, 0));
+        BandDef[] memory menu = new BandDef[](2);
+        menu[0] = BandDef(BAND_UP, 0, 0);
+        menu[1] = BandDef(BAND_DOWN, 0, 0);
+        list(ethSeries, menu);
         ethWindow = windows.openWindow(ethSeries, T0);
         recordEth(T0, KE);
     }

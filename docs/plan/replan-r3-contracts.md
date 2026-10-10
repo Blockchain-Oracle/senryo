@@ -26,8 +26,21 @@ Tested to the money invariants. Not deployed until R4.
 ## Steps
 
 ### Measure first
-- [ ] R3.1 `listSeries` prototype on a fork of 10143: `eth_estimateGas` for a five-band listing. Above ~700k, switch
+- [x] R3.1 `listSeries` prototype on a fork of 10143: `eth_estimateGas` for a five-band listing. Above ~700k, switch
   rides to route B (a separate `LinearReserve`) and record why.
+  - **Built in its final storage shape:** one `SeriesBook` per series — terms (σ, σ floor and cap, h50) and the band
+    count in slot 0, the menu packed 40 bits a band (`BandMath.pack`) in the next two, so a listing writes two slots of
+    one MIP-8 page. `listSeries` lists once; `addBand` appends (D-306); `setSigma` stays inside the series' bounds
+    (R3.4 turns it into the floor and cap only). Off chain nothing read `sigmaOf`/`menuOf` (the apps use the catalogue).
+  - **Measured 10 Oct 21:15 UTC: 162,881 gas** on the live testnet RPC (`eth_estimateGas` from the AccessManager admin
+    `0x52d2…0e6a`, the v3 reserve's runtime code and its four constructor slots supplied as a state override, BTC 5m
+    on the live `Windows` `0x4a97…`, five bands); 160,440 on an anvil fork at block 69,929,601 with `--network monad`.
+    The old route charged ≈ 1.04M per series (`setSigma` 157k + five `addBand` at 176k).
+  - **Route A stands** (rides inside the reserve). At 103 gwei and forge's 1.3× limit multiplier a listing costs
+    ≈ 0.022 MON, so 136 series ≈ 3.0 MON (07 §3.2 guessed 4.9–7.0). Monad bills the limit, so R3.21 sets the script's
+    multiplier lower.
+  - The deploy script still lists through `setSigma` + `addBand`; R3.20/R3.21 move it to `listSeries` with the
+    catalogue's floors, caps and h50s.
 - [ ] R3.2 Calibration fit:
   - fit the fat-tailed probability table (per lane if needed) from archived `pyth_prints`, plus Binance 90-day 1-minute
     bars as the proxy (`scripts/calibrate/`; data in the scratchpad, the table committed);

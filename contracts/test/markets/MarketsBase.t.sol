@@ -27,6 +27,7 @@ abstract contract MarketsBase is Test {
     uint64 internal constant CONF = 1e8; // $1 on $60,000: well inside 25 bps
     /// @dev ≈ 50 % a year per √second (0.5 / √(365 × 86,400)) × 1e8.
     uint64 internal constant SIGMA = 8900;
+    uint32 internal constant H50 = 20_000;
     uint256 internal constant POOL = 100_000e6;
     uint256 internal constant WALLET = 10_000e6;
     uint64 internal constant STAKE = 10e6;
@@ -63,11 +64,12 @@ abstract contract MarketsBase is Test {
         v0.validUntil = OPEN_ENDED;
         v0.primary = PrintSource(address(verifier), BTC_FEED);
         seriesId = windows.registerSeries(BTC, CADENCE, 0, v0);
-        reserve.setSigma(seriesId, SIGMA);
-        reserve.addBand(seriesId, BandDef(BAND_UP, 0, 0));
-        reserve.addBand(seriesId, BandDef(BAND_DOWN, 0, 0));
-        reserve.addBand(seriesId, BandDef(BAND_RANGE, 15, 15));
-        reserve.addBand(seriesId, BandDef(BAND_MOONSHOT, 30, 0));
+        BandDef[] memory menu = new BandDef[](4);
+        menu[0] = BandDef(BAND_UP, 0, 0);
+        menu[1] = BandDef(BAND_DOWN, 0, 0);
+        menu[2] = BandDef(BAND_RANGE, 15, 15);
+        menu[3] = BandDef(BAND_MOONSHOT, 30, 0);
+        list(seriesId, menu);
 
         usd.mint(address(this), POOL);
         usd.approve(address(reserve), POOL);
@@ -95,6 +97,11 @@ abstract contract MarketsBase is Test {
             minStake: 1e6,
             maxStake: 1000e6
         });
+    }
+
+    /// @dev Lists a series at `SIGMA`, with room to reprice it either way, and a 2-point half-spread at p = ½.
+    function list(bytes32 series, BandDef[] memory menu) internal {
+        reserve.listSeries(series, SeriesTerms(SIGMA, SIGMA / 2, SIGMA * 2, H50), menu);
     }
 
     function caps() internal pure returns (BandReserve.Caps memory) {

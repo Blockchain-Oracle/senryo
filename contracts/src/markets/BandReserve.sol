@@ -67,13 +67,15 @@ contract BandReserve is ParlayBook {
         windowSettled[windowId] = true;
 
         uint16 used = bandsUsed[windowId];
-        BandDef[] storage menu = _menu[w.seriesId];
+        SeriesBook storage book = _books[w.seriesId];
         uint16[OUTCOME_COUNT] memory masks; // indexed by outcome: lost, won, refunded
         uint256 toPool;
         uint256 toHolders;
         for (uint8 b; b < MAX_BANDS; ++b) {
             if (used & (uint16(1) << b) == 0) continue;
-            uint8 outcome = w.state == STATE_VOIDED ? OUTCOME_REFUND : BandMath.outcome(menu[b], w.openE8, w.closeE8);
+            uint8 outcome = w.state == STATE_VOIDED
+                ? OUTCOME_REFUND
+                : BandMath.outcome(BandMath.unpack(book.bands[b]), w.openE8, w.closeE8);
             bandOutcome[windowId][b] = outcome;
             masks[outcome] |= uint16(1) << b;
             BandTotals memory tot = bandTotals[windowId][b];
@@ -136,8 +138,18 @@ contract BandReserve is ParlayBook {
         return _tickets.length;
     }
 
-    function menuOf(bytes32 seriesId) external view returns (BandDef[] memory) {
-        return _menu[seriesId];
+    function menuOf(bytes32 seriesId) external view returns (BandDef[] memory menu) {
+        SeriesBook storage book = _books[seriesId];
+        menu = new BandDef[](book.bandCount);
+        for (uint8 i; i < menu.length; ++i) {
+            menu[i] = BandMath.unpack(book.bands[i]);
+        }
+    }
+
+    /// @notice A series' pricing terms (all zero until it is listed).
+    function termsOf(bytes32 seriesId) external view returns (SeriesTerms memory) {
+        SeriesBook storage book = _books[seriesId];
+        return SeriesTerms(book.sigmaE8, book.sigmaFloorE8, book.sigmaCapE8, book.h50E6);
     }
 
     /// @notice What `stake` on `band` would buy if the fill print were `spotE8` at `at` (no surcharge-free promise:
@@ -149,11 +161,12 @@ contract BandReserve is ParlayBook {
     {
         Window memory w = windows.windowOf(windowId);
         if (w.expiry == 0 || at >= w.expiry) revert WindowNotTrading(windowId);
-        if (band >= _menu[w.seriesId].length) revert UnknownBand(w.seriesId, band);
+        SeriesBook storage book = _books[w.seriesId];
+        if (band >= book.bandCount) revert UnknownBand(w.seriesId, band);
         int64 k = windows.openPrintOf(windowId).priceE8;
         if (k <= 0) revert NoOpenPrint(windowId);
         Params storage p = params;
-        probE6 = BandMath.probE6(_menu[w.seriesId][band], k, spotE8, sigmaOf[w.seriesId], w.expiry - at);
+        probE6 = BandMath.probE6(BandMath.unpack(book.bands[band]), k, spotE8, book.sigmaE8, w.expiry - at);
         priceE6 = probE6 + p.halfSpreadE6 + uint256(p.maxSurchargeE6) * reservedByExpiry[w.expiry] / p.maxExpiryReserved;
         payout = priceE6 < P_ONE ? BandMath.payoutFor(stake, priceE6) : 0;
     }

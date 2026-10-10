@@ -109,8 +109,7 @@ abstract contract ParlayBook is BandBook {
             }
             markets[i] = s.market;
             if (windows.openPrintOf(windowIds[i]).publishTime == 0) revert NoOpenPrint(windowIds[i]);
-            if (bands[i] >= _menu[w.seriesId].length) revert UnknownBand(w.seriesId, bands[i]);
-            if (sigmaOf[w.seriesId] == 0) revert NoVolatility(w.seriesId);
+            if (bands[i] >= _books[w.seriesId].bandCount) revert UnknownBand(w.seriesId, bands[i]);
             legs.push(ParlayLeg(windowIds[i], w.expiry, bands[i], s.calendarId, LEG_PENDING, 0));
         }
     }
@@ -175,7 +174,7 @@ abstract contract ParlayBook is BandBook {
             Window memory w = windows.windowOf(leg.windowId);
             int64 k = windows.openPrintOf(leg.windowId).priceE8;
             uint256 prob = BandMath.probE6(
-                _menu[w.seriesId][leg.band], k, print.priceE8, sigmaOf[w.seriesId], w.expiry - pl.target
+                _bandOf(w.seriesId, leg.band), k, print.priceE8, _books[w.seriesId].sigmaE8, w.expiry - pl.target
             );
             if (prob >= p.minProbE6 && prob <= p.maxProbE6) probs[i] = prob;
         }
@@ -308,7 +307,7 @@ abstract contract ParlayBook is BandBook {
         Window memory w = windows.windowOf(leg.windowId);
         if (w.state == STATE_OPEN) return LEG_PENDING;
         if (w.state == STATE_VOIDED) return LEG_VOID;
-        uint8 o = BandMath.outcome(_menu[w.seriesId][leg.band], w.openE8, w.closeE8);
+        uint8 o = BandMath.outcome(_bandOf(w.seriesId, leg.band), w.openE8, w.closeE8);
         return o == OUTCOME_WIN ? LEG_WON : o == OUTCOME_LOSE ? LEG_LOST : LEG_TIED;
     }
 

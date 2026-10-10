@@ -23,9 +23,8 @@ abstract contract BandBook is BandPool, ExitOrders {
 
     IWindows public immutable windows;
 
-    /// @dev Per-√second volatility × 1e8 per series (versioned through `configVersion`, bounded).
-    mapping(bytes32 seriesId => uint64) public sigmaOf;
-    mapping(bytes32 seriesId => BandDef[]) internal _menu;
+    /// @dev Each series' terms and fixed band menu (σ is per-√second volatility × 1e8, bounded).
+    mapping(bytes32 seriesId => SeriesBook) internal _books;
     Ticket[] internal _tickets;
     mapping(bytes32 windowId => mapping(uint8 band => BandTotals)) public bandTotals;
     mapping(bytes32 windowId => uint16) public bandsUsed;
@@ -38,21 +37,49 @@ abstract contract BandBook is BandPool, ExitOrders {
 
     // ------------------------------------------------------------------------------------------------ menu (PARAMS)
 
-    /// @notice Appends a band to a series' fixed menu (D-263). Entries never change: tickets name them by index.
-    function addBand(bytes32 seriesId, BandDef calldata d) external restricted {
+    /// @notice Lists a registered series in one call (D-309): its pricing terms and its band menu, in order. Once.
+    function listSeries(bytes32 seriesId, SeriesTerms calldata terms, BandDef[] calldata menu) external restricted {
         _requireSeries(seriesId);
-        BandDef[] storage menu = _menu[seriesId];
-        if (menu.length >= MAX_BANDS || !BandMath.isValid(d)) revert BadParams();
-        menu.push(d);
-        emit BandAdded(seriesId, uint8(menu.length - 1), d.kind, d.lowBps, d.highBps);
+        SeriesBook storage book = _books[seriesId];
+        if (book.bandCount != 0) revert SeriesAlreadyListed(seriesId);
+        if (menu.length == 0 || menu.length > MAX_BANDS || !_validTerms(terms)) revert BadParams();
+        uint40[MAX_BANDS] memory packed;
+        for (uint256 i; i < menu.length; ++i) {
+            BandDef calldata d = menu[i];
+            if (!BandMath.isValid(d)) revert BadParams();
+            packed[i] = BandMath.pack(d);
+            // forge-lint: disable-next-line(unsafe-typecast)
+            emit BandAdded(seriesId, uint8(i), d.kind, d.lowBps, d.highBps);
+        }
+        // forge-lint: disable-next-line(unsafe-typecast)
+        uint8 count = uint8(menu.length);
+        _books[seriesId] = SeriesBook(terms.sigmaE8, terms.sigmaFloorE8, terms.sigmaCapE8, terms.h50E6, count, packed);
+        emit SeriesListed(seriesId, terms.sigmaE8, terms.sigmaFloorE8, terms.sigmaCapE8, terms.h50E6, count);
+    }
+
+    /// @notice Appends a band to a listed series' menu (D-306: mainnet adds Range, Moonshot and Crash once they are
+    ///         calibrated). Entries never change or leave: tickets name them by index.
+    function addBand(bytes32 seriesId, BandDef calldata d) external restricted {
+        SeriesBook storage book = _listed(seriesId);
+        uint8 index = book.bandCount;
+        if (index >= MAX_BANDS || !BandMath.isValid(d)) revert BadParams();
+        book.bands[index] = BandMath.pack(d);
+        book.bandCount = index + 1;
+        emit BandAdded(seriesId, index, d.kind, d.lowBps, d.highBps);
     }
 
     function setSigma(bytes32 seriesId, uint64 sigmaE8) external restricted {
-        _requireSeries(seriesId);
-        if (sigmaE8 == 0 || sigmaE8 > MAX_SIGMA_E8) revert BadParams();
-        sigmaOf[seriesId] = sigmaE8;
+        SeriesBook storage book = _listed(seriesId);
+        if (sigmaE8 < book.sigmaFloorE8 || sigmaE8 > book.sigmaCapE8) revert BadParams();
+        book.sigmaE8 = sigmaE8;
         configVersion += 1;
         emit SigmaSet(seriesId, sigmaE8, configVersion);
+    }
+
+    /// @dev 0 < floor ≤ σ ≤ cap ≤ the chain's bound; a half-spread inside the chain's bound.
+    function _validTerms(SeriesTerms calldata t) private pure returns (bool) {
+        if (t.sigmaFloorE8 == 0 || t.sigmaE8 < t.sigmaFloorE8 || t.sigmaCapE8 < t.sigmaE8) return false;
+        return t.sigmaCapE8 <= MAX_SIGMA_E8 && t.h50E6 != 0 && t.h50E6 <= MAX_HALF_SPREAD_E6;
     }
 
     // ------------------------------------------------------------------------------------------------ commit
@@ -79,8 +106,7 @@ abstract contract BandBook is BandPool, ExitOrders {
         if (it.recipient == address(0)) revert ZeroAddress();
         Window memory w = _tradingWindow(it.windowId);
         if (windows.openPrintOf(it.windowId).publishTime == 0) revert NoOpenPrint(it.windowId);
-        if (it.band >= _menu[w.seriesId].length) revert UnknownBand(w.seriesId, it.band);
-        if (sigmaOf[w.seriesId] == 0) revert NoVolatility(w.seriesId);
+        if (it.band >= _books[w.seriesId].bandCount) revert UnknownBand(w.seriesId, it.band);
         bool viaSession = _authorize(it, sig);
         if (permit.deadline != 0) {
             // A front-run permit only spends the same signature; the pull below is what must succeed.
@@ -331,7 +357,8 @@ abstract contract BandBook is BandPool, ExitOrders {
 
     function _probAt(Window memory w, Ticket storage t, int64 spotE8) private view returns (uint256) {
         int64 k = windows.openPrintOf(t.windowId).priceE8;
-        return BandMath.probE6(_menu[w.seriesId][t.band], k, spotE8, sigmaOf[w.seriesId], w.expiry - t.target);
+        SeriesBook storage book = _books[w.seriesId];
+        return BandMath.probE6(BandMath.unpack(book.bands[t.band]), k, spotE8, book.sigmaE8, w.expiry - t.target);
     }
 
     function _refuseOpen(uint256 id, Ticket storage t, uint8 reason) internal {
@@ -359,5 +386,15 @@ abstract contract BandBook is BandPool, ExitOrders {
 
     function _requireSeries(bytes32 seriesId) internal view {
         if (windows.seriesOf(seriesId).cadenceSec == 0) revert UnknownSeries(seriesId);
+    }
+
+    function _listed(bytes32 seriesId) internal view returns (SeriesBook storage book) {
+        book = _books[seriesId];
+        if (book.bandCount == 0) revert SeriesNotListed(seriesId);
+    }
+
+    /// @dev Band `index` of a series' menu (the caller has checked `index < bandCount`).
+    function _bandOf(bytes32 seriesId, uint8 index) internal view returns (BandDef memory) {
+        return BandMath.unpack(_books[seriesId].bands[index]);
     }
 }

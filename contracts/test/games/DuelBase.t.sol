@@ -55,10 +55,11 @@ abstract contract DuelBase is MarketsBase {
         v0.validUntil = OPEN_ENDED;
         v0.primary = PrintSource(address(verifier), feed);
         bytes32 series = windows.registerSeries(market, CADENCE, 0, v0);
-        reserve.setSigma(series, SIGMA);
-        reserve.addBand(series, BandDef(BAND_UP, 0, 0));
-        reserve.addBand(series, BandDef(BAND_DOWN, 0, 0));
-        reserve.addBand(series, BandDef(BAND_MOONSHOT, 30, 0));
+        BandDef[] memory menu = new BandDef[](3);
+        menu[0] = BandDef(BAND_UP, 0, 0);
+        menu[1] = BandDef(BAND_DOWN, 0, 0);
+        menu[2] = BandDef(BAND_MOONSHOT, 30, 0);
+        list(series, menu);
         w = windows.openWindow(series, T0);
         recordOn(feed, T0, k);
     }
