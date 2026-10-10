@@ -250,7 +250,8 @@ export class LiveStream {
     const ticket = wanted.some((t) => t.startsWith(USER_PREFIX)) ? await this.ticketNow() : undefined;
     if (abort.signal.aborted) return;
     const topics = ticket ? wanted : wanted.filter((t) => !t.startsWith(USER_PREFIX));
-    const params = new URLSearchParams({ topics: topics.join(",") });
+    // `pp=1`: price ticks as one batched frame per flush (04-pricing R13); an older api ignores it and sends `p`.
+    const params = new URLSearchParams({ topics: topics.join(","), pp: "1" });
     if (ticket) params.set("ticket", ticket);
     const headers: Record<string, string> = { accept: "text/event-stream" };
     if (this.lastEventId) headers["last-event-id"] = this.lastEventId;

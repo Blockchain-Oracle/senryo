@@ -55,7 +55,13 @@ export const statusResponseSchema = z.object({
   priceDiagnostics: z.record(z.string(), z.unknown()),
   aurora: component,
   /** Unhandled rejections the api survived (04-pricing R1): any non-zero count is a bug to find in the log. */
-  process: z.object({ unhandledRejections: z.int().nonnegative(), lastRejectionAt: isoTimeSchema.nullable() }),
+  process: z.object({
+    unhandledRejections: z.int().nonnegative(),
+    lastRejectionAt: isoTimeSchema.nullable(),
+    /** The event loop's delay over the last full minute (D-272: p99 ≤ 20 ms); null in the first minute. */
+    loopDelayP99Ms: z.number().nonnegative().nullable(),
+    loopDelayMaxMs: z.number().nonnegative().nullable(),
+  }),
 });
 
 export const configRoute = defineRoute({

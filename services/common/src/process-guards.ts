@@ -1,3 +1,4 @@
+import { monitorEventLoopDelay } from "node:perf_hooks";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -10,6 +11,9 @@ export interface ProcessFaults {
   unhandledRejections: number;
   /** ISO time of the newest unhandled rejection, or null when there has been none. */
   lastRejectionAt: string | null;
+  /** The event loop's delay over the last full minute (D-272: p99 ≤ 20 ms); null in the first minute. */
+  loopDelayP99Ms: number | null;
+  loopDelayMaxMs: number | null;
 }
 
 export interface ProcessGuards {
@@ -17,6 +21,10 @@ export interface ProcessGuards {
 }
 
 const EXIT_FAILURE = 1;
+const LOOP_RESOLUTION_MS = 10;
+const LOOP_WINDOW_MS = 60_000;
+const NS_PER_MS = 1e6;
+const P99 = 99;
 
 function messageOf(reason: unknown): string {
   return reason instanceof Error ? reason.message : String(reason);
@@ -24,7 +32,19 @@ function messageOf(reason: unknown): string {
 
 /** Install once, as early as possible in a service's `main.ts`. */
 export function installProcessGuards(log: Logger): ProcessGuards {
-  const state: ProcessFaults = { unhandledRejections: 0, lastRejectionAt: null };
+  const state: ProcessFaults = {
+    unhandledRejections: 0,
+    lastRejectionAt: null,
+    loopDelayP99Ms: null,
+    loopDelayMaxMs: null,
+  };
+  const loop = monitorEventLoopDelay({ resolution: LOOP_RESOLUTION_MS });
+  loop.enable();
+  setInterval(() => {
+    state.loopDelayP99Ms = Math.round((loop.percentile(P99) / NS_PER_MS) * 10) / 10;
+    state.loopDelayMaxMs = Math.round((loop.max / NS_PER_MS) * 10) / 10;
+    loop.reset();
+  }, LOOP_WINDOW_MS).unref();
 
   process.on("unhandledRejection", (reason) => {
     state.unhandledRejections += 1;

@@ -1,7 +1,14 @@
 import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, nowSec } from "@senryo/service-common";
 import type { StreamBus } from "./bus.ts";
-import { HEARTBEAT_MS, MAX_TOPICS, RETRY_MS, SLOW_SOCKET_CLOSE_MS } from "./constants.ts";
+import {
+  HEARTBEAT_MS,
+  MAX_STREAMS_PER_IP,
+  MAX_TOPICS,
+  RETRY_MS,
+  SLOW_SOCKET_CLOSE_MS,
+  SOCKET_BACKLOG_MAX_BYTES,
+} from "./constants.ts";
 import { verifyStreamTicket } from "./ticket.ts";
 
 /**
@@ -24,7 +31,7 @@ export interface StreamDeps {
   ticketSecret: string | undefined;
   corsOrigins: readonly string[];
   /** Frames sent right after connecting, per topic (the price states and the latest price per feed). */
-  snapshot: (topic: string) => string[];
+  snapshot: (topic: string, batched: boolean) => string[];
   /** Fields every `time` beat carries besides the server time (`h`: the price states' digest). */
   beatData: () => Record<string, unknown>;
 }
@@ -67,8 +74,12 @@ export function grantTopics(
 }
 
 export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
+  const perIp = new Map<string, number>();
   app.get("/v1/stream", (request, reply) => {
-    const q = request.query as { topics?: string; ticket?: string; lastEventId?: string };
+    const q = request.query as { topics?: string; ticket?: string; lastEventId?: string; pp?: string };
+    if ((perIp.get(request.ip) ?? 0) >= MAX_STREAMS_PER_IP) {
+      return reply.code(HTTP_STATUS.tooMany).send({ error: { code: "RATE_LIMITED", message: "too many streams" } });
+    }
     const grant = grantTopics(q.topics, q.ticket, deps.ticketSecret, nowSec());
     const origin = request.headers.origin;
     const cors: Record<string, string> =
@@ -81,6 +92,9 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
         .send({ error: { code: "BAD_REQUEST", message: grant.error } });
     }
     const wanted = new Set(grant.topics);
+    // An app that asked for `pp` gets each flush's ticks as one frame; an older one its per-feed `p` frames.
+    const batched = q.pp === "1";
+    perIp.set(request.ip, (perIp.get(request.ip) ?? 0) + 1);
     reply.hijack();
     const res = reply.raw;
     res.writeHead(HTTP_STATUS.ok, {
@@ -97,6 +111,8 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
     const write = (text: string, droppable: boolean) => {
       if (blockedSince && droppable) return;
       if (!res.write(text) && !blockedSince) blockedSince = Date.now();
+      // Durable frames queue while blocked; past the cap the socket goes (it reconnects and replays or resets).
+      if (res.writableLength > SOCKET_BACKLOG_MAX_BYTES) res.destroy();
     };
     res.on("drain", () => {
       blockedSince = 0;
@@ -108,10 +124,10 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
       if (replay === null) write(`event: reset\ndata: ${JSON.stringify({ epoch: deps.bus.epoch })}\n\n`, false);
       for (const f of replay ?? []) write(f.text, false);
     }
-    for (const topic of grant.topics) for (const text of deps.snapshot(topic)) write(text, true);
+    for (const topic of grant.topics) for (const text of deps.snapshot(topic, batched)) write(text, true);
 
     const unsubscribe = deps.bus.subscribe((f) => {
-      if (wanted.has(f.topic)) write(f.text, f.seq === 0);
+      if (wanted.has(f.topic)) write(batched || !f.legacy ? f.text : f.legacy, f.seq === 0);
     });
     const beat = setInterval(() => {
       if (blockedSince && Date.now() - blockedSince > SLOW_SOCKET_CLOSE_MS) {
@@ -124,6 +140,9 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
     request.raw.on("close", () => {
       clearInterval(beat);
       unsubscribe();
+      const open = (perIp.get(request.ip) ?? 1) - 1;
+      if (open > 0) perIp.set(request.ip, open);
+      else perIp.delete(request.ip);
     });
   });
 }

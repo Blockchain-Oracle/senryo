@@ -2,9 +2,9 @@ import { type Hex, seriesIdOf } from "@senryo/chain";
 import { basketMembers, type FeedState, feedIdOf, MARKETS, type MarketSpec, pauseOf } from "@senryo/config";
 import { basketPointsE8 } from "@senryo/core";
 import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-common";
-import type { StreamBus } from "../stream/bus.ts";
+import { batchFrame, legacyFrames, type StreamBus, type Tick } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
-import { FRAME_GAP_MS, PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS } from "./constants.ts";
+import { PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS, TICK_FLUSH_MS } from "./constants.ts";
 import { FeedStates } from "./feed-state.ts";
 import { HERMES_CLASSES, type HermesClass, type HermesStatus, HermesStream, hermesClassOf } from "./hermes.ts";
 import { PrintFetcher, type PrintFetchStats, type PrintSourceKind } from "./print-fetcher.ts";
@@ -16,7 +16,7 @@ import { type SilenceStats, SilenceWatch } from "./silence-watch.ts";
 /**
  * The one Pyth gateway (D-272): the only holder of the Pyth key. One Hermes stream per entitlement class (crypto,
  * tradfi; 04-pricing R5), watched per feed for silence, fans out
- * as compact ticks on `/v1/stream` (one coalescer per feed for the whole process), folds 1-minute candles, archives
+ * as compact ticks on `/v1/stream` (every feed that moved, batched into one frame each 100 ms), folds 1-minute candles, archives
  * every minute boundary with its proof the moment it streams (`prints` topic + `pyth_prints`), and answers the relay's
  * "the unique print of t" from the ring, the stream, the archive, then upstream REST through the `PrintFetcher` (its
  * own rate and backoff, 04-pricing R2) — in that order. A basket (D-286)
@@ -60,8 +60,9 @@ export class PythGateway {
   private readonly archive: PriceArchive;
   private readonly watch: PrintWatch;
   private readonly states: FeedStates;
-  private readonly lastFrameAt = new Map<Hex, number>();
-  private readonly pendingFrame = new Map<Hex, ReturnType<typeof setTimeout>>();
+  /** Catalogue indexes that moved since the last flush. */
+  private readonly moved = new Set<number>();
+  private flushTimer: ReturnType<typeof setInterval> | undefined;
   private readonly streams = new Map<HermesClass, HermesStream>();
   private silence: SilenceWatch | undefined;
   private redstone: RedStoneReader | undefined;
@@ -142,6 +143,7 @@ export class PythGateway {
     this.redstone.start();
     this.archive.start();
     this.states.start();
+    this.flushTimer = setInterval(() => this.flushTicks(), TICK_FLUSH_MS);
     const access = pythKey ? { origin: hermesOrigin, key: pythKey } : undefined;
     const fetcher = new PrintFetcher(access, this.redstone, this.log);
     this.fetcher = fetcher;
@@ -180,6 +182,7 @@ export class PythGateway {
 
   /** Stops the streams and timers, then writes the open candles. */
   async stop(): Promise<void> {
+    clearInterval(this.flushTimer);
     this.states.stop();
     this.watch.stop();
     this.silence?.stop();
@@ -283,7 +286,7 @@ export class PythGateway {
       if (!value) continue;
       basket.ring.push(value);
       this.archive.foldCandle(value);
-      this.coalesce(basket, value);
+      this.moved.add(basket.index);
     }
   }
 
@@ -313,14 +316,15 @@ export class PythGateway {
     return u ? { priceE8: toE8(u.price, u.expo), publishTime: u.publishTime } : undefined;
   }
 
-  /** The states, then the latest tick per feed, as frames for a new subscriber. */
-  snapshot(): string[] {
-    const frames = [`event: h\ndata: ${JSON.stringify({ topic: "prices", data: { s: this.healthDigest() } })}\n\n`];
-    for (const f of this.feeds) {
+  /** The states, then the latest tick per feed (one `pp` batch, or `p` frames for an app before R1.13). */
+  snapshot(batched: boolean): string[] {
+    const ticks = this.feeds.flatMap((f) => {
       const u = f.ring.latest();
-      if (u) frames.push(`event: p\ndata: ${JSON.stringify({ topic: "prices", data: tickOf(f.index, u) })}\n\n`);
-    }
-    return frames;
+      return u ? [tickOf(f.index, u)] : [];
+    });
+    const states = `event: h\ndata: ${JSON.stringify({ topic: "prices", data: { s: this.healthDigest() } })}\n\n`;
+    if (ticks.length === 0) return [states];
+    return [states, batched ? batchFrame(PRICES_TOPIC, ticks) : legacyFrames(PRICES_TOPIC, ticks)];
   }
 
   private onUpdate(u: PriceUpdate): void {
@@ -340,28 +344,28 @@ export class PythGateway {
         publishTime: u.publishTime,
       });
     }
-    this.coalesce(feed, u);
+    this.moved.add(feed.index);
     this.onMemberTick(feed);
   }
 
-  /** Owarine's coalescer, once per feed for the process: the first tick after a quiet gap goes at once, the newest
-   *  value inside a gap is sent when it ends. */
-  private coalesce(feed: GatewayFeed, u: PriceUpdate): void {
-    const id = feedIdOf(feed.market);
-    if (this.pendingFrame.has(id)) return;
-    const wait = (this.lastFrameAt.get(id) ?? 0) + FRAME_GAP_MS - Date.now();
-    const send = () => {
-      this.pendingFrame.delete(id);
-      this.lastFrameAt.set(id, Date.now());
-      const latest = feed.ring.latest() ?? u;
-      this.bus.tick("prices", "p", tickOf(feed.index, latest));
-    };
-    if (wait <= 0) send();
-    else this.pendingFrame.set(id, setTimeout(send, wait));
+  /**
+   * Every feed that moved since the last flush, newest value each, in one frame (04-pricing R13): one write per socket
+   * per 100 ms however many feeds tick, at most 10 Hz per feed.
+   */
+  private flushTicks(): void {
+    if (this.moved.size === 0) return;
+    const ticks = [...this.moved].flatMap((i) => {
+      const u = this.feeds[i]?.ring.latest();
+      return u ? [tickOf(i, u)] : [];
+    });
+    this.moved.clear();
+    this.bus.ticks(PRICES_TOPIC, ticks);
   }
 }
 
+const PRICES_TOPIC = "prices";
+
 /** Compact tick `[catalogue index, priceE8, publish ms]` (D-272: ≤ 1 KB/s per client). */
-function tickOf(index: number, u: PriceUpdate): [number, number, number] {
+function tickOf(index: number, u: PriceUpdate): Tick {
   return [index, Number(toE8(u.price, u.expo)), u.publishTime * MS_PER_SECOND];
 }

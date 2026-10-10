@@ -1,4 +1,5 @@
 import { FEED_STATES, type FeedState } from "@senryo/config";
+import type { FanoutStats } from "../stream/bus.ts";
 import type { GatewayStatus } from "./gateway.ts";
 
 /**
@@ -22,7 +23,7 @@ function words(counts: Record<FeedState, number>): string {
 
 const WORST: readonly Health[] = ["down", "degraded", "unknown", "ok"];
 
-export function priceStatus(g: GatewayStatus) {
+export function priceStatus(g: GatewayStatus, stream: FanoutStats) {
   const priceSources = Object.entries(g.states).map(([source, counts]) => ({
     source,
     state: healthOf(counts),
@@ -34,6 +35,6 @@ export function priceStatus(g: GatewayStatus) {
   return {
     prices: { state, detail: g.keyed ? words(total) : "no Pyth key" },
     priceSources,
-    priceDiagnostics: { hermes: g.hermes, silence: g.silence, rest: g.rest, watch: g.watch },
+    priceDiagnostics: { stream, hermes: g.hermes, silence: g.silence, rest: g.rest, watch: g.watch },
   };
 }

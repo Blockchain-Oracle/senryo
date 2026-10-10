@@ -131,6 +131,12 @@ export class Live {
   }
 
   private onEvent(event: string, data: unknown): void {
+    // A flush of ticks (04-pricing R13): `[[catalogue index, priceE8, publish ms], …]`.
+    if (event === "pp" && Array.isArray(data)) {
+      const receivedMs = Date.now();
+      for (const t of data as [number, number, number][]) this.prices.push(t[0], t[1], t[2], receivedMs);
+      return;
+    }
     if (event === "p" && Array.isArray(data)) {
       const [i, priceE8, publishMs] = data as [number, number, number];
       this.prices.push(i, priceE8, publishMs);

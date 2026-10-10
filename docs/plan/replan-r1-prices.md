@@ -180,11 +180,20 @@ live PnL at about 8 Hz. No contract change.
     so nothing slips between them.) Scratch check on the real route and client: prints across a reconnect replayed
     1,2,3,4 with no reset; a restart (new epoch), a gap past the 2,000-event ring, and an old numeric id each reset.
     Exit 0.
-- [ ] R1.13 Fan-out (R13):
+- [x] R1.13 Fan-out (R13):
   - one batched `pp` frame every 100 ms;
   - a per-socket byte cap and a per-IP connection cap;
   - fan-out µs and event-loop p99 on `/status`;
   - Traefik excludes `text/event-stream` from compression (a Coolify setting).
+  - *As built (10 Oct):* the gateway queues the indexes that moved and flushes one `pp` frame (`[[i,p,t],…]`) every
+    100 ms (the per-feed coalescer and its timers are gone). Each flush is serialised once as `pp` and once as legacy
+    `p` frames; a socket gets `pp` only if it asked (`?pp=1`, which `LiveStream` now sends and an older api ignores) —
+    switching everyone would have left un-updated phones with no ticks. A socket with > 1 MiB queued is destroyed;
+    32 streams per client IP. `StreamBus` times every fan-out (`/status` → `priceDiagnostics.stream`) and, past one
+    500-socket slice, delivers in ordered slices that yield between them (measured: a single pass held the loop ~15 ms
+    in `writev` at 5,000 sockets). Process guards report the event loop's p99/max per minute (`/status` `process`).
+    G1 in `acceptance.md`: 1,000 and 5,000 clients pass the loop, fan-out and latency gates; RSS at 5,000 open (tsx).
+    **Traefik's compress exclusion is done at the R1 deploy** (Coolify change, no approval needed per the 1 Oct rule).
 - [ ] R1.14 Reseed and first paint (R15):
   - `/v1/prices/latest` on reconnect;
   - `/recent` pre-fills the open terminal with 5 minutes of real history;

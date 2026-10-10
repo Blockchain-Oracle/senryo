@@ -38,8 +38,8 @@ export const ROTATE_AFTER_MS = (23 * 60 + 45) * 60 * 1000;
 export const BOUNDARY_SEC = 60;
 /** A candle with no next minute is closed this long after its minute ends (late frames still fold in). */
 export const CANDLE_CLOSE_GRACE_SEC = 5;
-/** At most one price frame per feed per this many ms on `/v1/stream` (Owarine's coalescer). */
-export const FRAME_GAP_MS = 125;
+/** Every feed that moved goes out in one batched frame this often (04-pricing R13): ≤ 10 Hz per feed. */
+export const TICK_FLUSH_MS = 100;
 /** How often the print watch looks for instants a position needs that never archived (04-pricing R3). */
 export const PRINT_WATCH_MS = 2_000;
 /** A print still missing past this share of its market's admission is logged as an error: its windows will void. */

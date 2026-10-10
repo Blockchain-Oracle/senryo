@@ -60,7 +60,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     return sendRoute(reply, statusRoute, {
       at: new Date().toISOString(),
       chains,
-      ...priceStatus(ctx.gateway.status()),
+      ...priceStatus(ctx.gateway.status(), ctx.bus.stats()),
       aurora: NOT_WIRED,
       process: ctx.guards.faults(),
     });

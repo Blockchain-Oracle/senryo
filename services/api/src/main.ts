@@ -226,7 +226,7 @@ registerStreamRoute(app, {
   bus,
   ticketSecret: secrets.sessionSecret,
   corsOrigins: env.CORS_ORIGINS,
-  snapshot: (topic) => (topic === "prices" ? gateway.snapshot() : []),
+  snapshot: (topic, batched) => (topic === "prices" ? gateway.snapshot(batched) : []),
   beatData: () => ({ h: gateway.healthDigest() }),
 });
 
