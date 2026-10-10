@@ -15,6 +15,8 @@ export type EntityRole =
   | "route-provider"
   | "exchange"
   | "auth-provider"
+  /** A competition events are about (NHL, MLB, NFL, the Premier League). */
+  | "league"
   | "brand";
 
 /** `token`: an ERC-20 held and traded spot on Monad (J11), whatever it tracks. */

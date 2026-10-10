@@ -222,7 +222,7 @@ const org = (id: string, name: string, role: Entity["role"], art?: string, gap?:
 
 const orgRows = (): Entity[] => [
   org(ids.brand("senryo"), "Senryo", "brand", "senryo-seal"),
-  org(ids.provider("pyth"), "Pyth", "oracle", undefined, "first-party artwork via scripts/catalog.ts (S2)"),
+  org(ids.provider("pyth"), "Pyth", "oracle", "pyth"),
   // The MON market's labelled second source on mainnet (D-258, S9).
   org(ids.provider("chainlink"), "Chainlink", "oracle", "chainlink"),
   org(ids.provider("envio"), "Envio", "indexer", "envio"),
@@ -232,6 +232,10 @@ const orgRows = (): Entity[] => [
   org(ids.exchange("coinbase"), "Coinbase", "exchange", "coinbase"),
   org(ids.exchange("binance"), "Binance", "exchange", "binance"),
   org(ids.exchange("kraken"), "Kraken", "exchange", "kraken"),
+  // The leagues events are about (R2.6; `LEAGUES` in packages/config/src/events.ts).
+  org(ids.league("nhl"), "NHL", "league", "nhl"),
+  org(ids.league("mlb"), "MLB", "league", "mlb"),
+  org(ids.league("epl"), "Premier League", "league", "premier-league"),
 ];
 
 /**

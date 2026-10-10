@@ -883,6 +883,211 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "pyth",
+    "owner": "Pyth Data Association",
+    "provenance": "open-library",
+    "pageUrl": "https://github.com/0xa3k5/web3icons/tree/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens",
+    "licence": "MIT License, \"Copyright (c) 2024 0xa3k5\" (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"Permission is hereby granted, free of charge … to use, copy, modify, merge, publish, distribute\". The licence covers the icon files; the mark itself stays its owner's trademark and is used nominatively, only to identify the asset, network or venue it belongs to.",
+    "retrieved": "2026-10-10",
+    "usage": "Drawn on the library's 24-unit grid (3 units of clear space). The disc is the library's brand-colour background variant clipped to its inscribed circle by codegen; the dark-ink silhouette is the white one recoloured.",
+    "variants": {
+      "disc": {
+        "path": "packages/identity/sources/pyth/web3icons-tokens-background-PYTH.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/background/PYTH.svg",
+        "sha256": "cf699beee6fdb5a524b53f77173892cf0896e6a782891f0fd0962225ec228a03",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "any",
+        "shape": "disc",
+        "crop": "disc"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/pyth/web3icons-tokens-branded-PYTH.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/branded/PYTH.svg",
+        "sha256": "6f41d2e24ed38aefbbd471c6e0180b726b7f7a178c055785c6d78d91041c9006",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "surface": "any",
+        "shape": "free"
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/pyth/web3icons-tokens-mono-PYTH.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/PYTH.svg",
+        "sha256": "e1aa65fb4c3ee3da77665d7e671e7fec28c2a81d42002aaa1c635a38209d0ded",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "dark"
+      },
+      "monoDark": {
+        "path": "packages/identity/sources/pyth/web3icons-tokens-mono-PYTH-dark.svg",
+        "url": "https://raw.githubusercontent.com/0xa3k5/web3icons/ad3cbe05229db54931cd8b2c2a86662288a0ce50/raw-svgs/tokens/mono/PYTH.svg",
+        "sha256": "4b7883baaee1fd408861d5dcbdca41f6acb898dde74ab74eb8818f3c57a5562c",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 125,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/pyth/web3icons-tokens-mono-PYTH.svg",
+          "recolour": {
+            "white": "#000000"
+          },
+          "basis": "MIT License (https://github.com/0xa3k5/web3icons/blob/ad3cbe05229db54931cd8b2c2a86662288a0ce50/LICENCE): \"the rights to use, copy, modify, merge, publish, distribute\" — the library's one-ink silhouette, recoloured to dark ink for light grounds."
+        }
+      }
+    }
+  },
+  {
+    "key": "nhl",
+    "owner": "National Hockey League",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=nhl",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #000000 is the value in the library's data file.",
+    "retrieved": "2026-10-10",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #000000.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/nhl/simple-icons-nhl.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/nhl.svg",
+        "sha256": "270ad47c7cfa6d3f915458a76462806ee90699828f9c553df1fa128636db9999",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/nhl/simple-icons-nhl-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/nhl.svg",
+        "sha256": "c577f50abfa71eddc18c080cd0ffb48d12092e090de11616aa606f5ca2952dfe",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/nhl/simple-icons-nhl.svg",
+          "recolour": {},
+          "rootFill": "#000000",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/nhl/simple-icons-nhl-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/nhl.svg",
+        "sha256": "ffc465c237133d3efd9b5cb31649ce3eaf3ccec3810cfa10502a9df312b45e73",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/nhl/simple-icons-nhl.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "mlb",
+    "owner": "Major League Baseball",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=mlb",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #041E42 is the value in the library's data file.",
+    "retrieved": "2026-10-10",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #041E42.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/mlb/simple-icons-mlb.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/mlb.svg",
+        "sha256": "6791cb013d660aa09ec15a05169759b186ed73a6db89b8d583dcbcfa9aaf20b4",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/mlb/simple-icons-mlb-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/mlb.svg",
+        "sha256": "2aed96bf8860e3b2ef81956339d1485131af08af9abd442b902d57db2dffb0c9",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/mlb/simple-icons-mlb.svg",
+          "recolour": {},
+          "rootFill": "#041E42",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/mlb/simple-icons-mlb-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/mlb.svg",
+        "sha256": "8ab19a42b37d2d41d4a17a02c049565cd5778a30b59b12cb3febb3dd04f5875f",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/mlb/simple-icons-mlb.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
+    "key": "premier-league",
+    "owner": "The Football Association Premier League Limited",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=premierleague",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #360D3A is the value in the library's data file.",
+    "retrieved": "2026-10-10",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #360D3A.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/premier-league/simple-icons-premierleague.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/premierleague.svg",
+        "sha256": "fedd58bbed35aa02ce2ce47896ba370930bcdfffa3a6868bc3d93f9497e99bfb",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/premier-league/simple-icons-premierleague-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/premierleague.svg",
+        "sha256": "8c7e9c2597ea807672c9ffd44ded7eeb2f4cad103c74d8da964a7b2733f7735f",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/premier-league/simple-icons-premierleague.svg",
+          "recolour": {},
+          "rootFill": "#360D3A",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/premier-league/simple-icons-premierleague-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/premierleague.svg",
+        "sha256": "8cf82a10d5a9bbf797b0d66c0294f2b4a660cb4f99721c9279d2e0b76a59648e",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/premier-league/simple-icons-premierleague.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
     "key": "nvidia",
     "owner": "NVIDIA Corporation",
     "provenance": "open-library",

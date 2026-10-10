@@ -141,6 +141,19 @@ const ArtAvalancheDisc = lazy(() => import("./avalanche-disc.tsx"));
 const ArtAvalancheSymbol = lazy(() => import("./avalanche-symbol.tsx"));
 const ArtAvalancheMonoLight = lazy(() => import("./avalanche-monolight.tsx"));
 const ArtAvalancheMonoDark = lazy(() => import("./avalanche-monodark.tsx"));
+const ArtPythDisc = lazy(() => import("./pyth-disc.tsx"));
+const ArtPythSymbol = lazy(() => import("./pyth-symbol.tsx"));
+const ArtPythMonoLight = lazy(() => import("./pyth-monolight.tsx"));
+const ArtPythMonoDark = lazy(() => import("./pyth-monodark.tsx"));
+const ArtNhlMonoDark = lazy(() => import("./nhl-monodark.tsx"));
+const ArtNhlSymbol = lazy(() => import("./nhl-symbol.tsx"));
+const ArtNhlMonoLight = lazy(() => import("./nhl-monolight.tsx"));
+const ArtMlbMonoDark = lazy(() => import("./mlb-monodark.tsx"));
+const ArtMlbSymbol = lazy(() => import("./mlb-symbol.tsx"));
+const ArtMlbMonoLight = lazy(() => import("./mlb-monolight.tsx"));
+const ArtPremierLeagueMonoDark = lazy(() => import("./premier-league-monodark.tsx"));
+const ArtPremierLeagueSymbol = lazy(() => import("./premier-league-symbol.tsx"));
+const ArtPremierLeagueMonoLight = lazy(() => import("./premier-league-monolight.tsx"));
 const ArtNvidiaMonoDark = lazy(() => import("./nvidia-monodark.tsx"));
 const ArtNvidiaSymbol = lazy(() => import("./nvidia-symbol.tsx"));
 const ArtNvidiaMonoLight = lazy(() => import("./nvidia-monolight.tsx"));
@@ -260,6 +273,10 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
+  "pyth": { disc: ArtPythDisc, symbol: ArtPythSymbol, monoLight: ArtPythMonoLight, monoDark: ArtPythMonoDark },
+  "nhl": { monoDark: ArtNhlMonoDark, symbol: ArtNhlSymbol, monoLight: ArtNhlMonoLight },
+  "mlb": { monoDark: ArtMlbMonoDark, symbol: ArtMlbSymbol, monoLight: ArtMlbMonoLight },
+  "premier-league": { monoDark: ArtPremierLeagueMonoDark, symbol: ArtPremierLeagueSymbol, monoLight: ArtPremierLeagueMonoLight },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
   "apple": { monoDark: ArtAppleMonoDark, symbol: ArtAppleSymbol, monoLight: ArtAppleMonoLight },

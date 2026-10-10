@@ -34,4 +34,6 @@ export const ids = {
   provider: (slug: string): EntityId => `provider:${slug}`,
   exchange: (slug: string): EntityId => `exchange:${slug}`,
   brand: (slug: string): EntityId => `brand:${slug}`,
+  /** `league:nhl` — a competition events are about (`LeagueKey` in packages/config/src/events.ts). */
+  league: (key: string): EntityId => `league:${key}`,
 } as const;

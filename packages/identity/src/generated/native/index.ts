@@ -141,6 +141,19 @@ import ArtAvalancheDisc from "./avalanche-disc.tsx";
 import ArtAvalancheSymbol from "./avalanche-symbol.tsx";
 import ArtAvalancheMonoLight from "./avalanche-monolight.tsx";
 import ArtAvalancheMonoDark from "./avalanche-monodark.tsx";
+import ArtPythDisc from "./pyth-disc.tsx";
+import ArtPythSymbol from "./pyth-symbol.tsx";
+import ArtPythMonoLight from "./pyth-monolight.tsx";
+import ArtPythMonoDark from "./pyth-monodark.tsx";
+import ArtNhlMonoDark from "./nhl-monodark.tsx";
+import ArtNhlSymbol from "./nhl-symbol.tsx";
+import ArtNhlMonoLight from "./nhl-monolight.tsx";
+import ArtMlbMonoDark from "./mlb-monodark.tsx";
+import ArtMlbSymbol from "./mlb-symbol.tsx";
+import ArtMlbMonoLight from "./mlb-monolight.tsx";
+import ArtPremierLeagueMonoDark from "./premier-league-monodark.tsx";
+import ArtPremierLeagueSymbol from "./premier-league-symbol.tsx";
+import ArtPremierLeagueMonoLight from "./premier-league-monolight.tsx";
 import ArtNvidiaMonoDark from "./nvidia-monodark.tsx";
 import ArtNvidiaSymbol from "./nvidia-symbol.tsx";
 import ArtNvidiaMonoLight from "./nvidia-monolight.tsx";
@@ -260,6 +273,10 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "polygon": { disc: ArtPolygonDisc, symbol: ArtPolygonSymbol, monoLight: ArtPolygonMonoLight, monoDark: ArtPolygonMonoDark },
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
+  "pyth": { disc: ArtPythDisc, symbol: ArtPythSymbol, monoLight: ArtPythMonoLight, monoDark: ArtPythMonoDark },
+  "nhl": { monoDark: ArtNhlMonoDark, symbol: ArtNhlSymbol, monoLight: ArtNhlMonoLight },
+  "mlb": { monoDark: ArtMlbMonoDark, symbol: ArtMlbSymbol, monoLight: ArtMlbMonoLight },
+  "premier-league": { monoDark: ArtPremierLeagueMonoDark, symbol: ArtPremierLeagueSymbol, monoLight: ArtPremierLeagueMonoLight },
   "nvidia": { monoDark: ArtNvidiaMonoDark, symbol: ArtNvidiaSymbol, monoLight: ArtNvidiaMonoLight },
   "tesla": { monoDark: ArtTeslaMonoDark, symbol: ArtTeslaSymbol, monoLight: ArtTeslaMonoLight },
   "apple": { monoDark: ArtAppleMonoDark, symbol: ArtAppleSymbol, monoLight: ArtAppleMonoLight },

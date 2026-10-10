@@ -71,15 +71,19 @@ export async function getSvg(url: string, headers?: Record<string, string>): Pro
   return svg;
 }
 
-/**
- * The one paint a mono silhouette uses, as an attribute (`fill="#fff"`) or a style declaration (`fill:#000000`), so
- * recolouring it is a single literal substitution.
- */
-export function soleInk(svg: string, label: string): string {
+/** Every paint a file uses, as attributes (`fill="#fff"`) or style declarations (`fill:#000000`), once each. */
+export function inksOf(svg: string): string[] {
   const paints = [...svg.matchAll(/(?:fill|stroke|stop-color)(?:="([^"]+)"|:\s*([^;"}]+))/g)].map((m) =>
     (m[1] ?? m[2] ?? "").trim(),
   );
-  const inks = [...new Set(paints.filter((p) => p !== "none"))];
+  return [...new Set(paints.filter((p) => p !== "none"))];
+}
+
+/**
+ * The one paint a mono silhouette uses, so recolouring it is a single literal substitution.
+ */
+export function soleInk(svg: string, label: string): string {
+  const inks = inksOf(svg);
   if (inks.length !== 1 || inks[0] === undefined)
     throw new Error(`${label}: expected one ink, found ${inks.join(", ")}`);
   return inks[0];

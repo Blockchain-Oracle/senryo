@@ -70,6 +70,20 @@ const STANDALONE: readonly CatalogEntry[] = [
     spec: { from: "web3icons", group: "networks", name: "optimism", take: ALL },
   },
   { key: "avalanche", owner: "Ava Labs", spec: { from: "web3icons", group: "networks", name: "avalanche", take: ALL } },
+  // The price oracle behind most markets (R2.6): its token mark, as the library draws it.
+  {
+    key: "pyth",
+    owner: "Pyth Data Association",
+    spec: { from: "web3icons", group: "tokens", name: "PYTH", take: ALL },
+  },
+  // The leagues events are about (R2.6). The NFL is not in Simple Icons (see src/entities.ts).
+  { key: "nhl", owner: "National Hockey League", spec: { from: "simple-icons", slug: "nhl" } },
+  { key: "mlb", owner: "Major League Baseball", spec: { from: "simple-icons", slug: "mlb" } },
+  {
+    key: "premier-league",
+    owner: "The Football Association Premier League Limited",
+    spec: { from: "simple-icons", slug: "premierleague" },
+  },
   { key: "nvidia", owner: "NVIDIA Corporation", spec: { from: "simple-icons", slug: "nvidia" } },
   { key: "tesla", owner: "Tesla, Inc.", spec: { from: "simple-icons", slug: "tesla" } },
   { key: "apple", owner: "Apple Inc.", spec: { from: "simple-icons", slug: "apple" } },
