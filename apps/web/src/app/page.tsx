@@ -184,7 +184,7 @@ export default function Welcome() {
             <p className={styles.smallNote}>Test dollars have no value. A call can lose its whole stake.</p>
           </div>
           <div className={styles.walletArt}>
-            <span className={styles.artCaption}>Practice is free. Real starts when you switch.</span>
+            <span className={styles.artCaption}>Practice is free. Real opens with mainnet.</span>
             <Image
               src="/brand/website/scene-modes.webp"
               alt="Practice notes in front and a gold koban set apart on its own dish: Practice · Test dollars and Real · USDC"

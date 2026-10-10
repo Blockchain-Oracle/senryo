@@ -11,7 +11,8 @@ Monad testnet with free test dollars; Real (USDC on mainnet) opens with the main
 2. **Create account** — one passkey prompt (iCloud Keychain, Google Password Manager or 1Password; no seed phrase).
 3. Setup asks for a username, the terms, then grants **test dollars** on its own (gas-free; they have no value).
 4. On the terminal, pick a stake ($1 · $5 · $10 · $25, any amount, or Max) and tap **Up** or **Down**. The odds under
-   each button are the contracts' own price for that stake right now ("pays 1.92× · about 52%").
+   each button are the contracts' own price for that stake right now ("pays 1.92× · about 52%"). **Range** (the close
+   stays near the line) and **Moonshot** / **Crash** (a big move) are the other tabs — the same window, other bands.
 5. Watch it ride: the dashed line is **K**, the window's opening Pyth print; your side of it is shaded; the pill shows
    the price and your result rolling. **Cash out** (all, 25 % or 50 %) any time until 20 seconds before the close.
 6. When the window closes its result arrives wherever you are, with confetti on a win. **Calls** holds every call;
@@ -60,8 +61,14 @@ Explorer: https://testnet.monadvision.com. Public reads, no account needed:
 Source: [`contracts/`](../contracts), [`services/`](../services), [`packages/calls`](../packages/calls) (the call flow both
 apps share), [`apps/web`](../apps/web), [`apps/mobile`](../apps/mobile).
 
-## 5. Not yet
+## 5. What is live, and what isn't yet
 
-Real money opens with the mainnet deploy. Range and Moonshot calls, stocks, multi-market baskets, Earn (providing the
-pool's liquidity) and the proof page arrive next; games, people and events after them. They are not shown in the
-apps until they work — nothing on screen is a placeholder.
+- **Live in Practice:** every call type (Up, Down, Range, Moonshot, Crash) on **BTC, ETH and SOL**, in 1-minute to
+  1-hour windows, with cash-out, receipts and the window proof.
+- **Shown, calls not open yet:** the other 31 markets — stocks (Nvidia, Apple, Tesla…), gold and silver, the euro, more
+  crypto and four baskets — carry their live prices and charts and say "Not open for calls yet". Their windows open
+  with the next contracts deploy, without an app update (the api reads what the chain has listed).
+- **Not open yet:** Earn (lending the pool your dollars), duels, events and parlays say so on their screens.
+- **Prices:** Pyth for crypto, stocks, metals and FX; RedStone for some markets, whose keyless access closes in steps
+  until 29 October — when it refuses, those markets say "No fresh price" rather than show a stale one.
+- **Real money** (USDC on Monad mainnet) opens with the mainnet deploy.

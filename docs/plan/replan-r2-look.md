@@ -101,8 +101,14 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     people channels stay in the saved choices for R8, and aren't registered as Android channels); the signed-out and
     permission copy, Help's Envio line and the web's username step no longer promise price alerts, invites or a
     leaderboard. Nothing else in either app mentions them.
-- [ ] R2.12 `docs/judges.md` (rendered at `/judges`), the landing and the Calls copy match the screens: 34 markets, what
+- [x] R2.12 `docs/judges.md` (rendered at `/judges`), the landing and the Calls copy match the screens: 34 markets, what
   is live and what is Practice.
+  - *As built (10 Oct):* the judge guide's last section said Range, Moonshot, stocks, baskets and Earn weren't shown
+    ("nothing on screen is a placeholder"); it now says what is live in Practice (every call type on BTC, ETH and SOL —
+    checked on chain: all twelve series carry the five-band menu), what is shown with live prices but not open for
+    calls (the other 31), what isn't open (Earn, duels, events, parlays), RedStone's keyless window, and Real. The
+    walkthrough names Range, Moonshot and Crash. The landing's "Real starts when you switch" reads "Real opens with
+    mainnet". The Calls copy already matched ("Call the next move on BTC, ETH or SOL").
 - [ ] R2.13 Links:
   - AASA and asset links name the current routes (`/app/*`, `/call`, `/proof`, `/u`);
   - the phone's `share-link.ts`, recovery link and `/trade` deep link are fixed.
