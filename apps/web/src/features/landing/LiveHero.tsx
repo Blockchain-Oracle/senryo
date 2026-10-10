@@ -6,11 +6,13 @@
  */
 import { DEFAULT_CADENCE, useCallWindow } from "@senryo/calls/react";
 import { clockText } from "@senryo/core";
+import { marketId } from "@senryo/identity";
 import { LiveProvider } from "@senryo/live/react";
 import { QueryEnvProvider, useWindowLoad } from "@senryo/query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { EntityMark } from "@/components/identity/entity-mark";
 import { LiveText } from "@/components/kit/live-text";
 import { LiveChart } from "@/features/terminal/chart/LiveChart";
 import { useLiveQuote } from "@/features/terminal/useLiveQuote";
@@ -20,6 +22,7 @@ import { appLive } from "@/lib/live";
 
 const SYMBOL = "BTC";
 const STAKE = 5_000_000n;
+const MARK = 24;
 
 function Hero() {
   const t = useCallWindow(SYMBOL, DEFAULT_CADENCE, undefined);
@@ -29,7 +32,10 @@ function Hero() {
   return (
     <div className="live-hero dark">
       <div className="live-hero-head">
-        <span className="live-hero-symbol">BTC · 1m</span>
+        <span className="live-hero-symbol">
+          <EntityMark id={marketId(SYMBOL)} size={MARK} decorative ground="var(--background)" />
+          BTC · 1m
+        </span>
         <span className="live-hero-clock tnum">
           {t.window.trading
             ? `calls close in ${clockText(t.window.closesIn)}`

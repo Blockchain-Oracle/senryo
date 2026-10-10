@@ -1,9 +1,10 @@
+/* The landing on the app's tokens (UGLYCASH, R2.4): its names, the palette's values, both themes. */
 .site {
-  --page-ink: #3c315b;
-  --page-muted: #655d76;
-  --page-paper: #fdfcfe;
-  --page-lavender: #e2dffe;
-  --page-line: #ded9e5;
+  --page-ink: var(--foreground);
+  --page-muted: var(--text-2);
+  --page-paper: var(--background);
+  --page-lavender: var(--secondary);
+  --page-line: var(--border);
   color: var(--page-ink);
   background: var(--page-paper);
   font-family: var(--font-inter), var(--font-noto-jp), sans-serif;
@@ -13,17 +14,19 @@
   -webkit-tap-highlight-color: transparent;
 }
 .site :is(a, button, summary):focus-visible {
-  outline: 3px solid #7463b6;
+  outline: 3px solid var(--ring);
   outline-offset: 5px;
 }
 .site :is(section, main)[id] {
   scroll-margin-top: 40px;
 }
+/* Headings in the condensed display face, as the app's page titles (R2.3). */
 .site h1:not(.accountActions *),
 .site h2:not(.accountActions *),
 .site h3:not(.accountActions *) {
-  font-weight: 400;
-  letter-spacing: -0.055em;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.01em;
   text-wrap: balance;
 }
 .site h2:not(.accountActions *),
@@ -39,7 +42,7 @@
   padding: 14px 20px;
   border-radius: 100px;
   background: var(--page-ink);
-  color: white;
+  color: var(--page-paper);
   transform: translateY(-150%);
 }
 .skip:focus {
@@ -73,17 +76,25 @@
   padding: 17px 28px;
   font-size: 16px;
 }
-.smallButton:hover,
+.smallButton:hover {
+  background: var(--row-pressed);
+  transform: translateY(-2px);
+}
+/* UGLYCASH: the primary action is black (white in dark) with its own ink. */
+.primaryButton {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
 .primaryButton:hover {
-  background: #d3cdf5;
+  background: var(--primary-pressed);
   transform: translateY(-2px);
 }
 .whiteButton {
-  background: var(--page-paper);
+  background: var(--card);
   width: fit-content;
 }
 .whiteButton:hover {
-  background: #f4f0fa;
+  background: var(--secondary);
   transform: translateY(-2px);
 }
 .hero {
@@ -108,7 +119,6 @@
 .hero h1 {
   font-size: clamp(60px, 6.6vw, 92px);
   line-height: 1.035;
-  letter-spacing: -0.065em;
   margin: 26px 0;
 }
 .intro {
@@ -171,14 +181,15 @@
   grid-template-columns: 1fr 1fr;
   gap: 64px;
   align-items: center;
-  background: #211c2c;
-  color: #f3eef8;
+  /* The section carries `.dark`: a dark card on the light page, its sign-in themed to match. */
+  background: var(--card);
+  color: var(--foreground);
 }
 .entry h2 {
   margin: 22px 0;
 }
 .entry > div > p:last-child {
-  color: #d3c9de;
+  color: var(--text-2);
   font-size: 15px;
   line-height: 1.8;
 }

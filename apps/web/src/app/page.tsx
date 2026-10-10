@@ -233,7 +233,7 @@ export default function Welcome() {
           </div>
         </section>
 
-        <section id="start" className={styles.entry} aria-labelledby="start-title">
+        <section id="start" className={`${styles.entry} dark`} aria-labelledby="start-title">
           <div>
             <p className={styles.eyebrow}>Welcome to Senryo</p>
             <h2 id="start-title">

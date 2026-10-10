@@ -1,5 +1,5 @@
-/* The landing's live card (LiveHero.tsx): the terminal in miniature — always the dark lacquer (`.dark` on the card
- * scopes the dark tokens in either theme), a fixed height so the island arriving never shifts the page. */
+/* The landing's live card (LiveHero.tsx): the terminal in miniature — always dark (`.dark` on the card scopes the dark
+ * tokens in either theme), a fixed height so the island arriving never shifts the page. */
 .live-hero {
   display: flex;
   height: 560px;
@@ -9,10 +9,10 @@
   border-radius: 32px;
   background: var(--background);
   color: var(--foreground);
-  box-shadow: 0 24px 64px -32px rgb(10 9 17 / 55%);
+  box-shadow: 0 24px 64px -32px rgb(0 0 0 / 55%);
 }
 .live-hero-waiting {
-  background: #0a0911;
+  background: var(--background);
 }
 .live-hero-head {
   display: flex;
@@ -21,6 +21,9 @@
   gap: 12px;
 }
 .live-hero-symbol {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font:
     700 17px / 22px var(--font-inter),
     system-ui;

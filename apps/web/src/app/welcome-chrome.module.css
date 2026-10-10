@@ -76,7 +76,7 @@
 }
 .footerWordmark {
   display: block;
-  color: #e2ddec;
+  color: var(--row-pressed);
   margin: 18px 0 -0.09em;
   font-size: clamp(100px, 24vw, 320px);
   font-weight: 400;
@@ -142,7 +142,7 @@
     color: var(--page-paper);
     padding: 12px 22px;
     border-radius: 20px;
-    box-shadow: 0 12px 24px #3c315b1a;
+    box-shadow: var(--elevation-dock);
   }
   .mobileMenu nav a {
     display: block;

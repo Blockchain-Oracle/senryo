@@ -26,7 +26,7 @@
 }
 .walletArt {
   height: 510px;
-  background: #f0edf6;
+  background: var(--secondary);
 }
 .chest {
   width: 100%;

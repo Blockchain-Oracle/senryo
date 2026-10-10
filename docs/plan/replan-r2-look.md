@@ -57,7 +57,13 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     page titles can't fall back to Inter by omission; the shell's word mark uses it too. On the canvas the price pill
     and tags use it; the axis stays Inter. The unused `DISPLAY_MIN_SIZE` is gone. Checked in the browser: the face
     loads, page titles and the chart pill render in it.
-- [ ] R2.4 The landing (`welcome.module.css`, `live-hero.css`) joins the same tokens, with the BTC mark on the live hero.
+- [x] R2.4 The landing (`welcome.module.css`, `live-hero.css`) joins the same tokens, with the BTC mark on the live hero.
+  - *As built (10 Oct):* the landing's own lavender palette is gone: its `--page-*` names point at the tokens (ink,
+    text-2, ground, secondary, border) and every literal (focus outline, hovers, art plate, faint word mark, menu
+    shadow, the entry band) is a token, so it follows light and dark. Headings use the condensed display face; the
+    primary action is the app's black; the sign-in band scopes the dark tokens (a dark card on the light page, its
+    buttons themed to match); the live hero is a dark card with the BTC mark beside "BTC · 1m". Checked in the
+    browser top to bottom.
 - [ ] R2.5 `.21st/design.json` on both apps records UGLYCASH as the direction.
 
 ### Logos
