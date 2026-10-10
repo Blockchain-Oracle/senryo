@@ -48,8 +48,15 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     meaning), success lines and countdown clocks read in ink, settings toggles are primary like the phone's switches.
     Practice/Real tints are the shared palette's. Checked in the browser: light `#F5F5F5`, dark `#111`, rail seal
     black, dock seal magenta; the one violet left in the rail is Monad's own logo in the Practice capsule.
-- [ ] R2.3 A condensed display face (the phone's Roboto Condensed Black, via `next/font`) for money and headings; canvas
+- [x] R2.3 A condensed display face (the phone's Roboto Condensed Black, via `next/font`) for money and headings; canvas
   text uses it too.
+  - *As built (10 Oct):* the web self-hosts the phone's own vendored file, subset to the web's Latin ranges (34 KB
+    WOFF2, tabular digits, every feature kept; fontTools 4.66.1; provenance in `packages/tokens/src/fonts.ts`, the
+    `font-provenance` invariant passes) through `next/font/local`. `FONT.display` is Roboto Condensed, and the emitted
+    CSS gives every display role (`text-num-*`, `text-display-*`, `text-page-title`) the display face, so money and
+    page titles can't fall back to Inter by omission; the shell's word mark uses it too. On the canvas the price pill
+    and tags use it; the axis stays Inter. The unused `DISPLAY_MIN_SIZE` is gone. Checked in the browser: the face
+    loads, page titles and the chart pill render in it.
 - [ ] R2.4 The landing (`welcome.module.css`, `live-hero.css`) joins the same tokens, with the BTC mark on the live hero.
 - [ ] R2.5 `.21st/design.json` on both apps records UGLYCASH as the direction.
 

@@ -1,19 +1,19 @@
 /**
- * "Living Lacquer" type, space, radius, elevation and motion scales (direction §3–4, v2-plan §5.3–5.4; every value not
- * in the direction is from the S1b.6 Codex consult, docs/design/senryo-v2/tokens-consult.md, D-191). Inter 400–700 for UI,
- * Inter Display SemiBold for big numbers and titles ≥ 32, Noto Sans JP for Japanese, tabular lining figures for money,
- * sentence/title case with no tracked uppercase. Exact source fonts and springs are declared adaptations.
+ * Type, space, radius, elevation and motion scales (first set by the S1b.6 consult, D-191; the faces are UGLYCASH's,
+ * D-304). Inter 400–700 for UI, Roboto Condensed Black for big numbers and page titles (the phone's display face, on the
+ * web since R2.3), Noto Sans JP for Japanese, tabular lining figures for money, sentence/title case with no tracked
+ * uppercase. Exact source fonts and springs are declared adaptations.
  */
 
 export const FONT = {
   sans: "Inter",
-  display: "Inter Display",
+  display: "Roboto Condensed",
   jp: "Noto Sans JP",
   /** Legacy alias: amounts used a monospace face in D2; they are now Inter with tabular lining figures. */
   mono: "Inter",
 } as const;
 
-/** `display` roles use Inter Display; `numeric` roles turn on tabular + lining figures (`tnum`, `lnum`). */
+/** `display` roles use the condensed display face; `numeric` roles turn on tabular + lining figures (`tnum`, `lnum`). */
 export type TypeFace = "sans" | "display";
 interface TypeSpec {
   size: number;
@@ -73,9 +73,6 @@ export const TYPE = {
   sheetHeading: { size: 22, lineHeight: 28, tracking: 0, weight: 600, font: "sans", numeric: false },
 } as const satisfies Record<string, TypeSpec>;
 export type TypeRole = keyof typeof TYPE;
-
-/** Inter Display takes over from Inter at this size (px/pt, inclusive). */
-export const DISPLAY_MIN_SIZE = 32;
 
 /** Spacing in px on a 4 px grid (2 is an optical micro-gap only); `inset` is the default screen gutter. */
 export const SPACE = {

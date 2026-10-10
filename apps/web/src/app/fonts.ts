@@ -1,7 +1,9 @@
 import localFont from "next/font/local";
 
 /**
- * Living Lacquer faces (D-192), self-hosted with next/font/local (no Google request at build or run time).
+ * The web's faces (D-192; the display face is UGLYCASH's, D-304), self-hosted with next/font/local (no Google request
+ * at build or run time). Roboto Condensed Black sets money and page titles, as on the phone (R2.3): the phone's own
+ * vendored file, subset to the Latin ranges below (34 KB).
  * Inter is the official Inter 4.1 variable font, instanced to weights 400–700 and subset to Latin + Latin Extended-A/B
  * and the UI's symbols: one 121 KB file instead of five static faces (245 KB) on the critical path. Its optical-size
  * axis (opsz 14–32) is Inter Display at large sizes — browsers apply it from the font size (`font-optical-sizing:
@@ -13,6 +15,12 @@ import localFont from "next/font/local";
 export const inter = localFont({
   src: [{ path: "./fonts/InterVariable-latin.woff2", weight: "400 700", style: "normal" }],
   variable: "--font-inter",
+  display: "swap",
+});
+
+export const condensed = localFont({
+  src: [{ path: "./fonts/RobotoCondensed-Black-latin.woff2", weight: "900", style: "normal" }],
+  variable: "--font-condensed",
   display: "swap",
 });
 

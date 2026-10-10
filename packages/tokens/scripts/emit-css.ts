@@ -80,7 +80,15 @@ const shared = [
   `  --qr-paper: ${QR.paper};`,
   "}",
 ].join("\n");
-const css = [header, shared, block(":root, .light", LIGHT), block(".dark", DARK), ""].join("\n\n");
+/**
+ * Display roles carry their face on the web as on the phone (R2.3): every `text-<role>` utility whose role is set in the
+ * display face also sets `--font-display`, so money and page titles can't be set in Inter by omission.
+ */
+const displayRoles = Object.entries(TYPE)
+  .filter(([, t]) => t.font === "display")
+  .map(([role]) => `.text-${toKebab(role)}`);
+const displayFace = [`${displayRoles.join(",\n")} {`, "  font-family: var(--font-display);", "}"].join("\n");
+const css = [header, shared, block(":root, .light", LIGHT), block(".dark", DARK), displayFace, ""].join("\n\n");
 
 const target = fileURLToPath(new URL("../src/tokens.css", import.meta.url));
 writeFileSync(target, css);

@@ -11,7 +11,7 @@
   --radius-step-pill: 62.4375rem;
   --hairline: 1px;
   --font-sans-family: "Inter", "Noto Sans JP", ui-sans-serif, system-ui;
-  --font-display-family: "Inter Display", "Inter", "Noto Sans JP", ui-sans-serif, system-ui;
+  --font-display-family: "Roboto Condensed", "Inter", "Noto Sans JP", ui-sans-serif, system-ui;
   --font-mono-family: "Inter", "Noto Sans JP", ui-sans-serif, system-ui;
   --motion-press: 100ms;
   --motion-selection: 170ms;
@@ -345,5 +345,16 @@
   --down-foreground: #000000;
   --chart-neutral: #A0A0A0;
   --sheet-handle: #999999;
+}
+
+.text-num-ticker,
+.text-num-lg,
+.text-num-xl,
+.text-num-hero,
+.text-display-balance,
+.text-display-margin,
+.text-display-price,
+.text-page-title {
+  font-family: var(--font-display);
 }
 

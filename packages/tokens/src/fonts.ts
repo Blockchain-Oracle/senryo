@@ -53,6 +53,28 @@ export const FONT_SOURCES: readonly FontSource[] = [
     ],
   },
   {
+    family: "Roboto Condensed Black (web, Latin subset)",
+    owner: "Google / The Roboto Project Authors",
+    provenance: "derived",
+    pageUrl: "https://github.com/google/fonts/tree/69d0549e8fc7ad72e1531734c81237be401ec4fd/ofl/robotocondensed",
+    source: {
+      url: "https://raw.githubusercontent.com/google/fonts/69d0549e8fc7ad72e1531734c81237be401ec4fd/ofl/robotocondensed/RobotoCondensed%5Bwght%5D.ttf",
+      sha256: "dace262afcee68a5276f200d8026c57221735c0118ab5fda8c2c0d3dc409a8d0",
+    },
+    licence:
+      "SIL Open Font License 1.1; subsetting is a permitted Modified Version and Roboto Condensed has no Reserved Font Name.",
+    licenceFiles: ["apps/web/src/app/fonts/OFL-RobotoCondensed.txt"],
+    retrieved: "2026-10-10",
+    derivation:
+      "fontTools 4.66.1 from the phone's apps/mobile/assets/fonts/RobotoCondensed-Black.ttf (the wght=900 instance above, sha256 974689ed…601d): subset.Subsetter to the web Inter file's Latin ranges (U+0000-00FF,U+0100-024F,U+2000-206F,U+20A0-20C0 and the same symbols) with every OpenType feature and all name IDs kept, recalcTimestamp=False, WOFF2 (34 KB; tabular digits).",
+    files: [
+      {
+        path: "apps/web/src/app/fonts/RobotoCondensed-Black-latin.woff2",
+        sha256: "cbad0314e2625c95cb98225c447f0ed85af157d741ef4cce83369942e3310987",
+      },
+    ],
+  },
+  {
     family: "Material Symbols Outlined (Android utility icons)",
     owner: "Google LLC",
     provenance: "first-party",

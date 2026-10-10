@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "@/components/shell/theme-provider";
 import { BRAND } from "@/lib/constants/brand";
-import { inter, notoSansJp } from "./fonts";
+import { condensed, inter, notoSansJp } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +21,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${notoSansJp.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${condensed.variable} ${notoSansJp.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh">
         {/* The account runtime lives where accounts are used: the app's layout and the landing's sign-in island. */}
         <ThemeProvider>{children}</ThemeProvider>
