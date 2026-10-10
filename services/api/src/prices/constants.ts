@@ -1,14 +1,33 @@
 /** The Pyth gateway's numbers (D-272). Hermes base, timings and retention live here and nowhere else. */
 
-export const HERMES_ORIGIN = "https://hermes.pyth.network";
+/**
+ * Hermes's documented base since the 26 Aug 2026 upgrade (`hermes.pyth.network` fronts it); `HERMES_ORIGIN` in the env
+ * overrides it. Probed 10 Oct with the key: streams, `channel` and `ignore_invalid_price_ids` all answer here.
+ */
+export const HERMES_ORIGIN = "https://pyth.dourolabs.app/hermes";
+/** Named on every stream, so a plan change to 200 ms is one line (04-pricing R5g). Starter's rate is 1 s. */
+export const HERMES_CHANNEL = "fixed_rate@1000ms";
+/** A connection that hasn't answered with headers by now is abandoned (undici would wait 300 s). */
+export const HERMES_HEADERS_TIMEOUT_MS = 5_000;
+/** The reconnect backoff resets only after a connection has streamed this long (a 200-then-close loops otherwise). */
+export const HERMES_HEALTHY_RESET_MS = 30_000;
 /** Hermes keeps ~640 s in memory; the ring keeps a little less so any fill the relay asks for is still provable. */
 export const RING_KEEP_SEC = 300;
 /** One sample a second for first paint. */
 export const RECENT_WINDOW_SEC = 300;
 /** How long the relay waits for a fill print to stream in before falling back to the archive / REST. */
 export const PRINT_WAIT_MS = 8_000;
-/** No frame for this long → the stream is dead; reconnect. */
+/**
+ * No frame for this long → the stream is dead; reconnect. Hermes's fixed-rate channel sends a frame a second even for
+ * closed markets (their publish time frozen at the close — probed Saturday 10 Oct), so a quiet class is never idle.
+ */
 export const WATCHDOG_MS = 10_000;
+/**
+ * An open market whose publish time hasn't moved for this long is silent (04-pricing R5e): Pyth's 1 Hz plus jitter
+ * (p95 1.04 s, max 1.4 s measured). R1.9 moves it into each market's declared cadence.
+ */
+export const FEED_SILENCE_MS = 5_000;
+export const SILENCE_CHECK_MS = 1_000;
 /** Jittered reconnect backoff bounds. */
 export const BACKOFF_MIN_MS = 500;
 export const BACKOFF_MAX_MS = 30_000;

@@ -5,14 +5,16 @@ import { type Db, type Logger, MS_PER_SECOND } from "@senryo/service-common";
 import type { StreamBus } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
 import { FRAME_GAP_MS, PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS } from "./constants.ts";
-import { type HermesStatus, HermesStream } from "./hermes.ts";
+import { HERMES_CLASSES, type HermesClass, type HermesStatus, HermesStream, hermesClassOf } from "./hermes.ts";
 import { PrintFetcher, type PrintFetchStats, type PrintSourceKind } from "./print-fetcher.ts";
 import { PrintWatch, type PrintWatchStats } from "./print-watch.ts";
 import { type RedStoneGateway, RedStoneReader } from "./redstone.ts";
 import { FeedRing, type PriceUpdate, toE8 } from "./ring.ts";
+import { type SilenceStats, SilenceWatch } from "./silence-watch.ts";
 
 /**
- * The one Pyth gateway (D-272): the only holder of the Pyth key. One Hermes stream for every catalogue feed fans out
+ * The one Pyth gateway (D-272): the only holder of the Pyth key. One Hermes stream per entitlement class (crypto,
+ * tradfi; 04-pricing R5), watched per feed for silence, fans out
  * as compact ticks on `/v1/stream` (one coalescer per feed for the whole process), folds 1-minute candles, archives
  * every minute boundary with its proof the moment it streams (`prints` topic + `pyth_prints`), and answers the relay's
  * "the unique print of t" from the ring, the stream, the archive, then upstream REST through the `PrintFetcher` (its
@@ -33,6 +35,21 @@ export interface GatewayFeed {
 
 const PRINT_EXPO = -8;
 
+/** Where prices come from: the Pyth key and Hermes's base, and RedStone's gateways (D-284). */
+export interface GatewayUpstream {
+  pythKey: string | undefined;
+  hermesOrigin: string;
+  redstoneGateways: RedStoneGateway[] | undefined;
+}
+
+export interface GatewayStatus {
+  keyed: boolean;
+  hermes: Partial<Record<HermesClass, HermesStatus>>;
+  silence: SilenceStats | null;
+  rest: Record<PrintSourceKind, PrintFetchStats> | null;
+  watch: PrintWatchStats;
+}
+
 export class PythGateway {
   readonly feeds: GatewayFeed[];
   private readonly byId = new Map<Hex, GatewayFeed>();
@@ -41,7 +58,8 @@ export class PythGateway {
   private readonly watch: PrintWatch;
   private readonly lastFrameAt = new Map<Hex, number>();
   private readonly pendingFrame = new Map<Hex, ReturnType<typeof setTimeout>>();
-  private hermes: HermesStream | undefined;
+  private readonly streams = new Map<HermesClass, HermesStream>();
+  private silence: SilenceWatch | undefined;
   private redstone: RedStoneReader | undefined;
   private fetcher: PrintFetcher | undefined;
 
@@ -49,8 +67,7 @@ export class PythGateway {
     db: Db,
     private readonly bus: StreamBus,
     private readonly log: Logger,
-    private readonly key: string | undefined,
-    private readonly redstoneGateways: RedStoneGateway[] | undefined = undefined,
+    private readonly upstream: GatewayUpstream,
   ) {
     this.archive = new PriceArchive(db, log);
     this.feeds = MARKETS.map((market, index) => ({
@@ -91,38 +108,57 @@ export class PythGateway {
         f.market.source.kind === "redstone" ? [[f.market.source.feed, feedIdOf(f.market)] as const] : [],
       ),
     );
-    this.redstone = new RedStoneReader(redstoneFeeds, (u) => this.onUpdate(u), this.log, this.redstoneGateways);
+    const { pythKey, hermesOrigin, redstoneGateways } = this.upstream;
+    this.redstone = new RedStoneReader(redstoneFeeds, (u) => this.onUpdate(u), this.log, redstoneGateways);
     this.redstone.start();
-    this.fetcher = new PrintFetcher(this.key, this.redstone, this.log);
+    const access = pythKey ? { origin: hermesOrigin, key: pythKey } : undefined;
+    const fetcher = new PrintFetcher(access, this.redstone, this.log);
+    this.fetcher = fetcher;
     this.watch.start();
-    if (!this.key) {
-      this.log.warn("PYTH_API_KEY unset — prices and prints are off");
+    if (!access) {
+      this.log.error("PYTH_API_KEY unset — Pyth prices and prints are off");
       return;
     }
-    this.hermes = new HermesStream(
-      this.key,
-      this.feeds.filter((f) => f.market.source.kind === "pyth").map((f) => feedIdOf(f.market)),
-      (u) => this.onUpdate(u),
+    const pyth = this.pythMarkets();
+    const silence = new SilenceWatch(
+      pyth,
+      (m) => fetcher.latestOf(m),
+      (m, reason) => this.streams.get(hermesClassOf(m.kind))?.restart(reason),
       this.log,
-      (from, to) => this.watch.onGap(from, to),
     );
-    this.hermes.start();
+    this.silence = silence;
+    silence.start();
+    for (const name of HERMES_CLASSES) {
+      const markets = pyth.filter((m) => hermesClassOf(m.kind) === name);
+      if (markets.length === 0) continue;
+      const stream = new HermesStream({
+        name,
+        ...access,
+        feedIds: markets.map(feedIdOf),
+        onUpdate: (u) => {
+          silence.observe(u);
+          this.onUpdate(u);
+        },
+        onResume: (from, to) => this.watch.onGap(from, to, markets),
+        log: this.log,
+      });
+      this.streams.set(name, stream);
+      stream.start();
+    }
   }
 
   stop(): void {
     this.watch.stop();
-    this.hermes?.stop();
+    this.silence?.stop();
+    for (const stream of this.streams.values()) stream.stop();
     this.redstone?.stop();
   }
 
-  status(): HermesStatus & {
-    keyed: boolean;
-    rest: Record<PrintSourceKind, PrintFetchStats> | null;
-    watch: PrintWatchStats;
-  } {
+  status(): GatewayStatus {
     return {
-      keyed: Boolean(this.key),
-      ...(this.hermes?.status ?? { connected: false, lastFrameAt: 0, lastError: null, lastBadStatus: null }),
+      keyed: Boolean(this.upstream.pythKey),
+      hermes: Object.fromEntries([...this.streams].map(([name, s]) => [name, { ...s.status }])),
+      silence: this.silence?.stats() ?? null,
       rest: this.fetcher?.stats() ?? null,
       watch: { ...this.watch.stats },
     };

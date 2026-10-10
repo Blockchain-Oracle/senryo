@@ -67,7 +67,11 @@ const chains = await openChains(env, log);
 const geo = new GeoDb(log);
 geo.start();
 const bus = new StreamBus();
-const gateway = new PythGateway(db, bus, log, secrets.pythKey, secrets.redstoneGateways);
+const gateway = new PythGateway(db, bus, log, {
+  pythKey: secrets.pythKey,
+  hermesOrigin: env.HERMES_ORIGIN,
+  redstoneGateways: secrets.redstoneGateways,
+});
 gateway.start();
 
 // Sponsor lanes (relayer keys, D-266): SPONSOR_PK, plus SPONSOR_2_PK for a second lane.

@@ -15,7 +15,8 @@ import {
   REDSTONE_HISTORY_RATE_PER_SEC,
   REDSTONE_POLL_OFFSET_MS,
 } from "./constants.ts";
-import { hermesClassOf, hermesPrintsAt } from "./hermes.ts";
+import { hermesClassOf } from "./hermes.ts";
+import { type HermesAccess, hermesLatest, hermesPrintsAt } from "./hermes-rest.ts";
 import type { RedStoneReader } from "./redstone.ts";
 import type { PriceUpdate } from "./ring.ts";
 import { Backoff, sleep, TokenBucket, type UpstreamOutcome } from "./upstream.ts";
@@ -102,7 +103,7 @@ export class PrintFetcher {
   private readonly history = new Map<number, HistoryRead>();
 
   constructor(
-    private readonly hermesKey: string | undefined,
+    private readonly hermesAccess: HermesAccess | undefined,
     private readonly redstoneReader: RedStoneReader | undefined,
     private readonly log: Logger,
   ) {}
@@ -118,10 +119,19 @@ export class PrintFetcher {
     return undefined;
   }
 
+  /** A Pyth market's latest update on Hermes REST (the silence watch's probe), under the same budget. */
+  async latestOf(market: MarketSpec): Promise<PriceUpdate | undefined> {
+    this.hermes.stats.asked += 1;
+    if (!this.hermesAccess || market.source.kind !== "pyth") return undefined;
+    if (!(await this.admit(this.hermes))) return undefined;
+    const feedId = feedIdOf(market);
+    return this.record(this.hermes, "hermes", await hermesLatest(this.hermesAccess, [feedId]))?.get(feedId);
+  }
+
   private async hermesAt(market: MarketSpec, t: number): Promise<PriceUpdate | undefined> {
     const stats = this.hermes.stats;
     stats.asked += 1;
-    if (!this.hermesKey) return undefined;
+    if (!this.hermesAccess) return undefined;
     if (t > nowSec() - PRINT_GRACE_SEC) {
       stats.early += 1;
       return undefined;
@@ -130,14 +140,14 @@ export class PrintFetcher {
     const key = `${hermesClassOf(market.kind)}:${t}`;
     let batch = this.batches.get(key);
     if (batch && (batch.open || batch.feeds.has(feedId))) stats.joined += 1;
-    else batch = this.openBatch(key, this.hermesKey, t);
+    else batch = this.openBatch(key, this.hermesAccess, t);
     if (batch.open) batch.feeds.add(feedId);
     return (await batch.done).get(feedId);
   }
 
-  private openBatch(key: string, hermesKey: string, t: number): HermesBatch {
+  private openBatch(key: string, access: HermesAccess, t: number): HermesBatch {
     const batch: HermesBatch = { feeds: new Set(), open: true, done: Promise.resolve(NO_PRINTS) };
-    batch.done = this.sendBatch(batch, hermesKey, t).finally(() => {
+    batch.done = this.sendBatch(batch, access, t).finally(() => {
       batch.open = false;
       if (this.batches.get(key) === batch) this.batches.delete(key);
     });
@@ -145,11 +155,11 @@ export class PrintFetcher {
     return batch;
   }
 
-  private async sendBatch(batch: HermesBatch, hermesKey: string, t: number): Promise<ReadonlyMap<Hex, PriceUpdate>> {
+  private async sendBatch(batch: HermesBatch, access: HermesAccess, t: number): Promise<ReadonlyMap<Hex, PriceUpdate>> {
     await sleep(PRINT_BATCH_COLLECT_MS);
     if (!(await this.admit(this.hermes))) return NO_PRINTS;
     batch.open = false;
-    const outcome = await hermesPrintsAt(hermesKey, [...batch.feeds], t);
+    const outcome = await hermesPrintsAt(access, [...batch.feeds], t);
     return this.record(this.hermes, "hermes", outcome) ?? NO_PRINTS;
   }
 

@@ -4,6 +4,7 @@ import { baseEnvSchema, csvSchema, parseEnv, portSchema, readSecret } from "@sen
 import { z } from "zod";
 import { API_PORT, COUNTRY_HEADERS, MIN_APP_VERSION } from "./constants.ts";
 import { DEFAULT_INDEXER_SCHEMA } from "./history/constants.ts";
+import { HERMES_ORIGIN } from "./prices/constants.ts";
 
 export const apiEnvSchema = baseEnvSchema.extend({
   PORT: portSchema.default(API_PORT),
@@ -27,6 +28,14 @@ export const apiEnvSchema = baseEnvSchema.extend({
     .string()
     .regex(/^[a-z_][a-z0-9_]*$/)
     .default(DEFAULT_INDEXER_SCHEMA),
+  /** Pyth Hermes's base URL (no trailing slash); the documented one when unset or empty (04-pricing R5f). */
+  HERMES_ORIGIN: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .url()
+      .default(HERMES_ORIGIN)
+      .transform((url) => url.replace(/\/+$/, "")),
+  ),
   /** Feature flags served by /v1/config, e.g. `earn=1,games=0`. */
   FEATURES: csvSchema.transform((list) =>
     Object.fromEntries((list ?? []).map((pair) => [pair.split("=")[0] ?? pair, pair.split("=")[1] !== "0"])),

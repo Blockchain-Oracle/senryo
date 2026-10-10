@@ -15,7 +15,7 @@ replaces the open S8 steps (S8.1–S8.3, S8.8, S8.9) with stages, in order:
 
 Parity: [parity-replan.md](parity-replan.md).
 
-**Where we are:** R1.1–R1.4 done (process guards, RedStone body validation, `PrintFetcher`, `PrintWatch`, archive-only print route). Next: R1.5 Hermes hardening.
+**Where we are:** R1.1–R1.5 done (process guards, RedStone body validation, `PrintFetcher`, `PrintWatch`, archive-only print route, Hermes hardening). Next: R1.6 RedStone off the main loop.
 
 **Not changed:** the pivot plan (product, stack, S8b–S10). The S8.8 games work in `b61d1932` (engines, api, first screens)
 carries into R7. The half-finished markets v2 deploy is abandoned (D-309).

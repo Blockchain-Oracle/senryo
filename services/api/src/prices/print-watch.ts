@@ -1,5 +1,6 @@
 import type { Hex } from "@senryo/chain";
-import { admissionSecOf, feedIdOf, MARKETS, type MarketSpec } from "@senryo/config";
+import { admissionSecOf, CALENDARS, feedIdOf, MARKETS, type MarketSpec } from "@senryo/config";
+import { isOpenAt, scheduleOf } from "@senryo/core";
 import { archivedKeys, type Db, instantsAwaitingPrints, type Logger, nowSec, printKey } from "@senryo/service-common";
 import { BOUNDARY_SEC, PRINT_GRACE_SEC, PRINT_WATCH_MS, PRINT_WATCH_NEARING_SHARE } from "./constants.ts";
 import type { PriceUpdate } from "./ring.ts";
@@ -11,7 +12,8 @@ import type { PriceUpdate } from "./ring.ts";
  *   legs — with no archived print by t + 2 s is asked of the gateway (ring → archive → `PrintFetcher`), which archives
  *   it. This replaces the fill-only `archivePending`.
  * - **After a Hermes gap** (a reconnect, or the first frame after a restart): every minute boundary in the gap, for
- *   every Pyth feed, one boundary at a time, so the REST budget is never queued past its limit.
+ *   each of that stream's markets open at the boundary, one boundary at a time, so the REST budget is never queued
+ *   past its limit.
  * - Only within the market's admission (past it, the keeper voids anyway). Counted for `/status`; an instant still
  *   missing at half its admission is logged as an error once.
  */
@@ -30,7 +32,6 @@ export interface PrintWatchStats {
 /** What the watch needs of the gateway. */
 export interface WatchedFeeds {
   marketOfSeries(seriesId: string): MarketSpec | undefined;
-  pythMarkets(): readonly MarketSpec[];
   printAt(feedId: Hex, t: number, waitMs?: number): Promise<PriceUpdate | undefined>;
 }
 
@@ -73,11 +74,14 @@ export class PrintWatch {
     clearInterval(this.timer);
   }
 
-  /** The stream resumed after `fromSec` (0: nothing seen since the process started) with a print at `toSec`. */
-  onGap(fromSec: number, toSec: number): void {
+  /**
+   * A stream of these markets resumed after `fromSec` (0: nothing seen since the process started) with a print at
+   * `toSec`.
+   */
+  onGap(fromSec: number, toSec: number, markets: readonly MarketSpec[]): void {
     const from = fromSec > 0 ? fromSec : toSec - HORIZON_SEC;
     this.gaps = this.gaps
-      .then(() => this.backfillGap(from, toSec))
+      .then(() => this.backfillGap(from, toSec, markets))
       .catch((error) => this.log.warn({ err: (error as Error).message }, "gap back-fill failed"));
   }
 
@@ -103,12 +107,14 @@ export class PrintWatch {
     }
   }
 
-  /** Every minute boundary in (fromSec, toSec] for every Pyth feed, oldest first, one boundary at a time. */
-  private async backfillGap(fromSec: number, toSec: number): Promise<void> {
+  /** Every minute boundary in (fromSec, toSec], for each market open then, oldest first, one boundary at a time. */
+  private async backfillGap(fromSec: number, toSec: number, markets: readonly MarketSpec[]): Promise<void> {
     const now = nowSec();
     const first = (Math.floor(Math.max(fromSec, now - HORIZON_SEC) / BOUNDARY_SEC) + 1) * BOUNDARY_SEC;
     for (let t = first; t <= Math.min(toSec, now - PRINT_GRACE_SEC); t += BOUNDARY_SEC) {
-      const wanted = this.feeds.pythMarkets().map((market) => ({ market, feedId: feedIdOf(market), t }));
+      const wanted = markets
+        .filter((market) => isOpenAt(scheduleOf(CALENDARS[market.calendarId].schedule), t))
+        .map((market) => ({ market, feedId: feedIdOf(market), t }));
       if ((await this.recoverMissing(wanted, now)) > 0) this.stats.gapBoundaries += 1;
     }
   }

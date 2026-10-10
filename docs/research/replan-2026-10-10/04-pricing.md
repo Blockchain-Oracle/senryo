@@ -393,7 +393,10 @@ source or by a probe. **[U]** means second-hand or undocumented.
     overnight (20:00–04:00 ET) ([market hours](https://docs.pyth.network/price-feeds/core/market-hours)).
   - The minimum channel for AAPL, SPY, TSLA, NVDA and QQQ is 50 ms.
   - The `.EXT` feeds are deprecated.
-  - Whether `publish_time` freezes when a market closes after the upgrade is **[U]**.
+  - Whether `publish_time` freezes when a market closes after the upgrade is **[U]**. *Answered 10 Oct (R1.5, keyed
+    probe of the documented origin on a Saturday): it freezes at the session's end — TSLA/QQQ at Fri 19:59:59 ET,
+    XAU/XAG/EUR at Fri 16:59:59 ET — and the `fixed_rate@1000ms` stream still sends a frame a second for them. So a
+    frame proves nothing for a feed; freshness is publish time against the market's calendar.*
 - **Pyth Core on Monad [V]** ([addresses](https://docs.pyth.network/price-feeds/core/upgrade/contracts); versions and
   fees from `cast`):
   - mainnet `0xB754BA51E3861Ac0Cb67f73CD046dE790A36508d`, fee 0;

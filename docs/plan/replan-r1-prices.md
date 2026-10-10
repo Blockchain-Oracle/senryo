@@ -71,7 +71,7 @@ live PnL at about 8 Hz. No contract change.
     `print` and `recent` take 120 a minute per IP; `recent` splits at most the catalogue's 34 symbols. Scratch check
     (Fastify inject on the real routes): 200 immutable / 404 `max-age=1`, 0 upstream calls, 429 from request 121 on
     both (a 20 KB symbol list included). Exit 0.
-- [ ] R1.5 Hermes hardening (R5):
+- [x] R1.5 Hermes hardening (R5):
   - a timeout until the headers arrive;
   - `ignore_invalid_price_ids`, with one stream per entitlement class;
   - rotation that aborts the old stream only after the new one's first frame;
@@ -80,6 +80,20 @@ live PnL at about 8 Hz. No contract change.
   - `HERMES_ORIGIN` from env;
   - an explicit `channel=fixed_rate@1000ms`;
   - 401/403 counted and alerted.
+  - *As built (10 Oct):* one `HermesStream` per class (crypto · tradfi, `HERMES_CLASSES`), options object, URL with
+    `ignore_invalid_price_ids=true&channel=fixed_rate@1000ms`; a 5 s headers timer; `rotate()` keeps the old
+    connection until the successor's **first frame** (`retiring`); `attempt` resets only after 30 s streaming;
+    `restart(reason)` debounced to one per watchdog span; 401/403 → `authRefusals` + an error log. REST moved to
+    `hermes-rest.ts` (`hermesPrintsAt`, `hermesLatest`). `silence-watch.ts`: an open market (its calendar) whose
+    **publish time** hasn't moved for 5 s is silent — probed once on REST `latest` (through the fetcher's budget):
+    newer there → that class's stream restarts; else "stale upstream". The gap back-fill is per class and only for
+    markets open at each boundary. `HERMES_ORIGIN` env (empty = unset), default `https://pyth.dourolabs.app/hermes`.
+    Finding (keyed probe, Saturday): Hermes keeps a 1 Hz frame for closed feeds with `publish_time` frozen at the
+    close, so frames never prove freshness (recorded in 04 §5.1). Scratch check against a fake Hermes: no headers →
+    abandoned at 5 s; 401 counted; params sent; rotation held the old connection 3,001 ms and closed it 5 ms after
+    the successor's first frame; 200-then-close kept backing off; BTC frozen-but-newer-upstream → restart, ETH
+    frozen-upstream → stale. Real Hermes, both streams 8 s: crypto 7 publish times, tradfi frozen, 0 false
+    silences. Exit 0.
 - [ ] R1.6 RedStone off the main loop: parse in a `worker_thread`, extracting only the wanted feeds (R14).
 - [ ] R1.7 R11/D-310: without `REDSTONE_GATEWAYS` after 29 Oct, the RedStone markets are read-only discovery with the
   reason; they turn back on when the key is set.
