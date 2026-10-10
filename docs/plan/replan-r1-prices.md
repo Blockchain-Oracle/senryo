@@ -16,7 +16,7 @@ live PnL at about 8 Hz. No contract change.
 - [x] G3 chaos (a)–(d) passes;
 - [x] G6 abuse passes;
 - ~~the display line measured at ≥ 6 Hz for BTC in a browser~~ (dropped by D-311: the line stays on Pyth);
-- [ ] δ and autocorrelation numbers in `acceptance.md` (script built; needs a weekday run from the server — R1.18);
+- [x] δ and autocorrelation numbers in `acceptance.md` (13:21Z; a weekday server run confirms BTC's before R3.6);
 - [x] api and keeper deployed (`sha-2f667bf`, 10 Oct);
 - [x] web deployed (`sha-4905dd2`); [ ] phone OTA after a simulator pass.
 
@@ -237,7 +237,7 @@ live PnL at about 8 Hz. No contract change.
 - [—] R1.17 Clients: `@senryo/live` merges display ticks into the line and pill. Quotes and limits read only settlement
   prices. Both charts draw a "Signed" marker at each Pyth print, and the chip says when the line is display.
   - *Dropped by D-311 (10 Oct):* the line stays on Pyth, so there are no display ticks to merge.
-- [ ] R1.18 Measure δ (Pyth lag behind Coinbase) and Pyth's 1–3 s autocorrelation from the recorded tape beside
+- [x] R1.18 Measure δ (Pyth lag behind Coinbase) and Pyth's 1–3 s autocorrelation from the recorded tape beside
   `pyth_prints` (`scripts/drive/price-lead-check.ts`). The result feeds `FILL_DELAY_SEC` in R3.
   - *Script built (10 Oct), measurement pending:* `scripts/drive/src/price-lead-check.ts` records the keyed Hermes
     stream beside **Bitfinex's** public trades (its terms allow internal analysis; Coinbase's forbid even internal fair
@@ -245,8 +245,12 @@ live PnL at about 8 Hz. No contract change.
     Pyth's return autocorrelation at 1/2/3 s; both feeds reconnect after drops. Two Saturday runs from the build
     machine were **not usable**: Bitfinex printed only ~17–27 trades per market in 20 min, and both connections died
     after ~2 min on the hotspot (the reconnects were added after). The early autocorrelation hint (BTC/ETH −0.3 at
-    1 s, SOL +0.2) is noise at that size. **To do:** a 60-minute run on a weekday from the server, before R3 sets
-    `FILL_DELAY_SEC`.
+    1 s, SOL +0.2) was noise at that size.
+  - *Measured (10 Oct 13:21Z, 20 min, 0 reconnects):* Pyth trails the tape by **400 ms (BTC), 200 ms (ETH), 300 ms
+    (SOL)**; Pyth's 1-s return autocorrelation at 1/2/3 s is about zero for BTC and ETH and **0.13 / 0.12 / 0.02 for
+    SOL** (`acceptance.md`). All under the plan's 0.5 s line, so R3.6 keeps `FILL_DELAY_SEC` at 1 s; SOL's mild
+    momentum goes to R3's spread check. Caveats: weekend volume (BTC's δ rests on 327 trades and a 0.29
+    correlation), arrival times over a hotspot. A weekday run from the server confirms it before R3.6 sets the value.
 - [x] R1.19 `/v1/prices/day` (24 h change, ported from `day-stats.ts`), with its api-client route and query hook.
   - *As built (10 Oct):* **from Senryo's own archive, not Coinbase** — `day-stats.ts` reads Coinbase `/stats`, which
     `09-display-terms.md` rules out for display. `PriceArchive.daySince(minute)`: per feed, the first candle's open at
@@ -344,4 +348,28 @@ live PnL at about 8 Hz. No contract change.
     locally (R1.13); G2 (soak) waits for a staging box.
 
 ## Handoff
-(written at the end of the stage)
+**Live (10 Oct 13:00 UTC):** api + keeper `sha-2f667bf`, web `sha-4905dd2` (`ids-and-txs.md`). The price path is the
+settlement plane only (Pyth + RedStone; the exchange display feed is built and **off**, D-311). Every market carries a
+`FeedState`; the chip, the call panel and the chart say "Live" only when it is, and the cause in words otherwise; a
+closed market shows its last session; a market not on chain yet shows its live price and "Not open for calls yet".
+Boundaries the stream misses are back-filled (`PrintWatch`, retried until admission); a Hermes outage is flagged in
+~3 s and recovers ~5 s after the network does; an api restart resets clients in ~1 s.
+
+**Open:**
+- The phone's simulator pass and OTA. The Release simulator build of this stage is built (10 Oct); simulator access
+  wasn't granted while the owner was away. Nothing new is native since 0.4.0 (checked: `expo-network`,
+  `expo-sharing`, `react-native-view-shot` are in its Podfile.lock), so the OTA is safe once the pass is done. It
+  carries every phone change since 8 Oct, so the pass walks the whole loop, plus R1.20's frozen/dimmed line and the
+  phone chart's frame time.
+- R1.18: a weekday run from the server to confirm BTC's δ before R3.6 (Saturday's says 1 s stays).
+- G2 soak, and G1's RSS at 5,000 clients on the bundled build (314 MB under `tsx`).
+
+**Operational notes for later stages:**
+- The api's Traefik labels are custom (its own compress middleware excludes `text/event-stream`). Coolify keeps them
+  across image deploys; a domain, gzip or strip-prefix change in its UI regenerates them — re-apply then.
+- `KEEPER_JOBS` has no `calendars` (or parlays, duels, events, earn): R4 adds them with the v3 deploy.
+- The api reads the on-chain listing every 10 minutes: R4's deploy opens its markets in the apps with no release.
+- RedStone: the public gateways serve until 29 Oct; after that its 19 markets pause with the reason (R1.7) unless
+  `REDSTONE_GATEWAYS` carries a key.
+- Checks to re-run after price-path changes: `services/api/scripts/price-chaos-check.ts` (scratch `*_check` DB only),
+  `scripts/drive/src/stream-ticket-check.ts`.
