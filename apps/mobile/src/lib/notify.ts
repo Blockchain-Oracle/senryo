@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { toast } from "sonner-native";
 import { fire } from "~/feedback/fire";
 import { TOAST_LIFETIME_MS } from "./constants/time";
@@ -13,10 +14,12 @@ export interface Notice {
   title: string;
   description?: string;
   tone?: ToastTone;
+  /** A leading mark (a result's market, R2.8). */
+  icon?: ReactNode;
 }
 
-export function notify({ title, description, tone = "neutral" }: Notice): void {
-  const options = { duration: TOAST_LIFETIME_MS, ...(description ? { description } : {}) };
+export function notify({ title, description, tone = "neutral", icon }: Notice): void {
+  const options = { duration: TOAST_LIFETIME_MS, ...(description ? { description } : {}), ...(icon ? { icon } : {}) };
   if (tone === "warning") {
     fire("warn");
     toast.warning(title, options);

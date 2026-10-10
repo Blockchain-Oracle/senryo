@@ -30,7 +30,8 @@ export interface ResultEffects {
   cue(cue: ResultCue): void;
   /** A win or a profitable cash-out: confetti. */
   celebrate(): void;
-  notify(notice: { title: string; description: string }): void;
+  /** `symbol`: the market the result is on — the app draws its mark on the toast (R2.8). */
+  notify(notice: { title: string; description: string; symbol: string }): void;
 }
 
 export function useResults({ hint }: Caller, effects: ResultEffects): void {
@@ -71,20 +72,36 @@ export function useResults({ hint }: Caller, effects: ResultEffects): void {
       const where = `${t.symbol} ${t.cadenceSec / SECONDS_PER_MINUTE}m`;
       if (t.state === "closed" && t.result !== null) {
         if (t.result > was.stake) fx.celebrate();
-        fx.notify({ title: `Cashed out ${usd(t.result)}`, description: `${signed(t.result - was.stake)} on ${where}` });
+        fx.notify({
+          title: `Cashed out ${usd(t.result)}`,
+          description: `${signed(t.result - was.stake)} on ${where}`,
+          symbol: t.symbol,
+        });
         continue;
       }
       if (!FINAL.has(t.state)) continue;
       if (t.outcome === "win") {
         fx.cue("win");
         fx.celebrate();
-        fx.notify({ title: `Won ${usd(t.result ?? t.payout)} on ${where}`, description: "Paid to your balance." });
+        fx.notify({
+          title: `Won ${usd(t.result ?? t.payout)} on ${where}`,
+          description: "Paid to your balance.",
+          symbol: t.symbol,
+        });
       } else if (t.outcome === "lose") {
         fx.cue("loss");
-        fx.notify({ title: `${where} closed against you`, description: `The ${usd(t.stake)} stake went to the pool.` });
+        fx.notify({
+          title: `${where} closed against you`,
+          description: `The ${usd(t.stake)} stake went to the pool.`,
+          symbol: t.symbol,
+        });
       } else {
         fx.cue("refund");
-        fx.notify({ title: `Refunded ${usd(t.result ?? t.stake)}`, description: `${where} · back in your balance.` });
+        fx.notify({
+          title: `Refunded ${usd(t.result ?? t.stake)}`,
+          description: `${where} · back in your balance.`,
+          symbol: t.symbol,
+        });
       }
     }
   }, [tickets]);

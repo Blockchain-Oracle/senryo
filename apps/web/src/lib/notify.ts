@@ -1,4 +1,6 @@
 "use client";
+import type { ReactNode } from "react";
+
 /**
  * A toast (the phone's `notify`): sonner's, mounted by the app shell once the browser is idle (`ToasterHost`), so it
  * is not in any page's first load. A toast asked for before then loads it and waits for it to mount. Warnings carry
@@ -32,14 +34,17 @@ export interface Notice {
   id?: string;
   /** Stays until acted on or dismissed (a new version is waiting). */
   persistent?: true;
+  /** A leading mark (a result's market, R2.8). */
+  icon?: ReactNode;
 }
 
-export function notify({ title, description, tone = "info", action, id, persistent }: Notice): void {
+export function notify({ title, description, tone = "info", action, id, persistent, icon }: Notice): void {
   const options = {
     ...(description ? { description } : {}),
     ...(action ? { action: { label: action.label, onClick: action.onClick } } : {}),
     ...(id ? { id } : {}),
     ...(persistent ? { duration: Number.POSITIVE_INFINITY } : {}),
+    ...(icon ? { icon } : {}),
   };
   for (const w of wanted) w();
   void Promise.all([import("sonner"), mounted]).then(([{ toast }]) => {
