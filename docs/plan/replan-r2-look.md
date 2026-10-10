@@ -32,7 +32,7 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     `#17151F` on up/down/destructive fills is black; a `seal` role (black in both) for the web's brand disc.
     `native-palette.ts` is gone: the phone's theme and `app.config.ts` read `@senryo/tokens`, its scene roles live in
     `theme/scene.ts`. `tokens.css` emits `:root, .light` and `.dark`. No `#414EF4` / `#B69DF8` / `#0A0911` in tokens;
-    the landing hero (R2.4) and the generated avatar/scene art (R2.8) still carry them.
+    the landing hero (R2.4) and the generated avatar/scene art (R2.8) still carried them (both since cleared).
 - [x] R2.2 Web:
   - light by default (next-themes, D-304), with the forced `dark` removed from `apps/web/src/app/layout.tsx:24`;
   - the theme provider's stale D2 comment goes;
@@ -91,8 +91,24 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     the api schema and `EventTeam` carry name and abbreviation only (the key is the event's league plus it; nothing in
     the terms hash changes). Which teams get a logo is the owner's call (R2.6): the leagues' terms forbid reuse, and
     Commons holds public-domain files for 35 of 114 clubs (NHL 6, MLB 17, NFL 12, Premier League 0).
-- [ ] R2.8 Marks on every surface in 06 §5.3: Earn, the web wallet / Receive / Withdraw drawers, result toasts, the
+- [x] R2.8 Marks on every surface in 06 §5.3: Earn, the web wallet / Receive / Withdraw drawers, result toasts, the
   landing hero, `/proof/w`, Lucky and Warm-up, the hub cards, and people (web avatars from `avatar.tsx`).
+  - *As built (10 Oct):* money: the network's dollar mark (`dollarId`) on Wallet, Receive, Withdraw and Earn on both
+    apps, the pool as the seal, the phone wallet naming its mode. Results: every toast leads with its market's mark.
+    Games: Lucky's reels land on the market's mark, the pixel bull or bear and the reach plate, and its draws show the
+    market; each hub card carries key art (the coin, bull, bear) and the markets or leagues it deals in; Warm-up cards
+    show their market. Events: league marks on the league lines; the committee's sources (ESPN, the league) by their
+    marks. `/proof/w`: the market's mark in the title and each print's real source by its mark (Pyth, RedStone, or
+    "a basket print, from its members'"). People: duels show both players' portraits and the tier in words on both
+    apps; the arcade board shows each player's portrait (the api returns the profile's avatar beside the handle). The
+    landing hero's BTC mark is R2.4's. The arcade's candles are seeded, not a market, so they carry no market mark.
+    The generated art left violet: in `brand/scripts` the practice and mainnet ramps follow `palette.ts` (grey notes,
+    a pale-lined mainnet tray), the pool and one robe take the chart teal, plum hair is rose, and every plum-black or
+    lavender-white became a neutral of the same luminance (lacquer is a true black; `MATERIAL.lacquer` follows). The
+    avatars, scenes, primers, seal, web icons and the phone's icon and splash are re-rendered (`render.sh`, which now
+    runs on Python 3.12, fetches fonts safely and no longer copies the retired card into either app). Nothing outside
+    `docs/` carries `#414EF4`, `#0A0911` or `#B69DF8`. The scene fields (periwinkle among them) stay: they are the
+    `SCENE_FIELD` tokens. The phone's new icon and splash ship with its next native build (an OTA can't change them).
 
 ### Tells and dead ends
 - [x] R2.9 Engineering copy ("the next markets deploy") becomes plain states until R4 makes those screens live. Earn
