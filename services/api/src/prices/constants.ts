@@ -29,6 +29,10 @@ export const FEED_STATE_STEP_MS = 1_000;
 export const HALT_STALE_MS = 15_000;
 /** D-289: a Pyth confidence wider than this share of the price (bps) halts it too. */
 export const HALT_CONF_BPS = 50;
+/** A display line that moved within this long keeps a late market in `fallback` rather than `delayed`/`stale`. */
+export const DISPLAY_FRESH_MS = 2_000;
+/** A display tick this fresh when a settlement update lands is a basis sample (display − settlement). */
+export const BASIS_FRESH_MS = 1_000;
 /** Jittered reconnect backoff bounds. */
 export const BACKOFF_MIN_MS = 500;
 export const BACKOFF_MAX_MS = 30_000;

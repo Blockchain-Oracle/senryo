@@ -226,6 +226,14 @@ live PnL at about 8 Hz. No contract change.
   - coalesce to 125 ms on a `display` topic, basis-adjusted to Pyth (a rolling median of display − Pyth at each print);
   - hysteresis on failover;
   - read Coinbase's and Kraken's market-data terms first and record them in `docs/research/replan-2026-10-10/`.
+  - *As built (10 Oct) — built, **off**, waiting on the owner:* all five venues' terms read (`09-display-terms.md`):
+    none allows showing its data to app users under free terms, derived or not. `prices/display/` holds the port
+    (Coinbase socket + `heartbeat` liveness and a 5 s reopen, the five-venue median with pair names read from each
+    venue's own list for all 17 crypto markets, two-look hysteresis, the basis onto Pyth, `dp` frames only to batched
+    apps, the `fallback` state); `DISPLAY_FEED=off` by default, so nothing reaches users. Measured through the real
+    gateway: the line sat within 0.1 bps of Pyth; a legacy app got no `dp`; with no socket the median carried
+    BTC/ETH/SOL. **Coinbase trades gave BTC only 0.1–1.1 Hz on a Saturday**, so the R1 gate "≥ 6 Hz" can't come from
+    trades. Owner choice pending: keep the line on Pyth / Pyth Pro for crypto / license exchange data.
 - [ ] R1.17 Clients: `@senryo/live` merges display ticks into the line and pill. Quotes and limits read only settlement
   prices. Both charts draw a "Signed" marker at each Pyth print, and the chip says when the line is display.
 - [ ] R1.18 Measure δ (Pyth lag behind Coinbase) and Pyth's 1–3 s autocorrelation from the recorded tape beside

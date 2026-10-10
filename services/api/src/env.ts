@@ -36,6 +36,11 @@ export const apiEnvSchema = baseEnvSchema.extend({
       .default(HERMES_ORIGIN)
       .transform((url) => url.replace(/\/+$/, "")),
   ),
+  /**
+   * The exchange display line (D-302): off until a market-data licence allows showing exchange prices to users — none
+   * of the five venues' free terms did on 10 Oct 2026 (research `09-display-terms.md`).
+   */
+  DISPLAY_FEED: z.enum(["on", "off"]).default("off"),
   /** Feature flags served by /v1/config, e.g. `earn=1,games=0`. */
   FEATURES: csvSchema.transform((list) =>
     Object.fromEntries((list ?? []).map((pair) => [pair.split("=")[0] ?? pair, pair.split("=")[1] !== "0"])),

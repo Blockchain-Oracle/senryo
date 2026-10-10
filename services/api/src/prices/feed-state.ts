@@ -9,7 +9,7 @@ import {
 } from "@senryo/config";
 import { isOpenAt, scheduleOf } from "@senryo/core";
 import { MS_PER_SECOND } from "@senryo/service-common";
-import { FEED_STATE_STEP_MS, HALT_CONF_BPS, HALT_STALE_MS } from "./constants.ts";
+import { DISPLAY_FRESH_MS, FEED_STATE_STEP_MS, HALT_CONF_BPS, HALT_STALE_MS } from "./constants.ts";
 import type { PriceUpdate } from "./ring.ts";
 
 /**
@@ -34,6 +34,8 @@ export interface StateFeed {
   index: number;
   market: MarketSpec;
   latest(): PriceUpdate | undefined;
+  /** When this market's display line last moved (ms), or null (no display line). */
+  displayAt(): number | null;
   /** A basket's member indexes (empty for a single feed). */
   members: readonly number[];
 }
@@ -135,7 +137,11 @@ export class FeedStates {
     const firstLateLook = state === "delayed" && this.stateOf(f.index) === "live" && !this.lateOnce.has(f.index);
     if (firstLateLook) this.lateOnce.add(f.index);
     else this.lateOnce.delete(f.index);
-    return firstLateLook ? "live" : state;
+    if (firstLateLook) return "live";
+    // The settlement price is late but the exchange line still moves: the line keeps going, labelled, and no quote.
+    const displayAt = f.displayAt();
+    if (state !== "live" && displayAt !== null && nowMs - displayAt <= DISPLAY_FRESH_MS) return "fallback";
+    return state;
   }
 
   private encode(): string {

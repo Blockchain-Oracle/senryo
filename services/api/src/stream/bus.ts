@@ -69,10 +69,14 @@ export class StreamBus {
     this.fanout({ seq: 0, topic, text: `event: ${event}\ndata: ${json({ topic, data })}\n\n` });
   }
 
-  /** One flush of price ticks: a `pp` batch, with its per-feed `p` form beside it. */
-  ticks(topic: string, ticks: readonly Tick[]): void {
-    if (ticks.length === 0) return;
-    this.fanout({ seq: 0, topic, text: batchFrame(topic, ticks), legacy: legacyFrames(topic, ticks) });
+  /**
+   * One flush: settlement ticks as a `pp` batch (with its per-feed `p` form beside it) and display ticks as a `dp`
+   * batch — the display line goes only to apps that asked for batches (an older one has no use for it).
+   */
+  ticks(topic: string, ticks: readonly Tick[], display: readonly Tick[] = []): void {
+    if (ticks.length === 0 && display.length === 0) return;
+    const text = (ticks.length ? batchFrame(topic, ticks) : "") + (display.length ? displayFrame(topic, display) : "");
+    this.fanout({ seq: 0, topic, text, legacy: legacyFrames(topic, ticks) });
   }
 
   subscribe(listener: Listener): () => void {
@@ -144,6 +148,11 @@ export class StreamBus {
 
 export function batchFrame(topic: string, ticks: readonly Tick[]): string {
   return `event: pp\ndata: ${JSON.stringify({ topic, data: ticks })}\n\n`;
+}
+
+/** Display ticks `[catalogue index, priceE8 on the settlement footing, trade ms]` (D-302). */
+export function displayFrame(topic: string, ticks: readonly Tick[]): string {
+  return `event: dp\ndata: ${JSON.stringify({ topic, data: ticks })}\n\n`;
 }
 
 export function legacyFrames(topic: string, ticks: readonly Tick[]): string {

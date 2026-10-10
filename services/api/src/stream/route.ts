@@ -109,7 +109,7 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
 
     let blockedSince = 0;
     const write = (text: string, droppable: boolean) => {
-      if (blockedSince && droppable) return;
+      if (!text || (blockedSince && droppable)) return;
       if (!res.write(text) && !blockedSince) blockedSince = Date.now();
       // Durable frames queue while blocked; past the cap the socket goes (it reconnects and replays or resets).
       if (res.writableLength > SOCKET_BACKLOG_MAX_BYTES) res.destroy();
@@ -127,7 +127,8 @@ export function registerStreamRoute(app: HttpServer, deps: StreamDeps): void {
     for (const topic of grant.topics) for (const text of deps.snapshot(topic, batched)) write(text, true);
 
     const unsubscribe = deps.bus.subscribe((f) => {
-      if (wanted.has(f.topic)) write(batched || !f.legacy ? f.text : f.legacy, f.seq === 0);
+      // `legacy` may be "" (a flush with only display ticks): an older app then gets nothing, never the batch.
+      if (wanted.has(f.topic)) write(batched || f.legacy === undefined ? f.text : f.legacy, f.seq === 0);
     });
     const beat = setInterval(() => {
       if (blockedSince && Date.now() - blockedSince > SLOW_SOCKET_CLOSE_MS) {

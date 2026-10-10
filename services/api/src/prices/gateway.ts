@@ -5,6 +5,8 @@ import { type Db, type Logger, MS_PER_SECOND, nowSec } from "@senryo/service-com
 import { batchFrame, legacyFrames, type StreamBus, type Tick } from "../stream/bus.ts";
 import { PriceArchive } from "./archive.ts";
 import { PRINT_WAIT_MS, REDSTONE_PRINT_WAIT_MS, TICK_FLUSH_MS } from "./constants.ts";
+import type { DisplayStatus } from "./display/display-feed.ts";
+import { DisplayLine } from "./display/display-line.ts";
 import { FeedStates } from "./feed-state.ts";
 import { HERMES_CLASSES, type HermesClass, type HermesStatus, HermesStream, hermesClassOf } from "./hermes.ts";
 import { PrintFetcher, type PrintFetchStats, type PrintSourceKind } from "./print-fetcher.ts";
@@ -41,6 +43,11 @@ export interface GatewayUpstream {
   pythKey: string | undefined;
   hermesOrigin: string;
   redstoneGateways: RedStoneGateway[] | undefined;
+  /**
+   * The exchange display line (D-302). Off unless a licence allows showing that data to users: on 10 Oct 2026 none of
+   * the five venues' free terms did (docs/research/replan-2026-10-10/09-display-terms.md).
+   */
+  displayFeed: boolean;
 }
 
 export interface GatewayStatus {
@@ -49,6 +56,8 @@ export interface GatewayStatus {
   states: Record<string, Record<FeedState, number>>;
   hermes: Partial<Record<HermesClass, HermesStatus>>;
   silence: SilenceStats | null;
+  /** The exchange line (D-302): its socket, the markets on the REST median, each market's basis (e-8). */
+  display: (DisplayStatus & { basis: Record<string, string> }) | null;
   rest: Record<PrintSourceKind, PrintFetchStats> | null;
   watch: PrintWatchStats;
 }
@@ -62,6 +71,8 @@ export class PythGateway {
   private readonly states: FeedStates;
   /** Catalogue indexes that moved since the last flush. */
   private readonly moved = new Set<number>();
+  /** The exchange line (D-302): display only. */
+  private readonly display: DisplayLine;
   private flushTimer: ReturnType<typeof setInterval> | undefined;
   private readonly streams = new Map<HermesClass, HermesStream>();
   private silence: SilenceWatch | undefined;
@@ -95,11 +106,13 @@ export class PythGateway {
         member.baskets.push(f);
       }
     }
+    this.display = new DisplayLine((symbol) => this.feedOf(symbol)?.index, log);
     this.states = new FeedStates(
       this.feeds.map((f) => ({
         index: f.index,
         market: f.market,
         latest: () => f.ring.latest(),
+        displayAt: () => this.display.movedAt(f.index),
         members: f.members.map((m) => m.index),
       })),
       (digest) => this.bus.tick("prices", "h", { s: digest }),
@@ -144,6 +157,7 @@ export class PythGateway {
     this.archive.start();
     this.states.start();
     this.flushTimer = setInterval(() => this.flushTicks(), TICK_FLUSH_MS);
+    if (this.upstream.displayFeed) this.display.start();
     const access = pythKey ? { origin: hermesOrigin, key: pythKey } : undefined;
     const fetcher = new PrintFetcher(access, this.redstone, this.log);
     this.fetcher = fetcher;
@@ -183,6 +197,7 @@ export class PythGateway {
   /** Stops the streams and timers, then writes the open candles. */
   async stop(): Promise<void> {
     clearInterval(this.flushTimer);
+    this.display.stop();
     this.states.stop();
     this.watch.stop();
     this.silence?.stop();
@@ -197,6 +212,7 @@ export class PythGateway {
       states: this.states.counts(),
       hermes: Object.fromEntries([...this.streams].map(([name, s]) => [name, { ...s.status }])),
       silence: this.silence?.stats() ?? null,
+      display: this.upstream.displayFeed ? this.display.status() : null,
       rest: this.fetcher?.stats() ?? null,
       watch: { ...this.watch.stats },
     };
@@ -335,6 +351,7 @@ export class PythGateway {
   private onUpdate(u: PriceUpdate): void {
     const feed = this.byId.get(u.feedId);
     if (!feed) return;
+    this.display.onSettlement(feed.index, toE8(u.price, u.expo));
     feed.ring.push(u);
     this.archive.foldCandle(u);
     for (const t of this.archive.boundariesOf(u)) {
@@ -358,13 +375,12 @@ export class PythGateway {
    * per 100 ms however many feeds tick, at most 10 Hz per feed.
    */
   private flushTicks(): void {
-    if (this.moved.size === 0) return;
     const ticks = [...this.moved].flatMap((i) => {
       const u = this.feeds[i]?.ring.latest();
       return u ? [tickOf(i, u)] : [];
     });
     this.moved.clear();
-    this.bus.ticks(PRICES_TOPIC, ticks);
+    this.bus.ticks(PRICES_TOPIC, ticks, this.display.take());
   }
 }
 

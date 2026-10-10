@@ -71,6 +71,7 @@ const gateway = new PythGateway(db, bus, log, {
   pythKey: secrets.pythKey,
   hermesOrigin: env.HERMES_ORIGIN,
   redstoneGateways: secrets.redstoneGateways,
+  displayFeed: env.DISPLAY_FEED === "on",
 });
 gateway.start();
 
