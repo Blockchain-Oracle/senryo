@@ -1,3 +1,4 @@
+"use client";
 /**
  * A side's mark: its logo as the source feed publishes it (ESPN's), on a round plate; its abbreviation when there is
  * none or it fails to load.

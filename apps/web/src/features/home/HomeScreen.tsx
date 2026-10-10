@@ -62,6 +62,8 @@ export function HomeScreen() {
     <div className="mx-auto flex max-w-3xl flex-col gap-8">
       {address ? (
         <section aria-label="Balance" className="flex flex-col gap-2">
+          {/* One h1 per page (R2.18): the balance is the visual hero; the heading names the page for assistive tech. */}
+          <h1 className="sr-only">Home</h1>
           <span className="text-meta text-text-3">{ACTIVE_NETWORK.key === "testnet" ? "Test dollars" : "USDC"}</span>
           <span className="tnum font-semibold text-display-balance">
             {masked("value" in account ? money(account.value.balance) : "—", hidden)}
@@ -80,7 +82,7 @@ export function HomeScreen() {
       {address ? <OpenCalls owner={address} /> : null}
       <section aria-labelledby="home-markets" className="flex flex-col gap-3">
         <h2 id="home-markets" className="font-semibold text-section-title">
-          Call the next move
+          Markets
         </h2>
         <MarketList />
       </section>

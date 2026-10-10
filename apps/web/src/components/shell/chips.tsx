@@ -89,7 +89,6 @@ function Chip({
 }) {
   return (
     <span className={cn("health-chip", TONE_CLASS[tone], className)} role="status" title={title}>
-      <span aria-hidden className="health-dot" />
       <span className="health-word">{word}</span>
     </span>
   );

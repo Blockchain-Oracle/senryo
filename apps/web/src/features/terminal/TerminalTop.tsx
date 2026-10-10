@@ -29,6 +29,11 @@ export function TerminalTop({
   const hidden = usePrivacy();
   return (
     <div className="terminal-top">
+      {/* One h1 per page (R2.18): the market the terminal is on; the chip below is its button. */}
+      <h1 className="sr-only">
+        {t.symbol}
+        {t.market?.name ? ` · ${t.market.name}` : ""}
+      </h1>
       <div className="terminal-top-row">
         <button
           type="button"

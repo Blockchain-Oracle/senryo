@@ -145,7 +145,11 @@ its real mark. Nothing on screen reads like engineering notes or a dead end.
     the real setup order, the dock, the Settings rows).
 - [ ] R2.17 Web shell: splash, PWA install sheet and a "new version" toast (Owarine `Splash.tsx`, `InstallSheet.tsx`,
   `useAppUpdate.ts`).
-- [ ] R2.18 A11y: one h1 per page; `"use client"` where hooks are used; the HealthChip status dot replaced per D-237.
+- [x] R2.18 A11y: one h1 per page; `"use client"` where hooks are used; the HealthChip status dot replaced per D-237.
+  - *As built (10 Oct):* every web route counted in the browser has exactly one h1 (20 routes): Home's duplicate
+    "Call the next move" heading is "Markets" and a signed-in Home names itself; the terminal ("BTC · Bitcoin") and a
+    shared call's page get a screen-reader h1 above their visual heroes. `TeamMark` was the one hook user without
+    `"use client"`. The HealthChip is its word alone, toned ink / warn / muted — no dot, no pulse, never green.
 
 ## Handoff
 (written at the end of the stage)

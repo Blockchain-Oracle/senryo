@@ -98,30 +98,16 @@
   color: var(--shell-ink-2);
   font: 600 12px / 1 var(--shell-font);
 }
-.health-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+/* The word is the state (D-237: no status dots): ink when live, warn when late, muted when closed or without a price
+ * (R1.20) — never green, which means direction (R2.2). */
+.health-chip.is-live {
+  color: var(--foreground);
 }
-.health-chip.is-live .health-dot {
-  background: var(--up);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--up) 60%, transparent);
+.health-chip.is-waiting {
+  color: var(--warn);
 }
-.health-chip.is-waiting .health-dot {
-  background: var(--warn);
-  animation: health-pulse 900ms var(--motion-ease) infinite alternate;
-}
-/* Closed, halted or no price (R1.20): a still, neutral dot — never the live one. */
-.health-chip.is-off .health-dot {
-  background: color-mix(in srgb, var(--shell-ink-2) 55%, transparent);
-}
-@keyframes health-pulse {
-  from {
-    opacity: 0.35;
-  }
-  to {
-    opacity: 1;
-  }
+.health-chip.is-off {
+  color: var(--text-3);
 }
 
 /* ── the stage: one filled plate holds the page ────────────────────────────────────────────────────────────────── */
@@ -284,9 +270,6 @@
   .rail-item,
   .dock-seal {
     transition: none;
-  }
-  .health-chip.is-waiting .health-dot {
-    animation: none;
   }
 }
 
