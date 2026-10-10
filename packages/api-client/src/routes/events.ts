@@ -72,7 +72,15 @@ export const committeeSchema = z.object({
   id: z.int(),
   quorum: z.int(),
   runBy: z.string(),
-  members: z.array(z.object({ address: addressSchema, name: z.string(), reads: z.string() })),
+  members: z.array(
+    z.object({
+      address: addressSchema,
+      name: z.string(),
+      reads: z.string(),
+      /** Where the member reads (its mark on screen, R2.8); absent from an older api. */
+      source: z.enum(["league", "espn", "thescore"]).optional(),
+    }),
+  ),
 });
 
 export type CommitteeView = z.output<typeof committeeSchema>;

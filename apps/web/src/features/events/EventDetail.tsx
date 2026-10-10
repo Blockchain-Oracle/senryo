@@ -30,6 +30,7 @@ import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./EventCard";
+import { SourceMark } from "./SourceMark";
 
 const BYTES32 = /^0x[0-9a-fA-F]{64}$/;
 const MS_PER_SECOND = 1000;
@@ -63,7 +64,10 @@ export function EventDetail() {
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
-          <span className="text-meta text-text-3">{leagueName(e.league)} · Yes / No · Practice</span>
+          <span className="flex items-center gap-1.5 text-meta text-text-3">
+            <SourceMark source="league" league={e.league} />
+            {leagueName(e.league)} · Yes / No · Practice
+          </span>
           <h1 className="font-semibold text-page-title">{e.question}</h1>
           <span className="text-body text-text-2">{statusLine(e, now)}</span>
         </div>
@@ -94,6 +98,8 @@ export function EventDetail() {
               <MemberRow
                 key={m.address}
                 name={m.name}
+                source={m.source}
+                league={e.league}
                 reads={m.reads}
                 address={m.address}
                 answer={byMember.get(m.address.toLowerCase()) ?? null}
@@ -115,6 +121,8 @@ export function EventDetail() {
 
 function MemberRow(p: {
   name: string;
+  source: string | undefined;
+  league: string;
   reads: string;
   address: string;
   answer: EventAnswerView | null;
@@ -126,7 +134,10 @@ function MemberRow(p: {
   return (
     <li className="flex flex-col gap-1 py-3">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-semibold text-row-title">{p.name}</span>
+        <span className="flex items-center gap-2 font-semibold text-row-title">
+          <SourceMark source={p.source} league={p.league} />
+          {p.name}
+        </span>
         <span className={cn("font-semibold text-row-title", a ? (a.yes ? "text-up" : "text-down") : "text-text-3")}>
           {a ? sideWord(a.yes) : "Not yet"}
         </span>

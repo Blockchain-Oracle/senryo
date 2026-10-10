@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { EventCard } from "./EventCard";
 import { HowItSettles, usePhoneEvents } from "./EventsScreen";
+import { SourceMark } from "./SourceMark";
 
 const BYTES32 = /^0x[0-9a-fA-F]{64}$/;
 const MS_PER_SECOND = 1000;
@@ -79,6 +80,8 @@ export function EventDetailScreen({ eventId }: { eventId: string }) {
               <MemberRow
                 key={m.address}
                 name={m.name}
+                source={m.source}
+                league={detail.value.event.league}
                 answer={detail.value.answers.find((a) => a.member.toLowerCase() === m.address.toLowerCase()) ?? null}
                 chainId={flow.chainId}
               />
@@ -101,7 +104,13 @@ function Fact(p: { label: string; value: string }) {
   );
 }
 
-function MemberRow(p: { name: string; answer: EventAnswerView | null; chainId: ChainId }) {
+function MemberRow(p: {
+  name: string;
+  source: string | undefined;
+  league: string;
+  answer: EventAnswerView | null;
+  chainId: ChainId;
+}) {
   const { color } = useTheme();
   const a = p.answer;
   const read = a ? statementRead(a) : null;
@@ -109,7 +118,10 @@ function MemberRow(p: { name: string; answer: EventAnswerView | null; chainId: C
   return (
     <View style={[styles.member, { borderBottomColor: color.hairline }]}>
       <View style={styles.fact}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{p.name}</Text>
+        <View style={styles.named}>
+          <SourceMark source={p.source} league={p.league} />
+          <Text style={[TYPE.rowTitle, { color: color.ink }]}>{p.name}</Text>
+        </View>
         <Text style={[TYPE.rowTitle, { color: a ? (a.yes ? color.up : color.down) : color.inkMuted }]}>
           {a ? sideWord(a.yes) : "Not yet"}
         </Text>
@@ -147,6 +159,7 @@ function TxLink(p: { chainId: ChainId; hash: string; label: string }) {
 }
 
 const styles = StyleSheet.create({
+  named: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.xl },
   section: { gap: SPACE.sm },
   fact: { flexDirection: "row", justifyContent: "space-between", gap: SPACE.sm },

@@ -21,6 +21,7 @@ import { accountRequiredRoute } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { EventCard, eventRoute } from "./EventCard";
+import { SourceMark } from "./SourceMark";
 
 /** The flow both event screens share, with the phone's effects. */
 export function usePhoneEvents(): EventsFlow {
@@ -54,9 +55,15 @@ export function EventsScreen() {
       style={{ backgroundColor: color.ground }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
     >
-      <Text style={[TYPE.body, { color: color.inkMuted }]}>
-        Real games · Yes or No · winners share the losing side · {LEAGUES.map((l) => leagueName(l.key)).join(", ")}
-      </Text>
+      <Text style={[TYPE.body, { color: color.inkMuted }]}>Real games · Yes or No · winners share the losing side</Text>
+      <View style={styles.leagues}>
+        {LEAGUES.map((l) => (
+          <View key={l.key} style={styles.league}>
+            <SourceMark source="league" league={l.key} />
+            <Text style={[TYPE.caption, { color: color.inkMuted }]}>{leagueName(l.key)}</Text>
+          </View>
+        ))}
+      </View>
       {empty ? (
         <Text accessibilityLiveRegion="polite" style={[TYPE.body, { color: color.inkMuted }]}>
           {empty}
@@ -94,7 +101,10 @@ export function HowItSettles({ committee }: { committee: CommitteeView | null })
           {committee.members.map((m) => (
             <View key={m.address} style={[styles.row, { borderBottomColor: color.hairline }]}>
               <View style={styles.flex}>
-                <Text style={[TYPE.rowTitle, { color: color.ink }]}>{m.name}</Text>
+                <View style={styles.league}>
+                  <SourceMark source={m.source} />
+                  <Text style={[TYPE.rowTitle, { color: color.ink }]}>{m.name}</Text>
+                </View>
                 <Text style={[TYPE.caption, { color: color.inkMuted }]}>Reads {m.reads}</Text>
               </View>
               <Text style={[TYPE.caption, { color: color.inkMuted }]}>{shortAddress(m.address)}</Text>
@@ -156,6 +166,8 @@ function YourCalls({ calls, signedIn }: { calls: readonly EventCallView[]; signe
 }
 
 const styles = StyleSheet.create({
+  leagues: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: SPACE.sm },
+  league: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.lg },
   section: { gap: SPACE.md },
   flex: { flex: 1 },

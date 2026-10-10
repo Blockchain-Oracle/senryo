@@ -15,6 +15,7 @@ import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { EventCard } from "./EventCard";
 import { HowItSettles, YourEventCalls } from "./EventSide";
+import { SourceMark } from "./SourceMark";
 
 export function EventsScreen() {
   const account = useAccount();
@@ -35,8 +36,14 @@ export function EventsScreen() {
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="flex flex-col gap-6">
-        <p className="text-body text-text-2">
-          Real games · Yes or No · winners share the losing side · {LEAGUES.map((l) => leagueName(l.key)).join(", ")}
+        <p className="text-body text-text-2">Real games · Yes or No · winners share the losing side</p>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-text-2">
+          {LEAGUES.map((l) => (
+            <span key={l.key} className="flex items-center gap-1.5">
+              <SourceMark source="league" league={l.key} />
+              {leagueName(l.key)}
+            </span>
+          ))}
         </p>
         {!flow.live ? (
           <p className="text-body text-text-2" role="status">

@@ -89,7 +89,7 @@ export function committeeView(chainId: ChainId) {
     id: c.id,
     quorum: c.quorum,
     runBy: c.runBy,
-    members: c.members.map((m) => ({ address: m.address, name: m.name, reads: m.reads })),
+    members: c.members.map((m) => ({ address: m.address, name: m.name, reads: m.reads, source: m.source })),
   };
 }
 

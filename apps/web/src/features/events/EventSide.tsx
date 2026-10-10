@@ -10,6 +10,7 @@ import Link from "next/link";
 import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { cn } from "@/lib/utils";
 import { eventHref } from "./EventCard";
+import { SourceMark } from "./SourceMark";
 
 export function HowItSettles({ committee, feeBps }: { committee: CommitteeView | null; feeBps: number }) {
   return (
@@ -22,7 +23,10 @@ export function HowItSettles({ committee, feeBps }: { committee: CommitteeView |
             {committee.members.map((m) => (
               <li key={m.address} className="flex items-baseline justify-between gap-3 py-2">
                 <span className="flex min-w-0 flex-col">
-                  <span className="font-semibold text-row-title">{m.name}</span>
+                  <span className="flex items-center gap-2 font-semibold text-row-title">
+                    <SourceMark source={m.source} />
+                    {m.name}
+                  </span>
                   <span className="truncate text-meta text-text-3">Reads {m.reads}</span>
                 </span>
                 <span className="tnum text-meta text-text-3">{shortAddress(m.address)}</span>
