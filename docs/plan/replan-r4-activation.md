@@ -41,6 +41,10 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
   - env gets `EVENT_SIGNER_{1,2,3}_PK` and `KEEPER_JOBS`: sync, settle, fills, parlays, duels, events, calendars,
     earn, retention, receipts, pushes, **sigma**, **rides**, **bounds**;
   - the σ-mark signer key is held by the keeper and given its role.
+  - **Note (11 Oct):** the local copy `~/.config/senryo/deploy/keeper.env` still lists pre-pivot jobs (`liquidate,
+    observe, mirror, …`), which the keeper drops as unknown. At R4.8 the Coolify env is read first: `KEEPER_JOBS`
+    unset (every job) or listing `sync, settle, fills, parlays, duels, events, calendars, earn, sigma, rides, bounds,
+    retention, receipts, pushes`. The σ-mark role needs no key: the deploy allows the keeper and the relay as signers.
 - [ ] R4.3 Keeper jobs:
   - `sigma`: an EWMA from `pyth_prints`, signed each minute. One shared definition in `@senryo/service-common`
     (`sigma-marks.ts`), the same as `scripts/calibrate/series.py` `SigmaMarks`:
@@ -119,6 +123,9 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
   `user:` topics.
 - [ ] R4.7 Apps: the Duel, Events, Earn, Parlay and stocks/baskets screens switch from read-only to live. Their R2
   interim states are deleted.
+  - **Note (11 Oct):** the read-only states are driven by the address book (`isDeployed(chain, "DuelArena")`,
+    `"EventBook"`, `"PoolShares"`; a series' `listed`), so on testnet they turn live by themselves with the v3 book.
+    The gates stay — mainnet opens these products at S9 — and R4.8's simulator pass checks each screen live.
 - [ ] R4.8 Deploy the api, keeper, indexer and web; phone OTA after one simulator pass; acceptance rows (S7, S8, rides).
   - **The switch, in order (11 Oct):** the new services work only v3, so v1 drains first under the old ones:
     1. pause v1's opens (`setPaused` on the v1 reserve) — closes, settlement and payouts go on;
