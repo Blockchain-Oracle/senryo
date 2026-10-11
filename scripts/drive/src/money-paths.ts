@@ -34,18 +34,11 @@ import {
   windowIdOf,
 } from "@senryo/chain";
 import { FILL_DELAY_SEC, LOCKOUT_SEC, MIN_HOLD_SEC, quoteCurve, RIDE_TERMS } from "@senryo/config";
-import {
-  clampMark,
-  loadSurchargeE6,
-  markMinuteOf,
-  quoteOpen,
-  rideFee,
-  rideNotional,
-  withTolerance,
-} from "@senryo/core";
+import { clampMark, loadSurchargeE6, markMinuteOf, quoteOpen, rideFee, rideNotional } from "@senryo/core";
 import { sleep } from "./lib.ts";
 import {
   type Act,
+  ADVERSE_BPS,
   account,
   api,
   BPS,
@@ -58,6 +51,7 @@ import {
   LEVERAGE_BPS,
   loadCatalog,
   MARGIN,
+  MIN_LEFT_SEC,
   MS,
   NEEDED,
   nowSec,
@@ -74,7 +68,6 @@ import {
   settled,
   signIn,
   spotE8,
-  TOLERANCE_BPS,
   txs,
   UP,
   until,
@@ -85,7 +78,7 @@ import {
 
 async function openCall(catalog: Awaited<ReturnType<typeof loadCatalog>>, what: string) {
   let start = nowSec() - (nowSec() % CADENCE);
-  if (nowSec() + LOCKOUT_SEC + FILL_DELAY_SEC >= start + CADENCE) {
+  if (nowSec() + Math.max(LOCKOUT_SEC + FILL_DELAY_SEC, MIN_LEFT_SEC) >= start + CADENCE) {
     await sleep((start + CADENCE - nowSec() + 1) * MS);
     start += CADENCE;
   }
@@ -118,14 +111,12 @@ async function openCall(catalog: Awaited<ReturnType<typeof loadCatalog>>, what: 
   };
   const band = catalog.series.bands[UP];
   if (!band) throw new Error("no Up band");
-  const q = quoteOpen(
-    band,
-    { openE8: k, mark, tauSec: BigInt(start + CADENCE - fillAt) },
-    await spotE8(),
-    STAKE,
-    terms,
-  );
-  if (q.refusal) {
+  const w = { openE8: k, mark, tauSec: BigInt(start + CADENCE - fillAt) };
+  const spot = await spotE8();
+  const q = quoteOpen(band, w, spot, STAKE, terms);
+  // Up pays less the higher the price goes: the limit is the payout at a p99 2-second rise (D-300).
+  const adverse = quoteOpen(band, w, (spot * (BPS + ADVERSE_BPS)) / BPS, STAKE, terms);
+  if (q.refusal || adverse.refusal) {
     check(false, `${what}: quoted (${q.refusal})`);
     return undefined;
   }
@@ -137,7 +128,7 @@ async function openCall(catalog: Awaited<ReturnType<typeof loadCatalog>>, what: 
     band: UP,
     ticketId: 0n,
     amount: STAKE,
-    limit: withTolerance(q.payout, TOLERANCE_BPS),
+    limit: adverse.payout,
     recipient: owner,
     configVersion: catalog.configVersion,
     deadline: BigInt(nowSec() + INTENT_TTL_SEC),

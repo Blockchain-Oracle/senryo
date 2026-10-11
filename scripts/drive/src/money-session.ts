@@ -29,14 +29,24 @@ import { sleep } from "./lib.ts";
 export const CHAIN = TESTNET_CHAIN_ID;
 export const ORIGIN = process.env.API_ORIGIN ?? "http://127.0.0.1:3901";
 export const SYMBOL = "BTC";
-export const CADENCE = 60;
+/**
+ * The 5-minute lane, opened with at least `MIN_LEFT_SEC` to go: in a 1-minute window's last seconds the odds swing so
+ * fast that a second between the quote and the fill print can move the payout past the 3 % limit (the slippage
+ * guard refunds it — right for a rider, noise for a drive).
+ */
+export const CADENCE = 300;
+export const MIN_LEFT_SEC = 60;
 export const UP = 0;
 export const RIDE_MARKET = 0;
 export const STAKE = 2_000_000n;
 export const MARGIN = 5_000_000n;
 export const LEVERAGE_BPS = 100_000;
-/** The quote may move this much between the signature and the fill print. */
-export const TOLERANCE_BPS = 300n;
+/**
+ * The limit is set in price terms (D-300; R5.8 brings it to the apps): the payout quoted at the price a p99
+ * 2-second move against the call would reach — 3 bp for BTC. Near the money a 1–2 s tick moves an Up payout ≈ 9 %
+ * per dollar, so "3 % of the quote" refunds about every other call after an adverse tick.
+ */
+export const ADVERSE_BPS = 3n;
 export const BPS = 10_000n;
 /** A long ride accepts an entry up to 2 % above the price it saw, a close down to 2 % below. */
 export const SLIPPAGE_BPS = 200n;
