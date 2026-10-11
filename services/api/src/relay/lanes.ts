@@ -4,6 +4,7 @@ import {
   type HeadTracker,
   LocalNonceSource,
   type ReadClient,
+  type RpcOverrides,
   type Sender,
   type Signer,
 } from "@senryo/chain";
@@ -26,7 +27,18 @@ export class Lane {
   }
 }
 
-export function openLanes(chainId: ChainId, read: ReadClient, heads: HeadTracker, db: Db, signers: Signer[]): Lane[] {
+/**
+ * One lane per sponsor key. `rpc` is the chain's own endpoints from the env: the lanes broadcast exactly where the api
+ * reads (a fork stays a fork — without it they would broadcast to the network's public RPCs).
+ */
+export function openLanes(
+  chainId: ChainId,
+  read: ReadClient,
+  heads: HeadTracker,
+  db: Db,
+  signers: Signer[],
+  rpc: RpcOverrides | undefined,
+): Lane[] {
   const fees = new FeeCache(read);
   fees.start();
   return signers.map(
@@ -35,6 +47,7 @@ export function openLanes(chainId: ChainId, read: ReadClient, heads: HeadTracker
         createSender({
           chainId,
           account,
+          rpc,
           read,
           heads,
           fees,

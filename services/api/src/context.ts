@@ -1,4 +1,11 @@
-import { createReadClient, createWsClient, HeadTracker, isDeployed, type ReadClient } from "@senryo/chain";
+import {
+  createReadClient,
+  createWsClient,
+  HeadTracker,
+  isDeployed,
+  type ReadClient,
+  type RpcOverrides,
+} from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
 import {
   type Db,
@@ -29,6 +36,8 @@ import type { StreamBus } from "./stream/bus.ts";
 export interface ChainContext {
   chainId: ChainId;
   deployed: boolean;
+  /** The env's endpoints for this chain (its reads, heads and the relay's broadcasts), or the network's defaults. */
+  rpc: RpcOverrides | undefined;
   read: ReadClient;
   heads: HeadTracker;
   /** Which catalogue series are on this chain (R1.24). */
@@ -83,7 +92,7 @@ export async function openChains(env: ApiEnv, log: Logger): Promise<Map<ChainId,
     const deployed = isDeployed(chainId, MARKETS_CONTRACT);
     const listing = new SeriesListing(chainId, read, log);
     if (deployed) await listing.start();
-    chains.set(chainId, { chainId, deployed, read, heads, listing });
+    chains.set(chainId, { chainId, deployed, rpc, read, heads, listing });
     log.info({ chainId, deployed }, "chain ready");
   }
   return chains;

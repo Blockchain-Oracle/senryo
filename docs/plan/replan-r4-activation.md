@@ -84,6 +84,18 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
     notices on `market_ride` reach the owner's stream as `ride`. Keeper: `rides` (sync with `rideOf`, backup fills,
     expiries, `settleEnds`) and `bounds` (the archive's crossings inside admission); the print watch archives every
     ride's fill target and end of life.
+  - **Proven on a fork (11 Oct):** the v3 route on an anvil fork of 10143 (257 txs), the api and keeper against it
+    with a scratch Postgres, `scripts/drive/src/money-paths.ts` as a fresh Practice wallet — Practice dollars, a call
+    opened (σ-marked fill) and cashed out, a call closed by its exit, a ride opened and closed, a ride closed by its
+    exit: every path ended where it should; tickets numbered #1001 on (D-314). Bounds and ends with storage pokes on
+    the fork: a knock-out and a cap-out settled by the keeper's archive sweep, an end of life by `settleEnds` at the
+    print the print watch archived, and — after its fix — a knock-out by the api's bound watcher within 2 s. Earn's
+    first roll went through (`lastRoll` 00:00 UTC).
+  - **Found and fixed on the way:** the relay's lanes broadcast to the network's public RPCs whatever `RPC_HTTP` said
+    (a local run sent one Practice mint to the real testnet with the sponsor key — it reverted there, nonce 125; the
+    production lane re-reads its nonce after one refusal); lanes now broadcast where the api reads. The bound watcher
+    settled at a print before a block could carry its second (refused as early, retried forever); it now waits for
+    the chain's clock as fills do.
 - [ ] R4.5 Indexer:
   - reads the v1 and v3 reserves;
   - ride entities (Ride, RideSide, records);
@@ -108,6 +120,15 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
 - [ ] R4.7 Apps: the Duel, Events, Earn, Parlay and stocks/baskets screens switch from read-only to live. Their R2
   interim states are deleted.
 - [ ] R4.8 Deploy the api, keeper, indexer and web; phone OTA after one simulator pass; acceptance rows (S7, S8, rides).
+  - **The switch, in order (11 Oct):** the new services work only v3, so v1 drains first under the old ones:
+    1. pause v1's opens (`setPaused` on the v1 reserve) — closes, settlement and payouts go on;
+    2. wait until `market_tickets` has no v1 ticket in `committed`/`open`/`closing` (≤ 1 h windows, then payouts);
+    3. R4.1's deploy (v3's ticket ids start after 1,000, D-314, so v1's rows stay as history);
+    4. api (with the σ desk) → keeper (with `sigma`, `rides`, `bounds`) → indexer (v3 addresses) → web → phone OTA.
+  - **Acceptance for the slow ride paths:** an end of life and a cap-out need the price or the clock; a knock-out needs
+    a ≈ 2 % move at 40×. PARAMS temporarily lists BTC's ride terms with a short life and a tiny `maxMoveBps` for one
+    run (a long caps out within seconds, a ride ends within minutes), then restores them; the knock-out row waits for
+    a 2 % move on a pair of 40× rides, one each way.
 
 ## Handoff
 (written at the end of the stage)

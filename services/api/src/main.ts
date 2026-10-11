@@ -89,7 +89,7 @@ const sponsors = [loadOptionalSigner("SPONSOR"), loadOptionalSigner("SPONSOR_2")
 const markets: ApiContext["markets"] = new Map();
 for (const chain of chains.values()) {
   if (!chain.deployed || sponsors.length === 0) continue;
-  const lanes = openLanes(chain.chainId, chain.read, chain.heads, db, sponsors);
+  const lanes = openLanes(chain.chainId, chain.read, chain.heads, db, sponsors, chain.rpc);
   const relay = new MarketRelay({
     chainId: chain.chainId,
     read: chain.read,

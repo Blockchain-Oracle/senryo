@@ -12,6 +12,7 @@ import { type ChainId, feedIdOf, type MarketSpec, rideMarketSpec } from "@senryo
 import { ridePastCap, ridePastKo, toE8 } from "@senryo/core";
 import { applyRideChanges, type Db, type Logger, nowSec, type RideRow } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
+import { retryWhileEarly, untilChainReaches } from "./chain-clock.ts";
 import { BOUND_RETRY_MS, BOUND_TICK_MS, EXIT_RELOAD_MS, RIDE_BATCH_MAX } from "./constants.ts";
 import type { Lane } from "./lanes.ts";
 
@@ -117,17 +118,21 @@ export class BoundWatcher {
     if (!print) return;
     const proof = proofOf(m.spec, print.updates);
     const reserve = addressOf(this.d.chainId, "BandReserve");
+    // The crossing is this second's print: usable once a block can carry its second (as a fill's is).
+    await untilChainReaches(print.publishTime);
     for (let i = 0; i < crossed.length; i += RIDE_BATCH_MAX) {
       const ids = crossed.slice(i, i + RIDE_BATCH_MAX).map((r) => r.ride_id);
       for (const id of ids) this.tried.set(id, Date.now());
       try {
-        const sent = await this.d.lane.run((sender) =>
-          sendTx(sender, {
-            to: reserve,
-            data: settleBoundsCallData(t, ids, proof),
-            action: "rideBounds",
-            meta: { job: "bounds", t: String(t) },
-          }),
+        const sent = await retryWhileEarly(() =>
+          this.d.lane.run((sender) =>
+            sendTx(sender, {
+              to: reserve,
+              data: settleBoundsCallData(t, ids, proof),
+              action: "rideBounds",
+              meta: { job: "bounds", t: String(t) },
+            }),
+          ),
         );
         await applyRideChanges(this.d.db, this.d.chainId, rideChanges(sent.receipt.logs, reserve), sent.hash);
         this.d.log.info(
