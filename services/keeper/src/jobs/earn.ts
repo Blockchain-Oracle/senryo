@@ -23,6 +23,7 @@ import {
   EARN_DELIVER_EVERY_MS,
   EARN_INTERVAL_MS,
   EARN_MARK_SEND_BY_SEC,
+  EARN_OVERDUE_SEC,
   EARN_ROLL_AT_SEC,
   HOUR_SEC,
   MINUTE_SEC,
@@ -48,9 +49,10 @@ export function earnJob(ctx: KeeperContext): Job {
       if (!earnDeployed(ctx.chainId)) return;
       const now = nowSec();
       const minute = now - (now % MINUTE_SEC);
+      // With rides open the boundary print may reach the archive a moment late: the minute is retried each tick until
+      // the roll is attempted or its mark could no longer be fresh.
       if (minute > triedMinute && now - minute >= EARN_ROLL_AT_SEC) {
-        triedMinute = minute;
-        await rollIfDue(ctx, now, minute);
+        if ((await rollIfDue(ctx, now, minute)) === "attempted") triedMinute = minute;
       }
       if (Date.now() - deliveredAt >= EARN_DELIVER_EVERY_MS) {
         deliveredAt = Date.now();
@@ -60,7 +62,8 @@ export function earnJob(ctx: KeeperContext): Job {
   };
 }
 
-async function rollIfDue(ctx: KeeperContext, now: number, minute: number): Promise<void> {
+/** "waiting": rides are open and the boundary's print isn't archived yet (try again next tick). */
+async function rollIfDue(ctx: KeeperContext, now: number, minute: number): Promise<"attempted" | "waiting"> {
   const shares = addressOf(ctx.chainId, "PoolShares");
   const reserve = addressOf(ctx.chainId, "BandReserve");
   const [lastRoll, ridesOpen] = await Promise.all([
@@ -69,20 +72,23 @@ async function rollIfDue(ctx: KeeperContext, now: number, minute: number): Promi
   ]);
   const current = now - (now % HOUR_SEC);
   const hour = lastRoll === 0 ? current : lastRoll + HOUR_SEC;
-  if (hour > current) return;
+  if (hour > current) return "attempted";
   try {
     if (!ridesOpen) {
       await send(ctx, shares, rollCallData(hour, hour), "earnRoll", String(hour));
-      return;
+      return "attempted";
     }
-    if (minute < hour || now - minute > EARN_MARK_SEND_BY_SEC) return;
+    if (minute < hour || now - minute > EARN_MARK_SEND_BY_SEC) return "attempted";
     const calls = await rideMarkCalls(ctx, minute);
-    if (!calls) return;
+    if (!calls) return "waiting";
     calls.push({ target: shares, allowFailure: false, callData: rollCallData(hour, minute) });
     await send(ctx, MULTICALL3_ADDRESS, aggregate(calls), "earnRollMarked", `${hour}@${minute}`);
   } catch (error) {
-    ctx.log.debug({ hour, err: describeError(error) }, "earn roll not due yet");
+    // Refused until the hour's windows settle — normal for a few minutes; past that, something holds it.
+    const level = now - hour > EARN_OVERDUE_SEC ? "warn" : "debug";
+    ctx.log[level]({ hour, minute, err: describeError(error) }, "earn roll refused; trying again next minute");
   }
+  return "attempted";
 }
 
 /** Each ride market with open rides: its print of `minute` recorded, each side's frontier refreshed (null: a print is

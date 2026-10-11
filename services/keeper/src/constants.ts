@@ -67,12 +67,15 @@ export const SIGMA_AFTER_SEC = 1;
 export const SIGMA_WAIT_SEC = 4;
 /**
  * Earn (D-287, D-307): the hourly roll is tried once a minute after the hour until the hour's windows are settled —
- * `EARN_ROLL_AT_SEC` past a boundary, once its prints are archived; with rides open it is sent only while that
- * boundary's print can still be at most 5 s old when mined. Deliveries run once a minute.
+ * `EARN_ROLL_AT_SEC` past a boundary; with rides open, as soon as the boundary's prints are archived and only while
+ * that print can still be at most 5 s old when mined. Deliveries run once a minute.
  */
 export const EARN_INTERVAL_MS = 1_000;
 export const EARN_ROLL_AT_SEC = 1;
-export const EARN_MARK_SEND_BY_SEC = 2;
+/** The mark must be ≤ 5 s old when mined: sent by 3 s past its boundary, with the print archived by then. */
+export const EARN_MARK_SEND_BY_SEC = 3;
+/** An hour still not rolled this long after it ends is logged as a warning each minute. */
+export const EARN_OVERDUE_SEC = 600;
 export const EARN_DELIVER_EVERY_MS = 60_000;
 export const HOUR_SEC = 3600;
 export const MINUTE_SEC = 60;

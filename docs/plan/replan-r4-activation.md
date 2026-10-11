@@ -94,7 +94,16 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
     exit: every path ended where it should; tickets numbered #1001 on (D-314). Bounds and ends with storage pokes on
     the fork: a knock-out and a cap-out settled by the keeper's archive sweep, an end of life by `settleEnds` at the
     print the print watch archived, and — after its fix — a knock-out by the api's bound watcher within 2 s. Earn's
-    first roll went through (`lastRoll` 00:00 UTC).
+    first roll went through (`lastRoll` 00:00 UTC). **The roll with a ride open (11 Oct, second fork):** one
+    Multicall3 transaction recorded BTC's 09:40:00 print, refreshed the long side's frontier and rolled 09:00 with
+    `ridesOwed` 15,289 (the open ride's profit at that print, equal to `markRides`), 1.16M gas of the 6M ceiling. The
+    minutes before it had failed only because this machine's network was dropping the Hermes stream (boundary prints
+    back-filled minutes late); the keeper now retries each tick from 1 s to 3 s past a boundary instead of once, and
+    warns when an hour is ten minutes overdue.
+  - **Money paths on the second fork:** the first call of a run was refunded twice for slippage — near the money a
+    1–2 s tick moves an Up payout ≈ 9 % per dollar of BTC, so "3 % of the quote" refuses about every other call after
+    an adverse tick (D-300's price-terms limit, R5.8, fixes it in the apps; the drive uses it now). With it, every path
+    ended where it should.
   - **Found and fixed on the way:** the relay's lanes broadcast to the network's public RPCs whatever `RPC_HTTP` said
     (a local run sent one Practice mint to the real testnet with the sponsor key — it reverted there, nonce 125; the
     production lane re-reads its nonce after one refusal); lanes now broadcast where the api reads. The bound watcher
