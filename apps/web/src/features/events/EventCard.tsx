@@ -5,10 +5,11 @@
  * how it ended; the question links to its page with the committee's statements.
  */
 import type { EventView } from "@senryo/api-client";
-import { estimateFor, eventPhase, leagueName, liveLine, sideWord, spanText, statusLine } from "@senryo/calls";
+import { estimateFor, eventPhase, leagueName, sideWord, spanText, statusLine } from "@senryo/calls";
 import type { EventReceipt, EventsFlow } from "@senryo/calls/react";
 import { EVENTS, explorerTxUrl } from "@senryo/config";
 import { usd } from "@senryo/core";
+import { ids, TEAM_CRESTS } from "@senryo/identity";
 import Link from "next/link";
 import { PredictionMarketCard } from "@/components/ui/prediction-market-card";
 import { TeamMark } from "./TeamMark";
@@ -26,15 +27,33 @@ export function EventCard(p: { event: EventView; flow: EventsFlow; now: number; 
   const e = p.event;
   const phase = eventPhase(e, p.now);
   const mine = p.flow.receipt?.eventId === e.eventId ? p.flow.receipt : null;
+  const colorOf = (abbr: string) => TEAM_CRESTS[ids.team(e.league, abbr)]?.color ?? null;
+  const live = e.live && e.live.state !== "pre" ? e.live : null;
   return (
     <PredictionMarketCard
+      board={{
+        home: {
+          crest: <TeamMark league={e.league} team={e.home} size="lg" />,
+          name: e.home.name,
+          score: live?.home ?? null,
+          color: colorOf(e.home.abbr),
+        },
+        away: {
+          crest: <TeamMark league={e.league} team={e.away} size="lg" />,
+          name: e.away.name,
+          score: live?.away ?? null,
+          color: colorOf(e.away.abbr),
+        },
+        state: live ? (live.state === "in" ? `LIVE · ${live.detail}` : live.detail || "Final") : startText(e.startsAt),
+        live: live?.state === "in",
+      }}
       marks={
         <>
           <TeamMark league={e.league} team={e.home} />
           <TeamMark league={e.league} team={e.away} />
         </>
       }
-      meta={liveLine(e) ?? `${leagueName(e.league)} · ${startText(e.startsAt)}`}
+      meta={leagueName(e.league)}
       question={
         <Link
           href={eventHref(e.eventId)}

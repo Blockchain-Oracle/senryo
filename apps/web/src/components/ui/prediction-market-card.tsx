@@ -30,6 +30,60 @@ export interface PredictionCallView {
   action?: { label: string; onClick: () => void };
 }
 
+export interface BoardSide {
+  crest: ReactNode;
+  name: string;
+  score: number | null;
+  /** The team's colour (its edge band and wash); null draws none. */
+  color: string | null;
+}
+
+export interface ScoreBoard {
+  home: BoardSide;
+  away: BoardSide;
+  /** "LIVE · 2nd 12:41", "Final", or the start ("Mon 18:00"). */
+  state: string;
+  live: boolean;
+}
+
+/** A team colour's faint wash behind its half of the card. */
+const WASH_ALPHA = "14";
+/** The team colour bands down the card's edges (research 10 §5: 6 px). */
+const BAND = "0.375rem";
+
+function BoardRow({ board }: { board: ScoreBoard }) {
+  const scored = board.home.score !== null && board.away.score !== null;
+  return (
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <TeamSide side={board.home} />
+      <div className="flex flex-col items-center gap-1">
+        <span className="tnum font-display font-semibold text-section-title">
+          {scored ? `${board.home.score} – ${board.away.score}` : "vs"}
+        </span>
+        <span
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-1.5 py-0.5 font-semibold text-micro",
+            board.live ? "bg-down-surface text-down" : "text-text-3",
+          )}
+        >
+          {board.live ? <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-down" /> : null}
+          {board.state}
+        </span>
+      </div>
+      <TeamSide side={board.away} />
+    </div>
+  );
+}
+
+function TeamSide({ side }: { side: BoardSide }) {
+  return (
+    <div className="flex min-w-0 flex-col items-center gap-1 text-center">
+      {side.crest}
+      <span className="w-full truncate font-semibold text-meta">{side.name}</span>
+    </div>
+  );
+}
+
 export function PredictionMarketCard(p: {
   /** The two sides' marks, home first. */
   marks: ReactNode;
@@ -57,6 +111,11 @@ export function PredictionMarketCard(p: {
   receipt: PredictionCallView | null;
   /** Why calling isn't possible here (not deployed, signed out…); null when it is. */
   blocked?: string | null;
+  /**
+   * The scoreboard (R7.9, research 10 §5): both crests facing each other with their names, the score between them and
+   * the game's state — instead of `marks` beside the question. Team colours run down the card's edges.
+   */
+  board?: ScoreBoard;
 }) {
   const reduce = useReducedMotion();
   const [side, setSide] = useState<boolean | null>(null);
@@ -93,7 +152,31 @@ export function PredictionMarketCard(p: {
   };
 
   return (
-    <article className="relative overflow-hidden rounded-2xl bg-card">
+    <article
+      className="relative overflow-hidden rounded-2xl bg-card"
+      style={
+        p.board && (p.board.home.color || p.board.away.color)
+          ? {
+              backgroundImage: [
+                p.board.home.color
+                  ? `radial-gradient(70% 60% at 0% 0%, ${p.board.home.color}${WASH_ALPHA}, transparent 70%)`
+                  : null,
+                p.board.away.color
+                  ? `radial-gradient(70% 60% at 100% 0%, ${p.board.away.color}${WASH_ALPHA}, transparent 70%)`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(", "),
+              boxShadow: [
+                p.board.home.color ? `inset ${BAND} 0 0 ${p.board.home.color}` : null,
+                p.board.away.color ? `inset -${BAND} 0 0 ${p.board.away.color}` : null,
+              ]
+                .filter(Boolean)
+                .join(", "),
+            }
+          : undefined
+      }
+    >
       <motion.div
         animate={reduce ? {} : showForm ? BEHIND : FRONT}
         transition={SPRING}
@@ -104,16 +187,24 @@ export function PredictionMarketCard(p: {
           <span className="truncate text-meta text-text-3">{p.meta}</span>
           {p.clock ? <span className="tnum font-semibold text-meta text-foreground">{p.clock}</span> : null}
         </div>
-        <div className="flex items-start gap-3">
-          <div className="flex shrink-0 -space-x-2">{p.marks}</div>
-          <h3 className="font-semibold text-row-title leading-snug">{p.question}</h3>
-        </div>
+        {p.board ? (
+          <>
+            <BoardRow board={p.board} />
+            <h3 className="text-center font-semibold text-row-title leading-snug">{p.question}</h3>
+          </>
+        ) : (
+          <div className="flex items-start gap-3">
+            <div className="flex shrink-0 -space-x-2">{p.marks}</div>
+            <h3 className="font-semibold text-row-title leading-snug">{p.question}</h3>
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-2">
           <Figure label="Pool" value={usd(total)} />
           <Figure label="On Yes" value={usd(p.pools.yes)} tone="up" />
           <Figure label="On No" value={usd(p.pools.no)} tone="down" />
         </div>
         <div className="flex flex-col gap-2">
+          {p.board ? <span className="text-micro text-text-3">Pool split</span> : null}
           <div className="flex items-baseline justify-between">
             <span className="tnum font-semibold text-section-title text-up">{share === null ? "—" : `${share}%`}</span>
             <span className="tnum text-meta text-text-3">
@@ -273,8 +364,10 @@ function SideButton(p: { yes: boolean; onClick: () => void; disabled: boolean; a
       onClick={p.onClick}
       disabled={p.disabled}
       className={cn(
-        "h-14 rounded-xl font-semibold text-button transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50",
-        p.yes ? "bg-up text-up-foreground" : "bg-down text-down-foreground",
+        "press-lift h-11 rounded-xl border-b-3 font-semibold text-button focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50",
+        p.yes
+          ? "border-up-fill-edge bg-up-fill text-on-direction-fill"
+          : "border-down-fill-edge bg-down-fill text-on-direction-fill",
       )}
     >
       {p.yes ? "Yes" : "No"}
