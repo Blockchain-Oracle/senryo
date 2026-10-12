@@ -48,7 +48,7 @@ async function readAccount(
   ctx: ApiContext,
   chainId: ChainId,
   owner: Address,
-): Promise<NonNullable<EarnView["account"]>> {
+): Promise<Omit<NonNullable<EarnView["account"]>, "basis">> {
   const read = chainOrThrow(ctx, chainId).read;
   const shares = { address: addressOf(chainId, "PoolShares"), abi: poolSharesAbi } as const;
   const dollar = dollarTokenOf(chainId);
@@ -95,14 +95,21 @@ export function registerEarnRoutes(app: HttpServer, ctx: ApiContext): void {
     if (!earnDeployed(query.chainId)) {
       return sendRoute(reply, earnRoute, { deployed: false, pool: null, account: null, hours: [] });
     }
-    const [pool, account, hours] = await Promise.all([
+    const [pool, account, hours, basis] = await Promise.all([
       readPool(ctx, query.chainId),
       query.owner ? readAccount(ctx, query.chainId, query.owner) : Promise.resolve(null),
       // Hours appear once the indexer has PoolShares; until then the screen simply has none to list.
-      reader.epochs(query.chainId).catch(() => []),
+      reader.epochs(query.chainId, query.range).catch(() => []),
+      // The cost basis appears once the indexer has re-read PoolShares' requests (P5); until then, none.
+      query.owner ? reader.earnBasis(query.chainId, query.owner).catch(() => null) : Promise.resolve(null),
     ]);
     reply.header("cache-control", "no-store");
-    return sendRoute(reply, earnRoute, { deployed: true, pool, account, hours });
+    return sendRoute(reply, earnRoute, {
+      deployed: true,
+      pool,
+      account: account ? { ...account, basis } : null,
+      hours,
+    });
   });
 
   app.post(earnRequestRoute.path, async (request, reply) => {

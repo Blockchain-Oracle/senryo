@@ -5,7 +5,7 @@
  */
 
 import { classifyAuthError, isSilent } from "@senryo/account";
-import { earnRequestRoute } from "@senryo/api-client";
+import { type EarnRange, earnRequestRoute } from "@senryo/api-client";
 import {
   addressOf,
   EARN_KIND,
@@ -65,11 +65,11 @@ export function checkEarnAmount(amount: string, max: bigint | undefined, noMax: 
 
 export type EarnResult = { state: "sent"; txHash: string } | { state: "cancelled" };
 
-export function useEarnFlow({ client, hint }: Caller) {
+export function useEarnFlow({ client, hint }: Caller, range: EarnRange = "1d") {
   const env = useQueryEnv();
   const queries = useQueryClient();
   const owner = hint?.address;
-  const earn = useEarn(owner);
+  const earn = useEarn(owner, range);
   const [pending, setPending] = useState<EarnKind | null>(null);
 
   const request = useCallback(

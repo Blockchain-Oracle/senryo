@@ -52,6 +52,57 @@ export interface SparkGeometry {
   tone: DayTone;
 }
 
+export interface SeriesGeometry {
+  /** The line as an SVG path; `M` restarts after a gap (a null). */
+  d: string;
+  /** The same line closed down to the box's floor, for the faint fill under it. */
+  area: string;
+  /** Where index `i` sits across, and where value `v` sits down, in the box. */
+  x: (i: number) => number;
+  y: (v: number) => number;
+  lo: number;
+  hi: number;
+}
+
+/**
+ * Any series as a line in a `width × height` box with `pad` kept clear top and bottom (P5 generalised D-319's day
+ * line): the points spread evenly across the width, gaps (null) break the path, `include` widens the range (a
+ * baseline). Null with fewer than two known points.
+ */
+export function seriesGeometry(
+  values: readonly (number | null)[],
+  width: number,
+  height: number,
+  pad: number,
+  include: readonly number[] = [],
+): SeriesGeometry | null {
+  const known = values.filter((v): v is number => v !== null);
+  if (known.length < 2) return null;
+  const lo = Math.min(...known, ...include);
+  const hi = Math.max(...known, ...include);
+  const span = hi - lo || 1;
+  const x = (i: number) => (i / Math.max(1, values.length - 1)) * width;
+  const y = (v: number) => pad + (1 - (v - lo) / span) * (height - pad * 2);
+  let d = "";
+  let area = "";
+  let run: { x: number; y: number }[] = [];
+  const flush = () => {
+    const first = run[0];
+    const last = run[run.length - 1];
+    if (!first || !last) return;
+    const line = run.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+    d += `${d ? " " : ""}${line}`;
+    area += `${area ? " " : ""}${line} L${last.x.toFixed(2)},${height} L${first.x.toFixed(2)},${height} Z`;
+    run = [];
+  };
+  values.forEach((v, i) => {
+    if (v === null) flush();
+    else run.push({ x: x(i), y: y(v) });
+  });
+  flush();
+  return { d, area, x, y, lo, hi };
+}
+
 /**
  * The geometry of a day line in a `width × height` box with `pad` kept clear top and bottom: the steps spread evenly
  * across the width and the live price (when known) closes it at the right edge. Null with fewer than two points.
@@ -66,31 +117,9 @@ export function sparkGeometry(
   const values: (number | null)[] = [...day.spark.slice(0, SPARK_POINTS)];
   while (values.length < SPARK_POINTS) values.push(null);
   values.push(nowE8 ?? null);
+  const g = seriesGeometry(values, width, height, pad, [day.openE8]);
+  if (!g) return null;
   const known = values.filter((v): v is number => v !== null);
-  if (known.length < 2) return null;
-  const lo = Math.min(...known, day.openE8);
-  const hi = Math.max(...known, day.openE8);
-  const span = hi - lo || 1;
-  const x = (i: number) => (i / (values.length - 1)) * width;
-  const y = (v: number) => pad + (1 - (v - lo) / span) * (height - pad * 2);
-  let d = "";
-  let area = "";
-  let run: { x: number; y: number }[] = [];
-  const flush = () => {
-    if (run.length === 0) return;
-    const first = run[0];
-    const last = run[run.length - 1];
-    if (!first || !last) return;
-    const line = run.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-    d += `${d ? " " : ""}${line}`;
-    area += `${area ? " " : ""}${line} L${last.x.toFixed(2)},${height} L${first.x.toFixed(2)},${height} Z`;
-    run = [];
-  };
-  values.forEach((v, i) => {
-    if (v === null) flush();
-    else run.push({ x: x(i), y: y(v) });
-  });
-  flush();
   const latest = known[known.length - 1] ?? day.openE8;
-  return { d, area, baseY: y(day.openE8), tone: dayTone(day.openE8, latest) };
+  return { d: g.d, area: g.area, baseY: g.y(day.openE8), tone: dayTone(day.openE8, latest) };
 }

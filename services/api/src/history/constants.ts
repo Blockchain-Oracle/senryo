@@ -14,5 +14,5 @@ export const LEADERBOARD_MAX_AGE = "public, s-maxage=30, max-age=10";
 /** Windows per page of the Proof feed. */
 export const WINDOWS_PAGE = 30;
 
-/** Earn's hourly results shown (a day). */
-export const EPOCHS_SHOWN = 24;
+/** Earn's hourly results shown per chart range (P5: 1D, 7D, 30D); one more row gives the first hour's change. */
+export const EPOCH_HOURS = { "1d": 24, "7d": 168, "30d": 720 } as const;

@@ -1,4 +1,4 @@
-import { indexer } from "envio";
+import { type EvmOnEventContext, indexer } from "envio";
 import { key, newPool } from "../lib/records.ts";
 
 /** The pool, window settlement and sessions (contracts/src/markets/{BandPool,BandReserve,SessionGrants}.sol). */
@@ -55,6 +55,41 @@ indexer.onEvent({ contract: "BandReserve", event: "EpochBumped" }, async ({ even
   // A revoke ends the session (the contract deletes it); the epoch is the owner's, kept on the record.
   const s = await context.Session.get(key(event.chainId, event.params.owner));
   if (s) context.Session.set({ ...s, expiry: 0, epoch: Number(event.params.epoch) });
+});
+
+/** One account's money in and out of Earn (P5), the base its net earned is read against. */
+async function earnFlow(
+  context: EvmOnEventContext,
+  chainId: number,
+  account: string,
+  at: number,
+  delta: { paidIn?: bigint; paidOut?: bigint },
+) {
+  const id = key(chainId, account.toLowerCase());
+  const was = await context.EarnAccount.get(id);
+  context.EarnAccount.set({
+    id,
+    chainId,
+    account: account.toLowerCase(),
+    paidIn: (was?.paidIn ?? 0n) + (delta.paidIn ?? 0n),
+    paidOut: (was?.paidOut ?? 0n) + (delta.paidOut ?? 0n),
+    updatedAt: at,
+  });
+}
+
+indexer.onEvent({ contract: "PoolShares", event: "SupplyRequested" }, async ({ event, context }) => {
+  await earnFlow(context, event.chainId, event.params.account, event.block.timestamp, { paidIn: event.params.assets });
+});
+
+indexer.onEvent({ contract: "PoolShares", event: "RequestCancelled" }, async ({ event, context }) => {
+  // A supply taken back returns its dollars; a withdrawal taken back returns shares, not dollars.
+  if (!event.params.supply) return;
+  await earnFlow(context, event.chainId, event.params.account, event.block.timestamp, { paidIn: -event.params.amount });
+});
+
+indexer.onEvent({ contract: "PoolShares", event: "Claimed" }, async ({ event, context }) => {
+  if (event.params.assets === 0n) return;
+  await earnFlow(context, event.chainId, event.params.account, event.block.timestamp, { paidOut: event.params.assets });
 });
 
 /** Earn's hourly roll (contracts/src/markets/PoolShares.sol, D-287): each hour's value, supply and flows. */

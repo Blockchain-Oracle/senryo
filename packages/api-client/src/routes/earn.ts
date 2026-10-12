@@ -12,6 +12,9 @@ const UINT8_MAX = 255;
 /** A request waiting for its roll, or settled and waiting to be delivered. */
 const pendingSchema = z.object({ amount: uintCodec, settled: z.boolean() });
 
+export const EARN_RANGES = ["1d", "7d", "30d"] as const;
+export type EarnRange = (typeof EARN_RANGES)[number];
+
 export const earnViewSchema = z.object({
   deployed: z.boolean(),
   pool: z
@@ -48,6 +51,8 @@ export const earnViewSchema = z.object({
       /** For the supply's permit: the dollar's allowance to the share contract and the owner's permit nonce. */
       allowance: uintCodec,
       permitNonce: uintCodec,
+      /** Dollars put in (supplies, less those taken back) and taken out (settled withdrawals), once indexed (P5). */
+      basis: z.object({ paidIn: uintCodec, paidOut: uintCodec }).nullable().default(null),
     })
     .nullable(),
 });
@@ -59,7 +64,12 @@ export const earnRoute = defineRoute({
   path: "/v1/earn",
   auth: "none",
   params: undefined,
-  query: z.object({ chainId: z.coerce.number().pipe(chainIdSchema), owner: addressSchema.optional() }),
+  query: z.object({
+    chainId: z.coerce.number().pipe(chainIdSchema),
+    owner: addressSchema.optional(),
+    /** How far back the hourly rolls go (P5's share-value chart); a day when absent. */
+    range: z.enum(EARN_RANGES).optional(),
+  }),
   body: undefined,
   response: earnViewSchema,
 });

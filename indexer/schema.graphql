@@ -289,6 +289,19 @@ type DailyAccountStat {
   pnl: BigInt! @index
 }
 
+# One account's money in and out of Earn (P5): dollars supplied (less supplies taken back) and dollars paid out by
+# withdrawals. What the account has earned is its share value now, plus what it took out, less what it put in.
+type EarnAccount {
+  id: ID!
+  chainId: Int! @index
+  account: String! @index
+  "Dollars supplied, less supplies taken back before their hour (e6)."
+  paidIn: BigInt!
+  "Dollars paid out by settled withdrawals (e6)."
+  paidOut: BigInt!
+  updatedAt: Int!
+}
+
 "Earn's hourly roll (D-287): the pool's value and supply it settled at, and what came in and went out."
 type PoolEpoch {
   id: ID!

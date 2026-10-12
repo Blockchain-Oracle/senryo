@@ -5,7 +5,7 @@ import { type Db, nowSec } from "@senryo/service-common";
 import {
   CALLS_PAGE,
   DAYS_PER_WEEK,
-  EPOCHS_SHOWN,
+  EPOCH_HOURS,
   LEADERBOARD_SIZE,
   SECONDS_PER_DAY,
   WINDOWS_PAGE,
@@ -165,13 +165,21 @@ export class IndexerReader {
     return { windows, next: rows.length === WINDOWS_PAGE ? (rows.at(-1)?.start ?? null) : null };
   }
 
-  /** Earn's last hourly rolls (D-287), newest first. */
-  async epochs(chainId: ChainId) {
+  /** Earn's last hourly rolls (D-287) over a chart range (P5), newest first. */
+  async epochs(chainId: ChainId, range: keyof typeof EPOCH_HOURS = "1d") {
     return this.db<
       { hour: number; value: bigint; supply: bigint; supplied: bigint; withdrawn: bigint; deferred: boolean }[]
     >`SELECT hour, value::int8 AS value, supply::int8 AS supply,
              supplied::int8 AS supplied, withdrawn::int8 AS withdrawn, deferred
-      FROM ${this.t("PoolEpoch")} WHERE "chainId" = ${chainId} ORDER BY hour DESC LIMIT ${EPOCHS_SHOWN}`;
+      FROM ${this.t("PoolEpoch")} WHERE "chainId" = ${chainId} ORDER BY hour DESC LIMIT ${EPOCH_HOURS[range] + 1}`;
+  }
+
+  /** One account's dollars into and out of Earn (P5, the indexer's `EarnAccount`), or null before any. */
+  async earnBasis(chainId: ChainId, owner: string): Promise<{ paidIn: bigint; paidOut: bigint } | null> {
+    const [row] = await this.db<{ paidIn: bigint; paidOut: bigint }[]>`
+      SELECT "paidIn"::int8 AS "paidIn", "paidOut"::int8 AS "paidOut"
+      FROM ${this.t("EarnAccount")} WHERE id = ${`${chainId}_${owner.toLowerCase()}`}`;
+    return row ?? null;
   }
 
   /** Practice and Real boards are separate (`chainId`); handles only for profiles listed on that network. */

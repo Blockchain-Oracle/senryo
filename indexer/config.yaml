@@ -72,6 +72,9 @@ contracts:
   - name: PoolShares
     events:
       - event: "EpochRolled(uint40 indexed hour, uint256 value, uint256 supply, uint256 suppliedAssets, uint256 withdrawnAssets, bool deferred, int256 ridesOwed)"
+      - event: "SupplyRequested(address indexed account, uint40 indexed hour, uint256 assets)"
+      - event: "RequestCancelled(address indexed account, bool supply, uint256 amount)"
+      - event: "Claimed(address indexed account, uint256 shares, uint256 assets)"
 
 chains:
   - id: 10143
