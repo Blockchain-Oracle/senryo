@@ -4,7 +4,7 @@
  */
 import type { DuelQueueView, DuelView } from "@senryo/api-client";
 import { type ChainId, DUEL, DUEL_TIERS, type DuelTierSpec, duelEntryCost } from "@senryo/config";
-import { lane, signedUsd, usd } from "@senryo/core";
+import { lane, signedUsd, usd, usdTidy } from "@senryo/core";
 
 export const DUEL_SIDES = [
   { band: 0, label: "Up" },
@@ -16,8 +16,8 @@ export const DUEL_LIVE_STATES = new Set(["opening", "sealed", "picking", "settli
 
 export const duelTiers = (chainId: ChainId): readonly DuelTierSpec[] => DUEL_TIERS[chainId];
 
-/** "Free" or "$10 pot". */
-export const tierTitle = (t: DuelTierSpec) => (t.pot === 0n ? "Free" : `${usd(t.pot)} pot`);
+/** "No pot" (D-323: never "Free" — its three calls still stake) or "$10 pot". */
+export const tierTitle = (t: DuelTierSpec) => (t.pot === 0n ? "No pot" : `${usdTidy(t.pot)} pot`);
 
 /** "3 calls of $10 · winner takes $20". */
 export const tierLine = (t: DuelTierSpec) =>
@@ -27,6 +27,44 @@ export const tierLine = (t: DuelTierSpec) =>
 
 /** What entering takes now; the cards' results and the pot come back after. */
 export const entryText = (t: DuelTierSpec) => `${usd(duelEntryCost(t))} goes in now`;
+
+/** The selected tier's commitment spelled out (P4, D-323): the sum, then where the money goes. */
+export function commitment(t: DuelTierSpec): { sum: string; note: string } {
+  const calls = `${DUEL.cards} × ${usdTidy(t.cardStake)} calls`;
+  const total = usdTidy(duelEntryCost(t));
+  if (t.pot === 0n) {
+    return { sum: `${calls} = ${total} · no pot`, note: "Each call pays on its own; the better total wins the duel." };
+  }
+  return {
+    sum: `${calls} + ${usdTidy(t.pot)} pot = ${total}`,
+    note: `The winner takes the ${usdTidy(t.pot * 2n)} pot; each call pays on its own.`,
+  };
+}
+
+/** What's on the line between the seats: the whole pot, or that there's none. */
+export const potLine = (t: { pot: bigint }) => (t.pot === 0n ? "No pot · calls only" : `${usdTidy(t.pot * 2n)} pot`);
+
+/** A tier's queue in words: how many wait, "First in this tier", or that the count isn't known. */
+export function waitingText(count: number | undefined): string {
+  if (count === undefined) return "Queue count unavailable";
+  return count === 0 ? "First in this tier" : `${count} waiting`;
+}
+
+/** After this long in the queue, the other tiers' queues are offered (never switched to on their own). */
+export const DUEL_QUIET_SEC = 30;
+
+/** A seat's running total: the settled calls' results so far, provisional until every card of the seat has one. */
+export function seatTotal(m: DuelView, seat: 0 | 1): { total: bigint | null; provisional: boolean } {
+  if (m.results) return { total: m.results[seat], provisional: false };
+  const mine = picksOf(m, seat);
+  const settled = mine.filter((p) => p.result !== null);
+  if (settled.length === 0) return { total: null, provisional: true };
+  return { total: settled.reduce((a, p) => a + (p.result ?? 0n), 0n), provisional: settled.length < DUEL.cards };
+}
+
+/** "Rating 1042" or "Unranked" (no duel finished yet). */
+export const ratingText = (r: { rating: number; played: number } | null | undefined) =>
+  r && r.played > 0 ? `Rating ${r.rating}` : "Unranked";
 
 export type DuelPhase = "idle" | "queued" | "opening" | "picking" | "waiting" | "settling" | "done";
 

@@ -19,7 +19,7 @@ import {
 } from "@senryo/calls";
 import type { ParlayQuoteView } from "@senryo/calls/react";
 import type { CadenceSec } from "@senryo/config";
-import { lane, usd, withTolerance } from "@senryo/core";
+import { lane, usd, usdTidy, withTolerance } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -160,7 +160,7 @@ function Slip(p: SlipProps) {
               accessibilityState={{ selected: on }}
               style={[styles.chip, { backgroundColor: on ? color.ink : color.raised2 }]}
             >
-              <Text style={[TYPE.chipLabel, { color: on ? color.ground : color.ink }]}>{usd(v)}</Text>
+              <Text style={[TYPE.chipLabel, { color: on ? color.ground : color.ink }]}>{usdTidy(v)}</Text>
             </Pressable>
           );
         })}
@@ -171,7 +171,7 @@ function Slip(p: SlipProps) {
           style={[styles.chip, { backgroundColor: presetOn ? color.raised2 : color.ink }]}
         >
           <Text style={[TYPE.chipLabel, { color: presetOn ? color.ink : color.ground }]}>
-            {presetOn ? "…" : usd(p.stake)}
+            {presetOn ? "…" : usdTidy(p.stake)}
           </Text>
         </Pressable>
       </View>

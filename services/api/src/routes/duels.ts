@@ -18,6 +18,7 @@ import { DuelReader } from "../history/duel-reader.ts";
 
 /** Duel over HTTP (S8.6, D-294): enter and leave the queue, swipe, and read matches, ratings and the ladder. */
 const MINUTE_MS = 60_000;
+const MS_PER_SECOND = 1000;
 const limited = { config: { rateLimit: { max: DUEL_REQUESTS_PER_MINUTE, timeWindow: MINUTE_MS } } };
 /** Before the reveal the deck stays sealed: neither its cards nor the server's seed are served. */
 const SEALED = new Set(["opening", "sealed", "failed"]);
@@ -75,7 +76,12 @@ export function registerDuelRoutes(app: HttpServer, ctx: ApiContext): void {
 
   app.get(duelQueueRoute.path, async (request, reply) => {
     const { query } = parseRoute(duelQueueRoute, request);
-    return sendRoute(reply, duelQueueRoute, { entry: await duelsOn(ctx, query.chainId).queue.latest(query.owner) });
+    const queue = duelsOn(ctx, query.chainId).queue;
+    const [entry, waiting] = await Promise.all([
+      query.owner ? queue.latest(query.owner) : null,
+      queue.waiting(Math.floor(Date.now() / MS_PER_SECOND)),
+    ]);
+    return sendRoute(reply, duelQueueRoute, { entry, waiting });
   });
 
   app.post(duelPickRoute.path, limited, async (request, reply) => {

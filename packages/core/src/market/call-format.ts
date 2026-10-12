@@ -29,6 +29,15 @@ export const lane = laneLabel;
 /** `$5.00` — the magnitude; the sign is the caller's. */
 export const usd = (v: bigint) => `$${formatUnits(v < 0n ? -v : v, DOLLAR_DECIMALS, CENTS)}`;
 
+/** One dollar in its six-decimal units. */
+const ONE_DOLLAR = 1_000_000n;
+
+/** `$10` for whole dollars, `$7.50` otherwise — tiers, pots and stake chips, where the cents are noise. */
+export const usdTidy = (v: bigint) => {
+  const m = v < 0n ? -v : v;
+  return m % ONE_DOLLAR === 0n ? `$${(m / ONE_DOLLAR).toLocaleString("en-US")}` : usd(m);
+};
+
 /** `+$4.60` / `−$0.40` / `$0.00`. */
 export const signedUsd = (v: bigint) => `${v > 0n ? "+" : v < 0n ? "−" : ""}${usd(v)}`;
 

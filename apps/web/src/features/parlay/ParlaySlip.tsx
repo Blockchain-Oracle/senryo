@@ -20,7 +20,7 @@ import {
 } from "@senryo/calls";
 import type { ParlayQuoteView } from "@senryo/calls/react";
 import type { CadenceSec } from "@senryo/config";
-import { formatUnits, lane, parseUnits, usd, withTolerance } from "@senryo/core";
+import { formatUnits, lane, parseUnits, usd, usdTidy, withTolerance } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { X } from "lucide-react";
 import { useState } from "react";
@@ -195,7 +195,7 @@ function StakePicker({
               stake === v ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-accent",
             )}
           >
-            {usd(v)}
+            {usdTidy(v)}
           </button>
         ))}
       </div>

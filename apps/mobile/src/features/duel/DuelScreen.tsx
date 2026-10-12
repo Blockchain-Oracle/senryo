@@ -1,49 +1,37 @@
 /**
- * Duel on the phone (S8.6, D-294; the web's `DuelScreen`): pick a tier and find an opponent (one Face ID: the entry
- * and its permit), wait in the queue, get dealt the same three cards, swipe each Up or Down before the clock runs
- * out — the seat's key signs, no prompt — and watch the cards settle into both totals; the better one takes the pot.
- * Your duels and rating below. Queue, pricing, signing and the match are `@senryo/calls` `useDuelFlow`, the web's own.
+ * Duel on the phone as a two-seat arena (P4, D-322 … D-323; Codex's arena, Owarine's duel feel): the stage puts you
+ * across from an empty opponent seat with the pot between; the tiers page by below it with how many wait in each and
+ * the commitment spelled out; one pinned action finds an opponent (one Face ID: the entry and its permit). Queued, the
+ * empty seat breathes as a search with the time waited and the tier's queue — after half a minute the busier tiers are
+ * offered, never switched to. Matched, the opponent takes the seat and the match plays on three market lanes
+ * (`DuelMatch`). The ladder and your duels follow. Queue, pricing, signing and the match are `@senryo/calls`
+ * `useDuelFlow`, the web's own.
  */
-import type { DuelRatingView, DuelView } from "@senryo/api-client";
-import { DUEL_LIVE_STATES, duelTiers, entryText, opponentOf, outcomeText, tierLine, tierTitle } from "@senryo/calls";
+import { DUEL_QUIET_SEC, duelTiers, potLine, ratingText, tierTitle, waitingText } from "@senryo/calls";
 import { type DuelFeel, useDuelFlow, useDuelMoments } from "@senryo/calls/react";
 import { duelEntryCost } from "@senryo/config";
-import { clockText, shortAddress, usd } from "@senryo/core";
+import { clockText, usdTidy } from "@senryo/core";
 import { useServerSeconds } from "@senryo/live/react";
-import { useProfile } from "@senryo/query";
+import { useDuelWaiting } from "@senryo/query";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Avatar } from "~/components/identity/Avatar";
 import { Button } from "~/components/kit/Button";
 import { celebrate } from "~/feedback/celebrate";
 import { fire, music } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { DuelHistory, DuelLadder } from "./DuelBoard";
 import { DuelMatch } from "./DuelMatch";
+import { DuelStage } from "./DuelStage";
+import { TierCarousel } from "./TierCarousel";
 
 const DEFAULT_TIER = 1;
 const MS_PER_SECOND = 1000;
-const DOT = 10;
-const PORTRAIT = 72;
-const RINGS = 3;
-/** One breath of the search (research 10 §4); the rings share it evenly. */
-const BREATH_MS = 2400;
-const RING_ALPHA = 0.6;
-const RING_GROW = 1.4;
-const RADAR_H = 200;
+const ACTION_SPACE = SIZE.buttonHeight + SPACE.xl;
 /** The phone's feel for a duel's moments (D-317; the web's own hook). */
 const FEEL: DuelFeel = { fire, music, celebrate };
 
@@ -51,6 +39,7 @@ export function DuelScreen() {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const account = useAccount();
+  const now = useServerSeconds();
   const [tier, setTier] = useState(DEFAULT_TIER);
   const [seen, setSeen] = useState<string | null>(null);
   const flow = useDuelFlow(account, {
@@ -60,179 +49,148 @@ export function DuelScreen() {
     needAccount: () => router.push(accountRequiredRoute("duel")),
   });
   useDuelMoments(flow, FEEL);
+  const waitingQuery = useDuelWaiting();
+  const waiting = "value" in waitingQuery ? waitingQuery.value : undefined;
   const tiers = duelTiers(flow.chainId);
   const chosen = tiers.find((t) => t.id === tier) ?? tiers[0];
   const cost = chosen ? duelEntryCost(chosen) : 0n;
+  const rating = ratingText(flow.rating);
   const dismissed = flow.phase === "done" && flow.match?.matchId === seen;
-  const showMatch = flow.match && flow.phase !== "idle" && flow.phase !== "queued" && !dismissed;
+  const inMatch = flow.match !== null && flow.phase !== "idle" && flow.phase !== "queued" && !dismissed;
+  const queued = flow.phase === "queued" && flow.entry !== null;
   const short = flow.balance !== undefined && flow.balance < cost;
   const why = !flow.live ? "Duels aren't open yet" : short ? "Not enough dollars for this duel" : null;
+  const waited = queued && flow.entry ? Math.max(0, now - Math.floor(Date.parse(flow.entry.since) / MS_PER_SECOND)) : 0;
+  const queuedTier = queued ? tiers.find((t) => t.id === flow.entry?.tier) : undefined;
+  const stageTier = queuedTier ?? chosen;
+  const count = (id: number) => (waiting ? (waiting.get(id) ?? 0) : undefined);
+  // Half a minute in, the tiers with someone waiting are offered (never switched to on their own).
+  const busier =
+    queued && waited >= DUEL_QUIET_SEC ? tiers.filter((t) => t.id !== queuedTier?.id && (count(t.id) ?? 0) > 0) : [];
+  const switchTo = async (id: number) => {
+    fire("tick");
+    await flow.cancel();
+    setTier(id);
+    await flow.enter(id);
+  };
+
   return (
-    <ScrollView
-      style={{ backgroundColor: color.ground }}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
-    >
-      {flow.phase === "queued" && flow.entry ? (
-        <Queue
-          title={chosen && flow.entry.tier === chosen.id ? tierTitle(chosen) : "Duel"}
-          since={flow.entry.since}
-          owner={flow.owner}
-          onCancel={() => void flow.cancel()}
-        />
-      ) : showMatch ? (
-        <DuelMatch flow={flow} onAgain={() => setSeen(flow.match?.matchId ?? null)} />
-      ) : (
-        <View style={styles.section} accessibilityLabel="Start a duel">
-          <Text style={[TYPE.body, { color: color.inkMuted }]}>
-            Three cards each · Up or Down · the better total takes the pot
-          </Text>
-          <View accessibilityRole="radiogroup">
-            {tiers.map((t) => {
-              const on = t.id === chosen?.id;
-              return (
-                <Pressable
-                  key={t.id}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: on }}
-                  onPress={() => {
-                    fire("tick");
-                    setTier(t.id);
-                  }}
-                  style={[styles.tier, { borderBottomColor: color.hairline }]}
-                >
-                  <View style={[styles.dot, { backgroundColor: on ? color.primary : color.raised2 }]} />
-                  <View style={styles.flex}>
-                    <Text style={[TYPE.rowTitle, { color: color.ink }]}>{tierTitle(t)}</Text>
-                    <Text style={[TYPE.caption, { color: color.inkMuted }]}>{tierLine(t)}</Text>
-                  </View>
-                  <Text style={[TYPE.caption, { color: color.inkMuted }]}>{entryText(t)}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Text accessibilityLiveRegion="polite" style={[TYPE.caption, { color: color.inkMuted }]}>
-            {flow.busy ?? why ?? "Every card is a real call · results pay as each window closes"}
-          </Text>
-          <Button
-            label={`Find a duel · ${usd(cost)}`}
-            disabled={why !== null || flow.busy !== null}
-            loading={flow.busy !== null}
-            onPress={() => void flow.enter(tier)}
+    <View style={[styles.fill, { backgroundColor: color.ground }]}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + (inMatch ? SPACE.xl : ACTION_SPACE) }]}
+      >
+        {inMatch ? (
+          <DuelMatch
+            flow={flow}
+            rating={rating}
+            onRematch={(t) => {
+              setTier(t);
+              void flow.enter(t);
+            }}
+            onDone={() => setSeen(flow.match?.matchId ?? null)}
           />
-          {flow.entry?.state === "failed" || flow.entry?.state === "lapsed" ? (
-            <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-              {flow.entry.state === "lapsed"
-                ? "Nobody joined in time · nothing was taken"
-                : `Couldn't start · ${flow.entry.reason ?? "nothing was taken"}`}
-            </Text>
-          ) : null}
+        ) : (
+          <View style={styles.section}>
+            <DuelStage
+              me={flow.owner}
+              rating={rating}
+              opponent={
+                queued
+                  ? {
+                      kind: "searching",
+                      line: `Searching · ${clockText(waited)}`,
+                      detail: waitingText(queuedTier ? count(queuedTier.id) : undefined),
+                    }
+                  : { kind: "empty" }
+              }
+              pot={stageTier ? potLine(stageTier) : "—"}
+            >
+              <Text style={[TYPE.caption, styles.center, { color: color.inkMuted }]}>
+                {queued
+                  ? `${queuedTier ? tierTitle(queuedTier) : "Duel"} · the same three cards for both of you`
+                  : "Three calls each on the same cards · the better total takes the pot"}
+              </Text>
+            </DuelStage>
+            {queued ? (
+              busier.length > 0 ? (
+                <View style={styles.offers} accessibilityLabel="Busier tiers">
+                  <Text style={[TYPE.caption, { color: color.inkMuted }]}>Quiet here. Others are waiting in:</Text>
+                  {busier.map((t) => (
+                    <Pressable
+                      key={t.id}
+                      onPress={() => void switchTo(t.id)}
+                      accessibilityRole="button"
+                      style={[styles.offer, { backgroundColor: color.card }]}
+                    >
+                      <Text style={[TYPE.rowTitle, styles.flex, { color: color.ink }]}>{tierTitle(t)}</Text>
+                      <Text style={[TYPE.caption, { color: color.inkMuted }]}>{waitingText(count(t.id))}</Text>
+                      <Text style={[TYPE.rowTitle, { color: color.link }]}>Switch</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null
+            ) : (
+              <TierCarousel tiers={tiers} value={chosen?.id ?? tier} onChange={setTier} waiting={waiting} />
+            )}
+            {flow.entry?.state === "failed" || flow.entry?.state === "lapsed" ? (
+              <Text style={[TYPE.caption, { color: color.inkMuted }]}>
+                {flow.entry.state === "lapsed"
+                  ? "Nobody joined in time · nothing was taken"
+                  : `Couldn't start · ${flow.entry.reason ?? "nothing was taken"}`}
+              </Text>
+            ) : null}
+          </View>
+        )}
+        <DuelLadder me={flow.owner} rating={flow.rating} />
+        <DuelHistory me={flow.owner} duels={flow.history} />
+      </ScrollView>
+      {inMatch ? null : (
+        <View style={[styles.action, { backgroundColor: color.ground, paddingBottom: insets.bottom + SPACE.sm }]}>
+          {queued ? (
+            <Button label="Leave the queue" variant="secondary" onPress={() => void flow.cancel()} />
+          ) : (
+            <>
+              {(flow.busy ?? why) ? (
+                <Text accessibilityLiveRegion="polite" style={[TYPE.caption, styles.center, { color: color.inkMuted }]}>
+                  {flow.busy ?? why}
+                </Text>
+              ) : null}
+              <Button
+                label={`Find opponent · ${usdTidy(cost)}`}
+                disabled={why !== null || flow.busy !== null}
+                loading={flow.busy !== null}
+                onPress={() => void flow.enter(chosen?.id ?? tier)}
+              />
+            </>
+          )}
         </View>
-      )}
-      <History owner={flow.owner} duels={flow.history} rating={flow.rating} />
-    </ScrollView>
-  );
-}
-
-/** One ring of the search: out from the portrait and gone over a breath, staggered by its place. */
-function Ring({ index }: { index: number }) {
-  const { color } = useTheme();
-  const reduce = useReducedMotion();
-  const t = useSharedValue(0);
-  useEffect(() => {
-    if (reduce) return;
-    t.value = withDelay(
-      (index * BREATH_MS) / RINGS,
-      withRepeat(withTiming(1, { duration: BREATH_MS, easing: Easing.out(Easing.quad) }), -1),
-    );
-  }, [t, index, reduce]);
-  const style = useAnimatedStyle(() => ({
-    opacity: (1 - t.value) * RING_ALPHA,
-    transform: [{ scale: 1 + t.value * RING_GROW }],
-  }));
-  return <Animated.View style={[styles.ring, { borderColor: color.accent }, style]} />;
-}
-
-/** Finding an opponent (R7.8, research 10 §4; the web's `DuelQueue`): your portrait in a breathing search. */
-function Queue(p: { title: string; since: string; owner: string | undefined; onCancel: () => void }) {
-  const { color } = useTheme();
-  const now = useServerSeconds();
-  const profile = useProfile(p.owner);
-  const avatar = "value" in profile ? (profile.value?.avatar ?? null) : null;
-  const waited = Math.max(0, now - Math.floor(Date.parse(p.since) / MS_PER_SECOND));
-  return (
-    <View style={styles.section} accessibilityLiveRegion="polite">
-      <View style={[styles.radar, { backgroundColor: color.arena }]}>
-        {Array.from({ length: RINGS }, (_, i) => (
-          <Ring key={i} index={i} />
-        ))}
-        <Avatar avatar={avatar} {...(p.owner ? { address: p.owner } : {})} size={PORTRAIT} />
-      </View>
-      <Text accessibilityRole="header" style={[TYPE.sectionTitle, styles.center, { color: color.ink }]}>
-        Finding an opponent…
-      </Text>
-      <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-        {p.title} · waiting {clockText(waited)}
-      </Text>
-      <Button label="Leave the queue" variant="secondary" onPress={p.onCancel} />
-    </View>
-  );
-}
-
-function History(p: { owner: string | undefined; duels: readonly DuelView[]; rating: DuelRatingView | null }) {
-  const { color } = useTheme();
-  const done = p.duels.filter((d) => !DUEL_LIVE_STATES.has(d.state));
-  const r = p.rating;
-  return (
-    <View style={styles.section} accessibilityLabel="Your duels">
-      <View style={styles.head}>
-        <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
-          Your duels
-        </Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          {r ? `Rating ${r.rating} · ${r.wins}–${r.losses}${r.ties ? `–${r.ties}` : ""}` : "Rating 1000"}
-        </Text>
-      </View>
-      {done.length === 0 ? (
-        <Text style={[TYPE.body, { color: color.inkMuted }]}>Finished duels show here.</Text>
-      ) : (
-        done.map((d) => {
-          const o = outcomeText(d, p.owner);
-          const them = opponentOf(d, p.owner);
-          return (
-            <View key={d.matchId} style={[styles.tier, { borderBottomColor: color.hairline }]}>
-              <View style={styles.flex}>
-                <Text style={[TYPE.rowTitle, { color: color.ink }]}>{o.title}</Text>
-                <Text style={[TYPE.caption, { color: color.inkMuted }]}>vs {them ? shortAddress(them) : "—"}</Text>
-              </View>
-              <Text style={[TYPE.caption, { color: color.inkMuted }]}>{o.detail}</Text>
-            </View>
-          );
-        })
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.xl },
-  section: { gap: SPACE.md },
-  head: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: SPACE.sm },
+  fill: { flex: 1 },
   flex: { flex: 1 },
-  tier: {
+  content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.xl },
+  section: { gap: SPACE.lg },
+  center: { textAlign: "center" },
+  offers: { gap: SPACE.sm },
+  offer: {
     flexDirection: "row",
     alignItems: "center",
     gap: SPACE.sm,
-    minHeight: SIZE.rowMinHeight,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    minHeight: SIZE.touch + SPACE.sm,
+    paddingHorizontal: SPACE.md,
+    borderRadius: SPACE.md,
   },
-  dot: { width: DOT, height: DOT, borderRadius: DOT / 2 },
-  radar: {
-    height: RADAR_H,
-    borderRadius: RADIUS.lg,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
+  action: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    gap: SPACE.xs,
+    paddingHorizontal: SIZE.gutter,
+    paddingTop: SPACE.sm,
   },
-  ring: { position: "absolute", width: PORTRAIT, height: PORTRAIT, borderRadius: PORTRAIT / 2, borderWidth: 2 },
-  center: { textAlign: "center" },
 });

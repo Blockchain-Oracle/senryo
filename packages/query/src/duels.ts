@@ -29,7 +29,11 @@ export const duelKeys = {
   queue: (chainId: ChainId, owner: Address) => [...marketKeys.owner(chainId, owner), "duel-queue"] as const,
   match: (chainId: ChainId, matchId: string) => ["duel", chainId, "match", matchId] as const,
   ladder: (chainId: ChainId) => ["duel", chainId, "ladder"] as const,
+  waiting: (chainId: ChainId) => ["duel", chainId, "waiting"] as const,
 };
+
+/** How many wait in each tier (P4's tier tiles), re-read this often while Duel is open. */
+export const DUEL_WAITING_MS = 10_000;
 
 export function useDuelQueue(owner: Address | undefined) {
   const env = useQueryEnv();
@@ -41,6 +45,20 @@ export function useDuelQueue(owner: Address | undefined) {
     },
     enabled: owner !== undefined,
     refetchInterval: ACCOUNT_FALLBACK_MS,
+  });
+  return fromQuery(query);
+}
+
+/** The queue's size per tier now ("N waiting"; a tier with nobody reads "First in this tier"). */
+export function useDuelWaiting() {
+  const env = useQueryEnv();
+  const query = useQuery({
+    queryKey: duelKeys.waiting(env.chainId),
+    queryFn: async ({ signal }) => {
+      const { waiting } = await env.api.call(duelQueueRoute, { query: { chainId: env.chainId } }, { signal });
+      return new Map(waiting.map((w) => [w.tier, w.count]));
+    },
+    refetchInterval: DUEL_WAITING_MS,
   });
   return fromQuery(query);
 }

@@ -1,37 +1,34 @@
 "use client";
 /**
- * The duel's entry (S8.6; Owarine's Entry): the tiers as rows — free, or a pot the winner takes — each saying what
- * three calls cost and what goes in now, then Find a duel (one passkey: the entry and its permit). Until the arena is
- * on this network the rows stay readable and the button says why it waits.
+ * The duel tiers as tiles (P4, D-323; the phone's `TierCarousel`): each names its pot ("No pot", "$10 pot"), its three
+ * calls' stake and how many wait in it now; the row snaps tile by tile. The chosen tile is filled, and its commitment
+ * is spelled out below.
  */
-import { entryText, tierLine, tierTitle } from "@senryo/calls";
-import { type DuelTierSpec, duelEntryCost } from "@senryo/config";
-import { usd } from "@senryo/core";
+import { commitment, tierTitle, waitingText } from "@senryo/calls";
+import { DUEL, type DuelTierSpec } from "@senryo/config";
+import { usdTidy } from "@senryo/core";
 import { fire } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
 
-export function DuelTiers(p: {
+export function DuelTiers({
+  tiers,
+  value,
+  onChange,
+  waiting,
+}: {
   tiers: readonly DuelTierSpec[];
-  tier: number;
-  onTier: (id: number) => void;
-  onEnter: () => void;
-  live: boolean;
-  busy: string | null;
-  balance: bigint | undefined;
+  value: number;
+  onChange: (id: number) => void;
+  waiting: ReadonlyMap<number, number> | undefined;
 }) {
-  const chosen = p.tiers.find((t) => t.id === p.tier) ?? p.tiers[0];
-  const cost = chosen ? duelEntryCost(chosen) : 0n;
-  const short = p.balance !== undefined && p.balance < cost;
-  const why = !p.live ? "Duels aren't open yet" : short ? "Not enough dollars for this duel" : null;
+  const chosen = tiers.find((t) => t.id === value) ?? tiers[0];
+  const words = chosen ? commitment(chosen) : null;
+  const count = (id: number) => (waiting ? (waiting.get(id) ?? 0) : undefined);
   return (
-    <section aria-label="Start a duel" className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-semibold text-section-title">Start a duel</h2>
-        <p className="text-body text-text-2">Three cards each · Up or Down · the better total takes the pot</p>
-      </div>
-      <fieldset className="m-0 flex min-w-0 flex-col divide-y divide-border border-0 p-0">
-        <legend className="sr-only">Tier</legend>
-        {p.tiers.map((t) => {
+    <div className="flex flex-col gap-4">
+      <fieldset className="m-0 flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto border-0 p-0 pb-1 [scrollbar-width:none]">
+        <legend className="sr-only">Duel tier</legend>
+        {tiers.map((t) => {
           const on = t.id === chosen?.id;
           return (
             <button
@@ -39,35 +36,30 @@ export function DuelTiers(p: {
               type="button"
               aria-pressed={on}
               onClick={() => {
+                if (on) return;
                 fire("tick", { cue: "tap" });
-                p.onTier(t.id);
+                onChange(t.id);
               }}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring",
-                on ? "bg-selected-row" : "hover:bg-row-pressed",
+                "press-lift flex h-28 w-33 shrink-0 snap-start flex-col justify-between rounded-2xl p-4 text-left focus-visible:outline-2 focus-visible:outline-ring",
+                on ? "bg-accent text-accent-foreground" : "bg-secondary hover:bg-accent/20",
               )}
             >
-              <span aria-hidden className={cn("size-2.5 shrink-0 rounded-full", on ? "bg-primary" : "bg-secondary")} />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="font-semibold text-row-title">{tierTitle(t)}</span>
-                <span className="text-meta text-text-3">{tierLine(t)}</span>
+              <span className="font-semibold text-title">{tierTitle(t)}</span>
+              <span className={cn("text-meta", on ? "opacity-90" : "text-text-3")}>
+                {DUEL.cards} × {usdTidy(t.cardStake)} calls
               </span>
-              <span className="tnum text-meta text-text-2">{entryText(t)}</span>
+              <span className={cn("text-micro", on ? "opacity-90" : "text-text-3")}>{waitingText(count(t.id))}</span>
             </button>
           );
         })}
       </fieldset>
-      <p className="min-h-5 text-meta text-text-3" role="status" aria-live="polite">
-        {p.busy ?? why ?? "Every card is a real call · results pay as each window closes"}
-      </p>
-      <button
-        type="button"
-        disabled={why !== null || p.busy !== null}
-        onClick={p.onEnter}
-        className="h-14 rounded-xl bg-primary font-semibold text-button text-primary-foreground transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
-      >
-        Find a duel · {usd(cost)}
-      </button>
-    </section>
+      {words ? (
+        <div aria-live="polite" className="flex flex-col gap-0.5">
+          <span className="tnum font-semibold text-row-title">{words.sum}</span>
+          <span className="text-meta text-text-3">{words.note}</span>
+        </div>
+      ) : null}
+    </div>
   );
 }

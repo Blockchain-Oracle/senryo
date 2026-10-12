@@ -173,6 +173,13 @@ export class DuelQueue {
     return status;
   }
 
+  /** How many entries wait in each tier now (P4: the tier tiles' "N waiting"); lapsing ones aren't counted. */
+  async waiting(nowSec: number): Promise<{ tier: number; count: number }[]> {
+    return this.d.db<{ tier: number; count: number }[]>`SELECT tier, count(*)::int AS count FROM duel_entries
+      WHERE chain_id = ${this.d.chainId} AND state = 'queued' AND deadline > ${nowSec}
+      GROUP BY tier ORDER BY tier`;
+  }
+
   /** The owner's newest entry on this network. */
   async latest(owner: Address): Promise<QueueStatus | null> {
     const [row] = await this.d.db<

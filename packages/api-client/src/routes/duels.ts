@@ -84,14 +84,18 @@ export const cancelDuelRoute = defineRoute({
   response: duelQueueSchema,
 });
 
+/** The caller's newest entry (with `owner`), and how many wait in each tier now (P4; anyone may ask). */
 export const duelQueueRoute = defineRoute({
   method: "GET",
   path: "/v1/duel/queue",
   auth: "none",
   params: undefined,
-  query: z.object({ ...chainQuery, owner: addressSchema }),
+  query: z.object({ ...chainQuery, owner: addressSchema.optional() }),
   body: undefined,
-  response: z.object({ entry: duelQueueSchema.nullable() }),
+  response: z.object({
+    entry: duelQueueSchema.nullable(),
+    waiting: z.array(z.object({ tier: z.int(), count: z.int().nonnegative() })).default([]),
+  }),
 });
 
 export const duelPickRoute = defineRoute({

@@ -130,6 +130,7 @@ export const Grid3x3 = symbol({ ios: "square.grid.3x3", android: "grid_on" }, "G
 export const Heart = symbol({ ios: "heart", iosFilled: "heart.fill", android: "favorite" }, "Heart");
 export const History = symbol({ ios: "clock.arrow.circlepath", android: "history" }, "History");
 export const House = symbol({ ios: "house", iosFilled: "house.fill", android: "home" }, "House");
+export const User = symbol({ ios: "person", iosFilled: "person.fill", android: "person" }, "User");
 export const IdCard = symbol({ ios: "person.text.rectangle", android: "badge" }, "IdCard");
 export const Info = symbol({ ios: "info.circle", android: "info" }, "Info");
 export const KeyRound = symbol({ ios: "key", android: "key" }, "KeyRound");
