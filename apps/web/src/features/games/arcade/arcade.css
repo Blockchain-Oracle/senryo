@@ -1,0 +1,205 @@
+/* The arcade's stage (R7.1): the run takes the whole screen — the Fullscreen API where the browser has it, and this
+   fixed layer over everything where it doesn't (an iPhone). Near-black arena in both themes (D-316); the HUD and the
+   plates are in the arena's ink. */
+.arcade-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  height: 100dvh;
+  background: var(--arena);
+  color: var(--arena-ink);
+  overscroll-behavior: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.arcade-stage canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.arcade-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(14px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.arcade-hud button {
+  pointer-events: auto;
+}
+.arcade-score {
+  font-family: var(--font-display-family);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.6);
+}
+.arcade-combo {
+  font-family: var(--font-display-family);
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: var(--accent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 60%, transparent);
+  animation: arcade-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.arcade-dim {
+  color: color-mix(in srgb, var(--arena-ink) 60%, transparent);
+}
+.arcade-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--arena-ink) 12%, transparent);
+  color: var(--arena-ink);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background 120ms ease;
+}
+.arcade-icon:hover {
+  background: color-mix(in srgb, var(--arena-ink) 20%, transparent);
+  transform: translateY(-2px);
+}
+.arcade-icon:active {
+  transform: translateY(1px) scale(0.96);
+}
+.arcade-icon:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.arcade-count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-family: var(--font-display-family);
+  font-size: clamp(5rem, 18vw, 11rem);
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 0 40px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.arcade-count span {
+  animation: arcade-count 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.arcade-count .is-go {
+  color: var(--up-fill);
+}
+.arcade-plate {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: radial-gradient(80% 70% at 50% 50%, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.8));
+  animation: arcade-fade 260ms ease both;
+}
+.arcade-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 26rem);
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--arena-raised), var(--arena));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--arena-ink) 10%, transparent),
+    0 24px 60px rgb(0 0 0 / 0.5);
+  text-align: center;
+  animation: arcade-rise 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.arcade-stamp {
+  font-family: var(--font-display-family);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--up-fill);
+  transform: rotate(-4deg);
+  animation: arcade-stamp 420ms cubic-bezier(0.34, 1.56, 0.64, 1) 200ms both;
+}
+.arcade-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  width: 100%;
+}
+.arcade-stats dt {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--arena-ink) 55%, transparent);
+}
+.arcade-stats dd {
+  font-family: var(--font-display-family);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.arcade-hint {
+  animation: arcade-fade 400ms ease both;
+}
+
+@keyframes arcade-pop {
+  from {
+    transform: scale(1.35);
+  }
+}
+@keyframes arcade-count {
+  from {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+@keyframes arcade-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes arcade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+}
+@keyframes arcade-stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-4deg) scale(2.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arcade-combo,
+  .arcade-count span,
+  .arcade-plate,
+  .arcade-card,
+  .arcade-stamp,
+  .arcade-hint {
+    animation: none;
+  }
+}
+/* The stage's buttons in the arena's own colours (unlayered, so they win over the theme's utilities). */
+.arcade-cta {
+  background: var(--up-fill);
+  color: var(--on-direction-fill);
+  box-shadow: inset 0 -3px 0 var(--up-fill-edge);
+}
+.arcade-cta:hover {
+  background: color-mix(in srgb, var(--up-fill) 90%, white);
+}
+.arcade-ghost {
+  background: color-mix(in srgb, var(--arena-ink) 10%, transparent);
+  color: var(--arena-ink);
+}
+.arcade-ghost:hover {
+  background: color-mix(in srgb, var(--arena-ink) 18%, transparent);
+  color: var(--arena-ink);
+}

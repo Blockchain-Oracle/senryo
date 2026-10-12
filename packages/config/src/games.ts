@@ -35,7 +35,7 @@ export const GAMES: readonly GameSpec[] = [
   {
     key: "line-rider",
     title: "Line Rider",
-    line: "Hug the line, build the combo",
+    line: "Ride the real chart · hop the gaps, land the flips",
     stakes: "No stakes · a board",
     href: "/app/games/line-rider/",
     route: "/games/line-rider",
@@ -51,3 +51,12 @@ export const GAMES: readonly GameSpec[] = [
 ];
 
 export const LUCKY_STAKES_USD = [1, 5, 10, 25] as const;
+
+/**
+ * Line Rider's terrain (R7.2, D-318): the price tape the api records for a run — one of these markets at random, its
+ * last day of 1-minute closes. A tape is cut on a 15-minute boundary, so the same few tapes serve every run in that
+ * quarter hour and each is stored once.
+ */
+export const ARCADE_TAPE_SYMBOLS = ["BTC", "ETH", "SOL"] as const;
+export const ARCADE_TAPE_MINUTES = 1_440;
+export const ARCADE_TAPE_CUT_SEC = 900;

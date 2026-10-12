@@ -46,6 +46,17 @@ old R7.1 (games audio) moved to F1–F3.
 
 ### The stage
 - [ ] R7.1 One game stage on both apps:
+  - *Progress 12 Oct (web arcade):*
+    - *`ArcadeStage.tsx` (with `loop.ts`, `run.ts`, `StageParts.tsx`, `arcade.css`) takes the whole screen: the
+      Fullscreen API with landscape asked inside the Play tap, and a fixed layer where the browser can't.*
+    - *The run: a 3-2-1-GO with its beeps, then the games music; a 60 Hz loop with the device-pixel ratio capped at 2,
+      stalls clamped to 100 ms, paused while hidden.*
+    - *The HUD and controls: score, best and combo pop; sound, Pause (practice runs only) and Exit, each 44 px.*
+    - *The page leaving: a ranked run ends unranked, a practice run pauses.*
+    - *The game-over card: score, a NEW BEST stamp, the replay check and rank, the run's numbers, Play again, Share
+      and Exit.*
+    - *Candle Hop plays on the same stage (`flap-run.ts`) until R7.3.*
+    - *Left: Lucky's and Warm-up's portrait stages, and the phone.*
   - **Entry:** Play removes the navigation.
   - **Full screen:**
     - web: the Fullscreen API with a viewport fallback;
@@ -60,6 +71,29 @@ old R7.1 (games audio) moved to F1–F3.
 
 ### The arcade (D-318)
 - [ ] R7.2 Line Rider v2, a sled riding chart terrain:
+  - *Progress 12 Oct (core, api, web):*
+    - *Engine (`packages/core/src/games/arcade/sled.ts`, `sled-world.ts`; v1 `ride.ts` deleted):*
+      - *two runners and a rider in a Verlet triangle, with six passes;*
+      - *hold to crouch, release to hop (240–460 px/s, charged over 0.6 s), lean in the air;*
+      - *the terrain is the tape's moves at a fixed scale, with leverage 1× → 2.2× over 90 s;*
+      - *gaps after 10 s ("a gap down": the far side lower) that only a hop clears;*
+      - *wipeouts: the rider touching the line, landing upside down, falling into a gap, or hitting its far wall.*
+    - *Checked headless on today's BTC, ETH and SOL tapes:*
+      - *an idle rider dies at 27–94 s, and a hop-and-level bot lives 26–90 s with combos up to 24×;*
+      - *flips land;*
+      - *every run replays to the same score and tick.*
+    - *api: `arcade_tapes` plus a seed's `tape` and `engine` (0028); a ranked seed carries its tape; a guest gets one
+      from `GET /v1/arcade/tape`; the board ranks only engine 2.*
+    - *Web: the sled renderer (`sled-draw.ts`):*
+      - *the camera at 30 %, with a minimum 420-unit width in portrait;*
+      - *the line green where the price rose and coral where it fell, with the quarter-hour minutes along the floor;*
+      - *lit gap edges, a trail, the sled, a glowing rider and the charge ring;*
+      - *sparks, dust, fragments, floating words, speed streaks, combo heat, shake and flash.*
+    - *Web: the driver (`sled-run.ts`) records the codes and plays the cues:*
+      - *a scrape grain while pressing, the wing on a hop, landing thuds;*
+      - *hit-stop and a 4 px shake on hard landings;*
+      - *the comboStep, gap and milestone ladders, a surge on a flip;*
+      - *on a wipeout, the crash, the flash and the music cut.*
   - **Camera:** side camera with the sled at 30 % of the width.
   - **Terrain:** neon, built from the server-recorded price tape with fixed normalisation. Emitted terrain never
     reshapes.

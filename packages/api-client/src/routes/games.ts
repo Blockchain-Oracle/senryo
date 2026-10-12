@@ -18,6 +18,8 @@ const SEED_RE = /^[0-9a-f]{8}$/;
 const TRACE_MAX = 216_000;
 const SYMBOL_MAX = 16;
 const MARKETS_MAX = 64;
+const TAPE_ID_MAX = 48;
+const TAPE_MAX = 2_000;
 
 export const ARCADE_GAME_KEYS = ["line-rider", "candle-hop"] as const;
 export const LUCKY_SIDE_KEYS = ["up", "down"] as const;
@@ -107,6 +109,21 @@ export const luckyDrawsRoute = defineRoute({
   response: z.object({ draws: z.array(luckyDrawSchema) }),
 });
 
+/**
+ * Line Rider's terrain (R7.2): a market's last day of 1-minute moves (tenths of a basis point), with its first close's
+ * minute and price for the HUD. A ranked run rides the tape its seed came with; a guest's run asks for one.
+ */
+export const arcadeTapeSchema = z.object({
+  id: z.string().max(TAPE_ID_MAX),
+  symbol: z.string().max(SYMBOL_MAX),
+  from: unixSecondsSchema,
+  /** The first close × 1e8. */
+  open: z.int().nonnegative(),
+  moves: z.array(z.int()).max(TAPE_MAX),
+});
+
+export type ArcadeTapeView = z.output<typeof arcadeTapeSchema>;
+
 export const arcadeSeedRoute = defineRoute({
   method: "POST",
   path: "/v1/arcade/seed",
@@ -114,7 +131,17 @@ export const arcadeSeedRoute = defineRoute({
   params: undefined,
   query: undefined,
   body: z.object({ game: z.enum(ARCADE_GAME_KEYS) }),
-  response: z.object({ seed: z.string().regex(SEED_RE) }),
+  response: z.object({ seed: z.string().regex(SEED_RE), tape: arcadeTapeSchema }),
+});
+
+export const arcadeTapeRoute = defineRoute({
+  method: "GET",
+  path: "/v1/arcade/tape",
+  auth: "none",
+  params: undefined,
+  query: z.object({ game: z.enum(ARCADE_GAME_KEYS) }),
+  body: undefined,
+  response: arcadeTapeSchema,
 });
 
 export const arcadeScoreRoute = defineRoute({

@@ -87,30 +87,54 @@ export async function recentLuckySeals(db: Db, owner: string, sec: number): Prom
 
 // ------------------------------------------------------------------------------------------------ arcade
 
-export async function issueArcadeSeed(db: Db, seed: string, game: string, owner: string): Promise<void> {
-  await db`INSERT INTO arcade_seeds (seed, game, owner) VALUES (${seed}, ${game}, ${owner.toLowerCase()})`;
+export interface ArcadeTapeRow {
+  id: string;
+  symbol: string;
+  fromMinute: number;
+  openE8: bigint;
+  moves: number[];
 }
 
-/** Takes a seed for one score: it must be this owner's, for this game, unused and younger than `maxAgeSec`. */
+/** Keeps a price tape once (its id is the symbol and first minute, so the same tape is never stored twice). */
+export async function saveArcadeTape(db: Db, t: ArcadeTapeRow): Promise<void> {
+  await db`INSERT INTO arcade_tapes (id, symbol, from_minute, open_e8, moves)
+    VALUES (${t.id}, ${t.symbol}, ${t.fromMinute}, ${t.openE8}, ${t.moves}) ON CONFLICT (id) DO NOTHING`;
+}
+
+export async function issueArcadeSeed(
+  db: Db,
+  s: { seed: string; game: string; owner: string; engine: number; tape: string },
+): Promise<void> {
+  await db`INSERT INTO arcade_seeds (seed, game, owner, engine, tape)
+    VALUES (${s.seed}, ${s.game}, ${s.owner.toLowerCase()}, ${s.engine}, ${s.tape})`;
+}
+
+/**
+ * Takes a seed for one score: it must be this owner's, for this game, unused and younger than `maxAgeSec`. Returns the
+ * engine the seed was issued for and its tape's moves (the replay runs that engine on that line), or null.
+ */
 export async function takeArcadeSeed(
   db: Db,
   seed: string,
   game: string,
   owner: string,
   maxAgeSec: number,
-): Promise<boolean> {
-  const rows = await db`UPDATE arcade_seeds SET used = true WHERE seed = ${seed} AND game = ${game}
-    AND owner = ${owner.toLowerCase()} AND NOT used AND issued_at > now() - make_interval(secs => ${maxAgeSec})
-    RETURNING seed`;
-  return rows.length > 0;
+): Promise<{ engine: number; moves: number[] } | null> {
+  const rows = await db<{ engine: number; moves: number[] | null }[]>`WITH taken AS (
+      UPDATE arcade_seeds SET used = true WHERE seed = ${seed} AND game = ${game}
+      AND owner = ${owner.toLowerCase()} AND NOT used AND issued_at > now() - make_interval(secs => ${maxAgeSec})
+      RETURNING engine, tape)
+    SELECT taken.engine, t.moves FROM taken LEFT JOIN arcade_tapes t ON t.id = taken.tape`;
+  const row = rows[0];
+  return row ? { engine: row.engine, moves: row.moves ?? [] } : null;
 }
 
 export async function insertArcadeScore(
   db: Db,
-  s: { game: string; owner: string; seed: string; calm: boolean; score: number; ticks: number },
+  s: { game: string; owner: string; seed: string; calm: boolean; score: number; ticks: number; engine: number },
 ): Promise<void> {
-  await db`INSERT INTO arcade_scores (game, owner, seed, calm, score, ticks)
-    VALUES (${s.game}, ${s.owner.toLowerCase()}, ${s.seed}, ${s.calm}, ${s.score}, ${s.ticks})`;
+  await db`INSERT INTO arcade_scores (game, owner, seed, calm, score, ticks, engine)
+    VALUES (${s.game}, ${s.owner.toLowerCase()}, ${s.seed}, ${s.calm}, ${s.score}, ${s.ticks}, ${s.engine})`;
 }
 
 export interface ArcadeBoardRow {
@@ -123,16 +147,16 @@ export interface ArcadeBoardRow {
 }
 
 /** Each player's best run, top first (a handle and portrait when the player has a profile). */
-export async function arcadeBoard(db: Db, game: string, limit: number): Promise<ArcadeBoardRow[]> {
+export async function arcadeBoard(db: Db, game: string, engine: number, limit: number): Promise<ArcadeBoardRow[]> {
   return db<ArcadeBoardRow[]>`SELECT DISTINCT ON (s.owner) s.owner, p.handle, p.avatar, s.score, s.calm, s.created_at
     FROM arcade_scores s LEFT JOIN profiles p ON p.address = s.owner
-    WHERE s.game = ${game} ORDER BY s.owner, s.score DESC, s.created_at`.then((rows) =>
+    WHERE s.game = ${game} AND s.engine = ${engine} ORDER BY s.owner, s.score DESC, s.created_at`.then((rows) =>
     rows.sort((a, b) => b.score - a.score || a.created_at.getTime() - b.created_at.getTime()).slice(0, limit),
   );
 }
 
-export async function arcadeBestOf(db: Db, game: string, owner: string): Promise<number | null> {
+export async function arcadeBestOf(db: Db, game: string, engine: number, owner: string): Promise<number | null> {
   const [row] = await db<{ score: number }[]>`SELECT max(score)::int AS score FROM arcade_scores
-    WHERE game = ${game} AND owner = ${owner.toLowerCase()}`;
+    WHERE game = ${game} AND engine = ${engine} AND owner = ${owner.toLowerCase()}`;
   return row?.score ?? null;
 }

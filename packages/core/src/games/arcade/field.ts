@@ -16,9 +16,6 @@ export const STEP_MS = MS_PER_SEC / STEP_HZ;
 export const MAX_RUN_SEC = 1_800;
 export const MAX_RUN_TICKS = MAX_RUN_SEC * STEP_HZ;
 
-/** The ride's wheel is one byte a tick in the trace, so the trace is compact and the replay exact. */
-export const TARGET_Q_MAX = 255;
-
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 export const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 export const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > hi ? hi : v);
@@ -30,9 +27,14 @@ export function isArcadeGame(value: string): value is ArcadeGame {
   return value === "line-rider" || value === "candle-hop";
 }
 
-/** Reduced motion offers the calmer ramp; the ramp is the mechanic, so the replay knows and the board says so. */
+/**
+ * What a run is played with besides its seed. Reduced motion offers the calmer ramp; the ramp is the mechanic, so the
+ * replay knows and the board says so. The tape is the price the server recorded for this run (one move a minute, in
+ * tenths of a basis point): Line Rider's terrain. The server keeps it with the seed, so the replay rides the same line.
+ */
 export interface ArcadeRunConfig {
   calm: boolean;
+  tape: readonly number[];
 }
 
 export const ticksToMs = (ticks: number): number => Math.round((ticks * MS_PER_SEC) / STEP_HZ);

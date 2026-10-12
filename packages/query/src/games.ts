@@ -1,12 +1,13 @@
 /**
- * Games without a contract (S8.8, D-295): Lucky's seal and reveal and a player's draws; the arcade's seed, checked
- * score and board. Lucky's call itself goes through the ordinary relay (`useSubmitIntent`).
+ * Games without a contract (S8.8, D-295): Lucky's seal and reveal and a player's draws; the arcade's seed (with its
+ * price tape), a guest's tape, the checked score and the board. Lucky's call itself goes through the ordinary relay (`useSubmitIntent`).
  */
 import {
   type ArcadeBoardView,
   arcadeBoardRoute,
   arcadeScoreRoute,
   arcadeSeedRoute,
+  arcadeTapeRoute,
   type CallInput,
   luckyDrawsRoute,
   luckyPlacedRoute,
@@ -69,15 +70,19 @@ export function useArcadeBoard(game: ArcadeGameKey) {
   return fromQuery(query);
 }
 
-/** A seed for the next run, and a finished run's score (checked by replay before it ranks). */
+/**
+ * A seed for the next ranked run (with the tape it rides), a tape for a guest's run, and a finished run's score
+ * (checked by replay before it ranks).
+ */
 export function useArcadeDesk(game: ArcadeGameKey) {
   const env = useQueryEnv();
   const client = useQueryClient();
   const seed = useMutation({ mutationFn: () => env.api.call(arcadeSeedRoute, { body: { game } }) });
+  const tape = useMutation({ mutationFn: () => env.api.call(arcadeTapeRoute, { query: { game } }) });
   const score = useMutation({
     mutationFn: (body: Omit<CallInput<typeof arcadeScoreRoute>["body"], "game">) =>
       env.api.call(arcadeScoreRoute, { body: { ...body, game } }),
     onSuccess: () => void client.invalidateQueries({ queryKey: gameKeys.board(game) }),
   });
-  return { seed, score };
+  return { seed, tape, score };
 }

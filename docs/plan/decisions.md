@@ -507,12 +507,17 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   - Effects and haptics are on by default. Game music starts on Play at 20 %; terminal music is off by default behind
     a visible ♪.
   - Refines D-235 and D-282 · research `10` §7, `01` §1.8–1.9 · planner (12 Oct plan, approved).
-- **D-318** 2026-10-12 · **Scored games use deterministic fixed-point physics.**
-  - Line Rider v2 and Candle Hop v2 step at 60 Hz with fixed-point Verlet, integer collision and integer square root,
-    so a run is bit-identical on V8, JavaScriptCore and Hermes and the server's replay stays exact.
+- **D-318** 2026-10-12 · **Scored games use deterministic physics.**
+  - Line Rider v2 and Candle Hop v2 step at 60 Hz with Verlet in plain doubles, using only + − × ÷, min, max, abs,
+    floor and round (IEEE 754 fixes each exactly), and a square root by a fixed 24-step Newton iteration (`droot`)
+    instead of `Math.sqrt`, which the spec lets engines approximate. A run is bit-identical on V8, JavaScriptCore and
+    Hermes, so the server's replay stays exact. *(Amended 12 Oct: integers were the plan; plain doubles under these
+    rules are as exact and keep the engine readable.)*
   - No physics library in scored games (Matter.js uses trigonometry).
   - The camera, hit-stop, shake and particles are drawing only: Canvas 2D on the web, Skia on the phone.
-  - Line Rider v2 gets its own board.
+  - Line Rider v2 gets its own board: seeds and scores carry their engine version (migration 0028).
+  - Line Rider's terrain is a real price tape: the api cuts a day of BTC, ETH or SOL 1-minute closes every quarter
+    hour, stores each tape once, and a seed names the tape it was issued with, so the replay rides the same line.
   - Research `10` §3 · planner (12 Oct plan, approved).
 - **D-319** 2026-10-12 · **Every price carries its 24-hour graph.**
   - A sparkline of 96 fifteen-minute closes plus the latest price, with a dashed baseline at the price 24 h ago: green

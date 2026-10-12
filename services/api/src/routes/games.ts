@@ -2,6 +2,7 @@ import {
   arcadeBoardRoute,
   arcadeScoreRoute,
   arcadeSeedRoute,
+  arcadeTapeRoute,
   luckyDrawsRoute,
   luckyPlacedRoute,
   luckyRevealRoute,
@@ -21,6 +22,7 @@ import {
 import { type ApiContext, chainOf } from "../context.ts";
 import { ArcadeDesk } from "../games/arcade.ts";
 import { LuckyDesk } from "../games/lucky.ts";
+import { type ArcadeTape, ArcadeTapes } from "../games/tape.ts";
 
 /** Lucky and the arcade over HTTP (S8.8, D-295): signed-in seals, reveals, seeds and scores; public draws and boards. */
 const MINUTE_MS = 60_000;
@@ -35,7 +37,14 @@ async function sessionOf(ctx: ApiContext, request: Parameters<NonNullable<ApiCon
 }
 
 export function registerGameRoutes(app: HttpServer, ctx: ApiContext): void {
-  const arcade = new ArcadeDesk(ctx.db);
+  const arcade = new ArcadeDesk(ctx.db, new ArcadeTapes(ctx.gateway, ctx.db));
+  const tapeView = (t: ArcadeTape) => ({
+    id: t.id,
+    symbol: t.symbol,
+    from: t.from,
+    open: Number(t.openE8),
+    moves: t.moves,
+  });
   const lucky = (chainId: Parameters<typeof luckyDrawsOf>[1]) =>
     new LuckyDesk({
       chainId,
@@ -95,7 +104,13 @@ export function registerGameRoutes(app: HttpServer, ctx: ApiContext): void {
   app.post(arcadeSeedRoute.path, runs, async (request, reply) => {
     const session = await sessionOf(ctx, request);
     const { body } = parseRoute(arcadeSeedRoute, request);
-    return sendRoute(reply, arcadeSeedRoute, { seed: await arcade.seed(session.address as Address, body.game) });
+    const { seed, tape } = await arcade.seed(session.address as Address, body.game);
+    return sendRoute(reply, arcadeSeedRoute, { seed, tape: tapeView(tape) });
+  });
+
+  app.get(arcadeTapeRoute.path, async (request, reply) => {
+    parseRoute(arcadeTapeRoute, request);
+    return sendRoute(reply, arcadeTapeRoute, tapeView(await arcade.tapes.pick()));
   });
 
   app.post(arcadeScoreRoute.path, runs, async (request, reply) => {
