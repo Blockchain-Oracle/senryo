@@ -65,7 +65,21 @@ Plan approved the same day:
 - **Live:** api and keeper `sha-79dee85`, web `sha-2869208`, OTA `b1440dae`.
 - **Left inside F:** the press kit on the remaining cards; F14 on Lucky, Duel, Events, Parlay and Earn.
 
-Next: R7 (games, Duel and Events as games).
+**R7 under way (12 Oct)** ([replan-r7-games.md](replan-r7-games.md)):
+- **Line Rider v2 (R7.2):** a sled with Verlet physics riding the real chart. The api cuts a day of BTC, ETH or SOL
+  every quarter hour, and the seed carries its tape, so the replay rides the same line. Gaps arrive after 10 s, and
+  the rider balances in the air. Engine 2 has its own board.
+- **Candle Hop v2 (R7.3):** a coin through a day of real candles, wicks as long as the moves.
+- **The stage (R7.1):** full screen with a 3-2-1-GO, music, pause, a HUD and a game-over card with Share. Checked
+  on production: the line, the cues, flips landed.
+- **The phone (R7.6):** both arcade games, drawn by the web's own code through a Skia canvas, with a landscape stage
+  and the page's game playing itself. Checked on a Release build in the simulator.
+- **Live:** api and keeper `sha-a574573` (migration 0028), web `sha-67402e2`, phone OTA
+  `773842ce-dc23-4167-86f6-73a63b71199f`.
+- **Earlier in R7:** R7.4 Lucky (phone), R7.7 hub cards (web), R7.8 Duel moments (web), R7.9 scoreboard (phone).
+
+Next: R7.5 Warm-up on both apps, then R7.7 on the phone (the hub's cards with the games playing themselves) and
+R7.8 / R7.9 / R7.10 on the side each still lacks.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
