@@ -59,6 +59,11 @@ export interface ChartOverlay {
   line: number | null;
   /** The held band's winning prices (null ends run off the chart): above K for Up, between the edges for Range… */
   zone: { from: number | null; to: number | null } | null;
+  /**
+   * The zone's own tone when it previews an offered side before any call (F8: hover or focus on a button shades where
+   * it wins); null draws a held call's zone in the winning tone.
+   */
+  zoneTone: "up" | "down" | "range" | null;
   levels: ChartLevel[];
 }
 
@@ -134,6 +139,8 @@ export interface QuoteInput {
   unit?: PriceUnit;
   /** The open call and its band's shape, when there is one. */
   position: { call: QuotePosition; band: BandSpecLike } | undefined;
+  /** The offered side being hovered or focused (0 or 1): its winning region previews on the chart. */
+  preview?: 0 | 1 | null;
 }
 
 /** The latest quotes, readable synchronously for the tap (the limit is the quote the user saw). */
@@ -154,8 +161,11 @@ export interface QuotePass {
   first: OpenQuote | null;
   second: OpenQuote | null;
   close: CloseQuote | null;
+  /** Under each button: "Pays 2.14× · $10.70", or "—" when that side has no price now. */
   firstLine: string;
   secondLine: string;
+  /** One sentence outside the buttons when a side has no price, else null (F8: never on a coloured button). */
+  note: string | null;
   /** "▲ $12.40 (0.015%) above the line". */
   lineText: string;
   /** What cashing out returns now, and the result against the stake. */
@@ -169,23 +179,46 @@ export interface QuotePass {
 export const dollars = (v: bigint) => `$${formatUnits(v < 0n ? -v : v, DOLLAR_DECIMALS, CENTS)}`;
 export const signedDollars = (v: bigint) => `${v < 0n ? "−" : "+"}${dollars(v)}`;
 
-/** "pays 1.92× · about 51%", or why there is no price. */
+const UNPRICED = "—";
+
+/** Under a call button: "Pays 1.92× · $9.60" (what comes back, the stake included), or "—" with no price now. */
 export function oddsLine(q: OpenQuote | null, stake: bigint): string {
-  if (q?.refusal === "capacity") return "Window full · next one soon";
-  if (!q || q.refusal) return "Not priced now";
-  const x = multiplierE2(stake, q.payout);
-  const pct = (q.probE6 * PERCENT) / P_ONE;
-  return `pays ${formatUnits(x, CENTS, CENTS)}× · about ${pct}%`;
+  if (!q || q.refusal) return UNPRICED;
+  return `Pays ${formatUnits(multiplierE2(stake, q.payout), CENTS, CENTS)}× · ${dollars(q.payout)}`;
+}
+
+/** The chance in words for a button's accessible name ("about 51%"), or null with no price. */
+export function chanceOf(q: OpenQuote | null): string | null {
+  return q && !q.refusal ? `about ${(q.probE6 * PERCENT) / P_ONE}%` : null;
+}
+
+/**
+ * Why a shown side has no price, in one sentence for outside the buttons (F8), or null when every shown side is
+ * priced: the window's room is used up, or the price has run so far that one side is beyond the pool's 3–97 % bounds.
+ */
+export function quoteNote(quotes: readonly (OpenQuote | null)[]): string | null {
+  if (quotes.some((q) => q?.refusal === "capacity")) return "This window is full · the next one opens soon";
+  if (quotes.some((q) => q?.refusal === "price")) return "Too one-sided to price right now";
+  if (quotes.some((q) => q === null)) return "Quote unavailable · retrying";
+  return null;
 }
 
 const toPrice = (e8: bigint) => Number(e8) / E8;
+/** A previewed side's shade: its direction's colour, Range's cyan (D-316). */
+const ZONE_TONE: Readonly<Record<BandSpecLike["kind"], "up" | "down" | "range">> = {
+  up: "up",
+  moonshot: "up",
+  down: "down",
+  crash: "down",
+  range: "range",
+};
 const lineLevel = (k: bigint): ChartLevel => ({ kind: "line", price: toPrice(k), label: "Line" });
 
 /** A band's edges or strike as chart levels (Up and Down have none beyond K). */
 function edgeLevels(band: BandSpecLike, k: bigint): ChartLevel[] {
   if (band.kind === "up" || band.kind === "down") return [];
   const e = bandEdgesE8(band, k);
-  const label = band.kind === "range" ? "Range" : "Strike";
+  const label = band.kind === "range" ? "Range" : band.kind === "moonshot" ? "Moonshot" : "Crash";
   return [e.low, e.high]
     .filter((v): v is bigint => v !== null)
     .map((v) => ({ kind: "edge", price: toPrice(v), label }));
@@ -220,11 +253,21 @@ export function quoteTick(i: QuoteInput): QuotePass {
   const diff = spot - i.k;
   const pct = i.k > 0n ? (diff * PERCENT_E3) / i.k : 0n;
   const lineText = `${diff >= 0n ? "▲" : "▼"} ${gapText(diff, i.k, i.unit)} (${formatUnits(pct < 0n ? -pct : pct, PERCENT_DECIMALS, PERCENT_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
-  const base = { first, second, firstLine: oddsLine(first, i.stake), secondLine: oddsLine(second, i.stake), lineText };
+  const shown = b ? [first, second] : [first];
+  const base = {
+    first,
+    second,
+    firstLine: oddsLine(first, i.stake),
+    secondLine: oddsLine(second, i.stake),
+    note: quoteNote(shown),
+    lineText,
+  };
 
   const p = i.position;
   if (!p || p.call.state === "committed") {
     const preview = [a, b].flatMap((band) => (band && i.k > 0n ? edgeLevels(band, i.k) : []));
+    const hovered = i.preview === 0 ? a : i.preview === 1 ? b : undefined;
+    const shade = hovered && i.k > 0n ? bandEdgesE8(hovered, i.k) : null;
     return {
       ...base,
       close: null,
@@ -236,7 +279,11 @@ export function quoteTick(i: QuoteInput): QuotePass {
         pnlText: null,
         pnlTrend: 0,
         line: toPrice(i.k),
-        zone: null,
+        zone: shade && {
+          from: shade.low === null ? null : toPrice(shade.low),
+          to: shade.high === null ? null : toPrice(shade.high),
+        },
+        zoneTone: hovered ? ZONE_TONE[hovered.kind] : null,
         levels: [lineLevel(i.k), ...preview],
       },
     };
@@ -268,6 +315,7 @@ export function quoteTick(i: QuoteInput): QuotePass {
         from: edges.low === null ? null : toPrice(edges.low),
         to: edges.high === null ? null : toPrice(edges.high),
       },
+      zoneTone: null,
       levels: [
         lineLevel(i.k),
         ...edgeLevels(p.band, i.k),

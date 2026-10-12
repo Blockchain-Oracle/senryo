@@ -90,3 +90,11 @@ const SEVERITY: readonly FeedState[] = ["halted", "stale", "closed", "fallback",
 export function worstState(states: readonly FeedState[]): FeedState {
   return SEVERITY.find((s) => states.includes(s)) ?? "stale";
 }
+
+// ------------------------------------------------------------------------------------ the 24 h graph (D-319)
+
+/** Every price row's sparkline: the last 24 h as closes on this step, from Senryo's own archive (`/v1/prices/day`). */
+export const SPARK_STEP_SEC = 900;
+const SECONDS_PER_DAY = 86_400;
+/** 96 closes; a step with no candle stays a gap (null), never a guess. */
+export const SPARK_POINTS = SECONDS_PER_DAY / SPARK_STEP_SEC;

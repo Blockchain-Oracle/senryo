@@ -3,7 +3,15 @@
 // Each store has a server snapshot for the web's static prerender: nothing has streamed there (no price, an idle
 // stream, second 0); the client takes over at hydration.
 import type { FeedState } from "@senryo/config";
-import { createContext, createElement, type ReactNode, useContext, useEffect, useSyncExternalStore } from "react";
+import {
+  createContext,
+  createElement,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { Live } from "./live.ts";
 import type { BoundaryPrint } from "./prints.ts";
 import type { StreamStatus } from "./sse.ts";
@@ -36,6 +44,39 @@ export function useLivePrice(symbol: string): number | undefined {
     () => live.prices.latest(symbol)?.priceE8,
     () => undefined,
   );
+}
+
+/**
+ * The latest price × 1e8 for `symbol`, re-rendering at most once per `everyMs` (a sparkline's live tail, F7: 34 rows
+ * redrawing a path every frame would be waste; the trailing tick always lands).
+ */
+export function useSampledPrice(symbol: string, everyMs: number): number | undefined {
+  const live = useLive();
+  useLiveStream();
+  const [price, setPrice] = useState(() => live.prices.latest(symbol)?.priceE8);
+  useEffect(() => {
+    let last = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const take = () => {
+      last = Date.now();
+      setPrice(live.prices.latest(symbol)?.priceE8);
+    };
+    take();
+    const off = live.prices.subscribe(symbol, () => {
+      const wait = everyMs - (Date.now() - last);
+      if (wait <= 0) take();
+      else
+        timer ??= setTimeout(() => {
+          timer = undefined;
+          take();
+        }, wait);
+    });
+    return () => {
+      off();
+      if (timer) clearTimeout(timer);
+    };
+  }, [live, symbol, everyMs]);
+  return price;
 }
 
 /**

@@ -72,6 +72,14 @@
   --color-primary-pressed: var(--primary-pressed);
   --color-up-foreground: var(--up-foreground);
   --color-down-foreground: var(--down-foreground);
+  --color-range: var(--range);
+  --color-on-direction-fill: var(--on-direction-fill);
+  --color-up-fill: var(--up-fill);
+  --color-down-fill: var(--down-fill);
+  --color-range-fill: var(--range-fill);
+  --color-up-fill-edge: var(--up-fill-edge);
+  --color-down-fill-edge: var(--down-fill-edge);
+  --color-range-fill-edge: var(--range-fill-edge);
   --color-chart-neutral: var(--chart-neutral);
   --color-sheet-handle: var(--sheet-handle);
   --color-gold-leaf-shadow: var(--gold-leaf-shadow);

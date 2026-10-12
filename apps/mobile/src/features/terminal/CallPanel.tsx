@@ -1,7 +1,9 @@
 /**
- * The call panel (Tradash's UP/DOWN ↔ CLOSE, Senryo's windows): the stake (last one remembered; $1 · $5 · $10 · $25 ·
- * Max), then UP and DOWN each with its live odds ("pays 1.92× · about 52%"), or — holding a call in this window — one
- * CLOSE with the cash-out value rolling and, under it, its exit (take profit, stop, trail — S8.4). Honest states: calls
+ * The call panel (Tradash's UP/DOWN ↔ CLOSE, Owarine's `TradeButtons`, F8): the stake (last one remembered; $1 · $5 ·
+ * $10 · $25 · Max), then the mode's buttons — label only on their direction fills (black labels, a darker 3 px bottom
+ * edge), "Pays 1.92× · $9.60" under each; holding a button shades where it wins on the chart; a side with no price turns
+ * a recessed plate with "—" while one sentence under the pair says why — or, holding a call in this window, one CLOSE
+ * with the cash-out value rolling and, under it, its exit (take profit, stop, trail — S8.4). Honest states: calls
  * closed for the lockout, a stale price, a call in flight.
  */
 import { CALL_MODES, type CallMode, closedWords, type MarketLine, type Offer, type OfferedBand } from "@senryo/calls";
@@ -9,11 +11,11 @@ import type { OfferSlot, PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { useFont } from "@shopify/react-native-skia";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { type SharedValue } from "react-native-reanimated";
+import Animated, { type SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
 import { LiveText } from "~/components/kit/LiveText";
 import { Segmented } from "~/components/kit/Segmented";
-import { ArrowDownUp, Crosshair } from "~/components/kit/symbols";
+import { ArrowDown, ArrowDownUp, ArrowUp, Crosshair, Plunge, RangeBand, Surge } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
 import { CONTROL_FONT_SCALE, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -25,6 +27,21 @@ const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const dollars = (v: bigint) => `$${formatUnits(v, DOLLAR_DECIMALS, CENTS)}`;
 const BUTTON_H = 64;
+/** The call buttons (F8, research 10 §1): 52 pt, 12 pt corners, a 3 pt darker bottom edge. */
+const CALL_H = 52;
+const CALL_RADIUS = 12;
+const CALL_EDGE = 3;
+/** The labels' tracking (the web's 0.06 em at 16 px, in points). */
+const CALL_TRACKING = 1;
+/** A side's pays line reads this while it has no price: the button turns a recessed plate and takes no tap. */
+const UNPRICED = "—";
+const MARK: Readonly<Record<OfferedBand["band"]["kind"], typeof ArrowUp>> = {
+  up: ArrowUp,
+  down: ArrowDown,
+  range: RangeBand,
+  moonshot: Surge,
+  crash: Plunge,
+};
 const CASH_SIZE = 20;
 const CASH_HEIGHT = 26;
 const CASH_WIDTH = 120;
@@ -36,41 +53,56 @@ function CallButton({
   odds,
   disabled,
   onPress,
+  onPreview,
 }: {
   offered: OfferedBand;
   odds: SharedValue<string>;
   disabled: boolean;
   onPress: () => void;
+  onPreview: (on: boolean) => void;
 }) {
   const { color } = useTheme();
   const press = usePressScale();
-  // Up and Moonshot in the up colour, Down and Crash in the down colour, Range on the ink plate (neither direction).
-  const plate = offered.tone === "up" ? color.chartUp : offered.tone === "down" ? color.chartDown : color.ink;
-  const ink = offered.tone === "neutral" ? color.ground : color.paperInk;
+  // Up and Moonshot on the up fill, Down and Crash on the down fill, Range on its cyan (D-316); black labels.
+  const fill = offered.tone === "up" ? color.upFill : offered.tone === "down" ? color.downFill : color.rangeFill;
+  const edge =
+    offered.tone === "up" ? color.upFillEdge : offered.tone === "down" ? color.downFillEdge : color.rangeFillEdge;
+  const recessed = color.raised2;
+  const plate = useAnimatedStyle(() => {
+    const priced = odds.value !== UNPRICED;
+    return {
+      backgroundColor: priced ? fill : recessed,
+      borderBottomColor: priced ? edge : recessed,
+    };
+  });
   const directional = offered.band.kind === "up" || offered.band.kind === "down";
+  const Mark = MARK[offered.band.kind];
   return (
-    <Pressable
-      style={styles.flex}
-      onPress={onPress}
-      onPressIn={press.onPressIn}
-      onPressOut={press.onPressOut}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={`Call ${offered.label}${directional ? "" : `, ${offered.where}`}`}
-      accessibilityState={{ disabled }}
-    >
-      <Animated.View
-        style={[styles.call, { backgroundColor: plate, opacity: disabled ? DISABLED_OPACITY : 1 }, press.style]}
+    <View style={styles.slot}>
+      <Pressable
+        onPress={() => odds.value !== UNPRICED && onPress()}
+        onPressIn={() => {
+          press.onPressIn();
+          onPreview(true);
+        }}
+        onPressOut={() => {
+          press.onPressOut();
+          onPreview(false);
+        }}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={`Call ${offered.label}${directional ? "" : `, ${offered.where}`}`}
+        accessibilityState={{ disabled }}
       >
-        <Text style={[TYPE.buttonLabel, { color: ink }]}>{offered.label}</Text>
-        {directional ? null : (
-          <Text style={[TYPE.micro, { color: ink }]} numberOfLines={1}>
-            {offered.where}
+        <Animated.View style={[styles.call, { opacity: disabled ? DISABLED_OPACITY : 1 }, plate, press.style]}>
+          <Mark size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.onDirectionFill} />
+          <Text numberOfLines={1} style={[TYPE.buttonLabel, styles.callLabel, { color: color.onDirectionFill }]}>
+            {offered.label}
           </Text>
-        )}
-        <LiveText text={odds} style={[TYPE.micro, { color: ink }]} />
-      </Animated.View>
-    </Pressable>
+        </Animated.View>
+      </Pressable>
+      <LiveText text={odds} style={[TYPE.micro, styles.pays, { color: color.inkMuted }]} />
+    </View>
   );
 }
 
@@ -102,6 +134,8 @@ function OpenPanel({
   offer,
   firstOdds,
   secondOdds,
+  quoteNote,
+  onPreview,
   holding,
   cashOut,
   onPick,
@@ -120,6 +154,10 @@ function OpenPanel({
   offer: Offer;
   firstOdds: SharedValue<string>;
   secondOdds: SharedValue<string>;
+  /** Why a shown side has no price (one sentence under the buttons), or "". */
+  quoteNote: SharedValue<string>;
+  /** Shade where the held side wins on the chart (null clears it). */
+  onPreview: (side: 0 | 1 | null) => void;
   holding: boolean;
   cashOut: SharedValue<LiveFigure>;
   onPick: (slot: OfferSlot) => void;
@@ -275,19 +313,31 @@ function OpenPanel({
       ) : (
         <View style={styles.calls}>
           {offer[0] ? (
-            <CallButton offered={offer[0]} odds={firstOdds} disabled={blocked} onPress={() => onPick(0)} />
+            <CallButton
+              offered={offer[0]}
+              odds={firstOdds}
+              disabled={blocked}
+              onPress={() => onPick(0)}
+              onPreview={(on) => onPreview(on ? 0 : null)}
+            />
           ) : null}
           {offer[1] ? (
-            <CallButton offered={offer[1]} odds={secondOdds} disabled={blocked} onPress={() => onPick(1)} />
+            <CallButton
+              offered={offer[1]}
+              odds={secondOdds}
+              disabled={blocked}
+              onPress={() => onPick(1)}
+              onPreview={(on) => onPreview(on ? 1 : null)}
+            />
           ) : null}
         </View>
       )}
+      {holding ? null : <LiveText text={quoteNote} style={[TYPE.caption, styles.notice, { color: color.inkMuted }]} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
   wrap: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter },
   presets: { flexDirection: "row", gap: SPACE.sm },
   preset: {
@@ -299,7 +349,18 @@ const styles = StyleSheet.create({
   },
   notice: { textAlign: "center" },
   calls: { flexDirection: "row", gap: SPACE.sm },
-  call: { height: BUTTON_H, borderRadius: BUTTON_H / 2, alignItems: "center", justifyContent: "center", gap: 2 },
+  slot: { flex: 1, gap: SPACE.xs },
+  call: {
+    height: CALL_H,
+    borderRadius: CALL_RADIUS,
+    borderBottomWidth: CALL_EDGE,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACE.xs,
+  },
+  callLabel: { textTransform: "uppercase", letterSpacing: CALL_TRACKING },
+  pays: { textAlign: "center" },
   close: {
     height: BUTTON_H,
     borderRadius: BUTTON_H / 2,

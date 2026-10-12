@@ -90,6 +90,10 @@ export const ArrowLeft = symbol({ ios: "arrow.left", android: "arrow_back" }, "A
 export const ArrowLeftRight = symbol({ ios: "arrow.left.arrow.right", android: "swap_horiz" }, "ArrowLeftRight");
 export const ArrowRight = symbol({ ios: "arrow.right", android: "arrow_forward" }, "ArrowRight");
 export const ArrowUp = symbol({ ios: "arrow.up", android: "arrow_upward" }, "ArrowUp");
+/** The call buttons' marks (F8): Moonshot's climb, Crash's plunge, Range's band (SF has no rocket). */
+export const Surge = symbol({ ios: "chart.line.uptrend.xyaxis", android: "trending_up" }, "Surge");
+export const Plunge = symbol({ ios: "chart.line.downtrend.xyaxis", android: "trending_down" }, "Plunge");
+export const RangeBand = symbol({ ios: "arrow.up.and.down", android: "height" }, "RangeBand");
 export const Ban = symbol({ ios: "nosign", android: "block" }, "Ban");
 export const Bell = symbol({ ios: "bell", iosFilled: "bell.fill", android: "notifications" }, "Bell");
 export const BellPlus = symbol({ ios: "bell.badge", android: "notification_add" }, "BellPlus");

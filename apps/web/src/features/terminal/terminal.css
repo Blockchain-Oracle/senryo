@@ -217,57 +217,105 @@
 .terminal-calls.is-one {
   grid-template-columns: 1fr;
 }
-.terminal-call {
+/* The call buttons (F8, research 10 §1): label only on the direction fills with black labels and a darker 3 px bottom
+   edge; hover lifts 2 px in 120 ms with one gloss sweep, a press sinks 2 px at 0.98 in 70 ms. "Pays 2.14× · $10.70" sits
+   under each; a side with no price is a recessed plate keeping its label, its reason one sentence below the pair. */
+.terminal-call-slot {
   display: flex;
-  min-height: 64px;
-  padding: 8px 12px;
+  min-width: 0;
   flex-direction: column;
+  gap: 6px;
+}
+.terminal-call {
+  position: relative;
+  display: flex;
+  height: 52px;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  border-radius: 32px;
-  color: var(--up-foreground);
+  gap: 8px;
+  overflow: hidden;
+  border-radius: 12px;
+  border-bottom: 3px solid transparent;
+  color: var(--on-direction-fill);
+  font: 800 16px / 20px var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
   transition:
-    transform var(--motion-press) var(--motion-ease),
+    transform 120ms var(--motion-ease),
+    border-bottom-width 70ms var(--motion-ease),
+    background-color var(--motion-fast),
     opacity var(--motion-fast);
 }
 .terminal-call.is-up {
-  background: var(--chart-up);
+  background: var(--up-fill);
+  border-bottom-color: var(--up-fill-edge);
 }
 .terminal-call.is-down {
-  background: var(--chart-down);
+  background: var(--down-fill);
+  border-bottom-color: var(--down-fill-edge);
 }
-/* Range wins in neither direction: the ink plate, not a side's colour. */
+/* Range wins in neither direction: its own cyan (D-316). */
 .terminal-call.is-neutral {
-  background: var(--foreground);
-  color: var(--background);
+  background: var(--range-fill);
+  border-bottom-color: var(--range-fill-edge);
 }
-.terminal-call:active {
-  transform: scale(0.97);
+.terminal-call::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+  content: "";
+  pointer-events: none;
+  transform: translateX(-120%);
+}
+@media (hover: hover) {
+  .terminal-call:hover:not(:disabled):not([data-priced="false"]) {
+    transform: translateY(-2px);
+  }
+  .terminal-call:hover:not(:disabled):not([data-priced="false"])::after {
+    transform: translateX(120%);
+    transition: transform 640ms var(--motion-ease);
+  }
+}
+.terminal-call:active:not(:disabled):not([data-priced="false"]) {
+  border-bottom-width: 1px;
+  transform: translateY(2px) scale(0.98);
+  transition-duration: 70ms;
+}
+.terminal-call[data-priced="false"] {
+  background: var(--secondary);
+  border-bottom-color: var(--border);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.14);
+  color: var(--text-2);
+  cursor: default;
 }
 .terminal-call:disabled {
   opacity: 0.4;
+  cursor: default;
 }
 .terminal-call:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
-.terminal-call-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font: 800 17px / 22px var(--shell-font);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.terminal-call-where {
-  font: 600 11px / 14px var(--shell-font);
-  opacity: 0.8;
-}
-.terminal-call-odds {
+.terminal-call-pays {
   min-height: 16px;
+  color: var(--text-2);
   font: 600 12px / 16px var(--shell-font);
-  opacity: 0.85;
+  text-align: center;
+  white-space: nowrap;
+}
+.terminal-quote-note {
+  min-height: 18px;
+  color: var(--text-2);
+  font: 500 13px / 18px var(--shell-font);
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .terminal-call,
+  .terminal-call::after {
+    transition: none;
+  }
 }
 .terminal-cash {
   display: grid;

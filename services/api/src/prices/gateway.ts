@@ -233,6 +233,11 @@ export class PythGateway {
     return this.archive.daySince(since);
   }
 
+  /** Each feed's closes on `stepSec` steps since `since`, for the 24 h graph (D-319). */
+  closesSince(since: number, stepSec: number) {
+    return this.archive.closesSince(since, stepSec);
+  }
+
   /**
    * The unique print of `t` for a feed, with the bytes the chain verifies: the ring, then waiting for it to stream
    * (up to `waitMs` — a fill asks a second ahead), then the archive, then upstream REST (catalogue feeds only).

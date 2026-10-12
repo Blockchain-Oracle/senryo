@@ -211,7 +211,10 @@ export function drawFrame(
     const at = (price: number) => Math.min(win.bottom + PAD_Y, Math.max(win.top - PAD_Y, yOf(price, win)));
     const top = o.zone.to === null ? 0 : at(o.zone.to);
     const bottom = o.zone.from === null ? h : at(o.zone.from);
-    if (bottom > top) c.drawRect(Skia.XYWHRect(0, top, plotW, bottom - top), fill(k, tone, ZONE_ALPHA));
+    // A previewed side shades in its own tone; a held call's zone follows winning or losing.
+    const shade =
+      o.zoneTone === "range" ? k.colors.range : o.zoneTone === "down" ? k.colors.down : o.zoneTone ? k.colors.up : tone;
+    if (bottom > top) c.drawRect(Skia.XYWHRect(0, top, plotW, bottom - top), fill(k, shade, ZONE_ALPHA));
   }
   // The line as one path string: about one point per pixel (the ring holds more samples than the plot has pixels,
   // so straight segments read as the curve), parsed natively in one call.

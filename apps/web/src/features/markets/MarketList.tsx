@@ -1,22 +1,26 @@
 "use client";
 /**
  * Every market on this network in its kind groups (S7.3): a search, the kind filter (the Calls filter's segmented
- * control), and per row the real mark, symbol, the 1-minute window's countdown while the market trades or its session
- * in words while it doesn't ("Opens Mon 09:30 ET", `@senryo/calls` `marketLine`), and the price as it streams — the
- * last print, dimmed, when closed. A row opens the terminal. Prices re-render at most once a frame.
+ * control), and per row (F7, research 10 §2: mark → symbol/name → 24 h graph → price and change → chevron, 72 px) the
+ * real mark, symbol, the 1-minute window's countdown while the market trades or its session in words while it doesn't
+ * ("Opens Mon 09:30 ET", `@senryo/calls` `marketLine`), the day's sparkline against the price 24 hours ago (D-319),
+ * the price as it streams — the last print, dimmed, when closed — and its 24 h change. The whole row tints and lifts
+ * on hover and opens the terminal. Prices re-render at most once a frame; the graph and change once a second.
  */
 import { groupMarkets, MARKET_FILTERS, type MarketFilter, unitOf } from "@senryo/calls";
-import { useMarketLine } from "@senryo/calls/react";
+import { useDayLine, useMarketLine } from "@senryo/calls/react";
 import { formatPrice, priceFromE8 } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useLivePrice } from "@senryo/live/react";
 import { marketKeys, useCatalog } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
+import { ChangeChip } from "@/components/ui/change-chip";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Sparkline } from "@/components/ui/sparkline";
 import { tapFeedback } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
 
@@ -25,16 +29,17 @@ const SKELETON_ROWS = 3;
 
 export const tradeHref = (symbol: string) => `/app/trade/${symbol.toLowerCase()}/`;
 
-function MarketRow({ symbol, name }: { symbol: string; name: string }) {
+export function MarketRow({ symbol, name }: { symbol: string; name: string }) {
   const priceE8 = useLivePrice(symbol);
   const line = useMarketLine(symbol);
+  const day = useDayLine(symbol);
   const price = formatPrice(priceE8 === undefined ? undefined : priceFromE8(priceE8), undefined, unitOf(symbol));
   return (
     <Link
       href={tradeHref(symbol)}
       onClick={tapFeedback}
       aria-label={`${name}, ${price}. ${line.trading ? "" : `${line.text}. `}Open the terminal`}
-      className="flex min-h-16 items-center gap-3 rounded-md px-3 py-2 transition-colors duration-(--motion-fast) hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
+      className="group flex min-h-18 items-center gap-3 rounded-xl px-3 py-2 transition-[background-color,transform] duration-(--motion-fast) hover:-translate-y-0.5 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring active:translate-y-0 active:scale-[0.99]"
     >
       <EntityMark id={marketId(symbol)} size={MARK} decorative />
       <span className="flex min-w-0 flex-1 flex-col">
@@ -43,7 +48,15 @@ function MarketRow({ symbol, name }: { symbol: string; name: string }) {
           {name} · {line.text}
         </span>
       </span>
-      <span className={cn("tnum font-semibold text-row-price", !line.trading && "text-text-3")}>{price}</span>
+      {day ? <Sparkline symbol={symbol} day={day} className="shrink-0" /> : null}
+      <span className="flex min-w-24 flex-col items-end gap-1">
+        <span className={cn("tnum font-semibold text-row-price", !line.trading && "text-text-3")}>{price}</span>
+        {day ? <ChangeChip symbol={symbol} day={day} suffix={false} /> : null}
+      </span>
+      <ChevronRight
+        aria-hidden
+        className="size-4 shrink-0 text-text-3 transition-transform duration-(--motion-fast) group-hover:translate-x-0.5"
+      />
     </Link>
   );
 }

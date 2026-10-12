@@ -171,6 +171,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           offer={q.offer}
           firstOdds={q.firstLine}
           secondOdds={q.secondLine}
+          quoteNote={q.note}
+          onPreview={q.setPreview}
           holding={flow.holding}
           cashOut={q.cashOut}
           onPick={(slot) => void flow.open(slot)}

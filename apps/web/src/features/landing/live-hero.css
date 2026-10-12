@@ -54,8 +54,9 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border-radius: 30px;
-  color: var(--up-foreground);
+  border-radius: 12px;
+  border-bottom: 3px solid transparent;
+  color: var(--on-direction-fill);
   font:
     600 12px / 16px var(--font-inter),
     system-ui;
@@ -70,13 +71,21 @@
   text-transform: uppercase;
 }
 .live-hero-call.is-up {
-  background: var(--chart-up);
+  background: var(--up-fill);
+  border-bottom-color: var(--up-fill-edge);
 }
 .live-hero-call.is-down {
-  background: var(--chart-down);
+  background: var(--down-fill);
+  border-bottom-color: var(--down-fill-edge);
+}
+@media (hover: hover) {
+  .live-hero-call:hover {
+    transform: translateY(-2px);
+  }
 }
 .live-hero-call:active {
-  transform: scale(0.97);
+  border-bottom-width: 1px;
+  transform: translateY(2px) scale(0.98);
 }
 .live-hero-call:focus-visible {
   outline: 2px solid var(--ring);

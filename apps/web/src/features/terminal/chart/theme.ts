@@ -17,6 +17,7 @@ export function readChartTheme(el: Element): { chart: ChartTheme; dots: string }
     chart: {
       up: v("--chart-up"),
       down: v("--chart-down"),
+      range: v("--range"),
       ink: v("--foreground"),
       inverse: v("--background"),
       helper: v("--text-3"),

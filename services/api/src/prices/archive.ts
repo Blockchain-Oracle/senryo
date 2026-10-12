@@ -100,6 +100,14 @@ export class PriceArchive {
             WHERE minute >= ${since} GROUP BY feed_id) r USING (feed_id)`;
   }
 
+  /** Each feed's close at the end of every `stepSec` step from `since` (a step with no candle has no row). */
+  async closesSince(since: number, stepSec: number) {
+    return this.db<{ feed_id: string; step: number; close: bigint }[]>`
+      SELECT DISTINCT ON (feed_id, step) feed_id, ((minute - ${since}) / ${stepSec})::int AS step, close
+      FROM price_candles WHERE minute >= ${since}
+      ORDER BY feed_id, step, minute DESC`;
+  }
+
   async candles(feedId: Hex, from: number, to: number) {
     return this.db<{ minute: bigint; open: bigint; high: bigint; low: bigint; close: bigint }[]>`
       SELECT minute, open, high, low, close FROM price_candles

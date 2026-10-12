@@ -19,5 +19,6 @@ export * from "./receipt.ts";
 export * from "./session-history.ts";
 export * from "./sigma.ts";
 export * from "./sign.ts";
+export * from "./spark.ts";
 export * from "./suggest-handle.ts";
 export * from "./window.ts";

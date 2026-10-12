@@ -1,5 +1,5 @@
 import { candlesRoute, dayPricesRoute, latestPricesRoute, printRoute, recentPricesRoute } from "@senryo/api-client";
-import { feedIdOf, MARKETS, marketByFeedId } from "@senryo/config";
+import { feedIdOf, MARKETS, marketByFeedId, SPARK_POINTS, SPARK_STEP_SEC } from "@senryo/config";
 import { toE8 } from "@senryo/core";
 import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, HttpError, nowSec, parseRoute, SECONDS_PER_DAY, sendRoute } from "@senryo/service-common";
@@ -31,15 +31,27 @@ const MAX_CANDLE_SPAN_SEC = MAX_CANDLE_SPAN_DAYS * SECONDS_PER_DAY;
 const MINUTE = 60;
 
 export function registerPriceRoutes(app: HttpServer, gateway: PythGateway): void {
-  type Day = Record<string, { openE8: number; highE8: number; lowE8: number }>;
+  type Day = Record<string, { openE8: number; highE8: number; lowE8: number; spark: (number | null)[] }>;
   let day: { at: number; body: Promise<{ from: number; markets: Day }> } | null = null;
-  const readDay = async (from: number): Promise<Day> =>
-    Object.fromEntries(
-      (await gateway.daySince(from)).flatMap((r) => {
+  const readDay = async (from: number): Promise<Day> => {
+    const [stats, closes] = await Promise.all([gateway.daySince(from), gateway.closesSince(from, SPARK_STEP_SEC)]);
+    const sparks = new Map<string, (number | null)[]>();
+    for (const c of closes) {
+      if (c.step < 0 || c.step >= SPARK_POINTS) continue;
+      const line = sparks.get(c.feed_id) ?? new Array<number | null>(SPARK_POINTS).fill(null);
+      line[c.step] = Number(c.close);
+      sparks.set(c.feed_id, line);
+    }
+    return Object.fromEntries(
+      stats.flatMap((r) => {
         const symbol = marketByFeedId(r.feed_id)?.symbol;
-        return symbol ? [[symbol, { openE8: Number(r.open), highE8: Number(r.high), lowE8: Number(r.low) }]] : [];
+        const spark = sparks.get(r.feed_id) ?? [];
+        return symbol
+          ? [[symbol, { openE8: Number(r.open), highE8: Number(r.high), lowE8: Number(r.low), spark }]]
+          : [];
       }),
     );
+  };
   app.get(dayPricesRoute.path, { config: PRICE_READ_RATE }, async (_request, reply) => {
     const now = Date.now();
     if (!day || now - day.at > DAY_TTL_MS) {

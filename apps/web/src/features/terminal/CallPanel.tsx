@@ -1,9 +1,11 @@
 "use client";
 /**
- * The call panel (the phone's `CallPanel`; Tradash's UP/DOWN ↔ CLOSE, Owarine's web buttons): the way to call (Up /
- * Down · Range · Moonshot, S7.4), the stake (the last one remembered; $1 · $5 · $10 · $25 · any amount · Max), then the
- * mode's buttons — UP and DOWN, RANGE between its edges, MOONSHOT ▲ and CRASH ▼ beyond their strikes — each with
- * where it wins and its live odds ("pays 2.61× · about 37%"), or — holding a call in this window — CASH OUT with the
+ * The call panel (the phone's `CallPanel`; Tradash's UP/DOWN ↔ CLOSE, Owarine's `TradeButtons`, F8): the way to call
+ * (Up / Down · Range · Moonshot, S7.4), the stake (the last one remembered; $1 · $5 · $10 · $25 · any amount · Max),
+ * then the mode's buttons — label only (↑ UP, ↓ DOWN, ↔ RANGE, MOONSHOT, CRASH) on their direction fills, "Pays 2.14× ·
+ * $10.70" under each; where a side wins is shaded on the chart while the button is hovered or focused, and a side with
+ * no price turns a recessed plate with "—" while one sentence outside the buttons says why — or, holding a call in this
+ * window, CASH OUT with the
  * value it returns now, a part (25 / 50 %) and its exit (take profit, stop, trail — S8.4) with the armed exit's line. Honest
  * states: calls closed for the lockout, a stale price, a call in flight, and a market outside its session ("TSLA is
  * closed · Opens Mon 09:30 ET", D-289). Keys: ↑ Up, ↓ Down, C cash out.
@@ -12,7 +14,7 @@ import { CALL_MODES, type CallMode, closedWords, type MarketLine, type Offer, ty
 import type { OfferSlot, PanelState } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
 import { ArrowDown, ArrowDownUp, ArrowUp, Crosshair, Ellipsis, MoveVertical, Rocket, TrendingDown } from "lucide-react";
-import type { ComponentType } from "react";
+import { type ComponentType, useEffect, useRef } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { fire } from "@/lib/feedback";
@@ -48,6 +50,10 @@ export interface CallPanelProps {
   offer: Offer;
   firstOdds: LiveValue<string>;
   secondOdds: LiveValue<string>;
+  /** Why a shown side has no price (one sentence, outside the buttons), or null. */
+  quoteNote: LiveValue<string | null>;
+  /** Shade where the hovered or focused side wins on the chart (null clears it). */
+  onPreview: (side: 0 | 1 | null) => void;
   holding: boolean;
   cashOut: LiveValue<CashOutFigure>;
   onPick: (slot: OfferSlot) => void;
@@ -63,31 +69,47 @@ const ICON: Readonly<Record<OfferedBand["band"]["kind"], ComponentType<{ classNa
   { up: ArrowUp, down: ArrowDown, range: MoveVertical, moonshot: Rocket, crash: TrendingDown };
 const TONE_CLASS = { up: "is-up", down: "is-down", neutral: "is-neutral" } as const;
 
+/** The pays line reads "—" while its side has no price: the button turns a recessed plate and takes no tap. */
+const UNPRICED = "—";
+
 function CallButton(p: {
   offered: OfferedBand;
   odds: LiveValue<string>;
   disabled: boolean;
   onPick: () => void;
+  onPreview: (on: boolean) => void;
   shortcut: string;
 }) {
   const Icon = ICON[p.offered.band.kind];
   const directional = p.offered.band.kind === "up" || p.offered.band.kind === "down";
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const paint = (line: string) => {
+      if (ref.current) ref.current.dataset.priced = line === UNPRICED ? "false" : "true";
+    };
+    paint(p.odds.get());
+    return p.odds.subscribe(paint);
+  }, [p.odds]);
   return (
-    <button
-      type="button"
-      className={cn("terminal-call", TONE_CLASS[p.offered.tone])}
-      disabled={p.disabled}
-      onClick={p.onPick}
-      aria-label={`Call ${p.offered.label}${directional ? "" : `, ${p.offered.where}`}`}
-      aria-keyshortcuts={p.shortcut}
-    >
-      <span className="terminal-call-label">
-        <Icon aria-hidden className="size-5" strokeWidth={3} />
+    <div className="terminal-call-slot">
+      <button
+        ref={ref}
+        type="button"
+        className={cn("terminal-call", TONE_CLASS[p.offered.tone])}
+        disabled={p.disabled}
+        onClick={() => ref.current?.dataset.priced !== "false" && p.onPick()}
+        onPointerEnter={() => p.onPreview(true)}
+        onPointerLeave={() => p.onPreview(false)}
+        onFocus={() => p.onPreview(true)}
+        onBlur={() => p.onPreview(false)}
+        aria-label={`Call ${p.offered.label}${directional ? "" : `, ${p.offered.where}`}`}
+        aria-keyshortcuts={p.shortcut}
+      >
+        <Icon aria-hidden className="size-4.5" strokeWidth={3} />
         {p.offered.label}
-      </span>
-      {directional ? null : <span className="terminal-call-where">{p.offered.where}</span>}
-      <LiveText value={p.odds} className="terminal-call-odds" />
-    </button>
+      </button>
+      <LiveText value={p.odds} className="terminal-call-pays tnum" />
+    </div>
   );
 }
 
@@ -220,6 +242,7 @@ export function CallPanel(p: CallPanelProps) {
               odds={p.firstOdds}
               disabled={blocked}
               onPick={() => p.onPick(0)}
+              onPreview={(on) => p.onPreview(on ? 0 : null)}
               shortcut="ArrowUp"
             />
           ) : null}
@@ -229,11 +252,13 @@ export function CallPanel(p: CallPanelProps) {
               odds={p.secondOdds}
               disabled={blocked}
               onPick={() => p.onPick(1)}
+              onPreview={(on) => p.onPreview(on ? 1 : null)}
               shortcut="ArrowDown"
             />
           ) : null}
         </div>
       )}
+      {p.holding ? null : <LiveText value={p.quoteNote} format={(v) => v ?? ""} className="terminal-quote-note" />}
     </div>
   );
 }

@@ -69,10 +69,12 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
         {
           up: Skia.Color(color.chartUp),
           down: Skia.Color(color.chartDown),
+          range: Skia.Color(color.range),
           ink: Skia.Color(color.ink),
           inverse: Skia.Color(color.ground),
           helper: Skia.Color(color.inkMuted),
-          onLine: Skia.Color(color.paperInk),
+          // The pill's text on the direction ink: white in light, black in dark (the web's `--up-foreground`).
+          onLine: Skia.Color(color.upForeground),
         },
         {
           line: Skia.PathEffect.MakeDash([...LEVEL_DASH.line], 0),

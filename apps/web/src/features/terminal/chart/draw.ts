@@ -46,6 +46,8 @@ const HALF = 2;
 export interface ChartTheme {
   up: string;
   down: string;
+  /** Range's cyan: a previewed Range shades in it (D-316). */
+  range: string;
   ink: string;
   inverse: string;
   helper: string;

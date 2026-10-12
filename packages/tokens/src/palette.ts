@@ -1,8 +1,9 @@
 /**
  * The one palette (UGLYCASH, D-304; replan R2.1): the phone's native colours (evidence U04/U14/U16) are the source for
  * web and phone alike — near-black and white grounds, black (light) or white (dark) primary actions, `#FA00FF` with
- * black ink for trade, selected and publish controls, green and red only for direction. Light is the default; dark is
- * an accessible adaptation. The first block keeps the shadcn/Tailwind names the web maps; the second the app roles.
+ * black ink for trade, selected and publish controls, and the direction colours (D-316): acid green for Up, coral for
+ * Down, cyan for Range — vivid fills with black labels on the call buttons, and per-theme inks that read as text and
+ * lines (≥ 4.5:1 on the ground). Light is the default; dark is an accessible adaptation. The first block keeps the shadcn/Tailwind names the web maps; the second the app roles.
  * `packages/tokens/scripts/emit-css.ts` writes `tokens.css` from here. Eight-digit values are `#RRGGBBAA`.
  */
 
@@ -36,6 +37,8 @@ type ShadcnRole =
   | "chart4"
   | "chartUp"
   | "chartDown"
+  /** Range's ink (D-316): cyan, a band rather than a direction. */
+  | "range"
   /** Mode identity: Practice and Real read in neutral plates (UGLYCASH); the mode is in the words, never a hue. */
   | "practice"
   | "mainnet";
@@ -66,7 +69,16 @@ type AppRole =
   | "selectedRow"
   | "skeleton"
   | "primaryPressed"
-  /** Ink on solid up/down action fills. */
+  /** The call buttons' fills (D-316): vivid in both themes, black labels, and a darker 3 px bottom edge. */
+  | "upFill"
+  | "downFill"
+  | "rangeFill"
+  | "upFillEdge"
+  | "downFillEdge"
+  | "rangeFillEdge"
+  /** The label on a direction fill (black in both themes). */
+  | "onDirectionFill"
+  /** Ink on the up/down inks used as plates (the chart's price pill, Yes/No): white in light, black in dark. */
   | "upForeground"
   | "downForeground"
   | "chartNeutral"
@@ -97,15 +109,16 @@ export const LIGHT: Palette = {
   input: "#ECECEC",
   ring: "#FA00FF",
   surface: "#FFFFFF",
-  up: "#087F3C",
-  down: "#C83225",
+  up: "#2F7A00",
+  down: "#C8283F",
   gold: "#89611F",
   warn: "#8A5800",
   chart2: "#666666",
   chart3: "#087A8A",
   chart4: "#AD3265",
-  chartUp: "#087F3C",
-  chartDown: "#C83225",
+  chartUp: "#2F7A00",
+  chartDown: "#C8283F",
+  range: "#00727E",
   practice: "#666666",
   mainnet: "#000000",
 
@@ -120,14 +133,21 @@ export const LIGHT: Palette = {
   warningSurface: "#FFF0D5",
   practiceSurface: "#ECECEC",
   mainnetSurface: "#E2E2E2",
-  upSurface: "#E4F4E9",
-  downSurface: "#FBE8E5",
+  upSurface: "#EEF9DC",
+  downSurface: "#FDE7EA",
   destructiveSurface: "#FBE8E5",
   raised2: "#ECECEC",
   rowPressed: "#E2E2E2",
   selectedRow: "#FCE3FC",
   skeleton: "#DEDEDE",
   primaryPressed: "#252525",
+  upFill: "#B5F543",
+  downFill: "#FF647C",
+  rangeFill: "#3FE0F0",
+  upFillEdge: "#7FB224",
+  downFillEdge: "#D9435C",
+  rangeFillEdge: "#1FA8B6",
+  onDirectionFill: "#000000",
   upForeground: "#FFFFFF",
   downForeground: "#FFFFFF",
   chartNeutral: "#6E6E6E",
@@ -156,15 +176,16 @@ export const DARK: Palette = {
   input: "#292929",
   ring: "#FA00FF",
   surface: "#1C1C1C",
-  up: "#25CF68",
-  down: "#FF5A48",
+  up: "#B5F543",
+  down: "#FF647C",
   gold: "#D4AE5B",
   warn: "#F2B85C",
   chart2: "#B8B8B8",
   chart3: "#5CCAD8",
   chart4: "#F18BB7",
-  chartUp: "#25CF68",
-  chartDown: "#FF5A48",
+  chartUp: "#B5F543",
+  chartDown: "#FF647C",
+  range: "#3FE0F0",
   practice: "#B8B8B8",
   mainnet: "#F5F5F5",
 
@@ -179,14 +200,21 @@ export const DARK: Palette = {
   warningSurface: "#332719",
   practiceSurface: "#292929",
   mainnetSurface: "#363636",
-  upSurface: "#102A1C",
-  downSurface: "#35201F",
+  upSurface: "#1E2A0C",
+  downSurface: "#3A1A20",
   destructiveSurface: "#35201F",
   raised2: "#292929",
   rowPressed: "#363636",
   selectedRow: "#3C203C",
   skeleton: "#363636",
   primaryPressed: "#DEDEDE",
+  upFill: "#B5F543",
+  downFill: "#FF647C",
+  rangeFill: "#3FE0F0",
+  upFillEdge: "#7FB224",
+  downFillEdge: "#D9435C",
+  rangeFillEdge: "#1FA8B6",
+  onDirectionFill: "#000000",
   upForeground: "#000000",
   downForeground: "#000000",
   chartNeutral: "#A0A0A0",

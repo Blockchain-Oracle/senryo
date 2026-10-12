@@ -42,12 +42,21 @@ export function useLiveQuote(
     () => ({
       firstLine: liveValue(""),
       secondLine: liveValue(""),
+      note: liveValue<string | null>(null),
       lineText: liveValue(""),
       cashOut: liveValue<CashOutFigure>({ text: "", trend: 0 }),
     }),
     [],
   );
   const overlay = useRef<ChartOverlay | null>(null);
+  /** The offered side under the pointer or focus: the next pass shades where it wins (F8). */
+  const preview = useRef<0 | 1 | null>(null);
+  const rerun = useRef<() => void>(() => undefined);
+  const setPreview = useCallback((side: 0 | 1 | null) => {
+    if (preview.current === side) return;
+    preview.current = side;
+    rerun.current();
+  }, []);
   const latest = useRef<Quotes>({ first: null, second: null, close: null });
   const lastProceeds = useRef<bigint | null>(null);
   const lastPnl = useRef<bigint | null>(null);
@@ -76,6 +85,7 @@ export function useLiveQuote(
       if (!tick || !t.series || !pricing || t.k === undefined) {
         values.firstLine.set("");
         values.secondLine.set("");
+        values.note.set(null);
         values.lineText.set("");
         overlay.current = null;
         latest.current = { first: null, second: null, close: null };
@@ -93,9 +103,11 @@ export function useLiveQuote(
         offer: [offer[0]?.band, offer[1]?.band],
         unit,
         position: position && positionBand ? { call: position, band: positionBand } : undefined,
+        preview: preview.current,
       });
       values.firstLine.set(pass.firstLine);
       values.secondLine.set(pass.secondLine);
+      values.note.set(pass.note);
       values.lineText.set(pass.lineText);
       if (pass.proceeds !== null && pass.pnl !== null) {
         values.cashOut.set({ text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) });
@@ -109,9 +121,10 @@ export function useLiveQuote(
       const reaction: QuoteTick = { t: performance.now(), price: priceFromE8(tick.priceE8), position: pass.reading };
       for (const listener of listeners.current) listener(reaction);
     };
+    rerun.current = run;
     run();
     return live.prices.subscribe(t.symbol, run);
   }, [live, t.symbol, t.series, t.k, t.window.expiry, stake, offer, position, positionBand, pricing, values]);
 
-  return { ...values, overlay, latest, offer, onTick };
+  return { ...values, overlay, latest, offer, onTick, setPreview };
 }

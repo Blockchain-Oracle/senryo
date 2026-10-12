@@ -33,12 +33,22 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
   const live = useLive();
   const firstLine = useSharedValue("");
   const secondLine = useSharedValue("");
+  /** Why a shown side has no price (one sentence under the buttons), or "" (F8). */
+  const note = useSharedValue("");
   const lineText = useSharedValue("");
   const cashOut = useSharedValue<LiveFigure>({ text: "", trend: 0 });
   const overlay = useSharedValue<ChartOverlay | null>(null);
   const lastProceeds = useRef<bigint | null>(null);
   const lastPnl = useRef<bigint | null>(null);
   const latest = useRef<Quotes>({ first: null, second: null, close: null });
+  /** The side held under a finger: the next pass shades where it wins (F8). */
+  const preview = useRef<0 | 1 | null>(null);
+  const rerun = useRef<() => void>(() => undefined);
+  const setPreview = useCallback((side: 0 | 1 | null) => {
+    if (preview.current === side) return;
+    preview.current = side;
+    rerun.current();
+  }, []);
   // Tick listeners (the reactions): fed from the same pass as the quotes, so nothing is computed twice.
   const listeners = useRef(new Set<(tick: QuoteTick) => void>());
   const onTick = useCallback((listener: (tick: QuoteTick) => void) => {
@@ -64,7 +74,7 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
     const run = () => {
       const tick = live.prices.latest(t.symbol);
       if (!tick || !t.series || !pricing || t.k === undefined) {
-        firstLine.value = secondLine.value = lineText.value = "";
+        firstLine.value = secondLine.value = note.value = lineText.value = "";
         overlay.value = null;
         latest.current = { first: null, second: null, close: null };
         return;
@@ -81,9 +91,11 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
         offer: [offer[0]?.band, offer[1]?.band],
         unit,
         position: position && positionBand ? { call: position, band: positionBand } : undefined,
+        preview: preview.current,
       });
       firstLine.value = pass.firstLine;
       secondLine.value = pass.secondLine;
+      note.value = pass.note ?? "";
       lineText.value = pass.lineText;
       if (pass.proceeds !== null && pass.pnl !== null) {
         cashOut.value = { text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) };
@@ -101,6 +113,7 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
       };
       for (const listener of listeners.current) listener(reactionTick);
     };
+    rerun.current = run;
     run();
     return live.prices.subscribe(t.symbol, run);
   }, [
@@ -117,10 +130,11 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
     pricing,
     firstLine,
     secondLine,
+    note,
     lineText,
     cashOut,
     overlay,
   ]);
 
-  return { firstLine, secondLine, lineText, cashOut, overlay, latest, offer, onTick };
+  return { firstLine, secondLine, note, lineText, cashOut, overlay, latest, offer, onTick, setPreview };
 }

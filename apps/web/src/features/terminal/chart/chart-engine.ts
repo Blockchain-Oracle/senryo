@@ -303,7 +303,9 @@ export class ChartEngine {
       const bottom = o.zone.from === null ? h : at(o.zone.from);
       if (bottom > top) {
         ctx.globalAlpha = ZONE_ALPHA;
-        ctx.fillStyle = tone;
+        // A previewed side shades in its own tone; a held call's zone follows winning or losing.
+        ctx.fillStyle =
+          o.zoneTone === "range" ? theme.range : o.zoneTone === "down" ? theme.down : o.zoneTone ? theme.up : tone;
         ctx.fillRect(0, top, plotW, bottom - top);
         ctx.globalAlpha = 1;
       }

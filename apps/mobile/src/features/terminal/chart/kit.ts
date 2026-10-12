@@ -34,6 +34,8 @@ export interface DrawKit {
   colors: {
     up: SkColor;
     down: SkColor;
+    /** Range's cyan: a previewed Range shades in it (D-316). */
+    range: SkColor;
     ink: SkColor;
     inverse: SkColor;
     helper: SkColor;
