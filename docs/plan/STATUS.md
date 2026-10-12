@@ -78,8 +78,15 @@ Plan approved the same day:
   `773842ce-dc23-4167-86f6-73a63b71199f`.
 - **Earlier in R7:** R7.4 Lucky (phone), R7.7 hub cards (web), R7.8 Duel moments (web), R7.9 scoreboard (phone).
 
-Next: R7.5 Warm-up on both apps, then R7.7 on the phone (the hub's cards with the games playing themselves) and
-R7.8 / R7.9 / R7.10 on the side each still lacks.
+- **Later on 12 Oct:** R7.5 Warm-up (both apps), R7.7 phone hub (the games play themselves), R7.8 Duel moments on
+  the phone (one shared hook); phone OTA `46c9230c`.
+
+**The owner's phone review, 12 Oct afternoon** ([replan-p-phone.md](replan-p-phone.md), research
+`docs/research/review-2026-10-12/`): Parlay "even worse", Duel "like Warm-up", Earn's bare input, Status "mid", and
+the terminal's market sheet under the dock. Stage P rebuilds them in order (D-321…D-326); it folds in R7.10 and R7.8's
+leftovers.
+
+Next: P1 — the sheet foundation (a root host above the dock, detents).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

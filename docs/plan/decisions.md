@@ -532,3 +532,26 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   - Real's ticket reads "Trading opens with mainnet · Switch to Practice to play" until S9.
   - Real-money gates stay (D-172, D-267, D-270, D-273, D-305).
   - Research `10` §6 · planner, on the owner's "I cannot even click to toggle".
+- **D-321** 2026-10-12 · **Phone sheets have a root host and detents.**
+  - Our own `Sheet` engine stays: keyboard, accessibility and reduced motion already work, all three references hand-roll
+    theirs, and it needs no new dependency (`@gorhom/bottom-sheet` 5.2.14 was considered).
+  - Inline sheets render through a root `SheetHost` above the tab shell and its dock; the dock hides while any sheet is
+    open; the scrim makes what's behind inert.
+  - Optional detents `[0.62, 0.88, 1.0]` of the space under the top safe area; content scrolls only at the top detent.
+  - Research `review-2026-10-12` · the owner's "the button below is covering it… I cannot drag it more up".
+- **D-322** 2026-10-12 · **Duel picks on three market lanes; Warm-up keeps the swipe deck.** Both seats stay on screen
+  through every phase of a duel. Research `review-2026-10-12` (Codex) · the owner's "why is Duel like Warm-up".
+- **D-323** 2026-10-12 · **The "Free" duel tier is "No pot".** It still stakes three real calls; the entry spells the
+  commitment out (`3 × $10 calls = $30 · no pot`).
+- **D-324** 2026-10-12 · **Status history is recorded by the api.**
+  - A `health_minutes` table, one row a minute (90-day retention), from the api's feed states, process guards, relay,
+    overdue windows, indexer lag, block age with RPC latency and the keeper's job state.
+  - `GET /v1/status/history` serves 24 hourly and 90 daily buckets; unknown intervals are grey; scheduled closures are not
+    downtime.
+- **D-325** 2026-10-12 · **Earn never shows a bare input.**
+  - Guests see one pool share's value and its observed return.
+  - Amounts go in a keypad sheet (Supply / Withdraw) with wallet-scaled chips and MAX; withdraw is sized to what's free.
+  - The share-value chart plots value ÷ supply per hour; "Since launch · N h" until there's history.
+- **D-326** 2026-10-12 · **Parlay keeps everything live between rounds.**
+  - One banner replaces the per-row "reopen in"; legs roll to their next round by themselves.
+  - Indicative per-side odds come from one shared helper used by Parlay, Duel and the market sheet.
