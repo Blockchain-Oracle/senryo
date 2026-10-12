@@ -156,6 +156,9 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
     - **Phone:** a simulator pass on a fresh Release build (A2 Senryo iPhone 17) showed the terminal priced with σ
       marks and Duel, Events (the two calls in the pool), Earn and Parlay live.
     - **OTA** `8996a649-bb32-4a5f-985b-0974e41d8734` (runtime 0.4.0, iOS and Android).
+    - **End of life:** rides 5, 6 and 7 ended exactly at 11:54 UTC, settled by the keeper's `settleEnds`
+      (ids-and-txs).
+    - **Knock-out:** waits on a ≈ 2.25 % BTC move; a new 40× pair (rides 10 and 11) is open for it until 15:56 UTC.
     - **Found:**
       - a phone left on Real shows "Markets didn't load" (the api answers 400 "chain 143 is not served here");
       - the crowd line polls an unopened window (404s);
