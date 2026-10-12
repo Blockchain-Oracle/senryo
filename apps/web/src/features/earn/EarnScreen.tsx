@@ -14,8 +14,8 @@ import { EntityMark } from "@/components/identity/entity-mark";
 import { ErrorPanel, useRetry } from "@/components/ui/reading";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useAccount } from "@/lib/account/provider";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { fire } from "@/lib/feedback";
+import { activeNetwork } from "@/lib/network";
 import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { cn } from "@/lib/utils";
@@ -121,7 +121,7 @@ export function EarnScreen() {
     <div className="flex flex-col gap-6">
       <section aria-label="Your share" className="flex flex-col gap-1">
         <span className="flex items-center gap-3">
-          <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={HERO_MARK} decorative />
+          <EntityMark id={dollarId(activeNetwork().chainId)} size={HERO_MARK} decorative />
           <span className="tnum font-semibold text-hero">{words.hero}</span>
         </span>
         <span className="text-body text-text-2">{words.heroDetail}</span>

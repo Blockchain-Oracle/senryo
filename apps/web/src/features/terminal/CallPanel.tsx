@@ -18,6 +18,7 @@ import { type ComponentType, useEffect, useRef } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { fire } from "@/lib/feedback";
+import { activeNetwork, setActiveNetwork } from "@/lib/network";
 import type { LiveValue } from "@/lib/terminal/live-value";
 import { cn } from "@/lib/utils";
 import { STAKE_PRESETS_USD } from "./constants";
@@ -114,6 +115,25 @@ function CallButton(p: {
 }
 
 function ClosedPanel({ symbol, line }: { symbol: string; line: MarketLine }) {
+  // Real before mainnet (D-320): every price is live and browsable; the calls are in Practice, one tap away.
+  if (line.unlisted && activeNetwork().key === "mainnet") {
+    return (
+      <div className="terminal-panel" role="status">
+        <p className="font-semibold text-section-title">Trading opens with mainnet</p>
+        <p className="text-body text-text-2">{symbol}'s price is live. Make your calls in Practice meanwhile.</p>
+        <button
+          type="button"
+          className="terminal-call is-neutral"
+          onClick={() => {
+            fire("snap", { cue: "toggle" });
+            setActiveNetwork("testnet");
+          }}
+        >
+          Switch to Practice to play
+        </button>
+      </div>
+    );
+  }
   const words = closedWords(symbol, line);
   return (
     <div className="terminal-panel" role="status">

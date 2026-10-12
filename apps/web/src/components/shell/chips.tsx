@@ -12,28 +12,41 @@ import { Eye, EyeOff } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { useAccount } from "@/lib/account/provider";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
-import { tapFeedback } from "@/lib/feedback";
+import { fire, tapFeedback } from "@/lib/feedback";
 import { money } from "@/lib/format";
+import { setActiveNetwork, useNetwork } from "@/lib/network";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, setPrivacy, usePrivacy } from "@/lib/shell/privacy";
 import { cn } from "@/lib/utils";
 
 const CHAIN_MARK = 16;
-const PRACTICE = ACTIVE_NETWORK.key === "testnet";
 
-/** "Practice · Test dollars" (violet) or "Real · USDC" (blue): every money surface says which money it is. */
+/**
+ * "Practice · Test dollars" or "Real · USDC" (the rail's compact mode): every money surface says which money it is, and
+ * a tap switches to the other (D-320; the top line carries the full `ModeSwitch`).
+ */
 export function ModeCapsule({ className }: { className?: string | undefined }) {
-  const money = PRACTICE ? "Test dollars" : "USDC";
+  const network = useNetwork();
+  const practice = network.key === "testnet";
+  const money = practice ? "Test dollars" : "USDC";
   return (
-    <span
-      className={cn("mode-capsule", PRACTICE ? "is-practice" : "is-real", className)}
-      title={PRACTICE ? "Practice: test dollars on Monad's test network" : "Real: USDC on Monad"}
+    <button
+      type="button"
+      className={cn("mode-capsule", practice ? "is-practice" : "is-real", className)}
+      title={
+        practice
+          ? "Practice: test dollars on Monad's test network. Switch to Real"
+          : "Real: USDC on Monad. Switch to Practice"
+      }
+      onClick={() => {
+        fire("snap", { cue: "toggle" });
+        setActiveNetwork(practice ? "mainnet" : "testnet");
+      }}
     >
-      <EntityMark id={ids.evmChain(ACTIVE_NETWORK.chainId)} size={CHAIN_MARK} decorative />
-      <span className="mode-word">{ACTIVE_NETWORK.modeLabel}</span>
+      <EntityMark id={ids.evmChain(network.chainId)} size={CHAIN_MARK} decorative />
+      <span className="mode-word">{network.modeLabel}</span>
       <span className="mode-money">· {money}</span>
-    </span>
+    </button>
   );
 }
 

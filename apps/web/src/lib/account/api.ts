@@ -7,8 +7,8 @@
 import type { AccountClient, Address, PolicyContext } from "@senryo/account";
 import { defaultFaceIdMode } from "@senryo/account";
 import { type ApiClient, ApiError, authNonceRoute, authVerifyRoute, createApiClient } from "@senryo/api-client";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { ENV } from "@/lib/env";
+import { activeNetwork } from "@/lib/network";
 import { deviceId } from "./local";
 
 const HTTP_UNAUTHORIZED = 401;
@@ -43,9 +43,9 @@ export function api(): ApiClient {
 /** What the scoped signer checks every signature against (S8 adds market room and equity reads). */
 export function policyContext(address: Address, faceId: PolicyContext["faceId"] | undefined): () => PolicyContext {
   return () => ({
-    chainId: ACTIVE_NETWORK.chainId,
+    chainId: activeNetwork().chainId,
     self: address,
-    faceId: faceId ?? defaultFaceIdMode(ACTIVE_NETWORK.key),
+    faceId: faceId ?? defaultFaceIdMode(activeNetwork().key),
   });
 }
 
@@ -54,7 +54,7 @@ export async function ensureApiSession(account: AccountClient, faceId?: PolicyCo
   const address = account.hint?.address;
   if (!address) throw new Error("No account on this device");
   if (session && session.address === address && session.expiresAt > Date.now()) return;
-  const challenge = await api().call(authNonceRoute, { body: { address, chainId: ACTIVE_NETWORK.chainId } });
+  const challenge = await api().call(authNonceRoute, { body: { address, chainId: activeNetwork().chainId } });
   const signature = await account.signer(policyContext(address, faceId)).signMessage({ message: challenge.message });
   const verified = await api().call(authVerifyRoute, { body: { message: challenge.message, signature } });
   session = { token: verified.token, address, expiresAt: Date.parse(verified.expiresAt) };

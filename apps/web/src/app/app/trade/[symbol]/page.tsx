@@ -1,10 +1,10 @@
-import { marketsOn } from "@senryo/config";
+import { MAINNET, marketsOn, TESTNET } from "@senryo/config";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TerminalScreen } from "@/features/terminal/TerminalScreen";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 
-const MARKETS = marketsOn(ACTIVE_NETWORK.chainId);
+/** Every market on either network: a Real-only market still has its page (D-320). */
+const MARKETS = [...new Set([...marketsOn(TESTNET.chainId), ...marketsOn(MAINNET.chainId)])];
 const marketOf = (slug: string) => MARKETS.find((m) => m.symbol.toLowerCase() === slug);
 
 /** One terminal per market in the catalogue (`@senryo/config`), exported statically; others are a 404. */

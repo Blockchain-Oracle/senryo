@@ -28,7 +28,7 @@ import { Avatar } from "@/components/identity/avatar";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { SwipeDeck } from "@/components/ui/swipe-deck";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
+import { activeNetwork } from "@/lib/network";
 import { cn } from "@/lib/utils";
 
 const MARK = 28;
@@ -55,7 +55,7 @@ export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => vo
   const seat = seatOf(m, flow.owner);
   if (seat === null) return null;
   const other = seat === 0 ? 1 : 0;
-  const tier = duelTierOf(ACTIVE_NETWORK.chainId, m.tier);
+  const tier = duelTierOf(activeNetwork().chainId, m.tier);
   const results = m.results;
   const picking = m.state === "picking";
   const left = m.pickDeadline === null ? 0 : Math.max(0, m.pickDeadline - now);

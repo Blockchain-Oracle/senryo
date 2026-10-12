@@ -92,19 +92,25 @@ function marketsOf(ctx: ApiContext, chainId: ChainId) {
 export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
   app.get(catalogRoute.path, async (request, reply) => {
     const { query } = parseRoute(catalogRoute, request);
-    const chain = chainOf(ctx, query.chainId);
-    const terms = POOL_TERMS[chain.chainId];
+    const chainId = query.chainId;
+    const chain = ctx.chains.get(chainId);
+    const deployed = chain?.deployed === true;
+    const terms = POOL_TERMS[chainId];
     reply.header("cache-control", "public, max-age=10");
     return sendRoute(reply, catalogRoute, {
-      chainId: chain.chainId,
-      deployed: chain.deployed,
-      configVersion: await configVersion(ctx, chain.chainId),
-      contracts: {
-        reserve: addressOf(chain.chainId, "BandReserve"),
-        windows: addressOf(chain.chainId, "Windows"),
-        verifier: addressOf(chain.chainId, "PythPrintVerifier"),
-        dollar: dollarTokenOf(chain.chainId) ?? addressOf(chain.chainId, "BandReserve"),
-      },
+      chainId,
+      deployed,
+      // A network without its reserve yet (Real before S9) is read-only, never blank (F10, D-320): its markets, live
+      // prices and sessions, every one unlisted, and no contract to call.
+      configVersion: deployed ? await configVersion(ctx, chainId) : 0,
+      contracts: deployed
+        ? {
+            reserve: addressOf(chainId, "BandReserve"),
+            windows: addressOf(chainId, "Windows"),
+            verifier: addressOf(chainId, "PythPrintVerifier"),
+            dollar: dollarTokenOf(chainId) ?? addressOf(chainId, "BandReserve"),
+          }
+        : { reserve: ZERO_ADDRESS, windows: ZERO_ADDRESS, verifier: ZERO_ADDRESS, dollar: ZERO_ADDRESS },
       terms: {
         minHalfSpreadE6: terms.minHalfSpreadE6,
         minProbE6: terms.minProbE6,
@@ -116,16 +122,16 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
         maxStake: terms.maxStake,
         session: terms.session,
       },
-      markets: marketsOn(chain.chainId).map((m) => ({
+      markets: marketsOn(chainId).map((m) => ({
         symbol: m.symbol,
         name: m.name,
         kind: m.kind,
         feedId: feedIdOf(m),
         paused: ctx.gateway.pausedReason(m),
-        listed: chain.listing.marketListed(m),
+        listed: deployed && chain !== undefined && chain.listing.marketListed(m),
         members:
           m.source.kind === "basket" ? m.source.members.map(({ symbol, weightBps }) => ({ symbol, weightBps })) : [],
-        series: lanesOn(chain.chainId, m).map((cadenceSec) => {
+        series: lanesOn(chainId, m).map((cadenceSec) => {
           const { floorE8, capE8 } = sigmaBoundsOf(m);
           return {
             cadenceSec,
@@ -133,7 +139,7 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
             sigmaE8: sigmaE8Of(m),
             sigmaFloorE8: floorE8,
             sigmaCapE8: capE8,
-            bands: menuOn(chain.chainId, m, cadenceSec).map((b, index) => ({ index, ...b })),
+            bands: menuOn(chainId, m, cadenceSec).map((b, index) => ({ index, ...b })),
           };
         }),
       })),

@@ -1,11 +1,6 @@
 /**
  * Web auth constants (S6). The rpId itself is `RP_ID` from `@senryo/config` — never duplicated here.
  */
-import { TESTNET } from "@senryo/config";
-
-/** Practice (testnet) is the only live network until the mainnet deploy (S8); the Mode screen says so. */
-export const ACTIVE_NETWORK = TESTNET;
-
 export const AUTH_STORAGE = {
   settings: "senryo.session-settings.v1",
   measure: "senryo.measure.v1",

@@ -11,7 +11,7 @@ import { DottedQr } from "@/components/kit/dotted-qr";
 import { CopyCode } from "@/components/ui/copy-code-button";
 import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
+import { activeNetwork } from "@/lib/network";
 import type { DrawerProps } from "./types";
 
 /** The network's mark in the code's centre, as on the phone's Receive. */
@@ -19,7 +19,7 @@ const QR_MARK = 44;
 
 export function ReceiveDrawer({ open, onOpenChange }: DrawerProps) {
   const address = useAccount().hint?.address;
-  const practice = ACTIVE_NETWORK.key === "testnet";
+  const practice = activeNetwork().key === "testnet";
   return (
     <SlideOver
       open={open}
@@ -35,7 +35,7 @@ export function ReceiveDrawer({ open, onOpenChange }: DrawerProps) {
               label={`Your address ${shortAddress(address)}`}
               center={
                 <EntityMark
-                  id={ids.evmChain(ACTIVE_NETWORK.chainId)}
+                  id={ids.evmChain(activeNetwork().chainId)}
                   size={QR_MARK}
                   decorative
                   ground="var(--qr-paper)"

@@ -19,7 +19,7 @@ import {
   type SessionSnapshot,
 } from "@senryo/account";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
+import { activeNetwork } from "@/lib/network";
 import { WEB_RP_ID } from "./rp";
 import { loadSettings, saveSettings } from "./settings";
 
@@ -138,7 +138,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const applySettings = useCallback(
     async (next: SessionSettings) => {
       const c = need();
-      const networkDefault = defaultFaceIdMode(ACTIVE_NETWORK.key);
+      const networkDefault = defaultFaceIdMode(activeNetwork().key);
       if (isLoosening(c.session.settings, next, networkDefault)) await c.stepUp(async () => undefined);
       adopt(c, next);
       void import("./remote").then(({ pushPrefs }) => pushPrefs(c, next)).catch(() => undefined);

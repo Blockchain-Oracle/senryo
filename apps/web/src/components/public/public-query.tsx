@@ -9,13 +9,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { type ReactNode, Suspense, useState } from "react";
 import { api } from "@/lib/account/api";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "@/lib/constants/query";
+import { activeNetwork } from "@/lib/network";
 
 function WithChain({ children }: { children: (chainId: ChainId, params: URLSearchParams) => ReactNode }) {
   const params = useSearchParams();
   const asked = Number(params.get("chainId"));
-  const chainId = isChainId(asked) ? asked : ACTIVE_NETWORK.chainId;
+  const chainId = isChainId(asked) ? asked : activeNetwork().chainId;
   return (
     <QueryEnvProvider chainId={chainId} api={api()}>
       {children(chainId, params)}

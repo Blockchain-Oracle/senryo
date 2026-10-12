@@ -17,8 +17,8 @@ import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
 import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { fire } from "@/lib/feedback";
+import { activeNetwork } from "@/lib/network";
 import { cn } from "@/lib/utils";
 import type { DrawerProps } from "./types";
 
@@ -110,7 +110,7 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="flex items-center gap-1.5 text-meta text-text-2">
-              <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={INLINE_MARK} decorative />
+              <EntityMark id={dollarId(activeNetwork().chainId)} size={INLINE_MARK} decorative />
               Amount{balance !== undefined ? ` · you have ${usd(balance)}` : ""}
             </span>
             <span className="flex gap-2">
@@ -145,7 +145,7 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
       ) : stage.kind === "review" || stage.kind === "sending" ? (
         <div className="flex flex-col gap-4 pt-2">
           <p className="flex items-center gap-2 font-semibold text-title">
-            <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={TITLE_MARK} decorative />
+            <EntityMark id={dollarId(activeNetwork().chainId)} size={TITLE_MARK} decorative />
             {usd(stage.value)} to {shortAddress(stage.to)}
           </p>
           <p className="break-all text-meta text-text-3">{stage.to}</p>

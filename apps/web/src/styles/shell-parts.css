@@ -20,6 +20,59 @@
   background: var(--mainnet-surface);
   color: var(--mainnet);
 }
+.mode-capsule {
+  cursor: pointer;
+  transition: transform 120ms var(--motion-ease);
+}
+.mode-capsule:active {
+  transform: scale(0.97);
+}
+/* Practice | Real (F9): a 44 px two-segment switch; the thumb springs under the chosen mode. */
+.mode-switch {
+  display: inline-flex;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  height: 44px;
+  padding: 4px;
+  gap: 2px;
+  border-radius: var(--r-pill);
+  background: var(--secondary);
+}
+.mode-switch-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: var(--r-pill);
+  color: var(--text-2);
+  font: 600 13px / 16px var(--shell-font);
+  cursor: pointer;
+}
+.mode-switch-option.is-on {
+  color: var(--background);
+}
+.mode-switch-option:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.mode-switch-thumb {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-pill);
+  background: var(--foreground);
+}
+.mode-switch-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
 .mode-money {
   opacity: 0.8;
   font-weight: 500;

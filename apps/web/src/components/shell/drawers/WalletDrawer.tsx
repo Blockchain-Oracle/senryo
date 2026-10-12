@@ -12,15 +12,14 @@ import { Button } from "@/components/ui/button";
 import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
 import { useSessionRunner } from "@/lib/account/use-session-runner";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { fire } from "@/lib/feedback";
 import { money } from "@/lib/format";
+import { activeNetwork } from "@/lib/network";
 import { notify } from "@/lib/notify";
 import { DRAWERS, dropDrawerParam, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import type { DrawerProps } from "./types";
 
-const PRACTICE = ACTIVE_NETWORK.key === "testnet";
 const DOLLAR_MARK = 36;
 
 function go(name: string) {
@@ -30,6 +29,7 @@ function go(name: string) {
 }
 
 export function WalletDrawer({ open, onOpenChange }: DrawerProps) {
+  const PRACTICE = activeNetwork().key === "testnet";
   const address = useAccount().hint?.address;
   const account = useMarketAccount(address);
   const session = useSessionRunner();
@@ -52,7 +52,7 @@ export function WalletDrawer({ open, onOpenChange }: DrawerProps) {
       ) : (
         <div className="flex flex-col gap-6 pt-2">
           <p className="flex items-center gap-3">
-            <EntityMark id={dollarId(ACTIVE_NETWORK.chainId)} size={DOLLAR_MARK} decorative />
+            <EntityMark id={dollarId(activeNetwork().chainId)} size={DOLLAR_MARK} decorative />
             <span className="tnum font-semibold text-display-balance">
               {masked("value" in account ? money(account.value.balance) : "—", hidden)}
             </span>

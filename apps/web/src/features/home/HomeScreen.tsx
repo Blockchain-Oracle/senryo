@@ -12,9 +12,9 @@ import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
 import { MarketList, tradeHref } from "@/features/markets/MarketList";
 import { useAccount } from "@/lib/account/provider";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { tapFeedback } from "@/lib/feedback";
 import { money } from "@/lib/format";
+import { activeNetwork } from "@/lib/network";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { OneTapChip } from "./OneTapChip";
@@ -64,7 +64,7 @@ export function HomeScreen() {
         <section aria-label="Balance" className="flex flex-col gap-2">
           {/* One h1 per page (R2.18): the balance is the visual hero; the heading names the page for assistive tech. */}
           <h1 className="sr-only">Home</h1>
-          <span className="text-meta text-text-3">{ACTIVE_NETWORK.key === "testnet" ? "Test dollars" : "USDC"}</span>
+          <span className="text-meta text-text-3">{activeNetwork().key === "testnet" ? "Test dollars" : "USDC"}</span>
           <span className="tnum font-semibold text-display-balance">
             {masked("value" in account ? money(account.value.balance) : "—", hidden)}
           </span>

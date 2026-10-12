@@ -12,7 +12,8 @@ import { SessionChip } from "@/components/auth/session-chip";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { tapFeedback } from "@/lib/feedback";
-import { BalanceChip, HealthChip, ModeCapsule } from "./chips";
+import { BalanceChip, HealthChip } from "./chips";
+import { ModeSwitch } from "./mode-switch";
 import { backOf } from "./nav";
 import { shortcutBlocked } from "./Rail";
 
@@ -91,7 +92,7 @@ export function TopLine() {
       </div>
       <div className="topline-tools">
         <HealthChip className="topline-health" />
-        <ModeCapsule className="topline-mode" />
+        <ModeSwitch className="topline-mode" />
         <BalanceChip className="topline-balance" />
         <button
           type="button"

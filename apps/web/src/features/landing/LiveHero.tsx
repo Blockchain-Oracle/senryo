@@ -5,6 +5,7 @@
  * `useLiveQuote`), so the landing shows the product, not a picture of it. Loaded after first paint; one stream.
  */
 import { DEFAULT_CADENCE, useCallWindow } from "@senryo/calls/react";
+import { TESTNET } from "@senryo/config";
 import { clockText } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { LiveProvider } from "@senryo/live/react";
@@ -17,7 +18,6 @@ import { LiveText } from "@/components/kit/live-text";
 import { LiveChart } from "@/features/terminal/chart/LiveChart";
 import { useLiveQuote } from "@/features/terminal/useLiveQuote";
 import { api } from "@/lib/account/api";
-import { ACTIVE_NETWORK } from "@/lib/constants/auth";
 import { appLive } from "@/lib/live";
 
 const SYMBOL = "BTC";
@@ -69,7 +69,7 @@ export function LiveHero() {
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: 1 } } }));
   return (
     <QueryClientProvider client={client}>
-      <QueryEnvProvider chainId={ACTIVE_NETWORK.chainId} api={api()}>
+      <QueryEnvProvider chainId={TESTNET.chainId} api={api()}>
         <LiveProvider live={appLive()}>
           <Hero />
         </LiveProvider>
