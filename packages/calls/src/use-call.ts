@@ -12,6 +12,7 @@ import { useCatalog, useMarketAccount, useQueryEnv, useSubmitIntent } from "@sen
 import { useCallback, useEffect } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPTS, TOLERANCE_BPS } from "./constants.ts";
+import { type JournalMark, sendJournalled } from "./intent-journal.ts";
 import type { CallDraft, SignDeps } from "./sign.ts";
 
 /**
@@ -22,7 +23,11 @@ const signing = () => Promise.all([import("./sign.ts"), import("./delegates.ts")
 
 import type { CallWindow } from "./window.ts";
 
-export type CallResult = { kind: "sent"; status: IntentStatus; via: "one-tap" | "face-id" } | { kind: "cancelled" };
+/** `unknown`: the send's answer was lost — the journal's recovery reads how it ended and says so (R5.13). */
+export type CallResult =
+  | { kind: "sent"; status: IntentStatus; via: "one-tap" | "face-id" }
+  | { kind: "cancelled" }
+  | { kind: "unknown"; digest: `0x${string}` };
 
 export interface OpenArgs {
   window: CallWindow;
@@ -34,6 +39,8 @@ export interface OpenArgs {
   payoutQuote: bigint;
   /** The least payout at a p99 2-second move against it (R5.8, D-300); absent: the quote less the tolerance. */
   payoutLimit?: bigint | null | undefined;
+  /** How the device's journal names it (R5.13). */
+  journal: JournalMark;
 }
 
 export interface CloseArgs {
@@ -45,6 +52,7 @@ export interface CloseArgs {
   proceedsQuote: bigint;
   /** The least proceeds at a p99 2-second move against it (R5.8); absent: the quote less the tolerance. */
   proceedsLimit?: bigint | null | undefined;
+  journal: JournalMark;
 }
 
 export function useCallActions({ client, hint }: Caller) {
@@ -60,7 +68,12 @@ export function useCallActions({ client, hint }: Caller) {
   const ready = Boolean(client && owner && "value" in catalog && "value" in account);
 
   const send = useCallback(
-    async (w: CallWindow, draft: Omit<CallDraft, "owner" | "configVersion">, prompt: string): Promise<CallResult> => {
+    async (
+      w: CallWindow,
+      draft: Omit<CallDraft, "owner" | "configVersion">,
+      prompt: string,
+      mark: JournalMark,
+    ): Promise<CallResult> => {
       if (!client || !owner || !("value" in catalog) || !("value" in account)) throw new Error("Not ready to call");
       const [{ signCall }, { appDelegates }] = await signing();
       const deps: SignDeps = {
@@ -73,15 +86,19 @@ export function useCallActions({ client, hint }: Caller) {
       };
       try {
         const signed = await signCall(deps, { ...draft, owner, configVersion: catalog.value.configVersion }, prompt);
-        const status = await submit.mutateAsync({
-          intent: { ...signed.intent, action: signed.intent.action as 1 | 2 },
-          signature: signed.signature,
-          permit: signed.permit,
-          symbol: w.symbol,
-          cadenceSec: w.cadenceSec,
-          start: w.start,
-        });
-        return { kind: "sent", status, via: signed.via };
+        const sent = await sendJournalled(env.chainId, owner, mark, signed.digest, () =>
+          submit.mutateAsync({
+            intent: { ...signed.intent, action: signed.intent.action as 1 | 2 },
+            signature: signed.signature,
+            permit: signed.permit,
+            symbol: w.symbol,
+            cadenceSec: w.cadenceSec,
+            start: w.start,
+          }),
+        );
+        return sent === null
+          ? { kind: "unknown", digest: signed.digest }
+          : { kind: "sent", status: sent, via: signed.via };
       } catch (error) {
         if (isSilent(classifyAuthError(error))) return { kind: "cancelled" };
         throw error;
@@ -103,6 +120,7 @@ export function useCallActions({ client, hint }: Caller) {
           limit: a.payoutLimit ?? withTolerance(a.payoutQuote, TOLERANCE_BPS),
         },
         PROMPTS.call(a.bandLabel, a.window.symbol),
+        a.journal,
       ),
     [send],
   );
@@ -120,6 +138,7 @@ export function useCallActions({ client, hint }: Caller) {
           limit: a.proceedsLimit ?? withTolerance(a.proceedsQuote, TOLERANCE_BPS),
         },
         PROMPTS.close,
+        a.journal,
       ),
     [send],
   );

@@ -2,7 +2,7 @@
  * Closing a position from any list on the phone (R5.3): the press, the shared close (`usePositionActions`), and a plain
  * warning when it doesn't go through. What it returned arrives as the result toast (`ResultHost`).
  */
-import { type BookEntry, closeWord } from "@senryo/calls";
+import { type BookEntry, closeWord, reasonWords } from "@senryo/calls";
 import { usePositionActions } from "@senryo/calls/react";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
@@ -14,7 +14,7 @@ export function usePositionClose() {
     fire("fail", { cue: "error" });
     notify({
       title: e ? `Couldn't ${closeWord(e).toLowerCase()}` : "Couldn't close everything",
-      description: (error as Error).message,
+      description: reasonWords((error as Error).message, e?.kind === "ride" ? "It's still open." : "Nothing changed."),
       tone: "warning",
     });
   };

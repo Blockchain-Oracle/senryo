@@ -36,6 +36,9 @@ const subscribe = (l: () => void) => {
   return () => listeners.delete(l);
 };
 
+/** Read outside React (a toast raised from a flow). */
+export const privacyOn = (): boolean => read();
+
 /** True while balances are hidden. The static HTML shows them; the client corrects at once. */
 export function usePrivacy(): boolean {
   return useSyncExternalStore(subscribe, read, () => false);

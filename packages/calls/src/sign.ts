@@ -13,6 +13,7 @@ import {
   exitOrderRequest,
   freshNonce,
   freshSeed,
+  intentDigest,
   intentRequest,
   type MarketDuelEntry,
   type MarketDuelPick,
@@ -25,6 +26,7 @@ import {
   permitParts,
   permitRequest,
   type RideIntent,
+  rideIntentDigest,
   rideIntentRequest,
 } from "@senryo/chain";
 import { type ChainId, DUEL, EVENTS } from "@senryo/config";
@@ -48,6 +50,8 @@ export interface Permit {
 
 export interface SignedCall {
   intent: MarketIntent;
+  /** The EIP-712 digest the relay keys it by: journalled before the send (R5.13). */
+  digest: Hex;
   signature: Hex;
   permit: Permit | null;
   via: "one-tap" | "face-id";
@@ -125,7 +129,7 @@ export async function signCall(d: SignDeps, draft: CallDraft, prompt: string): P
   const r = await signSpend(d, draft.owner, spend, prompt, (signer) =>
     signer.signTypedData(intentRequest(d.chainId, intent)),
   );
-  return { intent, signature: r.signed, permit: r.permit, via: r.via };
+  return { intent, digest: intentDigest(d.chainId, intent), signature: r.signed, permit: r.permit, via: r.via };
 }
 
 export type ParlayDraft = Omit<MarketParlayIntent, "deadline" | "nonce" | "epoch" | "recipient">;
@@ -156,6 +160,8 @@ export type RideDraft = Omit<RideIntent, "deadline" | "nonce" | "epoch" | "recip
 
 export interface SignedRide {
   intent: RideIntent;
+  /** The EIP-712 digest the relay keys it by: journalled before the send (R5.13). */
+  digest: Hex;
   signature: Hex;
   permit: Permit | null;
   via: "one-tap" | "face-id";
@@ -176,7 +182,7 @@ export async function signRide(d: SignDeps, draft: RideDraft, spend: bigint, pro
   const r = await signSpend(d, draft.owner, draft.action === ACTION_OPEN ? spend : 0n, prompt, (signer) =>
     signer.signTypedData(rideIntentRequest(marketsDomain(d.chainId), intent)),
   );
-  return { intent, signature: r.signed, permit: r.permit, via: r.via };
+  return { intent, digest: rideIntentDigest(d.chainId, intent), signature: r.signed, permit: r.permit, via: r.via };
 }
 
 export type ExitDraft = Omit<MarketExitOrder, "deadline" | "nonce" | "epoch">;

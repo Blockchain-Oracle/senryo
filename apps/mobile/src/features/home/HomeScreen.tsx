@@ -103,6 +103,7 @@ export function HomeScreen() {
                 font={font}
                 color={color.ink}
                 height={BALANCE_HEIGHT}
+                sensitive
                 accessibilityLabel={
                   value === undefined ? "Balance" : `Balance $${formatUnits(value, DOLLAR_DECIMALS, CENTS)}`
                 }

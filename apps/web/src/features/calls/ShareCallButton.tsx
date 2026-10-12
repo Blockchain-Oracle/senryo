@@ -2,7 +2,8 @@
 /**
  * Share a finished call (the phone's `ShareCallButton`): the card drawn as a PNG (`share-card.ts`) and handed to the
  * system share sheet with its link where the browser can share files; otherwise the image downloads and the link is
- * copied. The mark and the seal are rendered off-screen here and serialised for the canvas.
+ * copied. The mark and the seal are rendered off-screen here and serialised for the canvas. While balances are hidden
+ * it waits: the card shows the result (R5.14).
  */
 import type { ShareCall } from "@senryo/calls";
 import { ids, marketId } from "@senryo/identity";
@@ -13,6 +14,7 @@ import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
+import { setPrivacy, usePrivacy } from "@/lib/shell/privacy";
 import { drawShareCard, imageFrom, svgImage } from "./share-card";
 
 const MARK = 40;
@@ -23,9 +25,18 @@ const QR_MARGIN = 0;
 export function ShareCallButton({ card }: { card: ShareCall }) {
   const marks = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
+  const hidden = usePrivacy();
 
   const share = async () => {
     fire("press", { cue: "tap" });
+    if (hidden) {
+      notify({
+        title: "Balances are hidden",
+        description: "The card shows this call's result. Show balances to share it.",
+        action: { label: "Show", onClick: () => setPrivacy(false) },
+      });
+      return;
+    }
     setBusy(true);
     try {
       const box = marks.current;

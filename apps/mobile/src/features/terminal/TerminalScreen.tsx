@@ -21,8 +21,10 @@ import { ViewPositionPill } from "~/features/positions/ViewPositionPill";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute, firstCallRoute } from "~/lib/constants/routes";
+import { balancesHidden, HIDDEN_AMOUNT } from "~/lib/hide-balances";
 import { usd } from "~/lib/money";
 import { notify } from "~/lib/notify";
+import { tradeToast } from "~/lib/trade-toast";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ActionPanel } from "./ActionPanel";
 import { BasketMembers } from "./BasketMembers";
@@ -107,6 +109,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
             ? fire("close", { cue: "close" })
             : fire("filled", { cue: "open" }),
     notify: (n: { title: string; description: string }) => notify({ ...n, tone: "warning" as const }),
+    toast: tradeToast,
     needAccount: (slot?: OfferSlot) => {
       const offered = slot === undefined || ride ? undefined : q.offer[slot];
       if (slot === undefined || !offered) return router.push(accountRequiredRoute(ride ? "ride" : "make a call"));
@@ -115,7 +118,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     },
     shortfall: (short: bigint) =>
       notify({
-        title: `${usd(short)} short`,
+        title: `${balancesHidden() ? HIDDEN_AMOUNT : usd(short)} short`,
         description: "Top up in Wallet (test dollars in Practice), then tap again.",
         tone: "warning",
       }),

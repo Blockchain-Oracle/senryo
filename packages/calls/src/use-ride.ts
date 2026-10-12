@@ -12,11 +12,15 @@ import { useLive } from "@senryo/live/react";
 import { useCatalog, useMarketAccount, useQueryEnv, useRideCatalog, useSubmitRide } from "@senryo/query";
 import { useCallback } from "react";
 import type { Caller } from "./caller.ts";
+import { type JournalMark, sendJournalled } from "./intent-journal.ts";
 import type { RideDraft, SignDeps } from "./sign.ts";
 
 const signing = () => Promise.all([import("./sign.ts"), import("./delegates.ts")]);
 
-export type RideResult = { kind: "sent"; status: IntentStatus; via: "one-tap" | "face-id" } | { kind: "cancelled" };
+export type RideResult =
+  | { kind: "sent"; status: IntentStatus; via: "one-tap" | "face-id" }
+  | { kind: "cancelled" }
+  | { kind: "unknown"; digest: `0x${string}` };
 
 export interface RideOpenArgs {
   symbol: string;
@@ -25,6 +29,8 @@ export interface RideOpenArgs {
   leverageBps: number;
   /** The price the rider saw; the fill may be worse by the slippage limit at most. */
   markE8: bigint;
+  /** How the device's journal names it (R5.13). */
+  journal: JournalMark;
 }
 
 export interface RideCloseArgs {
@@ -34,6 +40,7 @@ export interface RideCloseArgs {
   markE8: bigint;
   /** Size to close (0 or absent: all of it). */
   size?: bigint;
+  journal: JournalMark;
 }
 
 /** Ride prompts (the OS sheet over the terminal). */
@@ -65,7 +72,12 @@ export function useRideActions({ client, hint }: Caller) {
   );
 
   const send = useCallback(
-    async (draft: Omit<RideDraft, "owner" | "configVersion">, spend: bigint, prompt: string): Promise<RideResult> => {
+    async (
+      draft: Omit<RideDraft, "owner" | "configVersion">,
+      spend: bigint,
+      prompt: string,
+      mark: JournalMark,
+    ): Promise<RideResult> => {
       if (!client || !owner || !("value" in catalog) || !("value" in account)) throw new Error("Not ready to ride");
       const [{ signRide }, { appDelegates }] = await signing();
       const deps: SignDeps = {
@@ -83,12 +95,16 @@ export function useRideActions({ client, hint }: Caller) {
           spend,
           prompt,
         );
-        const status = await submit.mutateAsync({
-          intent: { ...signed.intent, action: signed.intent.action as 1 | 2 },
-          signature: signed.signature,
-          permit: signed.permit,
-        });
-        return { kind: "sent", status, via: signed.via };
+        const sent = await sendJournalled(env.chainId, owner, mark, signed.digest, () =>
+          submit.mutateAsync({
+            intent: { ...signed.intent, action: signed.intent.action as 1 | 2 },
+            signature: signed.signature,
+            permit: signed.permit,
+          }),
+        );
+        return sent === null
+          ? { kind: "unknown", digest: signed.digest }
+          : { kind: "sent", status: sent, via: signed.via };
       } catch (error) {
         if (isSilent(classifyAuthError(error))) return { kind: "cancelled" };
         throw error;
@@ -116,6 +132,7 @@ export function useRideActions({ client, hint }: Caller) {
         },
         rideOpenCost(a.margin, a.leverageBps, terms.takerFeeBps),
         PROMPT.open(a.isLong, a.symbol),
+        a.journal,
       );
     },
     [send, rides],
@@ -138,6 +155,7 @@ export function useRideActions({ client, hint }: Caller) {
         },
         0n,
         PROMPT.close,
+        a.journal,
       ),
     [send],
   );

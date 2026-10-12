@@ -8,6 +8,7 @@ import Animated from "react-native-reanimated";
 import { Plunge, Surge } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
+import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const BPS_PER_PERCENT = 100;
@@ -17,12 +18,14 @@ export function ViewPositionPill({ onOpen }: { onOpen: () => void }) {
   const { color } = useTheme();
   const press = usePressScale();
   const { totals } = useLiveBook();
+  const [hidden] = useHideBalances();
   if (totals.count === 0) return null;
   const roi = totals.roiBps;
   const down = roi !== null && roi < 0;
   const Icon = down ? Plunge : Surge;
   const label = totals.count === 1 ? "View position" : `View ${totals.count} positions`;
-  const pct = roi === null ? "" : `${down ? "−" : "+"}${Math.abs(roi / BPS_PER_PERCENT).toFixed(PCT_DECIMALS)}%`;
+  const pct =
+    roi === null ? "" : masked(`${down ? "−" : "+"}${Math.abs(roi / BPS_PER_PERCENT).toFixed(PCT_DECIMALS)}%`, hidden);
   return (
     <Animated.View style={[styles.wrap, press.style]}>
       <Pressable

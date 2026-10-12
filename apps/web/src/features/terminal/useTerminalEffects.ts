@@ -1,7 +1,7 @@
 "use client";
 /**
  * What a trade does around itself on the web, for calls and rides alike: the press, fill and failure cues, plain
- * warnings, the terms check before money moves, a guest's first call through its own sheet (F14), and a shortfall
+ * warnings, each trade's one toast (`tradeToast`, R5.11), the terms check before money moves, a guest's first call through its own sheet (F14), and a shortfall
  * that names the gap and opens where dollars come from (R5.7: test dollars in Practice, Add money in Real).
  */
 import { dollars } from "@senryo/calls";
@@ -13,6 +13,8 @@ import { fire } from "@/lib/feedback";
 import { activeNetwork } from "@/lib/network";
 import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
+import { HIDDEN_AMOUNT, privacyOn } from "@/lib/shell/privacy";
+import { tradeToast } from "@/lib/trade-toast";
 
 export function useTerminalEffects(onGuestCall: (slot: OfferSlot) => boolean) {
   const account = useAccount();
@@ -26,6 +28,7 @@ export function useTerminalEffects(onGuestCall: (slot: OfferSlot) => boolean) {
             ? fire("close", { cue: "close" })
             : fire("filled", { cue: "open" }),
     notify: (n) => notify({ ...n, tone: "warning" }),
+    toast: tradeToast,
     gate: () => {
       if (hasAcknowledgedTerms(account.hint?.address)) return true;
       notify({
@@ -47,7 +50,7 @@ export function useTerminalEffects(onGuestCall: (slot: OfferSlot) => boolean) {
     shortfall: (short) => {
       const practice = activeNetwork().key === "testnet";
       notify({
-        title: `${dollars(short)} short`,
+        title: `${privacyOn() ? HIDDEN_AMOUNT : dollars(short)} short`,
         description: practice ? "Top up with test dollars, then tap again." : "Add money, then tap again.",
         action: {
           label: practice ? "Get test dollars" : "Add money",

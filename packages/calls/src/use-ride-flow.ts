@@ -3,6 +3,8 @@
  * ("Signing…", "Opening Up…", "Closing…" until the stream says filled), a stale price, a market that doesn't ride — and
  * the actions with their guards: open Up or Down at the mark within the slippage limit (not enough dollars said with
  * the shortfall), close the held ride for what the tick pass showed, and arm its trail with break-even as the floor.
+ * Each tap's toast runs like a call's (R5.11): "Opening Up…" → "Up BTC ride opened"; "Closing…" → its result
+ * (`useRideResults`, same id).
  */
 import type { IntentStatus, RideView } from "@senryo/api-client";
 import { formatUnits, longClockText } from "@senryo/core";
@@ -10,7 +12,17 @@ import { useIntentStatus, useRefreshCaller } from "@senryo/query";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { ridesOn } from "./instrument.ts";
-import { type CallFlowEffects, type OfferSlot, type PanelState, WHOLE } from "./use-call-flow.ts";
+import { forgetIntent } from "./intent-journal.ts";
+import { reasonWords } from "./reason-words.ts";
+import { tradeToastId } from "./toast-run.ts";
+import {
+  type CallFlowEffects,
+  type FlowPending,
+  type OfferSlot,
+  type PanelState,
+  settleRun,
+  WHOLE,
+} from "./use-call-flow.ts";
 import { usePriceHealth } from "./use-price-health.ts";
 import { rideOpenCost, useRideActions } from "./use-ride.ts";
 import { useRideExit } from "./use-ride-exit.ts";
@@ -18,6 +30,9 @@ import { useRideExit } from "./use-ride-exit.ts";
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const SETTLED = new Set(["filled", "refused", "failed"]);
+const BPS_PER_X = 10_000;
+
+const usdText = (v: bigint) => `$${formatUnits(v, DOLLAR_DECIMALS, CENTS)}`;
 
 /** What the tap reads synchronously: the mark the user saw and, held, the B/E the trail floors at. */
 export interface RideLatest {
@@ -45,7 +60,7 @@ export function useRideFlow(i: RideFlowInput) {
   const actions = useRideActions(i.caller);
   const exit = useRideExit(i.caller);
   const [signing, setSigning] = useState<string | null>(null);
-  const [pending, setPending] = useState<{ digest: `0x${string}`; label: string; kind: "open" | "close" } | null>(null);
+  const [pending, setPending] = useState<FlowPending | null>(null);
   const intent = useIntentStatus(pending?.digest);
   const status: IntentStatus | null = "value" in intent ? intent.value : null;
   const fx = useRef(i.effects);
@@ -55,21 +70,18 @@ export function useRideFlow(i: RideFlowInput) {
   const refresh = useRefreshCaller(i.owner);
 
   useEffect(() => {
-    if (!status || !SETTLED.has(status.state)) return;
+    const p = pendingRef.current;
+    if (!status || !SETTLED.has(status.state) || !p) return;
     refresh();
-    if (status.state === "filled") {
-      fx.current.cue(pendingRef.current?.kind === "close" ? "filled-close" : "filled-open");
-      fx.current.onFilled?.();
-    } else {
-      fx.current.cue("fail");
-      fx.current.notify({
-        title: status.state === "refused" ? "Ride refused" : "Ride didn't go through",
-        description:
-          pendingRef.current?.kind === "close" ? "It's still open." : (status.reason ?? "Your margin was not taken."),
-      });
-    }
+    forgetIntent(p.digest);
+    settleRun(fx.current, p, status, {
+      symbol: i.symbol,
+      refused: p.kind === "close" ? "Close refused" : "Ride refused",
+      failed: p.kind === "close" ? "Close didn't go through" : "Ride didn't go through",
+      kept: p.kind === "close" ? "It's still open." : "Your margin was not taken.",
+    });
     setPending(null);
-  }, [status, refresh]);
+  }, [status, refresh, i.symbol]);
 
   const health = usePriceHealth(i.symbol);
   const held = i.held && i.held.state !== "committed" ? i.held : undefined;
@@ -113,7 +125,16 @@ export function useRideFlow(i: RideFlowInput) {
       return;
     }
     const isLong = slot === 0;
+    const side = isLong ? "Up" : "Down";
+    const terms = `${usdText(i.margin)} at ${i.leverageBps / BPS_PER_X}×`;
     fx.current.cue("press");
+    const id = tradeToastId.open();
+    fx.current.toast(id, {
+      title: `Opening ${side}…`,
+      description: `${i.symbol} ride · ${terms}`,
+      symbol: i.symbol,
+      tone: "loading",
+    });
     setSigning("Signing…");
     try {
       const r = await actions.open({
@@ -122,12 +143,27 @@ export function useRideFlow(i: RideFlowInput) {
         margin: i.margin,
         leverageBps: i.leverageBps,
         markE8: mark,
+        journal: { what: `${side} ${i.symbol} ride`, kind: "open", instrument: "ride", symbol: i.symbol, toast: id },
       });
-      if (r.kind === "sent")
-        setPending({ digest: r.status.digest, label: `Opening ${isLong ? "Up" : "Down"}…`, kind: "open" });
+      if (r.kind === "cancelled") fx.current.toast(id, null);
+      // A lost answer is recovery's to tell, on this same toast (R5.13).
+      else if (r.kind === "sent")
+        setPending({
+          digest: r.status.digest,
+          label: `Opening ${side}…`,
+          kind: "open",
+          toast: id,
+          filled: { title: `${side} ${i.symbol} ride opened`, description: terms, symbol: i.symbol, tone: "info" },
+          cue: "filled-open",
+        });
     } catch (error) {
       fx.current.cue("fail");
-      fx.current.notify({ title: "Couldn't open the ride", description: (error as Error).message });
+      fx.current.toast(id, {
+        title: "Couldn't open the ride",
+        description: reasonWords((error as Error).message, "Your margin was not taken."),
+        symbol: i.symbol,
+        tone: "warning",
+      });
     } finally {
       setSigning(null);
     }
@@ -138,15 +174,50 @@ export function useRideFlow(i: RideFlowInput) {
     const mark = i.latest.current?.markE8;
     if (!guard() || !held || mark == null) return;
     fx.current.cue("press");
+    const whole = percent === WHOLE;
+    const label = whole ? "Closing…" : `Closing ${percent}%…`;
+    const id = tradeToastId.ride(held.rideId);
+    fx.current.toast(id, { title: label, symbol: i.symbol, tone: "loading" });
     setSigning("Signing…");
     try {
-      const size = percent === WHOLE ? 0n : (held.size * percent) / WHOLE;
-      const r = await actions.close({ rideId: held.rideId, symbol: i.symbol, isLong: held.isLong, markE8: mark, size });
-      const label = percent === WHOLE ? "Closing…" : `Closing ${percent}%…`;
-      if (r.kind === "sent") setPending({ digest: r.status.digest, label, kind: "close" });
+      const size = whole ? 0n : (held.size * percent) / WHOLE;
+      const r = await actions.close({
+        rideId: held.rideId,
+        symbol: i.symbol,
+        isLong: held.isLong,
+        markE8: mark,
+        size,
+        journal: {
+          what: `${held.isLong ? "Up" : "Down"} ${i.symbol} ride`,
+          kind: "close",
+          instrument: "ride",
+          symbol: i.symbol,
+          toast: id,
+        },
+      });
+      if (r.kind === "cancelled") fx.current.toast(id, null);
+      else if (r.kind === "sent")
+        setPending({
+          digest: r.status.digest,
+          label,
+          kind: "close",
+          toast: id,
+          filled: {
+            title: whole ? "Closed" : `Closed ${percent}%`,
+            description: whole ? "Counting it up…" : "The rest rides on.",
+            symbol: i.symbol,
+            tone: "info",
+          },
+          cue: whole ? null : "filled-close",
+        });
     } catch (error) {
       fx.current.cue("fail");
-      fx.current.notify({ title: "Couldn't close the ride", description: (error as Error).message });
+      fx.current.toast(id, {
+        title: "Couldn't close the ride",
+        description: reasonWords((error as Error).message, "It's still open."),
+        symbol: i.symbol,
+        tone: "warning",
+      });
     } finally {
       setSigning(null);
     }

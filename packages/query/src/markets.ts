@@ -5,11 +5,13 @@
  * stream events invalidate these keys (`live-sync.ts`), with a slow fallback refetch for a missed event.
  */
 import {
+  ApiError,
   type CallInput,
   candlesRoute,
   catalogRoute,
   dayPricesRoute,
   grantSessionRoute,
+  type IntentStatus,
   intentStatusRoute,
   marketAccountRoute,
   practiceGrantRoute,
@@ -21,8 +23,8 @@ import {
 } from "@senryo/api-client";
 import type { ChainId } from "@senryo/config";
 import { type Address, fromQuery } from "@senryo/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useQueryEnv } from "./env.tsx";
+import { queryOptions, useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryEnv, useQueryEnv } from "./env.tsx";
 import type { SessionRunner } from "./profiles.ts";
 
 /** Balances, positions and sessions refresh on the user's own events; this is the fallback for a missed one. */
@@ -121,20 +123,45 @@ export function useSubmitIntent() {
 }
 
 const SETTLED_INTENT = new Set(["filled", "refused", "failed"]);
+const INTENT_RETRIES = 3;
+const NOT_FOUND = 404;
 
-/** A relayed call's status: pushed by the stream, with a slow poll only until it settles. */
-export function useIntentStatus(digest: `0x${string}` | undefined) {
-  const env = useQueryEnv();
-  const query = useQuery({
+/** One status read, shared by every reader of the digest; "not found" is an answer (the relay never got it). */
+const intentQuery = (env: QueryEnv, digest: `0x${string}` | undefined) =>
+  queryOptions({
     queryKey: marketKeys.intent(digest ?? ""),
-    queryFn: ({ signal }) => {
+    queryFn: ({ signal }): Promise<IntentStatus> => {
       if (!digest) throw new Error("no intent");
       return env.api.call(intentStatusRoute, { params: { digest } }, { signal });
     },
     enabled: digest !== undefined,
+    retry: (n, error) => !(error instanceof ApiError && error.status === NOT_FOUND) && n < INTENT_RETRIES,
     refetchInterval: (q) => (q.state.data && SETTLED_INTENT.has(q.state.data.state) ? false : INTENT_FALLBACK_MS),
   });
-  return fromQuery(query);
+
+/** A relayed call's status: pushed by the stream, with a slow poll only until it settles. */
+export function useIntentStatus(digest: `0x${string}` | undefined) {
+  return fromQuery(useQuery(intentQuery(useQueryEnv(), digest)));
+}
+
+/**
+ * Many statuses at once (the device's journal, R5.13), on the same cache as `useIntentStatus`: each digest is read by
+ * one query however many screens watch it. `refetch` re-reads one — a Check status tap; it never sends.
+ */
+export function useIntentStatuses(digests: readonly `0x${string}`[]) {
+  const env = useQueryEnv();
+  return useQueries({
+    queries: digests.map((d) => intentQuery(env, d)),
+    combine: (results) =>
+      results.map((r, i) => ({
+        digest: digests[i] as `0x${string}`,
+        status: r.data,
+        notFound: r.error instanceof ApiError && r.error.status === NOT_FOUND,
+        failed: r.isError,
+        checking: r.isFetching,
+        refetch: () => void r.refetch(),
+      })),
+  });
 }
 
 type GrantBody = CallInput<typeof grantSessionRoute>["body"];

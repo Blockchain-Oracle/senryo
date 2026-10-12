@@ -1,7 +1,8 @@
 /**
  * Share a call (S5.13): mounts the share card off-screen, waits for it to lay out and for its marks to draw, captures
  * it at 3× (`react-native-view-shot`, 1080 × 1350 PNG) and opens the system share sheet (`expo-sharing`). Cancelling
- * the sheet is not an error; a capture that fails says so.
+ * the sheet is not an error; a capture that fails says so. While balances are hidden it waits: the card shows the
+ * result (R5.14).
  */
 import * as Sharing from "expo-sharing";
 import { useRef, useState } from "react";
@@ -9,6 +10,7 @@ import { StyleSheet, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import { Button } from "~/components/kit/Button";
 import { fire } from "~/feedback/fire";
+import { useHideBalances } from "~/lib/hide-balances";
 import { notify } from "~/lib/notify";
 import { CARD_H, CARD_W, type ShareCall, ShareCard } from "./ShareCard";
 
@@ -19,6 +21,7 @@ const SETTLE_MS = 250;
 export function ShareCallButton({ card }: { card: ShareCall }) {
   const ref = useRef<View>(null);
   const [busy, setBusy] = useState(false);
+  const [hidden, setHidden] = useHideBalances();
 
   const capture = () =>
     new Promise<string>((resolve, reject) =>
@@ -36,6 +39,14 @@ export function ShareCallButton({ card }: { card: ShareCall }) {
 
   const share = async () => {
     fire("tick");
+    if (hidden) {
+      notify({
+        title: "Balances are hidden",
+        description: "The card shows this call's result. Show balances to share it.",
+        action: { label: "Show", onClick: () => setHidden(false) },
+      });
+      return;
+    }
     setBusy(true);
     try {
       const uri = await capture();

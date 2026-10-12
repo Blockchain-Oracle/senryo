@@ -186,7 +186,7 @@ function HeldButtons(p: Extract<TradeButtonsProps, { mode: "held" }>) {
             <View>
               <Text style={[TYPE.buttonLabel, styles.label, { color: color.ground }]}>{p.closeWord}</Text>
               <View style={styles.cash}>
-                <LiveOdometer source={p.close} font={font} color={color.ground} height={CASH_HEIGHT} />
+                <LiveOdometer source={p.close} font={font} color={color.ground} height={CASH_HEIGHT} sensitive />
               </View>
             </View>
           </Animated.View>

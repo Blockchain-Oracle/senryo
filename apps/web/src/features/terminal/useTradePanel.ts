@@ -10,6 +10,7 @@ import { rideFee, rideNotional } from "@senryo/core";
 import { type RefObject, useCallback, useMemo, useRef } from "react";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
+import { HIDDEN_AMOUNT, usePrivacy } from "@/lib/shell/privacy";
 import type { StackRow } from "./OrderStack";
 import type { Side, TradeButtonsProps } from "./TradeButtons";
 import type { useLiveQuote } from "./useLiveQuote";
@@ -159,11 +160,14 @@ export function useTradePanel(i: {
         ],
       };
 
-  // The chart and the reactions read whichever instrument is on, frame by frame.
+  // The chart and the reactions read whichever instrument is on, frame by frame; hidden balances mask its PnL (R5.14).
+  const hidden = useRef(false);
+  hidden.current = usePrivacy();
   const overlay = useMemo<RefObject<ChartOverlay | null>>(
     () => ({
       get current() {
-        return active.current ? side.live.overlay.current : q.overlay.current;
+        const o = active.current ? side.live.overlay.current : q.overlay.current;
+        return o?.pnlText && hidden.current ? { ...o, pnlText: HIDDEN_AMOUNT } : o;
       },
     }),
     [side.live.overlay, q.overlay],

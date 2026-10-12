@@ -13,8 +13,11 @@ import { useIntentStatus, useLuckyDesk, useLuckyDraws, useQueryEnv, useTickets }
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { fillMark } from "./sigma.ts";
+import { tradeToastId } from "./toast-run.ts";
 import { useCallActions } from "./use-call.ts";
 import { useCallWindow } from "./use-call-window.ts";
+
+const SECONDS_PER_MINUTE = 60;
 
 export type LuckyPhase = "idle" | "spinning" | "dealt" | "nothing" | "placing" | "placed";
 
@@ -152,8 +155,17 @@ export function useLuckyFlow(caller: Caller, effects: LuckyFlowEffects) {
         bandLabel: luckyBandWord(dealt.band),
         stake,
         payoutQuote: q.payout,
+        journal: {
+          what: `${luckyBandWord(dealt.band)} ${view.window.symbol} ${view.window.cadenceSec / SECONDS_PER_MINUTE}m`,
+          kind: "open",
+          instrument: "call",
+          symbol: view.window.symbol,
+          toast: tradeToastId.open(),
+        },
       });
       if (sent.kind === "cancelled") return setPhase("dealt");
+      // A lost answer: the journal's recovery says how it ended.
+      if (sent.kind === "unknown") return setPhase("dealt");
       setDigest(sent.status.digest);
     } catch (error) {
       setPhase("dealt");

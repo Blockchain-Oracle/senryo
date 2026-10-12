@@ -1,12 +1,14 @@
 /**
  * A live money figure that rolls its digits (`odometer.ts`) without rendering React: the text arrives through a shared
  * value (`{ text, trend }` — trend gives the roll direction), a frame callback rolls it on the UI thread, and a Skia
- * picture draws it. For the cash-out value, the balance and anything else that moves with ticks.
+ * picture draws it. For the cash-out value, the balance and anything else that moves with ticks. `sensitive` figures
+ * read "••••" while balances are hidden (R5.14), the web's `Odometer` rule.
  */
 import { Canvas, Picture, type SkFont, Skia } from "@shopify/react-native-skia";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { type SharedValue, useDerivedValue, useFrameCallback, useSharedValue } from "react-native-reanimated";
+import { HIDDEN_AMOUNT, useHideBalances } from "~/lib/hide-balances";
 import { drawOdometer, emptyOdometer, odometerWidth, setOdometerTrend, stepOdometer } from "./odometer";
 
 /** A figure's text and which way it just moved (−1, 0, 1; money compares as bigints on the JS thread). */
@@ -25,6 +27,7 @@ export function LiveOdometer({
   height,
   align = "left",
   accessibilityLabel,
+  sensitive = false,
 }: {
   source: SharedValue<LiveFigure>;
   font: SkFont | null;
@@ -32,7 +35,15 @@ export function LiveOdometer({
   height: number;
   align?: "left" | "right";
   accessibilityLabel?: string;
+  /** A balance or a result: masked while balances are hidden. */
+  sensitive?: boolean;
 }) {
+  const [hiddenAll] = useHideBalances();
+  const hidden = sensitive && hiddenAll;
+  const mask = useSharedValue(hidden);
+  useEffect(() => {
+    mask.value = hidden;
+  }, [hidden, mask]);
   const odo = useSharedValue(emptyOdometer());
   const clock = useSharedValue(0);
   const last = useSharedValue(0);
@@ -53,7 +64,8 @@ export function LiveOdometer({
     odo.modify((o) => {
       "worklet";
       const s = source.value;
-      setOdometerTrend(o, s.text, s.trend);
+      if (mask.value) setOdometerTrend(o, HIDDEN_AMOUNT, 0);
+      else setOdometerTrend(o, s.text, s.trend);
       moving = stepOdometer(o, dt);
       return o;
     });
@@ -79,7 +91,7 @@ export function LiveOdometer({
         width.value = e.nativeEvent.layout.width;
       }}
       accessible
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={hidden ? "Hidden" : accessibilityLabel}
     >
       <Canvas style={StyleSheet.absoluteFill}>
         <Picture picture={picture} />

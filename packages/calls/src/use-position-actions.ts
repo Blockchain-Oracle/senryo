@@ -1,17 +1,41 @@
 /**
  * Close any position the live book holds (R5.3): a call in any market or lane at its exact cash-out (the bid the
  * book shows, less the call tolerance), or a ride at the mark within the slippage limit. Close all closes each
- * closable one in turn — one prompt each without one-tap, none with it.
+ * closable one in turn — one prompt each without one-tap, none with it. Each close is journalled under its position's
+ * toast (R5.11, R5.13), where its result lands.
  */
 import { useLive } from "@senryo/live/react";
 import { useCallback, useState } from "react";
 import type { BookEntry } from "./book.ts";
 import type { Caller } from "./caller.ts";
+import type { JournalMark } from "./intent-journal.ts";
+import { tradeToastId } from "./toast-run.ts";
 import { type CallResult, useCallActions } from "./use-call.ts";
 import { type RideResult, useRideActions } from "./use-ride.ts";
 import { windowOfCall } from "./window.ts";
 
 export type CloseResult = CallResult | RideResult;
+
+const SECONDS_PER_MINUTE = 60;
+
+/** A position's close as the journal names it, under the toast its result lands on. */
+export function closeMark(e: BookEntry): JournalMark {
+  return e.kind === "call"
+    ? {
+        what: `Your ${e.symbol} ${(e.call?.cadenceSec ?? 0) / SECONDS_PER_MINUTE}m call`,
+        kind: "close",
+        instrument: "call",
+        symbol: e.symbol,
+        toast: tradeToastId.call(e.id),
+      }
+    : {
+        what: `${e.up ? "Up" : "Down"} ${e.symbol} ride`,
+        kind: "close",
+        instrument: "ride",
+        symbol: e.symbol,
+        toast: tradeToastId.ride(e.id),
+      };
+}
 
 export function usePositionActions(caller: Caller) {
   const calls = useCallActions(caller);
@@ -39,10 +63,17 @@ export function usePositionActions(caller: Caller) {
             band: e.call.band,
             shares: e.call.shares,
             proceedsQuote: e.closeValue,
+            journal: closeMark(e),
           });
         }
         if (e.kind === "ride" && e.markE8 !== null && e.up !== null) {
-          return await rides.close({ rideId: e.id, symbol: e.symbol, isLong: e.up, markE8: e.markE8 });
+          return await rides.close({
+            rideId: e.id,
+            symbol: e.symbol,
+            isLong: e.up,
+            markE8: e.markE8,
+            journal: closeMark(e),
+          });
         }
         return null;
       } finally {

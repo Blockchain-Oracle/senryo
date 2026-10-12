@@ -95,6 +95,7 @@ export function TerminalTop({
             color={color.ink}
             height={BALANCE_HEIGHT}
             align="right"
+            sensitive
             accessibilityLabel={
               equity === undefined ? "Equity" : `Equity $${formatUnits(equity, DOLLAR_DECIMALS, CENTS)}`
             }

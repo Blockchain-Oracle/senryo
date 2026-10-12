@@ -9,6 +9,7 @@ import { rideFee, rideNotional } from "@senryo/core";
 import { useCallback, useEffect, useRef } from "react";
 import { type SharedValue, useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
+import { HIDDEN_AMOUNT, useHideBalances } from "~/lib/hide-balances";
 import { notify } from "~/lib/notify";
 import type { StackRow } from "./OrderStack";
 import type { Side, TradeButtonsProps } from "./TradeButtons";
@@ -50,9 +51,16 @@ export function useTradePanel(i: {
   }, [ride, rideOn]);
   const callOverlay = q.overlay;
   const rideOverlay = side.live.overlay;
-  const overlay: SharedValue<ChartOverlay | null> = useDerivedValue(() =>
-    rideOn.value ? rideOverlay.value : callOverlay.value,
-  );
+  // Hidden balances mask the chart's PnL too (R5.14).
+  const [hidden] = useHideBalances();
+  const masking = useSharedValue(hidden);
+  useEffect(() => {
+    masking.value = hidden;
+  }, [hidden, masking]);
+  const overlay: SharedValue<ChartOverlay | null> = useDerivedValue(() => {
+    const o = rideOn.value ? rideOverlay.value : callOverlay.value;
+    return o?.pnlText && masking.value ? { ...o, pnlText: HIDDEN_AMOUNT } : o;
+  });
 
   const armed = (title: string) => {
     fire("confirm");

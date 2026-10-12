@@ -30,19 +30,22 @@ import { PositionsList } from "~/features/positions/PositionsList";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
+import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const MARK = 36;
 
 function CallRowView({ row }: { row: Row }) {
   const { color } = useTheme();
+  const [hidden] = useHideBalances();
   const tint = row.tone === "up" ? color.up : row.tone === "down" ? color.down : color.inkMuted;
   const title = `${row.symbol} ${sideName(row.band)}`;
+  const result = masked(row.result, hidden);
   return (
     <Pressable
       style={styles.row}
       accessibilityRole="button"
-      accessibilityLabel={`${title}, ${row.status}, ${row.result}. Open the receipt`}
+      accessibilityLabel={`${title}, ${row.status}, ${result}. Open the receipt`}
       onPress={() => {
         fire("tick");
         router.push(`/calls/${row.ticketId}` as Href);
@@ -52,10 +55,10 @@ function CallRowView({ row }: { row: Row }) {
       <View style={styles.text}>
         <Text style={[TYPE.rowTitle, { color: color.ink }]}>{title}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          {lane(row.cadenceSec)} · {usd(row.stake)} · {row.status}
+          {lane(row.cadenceSec)} · {masked(usd(row.stake), hidden)} · {row.status}
         </Text>
       </View>
-      <Text style={[TYPE.rowTitle, { color: tint }]}>{row.result}</Text>
+      <Text style={[TYPE.rowTitle, { color: tint }]}>{result}</Text>
     </Pressable>
   );
 }
@@ -64,18 +67,16 @@ function CallRowView({ row }: { row: Row }) {
 function Record({ owner }: { owner: `0x${string}` }) {
   const { color } = useTheme();
   const stats = useCallerStats(owner);
+  const [hidden] = useHideBalances();
   if (!("value" in stats) || stats.value.calls === 0) return null;
   const s = stats.value;
   const pnl = BigInt(s.pnl);
+  const total = masked(signedUsd(pnl), hidden);
   const tone = toneOf(pnl);
   return (
-    <View
-      style={styles.record}
-      accessible
-      accessibilityLabel={`Result ${signedUsd(pnl)}, ${s.calls} calls, ${s.wins} won`}
-    >
+    <View style={styles.record} accessible accessibilityLabel={`Result ${total}, ${s.calls} calls, ${s.wins} won`}>
       <Text style={[TYPE.title, { color: tone === "up" ? color.up : tone === "down" ? color.down : color.ink }]}>
-        {signedUsd(pnl)}
+        {total}
       </Text>
       <Text style={[TYPE.caption, { color: color.inkMuted }]}>
         {s.calls} {s.calls === 1 ? "call" : "calls"} · {s.wins} won · {s.losses} lost · best streak {s.bestStreak}

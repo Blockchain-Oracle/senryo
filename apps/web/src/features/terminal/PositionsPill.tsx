@@ -26,7 +26,7 @@ export function PositionsPill({ onOpen }: { onOpen: () => void }) {
     >
       <Icon aria-hidden className={roi !== null && roi < 0 ? "size-4 text-down" : "size-4 text-up"} />
       {totals.count === 1 ? "View position" : `View ${totals.count} positions`}
-      {roi !== null ? <Odometer kind="pct" value={roi / BPS_PER_PERCENT} decimals={1} /> : null}
+      {roi !== null ? <Odometer kind="pct" value={roi / BPS_PER_PERCENT} decimals={1} sensitive /> : null}
     </button>
   );
 }
