@@ -17,6 +17,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { fire } from "~/feedback/fire";
 import { BUTTON, DISABLED_OPACITY, RADIUS, SIZE, SPACE, SPRING, TYPE, useTheme } from "~/theme";
+import { BoardRow, type ScoreBoard, TeamBands } from "./ScoreBoard";
 import { useGroupFill } from "./Surface";
 import { ArrowLeft } from "./symbols";
 import { usePressScale } from "./usePressScale";
@@ -44,6 +45,9 @@ export interface PredictionCallView {
   link?: { label: string; onPress: () => void };
 }
 
+/** Yes / No sit on the direction fills with their darker bottom edge (D-316). */
+const SIDE_EDGE = 3;
+
 export function PredictionMarketCard(p: {
   marks: ReactNode;
   meta: string;
@@ -63,6 +67,8 @@ export function PredictionMarketCard(p: {
   onConfirm: (yes: boolean, stake: bigint) => Promise<boolean>;
   receipt: PredictionCallView | null;
   blocked?: string | null;
+  /** The scoreboard (R7.9) in place of `marks` beside the question. */
+  board?: ScoreBoard;
 }) {
   const { color } = useTheme();
   const fill = useGroupFill();
@@ -122,6 +128,7 @@ export function PredictionMarketCard(p: {
       style={[styles.card, { backgroundColor: fill }]}
       onLayout={(e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height)}
     >
+      <TeamBands board={p.board} />
       <Animated.View
         style={[styles.body, front]}
         importantForAccessibility={showForm ? "no-hide-descendants" : "auto"}
@@ -133,8 +140,9 @@ export function PredictionMarketCard(p: {
           </Text>
           {p.clock ? <Text style={[TYPE.caption, styles.strong, { color: color.ink }]}>{p.clock}</Text> : null}
         </View>
+        {p.board ? <BoardRow board={p.board} /> : null}
         <View style={styles.question}>
-          <View style={styles.marks}>{p.marks}</View>
+          {p.board ? null : <View style={styles.marks}>{p.marks}</View>}
           <Text
             onPress={p.onQuestion}
             accessibilityRole={p.onQuestion ? "link" : "text"}
@@ -270,12 +278,14 @@ function SideButton(p: { yes: boolean; onPress: () => void; disabled: boolean; l
         onPressOut={press.onPressOut}
         style={[
           styles.sideButton,
-          { backgroundColor: p.yes ? color.up : color.down, opacity: p.disabled ? DISABLED_OPACITY : 1 },
+          {
+            backgroundColor: p.yes ? color.upFill : color.downFill,
+            borderBottomColor: p.yes ? color.upFillEdge : color.downFillEdge,
+            opacity: p.disabled ? DISABLED_OPACITY : 1,
+          },
         ]}
       >
-        <Text style={[TYPE.buttonLabel, { color: p.yes ? color.upForeground : color.downForeground }]}>
-          {p.label ?? (p.yes ? "Yes" : "No")}
-        </Text>
+        <Text style={[TYPE.buttonLabel, { color: color.onDirectionFill }]}>{p.label ?? (p.yes ? "Yes" : "No")}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -361,6 +371,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: SPACE.md,
+    borderBottomWidth: SIDE_EDGE,
   },
   back: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, minHeight: SIZE.touch },
   center: { alignItems: "center", gap: SPACE.xxs },
