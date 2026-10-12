@@ -33,6 +33,8 @@ export interface ArcadeRun extends LoopDriver {
   ticks(): number;
   trace(): number[];
   input(next: RunInput): void;
+  /** How the game plays itself (a page's attract loop): the input a steady player would give now. */
+  autopilot(): RunInput;
   hud(): RunHud;
   stats(): RunStat[];
 }

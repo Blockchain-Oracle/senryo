@@ -47,6 +47,9 @@ const LOOK = {
 } as const;
 
 const HALF = 0.5;
+/** The autopilot aims a little under the gap's middle and doesn't flap while already rising this fast. */
+const AUTO_BIAS = 6;
+const AUTO_RISE = -50;
 const TWO = 2;
 const FULL_TURN = Math.PI * TWO;
 
@@ -212,6 +215,12 @@ export function createFlapRun(o: {
     input: (next) => {
       if (next.hold && !held) pressed = true;
       held = next.hold;
+    },
+    autopilot: () => {
+      // Aim for the middle of the next gap (between its wicks); flap when below it and not already rising.
+      const next = s.candles.find((c) => c.x + FLAP.bodyW * HALF > FLAP.coinX - FLAP.hitR);
+      const target = next ? next.center + (next.wickTop - next.wickBottom) * HALF + AUTO_BIAS : FIELD_H * HALF;
+      return { hold: s.coinY > target && s.vy > AUTO_RISE, lean: 0 };
     },
     hud: () => ({ score: s.score, combo: null, line: `${o.tape.symbol} · the last day's candles` }),
     stats: () => [

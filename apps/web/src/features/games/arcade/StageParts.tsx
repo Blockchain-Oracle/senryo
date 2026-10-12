@@ -6,9 +6,11 @@
  */
 import type { RunStat } from "@senryo/arcade";
 import { Pause, Play, Share2, Volume2, VolumeX, X } from "lucide-react";
-import type { RefObject } from "react";
+import { type RefObject, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { fire, setFeedback, useFeedback } from "@/lib/feedback";
+
+const CARD_READY_MS = 600;
 
 export interface StageResult {
   score: number;
@@ -115,6 +117,15 @@ export function OverPlate({
   onShare: () => void;
   onExit: () => void;
 }) {
+  // A key still held from the run (Space) must not land on the focused Play again: the card listens after a beat.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), CARD_READY_MS);
+    return () => window.clearTimeout(t);
+  }, []);
+  const when = (act: () => void) => () => {
+    if (ready) act();
+  };
   return (
     <div className="arcade-plate" role="dialog" aria-label={`${title} · run over`}>
       <div className="arcade-card">
@@ -132,14 +143,14 @@ export function OverPlate({
             </div>
           ))}
         </dl>
-        <Button size="xl" className="arcade-cta w-full" onClick={onAgain} autoFocus>
+        <Button size="xl" className="arcade-cta w-full" onClick={when(onAgain)} autoFocus>
           Play again
         </Button>
         <div className="flex w-full gap-2">
-          <Button size="lg" variant="ghost" className="arcade-ghost flex-1" onClick={onShare}>
+          <Button size="lg" variant="ghost" className="arcade-ghost flex-1" onClick={when(onShare)}>
             <Share2 aria-hidden className="size-4" /> Share
           </Button>
-          <Button size="lg" variant="ghost" className="arcade-ghost flex-1" onClick={onExit}>
+          <Button size="lg" variant="ghost" className="arcade-ghost flex-1" onClick={when(onExit)}>
             Exit
           </Button>
         </div>

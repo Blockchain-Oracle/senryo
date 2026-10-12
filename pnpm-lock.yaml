@@ -78,6 +78,9 @@ importers:
       '@senryo/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@senryo/arcade':
+        specifier: workspace:*
+        version: link:../../packages/arcade
       '@senryo/calls':
         specifier: workspace:*
         version: link:../../packages/calls

@@ -134,8 +134,10 @@ export const Info = symbol({ ios: "info.circle", android: "info" }, "Info");
 export const KeyRound = symbol({ ios: "key", android: "key" }, "KeyRound");
 export const Lock = symbol({ ios: "lock", iosFilled: "lock.fill", android: "lock" }, "Lock");
 export const Minus = symbol({ ios: "minus", android: "remove" }, "Minus");
+export const Pause = symbol({ ios: "pause.fill", android: "pause" }, "Pause");
 export const Pin = symbol({ ios: "pin", iosFilled: "pin.fill", android: "push_pin" }, "Pin");
 export const Plus = symbol({ ios: "plus", android: "add" }, "Plus");
+export const PlayFill = symbol({ ios: "play.fill", android: "play_arrow" }, "PlayFill");
 export const QrCode = symbol({ ios: "qrcode", android: "qr_code" }, "QrCode");
 export const ScanLine = symbol({ ios: "qrcode.viewfinder", android: "qr_code_scanner" }, "ScanLine");
 export const ScrollText = symbol({ ios: "scroll", android: "description" }, "ScrollText");
@@ -179,6 +181,7 @@ export const Receipt = symbol(
   { ios: "list.bullet.rectangle.portrait", iosFilled: "list.bullet.rectangle.portrait.fill", android: "receipt_long" },
   "Receipt",
 );
+export const RotatePhone = symbol({ ios: "rectangle.landscape.rotate", android: "screen_rotation" }, "RotatePhone");
 export const LayoutGrid = symbol(
   { ios: "square.grid.2x2", iosFilled: "square.grid.2x2.fill", android: "grid_view" },
   "LayoutGrid",

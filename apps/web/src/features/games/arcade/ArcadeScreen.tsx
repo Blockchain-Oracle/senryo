@@ -6,7 +6,14 @@
  * issued, and ranks once the server's replay reproduces it; a guest plays the same game on a tape of its own. How a
  * score is checked sits behind ⓘ.
  */
-import { type ArcadeFeel, type ArcadeInk, type ArcadeRun, createFlapRun, createSledRun } from "@senryo/arcade";
+import {
+  type ArcadeFeel,
+  type ArcadeInk,
+  type ArcadeRun,
+  createFlapRun,
+  createSledRun,
+  rankNote,
+} from "@senryo/arcade";
 import { GAMES } from "@senryo/config";
 import { type ArcadeGame, seedFromBytes, shortAddress, ticksToMs } from "@senryo/core";
 import { useArcadeBoard, useArcadeDesk } from "@senryo/query";
@@ -23,9 +30,6 @@ import { ArcadeStage } from "./ArcadeStage";
 const SEED_BYTES = 4;
 /** A board row's portrait (R2.8): the row's text height. */
 const BOARD_AVATAR = 24;
-const ORDINAL = new Intl.PluralRules("en", { type: "ordinal" });
-const SUFFIX: Readonly<Record<string, string>> = { one: "st", two: "nd", few: "rd", other: "th" };
-const ordinal = (n: number) => `${n}${SUFFIX[ORDINAL.select(n)] ?? "th"}`;
 /** The web's feel for a run: Web Audio cues and the vibration table (D-317). */
 const FEEL: ArcadeFeel = { fire, sound, music };
 
@@ -94,9 +98,8 @@ export function ArcadeScreen({
         trace: run.trace(),
         score: run.score(),
       });
-      const rank = 1 + players.filter((p) => p.owner.toLowerCase() !== me && p.score > checked.best).length;
-      const where = rank <= players.length + 1 ? ` · ${ordinal(rank)} on the board` : "";
-      return { best: checked.best, note: `Checked by replay · your best ${checked.best.toLocaleString()}${where}` };
+
+      return { best: checked.best, note: rankNote(players, me, checked.best) };
     },
     [desk.score, me, players],
   );

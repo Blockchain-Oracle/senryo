@@ -147,6 +147,25 @@ old R7.1 (games audio) moved to F1–F3.
   - **The 30 s watch:** five mini races against the coin's visible picks.
   - **Reveals:** 220 ms apart, each with its verdict sound, then the score and a fanfare.
 - [ ] R7.6 Phone parity:
+  - *Progress 12 Oct (Line Rider and Candle Hop on the phone):*
+    - *The runs, their drawing and the canvas they draw on are one package, `@senryo/arcade`, with the feel
+      injected.*
+    - *The phone draws them through a 2D canvas over Skia's picture recorder (`skia-2d.ts`): fills and strokes with
+      their glow, gradients, paths, arcs, round rects, text. Each frame is recorded on the JS thread and shown by a
+      `<Picture>` from a shared value.*
+    - *The phone stage (`ArcadeStage.tsx`) is turned a quarter turn by a transform: landscape with no native change,
+      shipped by update.*
+      - *A "turn your phone" cue rides the 3-2-1-GO.*
+      - *Any finger holds; the half it touches leans.*
+      - *Pause for practice runs; Back pauses; the app leaving pauses a practice run and ends a ranked one.*
+      - *The game-over card with Share.*
+    - *The page shows the game playing itself: the attract loop, the same engine on a real tape, steered by each
+      run's autopilot.*
+    - *Routes `/games/line-rider` and `/games/candle-hop`; the hub lists both.*
+    - *Checked on a Release build in the simulator: the page, the attract loop, the stage, a press-and-hop.*
+    - *Fixed on the way: Hermes has no `Intl.PluralRules`. The board's ordinal is plain arithmetic in
+      `@senryo/arcade` `rankNote`, one helper for both apps.*
+    - *Left: Warm-up on the phone (R7.5), and the `ON_PHONE` list goes once it has every game.*
   - all four games on the phone in Skia;
   - the config's phone routes become real;
   - delete `ON_PHONE` (`GamesScreen.tsx:28`) and the deep-link fallback (`lib/deep-link.ts:33`).

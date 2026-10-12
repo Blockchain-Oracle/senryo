@@ -1,3 +1,5 @@
+export * from "./attract.ts";
+export * from "./board.ts";
 export * from "./canvas.ts";
 export * from "./feel.ts";
 export * from "./flap-run.ts";

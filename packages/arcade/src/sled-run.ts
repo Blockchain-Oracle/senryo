@@ -96,8 +96,12 @@ export const FX = {
   bitSize: 3,
   sparkSize: 1.6,
   textLift: 30,
+  textStack: 18,
+  textStackTicks: 20,
 } as const;
 
+/** The autopilot: how far it looks for a gap, where it lets go, and its show hops (ticks). */
+const AUTO = { look: 220, release: 40, every: 150, charge: 30 } as const;
 const E8 = 1e8;
 const MOVE_UNITS = 1e5;
 const MS = 1000;
@@ -164,7 +168,9 @@ export function createSledRun(o: {
     }
   };
   const say = (text: string, color: string) => {
-    scene.texts.push({ text, x: s.r.x, y: s.r.y - FX.textLift, life: FX.textTicks, color });
+    // Words said together stack, newest on top.
+    const fresh = scene.texts.filter((t) => t.life > FX.textTicks - FX.textStackTicks).length;
+    scene.texts.push({ text, x: s.r.x, y: s.r.y - FX.textLift - fresh * FX.textStack, life: FX.textTicks, color });
   };
 
   const onLand = (comboBefore: number) => {
@@ -302,6 +308,20 @@ export function createSledRun(o: {
     trace: () => trace,
     input: (next) => {
       input = next;
+    },
+    autopilot: () => {
+      // Charge for a gap coming up and hop at its edge; otherwise a show hop now and then.
+      const mid = (s.b.x + s.f.x) * HALF;
+      let gapAt = -1;
+      for (let d = 0; d <= AUTO.look; d += SLED.seg) {
+        if (sledOpenAt(s, mid + d)) {
+          gapAt = d;
+          break;
+        }
+      }
+      if (!s.grounded) return { hold: false, lean: 0 };
+      if (gapAt >= 0) return { hold: gapAt > AUTO.release, lean: 0 };
+      return { hold: s.tick % AUTO.every < AUTO.charge, lean: 0 };
     },
     hud: () => {
       const i = at();

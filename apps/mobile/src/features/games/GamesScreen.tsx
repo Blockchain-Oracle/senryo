@@ -25,7 +25,7 @@ const GAME_ART: Readonly<Record<string, readonly PixelMarkName[]>> = {
 const LEAGUE_KEYS = ["nhl", "mlb", "epl"] as const;
 
 /** The phone screens that exist so far (the rest arrive with their stage). */
-const ON_PHONE = new Set(["lucky"]);
+const ON_PHONE = new Set(["lucky", "line-rider", "candle-hop"]);
 const MORE = [
   { route: "/duel", title: "Duel", line: "The same three cards · the better total takes the pot", art: "markets" },
   { route: "/parlay", title: "Parlay", line: "Two to four calls that must all come true", art: "markets" },
