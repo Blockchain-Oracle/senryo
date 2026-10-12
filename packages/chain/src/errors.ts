@@ -47,7 +47,13 @@ export function describeError(error: unknown): string {
   }
   const revert = decodeRevert(error);
   if (revert) return revert.message;
-  if (error instanceof BaseError) return error.shortMessage;
+  // `details` is the RPC's own words ("Signer had insufficient balance") behind viem's summary ("Missing or invalid
+  // parameters"); it never carries the endpoint (that is in `metaMessages`, never logged — S8.5b K5).
+  if (error instanceof BaseError) {
+    return error.details && error.details !== error.shortMessage
+      ? `${error.shortMessage} (${error.details})`
+      : error.shortMessage;
+  }
   return error instanceof Error ? error.message : String(error);
 }
 

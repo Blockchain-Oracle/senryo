@@ -1,6 +1,7 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { type Hex, seriesIdOf, windowIdOf } from "@senryo/chain";
 import {
+  admissionSecOf,
   CALENDARS,
   type CadenceSec,
   type ChainId,
@@ -17,7 +18,9 @@ import { DECK_CADENCES, DECK_MARGIN_SEC, SEED_BYTES } from "./constants.ts";
 /**
  * The deckmaster (D-294): three cards, each the running window of a different market, with room to play past the
  * pick deadline (the arena checks `minCardLifeSec` again at the reveal; the margin covers the open and reveal
- * transactions). Short windows first: 5-minute ones while they have the room, 15-minute ones to fill the deck. The
+ * transactions) and still young enough that its open print can be recorded at the reveal — a window opens on its
+ * first call, and nobody may have called it yet (a 15-minute window 9 minutes in could no longer be opened, so the
+ * reveal refused the whole deck). Short windows first: 5-minute ones while they have the room, 15-minute ones to fill the deck. The
  * draw is HMAC-SHA256 keyed by the server's seed over both players' seeds and the card's index, so neither the server
  * alone nor a player alone chose it; the commitment over all three seeds and the cards is sealed on chain before the
  * reveal.
@@ -36,6 +39,7 @@ export function candidates(chainId: ChainId, nowSec: number, prices: DeckSource)
       const start = nowSec - (nowSec % cadenceSec);
       const expiry = start + cadenceSec;
       if (expiry - nowSec < need) return [];
+      if (nowSec + DECK_MARGIN_SEC >= start + admissionSecOf(m)) return [];
       if (!sessionCovers(scheduleOf(CALENDARS[m.calendarId].schedule), start, expiry)) return [];
       if (!isQuotable(prices.feedState(feedIdOf(m)))) return [];
       const seriesId = seriesIdOf(m.symbol, cadenceSec);
