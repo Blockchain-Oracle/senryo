@@ -2,19 +2,12 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
-
-const subscribe = () => () => {};
+import { useHydrated } from "@/lib/use-scheme";
 
 /** Dark ⇄ paper. Renders a stable icon until hydrated so the static HTML never mismatches. */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const hydrated = useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-  const light = hydrated && resolvedTheme === "light";
+  const light = useHydrated() && resolvedTheme === "light";
   return (
     <button
       type="button"

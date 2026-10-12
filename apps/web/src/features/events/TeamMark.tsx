@@ -1,13 +1,13 @@
 "use client";
 /**
  * A side's crest (D-315, F11): the team's own crest from `@senryo/identity`'s team table (fetched by script from ESPN's
- * team feeds, pinned and self-hosted — never hot-linked), the dark-ground crest in the dark theme; only a club the feed
- * doesn't list falls back to its abbreviation on a plate.
+ * team feeds, pinned and self-hosted — never hot-linked), the dark-ground crest in the dark theme (from hydration on,
+ * `useScheme`); only a club the feed doesn't list falls back to its abbreviation on a plate.
  */
 import type { EventView } from "@senryo/api-client";
 import { ids, TEAM_CRESTS } from "@senryo/identity";
 import { TEAM_CREST_URLS } from "@senryo/identity/web";
-import { useTheme } from "next-themes";
+import { useScheme } from "@/lib/use-scheme";
 import { cn } from "@/lib/utils";
 
 export function TeamMark({
@@ -20,10 +20,10 @@ export function TeamMark({
   /** md 36 px in a row, lg 48 px on a card (research 10 §5). */
   size?: "md" | "lg";
 }) {
-  const { resolvedTheme } = useTheme();
+  const scheme = useScheme();
   const id = ids.team(league, team.abbr);
   const crest = TEAM_CRESTS[id];
-  const src = TEAM_CREST_URLS[resolvedTheme === "dark" && crest?.dark ? `${id}:dark` : id];
+  const src = TEAM_CREST_URLS[scheme === "dark" && crest?.dark ? `${id}:dark` : id];
   const box = size === "lg" ? "size-12" : "size-9";
   if (src) {
     return (
