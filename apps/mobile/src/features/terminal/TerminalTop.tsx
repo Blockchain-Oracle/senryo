@@ -3,6 +3,8 @@
  * the balance rolling on the right, and the lane chips — 1m · 5m · 15m · 1h — the selected one carrying the countdown
  * ring to the moment calls close, on the server's clock.
  */
+
+import { useDayLine } from "@senryo/calls/react";
 import { CADENCES_SEC, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, formatUnits, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
@@ -11,8 +13,10 @@ import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { ChangeChip } from "~/components/kit/ChangeChip";
 import { CountdownRing } from "~/components/kit/CountdownRing";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
+import { Sparkline } from "~/components/kit/Sparkline";
 import { ChevronDown } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
@@ -39,6 +43,7 @@ export function TerminalTop({
 }) {
   const { color } = useTheme();
   const press = usePressScale();
+  const day = useDayLine(t.symbol);
   const font = useFont(require("../../../assets/fonts/Inter-SemiBold.ttf"), BALANCE_SIZE);
   const balance = useSharedValue<LiveFigure>({ text: "", trend: 0 });
   const previous = useRef<bigint | undefined>(undefined);
@@ -66,6 +71,12 @@ export function TerminalTop({
             <ChevronDown size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.text3} />
           </Animated.View>
         </Pressable>
+        {day ? (
+          <View style={styles.day} accessibilityLabel="The last 24 hours">
+            <Sparkline symbol={t.symbol} day={day} />
+            <ChangeChip symbol={t.symbol} day={day} />
+          </View>
+        ) : null}
         <View style={styles.balance}>
           <LiveOdometer
             source={balance}
@@ -122,6 +133,7 @@ export function TerminalTop({
 }
 
 const styles = StyleSheet.create({
+  day: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   wrap: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   asset: {

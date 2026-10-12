@@ -1,3 +1,4 @@
+/* The terminal's top row beyond terminal.css (split for length): the music toggle (F2) and the 24 h line (F7). */
 /* The music toggle (F2): a round ♪, equaliser bars while it plays, and the track chip beside it. */
 .terminal-music {
   display: flex;
@@ -62,5 +63,17 @@
 @media (prefers-reduced-motion: reduce) {
   .terminal-eq i {
     animation: none;
+  }
+}
+
+/* The market's last 24 hours beside its chip (F7). */
+.terminal-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 420px) {
+  .terminal-day .block {
+    display: none;
   }
 }

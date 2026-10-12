@@ -131,6 +131,13 @@ export const rules = [
     pattern: /#[0-9a-fA-F]{3,8}\b|\b\d+px\b/,
   },
   {
+    id: "web-clickable-semantics",
+    description: "a click lives on a button or a link, never a div/span/li/img (F4: it must look and act clickable)",
+    scopes: ["apps/web/src"],
+    exts: [".tsx"],
+    pattern: /<(div|span|li|section|article|img|p)\b[^>]*\bonClick=/,
+  },
+  {
     id: "design-literals-mobile",
     description: "no hex/rgba outside apps/mobile/src/theme",
     scopes: ["apps/mobile/src"],

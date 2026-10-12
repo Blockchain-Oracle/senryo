@@ -10,7 +10,6 @@ import { Music } from "lucide-react";
 import { useEffect } from "react";
 import { fire, music, setFeedback, useFeedback } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
-import "./music-toggle.css";
 
 const BARS = 3;
 

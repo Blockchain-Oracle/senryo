@@ -22,6 +22,42 @@ import { cn } from "@/lib/utils";
 import { RecoveryGroup } from "./RecoveryGroup";
 import type { DrawerProps } from "./types";
 
+const PERCENT = 100;
+
+/** A 0–100 % volume (F3): effects or music; a cue plays on release so the level is heard as it's set. */
+function Volume({
+  label,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  disabled: boolean;
+}) {
+  const id = `volume-${label.toLowerCase()}`;
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <label htmlFor={id} className="w-20 font-semibold text-row-title">
+        {label}
+      </label>
+      <input
+        id={id}
+        type="range"
+        min={0}
+        max={PERCENT}
+        value={Math.round(value * PERCENT)}
+        disabled={disabled}
+        onChange={(e) => onChange(Number(e.target.value) / PERCENT)}
+        onPointerUp={() => fire("tick", { cue: "toggle" })}
+        className="h-11 flex-1 accent-(--accent)"
+      />
+      <span className="tnum w-10 text-right text-meta text-text-2">{Math.round(value * PERCENT)}%</span>
+    </div>
+  );
+}
+
 function Toggle({
   label,
   detail,
@@ -102,6 +138,24 @@ export function SettingsDrawer({ open, onOpenChange }: DrawerProps) {
             detail="Calls, results and the live line"
             on={feedback.sound}
             onChange={(v) => setFeedback({ sound: v })}
+          />
+          <Volume
+            label="Effects"
+            value={feedback.effects}
+            disabled={!feedback.sound}
+            onChange={(v) => setFeedback({ effects: v })}
+          />
+          <Volume
+            label="Music"
+            value={feedback.music}
+            disabled={!feedback.sound}
+            onChange={(v) => setFeedback({ music: v })}
+          />
+          <Toggle
+            label="Music in the terminal"
+            detail="Games always have theirs; the terminal's is your choice"
+            on={feedback.terminalMusic}
+            onChange={(v) => setFeedback({ terminalMusic: v })}
           />
           <Toggle
             label="Vibration"

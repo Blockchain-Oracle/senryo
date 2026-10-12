@@ -40,6 +40,7 @@ import { TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
 import { useReactions } from "./useReactions";
 import { useTerminal } from "./useTerminal";
+import { useTerminalMusic } from "./useTerminalMusic";
 
 const DEFAULT_STAKE = 5_000_000;
 const MIN_STAKE = 1_000_000n;
@@ -53,6 +54,7 @@ export interface TerminalProps {
 }
 
 export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
+  useTerminalMusic();
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const bottom = useDockInset();

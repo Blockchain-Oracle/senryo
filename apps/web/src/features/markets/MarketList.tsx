@@ -39,7 +39,7 @@ export function MarketRow({ symbol, name }: { symbol: string; name: string }) {
       href={tradeHref(symbol)}
       onClick={tapFeedback}
       aria-label={`${name}, ${price}. ${line.trading ? "" : `${line.text}. `}Open the terminal`}
-      className="group flex min-h-18 items-center gap-3 rounded-xl px-3 py-2 transition-[background-color,transform] duration-(--motion-fast) hover:-translate-y-0.5 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring active:translate-y-0 active:scale-[0.99]"
+      className="group press-lift flex min-h-18 items-center gap-3 rounded-xl px-3 py-2 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
     >
       <EntityMark id={marketId(symbol)} size={MARK} decorative />
       <span className="flex min-w-0 flex-1 flex-col">

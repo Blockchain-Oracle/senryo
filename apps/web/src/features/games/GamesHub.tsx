@@ -57,7 +57,7 @@ export function GamesHub() {
           <Link
             key={g.key}
             href={g.href}
-            className="flex flex-col gap-1 rounded-2xl bg-card p-4 transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring"
+            className="press-lift flex flex-col gap-1 rounded-2xl bg-card p-4 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
           >
             <Art names={GAME_ART[g.key] ?? []} />
             <span className="pt-2 font-semibold text-section-title">{g.title}</span>

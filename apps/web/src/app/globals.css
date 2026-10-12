@@ -160,6 +160,31 @@
   --ease-desk: var(--motion-ease);
 }
 
+/* F4's press kit for a card or row that is one big control: it lifts 2 px on hover in 120 ms, sinks on press (0.98 in
+   70 ms) and settles in 160 ms; reduced motion keeps only the colour change. */
+@utility press-lift {
+  transition:
+    transform 160ms var(--motion-ease),
+    background-color var(--motion-fast);
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      transition-duration: 120ms;
+    }
+  }
+  &:active {
+    transform: translateY(1px) scale(0.98);
+    transition-duration: 70ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: background-color var(--motion-fast);
+    &:hover,
+    &:active {
+      transform: none;
+    }
+  }
+}
+
 @utility tnum {
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings:
@@ -170,6 +195,20 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  /* F4: everything you can press looks pressable (Tailwind 4's preflight gives buttons the arrow) and shows where the
+     keyboard is. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  summary,
+  label[for],
+  select {
+    cursor: pointer;
+  }
+  :where(button, a[href], [role="button"], input, select, textarea, summary):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   html {
     color-scheme: dark;

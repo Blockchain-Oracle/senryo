@@ -1,20 +1,23 @@
 "use client";
 /**
- * The terminal's top (the phone's `TerminalTop`, Tradash's asset chip): the market chip (real mark, symbol, the price
- * rolling; opens the markets drawer), the balance, and the lanes — 1m · 5m · 15m · 1h — the selected one carrying the
- * countdown ring to the moment calls close, on the server's clock.
+ * The terminal's top (the phone's `TerminalTop`, Tradash's asset chip): the market chip (real mark, symbol, its 24 h
+ * graph and change — D-319, F7; opens the markets drawer), the music, the balance, and the lanes — 1m · 5m · 15m · 1h —
+ * the selected one carrying the countdown ring to the moment calls close, on the server's clock.
  */
-import type { CallWindowView } from "@senryo/calls/react";
+import { type CallWindowView, useDayLine } from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { ChevronDown } from "lucide-react";
 import { EntityMark } from "@/components/identity/entity-mark";
+import { ChangeChip } from "@/components/ui/change-chip";
+import { Sparkline } from "@/components/ui/sparkline";
 import { fire, tapFeedback } from "@/lib/feedback";
 import { money } from "@/lib/format";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { CountdownRing } from "./CountdownRing";
 import { MusicToggle } from "./MusicToggle";
+import "./terminal-top.css";
 
 const MARK = 28;
 
@@ -28,6 +31,7 @@ export function TerminalTop({
   onCadence: (c: CadenceSec) => void;
 }) {
   const hidden = usePrivacy();
+  const day = useDayLine(t.symbol);
   return (
     <div className="terminal-top">
       {/* One h1 per page (R2.18): the market the terminal is on; the chip below is its button. */}
@@ -50,6 +54,12 @@ export function TerminalTop({
           <span className="terminal-asset-name">{t.market?.name}</span>
           <ChevronDown aria-hidden className="terminal-asset-chevron" />
         </button>
+        {day ? (
+          <span className="terminal-day" title="The last 24 hours">
+            <Sparkline symbol={t.symbol} day={day} className="h-6 w-16 sm:h-6 sm:w-16" />
+            <ChangeChip symbol={t.symbol} day={day} />
+          </span>
+        ) : null}
         <MusicToggle />
         {t.balance !== undefined ? (
           <span className="terminal-balance tnum">
