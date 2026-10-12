@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img">
+  <title>Lucky: a slot machine</title>
+  <style>
+    .face{fill:#F5EFE0;font:700 18px/1 "Roboto Condensed","Arial Narrow",sans-serif}
+    .r0{animation:spin 1.4s linear infinite}.r1{animation:spin 1.1s linear infinite}.r2{animation:spin 1.7s linear infinite}
+    @keyframes spin{from{transform:translateY(0)}to{transform:translateY(-168px)}}
+    .lever{transform-box:fill-box;transform-origin:50% 100%;animation:pull 3s ease-in-out infinite}
+    @keyframes pull{0%,70%,100%{transform:rotate(0)}78%{transform:rotate(40deg)}}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  </style>
+  <defs>
+    <radialGradient id="g" cx="50%" cy="0%" r="90%"><stop offset="0%" stop-color="#241E14"/><stop offset="100%" stop-color="#0B0906"/></radialGradient>
+    <clipPath id="w"><rect width="52" height="84" rx="8"/></clipPath>
+    <g id="strip">
+      <text class="face" x="26" y="28" text-anchor="middle">₿</text><text class="face" x="26" y="56" text-anchor="middle">▲</text>
+      <text class="face" x="26" y="84" text-anchor="middle">×5</text><text class="face" x="26" y="112" text-anchor="middle">Ξ</text>
+      <text class="face" x="26" y="140" text-anchor="middle">▼</text><text class="face" x="26" y="168" text-anchor="middle">×20</text>
+      <text class="face" x="26" y="196" text-anchor="middle">₿</text><text class="face" x="26" y="224" text-anchor="middle">▲</text>
+      <text class="face" x="26" y="252" text-anchor="middle">×5</text><text class="face" x="26" y="280" text-anchor="middle">Ξ</text>
+      <text class="face" x="26" y="308" text-anchor="middle">▼</text><text class="face" x="26" y="336" text-anchor="middle">×20</text>
+    </g>
+  </defs>
+  <rect width="320" height="180" fill="url(#g)"/>
+  <rect x="52" y="34" width="216" height="112" rx="16" fill="none" stroke="#D4AE5B" stroke-width="3"/>
+  <g transform="translate(70 48)"><rect width="52" height="84" rx="8" fill="#241E14"/><g clip-path="url(#w)"><use href="#strip" class="r0"/></g></g>
+  <g transform="translate(134 48)"><rect width="52" height="84" rx="8" fill="#241E14"/><g clip-path="url(#w)"><use href="#strip" class="r1"/></g></g>
+  <g transform="translate(198 48)"><rect width="52" height="84" rx="8" fill="#241E14"/><g clip-path="url(#w)"><use href="#strip" class="r2"/></g></g>
+  <line x1="60" x2="260" y1="90" y2="90" stroke="#D4AE5B" stroke-opacity=".6" stroke-width="2"/>
+  <g class="lever"><rect x="282" y="52" width="6" height="56" rx="3" fill="#D4AE5B"/><circle cx="285" cy="50" r="9" fill="#FF647C"/></g>
+</svg>

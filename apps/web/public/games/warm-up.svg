@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img">
+  <title>Warm-up: a table of live cards</title>
+  <style>
+    .flip{transform-box:fill-box;transform-origin:50% 50%;animation:flip 2.4s ease-in-out infinite}
+    @keyframes flip{0%,60%,100%{transform:scaleX(1)}75%{transform:scaleX(0)}}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  </style>
+  <defs>
+    <radialGradient id="g" cx="50%" cy="0%" r="90%"><stop offset="0%" stop-color="#241E14"/><stop offset="100%" stop-color="#0B0906"/></radialGradient>
+    <g id="up"><rect x="-26" y="-40" width="52" height="76" rx="8" fill="#241E14" stroke="#D4AE5B"/><path d="M-12 4 L0 -12 L12 4" stroke="#B5F543" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+    <g id="down"><rect x="-26" y="-40" width="52" height="76" rx="8" fill="#241E14" stroke="#D4AE5B"/><path d="M-12 -8 L0 8 L12 -8" stroke="#FF647C" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+  </defs>
+  <rect width="320" height="180" fill="url(#g)"/>
+  <use href="#up" transform="translate(84 96) rotate(-14)"/>
+  <use href="#down" transform="translate(122 96) rotate(-7)"/>
+  <g transform="translate(160 96)"><use href="#up" class="flip"/></g>
+  <use href="#down" transform="translate(198 96) rotate(7)"/>
+  <use href="#up" transform="translate(236 96) rotate(14)"/>
+</svg>

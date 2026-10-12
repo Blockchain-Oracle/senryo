@@ -1,0 +1,9 @@
+/* The hub's game cards (R7.7): a 16:9 animated scene of each game (public/games/*.svg). */
+.game-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  background: var(--arena);
+}

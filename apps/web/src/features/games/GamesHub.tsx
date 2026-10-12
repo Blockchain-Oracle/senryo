@@ -1,7 +1,8 @@
 "use client";
 /**
- * The Games hub (S8.8, D-295; Owarine's hub): every game with whose money is at risk — Lucky's one real call, Warm-up and
- * the arcade's none — then the head-to-head and multi-call places that have their own pages.
+ * The Games hub (S8.8, D-295; Owarine's hub; R7.7): every game as a card that shows the game itself — a moving 16:9
+ * scene (`GameScene`), its name and line, whose money is at risk (Lucky's one real call, Warm-up and the arcade's none)
+ * and an explicit Play — then the head-to-head and multi-call places that have their own pages.
  */
 import { GAMES } from "@senryo/config";
 import { ids, marketId, type PixelMarkName } from "@senryo/identity";
@@ -9,9 +10,11 @@ import { PixelMark } from "@senryo/identity/web";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
+import { GameScene } from "./GameScene";
+import "./games.css";
 import { PIXEL_COLORS } from "@/lib/pixel-colors";
 
-const ART = 40;
+const ART = 24;
 const ROW_ART = 28;
 /** Each game's key art (R2.8): the pixel marks it plays with (the arcade's candles are seeded, not a market's). */
 const GAME_ART: Readonly<Record<string, readonly PixelMarkName[]>> = {
@@ -52,17 +55,27 @@ const PLACE_ART: Readonly<Record<"markets" | "leagues", ReactNode>> = {
 export function GamesHub() {
   return (
     <div className="flex flex-col gap-8">
-      <section aria-label="Games" className="grid gap-3 sm:grid-cols-2">
+      <section aria-label="Games" className="grid gap-4 sm:grid-cols-2">
         {GAMES.map((g) => (
           <Link
             key={g.key}
             href={g.href}
-            className="press-lift flex flex-col gap-1 rounded-2xl bg-card p-4 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
+            className="press-lift group flex flex-col gap-3 rounded-2xl bg-card p-3 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
           >
-            <Art names={GAME_ART[g.key] ?? []} />
-            <span className="pt-2 font-semibold text-section-title">{g.title}</span>
-            <span className="text-body text-text-2">{g.line}</span>
-            <span className="text-meta text-text-3">{g.stakes}</span>
+            <GameScene game={g.key} />
+            <span className="flex items-start justify-between gap-3 px-1">
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="flex items-center gap-2 font-semibold text-section-title">
+                  <Art names={GAME_ART[g.key] ?? []} />
+                  {g.title}
+                </span>
+                <span className="text-body text-text-2">{g.line}</span>
+                <span className="text-meta text-text-3">{g.stakes}</span>
+              </span>
+              <span className="shrink-0 rounded-xl border-b-3 border-up-fill-edge bg-up-fill px-4 py-2 font-semibold text-button-compact text-on-direction-fill transition-transform group-hover:scale-105">
+                Play
+              </span>
+            </span>
           </Link>
         ))}
       </section>

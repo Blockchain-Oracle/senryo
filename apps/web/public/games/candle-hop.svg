@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img">
+  <title>Candle Hop: a coin through the candles</title>
+  <style>
+    .scroll{animation:scroll 5s linear infinite}@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-280px)}}
+    .coin{animation:flap .9s ease-in-out infinite}@keyframes flap{0%,100%{transform:translateY(14px)}30%{transform:translateY(-16px)}}
+    .mark{fill:#0B0906;font:700 14px/1 "Noto Sans JP",sans-serif}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  </style>
+  <defs>
+    <radialGradient id="g" cx="50%" cy="0%" r="90%"><stop offset="0%" stop-color="#241E14"/><stop offset="100%" stop-color="#0B0906"/></radialGradient>
+    <g id="pair-up"><rect x="0" y="0" width="24" height="30" rx="3" fill="#B5F543"/><rect x="0" y="100" width="24" height="80" rx="3" fill="#FF647C"/><line x1="12" x2="12" y1="0" y2="38" stroke="#F5EFE0" stroke-opacity=".4"/></g>
+    <g id="pair-down"><rect x="0" y="0" width="24" height="50" rx="3" fill="#FF647C"/><rect x="0" y="116" width="24" height="64" rx="3" fill="#B5F543"/><line x1="12" x2="12" y1="0" y2="58" stroke="#F5EFE0" stroke-opacity=".4"/></g>
+  </defs>
+  <rect width="320" height="180" fill="url(#g)"/>
+  <g class="scroll">
+    <use href="#pair-up" x="40"/><use href="#pair-down" x="110"/><use href="#pair-up" x="180"/>
+    <use href="#pair-down" x="250"/><use href="#pair-up" x="320"/><use href="#pair-down" x="390"/>
+    <use href="#pair-up" x="460"/><use href="#pair-down" x="530"/>
+  </g>
+  <g class="coin"><circle cx="96" cy="92" r="13" fill="#D4AE5B"/><text class="mark" x="96" y="97" text-anchor="middle">千</text></g>
+</svg>
