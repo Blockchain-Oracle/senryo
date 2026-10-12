@@ -129,15 +129,17 @@ function useLines(calls: readonly TicketView[]): Map<string, bigint> {
       retryDelay: PRINT_RETRY_MS,
     })),
   });
-  const data = results.map((r) => r.data);
+  // One string for every line in hand: the memo below changes only when a print arrives.
+  const got = results.map((r) => (r.data === undefined ? "" : r.data.toString())).join(",");
   return useMemo(() => {
+    const values = got.split(",");
     const lines = new Map<string, bigint>();
     calls.forEach((c, i) => {
-      const k = data[i];
-      if (k !== undefined) lines.set(`${c.symbol}:${c.start}`, k);
+      const k = values[i];
+      if (k) lines.set(`${c.symbol}:${c.start}`, BigInt(k));
     });
     return lines;
-  }, [calls, ...data]);
+  }, [calls, got]);
 }
 
 function useBookSource(store: BookStore, owner: Address | undefined): void {

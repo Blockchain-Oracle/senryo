@@ -82,6 +82,16 @@ and the morph on top of them.*
   - Shortfall opens Add money / test dollars with the amount pre-filled; the panel shows "after this: $Y".
 - [ ] R5.8 Slippage limit in price terms (D-300), shared by calls and rides.
 - [ ] R5.9 Hotkeys per D-308: in Real, ↑/↓/C act only with one-tap on.
+- [ ] R5.25 Lanes that can't take a call say so before the tap *(found 12 Oct in R5-A's testnet run)*:
+  - `Windows.openWindow` accepts a window only within its print's admission (300 s for Pyth) after its start, and
+    nothing opens windows ahead (the relay opens one lazily, with the first call). So a 15m or 1h window nobody
+    called in its first 5 minutes refuses every call for the rest of its life ("WindowNotTrading"); 1m and 5m
+    windows are always within it. Pre-opening every 15m/1h window would cost ≈ 40 MON a day on testnet (≈ 100k gas
+    each, plus each boundary's print) — more than the keeper (3.0) and sponsor (7.9) hold.
+  - The relay's batch for a boundary call also opens its market's other lanes starting at that second (≈ 0.01 MON
+    each, only where someone trades).
+  - The terminal reads whether its window is open on chain; past the 5 minutes without it, the lane says "No calls
+    in this window · the next opens at 20:00" instead of failing on the tap.
 
 ### The moments
 - [ ] R5.10 Instant first call:
