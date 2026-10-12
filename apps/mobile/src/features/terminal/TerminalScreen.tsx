@@ -20,7 +20,8 @@ import { LiveText } from "~/components/kit/LiveText";
 import { useDockInset } from "~/components/shell/dock-context";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
-import { accountRequiredRoute } from "~/lib/constants/routes";
+import { accountRequiredRoute, firstCallRoute } from "~/lib/constants/routes";
+import { usd } from "~/lib/money";
 import { notify } from "~/lib/notify";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -33,6 +34,7 @@ import type { Head } from "./chart/draw";
 import { SAMPLE_CAPACITY } from "./chart/engine";
 import { LiveChart } from "./chart/LiveChart";
 import { ExitSheet } from "./ExitSheet";
+import { holdFirstCall, useFirstCall } from "./first-call";
 import { MarketsSheet } from "./MarketsSheet";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { StakeSheet } from "./StakeSheet";
@@ -107,10 +109,16 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
               ? fire("close", { cue: "close" })
               : fire("filled", { cue: "open" }),
       notify: (n) => notify({ ...n, tone: "warning" }),
-      needAccount: () => router.push(accountRequiredRoute("make a call")),
+      needAccount: (slot) => {
+        const offered = slot === undefined ? undefined : q.offer[slot];
+        if (slot === undefined || !offered) return router.push(accountRequiredRoute("make a call"));
+        holdFirstCall({ symbol: t.symbol, slot, stake });
+        router.push(firstCallRoute(`Place ${usd(stake)} on ${t.symbol} ${offered.label}`));
+      },
       ...(onFilled ? { onFilled } : {}),
     },
   });
+  useFirstCall(t.symbol, t.owner, (slot) => void flow.open(slot));
 
   const position = t.position;
   const closeQuote = q.latest.current.close;
