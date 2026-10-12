@@ -11,6 +11,7 @@ import { useEffect, useRef } from "react";
 import type { Caller } from "./caller.ts";
 import { type ResultEffects, realisedCue, signed, usd } from "./result-cue.ts";
 import { tradeResulted, tradeToastId } from "./toast-run.ts";
+import { finishRun } from "./trade-run.ts";
 import { useRideResults } from "./use-ride-results.ts";
 
 const SECONDS_PER_MINUTE = 60;
@@ -60,6 +61,9 @@ export function useResults({ hint }: Caller, effects: ResultEffects): void {
       if (was === undefined || FINAL.has(was.state) || was.state === "closed") continue;
       const where = `${t.symbol} ${t.cadenceSec / SECONDS_PER_MINUTE}m`;
       const id = tradeToastId.call(t.ticketId);
+      // Ended this session: its slip joins "Just finished" (R5.11).
+      if ((t.state === "closed" && t.result !== null) || FINAL.has(t.state))
+        finishRun({ instrument: "call", id: t.ticketId, symbol: t.symbol });
       if (t.state === "closed" && t.result !== null) {
         const net = t.result - was.stake;
         tradeResulted(id);

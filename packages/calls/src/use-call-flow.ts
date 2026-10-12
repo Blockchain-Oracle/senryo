@@ -20,6 +20,7 @@ import type { Offer } from "./modes.ts";
 import type { Quotes } from "./quote.ts";
 import { reasonWords } from "./reason-words.ts";
 import { type TradeNote, tradeHasResult, tradeToastId } from "./toast-run.ts";
+import { dropRun, startRun, updateRun } from "./trade-run.ts";
 import { useCallActions } from "./use-call.ts";
 import type { CallWindowView } from "./use-call-window.ts";
 import { usePriceHealth } from "./use-price-health.ts";
@@ -182,6 +183,16 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
     const where = `${t.symbol} ${t.window.cadenceSec / SECONDS_PER_MINUTE}m`;
     const opening = `${where} · ${usdText(stake)} in`;
     fx.toast(id, { title: `Opening ${label}…`, description: opening, symbol: t.symbol, tone: "loading" });
+    startRun({
+      key: id,
+      instrument: "call",
+      symbol: t.symbol,
+      title: `${t.symbol} · ${label} · ${t.window.cadenceSec / SECONDS_PER_MINUTE}m`,
+      quoted: [
+        { k: "Stake", v: usdText(stake), money: true },
+        { k: "Pays if right", v: usdText(quote.payout), money: true },
+      ],
+    });
     const tapped = live.prices.latest(t.symbol)?.priceE8;
     setPendingEntry(tapped === undefined ? null : tapped / E8);
     let sent = false;
@@ -196,10 +207,15 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
         payoutLimit: slot === 0 ? latest.current?.limits?.first : latest.current?.limits?.second,
         journal: { what: `${label} ${where}`, kind: "open", instrument: "call", symbol: t.symbol, toast: id },
       });
-      if (r.kind === "cancelled") fx.toast(id, null);
+      if (r.kind === "cancelled") {
+        fx.toast(id, null);
+        dropRun(id);
+      }
       // A lost answer is recovery's to tell, on this same toast (R5.13).
-      else if (r.kind === "sent") {
+      else if (r.kind === "unknown") updateRun(id, { stage: "pending", digest: r.digest });
+      else {
         sent = true;
+        updateRun(id, { stage: "pending", digest: r.status.digest });
         setPending({
           digest: r.status.digest,
           label: `Opening ${label}…`,
@@ -216,6 +232,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       }
     } catch (error) {
       fx.cue("fail");
+      dropRun(id);
       fx.toast(id, {
         title: "Couldn't place the call",
         description: reasonWords((error as Error).message, "Your stake was not taken."),
@@ -301,9 +318,12 @@ export function settleRun(
   if (status.state === "filled") {
     if (p.cue) fx.cue(p.cue);
     if (!tradeHasResult(p.toast)) fx.toast(p.toast, p.filled);
+    // The open is booked: its row takes the pending object's place (R5.11).
+    if (p.kind === "open") updateRun(p.toast, { stage: "booked", id: status.ticketId ?? status.rideId ?? null });
     fx.onFilled?.();
     return;
   }
+  if (p.kind === "open") dropRun(p.toast);
   fx.cue("fail");
   fx.toast(p.toast, {
     title: status.state === "refused" ? words.refused : words.failed,

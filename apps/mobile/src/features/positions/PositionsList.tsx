@@ -1,16 +1,19 @@
 /**
  * Your open positions on the phone, live (Tradash's "Open positions", R5.3): the Unrealized PnL card — the total
  * rolling, its % of what went in, "N unpriced" when some can't be valued now, Close all (N) when more than one can
- * close — then a row per call and ride, and the parlays in play as a count (they have no live price). The positions
- * sheet, Home and Calls all show this one list.
+ * close — then a trade on its way as its pending paper (R5.11: drawn at the tap, its row takes its place once booked),
+ * a row per call and ride, the parlays in play as a count (they have no live price), and this session's ended trades
+ * as their slips under "Just finished". The positions sheet, Home and Calls all show this one list.
  */
 import { type BookTotals, dollars } from "@senryo/calls";
-import { useLiveBook } from "@senryo/calls/react";
+import { useLiveBook, useTradeRuns } from "@senryo/calls/react";
 import { useFont } from "@shopify/react-native-skia";
 import { type Href, router } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { RollingFigure } from "~/components/kit/RollingFigure";
 import { ChartCandlestick } from "~/components/kit/symbols";
+import { FinishedSlip } from "~/features/receipts/FinishedSlip";
+import { PendingTradeCard } from "~/features/receipts/PendingTradeCard";
 import { fire } from "~/feedback/fire";
 import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -92,7 +95,9 @@ export function PositionsList({ empty = "card" }: { empty?: "card" | "none" }) {
   const book = useLiveBook();
   const actions = usePositionClose();
   const font = useFont(require("../../../assets/fonts/Inter-SemiBold.ttf"), ROW_FONT);
-  if (book.entries.length === 0 && book.parlays === 0) {
+  const runs = useTradeRuns((instrument, id) => book.entries.some((e) => e.kind === instrument && e.id === id));
+  const quiet = runs.pending.length === 0 && runs.finished.length === 0;
+  if (book.entries.length === 0 && book.parlays === 0 && quiet) {
     if (empty === "none") return null;
     return (
       <View style={[styles.empty, { backgroundColor: color.raised2 }]}>
@@ -105,11 +110,16 @@ export function PositionsList({ empty = "card" }: { empty?: "card" | "none" }) {
   }
   return (
     <View style={styles.list}>
-      <Unrealized
-        totals={book.totals}
-        onCloseAll={() => void actions.closeAll(book.entries)}
-        closingAll={actions.closing.size > 1}
-      />
+      {book.entries.length > 0 ? (
+        <Unrealized
+          totals={book.totals}
+          onCloseAll={() => void actions.closeAll(book.entries)}
+          closingAll={actions.closing.size > 1}
+        />
+      ) : null}
+      {runs.pending.map((run) => (
+        <PendingTradeCard key={run.key} run={run} />
+      ))}
       {book.entries.map((e) => (
         <PositionRow
           key={e.key}
@@ -132,6 +142,14 @@ export function PositionsList({ empty = "card" }: { empty?: "card" | "none" }) {
             {book.parlays === 1 ? "1 parlay in play" : `${book.parlays} parlays in play`}
           </Text>
         </Pressable>
+      ) : null}
+      {runs.finished.length > 0 ? (
+        <>
+          <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Just finished</Text>
+          {runs.finished.map((run) => (
+            <FinishedSlip key={`${run.instrument}-${run.id}`} run={run} />
+          ))}
+        </>
       ) : null}
     </View>
   );

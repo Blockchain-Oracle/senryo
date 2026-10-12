@@ -15,6 +15,7 @@ import { ridesOn } from "./instrument.ts";
 import { forgetIntent } from "./intent-journal.ts";
 import { reasonWords } from "./reason-words.ts";
 import { tradeToastId } from "./toast-run.ts";
+import { dropRun, startRun, updateRun } from "./trade-run.ts";
 import {
   type CallFlowEffects,
   type FlowPending,
@@ -139,6 +140,16 @@ export function useRideFlow(i: RideFlowInput) {
       symbol: i.symbol,
       tone: "loading",
     });
+    startRun({
+      key: id,
+      instrument: "ride",
+      symbol: i.symbol,
+      title: `${i.symbol} · ${side} · Ride`,
+      quoted: [
+        { k: "Margin", v: usdText(i.margin), money: true },
+        { k: "Leverage", v: `${i.leverageBps / BPS_PER_X}×`, money: false },
+      ],
+    });
     setPendingEntry(Number(mark) / E8);
     let sent = false;
     setSigning("Signing…");
@@ -151,10 +162,15 @@ export function useRideFlow(i: RideFlowInput) {
         markE8: mark,
         journal: { what: `${side} ${i.symbol} ride`, kind: "open", instrument: "ride", symbol: i.symbol, toast: id },
       });
-      if (r.kind === "cancelled") fx.current.toast(id, null);
+      if (r.kind === "cancelled") {
+        fx.current.toast(id, null);
+        dropRun(id);
+      }
       // A lost answer is recovery's to tell, on this same toast (R5.13).
-      else if (r.kind === "sent") {
+      else if (r.kind === "unknown") updateRun(id, { stage: "pending", digest: r.digest });
+      else {
         sent = true;
+        updateRun(id, { stage: "pending", digest: r.status.digest });
         setPending({
           digest: r.status.digest,
           label: `Opening ${side}…`,
@@ -166,6 +182,7 @@ export function useRideFlow(i: RideFlowInput) {
       }
     } catch (error) {
       fx.current.cue("fail");
+      dropRun(id);
       fx.current.toast(id, {
         title: "Couldn't open the ride",
         description: reasonWords((error as Error).message, "Your margin was not taken."),

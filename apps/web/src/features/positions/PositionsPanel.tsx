@@ -2,14 +2,18 @@
 /**
  * Your open positions, live (Tradash's right rail, Owarine's `UnrealizedCard` + `PositionsList`, R5.3): the Unrealized
  * PnL card — the total rolling (decimals by size), its % of what went in, "N unpriced" when some can't be valued now,
- * Close all (N) when more than one can close — then a row per call and ride, newest first, and the parlays in play
- * as a count (they have no live price). One component for the terminal's column, its drawer, Home and Calls.
+ * Close all (N) when more than one can close — then a trade on its way as its pending paper (R5.11: drawn at the
+ * tap, its row takes its place once booked), a row per call and ride, newest first, the parlays in play as a count
+ * (they have no live price), and this session's ended trades as their slips under "Just finished". One component for
+ * the terminal's column, its drawer, Home and Calls.
  */
 import type { BookTotals } from "@senryo/calls";
-import { useLiveBook } from "@senryo/calls/react";
+import { useLiveBook, useTradeRuns } from "@senryo/calls/react";
 import { CandlestickChart, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { moneyDecimals, Odometer, viewDollars } from "@/components/ui/odometer";
+import { FinishedSlip } from "@/features/receipts/FinishedSlip";
+import { PendingTradeCard } from "@/features/receipts/PendingTradeCard";
 import { cn } from "@/lib/utils";
 import { PositionRow } from "./PositionRow";
 import { usePositionClose } from "./usePositionClose";
@@ -75,7 +79,9 @@ export function PositionsPanel({ className, empty = "card" }: { className?: stri
   const book = useLiveBook();
   const actions = usePositionClose();
   const closingAll = actions.closing.size > 1;
-  if (book.entries.length === 0 && book.parlays === 0) {
+  const runs = useTradeRuns((instrument, id) => book.entries.some((e) => e.kind === instrument && e.id === id));
+  const quiet = runs.pending.length === 0 && runs.finished.length === 0;
+  if (book.entries.length === 0 && book.parlays === 0 && quiet) {
     if (empty === "none") return null;
     return (
       <div className={cn("flex flex-col items-center justify-center gap-3 rounded-2xl bg-secondary p-6", className)}>
@@ -86,12 +92,17 @@ export function PositionsPanel({ className, empty = "card" }: { className?: stri
   }
   return (
     <section aria-label="Open positions" className={cn("flex min-h-0 flex-col gap-2", className)}>
-      <UnrealizedCard
-        totals={book.totals}
-        onCloseAll={() => void actions.closeAll(book.entries)}
-        closingAll={closingAll}
-      />
+      {book.entries.length > 0 ? (
+        <UnrealizedCard
+          totals={book.totals}
+          onCloseAll={() => void actions.closeAll(book.entries)}
+          closingAll={closingAll}
+        />
+      ) : null}
       <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
+        {runs.pending.map((run) => (
+          <PendingTradeCard key={run.key} run={run} />
+        ))}
         {book.entries.map((e) => (
           <PositionRow
             key={e.key}
@@ -107,6 +118,14 @@ export function PositionsPanel({ className, empty = "card" }: { className?: stri
           >
             {book.parlays === 1 ? "1 parlay in play" : `${book.parlays} parlays in play`}
           </Link>
+        ) : null}
+        {runs.finished.length > 0 ? (
+          <>
+            <h3 className="pt-2 text-meta text-text-3">Just finished</h3>
+            {runs.finished.map((run) => (
+              <FinishedSlip key={`${run.instrument}-${run.id}`} run={run} />
+            ))}
+          </>
         ) : null}
       </div>
     </section>

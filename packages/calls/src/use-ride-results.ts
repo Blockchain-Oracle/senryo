@@ -8,6 +8,7 @@ import { useRides } from "@senryo/query";
 import { useEffect, useRef } from "react";
 import { type ResultEffects, realisedCue, signed, usd } from "./result-cue.ts";
 import { tradeResulted, tradeToastId } from "./toast-run.ts";
+import { finishRun } from "./trade-run.ts";
 
 const LIVE = new Set(["committed", "open", "closing"]);
 
@@ -39,6 +40,7 @@ export function useRideResults(owner: `0x${string}` | undefined, effects: Result
       const net = (r.pnl ?? 0n) - r.fees - r.openFee;
       const words = ending(`${r.isLong ? "Up" : "Down"} ${r.symbol} ride`, usd(r.paid));
       const id = tradeToastId.ride(r.rideId);
+      finishRun({ instrument: "ride", id: r.rideId, symbol: r.symbol });
       tradeResulted(id);
       realisedCue(fx, net);
       fx.notify({ title: `${words.title} ${signed(net)}`, description: words.description, symbol: r.symbol, id });

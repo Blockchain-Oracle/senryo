@@ -1,12 +1,14 @@
 /**
  * Tradash's "View position" pill on the phone terminal (R5.3): "View position" / "View N positions" with the total
- * ROI and an arrow by its sign; opens the positions sheet. Nothing while nothing is open.
+ * ROI and an arrow by its sign; opens the positions sheet. A trade on its way, or one that just ended, stands in its
+ * place as a small paper (`CompactTrade`, R5.11). Nothing while nothing is open.
  */
-import { useLiveBook } from "@senryo/calls/react";
+import { useLiveBook, useTradeRuns } from "@senryo/calls/react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import Animated from "react-native-reanimated";
 import { Plunge, Surge } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
+import { CompactTrade } from "~/features/receipts/CompactTrade";
 import { fire } from "~/feedback/fire";
 import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -17,8 +19,12 @@ const PCT_DECIMALS = 1;
 export function ViewPositionPill({ onOpen }: { onOpen: () => void }) {
   const { color } = useTheme();
   const press = usePressScale();
-  const { totals } = useLiveBook();
+  const { totals, entries } = useLiveBook();
   const [hidden] = useHideBalances();
+  const runs = useTradeRuns((instrument, id) => entries.some((e) => e.kind === instrument && e.id === id));
+  const pending = runs.pending[0];
+  const finished = runs.focused ?? undefined;
+  if (pending || finished) return <CompactTrade pending={pending} finished={finished} onOpen={onOpen} />;
   if (totals.count === 0) return null;
   const roi = totals.roiBps;
   const down = roi !== null && roi < 0;
