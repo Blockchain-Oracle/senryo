@@ -1,8 +1,9 @@
 /**
- * The sheets' layer (D-321): one host at the root, above every stack screen — the tab shell and its floating dock
- * included — where a `Sheet` opened inside the shell renders, so its scrim covers the whole screen (the terminal's
- * ticket too) and nothing draws over its panel. A sheet that already lives in a native modal (a `(sheets)/` route, or
- * an RN `Modal`) renders in place: the root layer sits under native modals. `SheetInPlace` marks those.
+ * The sheets' layer (D-321): one host at the root, above every stack screen — the tab shell and its floating dock, and
+ * pushed screens' headers — where every `Sheet` renders, so its scrim covers the whole screen (the terminal's ticket
+ * too) and nothing draws over its panel. A sheet that lives in a native modal (a `(sheets)/` route, or an RN `Modal`)
+ * renders in place, since UIKit presents those above this layer: `SheetInPlace` marks them (`SheetRoute` does it for
+ * the route sheets).
  */
 import { createContext, type ReactNode, useContext, useLayoutEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";

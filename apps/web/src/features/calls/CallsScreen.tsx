@@ -13,6 +13,7 @@ import { useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { OpenParlays } from "@/features/parlay/ParlayList";
 import { useAccount } from "@/lib/account/provider";
 import { tapFeedback } from "@/lib/feedback";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
@@ -92,6 +93,7 @@ export function CallsScreen() {
   return (
     <div className="flex flex-col gap-5">
       <Record owner={owner} hidden={hidden} />
+      <OpenParlays owner={owner} />
       <SegmentedControl
         options={CALL_FILTERS}
         label="Show calls"

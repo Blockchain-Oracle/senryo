@@ -63,6 +63,7 @@ export const ANDROID_CODEPOINTS = {
   redeem: 0xe8b1,
   remove: 0xe15b,
   restaurant: 0xe56c,
+  schedule: 0xe8b5,
   screen_rotation: 0xe1c1,
   search: 0xe8b6,
   send: 0xe163,

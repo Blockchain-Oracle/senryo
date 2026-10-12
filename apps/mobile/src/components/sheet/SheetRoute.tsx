@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SHEET_SHAPE, SPACE, TYPE, useTheme } from "~/theme";
 import { Sheet } from "./Sheet";
+import { SheetInPlace } from "./SheetHost";
 
 /**
  * A sheet's heading (Fomo F20/F36): the title centred under the handle, one centred sentence under it. No close
@@ -20,13 +21,16 @@ export function SheetHeading({ title, body }: { title: string; body?: string }) 
   );
 }
 
-/** A sheet route (transparent modal) with the standard heading; `router.back()` once it has slid away. */
+/** A sheet route (a native transparent modal, so the sheet renders in place) with the standard heading; `router.back()`
+ * once it has slid away. */
 export function SheetRoute({ title, body, children }: { title: string; body?: string; children?: ReactNode }) {
   return (
-    <Sheet onClose={() => router.back()} closeLabel={`Close ${title}`}>
-      <SheetHeading title={title} {...(body ? { body } : {})} />
-      {children ? <View style={styles.rows}>{children}</View> : null}
-    </Sheet>
+    <SheetInPlace>
+      <Sheet onClose={() => router.back()} closeLabel={`Close ${title}`}>
+        <SheetHeading title={title} {...(body ? { body } : {})} />
+        {children ? <View style={styles.rows}>{children}</View> : null}
+      </Sheet>
+    </SheetInPlace>
   );
 }
 

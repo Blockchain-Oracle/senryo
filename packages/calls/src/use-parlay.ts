@@ -1,14 +1,14 @@
 /**
- * The parlay builder, both apps (S8.5, D-293): 2–4 picks on the windows trading now; each leg's live chance from its
- * window's line and the latest price, recomputed once a second (a slip, not a chart); the joint chance and payout as
- * the chain prices them (`quoteParlay`); and placing it — one-tap or one Face ID, relayed gas-free, its status pushed
- * on the stream as an intent. The platform supplies the effects (feedback, notices, the sign-in prompt).
+ * The parlay builder, both apps (S8.5, D-293): 2–4 picks on the windows trading now; each leg's live chance
+ * (`useLegPrices`, once a second — a slip, not a chart); the joint chance and payout as the chain prices them
+ * (`quoteParlay`); and placing it — one-tap or one Face ID, relayed gas-free, its status pushed on the stream as an
+ * intent. The platform supplies the effects (feedback, notices, the sign-in prompt).
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
-import { type IntentStatus, printRoute } from "@senryo/api-client";
-import { type CadenceSec, FILL_DELAY_SEC, H50_E6, MARKETS, PARLAY, quoteCurve } from "@senryo/config";
-import { probE6, quoteParlay, withTolerance } from "@senryo/core";
-import { useLive, useServerSeconds } from "@senryo/live/react";
+import type { IntentStatus } from "@senryo/api-client";
+import { type CadenceSec, H50_E6, PARLAY, quoteCurve } from "@senryo/config";
+import { quoteParlay, withTolerance } from "@senryo/core";
+import { useLive } from "@senryo/live/react";
 import {
   useCatalog,
   useIntentStatus,
@@ -17,59 +17,28 @@ import {
   useRefreshCaller,
   useSubmitParlay,
 } from "@senryo/query";
-import { useQueries } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPTS, TOLERANCE_BPS } from "./constants.ts";
-import { PARLAY_SIDES, type ParlayPick } from "./parlay.ts";
-import { fillMark } from "./sigma.ts";
+import type { ParlayPick } from "./parlay.ts";
 import type { SignDeps } from "./sign.ts";
-import { windowFor } from "./window.ts";
+import { type LegPrice, useLegPrices } from "./use-leg-prices.ts";
 
 const signing = () => Promise.all([import("./sign.ts"), import("./delegates.ts")]);
-const PRINT_RETRIES = 10;
-const PRINT_RETRY_MS = 1_000;
 const SETTLED = new Set(["filled", "refused", "failed"]);
 
 export function useParlayQuote(picks: readonly ParlayPick[], stake: bigint) {
-  const now = useServerSeconds();
-  const live = useLive();
-  const { api } = useQueryEnv();
   const catalog = useCatalog();
-  const windows = picks.map((p) => windowFor(p.symbol, p.cadenceSec, now));
-  const archived = useQueries({
-    queries: windows.map((w) => ({
-      queryKey: ["prices", "print", w.symbol, w.start],
-      queryFn: async () => BigInt((await api.call(printRoute, { query: { symbol: w.symbol, t: w.start } })).priceE8),
-      enabled: now > w.start && !live.prints.at(w.symbol, w.start),
-      staleTime: Number.POSITIVE_INFINITY,
-      retry: PRINT_RETRIES,
-      retryDelay: PRINT_RETRY_MS,
-    })),
-  });
-  const markets = "value" in catalog ? catalog.value.markets : [];
+  const priced = useLegPrices(picks.map((p) => ({ symbol: p.symbol, cadenceSec: p.cadenceSec })));
+  const now = priced.now;
   const legs = picks.map((p, i) => {
-    const w = windows[i] ?? windowFor(p.symbol, p.cadenceSec, now);
-    const k = live.prints.at(w.symbol, w.start)?.priceE8 ?? archived[i]?.data;
-    const series = markets.find((m) => m.symbol === p.symbol)?.series.find((s) => s.cadenceSec === p.cadenceSec);
-    const spot = live.prices.latest(p.symbol)?.priceE8;
-    const tau = BigInt(Math.max(0, w.expiry - (now + FILL_DELAY_SEC)));
-    const mark = series ? fillMark(live.sigma, p.symbol, series, now) : undefined;
-    const chanceOf = (index: number) => {
-      const band = series?.bands[index];
-      return k !== undefined && spot !== undefined && band && mark
-        ? probE6(band, k, BigInt(Math.round(spot)), mark.fastE8, mark.slowE8, tau)
-        : null;
-    };
-    const group = MARKETS.find((m) => m.symbol === p.symbol)?.calendarId ?? 0;
-    /** Each side's chance (Up, Down) for the slip's odds buttons; `probE6` is the picked side's. */
-    const sides = PARLAY_SIDES.map((side) => chanceOf(side.band));
-    return { pick: p, window: w, k, probE6: chanceOf(p.band), sides, group };
+    const l = priced.legs[i] as LegPrice;
+    return { pick: p, window: l.window, k: l.k, probE6: l.sides[p.band] ?? null, sides: l.sides, group: l.group };
   });
   const terms = "value" in catalog ? catalog.value.terms : undefined;
-  const priced = legs.every((l) => l.probE6 !== null);
+  const allPriced = legs.every((l) => l.probE6 !== null);
   const quote =
-    terms && priced && legs.length >= PARLAY.minLegs
+    terms && allPriced && legs.length >= PARLAY.minLegs
       ? quoteParlay(
           legs.map((l) => ({ probE6: l.probE6 ?? 0n, group: l.group })),
           stake,
@@ -78,7 +47,7 @@ export function useParlayQuote(picks: readonly ParlayPick[], stake: bigint) {
           PARLAY.correlationBps,
         )
       : null;
-  return { now, legs, quote, trading: windows.every((w) => w.trading) };
+  return { now, legs, quote, trading: legs.every((l) => l.window.trading) };
 }
 
 export type ParlayQuoteView = ReturnType<typeof useParlayQuote>;

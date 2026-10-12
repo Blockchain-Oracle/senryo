@@ -13,7 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scheduleOnRN } from "react-native-worklets";
 import { SurfaceLevel } from "~/components/kit/Surface";
-import { SHEET_HOLD, useDock, useInShell } from "~/components/shell/dock-context";
+import { SHEET_HOLD, useDock } from "~/components/shell/dock-context";
 import { fire } from "~/feedback/fire";
 import { EASE, EASE_SHEET, ELEVATION, HAIRLINE_PX, RADIUS, SHEET_SHAPE, SIZE, SPRING, TIMING, useTheme } from "~/theme";
 import { SHEET } from "./constants";
@@ -51,13 +51,12 @@ interface SheetProps {
 }
 
 /**
- * Edge-attached reference sheet: rounded top, dimmed parent and keyboard-aware scrolling. Inside the tab shell it renders
- * in the root sheet layer (above the dock, D-321) and holds the dock hidden until it has slid away; in a native modal it
- * renders in place. Reduced Motion fades instead of travelling.
+ * Edge-attached reference sheet: rounded top, dimmed parent and keyboard-aware scrolling. It renders in the root sheet
+ * layer (above the tab shell, its dock and any header, D-321) and holds the dock hidden until it has slid away; in a
+ * native modal (`SheetInPlace`) it renders in place. Reduced Motion fades instead of travelling.
  */
 export function Sheet(props: SheetProps) {
   const id = useId();
-  const inShell = useInShell();
   const inPlace = useSheetInPlace();
   const { hide, show } = useDock();
   useEffect(() => {
@@ -66,8 +65,7 @@ export function Sheet(props: SheetProps) {
     return () => show(key);
   }, [hide, show, id]);
   const panel = <SheetPanel {...props} />;
-  if (!inShell || inPlace) return panel;
-  return <SheetPortal id={id}>{panel}</SheetPortal>;
+  return inPlace ? panel : <SheetPortal id={id}>{panel}</SheetPortal>;
 }
 
 function SheetPanel({

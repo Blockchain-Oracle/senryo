@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Platform, Text } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetInPlace } from "~/components/sheet/SheetHost";
 import { AuthCard } from "~/features/auth/AuthCard";
 import { fire } from "~/feedback/fire";
 import { type StepUpRequest, useStepUpRequest } from "~/lib/account/step-up";
@@ -90,8 +91,10 @@ function Body({ request }: { request: StepUpRequest | undefined }) {
 export default function StepUpSheet() {
   const request = useStepUpRequest();
   return (
-    <Sheet onClose={() => router.back()} closeLabel="Close confirmation">
-      <Body request={request} />
-    </Sheet>
+    <SheetInPlace>
+      <Sheet onClose={() => router.back()} closeLabel="Close confirmation">
+        <Body request={request} />
+      </Sheet>
+    </SheetInPlace>
   );
 }

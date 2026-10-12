@@ -100,6 +100,7 @@ export const BellPlus = symbol({ ios: "bell.badge", android: "notification_add" 
 export const CalendarDays = symbol({ ios: "calendar", android: "calendar_month" }, "CalendarDays");
 export const ChartCandlestick = symbol({ ios: "chart.bar.xaxis", android: "candlestick_chart" }, "ChartCandlestick");
 export const Check = symbol({ ios: "checkmark", android: "check" }, "Check");
+export const Clock = symbol({ ios: "clock", android: "schedule" }, "Clock");
 export const ChevronDown = symbol({ ios: "chevron.down", android: "expand_more" }, "ChevronDown");
 export const ChevronLeft = symbol({ ios: "chevron.left", android: "chevron_left" }, "ChevronLeft");
 export const ChevronRight = symbol({ ios: "chevron.right", android: "chevron_right" }, "ChevronRight");

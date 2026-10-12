@@ -18,6 +18,7 @@ import { Segmented } from "~/components/kit/Segmented";
 import { EmptyState, LoadingState } from "~/components/kit/states";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
+import { OpenParlays } from "~/features/parlay/ParlayList";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
@@ -110,6 +111,7 @@ export function CallsScreen() {
       ) : (
         <View style={styles.body}>
           <Record owner={owner} />
+          <OpenParlays owner={owner} />
           <Segmented options={CALL_FILTERS} value={filter} onChange={setFilter} label="Show calls" />
           {rows.length === 0 ? (
             <Text style={[TYPE.caption, styles.none, { color: color.inkMuted }]}>None here yet.</Text>
