@@ -6,13 +6,15 @@
 import { LIST_DETENTS } from "~/components/sheet/constants";
 import { Sheet } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
+import { useTheme } from "~/theme";
 import { PositionsList } from "./PositionsList";
 
 export function PositionsSheet({ onClose }: { onClose: () => void }) {
+  const { color } = useTheme();
   return (
     <Sheet onClose={onClose} closeLabel="Close open positions" detents={LIST_DETENTS}>
       <SheetHeading title="Open positions" />
-      <PositionsList />
+      <PositionsList ground={color.popover} />
     </Sheet>
   );
 }

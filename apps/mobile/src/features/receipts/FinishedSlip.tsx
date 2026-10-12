@@ -14,13 +14,13 @@ import { TradeSlip } from "./TradeSlip";
 /** A result this fresh presses its stamp as it appears; older ones show it at rest. */
 const FRESH_MS = 4_000;
 
-export function FinishedSlip({ run }: { run: FinishedTrade }) {
+export function FinishedSlip({ run, ground }: { run: FinishedTrade; ground?: string | undefined }) {
   const slip = useFinishedSlip(run);
   const [fresh] = useState(() => Date.now() - run.at < FRESH_MS);
   if (!slip) return null;
   return (
     <View style={styles.wrap}>
-      <TradeSlip slip={slip} press={fresh && !slip.live} />
+      <TradeSlip slip={slip} press={fresh && !slip.live} ground={ground} />
       <View style={styles.actions}>
         <Button
           label="Receipt"

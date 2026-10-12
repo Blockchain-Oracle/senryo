@@ -14,6 +14,11 @@ import { ELEVATION, FONT, KINPAKU, NUMERIC_VARIANT, RECEIPT, SLIP, SPACE } from 
 
 const MARK = 28;
 const CHIP_PAD = 6;
+const PENDING_WORD: Record<PendingTrade["stage"], string> = {
+  signing: "Signing…",
+  pending: "Waiting for the fill",
+  booked: "Booked",
+};
 
 export function CompactTrade({
   pending,
@@ -30,9 +35,7 @@ export function CompactTrade({
   if (!symbol) return null;
   const title = pending?.title ?? slip?.title ?? "";
   const line = pending
-    ? pending.stage === "signing"
-      ? "Signing…"
-      : "Waiting for the fill"
+    ? PENDING_WORD[pending.stage]
     : slip
       ? `${slip.figure.label} ${hidden ? HIDDEN_AMOUNT : slip.figure.text}`
       : "";
@@ -59,7 +62,7 @@ export function CompactTrade({
           {title}
         </Text>
         <View style={styles.line}>
-          {pending ? <ActivityIndicator size="small" color={RECEIPT.ink} /> : null}
+          {pending && pending.stage !== "booked" ? <ActivityIndicator size="small" color={RECEIPT.ink} /> : null}
           <Text style={[styles.lineText, { color: tone }]}>{line}</Text>
         </View>
       </View>

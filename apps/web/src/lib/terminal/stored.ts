@@ -18,6 +18,8 @@ export const TERMINAL_STORAGE = {
   callTrail: "senryo.terminal.call-trail.v1",
   favourites: "senryo.favourite-markets.v1",
   recents: "senryo.recent-markets.v1",
+  /** The terminal's tour was seen on this device (R5.15). */
+  tour: "senryo.terminal.tour.v1",
 } as const;
 
 const listeners = new Set<() => void>();

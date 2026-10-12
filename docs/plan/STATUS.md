@@ -142,8 +142,16 @@ Next: R5 — the live loop (below).
 - **R4 rows closed meanwhile:** rides 12/13 ran to their 4 h end at 19:58 UTC and settled within 30 s (no knock-out:
   BTC moved ≈ 0.2 %); BUF @ FLA decided Yes at 19:38:59 UTC. The knock-out row stays open on rides 16/17 (40× pair,
   owner `0x8Be3…9A9a`, until ≈ 00:33 UTC).
-- **Next in R5:** C the moments (R5.8 calls, R5.10–R5.14), D feel (R5.15, R5.17, R5.24), E after the trade
-  (R5.19–R5.22).
+- **C — the moments (built 12 Oct 23:30 UTC; web live, phone sim pass + OTA next):** one toast per trade from
+  "Opening…" to "Realized +$x" with the market's mark, win/loss by the realised sign, rides' endings as results
+  (D-327); the device journal of signed trades with recovery that only reads (D-328; the old operation journal
+  deleted); hide balances everywhere incl. toasts, the chart's PnL and share (D-329); a Practice guest trades on a
+  device key with no sign-in, its dollars following the passkey later (D-330, verified live: ticket 1019 placed and
+  won as a guest; the sweep's transfer moved gas-free); the trade slip — calls and rides on white paper with a Kinpaku
+  stamp, Share / Save image, ride receipts with `GET /v1/rides/:rideId` and migration 0031 (D-331, Codex direction
+  12) — and the trade in place from tap to result (pending paper, compact card, "Just finished"). api + keeper
+  `sha-17a3f2f`, web `sha-17a3f2f` → `9f3286d` deploying.
+- **Next in R5:** C's phone sim pass and OTA, then D feel (R5.15, R5.17, R5.24), E after the trade (R5.19–R5.22).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

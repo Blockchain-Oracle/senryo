@@ -118,8 +118,11 @@ and the morph on top of them.*
     ticket 1019 settled a win ($6.50). The sweep's transfer (the guest's whole $1,001.50, signed by the key, relayed by
     `/v1/money/withdraw`) moved gas-free on testnet. Sign-up → sweep in the app waits for a passkey on the device (the
     owner's walk); the phone waits for area C's sim pass.
-- [ ] R5.11 Pending entry drawn at the tap. *(Toast run, "Opening…" chart entry: built `9a5ec39`/`ef04e84`, verified on
-  the web; the slip is next — D-331, research 12.)*
+- [ ] R5.11 Pending entry drawn at the tap. *(Toast run, "Opening…" chart entry: `9a5ec39`/`ef04e84`, verified on the
+  web. The slip (D-331, research 12): `17a3f2f` — the call slip and its 1080-px image checked on the local web; ride
+  receipts live (`GET /v1/rides/16` reads `marginOpen`, `lastTx`). The trade in place: `9f3286d`. The compact card is
+  ~60 pt, not Codex's 144 pt: it stands where the pill was, over the action buttons, for a few seconds at a time.
+  Ticks once the in-place run and the phone are seen.)*
   - One toast id carries the whole run: "Opening…" → "Up BTC opened" → "Cashing out…" → "Realized +$x", with the market
     mark.
   - The pending card becomes the receipt slip in place (stamp from the Kinpaku materials, folio, proof link, PNG

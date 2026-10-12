@@ -15,6 +15,7 @@ import { ResultHost } from "./ResultHost";
 import { Splash } from "./Splash";
 import { ToasterHost } from "./ToasterHost";
 import { TopLine } from "./TopLine";
+import { TourHost } from "./TourHost";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -41,6 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <DrawerHost />
         <LiveHost />
         <ResultHost />
+        <TourHost />
         <ConfettiHost />
         <ToasterHost />
         <AppUpdateHost />

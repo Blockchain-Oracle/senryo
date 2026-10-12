@@ -90,7 +90,8 @@ function Unrealized({
   );
 }
 
-export function PositionsList({ empty = "card" }: { empty?: "card" | "none" }) {
+/** `ground`: the surface the list sits on (a sheet's popover), for the slips' perforations. */
+export function PositionsList({ empty = "card", ground }: { empty?: "card" | "none"; ground?: string }) {
   const { color } = useTheme();
   const book = useLiveBook();
   const actions = usePositionClose();
@@ -147,7 +148,7 @@ export function PositionsList({ empty = "card" }: { empty?: "card" | "none" }) {
         <>
           <Text style={[TYPE.rowDetail, { color: color.text3 }]}>Just finished</Text>
           {runs.finished.map((run) => (
-            <FinishedSlip key={`${run.instrument}-${run.id}`} run={run} />
+            <FinishedSlip key={`${run.instrument}-${run.id}`} run={run} ground={ground} />
           ))}
         </>
       ) : null}

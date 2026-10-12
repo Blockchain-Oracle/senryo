@@ -43,10 +43,11 @@ function Perforation({ notch }: { notch: string | null }) {
   );
 }
 
-export const TradeSlip = forwardRef<View, { slip: Slip; press?: boolean; exporting?: boolean }>(function TradeSlip(
-  { slip: raw, press = false, exporting = false },
-  ref,
-) {
+/** `ground`: the surface the slip sits on (the perforation's notches are cut in its colour; the page's by default). */
+export const TradeSlip = forwardRef<
+  View,
+  { slip: Slip; press?: boolean; exporting?: boolean; ground?: string | undefined }
+>(function TradeSlip({ slip: raw, press = false, exporting = false, ground }, ref) {
   const { color } = useTheme();
   const [hidden] = useHideBalances();
   const slip = hidden ? maskedSlip(raw, HIDDEN_AMOUNT) : raw;
@@ -86,7 +87,7 @@ export const TradeSlip = forwardRef<View, { slip: Slip; press?: boolean; exporti
           ))}
         </View>
       </View>
-      <Perforation notch={exporting ? null : color.ground} />
+      <Perforation notch={exporting ? null : (ground ?? color.ground)} />
       <View style={styles.stub}>
         <View style={[styles.flex, styles.stubWords]}>
           <Text style={styles.muted}>{slip.mode}</Text>

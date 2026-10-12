@@ -5,7 +5,7 @@
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { shortAddress } from "@senryo/core";
-import { Lock, LogOut } from "lucide-react";
+import { GraduationCap, Lock, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { SignInPrompt } from "@/components/auth/sign-in-prompt";
@@ -17,7 +17,9 @@ import { useAccount } from "@/lib/account/provider";
 import { useChip } from "@/lib/account/use-chip";
 import { fire, setFeedback, useFeedback } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
+import { closeDrawer } from "@/lib/shell/drawer-param";
 import { setPrivacy, usePrivacy } from "@/lib/shell/privacy";
+import { openTour } from "@/lib/terminal/tour";
 import { cn } from "@/lib/utils";
 import { RecoveryGroup } from "./RecoveryGroup";
 import type { DrawerProps } from "./types";
@@ -167,6 +169,19 @@ export function SettingsDrawer({ open, onOpenChange }: DrawerProps) {
         <Group title="Display">
           <Toggle label="Hide balances" detail="Amounts read ••••" on={hidden} onChange={setPrivacy} />
           <Toggle label="Light theme" on={resolvedTheme === "light"} onChange={(v) => setTheme(v ? "light" : "dark")} />
+        </Group>
+        <Group title="Help">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              fire("press", { cue: "tap" });
+              closeDrawer();
+              openTour();
+            }}
+          >
+            <GraduationCap aria-hidden />
+            How the terminal works
+          </Button>
         </Group>
         {address ? (
           <Group title="Account">

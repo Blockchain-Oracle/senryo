@@ -155,7 +155,8 @@ export function TerminalTop({
 }
 
 const styles = StyleSheet.create({
-  day: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
+  // The 24 h group yields its room to the equity (a four-digit balance must never run off the edge).
+  day: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, flexShrink: 1, minWidth: 0, overflow: "hidden" },
   wrap: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   asset: {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     minHeight: SIZE.touch,
     borderRadius: SIZE.touch / 2,
   },
-  balance: { width: BALANCE_WIDTH },
+  balance: { width: BALANCE_WIDTH, flexShrink: 0 },
   lanes: { flexDirection: "row", gap: SPACE.sm },
   life: { minHeight: SIZE.touch - SPACE.sm, textAlignVertical: "center", paddingTop: SPACE.xs },
   lane: {

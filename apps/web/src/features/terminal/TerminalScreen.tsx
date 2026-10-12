@@ -18,11 +18,12 @@ import {
   usePriceHealth,
 } from "@senryo/calls/react";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { PositionsPanel } from "@/features/positions/PositionsPanel";
 import { guestSession, useAppTrader } from "@/lib/account/guest";
 import { notify } from "@/lib/notify";
+import { openTour, useTourSeen } from "@/lib/terminal/tour";
 import { tradeToast } from "@/lib/trade-toast";
 import { ActionPanel } from "./ActionPanel";
 import { BasketMembers } from "./BasketMembers";
@@ -47,6 +48,11 @@ import "./positions.css";
 import "./reactions.css";
 
 export function TerminalScreen({ symbol }: { symbol: string }) {
+  // The first terminal visit on this device opens the tour (R5.15).
+  const [toured] = useTourSeen();
+  useEffect(() => {
+    if (!toured) openTour();
+  }, [toured]);
   // The passkey account, else on Practice the guest's device key (R5.10).
   const trader = useAppTrader();
   const account = trader.caller;

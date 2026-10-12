@@ -15,6 +15,11 @@ import { cn } from "@/lib/utils";
 import "./receipts.css";
 
 const MARK = 28;
+const PENDING_WORD: Record<PendingTrade["stage"], string> = {
+  signing: "Signing…",
+  pending: "Waiting for the fill",
+  booked: "Booked",
+};
 
 export function CompactTrade({
   pending,
@@ -31,9 +36,7 @@ export function CompactTrade({
   if (!symbol) return null;
   const title = pending?.title ?? slip?.title ?? "";
   const line = pending
-    ? pending.stage === "signing"
-      ? "Signing…"
-      : "Waiting for the fill"
+    ? PENDING_WORD[pending.stage]
     : slip
       ? `${slip.figure.label} ${hidden ? HIDDEN_AMOUNT : slip.figure.text}`
       : "";
@@ -57,7 +60,9 @@ export function CompactTrade({
             !pending && slip?.figure.tone === "down" && "is-down",
           )}
         >
-          {pending ? <LoaderCircle aria-hidden className="size-3.5 animate-spin" /> : null}
+          {pending && pending.stage !== "booked" ? (
+            <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
+          ) : null}
           {line}
         </span>
       </span>
