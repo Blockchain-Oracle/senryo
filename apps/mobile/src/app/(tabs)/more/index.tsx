@@ -22,7 +22,7 @@ import { CompactAvatar, ProfileHeader } from "~/features/profile/ProfileHeader";
 import { QuietState } from "~/features/profile/QuietState";
 import { SettingsRow } from "~/features/profile/SettingsRow";
 import { useAccount } from "~/lib/account/provider";
-import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
+import { ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, useTheme } from "~/theme";
 
 const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
@@ -67,11 +67,11 @@ export default function More() {
       {guest ? (
         <View style={styles.page}>
           <QuietState
-            line="Create an account to have a profile"
+            line="Your profile starts with your first call"
             action={{
-              label: "Create account",
+              label: "Make a call",
               variant: "primary",
-              onPress: () => router.push(accountRequiredRoute("make a call")),
+              onPress: () => router.navigate("/trade"),
             }}
           />
           <View>
