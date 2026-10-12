@@ -44,7 +44,8 @@ export function EventDetail() {
   const now = useServerSeconds();
   const detail = useEventDetail(valid ? id : null);
   const flow = useEventsFlow(account, {
-    cue: (c) => (c === "filled" ? fire("filled", { cue: "open" }) : fire(c)),
+    cue: (c) =>
+      c === "filled" ? fire("filled", { cue: "eventLock" }) : c === "fail" ? fire("fail", { cue: "error" }) : fire(c),
     notify: (n) => notify({ ...n, tone: "warning" }),
     needAccount: () =>
       notify({

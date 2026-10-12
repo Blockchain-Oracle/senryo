@@ -14,7 +14,11 @@ import { SIZE } from "~/theme";
 export function ResultHost() {
   useResults(useAccount(), {
     cue: (c) =>
-      c === "win" ? fire("win", { cue: "win" }) : c === "loss" ? fire("loss", { cue: "loss" }) : fire("confirm"),
+      c === "win"
+        ? fire("win", { cue: "win" })
+        : c === "loss"
+          ? fire("loss", { cue: "loss" })
+          : fire("confirm", { cue: "refund" }),
     celebrate,
     notify: ({ symbol, ...n }) =>
       notify({ ...n, icon: <EntityMark id={marketId(symbol)} size={SIZE.markInline} decorative /> }),

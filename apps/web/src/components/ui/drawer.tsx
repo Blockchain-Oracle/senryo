@@ -7,6 +7,7 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { type ReactNode, type PointerEvent as ReactPointerEvent, useRef } from "react";
+import { useSheetCues } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
 
 /** A swipe closes past this share of the drawer's width, or faster than this (px per ms). */
@@ -82,6 +83,7 @@ export function SlideOver({
   children,
 }: SlideOverProps) {
   const swipe = useSwipeClose(() => onOpenChange(false));
+  useSheetCues(open);
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>

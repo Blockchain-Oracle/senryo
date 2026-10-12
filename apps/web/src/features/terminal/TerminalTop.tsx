@@ -14,6 +14,7 @@ import { fire, tapFeedback } from "@/lib/feedback";
 import { money } from "@/lib/format";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { CountdownRing } from "./CountdownRing";
+import { MusicToggle } from "./MusicToggle";
 
 const MARK = 28;
 
@@ -49,6 +50,7 @@ export function TerminalTop({
           <span className="terminal-asset-name">{t.market?.name}</span>
           <ChevronDown aria-hidden className="terminal-asset-chevron" />
         </button>
+        <MusicToggle />
         {t.balance !== undefined ? (
           <span className="terminal-balance tnum">
             <span className="sr-only">Balance </span>

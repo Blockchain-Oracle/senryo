@@ -1,9 +1,11 @@
 /**
- * The WAV container for the terminal cues (gen-trade-sounds.mjs). The cues themselves — voices, mix, ladder — are
- * `@senryo/tokens` `sound.ts`, shared with the web's live synth.
+ * The WAV container for every rendered sound (gen-sounds.mjs). The sounds themselves — voices, mix, ladders, songs —
+ * are `@senryo/tokens` `sound.ts` and `music.ts`, shared with the web's live synth.
  */
 
 export const RATE = 44_100;
+/** Music renders at half rate: a chiptune's hats sit under 11 kHz, and the loops weigh half as much in the update. */
+export const MUSIC_RATE = 22_050;
 export const TAIL_S = 0.02;
 export const PCM_MAX = 32_767;
 export const HEADROOM = 0.9;

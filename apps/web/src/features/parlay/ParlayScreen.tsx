@@ -22,7 +22,8 @@ export function ParlayScreen() {
   const catalog = useCatalog();
   const [stake, setStake] = useState(DEFAULT_STAKE);
   const flow = useParlayFlow(account, {
-    cue: (c) => (c === "filled" ? fire("filled", { cue: "open" }) : fire(c)),
+    cue: (c) =>
+      c === "filled" ? fire("filled", { cue: "open" }) : c === "fail" ? fire("fail", { cue: "error" }) : fire(c),
     notify: (n) => notify({ ...n, tone: "warning" }),
     needAccount: () =>
       notify({

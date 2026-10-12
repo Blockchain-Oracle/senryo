@@ -1,11 +1,12 @@
 /**
  * Markets (S7.3): every market on this network in its kind groups, with a search and the kind filter (the Calls
- * filter's `Segmented`); each row is the real mark, name, the 1-minute window's countdown while it trades or its
- * session in words while it doesn't (`@senryo/calls` `marketLine`), and the live price — the last print, muted, when
- * closed. Tapping one opens the terminal there. Prices render at most once a frame (lists, not the terminal).
+ * filter's `Segmented`); each row (F7, research 10 §2) is the real mark, name, the 1-minute window's countdown while it
+ * trades or its session in words while it doesn't (`@senryo/calls` `marketLine`), the day's sparkline against the
+ * price 24 hours ago (D-319), the live price — the last print, muted, when closed — with its 24 h change, and a
+ * chevron. Tapping one opens the terminal there. Prices render at most once a frame; the graph and change once a second.
  */
 import { groupMarkets, MARKET_FILTERS, type MarketFilter, unitOf } from "@senryo/calls";
-import { useMarketLine } from "@senryo/calls/react";
+import { useDayLine, useMarketLine } from "@senryo/calls/react";
 import { marketId } from "@senryo/identity";
 import { useLivePrice } from "@senryo/live/react";
 import { useCatalog } from "@senryo/query";
@@ -14,9 +15,11 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { ChangeChip } from "~/components/kit/ChangeChip";
 import { Segmented } from "~/components/kit/Segmented";
+import { Sparkline } from "~/components/kit/Sparkline";
 import { EmptyState, LoadingState } from "~/components/kit/states";
-import { Search } from "~/components/kit/symbols";
+import { ChevronRight, Search } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
 import { fire } from "~/feedback/fire";
@@ -32,6 +35,7 @@ export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: stri
   const { color } = useTheme();
   const price = useLivePrice(symbol);
   const line = useMarketLine(symbol);
+  const day = useDayLine(symbol);
   const points = unitOf(symbol) === "points";
   const text = price ? formatValue(price / E8, priceDecimals(price / E8), points) : undefined;
   return (
@@ -48,7 +52,12 @@ export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: stri
           {name} · {line.text}
         </Text>
       </View>
-      <Text style={[TYPE.rowTitle, { color: line.trading ? color.ink : color.inkMuted }]}>{text ?? "—"}</Text>
+      {day ? <Sparkline symbol={symbol} day={day} /> : null}
+      <View style={styles.figures}>
+        <Text style={[TYPE.rowTitle, { color: line.trading ? color.ink : color.inkMuted }]}>{text ?? "—"}</Text>
+        {day ? <ChangeChip symbol={symbol} day={day} /> : null}
+      </View>
+      <ChevronRight size={SIZE.iconSm} color={color.inkMuted} />
     </Pressable>
   );
 }
@@ -116,8 +125,9 @@ export function MarketsScreen() {
 
 const styles = StyleSheet.create({
   page: { gap: SPACE.md },
-  row: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: SIZE.touch + SPACE.xl },
+  row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, minHeight: SIZE.touch + SPACE.xl + SPACE.xs },
   text: { flex: 1 },
+  figures: { alignItems: "flex-end", gap: SPACE.xxs },
   heading: { paddingTop: SPACE.sm, paddingBottom: SPACE.xs },
   search: {
     flexDirection: "row",

@@ -58,7 +58,7 @@ export function Segmented<T extends string>({
             accessibilityState={{ selected }}
             onPress={() => {
               if (selected) return;
-              fire("tick");
+              fire("tick", { cue: "toggle" });
               onChange(o.value);
             }}
             style={styles.cell}

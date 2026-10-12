@@ -135,3 +135,4 @@
 | V12 | Game cards show the game (16:9 art, Play, best, live players) | R7.7 | — |
 | V13 | Duel has a queue, a versus entrance, swipe cards with stakes and a result moment | R7.8 | — |
 | V14 | Events read as a scoreboard with crests, team colours and a settlement moment | R7.9 | — |
+| V15 | Value first, passkey only to sign: no account walls; the first commitment's sheet signs and completes it | F14 | — |

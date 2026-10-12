@@ -8,12 +8,14 @@
 
 import { ReactionEngine } from "@senryo/calls";
 import { type RefObject, useEffect, useRef } from "react";
-import { fire } from "~/feedback/fire";
+import { fire, musicTense } from "~/feedback/fire";
 import type { ReactionOverlayHandle } from "./ReactionOverlay";
 import type { QuoteTick } from "./useLiveQuote";
 
 const LADDER_TOP = 10;
 const ADVERSE_FROM = 2;
+/** The tense twin engages at a 5 % loss (ROI in basis points, research 01 §1.8). */
+const TENSE_ROI_BPS = -500;
 
 export function useReactions(
   symbol: string,
@@ -21,19 +23,25 @@ export function useReactions(
   overlay: RefObject<ReactionOverlayHandle | null>,
 ) {
   const engine = useRef(new ReactionEngine());
+  const tense = useRef(false);
   useEffect(() => {
     engine.current.reset();
   }, [symbol]);
   useEffect(
     () =>
       onTick((tick) => {
+        const down = tick.position !== null && tick.position.pnl <= TENSE_ROI_BPS;
+        if (down !== tense.current) {
+          tense.current = down;
+          musicTense(down);
+        }
         for (const r of engine.current.feed(tick)) {
           if (r.kind === "step") {
             if (r.favorable) fire("move", { profit: Math.min(LADDER_TOP, r.count - 1) });
             else if (r.count >= ADVERSE_FROM) fire("move", { cue: "adverse" });
           } else if (r.kind === "surge") {
-            if (r.favorable) fire("snap", { cue: r.mega ? "mega" : "surge" });
-            else fire("warn", { cue: "slump" });
+            if (r.favorable) fire(r.mega ? "mega" : "surge", { cue: r.mega ? "mega" : "surge" });
+            else fire("slump", { cue: "slump" });
             overlay.current?.flash(r.favorable, r.mega);
           } else {
             if (r.tone === "warn") fire("warn");

@@ -21,7 +21,8 @@ export function EventsScreen() {
   const account = useAccount();
   const now = useServerSeconds();
   const flow = useEventsFlow(account, {
-    cue: (c) => (c === "filled" ? fire("filled", { cue: "open" }) : fire(c)),
+    cue: (c) =>
+      c === "filled" ? fire("filled", { cue: "eventLock" }) : c === "fail" ? fire("fail", { cue: "error" }) : fire(c),
     notify: (n) => notify({ ...n, tone: "warning" }),
     needAccount: () =>
       notify({

@@ -194,7 +194,7 @@ function OpenPanel({
           options={CALL_MODES}
           value={mode}
           onChange={(m) => {
-            fire("tick");
+            fire("tick", { cue: "toggle" });
             onMode(m);
           }}
           label="Way to call"
@@ -209,7 +209,7 @@ function OpenPanel({
               <Pressable
                 key={usd}
                 onPress={() => {
-                  fire("tick");
+                  fire("tick", { cue: "tap" });
                   onStake(value);
                 }}
                 accessibilityRole="radio"
@@ -223,7 +223,7 @@ function OpenPanel({
           })}
           <Pressable
             onPress={() => {
-              fire("tick");
+              fire("tick", { cue: "tap" });
               onCustom();
             }}
             accessibilityRole="button"
@@ -243,7 +243,7 @@ function OpenPanel({
           {balance !== undefined ? (
             <Pressable
               onPress={() => {
-                fire("tick");
+                fire("tick", { cue: "tap" });
                 onStake(balance);
               }}
               accessibilityRole="radio"

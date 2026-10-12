@@ -43,7 +43,14 @@ export function LuckyScreen() {
   const [spinId, setSpinId] = useState(0);
   const [landed, setLanded] = useState(0);
   const flow = useLuckyFlow(account, {
-    cue: (c) => (c === "spin" ? fire("tick") : c === "filled" ? fire("filled", { cue: "open" }) : fire(c)),
+    cue: (c) =>
+      c === "spin"
+        ? fire("press", { cue: "reelSpin" })
+        : c === "filled"
+          ? fire("filled", { cue: "open" })
+          : c === "fail"
+            ? fire("fail", { cue: "error" })
+            : fire(c),
     notify: (n) => notify({ ...n, tone: "warning" }),
     needAccount: () => router.push(accountRequiredRoute("make a call", "/games/lucky")),
   });

@@ -143,7 +143,7 @@ export function CallPanel(p: CallPanelProps) {
           label="Way to call"
           value={p.mode}
           onValueChange={(v) => {
-            fire("tick", { cue: "tap" });
+            fire("tick", { cue: "toggle" });
             p.onMode(v as CallMode);
           }}
           fill

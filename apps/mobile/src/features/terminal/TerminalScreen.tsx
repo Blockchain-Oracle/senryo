@@ -100,8 +100,10 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
         c === "press"
           ? fire("press")
           : c === "fail"
-            ? fire("fail", { sound: "error" })
-            : fire("filled", { cue: c === "filled-close" ? "close" : "open" }),
+            ? fire("fail", { cue: "error" })
+            : c === "filled-close"
+              ? fire("close", { cue: "close" })
+              : fire("filled", { cue: "open" }),
       notify: (n) => notify({ ...n, tone: "warning" }),
       needAccount: () => router.push(accountRequiredRoute("make a call")),
       ...(onFilled ? { onFilled } : {}),

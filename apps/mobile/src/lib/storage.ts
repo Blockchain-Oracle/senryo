@@ -16,6 +16,11 @@ export const STORAGE_KEYS = {
   theme: "senryo.theme.v1",
   setupOrder: "senryo.setup-order.v2",
   sounds: "senryo.sounds.v1",
+  /** F2–F3: effects and music volumes (0–1), the terminal's music (off by default) and its track. */
+  effectsVolume: "senryo.effects-volume.v1",
+  musicVolume: "senryo.music-volume.v1",
+  terminalMusic: "senryo.terminal-music.v1",
+  musicTrack: "senryo.music-track.v1",
   tradeReactions: "senryo.trade-reactions.v1",
   /** The ElevenLabs cue variant chosen per sound in Preferences (by ear); absent = the bundled default. */
   soundChoice: "senryo.sound-choice.v1",

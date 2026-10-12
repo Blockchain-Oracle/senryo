@@ -1,5 +1,23 @@
 export { FONT_SOURCES, type FontFile, type FontSource } from "./fonts.ts";
 export { KINPAKU, MATERIAL, QR, SCENE_FIELD, WELCOME } from "./marks.ts";
+export {
+  MUSIC_CROSSFADE_S,
+  MUSIC_DUCK,
+  MUSIC_DUCK_IN_S,
+  MUSIC_DUCK_OUT_S,
+  MUSIC_FADE_IN_S,
+  MUSIC_GAIN,
+  MUSIC_TENSE_HZ,
+  MUSIC_TENSE_IN_S,
+  MUSIC_TENSE_OUT_S,
+  SONG_TITLES,
+  SONGS,
+  type SongName,
+  songSteps,
+  stepSeconds,
+  stepVoices,
+  TERMINAL_SONGS,
+} from "./music.ts";
 export { type ColorRole, DARK, DEFAULT_THEME, LIGHT, PALETTES, type Palette, type ThemeName } from "./palette.ts";
 export {
   ELEVATION,
@@ -18,13 +36,21 @@ export {
   type TypeRole,
 } from "./scale.ts";
 export {
+  type LadderCue,
+  ladderRate,
   SEMITONES_PER_OCTAVE,
   SOUND_ATTACK_S,
   SOUND_CUES,
+  SOUND_FILTER_Q,
   SOUND_FLOOR,
+  SOUND_HOLD_ATTACK_S,
+  SOUND_HOLD_RELEASE_AT,
   SOUND_LADDER_SEMITONES,
+  SOUND_LADDERS,
   SOUND_MASTER,
   SOUND_MIX,
   type SoundCue,
   type Voice,
+  type VoiceFilter,
+  type Wave,
 } from "./sound.ts";

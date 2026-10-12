@@ -33,7 +33,8 @@ export function DuelScreen() {
   const [tier, setTier] = useState(DEFAULT_TIER);
   const [seen, setSeen] = useState<string | null>(null);
   const flow = useDuelFlow(account, {
-    cue: (c) => (c === "filled" ? fire("filled", { cue: "open" }) : fire(c)),
+    cue: (c) =>
+      c === "filled" ? fire("filled", { cue: "open" }) : c === "fail" ? fire("fail", { cue: "error" }) : fire(c),
     notify: (n) => notify({ ...n, tone: "warning" }),
     needAccount: () => router.push(accountRequiredRoute("duel")),
   });

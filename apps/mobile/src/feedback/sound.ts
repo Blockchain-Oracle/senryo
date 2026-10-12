@@ -4,8 +4,8 @@ import { SOUND_VOLUME } from "./constants";
 import { chosenVariant, SOUND_VARIANTS } from "./sound-variants";
 
 /**
- * The UI sound palette (plan §2.4): story, deposit, send, unlock, error. The terminal's cues (open, close, win, loss,
- * the profit ladder) live in `trade-sound.ts`.
+ * The UI sound palette (plan §2.4): story, deposit, send, unlock, error. Every other cue — the terminal's, the games',
+ * Duel's and the events' — lives in `cues.ts`, rendered from the shared map.
  * Ported from the pre-existing audio pool: app-lifetime players preloaded once, replayed with seekTo(0) + play(),
  * errors swallowed. Sounds follow the ringer switch (`playsInSilentMode: false`) and mix with other audio.
  * No sound for ticks or navigation — haptics own those.

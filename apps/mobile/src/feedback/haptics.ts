@@ -7,7 +7,22 @@ import { Platform } from "react-native";
  * expo-haptics (invariant haptics-via-feedback); call sites go through `fire()` so the user toggle applies.
  * iOS uses the Taptic Engine's semantic feedback; Android the system constants (`performAndroidHapticsAsync`).
  */
-export type HapticEvent = "tick" | "press" | "snap" | "confirm" | "filled" | "warn" | "fail" | "win" | "loss" | "move";
+export type HapticEvent =
+  | "tick"
+  | "press"
+  | "snap"
+  | "confirm"
+  | "filled"
+  | "close"
+  | "warn"
+  | "fail"
+  | "win"
+  | "loss"
+  | "move"
+  | "surge"
+  | "mega"
+  | "slump"
+  | "impact";
 
 const android = Platform.OS === "android";
 const A = Haptics.AndroidHaptics;
@@ -34,6 +49,17 @@ function ios(event: HapticEvent): Promise<void> {
       return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     case "move":
       return Haptics.selectionAsync();
+    // Tradash's table (F3, research 01 F1): a cash-out, the surge and mega flourishes and a slump have their own words.
+    case "close":
+      return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    case "surge":
+      return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    case "mega":
+      return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    case "slump":
+      return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+    case "impact":
+      return Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }
 }
 
@@ -48,6 +74,11 @@ const ANDROID: Record<HapticEvent, Haptics.AndroidHaptics> = {
   win: A.Confirm,
   loss: A.Long_Press,
   move: A.Clock_Tick,
+  close: A.Virtual_Key,
+  surge: A.Confirm,
+  mega: A.Long_Press,
+  slump: A.Gesture_End,
+  impact: A.Long_Press,
 };
 
 /** Plays one haptic word; failures (Low Power Mode, Taptic off, camera active) are silent by design. */

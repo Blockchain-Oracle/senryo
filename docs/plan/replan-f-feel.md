@@ -182,5 +182,30 @@ R8 → R9).
 - [ ] F13 The crowd line stops polling a window nobody has called yet: it starts on the first `Filled`, so there is no
   404 every few seconds. The web's update check gets a 30 s floor between visibility checks.
 
+### Value first, sign last (the owner's video, 12 Oct)
+- [ ] F14 The passkey is a signing step, not a login wall. The owner's before/after video: *"Move wallet connect to the
+  end. Show the product first. Ask for a signature only when there's something to sign."* Today's guest path is the
+  "before":
+  - tapping UP gives the toast "Sign in to make a call", then a drawer, then the user must find the call and re-tap;
+  - Home leads with a "Create account" hero; More shows "Create an account to have a profile";
+  - Earn says "Sign in to earn" and Lucky "Sign in to spin";
+  - a separate setup and terms gate stands before the first call.
+
+  After:
+  - **Guests:** see and play with everything live (markets, odds, the ticket, Lucky's spin, a duel's tiers, an event's
+    pool split) with no account wall anywhere.
+  - **The first money action** — a call, Lucky's "Place call", "Find a duel", an event's Yes/No, a parlay, an Earn
+    supply — opens its own sheet:
+    - "Place $5 on BTC Up · pays $9.60";
+    - "Create your passkey to place it", where the passkey ceremony is the signing step;
+    - the Practice dollars granted in the same step;
+    - the Terms as one line under the button (replacing the setup gate for Practice).
+  - **The intent survives the ceremony** and completes in place, without a re-tap, ending on "You're in" with the
+    position live.
+  - **One-tap** is offered right after, so the prompt shows once.
+  - **Each hook's `needAccount`** (`use-call-flow`, `use-lucky`, `use-duel`, `use-events`, `use-parlay`, Earn) becomes
+    "sign to continue" with the pending action carried through.
+  - Both apps. R5.10's device-local Practice key (a first call with no ceremony at all) follows in R5.
+
 ## Handoff
 (written at the end of the stage)

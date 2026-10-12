@@ -6,6 +6,7 @@
  * (the OS sheet owns the screen).
  */
 import type { ReactNode } from "react";
+import { useSheetCues } from "@/lib/feedback";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog";
 
 export interface ModalProps {
@@ -19,6 +20,7 @@ export interface ModalProps {
 }
 
 export function Modal({ open, onOpenChange, title, description, children, footer, locked }: ModalProps) {
+  useSheetCues(open);
   const change = (next: boolean) => {
     if (!locked || next) onOpenChange(next);
   };

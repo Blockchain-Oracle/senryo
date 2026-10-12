@@ -103,8 +103,10 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
         c === "press"
           ? fire("press")
           : c === "fail"
-            ? fire("fail")
-            : fire("filled", { cue: c === "filled-close" ? "close" : "open" }),
+            ? fire("fail", { cue: "error" })
+            : c === "filled-close"
+              ? fire("close", { cue: "close" })
+              : fire("filled", { cue: "open" }),
       notify: (n) => notify({ ...n, tone: "warning" }),
       gate: () => {
         if (hasAcknowledgedTerms(account.hint?.address)) return true;
