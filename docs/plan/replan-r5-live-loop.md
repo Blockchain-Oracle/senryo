@@ -96,6 +96,20 @@ and the morph on top of them.*
     in this window · the next opens at 20:00" instead of failing on the tap.
 
 ### The moments
+*Design for area C (12 Oct, before building):*
+- *R5.10:* the guest's device key is a plain EOA kept like a one-tap delegate (`delegates`), Practice only. It signs in
+  by SIWE (the api already takes any wallet's signature — the drive scripts use it), takes the Practice grant and
+  signs calls and rides itself, with no prompt. At passkey sign-up it signs an EIP-3009 transfer of its whole balance
+  to the new account, relayed gas-free by `/v1/money/withdraw`; open positions settle to the key and are swept the
+  same way when they do. Real never uses it.
+- *R5.11/R5.12:* one toast id per action ("Opening…" → "Up BTC opened" → "Cashing out…" → "Realized +$x"); the phone's
+  `notify` gains ids (sonner-native takes them). The close's fill plays win or loss by the realised sign; rides'
+  results (closed, knocked out, capped, ended) join `useResults`.
+- *R5.13:* pending intents are journalled per device (digest, kind, label, sent-at) and re-read on launch: unknown →
+  checking → filled / refused, with a Check status that only reads, never re-sends. `query/trace.ts` (no importers)
+  is deleted. Failure reasons get plain words (`WindowNotTrading` → "This window has closed to calls").
+
+
 - [ ] R5.10 Instant first call:
   - a device-local Practice key for guests on the terminal (Practice only, granted test dollars);
   - the passkey account adopts it on sign-up (its test dollars move over).

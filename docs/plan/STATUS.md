@@ -127,11 +127,18 @@ Next: R5 — the live loop (below).
   size); equity in both terminals' tops; the web's positions column, View-position pill and drawer; Home and Calls
   list open positions live with Cash out; the near-certain winner no longer reads −$stake. api + keeper `sha-39ac653`,
   web `sha-5788360`. Checked on real testnet positions (calls 1018, rides 14/15) read-only in the local web.
-- **B — the terminal for calls and rides (built, gated `60a7a7a7`):** Call | Ride, the order stack and its settings
+- **B — the terminal for calls and rides (live 12 Oct 21:00 UTC):** Call | Ride, the order stack and its settings
   (Codex direction `11-terminal-direction.md`), UP/DOWN → TRAIL/CLOSE on both instruments, levels (B/E, trail,
-  TP/SL, knock-out, cap) and the PnL band on both engines, ride exits and part closes, shortfalls, D-308 keys, R5.25
-  (a 15m/1h window nobody opened within 5 minutes can't take calls: the lane says so; boundary calls open the
-  market's other long lanes). Waiting: the phone's simulator pass and OTA, the api + web deploy.
+  TP/SL, knock-out, cap) and the PnL band on both engines, ride exits and part closes, shortfalls, D-308 keys, R5.8
+  (calls and rides sign their limit at a p99 2-second move against them), R5.25 (a 15m/1h window nobody opened
+  within 5 minutes can't take calls: the lane says "Next 22:00" and the panel why; boundary calls open the market's
+  other long lanes). api + keeper + web `sha-9d1022a`, phone OTA `2a66bf10`. Checked: the web on real testnet
+  positions (ride 15's TRAIL "Need +0.74% to trail", CLOSE's rolling amount); the phone on a Release simulator build as
+  a guest (Ride, both settings sheets, R5.25 on DOGE's unopened 20:00 hour). Not seen yet: a signed-in phone holding a
+  position (the owner's phone).
+- **Incident (20:34–20:40 UTC):** `sha-60a7a7a`'s window-state route took the window proof's path; Fastify refused
+  the duplicate and the api crash-looped for ≈ 6 minutes until rolled back to `sha-39ac653`. Fixed on its own path;
+  the gate now has `unique-api-routes`.
 - **R4 rows closed meanwhile:** rides 12/13 ran to their 4 h end at 19:58 UTC and settled within 30 s (no knock-out:
   BTC moved ≈ 0.2 %); BUF @ FLA decided Yes at 19:38:59 UTC. The knock-out row stays open on rides 16/17 (40× pair,
   owner `0x8Be3…9A9a`, until ≈ 00:33 UTC).
