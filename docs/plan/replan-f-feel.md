@@ -57,7 +57,7 @@ R8 → R9).
 ## Steps
 
 ### Sound, music, haptics
-- [ ] F1 One cue map (`packages/tokens/src/sound.ts` grows from 10 cues to the map; gains, patterns and haptic words
+- [x] F1 One cue map (`packages/tokens/src/sound.ts` grows from 10 cues to the map; gains, patterns and haptic words
   per cue):
   - **Cue groups:**
     - **UI:** tap (±60-cent random detune, ≥ 18 cents from the last), toggle, sheet open and close, success, error.
@@ -78,7 +78,7 @@ R8 → R9).
   - **Mappings:** each app maps the hooks' cues (`fx.current.cue`) to the map, with a dev-only cue log.
   - **Delete:** `feedback/movement.ts`, the unplayed `tap.wav`/`onboarding.wav` and the README's phantom `fill` and
     `liquidation` cues.
-- [ ] F2 Music:
+- [x] F2 Music:
   - **Beds:** the games bed (112 bpm, A minor, 8 bars), three terminal tracks (arcade 112, rush 128, night 92) and a
     sparse Duel pulse;
   - **Engines:** code-sequenced on the web (port `music.ts`, `bed.ts`: 25 ms look-ahead timer, 100 ms booking);
@@ -87,7 +87,7 @@ R8 → R9).
     bars and a "♪ Arcade ›" chip that skips tracks (port `ChartControls.tsx:105-132`);
   - **Mix:** ducks 6 dB over 80 ms for verdicts and recovers over 400 ms; a tense 900 Hz low-pass while ROI ≤ −5 %;
     a speaker control in every game HUD.
-- [ ] F3 Haptics and one "Sound & vibration" sheet:
+- [x] F3 Haptics and one "Sound & vibration" sheet:
   - **Table:** Tradash's on both apps (tap 8, tick 3, open `[12,20,12]`, close 20, move 6, surge, mega, slump 35, warn
     `[80,60,80]`). This fixes `01` F1 (cash-out as `filled`, surge/mega as `snap`, slump as `warn`).
   - **Phone:** semantic Taptic words on iOS and `performAndroidHapticsAsync` on Android, as today.
@@ -108,19 +108,19 @@ R8 → R9).
     - a staggered list entrance.
   - **Enforced:** a new invariant in `scripts/invariants/rules.mjs` refuses `onClick` on a non-interactive element and
     a bare `Pressable` outside the kit.
-- [ ] F5 Direction palette (D-316):
+- [x] F5 Direction palette (D-316):
   - Up is acid green `#B5F543`, Down is coral `#FF647C`, both with black labels;
   - Range is cyan; Play/selected stays `#FA00FF`;
   - games' arenas are near-black;
   - `palette.ts` stays the only palette, with both themes re-derived and contrast checked.
 
 ### Prices with their graphs (D-319)
-- [ ] F6 `/v1/prices/day` gains `spark`:
+- [x] F6 `/v1/prices/day` gains `spark`:
   - 96 fifteen-minute closes per market from the 1-minute table, by one SQL with `date_bin`, inside the existing 60 s
     cache;
   - gaps are kept as gaps, never invented from high/low.
   - `dayPricesRoute`'s schema grows, and `useDayPrices()` (`packages/query/src/markets.ts:194`) finally has callers.
-- [ ] F7 `Sparkline` and the shared price row:
+- [x] F7 `Sparkline` and the shared price row:
   - **Sparkline** (port Mitoshi `sparkline.tsx`, 21st #30538, made passive; Skia path on the phone):
     - 96×32 on desktop, 64×24 on the phone;
     - 1.6 px stroke and an 8 % fill;
@@ -133,7 +133,7 @@ R8 → R9).
   - **Stale prices** keep their timestamp.
 
 ### The ticket
-- [ ] F8 Call buttons:
+- [x] F8 Call buttons:
   - **Buttons** (port Owarine `TradeButtons.tsx`; Mitoshi `prediction-ticket.tsx` for the stake/return hierarchy):
     - 52 px tall, 12 px radius, 10 px gap, equal widths, a 3 px darker bottom edge;
     - label only — ↑ UP, ↓ DOWN, ↔ RANGE, MOONSHOT (rocket), CRASH (plunge) — 16 px condensed, never wrapping;
@@ -148,7 +148,7 @@ R8 → R9).
   - This absorbs R5.4/R5.7's call-button parts. R5.5's TRAIL/CLOSE morph stays in R5 on this structure.
 
 ### Practice ↔ Real (D-320)
-- [ ] F9 The web switches at run time:
+- [x] F9 The web switches at run time:
   - **Provider:** `ACTIVE_NETWORK` (`apps/web/src/lib/constants/auth.ts:7`, 38 reads) is replaced by a
     `NetworkProvider` (the phone's `lib/network.ts` pattern).
   - **Switch:** a 44 px two-segment switch replaces `ModeCapsule` (port roy-chain's thumb and keyboard behaviour,
@@ -157,7 +157,7 @@ R8 → R9).
   - **Copy:** Practice reads "Test dollars"; Real reads "Live prices · trading opens with mainnet", and its ticket
     offers "Switch to Practice to play".
   - **Real money gates** stay per D-172, D-267, D-270, D-273 and D-305.
-- [ ] F10 Real is never blank:
+- [x] F10 Real is never blank:
   - the api serves a read-only catalogue for 143 (markets, sessions and feeds; `listed: false`; no contracts) instead
     of 400 "chain 143 is not served here";
   - prices and the 24 h graph work on Real on both apps;
@@ -165,21 +165,21 @@ R8 → R9).
   - `useReadOnlyNetwork()` gets its callers or is deleted.
 
 ### Crests and live scores (D-315)
-- [ ] F11 Crests:
+- [x] F11 Crests:
   - `packages/identity/scripts/catalog.ts` + `fetch-marks.ts` fetch every NHL, MLB, NFL and Premier League team's
     crest from ESPN's team feeds (light `500/` and `500-dark/`) and its `color`/`alternateColor`, pinned by sha256,
     with codegen into `src/generated/{web,native}`;
   - the NFL shield and theScore marks too;
   - `TeamMark` (both apps) draws the crest, and the event feed carries team colours;
   - the abbreviation plate stays only for a club ESPN doesn't list.
-- [ ] F12 Live scores:
+- [x] F12 Live scores:
   - the keeper's ESPN source (`services/keeper/src/events/sources/espn.ts`) also refreshes status
     (scheduled/live/final), score and period/clock every 30 s while a game is on;
   - `market_events` stores them and the `event` topic carries them;
   - `eventSchema` grows `status` and `score`.
 
 ### Found on 12 Oct
-- [ ] F13 The crowd line stops polling a window nobody has called yet: it starts on the first `Filled`, so there is no
+- [x] F13 The crowd line stops polling a window nobody has called yet: it starts on the first `Filled`, so there is no
   404 every few seconds. The web's update check gets a 30 s floor between visibility checks.
 
 ### Value first, sign last (the owner's video, 12 Oct)
@@ -206,6 +206,29 @@ R8 → R9).
   - **Each hook's `needAccount`** (`use-call-flow`, `use-lucky`, `use-duel`, `use-events`, `use-parlay`, Earn) becomes
     "sign to continue" with the pending action carried through.
   - Both apps. R5.10's device-local Practice key (a first call with no ceremony at all) follows in R5.
+
+**Built (12 Oct):**
+- **Commits:** `266a806b` (F5–F8), `00118358` (F1–F3), `1f6977d4` (F11), `d9299b40` (F9–F10), `911b3509`
+  (F14 web), `79dee854` (F12–F13), `28692085` (F3 settings, F4, F7 header), `bcfe6c6c` (F14 phone).
+- **Production:** api and keeper on `sha-79dee85`; web next. Live on production now:
+  - the 24 h graph on every row;
+  - Real's catalogue;
+  - null for unopened windows;
+  - live scores.
+- **Verified on the web (preview tools):**
+  - 34 of 35 rows draw their graph (gaps kept across equity sessions);
+  - unpriced Moonshot/Crash become plates with the note outside;
+  - the hover preview shades the side;
+  - crests load (Next-hashed, dark-ground in dark);
+  - the switch flips, persists and remounts.
+- **Rendered for the phone:**
+  - 32 cues, 43 ladder steps, 5 songs and 3 tense twins (−0.9 dB peaks);
+  - 114 crests (113 dark).
+- **Left inside the steps:**
+  - F4: the press kit on the remaining cards (events, duel tiers, sheets' rows) and the phone's `Pressable` audit;
+  - F14: Lucky, Duel, Events, Parlay and Earn still use their sign-in prompt — the terminal path signs in place on
+    both apps;
+  - the sound itself is checked by the owner's ear on a device.
 
 ## Handoff
 (written at the end of the stage)
