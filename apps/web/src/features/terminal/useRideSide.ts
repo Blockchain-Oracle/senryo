@@ -1,4 +1,5 @@
 "use client";
+import type { Caller } from "@senryo/calls";
 /**
  * The terminal's ride side (R5.4–R5.5): this market's ride terms on the active network, the leverage held to its
  * cap, the rider's newest open ride here, the live pass (`useLiveRide`) and the flow (`useRideFlow`). Rides are on
@@ -8,7 +9,6 @@ import { leverageFor, ridesOn } from "@senryo/calls";
 import { type CallFlowEffects, useRideFlow } from "@senryo/calls/react";
 import { useQueryEnv, useRideCatalog, useRides } from "@senryo/query";
 import { useMemo } from "react";
-import type { useAccount } from "@/lib/account/provider";
 import { useLiveRide } from "./useLiveRide";
 import type { TerminalChoices } from "./useTerminalChoices";
 
@@ -17,7 +17,7 @@ const ONE_X = 10_000;
 
 export function useRideSide(i: {
   symbol: string;
-  account: ReturnType<typeof useAccount>;
+  account: Caller;
   choices: TerminalChoices;
   active: boolean;
   balance: bigint | undefined;

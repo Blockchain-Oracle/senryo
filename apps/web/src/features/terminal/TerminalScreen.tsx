@@ -13,6 +13,7 @@ import {
   useCallFlow,
   useCallWindow,
   useExitActions,
+  useGuestTap,
   useMarketLine,
   usePriceHealth,
 } from "@senryo/calls/react";
@@ -20,15 +21,15 @@ import { useRecentCandles, useWindowLoad } from "@senryo/query";
 import { useMemo, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { PositionsPanel } from "@/features/positions/PositionsPanel";
-import { useAccount } from "@/lib/account/provider";
+import { guestSession, useAppTrader } from "@/lib/account/guest";
 import { notify } from "@/lib/notify";
+import { tradeToast } from "@/lib/trade-toast";
 import { ActionPanel } from "./ActionPanel";
 import { BasketMembers } from "./BasketMembers";
 import { CrowdLine } from "./CrowdLine";
 import type { ChartFrame } from "./chart/chart-engine";
 import { SAMPLE_CAPACITY } from "./chart/constants";
 import { LiveChart } from "./chart/LiveChart";
-import { type FirstCallRequest, FirstCallSheet } from "./FirstCallSheet";
 import { OrderStack } from "./OrderStack";
 import { PositionsPill } from "./PositionsPill";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
@@ -46,11 +47,13 @@ import "./positions.css";
 import "./reactions.css";
 
 export function TerminalScreen({ symbol }: { symbol: string }) {
-  const account = useAccount();
+  // The passkey account, else on Practice the guest's device key (R5.10).
+  const trader = useAppTrader();
+  const account = trader.caller;
   const choices = useTerminalChoices();
   // A market that doesn't ride shows Call; Ride stays in the switch and says why when tapped.
   const ride = choices.instrument === "ride" && ridesOn(symbol);
-  const t = useCallWindow(symbol, choices.cadence, account.hint?.address);
+  const t = useCallWindow(symbol, choices.cadence, trader.owner);
   // Nothing is asked of the api before the server clock has synced (the static HTML renders at second 0).
   const synced = t.now > 0;
   const load = useWindowLoad(synced ? t.window.expiry : undefined);
@@ -79,14 +82,16 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
   const [sheet, setSheet] = useState<Sheet | null>(null);
-  const [firstCall, setFirstCall] = useState<FirstCallRequest | null>(null);
-  const effects = useTerminalEffects((slot: OfferSlot) => {
-    const offered = q.offer[slot];
-    if (ride || !offered) return false;
-    const pays = slot === 0 ? q.firstLine : q.secondLine;
-    setFirstCall({ slot, symbol, label: offered.label, stake: choices.stake, pays });
-    return true;
+  // A visitor's first tap on Practice starts the guest and places that same trade once its dollars land.
+  const placer = useRef<(slot: OfferSlot) => void>(() => undefined);
+  const guestTap = useGuestTap({
+    owner: trader.owner,
+    symbol,
+    sessionFor: guestSession,
+    place: (slot) => placer.current(slot),
+    toast: tradeToast,
   });
+  const effects = useTerminalEffects(trader.guest, guestTap);
   const exits = useExitActions(account, choices.cadence);
   const flow = useCallFlow({
     view: t,
@@ -97,6 +102,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
     effects,
   });
   const side = useRideSide({ symbol, account, choices, active: ride, balance: t.balance, nowSec: t.now, effects });
+  placer.current = (slot) => void (ride ? side.flow.open(slot) : flow.open(slot));
   const trade = useTradePanel({ ride, t, q, flow, exits, side, choices, open: setSheet });
   useReactions(symbol, trade.onTick, reactions);
   useTerminalKeys({
@@ -172,7 +178,6 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
           buttons={trade.buttons}
         />
       </aside>
-      <FirstCallSheet request={firstCall} onClose={() => setFirstCall(null)} onPlace={(slot) => void flow.open(slot)} />
       <TerminalSheets
         symbol={symbol}
         sheet={sheet}

@@ -3,7 +3,7 @@
  * this device, plus a permit for the session's whole cap when the allowance is short, so no later call needs one.
  * Ending it signs a `Revoke` (the epoch bumps: every outstanding signature dies) and forgets the key.
  */
-import type { AccountClient, DelegateKeys, Hex } from "@senryo/account";
+import type { DelegateKeys, Hex } from "@senryo/account";
 import {
   freshNonce,
   type MarketSessionGrant,
@@ -13,6 +13,7 @@ import {
   sessionGrantRequest,
 } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
+import type { Signing } from "./caller.ts";
 import { INTENT_TTL_SEC, PERMIT_TTL_SEC, PROMPTS } from "./constants.ts";
 import type { AccountView, Permit } from "./sign.ts";
 
@@ -30,7 +31,7 @@ export interface SignedGrant {
 
 interface Deps {
   chainId: ChainId;
-  client: AccountClient;
+  client: Signing;
   delegates: DelegateKeys;
   reserve: `0x${string}`;
   owner: `0x${string}`;

@@ -555,3 +555,36 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 - **D-326** 2026-10-12 · **Parlay keeps everything live between rounds.**
   - One banner replaces the per-row "reopen in"; legs roll to their next round by themselves.
   - Indicative per-side odds come from one shared helper used by Parlay, Duel and the market sheet.
+- **D-327** 2026-10-12 · **One toast per trade, carried through its run (R5.11–R5.12).**
+  - The tap draws the toast and the chart's "Opening…" entry at the price tapped; the same id becomes "Up BTC opened",
+    "Cashing out…" / "Closing…", then the result ("Realized +$1.24") with the market's mark. A late step never
+    overwrites a landed result.
+  - A full close plays win or loss by the realised sign (confetti on a win); rides' endings (closed, knocked out,
+    capped, ended) are results too, realised as PnL − close fees − open fee.
+  - Failure reasons are said in words (`reason-words.ts`), never as a raw revert.
+- **D-328** 2026-10-12 · **The device journals every trade between signing and its ending (R5.13).**
+  - The digest is computed at signing and journalled before the send. A relay refusal (4xx) takes it out; a lost
+    answer (network, 5xx) leaves it for recovery, which reads its status by digest — unknown → checking → filled /
+    refused / never reached us — on this run's toast or at the next launch, with Check status that only reads.
+  - The pre-pivot operation journal in `@senryo/query` (trace, operations, operation-feedback, operation-progress) is
+    deleted with its phone wiring.
+- **D-329** 2026-10-12 · **Hide balances reaches every surface (R5.14).**
+  - Trade and result toasts keep their words and mask their amounts; the PnL pill, the chart's PnL, the phone's
+    balance, equity and close odometers and the Calls results mask too. Sharing a call waits while balances are
+    hidden, with Show.
+- **D-330** 2026-10-12 · **A Practice guest trades on a device key; its dollars follow the passkey (R5.10).**
+  - A visitor's first tap on Practice makes a plain key on the device (SecureStore on the phone; the browser's store on
+    the web, Practice only), signs in by SIWE, takes the Practice grant and places that same trade — no prompt, no
+    re-tap. It signs its own calls and rides; the terminal, book, results, live topic, balance chip and Calls follow
+    whoever trades (`useTrader`).
+  - Once a passkey account exists, the key's dollars move to it by an EIP-3009 transfer the relay submits, and again as
+    each open position pays out; the key is forgotten when nothing of it is left. Real never uses it.
+  - The F14 first-call sheet (web) and the phone's held first call (`first-call.ts`, `firstCallRoute`) are deleted.
+- **D-331** 2026-10-12 · **The trade slip (Codex direction 12, to build in R5.11).**
+  - One trade object in place from tap to settlement: the newest expanded row of the positions rail (web ≥ 1024 px), a
+    compact card in place of the View-position pill on the phone and narrow web.
+  - The slip: white paper and black ink in both themes, the one shadow, a perforated stub; an 88 px lacquer-and-foil
+    stamp at −4° with English words (Won · Lost · Refunded · Cashed out / Gain | Loss | Even; Closed / Up | Down | Even ·
+    Knocked out · Capped · Ended); folio `N° C-<chain>-<ticket>` / `N° R-<chain>-<ride>`.
+  - Share and Save PNG export the same slip (the share card merges into it); both wait while balances are hidden.
+    Rides get a receipt page and a public read route.

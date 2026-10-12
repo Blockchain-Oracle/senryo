@@ -31,6 +31,7 @@ const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const SETTLED = new Set(["filled", "refused", "failed"]);
 const BPS_PER_X = 10_000;
+const E8 = 1e8;
 
 const usdText = (v: bigint) => `$${formatUnits(v, DOLLAR_DECIMALS, CENTS)}`;
 
@@ -60,6 +61,8 @@ export function useRideFlow(i: RideFlowInput) {
   const actions = useRideActions(i.caller);
   const exit = useRideExit(i.caller);
   const [signing, setSigning] = useState<string | null>(null);
+  // The mark at the tap: the chart draws "Opening…" there until the fill draws the entry (R5.11).
+  const [pendingEntry, setPendingEntry] = useState<number | null>(null);
   const [pending, setPending] = useState<FlowPending | null>(null);
   const intent = useIntentStatus(pending?.digest);
   const status: IntentStatus | null = "value" in intent ? intent.value : null;
@@ -81,6 +84,7 @@ export function useRideFlow(i: RideFlowInput) {
       kept: p.kind === "close" ? "It's still open." : "Your margin was not taken.",
     });
     setPending(null);
+    setPendingEntry(null);
   }, [status, refresh, i.symbol]);
 
   const health = usePriceHealth(i.symbol);
@@ -135,6 +139,8 @@ export function useRideFlow(i: RideFlowInput) {
       symbol: i.symbol,
       tone: "loading",
     });
+    setPendingEntry(Number(mark) / E8);
+    let sent = false;
     setSigning("Signing…");
     try {
       const r = await actions.open({
@@ -147,7 +153,8 @@ export function useRideFlow(i: RideFlowInput) {
       });
       if (r.kind === "cancelled") fx.current.toast(id, null);
       // A lost answer is recovery's to tell, on this same toast (R5.13).
-      else if (r.kind === "sent")
+      else if (r.kind === "sent") {
+        sent = true;
         setPending({
           digest: r.status.digest,
           label: `Opening ${side}…`,
@@ -156,6 +163,7 @@ export function useRideFlow(i: RideFlowInput) {
           filled: { title: `${side} ${i.symbol} ride opened`, description: terms, symbol: i.symbol, tone: "info" },
           cue: "filled-open",
         });
+      }
     } catch (error) {
       fx.current.cue("fail");
       fx.current.toast(id, {
@@ -166,6 +174,7 @@ export function useRideFlow(i: RideFlowInput) {
       });
     } finally {
       setSigning(null);
+      if (!sent) setPendingEntry(null);
     }
   };
 
@@ -244,5 +253,15 @@ export function useRideFlow(i: RideFlowInput) {
   };
 
   const endsIn = held?.endAt ? `Closes in ${longClockText(held.endAt - i.nowSec)}` : null;
-  return { panel, holding: held !== undefined, open, close, armTrail, setExit: exit.set, arming: exit.pending, endsIn };
+  return {
+    panel,
+    holding: held !== undefined,
+    open,
+    close,
+    armTrail,
+    setExit: exit.set,
+    arming: exit.pending,
+    endsIn,
+    pendingEntry,
+  };
 }

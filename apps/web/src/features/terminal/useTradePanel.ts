@@ -4,7 +4,7 @@
  * the order stack's heading and rows, the chart's overlay and the reaction feed — a call's from `useLiveQuote`, a
  * ride's from `useLiveRide` — so the screen composes one thing whichever is on.
  */
-import { CALL_MODES, CENT_E6, type ChartOverlay, dollars, type QuoteTick, trailText } from "@senryo/calls";
+import { CALL_MODES, CENT_E6, type ChartOverlay, chartFrame, dollars, type QuoteTick, trailText } from "@senryo/calls";
 import type { CallWindowView, useCallFlow, useExitActions } from "@senryo/calls/react";
 import { rideFee, rideNotional } from "@senryo/core";
 import { type RefObject, useCallback, useMemo, useRef } from "react";
@@ -160,14 +160,14 @@ export function useTradePanel(i: {
         ],
       };
 
-  // The chart and the reactions read whichever instrument is on, frame by frame; hidden balances mask its PnL (R5.14).
-  const hidden = useRef(false);
-  hidden.current = usePrivacy();
+  // The chart and the reactions read whichever instrument is on, frame by frame (`chartFrame`).
+  const frame = useRef({ hidden: false, pending: null as number | null });
+  frame.current = { hidden: usePrivacy(), pending: ride ? side.flow.pendingEntry : flow.pendingEntry };
   const overlay = useMemo<RefObject<ChartOverlay | null>>(
     () => ({
       get current() {
         const o = active.current ? side.live.overlay.current : q.overlay.current;
-        return o?.pnlText && hidden.current ? { ...o, pnlText: HIDDEN_AMOUNT } : o;
+        return chartFrame(o, frame.current.pending, frame.current.hidden ? HIDDEN_AMOUNT : null);
       },
     }),
     [side.live.overlay, q.overlay],

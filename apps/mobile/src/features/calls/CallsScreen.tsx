@@ -28,7 +28,7 @@ import { TabTitle } from "~/components/shell/TabTitle";
 import { OpenParlays } from "~/features/parlay/ParlayList";
 import { PositionsList } from "~/features/positions/PositionsList";
 import { fire } from "~/feedback/fire";
-import { useAccount } from "~/lib/account/provider";
+import { useAppTrader } from "~/lib/account/guest";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
@@ -86,7 +86,7 @@ function Record({ owner }: { owner: `0x${string}` }) {
 }
 
 export function CallsScreen() {
-  const owner = useAccount().hint?.address;
+  const owner = useAppTrader().owner;
   const list = useCallRows(owner);
   const book = useLiveBook();
   const client = useQueryClient();

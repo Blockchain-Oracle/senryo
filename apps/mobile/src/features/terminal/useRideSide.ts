@@ -3,11 +3,12 @@
  * the leverage held to its cap, the rider's newest open ride here, the live pass (`useLiveRide`) and the flow
  * (`useRideFlow`). Practice rides on the phone; Real rides are web-only until S9 (D-305).
  */
+
+import type { Caller } from "@senryo/calls";
 import { leverageFor, ridesOn } from "@senryo/calls";
 import { type CallFlowEffects, useRideFlow } from "@senryo/calls/react";
 import { useQueryEnv, useRideCatalog, useRides } from "@senryo/query";
 import { useMemo } from "react";
-import type { useAccount } from "~/lib/account/provider";
 import { useLiveRide } from "./useLiveRide";
 import type { TerminalChoices } from "./useTerminalChoices";
 
@@ -16,7 +17,7 @@ const ONE_X = 10_000;
 
 export function useRideSide(i: {
   symbol: string;
-  account: ReturnType<typeof useAccount>;
+  account: Caller;
   choices: TerminalChoices;
   active: boolean;
   balance: bigint | undefined;

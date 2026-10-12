@@ -5,12 +5,12 @@
  */
 import { type BookEntry, closeWord, reasonWords } from "@senryo/calls";
 import { usePositionActions } from "@senryo/calls/react";
-import { useAccount } from "@/lib/account/provider";
+import { useAppTrader } from "@/lib/account/guest";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 
 export function usePositionClose() {
-  const actions = usePositionActions(useAccount());
+  const actions = usePositionActions(useAppTrader().caller);
   const fail = (e: BookEntry | null, error: unknown) => {
     fire("fail", { cue: "error" });
     notify({

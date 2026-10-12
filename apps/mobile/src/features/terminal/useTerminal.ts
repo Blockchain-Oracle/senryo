@@ -6,14 +6,14 @@
 import { DEFAULT_CADENCE, DEFAULT_SYMBOL, useCallWindow } from "@senryo/calls/react";
 import type { CadenceSec } from "@senryo/config";
 import { useMMKVNumber, useMMKVString } from "react-native-mmkv";
-import { useAccount } from "~/lib/account/provider";
+import { useAppTrader } from "~/lib/account/guest";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 
 export function useTerminal() {
   const [storedSymbol, setSymbol] = useMMKVString(STORAGE_KEYS.terminalSymbol, storage);
   const [storedCadence, setCadence] = useMMKVNumber(STORAGE_KEYS.terminalCadence, storage);
   const cadence = (storedCadence ?? DEFAULT_CADENCE) as CadenceSec;
-  const view = useCallWindow(storedSymbol ?? DEFAULT_SYMBOL, cadence, useAccount().hint?.address);
+  const view = useCallWindow(storedSymbol ?? DEFAULT_SYMBOL, cadence, useAppTrader().owner);
   return { ...view, cadence, setSymbol, setCadence: (c: CadenceSec) => setCadence(c) };
 }
 

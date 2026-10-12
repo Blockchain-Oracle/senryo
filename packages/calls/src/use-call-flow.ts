@@ -10,6 +10,7 @@
  */
 import type { IntentStatus } from "@senryo/api-client";
 import { clockText, formatUnits, proceedsFor } from "@senryo/core";
+import { useLive } from "@senryo/live/react";
 import { useIntentStatus, useRefreshCaller } from "@senryo/query";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { endsText } from "./book-words.ts";
@@ -27,6 +28,7 @@ import { useWindowDead } from "./use-window-dead.ts";
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 const SECONDS_PER_MINUTE = 60;
+const E8 = 1e8;
 const SETTLED = new Set(["filled", "refused", "failed"]);
 export const WHOLE = 100n;
 
@@ -90,6 +92,9 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
   const actions = useCallActions(caller);
   // Between the tap and the relay's answer: the signature (one-tap, or the passkey prompt).
   const [signing, setSigning] = useState(false);
+  // The price at the tap: the chart draws "Opening…" there until the fill draws the entry (R5.11).
+  const [pendingEntry, setPendingEntry] = useState<number | null>(null);
+  const live = useLive();
   const [pending, setPending] = useState<FlowPending | null>(null);
   const intent = useIntentStatus(pending?.digest);
   const pendingRef = useRef(pending);
@@ -112,6 +117,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       kept: p.kind === "close" ? "It's still open." : "Your stake was not taken.",
     });
     setPending(null);
+    setPendingEntry(null);
   }, [status, refresh, t.symbol]);
 
   // Quotable only on a live settlement price; otherwise the panel says why (04-pricing R7).
@@ -176,6 +182,9 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
     const where = `${t.symbol} ${t.window.cadenceSec / SECONDS_PER_MINUTE}m`;
     const opening = `${where} · ${usdText(stake)} in`;
     fx.toast(id, { title: `Opening ${label}…`, description: opening, symbol: t.symbol, tone: "loading" });
+    const tapped = live.prices.latest(t.symbol)?.priceE8;
+    setPendingEntry(tapped === undefined ? null : tapped / E8);
+    let sent = false;
     setSigning(true);
     try {
       const r = await actions.open({
@@ -189,7 +198,8 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       });
       if (r.kind === "cancelled") fx.toast(id, null);
       // A lost answer is recovery's to tell, on this same toast (R5.13).
-      else if (r.kind === "sent")
+      else if (r.kind === "sent") {
+        sent = true;
         setPending({
           digest: r.status.digest,
           label: `Opening ${label}…`,
@@ -203,6 +213,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
           },
           cue: "filled-open",
         });
+      }
     } catch (error) {
       fx.cue("fail");
       fx.toast(id, {
@@ -213,6 +224,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       });
     } finally {
       setSigning(false);
+      if (!sent) setPendingEntry(null);
     }
   };
 
@@ -273,7 +285,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
     }
   };
 
-  return { panel, holding, open, close };
+  return { panel, holding, open, close, pendingEntry };
 }
 
 /**

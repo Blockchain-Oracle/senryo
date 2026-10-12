@@ -6,7 +6,7 @@
  * The band from the price path to the entry fades 0.22 → 0.02 towards the entry.
  */
 import { LEVEL_TABLE } from "./constants.ts";
-import type { LevelKind } from "./quote.ts";
+import type { ChartOverlay, LevelKind } from "./quote.ts";
 
 export type LevelRole = "ink" | "helper" | "warn" | "tone" | "up" | "down";
 
@@ -18,3 +18,20 @@ export interface LevelStyle {
 }
 
 export const LEVEL_STYLE: Readonly<Record<LevelKind, LevelStyle>> = LEVEL_TABLE;
+
+/**
+ * What the chart draws this frame (both apps' one selector; a worklet on the phone): the instrument's overlay, the
+ * entry drawn at the price tapped while the tap waits for its fill ("Opening…", R5.11 — Tradash's pending entry), and
+ * the PnL masked while balances are hidden (R5.14).
+ */
+export function chartFrame(o: ChartOverlay | null, pending: number | null, mask: string | null): ChartOverlay | null {
+  "worklet";
+  if (!o || (pending === null && !(mask && o.pnlText))) return o;
+  return {
+    ...o,
+    ...(mask && o.pnlText ? { pnlText: mask } : {}),
+    ...(pending === null
+      ? {}
+      : { levels: [...o.levels, { kind: "entry" as const, price: pending, label: "Opening…" }] }),
+  };
+}

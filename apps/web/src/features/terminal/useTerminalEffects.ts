@@ -1,7 +1,8 @@
 "use client";
 /**
  * What a trade does around itself on the web, for calls and rides alike: the press, fill and failure cues, plain
- * warnings, each trade's one toast (`tradeToast`, R5.11), the terms check before money moves, a guest's first call through its own sheet (F14), and a shortfall
+ * warnings, each trade's one toast (`tradeToast`, R5.11), the terms check before money moves (a Practice guest agrees
+ * at sign-up: it holds test dollars only), a visitor's first tap starting the guest (R5.10), and a shortfall
  * that names the gap and opens where dollars come from (R5.7: test dollars in Practice, Add money in Real).
  */
 import { dollars } from "@senryo/calls";
@@ -16,7 +17,7 @@ import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { HIDDEN_AMOUNT, privacyOn } from "@/lib/shell/privacy";
 import { tradeToast } from "@/lib/trade-toast";
 
-export function useTerminalEffects(onGuestCall: (slot: OfferSlot) => boolean) {
+export function useTerminalEffects(guest: boolean, onGuestCall: (slot: OfferSlot) => boolean) {
   const account = useAccount();
   const effects: CallFlowEffects = {
     cue: (c) =>
@@ -30,7 +31,7 @@ export function useTerminalEffects(onGuestCall: (slot: OfferSlot) => boolean) {
     notify: (n) => notify({ ...n, tone: "warning" }),
     toast: tradeToast,
     gate: () => {
-      if (hasAcknowledgedTerms(account.hint?.address)) return true;
+      if (guest || hasAcknowledgedTerms(account.hint?.address)) return true;
       notify({
         title: "Agree to the terms first",
         description: "One step before any money moves.",

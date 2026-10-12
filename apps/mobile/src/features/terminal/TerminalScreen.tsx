@@ -6,7 +6,14 @@
  * (`useLiveQuote`, `useLiveRide` → shared values); the flows are `@senryo/calls`', the web's own.
  */
 import { ridesOn, sessionHistory } from "@senryo/calls";
-import { type OfferSlot, useCallFlow, useExitActions, useMarketLine, usePriceHealth } from "@senryo/calls/react";
+import {
+  type OfferSlot,
+  useCallFlow,
+  useExitActions,
+  useGuestTap,
+  useMarketLine,
+  usePriceHealth,
+} from "@senryo/calls/react";
 import { useLive } from "@senryo/live/react";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
@@ -19,8 +26,8 @@ import { LiveText } from "~/components/kit/LiveText";
 import { useDockInset } from "~/components/shell/dock-context";
 import { ViewPositionPill } from "~/features/positions/ViewPositionPill";
 import { fire } from "~/feedback/fire";
-import { useAccount } from "~/lib/account/provider";
-import { accountRequiredRoute, firstCallRoute } from "~/lib/constants/routes";
+import { guestSession, useAppTrader } from "~/lib/account/guest";
+import { accountRequiredRoute } from "~/lib/constants/routes";
 import { balancesHidden, HIDDEN_AMOUNT } from "~/lib/hide-balances";
 import { usd } from "~/lib/money";
 import { notify } from "~/lib/notify";
@@ -33,7 +40,6 @@ import { type ChartHealth, type ChartHistory, LIVE } from "./chart/constants";
 import type { Head } from "./chart/draw";
 import { SAMPLE_CAPACITY } from "./chart/engine";
 import { LiveChart } from "./chart/LiveChart";
-import { holdFirstCall, useFirstCall } from "./first-call";
 import { MarketsSheet } from "./MarketsSheet";
 import { OrderStack } from "./OrderStack";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
@@ -93,7 +99,18 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     if (past) historySeq.current += 1;
     history.value = past ? { seq: historySeq.current, ...past } : null;
   }, [closed, candles, history]);
-  const account = useAccount();
+  // The passkey account, else on Practice the guest's device key (R5.10).
+  const trader = useAppTrader();
+  const account = trader.caller;
+  // A visitor's first tap on Practice starts the guest and places that same trade once its dollars land.
+  const placer = useRef<(slot: OfferSlot) => void>(() => undefined);
+  const guestTap = useGuestTap({
+    owner: trader.owner,
+    symbol: t.symbol,
+    sessionFor: guestSession,
+    place: (slot) => placer.current(slot),
+    toast: tradeToast,
+  });
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [chartH, setChartH] = useState(0);
@@ -111,10 +128,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     notify: (n: { title: string; description: string }) => notify({ ...n, tone: "warning" as const }),
     toast: tradeToast,
     needAccount: (slot?: OfferSlot) => {
-      const offered = slot === undefined || ride ? undefined : q.offer[slot];
-      if (slot === undefined || !offered) return router.push(accountRequiredRoute(ride ? "ride" : "make a call"));
-      holdFirstCall({ symbol: t.symbol, slot, stake: choices.stake });
-      router.push(firstCallRoute(`Place ${usd(choices.stake)} on ${t.symbol} ${offered.label}`));
+      if (slot !== undefined && guestTap(slot)) return;
+      router.push(accountRequiredRoute(ride ? "ride" : "make a call"));
     },
     shortfall: (short: bigint) =>
       notify({
@@ -143,7 +158,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   });
   const trade = useTradePanel({ ride, t, q, flow, exits, side, choices, open: setSheet });
   useReactions(t.symbol, trade.onTick, reactions);
-  useFirstCall(t.symbol, t.owner, (slot) => void flow.open(slot));
+  placer.current = (slot) => void (ride ? side.flow.open(slot) : flow.open(slot));
 
   useEffect(() => {
     const id = setInterval(() => {

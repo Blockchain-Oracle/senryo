@@ -3,14 +3,15 @@
  * Keeps the one live stream in step with the tab (the phone's `LiveHost`, D-272/D-280): the app holds the stream while
  * it is mounted; a hidden tab lets it close after its linger and a visible one reopens it; back online, a silent socket
  * is replaced at once (04-pricing R9); the user's topic follows
- * the API session for the signed-in account; their events keep the queries true; the sound engine warms when idle.
+ * the API session for whoever trades here (the account, or the Practice guest, R5.10); their events keep the queries
+ * true; the sound engine warms when idle.
  */
 import { useLive } from "@senryo/live/react";
 import { useLiveSync } from "@senryo/query";
 import { useEffect } from "react";
 import { preconnect } from "react-dom";
 import { apiSessionScope, onApiSession } from "@/lib/account/api";
-import { useAccount } from "@/lib/account/provider";
+import { useAppTrader } from "@/lib/account/guest";
 import { ENV } from "@/lib/env";
 import { preloadFeedback } from "@/lib/feedback";
 
@@ -19,7 +20,7 @@ export function LiveHost() {
   // price). The api's CORS answers carry no credentials, so the hint is anonymous like the requests.
   preconnect(ENV.API_ORIGIN, { crossOrigin: "anonymous" });
   const live = useLive();
-  const address = useAccount().hint?.address;
+  const address = useAppTrader().owner;
   useLiveSync(live, address);
 
   useEffect(() => live.stream.acquire(), [live]);

@@ -8,6 +8,7 @@ export * from "./duel.ts";
 export * from "./earn-words.ts";
 export * from "./event-words.ts";
 export * from "./exits.ts";
+export * from "./guest.ts";
 export * from "./handle-copy.ts";
 export * from "./instrument.ts";
 export * from "./intent-journal.ts";

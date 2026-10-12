@@ -3,7 +3,7 @@ import { addNetworkStateListener } from "expo-network";
 import { useEffect } from "react";
 import { AppState } from "react-native";
 import { apiSessionScope, onApiSession } from "~/lib/account/api";
-import { useAccount } from "~/lib/account/provider";
+import { useAppTrader } from "~/lib/account/guest";
 import { appLive } from "~/lib/live";
 import { useNetwork } from "~/lib/network";
 
@@ -15,7 +15,7 @@ import { useNetwork } from "~/lib/network";
  */
 export function LiveHost() {
   const live = appLive();
-  const address = useAccount().hint?.address;
+  const address = useAppTrader().owner;
   const chainId = useNetwork().chainId;
   useLiveSync(live, address);
 

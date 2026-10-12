@@ -23,7 +23,8 @@
     "./delegate-store": {
       "react-native": "./src/platform/delegate-store.native.ts",
       "default": "./src/platform/delegate-store.web.ts"
-    }
+    },
+    "./guest-key": "./src/guest-key.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",

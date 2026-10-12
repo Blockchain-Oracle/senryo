@@ -11,7 +11,7 @@ import { useMarketAccount } from "@senryo/query";
 import { Eye, EyeOff } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { EntityMark } from "@/components/identity/entity-mark";
-import { useAccount } from "@/lib/account/provider";
+import { useAppTrader } from "@/lib/account/guest";
 import { fire, tapFeedback } from "@/lib/feedback";
 import { money } from "@/lib/format";
 import { setActiveNetwork, useNetwork } from "@/lib/network";
@@ -50,9 +50,13 @@ export function ModeCapsule({ className }: { className?: string | undefined }) {
   );
 }
 
-/** The balance (opens the wallet drawer) and the eye that hides every amount on this device. */
+/**
+ * The balance (opens the wallet drawer; a Practice guest's opens the account drawer, where a passkey keeps its test
+ * dollars, R5.10) and the eye that hides every amount on this device.
+ */
 export function BalanceChip({ className }: { className?: string | undefined }) {
-  const address = useAccount().hint?.address;
+  const trader = useAppTrader();
+  const address = trader.owner;
   const account = useMarketAccount(address);
   const hidden = usePrivacy();
   if (!address) return null;
@@ -62,10 +66,16 @@ export function BalanceChip({ className }: { className?: string | undefined }) {
       <button
         type="button"
         className="balance-amount tnum"
-        aria-label={hidden ? "Balance hidden. Open the wallet" : `Balance ${balance}. Open the wallet`}
+        aria-label={
+          trader.guest
+            ? `${hidden ? "Balance hidden" : `Balance ${balance}`}. Make a passkey to keep it`
+            : hidden
+              ? "Balance hidden. Open the wallet"
+              : `Balance ${balance}. Open the wallet`
+        }
         onClick={() => {
           tapFeedback();
-          openDrawer(DRAWERS.wallet);
+          openDrawer(trader.guest ? DRAWERS.account : DRAWERS.wallet);
         }}
       >
         {masked(balance, hidden)}

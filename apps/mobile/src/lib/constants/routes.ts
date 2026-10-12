@@ -68,13 +68,10 @@ export type AccountVerb =
   | "place a parlay"
   | "duel"
   | "call an event"
-  | "rank your runs";
+  | "rank your runs"
+  | "keep your test dollars";
 export const accountRequiredRoute = (verb: AccountVerb, next?: string) =>
   `/account-required?verb=${encodeURIComponent(verb)}${next ? `&next=${encodeURIComponent(next)}` : ""}` as const;
-
-/** F14: the account sheet as the signing step of the call a guest just picked ("Place $5 on BTC Up"). */
-export const firstCallRoute = (title: string) =>
-  `/account-required?verb=${encodeURIComponent("make a call")}&call=${encodeURIComponent(title)}` as const;
 
 /** B3: the receive sheet (the address never changes). */
 export const receiveRoute = () => "/receive" as Href;

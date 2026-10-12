@@ -50,6 +50,8 @@ export const STORAGE = {
   channel: "senryo.session.v1",
   /** The one-tap delegate key per owner and network (`<prefix>.<chainId>.<owner>`, D-280). */
   delegate: "senryo.delegate.v1",
+  /** A guest's Practice key (R5.10, `guest-key.ts`). */
+  guest: "senryo.guest.v1",
 } as const;
 
 /** HKDF info strings for keys derived from the PRF output (never the signing key). */

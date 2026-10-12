@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { OpenParlays } from "@/features/parlay/ParlayList";
 import { PositionsPanel } from "@/features/positions/PositionsPanel";
-import { useAccount } from "@/lib/account/provider";
+import { useAppTrader } from "@/lib/account/guest";
 import { tapFeedback } from "@/lib/feedback";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
@@ -64,7 +64,7 @@ function Record({ owner, hidden }: { owner: `0x${string}`; hidden: boolean }) {
 }
 
 export function CallsScreen() {
-  const owner = useAccount().hint?.address;
+  const owner = useAppTrader().owner;
   const list = useCallRows(owner);
   const book = useLiveBook();
   const hidden = usePrivacy();

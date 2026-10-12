@@ -3,7 +3,7 @@
  * props (UP / DOWN or TRAIL / CLOSE), the order stack's heading and rows, the chart's overlay (a derived value over
  * the call's and the ride's, read on the UI thread) and the reaction feed.
  */
-import { CALL_MODES, CENT_E6, type ChartOverlay, dollars, type QuoteTick, trailText } from "@senryo/calls";
+import { CALL_MODES, CENT_E6, type ChartOverlay, chartFrame, dollars, type QuoteTick, trailText } from "@senryo/calls";
 import type { useCallFlow, useExitActions } from "@senryo/calls/react";
 import { rideFee, rideNotional } from "@senryo/core";
 import { useCallback, useEffect, useRef } from "react";
@@ -51,16 +51,22 @@ export function useTradePanel(i: {
   }, [ride, rideOn]);
   const callOverlay = q.overlay;
   const rideOverlay = side.live.overlay;
-  // Hidden balances mask the chart's PnL too (R5.14).
+  // The chart reads whichever instrument is on, with the tap's pending entry and the PnL masked (`chartFrame`).
   const [hidden] = useHideBalances();
   const masking = useSharedValue(hidden);
+  const pendingEntry = ride ? side.flow.pendingEntry : flow.pendingEntry;
+  const pending = useSharedValue(pendingEntry);
   useEffect(() => {
     masking.value = hidden;
-  }, [hidden, masking]);
-  const overlay: SharedValue<ChartOverlay | null> = useDerivedValue(() => {
-    const o = rideOn.value ? rideOverlay.value : callOverlay.value;
-    return o?.pnlText && masking.value ? { ...o, pnlText: HIDDEN_AMOUNT } : o;
-  });
+    pending.value = pendingEntry;
+  }, [hidden, masking, pendingEntry, pending]);
+  const overlay: SharedValue<ChartOverlay | null> = useDerivedValue(() =>
+    chartFrame(
+      rideOn.value ? rideOverlay.value : callOverlay.value,
+      pending.value,
+      masking.value ? HIDDEN_AMOUNT : null,
+    ),
+  );
 
   const armed = (title: string) => {
     fire("confirm");

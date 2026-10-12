@@ -9,6 +9,7 @@ export * from "./use-duel-moments.ts";
 export * from "./use-earn.ts";
 export * from "./use-events.ts";
 export * from "./use-exit.ts";
+export * from "./use-guest.ts";
 export * from "./use-intent-recovery.ts";
 export * from "./use-leg-prices.ts";
 export * from "./use-leg-standing.ts";

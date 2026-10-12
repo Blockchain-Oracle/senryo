@@ -3,7 +3,7 @@
  * its caps (opens spend the caps; closes don't) — no prompt at all; otherwise the owner, one Face ID for the intent and,
  * when the reserve's allowance is short, a permit for exactly this stake in the same prompt.
  */
-import type { AccountClient, DelegateKeys, Hex, LocalAccount } from "@senryo/account";
+import type { DelegateKeys, Hex, LocalAccount } from "@senryo/account";
 import {
   ACTION_OPEN,
   addressOf,
@@ -30,6 +30,7 @@ import {
   rideIntentRequest,
 } from "@senryo/chain";
 import { type ChainId, DUEL, EVENTS } from "@senryo/config";
+import type { Signing } from "./caller.ts";
 import { INTENT_TTL_SEC, PERMIT_TTL_SEC, SESSION_MARGIN_SEC } from "./constants.ts";
 
 /** What `/v1/markets/account` says about the caller (balance, allowance, permit nonce, epoch, session). */
@@ -61,7 +62,7 @@ export type CallDraft = Omit<MarketIntent, "deadline" | "nonce" | "epoch" | "rec
 
 export interface SignDeps {
   chainId: ChainId;
-  client: AccountClient;
+  client: Signing;
   delegates: DelegateKeys;
   reserve: `0x${string}`;
   account: AccountView;

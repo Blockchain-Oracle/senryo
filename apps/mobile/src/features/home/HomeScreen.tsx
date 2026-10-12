@@ -27,7 +27,8 @@ import { SectionHeading } from "~/features/profile/SectionHeading";
 import { ContextualFaceId } from "~/features/setup/ContextualFaceId";
 import { SetupResume } from "~/features/setup/SetupResume";
 import { fire } from "~/feedback/fire";
-import { useAccount } from "~/lib/account/provider";
+import { useAppTrader } from "~/lib/account/guest";
+import { accountRequiredRoute } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { OneTapChip } from "./OneTapChip";
@@ -38,7 +39,9 @@ const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
 
 export function HomeScreen() {
-  const address = useAccount().hint?.address;
+  // The passkey account, else a Practice guest who has started (R5.10): its balance and positions show here too.
+  const trader = useAppTrader();
+  const address = trader.owner;
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const bottom = useDockInset();
@@ -108,7 +111,17 @@ export function HomeScreen() {
                   value === undefined ? "Balance" : `Balance $${formatUnits(value, DOLLAR_DECIMALS, CENTS)}`
                 }
               />
-              <OneTapChip />
+              {trader.guest ? (
+                <Button
+                  label="Make a passkey to keep it"
+                  variant="secondary"
+                  size="sm"
+                  block={false}
+                  onPress={() => router.push(accountRequiredRoute("keep your test dollars"))}
+                />
+              ) : (
+                <OneTapChip />
+              )}
             </View>
             <SetupResume />
             {book.entries.length > 0 || book.parlays > 0 ? (
@@ -123,7 +136,7 @@ export function HomeScreen() {
           <>
             <EmptyState
               why="Call the next move"
-              detail="Up or Down on live prices. Pick one: your passkey signs it."
+              detail="Up or Down on live prices. Practice needs no sign-up: pick one."
               action={{ label: "Make a call", onPress: () => watch("BTC") }}
             />
             {markets("Markets")}

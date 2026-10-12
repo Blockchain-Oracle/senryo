@@ -1,8 +1,10 @@
 import { configureIntentJournal } from "@senryo/calls";
-import { useIntentRecovery, useResults } from "@senryo/calls/react";
+import { useGuestSweep, useIntentRecovery, useResults } from "@senryo/calls/react";
 import { celebrate } from "~/feedback/celebrate";
 import { fire } from "~/feedback/fire";
+import { useAppTrader } from "~/lib/account/guest";
 import { useAccount } from "~/lib/account/provider";
+import { notify } from "~/lib/notify";
 import { storage } from "~/lib/storage";
 import { tradeToast } from "~/lib/trade-toast";
 
@@ -12,12 +14,15 @@ configureIntentJournal({ get: (k) => storage.getString(k), set: (k, v) => storag
 /**
  * Results land wherever you are: the shared rules (`@senryo/calls` `useResults`) with the phone's effects — the win
  * cue and haptic, the soft thud for a loss, confetti, and the result on its trade's toast (R5.11) with the market's
- * mark (R2.8) — and trades whose ending this device didn't see, re-read from its journal (R5.13).
+ * mark (R2.8) — trades whose ending this device didn't see, re-read from its journal (R5.13), and a former
+ * guest's test dollars moving to the account it made (R5.10).
  */
 export function ResultHost() {
-  const account = useAccount();
-  useIntentRecovery(account.hint?.address, tradeToast);
-  useResults(account, {
+  const trader = useAppTrader();
+  useIntentRecovery(trader.owner, tradeToast);
+  // A guest who made a passkey: its test dollars follow it to the account (R5.10).
+  useGuestSweep(useAccount().hint?.address, notify);
+  useResults(trader.caller, {
     cue: (c) =>
       c === "win"
         ? fire("win", { cue: "win" })
