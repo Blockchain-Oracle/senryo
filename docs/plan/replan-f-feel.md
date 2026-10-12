@@ -210,7 +210,18 @@ R8 → R9).
 **Built (12 Oct):**
 - **Commits:** `266a806b` (F5–F8), `00118358` (F1–F3), `1f6977d4` (F11), `d9299b40` (F9–F10), `911b3509`
   (F14 web), `79dee854` (F12–F13), `28692085` (F3 settings, F4, F7 header), `bcfe6c6c` (F14 phone).
-- **Production:** api and keeper on `sha-79dee85`; web next. Live on production now:
+- **Production:**
+  - api and keeper on `sha-79dee85`, web on `sha-2869208`;
+  - phone OTA `b1440dae-ba17-416b-8ed4-9ab605c691ed` (runtime 0.4.0) after a Release simulator pass on A2 Senryo
+    iPhone 17.
+- **What the pass showed:**
+  - Home rows with graph, change and chevron, and "Make a call" for a guest;
+  - the terminal header's 24 h line;
+  - the new UP/DOWN with "Pays …";
+  - Moonshot plates with the note;
+  - Events with crests;
+  - Real switching at once and listing its markets.
+- **Fixed during the pass:** Real's slide before mainnet (`895b3fae`); More's guest wall. Live on production now:
   - the 24 h graph on every row;
   - Real's catalogue;
   - null for unopened windows;

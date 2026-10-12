@@ -52,7 +52,20 @@ Plan approved the same day:
 - **Decisions** D-315 (team crests, superseding D-312) … D-320.
 - **Research** `10-feel-direction.md` (Codex, xhigh).
 
-Next: F.
+**F — feel, shipped 12 Oct 11:34 UTC** ([replan-f-feel.md](replan-f-feel.md)):
+- **Sound:** sound and music on both apps (one cue map, 37 cues and ladders, beds; the phone plays rendered WAVs via
+  OTA), with volumes and terminal music in settings.
+- **Haptics:** Tradash's haptic words.
+- **Colours:** the acid green / coral / cyan direction colours.
+- **Prices:** a 24 h sparkline and change on every price row and the terminal header.
+- **The ticket:** label-only buttons with "Pays …"; strikes and winning region on the chart; unpriced plates.
+- **Network:** Practice | Real switch on the web; Real never blank (the api serves 143 read-only).
+- **Events:** ESPN crests for all 114 clubs; live scores on cards.
+- **First call:** a guest's first call signs itself (terminal, both apps); no Home or More account walls.
+- **Live:** api and keeper `sha-79dee85`, web `sha-2869208`, OTA `b1440dae`.
+- **Left inside F:** the press kit on the remaining cards; F14 on Lucky, Duel, Events, Parlay and Earn.
+
+Next: R7 (games, Duel and Events as games).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
