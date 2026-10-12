@@ -3,6 +3,7 @@ import type { Address } from "@senryo/chain";
 import {
   type ArcadeGame,
   envelopeCheck,
+  FLAP_ENGINE_VERSION,
   MAX_RUN_SEC,
   replayArcade,
   SLED_ENGINE_VERSION,
@@ -23,7 +24,7 @@ import type { ArcadeTape, ArcadeTapes } from "./tape.ts";
  * The arcade's server half (S8.8, D-295; Owarine arcade/score.server.ts): a seed per run, issued here so a score can
  * only be for a run the api started, and a score accepted only when the replay of that seed and the recorded inputs
  * ends where the device said, on the score it said. Checked, not on chain; no money rides on it. A seed carries the
- * price tape it was issued with (Line Rider's terrain), and the replay rides that same tape.
+ * price tape it was issued with (the sled's terrain, the coin's canyon), and the replay plays that same tape.
  */
 const SEED_BYTES = 4;
 /** A seed stays good for the longest run plus a few minutes to start it. */
@@ -31,10 +32,13 @@ const SEED_GRACE_SEC = 300;
 /** The device's clock and the replay may round the last tick differently. */
 const TICK_SLACK = 1;
 export const ARCADE_BOARD_SIZE = 10;
-/** Each game's current engine: Line Rider is the sled (v2, R7.2); a seed is issued for, and replayed by, this one. */
+/**
+ * Each game's current engine: Line Rider is the sled (v2, R7.2), Candle Hop the coin through the canyon (v2, R7.3); a
+ * seed is issued for, and replayed by, this one, and the board ranks only its runs.
+ */
 export const ARCADE_ENGINE: Readonly<Record<ArcadeGame, number>> = {
   "line-rider": SLED_ENGINE_VERSION,
-  "candle-hop": 1,
+  "candle-hop": FLAP_ENGINE_VERSION,
 };
 
 export interface ArcadeRun {

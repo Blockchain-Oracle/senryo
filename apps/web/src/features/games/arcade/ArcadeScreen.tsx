@@ -79,10 +79,8 @@ export function ArcadeScreen({
       if (signedIn) issued = await desk.seed.mutateAsync().catch(() => null);
       const seed = issued?.seed ?? seedFromBytes(crypto.getRandomValues(new Uint8Array(SEED_BYTES)));
       const ranked = issued !== null;
-      if (game === "candle-hop") {
-        return createFlapRun({ seed, ranked, calm: reduce, tape: issued?.tape.moves ?? [], ink });
-      }
       const tape = issued?.tape ?? (await desk.tape.mutateAsync());
+      if (game === "candle-hop") return createFlapRun({ seed, ranked, calm: reduce, tape, ink });
       return createSledRun({ seed, ranked, calm: reduce, tape, ink });
     },
     [desk.seed, desk.tape, game, reduce, signedIn],

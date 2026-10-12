@@ -132,7 +132,7 @@ export function drawSled(view: ArcadeView, sc: SledScene, alpha: number): void {
 
   // Screen: speed streaks and the wipeout's flash.
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (s.speed > LOOK.streakFrom && !s.over) {
+  if (s.speed > LOOK.streakFrom && !s.over && !sc.still) {
     const a = Math.min(1, (s.speed - LOOK.streakFrom) / LOOK.streakFrom) * HALF;
     ctx.strokeStyle = tint(ink.ink, a * HALF);
     ctx.lineWidth = 1;
@@ -166,7 +166,7 @@ function drawMinutes(ctx: CanvasRenderingContext2D, sc: SledScene, camX: number,
   for (let x = Math.ceil(camX / every) * every; x < camX + visibleW; x += every) {
     ctx.moveTo(x, sc.camY);
     ctx.lineTo(x, bottom);
-    const minute = sc.tape.from + (tapeIndexAt(x, n) + 1) * SEC_PER_MIN;
+    const minute = sc.tape.from + (tapeIndexAt(sc.s, x, n) + 1) * SEC_PER_MIN;
     ctx.fillText(clock.format(minute * MS), x + LOOK.labelLift / TWO, bottom - LOOK.labelLift);
   }
   ctx.stroke();

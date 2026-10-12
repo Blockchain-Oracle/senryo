@@ -43,7 +43,7 @@ export const GAMES: readonly GameSpec[] = [
   {
     key: "candle-hop",
     title: "Candle Hop",
-    line: "Tap through the candles",
+    line: "Hop the coin through a day of real candles",
     stakes: "No stakes · a board",
     href: "/app/games/candle-hop/",
     route: "/games/candle-hop",

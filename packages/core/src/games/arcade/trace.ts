@@ -68,8 +68,8 @@ export function rideScoreCeiling(sec: number): number {
   return Math.ceil(perSec * (sec + (comboGrowth * sec * sec) / HALF)) + 1;
 }
 
-/** Field units from the first candle's spawn until its body has passed the flyer: no hop scores before then. */
-const FIELD_RUNWAY = FIELD_W + FIELD_W * FLAP.leadFrac - FLAP.birdX + FLAP.bodyW / HALF;
+/** Field px from the first candle's spawn until its body has passed the coin: no hop scores before then. */
+const FIELD_RUNWAY = FIELD_W + FIELD_W * FLAP.leadFrac - (FLAP.coinX - FLAP.hitR - FLAP.bodyW / HALF);
 
 /** The most a hop can score in `sec` seconds: nothing on the runway, then one candle per spacing at the top speed. */
 export function flapScoreCeiling(sec: number): number {

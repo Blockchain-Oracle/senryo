@@ -124,8 +124,10 @@ export interface SledState {
   head: number;
   pts: number[];
   open: boolean[];
-  /** Points laid so far (the tape's cursor); the gap being laid (segments left), its near edge, the cool-down. */
+  /** Points laid so far, and the tape's minute the run starts at (the seed picks it); the gap being laid (segments
+   * left), its near edge, the cool-down. */
   laid: number;
+  tapeStart: number;
   gapLeft: number;
   gapEdge: number;
   gapCool: number;
@@ -162,9 +164,9 @@ export interface SledState {
 export const rampOf = (s: SledState, sec: number, config: ArcadeRunConfig): number =>
   clamp(s.elapsedSec / (sec * (config.calm ? SLED.calmStretch : 1)), 0, 1);
 
-/** The tape's index under world x (it wraps on a long run), for the HUD's price. */
-export const tapeIndexAt = (x: number, tapeLength: number): number =>
-  tapeLength === 0 ? 0 : Math.floor(Math.max(0, x) / (SLED.seg * SLED.tapeSegs)) % tapeLength;
+/** The tape's minute under world x (it wraps on a long run), for the HUD's price and the floor's clock. */
+export const tapeIndexAt = (s: SledState, x: number, tapeLength: number): number =>
+  tapeLength === 0 ? 0 : (s.tapeStart + Math.floor(Math.max(0, x) / (SLED.seg * SLED.tapeSegs))) % tapeLength;
 
 function tapeScaleOf(tape: readonly number[]): number {
   let sum = 0;
@@ -176,7 +178,7 @@ function tapeScaleOf(tape: readonly number[]): number {
 function walkNext(s: SledState, rng: Rng, config: ArcadeRunConfig): number {
   const d = rampOf(s, SLED.wildSec, config);
   const tape = config.tape;
-  const move = tape.length === 0 ? 0 : (tape[Math.floor(s.laid / SLED.tapeSegs) % tape.length] as number);
+  const move = tape.length === 0 ? 0 : (tape[tapeIndexAt(s, s.laid * SLED.seg, tape.length)] as number);
   // A rising price climbs: y grows down, so a move up lifts the line.
   let step = (-move * s.tapeScale * lerp(SLED.lev0, SLED.lev1, d)) / SLED.tapeSegs;
   step += SLED.walkDrift * (rng.next() * 2 - 1);
@@ -268,6 +270,7 @@ export function createSledState(rng: Rng, config: ArcadeRunConfig): SledState {
     pts: [],
     open: [],
     laid: 0,
+    tapeStart: Math.floor(rng.next() * config.tape.length),
     gapLeft: 0,
     gapEdge: 0,
     gapCool: 0,

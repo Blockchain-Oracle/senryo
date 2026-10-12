@@ -109,6 +109,19 @@ old R7.1 (games audio) moved to F1–F3.
   - **Replaces** `packages/core/src/games/arcade/{ride,replay}.ts` together (engine v2, its own board). The engine's
     events (`impact`, `scored`, `crashed`, `regained`, `milestoneHit`) drive every effect.
 - [ ] R7.3 Candle Hop v2, a coin through a candle canyon:
+  - *Progress 12 Oct (core, web):*
+    - *The engine (`flap.ts` v2, engine 2 with its own board) is the canyon built from the run's price tape:*
+      - *one pair of candles a minute; the gap follows the price;*
+      - *each pair is green or coral by its move, and the wicks grow with the move's size;*
+      - *gravity 1,000 px/s², flap −310 px/s, the gap 120 → 88 px (calm: 100).*
+    - *Collision is a circle against rectangles by squared distance. The seed picks the minute the run starts at
+      (both games).*
+    - *A centre-seeking bot lives 7–45 s on today's tapes, and every run replays exactly.*
+    - *Web (`flap-run.ts`):*
+      - *the coin squashes on the kick and stretches in the fall;*
+      - *the wing on every flap; the gap ladder and sparks per candle passed;*
+      - *the crash: 50 ms hit-stop, an 8 px shake, fragments, a flash, the impact haptic and the music cut.*
+    - *Left: the phone (R7.6).*
   - **World:** real recent candles from the archive as the canyon, with solid bodies and dangerous wicks.
   - **Physics:** gravity 1,000 px/s², flap −310 px/s, gap 120 → 88 px; the same fixed-point discipline.
   - **Juice:** squash and stretch with a wing sound; sparks and rising notes per gap.

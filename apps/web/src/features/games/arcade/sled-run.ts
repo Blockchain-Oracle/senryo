@@ -64,6 +64,8 @@ export interface SledScene {
   shake: number;
   flash: number;
   camY: number;
+  /** Reduced motion: no shake, flash or streaks. */
+  still: boolean;
 }
 
 export const FX = {
@@ -131,6 +133,7 @@ export function createSledRun(o: {
     shake: 0,
     flash: 0,
     camY: 0,
+    still: o.calm,
   };
   // The HUD's price: the tape's closes rebuilt from its moves, once.
   const prices: number[] = [];
@@ -176,7 +179,7 @@ export function createSledRun(o: {
     if (air < FX.landAirSec) return;
     if (s.landed >= FX.hardLanding) {
       hitStop = FX.hitStopTicks;
-      scene.shake = Math.max(scene.shake, FX.landShake);
+      if (!scene.still) scene.shake = Math.max(scene.shake, FX.landShake);
       fire("impact", { cue: "landing" });
       burst(mx, my, FX.dustHard, FX.dustSpeed, o.ink.ink, FX.bitLife, FX.bitSize);
     } else {
@@ -191,8 +194,10 @@ export function createSledRun(o: {
   };
 
   const onCrash = () => {
-    scene.shake = FX.crashShake;
-    scene.flash = 1;
+    if (!scene.still) {
+      scene.shake = FX.crashShake;
+      scene.flash = 1;
+    }
     burst(s.r.x, s.r.y, FX.crashBits, FX.burstSpeed, o.ink.down, FX.bitLife, FX.bitSize);
     burst(s.r.x, s.r.y, FX.crashBits / TWO, FX.burstSpeed, o.ink.ink, FX.bitLife, FX.bitSize);
     fire("fail", { cue: "crash" });
@@ -249,7 +254,7 @@ export function createSledRun(o: {
       const n = s.flips - lastFlips;
       say(FLIP_WORDS[n] ?? `${n}× FLIP`, o.ink.accent);
       fire("surge", { cue: "surge" });
-      scene.shake = Math.max(scene.shake, FX.flipShake);
+      if (!scene.still) scene.shake = Math.max(scene.shake, FX.flipShake);
       burst(s.r.x, s.r.y, FX.flipBits, FX.burstSpeed, o.ink.accent, FX.bitLife, FX.bitSize);
     }
     lastFlips = s.flips;
@@ -282,7 +287,7 @@ export function createSledRun(o: {
     tickFx();
   };
 
-  const at = () => tapeIndexAt((s.b.x + s.f.x) * HALF, prices.length);
+  const at = () => tapeIndexAt(s, (s.b.x + s.f.x) * HALF, prices.length);
   return {
     seed: o.seed,
     ranked: o.ranked,
