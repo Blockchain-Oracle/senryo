@@ -9,6 +9,7 @@ import { Modal, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetInPlace } from "~/components/sheet/SheetHost";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { accountName, useAccountIdentity } from "~/features/auth/SignInOutcome";
 import { InfoTip } from "~/features/setup/InfoTip";
@@ -23,11 +24,13 @@ export function SignOutConfirm({ onClose }: { onClose: () => void }) {
   return (
     <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <GestureHandlerRootView style={styles.fill}>
-        <View style={StyleSheet.absoluteFill}>
-          <Sheet onClose={onClose} closeLabel="Close sign out">
-            <Body />
-          </Sheet>
-        </View>
+        <SheetInPlace>
+          <View style={StyleSheet.absoluteFill}>
+            <Sheet onClose={onClose} closeLabel="Close sign out">
+              <Body />
+            </Sheet>
+          </View>
+        </SheetInPlace>
       </GestureHandlerRootView>
     </Modal>
   );

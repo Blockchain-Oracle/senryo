@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Button } from "~/components/kit/Button";
 import { Info } from "~/components/kit/symbols";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetInPlace } from "~/components/sheet/SheetHost";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { fire } from "~/feedback/fire";
 import { SIZE, SPACE, useTheme } from "~/theme";
@@ -40,12 +41,14 @@ export function InfoSheet({ title, body, onClose }: { title: string; body: strin
   return (
     <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <GestureHandlerRootView style={styles.fill}>
-        <View style={StyleSheet.absoluteFill}>
-          <Sheet onClose={onClose} closeLabel={`Close ${title}`}>
-            <SheetHeading title={title} body={body} />
-            <GotIt />
-          </Sheet>
-        </View>
+        <SheetInPlace>
+          <View style={StyleSheet.absoluteFill}>
+            <Sheet onClose={onClose} closeLabel={`Close ${title}`}>
+              <SheetHeading title={title} body={body} />
+              <GotIt />
+            </Sheet>
+          </View>
+        </SheetInPlace>
       </GestureHandlerRootView>
     </Modal>
   );

@@ -10,4 +10,11 @@ export const SHEET = {
   failOffsetX: 24,
   scrollThrottle: 16,
   maxHeight: 0.9,
+  /** A sheet with detents stops this far under the top safe area at its tallest (D-321). */
+  topGap: 8,
+  /** A flick past this speed (pt/s) moves a sheet with detents one stop. */
+  detentVelocity: 500,
 } as const;
+
+/** A long list's rests (the market sheet, D-321): it opens at 62 % and drags to 88 % and full. */
+export const LIST_DETENTS = [0.62, 0.88, 1] as const;

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SheetPortalProvider } from "~/components/sheet/SheetHost";
 import { ConfettiHost } from "~/components/shell/ConfettiHost";
 import { DeferredLinkHost } from "~/components/shell/DeferredLinkHost";
 import { FeedbackHost } from "~/components/shell/FeedbackHost";
@@ -67,34 +68,36 @@ export default function RootLayout() {
 /**
  * The stack over the tab shell (S1b.7: `(tabs)` is the dock on headless tabs; S5 sets the prediction places), plus the headless
  * hosts mounted once (ported pattern): feedback (sound pool), toasts and the offline banner, the privacy plate (S6),
- * TxRecovery (S8.24) and pushes (S1b.13). Root pages (account, notifications) push over the shell; sheets are
- * transparent modals.
+ * TxRecovery (S8.24) and pushes (S1b.13). Root pages (account, notifications) push over the shell; route sheets are
+ * transparent modals; sheets opened inside the shell render in the sheet layer above it and its dock (D-321).
  */
 function RootStack() {
   const { name, color } = useTheme();
   return (
     <>
       <StatusBar style={name === "dark" ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: color.ground },
-          headerTintColor: color.ink,
-          headerTitleStyle: { fontFamily: FONT.sansStrong },
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: "minimal",
-          // The back button shows no text, but VoiceOver reads its title: never a route name like "(tabs)".
-          headerBackTitle: "Back",
-          contentStyle: { backgroundColor: color.ground },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
-        <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
-        {SHEETS.map((route) => (
-          <Stack.Screen key={route} name={`(sheets)/${route}`} options={sheet} />
-        ))}
-      </Stack>
+      <SheetPortalProvider>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: color.ground },
+            headerTintColor: color.ink,
+            headerTitleStyle: { fontFamily: FONT.sansStrong },
+            headerShadowVisible: false,
+            headerBackButtonDisplayMode: "minimal",
+            // The back button shows no text, but VoiceOver reads its title: never a route name like "(tabs)".
+            headerBackTitle: "Back",
+            contentStyle: { backgroundColor: color.ground },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
+          <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
+          {SHEETS.map((route) => (
+            <Stack.Screen key={route} name={`(sheets)/${route}`} options={sheet} />
+          ))}
+        </Stack>
+      </SheetPortalProvider>
       <FeedbackHost />
       <LiveHost />
       <ResultHost />
