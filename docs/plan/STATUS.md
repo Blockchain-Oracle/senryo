@@ -99,7 +99,14 @@ leftovers.
   the always-present slip bar → slip (the chain's own quote, stake presets or any amount, hold-to-place naming its
   blocker), settlement tracks, parlays in play on Calls. Web `sha-252aba6`, phone OTA `66b9f59c`.
 
-Next: P4 — Duel as a two-seat arena (the stage, tier tiles with "N waiting", "No pot", three market lanes, the result).
+- **P4 live (12 Oct 17:30 UTC):** Duel as a two-seat arena on both apps — the stage (your seat vs the opponent's:
+  empty, searching, then the person you drew; the pot between; running totals), tier tiles with live queue counts
+  ("No pot", D-323), the commitment spelled out, three market lanes in the match (D-322; Warm-up keeps the deck), the
+  verdict on the stage with Rematch and Share, the ladder. api + web `sha-ceeda2e`, phone OTA `c1681c42`. Open: a live
+  match on the lanes needs a real account in a seat (P7).
+
+Next: P5 — Earn as ownership (share value hero, the share-value chart, the keypad sheet, receipts, net earned via the
+indexer's `EarnAccount`).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

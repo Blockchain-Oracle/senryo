@@ -147,7 +147,7 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
 - **Guests** pick and price freely; placing is the passkey step with the slip kept (value first, sign last).
 
 ### P4 — Duel as a two-seat arena (both apps)
-- [ ] P4 built and deployed
+- [x] P4 built and deployed — `ceeda2e3`, api + web `sha-ceeda2e`, phone OTA `c1681c42` (12 Oct)
 
 - **Entry stage (220 pt):**
   - your 72 pt portrait vs an outlined "Opponent seat", the pot on the line between;
