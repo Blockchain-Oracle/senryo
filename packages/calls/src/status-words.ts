@@ -58,8 +58,15 @@ const n = (v: number | null | undefined) => (v === null || v === undefined ? nul
 export function metricLine(c: Component): string {
   const m = c.metrics;
   switch (c.id) {
-    case "prices":
-      return n(m.live) === null ? (c.detail ?? "") : `${m.live} markets live${c.detail ? ` · ${c.detail}` : ""}`;
+    case "prices": {
+      if (n(m.live) === null) return c.detail ?? "";
+      // The detail lists every state ("30 live · 4 closed"); the live count is already said.
+      const rest = (c.detail ?? "")
+        .split(" · ")
+        .filter((part) => part && !part.endsWith(" live"))
+        .join(" · ");
+      return rest ? `${m.live} markets live · ${rest}` : `${m.live} markets live`;
+    }
     case "settlement":
       return n(m.overdue) === 0 ? "Every closed window settled" : (c.detail ?? "");
     case "relay":
