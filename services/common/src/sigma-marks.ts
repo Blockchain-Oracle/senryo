@@ -1,13 +1,15 @@
 import type { Hex } from "@senryo/chain";
-import { lnWad, SIGMA_MARK_STEP_SEC, toE8 } from "@senryo/core";
+import { CALENDARS, type MarketSpec } from "@senryo/config";
+import { alwaysOpen, isOpenAt, lnWad, SIGMA_MARK_STEP_SEC, scheduleOf, toE8 } from "@senryo/core";
 import type { Db } from "./db.ts";
 
 /**
  * σ marks (R4.3, D-300, D-313): each feed's volatility through each minute boundary, exactly as the calibration
  * defined it (`scripts/calibrate/series.py` `SigmaMarks`) — EWMAs of squared 1-minute log returns between boundary
  * prints, per √second: the fast mark (span 30) and the slow anchor (span 1,440, a day), each seeded with the plain mean
- * of its first 30 returns. A boundary print more than 5 s past its instant is no price (a closed or silent market), so
- * the returns on either side of it are skipped. Each return is taken exactly from the integer prints (`lnWad`), so
+ * of its first 30 returns. A minute its market's calendar marks closed, or whose boundary print is more than 5 s past
+ * its instant (a silent feed), has no price, so the returns on either side of it are skipped — Pyth's equity feeds keep
+ * printing while their market is shut, and counting those flat minutes would decay an equity's σ to nothing overnight. Each return is taken exactly from the integer prints (`lnWad`), so
  * every service computes the same bits.
  *
  * The state is stored with every mark (`sigma_marks`), so each minute is the last one plus a return: the keeper writes
@@ -25,6 +27,8 @@ const PRINT_MAX_AGE_SEC = 5;
 const REBUILD_DAYS = 3;
 const REBUILD_MINUTES = REBUILD_DAYS * SIGMA_SLOW_SPAN;
 const E8 = 1e8;
+/** The marks' definition (0025): rule 2 skips closed minutes; a row made by an older rule is never built on. */
+const SIGMA_RULE = 2;
 const WAD = 1_000_000_000_000_000_000n;
 const WAD_FLOAT = 1e18;
 
@@ -109,8 +113,15 @@ const stateOf = (r: MarkRow): SigmaState => ({
   slowSeen: r.slow_seen,
 });
 
+/** When `m`'s market is open (its calendar), for skipping closed minutes. */
+export function marketOpenAt(m: MarketSpec): (t: number) => boolean {
+  const schedule = scheduleOf(CALENDARS[m.calendarId].schedule);
+  return alwaysOpen(schedule) ? () => true : (t) => isOpenAt(schedule, t);
+}
+
 export async function storedSigmaMark(db: Db, feedId: Hex, minute: number): Promise<SigmaMarkValue | undefined> {
-  const [row] = await db<MarkRow[]>`SELECT * FROM sigma_marks WHERE feed_id = ${feedId} AND minute = ${minute}`;
+  const [row] = await db<MarkRow[]>`SELECT * FROM sigma_marks
+    WHERE feed_id = ${feedId} AND minute = ${minute} AND rule = ${SIGMA_RULE}`;
   return row ? markValueOf(feedId, row) : undefined;
 }
 
@@ -118,22 +129,31 @@ export async function storedSigmaMark(db: Db, feedId: Hex, minute: number): Prom
 export async function sigmaMarksAt(db: Db, minutes: readonly number[]): Promise<SigmaMarkValue[]> {
   if (minutes.length === 0) return [];
   const rows = await db<(MarkRow & { feed_id: string })[]>`
-    SELECT * FROM sigma_marks WHERE minute IN ${db(minutes.map(BigInt))} ORDER BY minute, feed_id`;
+    SELECT * FROM sigma_marks WHERE minute IN ${db(minutes.map(BigInt))} AND rule = ${SIGMA_RULE}
+    ORDER BY minute, feed_id`;
   return rows.map((r) => markValueOf(r.feed_id as Hex, r));
 }
 
 /**
  * The stored mark of `feedId` through `minute`, computing and storing it first if nobody has: from the last stored
- * state within three days (else from nothing three days back), one boundary print at a time. `minute` must have
- * passed — a boundary print not yet archived counts as none, for good.
+ * state within three days (else from nothing three days back), one boundary print at a time, skipping the minutes
+ * `openAt` says the market was closed. `minute` must have passed — a boundary print not yet archived counts as none,
+ * for good.
  */
-export async function sigmaMarkFor(db: Db, feedId: Hex, minute: number, fallbackE8: number): Promise<SigmaMarkValue> {
+export async function sigmaMarkFor(
+  db: Db,
+  feedId: Hex,
+  minute: number,
+  fallbackE8: number,
+  openAt: (t: number) => boolean,
+): Promise<SigmaMarkValue> {
   if (minute % SIGMA_MINUTE_SEC !== 0) throw new Error(`σ mark minute ${minute} is not a boundary`);
   const stored = await storedSigmaMark(db, feedId, minute);
   if (stored) return stored;
   const earliest = minute - REBUILD_MINUTES * SIGMA_MINUTE_SEC;
   const [base] = await db<MarkRow[]>`
     SELECT * FROM sigma_marks WHERE feed_id = ${feedId} AND minute < ${minute} AND minute >= ${earliest}
+      AND rule = ${SIGMA_RULE}
     ORDER BY minute DESC LIMIT 1`;
   const from = base ? Number(base.minute) : earliest - SIGMA_MINUTE_SEC;
   const prints = await db<{ t: bigint; publish_time: bigint; price: bigint; expo: number }[]>`
@@ -144,14 +164,18 @@ export async function sigmaMarkFor(db: Db, feedId: Hex, minute: number, fallback
   );
   let state = base ? stateOf(base) : EMPTY_SIGMA;
   for (let m = from + SIGMA_MINUTE_SEC; m <= minute; m += SIGMA_MINUTE_SEC) {
-    state = stepSigma(state, priceAt.get(m) ?? null);
+    state = stepSigma(state, openAt(m) ? (priceAt.get(m) ?? null) : null);
   }
   const { fastE8, slowE8 } = marksOf(state, fallbackE8);
   await db`
-    INSERT INTO sigma_marks (feed_id, minute, fast_e8, slow_e8, price_e8, fast_var, fast_seen, slow_var, slow_seen)
+    INSERT INTO sigma_marks (feed_id, minute, fast_e8, slow_e8, price_e8, fast_var, fast_seen, slow_var, slow_seen, rule)
     VALUES (${feedId}, ${minute}, ${fastE8}, ${slowE8}, ${state.priceE8}, ${state.fastVar}, ${state.fastSeen},
-            ${state.slowVar}, ${state.slowSeen})
-    ON CONFLICT (feed_id, minute) DO NOTHING`;
+            ${state.slowVar}, ${state.slowSeen}, ${SIGMA_RULE})
+    ON CONFLICT (feed_id, minute) DO UPDATE SET
+      fast_e8 = EXCLUDED.fast_e8, slow_e8 = EXCLUDED.slow_e8, price_e8 = EXCLUDED.price_e8,
+      fast_var = EXCLUDED.fast_var, fast_seen = EXCLUDED.fast_seen, slow_var = EXCLUDED.slow_var,
+      slow_seen = EXCLUDED.slow_seen, rule = EXCLUDED.rule, created_at = now()
+    WHERE sigma_marks.rule < EXCLUDED.rule`;
   const won = await storedSigmaMark(db, feedId, minute);
   if (!won) throw new Error(`σ mark ${feedId}@${minute} vanished`);
   return won;

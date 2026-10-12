@@ -5,6 +5,7 @@ import {
   type Db,
   type Logger,
   MS_PER_SECOND,
+  marketOpenAt,
   nowSec,
   type SigmaMarkValue,
   sigmaMarkFor,
@@ -67,7 +68,7 @@ export class SigmaDesk {
     if (hit) return hit;
     const market = this.markets.get(feed)?.[0];
     if (!market) return Promise.reject(new Error(`no market for feed ${feedId}`));
-    const work = sigmaMarkFor(this.d.db, feed, minute, sigmaE8Of(market));
+    const work = sigmaMarkFor(this.d.db, feed, minute, sigmaE8Of(market), marketOpenAt(market));
     this.cache.set(key, work);
     work.catch(() => this.cache.delete(key));
     if (this.cache.size > CACHE_KEEP) {
