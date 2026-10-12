@@ -140,6 +140,20 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
     `"EventBook"`, `"PoolShares"`; a series' `listed`), so on testnet they turn live by themselves with the v3 book.
     The gates stay — mainnet opens these products at S9 — and R4.8's simulator pass checks each screen live.
 - [ ] R4.8 Deploy the api, keeper, indexer and web; phone OTA after one simulator pass; acceptance rows (S7, S8, rides).
+  - **Switched 12 Oct 07:33 UTC** (ids-and-txs: R4 switch): v1 paused, api/keeper/indexer/web on `sha-07ea785`, then
+    the api and keeper through the fixes below to **`sha-033cef3`**.
+  - **Acceptance on production so far:** call open, close and exit; ride open, close, exit and cap-out (via a
+    temporary `maxMoveBps` of 1, restored); Earn supply and the roll with rides open; a two-leg parlay; a duel to its
+    pot. **Waiting:** Earn's withdrawal (09:00 roll), a ride's end of life (ride 7, 11:54 UTC), a knock-out (rides 5/6,
+    40× each way — a 2.25 % move), an event decided by its committee (the keeper lists tonight's games), the phone
+    OTA after a simulator pass. **Blocked on testnet MON:** the sponsor is empty (0.0013) and the keeper low (0.44);
+    every relayed action costs ≈ 0.05–0.2 MON on v3 (open issue: v3's gas on Monad — a fill ≈ 600k, a reveal ≈ 1M —
+    for R9's mainnet economics).
+  - **Fixed on production along the way** (each found by the acceptance drives): σ marks skip closed market minutes
+    (0025; equities decayed to the floor overnight); broadcast failures name each RPC's reason; parlay commits have
+    their own gas ceiling; jsonb columns hold JSON, not a JSON string (0026 — duel cards, Lucky draws, event teams,
+    intent bodies); duels deal only windows whose open print is still admissible; a duel pick no longer deadlocks the
+    relay lane (production's single lane hung behind the first picks for five minutes).
   - **The switch, in order (11 Oct):** the new services work only v3, so v1 drains first under the old ones:
     1. pause v1's opens (`setPaused` on the v1 reserve) — closes, settlement and payouts go on;
     2. wait until `market_tickets` has no v1 ticket in `committed`/`open`/`closing` (≤ 1 h windows, then payouts);
