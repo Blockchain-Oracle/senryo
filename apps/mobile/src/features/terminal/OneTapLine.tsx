@@ -1,8 +1,9 @@
 /**
  * One-tap's state where calls are made (pivot craft list "session chip", S5.13; the session-expiry experience): while
  * this phone's capped key is live, "One-tap · 12 min · $76 left"; once it lapses or was never on, "One-tap is off ·
- * Turn on" — the next call then asks for the passkey, and this line says why before it does. A leaf: its once-a-second
- * countdown never re-renders the terminal. Nothing for a guest.
+ * Turn on" — the next call then asks for the passkey, and this line says why before it does. Compact beside Call |
+ * Ride: "One-tap · 12 min" / "One-tap off" (R5.4). A leaf: its once-a-second countdown never re-renders the terminal.
+ * Nothing for a guest.
  */
 
 import { useOneTap } from "@senryo/calls/react";
@@ -16,7 +17,7 @@ import { SIZE, TYPE, useTheme } from "~/theme";
 const DOLLAR_DECIMALS = 6;
 const SECONDS_PER_MINUTE = 60;
 
-export function OneTapLine() {
+export function OneTapLine({ compact = false }: { compact?: boolean }) {
   const { color } = useTheme();
   const account = useAccount();
   const owner = account.hint?.address;
@@ -24,7 +25,10 @@ export function OneTapLine() {
   if (!owner) return null;
   const s = oneTap.state;
   if (s.on) {
-    const text = `One-tap · ${Math.ceil(s.secondsLeft / SECONDS_PER_MINUTE)} min · $${formatUnits(s.left, DOLLAR_DECIMALS, 0)} left`;
+    const minutes = Math.ceil(s.secondsLeft / SECONDS_PER_MINUTE);
+    const text = compact
+      ? `One-tap · ${minutes} min`
+      : `One-tap · ${minutes} min · $${formatUnits(s.left, DOLLAR_DECIMALS, 0)} left`;
     return (
       <Text style={[TYPE.caption, styles.line, { color: color.up }]} accessibilityLabel={text}>
         {text}
@@ -47,8 +51,8 @@ export function OneTapLine() {
       }}
     >
       <Text style={[TYPE.caption, styles.line, { color: color.inkMuted }]}>
-        {oneTap.busy ? "Turning on one-tap…" : "One-tap is off · "}
-        {oneTap.busy ? null : <Text style={{ color: color.link }}>Turn on</Text>}
+        {oneTap.busy ? "Turning on…" : compact ? "One-tap " : "One-tap is off · "}
+        {oneTap.busy ? null : <Text style={{ color: color.link }}>{compact ? "off" : "Turn on"}</Text>}
       </Text>
     </Pressable>
   );

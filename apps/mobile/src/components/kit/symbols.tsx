@@ -125,6 +125,8 @@ export const Ellipsis = symbol({ ios: "ellipsis", android: "more_horiz" }, "Elli
 export const ExternalLink = symbol({ ios: "arrow.up.right.square", android: "open_in_new" }, "ExternalLink");
 export const Flag = symbol({ ios: "flag", iosFilled: "flag.fill", android: "flag" }, "Flag");
 export const Gauge = symbol({ ios: "gauge.with.dots.needle.50percent", android: "speed" }, "Gauge");
+/** The order stack's fees row (R5.4). */
+export const Percent = symbol({ ios: "percent", android: "percent" }, "Percent");
 export const Gift = symbol({ ios: "gift", android: "redeem" }, "Gift");
 export const Grid3x3 = symbol({ ios: "square.grid.3x3", android: "grid_on" }, "Grid3x3");
 export const Heart = symbol({ ios: "heart", iosFilled: "heart.fill", android: "favorite" }, "Heart");

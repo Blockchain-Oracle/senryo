@@ -16,6 +16,12 @@ export const STORAGE_KEYS = {
   recentMarkets: "senryo.recent-markets.v1",
   /** The way to call: Up / Down, Range or Moonshot (S7.4). */
   terminalMode: "senryo.terminal.mode.v1",
+  /** R5.4: Call or Ride, the ride's margin (base units), leverage (×) and trail (bps), the call's trail (cents). */
+  terminalInstrument: "senryo.terminal.instrument.v1",
+  rideMargin: "senryo.terminal.ride-margin.v1",
+  rideLeverage: "senryo.terminal.leverage.v1",
+  rideTrail: "senryo.terminal.ride-trail.v1",
+  callTrail: "senryo.terminal.call-trail.v1",
   theme: "senryo.theme.v1",
   setupOrder: "senryo.setup-order.v2",
   sounds: "senryo.sounds.v1",

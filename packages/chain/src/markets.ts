@@ -142,21 +142,33 @@ export function aggregate(calls: Call[]): Hex {
 
 /**
  * The first call in a window, in one transaction: open the window and record its open print (both allowed to fail —
- * someone may have done it already), then the commit itself (must succeed).
+ * someone may have done it already), open the market's other long lanes that start at the same second (R5.25: a
+ * window is openable only within its print's admission, so a boundary call keeps them callable), then the commit
+ * itself (must succeed).
  */
 export function openAndCommitData(
   chainId: ChainId,
-  args: { seriesId: Hex; start: number; verifier: Address; feedId: Hex; openProof: Hex; commitData: Hex },
+  args: {
+    seriesId: Hex;
+    start: number;
+    verifier: Address;
+    feedId: Hex;
+    openProof: Hex;
+    commitData: Hex;
+    /** Other series of the market whose window starts at `start` and isn't open yet. */
+    siblings?: readonly Hex[];
+  },
   /** Simulation only: let the commit fail so its own revert can be read from the result (a strict batch hides it). */
   commitMayFail = false,
 ): Hex {
   const windows = addressOf(chainId, "Windows");
+  const open = (seriesId: Hex) => ({
+    target: windows,
+    allowFailure: true,
+    callData: encodeFunctionData({ abi: windowsAbi, functionName: "openWindow", args: [seriesId, args.start] }),
+  });
   return aggregate([
-    {
-      target: windows,
-      allowFailure: true,
-      callData: encodeFunctionData({ abi: windowsAbi, functionName: "openWindow", args: [args.seriesId, args.start] }),
-    },
+    open(args.seriesId),
     {
       target: windows,
       allowFailure: true,
@@ -166,6 +178,7 @@ export function openAndCommitData(
         args: [args.verifier, args.feedId, args.start, args.openProof],
       }),
     },
+    ...(args.siblings ?? []).map(open),
     { target: addressOf(chainId, "BandReserve"), allowFailure: commitMayFail, callData: args.commitData },
   ]);
 }

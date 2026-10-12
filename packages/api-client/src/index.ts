@@ -20,3 +20,4 @@ export * from "./routes/prices.ts";
 export * from "./routes/profile.ts";
 export * from "./routes/rides.ts";
 export * from "./routes/storage.ts";
+export * from "./routes/windows.ts";

@@ -24,5 +24,6 @@ export * from "./use-ride.ts";
 export * from "./use-ride-exit.ts";
 export * from "./use-ride-flow.ts";
 export * from "./use-warm-up.ts";
+export * from "./use-window-dead.ts";
 export * from "./use-window-open.ts";
 export * from "./use-withdraw.ts";

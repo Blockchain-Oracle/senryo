@@ -15,10 +15,12 @@ import {
   type Signer,
   SimulationRevertedError,
   sendTx,
+  seriesIdOf,
   ticketChanges,
   verifierOf,
+  windowIdOf,
 } from "@senryo/chain";
-import { type ChainId, feedIdOf } from "@senryo/config";
+import { admissionSecOf, type ChainId, feedIdOf, lanesOn } from "@senryo/config";
 import { windowsAbi } from "@senryo/contracts/abis";
 import {
   applyTicketChanges,
@@ -186,6 +188,7 @@ export class MarketRelay {
         feedId: feedIdOf(c.market),
         openProof: proofOf(c.market, open.updates),
         commitData,
+        siblings: await this.unopenedSiblings(c),
       };
       await untilChainReaches(open.publishTime);
       await retryWhileEarly(() =>
@@ -239,6 +242,36 @@ export class MarketRelay {
   }
 
   /** Whether a window is open on chain with its line recorded (a first call opens it in the same transaction). */
+  /**
+   * The market's other long lanes (longer than its print's admission, so they can't open late) whose window starts
+   * at this call's start and isn't open yet: the boundary batch opens them too (R5.25).
+   */
+  private async unopenedSiblings(c: CheckedIntent): Promise<Hex[]> {
+    const admission = admissionSecOf(c.market);
+    const lanes = lanesOn(this.d.chainId, c.market).filter(
+      (cadence) => cadence !== c.cadenceSec && cadence > admission && c.start % cadence === 0,
+    );
+    if (lanes.length === 0) return [];
+    const series = lanes.map((cadence) => seriesIdOf(c.market.symbol, cadence));
+    const windows = addressOf(this.d.chainId, "Windows");
+    const states = await this.d.read.multicall({
+      allowFailure: true,
+      contracts: series.map(
+        (id) =>
+          ({
+            address: windows,
+            abi: windowsAbi,
+            functionName: "windowOf",
+            args: [windowIdOf(id, c.start)],
+          }) as const,
+      ),
+    });
+    return series.filter((_, i) => {
+      const r = states[i];
+      return r?.status === "success" && r.result.expiry === 0;
+    });
+  }
+
   async openPrintRecorded(windowId: Hex): Promise<boolean> {
     const windows = addressOf(this.d.chainId, "Windows");
     const w = await this.d.read.readContract({

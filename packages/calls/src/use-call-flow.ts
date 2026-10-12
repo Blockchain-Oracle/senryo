@@ -10,12 +10,14 @@ import type { IntentStatus } from "@senryo/api-client";
 import { clockText, formatUnits, proceedsFor } from "@senryo/core";
 import { useIntentStatus, useRefreshCaller } from "@senryo/query";
 import { type RefObject, useEffect, useRef, useState } from "react";
+import { endsText } from "./book-words.ts";
 import type { Caller } from "./caller.ts";
 import type { Offer } from "./modes.ts";
 import type { Quotes } from "./quote.ts";
 import { useCallActions } from "./use-call.ts";
 import type { CallWindowView } from "./use-call-window.ts";
 import { usePriceHealth } from "./use-price-health.ts";
+import { useWindowDead } from "./use-window-dead.ts";
 
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
@@ -95,6 +97,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
 
   // Quotable only on a live settlement price; otherwise the panel says why (04-pricing R7).
   const health = usePriceHealth(t.symbol);
+  const dead = useWindowDead(t);
   const holding = t.position !== undefined && t.position.state !== "committed";
   const lockText = holding
     ? `Cash-out closed · result in ${clockText(t.window.expiry - t.now)}`
@@ -105,11 +108,13 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       ? { kind: "pending", status: null, label: "Signing…" }
       : !t.window.trading
         ? { kind: "locked", text: lockText }
-        : !health.live
-          ? { kind: "stale", text: health.notice ?? "Price paused" }
-          : t.k === undefined
-            ? { kind: "no-price" }
-            : { kind: "ready" };
+        : dead && !holding
+          ? { kind: "locked", text: `No calls in this window · the next opens at ${endsText(t.window.expiry)}` }
+          : !health.live
+            ? { kind: "stale", text: health.notice ?? "Price paused" }
+            : t.k === undefined
+              ? { kind: "no-price" }
+              : { kind: "ready" };
 
   const guard = (slot?: OfferSlot): boolean => {
     if (!t.owner) {

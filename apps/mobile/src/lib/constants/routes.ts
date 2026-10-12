@@ -59,6 +59,7 @@ export const profileEditRoute = (focus: ProfileFocus) => `/account/profile?focus
  */
 export type AccountVerb =
   | "make a call"
+  | "ride"
   | "add money"
   | "follow"
   | "set alerts"

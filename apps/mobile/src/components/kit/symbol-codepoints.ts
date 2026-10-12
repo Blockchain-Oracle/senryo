@@ -54,6 +54,7 @@ export const ANDROID_CODEPOINTS = {
   open_in_new: 0xe89e,
   paid: 0xf041,
   pause: 0xe034,
+  percent: 0xeb58,
   person: 0xe7fd,
   play_arrow: 0xe037,
   public: 0xe80b,

@@ -20,3 +20,4 @@ export * from "./reading.ts";
 export * from "./rides.ts";
 export * from "./status.ts";
 export * from "./trace.ts";
+export * from "./windows.ts";

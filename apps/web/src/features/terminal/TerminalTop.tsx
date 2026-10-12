@@ -5,7 +5,8 @@
  * position's live value, rolling — R5.3), and the lanes — 1m · 5m · 15m · 1h — the selected one carrying the
  * countdown ring to the moment calls close, on the server's clock.
  */
-import { type CallWindowView, useDayLine, useLiveBook } from "@senryo/calls/react";
+import { endsText } from "@senryo/calls";
+import { type CallWindowView, useDayLine, useLiveBook, useWindowDead } from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
@@ -49,6 +50,8 @@ export function TerminalTop({
   onCadence: (c: CadenceSec) => void;
 }) {
   const day = useDayLine(t.symbol);
+  // R5.25: a long lane nobody opened in time takes no calls this window — its chip names when the next opens.
+  const dead = useWindowDead(t);
   return (
     <div className="terminal-top">
       {/* One h1 per page (R2.18): the market the terminal is on; the chip below is its button. */}
@@ -108,7 +111,11 @@ export function TerminalTop({
                 <span>{laneLabel(c)}</span>
                 {selected ? (
                   <span className="tnum">
-                    {t.window.trading ? clockText(t.window.closesIn) : clockText(t.window.expiry - t.now)}
+                    {dead
+                      ? `Next ${endsText(t.window.expiry)}`
+                      : t.window.trading
+                        ? clockText(t.window.closesIn)
+                        : clockText(t.window.expiry - t.now)}
                   </span>
                 ) : null}
               </button>

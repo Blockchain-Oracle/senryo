@@ -1,53 +1,50 @@
 /**
- * The terminal (S5; Tradash's phone workspace on Senryo's windows): top bar, the full-bleed live chart with K, the
- * distance to the line, and the call panel. Ticks never render React here (`useLiveQuote` → shared values); the screen
- * renders on events and once a second for the countdown. The call flow — the panel's states, open and cash out with
- * their guards, following a call to its fill — is `@senryo/calls` `useCallFlow`, the same on the web.
+ * The phone terminal (S5 → R5; Tradash's phone workspace, Codex direction 11): the top bar with the market, equity
+ * and the lanes (on Ride, the ride's life left); the full-bleed chart with its levels and band, the reactions and the
+ * order stack on its left edge; the View-position pill; then the action group — Call | Ride, one sentence when
+ * something holds the buttons, and UP / DOWN that morph into TRAIL / CLOSE while held. Ticks never render React
+ * (`useLiveQuote`, `useLiveRide` → shared values); the flows are `@senryo/calls`', the web's own.
  */
-import { type CallMode, exitLine, isCallMode, sessionHistory } from "@senryo/calls";
-import { useCallFlow, useExitActions, useMarketLine, usePriceHealth } from "@senryo/calls/react";
-import { type ExitPrices, hasExit } from "@senryo/core";
+import { ridesOn, sessionHistory } from "@senryo/calls";
+import { type OfferSlot, useCallFlow, useExitActions, useMarketLine, usePriceHealth } from "@senryo/calls/react";
 import { useLive } from "@senryo/live/react";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useMMKVNumber, useMMKVString } from "react-native-mmkv";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
 import { LiveText } from "~/components/kit/LiveText";
-import { StakeSheet } from "~/components/sheet/StakeSheet";
 import { useDockInset } from "~/components/shell/dock-context";
-import { PositionsSheet } from "~/features/positions/PositionsSheet";
 import { ViewPositionPill } from "~/features/positions/ViewPositionPill";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute, firstCallRoute } from "~/lib/constants/routes";
 import { usd } from "~/lib/money";
 import { notify } from "~/lib/notify";
-import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { ActionPanel } from "./ActionPanel";
 import { BasketMembers } from "./BasketMembers";
-import { CallPanel } from "./CallPanel";
-import { CashOutSheet } from "./CashOutSheet";
 import { CrowdLine } from "./CrowdLine";
 import { type ChartHealth, type ChartHistory, LIVE } from "./chart/constants";
 import type { Head } from "./chart/draw";
 import { SAMPLE_CAPACITY } from "./chart/engine";
 import { LiveChart } from "./chart/LiveChart";
-import { ExitSheet } from "./ExitSheet";
 import { holdFirstCall, useFirstCall } from "./first-call";
 import { MarketsSheet } from "./MarketsSheet";
+import { OrderStack } from "./OrderStack";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
+import { TerminalSheets } from "./TerminalSheets";
 import { TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
 import { useReactions } from "./useReactions";
+import { useRideSide } from "./useRideSide";
 import { useTerminal } from "./useTerminal";
+import { useTerminalChoices } from "./useTerminalChoices";
 import { useTerminalMusic } from "./useTerminalMusic";
+import { type Sheet, useTradePanel } from "./useTradePanel";
 
-const DEFAULT_STAKE = 5_000_000;
-const MIN_STAKE = 1_000_000n;
 const CLOCK_SYNC_MS = 5_000;
 
 export interface TerminalProps {
@@ -64,15 +61,19 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const bottom = useDockInset();
   const live = useLive();
   const t = useTerminal();
-  const [storedStake, setStoredStake] = useMMKVNumber(STORAGE_KEYS.lastStake, storage);
-  const stake = BigInt(storedStake ?? DEFAULT_STAKE);
-  const [storedMode, setMode] = useMMKVString(STORAGE_KEYS.terminalMode, storage);
-  const mode: CallMode = isCallMode(storedMode) ? storedMode : "updown";
+  const choices = useTerminalChoices();
+  // A market that doesn't ride shows Call; Ride stays in the switch and says why when tapped.
+  const ride = choices.instrument === "ride" && ridesOn(t.symbol);
   const load = useWindowLoad(t.window.expiry > 0 ? t.window.expiry : undefined);
-  const q = useLiveQuote(t, stake, "value" in load ? load.value : undefined, mode);
+  const q = useLiveQuote(
+    t,
+    choices.stake,
+    "value" in load ? load.value : undefined,
+    choices.mode,
+    choices.callTrailCents,
+  );
   const head = useSharedValue<Head | null>(null);
   const reactions = useRef<ReactionOverlayHandle>(null);
-  useReactions(t.symbol, q.onTick, reactions);
   const session = useMarketLine(t.symbol);
   // The chart reads it on the UI thread: not live → the line freezes, dims and shows its age or state (R1.20).
   const priceHealth = usePriceHealth(t.symbol);
@@ -92,55 +93,54 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   }, [closed, candles, history]);
   const account = useAccount();
   const [picking, setPicking] = useState(false);
-  const [sheet, setSheet] = useState<"stake" | "part" | "exit" | "positions" | null>(null);
+  const [sheet, setSheet] = useState<Sheet | null>(null);
+  const [chartH, setChartH] = useState(0);
   const exits = useExitActions(account, t.cadence);
   const offsetMs = useSharedValue(live.clock.offset);
+  const effects = {
+    cue: (c: "press" | "filled-open" | "filled-close" | "fail") =>
+      c === "press"
+        ? fire("press")
+        : c === "fail"
+          ? fire("fail", { cue: "error" })
+          : c === "filled-close"
+            ? fire("close", { cue: "close" })
+            : fire("filled", { cue: "open" }),
+    notify: (n: { title: string; description: string }) => notify({ ...n, tone: "warning" as const }),
+    needAccount: (slot?: OfferSlot) => {
+      const offered = slot === undefined || ride ? undefined : q.offer[slot];
+      if (slot === undefined || !offered) return router.push(accountRequiredRoute(ride ? "ride" : "make a call"));
+      holdFirstCall({ symbol: t.symbol, slot, stake: choices.stake });
+      router.push(firstCallRoute(`Place ${usd(choices.stake)} on ${t.symbol} ${offered.label}`));
+    },
+    shortfall: (short: bigint) =>
+      notify({
+        title: `${usd(short)} short`,
+        description: "Top up in Wallet (test dollars in Practice), then tap again.",
+        tone: "warning",
+      }),
+    ...(onFilled ? { onFilled } : {}),
+  };
   const flow = useCallFlow({
     view: t,
     caller: account,
-    stake,
+    stake: choices.stake,
     latest: q.latest,
     offer: q.offer,
-    effects: {
-      cue: (c) =>
-        c === "press"
-          ? fire("press")
-          : c === "fail"
-            ? fire("fail", { cue: "error" })
-            : c === "filled-close"
-              ? fire("close", { cue: "close" })
-              : fire("filled", { cue: "open" }),
-      notify: (n) => notify({ ...n, tone: "warning" }),
-      needAccount: (slot) => {
-        const offered = slot === undefined ? undefined : q.offer[slot];
-        if (slot === undefined || !offered) return router.push(accountRequiredRoute("make a call"));
-        holdFirstCall({ symbol: t.symbol, slot, stake });
-        router.push(firstCallRoute(`Place ${usd(stake)} on ${t.symbol} ${offered.label}`));
-      },
-      ...(onFilled ? { onFilled } : {}),
-    },
+    effects,
   });
+  const side = useRideSide({
+    symbol: t.symbol,
+    account,
+    choices,
+    active: ride,
+    balance: t.balance,
+    nowSec: t.now,
+    effects,
+  });
+  const trade = useTradePanel({ ride, t, q, flow, exits, side, choices, open: setSheet });
+  useReactions(t.symbol, trade.onTick, reactions);
   useFirstCall(t.symbol, t.owner, (slot) => void flow.open(slot));
-
-  const position = t.position;
-  const closeQuote = q.latest.current.close;
-  const setExit = async (prices: ExitPrices) => {
-    if (!position) return;
-    try {
-      const r = await exits.set(position.ticketId, prices);
-      if (r.kind === "cancelled") return;
-      setSheet(null);
-      fire("confirm");
-      notify(
-        hasExit(prices)
-          ? { title: "Exit set", description: "It runs with the app closed." }
-          : { title: "Exit removed", description: "Nothing sells on its own now." },
-      );
-    } catch (error) {
-      fire("fail", { sound: "error" });
-      notify({ title: "Couldn't set the exit", description: (error as Error).message, tone: "warning" });
-    }
-  };
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -157,77 +157,74 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           <Button label={coach.action} variant="ghost" size="sm" block={false} onPress={coach.onAction} />
         </View>
       ) : null}
-      <TerminalTop t={t} offsetMs={offsetMs} onPickMarket={() => setPicking(true)} />
-      <View style={styles.chart}>
+      <TerminalTop
+        t={t}
+        offsetMs={offsetMs}
+        ride={ride}
+        rideEndsIn={side.flow.endsIn}
+        onPickMarket={() => setPicking(true)}
+      />
+      <View style={styles.chart} onLayout={(e) => setChartH(e.nativeEvent.layout.height)}>
         <LiveChart
           symbol={t.symbol}
-          overlay={q.overlay}
+          overlay={trade.overlay}
           waiting={`Waiting for ${t.symbol}…`}
           head={head}
           health={health}
           history={history}
         />
         <ReactionOverlay ref={reactions} head={head} />
+        {chartH > 0 ? (
+          <OrderStack
+            heading={trade.stack.heading}
+            rows={trade.stack.rows}
+            height={chartH}
+            onOpen={() => setSheet("order")}
+          />
+        ) : null}
       </View>
-      <LiveText text={q.lineText} style={[TYPE.caption, styles.line, { color: color.inkMuted }]} />
-      <CrowdLine windowId={t.window.windowId} />
-      <BasketMembers symbol={t.symbol} />
-      <View style={{ paddingBottom: bottom }}>
+      {ride ? null : (
+        <>
+          <LiveText text={q.lineText} style={[TYPE.caption, styles.line, { color: color.inkMuted }]} />
+          <CrowdLine windowId={t.window.windowId} />
+          <BasketMembers symbol={t.symbol} />
+        </>
+      )}
+      <View style={[styles.actions, { paddingBottom: bottom }]}>
         <ViewPositionPill onOpen={() => setSheet("positions")} />
-        <CallPanel
+        <ActionPanel
           symbol={t.symbol}
           session={session}
-          state={flow.panel}
-          stake={stake}
-          balance={t.balance}
-          onStake={(s) => setStoredStake(Number(s))}
-          mode={mode}
-          onMode={setMode}
-          offer={q.offer}
-          firstOdds={q.firstLine}
-          secondOdds={q.secondLine}
-          quoteNote={q.note}
-          onPreview={q.setPreview}
-          holding={flow.holding}
-          cashOut={q.cashOut}
-          onPick={(slot) => void flow.open(slot)}
-          onClose={() => void flow.close()}
-          onCustom={() => setSheet("stake")}
-          onClosePart={() => setSheet("part")}
-          exitLine={position ? exitLine(position.exit, position.payout) : null}
-          onExit={() => setSheet("exit")}
+          instrument={ride ? "ride" : "call"}
+          onInstrument={(next) => {
+            if (next === "ride" && !ridesOn(t.symbol)) {
+              fire("fail");
+              notify({
+                title: `Rides aren't available on ${t.symbol}`,
+                description: "Rides are on BTC, ETH, SOL, XRP, BNB, DOGE and HYPE.",
+              });
+              return;
+            }
+            fire("tick");
+            choices.setInstrument(next);
+          }}
+          state={trade.panel}
+          holding={trade.holding}
+          quoteNote={ride ? null : q.note}
+          buttons={trade.buttons}
         />
       </View>
-      {sheet === "stake" ? (
-        <StakeSheet
-          current={stake}
-          min={t.terms?.minStake ?? MIN_STAKE}
-          max={t.terms?.maxStake ?? stake}
-          balance={t.balance}
-          onPick={(s) => setStoredStake(Number(s))}
-          onClose={() => setSheet(null)}
-        />
-      ) : null}
-      {sheet === "part" && t.position && q.latest.current.close ? (
-        <CashOutSheet
-          shares={t.position.payout}
-          bidE6={q.latest.current.close.bidE6}
-          onPick={(pct) => void flow.close(pct)}
-          onClose={() => setSheet(null)}
-        />
-      ) : null}
-      {sheet === "exit" && position && closeQuote && !closeQuote.refusal && exits.bounds ? (
-        <ExitSheet
-          shares={position.payout}
-          nowBidE6={Number(closeQuote.bidE6)}
-          exit={position.exit}
-          bounds={exits.bounds}
-          pending={exits.pending}
-          onSet={(prices) => void setExit(prices)}
-          onClose={() => setSheet(null)}
-        />
-      ) : null}
-      {sheet === "positions" ? <PositionsSheet onClose={() => setSheet(null)} /> : null}
+      <TerminalSheets
+        sheet={sheet}
+        setSheet={setSheet}
+        ride={ride}
+        t={t}
+        q={q}
+        flow={flow}
+        exits={exits}
+        side={side}
+        choices={choices}
+      />
       {picking ? (
         <MarketsSheet
           markets={t.markets}
@@ -244,6 +241,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   chart: { flex: 1, marginTop: SPACE.sm },
   line: { textAlign: "center", paddingVertical: SPACE.xs },
+  actions: { gap: SPACE.sm },
   coach: {
     flexDirection: "row",
     alignItems: "center",

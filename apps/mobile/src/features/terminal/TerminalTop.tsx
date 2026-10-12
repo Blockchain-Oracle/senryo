@@ -4,7 +4,8 @@
  * ring to the moment calls close, on the server's clock.
  */
 
-import { useDayLine, useLiveBook } from "@senryo/calls/react";
+import { endsText } from "@senryo/calls";
+import { useDayLine, useLiveBook, useWindowDead } from "@senryo/calls/react";
 import { CADENCES_SEC, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, formatUnits, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
@@ -35,10 +36,15 @@ const CENTS = 2;
 export function TerminalTop({
   t,
   offsetMs,
+  ride = false,
+  rideEndsIn = null,
   onPickMarket,
 }: {
   t: TerminalView;
   offsetMs: SharedValue<number>;
+  /** On Ride the lanes give way to the held ride's life left ("Closes in 3:42:18"), if any. */
+  ride?: boolean;
+  rideEndsIn?: string | null;
   onPickMarket: () => void;
 }) {
   const { color } = useTheme();
@@ -46,6 +52,8 @@ export function TerminalTop({
   const day = useDayLine(t.symbol);
   const font = useFont(require("../../../assets/fonts/Inter-SemiBold.ttf"), BALANCE_SIZE);
   const book = useLiveBook();
+  // R5.25: a long lane nobody opened in time takes no calls this window — its chip names when the next opens.
+  const dead = useWindowDead(t);
   // Cash until the book has loaded, then cash + what every open position returns now.
   const equity = book.ready ? (book.totals.equity ?? undefined) : t.balance;
   const balance = useSharedValue<LiveFigure>({ text: "", trend: 0 });
@@ -93,44 +101,54 @@ export function TerminalTop({
           />
         </View>
       </View>
-      <View style={styles.lanes} accessibilityRole="tablist">
-        {CADENCES_SEC.map((c) => {
-          const selected = c === t.cadenceSec;
-          return (
-            <Pressable
-              key={c}
-              onPress={() => {
-                if (selected) return;
-                fire("tick");
-                t.setCadence(c);
-              }}
-              accessibilityRole="tab"
-              accessibilityState={{ selected }}
-              accessibilityLabel={`${laneLabel(c)} windows`}
-              style={[styles.lane, { backgroundColor: selected ? color.ink : color.raised2 }]}
-            >
-              {selected ? (
-                <CountdownRing
-                  fromSec={t.window.start}
-                  toSec={t.window.expiry - LOCKOUT_SEC}
-                  offsetMs={offsetMs}
-                  size={RING}
-                  stroke={RING_STROKE}
-                  color={color.ground}
-                  warn={color.warn}
-                  track={color.inkMuted}
-                />
-              ) : null}
-              <Text style={[TYPE.micro, { color: selected ? color.ground : color.ink }]}>{laneLabel(c)}</Text>
-              {selected ? (
-                <Text style={[TYPE.micro, { color: color.ground }]}>
-                  {t.window.trading ? clockText(t.window.closesIn) : clockText(t.window.expiry - t.now)}
-                </Text>
-              ) : null}
-            </Pressable>
-          );
-        })}
-      </View>
+      {ride ? (
+        <Text style={[TYPE.caption, styles.life, { color: color.inkMuted }]} accessibilityLiveRegion="polite">
+          {rideEndsIn ?? "Up to 4 h a ride · no funding"}
+        </Text>
+      ) : (
+        <View style={styles.lanes} accessibilityRole="tablist">
+          {CADENCES_SEC.map((c) => {
+            const selected = c === t.cadenceSec;
+            return (
+              <Pressable
+                key={c}
+                onPress={() => {
+                  if (selected) return;
+                  fire("tick");
+                  t.setCadence(c);
+                }}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+                accessibilityLabel={`${laneLabel(c)} windows`}
+                style={[styles.lane, { backgroundColor: selected ? color.ink : color.raised2 }]}
+              >
+                {selected ? (
+                  <CountdownRing
+                    fromSec={t.window.start}
+                    toSec={t.window.expiry - LOCKOUT_SEC}
+                    offsetMs={offsetMs}
+                    size={RING}
+                    stroke={RING_STROKE}
+                    color={color.ground}
+                    warn={color.warn}
+                    track={color.inkMuted}
+                  />
+                ) : null}
+                <Text style={[TYPE.micro, { color: selected ? color.ground : color.ink }]}>{laneLabel(c)}</Text>
+                {selected ? (
+                  <Text style={[TYPE.micro, { color: color.ground }]}>
+                    {dead
+                      ? `Next ${endsText(t.window.expiry)}`
+                      : t.window.trading
+                        ? clockText(t.window.closesIn)
+                        : clockText(t.window.expiry - t.now)}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -150,6 +168,7 @@ const styles = StyleSheet.create({
   },
   balance: { width: BALANCE_WIDTH },
   lanes: { flexDirection: "row", gap: SPACE.sm },
+  life: { minHeight: SIZE.touch - SPACE.sm, textAlignVertical: "center", paddingTop: SPACE.xs },
   lane: {
     flexDirection: "row",
     alignItems: "center",

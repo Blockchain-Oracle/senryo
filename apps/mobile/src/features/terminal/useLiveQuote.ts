@@ -9,10 +9,15 @@ import {
   type CallMode,
   type QuoteTick as CallsQuoteTick,
   type ChartOverlay,
+  callTrailCaption,
+  callTrailReady,
+  DEFAULT_CALL_TRAIL_CENTS,
   dollars,
+  feesWords,
   fillMark,
   offerOf,
   type PoolTerms,
+  paysWords,
   pricingFor,
   type Quotes,
   quoteTick,
@@ -25,6 +30,7 @@ import { useLive } from "@senryo/live/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import type { LiveFigure } from "~/components/kit/LiveOdometer";
+import { useHeldState } from "./useHeldState";
 import type { TerminalView } from "./useTerminal";
 
 export type QuoteTick = CallsQuoteTick;
@@ -32,8 +38,21 @@ export type QuoteTick = CallsQuoteTick;
 /** The cash-out button's amount while the pool won't buy the call back. */
 const UNSOLD = "—";
 
-export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | undefined, mode: CallMode) {
+export function useLiveQuote(
+  t: TerminalView,
+  stake: bigint,
+  load: WindowLoad | undefined,
+  mode: CallMode,
+  trailCents: number = DEFAULT_CALL_TRAIL_CENTS,
+) {
   const live = useLive();
+  /** The order stack's live rows (R5.4) and a held call's TRAIL caption (R5.5). */
+  const pays = useSharedValue("—");
+  const fees = useSharedValue("—");
+  const trailCaption = useSharedValue("");
+  const [held, writeHeld] = useHeldState();
+  /** The bid TRAIL floors at (break-even's), read at the tap. */
+  const trailFloor = useRef<number | null>(null);
   const firstLine = useSharedValue("");
   const secondLine = useSharedValue("");
   /** Why a shown side has no price (one sentence under the buttons), or "" (F8). */
@@ -114,6 +133,20 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
         cashOut.value = { text: UNSOLD, trend: 0 };
       }
       latest.current = { first: pass.first, second: pass.second, close: pass.close };
+      const shown = offer[1] ? [pass.first, pass.second] : [pass.first];
+      pays.value = paysWords(shown, stake);
+      fees.value = feesWords(shown, stake);
+      if (pass.close && position && position.state !== "committed") {
+        const exit = position.exit;
+        const armed = (exit?.trailE6 ?? 0) > 0;
+        const r = callTrailReady(pass.close.bidE6, position.stake, position.payout, trailCents);
+        trailFloor.current = r.floorE6;
+        trailCaption.value = armed ? callTrailCaption(exit?.trailStopE6 ?? null) : r.caption;
+        writeHeld({ armed, ready: r.ready && !pass.close.refusal, closable: pass.proceeds !== null });
+      } else {
+        trailFloor.current = null;
+        writeHeld(null);
+      }
       const reactionTick: QuoteTick = {
         t: performance.now(),
         price: priceFromE8(tick.priceE8),
@@ -142,7 +175,28 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
     lineText,
     cashOut,
     overlay,
+    pays,
+    fees,
+    trailCaption,
+    writeHeld,
+    trailCents,
   ]);
 
-  return { firstLine, secondLine, note, lineText, cashOut, overlay, latest, offer, onTick, setPreview };
+  return {
+    firstLine,
+    secondLine,
+    note,
+    lineText,
+    cashOut,
+    overlay,
+    latest,
+    offer,
+    onTick,
+    setPreview,
+    pays,
+    fees,
+    trailCaption,
+    held,
+    trailFloor,
+  };
 }
