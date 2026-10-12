@@ -75,7 +75,7 @@ contracts:
 
 chains:
   - id: 10143
-    # The S2 deploy block (packages/contracts/src/addresses/10143.json startBlock).
+    # The S2 deploy block (v1's; the v3 contracts came later, R4.1 11 Oct from block 70080232).
     start_block: 69306230
     # HyperSync backfills; this RPC follows the head (HyperSync's token budget is 15 queries a minute, D-279). Monad's
     # public RPC answers eth_getLogs over at most 100 blocks, so every request stays within that.
@@ -85,8 +85,19 @@ chains:
         for: realtime
         initial_block_interval: 100
         interval_ceiling: 100
+    # v1 (S2) and v3 (R4, D-309) side by side: v1's history stays; v3's ticket ids start after 1,000 (D-314).
     contracts:
       - name: Windows
-        address: "0x6f4Cc798951f889b9f2a7029C1D8D7749860dF69"
+        address:
+          - "0x6f4Cc798951f889b9f2a7029C1D8D7749860dF69"
+          - "0x4a97Ea931498eE8831D1fBF3E11065de6AcAFd61"
       - name: BandReserve
-        address: "0xbcf5E007DBFd1BF579fFD17CbA0e3885906230D4"
+        address:
+          - "0xbcf5E007DBFd1BF579fFD17CbA0e3885906230D4"
+          - "0x5615638Ac3bc141E1CB3008D9CF3bdE6E4A449bE"
+      - name: PoolShares
+        address: "0x895c06cd866654F412607045B367aEF5352e2f4a"
+      - name: DuelArena
+        address: "0x8DceD6DBD4D00556Ca363C83744601D70FBE0D53"
+      - name: EventBook
+        address: "0x6F78CD62C15D47F12c2f19f89cee0B3aE3a5b98A"

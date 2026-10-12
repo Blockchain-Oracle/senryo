@@ -31,12 +31,16 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
 - api, keeper, indexer and web deployed; phone OTA after a simulator pass.
 
 ## Steps
-- [ ] R4.1 Deploy:
+- [x] R4.1 Deploy:
   - copy the partial book;
   - run the v3 route: v3 reserve, `DuelArena` and tiers, `PoolShares`, `EventBook` and committee, 136 series via
     `listSeries`, the ride markets, the seed, roles;
   - `pnpm contracts:export`;
   - `ids-and-txs.md` row with first and last tx, MON spent and addresses.
+  - **Done 11 Oct 09:57 UTC:** 257 txs, all status 1, 7.66 MON (rehearsed 7.6); addresses as rehearsed — reserve v3
+    `0x5615…49bE`, PoolShares `0x895c…2f4a`, DuelArena `0x8Dce…0D53`, EventBook `0x6F78…b98A`. Checked on chain:
+    `ticketBase` 1,000, 7 ride markets, keeper and sponsor allowed σ signers, the 10M seed, every lane's σ bounds and
+    h50. The indexer lists v1 and v3 side by side.
 - [ ] R4.2 Keeper:
   - env gets `EVENT_SIGNER_{1,2,3}_PK` and `KEEPER_JOBS`: sync, settle, fills, parlays, duels, events, calendars,
     earn, retention, receipts, pushes, **sigma**, **rides**, **bounds**;

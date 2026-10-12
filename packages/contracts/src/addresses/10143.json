@@ -2,40 +2,88 @@
   "chainId": 10143,
   "contracts": {
     "AccessManager": {
-      "address": "0x4b860aC358C9030b6B608ab484c4BF2728643A5D",
+      "address": "0x2da4aD070f76b433dD68fef2B2E93524c93a9AC5",
       "indexed": false,
       "initCodeHash": "0xf7438704d2184530fa36a14533ae6c81a04b463fa1aa5b626d7c0241b201a88a",
-      "startBlock": 69306230
+      "startBlock": 69755233
     },
     "BandReserve": {
-      "address": "0xbcf5E007DBFd1BF579fFD17CbA0e3885906230D4",
+      "address": "0x5615638Ac3bc141E1CB3008D9CF3bdE6E4A449bE",
       "indexed": true,
-      "initCodeHash": "0xeab76511538db13e878cc4a6d4a1b5de3b0ddabe915722ae99d42e9a448612e8",
-      "startBlock": 69306230
+      "initCodeHash": "0x2e6f31e1fdea4fbd55b5d245970149a7489e04afea19210e7c49d3cbcae7b031",
+      "startBlock": 70079509
+    },
+    "BasketPrintVerifier": {
+      "address": "0x86B92E041d190c1553eE8B0f450caFA9b134A05A",
+      "indexed": false,
+      "initCodeHash": "0x009891655fb19a4918ac5eb99d56816ba794014744b5b3c12cdc2c281312d868",
+      "startBlock": 69755233
+    },
+    "DuelArena": {
+      "address": "0x8DceD6DBD4D00556Ca363C83744601D70FBE0D53",
+      "indexed": true,
+      "initCodeHash": "0x5c424904db56434a55dc7477321285a1ab26e134eaeecbcd8909fc7b168f1eab",
+      "startBlock": 70079509
+    },
+    "EventBook": {
+      "address": "0x6F78CD62C15D47F12c2f19f89cee0B3aE3a5b98A",
+      "indexed": true,
+      "initCodeHash": "0x226c848e674fd33378a2638da4ab72489ab4c39c13098ccb8b298969531f338d",
+      "startBlock": 70079509
     },
     "MarketCalendar": {
-      "address": "0x068ddE517bb332C089aBde3028D5714eC45E2A4c",
+      "address": "0x46819a246D030D2499c659414e7fEa43711ee084",
       "indexed": false,
-      "initCodeHash": "0x34f048201b1dd74ec78ff8319f2665a6f5bb45c5513beb123cfd514efc89bf7f",
-      "startBlock": 69306230
+      "initCodeHash": "0x728c1c2cf8c9fd6db03b553fd867140d6e55c2836220eb377ac4a49b32c9f768",
+      "startBlock": 69755233
+    },
+    "PoolShares": {
+      "address": "0x895c06cd866654F412607045B367aEF5352e2f4a",
+      "indexed": true,
+      "initCodeHash": "0x7149c5dd971d4be7777401fa2abe4a265d7386d48ab946800a3848af7534608b",
+      "startBlock": 70079509
     },
     "PythPrintVerifier": {
-      "address": "0x06C766c57c88124db9D302cD2050bEbAD9c1b5Df",
+      "address": "0xc958F3894C01Af4B5b83a2A1659B4FC87bb200D4",
       "indexed": false,
-      "initCodeHash": "0xf56a7c3a10a8bfc6fc208585df8a025ef9fe5d2f9fd1e94e7952b83a0a752f14",
-      "startBlock": 69306230
+      "initCodeHash": "0xe261a5ca663c53ea658aa6fb1a3d8a42bdcac8c3b3a0ed4dc4ca7f5b385b7f29",
+      "startBlock": 69755233
+    },
+    "PythPrintVerifierEquity": {
+      "address": "0xAbECe4862F0ffDab19072bAd84726eB3338f0Fc2",
+      "indexed": false,
+      "initCodeHash": "0xb1b9d003a946901d1be41945e0b92b3aee8cfc0401e3daa4fd343ce0bb351061",
+      "startBlock": 69755233
+    },
+    "RedStoneBasketVerifier": {
+      "address": "0x408a0127c515E0dAd66592E0f0057300b7157E21",
+      "indexed": false,
+      "initCodeHash": "0x8e553c625014c95de96305fd33d759602d7e29a3728ac716b78599fa131eff16",
+      "startBlock": 69755233
+    },
+    "RedStonePrintVerifier": {
+      "address": "0x4bB5BB5b8CB0a7d32b8b1b96979F698a638044Ba",
+      "indexed": false,
+      "initCodeHash": "0x2de697d5d30191c287e40d8fbbf9c4931424ac4f84947a86334f7653e306caf6",
+      "startBlock": 69755233
+    },
+    "TailTable": {
+      "address": "0x088e64f2740E646140b1d8D2b37019848D80b8F0",
+      "indexed": false,
+      "initCodeHash": "0x300ebbcc01574d872b8dd46c9c08a4e7d5657da307203e93bee23e668d800d5e",
+      "startBlock": 70079509
     },
     "TestUSD": {
-      "address": "0xeA23d6884b7861d2b9324C6A542020e8995cd3D3",
+      "address": "0xABb0BFD3de979112EAa5C6d26580e716f71E87A3",
       "indexed": false,
-      "initCodeHash": "0x411f7ff8f071b63b13b42cc8970e8d886449210e5b2c2f82b9113d6cd9a5b214",
-      "startBlock": 69306230
+      "initCodeHash": "0x85230386ed61ce20dfa37d16fe241358d6ab1fb0b15d3d5b9bdcb3130ddc9610",
+      "startBlock": 69755233
     },
     "Windows": {
-      "address": "0x6f4Cc798951f889b9f2a7029C1D8D7749860dF69",
+      "address": "0x4a97Ea931498eE8831D1fBF3E11065de6AcAFd61",
       "indexed": true,
-      "initCodeHash": "0x016b1aa6ba8f1c31735ea37e2b15e45b6450988224ef417125f1392a4ce7f009",
-      "startBlock": 69306230
+      "initCodeHash": "0x00423f25b96881f953fdc880bcc1a3c88821c688bed5c4dd7084258237574e03",
+      "startBlock": 69755233
     }
   }
 }

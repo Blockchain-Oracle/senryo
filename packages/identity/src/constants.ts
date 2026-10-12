@@ -4,10 +4,11 @@
 export const EXTERNAL_CHAIN_IDS = { ethereum: 1, base: 8453, arbitrum: 42161, bnb: 56, polygon: 137 } as const;
 
 /**
- * Practice's dollar on Monad testnet (S2 deploy, 8 Oct 2026). The `identity-provenance` invariant fails if the address
- * book's `TestUSD` moves without this, so a redeploy can't silently orphan the mark.
+ * Practice's dollar on Monad testnet (deployed with the markets v2 run on 10 Oct and reused by v3, R4.1 11 Oct; S2's
+ * was `0xeA23…cd3D3`). The `identity-provenance` invariant fails if the address book's `TestUSD` moves without this,
+ * so a redeploy can't silently orphan the mark.
  */
-export const PRACTICE_DOLLAR = "0xeA23d6884b7861d2b9324C6A542020e8995cd3D3" as const;
+export const PRACTICE_DOLLAR = "0xABb0BFD3de979112EAa5C6d26580e716f71E87A3" as const;
 
 /** Circle-issued USDC outside Monad (developers.circle.com/stablecoins/usdc-contract-addresses, read 2026-09-30). */
 export const USDC_ELSEWHERE = {
