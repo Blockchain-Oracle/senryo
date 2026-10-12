@@ -1,6 +1,6 @@
 import type { EventChange, Hex } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
-import type { Db } from "./db.ts";
+import { type Db, jsonb } from "./db.ts";
 
 /**
  * The services' yes/no book (`market_events`, `event_answers`, `event_calls`; S8.7, D-296): the keeper writes a game
@@ -108,7 +108,7 @@ export async function insertListing(db: Db, chainId: ChainId, l: NewListing): Pr
   await db`INSERT INTO market_events (chain_id, event_id, league, game_key, question, rules, terms_hash, home, away,
       starts_at, closes_at, answer_from, answer_by, fee_bps, committee_id, state)
     VALUES (${chainId}, ${l.eventId}, ${l.league}, ${l.gameKey}, ${l.question}, ${l.rules}, ${l.termsHash},
-      ${JSON.stringify(l.home)}::jsonb, ${JSON.stringify(l.away)}::jsonb, ${l.startsAt}, ${l.closesAt},
+      ${jsonb(db, l.home)}, ${jsonb(db, l.away)}, ${l.startsAt}, ${l.closesAt},
       ${l.answerFrom}, ${l.answerBy}, ${l.feeBps}, ${l.committeeId}, 'listing')
     ON CONFLICT DO NOTHING`;
 }

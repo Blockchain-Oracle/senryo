@@ -20,7 +20,7 @@ import {
   RIDE_TERMS,
   rideMarketSpec,
 } from "@senryo/config";
-import { applyRideChanges, type Db, HTTP_STATUS, HttpError, type Logger, nowSec } from "@senryo/service-common";
+import { applyRideChanges, type Db, HTTP_STATUS, HttpError, jsonb, type Logger, nowSec } from "@senryo/service-common";
 import type { PythGateway } from "../prices/gateway.ts";
 import { retryWhileEarly } from "./chain-clock.ts";
 import { bad, checkDeadline, ZERO_ADDRESS } from "./gates.ts";
@@ -89,10 +89,9 @@ export class RideRelay {
     }
     const owner = req.intent.owner.toLowerCase();
     const kind = req.intent.action === ACTION_OPEN ? "open" : "close";
-    const body = JSON.stringify(req, (_k, v) => (typeof v === "bigint" ? v.toString() : v));
     const inserted = await this.d.db`
       INSERT INTO market_intents (digest, chain_id, owner, kind, book, body, ride_id)
-      VALUES (${checked.digest}, ${req.chainId}, ${owner}, ${kind}, 'ride', ${body}::jsonb,
+      VALUES (${checked.digest}, ${req.chainId}, ${owner}, ${kind}, 'ride', ${jsonb(this.d.db, req)},
               ${req.intent.action === ACTION_CLOSE ? req.intent.rideId : null})
       ON CONFLICT (digest) DO NOTHING RETURNING digest`;
     if (inserted.length === 0) return (await this.d.relay.status(checked.digest)) as IntentStatus;

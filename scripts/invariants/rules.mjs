@@ -49,6 +49,13 @@ export const rules = [
     pattern: new RegExp(`\\b(parseFloat|Number|toFixed)\\s*\\(\\s*[\\w.]*(${MONEY_WORDS})`, "i"),
   },
   {
+    id: "jsonb-values",
+    description: "jsonb values go through jsonb(db, v): an interpolated value cast ::jsonb is stored as a JSON string",
+    scopes: ["services"],
+    exts: TS,
+    pattern: /\}::jsonb/,
+  },
+  {
     id: "write-boundary",
     description: "only packages/chain sends transactions",
     scopes: ["apps", "packages", "services", "scripts"],

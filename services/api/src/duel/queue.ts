@@ -18,6 +18,7 @@ import {
   HTTP_STATUS,
   HttpError,
   insertMatch,
+  jsonb,
   type Logger,
   MS_PER_SECOND,
   nowSec,
@@ -72,8 +73,6 @@ export interface QueueStatus {
 const PAIRING_MARGIN_SEC = 15;
 /** The app signs a fresh entry per tap; a deadline further out than the queue's TTL (plus the clock's slack) is odd. */
 const DEADLINE_SLACK_SEC = 30;
-
-const toJson = (v: unknown) => JSON.parse(JSON.stringify(v, (_k, x) => (typeof x === "bigint" ? x.toString() : x)));
 
 function signedOf(row: EntryRow): SignedDuelEntry {
   const e = row.body.entry;
@@ -146,9 +145,9 @@ export class DuelQueue {
       throw new HttpError(HTTP_STATUS.conflict, "CONFLICT", "you're already waiting for a duel");
     }
     const digest = duelEntryDigest(req.chainId, entry);
-    const body = toJson({ entry, signature: req.signature, permit: req.permit });
     await this.d.db`INSERT INTO duel_entries (digest, chain_id, owner, tier, body, deadline)
-      VALUES (${digest}, ${this.d.chainId}, ${owner}, ${entry.tier}, ${body}::jsonb, ${deadline})
+      VALUES (${digest}, ${this.d.chainId}, ${owner}, ${entry.tier},
+              ${jsonb(this.d.db, { entry, signature: req.signature, permit: req.permit })}, ${deadline})
       ON CONFLICT (digest) DO NOTHING`;
     const status = await this.statusOf(digest);
     this.tell(owner, status);

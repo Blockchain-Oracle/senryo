@@ -25,6 +25,7 @@ import {
   type Db,
   HTTP_STATUS,
   HttpError,
+  jsonb,
   type Logger,
   nowSec,
   type RideNotice,
@@ -124,10 +125,9 @@ export class MarketRelay {
     }
     const owner = req.intent.owner.toLowerCase();
     const kind = req.intent.action === ACTION_OPEN ? "open" : "close";
-    const body = JSON.stringify({ ...req, checked }, (_k, v) => (typeof v === "bigint" ? v.toString() : v));
     const inserted = await this.d.db<IntentRow[]>`
       INSERT INTO market_intents (digest, chain_id, owner, kind, body)
-      VALUES (${checked.digest}, ${req.chainId}, ${owner}, ${kind}, ${body}::jsonb)
+      VALUES (${checked.digest}, ${req.chainId}, ${owner}, ${kind}, ${jsonb(this.d.db, { ...req, checked })})
       ON CONFLICT (digest) DO NOTHING RETURNING *`;
     if (inserted.length === 0) return (await this.status(checked.digest)) as IntentStatus;
     void this.laneFor(req.intent.owner)

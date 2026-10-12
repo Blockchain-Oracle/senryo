@@ -1,5 +1,5 @@
 import type { ChainId } from "@senryo/config";
-import type { Db } from "./db.ts";
+import { type Db, jsonb } from "./db.ts";
 
 /** Lucky draws and arcade runs (S8.8, D-295): the api's own records, no chain. */
 
@@ -39,7 +39,7 @@ export async function insertLuckySeal(
 ): Promise<void> {
   await db`INSERT INTO lucky_draws (draw_id, chain_id, owner, server_seed, commitment, markets, markets_hash)
     VALUES (${d.drawId}, ${chainId}, ${d.owner.toLowerCase()}, ${d.serverSeed}, ${d.commitment},
-      ${JSON.stringify(d.markets)}::jsonb, ${d.marketsHash})`;
+      ${jsonb(db, d.markets)}, ${d.marketsHash})`;
 }
 
 export async function luckyDrawById(db: Db, chainId: ChainId, drawId: string): Promise<LuckyDrawRow | undefined> {
@@ -56,7 +56,7 @@ export async function recordLuckyReveal(
 ): Promise<boolean> {
   const rows =
     await db`UPDATE lucky_draws SET client_seed = ${r.clientSeed}, digest = ${r.digest}, symbol = ${r.symbol},
-      side = ${r.side}, reach = ${r.reach}, dealt = ${r.dealt === null ? null : JSON.stringify(r.dealt)}::jsonb,
+      side = ${r.side}, reach = ${r.reach}, dealt = ${r.dealt === null ? null : jsonb(db, r.dealt)},
       revealed_at = now()
     WHERE chain_id = ${chainId} AND draw_id = ${drawId} AND revealed_at IS NULL RETURNING draw_id`;
   return rows.length > 0;

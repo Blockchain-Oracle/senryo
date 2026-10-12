@@ -26,6 +26,7 @@ import {
   type Db,
   HTTP_STATUS,
   HttpError,
+  jsonb,
   type Logger,
   nowSec,
   type ParlayLegRef,
@@ -97,10 +98,9 @@ export class ParlayRelay {
       if (paused) throw new HttpError(HTTP_STATUS.conflict, "MARKET_PAUSED", `${leg.market.symbol}: ${paused}`);
     }
     const owner = req.intent.owner.toLowerCase();
-    const body = JSON.stringify(req, (_k, v) => (typeof v === "bigint" ? v.toString() : v));
     const inserted = await this.d.db`
       INSERT INTO market_intents (digest, chain_id, owner, kind, body)
-      VALUES (${checked.digest}, ${req.chainId}, ${owner}, 'parlay', ${body}::jsonb)
+      VALUES (${checked.digest}, ${req.chainId}, ${owner}, 'parlay', ${jsonb(this.d.db, req)})
       ON CONFLICT (digest) DO NOTHING RETURNING digest`;
     if (inserted.length === 0) return (await this.d.relay.status(checked.digest)) as IntentStatus;
     void this.d.relay

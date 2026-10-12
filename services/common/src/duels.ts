@@ -1,6 +1,6 @@
 import type { Address, DuelChange, Hex } from "@senryo/chain";
 import type { ChainId } from "@senryo/config";
-import type { Db } from "./db.ts";
+import { type Db, jsonb } from "./db.ts";
 
 /**
  * The services' duel book (`duel_matches`, `duel_picks`; S8.6, D-294): written when the matchmaker pairs two entries
@@ -81,7 +81,7 @@ export async function insertMatch(db: Db, chainId: ChainId, m: NewMatch): Promis
   await db`INSERT INTO duel_matches (chain_id, match_id, tier, player_a, player_b, pot, card_stake, server_seed,
                                      deck_hash, cards, state)
     VALUES (${chainId}, ${m.matchId}, ${m.tier}, ${m.playerA.toLowerCase()}, ${m.playerB.toLowerCase()}, ${m.pot},
-            ${m.cardStake}, ${m.serverSeed}, ${m.deckHash}, ${JSON.stringify(m.cards)}::jsonb, 'opening')
+            ${m.cardStake}, ${m.serverSeed}, ${m.deckHash}, ${jsonb(db, m.cards)}, 'opening')
     ON CONFLICT (chain_id, match_id) DO NOTHING`;
   await announce(db, chainId, m.matchId, "opening", null);
 }
