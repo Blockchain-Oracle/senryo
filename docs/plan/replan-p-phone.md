@@ -78,7 +78,7 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
     the market sheet.
 
 ### P1 — The sheet foundation (phone)
-- [ ] P1 built and deployed
+- [x] P1 built and deployed — `ff55a2a9`, phone OTA `f2ee0f7b` (12 Oct)
 
 - **Host:** a `SheetHost` at the root (`app/_layout.tsx`) with a portal API (`useSheetPortal()` → `present(node)`);
   `Sheet` renders through it when opened inline. Route sheets already sit above the dock as root transparent modals
@@ -102,7 +102,7 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
   - `features/parlay/ParlayScreen.tsx`.
 
 ### P2 — The market sheet (phone + web)
-- [ ] P2 built and deployed
+- [x] P2 built and deployed — `08649e5e`, web `sha-08649e5`, phone OTA `f2ee0f7b` (12 Oct)
 
 - **Layout:** detents `[0.62, 0.88, 1.0]`, opening at 0.62; search focus expands to 1.0 before focusing.
 - **Content, top to bottom:**

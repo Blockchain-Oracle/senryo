@@ -86,7 +86,15 @@ Plan approved the same day:
 the terminal's market sheet under the dock. Stage P rebuilds them in order (D-321…D-326); it folds in R7.10 and R7.8's
 leftovers.
 
-Next: P1 — the sheet foundation (a root host above the dock, detents).
+- **P1 + P2 live (12 Oct 16:00 UTC):** the phone's sheets render in one root layer above the dock and the ticket,
+  with detents (the market sheet rests at 62 / 88 / 100 %); the market picker on both apps — search, Favourites · Hot ·
+  All · the kinds, recents first, a star per row, the current market highlighted, reset on every open. Web `sha-08649e5`
+  (with the league marks' hydration fix), phone OTA `f2ee0f7b`. Found on the simulator: a lone positive pan offset
+  only activates downward, so the sheet couldn't be raised — the pan now takes both directions below the tallest stop.
+- **R4's knock-out row:** rides 10 and 11 ended at 15:56 without one (BTC moved 0.8 % of the 2.25 % needed); a third
+  40× pair (rides 12 and 13) is open until 19:58 UTC. The event committee answers from 19:00 UTC.
+
+Next: P3 — Parlay as a chain (sockets, cards with odds, the always-present slip, hold-to-place, the settlement track).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
