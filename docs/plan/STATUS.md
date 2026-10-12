@@ -105,8 +105,12 @@ leftovers.
   verdict on the stage with Rematch and Share, the ladder. api + web `sha-ceeda2e`, phone OTA `c1681c42`. Open: a live
   match on the lanes needs a real account in a seat (P7).
 
-Next: P5 — Earn as ownership (share value hero, the share-value chart, the keypad sheet, receipts, net earned via the
-indexer's `EarnAccount`).
+- **P5 live (12 Oct 17:15 UTC):** Earn as ownership on both apps — your share value, net earned and share of the pool
+  (a guest sees one share's value and what it did), a share's value over 1D / 7D / 30D, the pool panel, receipts, the
+  keypad sheet (phone) / amount modal (web), never a bare input; the indexer's `EarnAccount` gives net earned. Indexer,
+  api and web `sha-681a8a6`, phone OTA `e7565118`.
+
+Next: P6 — Status as a live evidence board (built: `3e0b7295`; deploying).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

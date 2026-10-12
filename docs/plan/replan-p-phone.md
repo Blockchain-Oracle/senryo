@@ -169,7 +169,7 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
   `duel_entries_queue` index).
 
 ### P5 — Earn as ownership (both apps)
-- [ ] P5 built and deployed
+- [x] P5 built and deployed — `681a8a69`, indexer + api + web `sha-681a8a6`, phone OTA `e7565118` (12 Oct)
 
 - **Hero:**
   - signed in: "Your share value" (52 pt), net earned, ownership %;
