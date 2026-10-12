@@ -132,6 +132,12 @@ export const SPRING = {
 export const SPRING_ENERGY_THRESHOLD = 6e-9;
 
 /** Motion (ms) on `cubic-bezier(0.2, 0.8, 0.2, 1)`. `fastMs`/`baseMs`/`slowMs`/`flash*` are the step-1 names. */
+/**
+ * The overshoot curve (R7: a reel's thunk, the duel's VS slam): out past the target and back, ≈ 4 px on a 36 px move.
+ * Cubic-bezier control points for CSS, motion and Reanimated alike.
+ */
+export const OVERSHOOT_EASE = [0.34, 1.56, 0.64, 1] as const;
+
 export const MOTION = {
   pressMs: 100,
   selectionMs: 170,

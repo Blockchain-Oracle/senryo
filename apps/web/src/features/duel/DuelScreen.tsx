@@ -4,10 +4,9 @@
  * wait in the queue, get dealt the same three cards, swipe each Up or Down before the clock runs out, and watch the
  * cards settle into both totals — the better one takes the pot. Your duels and rating below.
  */
-import { duelTiers, tierTitle } from "@senryo/calls";
+import { duelTiers } from "@senryo/calls";
 import { useDuelFlow } from "@senryo/calls/react";
-import { clockText } from "@senryo/core";
-import { useServerSeconds } from "@senryo/live/react";
+import { useProfile } from "@senryo/query";
 import { useState } from "react";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
@@ -15,10 +14,11 @@ import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { DuelHistory } from "./DuelHistory";
 import { DuelMatch } from "./DuelMatch";
+import { DuelQueue } from "./DuelQueue";
 import { DuelTiers } from "./DuelTiers";
+import { useDuelMoments } from "./useDuelMoments";
 
 const DEFAULT_TIER = 1;
-const MS_PER_SECOND = 1000;
 
 export function DuelScreen() {
   const account = useAccount();
@@ -35,6 +35,9 @@ export function DuelScreen() {
         action: { label: "Sign in", onClick: () => openDrawer(DRAWERS.account) },
       }),
   });
+  useDuelMoments(flow);
+  const profile = useProfile(flow.owner);
+  const avatar = "value" in profile ? (profile.value?.avatar ?? null) : null;
   const tiers = duelTiers(flow.chainId);
   const dismissed = flow.phase === "done" && flow.match?.matchId === seen;
   const showMatch = flow.match && flow.phase !== "idle" && flow.phase !== "queued" && !dismissed;
@@ -43,9 +46,11 @@ export function DuelScreen() {
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-6">
           {flow.phase === "queued" && flow.entry ? (
-            <Queue
+            <DuelQueue
               tier={tiers.find((t) => t.id === flow.entry?.tier)}
               since={flow.entry.since}
+              owner={flow.owner}
+              avatar={avatar}
               onCancel={() => void flow.cancel()}
             />
           ) : showMatch ? (
@@ -74,27 +79,5 @@ export function DuelScreen() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Queue(p: { tier: ReturnType<typeof duelTiers>[number] | undefined; since: string; onCancel: () => void }) {
-  const now = useServerSeconds();
-  const waited = Math.max(0, now - Math.floor(Date.parse(p.since) / MS_PER_SECOND));
-  return (
-    <section aria-label="Finding an opponent" className="flex flex-col gap-4" aria-live="polite">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-semibold text-section-title">Finding an opponent…</h2>
-        <span className="tnum text-meta text-text-2">
-          {p.tier ? tierTitle(p.tier) : "Duel"} · waiting {clockText(waited)}
-        </span>
-      </div>
-      <button
-        type="button"
-        onClick={p.onCancel}
-        className="h-14 rounded-xl bg-secondary font-semibold text-button transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        Leave the queue
-      </button>
-    </section>
   );
 }

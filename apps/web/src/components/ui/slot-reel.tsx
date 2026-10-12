@@ -1,4 +1,5 @@
 "use client";
+import { OVERSHOOT_EASE } from "@senryo/tokens";
 /**
  * 21st:adrielzimbril/handle-reel (#33159), retokenized: a slot-machine reel that tumbles through a list and decelerates
  * onto its target. Changes from the source: no prefix or editable landing slot (Lucky's reels land on the sealed
@@ -22,10 +23,6 @@ const SPIN_SEC = 2.4;
 const HALF = 2;
 /** The stop: a 0.3 s settle on a curve that overshoots and returns (≈ 4 px on a row). */
 const SETTLE_SEC = 0.3;
-const OVERSHOOT_X1 = 0.34;
-const OVERSHOOT_Y1 = 1.56;
-const OVERSHOOT_X2 = 0.64;
-const OVERSHOOT = [OVERSHOOT_X1, OVERSHOOT_Y1, OVERSHOOT_X2, 1] as const;
 const TICK_GAP_MS = 60;
 
 function shuffled<T>(xs: readonly T[]): T[] {
@@ -130,7 +127,7 @@ export function SlotReel(p: {
         y.set(at(centre + 1));
         settle = animate(y, at(centre), {
           duration: SETTLE_SEC,
-          ease: OVERSHOOT,
+          ease: OVERSHOOT_EASE,
           onComplete: () => {
             setLanded(true);
             p.onLand?.();

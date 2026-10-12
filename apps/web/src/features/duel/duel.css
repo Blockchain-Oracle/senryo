@@ -1,0 +1,75 @@
+/* Duel's moments (R7.8): the breathing search, the versus entrance, the heartbeat. */
+.duel-queue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 16px;
+  border-radius: 24px;
+  background: radial-gradient(80% 70% at 50% 35%, var(--arena-raised), var(--arena));
+  color: var(--arena-ink);
+}
+.duel-queue .text-text-2 {
+  color: rgb(245 239 224 / 0.7);
+}
+.duel-radar {
+  position: relative;
+  display: grid;
+  width: 200px;
+  height: 200px;
+  place-items: center;
+}
+.duel-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: duel-breathe 2.4s ease-out infinite;
+}
+@keyframes duel-breathe {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+.duel-radar-me {
+  position: relative;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 4px var(--arena),
+    0 0 24px rgb(250 0 255 / 0.45);
+}
+.duel-vs {
+  font: 800 28px / 1 var(--font-display);
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.duel-heartbeat {
+  animation: duel-beat 1s ease-in-out infinite;
+}
+@keyframes duel-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.04);
+  }
+  24% {
+    transform: scale(1);
+  }
+  36% {
+    transform: scale(1.03);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .duel-ring,
+  .duel-heartbeat {
+    animation: none;
+  }
+}

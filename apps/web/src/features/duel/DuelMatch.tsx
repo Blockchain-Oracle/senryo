@@ -18,23 +18,32 @@ import {
   sideLabel,
   tierTitle,
 } from "@senryo/calls";
-import { type DuelCardQuote, type DuelFlow, useDuelCardQuotes } from "@senryo/calls/react";
+import { type DuelCardQuote, type DuelFlow, useDayLine, useDuelCardQuotes } from "@senryo/calls/react";
 import { DUEL, duelTierOf } from "@senryo/config";
 import { clockText, shortAddress, signedUsd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useProfile } from "@senryo/query";
+import { OVERSHOOT_EASE } from "@senryo/tokens";
+import { motion, useReducedMotion } from "motion/react";
 import { Avatar } from "@/components/identity/avatar";
 import { EntityMark } from "@/components/identity/entity-mark";
+import { ChangeChip } from "@/components/ui/change-chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { Sparkline } from "@/components/ui/sparkline";
 import { SwipeDeck } from "@/components/ui/swipe-deck";
 import { activeNetwork } from "@/lib/network";
 import { cn } from "@/lib/utils";
+import "./duel.css";
 
 const MARK = 28;
 const FACE_MARK = 40;
 const [DOWN, UP] = [DUEL_SIDES[1], DUEL_SIDES[0]];
-const AVATAR = 40;
+/** The versus portraits (research 10 §4: 72 px) and their 700 ms entrance. */
+const AVATAR = 72;
+const VS_SEC = 0.7;
+const VS_FROM = 1.8;
+const HEARTBEAT_FROM_SEC = 10;
 
 /** A seat's person: the handle (or the short address) and the chosen portrait (R2.8: people show as themselves). */
 function usePerson(address: string | null): { name: string; avatar: string | null; address: string | undefined } {
@@ -46,6 +55,7 @@ function usePerson(address: string | null): { name: string; avatar: string | nul
 
 export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => void }) {
   const m = flow.match;
+  const reduce = useReducedMotion();
   const now = useServerSeconds();
   const quotes = useDuelCardQuotes(m);
   const opponent = usePerson(m ? opponentOf(m, flow.owner) : null);
@@ -63,14 +73,24 @@ export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => vo
   const theirCount = m.picks.filter((p) => p.seat === other).length;
   const outcome = outcomeText(m, flow.owner);
   const over = m.state === "finalized" || m.state === "refunded" || m.state === "failed";
+  const lastTen = picking && left <= HEARTBEAT_FROM_SEC;
   return (
     <section aria-label="Your duel" className="flex flex-col gap-5">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div
+        className={cn("grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-3xl p-4", lastTen && "duel-heartbeat")}
+        style={{ background: "radial-gradient(80% 90% at 50% 0%, var(--arena-raised), var(--arena))" }}
+      >
         <Side name="You" person={me} total={results?.[seat] ?? null} align="start" />
-        <span className="flex flex-col items-center text-meta text-text-3">
-          vs
-          {tier ? <span className="tnum">{tierTitle(tier)}</span> : null}
-        </span>
+        <motion.span
+          key={m.matchId}
+          initial={reduce ? false : { scale: VS_FROM, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: VS_SEC, ease: OVERSHOOT_EASE }}
+          className="flex flex-col items-center gap-1"
+        >
+          <span className="duel-vs">VS</span>
+          {tier ? <span className="tnum text-meta text-[--arena-ink]">{tierTitle(tier)}</span> : null}
+        </motion.span>
         <Side name={them} person={opponent} total={results?.[other] ?? null} align="end" />
       </div>
 
@@ -172,7 +192,7 @@ function Side({
   return (
     <span className={cn("flex min-w-0 flex-col gap-1", align === "end" ? "items-end" : "items-start")}>
       <Avatar avatar={person.avatar} {...(person.address ? { address: person.address } : {})} size={AVATAR} />
-      <span className="truncate text-meta text-text-2">{name}</span>
+      <span className="truncate font-semibold text-meta text-[--arena-ink]">{name}</span>
       <span
         className={cn(
           "tnum font-semibold text-num-md",
@@ -207,8 +227,9 @@ function Call(p: {
 
 function CardFace({ q, stake }: { q: DuelCardQuote; stake: bigint }) {
   const [up, down] = q.sides;
+  const day = useDayLine(q.card.symbol);
   return (
-    <div className="flex h-full flex-col justify-between p-5">
+    <div className="flex h-full flex-col justify-between gap-3 p-5">
       <div className="flex items-center gap-3">
         <EntityMark id={marketId(q.card.symbol)} size={FACE_MARK} decorative />
         <span className="flex flex-col">
@@ -216,6 +237,12 @@ function CardFace({ q, stake }: { q: DuelCardQuote; stake: bigint }) {
           <span className="tnum text-meta text-text-3">Closes in {clockText(q.closesIn)}</span>
         </span>
       </div>
+      {day ? (
+        <div className="flex items-center justify-between gap-3">
+          <Sparkline symbol={q.card.symbol} day={day} className="h-10 w-full sm:h-10 sm:w-full" />
+          <ChangeChip symbol={q.card.symbol} day={day} />
+        </div>
+      ) : null}
       <div className="grid grid-cols-2 gap-3">
         <span className="flex flex-col">
           <span className="text-meta text-down">← {down?.label}</span>

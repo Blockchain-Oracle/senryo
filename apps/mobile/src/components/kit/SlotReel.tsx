@@ -6,6 +6,8 @@
  * then thunks into place on a settle that overshoots and springs back; `onTick` fires as rows pass the payline; the
  * window is the arena's (D-316) and the landed row glows gold; the machine's owner plays the land haptic.
  */
+
+import { OVERSHOOT_EASE } from "@senryo/tokens";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -32,10 +34,7 @@ const EASE_X2 = 0.35;
 const LAND = Easing.bezier(EASE_X1, 0, EASE_X2, 1);
 /** The machine's stop: a 300 ms settle that overshoots ≈ 4 pt and springs back. */
 const SETTLE_MS = 300;
-const OVERSHOOT_X1 = 0.34;
-const OVERSHOOT_Y1 = 1.56;
-const OVERSHOOT_X2 = 0.64;
-const OVERSHOOT = Easing.bezier(OVERSHOOT_X1, OVERSHOOT_Y1, OVERSHOOT_X2, 1);
+const OVERSHOOT = Easing.bezier(...OVERSHOOT_EASE);
 const TICK_GAP_MS = 60;
 
 function shuffled<T>(xs: readonly T[]): T[] {
