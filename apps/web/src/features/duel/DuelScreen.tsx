@@ -5,18 +5,21 @@
  * cards settle into both totals — the better one takes the pot. Your duels and rating below.
  */
 import { duelTiers } from "@senryo/calls";
-import { useDuelFlow } from "@senryo/calls/react";
+import { type DuelFeel, useDuelFlow, useDuelMoments } from "@senryo/calls/react";
 import { useProfile } from "@senryo/query";
 import { useState } from "react";
 import { useAccount } from "@/lib/account/provider";
-import { fire } from "@/lib/feedback";
+import { fire, music } from "@/lib/feedback";
+import { celebrate } from "@/lib/feedback/celebrate";
 import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { DuelHistory } from "./DuelHistory";
 import { DuelMatch } from "./DuelMatch";
 import { DuelQueue } from "./DuelQueue";
 import { DuelTiers } from "./DuelTiers";
-import { useDuelMoments } from "./useDuelMoments";
+
+/** The web's feel for a duel's moments (D-317). */
+const FEEL: DuelFeel = { fire, music, celebrate };
 
 const DEFAULT_TIER = 1;
 
@@ -35,7 +38,7 @@ export function DuelScreen() {
         action: { label: "Sign in", onClick: () => openDrawer(DRAWERS.account) },
       }),
   });
-  useDuelMoments(flow);
+  useDuelMoments(flow, FEEL);
   const profile = useProfile(flow.owner);
   const avatar = "value" in profile ? (profile.value?.avatar ?? null) : null;
   const tiers = duelTiers(flow.chainId);

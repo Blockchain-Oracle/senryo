@@ -347,8 +347,8 @@ const styles = StyleSheet.create({
   },
   pressed: { transform: [{ translateY: 2 }] },
   card: { flex: 1, alignItems: "center", justifyContent: "center", gap: SPACE.sm, padding: SPACE.lg },
-  dayRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, alignSelf: "stretch" },
-  spark: { flex: 1, height: SPACE.xxxl },
+  dayRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: SPACE.md },
+  spark: { height: SPACE.xxxl, justifyContent: "center" },
   row: {
     flexDirection: "row",
     alignItems: "center",

@@ -34,6 +34,8 @@ const ROTATE_DEG = 8;
 const DEPTH_Y = 10;
 const DEPTH_SCALE = 0.045;
 const PEEK = 3;
+/** The direction fills' darker bottom edge (D-316, the ticket's buttons). */
+const EDGE = 3;
 const RETURN = { damping: 27, stiffness: 150, mass: 1 };
 
 export type SwipeSide = "left" | "right";
@@ -223,13 +225,14 @@ function DeckButton(p: { label: string; tone: "up" | "down"; disabled: boolean; 
         style={[
           styles.button,
           {
-            backgroundColor: p.tone === "up" ? color.upWash : color.downWash,
+            backgroundColor: p.tone === "up" ? color.upFill : color.downFill,
+            borderBottomColor: p.tone === "up" ? color.upFillEdge : color.downFillEdge,
             opacity: p.disabled ? DISABLED_OPACITY : 1,
           },
           press.style,
         ]}
       >
-        <Text style={[TYPE.buttonLabel, { color: p.tone === "up" ? color.up : color.down }]}>{p.label}</Text>
+        <Text style={[TYPE.buttonLabel, { color: color.onDirectionFill }]}>{p.label}</Text>
       </Animated.View>
     </Pressable>
   );
@@ -247,6 +250,7 @@ const styles = StyleSheet.create({
   button: {
     height: SIZE.buttonHeight,
     borderRadius: BUTTON.radius.md,
+    borderBottomWidth: EDGE,
     alignItems: "center",
     justifyContent: "center",
   },

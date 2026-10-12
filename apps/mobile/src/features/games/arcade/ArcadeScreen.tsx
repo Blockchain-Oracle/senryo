@@ -11,19 +11,16 @@ import {
   type ArcadeFeel,
   type ArcadeInk,
   type ArcadeRun,
-  createAttract,
   createFlapRun,
   createSledRun,
-  type LoopDriver,
   rankNote,
-  SILENT,
 } from "@senryo/arcade";
 import { GAMES } from "@senryo/config";
-import { type ArcadeGame, seedFromBytes, shortAddress, ticksToMs } from "@senryo/core";
+import { type ArcadeGame, shortAddress, ticksToMs } from "@senryo/core";
 import { useArcadeBoard, useArcadeDesk } from "@senryo/query";
 import { Canvas, Picture } from "@shopify/react-native-skia";
 import { type Href, router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { type LayoutChangeEvent, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,15 +32,13 @@ import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { type Palette, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ArcadeStage } from "./ArcadeStage";
-import { useArcadeFrames } from "./useArcadeFrames";
+import { localSeed, useAttract } from "./useAttract";
 
-const SEED_BYTES = 4;
-const BYTE = 256;
+const _SEED_BYTES = 4;
+const _BYTE = 256;
 const ASPECT_W = 16;
 const ASPECT_H = 9;
 const DEMO_ASPECT = ASPECT_W / ASPECT_H;
-/** A guest's seed: no money or rank rides on it, so any fresh bytes do. */
-const localSeed = () => seedFromBytes(Uint8Array.from({ length: SEED_BYTES }, () => Math.floor(Math.random() * BYTE)));
 
 /** The phone's feel for a run: the shared cues as WAVs and the haptic table (D-317). */
 const FEEL: ArcadeFeel = {
@@ -105,9 +100,7 @@ export function ArcadeScreen({
     [game, calm, ink],
   );
 
-  // The live window: a tape for the attract loop, playing while the page is in front and the stage is closed.
-  const attract = useRef<LoopDriver | null>(null);
-  const [demoKey, setDemoKey] = useState(0);
+  // The live window: the game playing itself while the page is in front and the stage is closed.
   const [focused, setFocused] = useState(true);
   const [box, setBox] = useState({ w: 0, h: 0 });
   useFocusEffect(
@@ -116,16 +109,7 @@ export function ArcadeScreen({
       return () => setFocused(false);
     }, []),
   );
-  useEffect(() => {
-    desk.tape.mutateAsync().then(
-      (tape) => {
-        attract.current = createAttract(() => make({ seed: localSeed(), ranked: false, tape, feel: SILENT }));
-        setDemoKey((k) => k + 1);
-      },
-      () => undefined,
-    );
-  }, []);
-  const demo = useArcadeFrames(attract, demoKey, box, focused && !playing);
+  const demo = useAttract(game, ink, calm, box, focused && !playing);
   const onDemoLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
     setBox({ w, h: w / DEMO_ASPECT });

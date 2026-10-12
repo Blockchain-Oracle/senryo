@@ -184,6 +184,12 @@ old R7.1 (games audio) moved to F1–F3.
 
 ### The hub
 - [ ] R7.7 Hub on both apps:
+  - *Progress 12 Oct (phone):*
+    - *Each card shows the game itself (`GameArt.tsx`): Line Rider and Candle Hop play themselves (the attract loop
+      on a real tape, `useAttract`); Lucky is its gold-rimmed machine, reels tumbling and the lever swinging;
+      Warm-up is a fan of live market cards with the coin flipping.*
+    - *An explicit Play on the direction fill. Every game is listed (the `ON_PHONE` filter is gone).*
+    - *Left: best and streak, "N playing", season, achievements, profile card (both apps).*
   - **Art:** 16:9 gameplay art per game (the sled, the reel machine, the candle canyon, the card table).
   - **Cards:** 240 px on desktop, full-width on the phone, each with:
     - an explicit Play button;
@@ -196,6 +202,9 @@ old R7.1 (games audio) moved to F1–F3.
 
 ### Duel, Events, Parlays
 - [ ] R7.8 Duel:
+  - *Progress 12 Oct: the moments — the match chord, the Duel pulse, the heartbeat in the last 10 s, the verdict
+    once — are one hook, `@senryo/calls` `useDuelMoments`, with each app's feel injected; the phone plays them now.
+    Left on the phone: the breathing queue, the 72-point portraits and the VS slam, the cards' 24 h lines.*
   - **Queue:** your avatar, stake, wait time and availability; a 2.4 s breathing search; a match chord and a firm
     haptic.
   - **Lobby:** 72 px portraits, handles, rating and pot, a 700 ms versus entrance, then the three-card deal.

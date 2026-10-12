@@ -6,7 +6,7 @@
  */
 import type { DuelRatingView, DuelView } from "@senryo/api-client";
 import { DUEL_LIVE_STATES, duelTiers, entryText, opponentOf, outcomeText, tierLine, tierTitle } from "@senryo/calls";
-import { useDuelFlow } from "@senryo/calls/react";
+import { type DuelFeel, useDuelFlow, useDuelMoments } from "@senryo/calls/react";
 import { duelEntryCost } from "@senryo/config";
 import { clockText, shortAddress, usd } from "@senryo/core";
 import { useServerSeconds } from "@senryo/live/react";
@@ -15,7 +15,8 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
-import { fire } from "~/feedback/fire";
+import { celebrate } from "~/feedback/celebrate";
+import { fire, music } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { notify } from "~/lib/notify";
@@ -25,6 +26,8 @@ import { DuelMatch } from "./DuelMatch";
 const DEFAULT_TIER = 1;
 const MS_PER_SECOND = 1000;
 const DOT = 10;
+/** The phone's feel for a duel's moments (D-317; the web's own hook). */
+const FEEL: DuelFeel = { fire, music, celebrate };
 
 export function DuelScreen() {
   const { color } = useTheme();
@@ -38,6 +41,7 @@ export function DuelScreen() {
     notify: (n) => notify({ ...n, tone: "warning" }),
     needAccount: () => router.push(accountRequiredRoute("duel")),
   });
+  useDuelMoments(flow, FEEL);
   const tiers = duelTiers(flow.chainId);
   const chosen = tiers.find((t) => t.id === tier) ?? tiers[0];
   const cost = chosen ? duelEntryCost(chosen) : 0n;

@@ -479,6 +479,9 @@ importers:
       '@senryo/query':
         specifier: workspace:*
         version: link:../query
+      '@senryo/tokens':
+        specifier: workspace:*
+        version: link:../tokens
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.104.0(react@19.2.8)

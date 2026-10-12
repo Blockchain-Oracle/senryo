@@ -1,20 +1,26 @@
-"use client";
 /**
  * Duel's sound and feel (R7.8, research 10 §4, §7): the match chord and a firm haptic the moment someone takes the
  * other seat; the Duel pulse under the match while it's live; a heartbeat each second of the last 10 before picks
  * close; the result's verdict — a win's jackpot and confetti, a loss's fall, a tie's refund — once, when it settles.
+ * Both apps: each passes its own feel (the web's Web Audio and vibration, the phone's WAVs and haptics).
  */
-import { type DuelPhase, outcomeText } from "@senryo/calls";
-import type { DuelFlow } from "@senryo/calls/react";
 import { useServerSeconds } from "@senryo/live/react";
+import type { SongName, SoundCue } from "@senryo/tokens";
 import { useEffect, useRef } from "react";
-import { fire, music } from "@/lib/feedback";
-import { celebrate } from "@/lib/feedback/celebrate";
+import { type DuelPhase, outcomeText } from "./duel.ts";
+import type { DuelFlow } from "./use-duel.ts";
+
+export interface DuelFeel {
+  fire(event: "impact" | "tick" | "win" | "confirm" | "loss", options?: { cue?: SoundCue }): void;
+  music(song: SongName | null): void;
+  celebrate(): void;
+}
 
 const HEARTBEAT_FROM_SEC = 10;
 const LIVE: ReadonlySet<DuelPhase> = new Set(["opening", "picking", "waiting", "settling"]);
 
-export function useDuelMoments(flow: DuelFlow): void {
+export function useDuelMoments(flow: DuelFlow, feel: DuelFeel): void {
+  const { fire, music, celebrate } = feel;
   const now = useServerSeconds();
   const was = useRef<DuelPhase>(flow.phase);
   const settled = useRef<string | null>(null);
@@ -43,7 +49,7 @@ export function useDuelMoments(flow: DuelFlow): void {
 
   // The verdict, once per match.
   useEffect(() => {
-    if (!m || m.state !== "finalized" || settled.current === m.matchId) return;
+    if (m?.state !== "finalized" || settled.current === m.matchId) return;
     settled.current = m.matchId;
     const title = outcomeText(m, flow.owner).title;
     if (title.startsWith("You won")) {
@@ -54,5 +60,5 @@ export function useDuelMoments(flow: DuelFlow): void {
     } else {
       fire("loss", { cue: "loss" });
     }
-  }, [m, flow.owner]);
+  }, [m, flow.owner, fire, celebrate]);
 }

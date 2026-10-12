@@ -1,6 +1,6 @@
 /**
- * The Games hub on the phone (S8.8, D-295; the web's `GamesHub`): each game with whose money is at risk, then the
- * head-to-head and multi-call places with their own screens. Lists the games that have a phone screen.
+ * The Games hub on the phone (S8.8, D-295; the web's `GamesHub`; R7.7): each game as a card that shows the game
+ * itself (`GameArt`), with whose money is at risk and an explicit Play, then the head-to-head and multi-call places.
  */
 import { GAMES } from "@senryo/config";
 import { ids, marketId, type PixelMarkName } from "@senryo/identity";
@@ -11,10 +11,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Panel } from "~/components/kit/Surface";
 import { fire } from "~/feedback/fire";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { pixelColors } from "~/theme/pixel-colors";
+import { GameArt } from "./GameArt";
 
-const ART = 40;
+const ART = 24;
+const PLAY_EDGE = 3;
 /** Each game's key art (R2.8; the web hub's): the pixel marks it plays with. */
 const GAME_ART: Readonly<Record<string, readonly PixelMarkName[]>> = {
   lucky: ["coin"],
@@ -46,14 +48,22 @@ export function GamesScreen() {
       {GAMES.map((g) => (
         <Pressable key={g.key} accessibilityRole="link" onPress={() => go(g.route)}>
           <Panel style={styles.card}>
-            <View style={styles.art}>
-              {(GAME_ART[g.key] ?? []).map((n) => (
-                <PixelMark key={n} name={n} size={ART} colors={pixels} />
-              ))}
+            <GameArt game={g.key} />
+            <View style={styles.cardFoot}>
+              <View style={styles.cardText}>
+                <View style={styles.art}>
+                  {(GAME_ART[g.key] ?? []).map((n) => (
+                    <PixelMark key={n} name={n} size={ART} colors={pixels} />
+                  ))}
+                  <Text style={[TYPE.sectionTitle, { color: color.ink }]}>{g.title}</Text>
+                </View>
+                <Text style={[TYPE.body, { color: color.inkMuted }]}>{g.line}</Text>
+                <Text style={[TYPE.caption, { color: color.inkMuted }]}>{g.stakes}</Text>
+              </View>
+              <View style={[styles.play, { backgroundColor: color.upFill, borderBottomColor: color.upFillEdge }]}>
+                <Text style={[TYPE.buttonLabel, { color: color.onDirectionFill }]}>Play</Text>
+              </View>
             </View>
-            <Text style={[TYPE.sectionTitle, { color: color.ink }]}>{g.title}</Text>
-            <Text style={[TYPE.body, { color: color.inkMuted }]}>{g.line}</Text>
-            <Text style={[TYPE.caption, { color: color.inkMuted }]}>{g.stakes}</Text>
           </Panel>
         </Pressable>
       ))}
@@ -88,7 +98,17 @@ export function GamesScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: SIZE.gutter, paddingTop: SPACE.md, gap: SPACE.md },
-  card: { gap: SPACE.xxs, padding: SPACE.md },
+  card: { gap: SPACE.md, padding: SPACE.md },
+  cardFoot: { flexDirection: "row", alignItems: "flex-end", gap: SPACE.md },
+  cardText: { flex: 1, gap: SPACE.xxs },
+  play: {
+    height: SIZE.touch,
+    paddingHorizontal: SPACE.lg,
+    borderRadius: RADIUS.sm,
+    borderBottomWidth: PLAY_EDGE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   flex: { flex: 1 },
   row: {
     minHeight: SIZE.rowMinHeight,
