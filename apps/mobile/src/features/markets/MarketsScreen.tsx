@@ -5,83 +5,21 @@
  * price 24 hours ago (D-319), the live price — the last print, muted, when closed — with its 24 h change, and a
  * chevron. Tapping one opens the terminal there. Prices render at most once a frame; the graph and change once a second.
  */
-import { groupMarkets, MARKET_FILTERS, type MarketFilter, unitOf } from "@senryo/calls";
-import { useDayLine, useMarketLine } from "@senryo/calls/react";
-import { marketId } from "@senryo/identity";
-import { useLivePrice } from "@senryo/live/react";
+import { groupMarkets, MARKET_FILTERS, type MarketFilter } from "@senryo/calls";
 import { useCatalog } from "@senryo/query";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
-import { EntityMark } from "~/components/identity/EntityMark";
-import { ChangeChip } from "~/components/kit/ChangeChip";
+import { SearchField } from "~/components/kit/SearchField";
 import { Segmented } from "~/components/kit/Segmented";
-import { Sparkline } from "~/components/kit/Sparkline";
 import { EmptyState, LoadingState } from "~/components/kit/states";
-import { ChevronRight, Search } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
 import { fire } from "~/feedback/fire";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
-import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { formatValue, priceDecimals } from "../terminal/chart/engine";
-
-const MARK = 40;
-const E8 = 1e8;
-const SEARCH_ICON = 18;
-
-export function MarketRow({ symbol, name, onOpen }: { symbol: string; name: string; onOpen: () => void }) {
-  const { color } = useTheme();
-  const price = useLivePrice(symbol);
-  const line = useMarketLine(symbol);
-  const day = useDayLine(symbol);
-  const points = unitOf(symbol) === "points";
-  const text = price ? formatValue(price / E8, priceDecimals(price / E8), points) : undefined;
-  return (
-    <Pressable
-      onPress={onOpen}
-      accessibilityRole="button"
-      accessibilityLabel={`${name}${text ? `, ${text}` : ""}. ${line.trading ? "" : `${line.text}. `}Open the terminal`}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: color.rowPressed }]}
-    >
-      <EntityMark id={marketId(symbol)} size={MARK} decorative />
-      <View style={styles.text}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{symbol}</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]} numberOfLines={1}>
-          {name} · {line.text}
-        </Text>
-      </View>
-      {day ? <Sparkline symbol={symbol} day={day} /> : null}
-      <View style={styles.figures}>
-        <Text style={[TYPE.rowTitle, { color: line.trading ? color.ink : color.inkMuted }]}>{text ?? "—"}</Text>
-        {day ? <ChangeChip symbol={symbol} day={day} /> : null}
-      </View>
-      <ChevronRight size={SIZE.iconSm} color={color.inkMuted} />
-    </Pressable>
-  );
-}
-
-function SearchField({ value, onChange }: { value: string; onChange: (next: string) => void }) {
-  const { color } = useTheme();
-  return (
-    <View style={[styles.search, { backgroundColor: color.muted }]}>
-      <Search size={SEARCH_ICON} color={color.inkMuted} />
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        placeholder="Search markets"
-        placeholderTextColor={color.inkMuted}
-        autoCapitalize="none"
-        autoCorrect={false}
-        clearButtonMode="while-editing"
-        returnKeyType="search"
-        accessibilityLabel="Search markets"
-        style={[TYPE.body, styles.searchInput, { color: color.ink }]}
-      />
-    </View>
-  );
-}
+import { SPACE, TYPE, useTheme } from "~/theme";
+import { MarketRow } from "./MarketRow";
 
 export function MarketsScreen() {
   const { color } = useTheme();
@@ -125,17 +63,5 @@ export function MarketsScreen() {
 
 const styles = StyleSheet.create({
   page: { gap: SPACE.md },
-  row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, minHeight: SIZE.touch + SPACE.xl + SPACE.xs },
-  text: { flex: 1 },
-  figures: { alignItems: "flex-end", gap: SPACE.xxs },
   heading: { paddingTop: SPACE.sm, paddingBottom: SPACE.xs },
-  search: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACE.sm,
-    minHeight: SIZE.touch,
-    paddingHorizontal: SPACE.lg,
-    borderRadius: RADIUS.pill,
-  },
-  searchInput: { flex: 1, minHeight: SIZE.touch },
 });

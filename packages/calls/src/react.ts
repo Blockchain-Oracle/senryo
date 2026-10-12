@@ -9,6 +9,7 @@ export * from "./use-earn.ts";
 export * from "./use-events.ts";
 export * from "./use-exit.ts";
 export * from "./use-lucky.ts";
+export * from "./use-market-picker.ts";
 export * from "./use-market-session.ts";
 export * from "./use-one-tap.ts";
 export * from "./use-parlay.ts";

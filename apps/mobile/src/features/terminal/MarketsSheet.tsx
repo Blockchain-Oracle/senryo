@@ -1,47 +1,110 @@
 /**
- * The markets sheet (Tradash's asset chip → Markets): every catalogue market on this network with its real mark, name
- * and live price; picking one moves the terminal there. Prices render at most once a frame, and only while it's open.
+ * The market sheet (P2, D-321; Tradash's asset chip → Markets, research `review-2026-10-12`): above the dock and the
+ * ticket, opening at 62 % and dragging to 88 % and full. A title with ✕, the search (focusing it raises the sheet to
+ * full first), the filter chips — Favourites · Hot · All · Crypto · Stocks · Metals · FX · Baskets — then the rows:
+ * your recent markets on an empty search, then the kinds. Each row is the Markets tab's row (24 h line, live price,
+ * change; a closed market says when it opens) with a star; the current market is highlighted. Every open starts at
+ * All with an empty search; picking ticks, closes, then moves the terminal.
  */
-import { marketId } from "@senryo/identity";
-import { useLivePrice } from "@senryo/live/react";
+import { PICKER_FILTERS, type PickerFilter, pushRecent, readSymbols, toggleFavourite } from "@senryo/calls";
+import { useMarketPicker } from "@senryo/calls/react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { EntityMark } from "~/components/identity/EntityMark";
-import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
-import { SheetHeading } from "~/components/sheet/SheetRoute";
+import { useMMKVString } from "react-native-mmkv";
+import { FilterChips } from "~/components/kit/FilterChips";
+import { SearchField } from "~/components/kit/SearchField";
+import { X } from "~/components/kit/symbols";
+import { LIST_DETENTS } from "~/components/sheet/constants";
+import { Sheet, useSheetClose, useSheetExpand } from "~/components/sheet/Sheet";
 import { fire } from "~/feedback/fire";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { formatUsd } from "./chart/engine";
+import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { MarketRow } from "../markets/MarketRow";
 
-const MARK = 36;
-const E8 = 1e8;
-
-interface MarketRow {
+interface PickerMarket {
   symbol: string;
   name: string;
+  kind: string;
 }
 
-function Row({ market, selected, onPick }: { market: MarketRow; selected: boolean; onPick: () => void }) {
+function emptyLine(filter: PickerFilter): string {
+  if (filter === "favourites") return "No favourites yet. Tap a star to add one.";
+  if (filter === "hot") return "The day's moves arrive with the next price update.";
+  return "No markets match that search.";
+}
+
+function Picker({
+  markets,
+  selected,
+  onPick,
+}: {
+  markets: readonly PickerMarket[];
+  selected: string;
+  onPick: (symbol: string) => void;
+}) {
   const { color } = useTheme();
-  const price = useLivePrice(market.symbol);
   const close = useSheetClose();
+  const expand = useSheetExpand();
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<PickerFilter>("all");
+  const [favRaw, setFavRaw] = useMMKVString(STORAGE_KEYS.favouriteMarkets, storage);
+  const [recentRaw, setRecentRaw] = useMMKVString(STORAGE_KEYS.recentMarkets, storage);
+  const favourites = useMemo(() => readSymbols(favRaw), [favRaw]);
+  const recents = useMemo(() => readSymbols(recentRaw), [recentRaw]);
+  const sections = useMarketPicker(markets, { query, filter, favourites, recents });
+  const pick = (symbol: string) => {
+    fire("tick");
+    setRecentRaw(JSON.stringify(pushRecent(recents, symbol)));
+    close(() => onPick(symbol));
+  };
+  const star = (symbol: string) => {
+    fire("tick");
+    setFavRaw(JSON.stringify(toggleFavourite(favourites, symbol)));
+  };
   return (
-    <Pressable
-      onPress={() => {
-        fire("tick");
-        close(onPick);
-      }}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      accessibilityLabel={`${market.name}${price ? `, ${formatUsd(price / E8)}` : ""}`}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: color.rowPressed }]}
-    >
-      <EntityMark id={marketId(market.symbol)} size={MARK} decorative />
-      <View style={styles.text}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{market.symbol}</Text>
-        <Text style={[TYPE.caption, { color: color.inkMuted }]}>{market.name}</Text>
+    <>
+      <View style={styles.title}>
+        <Text accessibilityRole="header" style={[TYPE.sheetHeading, { color: color.ink }]}>
+          Markets
+        </Text>
+        <Pressable
+          onPress={() => close()}
+          hitSlop={SPACE.sm}
+          accessibilityRole="button"
+          accessibilityLabel="Close markets"
+          style={[styles.close, { backgroundColor: color.raised2 }]}
+        >
+          <X size={SIZE.iconSm} color={color.ink} />
+        </Pressable>
       </View>
-      <Text style={[TYPE.rowTitle, { color: color.ink }]}>{price ? formatUsd(price / E8) : "—"}</Text>
-    </Pressable>
+      <SearchField value={query} onChange={setQuery} onFocus={expand} />
+      <FilterChips
+        options={PICKER_FILTERS}
+        value={filter}
+        onChange={setFilter}
+        label="Show markets"
+        bleed={SHEET_SHAPE.padding}
+      />
+      {sections.length === 0 ? (
+        <Text style={[TYPE.body, styles.empty, { color: color.inkMuted }]}>{emptyLine(filter)}</Text>
+      ) : (
+        sections.map((s) => (
+          <View key={s.label} accessibilityRole="list" accessibilityLabel={s.label}>
+            <Text style={[TYPE.sectionTitle, styles.heading, { color: color.inkMuted }]}>{s.label}</Text>
+            {s.markets.map((m) => (
+              <MarketRow
+                key={m.symbol}
+                symbol={m.symbol}
+                name={m.name}
+                selected={m.symbol === selected}
+                onOpen={() => pick(m.symbol)}
+                star={{ on: favourites.includes(m.symbol), onToggle: () => star(m.symbol) }}
+              />
+            ))}
+          </View>
+        ))
+      )}
+    </>
   );
 }
 
@@ -51,30 +114,27 @@ export function MarketsSheet({
   onPick,
   onClose,
 }: {
-  markets: readonly MarketRow[];
+  markets: readonly PickerMarket[];
   selected: string;
   onPick: (symbol: string) => void;
   onClose: () => void;
 }) {
   return (
-    <Sheet onClose={onClose} closeLabel="Close markets">
-      <SheetHeading title="Markets" />
-      <View>
-        {markets.map((m) => (
-          <Row key={m.symbol} market={m} selected={m.symbol === selected} onPick={() => onPick(m.symbol)} />
-        ))}
-      </View>
+    <Sheet onClose={onClose} closeLabel="Close markets" detents={LIST_DETENTS}>
+      <Picker markets={markets} selected={selected} onPick={onPick} />
     </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
+  title: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  close: {
+    width: SIZE.touch - SPACE.sm,
+    height: SIZE.touch - SPACE.sm,
+    borderRadius: (SIZE.touch - SPACE.sm) / 2,
     alignItems: "center",
-    gap: SPACE.md,
-    minHeight: SIZE.touch + SPACE.lg,
-    paddingHorizontal: SIZE.gutter,
+    justifyContent: "center",
   },
-  text: { flex: 1 },
+  heading: { paddingTop: SPACE.sm, paddingBottom: SPACE.xs },
+  empty: { textAlign: "center", paddingVertical: SPACE.xl },
 });

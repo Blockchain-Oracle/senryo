@@ -7,6 +7,7 @@ export * from "./event-words.ts";
 export * from "./exits.ts";
 export * from "./handle-copy.ts";
 export * from "./links.ts";
+export * from "./market-picker.ts";
 export * from "./markets.ts";
 export * from "./modes.ts";
 export * from "./one-tap.ts";

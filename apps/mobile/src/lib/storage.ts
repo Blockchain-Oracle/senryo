@@ -11,6 +11,9 @@ export const STORAGE_KEYS = {
   terminalCadence: "senryo.terminal.cadence.v1",
   /** The last stake, in dollar base units (S5: "last stake remembered"). */
   lastStake: "senryo.terminal.stake.v1",
+  /** P2: the market sheet's starred markets and the last markets picked (JSON arrays of symbols). */
+  favouriteMarkets: "senryo.favourite-markets.v1",
+  recentMarkets: "senryo.recent-markets.v1",
   /** The way to call: Up / Down, Range or Moonshot (S7.4). */
   terminalMode: "senryo.terminal.mode.v1",
   theme: "senryo.theme.v1",

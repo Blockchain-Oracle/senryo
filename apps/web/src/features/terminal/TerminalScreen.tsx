@@ -22,7 +22,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { shortcutBlocked } from "@/components/shell/Rail";
 import { SlideOver } from "@/components/ui/drawer";
-import { MarketList } from "@/features/markets/MarketList";
 import { useAccount } from "@/lib/account/provider";
 import { hasAcknowledgedTerms } from "@/lib/account/terms";
 import { ROUTES } from "@/lib/constants/routes";
@@ -40,6 +39,7 @@ import { LiveChart } from "./chart/LiveChart";
 import { DEFAULT_STAKE, MIN_STAKE } from "./constants";
 import { ExitModal } from "./ExitModal";
 import { type FirstCallRequest, FirstCallSheet } from "./FirstCallSheet";
+import { MarketPicker } from "./MarketPicker";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { StakeModal } from "./StakeModal";
 import { TerminalTop } from "./TerminalTop";
@@ -256,8 +256,8 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
           onClose={() => setOpen(null)}
         />
       ) : null}
-      <SlideOver open={open === "markets"} onOpenChange={(o) => setOpen(o ? "markets" : null)} title="Markets">
-        <MarketList />
+      <SlideOver open={open === "markets"} onOpenChange={(o) => setOpen(o ? "markets" : null)} title="Markets" wide>
+        <MarketPicker selected={symbol} onPick={() => setOpen(null)} />
       </SlideOver>
     </div>
   );

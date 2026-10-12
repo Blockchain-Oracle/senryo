@@ -18,7 +18,7 @@ import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
 import { EmptyState } from "~/components/kit/states";
 import { useDockInset } from "~/components/shell/dock-context";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
-import { MarketRow } from "~/features/markets/MarketsScreen";
+import { MarketRow } from "~/features/markets/MarketRow";
 import { NotificationsBell } from "~/features/notifications/NotificationsBell";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { ContextualFaceId } from "~/features/setup/ContextualFaceId";
