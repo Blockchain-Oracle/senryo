@@ -1,7 +1,8 @@
 "use client";
 /**
  * Home (the phone's Home, S5.10): the balance in the mode's money, the one-tap chip, your open calls (each opens its
- * terminal) and the live markets to call on. A guest gets the promise and one way in.
+ * terminal) and the live markets to call on. A guest gets the promise and a way to play, not an account wall: their
+ * passkey arrives with their first call (F14).
  */
 import { useCallRows } from "@senryo/calls/react";
 import { lane, sideName } from "@senryo/core";
@@ -15,7 +16,6 @@ import { useAccount } from "@/lib/account/provider";
 import { tapFeedback } from "@/lib/feedback";
 import { money } from "@/lib/format";
 import { activeNetwork } from "@/lib/network";
-import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { OneTapChip } from "./OneTapChip";
 
@@ -73,9 +73,11 @@ export function HomeScreen() {
       ) : (
         <section className="flex flex-col items-start gap-3">
           <h1 className="font-semibold text-page-title">Call the next move</h1>
-          <p className="text-body text-text-2">Up or Down on live prices, in dollars.</p>
-          <Button size="xl" onClick={() => openDrawer(DRAWERS.account)}>
-            Create account
+          <p className="text-body text-text-2">Up or Down on live prices. Pick one: your passkey signs it.</p>
+          <Button size="xl" asChild>
+            <Link href={tradeHref("BTC")} onClick={tapFeedback}>
+              Make a call
+            </Link>
           </Button>
         </section>
       )}

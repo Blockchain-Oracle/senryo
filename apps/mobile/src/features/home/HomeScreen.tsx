@@ -25,7 +25,6 @@ import { ContextualFaceId } from "~/features/setup/ContextualFaceId";
 import { SetupResume } from "~/features/setup/SetupResume";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
-import { accountRequiredRoute } from "~/lib/constants/routes";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { OneTapChip } from "./OneTapChip";
@@ -129,8 +128,8 @@ export function HomeScreen() {
           <>
             <EmptyState
               why="Call the next move"
-              detail="Up or Down on live prices, in dollars."
-              action={{ label: "Create account", onPress: () => router.push(accountRequiredRoute("make a call")) }}
+              detail="Up or Down on live prices. Pick one: your passkey signs it."
+              action={{ label: "Make a call", onPress: () => watch("BTC") }}
             />
             {markets("Markets")}
           </>

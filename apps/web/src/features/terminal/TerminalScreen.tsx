@@ -39,6 +39,7 @@ import { SAMPLE_CAPACITY } from "./chart/constants";
 import { LiveChart } from "./chart/LiveChart";
 import { DEFAULT_STAKE, MIN_STAKE } from "./constants";
 import { ExitModal } from "./ExitModal";
+import { type FirstCallRequest, FirstCallSheet } from "./FirstCallSheet";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { StakeModal } from "./StakeModal";
 import { TerminalTop } from "./TerminalTop";
@@ -91,6 +92,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
   useReactions(symbol, q.onTick, reactions);
   const [open, setOpen] = useState<"stake" | "part" | "exit" | "markets" | null>(null);
+  const [firstCall, setFirstCall] = useState<FirstCallRequest | null>(null);
   const exits = useExitActions(account, choices.cadence);
   const flow = useCallFlow({
     view: t,
@@ -118,12 +120,20 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
         });
         return false;
       },
-      needAccount: () =>
-        notify({
-          title: "Sign in to make a call",
-          description: "Your passkey is your account.",
-          action: { label: "Sign in", onClick: () => openDrawer(DRAWERS.account) },
-        }),
+      needAccount: (slot) =>
+        slot !== undefined && q.offer[slot]
+          ? setFirstCall({
+              slot,
+              symbol,
+              label: q.offer[slot]?.label ?? "",
+              stake: choices.stake,
+              pays: slot === 0 ? q.firstLine : q.secondLine,
+            })
+          : notify({
+              title: "Sign in to make a call",
+              description: "Your passkey is your account.",
+              action: { label: "Sign in", onClick: () => openDrawer(DRAWERS.account) },
+            }),
     },
   });
 
@@ -216,6 +226,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
           onExit={() => setOpen("exit")}
         />
       </aside>
+      <FirstCallSheet request={firstCall} onClose={() => setFirstCall(null)} onPlace={(slot) => void flow.open(slot)} />
       {open === "stake" ? (
         <StakeModal
           current={choices.stake}

@@ -18,6 +18,7 @@ import { Segmented } from "~/components/kit/Segmented";
 import { ArrowDown, ArrowDownUp, ArrowUp, Crosshair, Plunge, RangeBand, Surge } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
+import { setActiveNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { CONTROL_FONT_SCALE, DISABLED_OPACITY, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { STAKE_PRESETS_USD } from "./constants";
 import { OneTapLine } from "./OneTapLine";
@@ -109,6 +110,28 @@ function CallButton({
 /** A market outside its session (D-289): no new calls until it opens; the chart shows the last print. */
 function ClosedPanel({ symbol, line }: { symbol: string; line: MarketLine }) {
   const { color } = useTheme();
+  const readOnly = useReadOnlyNetwork();
+  // Real before mainnet (D-320): every price is live and browsable; the calls are in Practice, one tap away.
+  if (readOnly && line.unlisted) {
+    return (
+      <View style={styles.wrap} accessibilityRole="summary">
+        <Text style={[TYPE.sectionTitle, { color: color.ink }]}>Trading opens with mainnet</Text>
+        <Text style={[TYPE.body, { color: color.inkMuted }]}>
+          {symbol}'s price is live. Make your calls in Practice meanwhile.
+        </Text>
+        <Pressable
+          onPress={() => {
+            fire("snap", { cue: "toggle" });
+            setActiveNetwork("testnet");
+          }}
+          accessibilityRole="button"
+          style={[styles.call, { backgroundColor: color.rangeFill, borderBottomColor: color.rangeFillEdge }]}
+        >
+          <Text style={[TYPE.buttonLabel, { color: color.onDirectionFill }]}>Switch to Practice to play</Text>
+        </Pressable>
+      </View>
+    );
+  }
   const words = closedWords(symbol, line);
   return (
     <View style={styles.wrap} accessibilityRole="summary">

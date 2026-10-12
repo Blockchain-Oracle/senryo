@@ -36,8 +36,11 @@ export interface CallFlowEffects {
   /** The tap, a fill (open or cash-out) and a failure: sound and haptic. */
   cue(cue: FlowCue): void;
   notify(notice: { title: string; description: string }): void;
-  /** No account on this device: ask to sign in or create one ("make a call"). */
-  needAccount(): void;
+  /**
+   * No account on this device. With the call they picked (`slot`), the app opens that call's own sheet whose passkey
+   * signs it (F14: the signature is the sign-up, not a wall before it); without one (a cash-out), ask to sign in.
+   */
+  needAccount(slot?: OfferSlot): void;
   /** One of this screen's calls filled (first-run setup moves on). */
   onFilled?: () => void;
   /** A check before any call once signed in (the terms): say why and return false to stop. */
@@ -106,9 +109,9 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
             ? { kind: "no-price" }
             : { kind: "ready" };
 
-  const guard = (): boolean => {
+  const guard = (slot?: OfferSlot): boolean => {
     if (!t.owner) {
-      effectsRef.current.needAccount();
+      effectsRef.current.needAccount(slot);
       return false;
     }
     if (effectsRef.current.gate && !effectsRef.current.gate()) return false;
@@ -116,7 +119,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
   };
 
   const open = async (slot: OfferSlot) => {
-    if (!guard()) return;
+    if (!guard(slot)) return;
     const fx = effectsRef.current;
     const band = offer[slot];
     const quote = slot === 0 ? latest.current?.first : latest.current?.second;
