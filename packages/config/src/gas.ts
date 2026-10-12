@@ -23,6 +23,11 @@ export const GAS_LIMITS = {
   transferWithAuthorization: 120_000n,
   /** A commit, possibly batched with opening its window and recording the open print (Multicall3). */
   marketCommit: 900_000n,
+  /**
+   * A parlay's commit batched with opening each leg's window and recording its open print: two legs measured
+   * 1,136,112 on testnet (12 Oct, both windows new); four legs ≈ 2.1M.
+   */
+  parlayCommit: 2_500_000n,
   /** One `finalize` of up to 32 tickets at one print (v3: checking its σ mark adds about 15k). */
   marketFinalize: 4_000_000n,
   /** `listSeries` (R3.1: 162,881 on 10143 for five bands). */

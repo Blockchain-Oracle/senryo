@@ -141,7 +141,7 @@ export class ParlayRelay {
       to = MULTICALL3;
       data = openLegsAndCommitParlayData(this.d.chainId, opening, commitData);
     }
-    const sent = await retryWhileEarly(() => sendTx(sender, { to, data, action: "marketCommit", meta: { digest } }));
+    const sent = await retryWhileEarly(() => sendTx(sender, { to, data, action: "parlayCommit", meta: { digest } }));
     if (sent.stage === "reverted") throw new Error(`parlay commit reverted in ${sent.hash}`);
     const changes = parlayChanges(sent.receipt.logs, reserve);
     await this.apply(changes, legs, sent.hash);
@@ -221,6 +221,6 @@ export class ParlayRelay {
     const commit = aggregateResults(out ?? "0x").at(-1);
     if (commit?.success) return;
     const reason = revertReason(commit?.returnData ?? "0x");
-    throw new SimulationRevertedError("marketCommit", { name: reason, args: [], message: reason }, undefined);
+    throw new SimulationRevertedError("parlayCommit", { name: reason, args: [], message: reason }, undefined);
   }
 }
