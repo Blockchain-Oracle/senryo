@@ -149,9 +149,12 @@ Next: R5 — the live loop (below).
   device key with no sign-in, its dollars following the passkey later (D-330, verified live: ticket 1019 placed and
   won as a guest; the sweep's transfer moved gas-free); the trade slip — calls and rides on white paper with a Kinpaku
   stamp, Share / Save image, ride receipts with `GET /v1/rides/:rideId` and migration 0031 (D-331, Codex direction
-  12) — and the trade in place from tap to result (pending paper, compact card, "Just finished"). api + keeper
-  `sha-17a3f2f`, web `sha-17a3f2f` → `9f3286d` deploying.
-- **Next in R5:** C's phone sim pass and OTA, then D feel (R5.15, R5.17, R5.24), E after the trade (R5.19–R5.22).
+  12) — and the trade in place from tap to result (pending paper, compact card, "Just finished"). Seen on the web as a
+  guest and on a Release simulator build (fixed there: the equity running off the edge, "Booked" wording, the slip's
+  notches on a sheet). api + keeper `sha-17a3f2f`, web `sha-3f7e499`, phone OTA `655f245b`.
+- **D — feel (under way):** R5.15's tour live on the web, the phone's built; R5.17's shared candle model.
+- **Next in R5:** D (R5.15 phone, R5.17 candles + footer, R5.24 tab switches; one sim pass), E after the trade
+  (R5.19–R5.22).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
