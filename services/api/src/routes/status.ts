@@ -20,9 +20,10 @@ export function registerStatusRoutes(app: HttpServer, ctx: ApiContext): void {
     const nowMinute = Math.floor(Date.now() / MS_PER_SECOND / SECONDS_PER_MINUTE);
     const last = Math.floor(nowMinute / range.minutes);
     const first = last - range.buckets + 1;
-    const rows = await ctx.db<{ b: number; id: string; seen: number; ok: number; worst: number }[]>`
+    const rows = await ctx.db<{ b: number; id: string; seen: number; ok: number; unknown: number; worst: number }[]>`
       SELECT (minute / ${range.minutes})::int8 AS b, c->>'id' AS id, count(*)::int AS seen,
              count(*) FILTER (WHERE c->>'state' = 'ok')::int AS ok,
+             count(*) FILTER (WHERE c->>'state' = 'unknown')::int AS unknown,
              max(CASE c->>'state' WHEN 'down' THEN 3 WHEN 'degraded' THEN 2 WHEN 'unknown' THEN 1 ELSE 0 END)::int AS worst
       FROM health_minutes, jsonb_array_elements(payload->'components') AS c
       WHERE chain_id = ${query.chainId} AND minute >= ${first * range.minutes}
@@ -31,7 +32,7 @@ export function registerStatusRoutes(app: HttpServer, ctx: ApiContext): void {
       id,
       buckets: Array.from({ length: range.buckets }, (_, i) => {
         const r = rows.find((x) => x.id === id && Number(x.b) === first + i);
-        return r ? { seen: r.seen, ok: r.ok, worst: WORST[r.worst] ?? "unknown" } : null;
+        return r ? { seen: r.seen, ok: r.ok, unknown: r.unknown, worst: WORST[r.worst] ?? "unknown" } : null;
       }),
     }));
     reply.header("cache-control", HISTORY_MAX_AGE);

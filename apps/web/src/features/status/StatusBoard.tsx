@@ -157,7 +157,7 @@ function Tile({
               ? barLabel(history, picked, buckets[picked] ?? null)
               : uptime
                 ? `${uptime} working over the range`
-                : "Not recorded yet"}
+                : "Nothing measured yet"}
           </span>
         </>
       ) : null}

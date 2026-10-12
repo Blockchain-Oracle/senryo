@@ -1,5 +1,8 @@
+import { verdict } from "@senryo/calls";
 import { MORE_NAV, type NavIcon } from "@senryo/config";
-import { type Href, router } from "expo-router";
+import { useStatus } from "@senryo/query";
+import { type Href, router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   Bell,
@@ -48,6 +51,16 @@ export default function More() {
   const { color } = useTheme();
   const guest = account.ready && !account.hint;
   const address = account.hint?.address;
+  // The Status row carries the live verdict, read only while More is in front (P6's health chip).
+  const [focused, setFocused] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+  const status = useStatus({ enabled: focused });
+  const health = "value" in status ? verdict(status.value.components).word : null;
   return (
     <CollapsingScreen
       left={guest ? <TabTitle>More</TabTitle> : null}
@@ -80,6 +93,7 @@ export default function More() {
                 key={item.key}
                 title={item.label}
                 {...(GLYPH[item.icon] ? { icon: GLYPH[item.icon] } : {})}
+                {...(item.key === "status" && health ? { value: health } : {})}
                 onPress={() => router.push(item.path as Href)}
               />
             ))}
@@ -95,6 +109,7 @@ export default function More() {
                 key={item.key}
                 title={item.label}
                 {...(GLYPH[item.icon] ? { icon: GLYPH[item.icon] } : {})}
+                {...(item.key === "status" && health ? { value: health } : {})}
                 onPress={() => router.push(item.path as Href)}
               />
             ))}

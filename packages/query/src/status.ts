@@ -21,13 +21,15 @@ export const STATUS_REFRESH_MS = 15_000;
 /** The bars move a minute at a time; re-read them this often while the board is open. */
 export const STATUS_HISTORY_REFRESH_MS = 60_000;
 
-export function useStatus(): Reading<StatusResponse> {
+/** `enabled: false` stops the polling (a health chip on a screen that isn't in front). */
+export function useStatus({ enabled = true }: { enabled?: boolean } = {}): Reading<StatusResponse> {
   const env = useQueryEnv();
   const query = useQuery({
     queryKey: ["status", env.chainId] as const,
     queryFn: () => env.api.call(statusRoute, { query: { chainId: env.chainId } }),
     refetchInterval: STATUS_REFRESH_MS,
     staleTime: STATUS_REFRESH_MS,
+    enabled,
   });
   return readingOf(query);
 }

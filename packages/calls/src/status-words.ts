@@ -104,20 +104,24 @@ export function barLabel(h: Pick<StatusHistory, "from" | "bucketSec">, i: number
       ? iso.slice(DAY_START, DAY_START + DAY_LEN)
       : `${iso.slice(TIME_START, TIME_START + HHMM)} UTC`;
   if (!b) return `${when} · not recorded`;
-  return `${when} · ${STATE_WORDS[b.worst]} at worst · ${b.ok} of ${b.seen} min working`;
+  if (b.unknown === b.seen) return `${when} · couldn't be told`;
+  return `${when} · ${STATE_WORDS[b.worst]} at worst · ${b.ok} of ${b.seen - b.unknown} min working`;
 }
 
 const PERCENT = 100;
 const UPTIME_DECIMALS = 2;
 
-/** The share of recorded minutes that were healthy over the range ("99.86%"), or null with nothing recorded. */
+/**
+ * The share of measured minutes that were healthy over the range ("99.86%"): minutes it couldn't be told are left out
+ * (a component that isn't open has no uptime, not 0%). Null with nothing measured.
+ */
 export function uptimeText(buckets: readonly Bucket[]): string | null {
-  let seen = 0;
+  let measured = 0;
   let ok = 0;
   for (const b of buckets) {
     if (!b) continue;
-    seen += b.seen;
+    measured += b.seen - b.unknown;
     ok += b.ok;
   }
-  return seen === 0 ? null : `${((ok / seen) * PERCENT).toFixed(UPTIME_DECIMALS)}%`;
+  return measured <= 0 ? null : `${((ok / measured) * PERCENT).toFixed(UPTIME_DECIMALS)}%`;
 }

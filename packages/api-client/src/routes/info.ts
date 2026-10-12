@@ -109,9 +109,17 @@ export const statusRoute = defineRoute({
 export const STATUS_RANGES = ["24h", "90d"] as const;
 export type StatusRange = (typeof STATUS_RANGES)[number];
 
-/** One bucket of a component's history: minutes recorded, minutes healthy, and the worst state seen; null = no record. */
+/**
+ * One bucket of a component's history: minutes recorded, minutes healthy, minutes it couldn't be told (left out of
+ * uptime, never counted as down), and the worst state seen; null = no record.
+ */
 const bucketSchema = z
-  .object({ seen: z.int().nonnegative(), ok: z.int().nonnegative(), worst: z.enum(HEALTH_STATES) })
+  .object({
+    seen: z.int().nonnegative(),
+    ok: z.int().nonnegative(),
+    unknown: z.int().nonnegative().default(0),
+    worst: z.enum(HEALTH_STATES),
+  })
   .nullable();
 
 /** The Status board's bars (P6, D-324): 24 hourly or 90 daily buckets per component, oldest first, ending now. */
