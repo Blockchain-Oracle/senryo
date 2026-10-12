@@ -136,3 +136,27 @@
 | V13 | Duel has a queue, a versus entrance, swipe cards with stakes and a result moment | R7.8 | — |
 | V14 | Events read as a scoreboard with crests, team colours and a settlement moment | R7.9 | — |
 | V15 | Value first, passkey only to sign: no account walls; the first commitment's sheet signs and completes it | F14 | — |
+
+## Owner's phone review, 12 Oct afternoon (stage P; research `review-2026-10-12`)
+
+Status keeps three facts apart: **built** (committed, gate green), **accepted** (seen working in the Release simulator,
+the web preview or on testnet, with the evidence named) and **deployed** (production web/api/keeper/indexer, phone OTA).
+
+| Id | Row | Step | Status |
+|---|---|---|---|
+| PR1 | Sheets sit above the dock: the scrim covers the ticket, the dock hides, nothing draws over the panel | P1 (D-321) | built `ff55a2a9` · accepted (simulator: DOGE market sheet over the ticket, dock gone) · deployed OTA `f2ee0f7b` |
+| PR2 | The market sheet drags taller: 62 / 88 / 100 %, search raises it to full, the list scrolls only at the top | P1, P2 | built · accepted (simulator, each detent; the upward drag fixed after the first pass) · deployed OTA `f2ee0f7b` |
+| PR3 | The market picker: search, Favourites · Hot · All · kinds, recents first, a star per row, the current market marked, reset on every open | P2 | built `08649e5e` · accepted (simulator and web, both widths) · deployed web `sha-08649e5`, OTA `f2ee0f7b` |
+| PR4 | Parlay builds a chain: four sockets, the mark's flight into its socket, links that light | P3 (R7.10) | built `252aba6e` · accepted (simulator and web) · deployed web `sha-252aba6`, OTA `66b9f59c` |
+| PR5 | Parlay cards: live price, 24 h line, change, per-side indicative odds for the lane | P3 (D-326) | built · accepted (simulator, web) · deployed |
+| PR6 | One round strip, never a countdown per row; between rounds the sides become next-round drafts and the price waits | P3 (D-326) | built · accepted (simulator in the settling window, web dark) · deployed |
+| PR7 | The slip always exists; it opens to legs, "Pays N×" from the chain's quote, stake, the fill floor, and a hold-to-place that names its blocker | P3 | built · accepted (simulator: a guest's hold opened the passkey step with the slip kept) · deployed |
+| PR8 | Placed parlays settle as tracks; parlays in play on Calls | P3 | built · money path accepted on testnet (P7 parlay won, `0xe570…2f4a`); the track view itself not yet seen for a real account · deployed |
+| PR9 | Duel stage: your seat vs the opponent's, the pot on the line, searching in the empty seat | P4 (D-322) | built `ceeda2e3` · accepted (simulator, web light and dark) · deployed api + web `sha-ceeda2e`, OTA `c1681c42` |
+| PR10 | Tier tiles with live queue counts, "No pot" (never "Free"), the commitment spelled out | P4 (D-323) | built · accepted (`/v1/duel/queue` serves `waiting`; tiles read "First in this tier") · deployed |
+| PR11 | The match on three market lanes (Warm-up keeps the deck), the verdict on the stage, Rematch and Share | P4 (D-322) | built · **not accepted live**: both apps point at production, where only a real account sits a seat; the scripted duel (P7) proves the money path, not this view · deployed |
+| PR12 | Earn shows ownership: share value, net earned, share of the pool; a guest sees one share's value and what it did | P5 (D-325) | built `681a8a69` · accepted (simulator and web guest; net earned read for the R4 account, +$0.000031) · deployed indexer + api + web `sha-681a8a6`, OTA `e7565118` |
+| PR13 | A share's value over 1D / 7D / 30D, never deposits, never exaggerated | P5 | built · accepted (simulator, web; span floor) · deployed |
+| PR14 | Amounts only in a keypad sheet (phone) or amount modal (web), with ¼ ½ ¾ All, the estimate, the timing and the risk | P5 (D-325) | built · accepted (simulator keypad "$8", web modal "$50", both as guests) · deployed |
+| PR15 | Status: one verdict with a tally; a tile per component, problems first, with its numbers and 24 h / 90 d bars; unknown never counts as a pass or a failure | P6 (D-324) | built `3e0b7295`, `ee25b7e2`, `954df526`, `1d8e560e` · accepted (simulator, web, both widths and themes, against production's records) · deployed api + keeper `sha-ee25b7e`, web `sha-1d8e560`, OTA `6edf6099` |
+| PR16 | The web gets its first Status page; the phone's More row carries the live verdict | P6 | built · accepted (web preview; simulator "Status · Live" on a fresh build) · deployed web `sha-1d8e560`, OTA `6edf6099` |

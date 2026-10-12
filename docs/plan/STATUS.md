@@ -110,7 +110,16 @@ leftovers.
   keypad sheet (phone) / amount modal (web), never a bare input; the indexer's `EarnAccount` gives net earned. Indexer,
   api and web `sha-681a8a6`, phone OTA `e7565118`.
 
-Next: P6 — Status as a live evidence board (built: `3e0b7295`; deploying).
+- **P6 live (12 Oct 17:45 UTC):** Status as a live evidence board on both apps — one verdict with a tally, a tile per
+  component (problems first) with its numbers and 24 h / 90 d bars from the api's per-minute record (0029
+  `health_minutes`; unknown minutes stay out of uptime), the web's first Status page, the verdict on the phone's More
+  row. api + keeper `sha-ee25b7e`, web `sha-1d8e560`, phone OTA `6edf6099`.
+- **P7 accepted (12 Oct 18:05 UTC):** testnet — a two-leg parlay filled and won, a scripted duel finalized, a $20 Earn
+  supply settled at the 18:00 roll with its basis indexed; simulator and web passes of every P surface, both themes.
+  Open: a real account in the Duel match and the signed-in Earn hero (the owner's phone). Handoff in
+  [replan-p-phone.md](replan-p-phone.md).
+
+Next: rides 12/13 (19:58 UTC) and the event committee (from 19:00 UTC); then R5 — the live loop.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

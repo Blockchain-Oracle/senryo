@@ -191,7 +191,7 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
   confirm is the passkey step.
 
 ### P6 — Status as a live evidence board (api + both apps)
-- [ ] P6 built and deployed
+- [x] P6 built and deployed — `3e0b7295` (+ `ee25b7e2`, `954df526`, `1d8e560e`), api + keeper `sha-ee25b7e`, web `sha-1d8e560`, phone OTA `6edf6099` (12 Oct)
 
 - **Hero:** the verdict ("Live" / "Delayed" / "Unavailable" / "Unverified"), with the affected count, the last
   observation and a tally of pills.
@@ -217,7 +217,7 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
 - **Purge** after 90 days in the keeper's retention job.
 
 ### P7 — Acceptance and release
-- [ ] P7 built and deployed
+- [x] P7 built and deployed — acceptance on testnet and in the simulator and web preview, parity rows PR1–PR16, the Handoff (12 Oct)
 
 - **Phone:** one Release simulator pass covering the sheets and market sheet, a parlay placed on testnet, a duel
   queued, the Earn keypad, and Status.
@@ -238,4 +238,30 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
 - **api:** `curl /v1/duel/queue` shows `waiting`; `/v1/status/history` returns buckets after the first minutes.
 
 ## Handoff
-(written at the end of the stage)
+
+**Done (12 Oct, 15:30–18:05 UTC).** All seven steps built, gated, committed and deployed; parity rows PR1–PR16 in
+`parity-replan.md` keep built / accepted / deployed apart.
+
+- **P1–P2:** the phone's sheets render in one root layer above the dock, the tab shell and pushed screens' headers
+  (native-modal sheets stay in place); detents 62 / 88 / 100 %; the market picker on both apps.
+- **P3:** Parlay as a chain on both apps; the slip always present; hold-to-place; settlement tracks; parlays in play on
+  Calls. Testnet: a two-leg parlay filled and won through the production relay.
+- **P4:** Duel as a two-seat arena; tier tiles with live queue counts; "No pot"; three market lanes in the match.
+  Testnet: a scripted duel queued, paired, picked, settled and finalized.
+- **P5:** Earn as ownership; the share-value chart; the keypad sheet / amount modal; net earned from the indexer's
+  `EarnAccount`. Testnet: a $20 supply settled at the 18:00 roll with its basis indexed.
+- **P6:** Status as a live evidence board on both apps (the web's first Status page), backed by `health_minutes`
+  (0029), `/v1/status` components and `/v1/status/history`; the keeper persists its jobs' state.
+
+**Open, in order:**
+1. **A real account in the new screens.** Both apps point at production, where only a real account sits a seat, so
+   the Duel match lanes and verdict (PR11) and a signed-in Earn hero with net earned were seen only through the api and
+   scripted wallets. The owner's phone is the first real pass.
+2. **Rides 12 and 13** (the knock-out row) end at 19:58 UTC; the event committee answers from 19:00 UTC.
+3. **R7 leftovers not folded into P:** R7.1 portrait stages for Lucky and Warm-up; R7.7 meta (season, achievements,
+   profile card).
+4. Then the replan continues: R5 → R6 → R8 → R9.
+
+**Lessons:** a lone positive `activeOffsetY` only activates downward (the sheet couldn't be raised); a Release
+simulator build bundles late, so edits made during it ship half-done into the simulator — rebuild before judging a
+crash; unknown health minutes must stay out of uptime, never count as a pass or a failure.
