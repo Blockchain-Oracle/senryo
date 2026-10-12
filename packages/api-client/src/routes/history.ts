@@ -101,36 +101,39 @@ export const windowProofRoute = defineRoute({
   params: z.object({ windowId: bytes32Schema }),
   query: z.object({ chainId: z.coerce.number().pipe(chainIdSchema) }),
   body: undefined,
-  response: z.object({
-    windowId: bytes32Schema,
-    symbol: symbolSchema,
-    cadenceSec: z.int(),
-    start: unixSecondsSchema,
-    expiry: unixSecondsSchema,
-    state: z.enum(["open", "resolved", "voided"]),
-    settled: z.boolean(),
-    open: printSchema.nullable(),
-    close: printSchema.nullable(),
-    calls: z.int(),
-    /** Calls still riding it. Settlement posts the close only while some are: 0 after expiry means it never will. */
-    liveCalls: z.int().nonnegative(),
-    volume: uintCodec,
-    /** Stake per band index — "62 % called Up". */
-    bandStake: z.array(uintCodec),
-    openedTx: txHashSchema,
-    settledTx: txHashSchema.nullable(),
-    /** The verdict (S7.7): why it voided (0 none, 1 no print, 2 the cross-check diverged), and which bands won,
-     *  refunded or lost (bit i = band i), what went to the pool and to holders, and the resolve transaction. */
-    voidReason: z.int().nonnegative(),
-    wonMask: z.int().nonnegative(),
-    refundMask: z.int().nonnegative(),
-    lostMask: z.int().nonnegative(),
-    toPool: uintCodec,
-    toHolders: uintCodec,
-    resolvedTx: txHashSchema.nullable(),
-    /** Every call in the window (owners are not listed), oldest first, at most `WINDOW_CALLS_MAX`. */
-    callList: z.array(callSchema),
-  }),
+  response: z
+    .object({
+      windowId: bytes32Schema,
+      symbol: symbolSchema,
+      cadenceSec: z.int(),
+      start: unixSecondsSchema,
+      expiry: unixSecondsSchema,
+      state: z.enum(["open", "resolved", "voided"]),
+      settled: z.boolean(),
+      open: printSchema.nullable(),
+      close: printSchema.nullable(),
+      calls: z.int(),
+      /** Calls still riding it. Settlement posts the close only while some are: 0 after expiry means it never will. */
+      liveCalls: z.int().nonnegative(),
+      volume: uintCodec,
+      /** Stake per band index — "62 % called Up". */
+      bandStake: z.array(uintCodec),
+      openedTx: txHashSchema,
+      settledTx: txHashSchema.nullable(),
+      /** The verdict (S7.7): why it voided (0 none, 1 no print, 2 the cross-check diverged), and which bands won,
+       *  refunded or lost (bit i = band i), what went to the pool and to holders, and the resolve transaction. */
+      voidReason: z.int().nonnegative(),
+      wonMask: z.int().nonnegative(),
+      refundMask: z.int().nonnegative(),
+      lostMask: z.int().nonnegative(),
+      toPool: uintCodec,
+      toHolders: uintCodec,
+      resolvedTx: txHashSchema.nullable(),
+      /** Every call in the window (owners are not listed), oldest first, at most `WINDOW_CALLS_MAX`. */
+      callList: z.array(callSchema),
+    })
+    // A window nobody has called yet isn't on chain: null, not a 404 (F13 — a quiet window is not an error).
+    .nullable(),
 });
 
 export const windowsRoute = defineRoute({
@@ -166,7 +169,8 @@ export const windowsRoute = defineRoute({
 
 export type WindowsPage = z.output<typeof windowsRoute.response>;
 export type CallTimeline = z.output<typeof callTimelineRoute.response>;
-export type WindowProof = z.output<typeof windowProofRoute.response>;
+/** A window on chain, proved (the route answers null for one nobody has called yet). */
+export type WindowProof = NonNullable<z.output<typeof windowProofRoute.response>>;
 export type CallerStats = z.output<typeof callerStatsRoute.response>;
 
 export const LEADERBOARD_PERIODS = ["day", "week", "all"] as const;

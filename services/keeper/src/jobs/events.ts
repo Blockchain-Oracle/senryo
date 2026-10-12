@@ -28,6 +28,7 @@ import {
   dropListing,
   type EventRow,
   eventById,
+  eventsInPlay,
   eventWork,
   insertListing,
   listedGameKeys,
@@ -36,6 +37,7 @@ import {
   nowSec,
   pushTitle,
   saveAnswer,
+  saveLive,
   staleListings,
 } from "@senryo/service-common";
 import {
@@ -50,7 +52,7 @@ import {
 import type { KeeperContext } from "../context.ts";
 import { answerTime, type Committee, gameOf, loadCommittee, signAnswer } from "../events/committee.ts";
 import type { FetchCache, GameRef } from "../events/game.ts";
-import { espnSchedule } from "../events/sources/espn.ts";
+import { espnLive, espnSchedule } from "../events/sources/espn.ts";
 import type { Job } from "../runner.ts";
 
 /**
@@ -78,8 +80,19 @@ export function eventsJob(ctx: KeeperContext): Job {
         await guarded(ctx, e.event_id, () => advance(ctx, committee, e, cache, now));
       }
       await guarded(ctx, "payouts", () => pay(ctx));
+      await guarded(ctx, "live", () => live(ctx, cache, now));
     },
   };
+}
+
+/** The games on now: their status and score from ESPN each tick, onto the board (F12; display only). */
+async function live(ctx: KeeperContext, cache: FetchCache, now: number): Promise<void> {
+  for (const e of await eventsInPlay(ctx.db, ctx.chainId, now, EVENT_WORK_BATCH)) {
+    const league = leagueOf(e.league);
+    if (!league) continue;
+    const line = await espnLive(league, { key: e.game_key }, cache);
+    if (line) await saveLive(ctx.db, ctx.chainId, e.event_id, line);
+  }
 }
 
 async function guarded(ctx: KeeperContext, subject: string, work: () => Promise<void>): Promise<void> {

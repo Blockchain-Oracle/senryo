@@ -60,6 +60,7 @@ export function toEventView(e: EventRow): EventView {
     prize: e.prize,
     decidedAt: e.decided_at?.toISOString() ?? null,
     listedTx: e.listed_tx as Hex | null,
+    live: e.live,
   };
 }
 

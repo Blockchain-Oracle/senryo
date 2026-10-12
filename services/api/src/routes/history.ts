@@ -47,7 +47,10 @@ export function registerHistoryRoutes(app: HttpServer, ctx: ApiContext): void {
   app.get(windowProofRoute.path, async (request, reply) => {
     const { params, query } = parseRoute(windowProofRoute, request);
     const w = await reader.window(query.chainId, params.windowId);
-    if (!w) throw notFound("window");
+    if (!w) {
+      reply.header("cache-control", HISTORY_MAX_AGE);
+      return sendRoute(reply, windowProofRoute, null);
+    }
     const print = (p: typeof w.open) =>
       p && { priceE8: p.priceE8, confE8: p.confE8, publishTime: p.publishTime, txHash: p.txHash as Hex };
     reply.header("cache-control", HISTORY_MAX_AGE);

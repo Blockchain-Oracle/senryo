@@ -4,7 +4,7 @@
  * Yes's share, Yes / No and the call in place; a settled question says how it ended.
  */
 import type { EventView } from "@senryo/api-client";
-import { estimateFor, eventPhase, leagueName, sideWord, spanText, statusLine } from "@senryo/calls";
+import { estimateFor, eventPhase, leagueName, liveLine, sideWord, spanText, statusLine } from "@senryo/calls";
 import type { EventReceipt, EventsFlow } from "@senryo/calls/react";
 import { type ChainId, EVENTS, explorerTxUrl } from "@senryo/config";
 import { usd } from "@senryo/core";
@@ -35,7 +35,7 @@ export function EventCard(p: { event: EventView; flow: EventsFlow; now: number; 
           <TeamMark league={e.league} team={e.away} />
         </>
       }
-      meta={`${leagueName(e.league)} · ${startText(e.startsAt)}`}
+      meta={liveLine(e) ?? `${leagueName(e.league)} · ${startText(e.startsAt)}`}
       question={e.question}
       onQuestion={() => router.push(eventRoute(e.eventId))}
       clock={phase === "open" ? spanText(e.closesAt - p.now) : null}

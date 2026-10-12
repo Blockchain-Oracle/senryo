@@ -171,7 +171,7 @@ for (const owner of owners) {
 
 for (const [windowId, filled] of filledPerWindow) {
   const w = await api.call(windowProofRoute, { params: { windowId: windowId as Hex }, query: { chainId: CHAIN } });
-  check(w.calls === filled, `window ${windowId}: ${w.calls} calls ≠ ${filled} filled on chain`);
+  check(w?.calls === filled, `window ${windowId}: ${w?.calls ?? "not indexed"} calls ≠ ${filled} filled on chain`);
 }
 
 console.log(`\n${filledPerWindow.size} windows checked`);

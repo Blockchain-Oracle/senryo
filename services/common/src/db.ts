@@ -25,6 +25,7 @@ import * as m0023 from "../migrations/0023_sigma_marks.ts";
 import * as m0024 from "../migrations/0024_rides.ts";
 import * as m0025 from "../migrations/0025_sigma_rule.ts";
 import * as m0026 from "../migrations/0026_jsonb_values.ts";
+import * as m0027 from "../migrations/0027_event_live.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -87,6 +88,7 @@ export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [
   m0024,
   m0025,
   m0026,
+  m0027,
 ];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */

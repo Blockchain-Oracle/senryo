@@ -64,6 +64,19 @@ export const eventSchema = z.object({
   prize: uintCodec.nullable(),
   decidedAt: isoTimeSchema.nullable(),
   listedTx: txHashSchema.nullable(),
+  /**
+   * The game as it plays (F12, display only — the committee decides): ESPN's state, its short status ("2nd · 12:41",
+   * "Final") and the score; null before kick-off is read. Absent from an older api.
+   */
+  live: z
+    .object({
+      state: z.enum(["pre", "in", "post"]),
+      detail: z.string().max(TEXT_MAX),
+      home: z.int().nullable(),
+      away: z.int().nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type EventView = z.output<typeof eventSchema>;

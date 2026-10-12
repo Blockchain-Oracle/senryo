@@ -20,6 +20,14 @@ export interface EventTeam {
   abbr: string;
 }
 
+/** The game as it plays (F12): ESPN's state, its short status ("2nd · 12:41", "Final"), and the score. */
+export interface EventLive {
+  state: "pre" | "in" | "post";
+  detail: string;
+  home: number | null;
+  away: number | null;
+}
+
 export interface EventRow {
   event_id: string;
   league: string;
@@ -45,6 +53,7 @@ export interface EventRow {
   prize: bigint | null;
   decided_at: Date | null;
   listed_tx: string | null;
+  live: EventLive | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -77,7 +86,8 @@ export interface EventCallRow {
 export interface EventNotice {
   chainId: ChainId;
   eventId: string;
-  change: EventChange["kind"];
+  /** A change on chain, or "live" — the game's score or status moved (F12). */
+  change: EventChange["kind"] | "live";
   /** The caller, for a call or a payout (their stream hears of it). */
   owner: string | null;
   state: string;
@@ -214,6 +224,36 @@ async function announce(
     yesPool: row.yes_pool.toString(),
     noPool: row.no_pool.toString(),
     txHash,
+  };
+  await db`SELECT pg_notify(${EVENT_CHANNEL}, ${JSON.stringify(notice)})`;
+}
+
+/** Events whose game may be on now (started, not yet decided), for the live score read. */
+export async function eventsInPlay(db: Db, chainId: ChainId, now: number, limit: number): Promise<EventRow[]> {
+  return db<EventRow[]>`
+    SELECT * FROM market_events
+    WHERE chain_id = ${chainId} AND state IN ('listing', 'open') AND starts_at <= ${now} AND answer_by > ${now}
+      AND (live IS NULL OR live->>'state' <> 'post')
+    ORDER BY starts_at LIMIT ${limit}`;
+}
+
+/** Saves a game's live line; announces it on the board when it changed. */
+export async function saveLive(db: Db, chainId: ChainId, eventId: string, live: EventLive): Promise<void> {
+  const changed = await db<{ state: string; yes_pool: bigint; no_pool: bigint }[]>`
+    UPDATE market_events SET live = ${jsonb(db, live)}, updated_at = now()
+    WHERE chain_id = ${chainId} AND event_id = ${eventId} AND live IS DISTINCT FROM ${jsonb(db, live)}
+    RETURNING state, yes_pool, no_pool`;
+  const row = changed[0];
+  if (!row) return;
+  const notice: EventNotice = {
+    chainId,
+    eventId,
+    change: "live",
+    owner: null,
+    state: row.state,
+    yesPool: row.yes_pool.toString(),
+    noPool: row.no_pool.toString(),
+    txHash: null,
   };
   await db`SELECT pg_notify(${EVENT_CHANNEL}, ${JSON.stringify(notice)})`;
 }

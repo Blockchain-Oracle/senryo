@@ -8,14 +8,18 @@ import { useEffect } from "react";
 import { notify } from "@/lib/notify";
 
 const CHECK_MS = 300_000;
+/** A tab flicking between hidden and visible asks at most this often (F13: it was asking on every flick). */
+const FLOOR_MS = 30_000;
 const RUNNING = process.env.NEXT_PUBLIC_BUILD_ID ?? "";
 
 export function useAppUpdate(): void {
   useEffect(() => {
     if (!RUNNING) return;
     let shown = false;
+    let last = 0;
     const check = async () => {
-      if (shown || document.visibilityState !== "visible") return;
+      if (shown || document.visibilityState !== "visible" || Date.now() - last < FLOOR_MS) return;
+      last = Date.now();
       try {
         const res = await fetch("/version.json", { cache: "no-store" });
         const { build } = (await res.json()) as { build?: string };

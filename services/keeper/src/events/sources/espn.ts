@@ -1,4 +1,5 @@
 import type { LeagueSpec } from "@senryo/config";
+import type { EventLive } from "@senryo/service-common";
 import { easternDate, type FetchCache, fetchJson, finalLine, type GameReader, type GameRef, secOf } from "../game.ts";
 
 /**
@@ -21,7 +22,7 @@ interface EspnCompetitor {
 
 interface EspnCompetition {
   date: string;
-  status: { type: { name: string; completed: boolean; state: string } };
+  status: { type: { name: string; completed: boolean; state: string; shortDetail?: string } };
   competitors: EspnCompetitor[];
 }
 
@@ -68,6 +69,29 @@ export async function espnSchedule(
     }
   }
   return [...games.values()].sort((a, b) => a.startSec - b.startSec);
+}
+
+/** The game as it plays (F12, display only): ESPN's state, its short status and the score, or null. */
+export async function espnLive(
+  league: LeagueSpec,
+  game: Pick<GameRef, "key">,
+  cache: FetchCache,
+): Promise<EventLive | null> {
+  const d = await fetchJson<{ header?: { competitions?: EspnCompetition[] } }>(
+    cache,
+    `${BASE}/${league.espn}/summary?event=${game.key}`,
+  );
+  const c = d.header?.competitions?.[0];
+  const s = c && sides(c);
+  if (!c || !s) return null;
+  const state = c.status.type.state === "in" ? "in" : c.status.type.state === "post" ? "post" : "pre";
+  const score = (v: string | undefined) => (v === undefined || !Number.isFinite(Number(v)) ? null : Number(v));
+  return {
+    state,
+    detail: c.status.type.shortDetail ?? "",
+    home: state === "pre" ? null : score(s.home.score),
+    away: state === "pre" ? null : score(s.away.score),
+  };
 }
 
 /** The "ESPN" member: the game by its id. */

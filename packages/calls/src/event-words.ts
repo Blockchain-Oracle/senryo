@@ -108,3 +108,15 @@ export function statementRead(a: Pick<EventAnswerView, "statement">): { source: 
     return null;
   }
 }
+
+/**
+ * The game as it plays (F12), for a card's top line: "LIVE · 2nd 12:41 · BUF 2–1 FLA", then "Final · BUF 3–2 FLA";
+ * null before kick-off (the card shows its league and start instead).
+ */
+export function liveLine(e: Pick<EventView, "live" | "home" | "away">): string | null {
+  const l = e.live;
+  if (!l || l.state === "pre") return null;
+  const score = l.home !== null && l.away !== null ? `${e.home.abbr} ${l.home}–${l.away} ${e.away.abbr}` : null;
+  if (l.state === "post") return score ? `Final · ${score}` : "Final";
+  return ["LIVE", l.detail, score].filter(Boolean).join(" · ");
+}

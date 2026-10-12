@@ -49,7 +49,7 @@ const windowIds = [...new Set(calls.map((c) => c.windowId))];
 const windows: Array<{ id: Hex; start: number; expiry: number; k: bigint; seriesId: Hex }> = [];
 for (const id of windowIds) {
   const w = await api.call(windowProofRoute, { params: { windowId: id }, query: { chainId: CHAIN } });
-  if (!w.open) continue;
+  if (!w?.open) continue;
   windows.push({
     id,
     start: w.start,

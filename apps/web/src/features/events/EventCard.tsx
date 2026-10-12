@@ -5,7 +5,7 @@
  * how it ended; the question links to its page with the committee's statements.
  */
 import type { EventView } from "@senryo/api-client";
-import { estimateFor, eventPhase, leagueName, sideWord, spanText, statusLine } from "@senryo/calls";
+import { estimateFor, eventPhase, leagueName, liveLine, sideWord, spanText, statusLine } from "@senryo/calls";
 import type { EventReceipt, EventsFlow } from "@senryo/calls/react";
 import { EVENTS, explorerTxUrl } from "@senryo/config";
 import { usd } from "@senryo/core";
@@ -34,7 +34,7 @@ export function EventCard(p: { event: EventView; flow: EventsFlow; now: number; 
           <TeamMark league={e.league} team={e.away} />
         </>
       }
-      meta={`${leagueName(e.league)} · ${startText(e.startsAt)}`}
+      meta={liveLine(e) ?? `${leagueName(e.league)} · ${startText(e.startsAt)}`}
       question={
         <Link
           href={eventHref(e.eventId)}
