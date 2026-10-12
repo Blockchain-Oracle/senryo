@@ -110,21 +110,27 @@ and the morph on top of them.*
   is deleted. Failure reasons get plain words (`WindowNotTrading` → "This window has closed to calls").
 
 
-- [ ] R5.10 Instant first call:
+- [x] R5.10 Instant first call (D-330; `ef04e84`):
   - a device-local Practice key for guests on the terminal (Practice only, granted test dollars);
   - the passkey account adopts it on sign-up (its test dollars move over).
-- [ ] R5.11 Pending entry drawn at the tap.
+  - *Verified 12 Oct on senryo.xyz (web sha-ef04e84) as a visitor:* UP → "Getting your test dollars…" → the key
+    signed in, took $1,000 and placed that same call, no prompt → "Up BTC opened · Pays $6.08 if it holds · $5.00 in";
+    ticket 1019 settled a win ($6.50). The sweep's transfer (the guest's whole $1,001.50, signed by the key, relayed by
+    `/v1/money/withdraw`) moved gas-free on testnet. Sign-up → sweep in the app waits for a passkey on the device (the
+    owner's walk); the phone waits for area C's sim pass.
+- [ ] R5.11 Pending entry drawn at the tap. *(Toast run, "Opening…" chart entry: built `9a5ec39`/`ef04e84`, verified on
+  the web; the slip is next — D-331, research 12.)*
   - One toast id carries the whole run: "Opening…" → "Up BTC opened" → "Cashing out…" → "Realized +$x", with the market
     mark.
   - The pending card becomes the receipt slip in place (stamp from the Kinpaku materials, folio, proof link, PNG
     download).
-- [ ] R5.12 Win or loss sound by the realised sign at the close. Confetti on a win.
-- [ ] R5.13 Unknown outcomes:
+- [x] R5.12 Win or loss sound by the realised sign at the close. Confetti on a win. *(D-327; rides' endings join.)*
+- [x] R5.13 Unknown outcomes (D-328; the journal emptied once the guest's call settled, verified on the web):
   - a journal of pending intents (survives reload);
   - `unknown → checking → recovered (filled / refused)` with Check status, never re-sending;
   - `trace.ts` is wired or deleted.
-- [ ] R5.14 Privacy: masking reaches result toasts, the PnL pill, the canvas and share. Share is blocked while balances
-  are hidden.
+- [x] R5.14 Privacy: masking reaches result toasts, the PnL pill, the canvas and share. Share is blocked while balances
+  are hidden. *(D-329.)*
 
 ### Feel
 - [ ] R5.15 A five-step tutorial on the first terminal visit (both apps; Owarine `Tutorial.tsx` reworded for calls and
