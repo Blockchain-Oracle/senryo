@@ -30,12 +30,12 @@ export const CHAIN = TESTNET_CHAIN_ID;
 export const ORIGIN = process.env.API_ORIGIN ?? "http://127.0.0.1:3901";
 export const SYMBOL = "BTC";
 /**
- * The 5-minute lane, opened with at least `MIN_LEFT_SEC` to go: in a 1-minute window's last seconds the odds swing so
- * fast that a second between the quote and the fill print can move the payout past the 3 % limit (the slippage
- * guard refunds it — right for a rider, noise for a drive).
+ * The 5-minute lane, opened within `FRESH_SEC` of a window's start, when the price sits near its line: late in a window
+ * the price may have run so far that Up is beyond the pool's 3–97 % bounds (refused for price), and in the last
+ * seconds the odds swing so fast that a tick moves the payout past the limit.
  */
 export const CADENCE = 300;
-export const MIN_LEFT_SEC = 60;
+export const FRESH_SEC = 30;
 export const UP = 0;
 export const RIDE_MARKET = 0;
 export const STAKE = 2_000_000n;

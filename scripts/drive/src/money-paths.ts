@@ -33,7 +33,7 @@ import {
   seriesIdOf,
   windowIdOf,
 } from "@senryo/chain";
-import { FILL_DELAY_SEC, LOCKOUT_SEC, MIN_HOLD_SEC, quoteCurve, RIDE_TERMS } from "@senryo/config";
+import { FILL_DELAY_SEC, MIN_HOLD_SEC, quoteCurve, RIDE_TERMS } from "@senryo/config";
 import { clampMark, loadSurchargeE6, markMinuteOf, quoteOpen, rideFee, rideNotional } from "@senryo/core";
 import { sleep } from "./lib.ts";
 import {
@@ -45,13 +45,13 @@ import {
   CADENCE,
   CHAIN,
   check,
+  FRESH_SEC,
   failed,
   INTENT_TTL_SEC,
   LABEL_WIDTH,
   LEVERAGE_BPS,
   loadCatalog,
   MARGIN,
-  MIN_LEFT_SEC,
   MS,
   NEEDED,
   nowSec,
@@ -78,7 +78,7 @@ import {
 
 async function openCall(catalog: Awaited<ReturnType<typeof loadCatalog>>, what: string) {
   let start = nowSec() - (nowSec() % CADENCE);
-  if (nowSec() + Math.max(LOCKOUT_SEC + FILL_DELAY_SEC, MIN_LEFT_SEC) >= start + CADENCE) {
+  if (nowSec() - start > FRESH_SEC) {
     await sleep((start + CADENCE - nowSec() + 1) * MS);
     start += CADENCE;
   }

@@ -41,6 +41,10 @@ export function decodeRevert(error: unknown): DecodedRevert | undefined {
 
 /** Short, log-safe description of any error. */
 export function describeError(error: unknown): string {
+  // A broadcast to several RPCs fails with every RPC's own reason (insufficient funds, nonce too low…): name them.
+  if (error instanceof AggregateError && error.errors.length > 0) {
+    return [...new Set(error.errors.map(describeError))].join(" · ");
+  }
   const revert = decodeRevert(error);
   if (revert) return revert.message;
   if (error instanceof BaseError) return error.shortMessage;
