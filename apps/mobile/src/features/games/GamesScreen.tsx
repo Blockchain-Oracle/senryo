@@ -24,8 +24,6 @@ const GAME_ART: Readonly<Record<string, readonly PixelMarkName[]>> = {
 };
 const LEAGUE_KEYS = ["nhl", "mlb", "epl"] as const;
 
-/** The phone screens that exist so far (the rest arrive with their stage). */
-const ON_PHONE = new Set(["lucky", "line-rider", "candle-hop"]);
 const MORE = [
   { route: "/duel", title: "Duel", line: "The same three cards · the better total takes the pot", art: "markets" },
   { route: "/parlay", title: "Parlay", line: "Two to four calls that must all come true", art: "markets" },
@@ -45,7 +43,7 @@ export function GamesScreen() {
       style={{ backgroundColor: color.ground }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
     >
-      {GAMES.filter((g) => ON_PHONE.has(g.key)).map((g) => (
+      {GAMES.map((g) => (
         <Pressable key={g.key} accessibilityRole="link" onPress={() => go(g.route)}>
           <Panel style={styles.card}>
             <View style={styles.art}>

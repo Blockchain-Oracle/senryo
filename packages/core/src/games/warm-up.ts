@@ -6,7 +6,11 @@
  * card is scored at one instant when the watch ends, so the deck's order never becomes part of the result.
  */
 
+import { createRng } from "./arcade/rng.ts";
+
 export type WarmUpSide = "up" | "down";
+/** The shuffle's dice take the arcade's eight-hex seed (the round's seed is longer; its head is plenty). */
+const ARCADE_SEED_HEX = 8;
 
 /** The watch after the last swipe, and the room for the swipes themselves. */
 export const WARM_UP_WATCH_SEC = 30;
@@ -112,9 +116,27 @@ export function warmUpResult(side: WarmUpSide, entryE8: number, closeE8: number)
 }
 
 /** The deck: trading now and still trading when the round ends, soonest close first, one card per market. */
+/** Who leads a card's race at a price: you, the coin, or neither (both right, both wrong, or flat). */
+export function warmUpLeader(
+  side: WarmUpSide,
+  botSide: WarmUpSide,
+  entryE8: number,
+  nowE8: number,
+): "you" | "coin" | "even" {
+  const you = warmUpResult(side, entryE8, nowE8);
+  const bot = warmUpResult(botSide, entryE8, nowE8);
+  if (you === bot) return "even";
+  return you === "won" ? "you" : bot === "won" ? "coin" : "even";
+}
+
+/**
+ * The deck: one window per live market (its soonest that outlives the round), five markets shuffled by the round's
+ * seed — a different table each round, never the catalog's first five.
+ */
 export function selectWarmUpDeck(
   candidates: readonly WarmUpCandidate[],
   nowSec: number,
+  seed: string,
   size = WARM_UP_DECK_MAX,
 ): readonly WarmUpCard[] {
   const seen = new Set<string>();
@@ -123,10 +145,16 @@ export function selectWarmUpDeck(
     seen.add(c.symbol);
     return true;
   };
-  return candidates
+  const eligible = candidates
     .filter((c) => c.trading && c.expirySec - nowSec > WARM_UP_CARD_MIN_LIFE_SEC)
     .sort((a, b) => a.expirySec - b.expirySec || a.symbol.localeCompare(b.symbol))
-    .filter(firstPerMarket)
+    .filter(firstPerMarket);
+  const rng = createRng(seed.slice(0, ARCADE_SEED_HEX));
+  for (let i = eligible.length - 1; i > 0; i--) {
+    const j = Math.floor(rng.next() * (i + 1));
+    [eligible[i], eligible[j]] = [eligible[j] as WarmUpCandidate, eligible[i] as WarmUpCandidate];
+  }
+  return eligible
     .slice(0, Math.max(0, Math.min(size, WARM_UP_DECK_MAX)))
     .map((c, index) => ({ index, symbol: c.symbol, cadenceSec: c.cadenceSec, expirySec: c.expirySec }));
 }

@@ -41,6 +41,7 @@ export function SwipeDeck<T>({
   threshold = 92,
   flick = 520,
   peek = 3,
+  tall = false,
   className,
 }: {
   items: readonly T[];
@@ -57,6 +58,8 @@ export function SwipeDeck<T>({
   threshold?: number;
   flick?: number;
   peek?: number;
+  /** A taller deck for cards that carry a chart (Warm-up). */
+  tall?: boolean;
   className?: string;
 }) {
   const hintId = useId();
@@ -87,7 +90,11 @@ export function SwipeDeck<T>({
 
   return (
     <div className={cn("flex w-full flex-col gap-3", className)}>
-      <section aria-label="Card deck" aria-describedby={hintId} className="relative h-60 w-full rounded-xl">
+      <section
+        aria-label="Card deck"
+        aria-describedby={hintId}
+        className={cn("relative w-full rounded-xl", tall ? "h-84" : "h-60")}
+      >
         <motion.div
           aria-hidden={!done}
           initial={false}
@@ -104,6 +111,7 @@ export function SwipeDeck<T>({
               depth={depth}
               active={depth === 0 && !busy}
               reduced={reduced}
+              tall={tall}
               label={itemLabel(item)}
               leftLabel={leftLabel}
               rightLabel={rightLabel}
@@ -125,7 +133,7 @@ export function SwipeDeck<T>({
           disabled={done || busy}
           onClick={() => decide("left")}
           onKeyDown={keys}
-          className="h-14 rounded-xl bg-down-surface font-semibold text-button text-down transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
+          className="press-lift h-14 rounded-xl border-b-3 border-down-fill-edge bg-down-fill font-semibold text-button text-on-direction-fill focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
         >
           ← {leftLabel}
         </button>
@@ -134,7 +142,7 @@ export function SwipeDeck<T>({
           disabled={done || busy}
           onClick={() => decide("right")}
           onKeyDown={keys}
-          className="h-14 rounded-xl bg-up-surface font-semibold text-button text-up transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
+          className="press-lift h-14 rounded-xl border-b-3 border-up-fill-edge bg-up-fill font-semibold text-button text-on-direction-fill focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
         >
           {rightLabel} →
         </button>
@@ -150,6 +158,7 @@ function DeckCard({
   depth,
   active,
   reduced,
+  tall,
   label,
   leftLabel,
   rightLabel,
@@ -162,6 +171,7 @@ function DeckCard({
   depth: number;
   active: boolean;
   reduced: boolean;
+  tall: boolean;
   label: string;
   leftLabel: string;
   rightLabel: string;
@@ -226,7 +236,8 @@ function DeckCard({
       onDragEnd={(_e, info) => onRelease(info.offset.x, info.velocity.x)}
       style={{ x, rotate, opacity: fade, zIndex: 10 - depth, transformOrigin: "50% 100%", touchAction: "pan-y" }}
       className={cn(
-        "absolute inset-x-5 top-0 h-54 select-none overflow-hidden rounded-xl bg-card",
+        "absolute inset-x-5 top-0 select-none overflow-hidden rounded-xl bg-card",
+        tall ? "h-78" : "h-54",
         active ? "cursor-grab shadow-lg active:cursor-grabbing" : "shadow-sm",
       )}
     >

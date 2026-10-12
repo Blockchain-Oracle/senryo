@@ -142,6 +142,18 @@ old R7.1 (games audio) moved to F1–F3.
     - a result modal with the streak and confetti.
   - **Proof:** behind ⓘ.
 - [ ] R7.5 Warm-up, beat the coin (both apps):
+  - *Progress 12 Oct (web and phone, one flow in `@senryo/calls` `useWarmUp`):*
+    - *The table is dealt with five card sounds, and the deck is shuffled by the round's seed (it was the catalog's
+      first five).*
+    - *Big live cards in a taller deck: the mark, the rolling price, the 24 h line and change.*
+    - *Down and Up sit on their direction fills (the shared web deck; Duel too).*
+    - *Five slots, you against the coin: your pick, then the coin's flipping in (`coinOf`).*
+    - *The 30 s watch: five live races, the move since your pick and who leads it (`warmUpLeader`); beeps in the
+      last 5 s.*
+    - *The reveal, 220 ms apart, with each verdict's sound, then the score and a fanfare (the jackpot and
+      confetti when you win).*
+    - *The phone gets the screen and its route; the hub lists every game; the deep-link fallback for web-only
+      games is gone.*
   - **Table:** five big live cards (mark, mini chart, rolling price).
   - **Swipes** stamp Up/Down and flick away with a tick haptic.
   - **The 30 s watch:** five mini races against the coin's visible picks.

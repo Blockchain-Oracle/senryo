@@ -1,111 +1,177 @@
 "use client";
-import { useWarmUp } from "@senryo/calls/react";
-import type { WarmUpCard, WarmUpResult } from "@senryo/core";
 /**
- * Warm-up (S8.8, D-295; Owarine's Practice game; `/app/games/warm-up/`): five live windows as cards in the duel's swipe
- * deck (21st Swipe Deck #23568) — swipe or ← Down / Up → at the live price — then a 30-second watch on the live feed,
- * and every card scored at one instant against a coin flip. No stake, no account, nothing on chain.
+ * Warm-up, beat the coin (S8.8, D-295; R7.5; Owarine's Practice game): five big live cards dealt with their sound, each
+ * swiped Up or Down at the live price (the coin's own pick flips in beside yours), then a 30-second watch where the
+ * five races run live — the move since your pick and who leads it — and a reveal, card by card 220 ms apart with each
+ * verdict's sound, then the score and a fanfare. No stake, no account, nothing on chain.
  */
-import { lane } from "@senryo/core";
-import { marketId } from "@senryo/identity";
-import { EntityMark } from "@/components/identity/entity-mark";
+import { useWarmUp, type WarmUpFlow } from "@senryo/calls/react";
+import { WARM_UP_DECK_MAX, type WarmUpCard, type WarmUpResult } from "@senryo/core";
+import { useServerSeconds } from "@senryo/live/react";
+import { useEffect, useRef, useState } from "react";
 import { SwipeDeck } from "@/components/ui/swipe-deck";
-import { fire } from "@/lib/feedback";
-import { cn } from "@/lib/utils";
+import { fire, music, sound } from "@/lib/feedback";
+import { celebrate } from "@/lib/feedback/celebrate";
+import { CountdownRing } from "../terminal/CountdownRing";
+import { RaceRow, Slots, WarmCard } from "./WarmUpParts";
+import "./games.css";
 
-const CARD_MARK = 56;
-const ROW_MARK = 20;
+const REVEAL_MS = 220;
+const DEAL_GAP_MS = 90;
+const BEEP_FROM_SEC = 5;
+const WATCH_SEC = 30;
+const MS = 1000;
 
-const E8 = 1e8;
-const PRICE_DIGITS = 2;
-const priceText = (e8: number | null) =>
-  e8 === null ? "—" : (e8 / E8).toLocaleString(undefined, { maximumFractionDigits: PRICE_DIGITS });
-const RESULT_WORD: Record<WarmUpResult, string> = { won: "Right", lost: "Wrong", flat: "Flat" };
+/** The reveal: one card a beat, each with its verdict, then the score's fanfare. */
+function useReveal(w: WarmUpFlow): number {
+  const [shown, setShown] = useState(0);
+  const flow = useRef(w);
+  flow.current = w;
+  const scored = w.round.phase === "scored";
+  const total = w.round.cards.length;
+  useEffect(() => {
+    if (!scored) {
+      setShown(0);
+      return;
+    }
+    const score = flow.current.score;
+    if (!score || shown > total) return;
+    const t = window.setTimeout(() => {
+      const c = score.cards[shown];
+      if (c) fire(c.you === "won" ? "snap" : "tick", c.you === "won" ? { ladder: ["gap", shown] } : { cue: "adverse" });
+      else if (score.winner === "you") {
+        fire("win", { cue: "jackpot" });
+        celebrate();
+      } else fire(score.winner === "bot" ? "loss" : "tick", { cue: score.winner === "bot" ? "loss" : "refund" });
+      setShown((n) => n + 1);
+    }, REVEAL_MS);
+    return () => window.clearTimeout(t);
+  }, [scored, shown, total]);
+  return shown;
+}
 
 export function WarmUpScreen() {
   const w = useWarmUp();
   const r = w.round;
+  const now = useServerSeconds();
   const dealt = r.cards.length > 0;
-  const index = r.picks.length;
-  return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
-      <p className="text-body text-text-2">Five live cards · Up or Down · against a coin flip · no stakes</p>
+  const shown = useReveal(w);
+  const score = r.phase === "scored" ? w.score : null;
+  const results: (WarmUpResult | null)[] = r.cards.map((_, i) =>
+    score && i < shown ? (score.cards[i]?.you ?? null) : null,
+  );
 
-      {!dealt || r.phase === "scored" ? (
-        <button
-          type="button"
-          disabled={!w.ready}
-          onClick={() => {
-            fire("tick", { cue: "tap" });
-            w.deal();
-          }}
-          className="h-14 rounded-xl bg-primary font-semibold text-button text-primary-foreground transition-transform active:scale-97 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
-        >
-          {!w.ready ? "Loading markets…" : r.phase === "scored" ? "Deal again" : "Deal the cards"}
-        </button>
+  useEffect(() => () => music(null), []);
+  // The last seconds of the watch count down out loud.
+  useEffect(() => {
+    if (r.phase === "watching" && w.watchLeft !== null && w.watchLeft > 0 && w.watchLeft <= BEEP_FROM_SEC)
+      sound("countBeep");
+  }, [r.phase, w.watchLeft]);
+
+  const deal = () => {
+    fire("press", { cue: "tap" });
+    music("games");
+    w.deal();
+    for (let i = 0; i < WARM_UP_DECK_MAX; i++) window.setTimeout(() => sound("cardDeal"), i * DEAL_GAP_MS);
+  };
+
+  const ends = r.watchEndsAtMs === null ? null : r.watchEndsAtMs / MS;
+  const finished = score !== null && shown > r.cards.length;
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+      {dealt ? <Slots cards={r.cards} picks={r.picks} coinOf={w.coinOf} results={results} /> : null}
+
+      {!dealt || finished ? (
+        <section className="warm-table flex flex-col items-center gap-4 rounded-3xl p-6 text-center">
+          {finished && score ? (
+            <>
+              <span className="warm-stamp font-semibold text-page-title">
+                {score.winner === "you" ? "You beat the coin" : score.winner === "bot" ? "The coin won" : "A tie"}
+              </span>
+              <span className="tnum font-semibold text-display-price">
+                {score.youWon}–{score.botWon}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-semibold text-page-title">Beat the coin</span>
+              <span className="text-body text-text-2">
+                Five live cards. Call each Up or Down; a coin calls them too. Thirty seconds later, the better caller
+                wins. No stakes.
+              </span>
+            </>
+          )}
+          <button
+            type="button"
+            disabled={!w.ready}
+            onClick={deal}
+            className="press-lift h-14 rounded-xl border-b-4 border-up-fill-edge bg-up-fill px-8 font-semibold text-button text-on-direction-fill focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
+          >
+            {!w.ready ? "Loading markets…" : finished ? "Deal again" : "Deal the cards"}
+          </button>
+        </section>
       ) : null}
 
       {dealt && (r.phase === "dealt" || r.phase === "picking") ? (
         <SwipeDeck<WarmUpCard>
           items={r.cards}
-          index={index}
+          index={r.picks.length}
           itemKey={(c) => `${c.symbol}:${c.cadenceSec}`}
-          itemLabel={(c) => `${c.symbol} ${lane(c.cadenceSec)}`}
-          onDecide={(_, side) => {
-            fire("tick", { cue: "tap" });
+          itemLabel={(c) => c.symbol}
+          onDecide={(c, side) => {
+            fire("tick", { cue: "cardSlam" });
             w.swipe(side === "right" ? "up" : "down");
+            window.setTimeout(() => sound("cardFlip"), REVEAL_MS);
+            if (c.index === r.cards.length - 1) sound("eventLock");
           }}
           leftLabel="Down"
           rightLabel="Up"
           emptyLabel="Watching…"
+          tall
         >
-          {(c) => (
-            <div className="flex flex-col items-center gap-2 py-8">
-              <span className="text-meta text-text-3">
-                Card {c.index + 1} of {r.cards.length} · {lane(c.cadenceSec)}
-              </span>
-              <EntityMark id={marketId(c.symbol)} size={CARD_MARK} decorative />
-              <span className="font-semibold text-page-title">{c.symbol}</span>
-              <span className="tnum text-section-title text-text-2">{priceText(w.priceOf(c.symbol))}</span>
-              <span className="text-meta text-text-3">Up or down in the next 30 seconds after the last card?</span>
-            </div>
-          )}
+          {(c) => <WarmCard card={c} of={r.cards.length} />}
         </SwipeDeck>
       ) : null}
 
-      {r.phase === "watching" ? (
-        <p className="tnum text-body text-text-2" role="status" aria-live="polite">
-          Watching the live price · scores in {w.watchLeft ?? 0}s
-        </p>
-      ) : null}
-
-      {w.score ? (
-        <section aria-label="Result" className="flex flex-col gap-3">
-          <h2 className="font-semibold text-section-title">
-            {w.score.winner === "you" ? "You beat the coin" : w.score.winner === "bot" ? "The coin won" : "A tie"} ·{" "}
-            {w.score.youWon}–{w.score.botWon}
-          </h2>
-          <ul className="flex flex-col divide-y divide-border">
-            {w.score.cards.map((c) => (
-              <li key={c.card.index} className="flex items-center justify-between gap-3 py-2">
-                <span className="flex items-center gap-2 text-row-title">
-                  <EntityMark id={marketId(c.card.symbol)} size={ROW_MARK} decorative />
-                  {c.card.symbol} · you {c.side === "up" ? "Up" : "Down"} · coin {c.botSide === "up" ? "Up" : "Down"}
-                </span>
-                <span
-                  className={cn(
-                    "tnum text-meta",
-                    c.you === "won" ? "text-up" : c.you === "lost" ? "text-down" : "text-text-3",
-                  )}
-                >
-                  {RESULT_WORD[c.you]} · {priceText(c.entryE8)} → {priceText(c.closeE8)}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-meta text-text-3">Scored on the live price, not a window's close · nothing was staked</p>
+      {r.phase === "watching" || (r.phase === "scored" && !finished) ? (
+        <section aria-label="The races" className="flex flex-col gap-2">
+          {r.phase === "watching" && ends !== null ? (
+            <div className="flex items-center gap-3" role="status" aria-live="polite">
+              <CountdownRing fromSec={ends - WATCH_SEC} toSec={ends} nowSec={now} />
+              <span className="text-body text-text-2">Watching the live price · scores in {w.watchLeft ?? 0}s</span>
+            </div>
+          ) : null}
+          <RaceList w={w} shown={shown} />
         </section>
       ) : null}
+
+      {finished && score ? <RaceList w={w} shown={shown} /> : null}
+      <p className="text-meta text-text-3">Scored on the live price, not a window's close · nothing is staked</p>
     </div>
+  );
+}
+
+function RaceList({ w, shown }: { w: WarmUpFlow; shown: number }) {
+  const r = w.round;
+  const score = r.phase === "scored" ? w.score : null;
+  return (
+    <ul className="flex flex-col divide-y divide-border">
+      {r.picks.map((p) => {
+        const card = r.cards[p.cardIndex];
+        if (!card) return null;
+        const scored = score && p.cardIndex < shown ? score.cards.find((c) => c.card.index === p.cardIndex) : undefined;
+        return (
+          <RaceRow
+            key={p.cardIndex}
+            card={card}
+            side={p.side}
+            coin={w.coinOf(p.cardIndex)}
+            entryE8={p.entryE8}
+            closeE8={scored ? scored.closeE8 : null}
+            result={scored ? scored.you : null}
+          />
+        );
+      })}
+    </ul>
   );
 }

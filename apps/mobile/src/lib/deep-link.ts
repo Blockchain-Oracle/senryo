@@ -23,14 +23,13 @@ function tradeOn(symbol: string | undefined): string {
 }
 
 /**
- * The web app's routes (R2.13: the link files name `/app/*` and `/call`): the same places on the phone. A game only
- * the web has opens the Games hub; anything else under `/app/` is the phone's path without the prefix.
+ * The web app's routes (R2.13: the link files name `/app/*` and `/call`): the same places on the phone. Anything under
+ * `/app/` is the phone's path without the prefix (every game has its phone screen since R7.6).
  */
 const WEB_APP_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) => string]> = [
   [/^\/app\/?$/, () => ROUTES.home],
   [/^\/app\/trade\/([^/]+)\/?$/, (m) => tradeOn(m[1])],
   [/^\/app\/setup(\/.*)?$/, () => ROUTES.home],
-  [/^\/app\/games\/(warm-up|candle-hop|line-rider)\/?$/, () => "/games"],
   [/^\/app\/(.+?)\/?$/, (m) => `/${m[1]}`],
 ];
 

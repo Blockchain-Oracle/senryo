@@ -11,6 +11,7 @@ import {
   type WarmUpCandidate,
   type WarmUpRound,
   type WarmUpSide,
+  warmUpBotSide,
   warmUpScore,
   warmUpTransition,
 } from "@senryo/core";
@@ -50,7 +51,8 @@ export function useWarmUp() {
         trading,
       }));
     });
-    dispatch({ kind: "deal", seed: freshRoundSeed(), cards: selectWarmUpDeck(candidates, at) });
+    const seed = freshRoundSeed();
+    dispatch({ kind: "deal", seed, cards: selectWarmUpDeck(candidates, at, seed) });
   }, [catalog, live]);
 
   /** One swipe on the next card at the live price. */
@@ -90,6 +92,8 @@ export function useWarmUp() {
     ready: "value" in catalog,
     deal,
     swipe,
+    /** The coin's pick on a card — the stage shows it once you've picked yours (R7.5: the coin's picks are visible). */
+    coinOf: (cardIndex: number) => warmUpBotSide(round.seed, cardIndex),
     /** The live price of a card's market (× 1e8), for the stage's moving numbers. */
     priceOf: (symbol: string) => live.prices.latest(symbol)?.priceE8 ?? null,
   };
