@@ -17,24 +17,37 @@ import {
   sideLabel,
   tierTitle,
 } from "@senryo/calls";
-import { type DuelCardQuote, type DuelFlow, useDuelCardQuotes } from "@senryo/calls/react";
+import { type DuelCardQuote, type DuelFlow, useDayLine, useDuelCardQuotes } from "@senryo/calls/react";
 import { DUEL, duelTierOf } from "@senryo/config";
 import { clockText, shortAddress, signedUsd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useProfile } from "@senryo/query";
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming, ZoomIn } from "react-native-reanimated";
 import { Avatar } from "~/components/identity/Avatar";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
+import { ChangeChip } from "~/components/kit/ChangeChip";
 import { ProgressBar } from "~/components/kit/ProgressBar";
+import { Sparkline } from "~/components/kit/Sparkline";
 import { SwipeDeck } from "~/components/kit/SwipeDeck";
 import { useNetwork } from "~/lib/network";
-import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { FONT, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const MARK = 28;
 const FACE_MARK = 40;
-const CARD_HEIGHT = 200;
+const CARD_HEIGHT = 240;
+/** The match's faces (research 10 §4): 72-point portraits, a VS that slams in, a heartbeat through the last 10 s. */
+const PORTRAIT = 72;
+const VS_SIZE = 40;
+const VS_SPRING = { damping: 9, stiffness: 180 } as const;
+const HEARTBEAT_FROM_SEC = 10;
+const BEAT_SCALE = 1.04;
+const BEAT_IN_MS = 90;
+const BEAT_OUT_MS = 180;
+const SPARK_H = 32;
 const CALL_WIDTH = 84;
 const [UP, DOWN] = DUEL_SIDES;
 
@@ -72,28 +85,34 @@ export function DuelMatch({ flow, onAgain }: { flow: DuelFlow; onAgain: () => vo
   const tier = duelTierOf(network.chainId, m.tier);
   return (
     <View style={styles.wrap} accessibilityLabel="Your duel">
-      <View style={styles.versus}>
+      <Heartbeat beat={picking && left > 0 && left <= HEARTBEAT_FROM_SEC ? left : null}>
         <View style={styles.flex}>
-          <Avatar avatar={me.avatar} {...(me.address ? { address: me.address } : {})} size={SIZE.avatarSm} />
+          <Avatar avatar={me.avatar} {...(me.address ? { address: me.address } : {})} size={PORTRAIT} />
           <Text style={[TYPE.caption, { color: color.inkMuted }]}>You</Text>
           <Text style={[TYPE.numMd, { color: totalTone(mine) }]}>{mine === null ? "—" : signedUsd(mine)}</Text>
         </View>
         <View style={styles.middle}>
-          <Text style={[TYPE.caption, { color: color.inkMuted }]}>vs</Text>
+          <Animated.Text
+            key={m.matchId}
+            entering={ZoomIn.springify().damping(VS_SPRING.damping).stiffness(VS_SPRING.stiffness)}
+            style={[styles.vs, { color: color.accent }]}
+          >
+            VS
+          </Animated.Text>
           {tier ? <Text style={[TYPE.caption, { color: color.inkMuted }]}>{tierTitle(tier)}</Text> : null}
         </View>
         <View style={[styles.flex, styles.end]}>
           <Avatar
             avatar={opponent.avatar}
             {...(opponent.address ? { address: opponent.address } : {})}
-            size={SIZE.avatarSm}
+            size={PORTRAIT}
           />
           <Text numberOfLines={1} style={[TYPE.caption, { color: color.inkMuted }]}>
             {them}
           </Text>
           <Text style={[TYPE.numMd, { color: totalTone(theirs) }]}>{theirs === null ? "—" : signedUsd(theirs)}</Text>
         </View>
-      </View>
+      </Heartbeat>
 
       {m.state === "opening" || m.state === "sealed" ? (
         <Text accessibilityLiveRegion="polite" style={[TYPE.body, { color: color.inkMuted }]}>
@@ -185,8 +204,23 @@ function Call(p: {
   );
 }
 
+/** The header beats once a second through the last ten before picks close (`beat` is the seconds left, or null). */
+function Heartbeat({ beat, children }: { beat: number | null; children: React.ReactNode }) {
+  const scale = useSharedValue(1);
+  useEffect(() => {
+    if (beat === null) return;
+    scale.value = withSequence(
+      withTiming(BEAT_SCALE, { duration: BEAT_IN_MS }),
+      withTiming(1, { duration: BEAT_OUT_MS }),
+    );
+  }, [beat, scale]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.View style={[styles.versus, style]}>{children}</Animated.View>;
+}
+
 function CardFace({ q, stake }: { q: DuelCardQuote; stake: bigint }) {
   const { color } = useTheme();
+  const day = useDayLine(q.card.symbol);
   const [up, down] = q.sides;
   return (
     <View style={styles.face}>
@@ -197,6 +231,14 @@ function CardFace({ q, stake }: { q: DuelCardQuote; stake: bigint }) {
           <Text style={[TYPE.caption, { color: color.inkMuted }]}>Closes in {clockText(q.closesIn)}</Text>
         </View>
       </View>
+      {day ? (
+        <View style={styles.day}>
+          <View style={styles.spark}>
+            <Sparkline symbol={q.card.symbol} day={day} />
+          </View>
+          <ChangeChip symbol={q.card.symbol} day={day} />
+        </View>
+      ) : null}
       <View style={styles.odds}>
         <View>
           <Text style={[TYPE.caption, { color: color.down }]}>← {down?.label}</Text>
@@ -232,4 +274,7 @@ const styles = StyleSheet.create({
   face: { flex: 1, padding: SPACE.lg, justifyContent: "space-between" },
   faceHead: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
   odds: { flexDirection: "row", justifyContent: "space-between" },
+  vs: { fontFamily: FONT.display, fontSize: VS_SIZE, lineHeight: VS_SIZE },
+  day: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  spark: { flex: 1, height: SPARK_H, justifyContent: "center" },
 });
