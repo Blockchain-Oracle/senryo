@@ -4,6 +4,7 @@
  */
 import { DOCK_NAV, WEB_EVERYTHING, WEB_PLACES, WEB_RAIL, type WebIcon, type WebNavItem } from "@senryo/config";
 import {
+  Activity,
   ArrowDownToLine,
   ArrowUpRight,
   ChartCandlestick,
@@ -42,6 +43,7 @@ export const NAV_ICON: Record<WebIcon, LucideIcon> = {
   duel: Swords,
   events: Trophy,
   games: Gamepad2,
+  status: Activity,
 };
 
 export const RAIL: readonly WebNavItem[] = WEB_RAIL;
@@ -84,6 +86,7 @@ const PARENTS: Readonly<Record<string, { label: string; href: string }>> = {
   "/app/events/": { label: "Games", href: "/app/games/" },
   "/app/event/": { label: "Events", href: "/app/events/" },
   "/app/setup/": { label: "Home", href: "/app/" },
+  "/app/status/": { label: "Home", href: "/app/" },
 };
 
 /**

@@ -13,7 +13,7 @@ import {
   pgJournal,
   pingDb,
 } from "@senryo/service-common";
-import { type KeeperContext, RecentActions } from "./context.ts";
+import { type KeeperContext, RecentActions, saveJobState } from "./context.ts";
 import { type KeeperJob, loadKeeperEnv } from "./env.ts";
 import { boundsJob } from "./jobs/bounds.ts";
 import { calendarsJob } from "./jobs/calendars.ts";
@@ -87,7 +87,7 @@ const factories: Record<KeeperJob, (c: KeeperContext) => Job> = {
   receipts: pushReceiptsJob,
   pushes: pushOutboxJob,
 };
-const runner = new Runner(log);
+const runner = new Runner(log, (job, status) => saveJobState(db, job, { ...status }));
 runner.start(env.KEEPER_JOBS.map((name) => factories[name](ctx)));
 log.info(
   { keeper: account.address, chainId: env.CHAIN_ID, jobs: env.KEEPER_JOBS, pushDelivery: env.PUSH_DELIVERY },

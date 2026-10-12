@@ -48,6 +48,8 @@ export const RETENTION_DAYS = {
   pushTickets: 7,
   /** σ marks: a fill's own mark is in its transaction; the rebuild window is three days. */
   sigmaMarks: 7,
+  /** The Status board's per-minute health (P6): its longest view is 90 days. */
+  healthMinutes: 90,
 } as const;
 
 /** Receipts are fetched this long after the send (Expo's recommendation) and are gone after Expo clears them (24 h). */

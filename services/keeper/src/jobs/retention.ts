@@ -19,6 +19,7 @@ export function retentionJob(ctx: KeeperContext): Job {
         ctx.db`DELETE FROM events WHERE created_at < now() - make_interval(days => ${d.events})`,
         ctx.db`DELETE FROM push_sends WHERE sent_at < now() - make_interval(days => ${d.pushSends})`,
         ctx.db`DELETE FROM sigma_marks WHERE created_at < now() - make_interval(days => ${d.sigmaMarks})`,
+        ctx.db`DELETE FROM health_minutes WHERE created_at < now() - make_interval(days => ${d.healthMinutes})`,
       ]);
       ctx.log.info({ deleted: counts.map((c) => c.count) }, "retention sweep");
     },

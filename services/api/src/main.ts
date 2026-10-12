@@ -55,7 +55,9 @@ import { registerParlayRoutes } from "./routes/parlays.ts";
 import { registerPriceRoutes } from "./routes/prices.ts";
 import { registerProfileRoutes } from "./routes/profile.ts";
 import { registerRideRoutes } from "./routes/rides.ts";
+import { registerStatusRoutes } from "./routes/status.ts";
 import { registerStorageRoutes } from "./routes/storage.ts";
+import { startHealthRecorder } from "./status/recorder.ts";
 import { StreamBus } from "./stream/bus.ts";
 import { registerStreamRoute } from "./stream/route.ts";
 
@@ -258,6 +260,7 @@ await app.register(cors, { origin: env.CORS_ORIGINS, methods: [...CORS_METHODS],
 await app.register(rateLimit, { global: false });
 
 registerInfoRoutes(app, ctx);
+registerStatusRoutes(app, ctx);
 registerAuthRoutes(app, ctx);
 registerStorageRoutes(app, ctx);
 registerEngagementRoutes(app, ctx);
@@ -280,7 +283,9 @@ registerStreamRoute(app, {
   beatData: () => ({ h: gateway.healthDigest() }),
 });
 
+const stopHealth = startHealthRecorder(ctx);
 await listen(app, env.PORT, env.HOST, async () => {
+  stopHealth();
   geo.stop();
   sigma.stop();
   for (const m of markets.values()) {

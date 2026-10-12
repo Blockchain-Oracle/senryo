@@ -1,125 +1,226 @@
-import type { StatusResponse } from "@senryo/api-client";
-import { type ChainId, FEED_STATES, networkOf } from "@senryo/config";
-import { ids } from "@senryo/identity";
-import { useStatus } from "@senryo/query";
+/**
+ * Status as a live evidence board (P6, D-324; Owarine's pulse strip, Canton's status spec, Codex's board): one verdict —
+ * Live, Delayed, Unavailable or Unverified — with a tally and when it was checked; then a tile per component, problems
+ * first: its state, its numbers now, and a bar per hour (24 h) or day (90 d) whose height is the worst state seen —
+ * grey where nothing was recorded, never a pass. Tap a bar to read it. A tile's dot pulses only when a new reading
+ * arrives. Prices per source sit under the prices tile. Everything here is the api's own (`/v1/status`, refreshed every
+ * 15 s, and `/v1/status/history` every minute).
+ */
+import type { StatusHistory, StatusRange, StatusResponse } from "@senryo/api-client";
+import {
+  barLabel,
+  barOf,
+  boardOrder,
+  COMPONENT_NAMES,
+  type HealthState,
+  metricLine,
+  STATE_WORDS,
+  uptimeText,
+  verdict,
+} from "@senryo/calls";
+import { FEED_STATES } from "@senryo/config";
+import { useStatus, useStatusHistory } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
-import { EntityMark } from "~/components/identity/EntityMark";
-import { ListRow } from "~/components/kit/ListRow";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { ZoomIn } from "react-native-reanimated";
 import { Screen } from "~/components/kit/Screen";
-import { Panel } from "~/components/kit/Surface";
+import { Segmented } from "~/components/kit/Segmented";
 import { ReadingView } from "~/components/kit/states";
-import { SectionHeading } from "~/features/profile/SectionHeading";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { fire } from "~/feedback/fire";
+import { RADIUS, SPACE, TYPE, useTheme } from "~/theme";
 
-/**
- * Status (R2.10): what the api reports about itself, read from `/v1/status` every 15 s — prices overall and per source
- * (how many markets are live, delayed, closed…), each network's connection, how far history trails the chain, and
- * deposits. Only what the api reports: nothing here is inferred on the phone.
- */
-type Health = StatusResponse["prices"]["state"];
+const RANGES = [
+  { value: "24h", label: "24 h" },
+  { value: "90d", label: "90 d" },
+] as const;
+const STRIP_H = 32;
+const BAR_GAP = 2;
+const DOT = 8;
+const PILL_H = 28;
+const MS = 1000;
+/** The other bars while one is being read. */
+const DIMMED = 0.4;
+const BAR_RADIUS = 1;
+const SOURCE_NAMES: Readonly<Record<string, string>> = { pyth: "Pyth", redstone: "RedStone", basket: "Baskets" };
 
-const MARK = 28;
-const SOURCE_NAMES: Readonly<Record<string, { name: string; id?: string }>> = {
-  pyth: { name: "Pyth", id: ids.provider("pyth") },
-  redstone: { name: "RedStone", id: ids.provider("redstone") },
-  basket: { name: "Baskets", id: ids.market("MAJORS") },
-};
-const WORDS: Readonly<Record<Health, string>> = {
-  ok: "Working",
-  degraded: "Partly delayed",
-  down: "Down",
-  unknown: "Unknown",
-};
-
-/** "7 live · 5 closed": the non-zero states in their usual order. */
-function countsLine(counts: Readonly<Record<string, number>>): string {
-  const parts = FEED_STATES.flatMap((s) => (counts[s] ? [`${counts[s]} ${s}`] : []));
-  return parts.length > 0 ? parts.join(" · ") : "No markets";
-}
-
-/** "Latest block 2 s old · history 3 blocks behind". */
-function chainLine(c: StatusResponse["chains"][number]): string | undefined {
-  const parts = [
-    c.headAgeSec === null ? null : `Latest block ${c.headAgeSec} s old`,
-    c.indexerLagBlocks === null ? null : `history ${c.indexerLagBlocks} blocks behind`,
-  ].filter((p): p is string => p !== null);
-  return parts.length > 0 ? parts.join(" · ") : undefined;
-}
-
-function StateWord({ state }: { state: Health }) {
+function useTone() {
   const { color } = useTheme();
-  const tint =
-    state === "down" ? color.destructive : state === "degraded" ? color.warn : state === "ok" ? color.ink : color.text3;
-  return <Text style={[TYPE.rowStrong, { color: tint }]}>{WORDS[state]}</Text>;
+  return (t: HealthState | "none") =>
+    t === "down"
+      ? color.down
+      : t === "degraded"
+        ? color.warn
+        : t === "ok"
+          ? color.up
+          : t === "unknown"
+            ? color.inkMuted
+            : color.raised2;
 }
 
-function Report({ s }: { s: StatusResponse }) {
+function Board({
+  s,
+  history,
+  range,
+  onRange,
+}: {
+  s: StatusResponse;
+  history: StatusHistory | undefined;
+  range: StatusRange;
+  onRange: (r: StatusRange) => void;
+}) {
   const { color } = useTheme();
+  const tone = useTone();
+  const v = verdict(s.components);
+  const ago = Math.max(0, Math.round((Date.now() - Date.parse(s.at)) / MS));
   return (
-    <>
-      <View style={styles.section}>
-        <SectionHeading>Prices</SectionHeading>
-        <Panel>
-          <ListRow
-            title="All markets"
-            detail={s.prices.detail ?? undefined}
-            trailing={<StateWord state={s.prices.state} />}
-          />
-          {s.priceSources.map((p) => {
-            const known = SOURCE_NAMES[p.source];
-            return (
-              <ListRow
-                key={p.source}
-                title={known?.name ?? p.source}
-                detail={countsLine(p.counts)}
-                leading={known?.id ? <EntityMark id={known.id} size={MARK} decorative /> : undefined}
-                trailing={<StateWord state={p.state} />}
-              />
-            );
-          })}
-        </Panel>
+    <View style={styles.board}>
+      <View style={styles.hero} accessibilityLiveRegion="polite">
+        <Text
+          accessibilityRole="header"
+          style={[TYPE.pageTitle, { color: v.tone === "ok" ? color.ink : tone(v.tone) }]}
+        >
+          {v.word}
+        </Text>
+        <Text style={[TYPE.body, { color: color.inkMuted }]}>{v.line}</Text>
+        <View style={styles.pills}>
+          {(["ok", "degraded", "down", "unknown"] as const).map((k) =>
+            v.tally[k] > 0 ? (
+              <View key={k} style={[styles.pill, { backgroundColor: color.card }]}>
+                <View style={[styles.dot, { backgroundColor: tone(k) }]} />
+                <Text style={[TYPE.chipLabel, { color: color.ink }]}>
+                  {v.tally[k]} {STATE_WORDS[k].toLowerCase()}
+                </Text>
+              </View>
+            ) : null,
+          )}
+        </View>
+        <Text style={[TYPE.meta, { color: color.text3 }]}>Checked {ago} s ago · refreshes every 15 s</Text>
       </View>
-      <View style={styles.section}>
-        <SectionHeading>Networks</SectionHeading>
-        <Panel>
-          {s.chains.map((c) => (
-            <ListRow
-              key={c.chainId}
-              title={`${networkOf(c.chainId as ChainId).name} · ${networkOf(c.chainId as ChainId).modeLabel}`}
-              detail={chainLine(c) ?? c.rpc.detail ?? undefined}
-              trailing={<StateWord state={c.rpc.state} />}
-            />
-          ))}
-          <ListRow
-            title="Deposits"
-            detail={s.aurora.detail ?? undefined}
-            trailing={<StateWord state={s.aurora.state} />}
-          />
-        </Panel>
+      <Segmented options={RANGES} value={range} onChange={(r) => onRange(r as StatusRange)} label="History range" />
+      {boardOrder(s.components).map((c) => (
+        <Tile key={c.id} c={c} at={s.at} history={history} s={s} />
+      ))}
+    </View>
+  );
+}
+
+function Tile({
+  c,
+  at,
+  history,
+  s,
+}: {
+  c: StatusResponse["components"][number];
+  at: string;
+  history: StatusHistory | undefined;
+  s: StatusResponse;
+}) {
+  const { color } = useTheme();
+  const tone = useTone();
+  const [picked, setPicked] = useState<number | null>(null);
+  const buckets = history?.components.find((h) => h.id === c.id)?.buckets ?? [];
+  const uptime = uptimeText(buckets);
+  const name = COMPONENT_NAMES[c.id];
+  const problem = c.state === "down" || c.state === "degraded";
+  return (
+    <View
+      style={[styles.tile, { backgroundColor: color.card }]}
+      accessibilityLabel={`${name.title}: ${STATE_WORDS[c.state]}`}
+    >
+      <View style={styles.head}>
+        <Animated.View key={at} entering={ZoomIn} style={[styles.dot, { backgroundColor: tone(c.state) }]} />
+        <Text style={[TYPE.rowTitle, styles.flex, { color: color.ink }]}>{name.title}</Text>
+        <Text style={[TYPE.rowStrong, { color: c.state === "ok" ? color.ink : tone(c.state) }]}>
+          {STATE_WORDS[c.state]}
+        </Text>
       </View>
-      <Text style={[TYPE.meta, styles.stamp, { color: color.text3 }]}>
-        Checked {new Date(s.at).toLocaleTimeString()} · refreshes every 15 s
-      </Text>
-    </>
+      <Text style={[TYPE.caption, { color: problem ? color.ink : color.inkMuted }]}>{metricLine(c) || name.what}</Text>
+      {buckets.length > 0 && history ? (
+        <>
+          <View style={styles.strip} accessibilityRole="adjustable" accessibilityLabel={`${name.title} history`}>
+            {buckets.map((b, i) => {
+              const bar = barOf(b);
+              return (
+                <Pressable
+                  key={i}
+                  onPress={() => {
+                    fire("tick");
+                    setPicked((p) => (p === i ? null : i));
+                  }}
+                  style={styles.barSlot}
+                  accessibilityLabel={barLabel(history, i, b)}
+                >
+                  <View
+                    style={[
+                      styles.bar,
+                      {
+                        height: STRIP_H * bar.height,
+                        backgroundColor: tone(bar.tone),
+                        opacity: picked === null || picked === i ? 1 : DIMMED,
+                      },
+                    ]}
+                  />
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={[TYPE.meta, { color: color.text3 }]}>
+            {picked !== null
+              ? barLabel(history, picked, buckets[picked] ?? null)
+              : uptime
+                ? `${uptime} working over the range`
+                : "Not recorded yet"}
+          </Text>
+        </>
+      ) : null}
+      {c.id === "prices"
+        ? s.priceSources.map((p) => (
+            <Text key={p.source} style={[TYPE.meta, { color: color.inkMuted }]}>
+              {SOURCE_NAMES[p.source] ?? p.source} ·{" "}
+              {FEED_STATES.flatMap((k) => (p.counts[k] ? [`${p.counts[k]} ${k}`] : [])).join(" · ") || "no markets"}
+            </Text>
+          ))
+        : null}
+    </View>
   );
 }
 
 export function StatusScreen() {
+  const [range, setRange] = useState<StatusRange>("24h");
   const status = useStatus();
+  const history = useStatusHistory(range);
   const queries = useQueryClient();
   return (
     <Screen>
       <Stack.Screen options={{ title: "Status" }} />
       <ReadingView reading={status} retry={() => void queries.invalidateQueries({ queryKey: ["status"] })}>
-        {(s) => <Report s={s} />}
+        {(s) => (
+          <Board s={s} history={"value" in history ? history.value : undefined} range={range} onRange={setRange} />
+        )}
       </ReadingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: SPACE.sm, marginBottom: SPACE.lg },
-  stamp: { textAlign: "center", marginTop: SPACE.sm },
+  board: { gap: SPACE.md, paddingBottom: SPACE.xl },
+  hero: { gap: SPACE.xs, paddingBottom: SPACE.sm },
+  pills: { flexDirection: "row", flexWrap: "wrap", gap: SPACE.xs },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.xs,
+    height: PILL_H,
+    paddingHorizontal: SPACE.sm,
+    borderRadius: PILL_H / 2,
+  },
+  dot: { width: DOT, height: DOT, borderRadius: DOT / 2 },
+  tile: { borderRadius: RADIUS.lg, padding: SPACE.md, gap: SPACE.xs },
+  head: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  flex: { flex: 1 },
+  strip: { flexDirection: "row", alignItems: "flex-end", height: STRIP_H, gap: BAR_GAP, marginTop: SPACE.xs },
+  barSlot: { flex: 1, height: STRIP_H, justifyContent: "flex-end" },
+  bar: { borderRadius: BAR_RADIUS },
 });

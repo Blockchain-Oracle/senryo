@@ -80,7 +80,8 @@ export type WebIcon =
   | "parlay"
   | "duel"
   | "events"
-  | "games";
+  | "games"
+  | "status";
 
 export interface WebNavItem {
   key: string;
@@ -234,6 +235,14 @@ export const WEB_EVERYTHING = [
         href: "/proof/",
         description: "Every window's two prices, posted on chain — re-check any of them yourself.",
         keywords: "verify pyth print oracle",
+      },
+      {
+        key: "status",
+        label: "Status",
+        icon: "status",
+        href: "/app/status/",
+        description: "Every system's health now, and over the last day and 90 days.",
+        keywords: "uptime outage incident health down",
       },
     ],
   },

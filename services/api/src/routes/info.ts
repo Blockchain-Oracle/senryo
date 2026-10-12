@@ -1,9 +1,10 @@
 import { configRoute, geoRoute, statusRoute, timeRoute } from "@senryo/api-client";
 import { networkOf } from "@senryo/config";
-import { type HttpServer, MS_PER_SECOND, sendRoute } from "@senryo/service-common";
+import { type HttpServer, MS_PER_SECOND, parseRoute, sendRoute } from "@senryo/service-common";
 import type { ApiContext } from "../context.ts";
 import { geoOf } from "../geo.ts";
 import { priceStatus } from "../prices/health.ts";
+import { readHealth } from "../status/health.ts";
 
 /** A fixed public line; the full error (which may carry a keyed RPC URL) only goes to the log (S8.5b #7). */
 function rpcDown(ctx: ApiContext, error: unknown): string {
@@ -41,8 +42,12 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     sendRoute(reply, geoRoute, geoOf(request, { db: ctx.geo, trustedHeader: ctx.env.TRUSTED_COUNTRY_HEADER })),
   );
 
-  app.get(statusRoute.path, { config: READ_RATE }, async (_request, reply) => {
+  app.get(statusRoute.path, { config: READ_RATE }, async (request, reply) => {
+    const { query } = parseRoute(statusRoute, request);
     const nowSec = Math.floor(Date.now() / MS_PER_SECOND);
+    const served = query.chainId ?? [...ctx.chains.keys()][0];
+    const components = served !== undefined && ctx.chains.has(served) ? await readHealth(ctx, served) : [];
+    const lag = components.find((c) => c.id === "indexer")?.metrics.lagBlocks ?? null;
     const chains = await Promise.all(
       [...ctx.chains.values()].map(async (c) => {
         try {
@@ -51,7 +56,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
             chainId: c.chainId,
             rpc: { state: "ok" as const, detail: null },
             headAgeSec: nowSec - Number(block.timestamp),
-            indexerLagBlocks: null,
+            indexerLagBlocks: c.chainId === served ? lag : null,
           };
         } catch (error) {
           return {
@@ -65,6 +70,7 @@ export function registerInfoRoutes(app: HttpServer, ctx: ApiContext): void {
     );
     return sendRoute(reply, statusRoute, {
       at: new Date().toISOString(),
+      components,
       chains,
       ...priceStatus(ctx.gateway.status(), ctx.bus.stats()),
       aurora: NOT_OPEN,
