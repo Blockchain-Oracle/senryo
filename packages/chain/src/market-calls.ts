@@ -152,7 +152,8 @@ export function revertReason(returnData: Hex): string {
 
 export type TicketChange =
   | { kind: "committed"; ticketId: bigint; owner: Address; windowId: Hex; band: number; stake: bigint; target: number }
-  | { kind: "filled"; ticketId: bigint; payout: bigint; stake: bigint; entryE8: bigint }
+  /** `probE6` is the model's chance at the fill print, before the spread (D-303: a call's PnL starts from it). */
+  | { kind: "filled"; ticketId: bigint; payout: bigint; stake: bigint; entryE8: bigint; probE6: number }
   | { kind: "refused"; ticketId: bigint; reason: number; refunded: bigint }
   | { kind: "closing"; ticketId: bigint; shares: bigint; target: number }
   | { kind: "closed"; ticketId: bigint; shares: bigint; proceeds: bigint; basisOut: bigint }
@@ -200,6 +201,7 @@ export function ticketChanges(logs: readonly Log[], reserve: Address): TicketCha
           payout: a.payout as bigint,
           stake: a.stake as bigint,
           entryE8: a.entryE8 as bigint,
+          probE6: Number(a.probE6),
         });
         break;
       case "Refused":

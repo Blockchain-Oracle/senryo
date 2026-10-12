@@ -29,6 +29,9 @@ import type { TerminalView } from "./useTerminal";
 
 export type QuoteTick = CallsQuoteTick;
 
+/** The cash-out button's amount while the pool won't buy the call back. */
+const UNSOLD = "—";
+
 export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | undefined, mode: CallMode) {
   const live = useLive();
   const firstLine = useSharedValue("");
@@ -97,13 +100,18 @@ export function useLiveQuote(t: TerminalView, stake: bigint, load: WindowLoad | 
       secondLine.value = pass.secondLine;
       note.value = pass.note ?? "";
       lineText.value = pass.lineText;
-      if (pass.proceeds !== null && pass.pnl !== null) {
-        cashOut.value = { text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) };
-        lastProceeds.current = pass.proceeds;
+      if (pass.pnl !== null) {
         overlay.value = { ...pass.overlay, pnlTrend: trendOf(lastPnl.current, pass.pnl) };
         lastPnl.current = pass.pnl;
       } else {
         overlay.value = pass.overlay;
+      }
+      // Beyond the pool's bounds a held call can't be sold (it pays at expiry): no amount on the button.
+      if (pass.proceeds !== null) {
+        cashOut.value = { text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) };
+        lastProceeds.current = pass.proceeds;
+      } else if (pass.close) {
+        cashOut.value = { text: UNSOLD, trend: 0 };
       }
       latest.current = { first: pass.first, second: pass.second, close: pass.close };
       const reactionTick: QuoteTick = {

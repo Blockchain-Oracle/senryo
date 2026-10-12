@@ -1,0 +1,38 @@
+/* The terminal's positions (R5.3, Tradash's right rail): ≥ 1024 px the column fills top-down — Unrealized, the rows —
+ * above the call panel; below, a View-position pill over the panel opens them in the drawer. */
+.terminal-positions {
+  display: none;
+}
+.terminal-positions-pill {
+  display: flex;
+  align-self: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin-bottom: 8px;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  background: var(--secondary);
+  color: var(--foreground);
+  font: 600 14px / 18px var(--shell-font);
+}
+.terminal-positions-pill:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+@media (min-width: 1024px) {
+  .terminal-side {
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 0;
+  }
+  .terminal-positions {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+  .terminal-positions-pill {
+    display: none;
+  }
+}

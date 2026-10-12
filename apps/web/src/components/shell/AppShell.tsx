@@ -4,6 +4,7 @@
 // client island inside it. The terminal takes the whole stage (`.terminal-surface`, no top line or dock).
 import type { ReactNode } from "react";
 import { AppUpdateHost } from "./AppUpdateHost";
+import { BookHost } from "./BookHost";
 import { ConfettiHost } from "./ConfettiHost";
 import { BalanceChip, ModeCapsule } from "./chips";
 import { DrawerHost } from "./DrawerHost";
@@ -17,32 +18,34 @@ import { TopLine } from "./TopLine";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="app-shell">
-      <a className="skip-link" href="#content">
-        Skip to content
-      </a>
-      <Rail
-        foot={
-          <>
-            <ModeCapsule className="rail-mode" />
-            <BalanceChip className="rail-balance" />
-          </>
-        }
-      />
-      <div className="app-column">
-        <TopLine />
-        <main id="content" tabIndex={-1} className="app-stage">
-          {children}
-        </main>
+    <BookHost>
+      <div className="app-shell">
+        <a className="skip-link" href="#content">
+          Skip to content
+        </a>
+        <Rail
+          foot={
+            <>
+              <ModeCapsule className="rail-mode" />
+              <BalanceChip className="rail-balance" />
+            </>
+          }
+        />
+        <div className="app-column">
+          <TopLine />
+          <main id="content" tabIndex={-1} className="app-stage">
+            {children}
+          </main>
+        </div>
+        <MobileDock />
+        <DrawerHost />
+        <LiveHost />
+        <ResultHost />
+        <ConfettiHost />
+        <ToasterHost />
+        <AppUpdateHost />
+        <Splash />
       </div>
-      <MobileDock />
-      <DrawerHost />
-      <LiveHost />
-      <ResultHost />
-      <ConfettiHost />
-      <ToasterHost />
-      <AppUpdateHost />
-      <Splash />
-    </div>
+    </BookHost>
   );
 }

@@ -16,6 +16,7 @@ import { eventKeys } from "./events.ts";
 import { historyKeys } from "./history.ts";
 import { marketKeys } from "./markets.ts";
 import { parlayKeys } from "./parlays.ts";
+import { rideKeys } from "./rides.ts";
 
 /** The indexer trails a ticket notice by 0–2 s on production; history refetches after this. */
 export const HISTORY_LAG_MS = 2_500;
@@ -103,6 +104,11 @@ export function useLiveSync(live: Live, owner: Address | undefined): void {
       live.onUser("parlay", () => {
         void account();
         void client.invalidateQueries({ queryKey: parlayKeys.of(env.chainId, owner) });
+      }),
+      live.onUser<{ chainId: number }>("ride", (n) => {
+        if (n.chainId !== env.chainId) return;
+        void account();
+        void client.invalidateQueries({ queryKey: rideKeys.of(env.chainId, owner) });
       }),
       live.onUser<DuelQueueView>("duelQueue", (entry) => {
         client.setQueryData(duelKeys.queue(env.chainId, owner), entry);

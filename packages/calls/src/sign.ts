@@ -20,9 +20,12 @@ import {
   type MarketExitOrder,
   type MarketIntent,
   type MarketParlayIntent,
+  marketsDomain,
   parlayRequest,
   permitParts,
   permitRequest,
+  type RideIntent,
+  rideIntentRequest,
 } from "@senryo/chain";
 import { type ChainId, DUEL, EVENTS } from "@senryo/config";
 import { INTENT_TTL_SEC, PERMIT_TTL_SEC, SESSION_MARGIN_SEC } from "./constants.ts";
@@ -145,6 +148,33 @@ export async function signParlay(d: SignDeps, draft: ParlayDraft, prompt: string
   };
   const r = await signSpend(d, draft.owner, draft.stake, prompt, (signer) =>
     signer.signTypedData(parlayRequest(d.chainId, intent)),
+  );
+  return { intent, signature: r.signed, permit: r.permit, via: r.via };
+}
+
+export type RideDraft = Omit<RideIntent, "deadline" | "nonce" | "epoch" | "recipient">;
+
+export interface SignedRide {
+  intent: RideIntent;
+  signature: Hex;
+  permit: Permit | null;
+  via: "one-tap" | "face-id";
+}
+
+/**
+ * Sign a ride (D-299): an open spends its margin and open fee (`spend`, what the reserve pulls) like a call's stake —
+ * one-tap within the caps, else one Face ID; a close spends nothing.
+ */
+export async function signRide(d: SignDeps, draft: RideDraft, spend: bigint, prompt: string): Promise<SignedRide> {
+  const intent: RideIntent = {
+    ...draft,
+    recipient: draft.owner,
+    deadline: BigInt(d.nowSec + INTENT_TTL_SEC),
+    nonce: freshNonce(),
+    epoch: d.account.epoch,
+  };
+  const r = await signSpend(d, draft.owner, draft.action === ACTION_OPEN ? spend : 0n, prompt, (signer) =>
+    signer.signTypedData(rideIntentRequest(marketsDomain(d.chainId), intent)),
   );
   return { intent, signature: r.signed, permit: r.permit, via: r.via };
 }

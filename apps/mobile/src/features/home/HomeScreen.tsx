@@ -1,10 +1,12 @@
 /**
- * Home (S5.10): the balance rolling, the one-tap chip, your open calls (tap to watch them in the terminal) and the live
- * markets to call on. A guest gets the promise, one way in and the same live markets to look around (R2 sim pass:
+ * Home (S5.10): the balance rolling, the one-tap chip, your open positions live with their Cash out (R5.3) and the
+ * live markets to call on. A guest gets the promise, one way in and the same live markets to look around (R2 sim pass:
  * "Look around" used to land on the promise alone). Setup resume and the Face ID prompt stay on Home.
  */
+
+import { useLiveBook } from "@senryo/calls/react";
 import { formatUnits } from "@senryo/core";
-import { marketKeys, useCatalog, useMarketAccount, useTickets } from "@senryo/query";
+import { marketKeys, useCatalog, useMarketAccount } from "@senryo/query";
 import { useFont } from "@shopify/react-native-skia";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -20,6 +22,7 @@ import { useDockInset } from "~/components/shell/dock-context";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
 import { MarketRow } from "~/features/markets/MarketRow";
 import { NotificationsBell } from "~/features/notifications/NotificationsBell";
+import { PositionsList } from "~/features/positions/PositionsList";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { ContextualFaceId } from "~/features/setup/ContextualFaceId";
 import { SetupResume } from "~/features/setup/SetupResume";
@@ -33,7 +36,6 @@ const BALANCE_SIZE = 44;
 const BALANCE_HEIGHT = 56;
 const DOLLAR_DECIMALS = 6;
 const CENTS = 2;
-const OPEN = new Set(["committed", "open", "closing"]);
 
 export function HomeScreen() {
   const address = useAccount().hint?.address;
@@ -41,7 +43,7 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const bottom = useDockInset();
   const account = useMarketAccount(address);
-  const tickets = useTickets(address);
+  const book = useLiveBook();
   const catalog = useCatalog();
   const client = useQueryClient();
   const [, setSymbol] = useMMKVString(STORAGE_KEYS.terminalSymbol, storage);
@@ -59,7 +61,6 @@ export function HomeScreen() {
     };
   }, [value, balance]);
 
-  const open = "value" in tickets ? tickets.value.tickets.filter((t) => OPEN.has(t.state)) : [];
   const watch = (symbol: string) => {
     fire("tick");
     setSymbol(symbol);
@@ -109,17 +110,10 @@ export function HomeScreen() {
               <OneTapChip />
             </View>
             <SetupResume />
-            {open.length > 0 ? (
+            {book.entries.length > 0 || book.parlays > 0 ? (
               <View style={styles.section}>
-                <SectionHeading>Open calls</SectionHeading>
-                {open.map((t) => (
-                  <MarketRow
-                    key={String(t.ticketId)}
-                    symbol={t.symbol}
-                    name={`Pays $${formatUnits(t.payout, DOLLAR_DECIMALS, CENTS)} if right`}
-                    onOpen={() => watch(t.symbol)}
-                  />
-                ))}
+                <SectionHeading>Open positions</SectionHeading>
+                <PositionsList empty="none" />
               </View>
             ) : null}
             {markets("Call the next move")}

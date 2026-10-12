@@ -1,0 +1,38 @@
+/**
+ * Closing a position from any list on the phone (R5.3): the press, the shared close (`usePositionActions`), and a plain
+ * warning when it doesn't go through. What it returned arrives as the result toast (`ResultHost`).
+ */
+import { type BookEntry, closeWord } from "@senryo/calls";
+import { usePositionActions } from "@senryo/calls/react";
+import { fire } from "~/feedback/fire";
+import { useAccount } from "~/lib/account/provider";
+import { notify } from "~/lib/notify";
+
+export function usePositionClose() {
+  const actions = usePositionActions(useAccount());
+  const fail = (e: BookEntry | null, error: unknown) => {
+    fire("fail", { cue: "error" });
+    notify({
+      title: e ? `Couldn't ${closeWord(e).toLowerCase()}` : "Couldn't close everything",
+      description: (error as Error).message,
+      tone: "warning",
+    });
+  };
+  const close = async (e: BookEntry) => {
+    fire("press");
+    try {
+      await actions.close(e);
+    } catch (error) {
+      fail(e, error);
+    }
+  };
+  const closeAll = async (entries: readonly BookEntry[]) => {
+    fire("press");
+    try {
+      await actions.closeAll(entries.filter((e) => e.closeValue !== null));
+    } catch (error) {
+      fail(null, error);
+    }
+  };
+  return { close, closeAll, closing: actions.closing, ready: actions.ready };
+}

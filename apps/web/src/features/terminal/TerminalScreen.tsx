@@ -22,6 +22,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
 import { shortcutBlocked } from "@/components/shell/Rail";
 import { SlideOver } from "@/components/ui/drawer";
+import { PositionsPanel } from "@/features/positions/PositionsPanel";
 import { useAccount } from "@/lib/account/provider";
 import { hasAcknowledgedTerms } from "@/lib/account/terms";
 import { ROUTES } from "@/lib/constants/routes";
@@ -40,12 +41,14 @@ import { DEFAULT_STAKE, MIN_STAKE } from "./constants";
 import { ExitModal } from "./ExitModal";
 import { type FirstCallRequest, FirstCallSheet } from "./FirstCallSheet";
 import { MarketPicker } from "./MarketPicker";
+import { PositionsPill } from "./PositionsPill";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
 import { StakeModal } from "./StakeModal";
 import { TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
 import { useReactions } from "./useReactions";
 import "./terminal.css";
+import "./positions.css";
 import "./reactions.css";
 
 const WHOLE_NUMBER = /^\d+$/;
@@ -91,7 +94,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
   useReactions(symbol, q.onTick, reactions);
-  const [open, setOpen] = useState<"stake" | "part" | "exit" | "markets" | null>(null);
+  const [open, setOpen] = useState<"stake" | "part" | "exit" | "markets" | "positions" | null>(null);
   const [firstCall, setFirstCall] = useState<FirstCallRequest | null>(null);
   const exits = useExitActions(account, choices.cadence);
   const flow = useCallFlow({
@@ -202,6 +205,8 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
         </div>
       </section>
       <aside className="terminal-side" aria-label="Call">
+        <PositionsPanel className="terminal-positions" />
+        <PositionsPill onOpen={() => setOpen("positions")} />
         <CallPanel
           symbol={symbol}
           session={session}
@@ -258,6 +263,13 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
       ) : null}
       <SlideOver open={open === "markets"} onOpenChange={(o) => setOpen(o ? "markets" : null)} title="Markets" wide>
         <MarketPicker selected={symbol} onPick={() => setOpen(null)} />
+      </SlideOver>
+      <SlideOver
+        open={open === "positions"}
+        onOpenChange={(o) => setOpen(o ? "positions" : null)}
+        title="Open positions"
+      >
+        <PositionsPanel />
       </SlideOver>
     </div>
   );

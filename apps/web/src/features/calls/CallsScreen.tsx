@@ -1,10 +1,10 @@
 "use client";
 /**
  * Calls (the phone's Calls, S5.11): the record on this network (result, calls, won, lost, best streak), then what's open
- * now and every call before it, newest first, filtered All · Open · Won · Lost · Refunded (outcome words, never colour
- * alone; `@senryo/calls` `useCallRows`). Every row opens its receipt in the wide right drawer (`?d=call&id=…`, D-190).
+ * now, live (R5.3: the book's positions with Cash out), the parlays in play, and every call before it, newest first,
+ * filtered All · Won · Lost · Refunded (outcome words, never colour alone; `@senryo/calls` `useCallRows`). Every row opens its receipt in the wide right drawer (`?d=call&id=…`, D-190).
  */
-import { CALL_FILTERS, type CallFilter, type CallRow, filterRows, useCallRows } from "@senryo/calls/react";
+import { CALL_FILTERS, type CallFilter, type CallRow, filterRows, useCallRows, useLiveBook } from "@senryo/calls/react";
 import { lane, sideName, signedUsd, toneOf, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useCallerStats } from "@senryo/query";
@@ -14,6 +14,7 @@ import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { OpenParlays } from "@/features/parlay/ParlayList";
+import { PositionsPanel } from "@/features/positions/PositionsPanel";
 import { useAccount } from "@/lib/account/provider";
 import { tapFeedback } from "@/lib/feedback";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
@@ -65,6 +66,7 @@ function Record({ owner, hidden }: { owner: `0x${string}`; hidden: boolean }) {
 export function CallsScreen() {
   const owner = useAccount().hint?.address;
   const list = useCallRows(owner);
+  const book = useLiveBook();
   const hidden = usePrivacy();
   const [filter, setFilter] = useState<CallFilter>("all");
   if (!owner)
@@ -79,7 +81,7 @@ export function CallsScreen() {
     );
   if (list.failed) return <p className="text-body text-text-2">Calls didn't load.</p>;
   if (list.pending && list.rows.length === 0) return <p className="text-body text-text-3">Loading calls…</p>;
-  if (list.rows.length === 0)
+  if (list.rows.length === 0 && book.entries.length === 0 && book.parlays === 0)
     return (
       <div className="flex flex-col items-start gap-3 py-6">
         <p className="font-semibold text-row-title">No calls yet</p>
@@ -93,6 +95,7 @@ export function CallsScreen() {
   return (
     <div className="flex flex-col gap-5">
       <Record owner={owner} hidden={hidden} />
+      <PositionsPanel empty="none" />
       <OpenParlays owner={owner} />
       <SegmentedControl
         options={CALL_FILTERS}

@@ -31,6 +31,9 @@ export interface CashOutFigure {
   trend: number;
 }
 
+/** The cash-out button's amount while the pool won't buy the call back. */
+const UNSOLD = "—";
+
 export function useLiveQuote(
   t: CallWindowView,
   stake: bigint,
@@ -109,13 +112,18 @@ export function useLiveQuote(
       values.secondLine.set(pass.secondLine);
       values.note.set(pass.note);
       values.lineText.set(pass.lineText);
-      if (pass.proceeds !== null && pass.pnl !== null) {
-        values.cashOut.set({ text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) });
-        lastProceeds.current = pass.proceeds;
+      if (pass.pnl !== null) {
         overlay.current = { ...pass.overlay, pnlTrend: trendOf(lastPnl.current, pass.pnl) };
         lastPnl.current = pass.pnl;
       } else {
         overlay.current = pass.overlay;
+      }
+      // Beyond the pool's bounds a held call can't be sold (it pays at expiry): no amount on the button.
+      if (pass.proceeds !== null) {
+        values.cashOut.set({ text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) });
+        lastProceeds.current = pass.proceeds;
+      } else if (pass.close) {
+        values.cashOut.set({ text: UNSOLD, trend: 0 });
       }
       latest.current = { first: pass.first, second: pass.second, close: pass.close };
       const reaction: QuoteTick = { t: performance.now(), price: priceFromE8(tick.priceE8), position: pass.reading };

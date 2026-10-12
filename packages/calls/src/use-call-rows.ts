@@ -1,15 +1,14 @@
 /**
- * The Calls list, both apps (S5.11): what's open now (the services' ticket book, live) then every call before it (the
- * indexer), newest first, each in the shared words, grouped for the filters All · Open · Won · Lost · Refunded
- * (outcome words, never colour alone).
+ * The Calls history, both apps (S5.11): every finished call (the indexer), newest first, each in the shared words,
+ * grouped for the filters All · Won · Lost · Refunded (outcome words, never colour alone). What's open now is the live
+ * book's (R5.3, `useLiveBook`), shown above it with its live value and Cash out.
  */
 import type { Address } from "@senryo/account";
-import { OPEN_STATES, signedUsd, stateWord, type Tone, toneOf, usd } from "@senryo/core";
+import { OPEN_STATES, signedUsd, stateWord, type Tone, toneOf } from "@senryo/core";
 import { useCalls, useTickets } from "@senryo/query";
 
 export const CALL_FILTERS = [
   { value: "all", label: "All" },
-  { value: "open", label: "Open" },
   { value: "won", label: "Won" },
   { value: "lost", label: "Lost" },
   { value: "refunded", label: "Refunded" },
@@ -32,24 +31,10 @@ export interface CallRow {
 export function useCallRows(owner: Address | undefined) {
   const tickets = useTickets(owner);
   const calls = useCalls(owner);
-  const open: CallRow[] =
-    "value" in tickets
-      ? tickets.value.tickets
-          .filter((t) => OPEN_STATES.has(t.state))
-          .map((t) => ({
-            key: `open-${t.ticketId}`,
-            ticketId: t.ticketId,
-            symbol: t.symbol,
-            cadenceSec: t.cadenceSec,
-            band: t.band,
-            stake: t.stake,
-            status: stateWord({ status: t.state, outcome: null }),
-            result: t.state === "committed" ? "…" : `pays ${usd(t.payout)}`,
-            tone: "muted" as const,
-            group: "open" as const,
-          }))
-      : [];
-  const openIds = new Set(open.map((r) => r.ticketId));
+  // Open in the services' book (the indexer may still list it as open, or not have it yet): the live book shows it.
+  const openIds = new Set(
+    "value" in tickets ? tickets.value.tickets.filter((t) => OPEN_STATES.has(t.state)).map((t) => t.ticketId) : [],
+  );
   const past: CallRow[] = (calls.data?.pages ?? [])
     .flatMap((p) => p.calls)
     .filter((c) => !OPEN_STATES.has(c.status) && !openIds.has(c.ticketId))
@@ -70,8 +55,7 @@ export function useCallRows(owner: Address | undefined) {
       };
     });
   return {
-    rows: [...open, ...past],
-    open,
+    rows: past,
     pending: calls.isPending,
     failed: calls.isError && !calls.data,
     hasMore: calls.hasNextPage,

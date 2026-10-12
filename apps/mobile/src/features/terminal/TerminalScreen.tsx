@@ -19,6 +19,8 @@ import { Button } from "~/components/kit/Button";
 import { LiveText } from "~/components/kit/LiveText";
 import { StakeSheet } from "~/components/sheet/StakeSheet";
 import { useDockInset } from "~/components/shell/dock-context";
+import { PositionsSheet } from "~/features/positions/PositionsSheet";
+import { ViewPositionPill } from "~/features/positions/ViewPositionPill";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute, firstCallRoute } from "~/lib/constants/routes";
@@ -90,7 +92,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   }, [closed, candles, history]);
   const account = useAccount();
   const [picking, setPicking] = useState(false);
-  const [sheet, setSheet] = useState<"stake" | "part" | "exit" | null>(null);
+  const [sheet, setSheet] = useState<"stake" | "part" | "exit" | "positions" | null>(null);
   const exits = useExitActions(account, t.cadence);
   const offsetMs = useSharedValue(live.clock.offset);
   const flow = useCallFlow({
@@ -171,6 +173,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       <CrowdLine windowId={t.window.windowId} />
       <BasketMembers symbol={t.symbol} />
       <View style={{ paddingBottom: bottom }}>
+        <ViewPositionPill onOpen={() => setSheet("positions")} />
         <CallPanel
           symbol={t.symbol}
           session={session}
@@ -224,6 +227,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           onClose={() => setSheet(null)}
         />
       ) : null}
+      {sheet === "positions" ? <PositionsSheet onClose={() => setSheet(null)} /> : null}
       {picking ? (
         <MarketsSheet
           markets={t.markets}

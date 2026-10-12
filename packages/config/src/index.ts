@@ -14,3 +14,4 @@ export * from "./networks.ts";
 export * from "./pool-terms.ts";
 export * from "./price-sources.ts";
 export * from "./ride-terms.ts";
+export * from "./slippage.ts";

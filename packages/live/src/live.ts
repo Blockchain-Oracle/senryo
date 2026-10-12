@@ -17,6 +17,7 @@ export type UserEvent =
   | "dollars"
   | "earn"
   | "parlay"
+  | "ride"
   | "duel"
   | "duelQueue"
   | "duelPick"
@@ -28,6 +29,7 @@ const USER_EVENTS = new Set<string>([
   "dollars",
   "earn",
   "parlay",
+  "ride",
   "duel",
   "duelQueue",
   "duelPick",

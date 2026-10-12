@@ -17,5 +17,6 @@ export * from "./operations.ts";
 export * from "./parlays.ts";
 export * from "./profiles.ts";
 export * from "./reading.ts";
+export * from "./rides.ts";
 export * from "./status.ts";
 export * from "./trace.ts";

@@ -137,6 +137,9 @@ export const rideSchema = z.object({
   updatedAt: isoTimeSchema,
 });
 
+/** A ride as the apps read it. */
+export type RideView = z.output<typeof rideSchema>;
+
 export const ridesRoute = defineRoute({
   method: "GET",
   path: "/v1/rides",

@@ -1,11 +1,18 @@
 /**
- * Calls (S5.11): the caller's record on this network (result, calls, won, best streak), then what's open now (the
- * services' ticket book, live) and every call before it (the indexer), newest first, filtered All · Open · Won · Lost ·
- * Refunded (21st.dev ssychui/trade-journal-table #27124: outcome words with a check or cross, never colour alone).
+ * Calls (S5.11): the caller's record on this network (result, calls, won, best streak), then what's open now, live
+ * (R5.3: the book's positions with their Cash out), and every call before it (the indexer), newest first, filtered
+ * All · Won · Lost · Refunded (21st.dev ssychui/trade-journal-table #27124: outcome words with a check or cross, never colour alone).
  * Every row opens its receipt. Pull to refresh; the user's stream keeps both lists true.
  */
 
-import { CALL_FILTERS, type CallFilter, filterRows, type CallRow as Row, useCallRows } from "@senryo/calls/react";
+import {
+  CALL_FILTERS,
+  type CallFilter,
+  filterRows,
+  type CallRow as Row,
+  useCallRows,
+  useLiveBook,
+} from "@senryo/calls/react";
 import { lane, sideName, signedUsd, toneOf, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useCallerStats } from "@senryo/query";
@@ -19,6 +26,7 @@ import { EmptyState, LoadingState } from "~/components/kit/states";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
 import { OpenParlays } from "~/features/parlay/ParlayList";
+import { PositionsList } from "~/features/positions/PositionsList";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
@@ -79,6 +87,7 @@ function Record({ owner }: { owner: `0x${string}` }) {
 export function CallsScreen() {
   const owner = useAccount().hint?.address;
   const list = useCallRows(owner);
+  const book = useLiveBook();
   const client = useQueryClient();
   const [filter, setFilter] = useState<CallFilter>("all");
   const refresh = () =>
@@ -100,9 +109,9 @@ export function CallsScreen() {
 
   return (
     <CollapsingScreen left={<TabTitle>Calls</TabTitle>} onRefresh={refresh}>
-      {list.pending && all.length === 0 ? (
+      {list.pending && all.length === 0 && book.entries.length === 0 ? (
         <LoadingState />
-      ) : all.length === 0 ? (
+      ) : all.length === 0 && book.entries.length === 0 && book.parlays === 0 ? (
         <EmptyState
           why="No calls yet"
           detail="Call the next move on BTC, ETH or SOL."
@@ -111,6 +120,7 @@ export function CallsScreen() {
       ) : (
         <View style={styles.body}>
           <Record owner={owner} />
+          <PositionsList empty="none" />
           <OpenParlays owner={owner} />
           <Segmented options={CALL_FILTERS} value={filter} onChange={setFilter} label="Show calls" />
           {rows.length === 0 ? (

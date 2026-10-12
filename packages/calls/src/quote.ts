@@ -26,6 +26,7 @@ import {
   reserveCapacity,
   type SigmaPair,
 } from "@senryo/core";
+import { callFigures } from "./book.ts";
 import type { ReactionPosition } from "./reactions.ts";
 
 const E8 = 1e8;
@@ -49,7 +50,7 @@ export interface ChartLevel {
 
 /** What the chart overlays for the window and the open call (set per tick; read every frame). */
 export interface ChartOverlay {
-  /** Winning keeps the up tone; losing turns everything the down tone. Null when no call is open. */
+  /** PnL ≥ 0 keeps the up tone; below 0 turns everything the down tone (D-303). Null when no call is open. */
   winning: boolean | null;
   /** The pill's second row ("+$1.24"), when a call is open. */
   pnlText: string | null;
@@ -92,6 +93,8 @@ export interface QuotePosition {
   stake: bigint;
   payout: bigint;
   entryE8: bigint | null;
+  /** The fair chance at the fill (D-303), null for a call filled before it was recorded. */
+  fillProbE6: number | null;
 }
 
 /** What a quote reads of the pool's terms (the api's catalogue `terms`, or `POOL_TERMS`). */
@@ -168,7 +171,7 @@ export interface QuotePass {
   note: string | null;
   /** "▲ $12.40 (0.015%) above the line". */
   lineText: string;
-  /** What cashing out returns now, and the result against the stake. */
+  /** What cashing out returns now (null when it can't: none held, or beyond the pool's bounds) and the PnL (D-303). */
   proceeds: bigint | null;
   pnl: bigint | null;
   overlay: ChartOverlay;
@@ -289,14 +292,15 @@ export function quoteTick(i: QuoteInput): QuotePass {
     };
   }
   const close = quoteClose(p.band, w, spot, p.call.payout, terms);
-  const pnl = close.proceeds - p.call.stake;
-  const roiBps = p.call.stake > 0n ? (pnl * BPS) / p.call.stake : 0n;
+  const figures = callFigures(close, p.call.payout, p.call.stake, p.call.fillProbE6);
+  const pnl = figures.pnl;
+  const roiBps = pnl !== null && p.call.stake > 0n ? (pnl * BPS) / p.call.stake : 0n;
   const edges = bandEdgesE8(p.band, i.k);
   const reading = bandReading(p.band, i.k, spot);
   return {
     ...base,
     close,
-    proceeds: close.proceeds,
+    proceeds: figures.proceeds,
     pnl,
     reading: {
       key: String(p.call.ticketId),
@@ -307,8 +311,8 @@ export function quoteTick(i: QuoteInput): QuotePass {
       line: reading.line,
     },
     overlay: {
-      winning: bandOutcome(p.band, i.k, spot) === "win",
-      pnlText: signedDollars(pnl),
+      winning: pnl === null ? bandOutcome(p.band, i.k, spot) === "win" : pnl >= 0n,
+      pnlText: pnl === null ? null : signedDollars(pnl),
       pnlTrend: 0,
       line: toPrice(i.k),
       zone: {

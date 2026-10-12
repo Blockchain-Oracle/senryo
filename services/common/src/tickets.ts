@@ -79,7 +79,8 @@ export async function applyTicketChanges(
       }
       case "filled":
         await db`UPDATE market_tickets SET state = 'open', payout = ${c.payout}, stake = ${c.stake}, entry_e8 = ${c.entryE8},
-                 target = NULL, updated_at = now() WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
+                 fill_prob_e6 = ${c.probE6}, target = NULL, updated_at = now()
+                 WHERE chain_id = ${chainId} AND ticket_id = ${c.ticketId}`;
         break;
       case "refused":
         await db`UPDATE market_tickets SET state = 'refunded', target = NULL, result = ${c.refunded}, outcome = 'refund',
@@ -165,6 +166,8 @@ export interface TicketRow {
   stake: bigint;
   payout: bigint;
   entry_e8: bigint | null;
+  /** The fair chance at the fill (0030; null before it). */
+  fill_prob_e6: number | null;
   result: bigint | null;
   outcome: string | null;
   updated_at: Date;

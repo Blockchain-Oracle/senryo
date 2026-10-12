@@ -231,6 +231,7 @@ export function registerMarketRoutes(app: HttpServer, ctx: ApiContext): void {
             stake: r.stake,
             payout: r.payout,
             entryE8: r.entry_e8,
+            fillProbE6: r.fill_prob_e6,
             result: r.result,
             outcome: r.outcome as "win" | null,
             exit: exits.get(r.ticket_id) ?? null,

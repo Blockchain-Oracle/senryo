@@ -8,6 +8,7 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SheetPortalProvider } from "~/components/sheet/SheetHost";
+import { BookHost } from "~/components/shell/BookHost";
 import { ConfettiHost } from "~/components/shell/ConfettiHost";
 import { DeferredLinkHost } from "~/components/shell/DeferredLinkHost";
 import { FeedbackHost } from "~/components/shell/FeedbackHost";
@@ -54,7 +55,9 @@ export default function RootLayout() {
             <AccountProvider>
               <QueryEnvHost>
                 <LiveProvider live={appLive()}>
-                  <RootStack />
+                  <BookHost>
+                    <RootStack />
+                  </BookHost>
                 </LiveProvider>
               </QueryEnvHost>
             </AccountProvider>

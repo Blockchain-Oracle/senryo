@@ -1,25 +1,38 @@
 "use client";
 /**
  * The terminal's top (the phone's `TerminalTop`, Tradash's asset chip): the market chip (real mark, symbol, its 24 h
- * graph and change — D-319, F7; opens the markets drawer), the music, the balance, and the lanes — 1m · 5m · 15m · 1h —
- * the selected one carrying the countdown ring to the moment calls close, on the server's clock.
+ * graph and change — D-319, F7; opens the markets drawer), the music, equity (Tradash's pill: cash + every open
+ * position's live value, rolling — R5.3), and the lanes — 1m · 5m · 15m · 1h — the selected one carrying the
+ * countdown ring to the moment calls close, on the server's clock.
  */
-import { type CallWindowView, useDayLine } from "@senryo/calls/react";
+import { type CallWindowView, useDayLine, useLiveBook } from "@senryo/calls/react";
 import { CADENCES_SEC, type CadenceSec, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { ChevronDown } from "lucide-react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ChangeChip } from "@/components/ui/change-chip";
+import { Odometer, viewDollars } from "@/components/ui/odometer";
 import { Sparkline } from "@/components/ui/sparkline";
 import { fire, tapFeedback } from "@/lib/feedback";
-import { money } from "@/lib/format";
-import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { CountdownRing } from "./CountdownRing";
 import { MusicToggle } from "./MusicToggle";
 import "./terminal-top.css";
 
 const MARK = 28;
+
+/** Equity: cash plus what every open position would return now (Tradash's pill), rolling; cash until the book loads. */
+function Equity({ cash }: { cash: bigint | undefined }) {
+  const book = useLiveBook();
+  const equity = book.ready ? book.totals.equity : cash;
+  if (equity === null || equity === undefined) return null;
+  return (
+    <span className="terminal-balance" title="Cash and your open positions at their live value">
+      <span className="sr-only">Equity </span>
+      <Odometer value={viewDollars(equity)} sensitive />
+    </span>
+  );
+}
 
 export function TerminalTop({
   t,
@@ -30,7 +43,6 @@ export function TerminalTop({
   onPickMarket: () => void;
   onCadence: (c: CadenceSec) => void;
 }) {
-  const hidden = usePrivacy();
   const day = useDayLine(t.symbol);
   return (
     <div className="terminal-top">
@@ -61,12 +73,7 @@ export function TerminalTop({
           </span>
         ) : null}
         <MusicToggle />
-        {t.balance !== undefined ? (
-          <span className="terminal-balance tnum">
-            <span className="sr-only">Balance </span>
-            {masked(money(t.balance), hidden)}
-          </span>
-        ) : null}
+        <Equity cash={t.balance} />
       </div>
       <div className="terminal-lanes" role="tablist" aria-label="Window length">
         {CADENCES_SEC.map((c) => {

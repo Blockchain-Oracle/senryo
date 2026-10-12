@@ -1,0 +1,57 @@
+/**
+ * Tradash's "View position" pill on the phone terminal (R5.3): "View position" / "View N positions" with the total
+ * ROI and an arrow by its sign; opens the positions sheet. Nothing while nothing is open.
+ */
+import { useLiveBook } from "@senryo/calls/react";
+import { Pressable, StyleSheet, Text } from "react-native";
+import Animated from "react-native-reanimated";
+import { Plunge, Surge } from "~/components/kit/symbols";
+import { usePressScale } from "~/components/kit/usePressScale";
+import { fire } from "~/feedback/fire";
+import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+
+const BPS_PER_PERCENT = 100;
+const PCT_DECIMALS = 1;
+
+export function ViewPositionPill({ onOpen }: { onOpen: () => void }) {
+  const { color } = useTheme();
+  const press = usePressScale();
+  const { totals } = useLiveBook();
+  if (totals.count === 0) return null;
+  const roi = totals.roiBps;
+  const down = roi !== null && roi < 0;
+  const Icon = down ? Plunge : Surge;
+  const label = totals.count === 1 ? "View position" : `View ${totals.count} positions`;
+  const pct = roi === null ? "" : `${down ? "−" : "+"}${Math.abs(roi / BPS_PER_PERCENT).toFixed(PCT_DECIMALS)}%`;
+  return (
+    <Animated.View style={[styles.wrap, press.style]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${label}${pct ? `, ${pct}` : ""}`}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={() => {
+          fire("tick");
+          onOpen();
+        }}
+        style={[styles.pill, { backgroundColor: color.raised2 }]}
+      >
+        <Icon size={SIZE.iconSm} color={down ? color.down : color.up} />
+        <Text style={[TYPE.chipCategory, { color: color.ink }]}>{label}</Text>
+        {pct ? <Text style={[TYPE.rowChange, { color: down ? color.down : color.up }]}>{pct}</Text> : null}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { alignSelf: "center" },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.sm,
+    minHeight: SIZE.chipHeight + SPACE.xs,
+    paddingHorizontal: SPACE.lg,
+    borderRadius: (SIZE.chipHeight + SPACE.xs) / 2,
+  },
+});

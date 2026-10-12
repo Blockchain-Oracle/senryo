@@ -288,6 +288,7 @@ export const withdrawRoute = defineRoute({
 
 export const TICKET_STATES = ["committed", "open", "closing", "closed", "settled", "refunded"] as const;
 
+const PROB_ONE_E6 = 1_000_000;
 /** A share's bid × 1e6 (0 = unset; a share never bids $1). */
 const SHARE_E6_MAX = 999_999;
 export const shareE6Schema = z.int().min(0).max(SHARE_E6_MAX);
@@ -314,12 +315,17 @@ export const ticketSchema = z.object({
   stake: uintCodec,
   payout: uintCodec,
   entryE8: uintCodec.nullable(),
+  /** The fill's fair chance × 1e6 (D-303: live PnL counts from it); null for older calls or an api before R5. */
+  fillProbE6: z.int().min(0).max(PROB_ONE_E6).nullable().default(null),
   /** What it paid or would pay out (winnings, refund or proceeds), once known. */
   result: uintCodec.nullable(),
   outcome: z.enum(["win", "lose", "refund"]).nullable(),
   exit: exitStateSchema.nullable(),
   updatedAt: isoTimeSchema,
 });
+
+/** A ticket as the apps read it. */
+export type TicketView = z.output<typeof ticketSchema>;
 
 export const ticketsRoute = defineRoute({
   method: "GET",

@@ -31,5 +31,19 @@ export function windowFor(symbol: string, cadenceSec: CadenceSec, nowSec: number
   };
 }
 
+/** The window a held call is in (it may not be the one on screen): from its series and start. */
+export function windowOfCall(symbol: string, cadenceSec: CadenceSec, start: number, nowSec: number): CallWindow {
+  const expiry = start + cadenceSec;
+  return {
+    symbol,
+    cadenceSec,
+    start,
+    expiry,
+    windowId: windowIdOf(seriesIdOf(symbol, cadenceSec), start),
+    trading: nowSec + LOCKOUT_SEC < expiry,
+    closesIn: Math.max(0, expiry - LOCKOUT_SEC - nowSec),
+  };
+}
+
 /** Seconds until the next window of this series opens (the current one's expiry). */
 export const nextOpensIn = (w: CallWindow, nowSec: number): number => Math.max(0, w.expiry - nowSec);

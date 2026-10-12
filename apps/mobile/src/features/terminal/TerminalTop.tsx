@@ -1,10 +1,10 @@
 /**
  * The terminal's top (Tradash phone header, Senryo lanes): the asset chip (real mark, symbol; opens the markets sheet),
- * the balance rolling on the right, and the lane chips — 1m · 5m · 15m · 1h — the selected one carrying the countdown
+ * equity rolling on the right (Tradash's pill: cash + every open position's live value, R5.3), and the lane chips — 1m · 5m · 15m · 1h — the selected one carrying the countdown
  * ring to the moment calls close, on the server's clock.
  */
 
-import { useDayLine } from "@senryo/calls/react";
+import { useDayLine, useLiveBook } from "@senryo/calls/react";
 import { CADENCES_SEC, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, formatUnits, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
@@ -45,15 +45,18 @@ export function TerminalTop({
   const press = usePressScale();
   const day = useDayLine(t.symbol);
   const font = useFont(require("../../../assets/fonts/Inter-SemiBold.ttf"), BALANCE_SIZE);
+  const book = useLiveBook();
+  // Cash until the book has loaded, then cash + what every open position returns now.
+  const equity = book.ready ? (book.totals.equity ?? undefined) : t.balance;
   const balance = useSharedValue<LiveFigure>({ text: "", trend: 0 });
   const previous = useRef<bigint | undefined>(undefined);
   useEffect(() => {
-    if (t.balance === undefined) return;
+    if (equity === undefined) return;
     const was = previous.current;
-    previous.current = t.balance;
-    const trend = was === undefined || was === t.balance ? 0 : t.balance > was ? 1 : -1;
-    balance.value = { text: `$${formatUnits(t.balance, DOLLAR_DECIMALS, CENTS)}`, trend };
-  }, [t.balance, balance]);
+    previous.current = equity;
+    const trend = was === undefined || was === equity ? 0 : equity > was ? 1 : -1;
+    balance.value = { text: `$${formatUnits(equity, DOLLAR_DECIMALS, CENTS)}`, trend };
+  }, [equity, balance]);
 
   return (
     <View style={styles.wrap}>
@@ -85,7 +88,7 @@ export function TerminalTop({
             height={BALANCE_HEIGHT}
             align="right"
             accessibilityLabel={
-              t.balance === undefined ? "Balance" : `Balance $${formatUnits(t.balance, DOLLAR_DECIMALS, CENTS)}`
+              equity === undefined ? "Equity" : `Equity $${formatUnits(equity, DOLLAR_DECIMALS, CENTS)}`
             }
           />
         </View>

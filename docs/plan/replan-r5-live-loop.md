@@ -4,6 +4,20 @@
 states (R5.4/R5.7's call parts), sound, music, haptics and rolling numbers; R5 builds the live book, PnL, rides' UI
 and the morph on top of them.*
 
+**Where R5 starts (12 Oct, 18:50 UTC, after stage P).** Read against HEAD `69858f78`:
+- **Done elsewhere:** R5.23 (the market picker, P2); R5.16's sound, music, cues and haptics (F1–F3).
+- **Left over from F:** the web has no DOM odometer (F4 shipped only the press kit) — R5.3 needs it, so it lands
+  here; the phone's reactions switch defaults to off (`account/preferences.tsx`); `movement.ts` has no importers.
+- **Not started on either app:** any ride screen (no client signs a ride; only `scripts/drive/src/ride-open.ts`), the
+  positions book, TRAIL, the guest key (F14 signs with a passkey at the first call, it has no device key), replay,
+  stats beyond the Record line, share from an open position, the web inbox.
+- **Bugs found:** a near-certain winner (chance > 97 %) reads −$stake in the win colour and its Cash out does nothing
+  (`quote.ts:291-292`, `quoteClose` refuses for price); the apps dropped the api's `ride` stream events (`live.ts`
+  `UserEvent` had no `ride`); `Filled.probE6` was never stored, so D-303 had nothing to count from.
+- **Merged areas, each gated, committed, deployed and passed on the simulator once:** A the book (R5.1–R5.3) · B the
+  terminal (R5.4–R5.9) · C the moments (R5.10–R5.14) · D feel (R5.15, R5.17, R5.24) · E after the trade
+  (R5.19–R5.22).
+
 **Goal:** Tradash's five steps — tap, watch your PnL move, trail, close, bank it — on both apps, for calls and rides:
 - every open position is valued live;
 - PnL starts at $0.00 and rolls with the price;
@@ -117,7 +131,7 @@ and the morph on top of them.*
 - [ ] R5.20 Stats: lifetime PnL, win rate, trades, win and best streak, and volume.
 - [ ] R5.21 Share from an open or closed position: PnL / ROI / Both, with tiered X text.
 - [ ] R5.22 A web notifications inbox with marks (the phone's `SubjectMark` pattern).
-- [ ] R5.23 Market picker on both apps: categories, star favourites, Hot sort; the 24 h change and its sparkline come from
+- [x] R5.23 *(done in P2, 12 Oct)* Market picker on both apps: categories, star favourites, Hot sort; the 24 h change and its sparkline come from
   F6–F7 (12 Oct).
 
 ## Handoff
