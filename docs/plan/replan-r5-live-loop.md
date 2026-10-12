@@ -1,5 +1,9 @@
 # R5 — The live loop: calls and rides, Tradash at the core (replan stage 5)
 
+*12 Oct: runs after F and R7 (`replan-f-feel.md`, `replan-r7-games.md`). F already ships the call buttons' look and
+states (R5.4/R5.7's call parts), sound, music, haptics and rolling numbers; R5 builds the live book, PnL, rides' UI
+and the morph on top of them.*
+
 **Goal:** Tradash's five steps — tap, watch your PnL move, trail, close, bank it — on both apps, for calls and rides:
 - every open position is valued live;
 - PnL starts at $0.00 and rolls with the price;
@@ -85,7 +89,7 @@
 ### Feel
 - [ ] R5.15 A five-step tutorial on the first terminal visit (both apps; Owarine `Tutorial.tsx` reworded for calls and
   rides), reopened from Settings.
-- [ ] R5.16 Sound and music:
+- [→] R5.16 Sound and music *(moved to F1–F3, 12 Oct: `replan-f-feel.md`)*:
   - the reactions switch wired on both apps, default on; `movement.ts` deleted;
   - tap sounds on the phone too;
   - cue levels raised to Tradash's, with the loss cue an octave lower;
@@ -95,7 +99,7 @@
   - interval, type and music;
   - Owarine's candle view on the web, Skia candles on the phone;
   - crossfade and haptic detents.
-- [ ] R5.18 Rolling numbers:
+- [→] R5.18 Rolling numbers *(moved to F4/F7, 12 Oct: `replan-f-feel.md`)*:
   - a DOM odometer for every changing web number (cash-out, balance, odds, equity);
   - the rolling price in the asset chip;
   - pill digits at 15 px; canvas text in the display face.
@@ -113,7 +117,8 @@
 - [ ] R5.20 Stats: lifetime PnL, win rate, trades, win and best streak, and volume.
 - [ ] R5.21 Share from an open or closed position: PnL / ROI / Both, with tiered X text.
 - [ ] R5.22 A web notifications inbox with marks (the phone's `SubjectMark` pattern).
-- [ ] R5.23 Market picker on both apps: categories, star favourites, Hot sort, 24 h change (`/v1/prices/day`).
+- [ ] R5.23 Market picker on both apps: categories, star favourites, Hot sort; the 24 h change and its sparkline come from
+  F6–F7 (12 Oct).
 
 ## Handoff
 (written at the end of the stage)

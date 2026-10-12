@@ -132,8 +132,7 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
     `RideFilled`, `RideRefused`, `RideCloseCommitted`, `RideCloseRefused`, `RideExited`, `FrontierRefreshed`,
     `RideMarketSet`, `RideTermsSet`; listing adds `SeriesListed`, `SigmaBoundsSet`, `SigmaSignerSet`, `TailTableSet`,
     `WithdrawHoldSet`; `SigmaSet` is gone; Earn's `SupplyRequested`/`WithdrawRequested` are keyed by hour and
-    `EpochRolled` adds `ridesOwed`. migrations for rides (`market_rides`, `ride_exits`) and pg_notify channels onto the `markets` and
-  `user:` topics.
+    `EpochRolled` adds `ridesOwed`.
 - [ ] R4.7 Apps: the Duel, Events, Earn, Parlay and stocks/baskets screens switch from read-only to live. Their R2
   interim states are deleted.
   - **Note (11 Oct):** the read-only states are driven by the address book (`isDeployed(chain, "DuelArena")`,
@@ -149,6 +148,19 @@ route (`ReplaceReserve` with `BOOK=`), then R4.1 runs and everything switches to
     OTA after a simulator pass. **Blocked on testnet MON:** the sponsor is empty (0.0013) and the keeper low (0.44);
     every relayed action costs ≈ 0.05–0.2 MON on v3 (open issue: v3's gas on Monad — a fill ≈ 600k, a reveal ≈ 1M —
     for R9's mainnet economics).
+  - **12 Oct, after the MON top-up:**
+    - **Earn:** the withdrawal settled at the 09:00 roll (shares 0).
+    - **Event:** a Yes and a No call on BUF @ FLA were placed through `event-path.ts` (tickets 1 and 2; the committee
+      answers from 19:00 UTC).
+    - **Apps:** the web shows Duel, Events, Earn, Parlay and the stock/basket rows live on v3.
+    - **Phone:** a simulator pass on a fresh Release build (A2 Senryo iPhone 17) showed the terminal priced with σ
+      marks and Duel, Events (the two calls in the pool), Earn and Parlay live.
+    - **OTA** `8996a649-bb32-4a5f-985b-0974e41d8734` (runtime 0.4.0, iOS and Android).
+    - **Found:**
+      - a phone left on Real shows "Markets didn't load" (the api answers 400 "chain 143 is not served here");
+      - the crowd line polls an unopened window (404s);
+      - the update check runs on every visibility change.
+      These are F10 and F13 in `replan-f-feel.md`.
   - **Fixed on production along the way** (each found by the acceptance drives): σ marks skip closed market minutes
     (0025; equities decayed to the floor overnight); broadcast failures name each RPC's reason; parlay commits have
     their own gas ceiling; jsonb columns hold JSON, not a JSON string (0026 — duel cards, Lucky draws, event teams,

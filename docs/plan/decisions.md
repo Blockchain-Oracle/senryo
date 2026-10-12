@@ -472,7 +472,7 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 - **D-309** 2026-10-10 · **The partial markets v2 deploy is abandoned; v3 deploys once.** About 7.6 MON of the 10.93 spent on the v2 reserve, arena and 54 listings is lost. AccessManager, MarketCalendar, the five verifiers, Windows (with its 54 registered series) and TestUSD survive and are reused. v3 lists every series through a batched `listSeries`. This supersedes D-291's deploy route; its "indexer reads old and new reserves" rule stands (v1 + v3) · `07` §3 · **approved by user (plan default 7)**.
 - **D-310** 2026-10-10 · **RedStone markets fall back to read-only discovery.** Without `REDSTONE_GATEWAYS` after 29 Oct, the 19 RedStone markets show as read-only discovery with the reason, and turn tradeable again by themselves when the owner's requested key is set · `04` R11 · planner (owner: the key is requested and pending).
 - **D-311** 2026-10-10 · **The chart line stays on Pyth; the exchange display feed stays off.** All five venues' market-data terms bar showing their prices to app users without a signed licence (Coinbase outright; derived and median values included), and Coinbase BTC traded only 0.1–1 times a second on a Saturday (`docs/research/replan-2026-10-10/09-display-terms.md`). The line updates once a second from the settling Pyth prices and eases between them; D-302's display plane is built but `DISPLAY_FEED=off`; R1's "≥ 6 Hz display line" gate and R1.17 (client merge of display ticks) are dropped. Pyth Pro for crypto ($2,500/month, ~5 Hz, display rights) or an exchange licence remain the routes to a faster line. · R1.16 · owner (chose "keep it on Pyth").
-- **D-312** 2026-10-10 · **Event teams show their abbreviations, not logos.** The NHL, MLB, NFL and Premier League terms forbid using team logos without written permission, and Commons holds public-domain files for only 35 of the 114 clubs; a mixed set would read as unfinished. Every side is a plate with its abbreviation (`TeamMark`, R2.7); a league's grant would add logos through the registry with no other change. League marks (NHL, MLB, Premier League from Simple Icons) stay; the NFL shield and theScore are recorded gaps · **approved by user (10 Oct, R2.6 question)**.
+- ~~**D-312**~~ *(superseded by D-315, 12 Oct)* 2026-10-10 · **Event teams show their abbreviations, not logos.** The NHL, MLB, NFL and Premier League terms forbid using team logos without written permission, and Commons holds public-domain files for only 35 of the 114 clubs; a mixed set would read as unfinished. Every side is a plate with its abbreviation (`TeamMark`, R2.7); a league's grant would add logos through the registry with no other change. League marks (NHL, MLB, Premier League from Simple Icons) stay; the NFL shield and theScore are recorded gaps · **approved by user (10 Oct, R2.6 question)**.
 - **D-313** 2026-10-10 · **Call pricing v3 as built (refines D-300).** R3.2's fit and held-out check (`scripts/calibrate/`, `table.json`) set the details:
   - **Two σ per mark.** The keeper signs `SigmaMark(feedId, minute, fastE8, slowE8)` per feed (every lane of a market shares one): the fast mark is a 30-minute EWMA of 1-minute returns, the slow anchor a one-day EWMA. Pricing uses σ_τ² = σ_slow² + (σ_fast² − σ_slow²)·a·g(κτ), with a = 0.6 and κ = 0 from the fit. The fast mark alone was conditionally biased: in the quietest tenth of minutes it under-predicted the next move by 55–90 %.
   - **Exactly one valid mark.** A fill carries the mark of the last minute boundary at least 5 s before it, not any mark from the last 2 min. Nobody can choose between marks, and none can come from after the fill. Each σ is held inside the series' listed floor and cap, so a bad or compromised signer moves prices only within what the admin listed. Signers are an allow-list (`setSigmaSigner`: the keeper and the relay).
@@ -483,3 +483,47 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 
   `R3.2`–`R3.4` · planner (owner delegated pricing, D-300).
 - **D-314** 2026-10-11 · **v3 numbers its tickets after v1's.** Testnet's v1 reserve numbered 30 tickets and stays indexed (D-309), and every book keys a ticket by its chain and id — the services' `market_tickets` (whose insert keeps the first row), the indexer's entities, the apps' receipts, links and pushes. A v3 ticket #1 would have been dropped by the services and merged with v1's #1 everywhere else. `BandBook.ticketBase` (immutable, set at deploy from the catalogue: testnet 1,000, mainnet 0) shifts every v3 id, so ids stay unique per chain with no other change; the keeper's sync counts from the base. Parlays (v1 had none) and rides (new) keep their own numbering from 1 · R4 · planner.
+
+- **D-315** 2026-10-12 · **Event teams wear their real crests (supersedes D-312).**
+  - A script fetches every NHL, MLB, NFL and Premier League club's crest (light `500/` and `500-dark/`) and its
+    `color`/`alternateColor` from ESPN's public team feeds into `packages/identity`. Each file is pinned by sha256,
+    self-hosted and never hot-linked.
+  - The NFL shield and theScore join the same way.
+  - The leagues' terms still reserve their marks; the owner chose crests over abbreviation plates after seeing the
+    plates on production ("no logos … it looks like slop").
+  - `replan-f-feel.md` F11 · **approved by user (12 Oct, team logos question)**.
+- **D-316** 2026-10-12 · **Direction colours.**
+  - Up is acid green `#B5F543`, Down is coral `#FF647C`, both with black labels.
+  - Range is cyan; Play and selected stay `#FA00FF`.
+  - Off-white and ink stay outside games; arenas are near-black.
+  - `palette.ts` stays the only palette.
+  - Refines D-304's direction tokens · research `10` (Codex) · planner, on the owner's "the palette … is boring".
+- **D-317** 2026-10-12 · **One feel engine per app, one cue map.**
+  - `@senryo/tokens` holds every cue (UI, trade, games, Duel, events) with its gain, pattern and haptic word.
+  - The web synthesises in Web Audio, plus Kenney CC0 clips decoded into buffers.
+  - The phone plays WAVs rendered from the same definitions by a script, through `expo-audio`, so it ships by OTA
+    with no native build.
+  - Haptics use Tradash's table on both apps.
+  - Effects and haptics are on by default. Game music starts on Play at 20 %; terminal music is off by default behind
+    a visible ♪.
+  - Refines D-235 and D-282 · research `10` §7, `01` §1.8–1.9 · planner (12 Oct plan, approved).
+- **D-318** 2026-10-12 · **Scored games use deterministic fixed-point physics.**
+  - Line Rider v2 and Candle Hop v2 step at 60 Hz with fixed-point Verlet, integer collision and integer square root,
+    so a run is bit-identical on V8, JavaScriptCore and Hermes and the server's replay stays exact.
+  - No physics library in scored games (Matter.js uses trigonometry).
+  - The camera, hit-stop, shake and particles are drawing only: Canvas 2D on the web, Skia on the phone.
+  - Line Rider v2 gets its own board.
+  - Research `10` §3 · planner (12 Oct plan, approved).
+- **D-319** 2026-10-12 · **Every price carries its 24-hour graph.**
+  - A sparkline of 96 fifteen-minute closes plus the latest price, with a dashed baseline at the price 24 h ago: green
+    above, coral below.
+  - A "↑ +2.34% · 24h" chip.
+  - Drawn on every price row and the terminal header.
+  - Served by `/v1/prices/day` from Senryo's archive, never invented from high and low.
+  - Research `10` §2 · planner, on the owner's "a green graph … beside the price".
+- **D-320** 2026-10-12 · **The web switches Practice ↔ Real at run time (completes D-172 on the web).**
+  - A two-segment switch replaces the passive chip, and Real is never blank: the api serves 143 read-only, with live
+    prices and their graphs.
+  - Real's ticket reads "Trading opens with mainnet · Switch to Practice to play" until S9.
+  - Real-money gates stay (D-172, D-267, D-270, D-273, D-305).
+  - Research `10` §6 · planner, on the owner's "I cannot even click to toggle".

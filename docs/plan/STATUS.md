@@ -7,15 +7,52 @@ replaces the open S8 steps (S8.1–S8.3, S8.8, S8.9) with stages, in order:
 - R2 [one look, real logos](replan-r2-look.md)
 - R3 [contracts v3: rides, calibrated calls, fair Earn](replan-r3-contracts.md)
 - R4 [activation](replan-r4-activation.md) (needs ~13 testnet MON on the deployer)
+- F [feel: sound, haptics, motion, prices with their graphs, the ticket, Practice ↔ Real, crests](replan-f-feel.md)
+  (added 12 Oct after the owner's review of production; D-315…D-320)
+- R7 [games, Duel and Events as games](replan-r7-games.md) (rewritten 12 Oct, moved ahead of R5)
 - R5 [the live loop](replan-r5-live-loop.md)
 - R6 [⌘K and phone search](replan-r6-search.md)
-- R7 [games](replan-r7-games.md)
 - R8 [social](replan-r8-social.md)
 - R9 [acceptance](replan-r9-acceptance.md), then S8b → S9 → S10 from the pivot plan
 
 Parity: [parity-replan.md](parity-replan.md).
 
 **Where we are:** R1.1–R1.5 done (process guards, RedStone body validation, `PrintFetcher`, `PrintWatch`, archive-only print route, Hermes hardening). R1.6 done (RedStone parse in a worker: loop stall 24 → 1.9 ms). R1.7 done (RedStone markets pause with the reason after 29 Oct without a key). R1.8 done (settlement plane complete). R1.9 done (`FeedState` end to end; RedStone read moved to +7 s). R1.10 done (prices never wait on the user's ticket). R1.11 done (5 s beat and silence, fast reconnects, nudge). R1.12 done (replay epochs, `reset`). R1.13 done (batched `pp`, sliced fan-out, caps; G1 measured). R1.14 done (`/latest`, charts open on real history, preconnect). R1.15 done (NTP-style clock). R1.16 built but **off** (no venue's free terms allow showing exchange prices — `09-display-terms.md`; owner chose to keep the line on Pyth, D-311). R1.19 done (24 h change from our archive). R1.20 done (honest chip, panel, frozen/dimmed chart; closed markets show their last session). D-311: the line stays on Pyth, exchange feed off, R1.17 dropped. R1.21 done (the line moves on every frame at 60–144 Hz on both apps). R1.22 done (surge/mega/slump fire at 1 Hz). R1.23 done (chaos G3 a–d and abuse G6 pass on the real price path; the first run found a cut's boundaries never back-filled and a 30 s reconnect after an outage — both fixed: live again 5.5 s after a 90 s cut). R1.24 done (markets not on chain yet — 31 of 34 on testnet until R4 — show a live price and "Not open for calls yet"; the api reads the listing from `Windows` and refuses them up front). **R1 deployed 10 Oct 13:00 UTC:** api + keeper `sha-2f667bf`, web `sha-4905dd2`; the stream now leaves Traefik uncompressed (the api's own compress middleware excludes `text/event-stream`). R1.18 measured: Pyth trails Bitfinex by 200–400 ms, so R3 keeps the 1 s fill delay (a weekday server run confirms BTC's). The phone's simulator pass and OTA went out with R2's.
+
+**R4 live on production (12 Oct 07:33 UTC)** ([replan-r4-activation.md](replan-r4-activation.md)): markets v3 on
+Monad testnet (257 txs, 7.66 MON).
+- **Live:** api and keeper `sha-033cef3`, indexer and web `sha-07ea785`, phone OTA
+  `8996a649-bb32-4a5f-985b-0974e41d8734` after a Release simulator pass.
+- **Accepted on production:**
+  - call open, close and exit;
+  - ride open, close, exit and cap-out;
+  - Earn supply, the roll with rides open, and the withdrawal;
+  - a two-leg parlay;
+  - a duel to its pot;
+  - event calls placed.
+- **Waiting on the clock or the price:**
+  - ride 7's end of life (11:54 UTC);
+  - the committee's answer on BUF @ FLA (from 19:00 UTC);
+  - a knock-out (two 40× rides, a ~2.25 % move).
+- **Then:** the R4 Handoff.
+
+**12 Oct — the owner's review of production:** they called it boring, mediocre and slop:
+- no sound or music;
+- bare prices;
+- nothing looks clickable;
+- games that aren't games;
+- a mediocre Duel;
+- Events without logos;
+- a cramped ticket;
+- no Practice ↔ Real switch.
+
+Plan approved the same day:
+- **New stage F** builds the shared feel layer first (`replan-f-feel.md`).
+- **R7 is rewritten** around physics, full screen and a game camera, and runs next.
+- **Decisions** D-315 (team crests, superseding D-312) … D-320.
+- **Research** `10-feel-direction.md` (Codex, xhigh).
+
+Next: F.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

@@ -116,3 +116,22 @@
 | P6 | Earn: hour cutoff, exact ride mark, `withdrawHold` | R3.15 | — |
 | P7 | Batched `listSeries` | R3.1, R3.7 | — |
 | P8 | Mainnet listing Up/Down until calibrated | R3.20 (D-306) | — |
+
+## Owner review of production (12 Oct; research 10)
+
+| Id | Row | Step | Status |
+|---|---|---|---|
+| V1 | Sound everywhere: every tap, trade, verdict and game moment has its cue (one map, both apps) | F1 | — |
+| V2 | Music: games bed on Play, terminal tracks behind ♪, Duel pulse, ducking and the tense filter | F2 | — |
+| V3 | Haptics on every press and verdict, Tradash's table on both apps; one Sound & vibration sheet | F3 | — |
+| V4 | Everything tappable looks and moves tappable (lift, press, gloss, chevrons, focus) | F4 | — |
+| V5 | Direction colours that aren't boring (acid green / coral / cyan) | F5 (D-316) | — |
+| V6 | A 24 h graph and change chip beside every price, terminal header included | F6, F7 (D-319) | — |
+| V7 | The ticket reads at a glance: label-only buttons, the strike on the chart, unpriced states outside the buttons | F8 | — |
+| V8 | Practice ↔ Real is one tap on the web; Real is never blank on either app | F9, F10 (D-320) | — |
+| V9 | Teams wear their crests; live scores on event cards | F11, F12 (D-315) | — |
+| V10 | Games are real games: full screen, a game camera, physics, juice, sound and haptics | R7.1–R7.5 (D-318) | — |
+| V11 | All four games on the phone | R7.6 | — |
+| V12 | Game cards show the game (16:9 art, Play, best, live players) | R7.7 | — |
+| V13 | Duel has a queue, a versus entrance, swipe cards with stakes and a result moment | R7.8 | — |
+| V14 | Events read as a scoreboard with crests, team colours and a settlement moment | R7.9 | — |
