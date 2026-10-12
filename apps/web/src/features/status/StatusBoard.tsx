@@ -38,7 +38,7 @@ const TONE: Readonly<Record<HealthState | "none", string>> = {
   degraded: "bg-warn",
   down: "bg-down",
   unknown: "bg-text-3",
-  none: "bg-secondary",
+  none: "bg-(--shell-plate)",
 };
 const TEXT: Readonly<Record<HealthState, string>> = {
   ok: "text-foreground",
