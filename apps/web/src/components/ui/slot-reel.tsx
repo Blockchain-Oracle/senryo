@@ -4,6 +4,9 @@
  * onto its target. Changes from the source: no prefix or editable landing slot (Lucky's reels land on the sealed
  * draw), started by `spinId` and landing only once the draw is known (`target` set), the landed row lit in the
  * project's primary, reduced motion lands at once, and `onLand` fires when the motion ends so the deal can appear.
+ * R7.4 (Lucky's machine): each reel keeps tumbling `stopAfterMs` past the draw (720 / 980 / 1240 — the stagger), then
+ * stops in a short settle that overshoots a few pixels and springs back (a thunk, not a glide); `onTick` fires as each
+ * row passes the payline (the ratchet's sound), at most every `TICK_GAP_MS`.
  */
 import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -17,6 +20,13 @@ const EASE_X2 = 0.35;
 const EASE = [EASE_X1, 0, EASE_X2, 1] as const;
 const SPIN_SEC = 2.4;
 const HALF = 2;
+/** The stop: a 0.3 s settle on a curve that overshoots and returns (≈ 4 px on a row). */
+const SETTLE_SEC = 0.3;
+const OVERSHOOT_X1 = 0.34;
+const OVERSHOOT_Y1 = 1.56;
+const OVERSHOOT_X2 = 0.64;
+const OVERSHOOT = [OVERSHOOT_X1, OVERSHOOT_Y1, OVERSHOOT_X2, 1] as const;
+const TICK_GAP_MS = 60;
 
 function shuffled<T>(xs: readonly T[]): T[] {
   const out = [...xs];
@@ -38,6 +48,12 @@ export function SlotReel(p: {
   className?: string;
   /** How a row draws (a market's mark beside its symbol, R2.8); the plain value otherwise. Keep it one text line high. */
   face?: (item: string) => ReactNode;
+  /** How long this reel keeps tumbling once the draw is known (the machine's stagger). */
+  stopAfterMs?: number;
+  /** A row passed the payline. */
+  onTick?: () => void;
+  /** The machine's look: a deep window on the arena, no label row. */
+  machine?: boolean;
 }) {
   const reduce = useReducedMotion();
   const y = useMotionValue(0);
@@ -61,6 +77,24 @@ export function SlotReel(p: {
     if (h && h !== row) setRow(h);
   }, [row]);
 
+  // The ratchet: a tick each time a row crosses the payline.
+  const onTick = useRef(p.onTick);
+  onTick.current = p.onTick;
+  useEffect(() => {
+    if (!row) return;
+    let last = Math.round(y.get() / row);
+    let lastAt = 0;
+    return y.on("change", (v) => {
+      const i = Math.round(v / row);
+      const now = performance.now();
+      if (i !== last && now - lastAt >= TICK_GAP_MS) {
+        lastAt = now;
+        onTick.current?.();
+      }
+      last = i;
+    });
+  }, [row, y]);
+
   const at = (i: number) => (row * ROWS) / HALF - (i * row + row / HALF);
 
   useEffect(() => {
@@ -82,6 +116,33 @@ export function SlotReel(p: {
       p.onLand?.();
       return;
     }
+    if (p.stopAfterMs !== undefined) {
+      // The machine: tumble on for this reel's stagger, then thunk into place.
+      y.set(at(track.length - 1));
+      const loop = animate(y, [at(track.length - 1), at(centre + 1)], {
+        duration: SPIN_SEC,
+        ease: "linear",
+        repeat: Number.POSITIVE_INFINITY,
+      });
+      let settle: ReturnType<typeof animate> | undefined;
+      const timer = setTimeout(() => {
+        loop.stop();
+        y.set(at(centre + 1));
+        settle = animate(y, at(centre), {
+          duration: SETTLE_SEC,
+          ease: OVERSHOOT,
+          onComplete: () => {
+            setLanded(true);
+            p.onLand?.();
+          },
+        });
+      }, p.stopAfterMs);
+      return () => {
+        clearTimeout(timer);
+        loop.stop();
+        settle?.stop();
+      };
+    }
     const settle = animate(y, at(centre), {
       duration: SPIN_SEC,
       ease: EASE,
@@ -95,10 +156,10 @@ export function SlotReel(p: {
 
   return (
     <div className={cn("flex flex-col items-center gap-1", p.className)}>
-      <span className="text-meta text-text-3">{p.label}</span>
+      <span className={cn("text-meta text-text-3", p.machine && "sr-only")}>{p.label}</span>
       <div
         role="status"
-        className="relative w-full overflow-hidden rounded-xl bg-secondary"
+        className={cn("relative w-full overflow-hidden rounded-xl", p.machine ? "lucky-window" : "bg-secondary")}
         style={{ height: row ? row * ROWS : undefined }}
         aria-live="polite"
         aria-label={landed && p.target ? `${p.label}: ${p.target}` : `${p.label}: spinning`}

@@ -171,3 +171,11 @@ export function useSheetCues(open: boolean): void {
     fire("tick", { cue: open ? "sheetOpen" : "sheetClose" });
   }, [open]);
 }
+
+/** A cue with no haptic (a reel's ratchet ticks 14 times a second: heard, not felt). */
+export function sound(cue: SoundCue): void {
+  logCue(cue);
+  const run = (e: Engines) => e.sound.playCue(cue);
+  if (engines) run(engines);
+  else void loadFeedback().then(run, () => undefined);
+}
