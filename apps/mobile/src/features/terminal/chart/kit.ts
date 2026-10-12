@@ -39,6 +39,8 @@ export interface DrawKit {
     ink: SkColor;
     inverse: SkColor;
     helper: SkColor;
+    /** Break-even's amber. */
+    warn: SkColor;
     /** The helper colour at zero alpha: the ticks' edge fade interpolates to it, not to transparent black. */
     helperClear: SkColor;
     onLine: SkColor;
@@ -140,4 +142,12 @@ export function makeDotPicture(k: DrawKit, w: number, h: number): SkPicture | nu
   for (let x = 0; x < w + DOT_SPACING * HALF; x += DOT_SPACING)
     for (let y = 0; y < h + DOT_SPACING * HALF; y += DOT_SPACING) c.drawCircle(x, y, DOT_R, p);
   return recorder.finishRecordingAsPicture();
+}
+
+/** `color` at `alpha` (0–1) as a new SkColor (the band's fading stops). */
+export function withAlpha(color: SkColor, alpha: number): SkColor {
+  "worklet";
+  const out = new Float32Array(color);
+  out[ALPHA] = alpha;
+  return out;
 }

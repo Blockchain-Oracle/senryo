@@ -125,3 +125,27 @@ export const floorStart = (now: bigint): bigint => (now * FLOOR_START_BPS) / BPS
 /** The receipt's words for the exit that sold the last shares (indexer `closedBy`). */
 export const CLOSED_BY_WORD = { "take-profit": "Take profit", "stop-loss": "Stop loss", trail: "Trail" } as const;
 export type ClosedBy = keyof typeof CLOSED_BY_WORD;
+
+/**
+ * Whether a held call's TRAIL can arm (R5.5): its bid must beat break-even's bid (stake ÷ shares) by the trail's
+ * cents, so the stop it leaves never sells under the stake. Until then, how many cents of bid it still needs.
+ */
+export function callTrailReady(
+  bidE6: bigint,
+  stake: bigint,
+  shares: bigint,
+  trailCents: number,
+): { ready: boolean; caption: string; floorE6: number } {
+  const floor = shares === 0n ? P_ONE : (stake * P_ONE + shares - 1n) / shares;
+  const need = BigInt(trailCents * CENT_E6) - (bidE6 - floor);
+  const cents = need <= 0n ? 0n : (need + BigInt(CENT_E6) - 1n) / BigInt(CENT_E6);
+  return {
+    ready: cents === 0n,
+    caption: cents === 0n ? `${trailCents}¢ behind best bid` : `Need +${cents}¢ bid to trail`,
+    floorE6: Number(floor > SHARE_MAX_E6 ? SHARE_MAX_E6 : floor),
+  };
+}
+
+/** "Stop 62¢ · runs with app closed" for an armed call trail (its stop as a share's bid). */
+export const callTrailCaption = (stopE6: number | null): string =>
+  `Stop ${stopE6 === null ? "—" : `${Math.floor(stopE6 / CENT_E6)}¢`} · runs with app closed`;

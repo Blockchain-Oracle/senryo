@@ -3,7 +3,7 @@
  * the UI thread eases, samples and rolls the digits; a picture is re-recorded each frame from that state. React renders
  * only on layout and when the market changes — never per tick (the overlay is a shared value too).
  */
-import { unitOf } from "@senryo/calls";
+import { LEVEL_STYLE, type LevelKind, unitOf } from "@senryo/calls";
 import { fillLine } from "@senryo/live";
 import { useLive, useLiveStream } from "@senryo/live/react";
 import { Canvas, matchFont, Picture, Skia, useFont } from "@shopify/react-native-skia";
@@ -19,7 +19,7 @@ import {
 import { setOdometer, setOdometerTrend } from "~/components/kit/odometer";
 import { useTheme } from "~/theme";
 import { CHART_ERASER } from "~/theme/palette";
-import { type ChartHealth, type ChartHistory, LEVEL_DASH, LIVE, RESEED_WINDOW_MS } from "./constants";
+import { type ChartHealth, type ChartHistory, LIVE, RESEED_WINDOW_MS } from "./constants";
 import { type ChartOverlay, drawFrame, type Head } from "./draw";
 import { formatValue, priceDecimals, SAMPLE_CAPACITY, SAMPLE_MS } from "./engine";
 import { type DrawKit, makeDotPicture, makeKit } from "./kit";
@@ -73,14 +73,16 @@ export const LiveChart = memo(function LiveChart({ symbol, overlay, waiting, hea
           ink: Skia.Color(color.ink),
           inverse: Skia.Color(color.ground),
           helper: Skia.Color(color.inkMuted),
+          warn: Skia.Color(color.warn),
           // The pill's text on the direction ink: white in light, black in dark (the web's `--up-foreground`).
           onLine: Skia.Color(color.upForeground),
         },
-        {
-          line: Skia.PathEffect.MakeDash([...LEVEL_DASH.line], 0),
-          entry: Skia.PathEffect.MakeDash([...LEVEL_DASH.entry], 0),
-          edge: Skia.PathEffect.MakeDash([...LEVEL_DASH.edge], 0),
-        },
+        Object.fromEntries(
+          (Object.keys(LEVEL_STYLE) as LevelKind[]).map((kind) => [
+            kind,
+            Skia.PathEffect.MakeDash([...LEVEL_STYLE[kind].dash], 0),
+          ]),
+        ) as DrawKit["dash"],
         {
           solid: Skia.Color(CHART_ERASER.solid),
           mid: Skia.Color(CHART_ERASER.mid),

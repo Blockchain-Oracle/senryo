@@ -32,6 +32,8 @@ export interface RideCloseArgs {
   symbol: string;
   isLong: boolean;
   markE8: bigint;
+  /** Size to close (0 or absent: all of it). */
+  size?: bigint;
 }
 
 /** Ride prompts (the OS sheet over the terminal). */
@@ -130,7 +132,7 @@ export function useRideActions({ client, hint }: Caller) {
           margin: 0n,
           leverageBps: 0,
           // 0 closes all of it.
-          size: 0n,
+          size: a.size ?? 0n,
           // Closing a long sells: it accepts down to the limit below; a short's close buys back up to it above.
           worstPriceE8: worstPriceE8(a.markE8, slipOf(a.symbol), !a.isLong),
         },

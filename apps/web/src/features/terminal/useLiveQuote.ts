@@ -8,10 +8,15 @@ import type { WindowLoad } from "@senryo/api-client";
 import {
   type CallMode,
   type ChartOverlay,
+  callTrailCaption,
+  callTrailReady,
+  DEFAULT_CALL_TRAIL_CENTS,
   dollars,
+  feesWords,
   fillMark,
   offerOf,
   type PoolTerms,
+  paysWords,
   pricingFor,
   type Quotes,
   type QuoteTick,
@@ -25,10 +30,13 @@ import { priceFromE8 } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { liveValue } from "@/lib/terminal/live-value";
+import type { TrailView } from "./TradeButtons";
 
 export interface CashOutFigure {
   text: string;
   trend: number;
+  /** The amount behind the text (null: nothing to close for now). */
+  units: bigint | null;
 }
 
 /** The cash-out button's amount while the pool won't buy the call back. */
@@ -39,6 +47,7 @@ export function useLiveQuote(
   stake: bigint,
   load: WindowLoad | undefined,
   mode: CallMode = "updown",
+  trailCents: number = DEFAULT_CALL_TRAIL_CENTS,
 ) {
   const live = useLive();
   const values = useMemo(
@@ -47,10 +56,16 @@ export function useLiveQuote(
       secondLine: liveValue(""),
       note: liveValue<string | null>(null),
       lineText: liveValue(""),
-      cashOut: liveValue<CashOutFigure>({ text: "", trend: 0 }),
+      cashOut: liveValue<CashOutFigure>({ text: "", trend: 0, units: null }),
+      /** The order stack's live rows (R5.4) and TRAIL's state for a held call (R5.5). */
+      pays: liveValue("—"),
+      fees: liveValue("—"),
+      trail: liveValue<TrailView | null>(null),
     }),
     [],
   );
+  /** The bid TRAIL floors at (break-even's), read at the tap. */
+  const trailFloor = useRef<number | null>(null);
   const overlay = useRef<ChartOverlay | null>(null);
   /** The offered side under the pointer or focus: the next pass shades where it wins (F8). */
   const preview = useRef<0 | 1 | null>(null);
@@ -120,19 +135,53 @@ export function useLiveQuote(
       }
       // Beyond the pool's bounds a held call can't be sold (it pays at expiry): no amount on the button.
       if (pass.proceeds !== null) {
-        values.cashOut.set({ text: dollars(pass.proceeds), trend: trendOf(lastProceeds.current, pass.proceeds) });
+        values.cashOut.set({
+          text: dollars(pass.proceeds),
+          trend: trendOf(lastProceeds.current, pass.proceeds),
+          units: pass.proceeds,
+        });
         lastProceeds.current = pass.proceeds;
       } else if (pass.close) {
-        values.cashOut.set({ text: UNSOLD, trend: 0 });
+        values.cashOut.set({ text: UNSOLD, trend: 0, units: null });
       }
       latest.current = { first: pass.first, second: pass.second, close: pass.close };
+      const shown = offer[1] ? [pass.first, pass.second] : [pass.first];
+      values.pays.set(paysWords(shown, stake));
+      values.fees.set(feesWords(shown, stake));
+      if (pass.close && position && position.state !== "committed") {
+        const exit = position.exit;
+        const armed = (exit?.trailE6 ?? 0) > 0;
+        const r = callTrailReady(pass.close.bidE6, position.stake, position.payout, trailCents);
+        trailFloor.current = r.floorE6;
+        values.trail.set({
+          armed,
+          ready: r.ready && !pass.close.refusal,
+          caption: armed ? callTrailCaption(exit?.trailStopE6 ?? null) : r.caption,
+        });
+      } else {
+        trailFloor.current = null;
+        values.trail.set(null);
+      }
       const reaction: QuoteTick = { t: performance.now(), price: priceFromE8(tick.priceE8), position: pass.reading };
       for (const listener of listeners.current) listener(reaction);
     };
     rerun.current = run;
     run();
     return live.prices.subscribe(t.symbol, run);
-  }, [live, t.symbol, t.series, t.k, t.window.expiry, stake, offer, position, positionBand, pricing, values]);
+  }, [
+    live,
+    t.symbol,
+    t.series,
+    t.k,
+    t.window.expiry,
+    stake,
+    offer,
+    position,
+    positionBand,
+    pricing,
+    values,
+    trailCents,
+  ]);
 
-  return { ...values, overlay, latest, offer, onTick, setPreview };
+  return { ...values, overlay, latest, offer, onTick, setPreview, trailFloor };
 }

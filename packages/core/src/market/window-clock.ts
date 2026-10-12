@@ -16,6 +16,16 @@ export const laneLabel = (cadence: number): string =>
 export const clockText = (sec: number): string =>
   `${Math.floor(sec / SECONDS_PER_MINUTE)}:${String(Math.max(0, sec % SECONDS_PER_MINUTE)).padStart(PAD, "0")}`;
 
+/** `13338` → "3:42:18" (hours once there are any, else "m:ss"): a ride's life left. */
+export const longClockText = (sec: number): string => {
+  const s = Math.max(0, Math.floor(sec));
+  if (s < SECONDS_PER_HOUR) return clockText(s);
+  const h = Math.floor(s / SECONDS_PER_HOUR);
+  const rest = s % SECONDS_PER_HOUR;
+  const m = String(Math.floor(rest / SECONDS_PER_MINUTE)).padStart(PAD, "0");
+  return `${h}:${m}:${String(rest % SECONDS_PER_MINUTE).padStart(PAD, "0")}`;
+};
+
 export interface WindowCountdown {
   /** Calls are open in the current window. */
   open: boolean;

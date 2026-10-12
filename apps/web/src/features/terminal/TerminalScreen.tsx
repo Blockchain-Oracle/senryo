@@ -1,82 +1,66 @@
 "use client";
 /**
- * The terminal at `/app/trade/<symbol>/` (pivot S6.5; the phone's terminal with Owarine's web workspace): the whole
- * stage is the chart — K, your side's zone, the rolling pill, the reactions — with the market chip and the lanes over
- * it, the distance to the line and the crowd under it, and the call panel beside it (below it under 1024 px). Ticks
- * never render React (`useLiveQuote` → live values and the chart's ref); the screen renders once a second for the
- * countdown and on events. The call flow is `@senryo/calls` `useCallFlow`, the phone's own.
+ * The terminal at `/app/trade/<symbol>/` (pivot S6.5 → R5; Tradash's workspace, Owarine's web layout, Codex direction
+ * 11): the chart is the stage — the line, its levels and band, the rolling pill, the reactions — with the order stack
+ * on its left edge; the market chip, equity and lanes over it. The column (below the chart under 1024 px) holds the
+ * open positions over the action group: Call | Ride, one sentence when something holds the buttons, and UP / DOWN that
+ * morph into TRAIL / CLOSE while held. Ticks never render React (`useLiveQuote`, `useLiveRide` → live values and the
+ * chart's ref); the flows are `@senryo/calls`', the phone's own.
  */
-import { type CallMode, exitLine, isCallMode, sessionHistory } from "@senryo/calls";
+import { ridesOn, sessionHistory } from "@senryo/calls";
 import {
-  DEFAULT_CADENCE,
+  type OfferSlot,
   useCallFlow,
   useCallWindow,
   useExitActions,
   useMarketLine,
   usePriceHealth,
 } from "@senryo/calls/react";
-import { CADENCES_SEC, type CadenceSec } from "@senryo/config";
-import { type ExitPrices, hasExit } from "@senryo/core";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
-import { shortcutBlocked } from "@/components/shell/Rail";
-import { SlideOver } from "@/components/ui/drawer";
 import { PositionsPanel } from "@/features/positions/PositionsPanel";
 import { useAccount } from "@/lib/account/provider";
-import { hasAcknowledgedTerms } from "@/lib/account/terms";
-import { ROUTES } from "@/lib/constants/routes";
-import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
-import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
-import { TERMINAL_STORAGE, useStoredString } from "@/lib/terminal/stored";
+import { ActionPanel } from "./ActionPanel";
 import { BasketMembers } from "./BasketMembers";
-import { CallPanel } from "./CallPanel";
-import { CashOutModal } from "./CashOutModal";
 import { CrowdLine } from "./CrowdLine";
 import type { ChartFrame } from "./chart/chart-engine";
 import { SAMPLE_CAPACITY } from "./chart/constants";
 import { LiveChart } from "./chart/LiveChart";
-import { DEFAULT_STAKE, MIN_STAKE } from "./constants";
-import { ExitModal } from "./ExitModal";
 import { type FirstCallRequest, FirstCallSheet } from "./FirstCallSheet";
-import { MarketPicker } from "./MarketPicker";
+import { OrderStack } from "./OrderStack";
 import { PositionsPill } from "./PositionsPill";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
-import { StakeModal } from "./StakeModal";
+import { TerminalSheets } from "./TerminalSheets";
 import { TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
 import { useReactions } from "./useReactions";
+import { useRideSide } from "./useRideSide";
+import { useTerminalChoices } from "./useTerminalChoices";
+import { useTerminalEffects } from "./useTerminalEffects";
+import { useTerminalKeys } from "./useTerminalKeys";
+import { type Sheet, useTradePanel } from "./useTradePanel";
 import "./terminal.css";
 import "./positions.css";
 import "./reactions.css";
 
-const WHOLE_NUMBER = /^\d+$/;
-
-function useTerminalChoices() {
-  const [storedCadence, setCadence] = useStoredString(TERMINAL_STORAGE.cadence);
-  const [storedStake, setStake] = useStoredString(TERMINAL_STORAGE.stake);
-  const [storedMode, setMode] = useStoredString(TERMINAL_STORAGE.mode);
-  const cadence = CADENCES_SEC.find((c) => String(c) === storedCadence) ?? DEFAULT_CADENCE;
-  const stake = storedStake && WHOLE_NUMBER.test(storedStake) ? BigInt(storedStake) : DEFAULT_STAKE;
-  return {
-    cadence,
-    stake,
-    mode: isCallMode(storedMode) ? storedMode : ("updown" as CallMode),
-    setMode: (m: CallMode) => setMode(m),
-    setCadence: (c: CadenceSec) => setCadence(String(c)),
-    setStake: (s: bigint) => setStake(String(s)),
-  };
-}
-
 export function TerminalScreen({ symbol }: { symbol: string }) {
   const account = useAccount();
   const choices = useTerminalChoices();
+  // A market that doesn't ride shows Call; Ride stays in the switch and says why when tapped.
+  const ride = choices.instrument === "ride" && ridesOn(symbol);
   const t = useCallWindow(symbol, choices.cadence, account.hint?.address);
   // Nothing is asked of the api before the server clock has synced (the static HTML renders at second 0).
   const synced = t.now > 0;
   const load = useWindowLoad(synced ? t.window.expiry : undefined);
-  const q = useLiveQuote(t, choices.stake, "value" in load ? load.value : undefined, choices.mode);
+  const q = useLiveQuote(
+    t,
+    choices.stake,
+    "value" in load ? load.value : undefined,
+    choices.mode,
+    choices.callTrailCents,
+  );
   const session = useMarketLine(symbol);
   // The chart reads it each frame: not live → its line freezes, dims and shows the age (R1.20).
   const priceHealth = usePriceHealth(symbol);
@@ -91,11 +75,18 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   );
   const history = useRef(sessionLine);
   history.current = sessionLine;
+  const chart = useRef<HTMLDivElement>(null);
   const reactions = useRef<ReactionOverlayHandle>(null);
   const onFrame = useRef((frame: ChartFrame | null) => reactions.current?.frame(frame));
-  useReactions(symbol, q.onTick, reactions);
-  const [open, setOpen] = useState<"stake" | "part" | "exit" | "markets" | "positions" | null>(null);
+  const [sheet, setSheet] = useState<Sheet | null>(null);
   const [firstCall, setFirstCall] = useState<FirstCallRequest | null>(null);
+  const effects = useTerminalEffects((slot: OfferSlot) => {
+    const offered = q.offer[slot];
+    if (ride || !offered) return false;
+    const pays = slot === 0 ? q.firstLine : q.secondLine;
+    setFirstCall({ slot, symbol, label: offered.label, stake: choices.stake, pays });
+    return true;
+  });
   const exits = useExitActions(account, choices.cadence);
   const flow = useCallFlow({
     view: t,
@@ -103,89 +94,43 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
     stake: choices.stake,
     latest: q.latest,
     offer: q.offer,
-    effects: {
-      cue: (c) =>
-        c === "press"
-          ? fire("press")
-          : c === "fail"
-            ? fire("fail", { cue: "error" })
-            : c === "filled-close"
-              ? fire("close", { cue: "close" })
-              : fire("filled", { cue: "open" }),
-      notify: (n) => notify({ ...n, tone: "warning" }),
-      gate: () => {
-        if (hasAcknowledgedTerms(account.hint?.address)) return true;
-        notify({
-          title: "Agree to the terms first",
-          description: "One step before any money moves.",
-          action: { label: "Open setup", onClick: () => window.location.assign(ROUTES.setup) },
-          tone: "warning",
-        });
-        return false;
-      },
-      needAccount: (slot) =>
-        slot !== undefined && q.offer[slot]
-          ? setFirstCall({
-              slot,
-              symbol,
-              label: q.offer[slot]?.label ?? "",
-              stake: choices.stake,
-              pays: slot === 0 ? q.firstLine : q.secondLine,
-            })
-          : notify({
-              title: "Sign in to make a call",
-              description: "Your passkey is your account.",
-              action: { label: "Sign in", onClick: () => openDrawer(DRAWERS.account) },
-            }),
-    },
+    effects,
   });
-
-  // ↑ the first button (Up, Range, Moonshot), ↓ the second (Down, Crash), C cash out — when nothing else holds the keyboard.
-  const keys = useRef({ flow, holding: flow.holding, trading: session.trading });
-  keys.current = { flow, holding: flow.holding, trading: session.trading };
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (shortcutBlocked(event)) return;
-      const { flow: f, holding } = keys.current;
-      if (!holding && keys.current.trading && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
-        event.preventDefault();
-        void f.open(event.key === "ArrowUp" ? 0 : 1);
-      } else if (holding && event.key.toLowerCase() === "c") {
-        event.preventDefault();
-        void f.close();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  const closeQuote = q.latest.current.close;
-  const position = t.position;
-  const setExit = async (prices: ExitPrices) => {
-    if (!position) return;
-    try {
-      const r = await exits.set(position.ticketId, prices);
-      if (r.kind === "cancelled") return;
-      setOpen(null);
-      fire("snap");
-      notify(
-        hasExit(prices)
-          ? { title: "Exit set", description: "It runs with the app closed." }
-          : { title: "Exit removed", description: "Nothing sells on its own now." },
-      );
-    } catch (error) {
-      fire("fail");
-      notify({ title: "Couldn't set the exit", description: (error as Error).message, tone: "warning" });
+  const side = useRideSide({ symbol, account, choices, active: ride, balance: t.balance, nowSec: t.now, effects });
+  const trade = useTradePanel({ ride, t, q, flow, exits, side, choices, open: setSheet });
+  useReactions(symbol, trade.onTick, reactions);
+  useTerminalKeys({
+    holding: trade.holding,
+    trading: session.trading,
+    open: (slot) => void (ride ? side.flow.open(slot) : flow.open(slot)),
+    close: () => void (ride ? side.flow.close() : flow.close()),
+  });
+  const pickInstrument = (next: "call" | "ride") => {
+    if (next === "ride" && !ridesOn(symbol)) {
+      notify({
+        title: `Rides aren't available on ${symbol}`,
+        description: "Rides are on BTC, ETH, SOL, XRP, BNB, DOGE and HYPE.",
+        action: { label: "View ride markets", onClick: () => setSheet("markets") },
+      });
+      return;
     }
+    choices.setInstrument(next);
   };
+
   return (
     <div className="terminal-surface">
       <section className="terminal-stage" aria-label={`${symbol} live`}>
-        <TerminalTop t={t} onPickMarket={() => setOpen("markets")} onCadence={choices.setCadence} />
-        <div className="terminal-chart">
+        <TerminalTop
+          t={t}
+          ride={ride}
+          rideEndsIn={side.flow.endsIn}
+          onPickMarket={() => setSheet("markets")}
+          onCadence={choices.setCadence}
+        />
+        <div className="terminal-chart" ref={chart}>
           <LiveChart
             symbol={symbol}
-            overlay={q.overlay}
+            overlay={trade.overlay}
             waiting={`Waiting for ${symbol}…`}
             onFrame={onFrame}
             health={health}
@@ -193,84 +138,53 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
             label={`${symbol} live price`}
           />
           <ReactionOverlay ref={reactions} />
-        </div>
-        <div className="terminal-under">
-          <LiveText
-            value={q.lineText}
-            placeholder="Waiting for this window’s opening price"
-            className="terminal-distance tnum"
+          <OrderStack
+            heading={trade.stack.heading}
+            rows={trade.stack.rows}
+            bounds={chart}
+            onOpen={() => setSheet("order")}
           />
-          <CrowdLine windowId={synced ? t.window.windowId : undefined} />
-          <BasketMembers symbol={symbol} />
         </div>
+        {ride ? null : (
+          <div className="terminal-under">
+            <LiveText
+              value={q.lineText}
+              placeholder="Waiting for this window’s opening price"
+              className="terminal-distance tnum"
+            />
+            <CrowdLine windowId={synced ? t.window.windowId : undefined} />
+            <BasketMembers symbol={symbol} />
+          </div>
+        )}
       </section>
-      <aside className="terminal-side" aria-label="Call">
+      <aside className="terminal-side" aria-label={ride ? "Ride" : "Call"}>
         <PositionsPanel className="terminal-positions" />
-        <PositionsPill onOpen={() => setOpen("positions")} />
-        <CallPanel
+        <PositionsPill onOpen={() => setSheet("positions")} />
+        <ActionPanel
           symbol={symbol}
           session={session}
-          state={flow.panel}
-          stake={choices.stake}
-          balance={t.balance}
-          onStake={choices.setStake}
-          mode={choices.mode}
-          onMode={choices.setMode}
-          offer={q.offer}
-          firstOdds={q.firstLine}
-          secondOdds={q.secondLine}
-          quoteNote={q.note}
-          onPreview={q.setPreview}
-          holding={flow.holding}
-          cashOut={q.cashOut}
-          onPick={(slot) => void flow.open(slot)}
-          onClose={() => void flow.close()}
-          onCustom={() => setOpen("stake")}
-          onClosePart={() => setOpen("part")}
-          exitLine={position ? exitLine(position.exit, position.payout) : null}
-          onExit={() => setOpen("exit")}
+          instrument={ride ? "ride" : "call"}
+          rides={ridesOn(symbol)}
+          onInstrument={pickInstrument}
+          state={trade.panel}
+          holding={trade.holding}
+          quoteNote={ride ? null : q.note}
+          buttons={trade.buttons}
         />
       </aside>
       <FirstCallSheet request={firstCall} onClose={() => setFirstCall(null)} onPlace={(slot) => void flow.open(slot)} />
-      {open === "stake" ? (
-        <StakeModal
-          current={choices.stake}
-          min={t.terms?.minStake ?? MIN_STAKE}
-          max={t.terms?.maxStake ?? choices.stake}
-          balance={t.balance}
-          onPick={choices.setStake}
-          onClose={() => setOpen(null)}
-        />
-      ) : null}
-      {open === "part" && t.position && closeQuote ? (
-        <CashOutModal
-          shares={t.position.payout}
-          bidE6={closeQuote.bidE6}
-          onPick={(pct) => void flow.close(pct)}
-          onClose={() => setOpen(null)}
-        />
-      ) : null}
-      {open === "exit" && position && closeQuote && !closeQuote.refusal && exits.bounds ? (
-        <ExitModal
-          shares={position.payout}
-          nowBidE6={Number(closeQuote.bidE6)}
-          exit={position.exit}
-          bounds={exits.bounds}
-          pending={exits.pending}
-          onSet={(prices) => void setExit(prices)}
-          onClose={() => setOpen(null)}
-        />
-      ) : null}
-      <SlideOver open={open === "markets"} onOpenChange={(o) => setOpen(o ? "markets" : null)} title="Markets" wide>
-        <MarketPicker selected={symbol} onPick={() => setOpen(null)} />
-      </SlideOver>
-      <SlideOver
-        open={open === "positions"}
-        onOpenChange={(o) => setOpen(o ? "positions" : null)}
-        title="Open positions"
-      >
-        <PositionsPanel />
-      </SlideOver>
+      <TerminalSheets
+        symbol={symbol}
+        sheet={sheet}
+        setSheet={setSheet}
+        ride={ride}
+        t={t}
+        q={q}
+        flow={flow}
+        exits={exits}
+        side={side}
+        choices={choices}
+      />
     </div>
   );
 }

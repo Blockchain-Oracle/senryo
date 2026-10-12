@@ -1,0 +1,75 @@
+/* The trade buttons' morph (R5.5, Codex direction 11 §3): two equal slots, 12 px apart; the entry plates are the call
+   buttons' (`.terminal-call`); held, TRAIL is the up tint until armed (then solid) and CLOSE the ink plate carrying the
+   amount it returns. */
+.trade-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.trade-pair.is-one {
+  grid-template-columns: 1fr;
+}
+.trade-slot {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+.trade-trail,
+.trade-close {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 16px;
+  font: 800 16px / 20px var(--font-display);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  transition:
+    transform 70ms var(--motion-ease),
+    background-color var(--motion-fast),
+    opacity var(--motion-fast);
+}
+.trade-trail {
+  background: var(--up-surface);
+  color: var(--up);
+}
+.trade-trail.is-armed {
+  background: var(--up-fill);
+  color: var(--on-direction-fill);
+}
+.trade-close {
+  background: var(--foreground);
+  color: var(--background);
+}
+.trade-close-words {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+.trade-close-value {
+  font: 700 15px / 18px var(--shell-font);
+  letter-spacing: 0;
+}
+.trade-trail:active:not(:disabled),
+.trade-close:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.trade-trail:disabled,
+.trade-close:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.trade-trail:focus-visible,
+.trade-close:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trade-trail,
+  .trade-close {
+    transition: none;
+  }
+}

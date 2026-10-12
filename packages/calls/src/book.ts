@@ -8,21 +8,8 @@
  * - Colour follows PnL ≥ 0 (zero is a win, as Tradash's).
  * Pure: `use-live-book.ts` feeds it prices and writes the result where the screens read it.
  */
-import { type CadenceSec, FILL_DELAY_SEC, LOCKOUT_SEC, type RideNetworkTerms } from "@senryo/config";
-import {
-  type BandShape,
-  type CloseQuote,
-  P_ONE,
-  type QuoteTerms,
-  quoteClose,
-  RIDE_SCALE,
-  rideEarlyFee,
-  rideEquity,
-  rideFee,
-  rideNotionalAt,
-  ridePnl,
-  type SigmaPair,
-} from "@senryo/core";
+import { type CadenceSec, FILL_DELAY_SEC, LOCKOUT_SEC } from "@senryo/config";
+import { type BandShape, type CloseQuote, P_ONE, type QuoteTerms, quoteClose, type SigmaPair } from "@senryo/core";
 
 const BPS = 10_000n;
 
@@ -65,8 +52,43 @@ export interface BookEntry {
   markE8: bigint | null;
   /** The fill's price (a call's entry print, a ride's entry). */
   entryE8: bigint | null;
-  call?: { cadenceSec: CadenceSec; start: number; band: number; shares: bigint; lineE8: bigint | null };
-  ride?: { leverageBps: number; koE8: bigint | null; capE8: bigint | null; size: bigint };
+  call?: {
+    cadenceSec: CadenceSec;
+    start: number;
+    band: number;
+    shares: bigint;
+    lineE8: bigint | null;
+    /** The standing exit in bids × 1e6 (null without one). */
+    exit: BookCallExit | null;
+  };
+  ride?: {
+    leverageBps: number;
+    koE8: bigint | null;
+    capE8: bigint | null;
+    size: bigint;
+    /** Where it breaks even after both fees (null before the fill). */
+    breakEvenE8: bigint | null;
+    /** The standing exit, prices × 1e8 and the trail in bps (null without one). */
+    exit: BookRideExit | null;
+  };
+}
+
+/** A call's standing exit as the api serves it (bids × 1e6; the trail's stop now). */
+export interface BookCallExit {
+  takeProfitE6: number;
+  stopLossE6: number;
+  floorE6: number;
+  trailE6: number;
+  trailStopE6: number | null;
+}
+
+/** A ride's standing exit as the api serves it. */
+export interface BookRideExit {
+  takeProfitE8: bigint;
+  stopLossE8: bigint;
+  floorE8: bigint;
+  trailBps: number;
+  trailStopE8: bigint | null;
 }
 
 const roi = (pnl: bigint | null, cost: bigint): number | null =>
@@ -86,6 +108,7 @@ export interface BookCall {
   payout: bigint;
   entryE8: bigint | null;
   fillProbE6: number | null;
+  exit: BookCallExit | null;
 }
 
 export interface CallMarket {
@@ -145,7 +168,14 @@ export function valueCall(c: BookCall, m: CallMarket, nowSec: number, label: str
     endsAt: expiry,
     markE8: m.spotE8 ?? null,
     entryE8: c.entryE8,
-    call: { cadenceSec: cadence, start: c.start, band: c.band, shares: c.payout, lineE8: m.lineE8 ?? null },
+    call: {
+      cadenceSec: cadence,
+      start: c.start,
+      band: c.band,
+      shares: c.payout,
+      lineE8: m.lineE8 ?? null,
+      exit: c.exit,
+    },
   };
   if (c.state === "committed") return { ...base, state: "opening" };
   if (!m.band || m.lineE8 === undefined || !m.mark || m.spotE8 === undefined || !m.terms) return base;
@@ -175,125 +205,62 @@ export function valueCall(c: BookCall, m: CallMarket, nowSec: number, label: str
   };
 }
 
+/** What a call's levels need of its market: the band's shape, K, the σ a close carries and the lane's curve. */
+export interface CallLevelMarket {
+  band: BandShape;
+  lineE8: bigint;
+  mark: SigmaPair;
+  terms: QuoteTerms;
+}
+
 /**
- * Where a call breaks even: the spot at which cashing out returns its stake, by bisection on the exact bid
- * (`quoteClose`) at this moment — it moves as time passes. Null for Range (two such prices) or when no price inside
- * ±`spanBps` of K does it.
+ * The spot at which a held call's bid crosses `bidE6` at this moment, by bisection on the exact bid (`quoteClose`) —
+ * it moves as time passes. Null for Range (two such prices) or when no price inside ±`spanBps` of K reaches it.
  */
-export function callBreakEvenE8(
-  c: Pick<BookCall, "stake" | "payout" | "start" | "cadenceSec">,
-  m: { band: BandShape; lineE8: bigint; mark: SigmaPair; terms: QuoteTerms },
+export function callSpotAtBid(
+  c: { payout: bigint; expiry: number },
+  m: CallLevelMarket,
   nowSec: number,
-  spanBps = 200n,
+  bidE6: bigint,
+  spanBps = SPAN_BPS,
 ): bigint | null {
   if (m.band.kind === "range") return null;
-  const terms = m.terms;
-  const tauSec = BigInt(Math.max(0, c.start + c.cadenceSec - (nowSec + FILL_DELAY_SEC)));
+  const tauSec = BigInt(Math.max(0, c.expiry - (nowSec + FILL_DELAY_SEC)));
   const w = { openE8: m.lineE8, mark: m.mark, tauSec };
   const rising = m.band.kind === "up" || m.band.kind === "moonshot";
-  const short = (spot: bigint) => quoteClose(m.band, w, spot, c.payout, terms).proceeds < c.stake;
+  const under = (spot: bigint) => quoteClose(m.band, w, spot, c.payout, m.terms).bidE6 < bidE6;
   let lo = m.lineE8 - (m.lineE8 * spanBps) / BPS;
   let hi = m.lineE8 + (m.lineE8 * spanBps) / BPS;
-  // Up-like: short of the stake below B/E; down-like: above it.
-  if (short(rising ? hi : lo) || !short(rising ? lo : hi)) return null;
+  // Up-like: the bid rises with the price, so it's under the target below the crossing; down-like: above it.
+  if (under(rising ? hi : lo) || !under(rising ? lo : hi)) return null;
   for (let i = 0; i < BISECT_STEPS && hi - lo > 1n; i += 1) {
     const mid = (lo + hi) / 2n;
-    if (short(mid) === rising) lo = mid;
+    if (under(mid) === rising) lo = mid;
     else hi = mid;
   }
   return rising ? hi : lo;
 }
 const BISECT_STEPS = 48;
+const SPAN_BPS = 200n;
 
-// ------------------------------------------------------------------------------------------------ rides
-
-/** A ride as the book needs it (`/v1/rides` row). */
-export interface BookRide {
-  rideId: bigint;
-  symbol: string;
-  isLong: boolean;
-  state: string;
-  margin: bigint;
-  leverageBps: number;
-  openFee: bigint;
-  size: bigint;
-  reserve: bigint;
-  entryE8: bigint | null;
-  koE8: bigint | null;
-  capE8: bigint | null;
-  filledAt: number | null;
-  endAt: number | null;
-}
-
-/** What a close of the whole ride returns at `markE8`: equity less the taker fee and the early fee (contracts
- *  `_exitPart`; a close that reduces the pool's skew pays the maker rate, so it gets at least this). */
-export function rideCloseValue(
-  r: BookRide,
-  markE8: bigint,
-  takerFeeBps: number,
-  terms: Pick<RideNetworkTerms, "earlyFeeBps" | "earlyWindowSec">,
+/** Where a call breaks even: the spot at which cashing out returns its stake (a share's bid = stake ÷ shares). */
+export function callBreakEvenE8(
+  c: { stake: bigint; payout: bigint; expiry: number },
+  m: CallLevelMarket,
   nowSec: number,
-): { pnl: bigint; value: bigint; closeFee: bigint } {
-  const entry = r.entryE8 ?? markE8;
-  const pnl = ridePnl(r.isLong, r.size, entry, markE8);
-  const equity = rideEquity(r.margin, r.reserve, pnl);
-  const exitNotional = rideNotionalAt(r.size, markE8);
-  const age = BigInt(Math.max(0, nowSec + FILL_DELAY_SEC - (r.filledAt ?? nowSec)));
-  const early = rideEarlyFee(exitNotional, pnl, age, BigInt(terms.earlyFeeBps), BigInt(terms.earlyWindowSec));
-  const fee = rideFee(exitNotional, BigInt(takerFeeBps)) + early;
-  const charged = fee > equity ? equity : fee;
-  return { pnl, value: equity - charged, closeFee: charged };
+): bigint | null {
+  if (c.payout === 0n) return null;
+  return callSpotAtBid(c, m, nowSec, (c.stake * P_ONE + c.payout - 1n) / c.payout);
 }
 
-/** A ride's value at `markE8` (the live price), or unvalued without one. */
-export function valueRide(
-  r: BookRide,
-  markE8: bigint | undefined,
-  takerFeeBps: number | undefined,
-  terms: Pick<RideNetworkTerms, "earlyFeeBps" | "earlyWindowSec">,
+/** A held call's exit levels as prices on the chart: take-profit, stop and the trail's stop now (R5.6). */
+export function callExitLevelsE8(
+  c: { payout: bigint; expiry: number; exit: BookCallExit | null },
+  m: CallLevelMarket,
   nowSec: number,
-): BookEntry {
-  const base: BookEntry = {
-    key: rideKey(r.rideId),
-    kind: "ride",
-    id: r.rideId,
-    symbol: r.symbol,
-    label: r.isLong ? "Up" : "Down",
-    up: r.isLong,
-    state: "no-price",
-    cost: r.margin,
-    pnl: null,
-    roiBps: null,
-    closeValue: null,
-    worth: r.margin,
-    fees: null,
-    endsAt: r.endAt,
-    markE8: markE8 ?? null,
-    entryE8: r.entryE8,
-    ride: { leverageBps: r.leverageBps, koE8: r.koE8, capE8: r.capE8, size: r.size },
-  };
-  if (r.state === "committed") return { ...base, state: "opening" };
-  if (markE8 === undefined || takerFeeBps === undefined || r.entryE8 === null) return base;
-  const v = rideCloseValue(r, markE8, takerFeeBps, terms, nowSec);
-  const state: BookState =
-    r.state === "closing" ? "closing" : r.endAt !== null && nowSec >= r.endAt ? "settling" : "live";
-  return {
-    ...base,
-    state,
-    pnl: v.pnl,
-    roiBps: roi(v.pnl, r.margin),
-    closeValue: state === "live" ? v.value : null,
-    worth: v.value,
-    fees: r.openFee + v.closeFee,
-  };
-}
-
-/** Where a ride breaks even after both fees (closed form): the entry moved by fees ÷ size, the rider's way. */
-export function rideBreakEvenE8(r: BookRide, takerFeeBps: number): bigint | null {
-  if (r.entryE8 === null || r.size === 0n) return null;
-  const closeFee = rideFee(rideNotionalAt(r.size, r.entryE8), BigInt(takerFeeBps));
-  const move = ((r.openFee + closeFee) * RIDE_SCALE) / r.size;
-  return r.isLong ? r.entryE8 + move : r.entryE8 - move;
+): { tp: bigint | null; sl: bigint | null; trail: bigint | null } {
+  const at = (bid: number | null | undefined) => (bid ? callSpotAtBid(c, m, nowSec, BigInt(bid)) : null);
+  return { tp: at(c.exit?.takeProfitE6), sl: at(c.exit?.stopLossE6), trail: at(c.exit?.trailStopE6) };
 }
 
 // ------------------------------------------------------------------------------------------------ totals

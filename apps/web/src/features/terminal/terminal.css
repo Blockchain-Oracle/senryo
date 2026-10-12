@@ -208,15 +208,6 @@
 .terminal-link {
   color: var(--link);
 }
-.terminal-calls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  animation: terminal-swap 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.terminal-calls.is-one {
-  grid-template-columns: 1fr;
-}
 /* The call buttons (F8, research 10 §1): label only on the direction fills with black labels and a darker 3 px bottom
    edge; hover lifts 2 px in 120 ms with one gloss sweep, a press sinks 2 px at 0.98 in 70 ms. "Pays 2.14× · $10.70" sits
    under each; a side with no price is a recessed plate keeping its label, its reason one sentence below the pair. */
@@ -317,60 +308,9 @@
     transition: none;
   }
 }
-.terminal-cash {
-  display: grid;
-  grid-template-columns: 1fr 64px;
-  gap: 10px;
-  animation: terminal-swap 180ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.terminal-cashout {
-  display: flex;
-  height: 64px;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border-radius: 32px;
-  background: var(--foreground);
-  color: var(--background);
-  font: 800 17px / 22px var(--shell-font);
-}
-.terminal-cashout-value {
-  min-width: 5ch;
-  font: 700 18px / 22px var(--shell-font);
-}
-.terminal-part {
-  display: grid;
-  height: 64px;
-  place-items: center;
-  border-radius: 32px;
-  background: var(--secondary);
-  color: var(--foreground);
-}
-.terminal-cashout:disabled,
-.terminal-part:disabled {
-  opacity: 0.4;
-}
-.terminal-cashout:active,
-.terminal-part:active {
-  transform: scale(0.97);
-}
-.terminal-cashout:focus-visible,
-.terminal-part:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-@keyframes terminal-swap {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .reaction-callout,
-  .reaction-callout[data-leaving],
-  .terminal-calls,
-  .terminal-cash {
+  .reaction-callout[data-leaving] {
     animation-duration: 150ms;
     animation-timing-function: linear;
   }

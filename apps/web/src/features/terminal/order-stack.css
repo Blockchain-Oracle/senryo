@@ -1,0 +1,54 @@
+/* The floating order stack (R5.4, Codex direction 11 §2): flush to the chart's left edge, centred, 160 px wide; four
+   28 px rows under a small heading; 14 px glyphs and 11 px tabular values; right corners 16 px; Senryo's light glass. */
+.order-stack {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  width: 160px;
+  flex-direction: column;
+  padding: 8px;
+  border-radius: 0 16px 16px 0;
+  background: var(--glass-tint);
+  box-shadow: inset 0 0 0 1px var(--glass-rim);
+  backdrop-filter: blur(14px) saturate(1.4);
+  color: var(--foreground);
+  text-align: left;
+  cursor: grab;
+  translate: 0 -50%;
+}
+.order-stack:active {
+  cursor: grabbing;
+}
+.order-stack:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.order-stack-heading {
+  padding: 0 4px 4px;
+  color: var(--text-3);
+  font: 600 10px / 14px var(--shell-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.order-stack-row {
+  display: flex;
+  height: 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+.order-stack-glyph {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--text-2);
+}
+.order-stack-value {
+  min-width: 0;
+  overflow: hidden;
+  font: 600 11px / 14px var(--shell-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

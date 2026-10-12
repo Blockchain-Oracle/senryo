@@ -45,6 +45,8 @@ export interface CallFlowEffects {
   onFilled?: () => void;
   /** A check before any call once signed in (the terms): say why and return false to stop. */
   gate?: () => boolean;
+  /** Not enough dollars: the app names the gap and offers where dollars come from (R5.7). */
+  shortfall?: (short: bigint) => void;
 }
 
 export interface CallFlowInput {
@@ -135,10 +137,12 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       return;
     }
     if (t.balance !== undefined && t.balance < stake) {
-      fx.notify({
-        title: "Not enough dollars",
-        description: `You have $${formatUnits(t.balance, DOLLAR_DECIMALS, CENTS)}.`,
-      });
+      if (fx.shortfall) fx.shortfall(stake - t.balance);
+      else
+        fx.notify({
+          title: "Not enough dollars",
+          description: `You have $${formatUnits(t.balance, DOLLAR_DECIMALS, CENTS)}.`,
+        });
       return;
     }
     const label = band.label;

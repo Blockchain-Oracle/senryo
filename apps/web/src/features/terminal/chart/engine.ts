@@ -141,3 +141,16 @@ export function rollFrame(cur: number): { digit: number; next: number; frac: num
 
 /** Alpha for a label near a plot edge or the pill: fades over 14 px. */
 export const edgeAlpha = (distancePx: number): number => Math.min(1, Math.max(0, distancePx / EDGE_FADE_PX));
+
+const HEX_RGB = /^#[0-9a-f]{6}$/i;
+const ALPHA_MAX = 255;
+const HEX = 16;
+const HEX_PAIR = 2;
+
+/** A `#rrggbb` token at `alpha` (0–1) as `#rrggbbaa`; any other colour string unchanged. */
+export function withAlpha(colour: string, alpha: number): string {
+  if (!HEX_RGB.test(colour)) return colour;
+  return `${colour}${Math.round(alpha * ALPHA_MAX)
+    .toString(HEX)
+    .padStart(HEX_PAIR, "0")}`;
+}

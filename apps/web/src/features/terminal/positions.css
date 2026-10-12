@@ -36,3 +36,11 @@
     display: none;
   }
 }
+/* On Ride the lanes give way to the held ride's life left (R5.4). */
+.terminal-ride-life {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  color: var(--text-2);
+  font: 600 13px / 18px var(--shell-font);
+}

@@ -225,7 +225,7 @@ export function ExitModal(p: {
         {armed ? (
           <button
             type="button"
-            className="terminal-part flex-1"
+            className="h-12 flex-1 rounded-2xl bg-secondary font-semibold text-row-title disabled:opacity-40"
             disabled={p.pending}
             onClick={() => p.onSet({ takeProfitE6: 0, stopLossE6: 0, floorE6: 0, trailE6: 0 })}
           >
@@ -234,7 +234,7 @@ export function ExitModal(p: {
         ) : null}
         <button
           type="button"
-          className="terminal-cashout flex-[2] justify-center"
+          className="h-12 flex-[2] rounded-2xl bg-foreground font-semibold text-background text-row-title disabled:opacity-40"
           disabled={p.pending || problem !== null || !hasExit(prices)}
           onClick={() => {
             fire("press", { cue: "tap" });

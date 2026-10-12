@@ -21,6 +21,8 @@ export * from "./use-position-actions.ts";
 export * from "./use-price-health.ts";
 export * from "./use-results.ts";
 export * from "./use-ride.ts";
+export * from "./use-ride-exit.ts";
+export * from "./use-ride-flow.ts";
 export * from "./use-warm-up.ts";
 export * from "./use-window-open.ts";
 export * from "./use-withdraw.ts";

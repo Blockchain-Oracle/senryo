@@ -1,7 +1,8 @@
 "use client";
 /**
  * The terminal's remembered choices on this device (the phone keeps them in MMKV): the lane, the last stake, the way to
- * call, and the market picker's starred and recent markets (P2). Read through `useSyncExternalStore`; the static HTML
+ * call, Call or Ride with the ride's margin, leverage and trail (R5.4), the call's trail, and the market picker's starred
+ * and recent markets (P2). Read through `useSyncExternalStore`; the static HTML
  * uses the defaults and the client corrects at once.
  */
 import { useCallback, useSyncExternalStore } from "react";
@@ -10,6 +11,11 @@ export const TERMINAL_STORAGE = {
   cadence: "senryo.terminal.cadence.v1",
   stake: "senryo.terminal.stake.v1",
   mode: "senryo.terminal.mode.v1",
+  instrument: "senryo.terminal.instrument.v1",
+  rideMargin: "senryo.terminal.ride-margin.v1",
+  leverage: "senryo.terminal.leverage.v1",
+  rideTrail: "senryo.terminal.ride-trail.v1",
+  callTrail: "senryo.terminal.call-trail.v1",
   favourites: "senryo.favourite-markets.v1",
   recents: "senryo.recent-markets.v1",
 } as const;

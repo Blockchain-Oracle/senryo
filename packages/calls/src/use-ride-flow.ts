@@ -1,0 +1,177 @@
+/**
+ * The terminal's ride flow, both apps (R5.4–R5.5; `useCallFlow`'s twin): what the panel says — ready, a ride in flight
+ * ("Signing…", "Opening Up…", "Closing…" until the stream says filled), a stale price, a market that doesn't ride — and
+ * the actions with their guards: open Up or Down at the mark within the slippage limit (not enough dollars said with
+ * the shortfall), close the held ride for what the tick pass showed, and arm its trail with break-even as the floor.
+ */
+import type { IntentStatus, RideView } from "@senryo/api-client";
+import { formatUnits, longClockText } from "@senryo/core";
+import { useIntentStatus, useRefreshCaller } from "@senryo/query";
+import { type RefObject, useEffect, useRef, useState } from "react";
+import type { Caller } from "./caller.ts";
+import { ridesOn } from "./instrument.ts";
+import { type CallFlowEffects, type OfferSlot, type PanelState, WHOLE } from "./use-call-flow.ts";
+import { usePriceHealth } from "./use-price-health.ts";
+import { rideOpenCost, useRideActions } from "./use-ride.ts";
+import { useRideExit } from "./use-ride-exit.ts";
+
+const DOLLAR_DECIMALS = 6;
+const CENTS = 2;
+const SETTLED = new Set(["filled", "refused", "failed"]);
+
+/** What the tap reads synchronously: the mark the user saw and, held, the B/E the trail floors at. */
+export interface RideLatest {
+  markE8: bigint | null;
+  breakEvenE8: bigint | null;
+}
+
+export interface RideFlowInput {
+  symbol: string;
+  caller: Caller;
+  owner: `0x${string}` | undefined;
+  margin: bigint;
+  leverageBps: number;
+  takerFeeBps: number | undefined;
+  balance: bigint | undefined;
+  nowSec: number;
+  /** The open ride on this market (the newest), if any. */
+  held: RideView | undefined;
+  latest: RefObject<RideLatest>;
+  trailBps: number;
+  effects: CallFlowEffects;
+}
+
+export function useRideFlow(i: RideFlowInput) {
+  const actions = useRideActions(i.caller);
+  const exit = useRideExit(i.caller);
+  const [signing, setSigning] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ digest: `0x${string}`; label: string; kind: "open" | "close" } | null>(null);
+  const intent = useIntentStatus(pending?.digest);
+  const status: IntentStatus | null = "value" in intent ? intent.value : null;
+  const fx = useRef(i.effects);
+  fx.current = i.effects;
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+  const refresh = useRefreshCaller(i.owner);
+
+  useEffect(() => {
+    if (!status || !SETTLED.has(status.state)) return;
+    refresh();
+    if (status.state === "filled") {
+      fx.current.cue(pendingRef.current?.kind === "close" ? "filled-close" : "filled-open");
+      fx.current.onFilled?.();
+    } else {
+      fx.current.cue("fail");
+      fx.current.notify({
+        title: status.state === "refused" ? "Ride refused" : "Ride didn't go through",
+        description:
+          pendingRef.current?.kind === "close" ? "It's still open." : (status.reason ?? "Your margin was not taken."),
+      });
+    }
+    setPending(null);
+  }, [status, refresh]);
+
+  const health = usePriceHealth(i.symbol);
+  const held = i.held && i.held.state !== "committed" ? i.held : undefined;
+  const panel: PanelState = pending
+    ? { kind: "pending", status, label: pending.label }
+    : signing
+      ? { kind: "pending", status: null, label: signing }
+      : !ridesOn(i.symbol)
+        ? { kind: "locked", text: `Rides aren't available on ${i.symbol}` }
+        : !health.live
+          ? { kind: "stale", text: health.notice ?? "Price paused" }
+          : i.held?.state === "closing"
+            ? { kind: "pending", status: null, label: "Closing at the next price…" }
+            : { kind: "ready" };
+
+  const guard = (slot?: OfferSlot): boolean => {
+    if (!i.owner) {
+      fx.current.needAccount(slot);
+      return false;
+    }
+    if (fx.current.gate && !fx.current.gate()) return false;
+    return actions.ready;
+  };
+
+  const open = async (slot: OfferSlot) => {
+    if (!guard(slot)) return;
+    const mark = i.latest.current?.markE8;
+    if (mark == null || i.takerFeeBps === undefined) {
+      fx.current.notify({ title: "No live price", description: "Rides open on a live price. Try again in a moment." });
+      return;
+    }
+    const cost = rideOpenCost(i.margin, i.leverageBps, i.takerFeeBps);
+    if (i.balance !== undefined && i.balance < cost) {
+      const short = cost - i.balance;
+      if (fx.current.shortfall) fx.current.shortfall(short);
+      else
+        fx.current.notify({
+          title: "Not enough dollars",
+          description: `This ride takes $${formatUnits(cost, DOLLAR_DECIMALS, CENTS)} with its fee.`,
+        });
+      return;
+    }
+    const isLong = slot === 0;
+    fx.current.cue("press");
+    setSigning("Signing…");
+    try {
+      const r = await actions.open({
+        symbol: i.symbol,
+        isLong,
+        margin: i.margin,
+        leverageBps: i.leverageBps,
+        markE8: mark,
+      });
+      if (r.kind === "sent")
+        setPending({ digest: r.status.digest, label: `Opening ${isLong ? "Up" : "Down"}…`, kind: "open" });
+    } catch (error) {
+      fx.current.cue("fail");
+      fx.current.notify({ title: "Couldn't open the ride", description: (error as Error).message });
+    } finally {
+      setSigning(null);
+    }
+  };
+
+  /** Close the held ride, or `percent` of it. */
+  const close = async (percent: bigint = WHOLE) => {
+    const mark = i.latest.current?.markE8;
+    if (!guard() || !held || mark == null) return;
+    fx.current.cue("press");
+    setSigning("Signing…");
+    try {
+      const size = percent === WHOLE ? 0n : (held.size * percent) / WHOLE;
+      const r = await actions.close({ rideId: held.rideId, symbol: i.symbol, isLong: held.isLong, markE8: mark, size });
+      const label = percent === WHOLE ? "Closing…" : `Closing ${percent}%…`;
+      if (r.kind === "sent") setPending({ digest: r.status.digest, label, kind: "close" });
+    } catch (error) {
+      fx.current.cue("fail");
+      fx.current.notify({ title: "Couldn't close the ride", description: (error as Error).message });
+    } finally {
+      setSigning(null);
+    }
+  };
+
+  /** Arm the trail at `trailBps`, flooring at break-even and keeping any take-profit and stop already set. */
+  const armTrail = async (): Promise<boolean> => {
+    const be = i.latest.current?.breakEvenE8;
+    if (!guard() || !held || be == null) return false;
+    fx.current.cue("press");
+    try {
+      const r = await exit.set(held.rideId, {
+        takeProfitE8: held.exit?.takeProfitE8 ?? 0n,
+        stopLossE8: held.exit?.stopLossE8 ?? 0n,
+        floorE8: be,
+        trailBps: i.trailBps,
+      });
+      return r.kind === "sent";
+    } catch (error) {
+      fx.current.cue("fail");
+      fx.current.notify({ title: "Couldn't arm the trail", description: (error as Error).message });
+      return false;
+    }
+  };
+
+  const endsIn = held?.endAt ? `Closes in ${longClockText(held.endAt - i.nowSec)}` : null;
+  return { panel, holding: held !== undefined, open, close, armTrail, setExit: exit.set, arming: exit.pending, endsIn };
+}

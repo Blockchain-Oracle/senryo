@@ -4,7 +4,7 @@
  * tags move clear of the pill or stack at the edge when off-screen, and the capsule pill with its rolling digits.
  * Nothing here keeps state.
  */
-import type { ChartLevel } from "@senryo/calls";
+import { type ChartLevel, LEVEL_STYLE, type LevelRole } from "@senryo/calls";
 import { formatPrice, type PriceUnit } from "@senryo/core";
 import {
   EDGE_FADE_PX,
@@ -16,8 +16,6 @@ import {
   HEALTH_TAG_GAP,
   LABEL_RIGHT,
   LABEL_SPAN,
-  LEVEL_ALPHA,
-  LEVEL_DASH,
   MAJOR_TICK,
   MAJOR_TICK_ALPHA,
   MARK,
@@ -46,6 +44,8 @@ const HALF = 2;
 export interface ChartTheme {
   up: string;
   down: string;
+  /** Break-even's amber. */
+  warn: string;
   /** Range's cyan: a previewed Range shades in it (D-316). */
   range: string;
   ink: string;
@@ -172,6 +172,24 @@ function tag(ctx: CanvasRenderingContext2D, t: ChartTheme, text: string, right: 
  * K (ink, fine dash), the entry (helper) or a band's edge or strike (helper, long dash): the line and its tag, or
  * off-screen a tag at the edge.
  */
+/** A level's colour from its role (`LEVEL_STYLE`): the line's own tone, amber, up, down, ink or the helper grey. */
+function levelColour(t: ChartTheme, role: LevelRole, tone: string): string {
+  switch (role) {
+    case "ink":
+      return t.ink;
+    case "warn":
+      return t.warn;
+    case "tone":
+      return tone;
+    case "up":
+      return t.up;
+    case "down":
+      return t.down;
+    case "helper":
+      return t.helper;
+  }
+}
+
 export function drawLevel(
   ctx: CanvasRenderingContext2D,
   t: ChartTheme,
@@ -180,9 +198,11 @@ export function drawLevel(
   plotW: number,
   w: number,
   space: TagSpace,
-  unit: PriceUnit = "usd",
+  unit: PriceUnit,
+  tone: string,
 ): void {
-  const colour = level.kind === "line" ? t.ink : t.helper;
+  const style = LEVEL_STYLE[level.kind];
+  const colour = levelColour(t, style.role, tone);
   const y = yOf(level.price, win);
   const right = w - LABEL_RIGHT;
   ctx.font = t.tagFont;
@@ -196,9 +216,9 @@ export function drawLevel(
   }
   ctx.save();
   ctx.strokeStyle = colour;
-  ctx.globalAlpha = LEVEL_ALPHA[level.kind];
-  ctx.lineWidth = 1;
-  ctx.setLineDash([...LEVEL_DASH[level.kind]]);
+  ctx.globalAlpha = style.alpha;
+  ctx.lineWidth = style.width;
+  ctx.setLineDash([...style.dash]);
   ctx.beginPath();
   ctx.moveTo(0, Math.round(y) + HALF_PIXEL);
   ctx.lineTo(plotW, Math.round(y) + HALF_PIXEL);

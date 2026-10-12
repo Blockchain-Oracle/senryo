@@ -36,10 +36,15 @@ function Equity({ cash }: { cash: bigint | undefined }) {
 
 export function TerminalTop({
   t,
+  ride = false,
+  rideEndsIn = null,
   onPickMarket,
   onCadence,
 }: {
   t: CallWindowView;
+  /** On Ride the lanes give way to the held ride's life left ("Closes in 3:42:18"), if any. */
+  ride?: boolean;
+  rideEndsIn?: string | null;
   onPickMarket: () => void;
   onCadence: (c: CadenceSec) => void;
 }) {
@@ -75,36 +80,42 @@ export function TerminalTop({
         <MusicToggle />
         <Equity cash={t.balance} />
       </div>
-      <div className="terminal-lanes" role="tablist" aria-label="Window length">
-        {CADENCES_SEC.map((c) => {
-          const selected = c === t.cadenceSec;
-          return (
-            <button
-              key={c}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              aria-label={`${laneLabel(c)} windows`}
-              className="terminal-lane"
-              onClick={() => {
-                if (selected) return;
-                fire("tick", { cue: "tap" });
-                onCadence(c);
-              }}
-            >
-              {selected ? (
-                <CountdownRing fromSec={t.window.start} toSec={t.window.expiry - LOCKOUT_SEC} nowSec={t.now} />
-              ) : null}
-              <span>{laneLabel(c)}</span>
-              {selected ? (
-                <span className="tnum">
-                  {t.window.trading ? clockText(t.window.closesIn) : clockText(t.window.expiry - t.now)}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
+      {ride ? (
+        <p className="terminal-ride-life tnum" aria-live="polite">
+          {rideEndsIn ?? "Up to 4 h a ride · no funding"}
+        </p>
+      ) : (
+        <div className="terminal-lanes" role="tablist" aria-label="Window length">
+          {CADENCES_SEC.map((c) => {
+            const selected = c === t.cadenceSec;
+            return (
+              <button
+                key={c}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                aria-label={`${laneLabel(c)} windows`}
+                className="terminal-lane"
+                onClick={() => {
+                  if (selected) return;
+                  fire("tick", { cue: "tap" });
+                  onCadence(c);
+                }}
+              >
+                {selected ? (
+                  <CountdownRing fromSec={t.window.start} toSec={t.window.expiry - LOCKOUT_SEC} nowSec={t.now} />
+                ) : null}
+                <span>{laneLabel(c)}</span>
+                {selected ? (
+                  <span className="tnum">
+                    {t.window.trading ? clockText(t.window.closesIn) : clockText(t.window.expiry - t.now)}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

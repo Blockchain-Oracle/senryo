@@ -6,7 +6,7 @@
  * erased, the 千両 mark, the axis, K and the entry, the head dot and the rolling pill. The tone is the up line unless
  * the open call is losing.
  */
-import type { ChartOverlay, SessionHistory } from "@senryo/calls";
+import { BAND_ALPHA, type ChartOverlay, type SessionHistory } from "@senryo/calls";
 import { formatPrice, type PriceUnit } from "@senryo/core";
 import {
   BASE_TAU_MS,
@@ -42,7 +42,7 @@ import {
 } from "./constants";
 import type { FrameMotion } from "./dot-grid";
 import { type ChartTheme, drawAxis, drawGrid, drawHealthTag, drawLevel, drawMark, drawPill, drawWaiting } from "./draw";
-import { catmullRom, niceStep, SampleRing, stepFor, type YWindow, yOf } from "./engine";
+import { catmullRom, niceStep, SampleRing, stepFor, withAlpha, type YWindow, yOf } from "./engine";
 import { CanvasOdometer } from "./odometer";
 
 const HALF = 2;
@@ -257,7 +257,7 @@ export class ChartEngine {
       h: pillH,
     };
     const space = { pillTop: pill.y, pillBottom: pill.y + pillH, up: 0, down: 0 };
-    for (const level of o?.levels ?? []) drawLevel(ctx, theme, level, win, plotW, w, space, this.unit);
+    for (const level of o?.levels ?? []) drawLevel(ctx, theme, level, win, plotW, w, space, this.unit, tone);
     ctx.fillStyle = tone;
     ctx.globalAlpha = this.health.live || this.history ? 1 : DIM_ALPHA;
     ctx.beginPath();
@@ -273,6 +273,36 @@ export class ChartEngine {
       scrollX: moving ? (dt / SAMPLE_MS) * (plotW / (SAMPLE_CAPACITY - 1)) : 0,
       dtMs: dt,
     };
+  }
+
+  /** The line's path on the context (Catmull-Rom through the samples), rebuilt in place each frame. */
+  private trace(n: number, headY: number): void {
+    const { ctx, cp } = this;
+    ctx.beginPath();
+    ctx.moveTo(this.xs[0] ?? 0, this.ys[0] ?? headY);
+    for (let i = 0; i < n - 1; i++) {
+      catmullRom(this.xs, this.ys, i, n, cp);
+      ctx.bezierCurveTo(cp[0] ?? 0, cp[1] ?? 0, cp[2] ?? 0, cp[3] ?? 0, this.xs[i + 1] ?? 0, this.ys[i + 1] ?? 0);
+    }
+  }
+
+  /**
+   * Tradash's PnL band (R5.6): the price path closed down to the entry, filled in the line's tone fading from the
+   * price side (0.22) to the entry (0.02).
+   */
+  private drawBand(win: YWindow, tone: string, n: number, headY: number, entry: number): void {
+    const { ctx, height: h } = this;
+    const entryY = Math.min(h, Math.max(0, yOf(entry, win)));
+    this.trace(n, headY);
+    ctx.lineTo(this.xs[n - 1] ?? 0, entryY);
+    ctx.lineTo(this.xs[0] ?? 0, entryY);
+    ctx.closePath();
+    const far = headY < entryY ? 0 : h;
+    const gradient = ctx.createLinearGradient(0, far, 0, entryY);
+    gradient.addColorStop(0, withAlpha(tone, BAND_ALPHA.far));
+    gradient.addColorStop(1, withAlpha(tone, BAND_ALPHA.near));
+    ctx.fillStyle = gradient;
+    ctx.fill();
   }
 
   /**
@@ -310,14 +340,9 @@ export class ChartEngine {
         ctx.globalAlpha = 1;
       }
     }
+    if (o?.band != null) this.drawBand(win, tone, n, headY, o.band);
     // The context's own path, rebuilt in place (no Path2D per frame) and stroked twice: glow, then line.
-    const cp = this.cp;
-    ctx.beginPath();
-    ctx.moveTo(this.xs[0] ?? 0, this.ys[0] ?? headY);
-    for (let i = 0; i < n - 1; i++) {
-      catmullRom(this.xs, this.ys, i, n, cp);
-      ctx.bezierCurveTo(cp[0] ?? 0, cp[1] ?? 0, cp[2] ?? 0, cp[3] ?? 0, this.xs[i + 1] ?? 0, this.ys[i + 1] ?? 0);
-    }
+    this.trace(n, headY);
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
     ctx.strokeStyle = tone;

@@ -6,10 +6,10 @@
  * Native calls are the cost (≤ 2 ms gate): the line and the axis ticks are each one path parsed from a string, the
  * dots one picture, and paints come pre-set from the kit (`kit.ts`).
  */
-import type { ChartLevel, ChartOverlay } from "@senryo/calls";
+import { BAND_ALPHA, type ChartLevel, type ChartOverlay, LEVEL_STYLE, type LevelRole } from "@senryo/calls";
 import { type SkCanvas, type SkColor, Skia, type SkPicture, TileMode } from "@shopify/react-native-skia";
 import { drawOdometer } from "~/components/kit/odometer";
-import { type ChartHealth, DIM_ALPHA, HALF_PIXEL, HEALTH_TAG_GAP, LEVEL_ALPHA } from "./constants";
+import { type ChartHealth, DIM_ALPHA, HALF_PIXEL, HEALTH_TAG_GAP } from "./constants";
 import {
   EDGE_FADE_PX,
   edgeAlpha,
@@ -22,7 +22,7 @@ import {
   type YWindow,
   yOf,
 } from "./engine";
-import { type DrawKit, fill, stroke, textRight } from "./kit";
+import { type DrawKit, fill, stroke, textRight, withAlpha } from "./kit";
 import { type ChartState, DOT_SPACING, ringAt } from "./state";
 
 export const PAD_Y = 28;
@@ -119,6 +119,17 @@ interface EdgeSlots {
   down: number;
 }
 
+/** A level's colour from its role (`LEVEL_STYLE`): the line's own tone, amber, up, down, ink or the helper grey. */
+function levelColor(k: DrawKit, role: LevelRole, tone: SkColor): SkColor {
+  "worklet";
+  if (role === "ink") return k.colors.ink;
+  if (role === "warn") return k.colors.warn;
+  if (role === "tone") return tone;
+  if (role === "up") return k.colors.up;
+  if (role === "down") return k.colors.down;
+  return k.colors.helper;
+}
+
 function drawLevel(
   c: SkCanvas,
   k: DrawKit,
@@ -128,9 +139,11 @@ function drawLevel(
   w: number,
   pill: PillBox,
   edges: EdgeSlots,
+  tone: SkColor,
 ) {
   "worklet";
-  const color = level.kind === "line" ? k.colors.ink : k.colors.helper;
+  const style = LEVEL_STYLE[level.kind];
+  const color = levelColor(k, style.role, tone);
   const y = yOf(level.price, win);
   const right = w - LABEL_RIGHT;
   if (y < win.top - HALF || y > win.bottom + HALF) {
@@ -144,7 +157,8 @@ function drawLevel(
   }
   const p = k.paints.level;
   p.setColor(color);
-  p.setAlphaf(LEVEL_ALPHA[level.kind]);
+  p.setAlphaf(style.alpha);
+  p.setStrokeWidth(style.width);
   p.setPathEffect(k.dash[level.kind]);
   const ry = Math.round(y) + HALF_PIXEL;
   c.drawLine(0, ry, plotW, ry, p);
@@ -235,6 +249,27 @@ export function drawFrame(
     headY = yOf(s.head, win);
     d += `L${px(plotW)} ${px(headY)}`;
   }
+  if (o?.band != null) {
+    // Tradash's PnL band: the price path closed down to the entry, fading from the price side to the entry.
+    const entryY = Math.min(h, Math.max(0, yOf(o.band, win)));
+    const lastX = s.frac > 0 ? plotW : (n - 1 - s.frac) * dx;
+    const band = Skia.Path.MakeFromSVGString(`${d}L${px(lastX)} ${px(entryY)}L${px(-s.frac * dx)} ${px(entryY)}Z`);
+    if (band) {
+      const shade = k.paints.fill;
+      shade.setAlphaf(1);
+      shade.setShader(
+        Skia.Shader.MakeLinearGradient(
+          Skia.Point(0, headY < entryY ? 0 : h),
+          Skia.Point(0, entryY),
+          [withAlpha(tone, BAND_ALPHA.far), withAlpha(tone, BAND_ALPHA.near)],
+          null,
+          TileMode.Clamp,
+        ),
+      );
+      c.drawPath(band, shade);
+      shade.setShader(null);
+    }
+  }
   const path = Skia.Path.MakeFromSVGString(d);
   if (path) {
     c.drawPath(path, stroke(k, tone, GLOW_W, GLOW_ALPHA * strength));
@@ -303,7 +338,7 @@ export function drawFrame(
   const pillY = Math.min(h - pillH - HALF, Math.max(HALF, headY - pillH / HALF));
   const box: PillBox = { top: pillY, bottom: pillY + pillH };
   const edges: EdgeSlots = { up: 0, down: 0 };
-  for (const level of o?.levels ?? []) drawLevel(c, k, level, win, plotW, w, box, edges);
+  for (const level of o?.levels ?? []) drawLevel(c, k, level, win, plotW, w, box, edges, tone);
 
   c.drawCircle(plotW, headY, HEAD_R, fill(k, tone, strength));
   c.drawRRect(Skia.RRectXY(Skia.XYWHRect(pillX, pillY, pillW, pillH), pillH / HALF, pillH / HALF), fill(k, tone));

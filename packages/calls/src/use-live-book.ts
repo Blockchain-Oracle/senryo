@@ -30,7 +30,8 @@ import {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { type BookEntry, type BookTotals, bookTotals, valueCall, valueRide } from "./book.ts";
+import { type BookEntry, type BookTotals, bookTotals, valueCall } from "./book.ts";
+import { valueRide } from "./book-ride.ts";
 import type { PoolTerms } from "./quote.ts";
 import { fillMark } from "./sigma.ts";
 
@@ -84,7 +85,11 @@ const sameEntry = (a: BookEntry, b: BookEntry): boolean =>
   a.worth === b.worth &&
   a.fees === b.fees &&
   a.cost === b.cost &&
-  a.markE8 === b.markE8;
+  a.markE8 === b.markE8 &&
+  a.ride?.exit?.trailStopE8 === b.ride?.exit?.trailStopE8 &&
+  a.ride?.exit?.trailBps === b.ride?.exit?.trailBps &&
+  a.call?.exit?.trailStopE6 === b.call?.exit?.trailStopE6 &&
+  a.call?.exit?.trailE6 === b.call?.exit?.trailE6;
 
 function sameBook(a: LiveBook, b: LiveBook): boolean {
   if (a.ready !== b.ready || a.parlays !== b.parlays || a.entries.length !== b.entries.length) return false;

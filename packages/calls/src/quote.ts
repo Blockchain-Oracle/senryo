@@ -26,7 +26,7 @@ import {
   reserveCapacity,
   type SigmaPair,
 } from "@senryo/core";
-import { callFigures } from "./book.ts";
+import { type BookCallExit, callBreakEvenE8, callExitLevelsE8, callFigures } from "./book.ts";
 import type { ReactionPosition } from "./reactions.ts";
 
 const E8 = 1e8;
@@ -39,8 +39,11 @@ const PERCENT_DECIMALS = 3;
 /** Basis points: the reaction engine reads a call's result as a share of its stake. */
 const BPS = 10_000n;
 
-/** K, the call's entry, and a band's edge or strike. */
-export type LevelKind = "line" | "entry" | "edge";
+/**
+ * K, the entry, a band's edge or strike, and a held position's levels (Tradash's tags, R5.6): break-even, the trail's
+ * stop, take-profit and stop-loss, and a ride's knock-out and cap.
+ */
+export type LevelKind = "line" | "entry" | "edge" | "be" | "trail" | "tp" | "sl" | "ko" | "cap";
 
 export interface ChartLevel {
   kind: LevelKind;
@@ -66,6 +69,8 @@ export interface ChartOverlay {
    */
   zoneTone: "up" | "down" | "range" | null;
   levels: ChartLevel[];
+  /** A held position's entry: the price path is closed down to it in a fading band (Tradash's PnL band). */
+  band?: number | null;
 }
 
 /** The catalogue's pool terms (`/v1/markets/catalog` `terms`). */
@@ -95,6 +100,8 @@ export interface QuotePosition {
   entryE8: bigint | null;
   /** The fair chance at the fill (D-303), null for a call filled before it was recorded. */
   fillProbE6: number | null;
+  /** Its standing exit (bids × 1e6), drawn as levels. */
+  exit: BookCallExit | null;
 }
 
 /** What a quote reads of the pool's terms (the api's catalogue `terms`, or `POOL_TERMS`). */
@@ -326,9 +333,29 @@ export function quoteTick(i: QuoteInput): QuotePass {
         ...(p.call.entryE8 !== null
           ? [{ kind: "entry" as const, price: toPrice(p.call.entryE8), label: "Entry" }]
           : []),
+        ...heldLevels(p, { band: p.band, lineE8: i.k, mark: i.mark, terms }, i.expiry, i.nowSec),
       ],
+      band: p.call.entryE8 === null ? null : toPrice(p.call.entryE8),
     },
   };
+}
+
+/** B/E and the armed exit as levels (R5.6): where cashing out returns the stake, and the exit's bids as prices. */
+function heldLevels(
+  p: { call: QuotePosition; band: BandSpecLike },
+  m: { band: BandSpecLike; lineE8: bigint; mark: SigmaPair; terms: QuoteTerms },
+  expiry: number,
+  nowSec: number,
+): ChartLevel[] {
+  const c = { stake: p.call.stake, payout: p.call.payout, expiry, exit: p.call.exit };
+  const be = callBreakEvenE8(c, m, nowSec);
+  const exit = callExitLevelsE8(c, m, nowSec);
+  const out: ChartLevel[] = [];
+  if (be !== null) out.push({ kind: "be", price: toPrice(be), label: "B/E" });
+  if (exit.tp !== null) out.push({ kind: "tp", price: toPrice(exit.tp), label: "TP" });
+  if (exit.sl !== null) out.push({ kind: "sl", price: toPrice(exit.sl), label: "SL" });
+  if (exit.trail !== null) out.push({ kind: "trail", price: toPrice(exit.trail), label: "Trail" });
+  return out;
 }
 
 /** Which way a money figure moved, compared as bigints (−1, 0, 1). */
