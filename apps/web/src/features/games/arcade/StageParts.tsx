@@ -4,12 +4,11 @@
  * pause plate and the game-over card (score, a "New best" stamp, where it ranked, the run's numbers, Play again, Share,
  * Exit). In the arena's ink; every control is a 44 px button.
  */
+import type { RunStat } from "@senryo/arcade";
 import { Pause, Play, Share2, Volume2, VolumeX, X } from "lucide-react";
 import type { RefObject } from "react";
-import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { Button } from "@/components/ui/button";
 import { fire, setFeedback, useFeedback } from "@/lib/feedback";
-import type { RunStat } from "./run";
 
 export interface StageResult {
   score: number;
@@ -101,6 +100,7 @@ export function OverPlate({
   result,
   checking,
   signedIn,
+  onSignIn,
   onAgain,
   onShare,
   onExit,
@@ -109,6 +109,8 @@ export function OverPlate({
   result: StageResult;
   checking: boolean;
   signedIn: boolean;
+  /** Leaves the stage for the account drawer. */
+  onSignIn: () => void;
   onAgain: () => void;
   onShare: () => void;
   onExit: () => void;
@@ -141,7 +143,14 @@ export function OverPlate({
             Exit
           </Button>
         </div>
-        {signedIn ? null : <SignInPrompt line="Sign in to rank your runs." compact />}
+        {signedIn ? null : (
+          <div className="flex w-full items-center justify-between gap-3">
+            <span className="arcade-dim text-meta">Sign in to rank your runs.</span>
+            <Button size="sm" variant="ghost" className="arcade-ghost" onClick={onSignIn}>
+              Sign in
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

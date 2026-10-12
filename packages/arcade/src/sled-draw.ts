@@ -6,9 +6,9 @@
  * everything is drawn from the scene and nothing in it steers the run.
  */
 import { FIELD_H, SLED, tapeIndexAt } from "@senryo/core";
-import { tint } from "./ink";
-import type { ArcadeView } from "./loop";
-import type { SledScene } from "./sled-run";
+import type { ArcadeView, Ctx2D } from "./canvas.ts";
+import { tint } from "./ink.ts";
+import type { SledScene } from "./sled-run.ts";
 
 const LOOK = {
   sledAt: 0.3,
@@ -17,8 +17,8 @@ const LOOK = {
   topMargin: 60,
   bottomMargin: 30,
   camEase: 0.12,
-  lineWidth: 3,
-  glow: 14,
+  lineWidth: 4,
+  glow: 18,
   headGlow: 18,
   gridY: 45,
   labelEvery: 15,
@@ -27,9 +27,9 @@ const LOOK = {
   gapEdge: 46,
   gapLabelLift: 20,
   gapLabelSize: 11,
-  runner: 3.5,
-  body: 3,
-  head: 6,
+  runner: 4.5,
+  body: 3.5,
+  head: 7,
   ring: 11,
   ringWidth: 2.5,
   nose: 7,
@@ -41,7 +41,10 @@ const LOOK = {
   heatPerCombo: 0.05,
   heatMax: 0.35,
   flashAlpha: 0.35,
-  fillTop: 0.9,
+  fillTop: 0.1,
+  fillBottom: 0.015,
+  /** The minutes sit under the score, clear of the HUD's bottom line. */
+  labelTop: 60,
   trailChunks: 4,
   trailAlpha: 0.55,
   gridAlpha: 0.05,
@@ -63,7 +66,7 @@ const clock = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-d
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
-export function drawSled(view: ArcadeView, sc: SledScene, alpha: number): void {
+export function drawSled(view: ArcadeView, sc: SledScene, alpha: number, nowMs: number): void {
   const { ctx, w, h, dpr } = view;
   const { s, prev, ink } = sc;
   const k = Math.min(h / FIELD_H, w / LOOK.minWidth);
@@ -117,7 +120,7 @@ export function drawSled(view: ArcadeView, sc: SledScene, alpha: number): void {
   drawMinutes(ctx, sc, camX, visibleW, bottom);
   drawLine(ctx, sc, camX, visibleW, bottom);
   drawTrail(ctx, sc);
-  drawRider(ctx, sc, { bx, by, fx, fy, rx, ry });
+  drawRider(ctx, sc, { bx, by, fx, fy, rx, ry }, nowMs);
   for (const q of sc.particles) {
     ctx.fillStyle = tint(q.color, q.life / q.max);
     ctx.fillRect(q.x - q.size * HALF, q.y - q.size * HALF, q.size, q.size);
@@ -152,7 +155,7 @@ export function drawSled(view: ArcadeView, sc: SledScene, alpha: number): void {
 }
 
 /** The minutes the tape was recorded at, every quarter hour along the floor. */
-function drawMinutes(ctx: CanvasRenderingContext2D, sc: SledScene, camX: number, visibleW: number, bottom: number) {
+function drawMinutes(ctx: Ctx2D, sc: SledScene, camX: number, visibleW: number, bottom: number) {
   const n = sc.tape.moves.length;
   if (n === 0) return;
   const perMin = SLED.seg * SLED.tapeSegs;
@@ -167,13 +170,13 @@ function drawMinutes(ctx: CanvasRenderingContext2D, sc: SledScene, camX: number,
     ctx.moveTo(x, sc.camY);
     ctx.lineTo(x, bottom);
     const minute = sc.tape.from + (tapeIndexAt(sc.s, x, n) + 1) * SEC_PER_MIN;
-    ctx.fillText(clock.format(minute * MS), x + LOOK.labelLift / TWO, bottom - LOOK.labelLift);
+    ctx.fillText(clock.format(minute * MS), x + LOOK.labelLift / TWO, sc.camY + LOOK.labelTop);
   }
   ctx.stroke();
 }
 
 /** The price line: filled below, lit green where it rose and coral where it fell, open at the gaps. */
-function drawLine(ctx: CanvasRenderingContext2D, sc: SledScene, camX: number, visibleW: number, bottom: number) {
+function drawLine(ctx: Ctx2D, sc: SledScene, camX: number, visibleW: number, bottom: number) {
   const { s, ink } = sc;
   const i0 = Math.max(0, Math.floor(camX / SLED.seg) - s.head);
   const i1 = Math.min(s.pts.length - 1, Math.ceil((camX + visibleW) / SLED.seg) - s.head + 1);
@@ -181,8 +184,8 @@ function drawLine(ctx: CanvasRenderingContext2D, sc: SledScene, camX: number, vi
   const yOf = (i: number) => s.pts[i] as number;
   // Fill under the solid stretches.
   const fill = ctx.createLinearGradient(0, SLED.yTop, 0, bottom);
-  fill.addColorStop(0, tint(ink.raised, LOOK.fillTop));
-  fill.addColorStop(1, tint(ink.arena, 0));
+  fill.addColorStop(0, tint(ink.ink, LOOK.fillTop));
+  fill.addColorStop(1, tint(ink.ink, LOOK.fillBottom));
   ctx.fillStyle = fill;
   ctx.beginPath();
   for (let i = i0; i < i1; i++) {
@@ -212,6 +215,7 @@ function drawLine(ctx: CanvasRenderingContext2D, sc: SledScene, camX: number, vi
       stroke(ctx, color);
       color = next;
       ctx.beginPath();
+      ctx.moveTo(xOf(i), yOf(i));
     }
     if (open || i === i0) ctx.moveTo(xOf(i), yOf(i));
     open = false;
@@ -243,13 +247,13 @@ function drawLine(ctx: CanvasRenderingContext2D, sc: SledScene, camX: number, vi
   ctx.shadowBlur = 0;
 }
 
-function stroke(ctx: CanvasRenderingContext2D, color: string) {
+function stroke(ctx: Ctx2D, color: string) {
   ctx.strokeStyle = color;
   ctx.shadowColor = color;
   ctx.stroke();
 }
 
-function drawTrail(ctx: CanvasRenderingContext2D, sc: SledScene) {
+function drawTrail(ctx: Ctx2D, sc: SledScene) {
   const t = sc.trail;
   if (t.length < TWO) return;
   const chunk = Math.ceil(t.length / LOOK.trailChunks);
@@ -270,9 +274,10 @@ function drawTrail(ctx: CanvasRenderingContext2D, sc: SledScene) {
 
 /** The sled (runners with a curled nose, two struts) and the rider (body, glowing head, a scarf, the charge ring). */
 function drawRider(
-  ctx: CanvasRenderingContext2D,
+  ctx: Ctx2D,
   sc: SledScene,
   p: { bx: number; by: number; fx: number; fy: number; rx: number; ry: number },
+  nowMs: number,
 ) {
   const { s, ink } = sc;
   const dx = p.fx - p.bx;
@@ -302,7 +307,7 @@ function drawRider(
   ctx.lineTo(p.rx, p.ry);
   ctx.stroke();
   // The scarf streams back from the head.
-  const wave = Math.sin(performance.now() * LOOK.scarfWave) * LOOK.scarf * HALF;
+  const wave = Math.sin(nowMs * LOOK.scarfWave) * LOOK.scarf * HALF;
   ctx.strokeStyle = tint(ink.accent, LOOK.trailAlpha);
   ctx.beginPath();
   ctx.moveTo(p.rx, p.ry);

@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@senryo/account",
     "@senryo/api-client",
+    "@senryo/arcade",
     "@senryo/calls",
     "@senryo/chain",
     "@senryo/config",
@@ -32,6 +33,7 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       "@senryo/account",
       "@senryo/api-client",
+      "@senryo/arcade",
       "@senryo/calls",
       "@senryo/chain",
       "@senryo/config",

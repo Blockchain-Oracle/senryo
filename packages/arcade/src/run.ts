@@ -3,7 +3,7 @@
  * input, records the trace the server replays, and reports its HUD and its end. Line Rider's sled and Candle Hop's coin
  * both fit it, so the stage — full screen, countdown, pause, game over — is one.
  */
-import type { LoopDriver } from "./loop";
+import type { LoopDriver } from "./canvas.ts";
 
 /** Held anywhere (a pointer, Space or ↑) and which way to lean (the screen's half, ← or →). */
 export interface RunInput {

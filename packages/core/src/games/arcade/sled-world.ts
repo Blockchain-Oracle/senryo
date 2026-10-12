@@ -22,13 +22,17 @@ export const SLED = {
   /** Holding presses the runners down (grip on bumps) and pumps the cruise up. */
   pressGain: 0.5,
   pumpGain: 0.35,
-  /** The hop on release, charged by how long you held (px/s along the line's normal). */
+  /** The hop on release, charged by how long you held (px/s up). */
   hopMin: 240,
   hopMax: 460,
   hopChargeTicks: 36,
   hopMinTicks: 6,
   /** Lean: a turn the rider puts into the triangle in the air (px/s² at the rider, opposite at the runners). */
   lean: 1700,
+  /** With no lean held, the rider balances in the air: a turn back toward level and against the spin (px/s² per
+   * unit of tilt, per rad/s). Leaning switches it off, so flips stay the player's. */
+  levelGain: 900,
+  levelDamp: 220,
   /** Air drag and ground friction per step (velocity kept). */
   airKeep: 0.9995,
   groundKeep: 0.9995,
@@ -69,6 +73,10 @@ export const SLED = {
   jumpSize1: 95,
   centerPull: 0.02,
   smooth: 0.35,
+  /** The line never rises faster than this per point (px), so a spike is a ramp to ride, never a wall. */
+  maxRise: 14,
+  /** No forward progress for this long is a wipeout: every run ends. */
+  stallSec: 6,
   /** Gaps: none before `gapFromSec`; a chance per point laid, 2 → 6 points wide, the far side `gapDrop` lower. */
   gapFromSec: 10,
   gap0: 0.004,
@@ -151,6 +159,8 @@ export interface SledState {
   milestone: number;
   score: number;
   distance: number;
+  /** Seconds since the sled last went further than ever. */
+  stallSec: number;
   speed: number;
   /** Events of the last step, for the draw and the sounds. */
   landed: number;
@@ -190,6 +200,9 @@ function walkNext(s: SledState, rng: Rng, config: ArcadeRunConfig): number {
   const mid = (SLED.yTop + SLED.yBottom) * HALF;
   s.walk += (mid - s.walk) * SLED.centerPull;
   s.walkSmooth += (s.walk - s.walkSmooth) * SLED.smooth;
+  // y grows down: a rise is the line's y falling, held to `maxRise` a point.
+  const last = s.pts[s.pts.length - 1];
+  if (last !== undefined && s.walkSmooth < last - SLED.maxRise) s.walkSmooth = last - SLED.maxRise;
   return clamp(s.walkSmooth, SLED.yTop, SLED.yBottom);
 }
 
@@ -291,6 +304,7 @@ export function createSledState(rng: Rng, config: ArcadeRunConfig): SledState {
     milestone: 1,
     score: 0,
     distance: 0,
+    stallSec: 0,
     speed: 0,
     landed: 0,
     clean: false,

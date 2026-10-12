@@ -1,10 +1,10 @@
 /**
- * Line Rider v2 on the web (R7.2): a sled run as the stage's driver. Each fixed step turns the held input into the
+ * Line Rider v2's run (R7.2), the same on both apps: a sled run as the stage's driver. Each fixed step turns the held input into the
  * sled's code, records it (the trace the server replays), steps the shared engine, and turns its events into the
  * feel: a scrape grain and sparks while pressing into the line, a puff on the hop, a thud, dust, 30 ms of hit-stop and
  * a 4 px shake on a hard landing, a rising note per clean landing and per gap cleared, a flip's surge, the milestone
- * ladder, and on the wipeout an 8 px shake, a flash, fragments and the music cut. All of it is view-only: the engine's
- * state is never touched.
+ * ladder, and on the wipeout an 8 px shake, a flash, fragments and the music cut (the app's own feel, injected). All
+ * of it is view-only: the engine's state is never touched.
  */
 import {
   createRng,
@@ -19,11 +19,11 @@ import {
   stepSled,
   tapeIndexAt,
 } from "@senryo/core";
-import { fire, music, sound } from "@/lib/feedback";
-import type { ArcadeInk } from "./ink";
-import type { ArcadeView } from "./loop";
-import { type ArcadeRun, clockOf, type RunInput } from "./run";
-import { drawSled } from "./sled-draw";
+import type { ArcadeView } from "./canvas.ts";
+import type { ArcadeFeel } from "./feel.ts";
+import type { ArcadeInk } from "./ink.ts";
+import { type ArcadeRun, clockOf, type RunInput } from "./run.ts";
+import { drawSled } from "./sled-draw.ts";
 
 export interface SledTape {
   symbol: string;
@@ -116,7 +116,9 @@ export function createSledRun(o: {
   calm: boolean;
   tape: SledTape;
   ink: ArcadeInk;
+  feel: ArcadeFeel;
 }): ArcadeRun {
+  const { fire, music, sound } = o.feel;
   const rng = createRng(o.seed);
   const config = { calm: o.calm, tape: o.tape.moves };
   const s = createSledState(rng, config);
@@ -293,7 +295,7 @@ export function createSledRun(o: {
     ranked: o.ranked,
     calm: o.calm,
     step,
-    draw: (view: ArcadeView, alpha: number) => drawSled(view, scene, alpha),
+    draw: (view: ArcadeView, alpha: number, nowMs: number) => drawSled(view, scene, alpha, nowMs),
     isOver: () => s.over,
     score: () => sledScoreOf(s),
     ticks: () => s.tick,

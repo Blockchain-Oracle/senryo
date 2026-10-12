@@ -132,7 +132,7 @@ export function stepSled(s: SledState, code: number, rng: Rng, config: ArcadeRun
   const along = (((s.b.x - s.b.px + s.f.x - s.f.px) * ux + (s.b.y - s.b.py + s.f.y - s.f.py) * uy) * HALF) / STEP_SEC;
   const push = s.wasGrounded ? clamp((cruise - along) * SLED.cruiseGain, SLED.motorMin, SLED.motorMax) : 0;
   const g = SLED.gravity * (hold && s.wasGrounded ? 1 + SLED.pressGain : 1);
-  const turn = s.wasGrounded ? 0 : lean * SLED.lean;
+  const turn = s.wasGrounded ? 0 : lean !== 0 ? lean * SLED.lean : balance(s, ux, uy);
   const keep = s.wasGrounded ? SLED.groundKeep : SLED.airKeep;
   // Lean forward (turn > 0) dips the nose — a front flip: the tail rises, the nose drops, the rider pitches ahead.
   integrate(s.b, ux * push + nx * turn * HALF, g + uy * push + ny * turn * HALF, keep);
@@ -162,14 +162,15 @@ export function stepSled(s: SledState, code: number, rng: Rng, config: ArcadeRun
     return;
   }
 
-  // The hop: letting go after a hold on the line kicks the sled off it — the longer the hold, the higher. After the
+  // The hop: letting go after a hold on the line kicks the sled up off it — the longer the hold, the higher. After the
   // contact passes, so the line doesn't take the kick back this step.
   if (s.held && !hold && grounded && s.heldTicks >= SLED.hopMinTicks) {
     const charge = clamp(s.heldTicks / SLED.hopChargeTicks, 0, 1);
     const k = lerp(SLED.hopMin, SLED.hopMax, charge) * STEP_SEC;
+    // Up, and forward where the board points downhill — never back down an uphill.
     for (const p of [s.b, s.f, s.r]) {
-      p.px -= nx * k;
-      p.py -= ny * k;
+      p.px -= Math.max(0, nx) * k;
+      p.py += k;
     }
   }
   s.heldTicks = hold && grounded ? s.heldTicks + 1 : 0;
@@ -233,12 +234,32 @@ export function stepSled(s: SledState, code: number, rng: Rng, config: ArcadeRun
   if (x - SLED.behind > s.distance) {
     s.score += (x - SLED.behind - s.distance) * SLED.distRate * s.combo;
     s.distance = x - SLED.behind;
+    s.stallSec = 0;
+  } else {
+    s.stallSec += STEP_SEC;
+    if (s.stallSec >= SLED.stallSec) {
+      crash(s);
+      return;
+    }
   }
   const whole = Math.floor(s.combo);
   if (whole > s.milestone) {
     s.milestone = whole;
     s.milestoneHit = whole;
   } else if (s.combo < s.milestone) s.milestone = Math.max(1, whole);
+}
+
+/**
+ * The rider's balance in the air with no lean held: a turn toward level (only while the sled is the right way up) and
+ * against the spin, whose rate is the cross product of the runner line's last and current directions.
+ */
+function balance(s: SledState, ux: number, uy: number): number {
+  const lx = s.f.px - s.b.px;
+  const ly = s.f.py - s.b.py;
+  const ll = droot(lx * lx + ly * ly) || 1;
+  const spin = ((lx / ll) * uy - (ly / ll) * ux) / STEP_SEC;
+  const level = ux > 0 ? uy * SLED.levelGain : 0;
+  return -(level + spin * SLED.levelDamp);
 }
 
 /** A runner that was over a gap and is now under the far side's surface hit its wall. */

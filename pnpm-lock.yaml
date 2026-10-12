@@ -280,6 +280,9 @@ importers:
       '@senryo/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@senryo/arcade':
+        specifier: workspace:*
+        version: link:../../packages/arcade
       '@senryo/calls':
         specifier: workspace:*
         version: link:../../packages/calls
@@ -432,6 +435,19 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.6.5
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/arcade:
+    dependencies:
+      '@senryo/core':
+        specifier: workspace:*
+        version: link:../core
+      '@senryo/tokens':
+        specifier: workspace:*
+        version: link:../tokens
     devDependencies:
       typescript:
         specifier: 'catalog:'

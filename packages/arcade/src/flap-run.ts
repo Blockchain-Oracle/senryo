@@ -1,5 +1,5 @@
 /**
- * Candle Hop v2 on the stage (R7.3): a coin through the candle canyon as the stage's driver. A press is a flap
+ * Candle Hop v2's run (R7.3), the same on both apps: a coin through the candle canyon as the stage's driver. A press is a flap
  * (recorded by tick for the replay) with the wing; the coin squashes on the kick and stretches as it falls; each candle
  * passed rises a note and throws sparks; a crash is 50 ms of hit-stop, an 8 px shake over 300 ms, fragments, a flash,
  * the heavy haptic and the music cut. The 640×360 canyon is letterboxed into the stage; the draw never steers the run.
@@ -15,10 +15,10 @@ import {
   STEP_HZ,
   stepFlap,
 } from "@senryo/core";
-import { fire, music } from "@/lib/feedback";
-import { type ArcadeInk, tint } from "./ink";
-import type { ArcadeView } from "./loop";
-import { type ArcadeRun, clockOf } from "./run";
+import type { ArcadeView, Ctx2D } from "./canvas.ts";
+import type { ArcadeFeel } from "./feel.ts";
+import { type ArcadeInk, tint } from "./ink.ts";
+import { type ArcadeRun, clockOf } from "./run.ts";
 
 const LOOK = {
   bodyRadius: 4,
@@ -63,7 +63,7 @@ interface Bit {
 
 const rand = (spread: number) => (Math.random() * TWO - 1) * spread;
 
-function drawCandle(ctx: CanvasRenderingContext2D, c: Candle, x: number, ink: ArcadeInk): void {
+function drawCandle(ctx: Ctx2D, c: Candle, x: number, ink: ArcadeInk): void {
   const color = c.up ? ink.up : ink.down;
   const top = c.center - c.half;
   const bottom = c.center + c.half;
@@ -91,7 +91,9 @@ export function createFlapRun(o: {
   calm: boolean;
   tape: { symbol: string; moves: readonly number[] };
   ink: ArcadeInk;
+  feel: ArcadeFeel;
 }): ArcadeRun {
+  const { fire, music } = o.feel;
   const rng = createRng(o.seed);
   const config = { calm: o.calm, tape: o.tape.moves };
   const s: FlapState = createFlapState(rng, config);

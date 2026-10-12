@@ -6,23 +6,9 @@
  * tenth of a second so the run never lurches, and the loop stops while the page is hidden. The surface owns the
  * device-pixel ratio (capped at 2: past it nothing is sharper and a phone pays for it) and hands the draw the CSS box.
  */
+import type { ArcadeInk, ArcadeView, Ctx2D, LoopDriver } from "@senryo/arcade";
 import { STEP_MS } from "@senryo/core";
 import { type RefObject, useEffect, useRef, useSyncExternalStore } from "react";
-
-export interface ArcadeView {
-  ctx: CanvasRenderingContext2D;
-  /** The canvas box in CSS pixels, and the backing store's ratio to it. */
-  w: number;
-  h: number;
-  dpr: number;
-}
-
-export interface LoopDriver {
-  /** One fixed step. */
-  step(): void;
-  /** Paint the current state, `alpha` (0–1) of the way to the next. */
-  draw(view: ArcadeView, alpha: number, nowMs: number): void;
-}
 
 const MAX_FRAME_MS = 100;
 const MAX_DPR = 2;
@@ -37,7 +23,8 @@ export function useArcadeSurface(
   ready.current = onReady;
   useEffect(() => {
     const el = canvas.current;
-    const ctx = el?.getContext("2d");
+    // The browser's canvas is the arcade's `Ctx2D` (it has every member the draws use, and more).
+    const ctx = el?.getContext("2d") as Ctx2D | null | undefined;
     if (!el || !ctx) return;
     const measure = () => {
       const box = el.getBoundingClientRect();
@@ -97,4 +84,19 @@ export function useArcadeLoop(
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
   }, [running, visible, driver, view]);
+}
+
+/** The arcade's ink from the theme's tokens on the stage (the same in both themes). */
+export function readInk(el: HTMLElement): ArcadeInk {
+  const css = getComputedStyle(el);
+  const v = (name: string) => css.getPropertyValue(name).trim();
+  return {
+    arena: v("--arena"),
+    raised: v("--arena-raised"),
+    ink: v("--arena-ink"),
+    up: v("--up-fill"),
+    down: v("--down-fill"),
+    range: v("--range-fill"),
+    accent: v("--accent"),
+  };
 }

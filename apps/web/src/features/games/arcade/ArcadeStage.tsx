@@ -6,14 +6,14 @@
  * pauses (the button, Esc, or leaving the page); a ranked run can't pause, and leaving the page ends it unranked. The
  * run's end is the engine's: then the game-over card, with the server's replay check for a ranked run.
  */
+import type { ArcadeInk, ArcadeRun, LoopDriver, RunInput } from "@senryo/arcade";
 import type { ArcadeGame } from "@senryo/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { fire, music, sound } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
-import { readInk } from "./ink";
-import { type LoopDriver, useArcadeLoop, useArcadeSurface, usePageVisible } from "./loop";
-import type { ArcadeRun, RunInput } from "./run";
+import { DRAWERS, dropDrawerParam, openDrawer } from "@/lib/shell/drawer-param";
+import { readInk, useArcadeLoop, useArcadeSurface, usePageVisible } from "./loop";
 import { Countdown, OverPlate, PausePlate, type StageResult, StageTop } from "./StageParts";
 import "./arcade.css";
 
@@ -36,7 +36,7 @@ export interface StageProps {
   best: number | null;
   signedIn: boolean;
   /** Makes a run: a seed (the server's when signed in) and what it plays on. */
-  prepare: (ink: ReturnType<typeof readInk>) => Promise<ArcadeRun>;
+  prepare: (ink: ArcadeInk) => Promise<ArcadeRun>;
   /** A finished ranked run, checked by the server: its best, and the note for the card. */
   submit: (run: ArcadeRun) => Promise<{ best: number; note: string }>;
   share: (score: number) => void;
@@ -69,7 +69,8 @@ export function ArcadeStage(props: StageProps) {
     async (r: ArcadeRun, left: boolean) => {
       setPhase("over");
       const score = r.score();
-      const isBest = !left && score > 0 && (best === null || score > best);
+      // A first run sets the best; only beating one is a new best.
+      const isBest = !left && best !== null && score > best;
       const card = (note: string | null): StageResult => ({ score, isBest, note, stats: r.stats() });
       onFinished(score);
       if (isBest) fire("win", { cue: "win" });
@@ -284,6 +285,11 @@ export function ArcadeStage(props: StageProps) {
           result={result}
           checking={checking}
           signedIn={signedIn}
+          onSignIn={() => {
+            onClose();
+            dropDrawerParam();
+            openDrawer(DRAWERS.account);
+          }}
           onAgain={again}
           onShare={() => share(result.score)}
           onExit={exit}

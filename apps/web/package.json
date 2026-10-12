@@ -17,6 +17,7 @@
     "@radix-ui/react-slot": "1.3.3",
     "@senryo/account": "workspace:*",
     "@senryo/api-client": "workspace:*",
+    "@senryo/arcade": "workspace:*",
     "@senryo/calls": "workspace:*",
     "@senryo/chain": "workspace:*",
     "@senryo/config": "workspace:*",

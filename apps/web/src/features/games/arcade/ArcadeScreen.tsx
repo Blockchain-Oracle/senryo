@@ -6,6 +6,7 @@
  * issued, and ranks once the server's replay reproduces it; a guest plays the same game on a tape of its own. How a
  * score is checked sits behind ⓘ.
  */
+import { type ArcadeFeel, type ArcadeInk, type ArcadeRun, createFlapRun, createSledRun } from "@senryo/arcade";
 import { GAMES } from "@senryo/config";
 import { type ArcadeGame, seedFromBytes, shortAddress, ticksToMs } from "@senryo/core";
 import { useArcadeBoard, useArcadeDesk } from "@senryo/query";
@@ -14,14 +15,10 @@ import { useReducedMotion } from "motion/react";
 import { useCallback, useState } from "react";
 import { Avatar } from "@/components/identity/avatar";
 import { useAccount } from "@/lib/account/provider";
-import { fire } from "@/lib/feedback";
+import { fire, music, sound } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 import { GameScene } from "../GameScene";
 import { ArcadeStage } from "./ArcadeStage";
-import { createFlapRun } from "./flap-run";
-import type { ArcadeInk } from "./ink";
-import type { ArcadeRun } from "./run";
-import { createSledRun } from "./sled-run";
 
 const SEED_BYTES = 4;
 /** A board row's portrait (R2.8): the row's text height. */
@@ -29,6 +26,8 @@ const BOARD_AVATAR = 24;
 const ORDINAL = new Intl.PluralRules("en", { type: "ordinal" });
 const SUFFIX: Readonly<Record<string, string>> = { one: "st", two: "nd", few: "rd", other: "th" };
 const ordinal = (n: number) => `${n}${SUFFIX[ORDINAL.select(n)] ?? "th"}`;
+/** The web's feel for a run: Web Audio cues and the vibration table (D-317). */
+const FEEL: ArcadeFeel = { fire, sound, music };
 
 export interface ArcadeMove {
   keys: string;
@@ -80,8 +79,8 @@ export function ArcadeScreen({
       const seed = issued?.seed ?? seedFromBytes(crypto.getRandomValues(new Uint8Array(SEED_BYTES)));
       const ranked = issued !== null;
       const tape = issued?.tape ?? (await desk.tape.mutateAsync());
-      if (game === "candle-hop") return createFlapRun({ seed, ranked, calm: reduce, tape, ink });
-      return createSledRun({ seed, ranked, calm: reduce, tape, ink });
+      const run = { seed, ranked, calm: reduce, tape, ink, feel: FEEL };
+      return game === "candle-hop" ? createFlapRun(run) : createSledRun(run);
     },
     [desk.seed, desk.tape, game, reduce, signedIn],
   );

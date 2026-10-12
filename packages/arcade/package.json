@@ -1,0 +1,22 @@
+{
+  "name": "@senryo/arcade",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The arcade's runs as both apps play them (R7.1–R7.3, R7.6): Line Rider's sled and Candle Hop's coin as loop drivers — input, the recorded trace, the feel (cues and haptics, injected) and the drawing, onto a minimal 2D canvas the web's canvas and the phone's Skia recorder both satisfy. No react-native, no react-dom.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@senryo/core": "workspace:*",
+    "@senryo/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}
