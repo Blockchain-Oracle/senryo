@@ -158,9 +158,8 @@ export class DuelRelay {
     const key = `${pick.matchId}:${pick.card}:${player}`;
     if (this.placing.has(key)) return { state: "received" as const };
     this.placing.add(key);
-    void this.d.relay
-      .laneFor(pick.player)
-      .run(() => this.place(req, card))
+    // `place` takes the player's lane for its own send: wrapping it in the same lane too would wait on itself.
+    void this.place(req, card)
       .catch((error) => {
         const reason = describeError(error);
         this.d.log.warn({ match: pick.matchId, card: pick.card, reason }, "duel pick failed");
