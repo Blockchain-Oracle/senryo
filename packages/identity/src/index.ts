@@ -6,6 +6,7 @@ export { ART, ART_SOURCES } from "./art/index.ts";
 export { EXTERNAL_CHAIN_IDS } from "./constants.ts";
 export { type DrawFile, type DrawSource, drawOf } from "./draw.ts";
 export { ENTITIES } from "./entities.ts";
+export { TEAM_CRESTS, type TeamCrest } from "./generated/teams.ts";
 export { CAIP2, type EntityId, ids } from "./ids.ts";
 export { type MarkStatus, markLabel } from "./labels.ts";
 export { dollarId, marketId, ROUTE_CHAIN_ID, type RouteChain, routeAssetId } from "./lookup.ts";

@@ -1,32 +1,53 @@
 /**
- * A side's mark on the phone (the web's `TeamMark`, R2.7): the team's logo from the identity registry (`ids.team`)
- * where one is on file; otherwise its abbreviation on a round plate. Never an image from a feed.
+ * A side's crest on the phone (D-315, F11; the web's `TeamMark`): the team's own crest from `@senryo/identity`'s team
+ * table, bundled (fetched by script from ESPN's team feeds, pinned), the dark-ground crest in the dark theme; only a
+ * club the feed doesn't list falls back to its abbreviation on a round plate.
  */
 import type { EventView } from "@senryo/api-client";
-import { hasArt, ids } from "@senryo/identity";
+import { ids, TEAM_CRESTS } from "@senryo/identity";
+import { TEAM_CREST_SOURCES } from "@senryo/identity/native";
+import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
-import { EntityMark } from "~/components/identity/EntityMark";
 import { TYPE, useTheme } from "~/theme";
 
-const PLATE = 36;
+const SIZES = { md: 36, lg: 48 } as const;
 
-export function TeamMark({ league, team }: { league: string; team: EventView["home"] }) {
-  const { color } = useTheme();
+export function TeamMark({
+  league,
+  team,
+  size = "md",
+}: {
+  league: string;
+  team: EventView["home"];
+  size?: keyof typeof SIZES;
+}) {
+  const { color, name } = useTheme();
   const id = ids.team(league, team.abbr);
-  if (hasArt(id)) return <EntityMark id={id} size={PLATE} label={team.name} />;
+  const crest = TEAM_CRESTS[id];
+  const source = TEAM_CREST_SOURCES[name === "dark" && crest?.dark ? `${id}:dark` : id];
+  const px = SIZES[size];
+  if (source) {
+    return (
+      <Image
+        source={source}
+        style={{ width: px, height: px }}
+        contentFit="contain"
+        accessible
+        accessibilityLabel={team.name}
+      />
+    );
+  }
   return (
-    <View accessible accessibilityLabel={team.name} style={[styles.plate, { backgroundColor: color.raised2 }]}>
+    <View
+      accessible
+      accessibilityLabel={team.name}
+      style={[styles.plate, { width: px, height: px, borderRadius: px / 2, backgroundColor: color.raised2 }]}
+    >
       <Text style={[TYPE.micro, { color: color.inkMuted }]}>{team.abbr}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  plate: {
-    width: PLATE,
-    height: PLATE,
-    borderRadius: PLATE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  plate: { alignItems: "center", justifyContent: "center" },
 });

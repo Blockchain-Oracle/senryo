@@ -15,7 +15,8 @@
   "scripts": {
     "fetch": "node scripts/fetch-marks.ts",
     "codegen": "node scripts/codegen.ts",
-    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.native.json"
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p tsconfig.native.json",
+    "fetch:teams": "node scripts/fetch-teams.ts"
   },
   "dependencies": {
     "@senryo/config": "workspace:*",
@@ -41,6 +42,7 @@
     "@types/react": "catalog:",
     "react-native": "0.86.3",
     "react-native-svg": "15.15.4",
+    "sharp": "0.35.5",
     "svgo": "4.1.0",
     "typescript": "catalog:"
   }

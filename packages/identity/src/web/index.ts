@@ -1,6 +1,7 @@
 /** @senryo/identity/web — EntityMark, EntityGlyph and the generated inline-SVG artwork. */
 
 export { ART_COMPONENTS as WEB_ART } from "../generated/web/index.ts";
+export { TEAM_CREST_URLS } from "../generated/web/team-crests.ts";
 export * from "../index.ts";
 export { EntityGlyph, type EntityGlyphProps } from "./EntityGlyph.tsx";
 export { EntityMark, type EntityMarkProps } from "./EntityMark.tsx";
