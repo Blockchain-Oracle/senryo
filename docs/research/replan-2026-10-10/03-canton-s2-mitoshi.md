@@ -118,7 +118,7 @@ The only money flow is the payroll run described in §1.2. It is **not a trading
 Mitoshi offers prediction "Windows" on BTC, ETH, SOL and nine US stocks, plus tokenized stocks on Tempo (`cwf/web/src/app/(site)/page.tsx:9-12`).
 
 - **Revamp.** On 8 Oct the owner redirected it: Markets became a Tradash-style terminal at `/trade/[symbol]`, inside a roy-chain/Slush shell, "in Mitoshi's own colours and type" (`cwf/docs/plan/STATUS.md`, "The revamp"; `cwf/docs/plan/decisions.md:1578-1588`, D-189).
-- **Hosting.** Testnet runs on Coolify at `testnet.mitoshi.xyz` (STATUS).
+- **Hosting.** Runs on Coolify; the live reference to check is `mitoshi.xyz` — not `testnet.mitoshi.xyz` (owner, 12 Oct).
 - **Phone.** Mobile is web/PWA only (§0).
 
 **Route groups** (`cwf/web/src/app/`):

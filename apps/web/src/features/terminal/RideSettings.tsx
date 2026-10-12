@@ -6,7 +6,7 @@
  * risk, fees, the most it can win and where that caps, its 4-hour life, and the wallet after it.
  */
 import {
-  capWords,
+  capText,
   dollars,
   knockOutWords,
   leverageChips,
@@ -17,7 +17,6 @@ import {
   trailText,
   unitOf,
 } from "@senryo/calls";
-import { priceText } from "@senryo/core";
 import { fire } from "@/lib/feedback";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { AmountField } from "./AmountField";
@@ -127,7 +126,8 @@ export function RideSettings(p: RideSettingsProps) {
           <SummaryRow k="Estimated closing fee" v={`about ${money(up.fee)}`} />
           <SummaryRow k="Early-close fee" v={`on a profit, ${p.terms.earlyWindowSec} s at most`} />
           <SummaryRow k="Max profit" v={money(up.reserve)} />
-          {down ? <SummaryRow k="Up · Down" v={`${capWords(up, unit)} · ${priceText(down.capE8, unit)}`} /> : null}
+          <SummaryRow k="Up capped at" v={capText(up, unit)} />
+          {down ? <SummaryRow k="Down capped at" v={capText(down, unit)} /> : null}
           <SummaryRow k="Closes after" v={`${p.terms.maxLifeSec / SECONDS_PER_HOUR} h at most`} />
           {p.available !== undefined ? <SummaryRow k="After this" v={money(p.available - up.cost)} /> : null}
         </dl>

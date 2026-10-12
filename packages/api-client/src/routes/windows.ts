@@ -9,7 +9,7 @@ import { defineRoute } from "./define.ts";
 
 export const windowStateRoute = defineRoute({
   method: "GET",
-  path: "/v1/markets/windows/:windowId",
+  path: "/v1/markets/windows/:windowId/opened",
   auth: "none",
   params: z.object({ windowId: bytes32Schema }),
   query: z.object({ chainId: z.coerce.number().pipe(chainIdSchema) }),

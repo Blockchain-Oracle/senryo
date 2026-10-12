@@ -27,6 +27,7 @@ import {
   type SigmaPair,
 } from "@senryo/core";
 import { type BookCallExit, callBreakEvenE8, callExitLevelsE8, callFigures } from "./book.ts";
+import { closeLimit, openLimit } from "./limits.ts";
 import type { ReactionPosition } from "./reactions.ts";
 
 const E8 = 1e8;
@@ -151,6 +152,8 @@ export interface QuoteInput {
   position: { call: QuotePosition; band: BandSpecLike } | undefined;
   /** The offered side being hovered or focused (0 or 1): its winning region previews on the chart. */
   preview?: 0 | 1 | null;
+  /** The market's slippage limit (`slippageE6`, D-300): the quotes carry the limits a tap signs (R5.8). */
+  slipE6?: bigint | undefined;
 }
 
 /** The latest quotes, readable synchronously for the tap (the limit is the quote the user saw). */
@@ -158,6 +161,8 @@ export interface Quotes {
   first: OpenQuote | null;
   second: OpenQuote | null;
   close: CloseQuote | null;
+  /** The least each would accept at a p99 2-second move against it (R5.8); null keeps the tolerance on the quote. */
+  limits?: { first: bigint | null; second: bigint | null; close: bigint | null };
 }
 
 /** One tick as the reaction engine reads it: the price and, holding a call, its result as a share of the stake. */
@@ -168,6 +173,7 @@ export interface QuoteTick {
 }
 
 export interface QuotePass {
+  limits: NonNullable<Quotes["limits"]>;
   first: OpenQuote | null;
   second: OpenQuote | null;
   close: CloseQuote | null;
@@ -259,12 +265,17 @@ export function quoteTick(i: QuoteInput): QuotePass {
   const [a, b] = i.offer;
   const first = price(a);
   const second = price(b);
+  const slip = i.slipE6;
+  const limitOf = (band: BandSpecLike | undefined, q: OpenQuote | null) =>
+    band && q && !q.refusal && slip !== undefined ? openLimit(band, w, spot, i.stake, terms, slip) : null;
+  const limits = { first: limitOf(a, first), second: limitOf(b, second), close: null as bigint | null };
 
   const diff = spot - i.k;
   const pct = i.k > 0n ? (diff * PERCENT_E3) / i.k : 0n;
   const lineText = `${diff >= 0n ? "▲" : "▼"} ${gapText(diff, i.k, i.unit)} (${formatUnits(pct < 0n ? -pct : pct, PERCENT_DECIMALS, PERCENT_DECIMALS)}%) ${diff >= 0n ? "above" : "below"} the line`;
   const shown = b ? [first, second] : [first];
   const base = {
+    limits,
     first,
     second,
     firstLine: oddsLine(first, i.stake),
@@ -299,6 +310,7 @@ export function quoteTick(i: QuoteInput): QuotePass {
     };
   }
   const close = quoteClose(p.band, w, spot, p.call.payout, terms);
+  if (slip !== undefined && !close.refusal) limits.close = closeLimit(p.band, w, spot, p.call.payout, terms, slip);
   const figures = callFigures(close, p.call.payout, p.call.stake, p.call.fillProbE6);
   const pnl = figures.pnl;
   const roiBps = pnl !== null && p.call.stake > 0n ? (pnl * BPS) / p.call.stake : 0n;

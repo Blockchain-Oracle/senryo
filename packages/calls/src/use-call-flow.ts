@@ -160,6 +160,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
         bandLabel: label,
         stake,
         payoutQuote: quote.payout,
+        payoutLimit: slot === 0 ? latest.current?.limits?.first : latest.current?.limits?.second,
       });
       if (r.kind === "sent") setPending({ digest: r.status.digest, label: `Opening ${label}…`, kind: "open" });
     } catch (error) {
@@ -185,6 +186,8 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
         band: position.band,
         shares,
         proceedsQuote: percent === WHOLE ? quote.proceeds : proceedsFor(shares, quote.bidE6),
+        // The limit scales with the part: proceeds are linear in shares.
+        proceedsLimit: latest.current?.limits?.close == null ? null : (latest.current.limits.close * percent) / WHOLE,
       });
       const label = percent === WHOLE ? "Cashing out…" : `Cashing out ${percent}%…`;
       if (r.kind === "sent") setPending({ digest: r.status.digest, label, kind: "close" });

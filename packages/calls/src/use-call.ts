@@ -32,6 +32,8 @@ export interface OpenArgs {
   stake: bigint;
   /** The payout the user saw for this stake (`quoteOpen`). */
   payoutQuote: bigint;
+  /** The least payout at a p99 2-second move against it (R5.8, D-300); absent: the quote less the tolerance. */
+  payoutLimit?: bigint | null | undefined;
 }
 
 export interface CloseArgs {
@@ -41,6 +43,8 @@ export interface CloseArgs {
   shares: bigint;
   /** The proceeds the user saw for these shares (`quoteClose`). */
   proceedsQuote: bigint;
+  /** The least proceeds at a p99 2-second move against it (R5.8); absent: the quote less the tolerance. */
+  proceedsLimit?: bigint | null | undefined;
 }
 
 export function useCallActions({ client, hint }: Caller) {
@@ -96,7 +100,7 @@ export function useCallActions({ client, hint }: Caller) {
           band: a.band,
           ticketId: 0n,
           amount: a.stake,
-          limit: withTolerance(a.payoutQuote, TOLERANCE_BPS),
+          limit: a.payoutLimit ?? withTolerance(a.payoutQuote, TOLERANCE_BPS),
         },
         PROMPTS.call(a.bandLabel, a.window.symbol),
       ),
@@ -113,7 +117,7 @@ export function useCallActions({ client, hint }: Caller) {
           band: a.band,
           ticketId: a.ticketId,
           amount: a.shares,
-          limit: withTolerance(a.proceedsQuote, TOLERANCE_BPS),
+          limit: a.proceedsLimit ?? withTolerance(a.proceedsQuote, TOLERANCE_BPS),
         },
         PROMPTS.close,
       ),

@@ -24,6 +24,7 @@ import {
   noUiTests,
   pnpmOnly,
   solNoMagicNumbers,
+  uniqueApiRoutes,
 } from "./lib/repo-checks.mjs";
 import { sqlNoDroppedTables } from "./lib/sql-checks.mjs";
 
@@ -41,6 +42,11 @@ export const rules = [
     check: fileLength,
   },
   { id: "pnpm-only", description: "pnpm is the only package manager", check: pnpmOnly },
+  {
+    id: "unique-api-routes",
+    description: "every api route is declared once (a duplicate crashes the api)",
+    check: uniqueApiRoutes,
+  },
   {
     id: "no-float-money",
     description: "money is integer base units — no parseFloat/Number/toFixed on money values",

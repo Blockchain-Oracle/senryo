@@ -48,41 +48,43 @@ and the morph on top of them.*
 ## Steps
 
 ### The book
-- [ ] R5.1 `useLiveBook`:
+- [x] R5.1 `useLiveBook`:
   - values every open position — calls via `quoteClose`, rides via `LinearMath`, parlays read-only — at up to 5 Hz from
     `live.prices` and display ticks;
   - replaces the map only on change;
   - `use-call-window.ts`'s one-window view is deleted.
-- [ ] R5.2 PnL per D-303:
+- [x] R5.2 PnL per D-303:
   - from the fair price at the fill (`Filled.probE6`; ride entry);
   - a Fees row;
   - B/E by bisection against `quoteClose` (rides in closed form);
   - colour by PnL ≥ 0;
   - fix the near-certain winner showing −$10 in the win colour (`packages/calls/src/quote.ts:236-237`).
-- [ ] R5.3 Positions surfaces:
+- [x] R5.3 Positions surfaces:
   - **web aside:** equity pill (cash + live values), Unrealized card (odometer, %, "N unpriced"), rows with ROI over
     PnL that expand to reduce/exits/share, Close all (n);
   - **phone:** a View-position pill (count + ROI) and a positions sheet;
   - **Home and Calls rows:** live value and Cash out, with Locked/Settled/Void states.
 
 ### The terminal
-- [ ] R5.4 Mode switch Call | Ride. The order stack sits on the chart's edge (Stake · Leverage (ride) · Fees · Exit) and
+- [x] R5.4 Mode switch Call | Ride. The order stack sits on the chart's edge (Stake · Leverage (ride) · Fees · Exit) and
   opens a settings sheet. Risk is written in words, and so is the knock-out price.
-- [ ] R5.5 The button morph: UP/DOWN cross-fades to TRAIL/CLOSE.
+- [x] R5.5 The button morph: UP/DOWN cross-fades to TRAIL/CLOSE.
   - TRAIL is greyed with "Need +x% to trail" until it qualifies, then reads TRAILING;
   - one tap arms the on-chain trail at the default distance;
   - the exit sheet stays behind a long press.
-- [ ] R5.6 Chart levels on both engines:
+- [x] R5.6 Chart levels on both engines:
   - entry, B/E (amber `[1,3]`), trail (`[6,3]`, 1.5 px), TP and SL;
   - knock-out (Liq) and cap for rides;
   - the path-to-entry gradient band.
-- [ ] R5.7 Order controls:
+- [x] R5.7 Order controls:
   - stake presets plus keypad, with "remember last";
   - for rides, leverage chips up to the market's cap.
   - Shortfall opens Add money / test dollars with the amount pre-filled; the panel shows "after this: $Y".
-- [ ] R5.8 Slippage limit in price terms (D-300), shared by calls and rides.
-- [ ] R5.9 Hotkeys per D-308: in Real, ↑/↓/C act only with one-tap on.
-- [ ] R5.25 Lanes that can't take a call say so before the tap *(found 12 Oct in R5-A's testnet run)*:
+- [x] R5.8 Slippage limit in price terms (D-300), shared by calls and rides: `slippageE6` (the p99 of a 2-second move by
+  market, 3.8 σ over 2 s, ≥ 3 bp); a ride's worst price, a call's payout or cash-out at that move against it
+  (`limits.ts`), the old 3 % tolerance kept only where both sides of the move would be refused.
+- [x] R5.9 Hotkeys per D-308: in Real, ↑/↓/C act only with one-tap on.
+- [x] R5.25 Lanes that can't take a call say so before the tap *(found 12 Oct in R5-A's testnet run)*:
   - `Windows.openWindow` accepts a window only within its print's admission (300 s for Pyth) after its start, and
     nothing opens windows ahead (the relay opens one lazily, with the first call). So a 15m or 1h window nobody
     called in its first 5 minutes refuses every call for the rest of its life ("WindowNotTrading"); 1m and 5m

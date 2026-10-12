@@ -119,7 +119,24 @@ leftovers.
   Open: a real account in the Duel match and the signed-in Earn hero (the owner's phone). Handoff in
   [replan-p-phone.md](replan-p-phone.md).
 
-Next: rides 12/13 (19:58 UTC) and the event committee (from 19:00 UTC); then R5 — the live loop.
+Next: R5 — the live loop (below).
+
+**R5 under way (12 Oct evening)** ([replan-r5-live-loop.md](replan-r5-live-loop.md)):
+- **A — the live book (live on the web, 12 Oct 20:20 UTC):** every open call and ride valued at up to 5 Hz the
+  Tradash way (D-303: a call from its fill's fair chance — `Filled.probE6` now stored, 0030 — a ride (mark − entry) ×
+  size); equity in both terminals' tops; the web's positions column, View-position pill and drawer; Home and Calls
+  list open positions live with Cash out; the near-certain winner no longer reads −$stake. api + keeper `sha-39ac653`,
+  web `sha-5788360`. Checked on real testnet positions (calls 1018, rides 14/15) read-only in the local web.
+- **B — the terminal for calls and rides (built, gated `60a7a7a7`):** Call | Ride, the order stack and its settings
+  (Codex direction `11-terminal-direction.md`), UP/DOWN → TRAIL/CLOSE on both instruments, levels (B/E, trail,
+  TP/SL, knock-out, cap) and the PnL band on both engines, ride exits and part closes, shortfalls, D-308 keys, R5.25
+  (a 15m/1h window nobody opened within 5 minutes can't take calls: the lane says so; boundary calls open the
+  market's other long lanes). Waiting: the phone's simulator pass and OTA, the api + web deploy.
+- **R4 rows closed meanwhile:** rides 12/13 ran to their 4 h end at 19:58 UTC and settled within 30 s (no knock-out:
+  BTC moved ≈ 0.2 %); BUF @ FLA decided Yes at 19:38:59 UTC. The knock-out row stays open on rides 16/17 (40× pair,
+  owner `0x8Be3…9A9a`, until ≈ 00:33 UTC).
+- **Next in R5:** C the moments (R5.8 calls, R5.10–R5.14), D feel (R5.15, R5.17, R5.24), E after the trade
+  (R5.19–R5.22).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

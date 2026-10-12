@@ -88,6 +88,10 @@ export const knockOutWords = (q: RideQuote, unit: PriceUnit = "usd"): string =>
 export const capWords = (q: RideQuote, unit: PriceUnit = "usd"): string =>
   `Capped at ${priceText(q.capE8, unit)} (${pctText(q.capMoveBps)})`;
 
+/** "$92,000 (+22.5%)": where a side caps, and how far that is. */
+export const capText = (q: RideQuote, unit: PriceUnit = "usd"): string =>
+  `${priceText(q.capE8, unit)} (${pctText(q.capMoveBps)})`;
+
 /** "10×". */
 export const leverageOf = (leverageBps: number): number => Math.round(leverageBps / LEVERAGE_ONE);
 

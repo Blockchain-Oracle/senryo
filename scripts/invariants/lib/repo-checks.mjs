@@ -256,3 +256,22 @@ export function navRouteCoverage(rule, ctx) {
       findings.push(finding(rule, `web nav href ${href} has no page in ${webDir}`, "packages/config/src/nav.ts"));
   return { findings };
 }
+
+/**
+ * Every api route is declared once: two `defineRoute`s with the same method and path crash the api at start (Fastify
+ * refuses the second) — R5's window state first took the window proof's path and looped the api on deploy.
+ */
+export function uniqueApiRoutes(rule, ctx) {
+  const seen = new Map();
+  const findings = [];
+  const ROUTE = /method:\s*"([A-Z]+)",\s*\n\s*path:\s*"([^"]+)"/g;
+  for (const { rel, abs } of walkFiles(ctx.root, "packages/api-client/src/routes", [".ts"])) {
+    for (const m of readText(abs).matchAll(ROUTE)) {
+      const key = `${m[1]} ${m[2]}`;
+      const at = seen.get(key);
+      if (at) findings.push(finding(rule, `${key} is also declared in ${at}`, rel));
+      else seen.set(key, rel);
+    }
+  }
+  return findings;
+}

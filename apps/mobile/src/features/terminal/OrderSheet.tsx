@@ -9,7 +9,7 @@
 import {
   CALL_MODES,
   type CallMode,
-  capWords,
+  capText,
   dollars,
   knockOutWords,
   leverageChips,
@@ -82,7 +82,7 @@ function Row({ k, v }: { k: string; v: string }) {
   return (
     <View style={styles.row}>
       <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{k}</Text>
-      <Text style={[TYPE.rowAmount, { color: color.ink }]}>{v}</Text>
+      <Text style={[TYPE.rowAmount, styles.value, { color: color.ink }]}>{v}</Text>
     </View>
   );
 }
@@ -202,7 +202,8 @@ function RideBody({ o, available }: { o: RideOrder; available: bigint | undefine
           <Row k="Opening fee" v={money(up.fee)} />
           <Row k="Estimated closing fee" v={`about ${money(up.fee)}`} />
           <Row k="Max profit" v={money(up.reserve)} />
-          <Row k="Up · Down" v={`${capWords(up, unit)} · ${priceText(down.capE8, unit)}`} />
+          <Row k="Up capped at" v={capText(up, unit)} />
+          <Row k="Down capped at" v={capText(down, unit)} />
           <Row k="Closes after" v={`${o.terms.maxLifeSec / SECONDS_PER_HOUR} h at most`} />
           {available !== undefined ? <Row k="After this" v={money(available - up.cost)} /> : null}
         </View>
@@ -311,5 +312,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: SPACE.xs },
+  row: { flexDirection: "row", justifyContent: "space-between", gap: SPACE.md, paddingVertical: SPACE.xs },
+  value: { flexShrink: 1, textAlign: "right" },
 });

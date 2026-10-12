@@ -25,7 +25,7 @@ import {
   unitOf,
 } from "@senryo/calls";
 import type { CallWindowView } from "@senryo/calls/react";
-import type { CadenceSec } from "@senryo/config";
+import { type CadenceSec, MARKETS, slippageE6 } from "@senryo/config";
 import { priceFromE8 } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -87,6 +87,11 @@ export function useLiveQuote(
   }, []);
 
   const bands = t.series?.bands;
+  // R5.8 (D-300): the limit a tap signs is the quote at a p99 2-second move against it, by market.
+  const slipE6 = useMemo(() => {
+    const spec = MARKETS.find((m) => m.symbol === t.symbol);
+    return spec ? slippageE6(spec) : undefined;
+  }, [t.symbol]);
   const unit = unitOf(t.symbol);
   const offer = useMemo(() => offerOf(mode, bands, t.k, unit), [mode, bands, t.k, unit]);
   const position = t.position;
@@ -122,6 +127,7 @@ export function useLiveQuote(
         unit,
         position: position && positionBand ? { call: position, band: positionBand } : undefined,
         preview: preview.current,
+        slipE6,
       });
       values.firstLine.set(pass.firstLine);
       values.secondLine.set(pass.secondLine);
@@ -144,7 +150,7 @@ export function useLiveQuote(
       } else if (pass.close) {
         values.cashOut.set({ text: UNSOLD, trend: 0, units: null });
       }
-      latest.current = { first: pass.first, second: pass.second, close: pass.close };
+      latest.current = { first: pass.first, second: pass.second, close: pass.close, limits: pass.limits };
       const shown = offer[1] ? [pass.first, pass.second] : [pass.first];
       values.pays.set(paysWords(shown, stake));
       values.fees.set(feesWords(shown, stake));
@@ -179,6 +185,7 @@ export function useLiveQuote(
     position,
     positionBand,
     pricing,
+    slipE6,
     values,
     trailCents,
   ]);
