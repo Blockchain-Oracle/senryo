@@ -78,6 +78,10 @@ type AppRole =
   | "rangeFillEdge"
   /** The label on a direction fill (black in both themes). */
   | "onDirectionFill"
+  /** A game's arena (D-316: near-black in both themes), its raised window, and the ink on it. */
+  | "arena"
+  | "arenaRaised"
+  | "arenaInk"
   /** Ink on the up/down inks used as plates (the chart's price pill, Yes/No): white in light, black in dark. */
   | "upForeground"
   | "downForeground"
@@ -148,6 +152,9 @@ export const LIGHT: Palette = {
   downFillEdge: "#D9435C",
   rangeFillEdge: "#1FA8B6",
   onDirectionFill: "#000000",
+  arena: "#0B0906",
+  arenaRaised: "#241E14",
+  arenaInk: "#F5EFE0",
   upForeground: "#FFFFFF",
   downForeground: "#FFFFFF",
   chartNeutral: "#6E6E6E",
@@ -215,6 +222,9 @@ export const DARK: Palette = {
   downFillEdge: "#D9435C",
   rangeFillEdge: "#1FA8B6",
   onDirectionFill: "#000000",
+  arena: "#0B0906",
+  arenaRaised: "#241E14",
+  arenaInk: "#F5EFE0",
   upForeground: "#000000",
   downForeground: "#000000",
   chartNeutral: "#A0A0A0",

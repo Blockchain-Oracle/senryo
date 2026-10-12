@@ -292,6 +292,9 @@
   --down-fill-edge: #D9435C;
   --range-fill-edge: #1FA8B6;
   --on-direction-fill: #000000;
+  --arena: #0B0906;
+  --arena-raised: #241E14;
+  --arena-ink: #F5EFE0;
   --up-foreground: #FFFFFF;
   --down-foreground: #FFFFFF;
   --chart-neutral: #6E6E6E;
@@ -357,6 +360,9 @@
   --down-fill-edge: #D9435C;
   --range-fill-edge: #1FA8B6;
   --on-direction-fill: #000000;
+  --arena: #0B0906;
+  --arena-raised: #241E14;
+  --arena-ink: #F5EFE0;
   --up-foreground: #000000;
   --down-foreground: #000000;
   --chart-neutral: #A0A0A0;
