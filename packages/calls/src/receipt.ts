@@ -14,9 +14,7 @@ import {
   priceText,
   SIDE,
   sideName,
-  signedUsd,
   stepTitle,
-  toneOf,
   usd,
   whenText,
 } from "@senryo/core";
@@ -82,53 +80,12 @@ export function receiptFacts(t: CallTimeline, where: string | null = null): [lab
     ["Entry", c.entryE8 === null ? "At the next print" : priceText(c.entryE8, unitOf(c.symbol))],
     ...(exit?.priceE8 ? ([["Cashed out at", priceText(exit.priceE8, unitOf(c.symbol))]] as [string, string][]) : []),
     ...(c.closedBy ? ([["Closed by", CLOSED_BY_WORD[c.closedBy]]] as [string, string][]) : []),
-    ["Signed with", c.viaSession ? "One-tap" : "Your passkey"],
+    // A Practice guest signs with its device key (R5.10), so the owner's signature is all the chain can say.
+    ["Signed with", c.viaSession ? "One-tap" : "Your signature"],
   ];
 }
 
-/** The receipt's big line and its tone: what it pays while live, the signed result once done. */
-export function receiptHero(t: CallTimeline): { text: string; tone: "up" | "down" | "ink"; live: boolean } {
-  const c = t.call;
-  const live = OPEN_STATES.has(c.status);
-  const pnl = c.pnl === null ? null : BigInt(c.pnl);
-  const filled = t.events.find((e) => e.kind === "filled");
-  if (live) return { text: filled ? `Pays ${usd(filled.amount)}` : usd(c.stake), tone: "ink", live };
-  const tone = toneOf(pnl);
-  return { text: pnl === null ? "—" : signedUsd(pnl), tone: tone === "muted" ? "ink" : tone, live };
-}
-
 export const callTitle = (c: CallTimeline["call"]) => `${c.symbol} ${sideName(c.band)} · ${lane(c.cadenceSec)}`;
-
-export interface ShareCall {
-  symbol: string;
-  call: string;
-  result: string;
-  won: boolean;
-  entry: string | null;
-  exit: string | null;
-  exitLabel: string;
-  mode: string;
-  url: string;
-}
-
-/** The share card's words for a finished call: its result, entry and how it ended (cashed out or the close print). */
-export function shareOf(t: CallTimeline, modeLabel: string, closeE8: bigint | null, url: string): ShareCall {
-  const c = t.call;
-  const pnl = c.pnl === null ? 0n : BigInt(c.pnl);
-  const cashed = t.events.findLast((e) => e.kind === "cashed out");
-  const exit = cashed?.priceE8 ?? closeE8;
-  return {
-    symbol: c.symbol,
-    call: callTitle(c),
-    result: signedUsd(pnl),
-    won: pnl > 0n,
-    entry: c.entryE8 === null ? null : priceText(c.entryE8, unitOf(c.symbol)),
-    exit: exit === null || exit === undefined ? null : priceText(exit, unitOf(c.symbol)),
-    exitLabel: c.closedBy ? `${CLOSED_BY_WORD[c.closedBy]} at` : cashed ? "Cashed out at" : "Closed at",
-    mode: modeLabel === "Practice" ? "Practice · test dollars" : "Real · USDC",
-    url,
-  };
-}
 
 // ------------------------------------------------------------------------------------------------ the window proved
 
@@ -213,6 +170,3 @@ export function proofFacts(
   ];
   return { heading: `${whenText(p.start)} → ${whenText(p.expiry)}`, facts };
 }
-
-/** The close print the share card says, when the proof has one. */
-export const proofCloseE8 = (p: WindowProof | undefined): bigint | null => (p?.close ? p.close.priceE8 : null);

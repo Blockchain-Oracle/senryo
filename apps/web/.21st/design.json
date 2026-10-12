@@ -679,6 +679,15 @@
         "use": "events board and question page: the pool, each side's stakes, Yes's share as a split bar, Yes / No, the call view sliding up in place with an exact amount and presets, the receipt (S8.7); searched \"prediction market card\" (2537, 16240 BeUI Prediction Market, 22249 Market Snapshot), \"poll result bar\" (23544 Poll Results), \"yes no vote\" (28275 Vote Tally), \"amount input currency\" (28357)",
         "path": "src/components/ui/prediction-market-card.tsx",
         "retokenized": true
+      },
+      {
+        "name": "ticket-confirmation-card",
+        "source": "21st:ravikatiyar162/ticket-confirmation-card",
+        "id": 6492,
+        "url": "https://21st.dev/@ravikatiyar162/components/ticket-confirmation-card",
+        "use": "the trade slip (R5.11, D-331): its structure — header with the folio, the result, the facts, a dashed perforation and the stub; searched \"receipt ticket perforated\" (22433 Admit One Ticket, 31044 Engraved Ticket, 6492, 31601 Receipt Printer) and \"stamp seal\" (3417 Stamp); retokenized to the receipt tokens, the barcode replaced by the QR, the confetti and card logo dropped, the stamp from Kinpaku per Codex direction 12",
+        "path": "src/features/receipts/TradeSlip.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -831,6 +840,21 @@
         "id": 29468,
         "name": "Leaderboard Table",
         "verdict": "rejected for the duel's you-vs-them totals (a table for many rows); the versus strip is hand-written from the terminal's tokens — no 21st match for a two-sided scoreboard"
+      },
+      {
+        "id": 31601,
+        "name": "Receipt Printer",
+        "verdict": "rejected for the slip: a printing/tearing animation with remote audio; the slip is a static paper object (D-331)"
+      },
+      {
+        "id": 3417,
+        "name": "Stamp",
+        "verdict": "rejected: an award-badge wrapper; the stamp is a Kinpaku seal drawn from our materials"
+      },
+      {
+        "id": 22433,
+        "name": "Admit One Ticket",
+        "verdict": "rejected: an event-ticket look with a torn edge; the slip keeps a receipt's ledger"
       }
     ],
     "removed": [

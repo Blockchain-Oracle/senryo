@@ -780,6 +780,15 @@
         "port": "a panel one step above its ground; the split share bar with its skewed divider; Yes / No at the kit's button geometry with the 0.97 press; choosing a side springs the call view up inside the card (Reanimated, SPRING.tallDetail) over the question lifted, dimmed and shrunk; an exact amount (decimal pad, never truncated) and presets; the receipt in place",
         "deviations": "the pools are the book's (no simulated votes), no badges or bordered boxes, both sides' marks, the closing bar counts to the close",
         "status": "built (S8.7) — src/components/kit/PredictionMarketCard.tsx, src/features/events/*"
+      },
+      {
+        "name": "trade-slip",
+        "source": "21st #6492 ravikatiyar162/ticket-confirmation-card; searched \"receipt ticket perforated\" (22433 Admit One Ticket, 31044 Engraved Ticket, 6492, 31601 Receipt Printer), \"stamp seal\" (3417 Stamp)",
+        "evidence": [
+          "R5.11 / D-331, Codex direction 12 (docs/research/replan-2026-10-10/12-slip-direction.md); Mitoshi crypto-world-fair web Receipt.tsx, VerdictStamp.tsx, CallCard.tsx"
+        ],
+        "port": "the ticket card's ledger (header with the folio, the result, the facts, a dashed perforation, the stub) on white receipt paper in both themes with the receipt shadow; the dashed rule in react-native-svg with notches in the ground colour; the Kinpaku stamp (foil gradient ring, lacquer field, foil rule, gold-leaf words) at −4° pressing once (Reanimated); exported off-screen at 3× with its link and QR (view-shot + expo-sharing)",
+        "deviations": "barcode → QR; confetti and card logo dropped; Receipt Printer's print/tear animation rejected (a static paper object); Stamp 3417 rejected (an award wrapper)"
       }
     ],
     "planned": [

@@ -20,6 +20,7 @@ export const DRAWERS = {
   settings: "settings",
   oneTap: "one-tap",
   call: "call",
+  ride: "ride",
   install: "install",
 } as const;
 

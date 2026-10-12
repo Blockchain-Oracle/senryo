@@ -206,6 +206,7 @@
   --elevation-button: 0px 2px 4px 0px #00000029;
   --elevation-dock: 0px 8px 24px 0px #00000033;
   --elevation-sheet: 0px -4px 16px 0px #0000001F;
+  --elevation-receipt: 0px 8px 24px 0px #0000001F;
   --gold-leaf-shadow: #886426;
   --gold-leaf-mid: #D4AE5B;
   --gold-leaf-highlight: #FFF0BC;
@@ -231,6 +232,12 @@
   --scene-gray: #B7BBC6;
   --qr-ink: #000000;
   --qr-paper: #FFFFFF;
+  --receipt-paper: #FFFFFF;
+  --receipt-ink: #000000;
+  --receipt-muted: #5C5C5C;
+  --receipt-rule: #C8C8C8;
+  --receipt-up: #2F7A00;
+  --receipt-down: #C8283F;
 }
 
 :root, .light {

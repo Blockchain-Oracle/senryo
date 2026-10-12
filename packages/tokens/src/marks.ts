@@ -4,6 +4,8 @@
  * a colour here: real marks live in `@senryo/identity` (the old CHAIN_HUE/ASSET_HUE maps were deleted in S1b.6).
  */
 
+import { LIGHT } from "./palette.ts";
+
 /** Material ramps (direction §2): shadow / midtone / highlight for artwork, never UI semantics. */
 export const MATERIAL = {
   goldLeaf: { shadow: "#886426", mid: "#D4AE5B", highlight: "#FFF0BC" },
@@ -27,6 +29,20 @@ export const KINPAKU = {
 } as const;
 
 export const QR = { ink: "#000000", paper: "#FFFFFF" } as const;
+
+/**
+ * The trade slip's paper (D-331): white with black ink in either theme — an object, not a screen — its labels and
+ * perforation in grey; its stamp is Kinpaku (lacquer field, foil frame, gold-leaf letters).
+ */
+export const RECEIPT = {
+  paper: LIGHT.card,
+  ink: LIGHT.foreground,
+  muted: "#5C5C5C",
+  rule: "#C8C8C8",
+  /** The light palette's direction colours: the paper is white in either theme. */
+  up: LIGHT.up,
+  down: LIGHT.down,
+} as const;
 
 /** The welcome sky (the story's ground) and its ink: also the share card's background, on both apps. */
 export const WELCOME = { sky: "#428FC8", ink: "#FFFFFF" } as const;

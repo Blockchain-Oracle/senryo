@@ -1,0 +1,215 @@
+/*
+ * The trade slip (D-331, Codex direction 12): white paper and black ink in either theme, the one shadow, a perforated
+ * stub; the stamp is Kinpaku — a foil frame, a lacquer field, gold-leaf letters — at −4°.
+ */
+.receipt {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 12px;
+  background: var(--receipt-paper);
+  color: var(--receipt-ink);
+  box-shadow: var(--elevation-receipt);
+}
+
+.receipt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.receipt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--receipt-muted);
+}
+
+.receipt-brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--receipt-ink);
+}
+
+.receipt-folio {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.receipt-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.receipt-result {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.receipt-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--receipt-muted);
+}
+
+.receipt-figure {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-figure.is-up {
+  color: var(--receipt-up);
+}
+
+.receipt-figure.is-down {
+  color: var(--receipt-down);
+}
+
+.receipt-when {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--receipt-muted);
+}
+
+.receipt-open {
+  align-self: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--receipt-rule);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.receipt-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.receipt-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.receipt-fact dt {
+  color: var(--receipt-muted);
+}
+
+.receipt-fact dd {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* The perforation: a dashed rule with a notch cut from each side. */
+.receipt-perf {
+  position: relative;
+  height: 16px;
+}
+
+.receipt-perf::before {
+  content: "";
+  position: absolute;
+  inset: 50% 16px auto;
+  border-top: 1px dashed var(--receipt-rule);
+}
+
+.receipt-perf > i {
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--background);
+}
+
+.receipt-perf > i:first-child {
+  left: -8px;
+}
+
+.receipt-perf > i:last-child {
+  right: -8px;
+}
+
+.receipt-stub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 20px 18px;
+  font-size: 12px;
+  color: var(--receipt-muted);
+}
+
+.receipt-stub a {
+  color: var(--receipt-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The stamp: foil ring → lacquer field → a fine foil rule → gold-leaf words. */
+.receipt-stamp {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  padding: 3px;
+  border-radius: 4px;
+  rotate: -4deg;
+  background: linear-gradient(
+    135deg,
+    var(--kinpaku-foil-highlight),
+    var(--kinpaku-foil-light) 25%,
+    var(--kinpaku-foil-mid) 50%,
+    var(--kinpaku-foil-shade) 75%,
+    var(--kinpaku-foil-deep)
+  );
+}
+
+.receipt-stamp-field {
+  display: grid;
+  height: 100%;
+  padding: 4px;
+  border-radius: 2px;
+  background: var(--kinpaku-lacquer);
+}
+
+.receipt-stamp-words {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid var(--kinpaku-foil-shade);
+  border-radius: 1px;
+  color: var(--gold-leaf-highlight);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -1,15 +1,15 @@
-import { rideCatalogRoute, ridesRoute, submitRideRoute } from "@senryo/api-client";
+import { rideCatalogRoute, rideRoute, ridesRoute, submitRideRoute } from "@senryo/api-client";
 import { type Hex, isDeployed } from "@senryo/chain";
 import { RIDE_MARKETS, RIDE_TERMS } from "@senryo/config";
 import { rideTrailStopE8 } from "@senryo/core";
 import type { HttpServer } from "@senryo/service-common";
-import { HTTP_STATUS, HttpError, parseRoute, type RideRow, ridesOf, sendRoute } from "@senryo/service-common";
+import { HTTP_STATUS, HttpError, parseRoute, type RideRow, rideById, ridesOf, sendRoute } from "@senryo/service-common";
 import type { ApiContext } from "../context.ts";
 import { RIDES_PAGE } from "../relay/constants.ts";
 
 /**
- * Rides over HTTP (R4.4, D-299): the ride markets and their terms, a signed ride relayed gas-free, and the caller's
- * rides with their exits. A ride's exit goes through `/v1/markets/exits` (book 2).
+ * Rides over HTTP (R4.4, D-299): the ride markets and their terms, a signed ride relayed gas-free, the caller's rides
+ * with their exits, and one ride by id — its receipt (R5.11). A ride's exit goes through `/v1/markets/exits` (book 2).
  */
 const RIDES_PER_MINUTE = 30;
 const MINUTE_MS = 60_000;
@@ -73,6 +73,15 @@ export function registerRideRoutes(app: HttpServer, ctx: ApiContext): void {
       rides: rows.map((r) => rideView(r, exits.get(r.ride_id))),
     });
   });
+
+  app.get(rideRoute.path, async (request, reply) => {
+    const { params, query } = parseRoute(rideRoute, request);
+    const row = await rideById(ctx.db, query.chainId, params.rideId);
+    if (!row) throw new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", "no such ride");
+    const [exit] = await ctx.db<ExitRow[]>`SELECT * FROM ride_exits WHERE chain_id = ${query.chainId}
+      AND ride_id = ${params.rideId}`;
+    return sendRoute(reply, rideRoute, { ride: rideView(row, exit) });
+  });
 }
 
 function rideView(r: RideRow, e: ExitRow | undefined) {
@@ -89,6 +98,7 @@ function rideView(r: RideRow, e: ExitRow | undefined) {
     isLong: r.is_long,
     state: r.state as "open",
     margin: r.margin,
+    marginOpen: r.margin_open,
     leverageBps: r.leverage_bps,
     openFee: r.open_fee,
     size: BigInt(r.size),
@@ -111,6 +121,7 @@ function rideView(r: RideRow, e: ExitRow | undefined) {
             firedKind: e.fired_kind,
           }
         : null,
+    lastTx: (r.last_tx as `0x${string}` | null) ?? null,
     updatedAt: r.updated_at.toISOString(),
   };
 }

@@ -6,7 +6,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { KINPAKU, MATERIAL, QR, SCENE_FIELD } from "../src/marks.ts";
+import { KINPAKU, MATERIAL, QR, RECEIPT, SCENE_FIELD } from "../src/marks.ts";
 import { DARK, LIGHT, type Palette } from "../src/palette.ts";
 import { ELEVATION, FONT, HAIRLINE_PX, LAYOUT, MOTION, RADIUS, SPACE, TYPE } from "../src/scale.ts";
 
@@ -78,6 +78,7 @@ const shared = [
   ...Object.entries(SCENE_FIELD).map(([k, v]) => `  --scene-${k}: ${v};`),
   `  --qr-ink: ${QR.ink};`,
   `  --qr-paper: ${QR.paper};`,
+  ...Object.entries(RECEIPT).map(([k, v]) => `  --receipt-${k}: ${v};`),
   "}",
 ].join("\n");
 /**

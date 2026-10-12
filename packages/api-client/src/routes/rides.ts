@@ -11,6 +11,7 @@ import {
   hexSchema,
   intCodec,
   isoTimeSchema,
+  txHashSchema,
   uintCodec,
   unixSecondsSchema,
 } from "../primitives.ts";
@@ -116,6 +117,8 @@ export const rideSchema = z.object({
   isLong: z.boolean(),
   state: z.enum(RIDE_STATES),
   margin: uintCodec,
+  /** The margin it opened with (`margin` shrinks as parts close); null for rides that closed a part before it was kept. */
+  marginOpen: uintCodec.nullable().default(null),
   leverageBps: z.int(),
   openFee: uintCodec,
   size: uintCodec,
@@ -134,11 +137,24 @@ export const rideSchema = z.object({
   fees: uintCodec,
   paid: uintCodec,
   exit: rideExitSchema.nullable(),
+  /** The transaction that last moved it: the one that ended it, once it has (the receipt's proof). */
+  lastTx: txHashSchema.nullable().default(null),
   updatedAt: isoTimeSchema,
 });
 
 /** A ride as the apps read it. */
 export type RideView = z.output<typeof rideSchema>;
+
+/** One ride by id, whoever's it is: its receipt, shareable (no owner in it). */
+export const rideRoute = defineRoute({
+  method: "GET",
+  path: "/v1/rides/:rideId",
+  auth: "none",
+  params: z.object({ rideId: uintCodec }),
+  query: z.object({ chainId: z.coerce.number().pipe(chainIdSchema) }),
+  body: undefined,
+  response: z.object({ ride: rideSchema }),
+});
 
 export const ridesRoute = defineRoute({
   method: "GET",

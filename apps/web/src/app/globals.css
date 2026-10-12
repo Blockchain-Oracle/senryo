@@ -48,6 +48,11 @@
   --color-kinpaku-foil: var(--kinpaku-foil-mid);
   --color-kinpaku-foil-light: var(--kinpaku-foil-light);
   --color-kinpaku-foil-shade: var(--kinpaku-foil-shade);
+  --color-kinpaku-foil-deep: var(--kinpaku-foil-deep);
+  --color-receipt-paper: var(--receipt-paper);
+  --color-receipt-ink: var(--receipt-ink);
+  --color-receipt-muted: var(--receipt-muted);
+  --color-receipt-rule: var(--receipt-rule);
 
   /* App roles (`@senryo/tokens` palette, UGLYCASH): text-text-2, bg-glass-tint, bg-practice-surface, … */
   --color-text-2: var(--text-2);
@@ -98,9 +103,10 @@
   --radius-2xl: var(--radius-step-xl);
   --radius-3xl: var(--radius-step-xl);
 
-  /* Only the dock and sheets are elevated (shadow-dock, shadow-sheet). */
+  /* Only the dock, sheets and the trade slip are elevated (shadow-dock, shadow-sheet, shadow-receipt). */
   --shadow-dock: var(--elevation-dock);
   --shadow-sheet: var(--elevation-sheet);
+  --shadow-receipt: var(--elevation-receipt);
   --font-display: var(--font-condensed), var(--font-noto-jp), var(--font-display-family);
 
   /* Type roles from @senryo/tokens TYPE (text-micro … text-num-hero). */

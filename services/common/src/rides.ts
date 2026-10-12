@@ -29,6 +29,8 @@ export interface RideRow {
   is_long: boolean;
   state: string;
   margin: bigint;
+  /** The margin it opened with (null for rides that closed a part before 0031). */
+  margin_open: bigint | null;
   leverage_bps: number;
   open_fee: bigint;
   target: bigint | null;
@@ -47,6 +49,8 @@ export interface RideRow {
   paid: bigint;
   how: number | null;
   refund_reason: number | null;
+  /** The transaction that last moved it: the one that ended it, once it has. */
+  last_tx: string | null;
   updated_at: Date;
 }
 
@@ -111,10 +115,11 @@ export async function applyRideChanges(
     switch (c.kind) {
       case "rideCommitted":
         await db`
-          INSERT INTO market_rides (chain_id, ride_id, owner, market_id, is_long, state, margin, leverage_bps,
-                                    open_fee, target, limit_e8, commit_tx, last_tx)
+          INSERT INTO market_rides (chain_id, ride_id, owner, market_id, is_long, state, margin, margin_open,
+                                    leverage_bps, open_fee, target, limit_e8, commit_tx, last_tx)
           VALUES (${chainId}, ${c.rideId}, ${c.owner.toLowerCase()}, ${c.marketId}, ${c.isLong}, 'committed',
-                  ${c.margin}, ${c.leverageBps}, ${c.openFee}, ${c.target}, ${c.limitE8}, ${txHash}, ${txHash})
+                  ${c.margin}, ${c.margin}, ${c.leverageBps}, ${c.openFee}, ${c.target}, ${c.limitE8}, ${txHash},
+                  ${txHash})
           ON CONFLICT (chain_id, ride_id) DO NOTHING`;
         break;
       case "rideFilled":
@@ -195,6 +200,11 @@ export async function saveRideExit(
       take_profit_e8 = EXCLUDED.take_profit_e8, stop_loss_e8 = EXCLUDED.stop_loss_e8, floor_e8 = EXCLUDED.floor_e8,
       trail_peak_e8 = CASE WHEN ride_exits.trail_bps = EXCLUDED.trail_bps THEN ride_exits.trail_peak_e8 ELSE 0 END,
       trail_bps = EXCLUDED.trail_bps, fired_at = NULL, updated_at = now()`;
+}
+
+/** One ride by id (its public receipt), whoever's it is. */
+export async function rideById(db: Db, chainId: ChainId, rideId: bigint): Promise<RideRow | undefined> {
+  return rideRow(db, chainId, rideId);
 }
 
 export async function ridesOf(db: Db, chainId: ChainId, owner: string, limit: number): Promise<RideRow[]> {

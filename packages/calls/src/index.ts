@@ -35,4 +35,5 @@ export * from "./stack-words.ts";
 export * from "./status-words.ts";
 export * from "./suggest-handle.ts";
 export * from "./toast-run.ts";
+export * from "./trade-slip.ts";
 export * from "./window.ts";

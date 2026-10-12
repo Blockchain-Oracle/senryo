@@ -52,6 +52,9 @@ export function currentPath(path: string): string {
   // The web's static export shares a call as `/call?id=<ticketId>` (`@senryo/calls` `callLink`); in the app it is its receipt.
   const call = local === "/call" || local === "/call/" ? new URLSearchParams(query ?? "").get("id") : null;
   if (call && TICKET_ID.test(call)) return `/calls/${call}`;
+  // …and a ride as `/ride?id=<rideId>` (`rideLink`): its slip.
+  const ride = local === "/ride" || local === "/ride/" ? new URLSearchParams(query ?? "").get("id") : null;
+  if (ride && TICKET_ID.test(ride)) return `/calls/rides/${ride}`;
   // An event: the web's `/app/event?id=<id>` is the phone's `/events/<id>`.
   const event = /^\/app\/event\/?$/.test(local) ? new URLSearchParams(query ?? "").get("id") : null;
   if (event) return `/events/${encodeURIComponent(event)}`;

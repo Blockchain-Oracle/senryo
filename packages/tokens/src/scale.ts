@@ -103,6 +103,8 @@ export const ELEVATION = {
   button: { x: 0, y: 2, blur: 4, spread: 0, color: "#00000029" },
   dock: { x: 0, y: 8, blur: 24, spread: 0, color: "#00000033" },
   sheet: { x: 0, y: -4, blur: 16, spread: 0, color: "#0000001F" },
+  /** The trade slip (D-331): the one paper object, lifted off the page. */
+  receipt: { x: 0, y: 8, blur: 24, spread: 0, color: "#0000001F" },
 } as const;
 
 /** A physics spring: mass / stiffness / damping; `overshoot` false → `overshootClamping`. */

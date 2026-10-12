@@ -103,6 +103,8 @@ const shadow = (e: (typeof TOKEN_ELEVATION)[keyof typeof TOKEN_ELEVATION]): View
 export const ELEVATION = {
   dock: shadow(TOKEN_ELEVATION.dock),
   sheet: shadow(TOKEN_ELEVATION.sheet),
+  /** The trade slip (D-331): the one paper object. */
+  receipt: shadow(TOKEN_ELEVATION.receipt),
 } as const;
 /** Skeleton breathing (ms) and its opacity range — static under Reduce Motion. */
 export const SKELETON = { periodMs: 1200, from: 0.65, to: 1 } as const;
