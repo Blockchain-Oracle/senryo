@@ -123,7 +123,7 @@ Afterwards the replan continues: R5 → R6 → R8 → R9.
 - **Shared code:** `SearchField` becomes a kit component. On the web the same content goes in the existing drawer.
 
 ### P3 — Parlay as a chain (both apps)
-- [ ] P3 built and deployed
+- [x] P3 built and deployed — `252aba6e`, web `sha-252aba6`, phone OTA `66b9f59c` (12 Oct)
 
 - **Header:**
   - four connected leg sockets, "Pick 2–4 calls. Every leg must come true."; picked sockets carry the mark and

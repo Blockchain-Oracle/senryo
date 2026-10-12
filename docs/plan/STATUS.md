@@ -94,7 +94,12 @@ leftovers.
 - **R4's knock-out row:** rides 10 and 11 ended at 15:56 without one (BTC moved 0.8 % of the 2.25 % needed); a third
   40× pair (rides 12 and 13) is open until 19:58 UTC. The event committee answers from 19:00 UTC.
 
-Next: P3 — Parlay as a chain (sockets, cards with odds, the always-present slip, hold-to-place, the settlement track).
+- **P3 live (12 Oct 16:45 UTC):** Parlay as a chain on both apps — four sockets with the mark's flight, a card per
+  market with per-side indicative odds for the lane, one round strip (sides become next-round drafts between rounds),
+  the always-present slip bar → slip (the chain's own quote, stake presets or any amount, hold-to-place naming its
+  blocker), settlement tracks, parlays in play on Calls. Web `sha-252aba6`, phone OTA `66b9f59c`.
+
+Next: P4 — Duel as a two-seat arena (the stage, tier tiles with "N waiting", "No pot", three market lanes, the result).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
