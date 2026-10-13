@@ -7,7 +7,7 @@
 import { positionHold, unitOf } from "@senryo/calls";
 import { useBookEntry, useDayLine, useMarketLanes } from "@senryo/calls/react";
 import { helpOn, MARKETS } from "@senryo/config";
-import { clockText, formatPrice, priceFromE8, signedUsd, usd } from "@senryo/core";
+import { formatPrice, longClockText, priceFromE8, signedUsd, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useEventBoard } from "@senryo/query";
@@ -107,7 +107,7 @@ function PositionPreview({ position }: { position: string }) {
         <Fact label="Entry" value={price(e.entryE8)} />
         <Fact label="Now" value={price(e.markE8)} />
         <Fact label={e.kind === "ride" ? "Margin" : "Staked"} value={money(e.cost)} />
-        {e.endsAt !== null ? <Fact label="Ends in" value={clockText(Math.max(0, e.endsAt - now))} /> : null}
+        {e.endsAt !== null ? <Fact label="Ends in" value={longClockText(Math.max(0, e.endsAt - now))} /> : null}
         <Fact label={e.kind === "ride" ? "Close value" : "Cash out value"} value={money(e.closeValue)} />
       </dl>
       <p className="search-preview-hint">{hold ?? "↵ Open position · Cash out ready"}</p>

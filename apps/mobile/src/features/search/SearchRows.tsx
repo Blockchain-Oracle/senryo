@@ -8,7 +8,7 @@
 import { dayChange, positionHold, unitOf } from "@senryo/calls";
 import { useBookEntry, useDayLine, useMarketLanes } from "@senryo/calls/react";
 import { MARKETS } from "@senryo/config";
-import { clockText, signedUsd, usd } from "@senryo/core";
+import { longClockText, signedUsd, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useLivePrice, useSampledPrice, useServerSeconds } from "@senryo/live/react";
 import { useEventBoard } from "@senryo/query";
@@ -164,7 +164,7 @@ function PositionBody({ entry }: { entry: SearchEntry }) {
         <Text style={[TYPE.rowTitle, { color: color.ink }]}>{entry.title}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>{entry.subtitle}</Text>
         <Text style={[TYPE.micro, { color: color.inkMuted }]}>
-          {hold ?? (left === null ? "" : `Ends in ${clockText(left)}`)}
+          {hold ?? (left === null ? "" : `Ends in ${longClockText(left)}`)}
         </Text>
       </View>
       <View style={styles.figures}>

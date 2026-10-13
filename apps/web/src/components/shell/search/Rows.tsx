@@ -9,7 +9,7 @@
 import type { EventView } from "@senryo/api-client";
 import { positionHold } from "@senryo/calls";
 import { useBookEntry } from "@senryo/calls/react";
-import { clockText, signedUsd } from "@senryo/core";
+import { longClockText, signedUsd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useDuelWaiting, useEventBoard } from "@senryo/query";
@@ -65,7 +65,7 @@ function PositionBody({ entry }: { entry: SearchEntry }) {
       <span className="search-copy">
         <span className="search-title">{entry.title}</span>
         <span className="search-sub">{entry.subtitle}</span>
-        <span className="search-sub tnum">{hold ?? (left === null ? "" : `Ends in ${clockText(left)}`)}</span>
+        <span className="search-sub tnum">{hold ?? (left === null ? "" : `Ends in ${longClockText(left)}`)}</span>
       </span>
       <span className="search-figures">
         <Odometer value={viewDollars(e.closeValue ?? e.worth)} sensitive className="search-price" />
