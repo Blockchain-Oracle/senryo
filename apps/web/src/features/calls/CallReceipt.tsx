@@ -1,18 +1,19 @@
 "use client";
 /**
  * One call's receipt (the phone's `CallReceipt`; pivot "Call: see receipt", "the receipt shows entry → exit"): the
- * trade slip (D-331 — folio, the result and its stamp, the facts, the proof; saved or shared as one image), then every
- * step with its transaction and the window's proof, all in the shared words (`@senryo/calls`). A live call opens the
- * terminal. `publicView` is the shared link's page: no account needed.
+ * trade slip (D-331 — folio, the result and its stamp, the facts, the proof; shared with PnL · ROI · Both, R5.21),
+ * then every step with its transaction and the window's proof, all in the shared words (`@senryo/calls`). A live call
+ * opens the terminal. `publicView` is the shared link's page: no account needed.
  */
-import { callLink, callSlip, receiptSteps } from "@senryo/calls";
+import { callFigure, callKey, callLink, callSlip, receiptSteps } from "@senryo/calls";
 import { type ChainId, networkOf } from "@senryo/config";
+import { sideName } from "@senryo/core";
 import { historyKeys, useCallTimeline, useWindowProof } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SlipActions } from "@/features/receipts/SlipActions";
-import { TradeSlip } from "@/features/receipts/TradeSlip";
+import { ReplayFor } from "@/features/receipts/Replay";
+import { LiveShareSlip, ShareSlip } from "@/features/receipts/ShareSlip";
 import { CallTimeline } from "./CallTimeline";
 import { WindowProof } from "./WindowProof";
 
@@ -56,14 +57,18 @@ export function CallReceipt({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col items-start gap-4">
-        <TradeSlip slip={slip} />
+        {slip.live && !publicView ? (
+          <LiveShareSlip slip={slip} entryKey={callKey(c.ticketId)} side={sideName(c.band)} />
+        ) : (
+          <ShareSlip slip={slip} figure={slip.live ? null : callFigure(t)} side={sideName(c.band)} />
+        )}
+        {slip.live ? null : <ReplayFor chainId={chainId} bookKey={callKey(c.ticketId)} />}
         <div className="flex flex-wrap gap-2">
           {slip.live && !publicView ? (
-            <Button asChild size="xl">
+            <Button asChild size="xl" variant="secondary">
               <Link href={`/app/trade/${c.symbol.toLowerCase()}/`}>Watch it live</Link>
             </Button>
           ) : null}
-          {!slip.live ? <SlipActions slip={slip} /> : null}
           {publicView ? (
             <Button asChild size="xl" variant={slip.live ? "default" : "secondary"}>
               <Link href={`/app/trade/${c.symbol.toLowerCase()}/`}>Call {c.symbol} yourself</Link>

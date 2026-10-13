@@ -1,0 +1,45 @@
+"use client";
+/**
+ * The mark an inbox row shows (R5.22; the phone's `SubjectMark`, Part A rule 3 — real identity, never a dot): the
+ * market's or token's own mark, the person's avatar, and the Senryo seal for the account as a whole.
+ */
+import type { NotificationSubject } from "@senryo/api-client";
+import { ids, marketId } from "@senryo/identity";
+import { useProfile } from "@senryo/query";
+import { Avatar } from "@/components/identity/avatar";
+import { EntityMark } from "@/components/identity/entity-mark";
+
+const NATIVE_TOKEN = "0x0000000000000000000000000000000000000000";
+export const SUBJECT_MARK = 36;
+
+function PersonMark({ address }: { address: string }) {
+  const profile = useProfile(address);
+  const avatar = profile.status === "fresh" || profile.status === "stale" ? profile.value.avatar : undefined;
+  return <Avatar avatar={avatar ?? null} address={address} size={SUBJECT_MARK} />;
+}
+
+export function SubjectMark({ subject, chainId }: { subject: NotificationSubject | null; chainId: number }) {
+  switch (subject?.kind) {
+    case "market":
+      return <EntityMark id={marketId(subject.marketId)} size={SUBJECT_MARK} decorative />;
+    case "token":
+      return (
+        <EntityMark
+          id={
+            subject.address.toLowerCase() === NATIVE_TOKEN
+              ? ids.native(chainId, "MON")
+              : ids.token(chainId, subject.address)
+          }
+          size={SUBJECT_MARK}
+          label={subject.symbol}
+          decorative
+        />
+      );
+    case "person":
+      return <PersonMark address={subject.address} />;
+    default:
+      return (
+        <EntityMark id={ids.brand("senryo")} size={SUBJECT_MARK} variant="symbol" decorative ground="var(--seal)" />
+      );
+  }
+}

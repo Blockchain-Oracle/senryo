@@ -24,6 +24,7 @@ export * from "./use-parlay.ts";
 export * from "./use-parlay-board.ts";
 export * from "./use-position-actions.ts";
 export * from "./use-price-health.ts";
+export * from "./use-replay.ts";
 export * from "./use-results.ts";
 export * from "./use-ride.ts";
 export * from "./use-ride-exit.ts";

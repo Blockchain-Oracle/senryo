@@ -1,9 +1,10 @@
 /**
  * One call's receipt (S5.11 → R5.11; pivot "Call: see receipt"): the trade slip (D-331 — folio, the result and its
- * stamp, the facts, the proof; shared or saved as one image), then every step with its transaction and the window's
- * proof. A live call opens the terminal.
+ * stamp, the facts, the proof; shared with PnL · ROI · Both, R5.21), then every step with its transaction and the
+ * window's proof. A live call opens the terminal.
  */
-import { callLink, callSlip, receiptSteps } from "@senryo/calls";
+import { callFigure, callKey, callLink, callSlip, receiptSteps } from "@senryo/calls";
+import { sideName } from "@senryo/core";
 import { useCallTimeline, useQueryEnv, useWindowProof } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -12,8 +13,8 @@ import { useMMKVString } from "react-native-mmkv";
 import { Button } from "~/components/kit/Button";
 import { EmptyState, LoadingState } from "~/components/kit/states";
 import { useDockInset } from "~/components/shell/dock-context";
-import { SlipShare } from "~/features/receipts/SlipShare";
-import { TradeSlip } from "~/features/receipts/TradeSlip";
+import { ReplayFor } from "~/features/receipts/Replay";
+import { LiveShareSlip, ShareSlip } from "~/features/receipts/ShareSlip";
 import { fire } from "~/feedback/fire";
 import { useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -56,19 +57,23 @@ export function CallReceipt({ ticketId }: { ticketId: bigint }) {
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom + SPACE.xl }]}>
       <View style={styles.hero}>
-        <TradeSlip slip={slip} />
+        {slip.live ? (
+          <LiveShareSlip slip={slip} entryKey={callKey(c.ticketId)} side={sideName(c.band)} />
+        ) : (
+          <ShareSlip slip={slip} figure={callFigure(t)} side={sideName(c.band)} />
+        )}
+        {slip.live ? null : <ReplayFor chainId={network.chainId} bookKey={callKey(c.ticketId)} />}
         {slip.live ? (
           <Button
             label="Watch it live"
+            variant="secondary"
             onPress={() => {
               fire("tick");
               setSymbol(c.symbol);
               router.navigate("/trade");
             }}
           />
-        ) : (
-          <SlipShare slip={slip} />
-        )}
+        ) : null}
       </View>
       <CallTimeline steps={receiptSteps(t)} chainId={env.chainId} />
       <WindowProof windowId={c.windowId} chainId={env.chainId} />

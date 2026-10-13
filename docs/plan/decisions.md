@@ -588,3 +588,26 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
     Knocked out · Capped · Ended); folio `N° C-<chain>-<ticket>` / `N° R-<chain>-<ride>`.
   - Share and Save PNG export the same slip (the share card merges into it); both wait while balances are hidden.
     Rides get a receipt page and a public read route.
+- **D-332** 2026-10-13 · **Hidden dock tabs rest behind React's Activity, not a freeze (R5.24).**
+  - `freezeOnBlur` freezes with Suspense; on Fabric every tick a frozen live row received re-hid its whole tab, and the
+    phone ran at ~190 % CPU at rest. A hidden tab now sits behind `<Activity mode="hidden">`: its effects (live rows,
+    frame loops, timers) are torn down and its state kept; idle CPU fell to ~30 %.
+  - A warmed tab mounts shown once and hides straight after (a hidden first render waits for idle time live ticks never
+    leave). Focus-gated loops start at rest: a warmed tab hears no focus event until it is shown.
+  - The terminal stays live behind `display: none` instead: its costly parts already rest on blur, and waking it from
+    an Activity remounted every effect — ~1.6 s of JS per visit. The live book holds the price stream itself while
+    positions are open, since the screen in front may show no price.
+- **D-333** 2026-10-13 · **Your record is the indexer's account (R5.20).**
+  - Lifetime PnL, win rate, trades, win streak, best streak and volume over calls, rides, parlays and event calls in the
+    order they ended (the indexer already folds rides in). Win rate leaves refunds out; volume is each call's stake
+    and each ride's notional.
+  - 0032 fills each ended ride's opening margin from its signed open, so old ride receipts read exact amounts.
+- **D-334** 2026-10-13 · **Share is the slip, with PnL · ROI · Both (R5.21).**
+  - The mode changes the slip's figure, its image and the post; Post on X carries Tradash's tiered words and the
+    slip's link. An open position shares from its receipt at what the live book says it's worth now ("Open PnL");
+    Share from a position row opens that receipt. Everything waits while balances are hidden.
+- **D-335** 2026-10-13 · **Replays are recorded on the device (R5.19).**
+  - The live book provider samples every open position's price and live PnL every 200 ms (halved past 900 samples;
+    150 episodes, ~1.5 MB, then the newest 20) in the browser's storage or MMKV, saved when an episode ends and when
+    the app hides. A finished trade's receipt plays it back in at most 12 s when enough of its life was recorded
+    (Tradash's rule: 30 samples, 60 % covered, no hole in the middle 80 %).

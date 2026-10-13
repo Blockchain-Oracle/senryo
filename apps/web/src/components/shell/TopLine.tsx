@@ -1,7 +1,7 @@
 "use client";
 // The line above the stage (Mitoshi S22 `TopLine.tsx`, from Baku/roy-chain's top line): on phones the seal (the rail is
 // hidden there); Back below a place; search (⌘K or /), the `?` keyboard map, the mode capsule, the live health, the
-// balance with its eye, the theme and the account. The palette and the keyboard map are lazy islands.
+// balance with its eye, the theme, the bell (R5.22) and the account. The palette and the keyboard map are lazy islands.
 import { ids } from "@senryo/identity";
 import { ChevronLeft, CircleHelp, Search } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -12,6 +12,7 @@ import { SessionChip } from "@/components/auth/session-chip";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { tapFeedback } from "@/lib/feedback";
+import { BellButton } from "./BellButton";
 import { BalanceChip, HealthChip } from "./chips";
 import { ModeSwitch } from "./mode-switch";
 import { backOf } from "./nav";
@@ -107,6 +108,7 @@ export function TopLine() {
           <CircleHelp aria-hidden />
         </button>
         <ThemeToggle />
+        <BellButton />
         <SessionChip />
       </div>
       {palette !== null ? <CommandPalette open={palette} onOpenChange={setPalette} /> : null}

@@ -95,3 +95,8 @@ export function clockTime(ms: number): string {
   const d = new Date(ms);
   return `${String(d.getHours()).padStart(TWO_DIGITS, "0")}:${String(d.getMinutes()).padStart(TWO_DIGITS, "0")}`;
 }
+
+/** "13 Oct" in local time (the inbox's earlier rows). */
+export function dayLabel(ms: number): string {
+  return new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+}

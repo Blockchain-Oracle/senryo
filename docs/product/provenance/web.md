@@ -61,6 +61,14 @@ deposit's composition, the move request builders, the Practice par words, the de
 the Arriving rule moved from `apps/mobile` into `@senryo/query`; both apps import them (the phone keeps its paths as
 re-exports).
 
+### R5 after the trade (stats, share, replay, inbox)
+
+| Component (file) | 21st source | What was ported | Deviations |
+|---|---|---|---|
+| `features/notifications/InboxList.tsx`, `components/shell/drawers/InboxDrawer.tsx`, `components/shell/BellButton.tsx` (R5.22) | uvain/notification-panel **#27135**, by way of the phone's `InboxList` | Rows grouped Today / Earlier, the sentence first and the time quiet beside it; an unread row on a raised fill | The subject's real mark (market, token, person, Senryo's seal), never a dot; the bell carries a number; the inbox lives in the right drawer (`?d=inbox`) and a row opens its receipt drawer, event or wallet |
+| `features/receipts/ShareSlip.tsx` (R5.21) | none searched: Owarine's `ShareSheet` on the D-331 slip | PnL · ROI · Both on the slip and its image, Post on X with Tradash's tiered words | The slip is the share card (no keychain charm); an open position shares from the live book as "Open PnL" |
+| `features/receipts/Replay.tsx` (R5.19) | none searched: Owarine's `ReplaySheet` | The recorded path drawn as it plays (≤ 12 s), the PnL rolling beside it, entry and line dashed, Play / Pause / Again and a scrubber | Recorded by the live book provider for every open position, kept in this browser; shown only when enough was recorded |
+
 ## Searched, none fit (built on the kit)
 
 | Need | Search | Result → what was used |

@@ -1,9 +1,9 @@
 /**
  * One ride's receipt on the phone (R5.11, D-331; the web's `RideReceipt`): its slip — the realised result and its
  * stamp, margin, leverage, size, entry and exit, knock-out and cap, fees, what came back, and the transaction that
- * ended it — shared or saved as one image. A live ride opens the terminal.
+ * ended it — shared with PnL · ROI · Both (R5.21), open or ended. A live ride opens the terminal.
  */
-import { rideLink, rideSlip } from "@senryo/calls";
+import { rideFigure, rideKey, rideLink, rideSlip } from "@senryo/calls";
 import { useRide } from "@senryo/query";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -15,8 +15,8 @@ import { fire } from "~/feedback/fire";
 import { useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE } from "~/theme";
-import { SlipShare } from "./SlipShare";
-import { TradeSlip } from "./TradeSlip";
+import { ReplayFor } from "./Replay";
+import { LiveShareSlip, ShareSlip } from "./ShareSlip";
 
 export function RideReceipt({ rideId }: { rideId: bigint }) {
   const network = useNetwork();
@@ -33,22 +33,27 @@ export function RideReceipt({ rideId }: { rideId: bigint }) {
     practice: network.modeLabel === "Practice",
     url: rideLink(r.rideId, network.chainId),
   });
+  const side = r.isLong ? "Up" : "Down";
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom + SPACE.xl }]}>
       <View style={styles.hero}>
-        <TradeSlip slip={slip} />
+        {slip.live ? (
+          <LiveShareSlip slip={slip} entryKey={rideKey(r.rideId)} side={side} />
+        ) : (
+          <ShareSlip slip={slip} figure={rideFigure(r)} side={side} />
+        )}
+        {slip.live ? null : <ReplayFor chainId={network.chainId} bookKey={rideKey(r.rideId)} />}
         {slip.live ? (
           <Button
             label="Watch it live"
+            variant="secondary"
             onPress={() => {
               fire("tick");
               setSymbol(r.symbol);
               router.navigate("/trade");
             }}
           />
-        ) : (
-          <SlipShare slip={slip} />
-        )}
+        ) : null}
       </View>
     </ScrollView>
   );

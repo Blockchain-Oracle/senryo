@@ -3,12 +3,13 @@
  * One open position (Tradash's position row, Owarine's `PositionRow`, R5.3): the market's mark, "BTC ↗" with its lane
  * or leverage and when it ends, then ROI over PnL rolling with the price (D-303: from the fill's fair price; red the
  * moment PnL < 0). Tapping expands the facts — line or knock-out, entry, now, fees, what it pays — and the one way out:
- * Cash out (a call) or Close (a ride) for the exact amount it returns now. A held state says why in words.
+ * Cash out (a call) or Close (a ride) for the exact amount it returns now, and Share (R5.21: its slip at what it's worth
+ * now, in the receipt drawer). A held state says why in words.
  */
 import { type BookEntry, closeWord, dollars, leverageText, positionHold, positionSub, unitOf } from "@senryo/calls";
 import { laneLabel, priceText } from "@senryo/core";
 import { marketId } from "@senryo/identity";
-import { ArrowDownRight, ArrowUpRight, ChevronDown, LoaderCircle, Lock, MoveHorizontal } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronDown, LoaderCircle, Lock, MoveHorizontal, Share2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { type ReactNode, useState } from "react";
@@ -17,6 +18,7 @@ import { moneyDecimals, Odometer, viewDollars } from "@/components/ui/odometer";
 import { tradeHref } from "@/features/markets/MarketList";
 import { EASE_OUT } from "@/lib/constants/motion";
 import { fire, tapFeedback } from "@/lib/feedback";
+import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { cn } from "@/lib/utils";
 
@@ -131,7 +133,7 @@ export function PositionRow({
           >
             <div className="flex flex-col gap-3 px-3 pb-3">
               <Facts e={e} hidden={hidden} />
-              <div className="grid grid-cols-[1fr_auto] gap-2">
+              <div className="grid grid-cols-[1fr_auto_auto] gap-2">
                 <button
                   type="button"
                   disabled={e.closeValue === null || closing}
@@ -151,6 +153,18 @@ export function PositionRow({
                 >
                   Trade
                 </Link>
+                <button
+                  type="button"
+                  aria-label={`Share ${e.symbol} ${e.label}`}
+                  disabled={e.pnl === null}
+                  onClick={() => {
+                    tapFeedback();
+                    openDrawer(e.kind === "ride" ? DRAWERS.ride : DRAWERS.call, { id: String(e.id) });
+                  }}
+                  className="flex size-11 items-center justify-center rounded-xl bg-background disabled:opacity-40"
+                >
+                  <Share2 aria-hidden className="size-4" />
+                </button>
               </div>
             </div>
           </motion.div>

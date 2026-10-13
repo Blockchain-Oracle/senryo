@@ -137,24 +137,27 @@ and the morph on top of them.*
   are hidden. *(D-329.)*
 
 ### Feel
-- [ ] R5.15 A five-step tutorial on the first terminal visit (both apps; Owarine `Tutorial.tsx` reworded for calls and
-  rides), reopened from Settings. *(Web live `3f7e499`, seen locally; the phone's is built and waits for area D's sim
-  pass.)*
+- [x] R5.15 A five-step tutorial on the first terminal visit (both apps; Owarine `Tutorial.tsx` reworded for calls and
+  rides), reopened from Settings. *(Web live `3f7e499`; the phone's seen on the Release simulator build, 13 Oct.)*
 - [→] R5.16 Sound and music *(moved to F1–F3, 12 Oct: `replan-f-feel.md`)*:
   - the reactions switch wired on both apps, default on; `movement.ts` deleted;
   - tap sounds on the phone too;
   - cue levels raised to Tradash's, with the loss cue an octave lower;
   - music: `music.ts` on the web, pre-rendered loops on the phone, off by default, a footer toggle with a track chip,
     and the tense low-pass while PnL ≤ −5 %.
-- [ ] R5.17 Candles and the chart footer:
+- [x] R5.17 Candles and the chart footer:
   - interval, type and music;
   - Owarine's candle view on the web, Skia candles on the phone;
   - crossfade and haptic detents.
+  *(13 Oct: shared plain-data candles in `@senryo/calls`, archive minutes grouped to 1m/5m/15m/1h, the forming candle
+  from ticks; web canvas layer, phone Skia on the UI thread. Seen on the simulator: DOGE 15m candles, the crosshair
+  snapped to a candle with its O/H/L/C, a drag moving it, history panning back, pinch widening; fixed there: a worklet
+  default parameter that aborted the UI thread, a pinch toggling the crosshair, vertical drags not moving it.)*
 - [→] R5.18 Rolling numbers *(moved to F4/F7, 12 Oct: `replan-f-feel.md`)*:
   - a DOM odometer for every changing web number (cash-out, balance, odds, equity);
   - the rolling price in the asset chip;
   - pill digits at 15 px; canvas text in the display face.
-- [ ] R5.24 Tab switches answer at once on the phone (found in R2's simulator pass, 10 Oct, Release build): the first
+- [x] R5.24 Tab switches answer at once on the phone (found in R2's simulator pass, 10 Oct, Release build): the first
   visit to a dock tab showed the old screen for ~0.5–2.5 s after the tap, highlight included (the JS thread is busy:
   the tab mounts lazily — `expo-router/ui` screens default to `lazy` — and Markets re-renders 34 live rows).
   - Measure first with a Hermes profile (screenshots can't time it; a screen recording shows the switch lands as one
@@ -162,6 +165,9 @@ and the morph on top of them.*
   - Then: mount the other tabs in idle time after launch (`TabSlot`'s `renderFn` can render a not-yet-visited tab),
     let the dock highlight paint before the new tab mounts, and keep the hidden tabs' live rows and chart from
     rendering while blurred.
+  *(13 Oct, D-332: tabs warm one by one after launch; hidden ones rest behind React's Activity — `freezeOnBlur` had
+  the phone at ~190 % CPU at rest, re-hiding a frozen tab on every tick; now ~30 %. The terminal stays live (an
+  Activity reveal cost it ~1.6 s of JS); the live book holds the price stream itself while positions are open.)*
 
 ### After the trade
 - [ ] R5.19 Replay of a settled position (≤ 12 s) from its receipt.

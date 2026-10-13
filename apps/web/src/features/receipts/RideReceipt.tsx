@@ -1,17 +1,17 @@
 "use client";
 /**
  * One ride's receipt (R5.11, D-331): its slip — folio, the realised result and its stamp (closed up or down, knocked
- * out, capped, ended), margin, leverage, size, entry and exit, knock-out and cap, fees and what came back — saved or
- * shared as one image, with the transaction that ended it. A live ride opens the terminal. `publicView` is the shared
- * link's page: no account needed.
+ * out, capped, ended), margin, leverage, size, entry and exit, knock-out and cap, fees and what came back — shared with
+ * PnL · ROI · Both (R5.21), open or ended, with the transaction that ended it. A live ride opens the terminal.
+ * `publicView` is the shared link's page: no account needed.
  */
-import { rideLink, rideSlip } from "@senryo/calls";
+import { rideFigure, rideKey, rideLink, rideSlip } from "@senryo/calls";
 import { type ChainId, networkOf } from "@senryo/config";
 import { useRide } from "@senryo/query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SlipActions } from "./SlipActions";
-import { TradeSlip } from "./TradeSlip";
+import { ReplayFor } from "./Replay";
+import { LiveShareSlip, ShareSlip } from "./ShareSlip";
 
 export function RideReceipt({
   rideId,
@@ -39,16 +39,21 @@ export function RideReceipt({
     url: rideLink(r.rideId, chainId),
   });
   const terminal = `/app/trade/${r.symbol.toLowerCase()}/`;
+  const side = r.isLong ? "Up" : "Down";
   return (
     <div className="flex flex-col items-start gap-4">
-      <TradeSlip slip={slip} />
+      {slip.live && !publicView ? (
+        <LiveShareSlip slip={slip} entryKey={rideKey(r.rideId)} side={side} />
+      ) : (
+        <ShareSlip slip={slip} figure={slip.live ? null : rideFigure(r)} side={side} />
+      )}
+      {slip.live ? null : <ReplayFor chainId={chainId} bookKey={rideKey(r.rideId)} />}
       <div className="flex flex-wrap gap-2">
         {slip.live && !publicView ? (
-          <Button asChild size="xl">
+          <Button asChild size="xl" variant="secondary">
             <Link href={terminal}>Watch it live</Link>
           </Button>
         ) : null}
-        {!slip.live ? <SlipActions slip={slip} /> : null}
         {publicView ? (
           <Button asChild size="xl" variant={slip.live ? "default" : "secondary"}>
             <Link href={terminal}>Ride {r.symbol} yourself</Link>

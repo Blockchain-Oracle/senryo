@@ -22,6 +22,7 @@ export const DRAWERS = {
   call: "call",
   ride: "ride",
   install: "install",
+  inbox: "inbox",
 } as const;
 
 function urlWith(name: string | null, extra?: Record<string, string>): string {

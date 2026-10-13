@@ -2,12 +2,14 @@
  * One open position on the phone (Tradash's position row, R5.3): the market's mark, "BTC ↗" with its lane or leverage
  * and when it ends, then ROI over PnL rolling with the price (D-303: from the fill's fair price; red the moment PnL <
  * 0). A tap opens the facts — line or knock-out, entry, now, fees, what it pays — and Cash out (a call) or Close (a
- * ride) for the exact amount it returns now. A held state says why in words.
+ * ride) for the exact amount it returns now, and Share (R5.21: its receipt, shared at what it's worth now). A held
+ * state says why in words.
  */
 import { type BookEntry, closeWord, dollars, leverageText, positionHold, positionSub, unitOf } from "@senryo/calls";
 import { laneLabel, priceText } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import type { SkFont } from "@shopify/react-native-skia";
+import { type Href, router } from "expo-router";
 import { type ReactNode, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
@@ -152,6 +154,16 @@ export function PositionRow({
             disabled={e.closeValue === null}
             loading={closing}
           />
+          {e.pnl === null ? null : (
+            <Button
+              label="Share"
+              variant="secondary"
+              onPress={() => {
+                fire("tick");
+                router.push((e.kind === "ride" ? `/calls/rides/${e.id}` : `/calls/${e.id}`) as Href);
+              }}
+            />
+          )}
         </Animated.View>
       ) : null}
     </Animated.View>
