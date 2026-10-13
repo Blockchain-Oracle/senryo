@@ -182,7 +182,7 @@ R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.m
   - **Accepted:** Release simulator on testnet Practice (a 1× ride opened and closed; the row ticks, swipes, opens its
     ride) and production web as a guest. Open: the row's Close after its fix, the long-press menu, the accessibility
     pass (the simulator was in use).
-  - **Live:** web `sha-62439a8` (`sha-fdd6da0` deploying), phone OTA (this pass).
+  - **Live:** web `sha-fdd6da0`; phone OTA group `037a7a61-267b-464d-a56a-e91e7c52f14d` (Q0 + Q1).
   - **Next:** Q2 — the terminal surface (order stack as one control, payouts in the buttons, exit rulers, toasts).
     Then Q3–Q6, then R8 social.
 

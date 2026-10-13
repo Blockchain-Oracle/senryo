@@ -165,9 +165,9 @@ the web preview or on testnet, with the evidence named) and **deployed** (produc
 
 | Id | Row | Step | Status |
 |---|---|---|---|
-| QR1 | Leverage is opt-in: rides open at 1×, one Leverage switch (the whole row), the multiple and a marked slider when on | Q1 (D-344) | built `0f3f666a`, `62439a89` · accepted (simulator: a 1× ride opened and closed on testnet; Off in one tap) · deployed web `sha-9931957` |
+| QR1 | Leverage is opt-in: rides open at 1×, one Leverage switch (the whole row), the multiple and a marked slider when on | Q1 (D-344) | built `0f3f666a`, `62439a89` · accepted (simulator: a 1× ride opened and closed on testnet; Off in one tap) · deployed web `sha-fdd6da0`, OTA `037a7a61` |
 | QR2 | Ride settings drawn: margin line, two-rail risk ladder at true distances, Trail ruler, "Open fee ›" — the slop rows gone | Q1 (D-345) | built · accepted (simulator, production web as a guest) · deployed |
-| QR3 | Call settings drawn: Stake hero over the payoff (zones, thin "Pays $x" bars on one scale, stake tick, live bead, settlement ring), one rule sentence | Q1 | built `d954a7b1`, `fdd6da0b` · accepted (simulator Up/Down, Range, Moonshot; production web) · bead/ring/thin bars deploying |
+| QR3 | Call settings drawn: Stake hero over the payoff (zones, thin "Pays $x" bars on one scale, stake tick, live bead, settlement ring), one rule sentence | Q1 | built `d954a7b1`, `fdd6da0b` · accepted (simulator Up/Down, Range, Moonshot; production web with bead, ring and thin bars) · deployed web `sha-fdd6da0`, OTA `037a7a61` |
 | QR4 | The live position row on every list: ring, head, ticking clock, recorded trace, rolling PnL; tap → that exact position | Q1 (D-343) | built `c05874f5` · accepted (simulator: ticks, swipe reveals Close, tap opens the ride with CLOSE ringed) · deployed |
 | QR5 | Close from the row: phone swipe → "Close $x" (one tap), web always-visible "Close $x"; Close all as a review | Q1 (D-343) | built · phone fix `d954a7b1` (a revealed Close opened the trade) **not yet re-seen**; review not yet seen with two positions |
 | QR6 | Position details and View receipt behind long-press / right-click | Q1 | built · not yet seen |
