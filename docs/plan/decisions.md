@@ -649,3 +649,11 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 - **D-341** 2026-10-13 · **Help is one list (R6.1).**
   - `@senryo/config` `HELP` feeds the phone's Help, a new web Help drawer, the landing's questions and search's Help
     group; an answer true for one app says so.
+- **D-342** 2026-10-13 · **Home's launcher moves with the page and speaks (the owner's review of R6.9).**
+  - The owner: a white capsule on a dark Home is wrong, and it shouldn't sit still over a page you're reading. It now
+    wears the dock's material (the dock's glass in dark, white with the dock's shadow in light); reading down tucks it
+    behind the dock (24 pt of travel), scrolling up brings it back (12 pt), and near the top or the end it always shows
+    — on the UI thread, taking no taps while tucked.
+  - At rest its words walk through what search can do right now, every 3.2 s: today's biggest move ("NEAR −10.2%
+    today"), your open position, "btc 5m", "deposit", pasting a receipt; the base line alone under Reduce Motion or
+    while tucked. Codex's white-in-both-themes capsule (direction 13) is superseded.

@@ -12,9 +12,9 @@ import { useFont } from "@shopify/react-native-skia";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
-import { useSharedValue } from "react-native-reanimated";
+import Animated, { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
@@ -26,6 +26,7 @@ import { NotificationsBell } from "~/features/notifications/NotificationsBell";
 import { PositionsList } from "~/features/positions/PositionsList";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { SearchLauncher, useLauncherInset } from "~/features/search/SearchLauncher";
+import { useLauncherScroll } from "~/features/search/useLauncher";
 import { ContextualFaceId } from "~/features/setup/ContextualFaceId";
 import { SetupResume } from "~/features/setup/SetupResume";
 import { fire } from "~/feedback/fire";
@@ -50,6 +51,8 @@ export function HomeScreen() {
   const dockInset = useDockInset();
   const launcherInset = useLauncherInset();
   const bottom = Math.max(dockInset, launcherInset);
+  // Reading down tucks the launcher behind the dock; scrolling up brings it back (the owner's review, 13 Oct).
+  const launcher = useLauncherScroll();
   const account = useMarketAccount(address);
   const book = useLiveBook();
   const catalog = useCatalog();
@@ -101,7 +104,11 @@ export function HomeScreen() {
           <NotificationsBell />
         </View>
       </View>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom }]}>
+      <Animated.ScrollView
+        onScroll={launcher.onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={[styles.content, { paddingBottom: bottom }]}
+      >
         {address ? (
           <>
             <View style={styles.hero}>
@@ -147,8 +154,8 @@ export function HomeScreen() {
             {markets("Markets")}
           </>
         )}
-      </ScrollView>
-      <SearchLauncher />
+      </Animated.ScrollView>
+      <SearchLauncher shown={launcher.shown} />
       <ContextualFaceId key={address} />
     </View>
   );
