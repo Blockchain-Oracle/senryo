@@ -4,9 +4,10 @@
  * close landed against the line, and how the crowd called it. Facts only: no winner is inferred beyond the prints.
  */
 import type { WindowProof as Proof } from "@senryo/api-client";
-import { closeUnposted, proofFacts, proofLink } from "@senryo/calls";
+import { closeUnposted, proofFacts, proofWindowPath } from "@senryo/calls";
 import { type ChainId, explorerTxUrl } from "@senryo/config";
 import { usePrint, useWindowProof } from "@senryo/query";
+import { type Href, router } from "expo-router";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { fire } from "~/feedback/fire";
@@ -87,10 +88,10 @@ function ProofBody({ p, chainId }: { p: Proof; chainId: ChainId }) {
       ))}
       <Pressable
         accessibilityRole="link"
-        accessibilityHint="Opens the window's proof in your browser, where you can re-verify its prints"
+        accessibilityHint="Opens the window's proof, where you can re-verify its prints"
         onPress={() => {
           fire("tick");
-          void Linking.openURL(proofLink(p.windowId, chainId));
+          router.push(proofWindowPath(p.windowId) as Href);
         }}
         style={styles.full}
       >

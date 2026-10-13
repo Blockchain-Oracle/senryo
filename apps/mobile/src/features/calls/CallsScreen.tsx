@@ -74,6 +74,9 @@ export function CallsScreen() {
   const { color } = useTheme();
   const all = list.rows;
   const rows = filterRows(all, filter);
+  // A failed history never reads as "No calls yet"; open positions stay on screen either way (P2).
+  const failed = list.failed && all.length === 0;
+  const holding = book.entries.length > 0 || book.parlays > 0;
 
   if (!owner)
     return (
@@ -88,9 +91,15 @@ export function CallsScreen() {
 
   return (
     <CollapsingScreen left={<TabTitle>Calls</TabTitle>} onRefresh={refresh}>
-      {list.pending && all.length === 0 && book.entries.length === 0 ? (
+      {list.pending && all.length === 0 && !holding ? (
         <LoadingState />
-      ) : all.length === 0 && book.entries.length === 0 && book.parlays === 0 ? (
+      ) : failed && !holding ? (
+        <EmptyState
+          why="Your calls didn't load"
+          detail="Pull down to refresh, or try again."
+          action={{ label: "Try again", onPress: list.retry }}
+        />
+      ) : all.length === 0 && !holding ? (
         <EmptyState
           why="No calls yet"
           detail="Call the next move on BTC, ETH or SOL."
@@ -102,7 +111,14 @@ export function CallsScreen() {
           <PositionsList empty="none" />
           <OpenParlays owner={owner} />
           <Segmented options={CALL_FILTERS} value={filter} onChange={setFilter} label="Show calls" />
-          {rows.length === 0 ? (
+          {failed ? (
+            <Pressable accessibilityRole="button" onPress={list.retry} style={styles.more}>
+              <Text style={[TYPE.caption, { color: color.inkMuted }]}>Your history didn't load.</Text>
+              <Text style={[TYPE.rowTitle, { color: color.link }]}>Try again</Text>
+            </Pressable>
+          ) : list.pending && all.length === 0 ? (
+            <LoadingState />
+          ) : rows.length === 0 ? (
             <Text style={[TYPE.caption, styles.none, { color: color.inkMuted }]}>None here yet.</Text>
           ) : (
             rows.map((r) => <CallRowView key={r.key} row={r} />)
@@ -110,9 +126,9 @@ export function CallsScreen() {
           {list.hasMore ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() => {
-                list.loadMore();
-              }}
+              accessibilityState={{ busy: list.loadingMore, disabled: list.loadingMore }}
+              disabled={list.loadingMore}
+              onPress={list.loadMore}
               style={styles.more}
             >
               <Text style={[TYPE.rowTitle, { color: color.link }]}>

@@ -7,6 +7,7 @@
  */
 import { maskedSlip, type TradeSlip as Slip } from "@senryo/calls";
 import { marketId } from "@senryo/identity";
+import { type Href, router } from "expo-router";
 import { forwardRef } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Line } from "react-native-svg";
@@ -108,7 +109,8 @@ export const TradeSlip = forwardRef<
               accessibilityRole="link"
               onPress={() => {
                 fire("tick");
-                void Linking.openURL(proof.href);
+                if (proof.path) router.push(proof.path as Href);
+                else void Linking.openURL(proof.href);
               }}
             >
               <Text style={[styles.link, { color: ink.ink }]}>{proof.label}</Text>

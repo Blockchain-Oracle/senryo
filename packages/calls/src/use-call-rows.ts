@@ -111,6 +111,8 @@ export function useCallRows(owner: Address | undefined) {
     loadMore: () => {
       if (!calls.isFetchingNextPage) void calls.fetchNextPage();
     },
+    /** Ask for the history again (a failed load's Try again, both apps). */
+    retry: () => void calls.refetch(),
   };
 }
 

@@ -9,7 +9,7 @@
 import { type BookEntry, closeOffered, closeWord, positionIntent, roiText } from "@senryo/calls";
 import { usePositionRow, useTerminalReady } from "@senryo/calls/react";
 import { intentQuery } from "@senryo/search";
-import { LoaderCircle } from "lucide-react";
+import { Ellipsis, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { moneyDecimals, Odometer, viewDollars } from "@/components/ui/odometer";
@@ -115,6 +115,19 @@ export function PositionRow({
           </span>
           <Figures e={e} hidden={hidden} />
         </Link>
+        {/* The menu's own way in (P2): hold and right-click aren't reachable by keyboard or a screen reader. */}
+        <button
+          type="button"
+          aria-label={`${e.symbol} position actions`}
+          aria-haspopup="dialog"
+          onClick={() => {
+            fire("tick", { cue: "tap" });
+            setMenu(true);
+          }}
+          className="flex size-9 shrink-0 items-center justify-center self-end rounded-lg text-text-3 hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring @sm:self-auto"
+        >
+          <Ellipsis aria-hidden className="size-4" />
+        </button>
         {canClose ? (
           <button
             type="button"

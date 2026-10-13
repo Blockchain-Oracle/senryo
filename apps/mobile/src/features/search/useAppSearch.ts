@@ -3,7 +3,7 @@
  * phone's places — the dock, More, the account pages — and its actions in their current state, and what a tap does.
  * Nothing here moves money: Up, Down and a position open the terminal ready (D-340).
  */
-import { proofLink, readSymbols } from "@senryo/calls";
+import { proofWindowPath, readSymbols } from "@senryo/calls";
 import { type SearchView, useSearch } from "@senryo/calls/react";
 import { DOCK_NAV, explorerTxUrl, GAMES, MORE_NAV, WEB_EVERYTHING, WEB_PLACES } from "@senryo/config";
 import {
@@ -138,7 +138,7 @@ export function useAppSearch(query: string, active: boolean): AppSearch {
       case "receipt":
         return router.push((t.of === "ride" ? `/calls/rides/${t.id}` : `/calls/${t.id}`) as Href);
       case "window":
-        return void Linking.openURL(proofLink(t.windowId, activeNetwork().chainId));
+        return router.push(proofWindowPath(t.windowId) as Href);
       case "event":
         return router.push(`/events/${t.eventId}` as Href);
       case "place": {

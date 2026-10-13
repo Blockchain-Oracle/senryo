@@ -33,9 +33,10 @@ const JSON_INDENT = 2;
 
 /**
  * What opens the app when tapped as a universal link (R2.13: the web's current routes, which the phone maps onto its
- * own in `lib/deep-link.ts`): the web app under `/app` and a shared call (`/call?id=…`). Settings stays on the web — it
- * is where the phone sends you to add a backup passkey. The landing, the judge guide, proofs, terms and `.well-known`
- * stay on the web. Components are read in order; an `exclude` must come before what it carves out.
+ * own in `lib/deep-link.ts`): the web app under `/app`, a shared call (`/call?id=…`) or ride (`/ride?id=…`), and the
+ * proof (`/proof`, `/proof/w/?id=…` — the phone has its own proof screens since stage P2). Settings stays on the web —
+ * it is where the phone sends you to add a backup passkey. The landing, the judge guide, terms and `.well-known` stay
+ * on the web. Components are read in order; an `exclude` must come before what it carves out.
  */
 const APP_LINK_COMPONENTS = [
   { "/": "/app/*", "?": { d: "settings" }, exclude: true, comment: "Settings (backup passkey) opens on the web" },
@@ -43,6 +44,10 @@ const APP_LINK_COMPONENTS = [
   { "/": "/app/*" },
   { "/": "/call" },
   { "/": "/call/*" },
+  { "/": "/ride" },
+  { "/": "/ride/*" },
+  { "/": "/proof" },
+  { "/": "/proof/*" },
 ];
 
 function readEnvFile(file, name) {

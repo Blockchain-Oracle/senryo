@@ -58,7 +58,8 @@ export function CloseAllSheet({
   onClose: () => void;
 }) {
   return (
-    <Sheet onClose={onClose} closeLabel="Close the review">
+    // Held while the batch runs, as the web's modal is locked: a swipe can't hide closes still on their way (P2).
+    <Sheet onClose={onClose} closeLabel="Close the review" dismissible={batch === null}>
       <SheetHeading title={`Close ${review.entries.length} positions`} />
       <Body review={review} batch={batch} onRun={onRun} />
     </Sheet>

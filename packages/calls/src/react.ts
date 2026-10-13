@@ -28,6 +28,7 @@ export * from "./use-position-row.ts";
 export * from "./use-price-health.ts";
 export * from "./use-replay.ts";
 export * from "./use-results.ts";
+export * from "./use-reverify.ts";
 export * from "./use-ride.ts";
 export * from "./use-ride-exit.ts";
 export * from "./use-ride-flow.ts";

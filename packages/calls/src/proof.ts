@@ -74,4 +74,8 @@ export function bandVerdicts(p: WindowProof): BandVerdict[] {
   });
 }
 
+/** The phone's in-app paths for the proof, the web's own paths (`/proof`, `/proof/w?id=`) so links need no mapping. */
+export const proofFeedPath = (symbol?: string) => (symbol ? `/proof?market=${symbol}` : "/proof");
+export const proofWindowPath = (windowId: string) => `/proof/w?id=${windowId}`;
+
 export const OUTCOME_WORD: Readonly<Record<BandOutcome, string>> = { win: "Won", lose: "Lost", refund: "Refunded" };

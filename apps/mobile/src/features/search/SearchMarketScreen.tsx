@@ -4,13 +4,12 @@
  * ready, never placing), Lanes (a tap picks one here), Market (its proof on the web, its star). Back returns to the
  * search as it was.
  */
-import { type MarketPageRow, marketPageRows, marketProofLink, readSymbols, toggleFavourite } from "@senryo/calls";
+import { type MarketPageRow, marketPageRows, proofFeedPath, readSymbols, toggleFavourite } from "@senryo/calls";
 import { useMarketLanes } from "@senryo/calls/react";
 import type { CadenceSec } from "@senryo/config";
 import { marketId } from "@senryo/identity";
 import { intentParams } from "@senryo/search";
-import * as Linking from "expo-linking";
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
@@ -18,7 +17,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { ArrowDown, ArrowUp, ChartLine, ChevronLeft, ScrollText, Star } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
-import { activeNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
@@ -57,7 +55,7 @@ export function SearchMarketScreen({ symbol }: { symbol: string }) {
         return setLane(act.lane);
       case "proof":
         fire("tick", { cue: "tap" });
-        return void Linking.openURL(marketProofLink(symbol, activeNetwork().chainId));
+        return router.push(proofFeedPath(symbol) as Href);
       case "star":
         fire("tick", { cue: "toggle" });
         return setFavRaw(JSON.stringify(toggleFavourite(favourites, symbol)));

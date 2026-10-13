@@ -64,9 +64,12 @@ export function CallsScreen() {
         </Button>
       </div>
     );
-  if (list.failed) return <p className="text-body text-text-2">Calls didn't load.</p>;
-  if (list.pending && list.rows.length === 0) return <p className="text-body text-text-3">Loading calls…</p>;
-  if (list.rows.length === 0 && book.entries.length === 0 && book.parlays === 0)
+  // A failed or loading history keeps the open positions on screen (P2); only the history part waits or says so.
+  const failed = list.failed && list.rows.length === 0;
+  const holding = book.entries.length > 0 || book.parlays > 0;
+  if (list.pending && list.rows.length === 0 && !holding)
+    return <p className="text-body text-text-3">Loading calls…</p>;
+  if (!failed && list.rows.length === 0 && !holding)
     return (
       <div className="flex flex-col items-start gap-3 py-6">
         <p className="font-semibold text-row-title">No calls yet</p>
@@ -89,7 +92,16 @@ export function CallsScreen() {
         onValueChange={(v) => setFilter(v as CallFilter)}
         className="self-start"
       />
-      {rows.length === 0 ? (
+      {failed ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-body text-text-2">Your history didn't load.</p>
+          <Button variant="secondary" onClick={list.retry}>
+            Try again
+          </Button>
+        </div>
+      ) : list.pending && list.rows.length === 0 ? (
+        <p className="text-meta text-text-3">Loading calls…</p>
+      ) : rows.length === 0 ? (
         <p className="text-meta text-text-3">None here yet.</p>
       ) : (
         <ul className="flex flex-col">

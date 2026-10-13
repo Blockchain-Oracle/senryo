@@ -6,52 +6,22 @@
  * applied here, the crowd, where the money went, and every call in it with its receipt.
  */
 import type { WindowProof } from "@senryo/api-client";
-import { bandVerdicts, callTitle, crowdText, OUTCOME_WORD, unitOf, utcClock, utcTime, windowRow } from "@senryo/calls";
-import { type ChainId, explorerTxUrl, feedIdOf, MARKETS } from "@senryo/config";
+import { bandVerdicts, callTitle, crowdText, OUTCOME_WORD, unitOf, utcTime, windowRow } from "@senryo/calls";
+import { type ProofPrint, useReverify } from "@senryo/calls/react";
+import { type ChainId, explorerTxUrl, MARKETS } from "@senryo/config";
 import { priceText, signedUsd, usd } from "@senryo/core";
 import { ids, marketId } from "@senryo/identity";
 import { useWindowProof } from "@senryo/query";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { PublicQuery } from "@/components/public/public-query";
 import { cn } from "@/lib/utils";
 
 const WINDOW_ID = /^0x[0-9a-fA-F]{64}$/;
-type Print = NonNullable<WindowProof["open"]>;
 
-function Reverify({ p, print, t, chainId }: { p: WindowProof; print: Print; t: number; chainId: ChainId }) {
-  const [state, setState] = useState<{ kind: "idle" | "busy" } | { kind: "done"; text: string; ok: boolean }>({
-    kind: "idle",
-  });
-  const run = async () => {
-    const market = MARKETS.find((m) => m.symbol === p.symbol);
-    if (!market) return;
-    setState({ kind: "busy" });
-    try {
-      const { reverifyPrint } = await import("@senryo/chain");
-      const r = await reverifyPrint(chainId, market, feedIdOf(market), t, print.txHash, {
-        priceE8: print.priceE8,
-        confE8: print.confE8,
-        publishTime: print.publishTime,
-      });
-      if (r.state === "no-proof") setState({ kind: "done", text: r.reason, ok: false });
-      else {
-        const said = `${priceText(r.recomputed.priceE8, unitOf(p.symbol))} at ${utcClock(r.recomputed.publishTime)}`;
-        setState({
-          kind: "done",
-          ok: r.state === "verified" && r.apiAgrees,
-          text:
-            r.state === "verified"
-              ? `Re-verified: the verifier answers ${said}, the same as stored on chain${r.apiAgrees ? " and shown here" : " — but not what this page showed"}.`
-              : `The verifier now answers ${said}, which differs from what is stored on chain.`,
-        });
-      }
-    } catch (error) {
-      setState({ kind: "done", ok: false, text: `Couldn't re-verify: ${(error as Error).message}` });
-    }
-  };
+function Reverify({ p, print, t, chainId }: { p: WindowProof; print: ProofPrint; t: number; chainId: ChainId }) {
+  const { state, run } = useReverify(p, print, t, chainId);
   if (state.kind === "done") return <p className={cn("text-meta", state.ok ? "text-up" : "text-down")}>{state.text}</p>;
   return (
     <button
@@ -81,7 +51,7 @@ function PrintSource({ symbol }: { symbol: string }) {
   );
 }
 
-function PrintBlock(props: { label: string; p: WindowProof; print: Print | null; t: number; chainId: ChainId }) {
+function PrintBlock(props: { label: string; p: WindowProof; print: ProofPrint | null; t: number; chainId: ChainId }) {
   const { label, p, print, t, chainId } = props;
   return (
     <section className="flex flex-col gap-2">

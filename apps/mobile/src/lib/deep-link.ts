@@ -34,6 +34,9 @@ const WEB_APP_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) =
   [/^\/app\/?$/, () => ROUTES.home],
   [/^\/app\/trade\/([^/]+)\/?$/, (m) => tradeOn(m[1])],
   [/^\/app\/setup(\/.*)?$/, () => ROUTES.home],
+  // The proof (stage P2): the web's `/proof/` and `/proof/w/?id=…` are the phone's own screens; the query rides along.
+  [/^\/proof\/?$/, () => "/proof"],
+  [/^\/proof\/w\/?$/, () => "/proof/w"],
   [/^\/app\/(.+?)\/?$/, (m) => `/${m[1]}`],
 ];
 

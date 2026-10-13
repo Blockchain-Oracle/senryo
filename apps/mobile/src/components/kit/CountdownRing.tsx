@@ -1,11 +1,18 @@
 /**
  * The window's countdown ring (21st.dev #1737 Circle Progress, ported to Skia): the arc empties counter-clockwise from
  * the window's start to the moment calls close, on the server's clock (`offsetMs`), redrawn on the UI thread — no React
- * render per second. The last ten seconds tint it the warning colour (or, for a position, thicken it).
+ * render per second. The last ten seconds tint it the warning colour (or, for a position, thicken it). Under Reduce
+ * Motion it steps once a second instead of sweeping every frame (P2): the time still shows, the motion doesn't.
  */
 import { Canvas, Path, Skia } from "@shopify/react-native-skia";
-import { useMemo } from "react";
-import { type SharedValue, useDerivedValue, useFrameCallback, useSharedValue } from "react-native-reanimated";
+import { useEffect, useMemo } from "react";
+import {
+  type SharedValue,
+  useDerivedValue,
+  useFrameCallback,
+  useReducedMotion,
+  useSharedValue,
+} from "react-native-reanimated";
 
 const MS = 1000;
 const LAST_SECONDS = 10;
@@ -36,10 +43,21 @@ export function CountdownRing({
   lastStroke?: number;
 }) {
   const now = useSharedValue(Date.now());
-  useFrameCallback(() => {
+  const reduce = useReducedMotion();
+  const frame = useFrameCallback(() => {
     "worklet";
     now.value = Date.now() + offsetMs.value;
-  });
+  }, !reduce);
+  useEffect(() => {
+    frame.setActive(!reduce);
+    if (!reduce) return;
+    const tick = () => {
+      now.value = Date.now() + offsetMs.value;
+    };
+    tick();
+    const id = setInterval(tick, MS);
+    return () => clearInterval(id);
+  }, [reduce, frame, now, offsetMs]);
   const r = (size - stroke) / HALF;
   const rect = useMemo(() => Skia.XYWHRect(stroke / HALF, stroke / HALF, size - stroke, size - stroke), [size, stroke]);
   const circle = useMemo(() => Skia.Path.Circle(size / HALF, size / HALF, r), [size, r]);

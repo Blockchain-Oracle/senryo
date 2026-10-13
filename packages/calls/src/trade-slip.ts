@@ -9,6 +9,7 @@ import { type ChainId, explorerTxUrl, WEB_ORIGIN } from "@senryo/config";
 import { lane, OPEN_STATES, priceText, sideName, signedUsd, usd, whenText } from "@senryo/core";
 import { proofLink } from "./links.ts";
 import { unitOf } from "./markets.ts";
+import { proofWindowPath } from "./proof.ts";
 import { callWhere, receiptFacts } from "./receipt.ts";
 
 export type StampTone = "up" | "down" | "even";
@@ -42,7 +43,8 @@ export interface TradeSlip {
   when: string | null;
   stamp: SlipStamp | null;
   facts: SlipFact[];
-  proof: { label: string; href: string } | null;
+  /** `path`: the window's proof in the app (the phone opens it there; the web follows `href`). */
+  proof: { label: string; href: string; path?: string } | null;
   /** The slip's own link (the QR on the saved image). */
   url: string;
 }
@@ -97,7 +99,7 @@ export function callSlip(
     when: live || !last ? null : whenText(last.at),
     stamp: live ? null : callStamp(c),
     facts: receiptFacts(t, callWhere(c, ctx.kE8)).map(([k, v]) => ({ k, v, money: MONEY_FACTS.has(k) })),
-    proof: { label: "The window, proved", href: proofLink(c.windowId, ctx.chainId) },
+    proof: { label: "The window, proved", href: proofLink(c.windowId, ctx.chainId), path: proofWindowPath(c.windowId) },
     url: ctx.url,
   };
 }
