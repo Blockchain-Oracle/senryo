@@ -83,6 +83,8 @@ const STANDALONE: readonly CatalogEntry[] = [
     owner: "Pyth Data Association",
     spec: { from: "web3icons", group: "tokens", name: "PYTH", take: ALL },
   },
+  // Where a trade is posted (Q3): X's own mark on the receipt's post action, never a letter standing in for it.
+  { key: "x", owner: "X Corp.", spec: { from: "simple-icons", slug: "x" } },
   // The leagues events are about (R2.6). The NFL is not in Simple Icons (see src/entities.ts).
   { key: "nhl", owner: "National Hockey League", spec: { from: "simple-icons", slug: "nhl" } },
   { key: "mlb", owner: "Major League Baseball", spec: { from: "simple-icons", slug: "mlb" } },

@@ -938,6 +938,56 @@ export const FETCHED_ART: readonly ArtSource[] = [
     }
   },
   {
+    "key": "x",
+    "owner": "X Corp.",
+    "provenance": "open-library",
+    "pageUrl": "https://simpleicons.org/?q=x",
+    "licence": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) for the icon file. The library's DISCLAIMER.md: the brand stays its owner's trademark; used nominatively, to identify the underlying company of an instrument, never as an endorsement. Brand colour #000000 is the value in the library's data file.",
+    "retrieved": "2026-10-13",
+    "usage": "Always beside the instrument's ticker and type (study 08: company artwork never drops the perp / tokenized distinction). The colour mark is the one-path icon filled with #000000.",
+    "variants": {
+      "monoDark": {
+        "path": "packages/identity/sources/x/simple-icons-x.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/x.svg",
+        "sha256": "693e68863eceb8dc9f72e2acd386ab9c20a10858dab2c076212f7084cb7a32fe",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light"
+      },
+      "symbol": {
+        "path": "packages/identity/sources/x/simple-icons-x-brand.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/x.svg",
+        "sha256": "07099f0e2eea46fe8cef6a2422dee63e1aa98c3cab07f3edf9a0b333314f758b",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "light",
+        "derived": {
+          "from": "packages/identity/sources/x/simple-icons-x.svg",
+          "recolour": {},
+          "rootFill": "#000000",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      },
+      "monoLight": {
+        "path": "packages/identity/sources/x/simple-icons-x-light.svg",
+        "url": "https://cdn.jsdelivr.net/npm/simple-icons@16.33.0/icons/x.svg",
+        "sha256": "7ce8f894e1c7e63a521c5d9282a3a1d6ffd56b5bf0dbd913f2b684b1374989fe",
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "shape": "free",
+        "surface": "dark",
+        "derived": {
+          "from": "packages/identity/sources/x/simple-icons-x.svg",
+          "recolour": {},
+          "rootFill": "#FFFFFF",
+          "basis": "CC0 1.0 Universal (https://github.com/simple-icons/simple-icons/blob/16.33.0/LICENSE.md) dedicates the icon file to the public domain; the library itself serves each icon in a chosen colour (https://cdn.simpleicons.org/[SLUG]/[COLOR])."
+        }
+      }
+    }
+  },
+  {
     "key": "nhl",
     "owner": "National Hockey League",
     "provenance": "open-library",

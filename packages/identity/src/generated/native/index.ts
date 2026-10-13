@@ -145,6 +145,9 @@ import ArtPythDisc from "./pyth-disc.tsx";
 import ArtPythSymbol from "./pyth-symbol.tsx";
 import ArtPythMonoLight from "./pyth-monolight.tsx";
 import ArtPythMonoDark from "./pyth-monodark.tsx";
+import ArtXMonoDark from "./x-monodark.tsx";
+import ArtXSymbol from "./x-symbol.tsx";
+import ArtXMonoLight from "./x-monolight.tsx";
 import ArtNhlMonoDark from "./nhl-monodark.tsx";
 import ArtNhlSymbol from "./nhl-symbol.tsx";
 import ArtNhlMonoLight from "./nhl-monolight.tsx";
@@ -280,6 +283,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
   "pyth": { disc: ArtPythDisc, symbol: ArtPythSymbol, monoLight: ArtPythMonoLight, monoDark: ArtPythMonoDark },
+  "x": { monoDark: ArtXMonoDark, symbol: ArtXSymbol, monoLight: ArtXMonoLight },
   "nhl": { monoDark: ArtNhlMonoDark, symbol: ArtNhlSymbol, monoLight: ArtNhlMonoLight },
   "mlb": { monoDark: ArtMlbMonoDark, symbol: ArtMlbSymbol, monoLight: ArtMlbMonoLight },
   "premier-league": { monoDark: ArtPremierLeagueMonoDark, symbol: ArtPremierLeagueSymbol, monoLight: ArtPremierLeagueMonoLight },

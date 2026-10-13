@@ -1223,6 +1223,29 @@ export const DRAW: Readonly<Record<string, DrawSource>> = {
       }
     }
   },
+  "x": {
+    "key": "x",
+    "variants": {
+      "monoDark": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "symbol": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "light",
+        "shape": "free"
+      },
+      "monoLight": {
+        "viewBox": "0 0 24 24",
+        "insetPermille": 0,
+        "surface": "dark",
+        "shape": "free"
+      }
+    }
+  },
   "nhl": {
     "key": "nhl",
     "variants": {

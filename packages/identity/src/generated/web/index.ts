@@ -145,6 +145,9 @@ const ArtPythDisc = lazy(() => import("./pyth-disc.tsx"));
 const ArtPythSymbol = lazy(() => import("./pyth-symbol.tsx"));
 const ArtPythMonoLight = lazy(() => import("./pyth-monolight.tsx"));
 const ArtPythMonoDark = lazy(() => import("./pyth-monodark.tsx"));
+const ArtXMonoDark = lazy(() => import("./x-monodark.tsx"));
+const ArtXSymbol = lazy(() => import("./x-symbol.tsx"));
+const ArtXMonoLight = lazy(() => import("./x-monolight.tsx"));
 const ArtNhlMonoDark = lazy(() => import("./nhl-monodark.tsx"));
 const ArtNhlSymbol = lazy(() => import("./nhl-symbol.tsx"));
 const ArtNhlMonoLight = lazy(() => import("./nhl-monolight.tsx"));
@@ -280,6 +283,7 @@ export const ART_COMPONENTS: Readonly<Record<string, Partial<Record<MarkVariant,
   "optimism": { disc: ArtOptimismDisc, symbol: ArtOptimismSymbol, monoLight: ArtOptimismMonoLight, monoDark: ArtOptimismMonoDark },
   "avalanche": { disc: ArtAvalancheDisc, symbol: ArtAvalancheSymbol, monoLight: ArtAvalancheMonoLight, monoDark: ArtAvalancheMonoDark },
   "pyth": { disc: ArtPythDisc, symbol: ArtPythSymbol, monoLight: ArtPythMonoLight, monoDark: ArtPythMonoDark },
+  "x": { monoDark: ArtXMonoDark, symbol: ArtXSymbol, monoLight: ArtXMonoLight },
   "nhl": { monoDark: ArtNhlMonoDark, symbol: ArtNhlSymbol, monoLight: ArtNhlMonoLight },
   "mlb": { monoDark: ArtMlbMonoDark, symbol: ArtMlbSymbol, monoLight: ArtMlbMonoLight },
   "premier-league": { monoDark: ArtPremierLeagueMonoDark, symbol: ArtPremierLeagueSymbol, monoLight: ArtPremierLeagueMonoLight },

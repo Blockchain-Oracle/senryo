@@ -229,6 +229,7 @@ const org = (id: string, name: string, role: Entity["role"], art?: string, gap?:
 
 const orgRows = (): Entity[] => [
   org(ids.brand("senryo"), "Senryo", "brand", "senryo-seal"),
+  org(ids.brand("x"), "X", "brand", "x"),
   org(ids.provider("pyth"), "Pyth", "oracle", "pyth"),
   org(ids.provider("redstone"), "RedStone", "oracle", "redstone"),
   // An events data source (D-296): one of the three committee readers.
