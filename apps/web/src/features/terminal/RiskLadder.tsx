@@ -12,7 +12,7 @@ import { fire } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
 
 const PERCENT = 100;
-const RAIL_AT = { up: 44, down: 56 } as const;
+const RAIL_AT = { up: 45, down: 55 } as const;
 const PERCENT_PER_BPS = 100;
 const ONE_DECIMAL = 1;
 
@@ -41,9 +41,7 @@ export function RiskLadder({ ladder, symbol, markE8 }: { ladder: RideLadder; sym
         )}
         style={{
           top: top(l.at),
-          ...(left
-            ? { right: `calc(${PERCENT - RAIL_AT.up}% + 1.25rem)` }
-            : { left: `calc(${RAIL_AT.down}% + 1.25rem)` }),
+          ...(left ? { right: `calc(${PERCENT - RAIL_AT.up}% + 1rem)` } : { left: `calc(${RAIL_AT.down}% + 1rem)` }),
         }}
       >
         {name} {open === key ? moveText(l.moveBps) : ladderPriceText(l.priceE8, unit)}

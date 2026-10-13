@@ -1,7 +1,7 @@
 "use client";
 /**
  * What a call pays, drawn (Q1, Codex direction 16 §2; `@senryo/calls` `callPayoff`; the phone's `PayoffDrawing`): the
- * line across a rising price axis, each side's winning zone tinted where its edges sit, and in each zone a pay bar on
+ * line across a rising price axis, each side's winning zone tinted where its edges sit, and in each zone a thin pay bar on
  * one shared scale — a bigger stake grows them; the dashed tick is the stake, so the bar past it is the profit. A live
  * bead on the axis is the price now; a ring by the line drains to settlement. Clicking a zone shows where it wins in
  * place of its name. With balances hidden the bars keep only their odds.
@@ -17,7 +17,6 @@ import { CountdownRing } from "./CountdownRing";
 
 const PERCENT = 100;
 const GUTTER = "5.5rem";
-const INSIDE = 0.72;
 const MIN_BAR = 0.02;
 const MIN_SPAN = 0.001;
 const BEAD_MS = 250;
@@ -50,7 +49,6 @@ export function PayoffDrawing({
     <div className="relative h-54">
       {payoff.zones.map((z) => {
         const pays = z.payout === null ? "—" : `Pays ${masked(dollars(z.payout), hidden)}`;
-        const inside = share(z) > INSIDE;
         // The bar's height inside its zone (a Range's sits above the line that runs through it).
         const top = pct((z.to - z.barAt) / Math.max(MIN_SPAN, z.to - z.from));
         return (
@@ -80,22 +78,15 @@ export function PayoffDrawing({
             <span
               aria-hidden
               className={cn(
-                "-translate-y-1/2 absolute h-7 rounded-full transition-[width] duration-(--motion-base)",
+                "-translate-y-1/2 absolute h-3 rounded-full transition-[width] duration-(--motion-base)",
                 z.band.tone === "up" ? "bg-up" : z.band.tone === "down" ? "bg-down" : "bg-primary",
                 z.payout === null && "opacity-30",
               )}
               style={{ top, left: GUTTER, width: `calc((100% - ${GUTTER}) * ${share(z)})` }}
             />
             <span
-              className={cn(
-                "tnum -translate-y-1/2 absolute font-semibold text-row",
-                inside ? "text-background" : "text-foreground",
-              )}
-              style={
-                inside
-                  ? { top, right: `calc(100% - ${along(share(z))} + 0.5rem)` }
-                  : { top, left: `calc(${along(share(z))} + 0.5rem)` }
-              }
+              className="tnum -translate-y-full absolute font-semibold text-foreground text-row"
+              style={{ top: `calc(${top} - 0.5rem)`, left: GUTTER }}
             >
               {pays}
             </span>

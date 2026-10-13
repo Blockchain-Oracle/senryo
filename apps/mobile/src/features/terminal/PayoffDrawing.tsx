@@ -1,6 +1,6 @@
 /**
  * What a call pays, drawn (Q1, Codex direction 16 §2; `@senryo/calls` `callPayoff`): the line across a rising price
- * axis, each side's winning zone tinted where its edges sit, and in each zone a pay bar on one shared scale — a bigger
+ * axis, each side's winning zone tinted where its edges sit, and in each zone a thin pay bar on one shared scale — a bigger
  * stake grows them; the dashed tick is the stake, so the bar past it is the profit. A live bead on the axis is the price
  * now; a ring by the line drains to settlement (the call's one clock here). A tap on a zone shows where it wins in place
  * of its name. With balances hidden the bars keep only their odds (no stake tick, no amounts).
@@ -20,11 +20,10 @@ import { SPACE, TYPE, useTheme } from "~/theme";
 
 export const PAYOFF_HEIGHT = 216;
 const GUTTER = 88;
-const BAR = 28;
+const BAR = 12;
 const HALF = 2;
 const DASH_LEN = 4;
 const DASH = [DASH_LEN, DASH_LEN];
-const INSIDE = 0.72;
 const LABEL_H = 18;
 const UNPRICED_ALPHA = 0.3;
 const BEAD_R = 4;
@@ -125,8 +124,6 @@ export function PayoffDrawing({
           {payoff.zones.map((z) => {
             const mid = y(z.barAt);
             const pays = z.payout === null ? "—" : `Pays ${masked(dollars(z.payout), hidden)}`;
-            const end = GUTTER + Math.max(BAR / HALF, share(z) * span);
-            const inside = share(z) > INSIDE;
             return (
               <Pressable
                 key={`hit-${z.slot}`}
@@ -148,10 +145,7 @@ export function PayoffDrawing({
                   style={[
                     TYPE.rowAmount,
                     styles.pays,
-                    { top: mid - y(z.to) - LABEL_H / HALF },
-                    inside
-                      ? { right: width - end + SPACE.sm, color: color.ground }
-                      : { left: end + SPACE.sm, color: color.ink },
+                    { top: mid - y(z.to) - BAR / HALF - SPACE.xs - LABEL_H, color: color.ink },
                   ]}
                 >
                   {pays}
@@ -184,7 +178,7 @@ const styles = StyleSheet.create({
   wrap: { height: PAYOFF_HEIGHT },
   zone: { position: "absolute", left: 0, right: 0 },
   name: { position: "absolute", left: 0, width: GUTTER - SPACE.sm },
-  pays: { position: "absolute", height: LABEL_H },
+  pays: { position: "absolute", left: GUTTER, height: LABEL_H },
   line: {
     position: "absolute",
     right: 0,
