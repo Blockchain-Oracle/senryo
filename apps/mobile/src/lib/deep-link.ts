@@ -1,4 +1,5 @@
-import { isChainId, MARKETS, networkOf } from "@senryo/config";
+import { marketFromLink } from "@senryo/calls";
+import { isChainId, networkOf } from "@senryo/config";
 import { ROUTES } from "~/lib/constants/routes";
 
 const SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
@@ -16,10 +17,13 @@ export function inAppPath(base: string): string {
  * Retired paths (D-256 pivot): the trading app's portfolio, trade, card and fund links land on Home or Markets; S5
  * maps `/m/<SYMBOL>-<cadence>` share links onto the terminal. A link written for the old app never dead-ends.
  */
-/** The terminal on a market the catalogue lists (any case), else the terminal as it was. */
+/**
+ * The terminal on a link's market: the catalogue's symbol in any case; one it doesn't list goes through as typed, so
+ * the terminal keeps the last market and says so (D-354).
+ */
 function tradeOn(symbol: string | undefined): string {
-  const known = MARKETS.find((m) => m.symbol === symbol?.toUpperCase());
-  return known ? `/trade?symbol=${known.symbol}` : "/trade";
+  if (!symbol) return "/trade";
+  return `/trade?symbol=${encodeURIComponent(marketFromLink(symbol) ?? symbol)}`;
 }
 
 /**
@@ -37,7 +41,9 @@ const LEGACY_PATHS: ReadonlyArray<readonly [RegExp, (match: RegExpMatchArray) =>
   ...WEB_APP_PATHS,
   [/^\/(portfolio|fund|card|lp|orders|positions|withdraw|activity)(\/.*)?$/, () => ROUTES.home],
   [/^\/trade\/([^/]+)\/?$/, (m) => tradeOn(m[1])],
-  [/^\/(trade|social|watch)(\/.*)?$/, () => ROUTES.markets],
+  // `/trade` itself is today's terminal (with `?symbol=`); only the old app's deeper trade paths are retired.
+  [/^\/trade\/.+$/, () => ROUTES.markets],
+  [/^\/(social|watch)(\/.*)?$/, () => ROUTES.markets],
   [/^\/account\/?$/, () => ROUTES.more],
 ];
 
