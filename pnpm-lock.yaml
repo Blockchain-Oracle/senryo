@@ -344,8 +344,8 @@ importers:
         specifier: 1.48.0
         version: 1.48.0(react@19.2.8)
       mediabunny:
-        specifier: 1.61.4
-        version: 1.61.4
+        specifier: 1.61.3
+        version: 1.61.3
       motion:
         specifier: 'catalog:'
         version: 13.4.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -4146,8 +4146,8 @@ packages:
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
-  mediabunny@1.61.4:
-    resolution: {integrity: sha512-gZPBi40ldiZGeU2DJxT/Q3hlNiaxfpwNYTfmi0Maq3SoBJT64+W+ySc0Z7t+2JUGxNbkXnLFrDkSS2OQuweOhA==}
+  mediabunny@1.61.3:
+    resolution: {integrity: sha512-kUqLKVXQVwHR62GkOJxYosAmXERJbqnXBgJDTtRlxHEYviVkMg/Evhl9XN6kedqS5LP1tV4kFKyzY/V4a4ofow==}
 
   memoize-one@5.2.1:
     resolution: {integrity: sha512-zYiwtZUcYyXKo/np96AGZAckk+FWWsUdJ3cHGGmld7+AhvcWmQyGCYUh1hc4Q/pkOhb65dQR/pqCyK0cOaHz4Q==}
@@ -9648,7 +9648,7 @@ snapshots:
 
   mdn-data@2.27.1: {}
 
-  mediabunny@1.61.4:
+  mediabunny@1.61.3:
     dependencies:
       '@types/dom-mediacapture-transform': 0.1.12
       '@types/dom-webcodecs': 0.1.13
