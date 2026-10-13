@@ -14,6 +14,7 @@ import { Panel } from "~/components/kit/Surface";
 import {
   ArrowLeftRight,
   Bell,
+  ChartLine,
   Eye,
   History,
   KeyRound,
@@ -33,6 +34,7 @@ import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { useHideBalances } from "~/lib/hide-balances";
 import { useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
+import { openTour } from "~/lib/tour";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { SectionHeading } from "./SectionHeading";
 import { SettingsRow } from "./SettingsRow";
@@ -150,6 +152,15 @@ export function SettingsList() {
             icon={History}
             tint={color.practice}
             onPress={() => open(ROUTES.welcome)}
+          />
+          <SettingsRow
+            title="How the terminal works"
+            icon={ChartLine}
+            tint={color.up}
+            onPress={() => {
+              fire("tick");
+              openTour();
+            }}
           />
         </Panel>
       </View>

@@ -15,6 +15,7 @@ import { FeedbackHost } from "~/components/shell/FeedbackHost";
 import { LiveHost } from "~/components/shell/LiveHost";
 import { OfflineBanner } from "~/components/shell/OfflineBanner";
 import { ResultHost } from "~/components/shell/ResultHost";
+import { TourHost } from "~/components/shell/TourHost";
 import { ToastHost } from "~/components/toast/ToastHost";
 import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
 import { TermsHost } from "~/features/legal/TermsHost";
@@ -104,6 +105,7 @@ function RootStack() {
       <FeedbackHost />
       <LiveHost />
       <ResultHost />
+      <TourHost />
       <DeferredLinkHost />
       <OfflineBanner />
       <ToastHost />

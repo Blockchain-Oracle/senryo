@@ -1,11 +1,13 @@
 "use client";
 /**
  * What the terminal remembers on this device (R5.4): the lane, Call or Ride, the call's kind, stake and trail, and the
- * ride's margin, leverage and trail. A market that doesn't ride shows Call whatever was chosen; leverage is held to the
+ * ride's margin, leverage and trail, and the chart's view (line or candles, and the candles' interval, R5.17). A market that doesn't ride shows Call whatever was chosen; leverage is held to the
  * market's cap when it's read (`leverageFor`).
  */
 import {
+  CANDLE_INTERVALS,
   type CallMode,
+  type CandleInterval,
   DEFAULT_CALL_TRAIL_CENTS,
   DEFAULT_RIDE_MARGIN,
   type Instrument,
@@ -34,6 +36,8 @@ export function useTerminalChoices() {
   const [leverage, setLeverage] = useStoredString(TERMINAL_STORAGE.leverage);
   const [rideTrail, setRideTrail] = useStoredString(TERMINAL_STORAGE.rideTrail);
   const [callTrail, setCallTrail] = useStoredString(TERMINAL_STORAGE.callTrail);
+  const [chart, setChart] = useStoredString(TERMINAL_STORAGE.chart);
+  const [interval, storeInterval] = useStoredString(TERMINAL_STORAGE.candleInterval);
   return {
     cadence: CADENCES_SEC.find((c) => String(c) === cadence) ?? DEFAULT_CADENCE,
     stake: amount(stake, DEFAULT_STAKE),
@@ -44,6 +48,8 @@ export function useTerminalChoices() {
     leverageX: leverage && WHOLE_NUMBER.test(leverage) ? Number(leverage) : null,
     rideTrailBps: count(rideTrail, RIDE_TRAIL_BPS),
     callTrailCents: count(callTrail, DEFAULT_CALL_TRAIL_CENTS),
+    candles: chart === "candles",
+    candleInterval: (CANDLE_INTERVALS.find((i) => i === interval) ?? "1m") as CandleInterval,
     setCadence: (c: CadenceSec) => setCadence(String(c)),
     setStake: (s: bigint) => setStake(String(s)),
     setMode: (m: CallMode) => setMode(m),
@@ -52,6 +58,8 @@ export function useTerminalChoices() {
     setLeverageX: (x: number) => setLeverage(String(x)),
     setRideTrailBps: (b: number) => setRideTrail(String(b)),
     setCallTrailCents: (c: number) => setCallTrail(String(c)),
+    setCandles: (on: boolean) => setChart(on ? "candles" : "line"),
+    setCandleInterval: (i: CandleInterval) => storeInterval(i),
   };
 }
 

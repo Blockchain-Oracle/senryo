@@ -7,7 +7,7 @@ import { priceFromE8 } from "@senryo/core";
 import { fillLine } from "@senryo/live";
 
 /** `[minute start (s), open, high, low, close]` in e-8. */
-export type Candle = readonly [number, number, number, number, number];
+export type CandleRow = readonly [number, number, number, number, number];
 
 export interface SessionHistory {
   /** `capacity` values, oldest first, across the session. */
@@ -30,14 +30,14 @@ const LOW = 3;
 const CLOSE = 4;
 
 /** The last session's line, or null with fewer than two candles in it. */
-export function sessionHistory(candles: readonly Candle[], capacity: number): SessionHistory | null {
+export function sessionHistory(candles: readonly CandleRow[], capacity: number): SessionHistory | null {
   if (candles.length < 2) return null;
   let start = candles.length - 1;
   while (start > 0 && (candles[start]?.[0] ?? 0) - (candles[start - 1]?.[0] ?? 0) <= SESSION_GAP_SEC) start -= 1;
   const session = candles.slice(start);
   if (session.length < 2) return null;
   // The open of the first minute, then each minute's close at its end: the path the price took.
-  const first = session[0] as Candle;
+  const first = session[0] as CandleRow;
   const times = [first[0] * MS, ...session.map((c) => (c[0] + MINUTE_SEC) * MS)];
   const values = [first[OPEN], ...session.map((c) => c[CLOSE])];
   const fromMs = times[0] ?? 0;
@@ -48,7 +48,7 @@ export function sessionHistory(candles: readonly Candle[], capacity: number): Se
     line: line.map(priceFromE8),
     low: priceFromE8(Math.min(...session.map((c) => c[LOW]))),
     high: priceFromE8(Math.max(...session.map((c) => c[HIGH]))),
-    close: priceFromE8((session[session.length - 1] as Candle)[CLOSE]),
+    close: priceFromE8((session[session.length - 1] as CandleRow)[CLOSE]),
     fromSec: first[0],
     toSec: toMs / MS,
   };

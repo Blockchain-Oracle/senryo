@@ -6,8 +6,9 @@
  * erased, the 千両 mark, the axis, K and the entry, the head dot and the rolling pill. The tone is the up line unless
  * the open call is losing.
  */
-import { BAND_ALPHA, type ChartOverlay, type SessionHistory } from "@senryo/calls";
+import { BAND_ALPHA, type ChartOverlay, defaultSpacing, type SessionHistory } from "@senryo/calls";
 import { formatPrice, type PriceUnit } from "@senryo/core";
+import { CandleLayer } from "./candle-draw";
 import {
   BASE_TAU_MS,
   DIM_ALPHA,
@@ -72,6 +73,8 @@ export class ChartEngine {
   private readonly cp = new Float64Array(CONTROL_POINTS);
   /** The tail's fade, made once per size. */
   private fade: { w: number; h: number; gradient: CanvasGradient } | null = null;
+  /** The candle view (R5.17): its series, the crossfade and the crosshair. */
+  readonly candles = new CandleLayer();
   private readonly priceOdo = new CanvasOdometer();
   private readonly pnlOdo = new CanvasOdometer();
   private target: number | null = null;
@@ -92,6 +95,7 @@ export class ChartEngine {
   private tickMs = 0;
   private unit: PriceUnit = "usd";
   private width = 0;
+  /** The last frame's plot width (the candle gestures read it). */ plotW = 0;
   private height = 0;
   private dpr = 1;
 
@@ -233,9 +237,15 @@ export class ChartEngine {
     const plotW = Math.min(w - PILL_RIGHT - pillW - PILL_GAP, w - MIN_PLOT_LEFTOVER);
     const pillH = o?.pnlText ? PILL_H_POSITION : PILL_H;
     const hist = this.history;
-    const win: YWindow = hist
-      ? { center: (hist.low + hist.high) / HALF, half: this.historyHalf, top: PAD_Y, bottom: h - PAD_Y }
-      : { center: this.eased, half: (SPAN_STEPS * this.step) / HALF, top: PAD_Y, bottom: h - PAD_Y };
+    this.candles.tick(dt, reduced, this.latest, this.eased);
+    const layout = this.candles.layout(plotW, defaultSpacing(plotW));
+    this.plotW = plotW;
+    const candleView = hist ? null : this.candles.window(layout, this.eased, PAD_Y, h - PAD_Y);
+    const step = candleView?.step ?? this.step;
+    const [center, half] = hist
+      ? [(hist.low + hist.high) / HALF, this.historyHalf]
+      : [this.eased, (SPAN_STEPS * this.step) / HALF];
+    const win: YWindow = candleView?.win ?? { center, half, top: PAD_Y, bottom: h - PAD_Y };
     // Sub-sample scroll (04-pricing R17): the line shifts by the part-sample owed, and its head eases to "now", so it
     // moves on every frame of a 90, 120 or 144 Hz screen instead of only on frames that push a sample.
     const moving = this.health.live && !this.history;
@@ -244,12 +254,13 @@ export class ChartEngine {
       reduced || !moving
         ? this.eased
         : this.eased + (this.target - this.eased) * (1 - Math.exp((-frac * SAMPLE_MS) / tau));
-    const headY = this.drawLine(win, plotW, tone, frac, head);
+    const headY = this.drawLine(win, plotW, tone, frac, head, step, 1 - this.candles.mix);
+    this.candles.draw(ctx, theme, layout, win, step, this.unit);
 
     drawMark(ctx, theme, plotW, h);
     // Axis labels give way to the pill — and to the health tag beside it when there is one.
     const clearH = this.health.tag ? pillH + HALF * (HEALTH_TAG_GAP + TAG_H) : pillH;
-    drawAxis(ctx, theme, win, this.step, w, headY, clearH, o?.levels ?? [], this.unit);
+    drawAxis(ctx, theme, win, step, w, headY, clearH, o?.levels ?? [], this.unit);
     const pill = {
       x: w - PILL_RIGHT - pillW,
       y: Math.min(h - pillH - HALF, Math.max(HALF, headY - pillH / HALF)),
@@ -309,7 +320,15 @@ export class ChartEngine {
    * Grid, zone, glow and line on the layer the fade erases; returns the head's y. The ring is shifted left by `frac`
    * of a sample and the head point (`head`, the price eased to now) closes the line at the plot's edge.
    */
-  private drawLine(win: YWindow, plotW: number, tone: string, frac: number, head: number): number {
+  private drawLine(
+    win: YWindow,
+    plotW: number,
+    tone: string,
+    frac: number,
+    head: number,
+    step: number,
+    lineAlpha: number,
+  ): number {
     const { ctx, theme, height: h } = this;
     const samples = this.ring.length;
     const dx = plotW / (samples - 1);
@@ -324,7 +343,7 @@ export class ChartEngine {
       n += 1;
     }
     const headY = this.ys[n - 1] ?? h / HALF;
-    drawGrid(ctx, theme, win, this.step, plotW);
+    drawGrid(ctx, theme, win, step, plotW);
     const o = this.overlay;
     if (o?.zone) {
       // The held band's winning prices; an open end runs off the chart (higher prices sit higher).
@@ -340,14 +359,18 @@ export class ChartEngine {
         ctx.globalAlpha = 1;
       }
     }
+    // The line, its band and its glow fade out as the candles fade in (R5.17).
+    if (lineAlpha === 0) return headY;
+    ctx.globalAlpha = lineAlpha;
     if (o?.band != null) this.drawBand(win, tone, n, headY, o.band);
+    ctx.globalAlpha = 1;
     // The context's own path, rebuilt in place (no Path2D per frame) and stroked twice: glow, then line.
     this.trace(n, headY);
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
     ctx.strokeStyle = tone;
     // History is real and labelled: drawn whole. Only a live line gone stale is dimmed.
-    const strength = this.health.live || this.history ? 1 : DIM_ALPHA;
+    const strength = (this.health.live || this.history ? 1 : DIM_ALPHA) * lineAlpha;
     ctx.globalAlpha = GLOW_ALPHA * strength;
     ctx.lineWidth = GLOW_W;
     ctx.stroke();

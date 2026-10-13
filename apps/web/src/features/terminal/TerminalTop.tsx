@@ -17,7 +17,6 @@ import { Odometer, viewDollars } from "@/components/ui/odometer";
 import { Sparkline } from "@/components/ui/sparkline";
 import { fire, tapFeedback } from "@/lib/feedback";
 import { CountdownRing } from "./CountdownRing";
-import { MusicToggle } from "./MusicToggle";
 import "./terminal-top.css";
 
 const MARK = 28;
@@ -80,7 +79,6 @@ export function TerminalTop({
             <ChangeChip symbol={t.symbol} day={day} />
           </span>
         ) : null}
-        <MusicToggle />
         <Equity cash={t.balance} />
       </div>
       {ride ? (

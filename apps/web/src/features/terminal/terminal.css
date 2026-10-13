@@ -318,3 +318,36 @@
     transition: none;
   }
 }
+
+/* The chart's footer (R5.17): the view, the candles' interval, the music. */
+.chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 12px 0;
+}
+
+.chart-footer-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chart-footer-chip {
+  display: inline-flex;
+  min-width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chart-footer-chip.is-on {
+  background: var(--secondary);
+  color: var(--foreground);
+}

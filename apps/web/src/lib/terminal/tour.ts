@@ -28,6 +28,15 @@ export function useTourOpen(): boolean {
   );
 }
 
+/** Read now, not through the hydrating snapshot (which reads "unseen" on the first render). */
+export function tourSeenNow(): boolean {
+  try {
+    return localStorage.getItem(TERMINAL_STORAGE.tour) === "seen";
+  } catch {
+    return false;
+  }
+}
+
 /** [seen, markSeen]: the first terminal visit opens the tour while this is false. */
 export function useTourSeen(): [boolean, () => void] {
   const [value, setValue] = useStoredString(TERMINAL_STORAGE.tour);

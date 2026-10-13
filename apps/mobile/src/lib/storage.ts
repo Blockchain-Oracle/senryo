@@ -22,6 +22,11 @@ export const STORAGE_KEYS = {
   rideLeverage: "senryo.terminal.leverage.v1",
   rideTrail: "senryo.terminal.ride-trail.v1",
   callTrail: "senryo.terminal.call-trail.v1",
+  /** The chart's view, line or candles, and the candles' interval (R5.17). */
+  terminalChart: "senryo.terminal.chart.v1",
+  candleInterval: "senryo.terminal.candle-interval.v1",
+  /** The terminal's tour was seen on this phone (R5.15). */
+  terminalTour: "senryo.terminal.tour.v1",
   theme: "senryo.theme.v1",
   setupOrder: "senryo.setup-order.v2",
   sounds: "senryo.sounds.v1",

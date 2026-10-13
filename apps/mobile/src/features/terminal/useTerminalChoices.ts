@@ -4,7 +4,9 @@
  * was chosen; leverage is held to the market's cap when it's read (`leverageFor`).
  */
 import {
+  CANDLE_INTERVALS,
   type CallMode,
+  type CandleInterval,
   DEFAULT_CALL_TRAIL_CENTS,
   DEFAULT_RIDE_MARGIN,
   type Instrument,
@@ -24,6 +26,8 @@ export function useTerminalChoices() {
   const [leverage, setLeverage] = useMMKVNumber(STORAGE_KEYS.rideLeverage, storage);
   const [rideTrail, setRideTrail] = useMMKVNumber(STORAGE_KEYS.rideTrail, storage);
   const [callTrail, setCallTrail] = useMMKVNumber(STORAGE_KEYS.callTrail, storage);
+  const [chart, setChart] = useMMKVString(STORAGE_KEYS.terminalChart, storage);
+  const [interval, storeInterval] = useMMKVString(STORAGE_KEYS.candleInterval, storage);
   return {
     stake: BigInt(stake ?? DEFAULT_STAKE),
     mode: isCallMode(mode) ? mode : ("updown" as CallMode),
@@ -32,6 +36,8 @@ export function useTerminalChoices() {
     leverageX: leverage ?? null,
     rideTrailBps: rideTrail ?? RIDE_TRAIL_BPS,
     callTrailCents: callTrail ?? DEFAULT_CALL_TRAIL_CENTS,
+    candles: chart === "candles",
+    candleInterval: (CANDLE_INTERVALS.find((i) => i === interval) ?? "1m") as CandleInterval,
     setStake: (s: bigint) => setStake(Number(s)),
     setMode: (m: CallMode) => setMode(m),
     setInstrument: (i: Instrument) => setInstrument(i),
@@ -39,6 +45,8 @@ export function useTerminalChoices() {
     setLeverageX: (x: number) => setLeverage(x),
     setRideTrailBps: (b: number) => setRideTrail(b),
     setCallTrailCents: (c: number) => setCallTrail(c),
+    setCandles: (on: boolean) => setChart(on ? "candles" : "line"),
+    setCandleInterval: (i: CandleInterval) => storeInterval(i),
   };
 }
 

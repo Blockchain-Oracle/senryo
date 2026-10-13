@@ -2,6 +2,7 @@ export * from "./book.ts";
 export * from "./book-ride.ts";
 export * from "./book-words.ts";
 export * from "./caller.ts";
+export * from "./candles.ts";
 export * from "./constants.ts";
 export * from "./delegates.ts";
 export * from "./duel.ts";

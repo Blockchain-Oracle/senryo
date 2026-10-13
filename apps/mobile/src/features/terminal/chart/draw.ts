@@ -9,6 +9,8 @@
 import { BAND_ALPHA, type ChartLevel, type ChartOverlay, LEVEL_STYLE, type LevelRole } from "@senryo/calls";
 import { type SkCanvas, type SkColor, Skia, type SkPicture, TileMode } from "@shopify/react-native-skia";
 import { drawOdometer } from "~/components/kit/odometer";
+import { candleWindow, drawCandles, drawCrosshair } from "./candle-draw";
+import { spacingOf } from "./candle-state";
 import { type ChartHealth, DIM_ALPHA, HALF_PIXEL, HEALTH_TAG_GAP } from "./constants";
 import {
   EDGE_FADE_PX,
@@ -171,6 +173,8 @@ function drawLevel(
 export interface Head {
   x: number;
   y: number;
+  /** The candle crosshair's detent (null without one): a change ticks a haptic. */
+  detent?: string | null;
 }
 
 /** The whole frame, recorded into `c`; returns the head so the reactions can ride it. */
@@ -204,16 +208,25 @@ export function drawFrame(
   );
   const pillW = pillTextW + PILL_PAD_X;
   const plotW = Math.min(w - PILL_RIGHT - pillW - PILL_GAP, w - MIN_PLOT_LEFTOVER);
+  // The candle view (R5.17) leads the window once it holds most of the crossfade; the line fades as it does.
+  const cv = s.candles;
+  const layout = { plotW, spacing: spacingOf(cv, plotW), offset: cv.offset };
+  const fitted =
+    !history && cv.data && cv.mix >= HALF / (HALF * HALF)
+      ? candleWindow(cv.data, layout, s.eased, PAD_Y, h - PAD_Y)
+      : null;
+  const step = fitted?.step ?? s.step;
+  const lineAlpha = 1 - cv.mix;
   const win: YWindow = history
     ? { center: s.historyCenter, half: s.historyHalf, top: PAD_Y, bottom: h - PAD_Y }
-    : { center: s.eased, half: (SPAN_STEPS * s.step) / HALF, top: PAD_Y, bottom: h - PAD_Y };
+    : (fitted?.win ?? { center: s.eased, half: (SPAN_STEPS * s.step) / HALF, top: PAD_Y, bottom: h - PAD_Y });
   drawMark(c, k, plotW, h);
 
   // The layer the fade erases: grid, zone, glow and line.
   c.saveLayer();
   const lo = win.center - win.half * LABEL_SPAN;
   const hi = win.center + win.half * LABEL_SPAN;
-  const ticks = gridTicks(lo, hi, s.step);
+  const ticks = gridTicks(lo, hi, step);
   const grid = stroke(k, k.colors.ink, 1, GRID_ALPHA);
   for (const t of ticks) {
     if (!t.major) continue;
@@ -249,14 +262,14 @@ export function drawFrame(
     headY = yOf(s.head, win);
     d += `L${px(plotW)} ${px(headY)}`;
   }
-  if (o?.band != null) {
+  if (o?.band != null && lineAlpha > 0) {
     // Tradash's PnL band: the price path closed down to the entry, fading from the price side to the entry.
     const entryY = Math.min(h, Math.max(0, yOf(o.band, win)));
     const lastX = s.frac > 0 ? plotW : (n - 1 - s.frac) * dx;
     const band = Skia.Path.MakeFromSVGString(`${d}L${px(lastX)} ${px(entryY)}L${px(-s.frac * dx)} ${px(entryY)}Z`);
     if (band) {
       const shade = k.paints.fill;
-      shade.setAlphaf(1);
+      shade.setAlphaf(lineAlpha);
       shade.setShader(
         Skia.Shader.MakeLinearGradient(
           Skia.Point(0, headY < entryY ? 0 : h),
@@ -272,8 +285,8 @@ export function drawFrame(
   }
   const path = Skia.Path.MakeFromSVGString(d);
   if (path) {
-    c.drawPath(path, stroke(k, tone, GLOW_W, GLOW_ALPHA * strength));
-    c.drawPath(path, stroke(k, tone, LINE_W, strength));
+    c.drawPath(path, stroke(k, tone, GLOW_W, GLOW_ALPHA * strength * lineAlpha));
+    c.drawPath(path, stroke(k, tone, LINE_W, strength * lineAlpha));
   }
   const fadeW = plotW * FADE_FRACTION;
   const eraser = k.paints.eraser;
@@ -288,9 +301,14 @@ export function drawFrame(
   );
   c.drawRect(Skia.XYWHRect(0, 0, fadeW, h), eraser);
   c.restore();
+  let detentKey: string | null = null;
+  if (cv.data && cv.mix > 0 && !history) {
+    drawCandles(c, k, cv.data, layout, win, cv.mix);
+    if (cv.cross) detentKey = drawCrosshair(c, k, cv.data, layout, win, step, cv.cross);
+  }
 
   const pillH = o?.pnlText ? PILL_H_POSITION : PILL_H;
-  const decimals = labelDecimals(win.center, s.step);
+  const decimals = labelDecimals(win.center, step);
   // Ticks on both edges as two paths (major, minor) faded at the window's edges by one gradient; major labels at the
   // right, giving way to the pill and to the level tags (K, entry), as Tradash's fade near the pill.
   let major = "";
@@ -360,11 +378,11 @@ export function drawFrame(
       pillY,
       pillY + pillH,
     );
-    return { x: plotW, y: headY };
+    return { x: plotW, y: headY, detent: detentKey };
   }
   const mid = pillY + pillH / HALF;
   const ink = fill(k, k.colors.onLine);
   drawOdometer(c, s.price, k.fonts.pillSmall, ink, right, mid - PILL_ROW_OFFSET, ROLL_PITCH_SMALL, pillY, mid);
   drawOdometer(c, s.pnl, k.fonts.pillSmall, ink, right, mid + PILL_ROW_OFFSET, ROLL_PITCH_SMALL, mid, pillY + pillH);
-  return { x: plotW, y: headY };
+  return { x: plotW, y: headY, detent: detentKey };
 }

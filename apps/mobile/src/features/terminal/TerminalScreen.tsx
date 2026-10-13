@@ -16,8 +16,8 @@ import {
 } from "@senryo/calls/react";
 import { useLive } from "@senryo/live/react";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,10 +31,12 @@ import { accountRequiredRoute } from "~/lib/constants/routes";
 import { balancesHidden, HIDDEN_AMOUNT } from "~/lib/hide-balances";
 import { usd } from "~/lib/money";
 import { notify } from "~/lib/notify";
+import { openTour, useTourSeen } from "~/lib/tour";
 import { tradeToast } from "~/lib/trade-toast";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ActionPanel } from "./ActionPanel";
 import { BasketMembers } from "./BasketMembers";
+import { ChartFooter } from "./ChartFooter";
 import { CrowdLine } from "./CrowdLine";
 import { type ChartHealth, type ChartHistory, LIVE } from "./chart/constants";
 import type { Head } from "./chart/draw";
@@ -99,6 +101,14 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
     if (past) historySeq.current += 1;
     history.value = past ? { seq: historySeq.current, ...past } : null;
   }, [closed, candles, history]);
+  // The first terminal visit on this phone opens the tour (R5.15) — on focus, not mount: the dock mounts the terminal
+  // ahead of a visit (R5.24). Setup's coached terminal waits for it.
+  const [toured] = useTourSeen();
+  useFocusEffect(
+    useCallback(() => {
+      if (!toured && !coach) openTour();
+    }, [toured, coach]),
+  );
   // The passkey account, else on Practice the guest's device key (R5.10).
   const trader = useAppTrader();
   const account = trader.caller;
@@ -190,6 +200,7 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           head={head}
           health={health}
           history={history}
+          candles={choices.candles ? choices.candleInterval : null}
         />
         <ReactionOverlay ref={reactions} head={head} />
         {chartH > 0 ? (
@@ -201,6 +212,12 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
           />
         ) : null}
       </View>
+      <ChartFooter
+        candles={choices.candles}
+        interval={choices.candleInterval}
+        onCandles={choices.setCandles}
+        onInterval={choices.setCandleInterval}
+      />
       {ride ? null : (
         <>
           <LiveText text={q.lineText} style={[TYPE.caption, styles.line, { color: color.inkMuted }]} />

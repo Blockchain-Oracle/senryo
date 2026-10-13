@@ -4,6 +4,7 @@
  * (`dot-grid.ts`). `advance` runs once per display frame inside `useFrameCallback`; nothing here touches React.
  */
 import { emptyOdometer, type Odometer, stepOdometer } from "~/components/kit/odometer";
+import { advanceCandles, type CandleView, createCandleView } from "./candle-state";
 import { BASE_TAU_MS, type ChartHistory, HISTORY_PAD, MAX_TICK_GAP_MS, TICK_EMA, TICK_FOLLOW } from "./constants";
 import { niceStep, SAMPLE_CAPACITY, SAMPLE_MS, SPAN_STEPS, stepFor } from "./engine";
 
@@ -51,6 +52,8 @@ export interface ChartState {
   historySeq: number;
   historyCenter: number;
   historyHalf: number;
+  /** The candle view (R5.17): its series, the crossfade, the scroll and zoom, the crosshair. */
+  candles: CandleView;
 }
 
 export function createChartState(): ChartState {
@@ -79,6 +82,7 @@ export function createChartState(): ChartState {
     historySeq: 0,
     historyCenter: 0,
     historyHalf: 0,
+    candles: createCandleView(),
   };
 }
 
@@ -157,7 +161,14 @@ export function resetChart(s: ChartState): void {
  * One display frame: ease and sample on the fixed 60 Hz clock, roll the digits, and move the dots — left at half the
  * line's speed per sample pushed (so a 120 Hz screen doesn't double it), and up or down with the price's velocity.
  */
-export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: number, live: boolean): void {
+export function advance(
+  s: ChartState,
+  nowMs: number,
+  reduced: boolean,
+  plotW: number,
+  live: boolean,
+  wallMs: number,
+): void {
   "worklet";
   const dt = s.lastFrame === 0 ? SAMPLE_MS : Math.min(MAX_FRAME_MS, nowMs - s.lastFrame);
   s.lastFrame = nowMs;
@@ -180,6 +191,7 @@ export function advance(s: ChartState, nowMs: number, reduced: boolean, plotW: n
   s.head = s.eased + (s.target - s.eased) * (1 - Math.exp((-s.frac * SAMPLE_MS) / tau));
   stepOdometer(s.price, dt);
   stepOdometer(s.pnl, dt);
+  advanceCandles(s.candles, dt, reduced, s.latest, s.eased, wallMs, plotW);
   s.velocitySteps = s.step > 0 ? (s.eased - before) / s.step : 0;
   if (reduced) return;
   // The dots scroll with the line's time, not its pushes (smooth at any rate; still while the line holds still), and

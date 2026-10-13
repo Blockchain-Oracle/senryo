@@ -18,6 +18,9 @@ export const TERMINAL_STORAGE = {
   callTrail: "senryo.terminal.call-trail.v1",
   favourites: "senryo.favourite-markets.v1",
   recents: "senryo.recent-markets.v1",
+  /** The chart's view, line or candles, and the candles' interval (R5.17). */
+  chart: "senryo.terminal.chart.v1",
+  candleInterval: "senryo.terminal.candle-interval.v1",
   /** The terminal's tour was seen on this device (R5.15). */
   tour: "senryo.terminal.tour.v1",
 } as const;
