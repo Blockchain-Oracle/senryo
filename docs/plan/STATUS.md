@@ -215,7 +215,7 @@ transcripts are in `~/.claude/projects/-Users-abu-dev-hackathon-metropolis/`.
   Evening: the frozen Unlock (route sheets under their own modal) fixed with an invariant; `UpdateHost` so updates land
   without two cold starts (offers Restart); open event calls and duels on Calls; event cards say what you hold; D3/D6
   taps and silent failures; web `LoadFailed` everywhere. OTAs `46c07976`, `8ea7db9e`, `8c91f536`, `635e7dc0`; web
-  `sha-04e1eb2` → `sha-bfe1ebe` (pending a calm box). The owner's phone still ran D0 — two restarts once.
+  `sha-04e1eb2` → `sha-bfe1ebe`. The owner's phone still ran D0 — two restarts once.
 - **Next:** stage D's open list (its file), then P2's leftovers, then P3–P5. (proof screens on the phone, `/proof*` and `/ride` links, Calls states,
   web retry and row actions, Reduce Motion), with the web replay's end-to-end check. Then P3–P5, then Q2, Q4–Q6, R8.
 
