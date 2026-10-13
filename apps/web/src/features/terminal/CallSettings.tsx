@@ -5,7 +5,16 @@
  * the fees each one line that opens. The old summary rows (stake again, pays if right, fees per side, settles at,
  * after this) are gone.
  */
-import { CALL_MODES, type CallMode, callPayoff, dollars, type Offer, type Quotes, TRAIL_CENTS } from "@senryo/calls";
+import {
+  CALL_MODES,
+  type CallMode,
+  callPayoff,
+  dollars,
+  fineDollars,
+  type Offer,
+  type Quotes,
+  TRAIL_CENTS,
+} from "@senryo/calls";
 import { useState } from "react";
 import { DisclosureRow } from "@/components/ui/disclosure-row";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -37,6 +46,7 @@ export function CallSettings(p: CallSettingsProps) {
   const hidden = usePrivacy();
   const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
+  const fine = (v: bigint) => masked(fineDollars(v), hidden);
   const top = BigInt(STAKE_PRESETS_USD.at(-1) ?? 1) * USD;
   const payoff = callPayoff(p.offer, p.quotes, p.stake, top < p.max ? top : p.max);
   const fees = payoff.zones.flatMap((z) => (z.fee === null ? [] : [z.fee]));
@@ -99,12 +109,12 @@ export function CallSettings(p: CallSettingsProps) {
         </div>
       </DisclosureRow>
       {fees.length > 0 ? (
-        <DisclosureRow title="Fees" value={low === high ? money(low) : `${money(low)}–${money(high)}`}>
+        <DisclosureRow title="Fees" value={low === high ? fine(low) : `${fine(low)}–${fine(high)}`}>
           {payoff.zones.map((z) =>
             z.fee === null ? null : (
               <p key={z.slot} className="flex items-center gap-3 text-body">
                 <span className="flex-1 text-text-3">In {z.band.label}'s price</span>
-                <span className="tnum font-semibold">{money(z.fee)}</span>
+                <span className="tnum font-semibold">{fine(z.fee)}</span>
               </p>
             ),
           )}

@@ -7,6 +7,7 @@
  */
 import {
   dollars,
+  fineDollars,
   LEVERAGE_OFF_X,
   leverageMarks,
   leverageOn,
@@ -52,6 +53,7 @@ export function RideSettings(p: RideSettingsProps) {
   const hidden = usePrivacy();
   const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
+  const fine = (v: bigint) => masked(fineDollars(v), hidden);
   const on = leverageOn(p.leverageBps);
   const x = p.leverageBps / LEVERAGE_ONE;
   const marks = leverageMarks(p.maxLeverageBps);
@@ -148,10 +150,10 @@ export function RideSettings(p: RideSettingsProps) {
         </div>
       </DisclosureRow>
       {up ? (
-        <DisclosureRow title="Open fee" value={money(up.fee)}>
+        <DisclosureRow title="Open fee" value={fine(up.fee)}>
           <p className="flex items-center gap-3 text-body">
             <span className="flex-1 text-text-3">Close fee at today's price</span>
-            <span className="tnum font-semibold">{money(up.closeFee)}</span>
+            <span className="tnum font-semibold">{fine(up.closeFee)}</span>
           </p>
           {p.terms.earlyFeeBps > 0 ? (
             <p className="flex items-center gap-3 text-body">

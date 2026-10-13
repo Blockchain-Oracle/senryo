@@ -6,6 +6,7 @@
  */
 import {
   dollars,
+  fineDollars,
   LEVERAGE_OFF_X,
   leverageMarks,
   leverageOn,
@@ -52,6 +53,7 @@ export function RideSettingsBody({ o, available }: { o: RideOrder; available: bi
   const [hidden] = useHideBalances();
   const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
+  const fine = (v: bigint) => masked(fineDollars(v), hidden);
   const amount = useTyped(o.margin, o.terms.minMargin, o.terms.maxMargin, available, o.onMargin);
   const on = leverageOn(o.leverageBps);
   const x = o.leverageBps / ONE_X;
@@ -119,10 +121,10 @@ export function RideSettingsBody({ o, available }: { o: RideOrder; available: bi
         />
       </DisclosureRow>
       {up ? (
-        <DisclosureRow title="Open fee" value={money(up.fee)}>
+        <DisclosureRow title="Open fee" value={fine(up.fee)}>
           <View style={styles.fact}>
             <Text style={[TYPE.rowDetail, styles.grow, { color: color.inkMuted }]}>Close fee at today's price</Text>
-            <Text style={[TYPE.rowAmount, { color: color.ink }]}>{money(up.closeFee)}</Text>
+            <Text style={[TYPE.rowAmount, { color: color.ink }]}>{fine(up.closeFee)}</Text>
           </View>
           {o.terms.earlyFeeBps > 0 ? (
             <View style={styles.fact}>

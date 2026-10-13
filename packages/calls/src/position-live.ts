@@ -5,9 +5,10 @@
  * Never the entry, margin, fees, knock-out or cap: those live on the terminal's chart and in Position details.
  */
 import { RIDE_TERMS, TESTNET_CHAIN_ID } from "@senryo/config";
-import { clockText, formatUnits, laneLabel } from "@senryo/core";
+import { clockText, laneLabel } from "@senryo/core";
 import type { TerminalIntent } from "@senryo/search";
 import type { BookEntry } from "./book.ts";
+import { fineDollars } from "./quote.ts";
 import type { ReplaySample } from "./replay.ts";
 
 const RIDE_LIFE_SEC = RIDE_TERMS[TESTNET_CHAIN_ID].maxLifeSec;
@@ -20,19 +21,11 @@ export const LAST_SECONDS = 10;
 /** A hole longer than this in the recording breaks the line (the app was closed or the stream down). */
 const GAP_MS = 3_000;
 const MIN_SAMPLES = 2;
-const DOLLAR_DECIMALS = 6;
-/** Under $10 a PnL shows four decimals so a $1 trade visibly ticks (Tradash); two above. */
-const SMALL_PNL = 10_000_000n;
-const SMALL_DECIMALS = 4;
-const CENTS = 2;
 const BPS_PER_PERCENT = 100;
 const ROI_DECIMALS = 1;
 
-/** "+$0.0400", "−$12.30": a live PnL. */
-export function pnlText(v: bigint): string {
-  const abs = v < 0n ? -v : v;
-  return `${v < 0n ? "−" : "+"}$${formatUnits(abs, DOLLAR_DECIMALS, abs < SMALL_PNL ? SMALL_DECIMALS : CENTS)}`;
-}
+/** "+$0.0400", "−$12.30": a live PnL (four decimals under $10 so a $1 trade visibly ticks). */
+export const pnlText = (v: bigint): string => `${v < 0n ? "−" : "+"}${fineDollars(v)}`;
 
 /** "+0.7%": a return, one decimal. */
 export const roiText = (bps: number): string =>

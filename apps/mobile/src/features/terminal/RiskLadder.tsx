@@ -1,10 +1,10 @@
 /**
  * The ride's risk, drawn (Q1, Codex direction 16 §1; `@senryo/calls` `rideLadder`): two rails on one rising price
  * axis — UP on the left, DOWN on the right — each from its knock-out (a broken crossbar) to its cap (a solid tick),
- * the live price dashed across both. Distances are true: more leverage visibly brings the knock-out in. A tap on a
+ * the live price dashed across both and written once above, between the side names. Distances are true: more leverage visibly brings the knock-out in. A tap on a
  * level shows how far it is; its price shows otherwise. Each level is written once, nowhere else on the sheet.
  */
-import { type LadderLevel, type RideLadder, unitOf } from "@senryo/calls";
+import { type LadderLevel, ladderPriceText, type RideLadder, unitOf } from "@senryo/calls";
 import { priceText } from "@senryo/core";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -15,8 +15,8 @@ import { SPACE, TYPE, useTheme } from "~/theme";
 export const LADDER_HEIGHT = 192;
 const RAIL = 10;
 const TICK = 28;
-const UP_X = 0.36;
-const DOWN_X = 0.64;
+const UP_X = 0.44;
+const DOWN_X = 0.56;
 const DASH_LEN = 4;
 const DASH = [DASH_LEN, DASH_LEN];
 const HALF = 2;
@@ -42,7 +42,7 @@ export function RiskLadder({ ladder, symbol, markE8 }: { ladder: RideLadder; sym
   };
   const label = (l: LadderLevel) => {
     const key = `${l.side}-${l.kind}`;
-    const words = `${l.kind === "ko" ? "KO" : "Cap"} ${open === key ? moveText(l.moveBps) : priceText(l.priceE8, unit)}`;
+    const words = `${l.kind === "ko" ? "KO" : "Cap"} ${open === key ? moveText(l.moveBps) : ladderPriceText(l.priceE8, unit)}`;
     const left = l.side === "up";
     return (
       <Pressable
@@ -69,73 +69,67 @@ export function RiskLadder({ ladder, symbol, markE8 }: { ladder: RideLadder; sym
     );
   };
   return (
-    <View style={styles.wrap} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      {width > 0 ? (
-        <>
-          <Svg width={width} height={LADDER_HEIGHT}>
-            {(["up", "down"] as const).map((side) => {
-              const b = band(side);
-              return (
-                <Rect
-                  key={side}
-                  x={railX(side) - RAIL / HALF}
-                  y={b.top}
-                  width={RAIL}
-                  height={b.height}
-                  rx={RAIL / HALF}
-                  fill={side === "up" ? color.up : color.down}
-                  opacity={BAND_ALPHA}
-                />
-              );
-            })}
-            {ladder.levels.map((l) => {
-              const cx = railX(l.side);
-              return (
-                <Line
-                  key={`${l.side}-${l.kind}`}
-                  x1={cx - TICK / HALF}
-                  x2={cx + TICK / HALF}
-                  y1={y(l.at)}
-                  y2={y(l.at)}
-                  stroke={color.ink}
-                  strokeWidth={l.kind === "cap" ? CAP_STROKE : KO_STROKE}
-                  {...(l.kind === "ko" ? { strokeDasharray: DASH } : {})}
-                />
-              );
-            })}
-            <Line
-              x1={0}
-              x2={width}
-              y1={y(ladder.markAt)}
-              y2={y(ladder.markAt)}
-              stroke={color.inkMuted}
-              strokeWidth={1}
-              strokeDasharray={DASH}
-            />
-          </Svg>
-          {ladder.levels.map(label)}
-          <Text style={[TYPE.chipLabel, styles.side, { left: railX("up") - TICK, color: color.up }]}>UP ↑</Text>
-          <Text style={[TYPE.chipLabel, styles.side, { left: railX("down") - TICK / HALF, color: color.down }]}>
-            DOWN ↓
-          </Text>
-          <View style={[styles.now, { top: y(ladder.markAt) - LABEL_H / HALF, backgroundColor: color.ground }]}>
-            <Text style={[TYPE.chipLabel, { color: color.ink }]}>{priceText(markE8, unit)}</Text>
-          </View>
-        </>
-      ) : null}
+    <View style={styles.box}>
+      <View style={styles.head}>
+        <Text style={[TYPE.chipLabel, { color: color.up }]}>UP ↑</Text>
+        <Text style={[TYPE.moneyMeta, { color: color.inkMuted }]}>{priceText(markE8, unit)}</Text>
+        <Text style={[TYPE.chipLabel, { color: color.down }]}>DOWN ↓</Text>
+      </View>
+      <View style={styles.wrap} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        {width > 0 ? (
+          <>
+            <Svg width={width} height={LADDER_HEIGHT}>
+              {(["up", "down"] as const).map((side) => {
+                const b = band(side);
+                return (
+                  <Rect
+                    key={side}
+                    x={railX(side) - RAIL / HALF}
+                    y={b.top}
+                    width={RAIL}
+                    height={b.height}
+                    rx={RAIL / HALF}
+                    fill={side === "up" ? color.up : color.down}
+                    opacity={BAND_ALPHA}
+                  />
+                );
+              })}
+              {ladder.levels.map((l) => {
+                const cx = railX(l.side);
+                return (
+                  <Line
+                    key={`${l.side}-${l.kind}`}
+                    x1={cx - TICK / HALF}
+                    x2={cx + TICK / HALF}
+                    y1={y(l.at)}
+                    y2={y(l.at)}
+                    stroke={color.ink}
+                    strokeWidth={l.kind === "cap" ? CAP_STROKE : KO_STROKE}
+                    {...(l.kind === "ko" ? { strokeDasharray: DASH } : {})}
+                  />
+                );
+              })}
+              <Line
+                x1={0}
+                x2={width}
+                y1={y(ladder.markAt)}
+                y2={y(ladder.markAt)}
+                stroke={color.inkMuted}
+                strokeWidth={1}
+                strokeDasharray={DASH}
+              />
+            </Svg>
+            {ladder.levels.map(label)}
+          </>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { height: LADDER_HEIGHT, marginTop: SPACE.lg },
+  box: { gap: SPACE.sm },
+  head: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
+  wrap: { height: LADDER_HEIGHT },
   label: { position: "absolute", height: LABEL_H, justifyContent: "center" },
-  side: { position: "absolute", top: -SPACE.lg },
-  now: {
-    position: "absolute",
-    alignSelf: "center",
-    height: LABEL_H,
-    paddingHorizontal: SPACE.xs,
-    justifyContent: "center",
-  },
 });

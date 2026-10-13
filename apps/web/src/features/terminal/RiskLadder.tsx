@@ -2,17 +2,17 @@
 /**
  * The ride's risk, drawn (Q1, Codex direction 16 §1; `@senryo/calls` `rideLadder`; the phone's `RiskLadder`): two
  * rails on one rising price axis — UP on the left, DOWN on the right — each from its knock-out (a dashed crossbar) to
- * its cap (a solid one), the live price dashed across both. Distances are true: more leverage visibly brings the
+ * its cap (a solid one), the live price dashed across both and written once above, between the side names. Distances are true: more leverage visibly brings the
  * knock-out in. Clicking a level shows how far it is; its price shows otherwise. Each level is written once.
  */
-import { type LadderLevel, type RideLadder, unitOf } from "@senryo/calls";
+import { type LadderLevel, ladderPriceText, type RideLadder, unitOf } from "@senryo/calls";
 import { priceText } from "@senryo/core";
 import { useState } from "react";
 import { fire } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
 
 const PERCENT = 100;
-const RAIL_AT = { up: 36, down: 64 } as const;
+const RAIL_AT = { up: 44, down: 56 } as const;
 const PERCENT_PER_BPS = 100;
 const ONE_DECIMAL = 1;
 
@@ -46,58 +46,47 @@ export function RiskLadder({ ladder, symbol, markE8 }: { ladder: RideLadder; sym
             : { left: `calc(${RAIL_AT.down}% + 1.25rem)` }),
         }}
       >
-        {name} {open === key ? moveText(l.moveBps) : priceText(l.priceE8, unit)}
+        {name} {open === key ? moveText(l.moveBps) : ladderPriceText(l.priceE8, unit)}
       </button>
     );
   };
   return (
-    <div className="relative mt-6 h-48">
-      {(["up", "down"] as const).map((side) => {
-        const [lo, hi] = ladder.bands[side];
-        return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between text-meta">
+        <span className="font-semibold text-up">UP ↑</span>
+        <span className="tnum text-text-3">{priceText(markE8, unit)}</span>
+        <span className="font-semibold text-down">DOWN ↓</span>
+      </div>
+      <div className="relative h-48">
+        {(["up", "down"] as const).map((side) => {
+          const [lo, hi] = ladder.bands[side];
+          return (
+            <div
+              key={side}
+              aria-hidden
+              className={cn("-translate-x-1/2 absolute w-2.5 rounded-full", side === "up" ? "bg-up/30" : "bg-down/30")}
+              style={{ left: `${RAIL_AT[side]}%`, top: top(hi), height: `${Math.max(0, hi - lo) * PERCENT}%` }}
+            />
+          );
+        })}
+        {ladder.levels.map((l) => (
           <div
-            key={side}
+            key={`tick-${l.side}-${l.kind}`}
             aria-hidden
-            className={cn("-translate-x-1/2 absolute w-2.5 rounded-full", side === "up" ? "bg-up/30" : "bg-down/30")}
-            style={{ left: `${RAIL_AT[side]}%`, top: top(hi), height: `${Math.max(0, hi - lo) * PERCENT}%` }}
+            className={cn(
+              "-translate-x-1/2 absolute h-0 w-7 border-foreground",
+              l.kind === "ko" ? "border-t-2 border-dashed" : "border-t-3",
+            )}
+            style={{ left: `${RAIL_AT[l.side]}%`, top: top(l.at) }}
           />
-        );
-      })}
-      {ladder.levels.map((l) => (
+        ))}
         <div
-          key={`tick-${l.side}-${l.kind}`}
           aria-hidden
-          className={cn(
-            "-translate-x-1/2 absolute h-0 w-7 border-foreground",
-            l.kind === "ko" ? "border-t-2 border-dashed" : "border-t-3",
-          )}
-          style={{ left: `${RAIL_AT[l.side]}%`, top: top(l.at) }}
+          className="absolute inset-x-0 h-0 border-text-3 border-t border-dashed"
+          style={{ top: top(ladder.markAt) }}
         />
-      ))}
-      <div
-        aria-hidden
-        className="absolute inset-x-0 h-0 border-text-3 border-t border-dashed"
-        style={{ top: top(ladder.markAt) }}
-      />
-      {ladder.levels.map(label)}
-      <span
-        className="-top-6 -translate-x-1/2 absolute font-semibold text-meta text-up"
-        style={{ left: `${RAIL_AT.up}%` }}
-      >
-        UP ↑
-      </span>
-      <span
-        className="-top-6 -translate-x-1/2 absolute font-semibold text-down text-meta"
-        style={{ left: `${RAIL_AT.down}%` }}
-      >
-        DOWN ↓
-      </span>
-      <span
-        className="tnum -translate-x-1/2 -translate-y-1/2 absolute left-1/2 bg-background px-1 text-meta"
-        style={{ top: top(ladder.markAt) }}
-      >
-        {priceText(markE8, unit)}
-      </span>
+        {ladder.levels.map(label)}
+      </div>
     </div>
   );
 }

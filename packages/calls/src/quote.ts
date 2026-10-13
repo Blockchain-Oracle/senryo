@@ -194,6 +194,13 @@ export interface QuotePass {
 
 export const dollars = (v: bigint) => `$${formatUnits(v < 0n ? -v : v, DOLLAR_DECIMALS, CENTS)}`;
 export const signedDollars = (v: bigint) => `${v < 0n ? "−" : "+"}${dollars(v)}`;
+/** Under $10 an amount shows four decimals — a sub-cent fee isn't "$0.00", a $1 trade's PnL visibly ticks; two above. */
+const FINE_BELOW = 10_000_000n;
+const FINE_DECIMALS = 4;
+export const fineDollars = (v: bigint) => {
+  const abs = v < 0n ? -v : v;
+  return `$${formatUnits(abs, DOLLAR_DECIMALS, abs < FINE_BELOW ? FINE_DECIMALS : CENTS)}`;
+};
 
 const UNPRICED = "—";
 

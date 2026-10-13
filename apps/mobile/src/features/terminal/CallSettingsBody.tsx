@@ -3,7 +3,16 @@
  * tap), what it pays drawn under it, the one rule worth a sentence, then the trail and the fees each one line that
  * opens. The old summary rows (stake again, pays if right, fees per side, settles at, after this) are gone.
  */
-import { CALL_MODES, type CallMode, callPayoff, dollars, type Offer, type Quotes, TRAIL_CENTS } from "@senryo/calls";
+import {
+  CALL_MODES,
+  type CallMode,
+  callPayoff,
+  dollars,
+  fineDollars,
+  type Offer,
+  type Quotes,
+  TRAIL_CENTS,
+} from "@senryo/calls";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AmountPad } from "~/components/kit/AmountPad";
@@ -38,6 +47,7 @@ export function CallSettingsBody({ o, available }: { o: CallOrder; available: bi
   const [hidden] = useHideBalances();
   const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
+  const fine = (v: bigint) => masked(fineDollars(v), hidden);
   const amount = useTyped(o.stake, o.min, o.max, available, o.onStake);
   const top = BigInt(STAKE_PRESETS_USD.at(-1) ?? 1) * USD;
   const payoff = callPayoff(o.offer, o.quotes, o.stake, top < o.max ? top : o.max);
@@ -83,12 +93,12 @@ export function CallSettingsBody({ o, available }: { o: CallOrder; available: bi
         />
       </DisclosureRow>
       {fees.length > 0 ? (
-        <DisclosureRow title="Fees" value={low === high ? money(low) : `${money(low)}–${money(high)}`}>
+        <DisclosureRow title="Fees" value={low === high ? fine(low) : `${fine(low)}–${fine(high)}`}>
           {payoff.zones.map((z) =>
             z.fee === null ? null : (
               <View key={z.slot} style={styles.fact}>
                 <Text style={[TYPE.rowDetail, styles.grow, { color: color.inkMuted }]}>In {z.band.label}'s price</Text>
-                <Text style={[TYPE.rowAmount, { color: color.ink }]}>{money(z.fee)}</Text>
+                <Text style={[TYPE.rowAmount, { color: color.ink }]}>{fine(z.fee)}</Text>
               </View>
             ),
           )}

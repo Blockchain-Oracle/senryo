@@ -4,10 +4,14 @@
  * instead of read in a sentence. Positions are 0 (the bottom) … 1 (the top); levels carry their exact price and signed
  * move for the tap that shows them. Never reordered for looks.
  */
+import { formatPrice, type PriceUnit, priceDecimals } from "@senryo/core";
 import type { RideQuote } from "./ride-quote.ts";
 
 /** Room above and below the outermost level, as a share of the span. */
 const PAD = 0.06;
+const E8 = 1e8;
+/** A level at or above this reads in whole units ("$104,869"): the ladder's labels share half a sheet's width. */
+const WHOLE_FROM = 1_000;
 
 export interface LadderLevel {
   side: "up" | "down";
@@ -49,4 +53,10 @@ export function rideLadder(up: RideQuote, down: RideQuote, markE8: bigint): Ride
       down: [at(down.capE8), at(down.koE8)],
     },
   };
+}
+
+/** A level's price on the ladder: whole units from $1,000 up, the market's precision below. */
+export function ladderPriceText(e8: bigint, unit: PriceUnit = "usd"): string {
+  const v = Number(e8) / E8;
+  return formatPrice(v, Math.abs(v) >= WHOLE_FROM ? 0 : priceDecimals(v), unit);
 }
