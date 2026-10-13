@@ -29,6 +29,7 @@ import {
 import { useVisitsVersion } from "@senryo/search/react";
 import { useEffect, useMemo, useState } from "react";
 import type { BookEntry } from "./book.ts";
+import { positionIntent } from "./position-live.ts";
 import { useBookPositions } from "./use-live-book.ts";
 import { useHotSymbols } from "./use-market-picker.ts";
 
@@ -55,15 +56,7 @@ function positionEntry(chainId: ChainId, e: BookEntry): SearchEntry {
     title: `${e.symbol} ${e.label}`,
     subtitle: kind,
     keywords: [e.symbol, market?.name ?? "", e.kind, "position", "open", "cash out", "close"],
-    target: {
-      kind: "terminal",
-      intent: {
-        symbol: e.symbol,
-        instrument: e.kind,
-        position: e.key,
-        ...(e.call ? { lane: e.call.cadenceSec } : {}),
-      },
-    },
+    target: { kind: "terminal", intent: positionIntent(e) },
   };
 }
 

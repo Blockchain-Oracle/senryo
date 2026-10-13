@@ -42,6 +42,8 @@ export function usePositionActions(caller: Caller) {
   const rides = useRideActions(caller);
   const live = useLive();
   const [closing, setClosing] = useState<ReadonlySet<string>>(new Set());
+  // Close all's run, one at a time: which one it's on, of how many ("Closing 1 of 2…").
+  const [batch, setBatch] = useState<{ at: number; of: number } | null>(null);
 
   const mark = (key: string, on: boolean) =>
     setClosing((was) => {
@@ -86,17 +88,22 @@ export function usePositionActions(caller: Caller) {
   const closeAll = useCallback(
     async (entries: readonly BookEntry[]): Promise<CloseResult[]> => {
       const out: CloseResult[] = [];
-      for (const e of entries) {
-        const r = await close(e);
-        if (!r) continue;
-        out.push(r);
-        // A cancelled prompt stops the run: the rider said no.
-        if (r.kind === "cancelled") break;
+      try {
+        for (const [i, e] of entries.entries()) {
+          setBatch({ at: i + 1, of: entries.length });
+          const r = await close(e);
+          if (!r) continue;
+          out.push(r);
+          // A cancelled prompt stops the run: the rider said no.
+          if (r.kind === "cancelled") break;
+        }
+      } finally {
+        setBatch(null);
       }
       return out;
     },
     [close],
   );
 
-  return { ready: calls.ready, close, closeAll, closing };
+  return { ready: calls.ready, close, closeAll, closing, batch };
 }

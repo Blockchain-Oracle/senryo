@@ -1,7 +1,7 @@
 /**
  * The window's countdown ring (21st.dev #1737 Circle Progress, ported to Skia): the arc empties counter-clockwise from
  * the window's start to the moment calls close, on the server's clock (`offsetMs`), redrawn on the UI thread — no React
- * render per second. The last ten seconds tint it the warning colour.
+ * render per second. The last ten seconds tint it the warning colour (or, for a position, thicken it).
  */
 import { Canvas, Path, Skia } from "@shopify/react-native-skia";
 import { useMemo } from "react";
@@ -22,6 +22,7 @@ export function CountdownRing({
   color,
   warn,
   track,
+  lastStroke = stroke,
 }: {
   fromSec: number;
   toSec: number;
@@ -31,6 +32,8 @@ export function CountdownRing({
   color: string;
   warn: string;
   track: string;
+  /** The arc's width in the last ten seconds (a position's ring thickens instead of turning a warning colour). */
+  lastStroke?: number;
 }) {
   const now = useSharedValue(Date.now());
   useFrameCallback(() => {
@@ -48,10 +51,11 @@ export function CountdownRing({
       .build();
   });
   const tint = useDerivedValue(() => (toSec * MS - now.value <= LAST_SECONDS * MS ? warn : color));
+  const width = useDerivedValue(() => (toSec * MS - now.value <= LAST_SECONDS * MS ? lastStroke : stroke));
   return (
     <Canvas style={{ width: size, height: size }}>
       <Path path={circle} style="stroke" strokeWidth={stroke} color={track} />
-      <Path path={arc} style="stroke" strokeWidth={stroke} strokeCap="round" color={tint} />
+      <Path path={arc} style="stroke" strokeWidth={width} strokeCap="round" color={tint} />
     </Canvas>
   );
 }

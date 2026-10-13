@@ -1,105 +1,121 @@
 /**
- * One open position on the phone (Tradash's position row, R5.3): the market's mark, "BTC ↗" with its lane or leverage
- * and when it ends, then ROI over PnL rolling with the price (D-303: from the fill's fair price; red the moment PnL <
- * 0). A tap opens the facts — line or knock-out, entry, now, fees, what it pays — and Cash out (a call) or Close (a
- * ride) for the exact amount it returns now, and Share (R5.21: its receipt, shared at what it's worth now). A held
- * state says why in words.
+ * One open position on the phone, a live object (D-343, Codex direction 15): the market's mark inside a ring draining
+ * to its end on the server's clock, "BTC ↑ · 10×" over the time left ticking by itself and the trade's own recorded
+ * PnL path, then its PnL rolling (dollars first, ROI under). A tap opens the terminal on this exact position (D-340);
+ * a swipe left reveals "Close $5.04" — only revealed, a separate tap closes; a long-press offers Position details and
+ * View receipt. Nothing else at rest: entry, levels, margin and fees live on the chart and in details.
  */
-import { type BookEntry, closeWord, dollars, leverageText, positionHold, positionSub, unitOf } from "@senryo/calls";
-import { useTerminalReady } from "@senryo/calls/react";
-import { laneLabel, priceText } from "@senryo/core";
+import { type BookEntry, closeWord, dollars, pnlText, positionIntent, positionSpan, roiText } from "@senryo/calls";
+import { usePositionRow, useTerminalReady } from "@senryo/calls/react";
 import { marketId } from "@senryo/identity";
+import { intentParams } from "@senryo/search";
 import type { SkFont } from "@shopify/react-native-skia";
-import { type Href, router } from "expo-router";
-import { type ReactNode, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
+import { router } from "expo-router";
+import { type RefObject, useEffect, useRef, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import ReanimatedSwipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import type { SharedValue } from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
-import { Button } from "~/components/kit/Button";
+import { CountdownRing } from "~/components/kit/CountdownRing";
 import { ReadyRing } from "~/components/kit/ReadyRing";
 import { RollingFigure } from "~/components/kit/RollingFigure";
-import { ArrowDown, ArrowLeftRight, ArrowUp, ChevronDown, Lock } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
-import { masked, useHideBalances } from "~/lib/hide-balances";
-import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { HIDDEN_AMOUNT, masked, useHideBalances } from "~/lib/hide-balances";
+import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { PositionSheet } from "./PositionSheet";
+import { PositionTrace } from "./PositionTrace";
 
+const ROW = 80;
 const MARK = 32;
-const FIGURE_H = 22;
-const FIGURE_W = 104;
-const BPS_PER_PERCENT = 100;
-const PCT_DECIMALS = 1;
+const RING = 40;
+const RING_STROKE = 2;
+const RING_LAST_STROKE = 3;
+const FIGURE_W = 120;
+const FIGURE_H = 28;
+const ACTION_W = 112;
+const HALF = 2;
 
-const signed = (v: bigint) => `${v < 0n ? "−" : "+"}${dollars(v)}`;
-const pctText = (bps: number) => `${bps < 0 ? "−" : "+"}${Math.abs(bps / BPS_PER_PERCENT).toFixed(PCT_DECIMALS)}%`;
+/** The one revealed row in a list: opening another closes it. */
+export type OpenSwipe = RefObject<SwipeableMethods | null>;
 
-function Fact({ k, v, down }: { k: string; v: ReactNode; down?: boolean }) {
+function Mark({ e, offsetMs }: { e: BookEntry; offsetMs: SharedValue<number> }) {
   const { color } = useTheme();
+  const span = positionSpan(e);
   return (
-    <View style={styles.fact}>
-      <Text style={[TYPE.rowDetail, { color: color.text3 }]}>{k}</Text>
-      <Text style={[TYPE.rowAmount, { color: down ? color.down : color.ink }]}>{v}</Text>
-    </View>
-  );
-}
-
-function Facts({ e, hidden }: { e: BookEntry; hidden: boolean }) {
-  const unit = unitOf(e.symbol);
-  const price = (v: bigint | null | undefined) => (v === null || v === undefined ? "—" : priceText(v, unit));
-  const money = (v: bigint | null) => (v === null ? "—" : masked(dollars(v), hidden));
-  if (e.kind === "ride" && e.ride) {
-    return (
-      <View>
-        <Fact k="Direction" v={`${e.label} · ${leverageText(e.ride.leverageBps)}`} />
-        <Fact k="Entry" v={price(e.entryE8)} />
-        <Fact k="Now" v={price(e.markE8)} />
-        <Fact k="Knocked out at" v={price(e.ride.koE8)} down />
-        <Fact k="Capped at" v={price(e.ride.capE8)} />
-        <Fact k="Margin" v={money(e.cost)} />
-        <Fact k="Fees" v={money(e.fees)} />
+    <View style={styles.mark}>
+      {span ? (
+        <CountdownRing
+          fromSec={span.fromSec}
+          toSec={span.toSec}
+          offsetMs={offsetMs}
+          size={RING}
+          stroke={RING_STROKE}
+          lastStroke={RING_LAST_STROKE}
+          color={color.inkMuted}
+          warn={color.ink}
+          track={color.muted}
+        />
+      ) : null}
+      <View style={styles.markInner}>
+        <EntityMark id={marketId(e.symbol)} size={MARK} decorative />
       </View>
-    );
-  }
-  return (
-    <View>
-      <Fact k="Call" v={`${e.label} · ${e.call ? laneLabel(e.call.cadenceSec) : ""}`} />
-      <Fact k="Line" v={price(e.call?.lineE8)} />
-      <Fact k="Entry" v={price(e.entryE8)} />
-      <Fact k="Now" v={price(e.markE8)} />
-      <Fact k="Staked" v={money(e.cost)} />
-      <Fact k="Pays if right" v={money(e.call?.shares ?? null)} />
-      <Fact k="Fees" v={money(e.fees)} />
     </View>
   );
 }
 
 function Figures({ e, font, hidden }: { e: BookEntry; font: SkFont | null; hidden: boolean }) {
   const { color } = useTheme();
-  if (e.state === "opening" || e.state === "closing") return <ActivityIndicator color={color.text3} />;
-  if (e.pnl === null || e.roiBps === null) {
-    return e.state === "locked" ? (
-      <Lock size={SIZE.iconSm} color={color.text3} />
-    ) : (
-      <Text style={[TYPE.rowAmount, { color: color.text3 }]}>—</Text>
+  // Closing: the last figure holds, muted, until the result arrives.
+  const held = useRef({ pnl: e.pnl, roi: e.roiBps });
+  if (e.state !== "closing") held.current = { pnl: e.pnl, roi: e.roiBps };
+  const { pnl, roi } = held.current;
+  if (pnl === null || roi === null) {
+    return (
+      <View style={styles.figures}>
+        <Text style={[TYPE.rowPrice, { color: color.inkMuted }]}>—</Text>
+      </View>
     );
   }
-  const tone = e.pnl >= 0n ? color.up : color.down;
+  const tone = e.state === "closing" ? color.inkMuted : pnl >= 0n ? color.up : color.down;
   return (
     <View style={styles.figures}>
-      <Text style={[TYPE.rowPrice, { color: tone }]}>{pctText(e.roiBps)}</Text>
       {hidden ? (
-        <Text style={[TYPE.moneyMeta, { color: tone }]}>{masked("", true)}</Text>
+        <Text style={[TYPE.rowPrice, { color: color.inkMuted }]}>{HIDDEN_AMOUNT}</Text>
       ) : (
         <View style={styles.figure}>
           <RollingFigure
-            text={signed(e.pnl)}
-            value={e.pnl}
+            text={pnlText(pnl)}
+            value={pnl}
             font={font}
             color={tone}
             height={FIGURE_H}
-            accessibilityLabel={`PnL ${signed(e.pnl)}`}
+            accessibilityLabel={`PnL ${pnlText(pnl)}`}
           />
         </View>
       )}
+      <Text style={[TYPE.moneyMeta, { color: hidden ? color.inkMuted : tone }]}>{masked(roiText(roi), hidden)}</Text>
+    </View>
+  );
+}
+
+function CloseAction({ e, ready, onPress }: { e: BookEntry; ready: boolean; onPress: () => void }) {
+  const { color } = useTheme();
+  const [hidden] = useHideBalances();
+  const amount = e.closeValue === null ? "—" : masked(dollars(e.closeValue), hidden);
+  return (
+    <View style={styles.actionWrap}>
+      <ReadyRing on={ready} radius={RADIUS.xs}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${closeWord(e)} ${amount}`}
+          disabled={e.closeValue === null}
+          onPress={onPress}
+          style={[styles.action, { backgroundColor: color.accent }]}
+        >
+          <Text style={[TYPE.buttonCompact, { color: color.accentForeground }]}>{closeWord(e)}</Text>
+          <Text style={[TYPE.moneyMeta, { color: color.accentForeground }]}>{amount}</Text>
+        </Pressable>
+      </ReadyRing>
     </View>
   );
 }
@@ -109,84 +125,122 @@ export function PositionRow({
   closing,
   onClose,
   font,
+  offsetMs,
+  openSwipe,
+  onPick,
 }: {
   entry: BookEntry;
   closing: boolean;
   onClose: (e: BookEntry) => void;
   font: SkFont | null;
+  offsetMs: SharedValue<number>;
+  openSwipe: OpenSwipe;
+  /** After a tap opens the trade (the terminal's sheet closes itself). */
+  onPick?: () => void;
 }) {
   const { color } = useTheme();
   const [hidden] = useHideBalances();
-  const [open, setOpen] = useState(false);
-  // A link (search's position, D-340) asked for this one: open, Cash out ringed, never pressed.
+  const { head, clock, samples } = usePositionRow(e);
+  const swipe = useRef<SwipeableMethods>(null);
+  const [menu, setMenu] = useState(false);
+  // A link (search's position, D-340) asked for this one: its Close revealed and ringed, never pressed.
   const ready = useTerminalReady().position === e.key;
+  const canClose = clock.live && !closing;
   useEffect(() => {
-    if (ready) setOpen(true);
-  }, [ready]);
-  const hold = positionHold(e);
-  const Dir = e.up === null ? ArrowLeftRight : e.up ? ArrowUp : ArrowDown;
+    if (ready && canClose) swipe.current?.openRight();
+  }, [ready, canClose]);
+  const openTrade = () => {
+    fire("tick", { cue: "tap" });
+    router.navigate({ pathname: "/trade", params: { symbol: e.symbol, ...intentParams(positionIntent(e)) } });
+    onPick?.();
+  };
   return (
-    <Animated.View layout={LinearTransition} style={[styles.card, { backgroundColor: color.raised2 }]}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={`${e.symbol} ${e.label}, ${hold ?? positionSub(e)}`}
-        onPress={() => {
-          fire("tick");
-          setOpen((o) => !o);
+    <>
+      <ReanimatedSwipeable
+        ref={swipe}
+        enabled={canClose}
+        friction={1}
+        overshootRight={false}
+        rightThreshold={ACTION_W / HALF}
+        renderRightActions={() => (
+          <CloseAction
+            e={e}
+            ready={ready}
+            onPress={() => {
+              swipe.current?.close();
+              onClose(e);
+            }}
+          />
+        )}
+        onSwipeableWillOpen={() => {
+          fire("snap");
+          if (openSwipe.current && openSwipe.current !== swipe.current) openSwipe.current.close();
+          openSwipe.current = swipe.current;
         }}
-        style={styles.head}
       >
-        <EntityMark id={marketId(e.symbol)} size={MARK} decorative />
-        <View style={styles.title}>
-          <View style={styles.symbol}>
-            <Text style={[TYPE.rowTitle, { color: color.ink }]}>{e.symbol}</Text>
-            <Dir size={SIZE.iconSm} color={e.up === null ? color.text3 : e.up ? color.up : color.down} />
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={`Open ${e.symbol} position`}
+          accessibilityHint={clock.text}
+          accessibilityActions={[
+            { name: "activate" },
+            ...(canClose ? [{ name: "actions", label: "Show position actions" }] : []),
+            { name: "longpress", label: "Position details" },
+          ]}
+          onAccessibilityAction={(ev) => {
+            if (ev.nativeEvent.actionName === "actions") swipe.current?.openRight();
+            else if (ev.nativeEvent.actionName === "longpress") setMenu(true);
+            else openTrade();
+          }}
+          onPress={openTrade}
+          onLongPress={() => {
+            fire("tick", { cue: "sheetOpen" });
+            setMenu(true);
+          }}
+          style={({ pressed }) => [styles.row, { backgroundColor: pressed ? color.rowPressed : color.raised2 }]}
+        >
+          <Mark e={e} offsetMs={offsetMs} />
+          <View style={styles.middle}>
+            <Text numberOfLines={1} style={[TYPE.rowStrong, { color: color.ink }]}>
+              {head}
+            </Text>
+            <View style={styles.clockLine}>
+              <Text numberOfLines={2} style={[TYPE.meta, styles.clock, { color: color.inkMuted }]}>
+                {clock.text}
+              </Text>
+              {hidden ? null : <PositionTrace samples={samples} dim={e.state === "no-price"} />}
+            </View>
           </View>
-          <Text numberOfLines={1} style={[TYPE.rowDetail, { color: color.text3 }]}>
-            {hold ?? positionSub(e)}
-          </Text>
-        </View>
-        <Figures e={e} font={font} hidden={hidden} />
-        <View style={open ? styles.flip : undefined}>
-          <ChevronDown size={SIZE.iconSm} color={color.text3} />
-        </View>
-      </Pressable>
-      {open ? (
-        <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.body}>
-          <Facts e={e} hidden={hidden} />
-          <ReadyRing on={ready}>
-            <Button
-              label={e.closeValue === null ? closeWord(e) : `${closeWord(e)} ${masked(dollars(e.closeValue), hidden)}`}
-              onPress={() => onClose(e)}
-              disabled={e.closeValue === null}
-              loading={closing}
-            />
-          </ReadyRing>
-          {e.pnl === null ? null : (
-            <Button
-              label="Share"
-              variant="secondary"
-              onPress={() => {
-                fire("tick");
-                router.push((e.kind === "ride" ? `/calls/rides/${e.id}` : `/calls/${e.id}`) as Href);
-              }}
-            />
-          )}
-        </Animated.View>
-      ) : null}
-    </Animated.View>
+          <Figures e={e} font={font} hidden={hidden} />
+        </Pressable>
+      </ReanimatedSwipeable>
+      {menu ? <PositionSheet e={e} onClose={() => setMenu(false)} /> : null}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: SHEET_SHAPE.rowRadius },
-  head: { flexDirection: "row", alignItems: "center", gap: SPACE.md, padding: SPACE.md },
-  title: { flex: 1, minWidth: 0 },
-  symbol: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
-  figures: { alignItems: "flex-end" },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACE.md,
+    minHeight: ROW,
+    paddingHorizontal: SPACE.md,
+  },
+  mark: { width: RING, height: RING },
+  markInner: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
+  middle: { flex: 1, minWidth: 0, gap: SPACE.xs },
+  clockLine: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  clock: { flexShrink: 1 },
+  figures: { alignItems: "flex-end", minWidth: FIGURE_W },
   figure: { width: FIGURE_W, height: FIGURE_H },
-  flip: { transform: [{ rotate: "180deg" }] },
-  body: { gap: SPACE.md, paddingHorizontal: SPACE.md, paddingBottom: SPACE.md },
-  fact: { flexDirection: "row", justifyContent: "space-between", paddingVertical: SPACE.xs },
+  actionWrap: { justifyContent: "center", paddingLeft: SPACE.sm },
+  action: {
+    width: ACTION_W,
+    minHeight: SIZE.touch,
+    borderRadius: RADIUS.xs,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: SPACE.xs,
+  },
 });

@@ -12,8 +12,10 @@ export function usePositionRow(e: BookEntry): {
   head: string;
   clock: PositionClock;
   samples: readonly ReplaySample[] | null;
+  /** The server's second the clock was read on (for a ring drawn from it). */
+  now: number;
 } {
   const now = useServerSeconds();
   const { chainId } = useQueryEnv();
-  return { head: positionHead(e), clock: positionClock(e, now), samples: liveSamples(chainId, e.key) };
+  return { head: positionHead(e), clock: positionClock(e, now), samples: liveSamples(chainId, e.key), now };
 }

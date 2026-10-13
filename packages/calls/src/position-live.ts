@@ -5,7 +5,8 @@
  * Never the entry, margin, fees, knock-out or cap: those live on the terminal's chart and in Position details.
  */
 import { RIDE_TERMS, TESTNET_CHAIN_ID } from "@senryo/config";
-import { clockText, laneLabel } from "@senryo/core";
+import { clockText, formatUnits, laneLabel } from "@senryo/core";
+import type { TerminalIntent } from "@senryo/search";
 import type { BookEntry } from "./book.ts";
 import type { ReplaySample } from "./replay.ts";
 
@@ -19,6 +20,29 @@ export const LAST_SECONDS = 10;
 /** A hole longer than this in the recording breaks the line (the app was closed or the stream down). */
 const GAP_MS = 3_000;
 const MIN_SAMPLES = 2;
+const DOLLAR_DECIMALS = 6;
+/** Under $10 a PnL shows four decimals so a $1 trade visibly ticks (Tradash); two above. */
+const SMALL_PNL = 10_000_000n;
+const SMALL_DECIMALS = 4;
+const CENTS = 2;
+const BPS_PER_PERCENT = 100;
+const ROI_DECIMALS = 1;
+
+/** "+$0.0400", "−$12.30": a live PnL. */
+export function pnlText(v: bigint): string {
+  const abs = v < 0n ? -v : v;
+  return `${v < 0n ? "−" : "+"}$${formatUnits(abs, DOLLAR_DECIMALS, abs < SMALL_PNL ? SMALL_DECIMALS : CENTS)}`;
+}
+
+/** "+0.7%": a return, one decimal. */
+export const roiText = (bps: number): string =>
+  `${bps < 0 ? "−" : "+"}${Math.abs(bps / BPS_PER_PERCENT).toFixed(ROI_DECIMALS)}%`;
+
+/** The life the ring drains over: a call's window, a ride's four hours (null without an end). */
+export function positionSpan(e: BookEntry): { fromSec: number; toSec: number } | null {
+  const duration = e.ride ? RIDE_LIFE_SEC : e.call ? e.call.cadenceSec : null;
+  return e.endsAt === null || duration === null ? null : { fromSec: e.endsAt - duration, toSec: e.endsAt };
+}
 
 /** "BTC ↑ · 10×", "BTC ↓ · 5m", "BTC · Range · 5m". */
 export function positionHead(e: BookEntry): string {
@@ -29,6 +53,35 @@ export function positionHead(e: BookEntry): string {
       : "";
   const side = e.up === null || (e.label !== "Up" && e.label !== "Down") ? ` · ${e.label}` : ` ${e.up ? "↑" : "↓"}`;
   return `${e.symbol}${side}${tag ? ` · ${tag}` : ""}`;
+}
+
+/** Where a tap on the row goes (D-340): the terminal on this exact position — its market, instrument and lane. */
+export function positionIntent(e: BookEntry): TerminalIntent {
+  return { symbol: e.symbol, instrument: e.kind, position: e.key, ...(e.call ? { lane: e.call.cadenceSec } : {}) };
+}
+
+/**
+ * Close all, as a review before it runs (D-343): how many can close now, what they return together at today's quotes,
+ * and how many can't — "Close all (3)" when every one can, "Close available (2)" when some can't; null under two.
+ */
+export interface CloseReview {
+  entries: readonly BookEntry[];
+  /** "Close all (3)" / "Close available (2)". */
+  action: string;
+  estimate: bigint;
+  unavailable: number;
+}
+
+export function closeReview(all: readonly BookEntry[]): CloseReview | null {
+  const entries = all.filter((e) => e.closeValue !== null);
+  if (entries.length < MIN_SAMPLES) return null;
+  const unavailable = all.length - entries.length;
+  return {
+    entries,
+    action: unavailable === 0 ? `Close all (${entries.length})` : `Close available (${entries.length})`,
+    estimate: entries.reduce((sum, e) => sum + (e.closeValue ?? 0n), 0n),
+    unavailable,
+  };
 }
 
 /** "3:42:18": hours always (a ride's clock). */

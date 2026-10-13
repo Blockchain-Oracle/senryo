@@ -159,6 +159,12 @@
   --text-button-compact--line-height: var(--type-button-compact-leading);
   --text-tab: var(--type-tab-label-size);
   --text-tab--line-height: var(--type-tab-label-leading);
+  --text-position-pnl: var(--type-position-pnl-size);
+  --text-position-pnl--line-height: var(--type-position-pnl-leading);
+  --text-position-pnl--letter-spacing: var(--type-position-pnl-tracking);
+  --text-position-total: var(--type-position-total-size);
+  --text-position-total--line-height: var(--type-position-total-leading);
+  --text-position-total--letter-spacing: var(--type-position-total-tracking);
 
   --tracking-label: var(--type-label-tracking);
   --ease-lacquer: var(--motion-ease);

@@ -14,9 +14,7 @@ import {
   useMarketLine,
   useMarketVisit,
   usePriceHealth,
-  useTerminalReady,
 } from "@senryo/calls/react";
-import { useLive } from "@senryo/live/react";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -35,6 +33,7 @@ import { usd } from "~/lib/money";
 import { notify } from "~/lib/notify";
 import { openTour, useTourSeen } from "~/lib/tour";
 import { tradeToast } from "~/lib/trade-toast";
+import { useClockOffset } from "~/lib/use-clock-offset";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ActionPanel } from "./ActionPanel";
 import { BasketMembers } from "./BasketMembers";
@@ -57,8 +56,6 @@ import { useTerminalChoices } from "./useTerminalChoices";
 import { useTerminalMusic } from "./useTerminalMusic";
 import { type Sheet, useTradePanel } from "./useTradePanel";
 
-const CLOCK_SYNC_MS = 5_000;
-
 export interface TerminalProps {
   /** First run: a title over the terminal and its one action (Skip before the call, Continue once it is live). */
   coach?: { title: string; action: string; onAction: () => void };
@@ -71,7 +68,6 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const bottom = useDockInset();
-  const live = useLive();
   const t = useTerminal();
   const choices = useTerminalChoices();
   // A market that doesn't ride shows Call; Ride stays in the switch and says why when tapped.
@@ -127,14 +123,9 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   });
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<Sheet | null>(null);
-  // A link asked for a position (search, D-340): its sheet opens on it, Cash out ringed.
-  const readyPosition = useTerminalReady().position;
-  useEffect(() => {
-    if (readyPosition) setSheet("positions");
-  }, [readyPosition]);
   const [chartH, setChartH] = useState(0);
   const exits = useExitActions(account, t.cadence);
-  const offsetMs = useSharedValue(live.clock.offset);
+  const offsetMs = useClockOffset();
   const effects = {
     cue: (c: "press" | "filled-open" | "filled-close" | "fail") =>
       c === "press"
@@ -178,13 +169,6 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const trade = useTradePanel({ ride, t, q, flow, exits, side, choices, open: setSheet });
   useReactions(t.symbol, trade.onTick, reactions);
   placer.current = (slot) => void (ride ? side.flow.open(slot) : flow.open(slot));
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      offsetMs.value = live.clock.offset;
-    }, CLOCK_SYNC_MS);
-    return () => clearInterval(id);
-  }, [live, offsetMs]);
 
   return (
     <View style={[styles.fill, { backgroundColor: color.ground, paddingTop: insets.top + SPACE.sm }]}>

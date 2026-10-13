@@ -7,9 +7,8 @@
  */
 
 import type { EventView } from "@senryo/api-client";
-import { positionHold } from "@senryo/calls";
+import { pnlText, positionClock, roiText } from "@senryo/calls";
 import { useBookEntry } from "@senryo/calls/react";
-import { longClockText, signedUsd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useDuelWaiting, useEventBoard } from "@senryo/query";
@@ -40,7 +39,6 @@ import { NAV_ICON } from "../nav";
 import { MarketActionBody, MarketBody } from "./MarketRows";
 
 const MARK = 36;
-const BPS_PER_PERCENT = 100;
 const MS = 1_000;
 
 function PositionBody({ entry }: { entry: SearchEntry }) {
@@ -56,8 +54,7 @@ function PositionBody({ entry }: { entry: SearchEntry }) {
       </span>
     );
   }
-  const hold = positionHold(e);
-  const left = e.endsAt === null ? null : Math.max(0, e.endsAt - now);
+  const clock = positionClock(e, now);
   const pnl = e.pnl;
   return (
     <>
@@ -65,15 +62,13 @@ function PositionBody({ entry }: { entry: SearchEntry }) {
       <span className="search-copy">
         <span className="search-title">{entry.title}</span>
         <span className="search-sub">{entry.subtitle}</span>
-        <span className="search-sub tnum">{hold ?? (left === null ? "" : `Ends in ${longClockText(left)}`)}</span>
+        <span className="search-sub tnum">{clock.text}</span>
       </span>
       <span className="search-figures">
         <Odometer value={viewDollars(e.closeValue ?? e.worth)} sensitive className="search-price" />
         {pnl !== null ? (
           <span className={cn("search-change tnum", pnl > 0n ? "is-up" : pnl < 0n ? "is-down" : "is-flat")}>
-            {hidden
-              ? HIDDEN_AMOUNT
-              : `${signedUsd(pnl)}${e.roiBps === null ? "" : ` · ${(e.roiBps / BPS_PER_PERCENT).toFixed(1)}%`}`}
+            {hidden ? HIDDEN_AMOUNT : `${pnlText(pnl)}${e.roiBps === null ? "" : ` · ${roiText(e.roiBps)}`}`}
           </span>
         ) : null}
       </span>

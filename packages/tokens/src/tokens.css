@@ -203,6 +203,14 @@
   --type-sheet-heading-leading: 1.75rem;
   --type-sheet-heading-tracking: 0em;
   --type-sheet-heading-weight: 600;
+  --type-position-pnl-size: 1.5rem;
+  --type-position-pnl-leading: 1.75rem;
+  --type-position-pnl-tracking: -0.02em;
+  --type-position-pnl-weight: 600;
+  --type-position-total-size: 2rem;
+  --type-position-total-leading: 2.25rem;
+  --type-position-total-tracking: -0.02em;
+  --type-position-total-weight: 600;
   --elevation-button: 0px 2px 4px 0px #00000029;
   --elevation-dock: 0px 8px 24px 0px #00000033;
   --elevation-sheet: 0px -4px 16px 0px #0000001F;
@@ -383,7 +391,9 @@
 .text-display-balance,
 .text-display-margin,
 .text-display-price,
-.text-page-title {
+.text-page-title,
+.text-position-pnl,
+.text-position-total {
   font-family: var(--font-display);
 }
 

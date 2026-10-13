@@ -132,6 +132,8 @@ function HeldButtons(p: Extract<TradeButtonsProps, { mode: "held" }>) {
   const armed = p.state?.armed ?? false;
   const trailOff = p.held !== null || p.busy !== null || !p.state || (!armed && !p.state.ready);
   const closeOff = p.held !== null || p.busy !== null || !p.state?.closable;
+  // A link selected this position (D-340, D-343): its close ringed for a few seconds, never pressed.
+  const readyClose = useTerminalReady().position !== null;
   const hold = (run: (() => void) | undefined) =>
     run
       ? () => {
@@ -169,34 +171,36 @@ function HeldButtons(p: Extract<TradeButtonsProps, { mode: "held" }>) {
         <LiveText text={p.trailCaption} style={[TYPE.micro, styles.caption, { color: color.inkMuted }]} />
       </View>
       <View style={styles.slot}>
-        <Pressable
-          onPress={p.onClose}
-          onLongPress={hold(p.onClosePart)}
-          delayLongPress={HOLD_MS}
-          onPressIn={closePress.onPressIn}
-          onPressOut={closePress.onPressOut}
-          disabled={closeOff}
-          accessibilityRole="button"
-          accessibilityLabel={p.closeWord}
-          accessibilityHint="Hold to close part of it"
-          accessibilityState={{ disabled: closeOff }}
-        >
-          <Animated.View
-            style={[
-              styles.held,
-              { backgroundColor: color.ink, opacity: closeOff ? DISABLED_OPACITY : 1 },
-              closePress.style,
-            ]}
+        <ReadyRing on={readyClose}>
+          <Pressable
+            onPress={p.onClose}
+            onLongPress={hold(p.onClosePart)}
+            delayLongPress={HOLD_MS}
+            onPressIn={closePress.onPressIn}
+            onPressOut={closePress.onPressOut}
+            disabled={closeOff}
+            accessibilityRole="button"
+            accessibilityLabel={p.closeWord}
+            accessibilityHint="Hold to close part of it"
+            accessibilityState={{ disabled: closeOff }}
           >
-            <X size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.ground} />
-            <View>
-              <Text style={[TYPE.buttonLabel, styles.label, { color: color.ground }]}>{p.closeWord}</Text>
-              <View style={styles.cash}>
-                <LiveOdometer source={p.close} font={font} color={color.ground} height={CASH_HEIGHT} sensitive />
+            <Animated.View
+              style={[
+                styles.held,
+                { backgroundColor: color.ink, opacity: closeOff ? DISABLED_OPACITY : 1 },
+                closePress.style,
+              ]}
+            >
+              <X size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.ground} />
+              <View>
+                <Text style={[TYPE.buttonLabel, styles.label, { color: color.ground }]}>{p.closeWord}</Text>
+                <View style={styles.cash}>
+                  <LiveOdometer source={p.close} font={font} color={color.ground} height={CASH_HEIGHT} sensitive />
+                </View>
               </View>
-            </View>
-          </Animated.View>
-        </Pressable>
+            </Animated.View>
+          </Pressable>
+        </ReadyRing>
         <Text style={[TYPE.micro, styles.caption, { color: color.inkMuted }]}>{p.held ?? ""}</Text>
       </View>
     </>

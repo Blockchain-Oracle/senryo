@@ -71,6 +71,9 @@ export const TYPE = {
   modeLabel: { size: 13, lineHeight: 18, tracking: 0, weight: 600, font: "sans", numeric: false },
   chipCategory: { size: 14, lineHeight: 18, tracking: 0, weight: 600, font: "sans", numeric: false },
   sheetHeading: { size: 22, lineHeight: 28, tracking: 0, weight: 600, font: "sans", numeric: false },
+  /** A live position's PnL and the Unrealized total over the list (D-343, Codex direction 15 §1, §3). */
+  positionPnl: { size: 24, lineHeight: 28, tracking: DISPLAY_TRACKING, weight: 600, font: "display", numeric: true },
+  positionTotal: { size: 32, lineHeight: 36, tracking: DISPLAY_TRACKING, weight: 600, font: "display", numeric: true },
 } as const satisfies Record<string, TypeSpec>;
 export type TypeRole = keyof typeof TYPE;
 

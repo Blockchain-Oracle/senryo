@@ -19,6 +19,7 @@ import { forgetIntent } from "./intent-journal.ts";
 import type { Offer } from "./modes.ts";
 import type { Quotes } from "./quote.ts";
 import { reasonWords } from "./reason-words.ts";
+import { clearSelectedPosition } from "./terminal-ready.ts";
 import { type TradeNote, tradeHasResult, tradeToastId } from "./toast-run.ts";
 import { dropRun, startRun, updateRun } from "./trade-run.ts";
 import { useCallActions } from "./use-call.ts";
@@ -153,6 +154,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
 
   const open = async (slot: OfferSlot) => {
     if (!guard(slot)) return;
+    clearSelectedPosition();
     const fx = effectsRef.current;
     const band = offer[slot];
     const quote = slot === 0 ? latest.current?.first : latest.current?.second;

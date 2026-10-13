@@ -14,6 +14,7 @@ import type { Caller } from "./caller.ts";
 import { ridesOn } from "./instrument.ts";
 import { forgetIntent } from "./intent-journal.ts";
 import { reasonWords } from "./reason-words.ts";
+import { clearSelectedPosition } from "./terminal-ready.ts";
 import { tradeToastId } from "./toast-run.ts";
 import { dropRun, startRun, updateRun } from "./trade-run.ts";
 import {
@@ -113,6 +114,7 @@ export function useRideFlow(i: RideFlowInput) {
 
   const open = async (slot: OfferSlot) => {
     if (!guard(slot)) return;
+    clearSelectedPosition();
     const mark = i.latest.current?.markE8;
     if (mark == null || i.takerFeeBps === undefined) {
       fx.current.notify({ title: "No live price", description: "Rides open on a live price. Try again in a moment." });

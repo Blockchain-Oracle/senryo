@@ -35,5 +35,5 @@ export function usePositionClose() {
       fail(null, error);
     }
   };
-  return { close, closeAll, closing: actions.closing, ready: actions.ready };
+  return { close, closeAll, closing: actions.closing, batch: actions.batch, ready: actions.ready };
 }

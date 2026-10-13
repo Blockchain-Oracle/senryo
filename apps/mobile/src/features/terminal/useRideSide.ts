@@ -5,8 +5,8 @@
  */
 
 import type { Caller } from "@senryo/calls";
-import { leverageFor, ridesOn } from "@senryo/calls";
-import { type CallFlowEffects, useRideFlow } from "@senryo/calls/react";
+import { leverageFor, rideKey, ridesOn } from "@senryo/calls";
+import { type CallFlowEffects, useRideFlow, useSelectedPosition } from "@senryo/calls/react";
 import { useQueryEnv, useRideCatalog, useRides } from "@senryo/query";
 import { useMemo } from "react";
 import { useLiveRide } from "./useLiveRide";
@@ -35,15 +35,15 @@ export function useRideSide(i: {
     [catalog, market],
   );
   const leverageBps = leverageFor(i.choices.leverageX, market?.maxLeverageBps ?? ONE_X);
-  const held = useMemo(
-    () =>
-      "value" in rides
-        ? rides.value.rides
-            .filter((r) => r.symbol === i.symbol && OPEN.has(r.state))
-            .sort((a, b) => (b.rideId > a.rideId ? 1 : -1))[0]
-        : undefined,
-    [rides, i.symbol],
-  );
+  // The selected ride when it's open here (an older one, D-343), else the newest.
+  const selected = useSelectedPosition();
+  const held = useMemo(() => {
+    if (!("value" in rides)) return undefined;
+    const open = rides.value.rides
+      .filter((r) => r.symbol === i.symbol && OPEN.has(r.state))
+      .sort((a, b) => (b.rideId > a.rideId ? 1 : -1));
+    return open.find((r) => rideKey(r.rideId) === selected) ?? open[0];
+  }, [rides, i.symbol, selected]);
   const live = useLiveRide({
     symbol: i.symbol,
     margin: i.choices.margin,

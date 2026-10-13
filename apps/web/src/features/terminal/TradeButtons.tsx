@@ -123,11 +123,19 @@ function CloseButton({
   onClose: () => void;
   onPart: (() => void) | undefined;
 }) {
+  // A link selected this position (D-340, D-343): its close ringed for a few seconds, never pressed.
+  const ready = useTerminalReady().position !== null;
   const figure = useLiveValue(close);
   const press = useLongPress(onClose, onPart);
   const off = disabled || busy || figure.units === null;
   return (
-    <button type="button" className="trade-close" disabled={off} aria-keyshortcuts="C" {...press}>
+    <button
+      type="button"
+      className={cn("trade-close", ready && "is-ready")}
+      disabled={off}
+      aria-keyshortcuts="C"
+      {...press}
+    >
       {busy ? (
         <LoaderCircle aria-hidden className="size-5 animate-spin" />
       ) : (

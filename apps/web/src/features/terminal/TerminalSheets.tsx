@@ -172,7 +172,7 @@ export function TerminalSheets(p: TerminalSheetsProps) {
         onOpenChange={(o) => p.setSheet(o ? "positions" : null)}
         title="Open positions"
       >
-        <PositionsPanel />
+        <PositionsPanel onPick={() => p.setSheet(null)} />
       </SlideOver>
     </>
   );

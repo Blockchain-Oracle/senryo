@@ -4,10 +4,10 @@
  * price, 24 h graph, four lanes and session; a position's live value, PnL and facts with "Cash out ready" (or why its
  * close is held); an event's crests, score and rules; a game's line; a help answer in full. It inspects, never acts.
  */
-import { positionHold, unitOf } from "@senryo/calls";
+import { pnlText, positionClock, roiText, unitOf } from "@senryo/calls";
 import { useBookEntry, useDayLine, useMarketLanes } from "@senryo/calls/react";
 import { helpOn, MARKETS } from "@senryo/config";
-import { formatPrice, longClockText, priceFromE8, signedUsd, usd } from "@senryo/core";
+import { formatPrice, priceFromE8, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useServerSeconds } from "@senryo/live/react";
 import { useEventBoard } from "@senryo/query";
@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { DayChangeText, LivePrice } from "./MarketRows";
 
 const MARK = 40;
-const BPS_PER_PERCENT = 100;
 const PERCENT = 100;
 const MS = 1_000;
 const HELP = helpOn("web");
@@ -82,7 +81,7 @@ function PositionPreview({ position }: { position: string }) {
   const unit = unitOf(e.symbol);
   const price = (v: bigint | null) => (v === null ? "—" : formatPrice(priceFromE8(Number(v)), undefined, unit));
   const money = (v: bigint | null) => (v === null ? "—" : hidden ? HIDDEN_AMOUNT : usd(v));
-  const hold = positionHold(e);
+  const clock = positionClock(e, now);
   return (
     <>
       <div className="search-preview-head">
@@ -98,19 +97,16 @@ function PositionPreview({ position }: { position: string }) {
       <Odometer value={viewDollars(e.closeValue ?? e.worth)} sensitive className="search-preview-price" />
       {e.pnl !== null ? (
         <p className={cn("search-change tnum", e.pnl > 0n ? "is-up" : e.pnl < 0n ? "is-down" : "is-flat")}>
-          {hidden
-            ? HIDDEN_AMOUNT
-            : `${signedUsd(e.pnl)}${e.roiBps === null ? "" : ` · ${(e.roiBps / BPS_PER_PERCENT).toFixed(1)}%`}`}
+          {hidden ? HIDDEN_AMOUNT : `${pnlText(e.pnl)}${e.roiBps === null ? "" : ` · ${roiText(e.roiBps)}`}`}
         </p>
       ) : null}
       <dl className="search-facts">
         <Fact label="Entry" value={price(e.entryE8)} />
         <Fact label="Now" value={price(e.markE8)} />
         <Fact label={e.kind === "ride" ? "Margin" : "Staked"} value={money(e.cost)} />
-        {e.endsAt !== null ? <Fact label="Ends in" value={longClockText(Math.max(0, e.endsAt - now))} /> : null}
         <Fact label={e.kind === "ride" ? "Close value" : "Cash out value"} value={money(e.closeValue)} />
       </dl>
-      <p className="search-preview-hint">{hold ?? "↵ Open position · Cash out ready"}</p>
+      <p className="search-preview-hint">{clock.live ? `${clock.text} · ↵ Open position` : clock.text}</p>
       <p className="search-sub">Review it on the terminal; nothing happens from here.</p>
     </>
   );

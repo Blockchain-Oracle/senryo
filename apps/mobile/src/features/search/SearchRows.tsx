@@ -5,10 +5,10 @@
  * PnL (masked while balances are hidden); an event's two crests and score or start; places, actions, help and
  * receipts as a glyph and two lines. The whole row taps; nothing moves money.
  */
-import { dayChange, positionHold, unitOf } from "@senryo/calls";
+import { dayChange, pnlText, positionClock, roiText, unitOf } from "@senryo/calls";
 import { useBookEntry, useDayLine, useMarketLanes } from "@senryo/calls/react";
 import { MARKETS } from "@senryo/config";
-import { longClockText, signedUsd, usd } from "@senryo/core";
+import { usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useLivePrice, useSampledPrice, useServerSeconds } from "@senryo/live/react";
 import { useEventBoard } from "@senryo/query";
@@ -40,7 +40,6 @@ const E8 = 1e8;
 const SPARK_W = 56;
 const SPARK_H = 20;
 const FIGURES_MIN = 96;
-const BPS_PER_PERCENT = 100;
 const MS = 1_000;
 /** Two 28 pt crests side by side. */
 const CRESTS = 56;
@@ -154,8 +153,7 @@ function PositionBody({ entry }: { entry: SearchEntry }) {
   const now = useServerSeconds();
   const [hidden] = useHideBalances();
   if (!e) return <Plain entry={entry} sub="Closed" />;
-  const hold = positionHold(e);
-  const left = e.endsAt === null ? null : Math.max(0, e.endsAt - now);
+  const clock = positionClock(e, now);
   const pnl = e.pnl;
   return (
     <>
@@ -163,18 +161,13 @@ function PositionBody({ entry }: { entry: SearchEntry }) {
       <View style={styles.copy}>
         <Text style={[TYPE.rowTitle, { color: color.ink }]}>{entry.title}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>{entry.subtitle}</Text>
-        <Text style={[TYPE.micro, { color: color.inkMuted }]}>
-          {hold ?? (left === null ? "" : `Ends in ${longClockText(left)}`)}
-        </Text>
+        <Text style={[TYPE.micro, { color: color.inkMuted }]}>{clock.text}</Text>
       </View>
       <View style={styles.figures}>
         <Text style={[TYPE.rowPrice, { color: color.ink }]}>{masked(usd(e.closeValue ?? e.worth), hidden)}</Text>
         {pnl !== null ? (
           <Text style={[TYPE.rowChange, { color: pnl > 0n ? color.up : pnl < 0n ? color.down : color.inkMuted }]}>
-            {masked(
-              `${signedUsd(pnl)}${e.roiBps === null ? "" : ` · ${(e.roiBps / BPS_PER_PERCENT).toFixed(1)}%`}`,
-              hidden,
-            )}
+            {masked(`${pnlText(pnl)}${e.roiBps === null ? "" : ` · ${roiText(e.roiBps)}`}`, hidden)}
           </Text>
         ) : null}
       </View>

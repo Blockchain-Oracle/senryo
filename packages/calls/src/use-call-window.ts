@@ -8,6 +8,8 @@ import type { CadenceSec } from "@senryo/config";
 import { useServerSeconds } from "@senryo/live/react";
 import { useCatalog, useMarketAccount, useTickets } from "@senryo/query";
 import { useMemo } from "react";
+import { callKey } from "./book.ts";
+import { useSelectedPosition } from "./terminal-ready.ts";
 import { useWindowOpen } from "./use-window-open.ts";
 import { windowFor } from "./window.ts";
 
@@ -28,12 +30,15 @@ export function useCallWindow(symbol: string, cadenceSec: CadenceSec, owner: Add
   const series = market?.series.find((s) => s.cadenceSec === cadenceSec);
   const terms = "value" in catalog ? catalog.value.terms : undefined;
   const balance = "value" in account ? account.value.balance : undefined;
+  // The selected call when it's open in this window (a second call in it, D-343), else the first open one.
+  const selected = useSelectedPosition();
   const position = useMemo(() => {
     if (!("value" in tickets)) return undefined;
-    return tickets.value.tickets.find(
+    const open = tickets.value.tickets.filter(
       (t) => t.windowId.toLowerCase() === window.windowId.toLowerCase() && OPEN_STATES.has(t.state),
     );
-  }, [tickets, window.windowId]);
+    return open.find((t) => callKey(t.ticketId) === selected) ?? open[0];
+  }, [tickets, window.windowId, selected]);
 
   return {
     symbol,

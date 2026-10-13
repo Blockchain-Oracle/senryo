@@ -135,11 +135,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
 
   return (
     <div className="terminal-surface">
-      <TerminalIntent
-        setCadence={choices.setCadence}
-        setInstrument={choices.setInstrument}
-        openPositions={() => setSheet("positions")}
-      />
+      <TerminalIntent setCadence={choices.setCadence} setInstrument={choices.setInstrument} />
       <section className="terminal-stage" aria-label={`${symbol} live`}>
         <TerminalTop
           t={t}
