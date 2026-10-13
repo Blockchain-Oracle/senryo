@@ -49,4 +49,4 @@ minimumReleaseAgeExclude:
   - expo-modules-core@57.0.20
   - expo-router@57.0.24
   - expo@57.0.26
-
+  - mediabunny@1.61.4
