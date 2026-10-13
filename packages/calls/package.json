@@ -21,6 +21,7 @@
     "@senryo/core": "workspace:*",
     "@senryo/live": "workspace:*",
     "@senryo/query": "workspace:*",
+    "@senryo/search": "workspace:*",
     "@senryo/tokens": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "react": "catalog:"

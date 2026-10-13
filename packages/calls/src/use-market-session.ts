@@ -1,7 +1,9 @@
+import { CADENCES_SEC, type CadenceSec, LOCKOUT_SEC } from "@senryo/config";
+import { clockText, laneLabel, windowCountdown } from "@senryo/core";
 import { useServerSeconds } from "@senryo/live/react";
 import { useCatalog } from "@senryo/query";
 import { useMemo } from "react";
-import { type MarketLine, marketLine, marketSession } from "./markets.ts";
+import { type MarketLine, marketLine, marketOf, marketSession } from "./markets.ts";
 
 const SECONDS_PER_MINUTE = 60;
 
@@ -17,4 +19,31 @@ export function useMarketLine(symbol: string): MarketLine {
   const catalog = useCatalog();
   const entry = "value" in catalog ? catalog.value.markets.find((m) => m.symbol === symbol) : undefined;
   return marketLine(session, now, entry?.paused ?? null, entry?.listed ?? true);
+}
+
+/** One lane's moment: "5m 3:42" while calls are open, "5m opens 0:12" in its lockout. */
+export interface LaneCell {
+  cadence: CadenceSec;
+  label: string;
+  open: boolean;
+  /** The time to calls closing (open) or to the next window (in the lockout). */
+  clock: string;
+}
+
+export function laneCells(nowSec: number, cadences: readonly CadenceSec[] = CADENCES_SEC): LaneCell[] {
+  return cadences.map((cadence) => {
+    const w = windowCountdown(nowSec, cadence, LOCKOUT_SEC);
+    return { cadence, label: laneLabel(cadence), open: w.open, clock: clockText(w.open ? w.closesIn : w.endsIn) };
+  });
+}
+
+/**
+ * Every lane of a market at once (R6.4, Codex direction 13): the four countdowns while it trades; null while it
+ * doesn't (closed, paused, not yet on chain), when its line's words say why instead.
+ */
+export function useMarketLanes(symbol: string): { line: MarketLine; lanes: LaneCell[] | null } {
+  const line = useMarketLine(symbol);
+  const now = useServerSeconds();
+  const cadences = marketOf(symbol)?.cadences ?? CADENCES_SEC;
+  return { line, lanes: line.trading ? laneCells(now, cadences) : null };
 }

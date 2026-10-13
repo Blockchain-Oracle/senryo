@@ -1,4 +1,5 @@
 export * from "./result-cue.ts";
+export * from "./terminal-ready.ts";
 export * from "./trade-run.ts";
 export * from "./use-call.ts";
 export * from "./use-call-flow.ts";
@@ -29,6 +30,7 @@ export * from "./use-results.ts";
 export * from "./use-ride.ts";
 export * from "./use-ride-exit.ts";
 export * from "./use-ride-flow.ts";
+export * from "./use-search.ts";
 export * from "./use-warm-up.ts";
 export * from "./use-window-dead.ts";
 export * from "./use-window-open.ts";

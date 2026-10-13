@@ -10,16 +10,39 @@ import { type CallWindowView, useDayLine, useLiveBook, useWindowDead } from "@se
 import { CADENCES_SEC, type CadenceSec, LOCKOUT_SEC } from "@senryo/config";
 import { clockText, laneLabel } from "@senryo/core";
 import { marketId } from "@senryo/identity";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ChangeChip } from "@/components/ui/change-chip";
 import { Odometer, viewDollars } from "@/components/ui/odometer";
 import { Sparkline } from "@/components/ui/sparkline";
 import { fire, tapFeedback } from "@/lib/feedback";
+import { useModCombo } from "@/lib/platform";
+import { openSearch } from "@/lib/shell/search-open";
 import { CountdownRing } from "./CountdownRing";
 import "./terminal-top.css";
 
 const MARK = 28;
+
+/** Search from the terminal (R6.8): its top line is hidden here; ⌘K / Ctrl+K and `/` work as anywhere. */
+function SearchButton() {
+  const combo = useModCombo("K");
+  return (
+    <button
+      type="button"
+      className="terminal-search"
+      aria-label="Search Senryo"
+      aria-keyshortcuts="Meta+K Control+K /"
+      onClick={() => {
+        tapFeedback();
+        openSearch();
+      }}
+    >
+      <Search aria-hidden />
+      <span className="terminal-search-label">Search</span>
+      <kbd aria-hidden>{combo}</kbd>
+    </button>
+  );
+}
 
 /** Equity: cash plus what every open position would return now (Tradash's pill), rolling; cash until the book loads. */
 function Equity({ cash }: { cash: bigint | undefined }) {
@@ -79,6 +102,7 @@ export function TerminalTop({
             <ChangeChip symbol={t.symbol} day={day} />
           </span>
         ) : null}
+        <SearchButton />
         <Equity cash={t.balance} />
       </div>
       {ride ? (

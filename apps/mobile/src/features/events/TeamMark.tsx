@@ -10,7 +10,7 @@ import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
 import { TYPE, useTheme } from "~/theme";
 
-const SIZES = { md: 36, lg: 48 } as const;
+const SIZES = { sm: 28, md: 36, lg: 48 } as const;
 
 export function TeamMark({
   league,

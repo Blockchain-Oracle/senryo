@@ -121,6 +121,26 @@ export function useLiveBook(): LiveBook {
   return useSyncExternalStore(store.subscribe, store.get, store.get);
 }
 
+/** What a position is, not what it's worth: changes when one opens, closes or changes state. */
+const bookShape = (b: LiveBook): string =>
+  `${b.ready}|${b.entries.map((e) => `${e.key}:${e.state}:${e.endsAt ?? ""}`).join(",")}`;
+
+/**
+ * The open positions without their moving values (search's rows read those themselves): re-renders when a position
+ * opens, closes or changes state, not at the book's 5 Hz.
+ */
+export function useBookPositions(): readonly BookEntry[] {
+  const store = useContext(Ctx);
+  if (!store) throw new Error("useBookPositions needs a LiveBookProvider");
+  const shape = useSyncExternalStore(
+    store.subscribe,
+    () => bookShape(store.get()),
+    () => bookShape(store.get()),
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the shape is the trigger; the entries are read at that moment.
+  return useMemo(() => store.get().entries, [shape, store]);
+}
+
 /** One position from the book by key ("call:12", "ride:3"), or undefined once it has closed. */
 export function useBookEntry(key: string | undefined): BookEntry | undefined {
   const book = useLiveBook();

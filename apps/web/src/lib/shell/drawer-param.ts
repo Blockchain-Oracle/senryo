@@ -7,7 +7,7 @@
 import { useSearchParams } from "next/navigation";
 
 export const DRAWER_PARAM = "d";
-/** A drawer's own params (a call's id), dropped with it. */
+/** A drawer's own params (a call's id, a help answer's key), dropped with it. */
 const DRAWER_EXTRAS = ["id"] as const;
 
 /** Every drawer the app opens by name. */
@@ -23,6 +23,7 @@ export const DRAWERS = {
   ride: "ride",
   install: "install",
   inbox: "inbox",
+  help: "help",
 } as const;
 
 function urlWith(name: string | null, extra?: Record<string, string>): string {

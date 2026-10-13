@@ -20,11 +20,22 @@ const DASH_ON = 2;
 const DASH_OFF = 3;
 const DASH = [DASH_ON, DASH_OFF];
 
-export function Sparkline({ symbol, day }: { symbol: string; day: DayLine }) {
+export function Sparkline({
+  symbol,
+  day,
+  width = SIZE.sparklineWidth,
+  height = SIZE.sparkline,
+}: {
+  symbol: string;
+  day: DayLine;
+  /** Search's rows draw it smaller (56 × 20, Codex direction 13). */
+  width?: number;
+  height?: number;
+}) {
   const { color } = useTheme();
   const nowE8 = useSampledPrice(symbol, TAIL_MS);
-  const w = SIZE.sparklineWidth;
-  const h = SIZE.sparkline;
+  const w = width;
+  const h = height;
   const g = useMemo(() => sparkGeometry(day, nowE8, w, h, PAD), [day, nowE8, w, h]);
   const paths = useMemo(
     () => (g ? { line: Skia.Path.MakeFromSVGString(g.d), area: Skia.Path.MakeFromSVGString(g.area) } : null),

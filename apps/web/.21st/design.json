@@ -592,11 +592,12 @@
         "source": "21st:originui/command",
         "id": 382,
         "url": "https://21st.dev/@originui/components/command",
-        "use": "⌘K palette: live markets (price, countdown), places, Everything, actions; cmdk over Radix Dialog, centred modal",
-        "path": "src/components/shell/CommandPalette.tsx",
+        "use": "⌘K (R6, D-336…D-339, Codex direction 13): one search — a top hit then groups by best hit, Recent · your positions · Hot · Go to with nothing typed, market rows with all four lanes, a nested market page, a preview pane ≥ 1024 px, ⌘↵ alternates and a footer legend; cmdk with shouldFilter off over MiniSearch ranking (@senryo/search), Radix Dialog; 31354 wensity/command for the nested page stack (Back on an empty field, Escape steps back) and the footer of key hints; 2075 rafa-porto/command-palette for the usage history behind frecency (count + last used)",
+        "path": "src/components/shell/search/",
         "retokenized": true,
         "added": "2026-10-09",
-        "considered": [2075, 23522, 31802, 33493, 33492, 23173, 33510, 27378]
+        "considered": [2075, 23522, 31802, 33493, 33492, 23173, 33510, 27378, 31354],
+        "updated": "2026-10-13"
       },
       {
         "name": "dock",

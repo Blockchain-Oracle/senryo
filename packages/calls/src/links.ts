@@ -14,3 +14,9 @@ export function proofLink(windowId: string, chainId: ChainId): string {
   const query = new URLSearchParams({ id: windowId, chainId: String(chainId) });
   return `${WEB_ORIGIN}/proof/w/?${query.toString()}`;
 }
+
+/** One market's windows on the Proof feed (search's "View proof", R6.4). */
+export function marketProofLink(symbol: string, chainId: ChainId): string {
+  const query = new URLSearchParams({ market: symbol, chainId: String(chainId) });
+  return `${WEB_ORIGIN}/proof/?${query.toString()}`;
+}

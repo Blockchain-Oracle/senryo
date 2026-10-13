@@ -1,6 +1,6 @@
 /**
  * The web's places and Everything from the one nav source (`@senryo/config` `nav.ts`, D-268): lucide glyphs for the
- * nav icons, which place a path belongs to, and Everything's search.
+ * nav icons and which place a path belongs to (search is `@senryo/search`, R6).
  */
 import { DOCK_NAV, WEB_EVERYTHING, WEB_PLACES, WEB_RAIL, type WebIcon, type WebNavItem } from "@senryo/config";
 import {
@@ -103,10 +103,4 @@ export function backOf(pathname: string | null): { label: string; href: string }
     return { label: place.label, href: place.href };
   }
   return PARENTS[section(pathname)];
-}
-
-export function searchNav(items: readonly WebNavItem[], query: string): WebNavItem[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [...items];
-  return items.filter((i) => `${i.label} ${i.description} ${i.keywords ?? ""}`.toLowerCase().includes(q));
 }

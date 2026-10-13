@@ -47,6 +47,18 @@ Everything is privacy-first (D-297).
 - [ ] R8.7 Trader Edge report: a curve, four metrics, session-hour bars and the payoff shape, from the indexer history.
 - [ ] R8.8 Takes (signed, ≤ 240 characters, with cashtags) and Rooms (a per-market thread open to holders only).
 - [ ] R8.9 People in ⌘K and phone search (R6.5); the settings hidden in R2.11 come back as their features land.
+- [ ] R8.10 Replay v2 (the owner's Fomo clip, 13 Oct; research `14-playback-replay.md` §3.2): one film engine for both
+  apps; the terminal's own chart in a driven mode; IN / OUT notches, beats that slow the big moments and captions;
+  cues from the reaction engine; the bow — the slip lands with its Kinpaku stamp; gaps filled from 1-minute prices
+  with "% recorded"; trades this device didn't record rebuilt and labelled; reduced motion; ▶ on history rows and
+  "Watch" on the result toast.
+- [ ] R8.11 Video export (§3.4): MP4 — mediabunny on the web with an `OfflineAudioContext` soundtrack; Skia video,
+  expo-sharing and media-library on the phone (**a new binary**, shared with R8's other native changes); 4:5 and 9:16;
+  PnL · ROI · Both; waits while balances are hidden; "by @handle" and the `?r=` link on the end card (R8.2, R8.4).
+- [ ] R8.12 Recap (§3.3): your day, week or all time as a film ending on a stamped Recap slip; `GET
+  /v1/accounts/:owner/timeline` (own, and listed ones per D-297) shared with Trader Edge and the leaderboard periods;
+  entry points on the Calls record, Home, profiles and the leaderboard; realised result until transfers are indexed,
+  then the balance line; Earn once per-account Earn events are indexed.
 
 ## Handoff
 (written at the end of the stage)

@@ -347,3 +347,22 @@
     pointer-events: none;
   }
 }
+
+/* ── ready (D-340): what a link asked the terminal to have ready — a trade side, a position's Cash out — ringed in
+ * the selected-control magenta for a few seconds; never pressed. ──────────────────────────────────────────────── */
+.is-ready {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  animation: ready-pulse 1200ms var(--motion-ease) 3;
+}
+@keyframes ready-pulse {
+  50% {
+    outline-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    outline-offset: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-ready {
+    animation: none;
+  }
+}

@@ -23,6 +23,7 @@
     "@senryo/identity": "workspace:*",
     "@senryo/live": "workspace:*",
     "@senryo/query": "workspace:*",
+    "@senryo/search": "workspace:*",
     "@senryo/tokens": "workspace:*",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.6.2",

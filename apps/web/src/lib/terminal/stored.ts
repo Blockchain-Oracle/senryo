@@ -2,7 +2,7 @@
 /**
  * The terminal's remembered choices on this device (the phone keeps them in MMKV): the lane, the last stake, the way to
  * call, Call or Ride with the ride's margin, leverage and trail (R5.4), the call's trail, and the market picker's starred
- * and recent markets (P2). Read through `useSyncExternalStore`; the static HTML
+ * markets (P2; recent markets are the device's visits, D-337). Read through `useSyncExternalStore`; the static HTML
  * uses the defaults and the client corrects at once.
  */
 import { useCallback, useSyncExternalStore } from "react";
@@ -17,7 +17,6 @@ export const TERMINAL_STORAGE = {
   rideTrail: "senryo.terminal.ride-trail.v1",
   callTrail: "senryo.terminal.call-trail.v1",
   favourites: "senryo.favourite-markets.v1",
-  recents: "senryo.recent-markets.v1",
   /** The chart's view, line or candles, and the candles' interval (R5.17). */
   chart: "senryo.terminal.chart.v1",
   candleInterval: "senryo.terminal.candle-interval.v1",

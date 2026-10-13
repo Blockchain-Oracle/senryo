@@ -97,6 +97,9 @@ function RootStack() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
           <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
+          {/* Search (R6.9): full pages over the dock, pushed from the right. */}
+          <Stack.Screen name="search/index" options={{ headerShown: false, animation: "slide_from_right" }} />
+          <Stack.Screen name="search/[symbol]" options={{ headerShown: false, animation: "slide_from_right" }} />
           {SHEETS.map((route) => (
             <Stack.Screen key={route} name={`(sheets)/${route}`} options={sheet} />
           ))}

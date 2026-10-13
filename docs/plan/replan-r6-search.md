@@ -27,6 +27,14 @@ It ranks well, previews, and is on the phone too.
 - an open position opens on the terminal with Cash out ready and never executes;
 - one simulator pass.
 
+## Design (13 Oct)
+- **Direction:** Codex, `docs/research/replan-2026-10-10/13-search-direction.md`; decisions D-336…D-341.
+- **Ranking:** MiniSearch 7.2 in `@senryo/search` (chosen from its docs over Fuse.js and uFuzzy); the gate's queries run
+  with `pnpm --filter @senryo/search queries`.
+- **Shared:** `@senryo/calls` `useSearch` (entries, lookup, empty view), `marketPageRows`, `useMarketLanes`,
+  `useBookPositions`, `setTerminalReady`; `@senryo/config` `HELP`; api `GET /v1/lookup`.
+- **People** stay with R8.9 (profile pages arrive there); no empty People group meanwhile.
+
 ## Steps
 - [ ] R6.1 A shared search index in a package: entries for places, markets, positions, events, duels, parlays, games,
   actions and help. The Everything drawer's `searchNav` is deleted.

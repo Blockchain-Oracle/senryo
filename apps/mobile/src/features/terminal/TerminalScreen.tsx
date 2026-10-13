@@ -12,7 +12,9 @@ import {
   useExitActions,
   useGuestTap,
   useMarketLine,
+  useMarketVisit,
   usePriceHealth,
+  useTerminalReady,
 } from "@senryo/calls/react";
 import { useLive } from "@senryo/live/react";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
@@ -109,6 +111,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       if (!toured && !coach) openTour();
     }, [toured, coach]),
   );
+  // The market this phone opened: search's Recents and the market sheet's recent markets (D-337).
+  useMarketVisit(t.symbol);
   // The passkey account, else on Practice the guest's device key (R5.10).
   const trader = useAppTrader();
   const account = trader.caller;
@@ -123,6 +127,11 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   });
   const [picking, setPicking] = useState(false);
   const [sheet, setSheet] = useState<Sheet | null>(null);
+  // A link asked for a position (search, D-340): its sheet opens on it, Cash out ringed.
+  const readyPosition = useTerminalReady().position;
+  useEffect(() => {
+    if (readyPosition) setSheet("positions");
+  }, [readyPosition]);
   const [chartH, setChartH] = useState(0);
   const exits = useExitActions(account, t.cadence);
   const offsetMs = useSharedValue(live.clock.offset);

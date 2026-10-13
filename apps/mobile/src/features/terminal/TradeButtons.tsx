@@ -8,11 +8,13 @@
  * The pair cross-fades (rise 12, 180 ms) keyed by instrument and state.
  */
 import type { OfferedBand } from "@senryo/calls";
+import { useTerminalReady } from "@senryo/calls/react";
 import { useFont } from "@shopify/react-native-skia";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutUp, type SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
 import { LiveText } from "~/components/kit/LiveText";
+import { ReadyRing } from "~/components/kit/ReadyRing";
 import { ArrowDown, ArrowUp, Plunge, RangeBand, Surge, X } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
 import { fire } from "~/feedback/fire";
@@ -89,30 +91,34 @@ function EntryButton({
     return { backgroundColor: priced ? fill : recessed, borderBottomColor: priced ? edge : recessed };
   });
   const Mark = MARK[side.kind];
+  // A link (search's Up / Down, D-340) asked for this side: ringed a few seconds, never pressed.
+  const ready = useTerminalReady().side === side.kind;
   return (
     <View style={styles.slot}>
-      <Pressable
-        onPress={() => side.line.value !== UNPRICED && onPick(slot)}
-        onPressIn={() => {
-          press.onPressIn();
-          onPreview(slot);
-        }}
-        onPressOut={() => {
-          press.onPressOut();
-          onPreview(null);
-        }}
-        disabled={disabled}
-        accessibilityRole="button"
-        accessibilityLabel={side.label}
-        accessibilityState={{ disabled }}
-      >
-        <Animated.View style={[styles.call, { opacity: disabled ? DISABLED_OPACITY : 1 }, plate, press.style]}>
-          <Mark size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.onDirectionFill} />
-          <Text numberOfLines={1} style={[TYPE.buttonLabel, styles.label, { color: color.onDirectionFill }]}>
-            {side.label}
-          </Text>
-        </Animated.View>
-      </Pressable>
+      <ReadyRing on={ready}>
+        <Pressable
+          onPress={() => side.line.value !== UNPRICED && onPick(slot)}
+          onPressIn={() => {
+            press.onPressIn();
+            onPreview(slot);
+          }}
+          onPressOut={() => {
+            press.onPressOut();
+            onPreview(null);
+          }}
+          disabled={disabled}
+          accessibilityRole="button"
+          accessibilityLabel={side.label}
+          accessibilityState={{ disabled }}
+        >
+          <Animated.View style={[styles.call, { opacity: disabled ? DISABLED_OPACITY : 1 }, plate, press.style]}>
+            <Mark size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.onDirectionFill} />
+            <Text numberOfLines={1} style={[TYPE.buttonLabel, styles.label, { color: color.onDirectionFill }]}>
+              {side.label}
+            </Text>
+          </Animated.View>
+        </Pressable>
+      </ReadyRing>
       <LiveText text={side.line} style={[TYPE.micro, styles.caption, { color: color.inkMuted }]} />
     </View>
   );

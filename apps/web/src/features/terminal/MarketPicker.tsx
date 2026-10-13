@@ -5,7 +5,7 @@
  * search and the kinds. Each row is the Markets row with a star; the current market is highlighted. The drawer unmounts
  * when it closes, so every open starts at All with an empty search. Favourites and recents stay on this device.
  */
-import { PICKER_FILTERS, type PickerFilter, pushRecent, readSymbols, toggleFavourite } from "@senryo/calls";
+import { PICKER_FILTERS, type PickerFilter, readSymbols, toggleFavourite } from "@senryo/calls";
 import { useMarketPicker } from "@senryo/calls/react";
 import { useCatalog } from "@senryo/query";
 import { useMemo, useState } from "react";
@@ -38,10 +38,8 @@ function Picker({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<PickerFilter>("all");
   const [favRaw, setFavRaw] = useStoredString(TERMINAL_STORAGE.favourites);
-  const [recentRaw, setRecentRaw] = useStoredString(TERMINAL_STORAGE.recents);
   const favourites = useMemo(() => readSymbols(favRaw), [favRaw]);
-  const recents = useMemo(() => readSymbols(recentRaw), [recentRaw]);
-  const sections = useMarketPicker(markets, { query, filter, favourites, recents });
+  const sections = useMarketPicker(markets, { query, filter, favourites });
   return (
     <div className="@container flex flex-col gap-4">
       <search className="flex flex-col gap-3">
@@ -78,10 +76,7 @@ function Picker({
                     symbol={m.symbol}
                     name={m.name}
                     selected={m.symbol === selected}
-                    onPick={() => {
-                      setRecentRaw(JSON.stringify(pushRecent(recents, m.symbol)));
-                      onPick();
-                    }}
+                    onPick={onPick}
                     star={{
                       on: favourites.includes(m.symbol),
                       onToggle: () => {

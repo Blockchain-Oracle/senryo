@@ -16,6 +16,7 @@ import {
   sessionNow,
   windowCountdown,
 } from "@senryo/core";
+import { createIndex, KIND_WORDS, marketEntryId, type SearchIndex, scores } from "@senryo/search";
 
 /** Each kind's heading in the list; `filter` is a shorter word where the heading won't fit a phone's filter cell. */
 export const MARKET_GROUPS: readonly { kind: MarketKind; label: string; filter?: string }[] = [
@@ -42,16 +43,59 @@ export function marketOf(symbol: string): MarketSpec | undefined {
   return MARKETS.find((m) => m.symbol === symbol);
 }
 
-/** The groups (one, under a filter) with at least one market matching `query` (symbol or name), in catalogue order. */
-export function groupMarkets<T extends { symbol: string; name: string; kind: string }>(
+interface Searchable {
+  symbol: string;
+  name: string;
+  kind: string;
+}
+
+/** One index per market list (lists are module constants or memoised, so this holds a handful). */
+const indexes = new WeakMap<readonly Searchable[], SearchIndex>();
+
+function marketIndex(markets: readonly Searchable[]): SearchIndex {
+  const held = indexes.get(markets);
+  if (held) return held;
+  const index = createIndex(
+    markets.map((m) => ({
+      id: marketEntryId(m.symbol),
+      group: "markets",
+      title: m.name,
+      symbol: m.symbol,
+      keywords: KIND_WORDS[m.kind as MarketKind]?.words ?? [],
+      target: { kind: "terminal", intent: { symbol: m.symbol } },
+    })),
+  );
+  indexes.set(markets, index);
+  return index;
+}
+
+/** Each matching market's score for `query`, ranked as search ranks (R6.2): typos, prefixes, tickers first. */
+export function marketScores(markets: readonly Searchable[], query: string): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const [id, score] of scores(marketIndex(markets), query, { groups: ["markets"] })) {
+    out.set(id.slice(marketEntryId("").length), score);
+  }
+  return out;
+}
+
+/**
+ * The groups (one, under a filter) with at least one market matching `query`, best match first within each group
+ * (catalogue order with nothing typed).
+ */
+export function groupMarkets<T extends Searchable>(
   markets: readonly T[],
   query = "",
   filter: MarketFilter = "all",
 ): { label: string; markets: T[] }[] {
-  const q = query.trim().toLowerCase();
-  const hit = (m: T) => !q || m.symbol.toLowerCase().includes(q) || m.name.toLowerCase().includes(q);
+  const scored = query.trim() ? marketScores(markets, query) : null;
+  const rank = (list: T[]) =>
+    scored === null
+      ? list
+      : list
+          .filter((m) => scored.has(m.symbol))
+          .sort((a, b) => (scored.get(b.symbol) ?? 0) - (scored.get(a.symbol) ?? 0));
   return MARKET_GROUPS.filter((g) => filter === "all" || g.kind === filter)
-    .map((g) => ({ label: g.label, markets: markets.filter((m) => m.kind === g.kind && hit(m)) }))
+    .map((g) => ({ label: g.label, markets: rank(markets.filter((m) => m.kind === g.kind)) }))
     .filter((g) => g.markets.length > 0);
 }
 

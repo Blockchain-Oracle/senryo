@@ -1,0 +1,28 @@
+{
+  "name": "@senryo/search",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "One search for Senryo (R6): entries, MiniSearch ranking with symbol and prefix boosts, typo tolerance and frecency from the device's visits, pasted ids and hashes. Pure; the visits hook in ./react.",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "queries": "tsx scripts/queries.ts"
+  },
+  "dependencies": {
+    "@senryo/config": "workspace:*",
+    "@senryo/core": "workspace:*",
+    "minisearch": "7.2.0",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "typescript": "catalog:",
+    "tsx": "catalog:"
+  }
+}

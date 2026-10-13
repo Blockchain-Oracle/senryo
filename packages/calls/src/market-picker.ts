@@ -1,9 +1,9 @@
 /**
  * The market picker's sections (P2, D-321; Tradash's markets sheet, research `review-2026-10-12`), both apps: your
  * favourites, the hot movers (the six biggest 24 h moves), your recent markets on an empty search, then the kind
- * groups. Every open starts at All with an empty search; a market never shows twice.
+ * groups. Every open starts at All with an empty search; a market never shows twice. A search ranks as ⌘K does (R6.2).
  */
-import { groupMarkets, MARKET_FILTERS, type MarketFilter } from "./markets.ts";
+import { groupMarkets, MARKET_FILTERS, type MarketFilter, marketScores } from "./markets.ts";
 
 export type PickerFilter = "favourites" | "hot" | MarketFilter;
 
@@ -15,8 +15,6 @@ export const PICKER_FILTERS: readonly { value: PickerFilter; label: string }[] =
 
 export const HOT_COUNT = 6;
 export const RECENT_COUNT = 5;
-/** The most recents kept (a few more than shown, so a removed market doesn't empty the list). */
-export const RECENT_KEEP = 8;
 
 interface PickerMarket {
   symbol: string;
@@ -48,8 +46,9 @@ export function pickerSections<T extends PickerMarket>(
     hot: readonly string[];
   },
 ): { label: string; markets: T[] }[] {
-  const q = o.query.trim().toLowerCase();
-  const hit = (m: T) => !q || m.symbol.toLowerCase().includes(q) || m.name.toLowerCase().includes(q);
+  const q = o.query.trim();
+  const scored = q ? marketScores(markets, q) : null;
+  const hit = (m: T) => scored === null || scored.has(m.symbol);
   const bySymbol = (symbols: readonly string[]) =>
     symbols.map((s) => markets.find((m) => m.symbol === s)).filter((m): m is T => m !== undefined && hit(m));
   if (o.filter === "favourites") {
@@ -73,10 +72,6 @@ export function pickerSections<T extends PickerMarket>(
 
 export function toggleFavourite(list: readonly string[], symbol: string): string[] {
   return list.includes(symbol) ? list.filter((s) => s !== symbol) : [...list, symbol];
-}
-
-export function pushRecent(list: readonly string[], symbol: string): string[] {
-  return [symbol, ...list.filter((s) => s !== symbol)].slice(0, RECENT_KEEP);
 }
 
 /** A stored list of symbols (JSON), or empty when absent or unreadable. */

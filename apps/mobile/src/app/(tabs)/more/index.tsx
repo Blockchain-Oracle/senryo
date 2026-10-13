@@ -24,6 +24,7 @@ import { UTILITY_ICON, UtilityButton } from "~/components/shell/Utilities";
 import { CompactAvatar, ProfileHeader } from "~/features/profile/ProfileHeader";
 import { QuietState } from "~/features/profile/QuietState";
 import { SettingsRow } from "~/features/profile/SettingsRow";
+import { MoreSearchRow } from "~/features/search/MoreSearchRow";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
 import { SIZE, SPACE, useTheme } from "~/theme";
@@ -44,7 +45,8 @@ const GLYPH: Partial<Record<NavIcon, SymbolIcon>> = {
 
 /**
  * More (D-268): the person on top — avatar (edit), name, @handle, bio — then every destination the dock doesn't hold,
- * from the shared navigation source. A guest gets one way in, then every place open to it read-only (R2.14).
+ * from the shared navigation source, search first (R6.9). A guest gets one way in, then every place open to it
+ * read-only (R2.14).
  */
 export default function More() {
   const account = useAccount();
@@ -88,6 +90,7 @@ export default function More() {
             }}
           />
           <View>
+            <MoreSearchRow />
             {MORE_NAV.filter((item) => "guest" in item && item.guest).map((item) => (
               <SettingsRow
                 key={item.key}
@@ -104,6 +107,7 @@ export default function More() {
         <View style={styles.page}>
           <ProfileHeader />
           <View>
+            <MoreSearchRow />
             {MORE_NAV.map((item) => (
               <SettingsRow
                 key={item.key}

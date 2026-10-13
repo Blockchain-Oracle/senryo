@@ -21,6 +21,7 @@ const LOADERS: Record<string, Loader> = {
   [DRAWERS.ride]: () => import("./drawers/RideDrawer").then((m) => m.RideDrawer),
   [DRAWERS.install]: () => import("./drawers/InstallDrawer").then((m) => m.InstallDrawer),
   [DRAWERS.inbox]: () => import("./drawers/InboxDrawer").then((m) => m.InboxDrawer),
+  [DRAWERS.help]: () => import("./drawers/HelpDrawer").then((m) => m.HelpDrawer),
 };
 
 const close = (next: boolean) => (next ? undefined : closeDrawer());

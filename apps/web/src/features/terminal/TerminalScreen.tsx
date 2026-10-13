@@ -15,6 +15,7 @@ import {
   useExitActions,
   useGuestTap,
   useMarketLine,
+  useMarketVisit,
   usePriceHealth,
 } from "@senryo/calls/react";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
@@ -35,6 +36,7 @@ import { LiveChart } from "./chart/LiveChart";
 import { OrderStack } from "./OrderStack";
 import { PositionsPill } from "./PositionsPill";
 import { ReactionOverlay, type ReactionOverlayHandle } from "./ReactionOverlay";
+import { TerminalIntent } from "./TerminalIntent";
 import { TerminalSheets } from "./TerminalSheets";
 import { TerminalTop } from "./TerminalTop";
 import { useLiveQuote } from "./useLiveQuote";
@@ -53,6 +55,8 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
   useEffect(() => {
     if (!tourSeenNow()) openTour();
   }, []);
+  // The market this device opened: search's Recents and the picker's recent markets (D-337).
+  useMarketVisit(symbol);
   // The passkey account, else on Practice the guest's device key (R5.10).
   const trader = useAppTrader();
   const account = trader.caller;
@@ -131,6 +135,11 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
 
   return (
     <div className="terminal-surface">
+      <TerminalIntent
+        setCadence={choices.setCadence}
+        setInstrument={choices.setInstrument}
+        openPositions={() => setSheet("positions")}
+      />
       <section className="terminal-stage" aria-label={`${symbol} live`}>
         <TerminalTop
           t={t}

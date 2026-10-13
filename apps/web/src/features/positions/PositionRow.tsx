@@ -7,12 +7,13 @@
  * now, in the receipt drawer). A held state says why in words.
  */
 import { type BookEntry, closeWord, dollars, leverageText, positionHold, positionSub, unitOf } from "@senryo/calls";
+import { useTerminalReady } from "@senryo/calls/react";
 import { laneLabel, priceText } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { ArrowDownRight, ArrowUpRight, ChevronDown, LoaderCircle, Lock, MoveHorizontal, Share2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { moneyDecimals, Odometer, viewDollars } from "@/components/ui/odometer";
 import { tradeHref } from "@/features/markets/MarketList";
@@ -91,12 +92,20 @@ export function PositionRow({
   onClose: (e: BookEntry) => void;
 }) {
   const [open, setOpen] = useState(false);
+  // A link (search's position, D-340) asked for this one: open, Cash out ringed, focus untouched.
+  const ready = useTerminalReady().position === e.key;
+  const row = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ready) return;
+    setOpen(true);
+    row.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [ready]);
   const hidden = usePrivacy();
   const reduce = useReducedMotion();
   const hold = positionHold(e);
   const Dir = e.up === false ? ArrowDownRight : ArrowUpRight;
   return (
-    <div className="rounded-2xl bg-secondary">
+    <div ref={row} className="rounded-2xl bg-secondary">
       <button
         type="button"
         aria-expanded={open}
@@ -138,7 +147,10 @@ export function PositionRow({
                   type="button"
                   disabled={e.closeValue === null || closing}
                   onClick={() => onClose(e)}
-                  className="flex h-11 items-center justify-center gap-2 rounded-xl bg-foreground px-4 font-semibold text-background text-row-title disabled:opacity-40"
+                  className={cn(
+                    "flex h-11 items-center justify-center gap-2 rounded-xl bg-foreground px-4 font-semibold text-background text-row-title disabled:opacity-40",
+                    ready && "is-ready",
+                  )}
                 >
                   {closing ? <LoaderCircle aria-hidden className="size-4 animate-spin" /> : null}
                   {closeWord(e)}

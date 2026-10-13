@@ -1,7 +1,8 @@
 import { SUPPORT_EMAIL } from "@senryo/api-client";
+import { helpOn } from "@senryo/config";
 import { ids } from "@senryo/identity";
 import * as Linking from "expo-linking";
-import { Stack } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { ListRow } from "~/components/kit/ListRow";
@@ -15,29 +16,8 @@ import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const SEAL = ids.brand("senryo");
 
-/** The questions people ask first (A10 Help/FAQ); each answer sits behind its ⓘ. */
-const FAQ = [
-  {
-    q: "What is Practice?",
-    a: "Practice runs on Monad’s test network with test dollars that have no value. Every call works the same, so you can learn before Real money.",
-  },
-  {
-    q: "Who holds my money?",
-    a: "You do. Your account is created from your passkey; Senryo never holds your keys and can’t move your funds or undo a transaction.",
-  },
-  {
-    q: "How do I get back in?",
-    a: "Open Senryo on any phone and tap “I have an account”. Your synced passkey opens the same address. Settings → Recovery adds a backup passkey.",
-  },
-  {
-    q: "Why does Face ID ask?",
-    a: "One Face ID turns on one-tap calls for a while, within a spending cap; it locks when you leave the app or stop. Sends, withdrawals and security changes always ask for Face ID again. Your passkey is for signing in on a new phone.",
-  },
-  {
-    q: "What does a call cost?",
-    a: "Only your stake. Senryo pays the network fee, so you never need MON. The call shows what it pays before you tap.",
-  },
-] as const;
+/** The questions people ask first (A10 Help/FAQ; the shared list, D-341); each answer sits behind its ⓘ. */
+const FAQ = helpOn("phone").map((h) => ({ key: h.key, q: h.q, a: h.a }));
 
 /** Where every number comes from, with the attribution each source asks for (DB-IP Lite is CC BY 4.0, S8.15). */
 const SOURCES = [
@@ -76,6 +56,8 @@ const MARKS_CREDIT =
 export default function HelpScreen() {
   const network = useNetwork();
   const { color } = useTheme();
+  // Search opens an answer here (R6): that question shows its answer under it.
+  const { q: picked } = useLocalSearchParams<{ q?: string }>();
   return (
     <Screen>
       <Stack.Screen options={{ title: "Help" }} />
@@ -91,9 +73,16 @@ export default function HelpScreen() {
       <View style={styles.section}>
         <SectionHeading>Questions</SectionHeading>
         <Panel>
-          {FAQ.map((item) => (
-            <ListRow key={item.q} title={item.q} trailing={<InfoTip title={item.q} body={item.a} />} />
-          ))}
+          {FAQ.map((item) =>
+            item.key === picked ? (
+              <View key={item.key} style={styles.answer}>
+                <Text style={[TYPE.rowTitle, { color: color.ink }]}>{item.q}</Text>
+                <Text style={[TYPE.body, { color: color.inkMuted }]}>{item.a}</Text>
+              </View>
+            ) : (
+              <ListRow key={item.key} title={item.q} trailing={<InfoTip title={item.q} body={item.a} />} />
+            ),
+          )}
         </Panel>
       </View>
       <View style={styles.section}>
@@ -129,4 +118,5 @@ export default function HelpScreen() {
 const styles = StyleSheet.create({
   about: { alignItems: "center", gap: SPACE.xs },
   section: { gap: SPACE.md },
+  answer: { gap: SPACE.xs, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.md },
 });

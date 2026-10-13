@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
     "@senryo/identity",
     "@senryo/live",
     "@senryo/query",
+    "@senryo/search",
     "@senryo/tokens",
   ],
   // Our packages are barrels (one index per package): import only the modules a page uses, so a page that never signs
@@ -41,6 +42,7 @@ const nextConfig: NextConfig = {
       "@senryo/identity",
       "@senryo/live",
       "@senryo/query",
+      "@senryo/search",
       "@senryo/tokens",
     ],
   },

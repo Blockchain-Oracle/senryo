@@ -7,7 +7,6 @@ import { AppProviders } from "./providers";
 import "@/styles/app-shell.css";
 import "@/styles/shell-parts.css";
 import "@/styles/drawer.css";
-import "@/styles/command.css";
 
 export const metadata: Metadata = {
   title: { default: "Senryo", template: "%s · Senryo" },

@@ -2,8 +2,9 @@
 /**
  * The Proof feed (`/proof/`, S7.7): every window anyone called in, newest first — the market, its lane and time, how
  * it closed against its line and how many calls rode it — each opening the window's proof. Public, no account.
+ * `?market=BTC` keeps one market's windows (search's "View proof", R6.4).
  */
-import { windowRow } from "@senryo/calls";
+import { marketOf, windowRow } from "@senryo/calls";
 import { marketId } from "@senryo/identity";
 import { useWindows } from "@senryo/query";
 import Link from "next/link";
@@ -12,12 +13,14 @@ import { PublicQuery } from "@/components/public/public-query";
 
 const MARK = 32;
 
-function Feed({ chainId }: { chainId: number }) {
-  const q = useWindows(undefined);
+function Feed({ chainId, market }: { chainId: number; market: string | undefined }) {
+  const q = useWindows(market);
   if (q.status === "error") return <p className="text-body text-text-2">The proof feed didn't load.</p>;
   const windows = q.data?.pages.flatMap((p) => p.windows) ?? [];
   if (q.status === "pending") return <div aria-busy className="h-64 animate-pulse rounded-lg bg-skeleton" />;
-  if (windows.length === 0) return <p className="text-body text-text-2">No window has calls yet.</p>;
+  if (windows.length === 0) {
+    return <p className="text-body text-text-2">No {market ? `${market} ` : ""}window has calls yet.</p>;
+  }
   return (
     <div className="flex flex-col gap-3">
       <ul className="flex flex-col">
@@ -54,5 +57,12 @@ function Feed({ chainId }: { chainId: number }) {
 }
 
 export function ProofFeed() {
-  return <PublicQuery loading="Loading the proof feed…">{(chainId) => <Feed chainId={chainId} />}</PublicQuery>;
+  return (
+    <PublicQuery loading="Loading the proof feed…">
+      {(chainId, params) => {
+        const asked = params.get("market")?.toUpperCase();
+        return <Feed chainId={chainId} market={asked && marketOf(asked) ? asked : undefined} />;
+      }}
+    </PublicQuery>
+  );
 }

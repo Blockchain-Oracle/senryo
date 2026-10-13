@@ -13,7 +13,6 @@ export const STORAGE_KEYS = {
   lastStake: "senryo.terminal.stake.v1",
   /** P2: the market sheet's starred markets and the last markets picked (JSON arrays of symbols). */
   favouriteMarkets: "senryo.favourite-markets.v1",
-  recentMarkets: "senryo.recent-markets.v1",
   /** The way to call: Up / Down, Range or Moonshot (S7.4). */
   terminalMode: "senryo.terminal.mode.v1",
   /** R5.4: Call or Ride, the ride's margin (base units), leverage (×) and trail (bps), the call's trail (cents). */

@@ -1,4 +1,5 @@
 "use client";
+import { useTerminalReady } from "@senryo/calls/react";
 /**
  * Tradash's two trade buttons (Owarine `TradeButtons`, Codex direction 11 §3, R5.5) in Senryo's direction plates.
  * - Entry: UP / DOWN (or RANGE alone, MOONSHOT / CRASH) with a line under each — a call's "Pays 2.14× · $10.70", a
@@ -84,11 +85,13 @@ function EntryButton({
   onPreview: (slot: 0 | 1 | null) => void;
 }) {
   const Icon = ICON[side.kind];
+  // A link (search's Up / Down, D-340) asked for this side: lit a few seconds, never pressed.
+  const ready = useTerminalReady().side === side.kind;
   return (
     <div className="trade-slot">
       <button
         type="button"
-        className={cn("terminal-call", TONE[side.kind])}
+        className={cn("terminal-call", TONE[side.kind], ready && "is-ready")}
         disabled={disabled}
         onClick={() => onPick(slot)}
         onPointerEnter={() => onPreview(slot)}

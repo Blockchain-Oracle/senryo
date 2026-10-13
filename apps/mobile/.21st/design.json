@@ -789,6 +789,13 @@
         ],
         "port": "the ticket card's ledger (header with the folio, the result, the facts, a dashed perforation, the stub) on white receipt paper in both themes with the receipt shadow; the dashed rule in react-native-svg with notches in the ground colour; the Kinpaku stamp (foil gradient ring, lacquer field, foil rule, gold-leaf words) at −4° pressing once (Reanimated); exported off-screen at 3× with its link and QR (view-shot + expo-sharing)",
         "deviations": "barcode → QR; confetti and card logo dropped; Receipt Printer's print/tear animation rejected (a static paper object); Stamp 3417 rejected (an award wrapper)"
+      },
+      {
+        "name": "search",
+        "source": "UGLYCASH U10 Searching (owarine-refs/uglycash/Searching S01–S05) for the floating launcher and the full page; 21st #31354 wensity/command for the market page stack; searched \"command palette with preview pane\" and \"cmdk command menu nested pages keyboard footer\" (2075, 23522, 31802, 31354, 33510, 33492, 23173)",
+        "evidence": ["R6.9 / D-339, Codex direction 13 (docs/research/replan-2026-10-10/13-search-direction.md)"],
+        "port": "a 264 × 44 white capsule \"Search for anything\" held above the dock on Home (press scale, a magenta halo only on entry); a pushed full page over the dock — Back, the filled 44 pt field with clear, groups headed in the section role, rows from the shared index (@senryo/calls useSearch): markets with the four lanes, a 56 × 20 Skia sparkline and a trailing options chevron; positions with live value and masked PnL; events with two crests; a market page from the shared marketPageRows; no filter chips",
+        "path": "src/features/search/"
       }
     ],
     "planned": [

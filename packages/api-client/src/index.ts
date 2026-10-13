@@ -13,6 +13,7 @@ export * from "./routes/exits.ts";
 export * from "./routes/games.ts";
 export * from "./routes/history.ts";
 export * from "./routes/info.ts";
+export * from "./routes/lookup.ts";
 export * from "./routes/markets.ts";
 export * from "./routes/notifications.ts";
 export * from "./routes/parlays.ts";

@@ -611,3 +611,41 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
     150 episodes, ~1.5 MB, then the newest 20) in the browser's storage or MMKV, saved when an episode ends and when
     the app hides. A finished trade's receipt plays it back in at most 12 s when enough of its life was recorded
     (Tradash's rule: 30 samples, 60 % covered, no hole in the middle 80 %).
+- **D-336** 2026-10-13 · **One search, ranked by MiniSearch (R6.1, R6.2).**
+  - `@senryo/search` holds the entries (platform-neutral targets each app routes), the index and the ranking; MiniSearch
+    7.2 was chosen from its docs (Context7) over Fuse.js and uFuzzy for field boosts, per-document boosts and edit-
+    distance typos in one small, dependency-free library that runs on Hermes.
+  - Ranking: symbol 5 · title 3 · hidden keywords 1.5 · second line 0.6; only the last word is a prefix; one typo from
+    4 letters, two from 8; a ticker typed exactly ×3; group weights (receipts and your positions lead, help trails
+    unless the query is a question); every word must match first, then any. Filler words drop from longer queries.
+  - A top hit leads, then groups by their best hit. Up, Down, Ride (the seven ride markets) and each lane are hidden
+    entries a multi-word query reaches ("btc 5m", "sol up"). The market picker and the Markets search rank the same way.
+  - `pnpm --filter @senryo/search queries` runs the gate's queries against the real catalogue and copy.
+  - People join the index with R8's profile pages; no empty People group meanwhile.
+- **D-337** 2026-10-13 · **Visits: one recents list and frecency on the device (R6.2, R6.3).**
+  - What a device opened (from search, the picker, any market row; the terminal records its market) is counted and
+    dated in browser storage or MMKV; frecency halves weekly and multiplies a hit by at most 2.2. Recents are the
+    empty view's first section and the picker's recent markets; the picker's own list was read in once and deleted.
+    Recorded when opened, never when highlighted; positions and receipts carry their network in the id.
+- **D-338** 2026-10-13 · **A pasted id resolves on the api (R6.6).**
+  - `GET /v1/lookup?chainId&q` reads the indexer: a hash against every transaction we keep (each call's and ride's
+    events, parlays, duels, event calls, windows) and the 32-byte ids; a number against calls, rides, parlays and
+    event calls. Each kind found is its own row (a bare number can be a call and a ride); a hash nothing carries opens
+    on the explorer; a slip's folio (`N° C-10143-001019`) names its kind and network. Looked up 180 ms after a complete
+    id; the local results answer at once.
+- **D-339** 2026-10-13 · **The palette and the phone's search (Codex direction 13).**
+  - Web: 960 px with a 360 px preview at ≥ 1024 px, one 672 px column below, a full page under 768 px. Empty: Recent,
+    your positions (earliest ending first), Hot · 24 h, Go to with keys 1–5 (used after Tab; digits type while the
+    field has focus). Market rows carry all four lanes; ↵ opens, ⌘↵ / Ctrl+↵ is each kind's alternate (market options,
+    receipt, rules, how to play, settings, explorer) named in the footer. A nested market page: Trade (Up, Down, Ride),
+    Lanes, Market (proof, favourite). The platform's modifier everywhere; a trigger in the terminal's top.
+  - Phone (UGLYCASH U10): a floating "Search for anything" launcher on Home above the dock, a Search row atop More, a
+    full page with the same groups; market options on a trailing chevron.
+  - ⌘K never executes: Up, Down and a position only open the terminal ready (D-340), even with one-tap on; the
+    terminal's keys rest while search is open.
+- **D-340** 2026-10-13 · **The terminal opens ready from a link (R6.4, R6.7).**
+  - A terminal link can carry its lane, Call or Ride, a side to have ready (lit, never placed) and a position to open
+    with Cash out ready (web `?lane=300&mode=ride&side=up&position=call:1019`, phone the same as route params).
+- **D-341** 2026-10-13 · **Help is one list (R6.1).**
+  - `@senryo/config` `HELP` feeds the phone's Help, a new web Help drawer, the landing's questions and search's Help
+    group; an answer true for one app says so.

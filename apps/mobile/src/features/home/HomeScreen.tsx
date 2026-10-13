@@ -1,7 +1,8 @@
 /**
  * Home (S5.10): the balance rolling, the one-tap chip, your open positions live with their Cash out (R5.3) and the
  * live markets to call on. A guest gets the promise, one way in and the same live markets to look around (R2 sim pass:
- * "Look around" used to land on the promise alone). Setup resume and the Face ID prompt stay on Home.
+ * "Look around" used to land on the promise alone). Setup resume and the Face ID prompt stay on Home. Search floats
+ * above the dock (R6.9, UGLYCASH U10).
  */
 
 import { useLiveBook } from "@senryo/calls/react";
@@ -24,6 +25,7 @@ import { MarketRow } from "~/features/markets/MarketRow";
 import { NotificationsBell } from "~/features/notifications/NotificationsBell";
 import { PositionsList } from "~/features/positions/PositionsList";
 import { SectionHeading } from "~/features/profile/SectionHeading";
+import { SearchLauncher, useLauncherInset } from "~/features/search/SearchLauncher";
 import { ContextualFaceId } from "~/features/setup/ContextualFaceId";
 import { SetupResume } from "~/features/setup/SetupResume";
 import { fire } from "~/feedback/fire";
@@ -44,7 +46,10 @@ export function HomeScreen() {
   const address = trader.owner;
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
-  const bottom = useDockInset();
+  // The floating search sits above the dock: the last row scrolls clear of both (R6.9).
+  const dockInset = useDockInset();
+  const launcherInset = useLauncherInset();
+  const bottom = Math.max(dockInset, launcherInset);
   const account = useMarketAccount(address);
   const book = useLiveBook();
   const catalog = useCatalog();
@@ -143,6 +148,7 @@ export function HomeScreen() {
           </>
         )}
       </ScrollView>
+      <SearchLauncher />
       <ContextualFaceId key={address} />
     </View>
   );

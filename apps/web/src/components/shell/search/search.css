@@ -1,0 +1,399 @@
+/* ⌘K (components/shell/search; Codex direction 13, research 13): one borderless surface — 960 px with a 360 px
+ * preview ≥ 1024 px, a 672 px column below, the whole viewport under 768 px — rows not boxes, a neutral wash and a
+ * magenta ↵ tile on the highlighted row, live figures in tabular numbers, the condensed face for headings and money. */
+.search-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--sheet-scrim);
+}
+.search-backdrop[data-state="open"] {
+  animation: search-fade var(--motion-base) var(--motion-ease);
+}
+.search-panel {
+  --search-top: clamp(24px, 10dvh, 72px);
+  position: fixed;
+  z-index: 71;
+  left: 50%;
+  top: var(--search-top);
+  transform: translateX(-50%);
+  width: min(672px, calc(100vw - 48px));
+  height: min(640px, calc(100dvh - var(--search-top) - 24px));
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--foreground);
+  outline: none;
+}
+.search-panel[data-state="open"] {
+  animation: search-in 240ms var(--motion-ease);
+}
+@media (min-width: 1024px) {
+  .search-panel {
+    width: 960px;
+    height: min(680px, calc(100dvh - var(--search-top) - 24px));
+  }
+}
+@media (max-width: 767px) {
+  .search-panel {
+    inset: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  }
+  .search-panel[data-state="open"] {
+    animation: search-fade var(--motion-base) var(--motion-ease);
+  }
+}
+@keyframes search-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+@keyframes search-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.search-command {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+/* The field: a 40 px filled rectangle inside a 64 px header. */
+.search-field {
+  display: flex;
+  height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 16px;
+  padding: 0 4px 0 12px;
+  border-radius: 8px;
+  background: var(--secondary);
+}
+.search-field-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--text-3);
+}
+.search-field input {
+  height: 100%;
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: 500 17px / 22px var(--shell-font);
+  outline: none;
+}
+.search-field input::placeholder {
+  color: var(--text-3);
+}
+.search-clear {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--text-2);
+}
+.search-clear svg {
+  width: 18px;
+  height: 18px;
+}
+
+.search-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+.search-list {
+  min-width: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0 12px;
+  outline: none;
+}
+@media (min-width: 1024px) {
+  .search-list {
+    flex: 0 0 600px;
+  }
+}
+.search-list [cmdk-group-heading] {
+  padding: 16px 16px 8px;
+}
+.search-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font: 700 18px / 22px var(--shell-display);
+}
+.search-heading small {
+  color: var(--text-3);
+  font: 400 12px / 16px var(--shell-font);
+}
+
+/* Rows: no cards, square edges, minimum heights by kind. */
+.search-row {
+  position: relative;
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 48px 8px 16px;
+  cursor: default;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+.search-row[data-group="markets"] {
+  min-height: 72px;
+}
+.search-row[data-group="positions"],
+.search-row[data-group="help"] {
+  min-height: 76px;
+}
+.search-row[data-group="events"] {
+  min-height: 88px;
+}
+.search-row[data-group="games"],
+.search-row[data-group="lanes"] {
+  min-height: 64px;
+}
+.search-row[data-group="actions"] {
+  min-height: 56px;
+}
+.search-row[data-group="receipts"] {
+  min-height: 72px;
+}
+.search-row.is-compact {
+  min-height: 52px;
+}
+.search-row[data-selected="true"] {
+  background: var(--secondary);
+}
+.search-row[data-disabled="true"] {
+  opacity: 0.45;
+}
+.search-enter {
+  position: absolute;
+  right: 12px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+.search-enter svg {
+  width: 14px;
+  height: 14px;
+}
+.search-row[data-selected="true"] .search-enter {
+  opacity: 1;
+}
+.search-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: 0 8px;
+  color: var(--text-2);
+}
+.search-icon.is-up {
+  color: var(--up);
+}
+.search-icon.is-down {
+  color: var(--down);
+}
+.search-icon.is-starred {
+  fill: currentColor;
+  color: var(--foreground);
+}
+.search-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.search-title {
+  overflow: hidden;
+  font: 600 16px / 20px var(--shell-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-title.is-wrap {
+  display: -webkit-box;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.search-sub {
+  overflow: hidden;
+  color: var(--text-3);
+  font: 400 12px / 16px var(--shell-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search-sub.is-two,
+.search-sub.is-clamp {
+  display: -webkit-box;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.search-sub.is-clamp {
+  -webkit-line-clamp: 4;
+}
+.search-body > .search-preview .search-sub.is-clamp {
+  margin-top: 8px;
+}
+.search-lanes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin-top: 2px;
+  color: var(--text-2);
+  font: 400 12px / 16px var(--shell-font);
+}
+.search-lanes.is-shut {
+  color: var(--text-3);
+}
+.search-lane {
+  white-space: nowrap;
+}
+.search-lane b {
+  font-weight: 600;
+}
+.search-lane.is-locked {
+  color: var(--text-3);
+}
+.search-spark {
+  flex-shrink: 0;
+}
+/* A phone's width: the name and lanes keep their room — the graph steps aside, the figures take what they need. */
+@media (max-width: 639px) {
+  .search-spark {
+    display: none;
+  }
+  .search-row {
+    padding-left: 12px;
+  }
+}
+/* The full page has its own way back (under 768 px). */
+.search-exit {
+  display: none;
+}
+@media (max-width: 767px) {
+  .search-exit {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin-left: -12px;
+    place-items: center;
+    color: var(--foreground);
+  }
+  .search-exit svg {
+    width: 22px;
+    height: 22px;
+  }
+  .search-field:has(.search-exit) .search-field-icon {
+    display: none;
+  }
+}
+.search-figures {
+  display: flex;
+  width: 104px;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+.search-price {
+  font: 700 20px / 24px var(--shell-display);
+}
+.search-price.is-small {
+  font-size: 17px;
+  line-height: 22px;
+}
+.search-change {
+  font: 500 12px / 16px var(--shell-font);
+}
+.search-change.is-up {
+  color: var(--up);
+}
+.search-change.is-down {
+  color: var(--down);
+}
+.search-change.is-flat {
+  color: var(--text-2);
+}
+.search-options {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  margin: 0 -8px 0 -4px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--text-3);
+}
+.search-options:hover {
+  background: var(--row-pressed);
+  color: var(--foreground);
+}
+.search-options svg {
+  width: 16px;
+  height: 16px;
+}
+.search-crests {
+  display: flex;
+  width: 56px;
+  flex-shrink: 0;
+}
+.search-crests > :is(img, span) {
+  width: 28px;
+  height: 28px;
+}
+.search-state,
+.search-picked {
+  flex-shrink: 0;
+  color: var(--text-2);
+  font: 500 12px / 16px var(--shell-font);
+}
+.search-picked {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 600;
+}
+.search-digit {
+  min-width: 20px;
+  color: var(--text-3);
+  font: 500 12px / 16px var(--shell-font);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-panel[data-state],
+  .search-backdrop[data-state] {
+    animation: search-fade var(--motion-reduced-motion) linear;
+  }
+  .search-spin {
+    animation: none;
+  }
+}

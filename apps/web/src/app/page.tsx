@@ -1,3 +1,4 @@
+import { HELP } from "@senryo/config";
 import { ArrowRight, ArrowUpRight, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,33 +48,8 @@ const STEPS = [
   },
 ] as const;
 
-const QUESTIONS = [
-  {
-    question: "What is a call?",
-    answer:
-      "A call says where a price will be when a window closes: above its opening price (Up) or below it (Down). What a call pays is quoted before you make it, from the price and the time left; a right call pays that, a wrong one loses its stake.",
-  },
-  {
-    question: "Where do the prices come from?",
-    answer:
-      "Pyth. Each window opens and closes on a Pyth price print that is posted on chain, and every receipt links to the transactions that posted them, so anyone can check how a call settled.",
-  },
-  {
-    question: "Who pays the winners?",
-    answer:
-      "A pool on Monad takes the other side of every call within limits the contracts enforce: how much one window can carry and how much the pool can owe at once. When a window is full, it says so.",
-  },
-  {
-    question: "Is this real money?",
-    answer:
-      "Practice uses free test dollars on Monad's test network: real prices, no value. Real uses USDC on Monad and opens with mainnet. A call can lose its whole stake — only call with what you can lose.",
-  },
-  {
-    question: "How do I get the app?",
-    answer:
-      "Open the web app in any browser, or ask for the iPhone beta on TestFlight. Make an account with a passkey, take your test dollars, and make your first call in under a minute.",
-  },
-] as const;
+/** The landing's questions: the shared Help list's (D-341). */
+const QUESTIONS = HELP.filter((h) => h.landing).map((h) => ({ question: h.q, answer: h.a }));
 
 const BETA_REQUEST = "mailto:support@senryo.xyz?subject=Senryo%20iPhone%20beta%20access";
 

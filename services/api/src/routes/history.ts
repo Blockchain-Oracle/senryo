@@ -3,6 +3,7 @@ import {
   callsRoute,
   callTimelineRoute,
   leaderboardRoute,
+  lookupRoute,
   windowProofRoute,
   windowsRoute,
 } from "@senryo/api-client";
@@ -11,6 +12,7 @@ import type { HttpServer } from "@senryo/service-common";
 import { HTTP_STATUS, HttpError, parseRoute, sendRoute } from "@senryo/service-common";
 import type { ApiContext } from "../context.ts";
 import { HISTORY_MAX_AGE, LEADERBOARD_MAX_AGE } from "../history/constants.ts";
+import { IndexerLookup } from "../history/lookup.ts";
 import { IndexerReader } from "../history/reader.ts";
 
 /**
@@ -19,6 +21,7 @@ import { IndexerReader } from "../history/reader.ts";
  */
 export function registerHistoryRoutes(app: HttpServer, ctx: ApiContext): void {
   const reader = new IndexerReader(ctx.db, ctx.env.INDEXER_SCHEMA);
+  const lookup = new IndexerLookup(ctx.db, ctx.env.INDEXER_SCHEMA);
   const notFound = (what: string) => new HttpError(HTTP_STATUS.notFound, "NOT_FOUND", `no such ${what}`);
 
   app.get(callsRoute.path, async (request, reply) => {
@@ -42,6 +45,13 @@ export function registerHistoryRoutes(app: HttpServer, ctx: ApiContext): void {
         txHash: e.txHash as Hex,
       })),
     });
+  });
+
+  // R6.6: what of ours a pasted hash or number names (search's receipts).
+  app.get(lookupRoute.path, async (request, reply) => {
+    const { query } = parseRoute(lookupRoute, request);
+    reply.header("cache-control", HISTORY_MAX_AGE);
+    return sendRoute(reply, lookupRoute, { hits: await lookup.find(query.chainId, query.q) });
   });
 
   app.get(windowProofRoute.path, async (request, reply) => {

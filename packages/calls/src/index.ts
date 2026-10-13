@@ -15,6 +15,7 @@ export * from "./instrument.ts";
 export * from "./intent-journal.ts";
 export * from "./levels.ts";
 export * from "./links.ts";
+export * from "./market-page.ts";
 export * from "./market-picker.ts";
 export * from "./markets.ts";
 export * from "./modes.ts";

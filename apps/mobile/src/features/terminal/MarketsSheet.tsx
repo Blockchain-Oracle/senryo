@@ -6,7 +6,7 @@
  * change; a closed market says when it opens) with a star; the current market is highlighted. Every open starts at
  * All with an empty search; picking ticks, closes, then moves the terminal.
  */
-import { PICKER_FILTERS, type PickerFilter, pushRecent, readSymbols, toggleFavourite } from "@senryo/calls";
+import { PICKER_FILTERS, type PickerFilter, readSymbols, toggleFavourite } from "@senryo/calls";
 import { useMarketPicker } from "@senryo/calls/react";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -48,13 +48,10 @@ function Picker({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<PickerFilter>("all");
   const [favRaw, setFavRaw] = useMMKVString(STORAGE_KEYS.favouriteMarkets, storage);
-  const [recentRaw, setRecentRaw] = useMMKVString(STORAGE_KEYS.recentMarkets, storage);
   const favourites = useMemo(() => readSymbols(favRaw), [favRaw]);
-  const recents = useMemo(() => readSymbols(recentRaw), [recentRaw]);
-  const sections = useMarketPicker(markets, { query, filter, favourites, recents });
+  const sections = useMarketPicker(markets, { query, filter, favourites });
   const pick = (symbol: string) => {
     fire("tick");
-    setRecentRaw(JSON.stringify(pushRecent(recents, symbol)));
     close(() => onPick(symbol));
   };
   const star = (symbol: string) => {

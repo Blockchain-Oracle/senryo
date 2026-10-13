@@ -281,6 +281,14 @@ export const WEB_EVERYTHING = [
     label: "Learn",
     items: [
       {
+        key: "help",
+        label: "Help",
+        icon: "help",
+        href: "/app/?d=help",
+        description: "The questions people ask first, and how to reach Senryo.",
+        keywords: "faq support questions contact answers",
+      },
+      {
         key: "how",
         label: "How it works",
         icon: "help",

@@ -1,7 +1,8 @@
 "use client";
 // The line above the stage (Mitoshi S22 `TopLine.tsx`, from Baku/roy-chain's top line): on phones the seal (the rail is
-// hidden there); Back below a place; search (⌘K or /), the `?` keyboard map, the mode capsule, the live health, the
-// balance with its eye, the theme, the bell (R5.22) and the account. The palette and the keyboard map are lazy islands.
+// hidden there); Back below a place; search (⌘K / Ctrl+K or /, R6 — the terminal has its own trigger, this line hides
+// there but its keys still work), the `?` keyboard map, the mode capsule, the live health, the balance with its eye,
+// the theme, the bell (R5.22) and the account. The palette and the keyboard map are lazy islands.
 import { ids } from "@senryo/identity";
 import { ChevronLeft, CircleHelp, Search } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -12,13 +13,15 @@ import { SessionChip } from "@/components/auth/session-chip";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { tapFeedback } from "@/lib/feedback";
+import { useModCombo } from "@/lib/platform";
+import { openSearch, toggleSearch, useSearchOpen } from "@/lib/shell/search-open";
 import { BellButton } from "./BellButton";
 import { BalanceChip, HealthChip } from "./chips";
 import { ModeSwitch } from "./mode-switch";
 import { backOf } from "./nav";
 import { shortcutBlocked } from "./Rail";
 
-const CommandPalette = dynamic(() => import("./CommandPalette").then((m) => m.CommandPalette), { ssr: false });
+const SearchPalette = dynamic(() => import("./search/SearchPalette").then((m) => m.SearchPalette), { ssr: false });
 const ShortcutsModal = dynamic(() => import("./ShortcutsModal").then((m) => m.ShortcutsModal), { ssr: false });
 
 const SEAL_SIZE = 26;
@@ -42,20 +45,21 @@ function BackButton() {
 
 export function TopLine() {
   // null = never opened (the island isn't loaded yet); then true / false.
-  const [palette, setPalette] = useState<boolean | null>(null);
+  const palette = useSearchOpen();
   const [keys, setKeys] = useState<boolean | null>(null);
+  const combo = useModCombo("K");
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setPalette((open) => !open);
+        toggleSearch();
         return;
       }
       if (shortcutBlocked(event)) return;
       if (event.key === "/") {
         event.preventDefault();
-        setPalette(true);
+        openSearch();
       } else if (event.key === "?") {
         event.preventDefault();
         setKeys(true);
@@ -77,17 +81,17 @@ export function TopLine() {
         <button
           type="button"
           className="topline-search"
-          aria-label="Search markets, places and actions"
+          aria-label="Search Senryo"
           aria-keyshortcuts="Meta+K Control+K /"
           onClick={() => {
             tapFeedback();
-            setPalette(true);
+            openSearch();
           }}
         >
           <Search aria-hidden />
-          <span className="topline-search-label">Search</span>
+          <span className="topline-search-label">Search Senryo</span>
           <kbd aria-hidden className="topline-kbd">
-            ⌘K
+            {combo}
           </kbd>
         </button>
       </div>
@@ -111,7 +115,7 @@ export function TopLine() {
         <BellButton />
         <SessionChip />
       </div>
-      {palette !== null ? <CommandPalette open={palette} onOpenChange={setPalette} /> : null}
+      {palette !== null ? <SearchPalette /> : null}
       {keys !== null ? <ShortcutsModal open={keys} onOpenChange={setKeys} /> : null}
     </header>
   );

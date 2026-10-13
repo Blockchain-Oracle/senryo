@@ -6,6 +6,7 @@ export * from "./env.ts";
 export * from "./events.ts";
 export * from "./games.ts";
 export * from "./gas.ts";
+export * from "./help.ts";
 export * from "./hosts.ts";
 export * from "./legal.ts";
 export * from "./money.ts";

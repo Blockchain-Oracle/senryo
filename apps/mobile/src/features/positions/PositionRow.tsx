@@ -6,15 +6,17 @@
  * state says why in words.
  */
 import { type BookEntry, closeWord, dollars, leverageText, positionHold, positionSub, unitOf } from "@senryo/calls";
+import { useTerminalReady } from "@senryo/calls/react";
 import { laneLabel, priceText } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import type { SkFont } from "@shopify/react-native-skia";
 import { type Href, router } from "expo-router";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
+import { ReadyRing } from "~/components/kit/ReadyRing";
 import { RollingFigure } from "~/components/kit/RollingFigure";
 import { ArrowDown, ArrowLeftRight, ArrowUp, ChevronDown, Lock } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
@@ -116,6 +118,11 @@ export function PositionRow({
   const { color } = useTheme();
   const [hidden] = useHideBalances();
   const [open, setOpen] = useState(false);
+  // A link (search's position, D-340) asked for this one: open, Cash out ringed, never pressed.
+  const ready = useTerminalReady().position === e.key;
+  useEffect(() => {
+    if (ready) setOpen(true);
+  }, [ready]);
   const hold = positionHold(e);
   const Dir = e.up === null ? ArrowLeftRight : e.up ? ArrowUp : ArrowDown;
   return (
@@ -148,12 +155,14 @@ export function PositionRow({
       {open ? (
         <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.body}>
           <Facts e={e} hidden={hidden} />
-          <Button
-            label={e.closeValue === null ? closeWord(e) : `${closeWord(e)} ${masked(dollars(e.closeValue), hidden)}`}
-            onPress={() => onClose(e)}
-            disabled={e.closeValue === null}
-            loading={closing}
-          />
+          <ReadyRing on={ready}>
+            <Button
+              label={e.closeValue === null ? closeWord(e) : `${closeWord(e)} ${masked(dollars(e.closeValue), hidden)}`}
+              onPress={() => onClose(e)}
+              disabled={e.closeValue === null}
+              loading={closing}
+            />
+          </ReadyRing>
           {e.pnl === null ? null : (
             <Button
               label="Share"

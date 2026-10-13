@@ -9,6 +9,7 @@ export * from "./geo.ts";
 export * from "./history.ts";
 export * from "./keys.ts";
 export * from "./live-sync.ts";
+export * from "./lookup.ts";
 export * from "./markets.ts";
 export * from "./notifications.ts";
 export * from "./parlays.ts";

@@ -7,6 +7,7 @@ import { LiveBookProvider } from "@senryo/calls/react";
 import type { ReactNode } from "react";
 import { useAppTrader } from "~/lib/account/guest";
 import "~/lib/replay-store";
+import "~/lib/visit-store";
 
 export function BookHost({ children }: { children: ReactNode }) {
   return <LiveBookProvider owner={useAppTrader().owner}>{children}</LiveBookProvider>;
