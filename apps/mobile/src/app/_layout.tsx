@@ -1,6 +1,6 @@
 import { LiveProvider } from "@senryo/live/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { type ErrorBoundaryProps, Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SheetPortalProvider } from "~/components/sheet/SheetHost";
+import { AppErrorScreen } from "~/components/shell/AppErrorScreen";
 import { BookHost } from "~/components/shell/BookHost";
 import { ConfettiHost } from "~/components/shell/ConfettiHost";
 import { DeferredLinkHost } from "~/components/shell/DeferredLinkHost";
@@ -21,6 +22,7 @@ import { PrivacyPlate } from "~/features/auth/PrivacyPlate";
 import { TermsHost } from "~/features/legal/TermsHost";
 import { AccountProvider } from "~/lib/account/provider";
 import { QUERY_RETRIES, QUERY_STALE_MS } from "~/lib/constants/time";
+import { noteScreen, startCrashWatch } from "~/lib/crash/report";
 import { appLive } from "~/lib/live";
 import { PushHost } from "~/lib/notifications/PushHost";
 import { QueryEnvHost } from "~/lib/query-env";
@@ -28,6 +30,13 @@ import { FONT, ThemeProvider, useTheme } from "~/theme";
 import { useAppFonts } from "~/theme/fonts";
 
 void SplashScreen.preventAutoHideAsync();
+// D0: last run's ending, the global error handler and the report of what was kept — before anything renders.
+startCrashWatch();
+
+/** A render error anywhere shows a calm screen with Try again and is kept for a report, instead of ending the app. */
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <AppErrorScreen {...props} />;
+}
 
 /** Sheets are transparent modals that draw their own scrim and panel (the ported one-sheet pattern). */
 const sheet = {
@@ -77,6 +86,8 @@ export default function RootLayout() {
  */
 function RootStack() {
   const { name, color } = useTheme();
+  const path = usePathname();
+  useEffect(() => noteScreen(path), [path]);
   return (
     <>
       <StatusBar style={name === "dark" ? "light" : "dark"} />

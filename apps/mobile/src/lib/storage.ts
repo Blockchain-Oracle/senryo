@@ -68,6 +68,11 @@ export const STORAGE_KEYS = {
   hideBalances: "senryo.hide-balances.v1",
   /** A9: an account whose server-side delete didn't reach Senryo; retried at its next unlock on this phone. */
   pendingDelete: "senryo.pending-delete.v1",
+  /** D0: errors kept until the next launch sends them, and whether the last run ended without reaching the background. */
+  crashQueue: "senryo.crash-queue.v1",
+  crashSession: "senryo.crash-session.v1",
+  /** The newest expo-updates error already reported (ms). */
+  crashUpdatesSeen: "senryo.crash-updates-seen.v1",
 } as const;
 
 /**

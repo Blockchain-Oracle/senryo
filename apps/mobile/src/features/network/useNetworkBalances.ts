@@ -13,14 +13,20 @@ import { BALANCE_STALE_MS } from "./constants";
 /** Networks whose markets the api serves (Practice now; Real joins at S9). */
 const SERVED = new Set<number>([TESTNET.chainId]);
 
+/**
+ * The key is `useMarketAccount`'s, so the cache holds the same shape — the whole account — and this reads `.balance`
+ * through `select`. It used to cache the bare balance under that key: after a switch the account object landed where
+ * this sheet read a bigint, the money format threw, and with a passkey account the app crashed (D0, 13 Oct).
+ */
 function useDollars(chainId: typeof TESTNET.chainId | typeof MAINNET.chainId) {
   const owner = useAccount().hint?.address;
   return useQuery({
     queryKey: marketKeys.account(chainId, owner ?? "0x"),
     queryFn: async () => {
       if (!owner) throw new Error("no account");
-      return (await api().call(marketAccountRoute, { query: { chainId, owner } })).balance;
+      return api().call(marketAccountRoute, { query: { chainId, owner } });
     },
+    select: (account) => account.balance,
     enabled: owner !== undefined && SERVED.has(chainId),
     staleTime: BALANCE_STALE_MS,
   });
