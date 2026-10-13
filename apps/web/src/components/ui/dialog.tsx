@@ -2,7 +2,9 @@
 
 // 21st: shadcn/dialog — the D2 preview's copy (design/preview/components/ui/dialog.tsx, from `21st get`), ported to
 // @radix-ui/react-dialog. Desktop (≥1024) sheets on the desk (spec client.md: "desktop … Dialogs"). D2 re-tokenized:
-// card surface, hairline border, 4 px radius, no shadow, desk tweens (nothing bounces).
+// card surface, hairline border, 4 px radius, no shadow, desk tweens (nothing bounces). Layer 70: above the right
+// drawer (60/61, `drawer.css`) a modal is often opened from — the receipt's Replay sat under it (P2) — below the skip
+// link (80) and the confetti (90).
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";
@@ -16,7 +18,7 @@ function DialogOverlay({ className, ...props }: ComponentProps<typeof DialogPrim
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "fixed inset-0 z-70 bg-background/80 backdrop-blur-sm data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className,
       )}
       {...props}
@@ -35,7 +37,7 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border bg-card p-6 text-card-foreground duration-(--motion-base) ease-desk data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "fixed top-1/2 left-1/2 z-70 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border bg-card p-6 text-card-foreground duration-(--motion-base) ease-desk data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           className,
         )}
         {...props}
