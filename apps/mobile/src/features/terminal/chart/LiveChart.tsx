@@ -59,7 +59,7 @@ const CANDLES_REREAD = 3;
 const REREAD_AFTER_MS = 4_000;
 /**
  * A drag takes over past this many points either way (the terminal doesn't scroll): with a crosshair up it moves it,
- * else its horizontal part scrolls history. A tap is a finger that stays within it, so a pinch never toggles the cross.
+ * else its horizontal part scrolls history. A tap is a finger that stays within it.
  */
 const PAN_ACTIVE = 10;
 
@@ -350,7 +350,9 @@ export const LiveChart = memo(function LiveChart({
           return s;
         });
       });
-    return Gesture.Simultaneous(pan, pinch, Gesture.Exclusive(doubleTap, tap));
+    // Taps wait for the pinch to fail: a symmetric pinch keeps its centroid still, so a distance check alone lets
+    // two fingers count as a tap.
+    return Gesture.Simultaneous(pan, Gesture.Exclusive(pinch, doubleTap, tap));
   }, [state]);
 
   const onLayout = (e: LayoutChangeEvent) => {

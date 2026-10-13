@@ -50,22 +50,29 @@ function useWarmTabs(): ReadonlySet<string> {
 }
 
 /**
- * A tab's screen behind React's Activity (R5.24): shown while focused; otherwise hidden, its Effects torn down — live
- * rows, the chart's frame loop, timers — and its state kept. A warmed tab mounts shown once (at normal priority: a hidden
- * first render waits for idle time that live ticks never leave) and hides straight after. (`freezeOnBlur` re-hid the
- * whole tree on every tick a frozen row received.)
+ * The terminal stays live behind `display: none` when blurred: its expensive parts already rest on blur (the chart's
+ * frame loop, music, the tour), while waking it from an Activity remounts every effect and re-lays out its whole tree
+ * — ~1.6 s of JS on each visit (13 Oct, Release simulator).
  */
-function TabActivity({ focused, children }: { focused: boolean; children: ReactNode }) {
+const STAYS_LIVE: ReadonlySet<string> = new Set(["trade"]);
+
+/**
+ * A tab's screen behind React's Activity (R5.24, D-332): shown while focused; otherwise hidden, its Effects torn down
+ * — live rows, timers — and its state kept. A warmed tab mounts shown once (at normal priority: a hidden first render
+ * waits for idle time that live ticks never leave) and hides straight after. (`freezeOnBlur` re-hid the whole tree on
+ * every tick a frozen row received.)
+ */
+function TabActivity({ focused, rests, children }: { focused: boolean; rests: boolean; children: ReactNode }) {
   const [mounted, setMounted] = useState(focused);
   useEffect(() => setMounted(true), []);
-  return <Activity mode={focused || !mounted ? "visible" : "hidden"}>{children}</Activity>;
+  return <Activity mode={focused || !mounted || !rests ? "visible" : "hidden"}>{children}</Activity>;
 }
 
 /** Slot, dock and fan share the tabs' navigator context (the dock reads which tab is focused). */
 function Shell() {
   const { color } = useTheme();
   const warm = useWarmTabs();
-  // A tab renders once visited or warmed; a hidden one rests behind its Activity.
+  // A tab renders once visited or warmed; a hidden one rests behind its Activity (the terminal stays live).
   const renderFn: NonNullable<TabSlotProps["renderFn"]> = (
     descriptor,
     { isFocused, loaded, detachInactiveScreens },
@@ -78,7 +85,9 @@ function Shell() {
         activityState={isFocused ? 2 : 0}
         style={[styles.screen, isFocused ? styles.focused : styles.unfocused]}
       >
-        <TabActivity focused={isFocused}>{descriptor.render()}</TabActivity>
+        <TabActivity focused={isFocused} rests={!STAYS_LIVE.has(descriptor.route.name)}>
+          {descriptor.render()}
+        </TabActivity>
       </Screen>
     );
   };

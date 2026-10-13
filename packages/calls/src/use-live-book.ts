@@ -34,6 +34,7 @@ import { type BookEntry, type BookTotals, bookTotals, valueCall } from "./book.t
 import { valueRide } from "./book-ride.ts";
 import type { PoolTerms } from "./quote.ts";
 import { fillMark } from "./sigma.ts";
+import { useReplayRecorder } from "./use-replay.ts";
 
 /** Tradash's store commits at most every 200 ms per symbol. */
 export const BOOK_HZ = 5;
@@ -102,10 +103,14 @@ function sameBook(a: LiveBook, b: LiveBook): boolean {
 
 const Ctx = createContext<BookStore | null>(null);
 
-/** Values the caller's book and serves it to every surface below (mount once, at the app's shell). */
+/**
+ * Values the caller's book, records it for replays (R5.19) and serves it to every surface below (mount once, at the
+ * app's shell).
+ */
 export function LiveBookProvider({ owner, children }: { owner: Address | undefined; children: ReactNode }) {
   const store = useMemo(() => new BookStore(), []);
   useBookSource(store, owner);
+  useReplayRecorder(store.get, useQueryEnv().chainId);
   return createElement(Ctx.Provider, { value: store }, children);
 }
 
@@ -230,8 +235,12 @@ function useBookSource(store: BookStore, owner: Address | undefined): void {
     };
     value();
     const offs = symbols ? symbols.split(",").map((s) => live.prices.subscribe(s, schedule)) : [];
+    // While anything is held the book keeps the price stream open itself: the screen in front may show no price at
+    // all (a receipt, Calls) while the tabs that do rest behind their Activity (D-332).
+    const release = symbols ? live.stream.acquire() : undefined;
     const timer = setInterval(schedule, SECOND_MS);
     return () => {
+      release?.();
       for (const off of offs) off();
       clearInterval(timer);
       if (queued) clearTimeout(queued);
