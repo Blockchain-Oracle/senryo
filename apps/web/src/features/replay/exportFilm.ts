@@ -1,10 +1,11 @@
 /**
- * The replay video as an MP4 on the web (Q3, D-350; Codex direction 17 §4): every frame drawn into an OffscreenCanvas at
+ * The replay as an MP4 on the web (Q3, D-350; Codex direction 17 §4): every frame drawn into an OffscreenCanvas at
  * t = i / 30 by the preview's own `drawFilmFrame` — never a screen recording — and encoded with Mediabunny (WebCodecs):
- * H.264 about 6 Mbps at 1080 × 1350, AAC 128 kbps. The soundtrack is the film's cue track rendered offline through the
- * same voices the app plays live. Where the browser can't encode H.264 at this size it says so — never a silent WebM.
+ * H.264 about 6 Mbps at 1080 × 1350, AAC 128 kbps. The soundtrack is the live terminal's price sounds (`filmSound`), no
+ * music: every cue rendered offline through the same voices the app plays, at its time. Where the browser can't encode
+ * H.264 at this size it says so — never a silent WebM.
  */
-import { type DrawnFrame, type FilmColours, type FilmWords, FILM_LAYOUT as L } from "@senryo/calls";
+import { type DrawnFrame, type FilmColours, type FilmSound, type FilmWords, FILM_LAYOUT as L } from "@senryo/calls";
 import { ladderRate, SOUND_CUES, SOUND_MASTER, SOUND_MIX, type SoundCue } from "@senryo/tokens";
 import { bookVoice } from "@/lib/feedback/sound";
 import { drawFilmFrame, type FilmFaces, type FilmImagesWeb } from "./drawFilm";
@@ -18,23 +19,22 @@ const CHANNELS = 2;
 
 export class VideoUnavailable extends Error {}
 
-export interface FilmExportWeb {
+export interface FilmExportWeb extends FilmSound {
   frames: DrawnFrame[];
   totalMs: number;
   words: FilmWords;
   colours: FilmColours;
   faces: FilmFaces;
   images: FilmImagesWeb;
-  cues: { at: number; cue: string; step: number }[];
-  sound: boolean;
 }
 
-async function soundtrack(cues: FilmExportWeb["cues"], totalMs: number): Promise<AudioBuffer> {
-  const ctx = new OfflineAudioContext(CHANNELS, Math.ceil((SAMPLE_RATE * totalMs) / MS), SAMPLE_RATE);
+/** The soundtrack, rendered offline: every cue through the app's own voices. */
+export async function soundtrack(e: FilmExportWeb): Promise<AudioBuffer> {
+  const ctx = new OfflineAudioContext(CHANNELS, Math.ceil((SAMPLE_RATE * e.totalMs) / MS), SAMPLE_RATE);
   const out = ctx.createGain();
   out.gain.value = SOUND_MASTER;
   out.connect(ctx.destination);
-  for (const c of cues) {
+  for (const c of e.cues) {
     const cue = c.cue as SoundCue;
     const voices = SOUND_CUES[cue];
     if (!voices) continue;
@@ -62,7 +62,7 @@ export async function exportFilm(
   });
   const video = new mb.CanvasSource(canvas, { codec: "avc", bitrate: VIDEO_BITRATE });
   output.addVideoTrack(video, { frameRate: FPS });
-  const withSound = e.sound && (await mb.canEncodeAudio("aac"));
+  const withSound = await mb.canEncodeAudio("aac");
   const audio = withSound ? new mb.AudioBufferSource({ codec: "aac", bitrate: AUDIO_BITRATE }) : null;
   if (audio) output.addAudioTrack(audio);
   await output.start();
@@ -74,7 +74,7 @@ export async function exportFilm(
       await video.add(i / FPS, 1 / FPS);
       onProgress(i / e.frames.length);
     }
-    if (audio) await audio.add(await soundtrack(e.cues, e.totalMs));
+    if (audio) await audio.add(await soundtrack(e));
     await output.finalize();
   } catch (error) {
     await output.cancel();

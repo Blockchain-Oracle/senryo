@@ -31,14 +31,17 @@ export function QrCode({
   label,
   size = SIZE.qr,
   center,
+  still = false,
 }: {
   value: string;
   label: string;
   size?: number;
   center?: ReactNode;
+  /** Drawn at rest with no reveal — for a snapshot (the replay's band). */
+  still?: boolean;
 }) {
   const { color } = useTheme();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotion() || still;
   const { path, extent } = useMemo(() => {
     const { modules } = create(value, { errorCorrectionLevel: center ? "H" : "M" });
     let d = "";

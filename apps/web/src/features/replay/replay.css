@@ -1,0 +1,47 @@
+/* The replay's scrubber (Codex direction 18 §B): a 2 px rail, the played part in ink, a 12 px thumb, 44 px to touch. */
+.replay-scrub {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  --played: 0%;
+}
+
+.replay-scrub::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--foreground) var(--played), var(--border) var(--played));
+}
+
+.replay-scrub::-moz-range-track {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.replay-scrub::-moz-range-progress {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--foreground);
+}
+
+.replay-scrub::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: var(--foreground);
+}
+
+.replay-scrub::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--foreground);
+}
+
+.replay-scrub:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

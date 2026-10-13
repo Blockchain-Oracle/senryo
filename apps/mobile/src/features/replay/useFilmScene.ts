@@ -1,6 +1,6 @@
 /**
- * The phone's side of the replay video's scene (Q3, D-350): the fonts at the frame's sizes, and the shared frames and
- * words (`filmSceneOf` — laid out once, strings formatted, hidden balances masked) memoised per film.
+ * The phone's side of the replay's scene (Q3, D-350): the fonts at the frame's sizes, and the shared frames, words and
+ * soundtrack (`filmSceneOf` — laid out once, strings formatted, hidden balances masked) memoised per film.
  */
 import { type FilmSceneData, filmSceneOf, FILM_LAYOUT as L, type ReceiptFilm } from "@senryo/calls";
 import { Skia, useTypeface } from "@shopify/react-native-skia";
@@ -28,20 +28,24 @@ export function useFilmFonts(): FilmFonts | null {
       handle: f(semibold, L.handle.size),
       handleSmall: f(semibold, L.handle.min),
       date: f(regular, L.date.size),
-      small: f(regular, L.labels.size),
-      caption: f(regular, L.moment.captionSize),
-      tiny: f(regular, L.provenance.size),
+      mode: f(regular, L.mode.size),
+      label: f(regular, L.labels.size),
+      tick: f(regular, L.ticks.size),
+      level: f(semibold, L.level.tagSize),
       pill: f(bold, L.pill.size),
-      marker: f(display, L.moment.labelSize),
+      tipTitle: f(semibold, L.tipText.titleSize),
+      tipValue: f(semibold, L.tipText.valueSize),
+      tiny: f(regular, L.provenance.size),
       market: f(semibold, L.market.nameSize),
-      body: f(regular, L.market.idSize),
+      tag: f(semibold, L.market.tagSize),
       pnl: f(display, L.pnl.size),
       pnlSmall: f(display, L.pnl.min),
       roi: f(semibold, L.roi.size),
+      statLabel: f(regular, L.stats.labelSize),
       statValue: f(semibold, L.stats.valueSize),
-      code: f(semibold, L.referral.codeSize),
-      codeSmall: f(semibold, L.referral.codeMin),
-      stampWord: f(display, L.stamp.wordSize),
+      referral: f(regular, L.referral.labelSize),
+      code: f(bold, L.referral.codeSize),
+      codeSmall: f(bold, L.referral.codeMin),
     };
   }, [regular, semibold, bold, display]);
 }

@@ -1,14 +1,18 @@
 /**
- * The replay video's frame, shared by both apps' renderers (Q3, D-350; Codex direction 17 §2): its layout at
- * 1080 × 1350 after Fomo's card in Senryo's look, its colours (the dark brand ground and card in either theme — the
- * export has one look, D-349), and every frame of a film laid out once with its strings formatted, so the renderers
- * only draw. The phone draws with Skia, the web with a 2D canvas; both from this.
+ * The replay's frame, shared by both apps' renderers (Q3, D-350; Codex direction 17 §2, amended by the owner's second
+ * pass, Codex direction 18 §C): its layout at 1080 × 1350 after Fomo's card — the brand magenta as the 12 px ground
+ * and the band, the dark card, the scrolling chart with its price pill, KO / Cap tags in the price column and the
+ * OPEN / CLOSE tooltips in the empty future, a flat centred panel with the market, the PnL and three stats, the lockup
+ * and the QR in the band — its colours (one look in either theme, D-349), and every frame of a film laid out once with
+ * its strings formatted, so the renderers only draw. Every text box has its own place; none can meet another at any t.
+ * The phone draws with Skia, the web with a 2D canvas; both from this.
  */
-import { priceText } from "@senryo/core";
-import { DARK, KINPAKU } from "@senryo/tokens";
+import { priceText, usd } from "@senryo/core";
+import { DARK } from "@senryo/tokens";
 import { filmOf } from "./film.ts";
 import { type FilmFrame, frameAt } from "./film-frame.ts";
 import type { FilmZone, ReceiptFilm } from "./film-input.ts";
+import { type FilmSound, filmSound } from "./film-sound.ts";
 import { unitOf } from "./markets.ts";
 import { pnlText, roiText } from "./position-live.ts";
 
@@ -24,70 +28,76 @@ export const FILM_LAYOUT = {
   frame: { w: 1080, h: 1350 },
   card: { x: 12, y: 12, w: 1056, h: 1154, radius: 60 },
   portrait: { x: 48, y: 48, size: 144 },
-  handle: { x: 228, base: 104, size: 52, min: 38, maxW: 500 },
-  date: { right: 1032, base: 92, size: 34 },
+  handle: { x: 228, base: 108, size: 52, min: 38, maxW: 440 },
+  provenance: { x: 228, base: 160, size: 24 },
+  date: { right: 1032, base: 92, size: 32 },
   mode: { right: 1032, base: 160, size: 28 },
-  stamp: { x: 228, y: 124, size: 104, ring: 4, rule: 7, wordSize: 24, tiltDeg: -4 },
-  plot: { x: 48, y: 264, w: 776, h: 368 },
+  plot: { x: 48, y: 228, w: 776, h: 372 },
   grid: { step: 48, dot: 1.5, alpha: 0.06 },
-  line: { width: 6, glow: 24, glowAlpha: 0.14 },
-  head: { r: 10 },
-  rule: { width: 2, on: 12, off: 12, alpha: 0.4 },
-  pill: { x: 848, w: 184, h: 56, radius: 10, size: 32, top: 264, bottom: 576 },
-  labels: { right: 1032, size: 28, clear: 40 },
-  ticks: { base: 676, size: 28 },
-  level: { width: 2, dash: 10, labelSize: 26, zoneAlpha: 0.07 },
-  moment: { notch: 24, leader: 2, labelSize: 30, captionSize: 26, maxW: 280, gap: 12 },
-  provenance: { x: 48, base: 724, size: 24 },
-  panel: { x: 48, y: 728, w: 984 },
-  market: { mark: 72, markY: 756, x: 140, nameBase: 798, nameSize: 44, idBase: 846, idSize: 30 },
-  figure: { base: 892, size: 28 },
-  pnl: { base: 1006, size: 112, min: 88, maxW: 660 },
-  roi: { x: 740, base: 978, size: 46 },
-  /** Three columns from the panel's left edge (x 48, 376, 704). */
-  stats: { column: 328, labelBase: 1068, valueBase: 1118, labelSize: 30, valueSize: 40 },
+  line: { width: 8, fillAlpha: 0.22 },
+  head: { r: 10, halo: 22, haloAlpha: 0.2 },
+  rule: { width: 2, on: 12, off: 12, alpha: 0.5 },
+  pill: { x: 848, w: 184, h: 56, radius: 10, size: 32, top: 228, bottom: 544 },
+  /** The price column, right-aligned: the pill first, then the level tags, then at most three labels — each text box
+   * claims its height plus `gap`, and anything that would meet a claimed box isn't drawn. */
+  labels: { right: 1032, size: 28, gap: 8 },
+  level: { width: 2, dash: 10, tagSize: 26, entryAlpha: 0.35, zoneAlpha: 0.07 },
+  ticks: { base: 684, size: 28 },
+  /** Discs on the line; one opaque tooltip in the empty future right of the head (Fomo's BUY / SELL). */
+  disc: { r: 24, glyph: 9 },
+  tip: { x: 632, minW: 200, maxRight: 832, h: 96, radius: 18, padX: 28, above: 48, top: 228, bottom: 504 },
+  tipText: { titleSize: 24, titleBase: 36, valueSize: 30, valueBase: 76 },
+  separator: { y: 728, x: 48, w: 984 },
+  market: { mark: 60, markY: 756, gap: 16, nameBase: 801, nameSize: 46, tagSize: 28 },
+  pnl: { base: 984, size: 104, min: 80, maxW: 940, gap: 24 },
+  roi: { base: 972, size: 46 },
+  /** Three columns across x 48–1032 (centres 212, 540, 868). */
+  stats: { x: 48, column: 328, labelBase: 1058, valueBase: 1118, labelSize: 30, valueSize: 40 },
   lockup: { x: 48, y: 1214, w: 325, h: 88 },
-  referral: { x: 440, labelBase: 1232, codeBase: 1290, labelSize: 30, codeSize: 42, codeMin: 28, maxW: 384 },
-  qr: { x: 888, y: 1188, size: 144 },
+  referral: { x: 440, labelBase: 1240, codeBase: 1296, labelSize: 32, codeSize: 46, codeMin: 34, maxW: 424 },
+  qr: { x: 888, y: 1188, size: 144, radius: 16 },
 } as const;
 
 export interface FilmColours {
+  /** The brand ground: the 12 px frame and the band. */
   ground: string;
+  /** Ink on the brand ground. */
+  groundInk: string;
   card: string;
+  /** The tooltip's fill. */
+  panel: string;
+  rule: string;
   ink: string;
   muted: string;
   up: string;
   down: string;
   range: string;
   pillInk: string;
-  foilLight: string;
-  foilDeep: string;
-  foilHighlight: string;
-  lacquer: string;
 }
 
 export const FILM_COLOURS: FilmColours = {
-  ground: DARK.background,
-  card: DARK.card,
+  ground: DARK.accent,
+  groundInk: DARK.accentForeground,
+  card: DARK.background,
+  panel: DARK.card,
+  rule: DARK.secondary,
   ink: DARK.foreground,
   muted: DARK.mutedForeground,
   up: DARK.up,
   down: DARK.down,
   range: DARK.range,
   pillInk: DARK.background,
-  foilLight: KINPAKU.foilLight,
-  foilDeep: KINPAKU.foilDeep,
-  foilHighlight: KINPAKU.foilHighlight,
-  lacquer: KINPAKU.lacquer,
 };
 
 export interface DrawnFrame extends FilmFrame {
   pnlText: string;
+  /** The signed ROI ("−3.1%"); empty when unknown. */
   roiText: string;
   pillText: string;
   labelTexts: string[];
   tickTexts: string[];
-  levelTexts: string[];
+  /** Each moment's tooltip value: the booked amount ("$5.00"), or the price when the amount is unknown. */
+  momentTexts: string[];
   provenanceText: string | null;
 }
 
@@ -95,21 +105,20 @@ export interface FilmWords {
   handle: string;
   date: string;
   mode: string;
-  stamp: readonly string[] | null;
   market: string;
-  identity: string;
-  figureLabel: string;
+  tag: string;
+  /** The trade's side (null for a range): IN's disc colour and triangle. */
+  up: boolean | null;
   stats: readonly (readonly [string, string])[];
   referralLabel: string;
   code: string;
   zone: FilmZone;
 }
 
-export interface FilmSceneData {
+export interface FilmSceneData extends FilmSound {
   totalMs: number;
   frames: DrawnFrame[];
   words: FilmWords;
-  cues: { at: number; cue: string; step: number }[];
 }
 
 const priceOf = (p: number, unit: ReturnType<typeof unitOf>) => priceText(BigInt(Math.round(p * E8)), unit);
@@ -119,7 +128,6 @@ const clockOf = (ms: number, seconds: boolean) =>
     minute: "2-digit",
     ...(seconds ? { second: "2-digit" } : {}),
   });
-const LEVEL_WORD: Partial<Record<string, string>> = { entry: "Entry", ko: "KO", cap: "Cap" };
 
 function drawn(f: FilmFrame, symbol: string, hidden: boolean): DrawnFrame {
   const unit = unitOf(symbol);
@@ -128,26 +136,24 @@ function drawn(f: FilmFrame, symbol: string, hidden: boolean): DrawnFrame {
     ...f,
     // Hidden balances: no amounts, and no PnL colour on the public price path.
     tone: hidden ? "flat" : f.tone,
-    pnlText: f.pnl === null ? "—" : hidden ? HIDDEN : pnlText(BigInt(Math.round(f.pnl * E6))),
+    pnlText: f.pnl === null ? "$0.00" : hidden ? HIDDEN : pnlText(BigInt(Math.round(f.pnl * E6))),
     roiText: f.roiBps === null ? "" : hidden ? HIDDEN : roiText(f.roiBps),
     pillText: priceOf(f.head.price, unit),
     labelTexts: f.labels.map((l) => priceOf(l.price, unit)),
     tickTexts: f.ticks.map((t) => clockOf(t.ms, secondsTicks)),
-    levelTexts: f.levels.map((l) => {
-      if (l.kind === "line") return "Line";
-      const word = LEVEL_WORD[l.kind];
-      return word ? `${word} ${priceOf(l.price, unit)}` : priceOf(l.price, unit);
-    }),
+    momentTexts: f.moments.map((m) =>
+      m.amount === null ? priceOf(m.price, unit) : hidden ? HIDDEN : usd(BigInt(m.amount)),
+    ),
     provenanceText:
       f.provenance.kind === "partial"
-        ? `Partial recording · ${f.provenance.coveragePct}% recorded`
+        ? `Partial recording · ${f.provenance.coveragePct}%`
         : f.provenance.kind === "rebuilt"
-          ? "Rebuilt · 1-minute prices"
+          ? "Rebuilt from 1-minute prices"
           : null,
   };
 }
 
-/** Every frame of the film and its words; `handle` null for a guest ("Guest", "Play on Senryo"). */
+/** Every frame of the film, its words and its soundtrack; `handle` null for a guest. */
 export function filmSceneOf(rf: ReceiptFilm | null, handle: string | null, hidden: boolean): FilmSceneData | null {
   const film = rf ? filmOf(rf.input) : null;
   if (!rf || !film) return null;
@@ -157,18 +163,18 @@ export function filmSceneOf(rf: ReceiptFilm | null, handle: string | null, hidde
   return {
     totalMs: film.totalMs,
     frames,
-    cues: film.cues,
+    ...filmSound(film),
     words: {
       handle: handle ? `@${handle}` : "Guest",
       date: rf.copy.date,
       mode: rf.copy.mode,
-      stamp: rf.copy.stamp,
       market: rf.copy.market,
-      identity: rf.copy.identity,
-      figureLabel: rf.copy.figureLabel,
+      tag: rf.copy.tag,
+      up: rf.input.up,
       stats,
-      referralLabel: handle ? "Play with code" : "Play on Senryo",
-      code: handle ? `@${handle}` : "senryo.xyz",
+      // A code belongs here once referrals are captured (R8.4); until then the band names where to play.
+      referralLabel: "Play at",
+      code: "senryo.xyz",
       zone: rf.copy.zone,
     },
   };

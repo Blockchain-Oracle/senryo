@@ -1,10 +1,10 @@
 /**
  * One frame of the replay film (Q3, D-350; Codex direction 17 §2–3): what to draw at film time `t`, in normalised plot
  * space (x 0 → 1 left to right, y 0 → 1 bottom to top) so each app scales it to its own frame. The head is pinned 70 %
- * across with history behind it and nothing replayed to its right; the path, the head's price, the levels (a distant one
- * as an edge label), the moments reached (fading in over 120 ms; IN's caption leaves after 1.2 s, OUT's stays), the PnL
- * stepping at most every 100 ms and landing on the realised result, its tone (neutral before IN or when unknown), the
- * price labels and up to three time ticks. Past the run the frame holds.
+ * across with history behind it and nothing replayed to its right; the path, the head's price, the levels (one beyond
+ * the range isn't drawn), the moments reached as discs on the line with Fomo's tooltip (IN's for 1.4 s, OUT's to the
+ * end), the PnL stepping at most every 100 ms and landing on the realised result, its tone (neutral before IN or when
+ * unknown), at most three price labels and up to three time ticks. Past the run the frame holds.
  */
 import {
   FILM_FPS,
@@ -22,13 +22,15 @@ import {
 
 const MS = 1_000;
 const FADE_MS = 120;
-const IN_CAPTION_MS = 1_200;
+/** A tooltip fades in over 80 ms; IN's leaves after 1.4 s (Fomo's buy), OUT's stays. */
+const TIP_IN_MS = 80;
+const IN_TIP_MS = 1_400;
 /** The figures take a new value at most this often (film time). */
 const NUMBER_STEP_MS = 100;
 const MAX_POINTS = 240;
 const Y_LABELS = 3;
 const TIME_TICKS = 3;
-const NICE = { two: 2, five: 5 } as const;
+const NICE = { two: 2, five: 5, ten: 10 } as const;
 const MID = 0.5;
 const BPS = 10_000;
 /** Time-tick steps (ms): the first giving at most three ticks across the visible history. */
@@ -60,7 +62,8 @@ export interface FilmFrame {
   roiBps: number | null;
   tone: "up" | "down" | "flat";
   levels: (FilmLevel & { y: number; edge: "top" | "bottom" | null })[];
-  moments: (FilmMoment & { x: number; y: number; alpha: number; captionAlpha: number })[];
+  /** `alpha` is the disc's; `tipAlpha` the tooltip's. */
+  moments: (FilmMoment & { x: number; y: number; alpha: number; tipAlpha: number })[];
   labels: { y: number; price: number }[];
   ticks: { x: number; ms: number }[];
   provenance: FilmProvenance;
@@ -74,7 +77,8 @@ function niceStep(span: number): number {
   const raw = span / Y_LABELS;
   const pow = 10 ** Math.floor(Math.log10(raw));
   const unit = raw / pow;
-  const step = unit >= NICE.five ? NICE.five : unit >= NICE.two ? NICE.two : 1;
+  // Rounded up, so a range never carries more than three labels.
+  const step = unit > NICE.five ? NICE.ten : unit > NICE.two ? NICE.five : unit > 1 ? NICE.two : 1;
   return step * pow;
 }
 
@@ -133,7 +137,10 @@ export function frameAt(f: Film, t: number): FilmFrame {
         x: xOf(m.ms),
         y: yOf(m.price),
         alpha: clamp01((t - at) / FADE_MS),
-        captionAlpha: m.kind === "out" ? clamp01((t - at) / FADE_MS) : clamp01((at + IN_CAPTION_MS - t) / FADE_MS),
+        tipAlpha: Math.min(
+          clamp01((t - at) / TIP_IN_MS),
+          m.kind === "out" ? 1 : clamp01((at + IN_TIP_MS - t) / FADE_MS),
+        ),
       })),
     labels,
     ticks,

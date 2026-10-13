@@ -1,17 +1,18 @@
 /**
- * The receipt's way to its video (Q3, D-350): "Video" under the paper when this phone recorded the trade — tapping it
- * builds the film from the receipt's records once and opens the video sheet — or "Replay unavailable" when it didn't.
+ * The receipt's way into its replay (Q3, D-352; Codex direction 18 §A): the row's first circle, "Replay" on the brand
+ * colour. Tapping it builds the film from the receipt's records once and opens the Replay sheet. When this phone
+ * didn't record the trade the circle stays in its place, inert, and says so.
  */
 import type { Episode, ReceiptFilm } from "@senryo/calls";
 import { useEpisode } from "@senryo/calls/react";
 import { useState } from "react";
-import { Text } from "react-native";
-import { Button } from "~/components/kit/Button";
+import { ActionCircle } from "~/components/kit/ActionCircle";
+import { PlayFill } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
-import { TYPE, useTheme } from "~/theme";
-import { VideoSheet } from "./VideoSheet";
+import { notify } from "~/lib/notify";
+import { ReplaySheet } from "./ReplaySheet";
 
-export function ReplayVideo({
+export function ReplayAction({
   chainId,
   bookKey,
   url,
@@ -22,23 +23,24 @@ export function ReplayVideo({
   url: string;
   build: (episode: Episode) => ReceiptFilm | null;
 }) {
-  const { color } = useTheme();
   const episode = useEpisode(chainId, bookKey);
   const [film, setFilm] = useState<ReceiptFilm | null>(null);
-  if (!episode || episode.samples.length < 2) {
-    return <Text style={[TYPE.rowDetail, { color: color.inkMuted, textAlign: "center" }]}>Replay unavailable</Text>;
-  }
+  const recorded = episode !== null && episode !== undefined && episode.samples.length >= 2;
   return (
     <>
-      <Button
-        label="Video"
-        variant="secondary"
+      <ActionCircle
+        icon={PlayFill}
+        label="Replay"
+        primary
+        reason={recorded ? undefined : "Not recorded"}
         onPress={() => {
+          const built = episode ? build(episode) : null;
+          if (!built) return notify({ title: "Replay unavailable" });
           fire("tick", { cue: "sheetOpen" });
-          setFilm(build(episode));
+          setFilm(built);
         }}
       />
-      {film ? <VideoSheet film={film} url={url} onClose={() => setFilm(null)} /> : null}
+      {film ? <ReplaySheet film={film} url={url} onClose={() => setFilm(null)} /> : null}
     </>
   );
 }

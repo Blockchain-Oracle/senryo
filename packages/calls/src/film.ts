@@ -5,10 +5,12 @@
  * - 0–0.6 s: the market before the fill (when it's known), neutral; IN lands at 0.6 s;
  * - the fill → exit maps linearly into 0.6 s … R − 0.4 s; the price then stops at the authoritative exit while the PnL
  *   lands on the realised result; the last frame holds 2 s (it is also the poster);
- * - the price range is eased per frame (18 % padding, grow 0.35, shrink 0.06) and stored, so a frame is a pure function
- *   of film time and seeking and export reproduce it exactly;
- * - the cue track (open at IN, the profit ladder at +10/25/50/100 %, adverse below −10 %, close at OUT, the verdict
- *   240 ms after) uses only existing cues.
+ * - the price range is eased per frame (18 % padding, grow 0.35, shrink 0.06, never cutting the head or the visible
+ *   path, never thinner than 0.05 % of the price) and stored, so a frame is a pure function of film time and seeking and
+ *   export reproduce it exactly;
+ * - the path ends at the authoritative exit: anything recorded after it is dropped, so the head stops where OUT lands;
+ * - the entry (or a call's line) stays inside the range; a ride's far knock-out and cap don't stretch it;
+ * - the soundtrack is `filmSound` (film-sound.ts): the live terminal's sound over this timeline.
  * Prices are numbers in the market's unit, money in dollars (display only — the receipt's figures stay bigint), times in
  * ms; an unknown PnL stays null. Plain arrays and numbers only, so the phone's export worklet can take it as is.
  */
@@ -26,19 +28,15 @@ export const FILM_LAND_MS = 400;
 export const FILM_HEAD_AT = 0.7;
 /** The window behind the head, as a share of the trade's life. */
 const WINDOW_SHARE = 0.45;
+/** The least market before the fill worth showing, as a share of that window. */
+const MIN_LEAD_SHARE = 0.1;
 const RANGE_PAD = 0.18;
+/** The least height a range gets, as a share of the price. */
+const MIN_SPAN_SHARE = 0.0005;
 const GROW = 0.35;
 const SHRINK = 0.06;
 const MS = 1_000;
 const E6 = 1e6;
-const BPS = 10_000;
-/** The verdict cue follows OUT by this much. */
-const VERDICT_AFTER_MS = 240;
-const LADDER_GAP_MS = 400;
-/** ROI tiers that play the profit ladder once each, and the drawdown that plays `adverse` once (bps). */
-const TIER = { tenth: 1_000, quarter: 2_500, half: 5_000, double: 10_000 } as const;
-export const FILM_PROFIT_TIERS_BPS = [TIER.tenth, TIER.quarter, TIER.half, TIER.double] as const;
-const ADVERSE_BPS = -1_000;
 
 export type FilmProvenance = { kind: "recorded" } | { kind: "partial"; coveragePct: number } | { kind: "rebuilt" };
 
@@ -46,18 +44,16 @@ export interface FilmMoment {
   kind: "in" | "out";
   ms: number;
   price: number;
-  /** IN: the fill time ("14:02:31"); OUT: the reason and time ("Trail · 14:06:11"). */
-  caption: string;
-  /** "OUT 25%" for a partial exit; "OUT · Settled" for a settlement. */
-  label: string;
+  /** The tooltip's word: "OPEN"; at OUT how it ended ("CLOSE", "KO", "TRAIL", "CASH OUT", "SETTLED"). */
+  title: string;
+  /** What went in (IN) or came back (OUT), in USDC units as a decimal string; null when unknown. */
+  amount: string | null;
 }
 
 export interface FilmLevel {
   kind: "line" | "low" | "high" | "entry" | "ko" | "cap";
   price: number;
 }
-
-export type FilmCue = "open" | "profit" | "adverse" | "close" | "win" | "loss" | "refund";
 
 export interface FilmInput {
   kind: "call" | "ride";
@@ -93,7 +89,6 @@ export interface Film {
   pnls: (number | null)[];
   lows: number[];
   highs: number[];
-  cues: { at: number; cue: FilmCue; step: number }[];
 }
 
 /** Market time at film time `t` (ms). */
@@ -125,70 +120,51 @@ export function sampleIndex(f: Film, ms: number): number {
   return lo;
 }
 
-function extentBetween(f: Film, from: number, to: number, alwaysIn: readonly number[]): [number, number] {
-  let lo = Number.POSITIVE_INFINITY;
-  let hi = Number.NEGATIVE_INFINITY;
-  for (let i = sampleIndex(f, from); i <= sampleIndex(f, to); i++) {
+/**
+ * The prices to show between two market times: the padded range to ease toward, and the raw extremes the eased range
+ * must never cut (the sample after `to` included, since the head interpolates toward it). A near-flat stretch is given
+ * at least 0.05 % of the price in height, so noise never reads as a spike.
+ */
+function extentBetween(
+  f: Film,
+  from: number,
+  to: number,
+  alwaysIn: readonly number[],
+): { lo: number; hi: number; rawLo: number; rawHi: number } {
+  let rawLo = Number.POSITIVE_INFINITY;
+  let rawHi = Number.NEGATIVE_INFINITY;
+  const last = Math.min(f.prices.length - 1, sampleIndex(f, to) + 1);
+  for (let i = sampleIndex(f, from); i <= last; i++) {
     const p = f.prices[i] ?? 0;
-    lo = Math.min(lo, p);
-    hi = Math.max(hi, p);
+    rawLo = Math.min(rawLo, p);
+    rawHi = Math.max(rawHi, p);
   }
   for (const p of alwaysIn) {
-    lo = Math.min(lo, p);
-    hi = Math.max(hi, p);
+    rawLo = Math.min(rawLo, p);
+    rawHi = Math.max(rawHi, p);
   }
-  const span = hi - lo || Math.abs(hi) * RANGE_PAD || 1;
-  return [lo - span * RANGE_PAD, hi + span * RANGE_PAD];
-}
-
-function cueTrack(f: Film): Film["cues"] {
-  const cues: Film["cues"] = [{ at: FILM_LEAD_MS, cue: "open", step: 0 }];
-  const cost = f.input.cost;
-  if (cost && cost > 0) {
-    let tier = 0;
-    let lastLadder = Number.NEGATIVE_INFINITY;
-    let adverse = false;
-    for (let i = 0; i < f.times.length; i++) {
-      const pnl = f.pnls[i];
-      const ms = f.times[i] ?? 0;
-      if (pnl === null || pnl === undefined || ms < f.fillMs) continue;
-      const roi = (pnl / cost) * BPS;
-      const at = filmTimeAt(f, ms);
-      const next = FILM_PROFIT_TIERS_BPS[tier];
-      if (next !== undefined && roi >= next && at - lastLadder >= LADDER_GAP_MS) {
-        cues.push({ at, cue: "profit", step: tier });
-        lastLadder = at;
-        tier += 1;
-      }
-      if (!adverse && roi <= ADVERSE_BPS) {
-        cues.push({ at, cue: "adverse", step: 0 });
-        adverse = true;
-      }
-    }
-  }
-  if (f.input.exit) {
-    const out = f.runMs - FILM_LAND_MS;
-    cues.push({ at: out, cue: "close", step: 0 });
-    if (f.input.verdict) cues.push({ at: out + VERDICT_AFTER_MS, cue: f.input.verdict, step: 0 });
-  }
-  return cues.sort((a, b) => a.at - b.at);
+  const mid = (rawLo + rawHi) / 2;
+  const span = Math.max(rawHi - rawLo, Math.abs(mid) * MIN_SPAN_SHARE) || 1;
+  const pad = span * RANGE_PAD;
+  return { lo: mid - span / 2 - pad, hi: mid + span / 2 + pad, rawLo, rawHi };
 }
 
 export function filmOf(input: FilmInput): Film | null {
-  const pts = input.samples.filter((s) => Number.isFinite(s[1]));
-  // The authoritative end lands as its own sample, never written over an arbitrary last observation.
-  if (input.exit && (pts.at(-1)?.[0] ?? 0) <= input.exit.ms) {
-    pts.push([
-      input.exit.ms,
-      input.exit.price,
-      input.realised === null ? null : String(Math.round(input.realised * E6)),
-    ]);
-  }
-  const first = pts[0];
+  const exit = input.exit;
+  // Nothing recorded after the exit plays; the authoritative end lands as its own last sample.
+  let pts = input.samples.filter((s) => Number.isFinite(s[1]) && (exit === null || s[0] < exit.ms));
+  if (exit) pts.push([exit.ms, exit.price, input.realised === null ? null : String(Math.round(input.realised * E6))]);
+  const head = pts[0];
   const last = pts.at(-1);
-  if (!first || !last || pts.length < 2 || last[0] <= input.fillMs) return null;
-  const fillMs = Math.max(first[0], input.fillMs);
+  if (!head || !last || pts.length < 2 || last[0] <= input.fillMs) return null;
+  const fillMs = Math.max(head[0], input.fillMs);
   const life = last[0] - fillMs;
+  // A few seconds before the fill aren't context at this scale (a sliver at the head): the film starts at the fill.
+  if (fillMs - head[0] < life * WINDOW_SHARE * MIN_LEAD_SHARE) {
+    const inPrice = input.moments.find((m) => m.kind === "in")?.price ?? head[1];
+    pts = [[fillMs, inPrice, null], ...pts.filter((s) => s[0] > fillMs)];
+  }
+  const first = pts[0] ?? head;
   const runMs = Math.min(FILM_RUN_MAX_MS, Math.max(FILM_RUN_MIN_MS, life));
   const film: Film = {
     input,
@@ -203,22 +179,23 @@ export function filmOf(input: FilmInput): Film | null {
     pnls: pts.map((s) => (s[2] === null ? null : Number(s[2]) / E6)),
     lows: [],
     highs: [],
-    cues: [],
   };
-  // The line and a range's edges stay in view; a ride's far knock-out and cap become edge labels instead.
-  const kept = input.levels
-    .filter((l) => l.kind === "line" || l.kind === "low" || l.kind === "high")
-    .map((l) => l.price);
+  // The entry, the line and a range's edges stay in view; a ride's far knock-out and cap only show once reached.
+  const kept = input.levels.filter((l) => l.kind !== "ko" && l.kind !== "cap").map((l) => l.price);
   const frames = Math.ceil((runMs / MS) * FILM_FPS) + 1;
-  let [lo, hi] = extentBetween(film, film.fromMs, film.fillMs, kept);
+  const start = extentBetween(film, film.fromMs, film.fillMs, kept);
+  let lo = start.lo;
+  let hi = start.hi;
   for (let i = 0; i < frames; i++) {
     const at = marketAt(film, (i / FILM_FPS) * MS);
-    const [tLo, tHi] = extentBetween(film, at - film.windowMs, at, kept);
-    lo += (tLo - lo) * (tLo < lo ? GROW : SHRINK);
-    hi += (tHi - hi) * (tHi > hi ? GROW : SHRINK);
+    const t = extentBetween(film, at - film.windowMs, at, kept);
+    lo += (t.lo - lo) * (t.lo < lo ? GROW : SHRINK);
+    hi += (t.hi - hi) * (t.hi > hi ? GROW : SHRINK);
+    // Easing never leaves the head or the visible path outside the range: it grows at once to hold them.
+    lo = Math.min(lo, t.rawLo);
+    hi = Math.max(hi, t.rawHi);
     film.lows.push(lo);
     film.highs.push(hi);
   }
-  film.cues = cueTrack(film);
   return film;
 }

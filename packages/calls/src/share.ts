@@ -1,6 +1,6 @@
 /**
- * Sharing a position (R5.21; Tradash's share by way of Owarine's `ShareSheet`): the slip and its image show the PnL, the
- * ROI or both, and the post carries words tiered by the result. An open position shares what it's worth now ("Open
+ * Sharing a position (R5.21, D-352; Tradash's share by way of Owarine's `ShareSheet`): the slip and its image show the
+ * PnL with its ROI (the PnL · ROI · Both chooser is gone), and the post carries words tiered by the result. An open position shares what it's worth now ("Open
  * PnL", from the live book); a finished one its realised result over what went in (a call's stake, a ride's margin
  * and open fee). Pure.
  */
@@ -8,14 +8,6 @@ import type { CallTimeline, RideView } from "@senryo/api-client";
 import { signedUsd, usd } from "@senryo/core";
 import type { BookEntry } from "./book.ts";
 import { rideNet, type TradeSlip } from "./trade-slip.ts";
-
-export type ShareMode = "pnl" | "roi" | "both";
-
-export const SHARE_MODES: readonly { value: ShareMode; label: string }[] = [
-  { value: "pnl", label: "PnL" },
-  { value: "roi", label: "ROI" },
-  { value: "both", label: "Both" },
-];
 
 /** What a share is about: the result and what went in, e-6 (`cost` null when it isn't known). */
 export interface ShareFigure {
@@ -74,22 +66,20 @@ export function postLink(words: string, url: string): string {
 }
 
 /**
- * The slip as shared, toned by the sign: PnL shows the money, ROI the percentage, Both the money with the percentage in
- * its label ("Realised · +24.8 %") so the figure stays one line beside the stamp. "Open PnL" while open. Without a
- * cost the ROI is unknown and the money stands alone.
+ * The slip as shared, toned by the sign: the money, with the percentage in its label ("Realised · +24.8 %") so the
+ * figure stays one line beside the stamp. "Open PnL" while open. Without a cost the ROI is unknown and the money stands
+ * alone.
  */
-export function sharedSlip(slip: TradeSlip, f: ShareFigure, mode: ShareMode): TradeSlip {
+export function sharedSlip(slip: TradeSlip, f: ShareFigure): TradeSlip {
   const pct = roiPct(f);
   const base = f.open ? "Open PnL" : "Realised";
-  const money = signedUsd(f.pnl);
-  const roiOnly = mode === "roi" && pct !== null;
   return {
     ...slip,
     figure: {
-      label: mode === "both" && pct !== null ? `${base} · ${signedPct(pct)}` : base,
-      text: roiOnly ? signedPct(pct) : money,
+      label: pct !== null ? `${base} · ${signedPct(pct)}` : base,
+      text: signedUsd(f.pnl),
       tone: f.pnl > 0n ? "up" : f.pnl < 0n ? "down" : "ink",
-      money: !roiOnly,
+      money: true,
     },
   };
 }

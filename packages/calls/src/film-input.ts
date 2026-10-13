@@ -1,9 +1,9 @@
 /**
  * A receipt's replay film, built from its records (Q3, D-350; Codex direction 17 §2): the call timeline or the ride, and
- * the path this device recorded while it was open. Gives the film's input (IN at the fill, OUT at the exit with its
- * reason and time; the line and the winning zone, or the entry, knock-out and cap; the ROI denominator; the verdict) and
- * the words around it (market, identity, the figure's label, the stamp's one word, the date, the mode, three stats with
- * the exit's value held back until OUT). Null without a recording to play: "Replay unavailable".
+ * the path this device recorded while it was open. Gives the film's input (IN at the fill with what went in, OUT at the
+ * exit with how it ended and what came back; the line and the winning zone, or the entry, knock-out and cap; the ROI
+ * denominator; the verdict) and the few words around it (the market and its "↑ 10×" tag, the date, Practice, three
+ * stats with the exit's value held back until OUT). Null without a recording: "Replay unavailable".
  */
 import type { CallTimeline, RideView } from "@senryo/api-client";
 import { bandMenu, MARKETS } from "@senryo/config";
@@ -24,10 +24,10 @@ export type FilmZone = "up" | "down" | "range" | "beyond-high" | "beyond-low" | 
 
 export interface FilmCopy {
   market: string;
-  identity: string;
-  figureLabel: string;
-  stamp: readonly string[] | null;
+  /** The side and size beside the market: "↑ 10×", "↓ 5m", "Range 5m". */
+  tag: string;
   date: string;
+  /** "Practice" for test dollars, empty for real money. */
   mode: string;
   /** Three stats; the last one's value shows only once the film reaches OUT. */
   stats: readonly (readonly [string, string])[];
@@ -45,10 +45,8 @@ const num8 = (e8: bigint | null | undefined) => (e8 === null || e8 === undefined
  * formatters, and the landed result is the trade record's own figure (doubles hold 6-decimal amounts exactly).
  */
 const drawnDollars = (units: bigint | string): number => Number(units) / E6;
-const clock = (ms: number) =>
-  new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 const day = (ms: number) => new Date(ms).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
-const modeOf = (practice: boolean) => (practice ? "Practice · test dollars" : "Real · USDC");
+const modeOf = (practice: boolean) => (practice ? "Practice" : "");
 const marketName = (symbol: string) => MARKETS.find((m) => m.symbol === symbol)?.name ?? symbol;
 
 function provenanceOf(e: Episode): FilmProvenance {
@@ -57,7 +55,7 @@ function provenanceOf(e: Episode): FilmProvenance {
   return pct >= FULL ? { kind: "recorded" } : { kind: "partial", coveragePct: Math.round(pct * PERCENT) };
 }
 
-const CLOSED_BY: Record<string, string> = { "take-profit": "Take profit", "stop-loss": "Stop", trail: "Trail" };
+const CLOSED_BY: Record<string, string> = { "take-profit": "TAKE PROFIT", "stop-loss": "STOP", trail: "TRAIL" };
 
 export function callFilm(
   t: CallTimeline,
@@ -110,16 +108,11 @@ export function callFilm(
               ? "beyond-high"
               : "beyond-low";
   }
-  const reason = cashed ? (c.closedBy ? (CLOSED_BY[c.closedBy] ?? "Manual") : "Manual") : "Settled";
-  const moments: FilmMoment[] = [{ kind: "in", ms: fillMs, price: entry, caption: clock(fillMs), label: "IN" }];
+  const title = verdict === "refund" ? "REFUND" : cashed ? (CLOSED_BY[c.closedBy ?? ""] ?? "CASH OUT") : "SETTLED";
+  const moments: FilmMoment[] = [{ kind: "in", ms: fillMs, price: entry, title: "OPEN", amount: String(c.stake) }];
   if (exit) {
-    moments.push({
-      kind: "out",
-      ms: exit.ms,
-      price: exit.price,
-      caption: `${reason} · ${clock(exit.ms)}`,
-      label: cashed ? "OUT" : "OUT · Settled",
-    });
+    const back = c.pnl === null ? null : String(c.stake + BigInt(c.pnl));
+    moments.push({ kind: "out", ms: exit.ms, price: exit.price, title, amount: back });
   }
   const live = !end;
   return {
@@ -139,18 +132,7 @@ export function callFilm(
     },
     copy: {
       market: marketName(c.symbol),
-      identity: `${sideName(c.band)} · ${lane(c.cadenceSec)}`,
-      figureLabel: live ? "Open PnL" : "Realised",
-      stamp:
-        verdict === "refund"
-          ? ["Refunded"]
-          : cashed
-            ? ["Cashed out"]
-            : verdict === "win"
-              ? ["Won"]
-              : verdict
-                ? ["Lost"]
-                : null,
+      tag: `${band?.kind === "up" ? "↑" : band?.kind === "down" ? "↓" : sideName(c.band)} ${lane(c.cadenceSec)}`,
       date: day(fillMs),
       mode: modeOf(ctx.practice),
       stats: [
@@ -163,23 +145,17 @@ export function callFilm(
   };
 }
 
-const RIDE_STAMP: Record<string, string> = {
-  refunded: "Refunded",
-  knocked_out: "Knocked out",
-  capped: "Capped",
-  ended: "Ended",
-  closed: "Closed",
-};
-const RIDE_REASON: Record<string, string> = { knocked_out: "KO", capped: "Cap", ended: "Ended" };
+const RIDE_ENDED = new Set(["refunded", "knocked_out", "capped", "ended", "closed"]);
+const RIDE_REASON: Record<string, string> = { knocked_out: "KO", capped: "CAP", ended: "END", refunded: "REFUND" };
 /** The ride's fired exit kinds (contract order): take profit, stop, trail. */
-const FIRED = ["Take profit", "Stop", "Trail"] as const;
+const FIRED = ["TAKE PROFIT", "STOP", "TRAIL"] as const;
 
 export function rideFilm(r: RideView, episode: Episode | null, ctx: { practice: boolean }): ReceiptFilm | null {
   if (!episode || episode.samples.length < 2 || r.filledAt === null || r.entryE8 === null) return null;
   const unit = unitOf(r.symbol);
   const fillMs = r.filledAt * MS;
   const entry = Number(r.entryE8) / E8;
-  const ended = r.state in RIDE_STAMP;
+  const ended = RIDE_ENDED.has(r.state);
   const exitMs = ended ? Date.parse(r.updatedAt) : null;
   const exitPrice = num8(r.exitE8) ?? episode.samples.at(-1)?.[1] ?? entry;
   const exit = exitMs === null ? null : { ms: exitMs, price: exitPrice };
@@ -187,22 +163,17 @@ export function rideFilm(r: RideView, episode: Episode | null, ctx: { practice: 
   const realised = ended ? drawnDollars(net) : null;
   const margin = r.marginOpen ?? r.margin;
   const fired = r.exit?.firedKind;
-  const reason =
-    RIDE_REASON[r.state] ?? (fired !== null && fired !== undefined ? (FIRED[fired] ?? "Manual") : "Manual");
+  const title = RIDE_REASON[r.state] ?? (fired !== null && fired !== undefined ? (FIRED[fired] ?? "CLOSE") : "CLOSE");
   const levels: FilmLevel[] = [{ kind: "entry", price: entry }];
   const ko = num8(r.koE8);
   const cap = num8(r.capE8);
   if (ko !== null) levels.push({ kind: "ko", price: ko });
   if (cap !== null) levels.push({ kind: "cap", price: cap });
-  const moments: FilmMoment[] = [{ kind: "in", ms: fillMs, price: entry, caption: clock(fillMs), label: "IN" }];
-  if (exit)
-    moments.push({
-      kind: "out",
-      ms: exit.ms,
-      price: exit.price,
-      caption: `${reason} · ${clock(exit.ms)}`,
-      label: "OUT",
-    });
+  const moments: FilmMoment[] = [{ kind: "in", ms: fillMs, price: entry, title: "OPEN", amount: String(margin) }];
+  if (exit) {
+    const back = String(margin + r.openFee + net);
+    moments.push({ kind: "out", ms: exit.ms, price: exit.price, title, amount: back });
+  }
   return {
     input: {
       kind: "ride",
@@ -220,9 +191,7 @@ export function rideFilm(r: RideView, episode: Episode | null, ctx: { practice: 
     },
     copy: {
       market: marketName(r.symbol),
-      identity: `${r.isLong ? "Up" : "Down"} · Ride · ${r.leverageBps / BPS_PER_X}×`,
-      figureLabel: ended ? "Realised" : "Open PnL",
-      stamp: ended ? [RIDE_STAMP[r.state] ?? "Closed"] : null,
+      tag: `${r.isLong ? "↑" : "↓"} ${r.leverageBps / BPS_PER_X}×`,
       date: day(fillMs),
       mode: modeOf(ctx.practice),
       stats: [

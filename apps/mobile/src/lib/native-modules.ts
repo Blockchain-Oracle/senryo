@@ -7,15 +7,18 @@
 import { requireOptionalNativeModule } from "expo";
 import type * as ExpoImage from "expo-image";
 import type * as LocalAuthentication from "expo-local-authentication";
+import type * as MediaLibrary from "expo-media-library";
 import type * as Notifications from "expo-notifications";
 
 export type NotificationsModule = typeof Notifications;
 export type LocalAuthModule = typeof LocalAuthentication;
 export type ImageModule = typeof ExpoImage;
+export type MediaLibraryModule = typeof MediaLibrary;
 
 let notifications: NotificationsModule | null | undefined;
 let localAuth: LocalAuthModule | null | undefined;
 let image: ImageModule | null | undefined;
+let mediaLibrary: MediaLibraryModule | null | undefined;
 
 export function notificationsModule(): NotificationsModule | undefined {
   if (notifications === undefined) {
@@ -41,4 +44,14 @@ export function imageModule(): ImageModule | undefined {
     image = requireOptionalNativeModule("ExpoImage") ? (require("expo-image") as ImageModule) : null;
   }
   return image ?? undefined;
+}
+
+/** expo-media-library (runtime 0.5.0): saving a receipt image or a replay to Photos, add-only. */
+export function mediaLibraryModule(): MediaLibraryModule | undefined {
+  if (mediaLibrary === undefined) {
+    mediaLibrary = requireOptionalNativeModule("ExpoMediaLibraryNext")
+      ? (require("expo-media-library") as MediaLibraryModule)
+      : null;
+  }
+  return mediaLibrary ?? undefined;
 }
