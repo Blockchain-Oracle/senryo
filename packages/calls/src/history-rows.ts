@@ -6,7 +6,7 @@
  */
 import type { DuelView, EventCallView, ParlayView } from "@senryo/api-client";
 import { signedUsd, type Tone, toneOf } from "@senryo/core";
-import { DUEL_LIVE_STATES, outcomeText, seatOf } from "./duel.ts";
+import { DUEL_LIVE_STATES, type DuelPhase, outcomeText, phaseOf, seatOf } from "./duel.ts";
 
 /** Where a row opens: a receipt, or the place the thing lives (events, parlays and duels have no receipt yet). */
 export type RowOpen =
@@ -19,7 +19,8 @@ export type RowOpen =
 /** The row's mark: a market's own, or the place's nav icon (Trophy, Layers, Swords). */
 export type RowMark = { kind: "market"; symbol: string } | { kind: "event" } | { kind: "parlay" } | { kind: "duel" };
 
-export type HistoryGroup = "won" | "lost" | "refunded";
+/** Outcome groups for the filters; `open` is what's still in play (never under a filter but All). */
+export type HistoryGroup = "won" | "lost" | "refunded" | "open";
 
 /** The fields every history row has beyond a call's own (`CallRow` carries these too). */
 export interface HistoryRow {
@@ -41,7 +42,53 @@ const DUEL_CARDS = 3;
 const seconds = (iso: string) => Math.floor(Date.parse(iso) / MS);
 const groupOf = (net: bigint, refunded: boolean): HistoryGroup => (refunded ? "refunded" : net > 0n ? "won" : "lost");
 
-/** A settled event call: its question, your side, what it paid less the stake. Open ones lead the Events page. */
+/**
+ * An event call still waiting for its answer (the owner, 13 Oct: "once I place an event, it doesn't show"): on Calls
+ * with what's open, as soon as it's placed.
+ */
+export function openEventRow(c: EventCallView): HistoryRow | null {
+  if (c.status !== "open") return null;
+  return {
+    key: `event-${c.ticketId}`,
+    title: c.question,
+    stake: c.stake,
+    tag: `Event · ${c.yes ? "Yes" : "No"}`,
+    status: "Pays when answered",
+    result: "Open",
+    tone: "muted",
+    group: "open",
+    at: seconds(c.createdAt),
+    open: { kind: "event", eventId: c.eventId },
+    mark: { kind: "event" },
+  };
+}
+
+const LIVE_DUEL: Partial<Record<DuelPhase, string>> = {
+  opening: "Dealing the cards",
+  picking: "Your picks",
+  waiting: "Waiting on the other side",
+  settling: "Cards in play",
+};
+
+/** A duel under way: on Calls with what's open, until its row joins the history. */
+export function liveDuelRow(m: DuelView, me: string | undefined): HistoryRow | null {
+  if (!DUEL_LIVE_STATES.has(m.state)) return null;
+  return {
+    key: `duel-${m.matchId}`,
+    title: "Duel",
+    stake: m.pot + m.cardStake * BigInt(DUEL_CARDS),
+    tag: m.pot === 0n ? "No pot" : "Pot",
+    status: LIVE_DUEL[phaseOf(null, m, me)] ?? "Under way",
+    result: "Live",
+    tone: "muted",
+    group: "open",
+    at: seconds(m.updatedAt),
+    open: { kind: "duel" },
+    mark: { kind: "duel" },
+  };
+}
+
+/** A settled event call: its question, your side, what it paid less the stake. */
 export function eventRow(c: EventCallView): HistoryRow | null {
   if (c.status === "open") return null;
   const refunded = c.status === "refunded";

@@ -1,6 +1,6 @@
 /**
  * Calls (S5.11): the caller's record on this network (R5.20 `StatsCard`), then what's open now, live
- * (R5.3: the book's positions with their Cash out), and every call before it (the indexer), newest first, filtered
+ * (R5.3: the book's positions with their Cash out; open parlays, event calls and duels), and every call before it, newest first, filtered
  * All · Won · Lost · Refunded (21st.dev ssychui/trade-journal-table #27124: outcome words with a check or cross, never colour alone).
  * Every row opens its receipt. Pull to refresh; the user's stream keeps both lists true.
  */
@@ -111,7 +111,7 @@ export function CallsScreen() {
   const rows = filterRows(all, filter);
   // A failed history never reads as "No calls yet"; open positions stay on screen either way (P2).
   const failed = list.failed && all.length === 0;
-  const holding = book.entries.length > 0 || book.parlays > 0;
+  const holding = book.entries.length > 0 || book.parlays > 0 || list.open.length > 0;
 
   if (!owner)
     return (
@@ -145,6 +145,10 @@ export function CallsScreen() {
           <StatsCard owner={owner} />
           <PositionsList empty="none" />
           <OpenParlays owner={owner} />
+          {/* Event calls waiting for their answer and duels under way, with the rest of what's open (D1). */}
+          {list.open.map((r) => (
+            <CallRowView key={r.key} row={r} />
+          ))}
           <Segmented options={CALL_FILTERS} value={filter} onChange={setFilter} label="Show calls" />
           {failed ? (
             <Pressable accessibilityRole="button" onPress={list.retry} style={styles.more}>

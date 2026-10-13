@@ -2,7 +2,7 @@
 import type { RowMark, RowOpen } from "@senryo/calls";
 /**
  * Calls (the phone's Calls, S5.11): the record on this network (R5.20 `StatsCard`), then what's open
- * now, live (R5.3: the book's positions with Cash out), the parlays in play, and every call before it, newest first,
+ * now, live (R5.3: the book's positions with Cash out), the parlays, event calls and duels in play, and every call before it, newest first,
  * filtered All · Won · Lost · Refunded (outcome words, never colour alone; `@senryo/calls` `useCallRows`). Every row opens its receipt in the wide right drawer (`?d=call&id=…`, D-190).
  */
 import { CALL_FILTERS, type CallFilter, type CallRow, filterRows, useCallRows, useLiveBook } from "@senryo/calls/react";
@@ -99,7 +99,7 @@ export function CallsScreen() {
     );
   // A failed or loading history keeps the open positions on screen (P2); only the history part waits or says so.
   const failed = list.failed && list.rows.length === 0;
-  const holding = book.entries.length > 0 || book.parlays > 0;
+  const holding = book.entries.length > 0 || book.parlays > 0 || list.open.length > 0;
   if (list.pending && list.rows.length === 0 && !holding)
     return <p className="text-body text-text-3">Loading calls…</p>;
   if (!failed && list.rows.length === 0 && !holding)
@@ -118,6 +118,16 @@ export function CallsScreen() {
       <StatsCard owner={owner} hidden={hidden} />
       <PositionsPanel empty="none" />
       <OpenParlays owner={owner} />
+      {/* Event calls waiting for their answer and duels under way, with the rest of what's open (D1). */}
+      {list.open.length > 0 ? (
+        <ul className="flex flex-col">
+          {list.open.map((r) => (
+            <li key={r.key}>
+              <Row row={r} hidden={hidden} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <SegmentedControl
         options={CALL_FILTERS}
         label="Show calls"

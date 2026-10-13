@@ -3,7 +3,8 @@
  * history"): every finished call and ride (the indexer), event call, parlay and duel, newest first, each in the shared
  * words, grouped for the filters All · Won · Lost · Refunded (outcome words, never colour alone). A ride's result is
  * its net after fees, as its receipt says (D-327); a duel is one row for its pot and cards (`history-rows.ts`); Lucky's
- * calls say so. What's open now is the live book's (R5.3, `useLiveBook`), shown above it with its live value.
+ * calls say so. What's open now is the live book's (R5.3, `useLiveBook`), shown above it with its live value; open
+ * event calls and duels under way are `open` here, shown with it (the owner: a placed event "doesn't show").
  */
 import type { Address } from "@senryo/account";
 import type { RideView } from "@senryo/api-client";
@@ -11,7 +12,15 @@ import { lane, OPEN_STATES, sideName, signedUsd, stateWord, toneOf } from "@senr
 import { useCalls, useDuels, useEventCalls, useLuckyDraws, useParlays, useRides, useTickets } from "@senryo/query";
 import { useMemo } from "react";
 import { leverageText } from "./book-words.ts";
-import { duelRow, eventRow, type HistoryRow, isDuelCard, parlayRow } from "./history-rows.ts";
+import {
+  duelRow,
+  eventRow,
+  type HistoryRow,
+  isDuelCard,
+  liveDuelRow,
+  openEventRow,
+  parlayRow,
+} from "./history-rows.ts";
 import { rideNet } from "./trade-slip.ts";
 
 export const CALL_FILTERS = [
@@ -108,8 +117,18 @@ export function useCallRows(owner: Address | undefined) {
     ];
     return [...past, ...ended, ...others].sort((a, b) => b.at - a.at);
   }, [callPages, ticketList, rideList, eventList, parlayList, duelList, drawList, owner]);
+  const open = useMemo(
+    () =>
+      [
+        ...(eventList ?? []).flatMap((c) => withKind(openEventRow(c), "event")),
+        ...(duelList ?? []).flatMap((m) => withKind(liveDuelRow(m, owner), "duel")),
+      ].sort((a, b) => b.at - a.at),
+    [eventList, duelList, owner],
+  );
   return {
     rows,
+    /** Event calls waiting for their answer and duels under way, newest first (shown with what's open). */
+    open,
     pending: calls.isPending,
     failed: calls.isError && !calls.data,
     hasMore: calls.hasNextPage,
