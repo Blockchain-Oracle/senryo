@@ -212,6 +212,10 @@ transcripts are in `~/.claude/projects/-Users-abu-dev-hackathon-metropolis/`.
   owner's phone); history of everything (events, parlays, duels, Lucky); open event calls first; Close answers at once;
   refresh everywhere on the phone; replay sound with the silent switch on; Edit profile and the silent failures said.
   OTAs `7fdae063`, `bce96cda`; web `sha-05aed91`. The owner's iPhone is paired with this Mac (devicectl).
+  Evening: the frozen Unlock (route sheets under their own modal) fixed with an invariant; `UpdateHost` so updates land
+  without two cold starts (offers Restart); open event calls and duels on Calls; event cards say what you hold; D3/D6
+  taps and silent failures; web `LoadFailed` everywhere. OTAs `46c07976`, `8ea7db9e`, `8c91f536`, `635e7dc0`; web
+  `sha-04e1eb2` → `sha-bfe1ebe` (pending a calm box). The owner's phone still ran D0 — two restarts once.
 - **Next:** stage D's open list (its file), then P2's leftovers, then P3–P5. (proof screens on the phone, `/proof*` and `/ride` links, Calls states,
   web retry and row actions, Reduce Motion), with the web replay's end-to-end check. Then P3–P5, then Q2, Q4–Q6, R8.
 

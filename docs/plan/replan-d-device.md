@@ -33,8 +33,7 @@ account and on production web.
 
 ## D2 · Your event calls first
 - [x] Events (both apps): your open calls above the board, then the board; settled calls under "Settled"; a card
-      shows the call you already hold on it. (Done: open calls lead, settled close the page. Open: the card's own
-      "your call" line.)
+      shows the call you already hold on it ("You hold Yes · $10.00", `381d50de`).
 
 ## D3 · Every tap answers at once
 - [x] A position row's Close runs the terminal's own path (one shared close run): press cue, "Closing…" toast that
@@ -43,7 +42,7 @@ account and on production web.
       event call, parlay place, one-tap on/off, exit set, call trail, Earn take back, web test dollars.
 
 ## D4 · Everything refreshes, every failure offers Try again
-- [x] (phone: all 14 screens; web: Parlay and Warm-up Try again, `05aed918`) Phone: pull-to-refresh on Home and the 13 screens without it (receipts, Earn, Wallet, Parlay, Duel, Events,
+- [x] (phone: all 14 screens; web: Parlay and Warm-up Try again, `05aed918`; the other seven, `bfe1ebe0` — `LoadFailed`) Phone: pull-to-refresh on Home and the 13 screens without it (receipts, Earn, Wallet, Parlay, Duel, Events,
       event detail, games, search). Web: Try again on the 10 screens that only say they failed or spin forever.
 
 ## D5 · Replay sound, every time
@@ -70,11 +69,10 @@ account and on production web.
 ## Open (13 Oct, 20:40)
 - D3: done — one-tap on/off, exit set (call and ride), call trail, Earn take back, web test dollars answer at the tap
   (busy before the signing import, one at a time, a press cue; take back says it was taken back).
-- D4 web: Try again on events, event detail, arcade, proof pages, Home's balance, Duel board, StatsCard; the ride
-  receipt's wrong "isn't here" on a load failure.
+- D4 web: done (`bfe1ebe0`) — events, event page, arcade board, both proof pages, Home's balance, the duel ladder and
+  the ride receipt; StatsCard stays hidden on a failure (the history below it says so).
 - D6: sign-out, delete data, paste, arcade seed now say what happened (both apps where both have it); unlock was the
   route-sheet freeze. Open: Lucky's link (not found on the phone), the web's "unavailable" grant wording.
-- D2: an event card shows the call you hold on it.
 - Web: React #418 (HTML mismatch) — intermittent on production Events; not the stored network (fresh tabs clean with
   either), not in dev. Likely a Suspense subtree hydrating after the query cache filled. React recovers; low impact.
 - Verify on the owner's iPhone (paired; devicectl can't launch while it's locked — over Wi-Fi it times out): Unlock,
