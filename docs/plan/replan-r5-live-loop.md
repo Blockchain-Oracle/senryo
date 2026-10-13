@@ -170,12 +170,39 @@ and the morph on top of them.*
   Activity reveal cost it ~1.6 s of JS); the live book holds the price stream itself while positions are open.)*
 
 ### After the trade
-- [ ] R5.19 Replay of a settled position (≤ 12 s) from its receipt.
-- [ ] R5.20 Stats: lifetime PnL, win rate, trades, win and best streak, and volume.
-- [ ] R5.21 Share from an open or closed position: PnL / ROI / Both, with tiered X text.
-- [ ] R5.22 A web notifications inbox with marks (the phone's `SubjectMark` pattern).
+- [x] R5.19 Replay of a settled position (≤ 12 s) from its receipt. *(D-335: recorded by the live book provider on
+  the device; seen on ride 18 on the phone and ride 19 on production web.)*
+- [x] R5.20 Stats: lifetime PnL, win rate, trades, win and best streak, and volume. *(D-333: the indexer's account,
+  volume added to the stats route; api `sha-c7e0898`; seen on both apps.)*
+- [x] R5.21 Share from an open or closed position: PnL / ROI / Both, with tiered X text. *(D-334: the slip is the
+  share; open ride 18/19 at "Open PnL", closed at "Realised" on the phone and production web.)*
+- [x] R5.22 A web notifications inbox with marks (the phone's `SubjectMark` pattern). *(Bell and drawer live; seen
+  locked (an account on localhost) and empty (a guest on production); rows follow the phone's list.)*
 - [x] R5.23 *(done in P2, 12 Oct)* Market picker on both apps: categories, star favourites, Hot sort; the 24 h change and its sparkline come from
   F6–F7 (12 Oct).
 
 ## Handoff
-(written at the end of the stage)
+*(13 Oct, 04:40 UTC.)*
+
+**Shipped, both apps:** A the live book · B the terminal for calls and rides · C the moments · D feel · E after the
+trade — R5.1–R5.15, R5.17, R5.19–R5.25 (R5.16, R5.18 moved to F). Live: api + keeper `sha-c7e0898`, web
+`sha-65f4161`, phone OTA `f86226a5-7098-4314-89df-4618095b5fa1` after a Release simulator pass. Decisions D-327…D-335.
+
+**Seen working:** guest trades with no sign-in (calls 1019–1021, rides 18–19); one toast from tap to realised;
+the trade slip with stamp, Share / Save image and Post on X in PnL · ROI · Both; Open PnL from the live book; the
+phone's and the web's replays; your record (PnL, win rate, trades, streaks, volume); candles with the crosshair,
+pan and pinch; the web inbox's bell and drawer; idle CPU on the phone ~30 % (was ~190 %).
+
+**Open, for R9 or sooner:**
+- The terminal tab still costs ~1–1.6 s of JS after each switch on the phone (Yoga lays out its large tree in a
+  burst of commits right after it shows). The list tabs answer at once. Measure touch → frame with a probe and
+  lighten what the terminal re-renders on focus.
+- A ride's end reached the guest's phone ~25 s late (a poll, not the push); the web got it in ~10 s. Check that
+  the phone's `LiveHost` follows the guest's user topic (it follows only the API session's address).
+- Home's live rows keep the phone's JS thread ~45 % busy at rest.
+- On the web a ride's pending paper and its opening row show together for the ~15 s until the fill.
+- Double-tap to recentre wasn't driven on the phone (the simulator tool can't double-tap); the web's is the same
+  model.
+- Inbox rows were only seen in their locked and empty states (no result notifications for the test guest).
+- R4's knock-out row is still unseen: rides 16/17 ran to their 4-hour end (ride 16 closed $163 above its
+  knock-out).

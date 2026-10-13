@@ -119,9 +119,9 @@ leftovers.
   Open: a real account in the Duel match and the signed-in Earn hero (the owner's phone). Handoff in
   [replan-p-phone.md](replan-p-phone.md).
 
-Next: R5 — the live loop (below).
+R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.md).
 
-**R5 under way (12 Oct evening)** ([replan-r5-live-loop.md](replan-r5-live-loop.md)):
+**R5 shipped (12–13 Oct)** ([replan-r5-live-loop.md](replan-r5-live-loop.md)):
 - **A — the live book (live on the web, 12 Oct 20:20 UTC):** every open call and ride valued at up to 5 Hz the
   Tradash way (D-303: a call from its fill's fair chance — `Filled.probE6` now stored, 0030 — a ride (mark − entry) ×
   size); equity in both terminals' tops; the web's positions column, View-position pill and drawer; Home and Calls
@@ -152,9 +152,15 @@ Next: R5 — the live loop (below).
   12) — and the trade in place from tap to result (pending paper, compact card, "Just finished"). Seen on the web as a
   guest and on a Release simulator build (fixed there: the equity running off the edge, "Booked" wording, the slip's
   notches on a sheet). api + keeper `sha-17a3f2f`, web `sha-3f7e499`, phone OTA `655f245b`.
-- **D — feel (under way):** R5.15's tour live on the web, the phone's built; R5.17's shared candle model.
-- **Next in R5:** D (R5.15 phone, R5.17 candles + footer, R5.24 tab switches; one sim pass), E after the trade
-  (R5.19–R5.22).
+- **D — feel (shipped 13 Oct):** the tour on both apps; candles (archive minutes grouped, the forming candle from
+  ticks; crosshair, pan, pinch); dock tabs warmed and resting behind React's Activity — `freezeOnBlur` had the
+  phone at ~190 % CPU at rest, now ~30 % (D-332).
+- **E — after the trade (shipped 13 Oct):** your record (D-333), share with PnL · ROI · Both (D-334), replays
+  (D-335), the web inbox. api + keeper `sha-c7e0898`, web `sha-65f4161`, phone OTA `f86226a5`.
+- **Incident (≈ 03:22–03:40 local):** another project's Next build (cwf) swapped the shared box to a standstill
+  (load 347); every app on it, Senryo included, stopped answering until it finished. Deploys now go one at a time.
+- **R5 Handoff written** (open items: the terminal's ~1 s switch, a guest's late ride result on the phone, Home's
+  JS load). **Next:** R6 ⌘K and phone search.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
