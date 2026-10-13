@@ -114,7 +114,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: { typedRoutes: true, reactCompiler: true },
   runtimeVersion: { policy: "appVersion" },
   // EAS Update: a store or TestFlight build on channel `production` / `preview` (eas.json) takes JS-only fixes over
-  // the air for the same app version; a native change still needs a new build.
-  updates: { url: `https://u.expo.dev/${EAS.projectId}` },
+  // the air for the same app version; a native change still needs a new build. A build made outside EAS (a local
+  // prebuild + Xcode — the no-paid-plan route) carries its channel itself, or every check is refused ("channel-name:
+  // Required", 13 Oct) and it never takes an update; an EAS build names it from its profile.
+  updates: {
+    url: `https://u.expo.dev/${EAS.projectId}`,
+    requestHeaders: { "expo-channel-name": process.env.EAS_BUILD_PROFILE === "preview" ? "preview" : "production" },
+  },
   extra: { rpId: RP_ID, eas: { projectId: EAS.projectId } },
 });

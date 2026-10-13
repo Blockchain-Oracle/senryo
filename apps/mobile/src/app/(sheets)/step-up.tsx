@@ -1,10 +1,10 @@
 import { type AuthFailure, authFailureCopy, classifyAuthError, isSilent } from "@senryo/account";
-import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Platform, Text } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetInPlace } from "~/components/sheet/SheetHost";
+import { leaveSheetRoute } from "~/components/sheet/SheetRoute";
 import { AuthCard } from "~/features/auth/AuthCard";
 import { fire } from "~/feedback/fire";
 import { type StepUpRequest, useStepUpRequest } from "~/lib/account/step-up";
@@ -92,7 +92,7 @@ export default function StepUpSheet() {
   const request = useStepUpRequest();
   return (
     <SheetInPlace>
-      <Sheet onClose={() => router.back()} closeLabel="Close confirmation">
+      <Sheet onClose={leaveSheetRoute} closeLabel="Close confirmation">
         <Body request={request} />
       </Sheet>
     </SheetInPlace>

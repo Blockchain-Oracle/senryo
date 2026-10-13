@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetInPlace } from "~/components/sheet/SheetHost";
-import { SheetHeading } from "~/components/sheet/SheetRoute";
+import { leaveSheetRoute, SheetHeading } from "~/components/sheet/SheetRoute";
 import { NetworkPill, ReceiveCard } from "~/features/wallet/ReceiveCard";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
@@ -19,7 +19,7 @@ export default function ReceiveSheet() {
   // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
     <SheetInPlace>
-      <Sheet onClose={() => router.back()} closeLabel="Close receive">
+      <Sheet onClose={leaveSheetRoute} closeLabel="Close receive">
         <Body />
       </Sheet>
     </SheetInPlace>

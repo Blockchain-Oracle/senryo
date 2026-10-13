@@ -156,7 +156,8 @@ export const rules = [
   { id: "mobile-tight-leading", description: "lineHeight never below fontSize", check: mobileTightLeading },
   {
     id: "route-sheets-in-place",
-    description: "a phone route sheet renders in place (SheetRoute / SheetInPlace), never under its own modal",
+    description:
+      "a phone route sheet renders in place (SheetRoute / SheetInPlace) and leaves with leaveSheetRoute, never a bare back()",
     check: routeSheetsInPlace,
   },
   {

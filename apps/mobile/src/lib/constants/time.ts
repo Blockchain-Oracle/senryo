@@ -8,3 +8,5 @@ export const TOAST_PENDING_MS = 30_000;
 /** Every query is fresh for 5 s and retried once (ported defaults; S6+ tunes per key). */
 export const QUERY_STALE_MS = 5_000;
 export const QUERY_RETRIES = 1;
+/** Back after this long away, a downloaded new version applies on its own (nothing in hand to lose). */
+export const UPDATE_AWAY_MS = 1_800_000;

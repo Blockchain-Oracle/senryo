@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetInPlace } from "~/components/sheet/SheetHost";
-import { SheetHeading } from "~/components/sheet/SheetRoute";
+import { leaveSheetRoute, SheetHeading } from "~/components/sheet/SheetRoute";
 import { AuthFlowBody, showsOutcome } from "~/features/auth/AuthFlowSheet";
 import { SessionPanel } from "~/features/auth/SessionPanel";
 import { SwitchBody } from "~/features/auth/SwitchConfirm";
@@ -66,7 +66,7 @@ export default function SessionSheet() {
   // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
     <SheetInPlace>
-      <Sheet onClose={() => router.back()} closeLabel="Close session">
+      <Sheet onClose={leaveSheetRoute} closeLabel="Close session">
         <Body />
       </Sheet>
     </SheetInPlace>

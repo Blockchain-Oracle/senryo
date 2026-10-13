@@ -283,13 +283,18 @@ export function uniqueApiRoutes(rule, ctx) {
 /**
  * A phone route sheet (`app/(sheets)/*`) is a native transparent modal: its `Sheet` must render in place
  * (`SheetRoute` or `SheetInPlace`), or it draws in the root layer under its own modal — visible, but every tap lands on
- * the empty modal above it (13 Oct: the owner's Unlock "nothing is clicking").
+ * the empty modal above it (13 Oct: the owner's Unlock "nothing is clicking"). It leaves with `leaveSheetRoute`, never a
+ * bare `router.back()`: a link can open it from a cold start with nothing under it, and back() then leaves a blank stack.
  */
 export function routeSheetsInPlace(rule, ctx) {
   const findings = [];
   for (const { rel, abs } of walkFiles(ctx.root, "apps/mobile/src/app/(sheets)", [".tsx"])) {
     if (rel.endsWith("/_layout.tsx")) continue;
     const text = readText(abs);
+    // A link can open a route sheet from a cold start with nothing under it: a bare back() leaves a blank stack.
+    if (/router\.back\(\)/.test(text)) {
+      findings.push(finding(rule, "a route sheet closes with router.back() — use leaveSheetRoute", rel));
+    }
     if (!/<Sheet\b|<SheetRoute\b/.test(text)) continue;
     if (!/<SheetRoute\b|<SheetInPlace\b/.test(text)) {
       findings.push(finding(rule, "a route sheet renders its Sheet outside SheetInPlace / SheetRoute", rel));

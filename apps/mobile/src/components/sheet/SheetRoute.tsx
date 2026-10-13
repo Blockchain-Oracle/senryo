@@ -21,12 +21,20 @@ export function SheetHeading({ title, body }: { title: string; body?: string }) 
   );
 }
 
-/** A sheet route (a native transparent modal, so the sheet renders in place) with the standard heading; `router.back()`
- * once it has slid away. */
+/**
+ * Leaves a sheet route once it has slid away: back to whatever opened it, or — when a link opened it from a cold start
+ * and nothing is under it — to `/`, whose gate picks welcome, setup or Home (never a blank stack).
+ */
+export function leaveSheetRoute() {
+  if (router.canGoBack()) router.back();
+  else router.replace("/");
+}
+
+/** A sheet route (a native transparent modal, so the sheet renders in place) with the standard heading. */
 export function SheetRoute({ title, body, children }: { title: string; body?: string; children?: ReactNode }) {
   return (
     <SheetInPlace>
-      <Sheet onClose={() => router.back()} closeLabel={`Close ${title}`}>
+      <Sheet onClose={leaveSheetRoute} closeLabel={`Close ${title}`}>
         <SheetHeading title={title} {...(body ? { body } : {})} />
         {children ? <View style={styles.rows}>{children}</View> : null}
       </Sheet>

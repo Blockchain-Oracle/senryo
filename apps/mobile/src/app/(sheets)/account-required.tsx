@@ -6,7 +6,7 @@ import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetInPlace } from "~/components/sheet/SheetHost";
-import { SheetHeading } from "~/components/sheet/SheetRoute";
+import { leaveSheetRoute, SheetHeading } from "~/components/sheet/SheetRoute";
 import { AuthFlowBody, showsOutcome } from "~/features/auth/AuthFlowSheet";
 import { useAuthFlow } from "~/features/auth/useAuthFlow";
 import { pendingSetupStep } from "~/features/setup/progress";
@@ -87,7 +87,7 @@ export default function AccountRequiredSheet() {
   // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
     <SheetInPlace>
-      <Sheet onClose={() => router.back()} closeLabel="Close create account">
+      <Sheet onClose={leaveSheetRoute} closeLabel="Close create account">
         <Body />
       </Sheet>
     </SheetInPlace>

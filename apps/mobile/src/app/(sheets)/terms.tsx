@@ -5,7 +5,7 @@ import { Button } from "~/components/kit/Button";
 import { Coins, KeyRound, type SymbolIcon, TriangleAlert } from "~/components/kit/symbols";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetInPlace } from "~/components/sheet/SheetHost";
-import { SheetHeading } from "~/components/sheet/SheetRoute";
+import { leaveSheetRoute, SheetHeading } from "~/components/sheet/SheetRoute";
 import { AgreeRow } from "~/features/legal/AgreeRow";
 import { acknowledgeTerms } from "~/features/legal/acknowledged";
 import { InfoTip } from "~/features/setup/InfoTip";
@@ -51,7 +51,7 @@ export default function TermsSheet() {
   // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
     <SheetInPlace>
-      <Sheet onClose={() => router.back()} closeLabel="Close terms" dismissible={!owed}>
+      <Sheet onClose={leaveSheetRoute} closeLabel="Close terms" dismissible={!owed}>
         <Body owed={owed} settle={request?.settle} />
       </Sheet>
     </SheetInPlace>
