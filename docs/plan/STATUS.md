@@ -187,6 +187,23 @@ R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.m
     right", "Came back"; and the replay's purpose is a **downloadable branded video** like Fomo's (D-349…D-351).
   - **Next: Q3** — receipts, the replay video and the Calls record (pulled ahead of Q2; R8.10–R8.11 moved in). Then Q2,
     Q4–Q6, then R8 social.
+  - **Q3's replay shipped (13 Oct, D-350…D-353)**: the film on both apps, the whole trade from 1-minute candles. The
+    web replay is deployed but not yet run end to end on production (open → encode the MP4 → its sound): do it in P2.
+
+**Stage P — phone ↔ web parity (13 Oct afternoon; the owner: "the features have to be consistent")**
+([replan-p-parity.md](replan-p-parity.md)). Resumed on the owner's second Claude account — the old sessions'
+transcripts are in `~/.claude/projects/-Users-abu-dev-hackathon-metropolis/`.
+- **Native 0.5.0** (the replay encoder, Save to Photos): iOS build 12 `4c860dbe` FINISHED and auto-submitted to
+  TestFlight; Android versionCode 7 `c045c90d` queued on EAS's free tier with the Play internal submit. Expo's Free
+  plan is 15 iOS + 15 Android cloud builds a month (12 iOS used in October); the owner won't pay — JS ships over the
+  air, native builds go local (`eas build --local`, then `eas submit --path`; install fastlane first).
+- **P1 live** (D-354, D-355): the trade loop the same on both apps (terms gate with resume, shortfall action, unpriced
+  tap, music chip, one Close rule, unknown-market links) and the web's designed 404 "Off the chart" with "Did you mean
+  …". Web `sha-c262f43`; phone OTA group `a7cd325d-a7f4-4de5-8ffe-a024c820944f` (runtime 0.5.0: the owner's phone
+  needs 0.5.0 from TestFlight to receive it). Checked on production web and a Release simulator build; the terms
+  gate needs a signed-in phone (the simulator runs a guest).
+- **Next: P2** — receipts, positions, Calls (proof screens on the phone, `/proof*` and `/ride` links, Calls states,
+  web retry and row actions, Reduce Motion), with the web replay's end-to-end check. Then P3–P5, then Q2, Q4–Q6, R8.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
