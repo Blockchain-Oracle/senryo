@@ -1,7 +1,8 @@
 /**
  * The replay film (Q3, D-350; Codex direction 17 §2–3): one trade as plain data both apps draw and both exporters
  * encode — what you watch is what you post. `filmOf` lays the trade on a timeline once:
- * - R = clamp(life, 6 s, 12 s); the film runs R + 2 s at 30 fps;
+ * - R = 6 s + 4 s per decade of minutes of the trade's life (6 – 18 s); the film runs R + 2 s at 30 fps;
+ * - the view keeps the first moment at its left edge and widens with the film, so the last frame is the whole trade;
  * - 0–0.6 s: the market before the fill (when it's known), neutral; IN lands at 0.6 s;
  * - the fill → exit maps linearly into 0.6 s … R − 0.4 s; the price then stops at the authoritative exit while the PnL
  *   lands on the realised result; the last frame holds 2 s (it is also the poster);
@@ -17,8 +18,11 @@
 import type { ReplaySample } from "./replay.ts";
 
 export const FILM_FPS = 30;
-export const FILM_RUN_MAX_MS = 12_000;
+export const FILM_RUN_MAX_MS = 18_000;
 export const FILM_RUN_MIN_MS = 6_000;
+/** The run grows with the trade's life: 6 s plus 4 s per decade of minutes (a minute ≈ 7 s, an hour ≈ 13 s). */
+const RUN_PER_DECADE_MS = 4_000;
+const MINUTE_MS = 60_000;
 export const FILM_HOLD_MS = 2_000;
 /** Before the fill: the market's context, then IN. */
 export const FILM_LEAD_MS = 600;
@@ -26,10 +30,13 @@ export const FILM_LEAD_MS = 600;
 export const FILM_LAND_MS = 400;
 /** The head's place across the plot (Fomo's x 594 of 48–824). */
 export const FILM_HEAD_AT = 0.7;
-/** The window behind the head, as a share of the trade's life. */
-const WINDOW_SHARE = 0.45;
-/** The least market before the fill worth showing, as a share of that window. */
-const MIN_LEAD_SHARE = 0.1;
+/**
+ * The view keeps the film's first moment at its left edge and widens as the film plays, so the last frame shows the
+ * whole trade; early on it is at least this share of the whole span wide, so the line never starts stretched.
+ */
+const MIN_WINDOW_SHARE = 0.25;
+/** The least market before the fill worth showing, as a share of the trade's life (less is a sliver at the head). */
+const MIN_LEAD_SHARE = 0.02;
 const RANGE_PAD = 0.18;
 /** The least height a range gets, as a share of the price. */
 const MIN_SPAN_SHARE = 0.0005;
@@ -38,7 +45,13 @@ const SHRINK = 0.06;
 const MS = 1_000;
 const E6 = 1e6;
 
-export type FilmProvenance = { kind: "recorded" } | { kind: "partial"; coveragePct: number } | { kind: "rebuilt" };
+export type FilmProvenance =
+  | { kind: "recorded" }
+  | { kind: "partial"; coveragePct: number }
+  /** Recorded, with the stretches this device missed filled from 1-minute candles. */
+  | { kind: "filled" }
+  /** Nothing recorded here: candles only. */
+  | { kind: "rebuilt" };
 
 export interface FilmMoment {
   kind: "in" | "out";
@@ -82,13 +95,19 @@ export interface Film {
   fromMs: number;
   fillMs: number;
   toMs: number;
-  windowMs: number;
+  /** The view's least width (ms); it is `now − fromMs` once that is wider (`windowAt`). */
+  minWindowMs: number;
   times: number[];
   prices: number[];
   /** PnL in dollars at each sample (null where unknown). */
   pnls: (number | null)[];
   lows: number[];
   highs: number[];
+}
+
+/** How much market the view spans at market time `now`: from the film's first moment, never under its least width. */
+export function windowAt(f: Pick<Film, "fromMs" | "minWindowMs">, now: number): number {
+  return Math.max(f.minWindowMs, now - f.fromMs);
 }
 
 /** Market time at film time `t` (ms). */
@@ -160,12 +179,15 @@ export function filmOf(input: FilmInput): Film | null {
   const fillMs = Math.max(head[0], input.fillMs);
   const life = last[0] - fillMs;
   // A few seconds before the fill aren't context at this scale (a sliver at the head): the film starts at the fill.
-  if (fillMs - head[0] < life * WINDOW_SHARE * MIN_LEAD_SHARE) {
+  if (fillMs - head[0] < life * MIN_LEAD_SHARE) {
     const inPrice = input.moments.find((m) => m.kind === "in")?.price ?? head[1];
     pts = [[fillMs, inPrice, null], ...pts.filter((s) => s[0] > fillMs)];
   }
   const first = pts[0] ?? head;
-  const runMs = Math.min(FILM_RUN_MAX_MS, Math.max(FILM_RUN_MIN_MS, life));
+  const runMs = Math.min(
+    FILM_RUN_MAX_MS,
+    Math.max(FILM_RUN_MIN_MS, FILM_RUN_MIN_MS + RUN_PER_DECADE_MS * Math.log10(life / MINUTE_MS + 1)),
+  );
   const film: Film = {
     input,
     runMs,
@@ -173,7 +195,7 @@ export function filmOf(input: FilmInput): Film | null {
     fromMs: first[0],
     fillMs,
     toMs: last[0],
-    windowMs: Math.max(MS, life * WINDOW_SHARE),
+    minWindowMs: Math.max(MS, (last[0] - first[0]) * MIN_WINDOW_SHARE),
     times: pts.map((s) => s[0]),
     prices: pts.map((s) => s[1]),
     pnls: pts.map((s) => (s[2] === null ? null : Number(s[2]) / E6)),
@@ -188,7 +210,7 @@ export function filmOf(input: FilmInput): Film | null {
   let hi = start.hi;
   for (let i = 0; i < frames; i++) {
     const at = marketAt(film, (i / FILM_FPS) * MS);
-    const t = extentBetween(film, at - film.windowMs, at, kept);
+    const t = extentBetween(film, at - windowAt(film, at), at, kept);
     lo += (t.lo - lo) * (t.lo < lo ? GROW : SHRINK);
     hi += (t.hi - hi) * (t.hi > hi ? GROW : SHRINK);
     // Easing never leaves the head or the visible path outside the range: it grows at once to hold them.

@@ -3,7 +3,7 @@
  * stamp, margin, leverage, size, entry and exit, knock-out and cap, fees, what came back, and the transaction that
  * ended it — with its row of actions (D-352): Replay or Live, Post, Share, Save.
  */
-import { rideFigure, rideFilm, rideKey, rideLink, rideSlip } from "@senryo/calls";
+import { rideFigure, rideFilm, rideKey, rideLink, rideSlip, rideSpan } from "@senryo/calls";
 import { useRide } from "@senryo/query";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -62,7 +62,10 @@ export function RideReceipt({ rideId }: { rideId: bigint }) {
                 chainId={network.chainId}
                 bookKey={rideKey(r.rideId)}
                 url={slip.url}
-                build={(episode) => rideFilm(r, episode, { practice: network.modeLabel === "Practice" })}
+                span={rideSpan(r)}
+                build={(episode, candles) =>
+                  rideFilm(r, episode, { practice: network.modeLabel === "Practice", candles })
+                }
               />
             }
           />

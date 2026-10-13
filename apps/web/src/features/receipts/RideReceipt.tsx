@@ -5,7 +5,7 @@
  * Live for an open one (the terminal), Post, Share, Save.
  * `publicView` is the shared link's page: no account needed.
  */
-import { rideFigure, rideFilm, rideKey, rideLink, rideSlip } from "@senryo/calls";
+import { rideFigure, rideFilm, rideKey, rideLink, rideSlip, rideSpan } from "@senryo/calls";
 import { type ChainId, networkOf } from "@senryo/config";
 import { useRide } from "@senryo/query";
 import { Activity } from "lucide-react";
@@ -52,7 +52,10 @@ export function RideReceipt({
       chainId={chainId}
       bookKey={rideKey(r.rideId)}
       url={slip.url}
-      build={(episode) => rideFilm(r, episode, { practice: networkOf(chainId).modeLabel === "Practice" })}
+      span={rideSpan(r)}
+      build={(episode, candles) =>
+        rideFilm(r, episode, { practice: networkOf(chainId).modeLabel === "Practice", candles })
+      }
     />
   );
   return (

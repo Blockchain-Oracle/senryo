@@ -9,6 +9,7 @@ import type { CallTimeline, RideView } from "@senryo/api-client";
 import { bandMenu, MARKETS } from "@senryo/config";
 import { bandEdgesE8, lane, priceText, sideName, usd } from "@senryo/core";
 import type { FilmInput, FilmLevel, FilmMoment, FilmProvenance } from "./film.ts";
+import { type FilledHistory, type FilmCandle, fillHistory } from "./film-history.ts";
 import { unitOf } from "./markets.ts";
 import { coverage, type Episode, replayable } from "./replay.ts";
 import { rideNet } from "./trade-slip.ts";
@@ -49,10 +50,27 @@ const day = (ms: number) => new Date(ms).toLocaleDateString([], { day: "numeric"
 const modeOf = (practice: boolean) => (practice ? "Practice" : "");
 const marketName = (symbol: string) => MARKETS.find((m) => m.symbol === symbol)?.name ?? symbol;
 
-function provenanceOf(e: Episode): FilmProvenance {
+function provenanceOf(e: Episode | null, h: FilledHistory): FilmProvenance {
+  if (h.rebuilt || !e) return { kind: "rebuilt" };
+  if (h.filled) return { kind: "filled" };
   if (!replayable(e)) return { kind: "partial", coveragePct: Math.round(coverage(e) * PERCENT) };
   const pct = coverage(e);
   return pct >= FULL ? { kind: "recorded" } : { kind: "partial", coveragePct: Math.round(pct * PERCENT) };
+}
+
+/** Market before the fill worth replaying: a tenth of the trade's life, a minute to ten. */
+const LEAD = { share: 0.1, minMs: 60_000, maxMs: 600_000 } as const;
+const leadOf = (lifeMs: number) => Math.min(LEAD.maxMs, Math.max(LEAD.minMs, lifeMs * LEAD.share));
+
+/** What this device recorded, filled from 1-minute candles over the fill's lead-in to the exit (now while open). */
+function historyOf(
+  episode: Episode | null,
+  candles: readonly FilmCandle[] | undefined,
+  fillMs: number,
+  endMs: number,
+  pnlAt: (price: number) => string | null,
+): FilledHistory {
+  return fillHistory(episode?.samples ?? [], candles ?? [], fillMs - leadOf(endMs - fillMs), endMs, pnlAt);
 }
 
 const CLOSED_BY: Record<string, string> = { "take-profit": "TAKE PROFIT", "stop-loss": "STOP", trail: "TRAIL" };
@@ -60,18 +78,21 @@ const CLOSED_BY: Record<string, string> = { "take-profit": "TAKE PROFIT", "stop-
 export function callFilm(
   t: CallTimeline,
   episode: Episode | null,
-  ctx: { practice: boolean; kE8?: bigint | undefined },
+  ctx: { practice: boolean; kE8?: bigint | undefined; candles?: readonly FilmCandle[] | undefined; nowMs?: number },
 ): ReceiptFilm | null {
   const c = t.call;
   const filled = t.events.find((e) => e.kind === "filled");
-  if (!episode || episode.samples.length < 2 || !filled || c.entryE8 === null) return null;
+  if (!filled || c.entryE8 === null) return null;
   const unit = unitOf(c.symbol);
   const fillMs = filled.at * MS;
   const entry = Number(c.entryE8) / E8;
   const cashed = t.events.findLast((e) => e.kind === "cashed out");
   const settled = t.events.findLast((e) => e.kind.startsWith("settled") || e.kind === "refunded");
   const end = cashed ?? settled;
-  const lastPrice = episode.samples.at(-1)?.[1] ?? entry;
+  // A call's mark-to-market isn't a function of the price alone: filled points carry no PnL, the figure holds.
+  const history = historyOf(episode, ctx.candles, fillMs, end ? end.at * MS : (ctx.nowMs ?? Date.now()), () => null);
+  if (history.samples.length < 2) return null;
+  const lastPrice = history.samples.at(-1)?.[1] ?? entry;
   const exit = end ? { ms: end.at * MS, price: num8(end.priceE8) ?? lastPrice } : null;
   const realised = c.pnl === null ? null : drawnDollars(c.pnl);
   const verdict =
@@ -120,7 +141,7 @@ export function callFilm(
       kind: "call",
       symbol: c.symbol,
       up: band?.kind === "up" ? true : band?.kind === "down" ? false : null,
-      samples: episode.samples,
+      samples: history.samples,
       fillMs,
       exit,
       cost: drawnDollars(c.stake),
@@ -128,7 +149,7 @@ export function callFilm(
       verdict,
       moments,
       levels,
-      provenance: provenanceOf(episode),
+      provenance: provenanceOf(episode, history),
     },
     copy: {
       market: marketName(c.symbol),
@@ -150,18 +171,29 @@ const RIDE_REASON: Record<string, string> = { knocked_out: "KO", capped: "CAP", 
 /** The ride's fired exit kinds (contract order): take profit, stop, trail. */
 const FIRED = ["TAKE PROFIT", "STOP", "TRAIL"] as const;
 
-export function rideFilm(r: RideView, episode: Episode | null, ctx: { practice: boolean }): ReceiptFilm | null {
-  if (!episode || episode.samples.length < 2 || r.filledAt === null || r.entryE8 === null) return null;
+export function rideFilm(
+  r: RideView,
+  episode: Episode | null,
+  ctx: { practice: boolean; candles?: readonly FilmCandle[] | undefined; nowMs?: number },
+): ReceiptFilm | null {
+  if (r.filledAt === null || r.entryE8 === null) return null;
   const unit = unitOf(r.symbol);
   const fillMs = r.filledAt * MS;
   const entry = Number(r.entryE8) / E8;
   const ended = RIDE_ENDED.has(r.state);
   const exitMs = ended ? Date.parse(r.updatedAt) : null;
-  const exitPrice = num8(r.exitE8) ?? episode.samples.at(-1)?.[1] ?? entry;
+  const marginOpen = r.marginOpen ?? r.margin;
+  // A ride's value moves with the price: a filled point carries its PnL before fees (display only).
+  const side = r.isLong ? 1 : -1;
+  const exposure = drawnDollars(marginOpen) * (r.leverageBps / BPS_PER_X);
+  const pnlAt = (price: number) => String(Math.round(exposure * (price / entry - 1) * side * E6));
+  const history = historyOf(episode, ctx.candles, fillMs, exitMs ?? ctx.nowMs ?? Date.now(), pnlAt);
+  if (history.samples.length < 2) return null;
+  const exitPrice = num8(r.exitE8) ?? history.samples.at(-1)?.[1] ?? entry;
   const exit = exitMs === null ? null : { ms: exitMs, price: exitPrice };
   const net = rideNet(r);
   const realised = ended ? drawnDollars(net) : null;
-  const margin = r.marginOpen ?? r.margin;
+  const margin = marginOpen;
   const fired = r.exit?.firedKind;
   const title = RIDE_REASON[r.state] ?? (fired !== null && fired !== undefined ? (FIRED[fired] ?? "CLOSE") : "CLOSE");
   const levels: FilmLevel[] = [{ kind: "entry", price: entry }];
@@ -179,7 +211,7 @@ export function rideFilm(r: RideView, episode: Episode | null, ctx: { practice: 
       kind: "ride",
       symbol: r.symbol,
       up: r.isLong,
-      samples: episode.samples,
+      samples: history.samples,
       fillMs,
       exit,
       cost: drawnDollars(margin + r.openFee),
@@ -187,7 +219,7 @@ export function rideFilm(r: RideView, episode: Episode | null, ctx: { practice: 
       verdict: r.state === "refunded" ? "refund" : !ended ? null : net >= 0n ? "win" : "loss",
       moments,
       levels,
-      provenance: provenanceOf(episode),
+      provenance: provenanceOf(episode, history),
     },
     copy: {
       market: marketName(r.symbol),
@@ -201,5 +233,30 @@ export function rideFilm(r: RideView, episode: Episode | null, ctx: { practice: 
       ],
       zone: null,
     },
+  };
+}
+
+/** What a ride's replay asks the candles for (unix seconds): its lead-in before the fill to its exit, or now. */
+export function rideSpan(r: RideView, nowMs = Date.now()): { symbol: string; fromSec: number; toSec: number } {
+  const fillMs = (r.filledAt ?? nowMs / MS) * MS;
+  const endMs = RIDE_ENDED.has(r.state) ? Date.parse(r.updatedAt) : nowMs;
+  return {
+    symbol: r.symbol,
+    fromSec: Math.floor((fillMs - leadOf(endMs - fillMs)) / MS),
+    toSec: Math.ceil(endMs / MS),
+  };
+}
+
+/** What a call's replay asks the candles for (unix seconds): its lead-in before the fill to its end, or now. */
+export function callSpan(t: CallTimeline, nowMs = Date.now()): { symbol: string; fromSec: number; toSec: number } {
+  const fillMs = (t.events.find((e) => e.kind === "filled")?.at ?? nowMs / MS) * MS;
+  const end = t.events.findLast(
+    (e) => e.kind === "cashed out" || e.kind.startsWith("settled") || e.kind === "refunded",
+  );
+  const endMs = end ? end.at * MS : nowMs;
+  return {
+    symbol: t.call.symbol,
+    fromSec: Math.floor((fillMs - leadOf(endMs - fillMs)) / MS),
+    toSec: Math.ceil(endMs / MS),
   };
 }

@@ -236,6 +236,23 @@ const LOOKBACK_DAYS = 4;
 const CANDLE_LOOKBACK_SEC = LOOKBACK_DAYS * DAY_SEC;
 
 /**
+ * A trade's 1-minute candles over its own span (D-353), for its replay's gaps: fetched once when the replay opens
+ * (a closed range never changes), off while `enabled` is false.
+ */
+export function useCandleRange(symbol: string, fromSec: number, toSec: number, enabled: boolean) {
+  const env = useQueryEnv();
+  const from = Math.floor(fromSec / MINUTE_SEC) * MINUTE_SEC;
+  const to = Math.ceil(toSec / MINUTE_SEC) * MINUTE_SEC;
+  const query = useQuery({
+    queryKey: ["prices", "candles", symbol, from, to] as const,
+    queryFn: ({ signal }) => env.api.call(candlesRoute, { query: { symbol, from, to } }, { signal }),
+    enabled,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  return fromQuery(query);
+}
+
+/**
  * A market's 1-minute candles over the last four days, from Senryo's archive, for a closed market's chart. The range
  * is fixed when the hook mounts (a closed market's candles don't change); off while `enabled` is false.
  */

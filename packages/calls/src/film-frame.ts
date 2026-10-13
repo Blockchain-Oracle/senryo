@@ -18,6 +18,7 @@ import {
   filmTimeAt,
   marketAt,
   sampleIndex,
+  windowAt,
 } from "./film.ts";
 
 const MS = 1_000;
@@ -91,8 +92,9 @@ export function frameAt(f: Film, t: number): FilmFrame {
   const hi = f.highs[frameIdx] ?? 1;
   const yOf = (p: number) => (hi > lo ? (p - lo) / (hi - lo) : MID);
   const now = marketAt(f, runT);
-  const left = now - f.windowMs;
-  const xOf = (ms: number) => ((ms - left) / f.windowMs) * FILM_HEAD_AT;
+  const span = windowAt(f, now);
+  const left = now - span;
+  const xOf = (ms: number) => ((ms - left) / span) * FILM_HEAD_AT;
   const i = sampleIndex(f, now);
   const next = Math.min(f.times.length - 1, i + 1);
   const t0 = f.times[i] ?? now;
@@ -100,9 +102,23 @@ export function frameAt(f: Film, t: number): FilmFrame {
   const k = t1 > t0 ? clamp01((now - t0) / (t1 - t0)) : 0;
   const headPrice = (f.prices[i] ?? 0) + ((f.prices[next] ?? 0) - (f.prices[i] ?? 0)) * k;
   const a = sampleIndex(f, left);
+  // A long history thins to its buckets' lows and highs in time order, so every up and down survives the squeeze.
   const step = Math.max(1, Math.ceil((i - a + 1) / MAX_POINTS));
   const path: FramePoint[] = [];
-  for (let j = a; j <= i; j += step) path.push({ x: xOf(f.times[j] ?? now), y: yOf(f.prices[j] ?? headPrice) });
+  const at = (j: number) => ({ x: xOf(f.times[j] ?? now), y: yOf(f.prices[j] ?? headPrice) });
+  for (let j = a; j <= i; j += step) {
+    if (step === 1) {
+      path.push(at(j));
+      continue;
+    }
+    let lo = j;
+    let hi = j;
+    for (let k = j; k < Math.min(i + 1, j + step); k++) {
+      if ((f.prices[k] ?? 0) < (f.prices[lo] ?? 0)) lo = k;
+      if ((f.prices[k] ?? 0) > (f.prices[hi] ?? 0)) hi = k;
+    }
+    for (const k of lo <= hi ? [lo, hi] : [hi, lo]) path.push(at(k));
+  }
   path.push({ x: FILM_HEAD_AT, y: yOf(headPrice) });
 
   // The figures step at most every 100 ms; in the last 0.4 s of the run they land on the realised result.
@@ -115,7 +131,7 @@ export function frameAt(f: Film, t: number): FilmFrame {
   const labels: { y: number; price: number }[] = [];
   const labelStep = niceStep(hi - lo);
   for (let p = Math.ceil(lo / labelStep) * labelStep; p <= hi; p += labelStep) labels.push({ y: yOf(p), price: p });
-  const tickStep = TICK_STEPS_MS.find((s) => f.windowMs / s <= TIME_TICKS) ?? TICK_STEPS_MS.at(-1) ?? MS;
+  const tickStep = TICK_STEPS_MS.find((s) => span / s <= TIME_TICKS) ?? TICK_STEPS_MS.at(-1) ?? MS;
   const ticks: { x: number; ms: number }[] = [];
   for (let ms = Math.ceil(left / tickStep) * tickStep; ms <= now; ms += tickStep) ticks.push({ x: xOf(ms), ms });
 

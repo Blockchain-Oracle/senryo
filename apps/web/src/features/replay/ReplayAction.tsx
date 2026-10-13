@@ -1,13 +1,15 @@
 "use client";
 /**
- * The receipt's way into its replay (Q3, D-352; Codex direction 18 §A; the phone's `ReplayAction`): the row's first
- * circle, "Replay" on the brand colour. Clicking it builds the film from the receipt's records once and opens the
- * Replay modal. When this browser didn't record the trade the circle keeps its place, dimmed, and says so.
+ * The receipt's way into its replay (Q3, D-352, D-353; Codex direction 18 §A; the phone's `ReplayAction`): the row's
+ * first circle, "Replay" on the brand colour. Clicking it fetches the trade's 1-minute candles (the circle spins),
+ * fills whatever this browser didn't record — or rebuilds a trade it never saw — builds the film once and opens the
+ * Replay modal. If the candles can't be had, what was recorded still plays.
  */
-import type { Episode, ReceiptFilm } from "@senryo/calls";
+import type { Episode, FilmCandle, ReceiptFilm } from "@senryo/calls";
 import { useEpisode } from "@senryo/calls/react";
+import { useCandleRange } from "@senryo/query";
 import { Play } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActionCircle } from "@/components/ui/action-circle";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
@@ -17,28 +19,39 @@ export function ReplayAction({
   chainId,
   bookKey,
   url,
+  span,
   build,
 }: {
   chainId: number;
   bookKey: string;
   url: string;
-  build: (episode: Episode) => ReceiptFilm | null;
+  /** The trade's market and its span (unix seconds, the lead-in included) for the candles. */
+  span: { symbol: string; fromSec: number; toSec: number };
+  build: (episode: Episode | null, candles: readonly FilmCandle[] | undefined) => ReceiptFilm | null;
 }) {
   const episode = useEpisode(chainId, bookKey);
+  const [wanted, setWanted] = useState(false);
   const [film, setFilm] = useState<ReceiptFilm | null>(null);
-  const recorded = episode !== null && episode !== undefined && episode.samples.length >= 2;
+  const candles = useCandleRange(span.symbol, span.fromSec, span.toSec, wanted);
+  const settled = "value" in candles || candles.status === "failed";
+  useEffect(() => {
+    if (!wanted || !settled) return;
+    setWanted(false);
+    const built = build(episode ?? null, "value" in candles ? candles.value.candles : undefined);
+    if (!built) return void notify({ title: "Replay unavailable" });
+    fire("tick", { cue: "sheetOpen" });
+    setFilm(built);
+  }, [wanted, settled, candles, episode, build]);
   return (
     <>
       <ActionCircle
         icon={<Play aria-hidden className="fill-current" />}
         label="Replay"
         primary
-        {...(recorded ? {} : { reason: "Not recorded" })}
+        busy={wanted}
         onClick={() => {
-          const built = episode ? build(episode) : null;
-          if (!built) return notify({ title: "Replay unavailable" });
-          fire("tick", { cue: "sheetOpen" });
-          setFilm(built);
+          fire("tick", { cue: "tap" });
+          setWanted(true);
         }}
       />
       {film ? <ReplayModal film={film} url={url} open onOpenChange={(o) => !o && setFilm(null)} /> : null}

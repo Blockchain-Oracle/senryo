@@ -5,7 +5,7 @@
  * then every step with its transaction and the window's proof, all in the shared words (`@senryo/calls`). A live call
  * opens the terminal. `publicView` is the shared link's page: no account needed.
  */
-import { callFigure, callFilm, callKey, callLink, callSlip, receiptSteps } from "@senryo/calls";
+import { callFigure, callFilm, callKey, callLink, callSlip, callSpan, receiptSteps } from "@senryo/calls";
 import { type ChainId, networkOf } from "@senryo/config";
 import { sideName } from "@senryo/core";
 import { historyKeys, useCallTimeline, useWindowProof } from "@senryo/query";
@@ -75,7 +75,8 @@ export function CallReceipt({
                   chainId={chainId}
                   bookKey={callKey(c.ticketId)}
                   url={slip.url}
-                  build={(episode) => callFilm(t, episode, { practice, kE8 })}
+                  span={callSpan(t)}
+                  build={(episode, candles) => callFilm(t, episode, { practice, kE8, candles })}
                 />
               )
             }

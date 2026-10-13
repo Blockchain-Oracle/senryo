@@ -3,7 +3,7 @@
  * stamp, the facts, the proof; with its row of actions, D-352), then every step with its transaction and the
  * window's proof. A live call opens the terminal.
  */
-import { callFigure, callFilm, callKey, callLink, callSlip, receiptSteps } from "@senryo/calls";
+import { callFigure, callFilm, callKey, callLink, callSlip, callSpan, receiptSteps } from "@senryo/calls";
 import { sideName } from "@senryo/core";
 import { useCallTimeline, useQueryEnv, useWindowProof } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
@@ -79,7 +79,8 @@ export function CallReceipt({ ticketId }: { ticketId: bigint }) {
                 chainId={network.chainId}
                 bookKey={callKey(c.ticketId)}
                 url={slip.url}
-                build={(episode) => callFilm(t, episode, { practice, kE8 })}
+                span={callSpan(t)}
+                build={(episode, candles) => callFilm(t, episode, { practice, kE8, candles })}
               />
             }
           />

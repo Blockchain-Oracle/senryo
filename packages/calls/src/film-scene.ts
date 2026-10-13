@@ -147,9 +147,11 @@ function drawn(f: FilmFrame, symbol: string, hidden: boolean): DrawnFrame {
     provenanceText:
       f.provenance.kind === "partial"
         ? `Partial recording · ${f.provenance.coveragePct}%`
-        : f.provenance.kind === "rebuilt"
-          ? "Rebuilt from 1-minute prices"
-          : null,
+        : f.provenance.kind === "filled"
+          ? "Gaps from 1-minute prices"
+          : f.provenance.kind === "rebuilt"
+            ? "From 1-minute prices"
+            : null,
   };
 }
 

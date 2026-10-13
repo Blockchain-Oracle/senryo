@@ -709,3 +709,14 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   The receipt's PnL·ROI·Both control and its three full-width buttons are replaced by one row of action circles:
   Replay ▶, Post (X's own mark), Share, Save. Supersedes D-350's "outcome and IN / OUT captions" and direction 17's
   action stack.
+- **D-353** 2026-10-13 · **A replay shows the whole trade (the owner: an hour-long trade's replay "feels
+  incomplete").**
+  - The recording a device keeps is filled from Senryo's own 1-minute candles wherever it has gaps (labelled "Gaps
+    from 1-minute prices"). A trade the device never saw is rebuilt from candles alone ("From 1-minute prices"), so
+    every finished trade has a Replay.
+  - The view keeps the film's first moment at its left edge and widens as it plays, so the last frame is the whole
+    trade from open to close.
+  - The run grows with the trade's life: 6 s plus 4 s per decade of minutes, up to 18 s, plus the 2 s hold.
+  - A long path thins to its buckets' lows and highs, so its ups and downs survive.
+
+  Supersedes direction 17's fixed 45 % scrolling window and the 12 s cap.
