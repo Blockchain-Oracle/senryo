@@ -15,6 +15,7 @@ import { celebrate } from "@/lib/feedback/celebrate";
 import { CountdownRing } from "../terminal/CountdownRing";
 import { RaceRow, Slots, WarmCard } from "./WarmUpParts";
 import "./games.css";
+import { useCatalogRetry } from "@/lib/use-catalog-retry";
 
 const REVEAL_MS = 220;
 const DEAL_GAP_MS = 90;
@@ -51,6 +52,7 @@ function useReveal(w: WarmUpFlow): number {
 }
 
 export function WarmUpScreen() {
+  const markets = useCatalogRetry();
   const w = useWarmUp();
   const r = w.round;
   const now = useServerSeconds();
@@ -103,11 +105,17 @@ export function WarmUpScreen() {
           )}
           <button
             type="button"
-            disabled={!w.ready}
-            onClick={deal}
+            disabled={!w.ready && !markets.failed}
+            onClick={!w.ready && markets.failed ? markets.retry : deal}
             className="press-lift h-14 rounded-xl border-b-4 border-up-fill-edge bg-up-fill px-8 font-semibold text-button text-on-direction-fill focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
           >
-            {!w.ready ? "Loading markets…" : finished ? "Deal again" : "Deal the cards"}
+            {!w.ready
+              ? markets.failed
+                ? "Markets didn't load · Try again"
+                : "Loading markets…"
+              : finished
+                ? "Deal again"
+                : "Deal the cards"}
           </button>
         </section>
       ) : null}

@@ -23,6 +23,7 @@ import { useServerSeconds } from "@senryo/live/react";
 import { useCatalog } from "@senryo/query";
 import { ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { SlideOver } from "@/components/ui/drawer";
 import { SearchField } from "@/components/ui/search-field";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -30,6 +31,7 @@ import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
+import { useCatalogRetry } from "@/lib/use-catalog-retry";
 import { cn } from "@/lib/utils";
 import { flyMark } from "./fly";
 import { LegSockets } from "./LegSockets";
@@ -43,6 +45,7 @@ const FALLBACK_SYMBOL = "BTC";
 const FALLBACK_LANE = 60 as CadenceSec;
 
 export function ParlayScreen() {
+  const catalogLoad = useCatalogRetry();
   const account = useAccount();
   const catalog = useCatalog();
   const now = useServerSeconds();
@@ -158,9 +161,20 @@ export function ParlayScreen() {
             </div>
           </search>
           {board.groups.length === 0 && board.closed.length === 0 ? (
-            <p className="py-6 text-center text-body text-text-3">
-              {query ? "No markets match that search." : "Markets are loading."}
-            </p>
+            <div className="flex flex-col items-center gap-3 py-6">
+              <p className="text-center text-body text-text-3">
+                {query
+                  ? "No markets match that search."
+                  : catalogLoad.failed
+                    ? "Markets didn't load."
+                    : "Markets are loading."}
+              </p>
+              {!query && catalogLoad.failed ? (
+                <Button variant="secondary" onClick={catalogLoad.retry}>
+                  Try again
+                </Button>
+              ) : null}
+            </div>
           ) : null}
           {board.groups.map((g) => (
             <section key={g.label} aria-label={g.label} className="flex flex-col gap-2">
