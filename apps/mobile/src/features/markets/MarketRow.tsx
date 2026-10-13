@@ -1,6 +1,7 @@
 /**
- * A market as a row (F7, research 10 §2; Markets, Home and the market sheet): the real mark, symbol and "name · the
- * 1-minute window's countdown while it trades, its session in words while it doesn't" (`@senryo/calls` `marketLine`),
+ * A market as a row (F7, research 10 §2; Markets, Home and the market sheet): the real mark, symbol and its name with
+ * the market's own note ("Closes 17:00 ET", "Opens 09:30 ET") — the shared 1-minute countdown is said once above the
+ * list (`RoundClock`, D-348),
  * the day's sparkline against the price 24 hours ago (D-319), the live price — the last print, muted, when closed —
  * with its 24 h change, then a chevron, or a star in the market sheet (P2). The current market is highlighted.
  */
@@ -55,9 +56,11 @@ export function MarketRow({
     >
       <EntityMark id={marketId(symbol)} size={MARK} decorative />
       <View style={styles.text}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{symbol}</Text>
+        <Text style={[TYPE.rowTitle, { color: color.ink }]} numberOfLines={1}>
+          {symbol}
+        </Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]} numberOfLines={1}>
-          {name} · {line.text}
+          {line.note ? `${name} · ${line.note}` : name}
         </Text>
       </View>
       {day ? <Sparkline symbol={symbol} day={day} /> : null}

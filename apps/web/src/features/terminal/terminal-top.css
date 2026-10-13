@@ -69,8 +69,20 @@
 /* The market's last 24 hours beside its chip (F7). */
 .terminal-day {
   display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 8px;
+}
+/* The "24h" goes first when the row is crowded; under 360 px the change goes too, so equity never clips. */
+@media (max-width: 480px) {
+  .terminal-day-suffix {
+    display: none;
+  }
+}
+@media (max-width: 360px) {
+  .terminal-day {
+    display: none;
+  }
 }
 @media (max-width: 420px) {
   .terminal-day .block {

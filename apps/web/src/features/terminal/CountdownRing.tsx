@@ -3,6 +3,8 @@
  * The selected lane's ring (the phone's `CountdownRing`): how much of the window's calling time is gone, on the
  * server's seconds, gliding between them; it turns the warning colour for the last ten seconds.
  */
+import "./countdown-ring.css";
+
 const SIZE = 18;
 const STROKE = 2;
 const R = (SIZE - STROKE) / 2;

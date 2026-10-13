@@ -47,3 +47,30 @@ export function useMarketLanes(symbol: string): { line: MarketLine; lanes: LaneC
   const cadences = marketOf(symbol)?.cadences ?? CADENCES_SEC;
   return { line, lanes: line.trading ? laneCells(now, cadences) : null };
 }
+
+/** The one round clock a list of markets shows (D-348): the first lane's window — closing, or reopening after it. */
+export interface RoundClock {
+  label: string;
+  open: boolean;
+  /** "closes in 0:42" or "reopens in 0:19". */
+  text: string;
+  /** The window's start and calls' close (unix seconds), for a CountdownRing. */
+  fromSec: number;
+  toSec: number;
+  nowSec: number;
+}
+
+export function useRoundClock(): RoundClock {
+  const now = useServerSeconds();
+  const cadence = CADENCES_SEC[0];
+  const w = windowCountdown(now, cadence, LOCKOUT_SEC);
+  const start = now - (cadence - w.endsIn);
+  return {
+    label: laneLabel(cadence),
+    open: w.open,
+    text: w.open ? `closes in ${clockText(w.closesIn)}` : `reopens in ${clockText(w.endsIn)}`,
+    fromSec: start,
+    toSec: start + cadence - LOCKOUT_SEC,
+    nowSec: now,
+  };
+}

@@ -20,6 +20,7 @@ import { fire } from "~/feedback/fire";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SHEET_SHAPE, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { MarketRow } from "../markets/MarketRow";
+import { RoundClock } from "../markets/RoundClock";
 
 interface PickerMarket {
   symbol: string;
@@ -82,6 +83,7 @@ function Picker({
         label="Show markets"
         bleed={SHEET_SHAPE.padding}
       />
+      <RoundClock />
       {sections.length === 0 ? (
         <Text style={[TYPE.body, styles.empty, { color: color.inkMuted }]}>{emptyLine(filter)}</Text>
       ) : (

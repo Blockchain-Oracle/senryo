@@ -19,12 +19,15 @@ export function ChangeChip({
   day,
   suffix = true,
   className,
+  suffixClassName,
 }: {
   symbol: string;
   day: DayLine;
   /** " · 24h" after the figure (rows say it once in their header instead). */
   suffix?: boolean;
   className?: string;
+  /** Lets a crowded row drop the "24h" at narrow widths. */
+  suffixClassName?: string;
 }) {
   const nowE8 = useSampledPrice(symbol, TAIL_MS);
   if (nowE8 === undefined) return null;
@@ -32,13 +35,13 @@ export function ChangeChip({
   return (
     <span
       className={cn(
-        "tnum inline-flex h-6 items-center rounded-md px-1.5 font-semibold text-label",
+        "tnum inline-flex h-6 items-center whitespace-nowrap rounded-md px-1.5 font-semibold text-label",
         TONE_CLASS[c.tone],
         className,
       )}
     >
       {c.text}
-      {suffix ? <span className="ml-1 font-medium opacity-70">24h</span> : null}
+      {suffix ? <span className={cn("ml-1 font-medium opacity-70", suffixClassName)}>24h</span> : null}
     </span>
   );
 }

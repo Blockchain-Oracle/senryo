@@ -114,6 +114,11 @@ export interface MarketLine {
   /** False while the market is closed, paused or not yet on chain: no calls. */
   trading: boolean;
   text: string;
+  /**
+   * The market's own words without the shared 1-minute countdown (D-348: a list shows one round clock, not one per
+   * row): its session ("Closes 17:00 ET") while it trades, or why it doesn't; null when there's nothing to add.
+   */
+  note: string | null;
   /** No price source at all (D-310): read-only until it returns, unlike a session that opens on its own. */
   paused: boolean;
   /**
@@ -136,12 +141,21 @@ export function marketLine(
   pausedText: string | null = null,
   listed = true,
 ): MarketLine {
-  if (pausedText) return { trading: false, text: pausedText, paused: true, unlisted: false };
-  if (!session.open) return { trading: false, text: session.text ?? "Closed", paused: false, unlisted: false };
-  if (!listed) return { trading: false, text: NOT_LISTED_TEXT, paused: false, unlisted: true };
+  if (pausedText) return { trading: false, text: pausedText, note: pausedText, paused: true, unlisted: false };
+  if (!session.open) {
+    const text = session.text ?? "Closed";
+    return { trading: false, text, note: text, paused: false, unlisted: false };
+  }
+  if (!listed) return { trading: false, text: NOT_LISTED_TEXT, note: NOT_LISTED_TEXT, paused: false, unlisted: true };
   const w = windowCountdown(nowSec, FIRST_CADENCE, LOCKOUT_SEC);
   const lane = `${laneLabel(FIRST_CADENCE)} ${w.open ? `closes in ${clockText(w.closesIn)}` : `calls reopen in ${clockText(w.endsIn)}`}`;
-  return { trading: true, text: session.text ? `${lane} · ${session.text}` : lane, paused: false, unlisted: false };
+  return {
+    trading: true,
+    text: session.text ? `${lane} · ${session.text}` : lane,
+    note: session.text ?? null,
+    paused: false,
+    unlisted: false,
+  };
 }
 
 /** The panel a market shows when it takes no calls: closed for its session, paused, or not on chain yet. */

@@ -91,8 +91,20 @@
   color: var(--text-3);
 }
 .terminal-balance {
+  flex-shrink: 0;
   color: var(--foreground);
   font: 600 17px / 24px var(--shell-font);
+  white-space: nowrap;
+}
+/* A phone-width top row: tighter gaps, the asset chip may shrink, and nothing wraps or runs off the edge. */
+@media (max-width: 480px) {
+  .terminal-top-row {
+    gap: 6px;
+  }
+  .terminal-asset {
+    min-width: 0;
+    padding-right: 10px;
+  }
 }
 .terminal-lanes {
   display: flex;
@@ -119,17 +131,6 @@
 .terminal-lane:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
-}
-.countdown-track {
-  stroke: var(--text-3);
-  opacity: 0.5;
-}
-.countdown-arc {
-  stroke: currentColor;
-  transition: stroke-dashoffset 1s linear;
-}
-.countdown-arc[data-warn] {
-  stroke: var(--warn);
 }
 
 /* ── the crowd ────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -313,9 +314,6 @@
   .reaction-callout[data-leaving] {
     animation-duration: 150ms;
     animation-timing-function: linear;
-  }
-  .countdown-arc {
-    transition: none;
   }
 }
 

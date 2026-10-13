@@ -2,7 +2,9 @@
 // The line above the stage (Mitoshi S22 `TopLine.tsx`, from Baku/roy-chain's top line): on phones the seal (the rail is
 // hidden there); Back below a place; search (⌘K / Ctrl+K or /, R6 — the terminal has its own trigger, this line hides
 // there but its keys still work), the `?` keyboard map, the mode capsule, the live health, the balance with its eye,
-// the theme, the bell (R5.22) and the account. The palette and the keyboard map are lazy islands.
+// the theme, the bell (R5.22) and the account. At phone width it is the phone's header: the seal, search, the mode
+// capsule and the bell (the balance lives on Home and in the terminal; theme and session in Settings), so nothing
+// overlaps. The palette and the keyboard map are lazy islands.
 import { ids } from "@senryo/identity";
 import { ChevronLeft, CircleHelp, Search } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -16,7 +18,7 @@ import { tapFeedback } from "@/lib/feedback";
 import { useModCombo } from "@/lib/platform";
 import { openSearch, toggleSearch, useSearchOpen } from "@/lib/shell/search-open";
 import { BellButton } from "./BellButton";
-import { BalanceChip, HealthChip } from "./chips";
+import { BalanceChip, HealthChip, ModeCapsule } from "./chips";
 import { ModeSwitch } from "./mode-switch";
 import { backOf } from "./nav";
 import { shortcutBlocked } from "./Rail";
@@ -97,8 +99,9 @@ export function TopLine() {
       </div>
       <div className="topline-tools">
         <HealthChip className="topline-health" />
-        <ModeSwitch className="topline-mode" />
-        <BalanceChip className="topline-balance" />
+        <ModeSwitch className="topline-mode topline-wide" />
+        <ModeCapsule className="topline-mode topline-narrow" />
+        <BalanceChip className="topline-balance topline-wide" />
         <button
           type="button"
           className="topline-icon topline-keys"
@@ -111,9 +114,13 @@ export function TopLine() {
         >
           <CircleHelp aria-hidden />
         </button>
-        <ThemeToggle />
+        <span className="topline-wide contents">
+          <ThemeToggle />
+        </span>
         <BellButton />
-        <SessionChip />
+        <span className="topline-wide contents">
+          <SessionChip />
+        </span>
       </div>
       {palette !== null ? <SearchPalette /> : null}
       {keys !== null ? <ShortcutsModal open={keys} onOpenChange={setKeys} /> : null}

@@ -99,16 +99,18 @@ export function TerminalTop({
         {day ? (
           <span className="terminal-day" title="The last 24 hours">
             <Sparkline symbol={t.symbol} day={day} className="h-6 w-16 sm:h-6 sm:w-16" />
-            <ChangeChip symbol={t.symbol} day={day} />
+            <ChangeChip symbol={t.symbol} day={day} suffixClassName="terminal-day-suffix" />
           </span>
         ) : null}
         <SearchButton />
         <Equity cash={t.balance} />
       </div>
       {ride ? (
-        <p className="terminal-ride-life tnum" aria-live="polite">
-          {rideEndsIn ?? "Up to 4 h a ride · no funding"}
-        </p>
+        rideEndsIn ? (
+          <p className="terminal-ride-life tnum" aria-live="polite">
+            {rideEndsIn}
+          </p>
+        ) : null
       ) : (
         <div className="terminal-lanes" role="tablist" aria-label="Window length">
           {CADENCES_SEC.map((c) => {

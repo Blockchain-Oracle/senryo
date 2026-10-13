@@ -1,0 +1,17 @@
+/* The countdown ring (terminal lanes, market lists' round clock): its own styles, so it draws on any page. */
+.countdown-track {
+  stroke: var(--text-3);
+  opacity: 0.5;
+}
+.countdown-arc {
+  stroke: currentColor;
+  transition: stroke-dashoffset 1s linear;
+}
+.countdown-arc[data-warn] {
+  stroke: var(--warn);
+}
+@media (prefers-reduced-motion: reduce) {
+  .countdown-arc {
+    transition: none;
+  }
+}

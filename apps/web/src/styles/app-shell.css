@@ -343,3 +343,15 @@
     display: none;
   }
 }
+/* The full switch, the balance, the theme and the session above phone width; the capsule alone below it. */
+.topline-narrow {
+  display: none;
+}
+@media (max-width: 560px) {
+  .topline-wide {
+    display: none !important;
+  }
+  .topline-narrow {
+    display: inline-flex;
+  }
+}

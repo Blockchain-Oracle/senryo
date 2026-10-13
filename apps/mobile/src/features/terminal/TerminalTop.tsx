@@ -105,9 +105,11 @@ export function TerminalTop({
         </View>
       </View>
       {ride ? (
-        <Text style={[TYPE.caption, styles.life, { color: color.inkMuted }]} accessibilityLiveRegion="polite">
-          {rideEndsIn ?? "Up to 4 h a ride · no funding"}
-        </Text>
+        rideEndsIn ? (
+          <Text style={[TYPE.caption, styles.life, { color: color.inkMuted }]} accessibilityLiveRegion="polite">
+            {rideEndsIn}
+          </Text>
+        ) : null
       ) : (
         <View style={styles.lanes} accessibilityRole="tablist">
           {CADENCES_SEC.map((c) => {

@@ -20,6 +20,7 @@ import { fire } from "~/feedback/fire";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SPACE, TYPE, useTheme } from "~/theme";
 import { MarketRow } from "./MarketRow";
+import { RoundClock } from "./RoundClock";
 
 export function MarketsScreen() {
   const { color } = useTheme();
@@ -43,6 +44,7 @@ export function MarketsScreen() {
         <View style={styles.page}>
           <SearchField value={query} onChange={setQuery} />
           <Segmented options={MARKET_FILTERS} value={filter} onChange={setFilter} label="Show markets" />
+          <RoundClock />
           {groups.length === 0 ? (
             <Text style={[TYPE.caption, { color: color.inkMuted }]}>Nothing matches “{query}”.</Text>
           ) : (

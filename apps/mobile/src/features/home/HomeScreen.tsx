@@ -22,6 +22,7 @@ import { EmptyState } from "~/components/kit/states";
 import { useDockInset } from "~/components/shell/dock-context";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
 import { MarketRow } from "~/features/markets/MarketRow";
+import { RoundClock } from "~/features/markets/RoundClock";
 import { NotificationsBell } from "~/features/notifications/NotificationsBell";
 import { PositionsList } from "~/features/positions/PositionsList";
 import { SectionHeading } from "~/features/profile/SectionHeading";
@@ -81,6 +82,7 @@ export function HomeScreen() {
   const markets = (heading: string) => (
     <View style={styles.section}>
       <SectionHeading>{heading}</SectionHeading>
+      <RoundClock />
       {"value" in catalog ? (
         catalog.value.markets.map((m) => (
           <MarketRow key={m.symbol} symbol={m.symbol} name={m.name} onOpen={() => watch(m.symbol)} />

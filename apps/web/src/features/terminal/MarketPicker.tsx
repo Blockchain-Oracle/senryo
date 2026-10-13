@@ -11,6 +11,7 @@ import { useCatalog } from "@senryo/query";
 import { useMemo, useState } from "react";
 import { SearchField } from "@/components/ui/search-field";
 import { MarketRow, MarketsFailed, MarketsLoading } from "@/features/markets/MarketList";
+import { RoundClock } from "@/features/markets/RoundClock";
 import { fire } from "@/lib/feedback";
 import { TERMINAL_STORAGE, useStoredString } from "@/lib/terminal/stored";
 
@@ -62,6 +63,7 @@ function Picker({
             </button>
           ))}
         </div>
+        <RoundClock />
       </search>
       {sections.length === 0 ? (
         <p className="py-6 text-center text-body text-text-3">{emptyLine(filter)}</p>

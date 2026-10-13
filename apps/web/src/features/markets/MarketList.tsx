@@ -2,8 +2,8 @@
 /**
  * Every market on this network in its kind groups (S7.3): a search, the kind filter (the Calls filter's segmented
  * control), and per row (F7, research 10 §2: mark → symbol/name → 24 h graph → price and change → chevron, 72 px) the
- * real mark, symbol, the 1-minute window's countdown while the market trades or its session in words while it doesn't
- * ("Opens Mon 09:30 ET", `@senryo/calls` `marketLine`), the day's sparkline against the price 24 hours ago (D-319),
+ * real mark, symbol, its name with the market's own note ("Opens Mon 09:30 ET"; the shared 1-minute countdown is said
+ * once above the list, `RoundClock`, D-348), the day's sparkline against the price 24 hours ago (D-319),
  * the price as it streams — the last print, dimmed, when closed — and its 24 h change. The whole row tints and lifts
  * on hover and opens the terminal. Prices re-render at most once a frame; the graph and change once a second.
  */
@@ -24,6 +24,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Sparkline } from "@/components/ui/sparkline";
 import { tapFeedback } from "@/lib/feedback";
 import { cn } from "@/lib/utils";
+import { RoundClock } from "./RoundClock";
 
 const MARK = 40;
 const SKELETON_ROWS = 3;
@@ -66,13 +67,13 @@ export function MarketRow({
     >
       <EntityMark id={marketId(symbol)} size={MARK} decorative />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="font-semibold text-row-title">{symbol}</span>
-        <span className="truncate text-meta text-text-3">
-          {name} · {line.text}
-        </span>
+        <span className="truncate font-semibold text-row-title">{symbol}</span>
+        <span className="truncate text-meta text-text-3">{line.note ? `${name} · ${line.note}` : name}</span>
       </span>
-      {/* In a narrow picker (under 24 rem) the name keeps the room the graph would take. */}
-      {day ? <Sparkline symbol={symbol} day={day} className={cn("shrink-0", star && "@max-sm:hidden")} /> : null}
+      {/* On a phone-width page, or in a narrow picker (under 24 rem), the name keeps the room the graph would take. */}
+      {day ? (
+        <Sparkline symbol={symbol} day={day} className={cn("shrink-0 max-sm:hidden", star && "@max-sm:hidden")} />
+      ) : null}
       <span className="flex min-w-24 flex-col items-end gap-1">
         <span className={cn("tnum font-semibold text-row-price", !line.trading && "text-text-3")}>{price}</span>
         {day ? <ChangeChip symbol={symbol} day={day} suffix={false} /> : null}
@@ -146,6 +147,7 @@ export function MarketList() {
           onValueChange={(v) => setFilter(v as MarketFilter)}
           className="self-start"
         />
+        <RoundClock />
       </search>
       {groups.length === 0 ? (
         <p className="text-meta text-text-3">Nothing matches “{query}”.</p>
