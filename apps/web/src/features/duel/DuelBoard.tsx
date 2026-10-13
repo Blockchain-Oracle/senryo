@@ -9,6 +9,7 @@ import { DUEL_LIVE_STATES, opponentOf, outcomeText } from "@senryo/calls";
 import { shortAddress } from "@senryo/core";
 import { useDuelLadder, useProfile } from "@senryo/query";
 import { Avatar } from "@/components/identity/avatar";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { cn } from "@/lib/utils";
 
 const LADDER_ROWS = 10;
@@ -24,6 +25,7 @@ export function DuelLadder({ me, rating }: { me: string | undefined; rating: Due
   const mine = me?.toLowerCase();
   const myRank = players.findIndex((p) => p.owner.toLowerCase() === mine);
   const pinned = rating && rating.played > 0 && (myRank < 0 || myRank >= LADDER_ROWS);
+  if (ladder.status === "failed") return <LoadFailed text="The ladder didn't load" />;
   if (top.length === 0) return null;
   return (
     <section aria-label="Duel ladder" className="flex flex-col gap-1">

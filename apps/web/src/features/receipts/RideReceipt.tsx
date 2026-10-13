@@ -11,6 +11,7 @@ import { useRide } from "@senryo/query";
 import { Activity } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { ActionCircle } from "@/components/ui/action-circle";
 import { Button } from "@/components/ui/button";
 import { ReplayAction } from "@/features/replay/ReplayAction";
@@ -28,12 +29,12 @@ export function RideReceipt({
   const router = useRouter();
   const ride = useRide(rideId, chainId);
   if (!("value" in ride)) {
-    return (
-      <p className="text-body text-text-3">
-        {ride.status === "failed"
-          ? "This ride isn't here. It appears a few seconds after it opens."
-          : "Loading the ride…"}
-      </p>
+    // A failed read says so with Try again — a new ride appears a few seconds after it opens (D4: never "isn't here"
+    // for what only didn't load).
+    return ride.status === "failed" ? (
+      <LoadFailed text="This ride didn't load · a new one appears a few seconds after it opens" />
+    ) : (
+      <p className="text-body text-text-3">Loading the ride…</p>
     );
   }
   const r = ride.value.ride;

@@ -7,6 +7,7 @@
 import { useLiveBook } from "@senryo/calls/react";
 import { useMarketAccount } from "@senryo/query";
 import Link from "next/link";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { Button } from "@/components/ui/button";
 import { MarketList, tradeHref } from "@/features/markets/MarketList";
 import { PositionsPanel } from "@/features/positions/PositionsPanel";
@@ -45,6 +46,7 @@ export function HomeScreen() {
           <span className="tnum font-semibold text-display-balance">
             {masked("value" in account ? money(account.value.balance) : "—", hidden)}
           </span>
+          {account.status === "failed" ? <LoadFailed text="Your balance didn't load" /> : null}
           <OneTapChip />
         </section>
       ) : (

@@ -9,6 +9,7 @@ import { eventPhase, leagueName, splitEventCalls } from "@senryo/calls";
 import { useEventsFlow } from "@senryo/calls/react";
 import { EVENTS, LEAGUES } from "@senryo/config";
 import { useServerSeconds } from "@senryo/live/react";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
@@ -53,9 +54,7 @@ export function EventsScreen() {
             Events aren't open yet.
           </p>
         ) : flow.boardStatus === "failed" ? (
-          <p className="text-body text-text-2" role="status">
-            The board can't be read right now · it retries on its own
-          </p>
+          <LoadFailed text="The board can't be read right now" />
         ) : open.length === 0 && rest.length === 0 ? (
           <p className="text-body text-text-2" role="status">
             {flow.boardStatus === "unknown"

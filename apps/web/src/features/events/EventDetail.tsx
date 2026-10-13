@@ -24,6 +24,7 @@ import { useEventDetail } from "@senryo/query";
 import { Check, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
@@ -57,7 +58,7 @@ export function EventDetail() {
   if (!valid) return <p className="text-body text-text-2">This link doesn't name a question.</p>;
   if (detail.status === "unknown") return <p className="text-body text-text-2">Reading the question…</p>;
   if (detail.status === "failed") {
-    return <p className="text-body text-text-2">This question can't be read right now · it retries on its own</p>;
+    return <LoadFailed text="This question can't be read right now" />;
   }
   const { event: e, committee, answers } = detail.value;
   const byMember = new Map(answers.map((a) => [a.member.toLowerCase(), a]));

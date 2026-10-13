@@ -9,13 +9,14 @@ import { marketId } from "@senryo/identity";
 import { useWindows } from "@senryo/query";
 import Link from "next/link";
 import { EntityMark } from "@/components/identity/entity-mark";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { PublicQuery } from "@/components/public/public-query";
 
 const MARK = 32;
 
 function Feed({ chainId, market }: { chainId: number; market: string | undefined }) {
   const q = useWindows(market);
-  if (q.status === "error") return <p className="text-body text-text-2">The proof feed didn't load.</p>;
+  if (q.status === "error") return <LoadFailed text="The proof feed didn't load" />;
   const windows = q.data?.pages.flatMap((p) => p.windows) ?? [];
   if (q.status === "pending") return <div aria-busy className="h-64 animate-pulse rounded-lg bg-skeleton" />;
   if (windows.length === 0) {

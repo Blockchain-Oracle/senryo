@@ -15,6 +15,7 @@ import { useWindowProof } from "@senryo/query";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { EntityMark } from "@/components/identity/entity-mark";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { PublicQuery } from "@/components/public/public-query";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +85,7 @@ function PrintBlock(props: { label: string; p: WindowProof; print: ProofPrint | 
 
 function Window({ windowId, chainId }: { windowId: `0x${string}`; chainId: ChainId }) {
   const proof = useWindowProof(windowId);
-  if (proof.status === "failed") return <p className="text-body text-text-2">This window's proof didn't load.</p>;
+  if (proof.status === "failed") return <LoadFailed text="This window's proof didn't load" />;
   if (!("value" in proof)) return <div aria-busy className="h-64 animate-pulse rounded-lg bg-skeleton" />;
   const p = proof.value;
   if (!p) return <p className="text-body text-text-2">Nobody called in this window, so it has no proof.</p>;

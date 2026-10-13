@@ -21,6 +21,7 @@ import { Info, Play } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { useCallback, useState } from "react";
 import { Avatar } from "@/components/identity/avatar";
+import { LoadFailed } from "@/components/kit/load-failed";
 import { useAccount } from "@/lib/account/provider";
 import { fire, music, sound } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
@@ -175,7 +176,7 @@ export function ArcadeScreen({
       <section aria-label="Board" className="flex flex-col gap-2 lg:sticky lg:top-6 lg:self-start">
         <h2 className="font-semibold text-section-title">Board</h2>
         {board.status === "failed" ? (
-          <p className="text-body text-text-2">The board can't be read right now · it retries on its own</p>
+          <LoadFailed text="The board can't be read right now" />
         ) : players.length === 0 ? (
           <p className="text-body text-text-2">
             {board.status === "unknown" ? "Reading the board…" : "No ranked runs yet. Be the first."}
