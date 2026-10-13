@@ -1,5 +1,5 @@
 /**
- * Calls (S5.11): the caller's record on this network (result, calls, won, best streak), then what's open now, live
+ * Calls (S5.11): the caller's record on this network (R5.20 `StatsCard`), then what's open now, live
  * (R5.3: the book's positions with their Cash out), and every call before it (the indexer), newest first, filtered
  * All · Won · Lost · Refunded (21st.dev ssychui/trade-journal-table #27124: outcome words with a check or cross, never colour alone).
  * Every row opens its receipt. Pull to refresh; the user's stream keeps both lists true.
@@ -13,9 +13,8 @@ import {
   useCallRows,
   useLiveBook,
 } from "@senryo/calls/react";
-import { lane, sideName, signedUsd, toneOf, usd } from "@senryo/core";
+import { lane, sideName, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
-import { useCallerStats } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
@@ -32,6 +31,7 @@ import { useAppTrader } from "~/lib/account/guest";
 import { accountRequiredRoute } from "~/lib/constants/routes";
 import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
+import { StatsCard } from "./StatsCard";
 
 const MARK = 36;
 
@@ -60,28 +60,6 @@ function CallRowView({ row }: { row: Row }) {
       </View>
       <Text style={[TYPE.rowTitle, { color: tint }]}>{result}</Text>
     </Pressable>
-  );
-}
-
-/** The record on this network, one line: the result first, then the counts. */
-function Record({ owner }: { owner: `0x${string}` }) {
-  const { color } = useTheme();
-  const stats = useCallerStats(owner);
-  const [hidden] = useHideBalances();
-  if (!("value" in stats) || stats.value.calls === 0) return null;
-  const s = stats.value;
-  const pnl = BigInt(s.pnl);
-  const total = masked(signedUsd(pnl), hidden);
-  const tone = toneOf(pnl);
-  return (
-    <View style={styles.record} accessible accessibilityLabel={`Result ${total}, ${s.calls} calls, ${s.wins} won`}>
-      <Text style={[TYPE.title, { color: tone === "up" ? color.up : tone === "down" ? color.down : color.ink }]}>
-        {total}
-      </Text>
-      <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-        {s.calls} {s.calls === 1 ? "call" : "calls"} · {s.wins} won · {s.losses} lost · best streak {s.bestStreak}
-      </Text>
-    </View>
   );
 }
 
@@ -120,7 +98,7 @@ export function CallsScreen() {
         />
       ) : (
         <View style={styles.body}>
-          <Record owner={owner} />
+          <StatsCard owner={owner} />
           <PositionsList empty="none" />
           <OpenParlays owner={owner} />
           <Segmented options={CALL_FILTERS} value={filter} onChange={setFilter} label="Show calls" />
@@ -150,7 +128,6 @@ export function CallsScreen() {
 
 const styles = StyleSheet.create({
   body: { gap: SPACE.sm },
-  record: { gap: SPACE.xxs, paddingBottom: SPACE.sm },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: SIZE.touch + SPACE.lg },
   text: { flex: 1 },
   none: { paddingVertical: SPACE.lg, textAlign: "center" },

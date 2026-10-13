@@ -1,13 +1,12 @@
 "use client";
 /**
- * Calls (the phone's Calls, S5.11): the record on this network (result, calls, won, lost, best streak), then what's open
+ * Calls (the phone's Calls, S5.11): the record on this network (R5.20 `StatsCard`), then what's open
  * now, live (R5.3: the book's positions with Cash out), the parlays in play, and every call before it, newest first,
  * filtered All · Won · Lost · Refunded (outcome words, never colour alone; `@senryo/calls` `useCallRows`). Every row opens its receipt in the wide right drawer (`?d=call&id=…`, D-190).
  */
 import { CALL_FILTERS, type CallFilter, type CallRow, filterRows, useCallRows, useLiveBook } from "@senryo/calls/react";
-import { lane, sideName, signedUsd, toneOf, usd } from "@senryo/core";
+import { lane, sideName, usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
-import { useCallerStats } from "@senryo/query";
 import Link from "next/link";
 import { useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
@@ -20,6 +19,7 @@ import { tapFeedback } from "@/lib/feedback";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { cn } from "@/lib/utils";
+import { StatsCard } from "./StatsCard";
 
 const MARK = 36;
 const TONE = { up: "text-up", down: "text-down", muted: "text-text-2" } as const;
@@ -45,21 +45,6 @@ function Row({ row, hidden }: { row: CallRow; hidden: boolean }) {
       </span>
       <span className={cn("tnum font-semibold text-row-title", TONE[row.tone])}>{masked(row.result, hidden)}</span>
     </button>
-  );
-}
-
-function Record({ owner, hidden }: { owner: `0x${string}`; hidden: boolean }) {
-  const stats = useCallerStats(owner);
-  if (!("value" in stats) || stats.value.calls === 0) return null;
-  const s = stats.value;
-  const pnl = BigInt(s.pnl);
-  return (
-    <section aria-label="Your record" className="flex flex-col gap-1">
-      <p className={cn("tnum font-semibold text-title", TONE[toneOf(pnl)])}>{masked(signedUsd(pnl), hidden)}</p>
-      <p className="text-meta text-text-3">
-        {s.calls} {s.calls === 1 ? "call" : "calls"} · {s.wins} won · {s.losses} lost · best streak {s.bestStreak}
-      </p>
-    </section>
   );
 }
 
@@ -94,7 +79,7 @@ export function CallsScreen() {
   const rows = filterRows(list.rows, filter);
   return (
     <div className="flex flex-col gap-5">
-      <Record owner={owner} hidden={hidden} />
+      <StatsCard owner={owner} hidden={hidden} />
       <PositionsPanel empty="none" />
       <OpenParlays owner={owner} />
       <SegmentedControl

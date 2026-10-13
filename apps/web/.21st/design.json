@@ -688,6 +688,15 @@
         "use": "the trade slip (R5.11, D-331): its structure — header with the folio, the result, the facts, a dashed perforation and the stub; searched \"receipt ticket perforated\" (22433 Admit One Ticket, 31044 Engraved Ticket, 6492, 31601 Receipt Printer) and \"stamp seal\" (3417 Stamp); retokenized to the receipt tokens, the barcode replaced by the QR, the confetti and card logo dropped, the stamp from Kinpaku per Codex direction 12",
         "path": "src/features/receipts/TradeSlip.tsx",
         "retokenized": true
+      },
+      {
+        "name": "stats-band",
+        "source": "21st:kuratlielia/stats-band",
+        "id": 35089,
+        "url": "https://21st.dev/@kuratlielia/components/stats-band",
+        "use": "your record (R5.20): its plain layout — the numbers on the page with a quiet label above each, no boxes — as a 3 × 2 grid of Owarine's six stats (lifetime PnL, win rate, trades, win streak, best streak, volume); searched \"trading stats grid lifetime pnl win rate streak volume\" and \"stats grid\" (29195 Stats Grid, 29196 Numbers Stats Grid, 25311 Stats Bento, 35089); the count-up, sparklines and world map dropped, retokenized to the numeric type role",
+        "path": "src/features/calls/StatsCard.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -855,6 +864,11 @@
         "id": 22433,
         "name": "Admit One Ticket",
         "verdict": "rejected: an event-ticket look with a torn edge; the slip keeps a receipt's ledger"
+      },
+      {
+        "id": 29196,
+        "name": "Numbers Stats Grid",
+        "verdict": "rejected: a landing page's coloured bordered boxes with icons and an illustration; the record keeps numbers on the page"
       }
     ],
     "removed": [

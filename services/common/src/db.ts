@@ -30,6 +30,7 @@ import * as m0028 from "../migrations/0028_arcade_engine.ts";
 import * as m0029 from "../migrations/0029_health_minutes.ts";
 import * as m0030 from "../migrations/0030_fill_prob.ts";
 import * as m0031 from "../migrations/0031_ride_receipts.ts";
+import * as m0032 from "../migrations/0032_ride_margin_backfill.ts";
 import type { Logger } from "./logger.ts";
 
 /**
@@ -97,6 +98,7 @@ export const MIGRATIONS: ReadonlyArray<{ id: string; sql: string }> = [
   m0029,
   m0030,
   m0031,
+  m0032,
 ];
 
 /** Session-level advisory lock key so three containers starting together migrate once. */

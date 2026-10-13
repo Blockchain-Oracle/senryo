@@ -122,6 +122,7 @@ export function registerHistoryRoutes(app: HttpServer, ctx: ApiContext): void {
       refunds: a?.refunds ?? 0,
       streak: a?.streak ?? 0,
       bestStreak: a?.bestStreak ?? 0,
+      volume: a?.volume ?? 0n,
     });
   });
 }

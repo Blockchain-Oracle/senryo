@@ -33,6 +33,7 @@ export * from "./sigma.ts";
 export * from "./sign.ts";
 export * from "./spark.ts";
 export * from "./stack-words.ts";
+export * from "./stats.ts";
 export * from "./status-words.ts";
 export * from "./suggest-handle.ts";
 export * from "./toast-run.ts";

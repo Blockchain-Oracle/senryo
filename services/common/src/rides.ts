@@ -29,7 +29,7 @@ export interface RideRow {
   is_long: boolean;
   state: string;
   margin: bigint;
-  /** The margin it opened with (null for rides that closed a part before 0031). */
+  /** The margin it opened with (0031, and 0032 from the signed opens; null only for a ride with no signed open). */
   margin_open: bigint | null;
   leverage_bps: number;
   open_fee: bigint;

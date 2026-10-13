@@ -217,5 +217,7 @@ export const callerStatsRoute = defineRoute({
     refunds: z.int(),
     streak: z.int(),
     bestStreak: z.int(),
+    /** What was traded (R5.20): each call's stake and each ride's notional (its opening margin × leverage). */
+    volume: uintCodec.default(0n),
   }),
 });

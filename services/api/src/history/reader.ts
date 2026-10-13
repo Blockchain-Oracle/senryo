@@ -1,5 +1,5 @@
 import { WINDOW_CALLS_MAX } from "@senryo/api-client";
-import { type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
+import { BPS, type Hex, seriesIdOf, seriesOf } from "@senryo/chain";
 import { type ChainId, feedIdOf, marketsOn, TESTNET_CHAIN_ID } from "@senryo/config";
 import { type Db, nowSec } from "@senryo/service-common";
 import {
@@ -214,10 +214,18 @@ export class IndexerReader {
         refunds: number;
         streak: number;
         bestStreak: number;
+        volume: bigint;
       }[]
-    >`SELECT calls, staked::int8 AS staked, returned::int8 AS returned, pnl::int8 AS pnl, wins, losses, refunds, streak,
-             "bestStreak"
-      FROM ${this.t("Account")} WHERE id = ${`${chainId}_${owner.toLowerCase()}`}`;
+    >`SELECT a.calls, a.staked::int8 AS staked, a.returned::int8 AS returned, a.pnl::int8 AS pnl, a.wins, a.losses,
+             a.refunds, a.streak, a."bestStreak",
+             (a.staked - COALESCE(r.stakes, 0) + COALESCE(r.notional, 0))::int8 AS volume
+      FROM ${this.t("Account")} a
+      LEFT JOIN LATERAL (
+        SELECT sum(x."originalMargin" + x."openFee") AS stakes,
+               sum(x."originalMargin" * x."leverageBps" / ${Number(BPS)}) AS notional
+        FROM ${this.t("Ride")} x
+        WHERE x."chainId" = a."chainId" AND x.owner = a.owner AND x."filledAt" IS NOT NULL) r ON true
+      WHERE a.id = ${`${chainId}_${owner.toLowerCase()}`}`;
     return a;
   }
 
