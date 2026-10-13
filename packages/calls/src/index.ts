@@ -14,6 +14,7 @@ export * from "./exits.ts";
 export * from "./film.ts";
 export * from "./film-frame.ts";
 export * from "./film-input.ts";
+export * from "./film-scene.ts";
 export * from "./guest.ts";
 export * from "./handle-copy.ts";
 export * from "./instrument.ts";

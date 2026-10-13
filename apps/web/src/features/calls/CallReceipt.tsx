@@ -5,15 +5,15 @@
  * then every step with its transaction and the window's proof, all in the shared words (`@senryo/calls`). A live call
  * opens the terminal. `publicView` is the shared link's page: no account needed.
  */
-import { callFigure, callKey, callLink, callSlip, receiptSteps } from "@senryo/calls";
+import { callFigure, callFilm, callKey, callLink, callSlip, receiptSteps } from "@senryo/calls";
 import { type ChainId, networkOf } from "@senryo/config";
 import { sideName } from "@senryo/core";
 import { historyKeys, useCallTimeline, useWindowProof } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ReplayFor } from "@/features/receipts/Replay";
 import { LiveShareSlip, ShareSlip } from "@/features/receipts/ShareSlip";
+import { ReplayVideo } from "@/features/replay/ReplayVideo";
 import { CallTimeline } from "./CallTimeline";
 import { WindowProof } from "./WindowProof";
 
@@ -48,12 +48,9 @@ export function CallReceipt({
   }
   const t = timeline.value;
   const c = t.call;
-  const slip = callSlip(t, {
-    chainId,
-    practice: networkOf(chainId).modeLabel === "Practice",
-    kE8: "value" in proof ? proof.value?.open?.priceE8 : undefined,
-    url: callLink(c.ticketId, chainId),
-  });
+  const practice = networkOf(chainId).modeLabel === "Practice";
+  const kE8 = "value" in proof ? proof.value?.open?.priceE8 : undefined;
+  const slip = callSlip(t, { chainId, practice, kE8, url: callLink(c.ticketId, chainId) });
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col items-start gap-4">
@@ -62,7 +59,14 @@ export function CallReceipt({
         ) : (
           <ShareSlip slip={slip} figure={slip.live ? null : callFigure(t)} side={sideName(c.band)} />
         )}
-        {slip.live ? null : <ReplayFor chainId={chainId} bookKey={callKey(c.ticketId)} />}
+        {slip.live ? null : (
+          <ReplayVideo
+            chainId={chainId}
+            bookKey={callKey(c.ticketId)}
+            url={slip.url}
+            build={(episode) => callFilm(t, episode, { practice, kE8 })}
+          />
+        )}
         <div className="flex flex-wrap gap-2">
           {slip.live && !publicView ? (
             <Button asChild size="xl" variant="secondary">

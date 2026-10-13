@@ -743,6 +743,15 @@
         "use": "the live position row (D-343): mark in a 40 px ring draining on the server's seconds, head and clock over the recorded PnL trace (72 × 24), PnL rolling in the installed Odometer over ROI, an always-visible Close $x sibling; right-click or hold for details and receipt",
         "path": "src/features/positions/PositionRow.tsx",
         "retokenized": true
+      },
+      {
+        "name": "replay video",
+        "source": "Fomo's exported share video (research 14 §1) in Senryo's look per Codex direction 17; encoder mediabunny 1.61.4 (WebCodecs)",
+        "id": 0,
+        "url": "",
+        "use": "the receipt's Video: the same 1080 × 1350 card as the phone from the shared FILM_LAYOUT and frames, drawn on a 2D canvas (preview) and an OffscreenCanvas (export) at t = i / 30; AAC from the cue track rendered offline through the app's voices; Save (download) / Share (files)",
+        "path": "src/features/replay/",
+        "retokenized": true
       }
     ],
     "considered": [

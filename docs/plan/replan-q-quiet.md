@@ -57,12 +57,17 @@ say". Memory `feedback-restraint-not-text-dumps`.
   longer sits over the dock).
 - [ ] Q3 Receipts, the replay video and the Calls record (**next**, ahead of Q2 — the owner's 13 Oct review of the
   receipt; D-349…D-351):
-  - [ ] the receipt follows the theme in the app (dark paper on dark, D-349); the exported image keeps its one light
-    look and QR;
+  - [x] the receipt follows the theme in the app (dark paper on dark, D-349); the exported image keeps its one light
+    look and QR — built `fb36e0a5` (RECEIPT_DARK; usePaper on the phone; --receipt-* under .dark on the web); the
+    three filler rows gone (D-351);
   - [ ] one composition: seal, market, folio; one figure; the replay stage (200 high) with entry, exit, the line /
     band, KO and Cap as pins; one stamp; at most three facts — no "Signed with", "Pays if right" or "Came back"
     (D-351); a 40-high pin strip for the timeline and proof; one "Proof ›"; Share / Save / Video outside the paper;
-  - [ ] **the replay video (D-350):** one film for both apps after Fomo's card in Senryo's look — crest, handle,
+  - [ ] **the replay video (D-350)** — direction: research 17 (Codex). Built so far: the film engine (`film.ts`,
+    `film-frame.ts`), the inputs from a receipt (`film-input.ts`), the shared frame and layout (`film-scene.ts`); the
+    phone's Skia renderer, preview, MP4 export (skia-video) and Video sheet (`6ddde6bd`); the web's canvas renderer,
+    preview, mediabunny export and Video modal. Open: acceptance in a new binary, 1-minute back-fill and rebuilt replays,
+    `r=` referral capture for the QR (R8.4). Spec: one film for both apps after Fomo's card in Senryo's look — crest, handle,
     outcome, date; market mark and name; the scrolling chart with the live price pill and IN / OUT captions; the PnL
     rolling large with ROI and three stats; the brand band with seal, wordmark, "Play with code @handle" and a QR;
     1080 × 1350, ≤ 15 s, a held last frame; sound from the cue map; plays in the receipt (open on the last frame,

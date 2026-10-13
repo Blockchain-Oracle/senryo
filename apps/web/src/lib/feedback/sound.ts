@@ -160,7 +160,7 @@ export function onAudioRebuilt(listener: () => void): () => void {
   return () => rebuildListeners.delete(listener);
 }
 
-function noiseBuffer(ctx: AudioContext): AudioBuffer {
+function noiseBuffer(ctx: BaseAudioContext): AudioBuffer {
   if (noise && noise.sampleRate === ctx.sampleRate) return noise;
   const buf = ctx.createBuffer(1, ctx.sampleRate * NOISE_SECONDS, ctx.sampleRate);
   const data = buf.getChannelData(0);
@@ -169,8 +169,15 @@ function noiseBuffer(ctx: AudioContext): AudioBuffer {
   return buf;
 }
 
-/** Book one voice at `start` into `out` (shared by the cues and the music). */
-export function bookVoice(ctx: AudioContext, out: AudioNode, v: Voice, start: number, level: number, rate = 1): void {
+/** Book one voice at `start` into `out` (shared by the cues, the music and the replay video's offline soundtrack). */
+export function bookVoice(
+  ctx: BaseAudioContext,
+  out: AudioNode,
+  v: Voice,
+  start: number,
+  level: number,
+  rate = 1,
+): void {
   const peak = Math.max(SOUND_FLOOR, v.gain * level);
   const end = start + v.dur;
   const g = ctx.createGain();

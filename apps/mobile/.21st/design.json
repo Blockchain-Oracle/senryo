@@ -835,6 +835,15 @@
         "evidence": ["D-343, Codex direction 15 (docs/research/replan-2026-10-10/15-position-row-direction.md)"],
         "port": "80 pt live row: mark in a 40 pt ring draining on the server clock (3 pt in the last ten seconds, never a warning colour), head and ticking clock over the recorded PnL trace (64 × 20, broken at holes), PnL in the condensed 24/28 role over ROI; swipe left reveals Close $x (112 pt, accent), long-press for details and receipt",
         "path": "src/features/positions/PositionRow.tsx"
+      },
+      {
+        "name": "replay video",
+        "source": "Fomo's exported share video (the owner's clip, ~/Downloads/ekB2UthMBUbj7h5v.mp4; research 14 §1 measures it) in Senryo's look per Codex direction 17 — no 21st source covers a deterministic trade film; encoder @azzapp/react-native-skia-video 0.10.1",
+        "evidence": [
+          "D-350; docs/research/replan-2026-10-10/14-playback-replay.md §1; 17-receipt-video-direction.md §2–4"
+        ],
+        "port": "1080 × 1350 card drawn by one Skia worklet (preview and export): dark brand ground and card, portrait, handle, date, mode, Kinpaku stamp; dot-grid plot, glow line, head pinned at x 594, price pill, zones / KO / cap, IN / OUT notches; panel with market, PnL 112, ROI, three stats; band with the lockup SVG, the code and a QR; MP4 30 fps H.264 + AAC from the cue track; Save to Photos / Share",
+        "path": "src/features/replay/"
       }
     ],
     "planned": [

@@ -5,12 +5,12 @@
  * PnL · ROI · Both (R5.21), open or ended, with the transaction that ended it. A live ride opens the terminal.
  * `publicView` is the shared link's page: no account needed.
  */
-import { rideFigure, rideKey, rideLink, rideSlip } from "@senryo/calls";
+import { rideFigure, rideFilm, rideKey, rideLink, rideSlip } from "@senryo/calls";
 import { type ChainId, networkOf } from "@senryo/config";
 import { useRide } from "@senryo/query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ReplayFor } from "./Replay";
+import { ReplayVideo } from "@/features/replay/ReplayVideo";
 import { LiveShareSlip, ShareSlip } from "./ShareSlip";
 
 export function RideReceipt({
@@ -47,7 +47,14 @@ export function RideReceipt({
       ) : (
         <ShareSlip slip={slip} figure={slip.live ? null : rideFigure(r)} side={side} />
       )}
-      {slip.live ? null : <ReplayFor chainId={chainId} bookKey={rideKey(r.rideId)} />}
+      {slip.live ? null : (
+        <ReplayVideo
+          chainId={chainId}
+          bookKey={rideKey(r.rideId)}
+          url={slip.url}
+          build={(episode) => rideFilm(r, episode, { practice: networkOf(chainId).modeLabel === "Practice" })}
+        />
+      )}
       <div className="flex flex-wrap gap-2">
         {slip.live && !publicView ? (
           <Button asChild size="xl" variant="secondary">

@@ -4,6 +4,8 @@
  * snapshotted into Skia images, so the video carries the same artwork as the app; the lockup is parsed from its SVG.
  * Renders nothing visible; `onReady` fires once every image is taken.
  */
+
+import { FILM_LAYOUT as L } from "@senryo/calls";
 import { marketId } from "@senryo/identity";
 import { makeImageFromView, Skia } from "@shopify/react-native-skia";
 import { useEffect, useRef } from "react";
@@ -13,7 +15,6 @@ import { EntityMark } from "~/components/identity/EntityMark";
 import { QrCode } from "~/components/kit/QrCode";
 import { LOCKUP_SVG } from "~/theme/brand-svg";
 import type { FilmImages } from "./drawFilm";
-import { LAYOUT as L } from "./film-layout";
 
 /** Off screen: laid out and drawable, never seen. */
 const AWAY = -10_000;

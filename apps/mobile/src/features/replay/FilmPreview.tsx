@@ -4,6 +4,9 @@
  * frame (the poster); Play runs it from the start; a horizontal drag scrubs (vertical movement stays the sheet's).
  * Reduce Motion opens still and plays only when asked.
  */
+
+import type { DrawnFrame, FilmColours, FilmWords } from "@senryo/calls";
+import { FILM_LAYOUT } from "@senryo/calls";
 import { Canvas, Picture, Skia } from "@shopify/react-native-skia";
 import { useEffect } from "react";
 import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
@@ -17,15 +20,10 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import {
-  type DrawnFrame,
-  drawFilmFrame,
-  type FilmColours,
-  type FilmFonts,
-  type FilmImages,
-  type FilmWords,
-} from "./drawFilm";
-import { FILM_H, FILM_W } from "./film-layout";
+import { drawFilmFrame, type FilmFonts, type FilmImages } from "./drawFilm";
+
+const FILM_W = FILM_LAYOUT.frame.w;
+const FILM_H = FILM_LAYOUT.frame.h;
 
 const FPS = 30;
 const MS = 1_000;

@@ -5,6 +5,9 @@
  * The encoder is a native module in runtime 0.5.0: on an older binary `canSaveVideo()` is false and nothing loads it.
  * Then Save writes the file to Photos (add-only access, asked on that tap) and Share hands it to the share sheet.
  */
+
+import type { DrawnFrame, FilmColours, FilmWords } from "@senryo/calls";
+import { FILM_LAYOUT } from "@senryo/calls";
 import { SOUND_MASTER, SOUND_MIX, type SoundCue } from "@senryo/tokens";
 import { Asset } from "expo-asset";
 import { File, Paths } from "expo-file-system";
@@ -12,15 +15,10 @@ import { Asset as LibraryAsset, requestPermissionsAsync } from "expo-media-libra
 import * as Sharing from "expo-sharing";
 import { TurboModuleRegistry } from "react-native";
 import { CUE_SOURCES, LADDER_SOURCES } from "~/feedback/cue-sources";
-import {
-  type DrawnFrame,
-  drawFilmFrame,
-  type FilmColours,
-  type FilmFonts,
-  type FilmImages,
-  type FilmWords,
-} from "./drawFilm";
-import { FILM_H, FILM_W } from "./film-layout";
+import { drawFilmFrame, type FilmFonts, type FilmImages } from "./drawFilm";
+
+const FILM_W = FILM_LAYOUT.frame.w;
+const FILM_H = FILM_LAYOUT.frame.h;
 
 const FPS = 30;
 const MS = 1_000;

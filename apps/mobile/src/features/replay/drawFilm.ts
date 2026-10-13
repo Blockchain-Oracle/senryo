@@ -1,11 +1,11 @@
 /**
  * Draws one frame of the replay film (Q3, D-350; Codex direction 17 §2) with Skia's imperative API — a worklet, so the
  * preview draws it on the UI thread and the exporter on its own runtime: the same pixels in the app and in the MP4.
- * Everything comes in: the frame (from `frameAt`, its strings formatted on the JS side), the fixed words, the colours,
+ * Everything comes in: the frame and words (`filmSceneOf`, strings already formatted), the colours, the layout (shared),
  * the fonts, and the images (the market mark, the portrait and the QR, snapshotted from the app's own views; the
  * lockup as SVG).
  */
-import type { FilmFrame } from "@senryo/calls";
+import { type DrawnFrame, type FilmColours, type FilmWords, FILM_LAYOUT as L } from "@senryo/calls";
 import {
   ClipOp,
   PaintStyle,
@@ -18,47 +18,6 @@ import {
   StrokeJoin,
   TileMode,
 } from "@shopify/react-native-skia";
-import { LAYOUT as L } from "./film-layout";
-
-export interface DrawnFrame extends FilmFrame {
-  pnlText: string;
-  roiText: string;
-  pillText: string;
-  labelTexts: string[];
-  tickTexts: string[];
-  levelTexts: string[];
-  provenanceText: string | null;
-}
-
-export interface FilmWords {
-  handle: string;
-  date: string;
-  mode: string;
-  stamp: readonly string[] | null;
-  market: string;
-  identity: string;
-  figureLabel: string;
-  stats: readonly (readonly [string, string])[];
-  referralLabel: string;
-  code: string;
-  /** Which side of the line wins (calls): the zone it tints. */
-  zone: "up" | "down" | "range" | "beyond-high" | "beyond-low" | null;
-}
-
-export interface FilmColours {
-  ground: string;
-  card: string;
-  ink: string;
-  muted: string;
-  up: string;
-  down: string;
-  range: string;
-  pillInk: string;
-  foilLight: string;
-  foilDeep: string;
-  foilHighlight: string;
-  lacquer: string;
-}
 
 export interface FilmFonts {
   handle: SkFont;
