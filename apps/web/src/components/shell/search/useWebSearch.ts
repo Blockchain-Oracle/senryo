@@ -6,10 +6,9 @@
  */
 import { readSymbols } from "@senryo/calls";
 import { type SearchView, useSearch } from "@senryo/calls/react";
-import { explorerTxUrl, GAMES, WEB_EVERYTHING, WEB_PLACES, WEB_RAIL, type WebNavItem } from "@senryo/config";
+import { explorerTxUrl, WEB_RAIL } from "@senryo/config";
 import {
   actionEntries,
-  intentQuery,
   recordVisit,
   SEARCH_ACTIONS,
   type SearchAction,
@@ -19,7 +18,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
-import { tradeHref } from "@/features/markets/MarketList";
 import { useAppTrader } from "@/lib/account/guest";
 import { setFeedback, useFeedback } from "@/lib/feedback";
 import { activeNetwork } from "@/lib/network";
@@ -27,19 +25,11 @@ import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { setPrivacy, usePrivacy } from "@/lib/shell/privacy";
 import { TERMINAL_STORAGE, useStoredString } from "@/lib/terminal/stored";
 import { openTour } from "@/lib/terminal/tour";
+import { DRAWER_PREFIX, HREF, pageHref, SEARCH_PLACES } from "./hrefs";
 import type { MarketPageState } from "./MarketPage";
 
-/** Everything's rows that are actions here (money moves through drawers; one-tap has its own action). */
-const NOT_PLACES = new Set(["dollars", "receive", "withdraw", "one-tap"]);
-const NAV: readonly WebNavItem[] = [...WEB_PLACES, ...WEB_EVERYTHING.flatMap((s): readonly WebNavItem[] => s.items)];
-const PLACES = NAV.filter((p) => !NOT_PLACES.has(p.key));
-const HREF: Record<string, string> = {
-  ...Object.fromEntries(NAV.map((p) => [p.key, p.href])),
-  ...Object.fromEntries(GAMES.map((g) => [g.key, g.href])),
-};
 /** Go to's keys 1…5: the rail (D-339). */
 export const GO_TO = WEB_RAIL.map((r) => r.key);
-const DRAWER_PREFIX = "/app/?d=";
 
 /** What ⌘↵ does for an entry, named for the footer; null where it has none. */
 export function alternateOf(entry: SearchEntry): string | null {
@@ -87,7 +77,7 @@ export function useWebSearch(query: string, open: boolean): WebSearch {
       }),
     [practice, hidden, feedback.sound, feedback.haptics, light, trader.guest],
   );
-  const view = useSearch({ query, app: "web", open, places: PLACES, actions, goTo: GO_TO, favourites });
+  const view = useSearch({ query, app: "web", open, places: SEARCH_PLACES, actions, goTo: GO_TO, favourites });
 
   const act = (action: SearchAction) => {
     switch (action) {
@@ -115,9 +105,8 @@ export function useWebSearch(query: string, open: boolean): WebSearch {
   const go = (t: SearchTarget) => {
     switch (t.kind) {
       case "terminal":
-        return router.push(`${tradeHref(t.intent.symbol)}${intentQuery(t.intent)}`);
       case "market":
-        return router.push(tradeHref(t.symbol));
+        return router.push(pageHref(t) ?? "");
       case "receipt":
         return openDrawer(t.of === "call" ? DRAWERS.call : DRAWERS.ride, { id: t.id });
       case "window":

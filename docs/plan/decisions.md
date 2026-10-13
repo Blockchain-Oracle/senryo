@@ -720,3 +720,16 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   - A long path thins to its buckets' lows and highs, so its ups and downs survive.
 
   Supersedes direction 17's fixed 45 % scrolling window and the 12 s cap.
+- **D-354** 2026-10-13 · **A link that leads nowhere is answered, never a bare 404 (stage P1; the owner: "design our
+  custom 404 well").**
+  - A market link to a symbol that isn't listed keeps the terminal on the last market this device opened, any case,
+    and says "No market called XYZ" (both apps; the web's not-found page sends `/app/trade/<x>/` there).
+  - Any other unknown web path is "Off the chart": "404" as the stage's watermark under a price line that knocks out
+    (the ride's ×), the link struck through, and "Did you mean …" from search's own ranking over markets, games and
+    places (`closestPage`), with Home. Grounded in 21st `ziegfiroyt/error9` and Refero's Coinbase, Kraken and
+    ElevenLabs 404s.
+  - The phone keeps F41: an unknown deep link lands on Home (no address bar to correct).
+- **D-355** 2026-10-13 · **One trade loop on both apps (stage P1).** A trade gate may resume the tap it stopped
+  (`gate(resume)`): the phone's terms sheet re-runs the same tap after Agree, on the render's latest actions. A row
+  offers Close by the position's state and its time (`closeOffered`), never by each tick's quote. Music on turns sound
+  on. Real rides stay the web's on the phone by network (D-305), not by "read-only".

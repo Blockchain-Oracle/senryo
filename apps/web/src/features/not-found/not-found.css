@@ -1,0 +1,158 @@
+/* The web's 404 (`NotFound.tsx`): the seal top-left, one left-aligned column centred on the page, the figure on top. */
+.nf {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(24px, env(safe-area-inset-bottom, 0px));
+  background: var(--background);
+  color: var(--foreground);
+}
+.nf-seal {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 12px;
+}
+.nf-seal:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.nf-body {
+  display: flex;
+  width: 100%;
+  max-width: 34rem;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+/* The figure: "404" as the stage's watermark (the terminal's 千両), the line over it. */
+.nf-stage {
+  position: relative;
+  margin-bottom: 12px;
+}
+.nf-code {
+  font-size: clamp(120px, 34vw, 208px);
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  color: var(--secondary);
+  user-select: none;
+}
+.nf-line {
+  position: absolute;
+  inset: 8% 0 0;
+  width: 100%;
+  height: 92%;
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nf-walk,
+.nf-drop,
+.nf-ko {
+  stroke: var(--foreground);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+.nf-ghost {
+  stroke: var(--text-3);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 6;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  animation: nf-fade 600ms ease-out 1900ms forwards;
+}
+.nf-walk {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: nf-draw 1400ms cubic-bezier(0.22, 0.8, 0.24, 1) 200ms forwards;
+}
+.nf-drop {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: nf-draw 260ms cubic-bezier(0.55, 0, 0.9, 0.4) 1600ms forwards;
+}
+.nf-head {
+  fill: var(--foreground);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nf-pop 240ms cubic-bezier(0.3, 1.6, 0.5, 1) 1450ms forwards;
+}
+.nf-ko {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nf-pop 320ms cubic-bezier(0.3, 1.6, 0.5, 1) 1860ms forwards;
+}
+@keyframes nf-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes nf-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes nf-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.nf-path {
+  overflow: hidden;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-suggest {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: var(--secondary);
+  transition: background-color var(--motion-fast, 120ms) ease;
+}
+.nf-suggest:hover {
+  background: color-mix(in oklab, var(--secondary) 80%, var(--foreground));
+}
+.nf-suggest:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.nf-home {
+  margin-top: 4px;
+}
+@media (min-width: 640px) {
+  .nf-home {
+    width: fit-content;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-walk,
+  .nf-drop {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .nf-ghost,
+  .nf-head,
+  .nf-ko {
+    animation: none;
+    opacity: 1;
+  }
+}

@@ -5,18 +5,22 @@ stays as it is until after submission; this stage is behaviour only. Source: a t
 folder and one-sided shared export (five areas, read-only, 13 Oct). Each item names the side that lacks it and the
 shared module that closes it. Order is demo impact: the trade loop, receipts and positions, the wallet, then the rest.
 
-## P1 · Trade loop (terminal)
-- [ ] Phone: the terms gate before the first trade. `useTermsGate` exists with no caller; pass it to `useCallFlow`'s
+## P1 · Trade loop (terminal) — built (`c5981b03` + the 404), D-354, D-355
+- [x] Phone: the terms gate before the first trade. `useTermsGate` exists with no caller; pass it to `useCallFlow`'s
       effects as the web does (`useTerminalEffects.ts:33-42`).
-- [ ] Phone: the shortfall button. "Short by $x" opens Add money with the amount, as on the web.
-- [ ] Phone: a tap on an unpriced side says "Not priced right now" (the web does; the phone ignores it silently).
-- [ ] Web: "Rides are Practice-only…" with Switch to Practice, from a shared "not deployed" state in `use-ride-flow`.
-- [ ] Web: the coached first call. The terminal takes the coach banner and the filled callback like the phone.
-- [ ] Phone: a music track chip (`TERMINAL_SONGS`); the saved track is read but never written. Music on also turns
+- [x] Phone: the shortfall button. "Short by $x" opens Add money with the amount, as on the web.
+- [x] Phone: a tap on an unpriced side says "Not priced right now" (the web does; the phone ignores it silently).
+- [x] Web: "Rides are Practice-only…" with Switch to Practice, from a shared "not deployed" state in `use-ride-flow`.
+      (Found already covered: in Real every market is unlisted, so both apps show "Trading opens with mainnet → Switch
+      to Practice"; the phone's own block keyed on read-only and could never show — it now keys on Real, D-305.)
+- [x] Web: the coached first call. The terminal takes the coach banner and the filled callback like the phone.
+- [x] Phone: a music track chip (`TERMINAL_SONGS`); the saved track is read but never written. Music on also turns
       sound on.
-- [ ] Both: one rule for when Close is offered (`clock.live` on both); a market link to an unknown symbol stays on the
+- [x] Both: one rule for when Close is offered (`clock.live` on both); a market link to an unknown symbol stays on the
       last market on both.
-- [ ] Phone: the "Live position reactions" switch is either wired into `useReactions` or deleted.
+- [x] Phone: the "Live position reactions" switch is either wired into `useReactions` or deleted. (Deleted: the web
+      has none; reactions follow Sounds on both.)
+- [x] Web: a designed 404, "Off the chart" with "Did you mean …" (the owner, 13 Oct; D-354).
 
 ## P2 · Receipts, positions, Calls
 - [ ] Phone: proof screens (the feed and the window page), using the web's helpers (`windowRow`, `bandVerdicts`,

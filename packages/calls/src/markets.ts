@@ -55,9 +55,14 @@ export function lastMarket(): string | null {
   return id ? id.slice(marketEntryId("").length) : null;
 }
 
-/** What a link to a market that isn't listed says, both apps: the terminal stays on the last market. */
-export function unknownMarketWords(raw: string): { title: string; description: string } {
-  return { title: `No market called ${raw.trim().toUpperCase()}`, description: "Showing your last market instead." };
+/** What a link to a market that isn't listed says, both apps (one toast by id): the terminal stays on the last market. */
+export function unknownMarketWords(raw: string): { id: string; title: string; description: string } {
+  const symbol = raw.trim().toUpperCase();
+  return {
+    id: `unknown-market:${symbol}`,
+    title: `No market called ${symbol}`,
+    description: "Showing your last market instead.",
+  };
 }
 
 interface Searchable {
