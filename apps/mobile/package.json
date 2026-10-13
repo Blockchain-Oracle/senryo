@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@azzapp/react-native-skia-video": "0.10.1",
     "@senryo/account": "workspace:*",
     "@senryo/api-client": "workspace:*",
     "@senryo/arcade": "workspace:*",
@@ -44,6 +45,7 @@
     "expo-image": "~57.0.5",
     "expo-linking": "~57.0.12",
     "expo-local-authentication": "~57.0.3",
+    "expo-media-library": "~57.0.5",
     "expo-network": "~57.0.2",
     "expo-notifications": "~57.0.22",
     "expo-print": "~57.0.2",

@@ -3,7 +3,7 @@
  * stamp, margin, leverage, size, entry and exit, knock-out and cap, fees, what came back, and the transaction that
  * ended it — shared with PnL · ROI · Both (R5.21), open or ended. A live ride opens the terminal.
  */
-import { rideFigure, rideKey, rideLink, rideSlip } from "@senryo/calls";
+import { rideFigure, rideFilm, rideKey, rideLink, rideSlip } from "@senryo/calls";
 import { useRide } from "@senryo/query";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -11,11 +11,11 @@ import { useMMKVString } from "react-native-mmkv";
 import { Button } from "~/components/kit/Button";
 import { EmptyState, LoadingState } from "~/components/kit/states";
 import { useDockInset } from "~/components/shell/dock-context";
+import { ReplayVideo } from "~/features/replay/ReplayVideo";
 import { fire } from "~/feedback/fire";
 import { useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
 import { SIZE, SPACE } from "~/theme";
-import { ReplayFor } from "./Replay";
 import { LiveShareSlip, ShareSlip } from "./ShareSlip";
 
 export function RideReceipt({ rideId }: { rideId: bigint }) {
@@ -42,7 +42,14 @@ export function RideReceipt({ rideId }: { rideId: bigint }) {
         ) : (
           <ShareSlip slip={slip} figure={rideFigure(r)} side={side} />
         )}
-        {slip.live ? null : <ReplayFor chainId={network.chainId} bookKey={rideKey(r.rideId)} />}
+        {slip.live ? null : (
+          <ReplayVideo
+            chainId={network.chainId}
+            bookKey={rideKey(r.rideId)}
+            url={slip.url}
+            build={(episode) => rideFilm(r, episode, { practice: network.modeLabel === "Practice" })}
+          />
+        )}
         {slip.live ? (
           <Button
             label="Watch it live"

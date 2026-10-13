@@ -22,6 +22,7 @@ import {
 const APNS_PRODUCTION_PROFILES = new Set(["production", "preview"]);
 /** Shown by iOS when Send opens the scanner. */
 const CAMERA_PERMISSION = "Senryo uses the camera to scan wallet and payment QR codes.";
+const SAVE_PHOTOS_PERMISSION = "Senryo saves your trade replays to Photos when you ask it to.";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -104,6 +105,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-web-browser",
     "expo-sharing",
     ["expo-camera", { cameraPermission: CAMERA_PERMISSION, microphonePermission: false, recordAudioAndroid: false }],
+    // Runtime 0.5.0 (Q3, D-350): the replay video is saved to Photos — add-only, never read.
+    [
+      "expo-media-library",
+      { savePhotosPermission: SAVE_PHOTOS_PERMISSION, photosPermission: false, isAccessMediaLocationEnabled: false },
+    ],
   ],
   experiments: { typedRoutes: true, reactCompiler: true },
   runtimeVersion: { policy: "appVersion" },
