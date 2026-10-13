@@ -1,15 +1,17 @@
 /**
- * The trades history, both apps (S5.11; rides joined 13 Oct — they had been missing since R4): every finished call
- * and every finished ride (the indexer), newest first, each in the shared words, grouped for the filters All · Won ·
- * Lost · Refunded (outcome words, never colour alone). A ride's result is its net after fees, as its receipt says
- * (D-327). What's open now is the live book's (R5.3, `useLiveBook`), shown above it with its live value.
+ * Your history, both apps (S5.11; rides joined 13 Oct; D1 the same evening — "anything I did should show in my
+ * history"): every finished call and ride (the indexer), event call, parlay and duel, newest first, each in the shared
+ * words, grouped for the filters All · Won · Lost · Refunded (outcome words, never colour alone). A ride's result is
+ * its net after fees, as its receipt says (D-327); a duel is one row for its pot and cards (`history-rows.ts`); Lucky's
+ * calls say so. What's open now is the live book's (R5.3, `useLiveBook`), shown above it with its live value.
  */
 import type { Address } from "@senryo/account";
 import type { RideView } from "@senryo/api-client";
-import { lane, OPEN_STATES, sideName, signedUsd, stateWord, type Tone, toneOf } from "@senryo/core";
-import { useCalls, useRides, useTickets } from "@senryo/query";
+import { lane, OPEN_STATES, sideName, signedUsd, stateWord, toneOf } from "@senryo/core";
+import { useCalls, useDuels, useEventCalls, useLuckyDraws, useParlays, useRides, useTickets } from "@senryo/query";
 import { useMemo } from "react";
 import { leverageText } from "./book-words.ts";
+import { duelRow, eventRow, type HistoryRow, isDuelCard, parlayRow } from "./history-rows.ts";
 import { rideNet } from "./trade-slip.ts";
 
 export const CALL_FILTERS = [
@@ -20,24 +22,13 @@ export const CALL_FILTERS = [
 ] as const;
 export type CallFilter = (typeof CALL_FILTERS)[number]["value"];
 
-export interface CallRow {
-  key: string;
-  kind: "call" | "ride";
-  /** The call's ticket or the ride's id: its receipt. */
-  id: bigint;
-  symbol: string;
-  /** "BTC Up", "BTC Up · Ride". */
-  title: string;
-  /** What went in: a call's stake, a ride's opening margin. */
-  stake: bigint;
-  /** "1m" for a call, "10×" for a ride. */
-  tag: string;
-  status: string;
-  result: string;
-  tone: Tone;
-  group: Exclude<CallFilter, "all">;
-  /** When it ended or was made (unix s), for the order. */
-  at: number;
+/**
+ * One history row: a call, a ride, an event call, a parlay or a duel. `title` reads "BTC Up", "BTC Up · Ride", the
+ * event's question, "Parlay · BTC + ETH" or "Duel"; `stake` is what went in; `tag` the lane, leverage, side or legs;
+ * `open` where a tap goes and `mark` what it shows. `at` (unix s) orders the list.
+ */
+export interface CallRow extends HistoryRow {
+  kind: "call" | "ride" | "event" | "parlay" | "duel";
 }
 
 const FINISHED_RIDE = new Set<RideView["state"]>(["closed", "knocked_out", "capped", "ended", "refunded"]);
@@ -55,8 +46,8 @@ function rideRow(r: RideView): CallRow {
   return {
     key: `ride-${r.rideId}`,
     kind: "ride",
-    id: r.rideId,
-    symbol: r.symbol,
+    open: { kind: "ride", id: r.rideId },
+    mark: { kind: "market", symbol: r.symbol },
     title: `${r.symbol} ${r.isLong ? "Up" : "Down"} · Ride`,
     stake: r.marginOpen ?? r.margin,
     tag: leverageText(r.leverageBps),
@@ -72,26 +63,36 @@ export function useCallRows(owner: Address | undefined) {
   const tickets = useTickets(owner);
   const calls = useCalls(owner);
   const rides = useRides(owner);
+  const events = useEventCalls(owner);
+  const parlays = useParlays(owner);
+  const duels = useDuels(owner);
+  const draws = useLuckyDraws(owner);
   const rideList = "value" in rides ? rides.value.rides : undefined;
+  const eventList = "value" in events ? events.value : undefined;
+  const parlayList = "value" in parlays ? parlays.value.parlays : undefined;
+  const duelList = "value" in duels ? duels.value.duels : undefined;
+  const drawList = "value" in draws ? draws.value : undefined;
   const callPages = calls.data?.pages;
   const ticketList = "value" in tickets ? tickets.value.tickets : undefined;
   const rows = useMemo(() => {
     // Open in the services' book (the indexer may still list it as open, or not have it yet): the live book shows it.
     const openIds = new Set((ticketList ?? []).filter((t) => OPEN_STATES.has(t.state)).map((t) => t.ticketId));
+    // Lucky's draws name the calls they placed: those rows say Lucky.
+    const lucky = new Set((drawList ?? []).flatMap((d) => (d.ticketId === null ? [] : [d.ticketId])));
     const past: CallRow[] = (callPages ?? [])
       .flatMap((p) => p.calls)
-      .filter((c) => !OPEN_STATES.has(c.status) && !openIds.has(c.ticketId))
+      .filter((c) => !OPEN_STATES.has(c.status) && !openIds.has(c.ticketId) && !isDuelCard(c))
       .map((c) => {
         const pnl = c.pnl === null ? null : BigInt(c.pnl);
         const refunded = c.status === "refunded" || c.outcome === "refund";
         return {
           key: `call-${c.ticketId}`,
           kind: "call" as const,
-          id: c.ticketId,
-          symbol: c.symbol,
+          open: { kind: "call" as const, id: c.ticketId },
+          mark: { kind: "market" as const, symbol: c.symbol },
           title: `${c.symbol} ${sideName(c.band)}`,
           stake: c.stake,
-          tag: lane(c.cadenceSec),
+          tag: lucky.has(c.ticketId) ? `Lucky · ${lane(c.cadenceSec)}` : lane(c.cadenceSec),
           status: stateWord(c),
           result: pnl === null ? "—" : signedUsd(pnl),
           tone: toneOf(pnl),
@@ -100,8 +101,13 @@ export function useCallRows(owner: Address | undefined) {
         };
       });
     const ended = (rideList ?? []).filter((r) => FINISHED_RIDE.has(r.state)).map(rideRow);
-    return [...past, ...ended].sort((a, b) => b.at - a.at);
-  }, [callPages, ticketList, rideList]);
+    const others: CallRow[] = [
+      ...(eventList ?? []).flatMap((c) => withKind(eventRow(c), "event")),
+      ...(parlayList ?? []).flatMap((p) => withKind(parlayRow(p), "parlay")),
+      ...(duelList ?? []).flatMap((m) => withKind(duelRow(m, owner), "duel")),
+    ];
+    return [...past, ...ended, ...others].sort((a, b) => b.at - a.at);
+  }, [callPages, ticketList, rideList, eventList, parlayList, duelList, drawList, owner]);
   return {
     rows,
     pending: calls.isPending,
@@ -115,6 +121,8 @@ export function useCallRows(owner: Address | undefined) {
     retry: () => void calls.refetch(),
   };
 }
+
+const withKind = (row: HistoryRow | null, kind: CallRow["kind"]): CallRow[] => (row ? [{ ...row, kind }] : []);
 
 export const filterRows = (rows: readonly CallRow[], filter: CallFilter): CallRow[] =>
   filter === "all" ? [...rows] : rows.filter((r) => r.group === filter);

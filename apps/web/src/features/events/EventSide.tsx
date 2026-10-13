@@ -43,37 +43,54 @@ export function HowItSettles({ committee, feeBps }: { committee: CommitteeView |
   );
 }
 
-export function YourEventCalls({ calls, signedIn }: { calls: readonly EventCallView[]; signedIn: boolean }) {
+/** Your event calls as rows, each to its event (D2: the open ones lead the page, the settled ones stay at the side). */
+export function EventCallList({ title, calls }: { title: string; calls: readonly EventCallView[] }) {
+  return (
+    <section aria-label={title} className="flex flex-col gap-2">
+      <h2 className="font-semibold text-section-title">{title}</h2>
+      <ul className="flex flex-col divide-y divide-border">
+        {calls.map((c) => (
+          <li key={c.ticketId.toString()} className="py-3">
+            <Link
+              href={eventHref(c.eventId)}
+              className="flex items-baseline justify-between gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <span className="min-w-0 truncate text-row-title">{c.question}</span>
+              <span
+                className={cn(
+                  "tnum shrink-0 text-meta",
+                  c.status === "won" ? "text-up" : c.status === "lost" ? "text-down" : "text-text-2",
+                )}
+              >
+                {callResultText(c)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** The side column's end: your settled calls, or where calls will show. */
+export function YourEventCalls({
+  settled,
+  any,
+  signedIn,
+}: {
+  settled: readonly EventCallView[];
+  any: boolean;
+  signedIn: boolean;
+}) {
+  if (settled.length > 0) return <EventCallList title="Your settled calls" calls={settled} />;
+  if (any) return null;
   return (
     <section aria-label="Your event calls" className="flex flex-col gap-2">
       <h2 className="font-semibold text-section-title">Your calls</h2>
-      {calls.length === 0 ? (
-        signedIn ? (
-          <p className="text-body text-text-2">Calls you make show here.</p>
-        ) : (
-          <SignInPrompt line="Sign in to call." compact />
-        )
+      {signedIn ? (
+        <p className="text-body text-text-2">Calls you make show here.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border">
-          {calls.map((c) => (
-            <li key={c.ticketId.toString()} className="py-3">
-              <Link
-                href={eventHref(c.eventId)}
-                className="flex items-baseline justify-between gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                <span className="min-w-0 truncate text-row-title">{c.question}</span>
-                <span
-                  className={cn(
-                    "tnum shrink-0 text-meta",
-                    c.status === "won" ? "text-up" : c.status === "lost" ? "text-down" : "text-text-2",
-                  )}
-                >
-                  {callResultText(c)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <SignInPrompt line="Sign in to call." compact />
       )}
     </section>
   );

@@ -121,3 +121,17 @@ export function liveLine(e: Pick<EventView, "live" | "home" | "away">): string |
   if (l.state === "post") return score ? `Final · ${score}` : "Final";
   return chain("LIVE", l.detail, score);
 }
+
+/**
+ * Your event calls split for the page (D2, the owner's iPhone review: open calls were at the very bottom): the open
+ * ones lead the Events page, newest first; the settled ones stay at its end.
+ */
+export function splitEventCalls<T extends Pick<EventCallView, "status" | "createdAt">>(
+  calls: readonly T[],
+): { open: T[]; settled: T[] } {
+  const newest = (a: T, b: T) => Date.parse(b.createdAt) - Date.parse(a.createdAt);
+  return {
+    open: calls.filter((c) => c.status === "open").sort(newest),
+    settled: calls.filter((c) => c.status !== "open").sort(newest),
+  };
+}

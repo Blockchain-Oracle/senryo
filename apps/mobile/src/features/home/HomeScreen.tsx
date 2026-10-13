@@ -18,6 +18,7 @@ import Animated, { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
 import { type LiveFigure, LiveOdometer } from "~/components/kit/LiveOdometer";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { EmptyState } from "~/components/kit/states";
 import { useDockInset } from "~/components/shell/dock-context";
 import { ModeCapsule } from "~/components/shell/ModeCapsule";
@@ -54,6 +55,8 @@ export function HomeScreen() {
   const bottom = Math.max(dockInset, launcherInset);
   // Reading down tucks the launcher behind the dock; scrolling up brings it back (the owner's review, 13 Oct).
   const launcher = useLauncherScroll();
+  // Pull down refreshes everything on Home, as on Markets and Calls (D4: Home was the one tab that couldn't).
+  const refresh = usePullRefresh();
   const account = useMarketAccount(address);
   const book = useLiveBook();
   const catalog = useCatalog();
@@ -107,6 +110,7 @@ export function HomeScreen() {
         </View>
       </View>
       <Animated.ScrollView
+        refreshControl={refresh}
         onScroll={launcher.onScroll}
         scrollEventThrottle={16}
         contentContainerStyle={[styles.content, { paddingBottom: bottom }]}

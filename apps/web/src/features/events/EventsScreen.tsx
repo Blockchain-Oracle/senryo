@@ -5,7 +5,7 @@
  * how a question settles and your calls beside. Until the book is on this network the board says what it waits for,
  * and how it settles stays readable.
  */
-import { eventPhase, leagueName } from "@senryo/calls";
+import { eventPhase, leagueName, splitEventCalls } from "@senryo/calls";
 import { useEventsFlow } from "@senryo/calls/react";
 import { EVENTS, LEAGUES } from "@senryo/config";
 import { useServerSeconds } from "@senryo/live/react";
@@ -14,7 +14,7 @@ import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
 import { EventCard } from "./EventCard";
-import { HowItSettles, YourEventCalls } from "./EventSide";
+import { EventCallList, HowItSettles, YourEventCalls } from "./EventSide";
 import { SourceMark } from "./SourceMark";
 
 export function EventsScreen() {
@@ -34,6 +34,7 @@ export function EventsScreen() {
   const open = flow.events.filter((e) => eventPhase(e, now) === "open");
   const rest = flow.events.filter((e) => eventPhase(e, now) !== "open");
   const blocked = !flow.limits ? "Events are Practice only" : null;
+  const yours = splitEventCalls(flow.calls);
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="flex flex-col gap-6">
@@ -46,6 +47,7 @@ export function EventsScreen() {
             </span>
           ))}
         </p>
+        {yours.open.length > 0 ? <EventCallList title="Your open calls" calls={yours.open} /> : null}
         {!flow.live ? (
           <p className="text-body text-text-2" role="status">
             Events aren't open yet.
@@ -81,7 +83,7 @@ export function EventsScreen() {
       </div>
       <div className="flex flex-col gap-8 lg:sticky lg:top-6 lg:self-start">
         <HowItSettles committee={flow.committee} feeBps={EVENTS.feeBps} />
-        <YourEventCalls calls={flow.calls} signedIn={Boolean(flow.owner)} />
+        <YourEventCalls settled={yours.settled} any={flow.calls.length > 0} signedIn={Boolean(flow.owner)} />
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ import { Sheet } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { useOwnProfile } from "~/features/profile/useOwnProfile";
 import { fire } from "~/feedback/fire";
+import { replayAudio } from "~/feedback/sound";
 import { useAppTrader } from "~/lib/account/guest";
 import { useHideBalances } from "~/lib/hide-balances";
 import { notify } from "~/lib/notify";
@@ -63,6 +64,25 @@ const clock = (ms: number) => {
   return `${Math.floor(s / SECONDS)}:${String(s % SECONDS).padStart(2, "0")}`;
 };
 
+/** How long Play waits for the soundtrack to load before starting the picture anyway. */
+const LOAD_WAIT_MS = 2_000;
+
+/** Resolves once the player has loaded its file (or after `LOAD_WAIT_MS`: the picture never waits on sound forever). */
+function whenLoaded(p: AudioPlayer): Promise<void> {
+  if (p.isLoaded) return Promise.resolve();
+  return new Promise((resolve) => {
+    const timer = setTimeout(done, LOAD_WAIT_MS);
+    const sub = p.addListener("playbackStatusUpdate", (s) => {
+      if (s.isLoaded) done();
+    });
+    function done() {
+      clearTimeout(timer);
+      sub.remove();
+      resolve();
+    }
+  });
+}
+
 export function ReplaySheet({ film, url, onClose }: { film: ReceiptFilm; url: string; onClose: () => void }) {
   const { color } = useTheme();
   const window = useWindowDimensions();
@@ -80,9 +100,7 @@ export function ReplaySheet({ film, url, onClose }: { film: ReceiptFilm; url: st
   const [sound, setSound] = useState(true);
   const [making, setMaking] = useState<Making>({ kind: "preparing" });
   const [run, setRun] = useState(0);
-  /** The making waits while the preview plays. */
-  const [held, setHeld] = useState(false);
-  const why = useRef<"cancel" | "play" | null>(null);
+  const why = useRef<"cancel" | null>(null);
   const abort = useRef<AbortController | null>(null);
   const player = useRef<AudioPlayer | null>(null);
   const t = useSharedValue(totalMs);
@@ -103,9 +121,9 @@ export function ReplaySheet({ film, url, onClose }: { film: ReceiptFilm; url: st
   );
 
   // The file: made from a frozen snapshot once everything is drawn, always with its sound; Retry and Make replay make
-  // it again. While the preview plays the making waits (both at once would stutter the picture) and resumes after.
+  // it again. Play waits for it (`waiting`), so the preview never plays during the making.
   useEffect(() => {
-    if (!encoder || hidden || held || !scene || !fonts || !images) return;
+    if (!encoder || hidden || !scene || !fonts || !images) return;
     void run;
     const controller = new AbortController();
     abort.current = controller;
@@ -124,13 +142,17 @@ export function ReplaySheet({ film, url, onClose }: { film: ReceiptFilm; url: st
         setMaking(why.current === "cancel" ? { kind: "cancelled" } : { kind: "preparing" });
       });
     return () => controller.abort();
-  }, [encoder, hidden, held, scene, fonts, images, run]);
+  }, [encoder, hidden, scene, fonts, images, run]);
 
   // The preview's sound is the file's own soundtrack, muted by the speaker; none while balances are hidden.
   const ready = making.kind === "ready" ? making.uri : null;
+  const soundRef = useRef(sound);
+  soundRef.current = sound;
   useEffect(() => {
     if (!ready || hidden) return;
-    const p = createAudioPlayer({ uri: ready });
+    // The session stays active between plays (D5: a pause or a cue could end it under the next play).
+    const p = createAudioPlayer({ uri: ready }, { keepAudioSessionActive: true });
+    p.muted = !soundRef.current;
     player.current = p;
     return () => {
       p.remove();
@@ -139,34 +161,39 @@ export function ReplaySheet({ film, url, onClose }: { film: ReceiptFilm; url: st
   }, [ready, hidden]);
   useEffect(() => {
     if (player.current) player.current.muted = !sound;
-  }, [sound, ready]);
+  }, [sound, ready, hidden]);
+  // Leaving the sheet hands the silent switch back to the app's cues.
+  useEffect(() => () => void replayAudio(false), []);
 
   const ended = () => {
     setPlaying(false);
-    setHeld(false);
+    void replayAudio(false);
   };
   const pause = () => {
     cancelAnimation(t);
     player.current?.pause();
     setPlaying(false);
-    setHeld(false);
+    void replayAudio(false);
   };
-  const play = () => {
-    const from = t.value >= totalMs ? 0 : t.value;
+  const start = (from: number) => {
     t.value = from;
     t.value = withTiming(totalMs, { duration: totalMs - from, easing: Easing.linear }, (done) => {
       if (done) runOnJS(ended)();
     });
+  };
+  // The sound is made ready first — heard with the silent switch on, loaded, at the picture's place — then both start
+  // together (D5: playing before it had loaded, or before the seek landed, was silent or out of step).
+  const play = async () => {
+    const from = t.value >= totalMs ? 0 : t.value;
+    setPlaying(true);
     const p = player.current;
     if (p) {
-      void p.seekTo(from / MS);
+      await replayAudio(true);
+      await whenLoaded(p);
+      await p.seekTo(from / MS, 0, 0);
       p.play();
     }
-    if (making.kind === "making") {
-      why.current = "play";
-      setHeld(true);
-    }
-    setPlaying(true);
+    start(from);
   };
   useEffect(() => {
     if (hidden) {
@@ -201,6 +228,8 @@ export function ReplaySheet({ film, url, onClose }: { film: ReceiptFilm; url: st
                 ? { text: "Cancelled", action: { label: "Make replay", onPress: () => setRun((n) => n + 1) } }
                 : { text: "Ready" };
   const busy = !hidden && encoder && making.kind === "making";
+  // With its sound on the way, Play waits for the file (D5: playing during the making was silent and restarted it).
+  const waiting = !hidden && encoder && (making.kind === "making" || making.kind === "preparing");
   const blocked = ready ? undefined : "";
   const muted = { color: color.inkMuted };
   return (
@@ -234,11 +263,11 @@ export function ReplaySheet({ film, url, onClose }: { film: ReceiptFilm; url: st
             onPress={() => {
               fire("tick");
               if (playing) pause();
-              else play();
+              else void play();
             }}
-            disabled={!scene}
+            disabled={!scene || waiting}
             accessibilityRole="button"
-            accessibilityLabel={playing ? "Pause" : "Play"}
+            accessibilityLabel={playing ? "Pause" : waiting ? "Play, once the replay is made" : "Play"}
             style={styles.square}
           >
             {playing ? <Pause size={SIZE.icon} color={color.ink} /> : <PlayFill size={SIZE.icon} color={color.ink} />}

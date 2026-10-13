@@ -6,7 +6,15 @@
  * it waits for, and how it settles stays readable.
  */
 import type { CommitteeView, EventCallView } from "@senryo/api-client";
-import { callResultText, committeeLine, eventPhase, feeLine, leagueName, REFUND_RULE } from "@senryo/calls";
+import {
+  callResultText,
+  committeeLine,
+  eventPhase,
+  feeLine,
+  leagueName,
+  REFUND_RULE,
+  splitEventCalls,
+} from "@senryo/calls";
 import { type EventsFlow, useEventsFlow } from "@senryo/calls/react";
 import { EVENTS, LEAGUES } from "@senryo/config";
 import { shortAddress } from "@senryo/core";
@@ -15,6 +23,7 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
@@ -39,6 +48,7 @@ export function EventsScreen() {
   const insets = useSafeAreaInsets();
   const now = useServerSeconds();
   const flow = usePhoneEvents();
+  const refresh = usePullRefresh();
   const open = flow.events.filter((e) => eventPhase(e, now) === "open");
   const rest = flow.events.filter((e) => eventPhase(e, now) !== "open");
   const blocked = flow.limits ? null : "Events are Practice only";
@@ -51,8 +61,10 @@ export function EventsScreen() {
           ? "Reading the board…"
           : "No games open right now · new ones list as their day comes up"
         : null;
+  const yours = splitEventCalls(flow.calls);
   return (
     <ScrollView
+      refreshControl={refresh}
       style={{ backgroundColor: color.ground }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
     >
@@ -65,6 +77,7 @@ export function EventsScreen() {
           </View>
         ))}
       </View>
+      {yours.open.length > 0 ? <CallList title="Your open calls" calls={yours.open} /> : null}
       {empty ? (
         <Text accessibilityLiveRegion="polite" style={[TYPE.body, { color: color.inkMuted }]}>
           {empty}
@@ -84,7 +97,7 @@ export function EventsScreen() {
         </View>
       ) : null}
       <HowItSettles committee={flow.committee} />
-      <YourCalls calls={flow.calls} signedIn={Boolean(flow.owner)} />
+      <YourCalls settled={yours.settled} any={flow.calls.length > 0} signedIn={Boolean(flow.owner)} />
     </ScrollView>
   );
 }
@@ -121,47 +134,58 @@ export function HowItSettles({ committee }: { committee: CommitteeView | null })
   );
 }
 
-function YourCalls({ calls, signedIn }: { calls: readonly EventCallView[]; signedIn: boolean }) {
+/** The page's end: your settled calls, or where they will show (open ones lead the page, `CallList`). */
+function YourCalls({ settled, any, signedIn }: { settled: readonly EventCallView[]; any: boolean; signedIn: boolean }) {
   const { color } = useTheme();
+  if (settled.length > 0) return <CallList title="Your settled calls" calls={settled} />;
+  if (any) return null;
   return (
     <View style={styles.section} accessibilityLabel="Your event calls">
       <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
         Your calls
       </Text>
-      {calls.length === 0 ? (
-        signedIn ? (
-          <Text style={[TYPE.body, { color: color.inkMuted }]}>Calls you make show here.</Text>
-        ) : (
-          <Button
-            label="Sign in to call"
-            variant="secondary"
-            size="sm"
-            block={false}
-            onPress={() => router.push(accountRequiredRoute("call an event", "/events"))}
-          />
-        )
+      {signedIn ? (
+        <Text style={[TYPE.body, { color: color.inkMuted }]}>Calls you make show here.</Text>
       ) : (
-        calls.map((c) => (
-          <Pressable
-            key={c.ticketId.toString()}
-            accessibilityRole="link"
-            onPress={() => router.push(eventRoute(c.eventId))}
-            style={[styles.row, { borderBottomColor: color.hairline }]}
-          >
-            <Text numberOfLines={2} style={[TYPE.rowTitle, styles.flex, { color: color.ink }]}>
-              {c.question}
-            </Text>
-            <Text
-              style={[
-                TYPE.caption,
-                { color: c.status === "won" ? color.up : c.status === "lost" ? color.down : color.inkMuted },
-              ]}
-            >
-              {callResultText(c)}
-            </Text>
-          </Pressable>
-        ))
+        <Button
+          label="Sign in to call"
+          variant="secondary"
+          size="sm"
+          block={false}
+          onPress={() => router.push(accountRequiredRoute("call an event", "/events"))}
+        />
       )}
+    </View>
+  );
+}
+
+function CallList({ title, calls }: { title: string; calls: readonly EventCallView[] }) {
+  const { color } = useTheme();
+  return (
+    <View style={styles.section} accessibilityLabel={title}>
+      <Text accessibilityRole="header" style={[TYPE.sectionTitle, { color: color.ink }]}>
+        {title}
+      </Text>
+      {calls.map((c) => (
+        <Pressable
+          key={c.ticketId.toString()}
+          accessibilityRole="link"
+          onPress={() => router.push(eventRoute(c.eventId))}
+          style={[styles.row, { borderBottomColor: color.hairline }]}
+        >
+          <Text numberOfLines={2} style={[TYPE.rowTitle, styles.flex, { color: color.ink }]}>
+            {c.question}
+          </Text>
+          <Text
+            style={[
+              TYPE.caption,
+              { color: c.status === "won" ? color.up : c.status === "lost" ? color.down : color.inkMuted },
+            ]}
+          >
+            {callResultText(c)}
+          </Text>
+        </Pressable>
+      ))}
     </View>
   );
 }

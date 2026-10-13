@@ -1,4 +1,5 @@
 "use client";
+import type { RowMark, RowOpen } from "@senryo/calls";
 /**
  * Calls (the phone's Calls, S5.11): the record on this network (R5.20 `StatsCard`), then what's open
  * now, live (R5.3: the book's positions with Cash out), the parlays in play, and every call before it, newest first,
@@ -7,7 +8,9 @@
 import { CALL_FILTERS, type CallFilter, type CallRow, filterRows, useCallRows, useLiveBook } from "@senryo/calls/react";
 import { usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
+import { Layers, Swords, Trophy } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
 import { Button } from "@/components/ui/button";
@@ -24,21 +27,51 @@ import { StatsCard } from "./StatsCard";
 const MARK = 36;
 const TONE = { up: "text-up", down: "text-down", muted: "text-text-2" } as const;
 
+const PLACE_ICON = { event: Trophy, parlay: Layers, duel: Swords } as const;
+
+/** A market's own mark, or the place's nav icon (the rail's Trophy, Layers, Swords) in the same circle. */
+function RowMarkView({ mark }: { mark: RowMark }) {
+  if (mark.kind === "market") return <EntityMark id={marketId(mark.symbol)} size={MARK} decorative />;
+  const Glyph = PLACE_ICON[mark.kind];
+  return (
+    <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary">
+      <Glyph className="size-4" />
+    </span>
+  );
+}
+
 function Row({ row, hidden }: { row: CallRow; hidden: boolean }) {
+  const router = useRouter();
   const title = row.title;
+  const receipt = row.open.kind === "call" || row.open.kind === "ride";
+  // A receipt opens in the wide drawer; an event call, parlay or duel opens where it lives (D1).
+  const go = (o: RowOpen) => {
+    switch (o.kind) {
+      case "call":
+        return openDrawer(DRAWERS.call, { id: String(o.id) });
+      case "ride":
+        return openDrawer(DRAWERS.ride, { id: String(o.id) });
+      case "event":
+        return router.push(`/app/event/?id=${o.eventId}`);
+      case "parlay":
+        return router.push("/app/parlay/");
+      case "duel":
+        return router.push("/app/duel/");
+    }
+  };
   return (
     <button
       type="button"
       className="flex min-h-16 w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
-      aria-label={`${title}, ${row.status}, ${masked(row.result, hidden)}. Open the receipt`}
+      aria-label={`${title}, ${row.status}, ${masked(row.result, hidden)}. ${receipt ? "Open the receipt" : "Open"}`}
       onClick={() => {
         tapFeedback();
-        openDrawer(row.kind === "ride" ? DRAWERS.ride : DRAWERS.call, { id: String(row.id) });
+        go(row.open);
       }}
     >
-      <EntityMark id={marketId(row.symbol)} size={MARK} decorative />
+      <RowMarkView mark={row.mark} />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="font-semibold text-row-title">{title}</span>
+        <span className="truncate font-semibold text-row-title">{title}</span>
         <span className="text-meta text-text-3">
           {row.tag} · {masked(usd(row.stake), hidden)} · {row.status}
         </span>

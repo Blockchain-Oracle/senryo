@@ -31,6 +31,22 @@ function sourceOf(name: SoundName): AudioSource {
 const players = new Map<SoundName, AudioPlayer>();
 let prepared = false;
 
+/**
+ * A replay the user plays is heard even with the silent switch on, as video is on iOS (D5: the owner's replay was
+ * silent "sometimes" — whenever the switch was on); the app's cues stay ambient otherwise. Never throws.
+ */
+export async function replayAudio(on: boolean): Promise<void> {
+  try {
+    await setAudioModeAsync({
+      playsInSilentMode: on,
+      interruptionMode: "mixWithOthers",
+      shouldPlayInBackground: false,
+    });
+  } catch {
+    // The picture plays either way.
+  }
+}
+
 /** Once at launch (the root layout's FeedbackHost): audio mode, then one player per available sound. */
 export async function prepareSounds(): Promise<void> {
   if (prepared) return;

@@ -5,6 +5,7 @@
  * Every row opens its receipt. Pull to refresh; the user's stream keeps both lists true.
  */
 
+import type { RowMark, RowOpen } from "@senryo/calls";
 import {
   CALL_FILTERS,
   type CallFilter,
@@ -22,8 +23,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Segmented } from "~/components/kit/Segmented";
 import { EmptyState, LoadingState } from "~/components/kit/states";
+import { Layers, Swords, Trophy } from "~/components/kit/symbols";
 import { CollapsingScreen } from "~/components/shell/CollapsingScreen";
 import { TabTitle } from "~/components/shell/TabTitle";
+import { eventRoute } from "~/features/events/EventCard";
 import { OpenParlays } from "~/features/parlay/ParlayList";
 import { PositionsList } from "~/features/positions/PositionsList";
 import { fire } from "~/feedback/fire";
@@ -35,6 +38,36 @@ import { StatsCard } from "./StatsCard";
 
 const MARK = 36;
 
+/** Where a history row goes: a receipt, or the place an event call, parlay or duel lives (D1). */
+function hrefOf(o: RowOpen): Href {
+  switch (o.kind) {
+    case "call":
+      return `/calls/${o.id}` as Href;
+    case "ride":
+      return `/calls/rides/${o.id}` as Href;
+    case "event":
+      return eventRoute(o.eventId);
+    case "parlay":
+      return "/parlay" as Href;
+    case "duel":
+      return "/duel" as Href;
+  }
+}
+
+const PLACE_ICON = { event: Trophy, parlay: Layers, duel: Swords } as const;
+
+/** A market's own mark, or the place's nav icon in the same circle. */
+function RowMarkView({ mark }: { mark: RowMark }) {
+  const { color } = useTheme();
+  if (mark.kind === "market") return <EntityMark id={marketId(mark.symbol)} size={MARK} decorative />;
+  const Glyph = PLACE_ICON[mark.kind];
+  return (
+    <View style={[styles.place, { backgroundColor: color.raised2 }]}>
+      <Glyph size={SIZE.iconSm} strokeWidth={SIZE.iconStroke} color={color.ink} />
+    </View>
+  );
+}
+
 function CallRowView({ row }: { row: Row }) {
   const { color } = useTheme();
   const [hidden] = useHideBalances();
@@ -45,15 +78,17 @@ function CallRowView({ row }: { row: Row }) {
     <Pressable
       style={styles.row}
       accessibilityRole="button"
-      accessibilityLabel={`${title}, ${row.status}, ${result}. Open the receipt`}
+      accessibilityLabel={`${title}, ${row.status}, ${result}. ${row.open.kind === "call" || row.open.kind === "ride" ? "Open the receipt" : "Open"}`}
       onPress={() => {
         fire("tick");
-        router.push((row.kind === "ride" ? `/calls/rides/${row.id}` : `/calls/${row.id}`) as Href);
+        router.push(hrefOf(row.open));
       }}
     >
-      <EntityMark id={marketId(row.symbol)} size={MARK} decorative />
+      <RowMarkView mark={row.mark} />
       <View style={styles.text}>
-        <Text style={[TYPE.rowTitle, { color: color.ink }]}>{title}</Text>
+        <Text numberOfLines={1} style={[TYPE.rowTitle, { color: color.ink }]}>
+          {title}
+        </Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
           {row.tag} · {masked(usd(row.stake), hidden)} · {row.status}
         </Text>
@@ -144,6 +179,7 @@ export function CallsScreen() {
 
 const styles = StyleSheet.create({
   body: { gap: SPACE.sm },
+  place: { width: MARK, height: MARK, borderRadius: MARK / 2, alignItems: "center", justifyContent: "center" },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: SIZE.touch + SPACE.lg },
   text: { flex: 1 },
   none: { paddingVertical: SPACE.lg, textAlign: "center" },

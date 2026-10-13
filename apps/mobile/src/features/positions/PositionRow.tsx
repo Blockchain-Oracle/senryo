@@ -34,6 +34,8 @@ import { RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { PositionSheet } from "./PositionSheet";
 import { PositionTrace } from "./PositionTrace";
 
+/** The figures while a close is on its way: still readable, plainly not live. */
+const CLOSING_OPACITY = 0.45;
 const ROW = 80;
 const MARK = 32;
 const RING = 40;
@@ -107,7 +109,17 @@ function Figures({ e, font, hidden }: { e: BookEntry; font: SkFont | null; hidde
   );
 }
 
-function CloseAction({ e, ready, onPress }: { e: BookEntry; ready: boolean; onPress: () => void }) {
+function CloseAction({
+  e,
+  ready,
+  closing,
+  onPress,
+}: {
+  e: BookEntry;
+  ready: boolean;
+  closing: boolean;
+  onPress: () => void;
+}) {
   const { color } = useTheme();
   const [hidden] = useHideBalances();
   const amount = e.closeValue === null ? "—" : masked(dollars(e.closeValue), hidden);
@@ -117,7 +129,8 @@ function CloseAction({ e, ready, onPress }: { e: BookEntry; ready: boolean; onPr
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${closeWord(e)} ${amount}`}
-          disabled={e.closeValue === null}
+          disabled={e.closeValue === null || closing}
+          accessibilityState={{ disabled: e.closeValue === null || closing, busy: closing }}
           onPress={onPress}
           style={[styles.action, { backgroundColor: color.accent }]}
         >
@@ -150,6 +163,8 @@ export function PositionRow({
   const { color } = useTheme();
   const [hidden] = useHideBalances();
   const { head, clock, samples, now } = usePositionRow(e);
+  // A close on its way says so at once and holds until it settles (D3): the tap is never met by nothing.
+  const clockText = closing ? (e.kind === "ride" ? "Closing…" : "Cashing out…") : clock.text;
   const swipe = useRef<SwipeableMethods>(null);
   const [menu, setMenu] = useState(false);
   // A link (search's position, D-340) asked for this one: its Close revealed and ringed, never pressed.
@@ -183,6 +198,7 @@ export function PositionRow({
           <CloseAction
             e={e}
             ready={ready}
+            closing={closing}
             onPress={() => {
               swipe.current?.close();
               onClose(e);
@@ -202,7 +218,7 @@ export function PositionRow({
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={`Open ${e.symbol} position`}
-          accessibilityHint={clock.text}
+          accessibilityHint={clockText}
           accessibilityActions={[
             { name: "activate" },
             ...(canClose ? [{ name: "actions", label: "Show position actions" }] : []),
@@ -227,12 +243,14 @@ export function PositionRow({
             </Text>
             <View style={styles.clockLine}>
               <Text numberOfLines={2} style={[TYPE.meta, styles.clock, { color: color.inkMuted }]}>
-                {clock.text}
+                {clockText}
               </Text>
               {hidden ? null : <PositionTrace samples={samples} dim={e.state === "no-price"} />}
             </View>
           </View>
-          <Figures e={e} font={font} hidden={hidden} />
+          <View style={closing ? styles.closing : null}>
+            <Figures e={e} font={font} hidden={hidden} />
+          </View>
         </Pressable>
       </ReanimatedSwipeable>
       {menu ? <PositionSheet e={e} onClose={() => setMenu(false)} /> : null}
@@ -241,6 +259,7 @@ export function PositionRow({
 }
 
 const styles = StyleSheet.create({
+  closing: { opacity: CLOSING_OPACITY },
   row: {
     flexDirection: "row",
     alignItems: "center",

@@ -8,9 +8,14 @@ import { usePositionActions } from "@senryo/calls/react";
 import { useAppTrader } from "@/lib/account/guest";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
+import { tradeToast } from "@/lib/trade-toast";
 
 export function usePositionClose() {
-  const actions = usePositionActions(useAppTrader().caller);
+  // The position's toast says "Closing…" at the tap and the refusal in place (D3); a filled close's result lands there.
+  const actions = usePositionActions(useAppTrader().caller, {
+    toast: tradeToast,
+    fail: () => fire("fail", { cue: "error" }),
+  });
   const fail = (e: BookEntry | null, error: unknown) => {
     fire("fail", { cue: "error" });
     notify({

@@ -20,6 +20,7 @@ export * from "./film-scene.ts";
 export * from "./film-sound.ts";
 export * from "./guest.ts";
 export * from "./handle-copy.ts";
+export * from "./history-rows.ts";
 export * from "./instrument.ts";
 export * from "./intent-journal.ts";
 export * from "./levels.ts";
