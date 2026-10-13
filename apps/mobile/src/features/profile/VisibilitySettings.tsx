@@ -6,9 +6,10 @@
  */
 
 import { SHARED_ADDRESS, type Visibility } from "@senryo/calls";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { ListRow } from "~/components/kit/ListRow";
 import { Panel } from "~/components/kit/Surface";
+import { Switch } from "~/components/kit/Switch";
 import { InfoTip } from "~/features/setup/InfoTip";
 import { fire } from "~/feedback/fire";
 import { SPACE, TYPE, useTheme } from "~/theme";
@@ -40,7 +41,6 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
       {NETWORKS.map((network) => {
         const tone = network.mode === "Practice" ? color.practice : color.mainnet;
         const listed = value[network.listed];
-        const switchColors = { trackColor: { true: tone, false: color.muted }, thumbColor: color.foreground };
         return (
           <View key={network.mode} style={styles.network}>
             <Text style={[TYPE.modeLabel, { color: tone }]}>{network.mode}</Text>
@@ -49,7 +49,7 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
                 title="List my profile"
                 trailing={
                   <Switch
-                    {...switchColors}
+                    tone={tone}
                     value={listed}
                     onValueChange={(on) => {
                       fire("tick");
@@ -64,7 +64,7 @@ export function VisibilitySettings({ value, onChange }: { value: Visibility; onC
                 detail={listed ? undefined : "List your profile first"}
                 trailing={
                   <Switch
-                    {...switchColors}
+                    tone={tone}
                     value={listed && value[network.trades]}
                     disabled={!listed}
                     onValueChange={(on) => {

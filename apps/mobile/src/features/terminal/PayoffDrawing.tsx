@@ -63,7 +63,7 @@ export function PayoffDrawing({
               />
             ))}
             {payoff.zones.map((z) => {
-              const mid = (y(z.from) + y(z.to)) / HALF;
+              const mid = y(z.barAt);
               return (
                 <Rect
                   key={`bar-${z.slot}`}
@@ -99,7 +99,7 @@ export function PayoffDrawing({
             )}
           </Svg>
           {payoff.zones.map((z) => {
-            const mid = (y(z.from) + y(z.to)) / HALF;
+            const mid = y(z.barAt);
             const pays = z.payout === null ? "—" : masked(dollars(z.payout), hidden);
             const end = GUTTER + Math.max(BAR / HALF, share(z) * span);
             const inside = share(z) > INSIDE;

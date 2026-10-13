@@ -10,13 +10,14 @@ import {
   type CallMode,
   callPayoff,
   dollars,
-  fineDollars,
+  feeDollars,
   type Offer,
   type Quotes,
   TRAIL_CENTS,
 } from "@senryo/calls";
 import { useState } from "react";
 import { DisclosureRow } from "@/components/ui/disclosure-row";
+import { FactList } from "@/components/ui/fact-list";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { fire } from "@/lib/feedback";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
@@ -46,7 +47,7 @@ export function CallSettings(p: CallSettingsProps) {
   const hidden = usePrivacy();
   const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
-  const fine = (v: bigint) => masked(fineDollars(v), hidden);
+  const fine = (v: bigint) => masked(feeDollars(v), hidden);
   const top = BigInt(STAKE_PRESETS_USD.at(-1) ?? 1) * USD;
   const payoff = callPayoff(p.offer, p.quotes, p.stake, top < p.max ? top : p.max);
   const fees = payoff.zones.flatMap((z) => (z.fee === null ? [] : [z.fee]));
@@ -110,14 +111,11 @@ export function CallSettings(p: CallSettingsProps) {
       </DisclosureRow>
       {fees.length > 0 ? (
         <DisclosureRow title="Fees" value={low === high ? fine(low) : `${fine(low)}–${fine(high)}`}>
-          {payoff.zones.map((z) =>
-            z.fee === null ? null : (
-              <p key={z.slot} className="flex items-center gap-3 text-body">
-                <span className="flex-1 text-text-3">In {z.band.label}'s price</span>
-                <span className="tnum font-semibold">{fine(z.fee)}</span>
-              </p>
-            ),
-          )}
+          <FactList
+            facts={payoff.zones.flatMap((z) =>
+              z.fee === null ? [] : [{ label: `In ${z.band.label}'s price`, value: feeDollars(z.fee), money: true }],
+            )}
+          />
         </DisclosureRow>
       ) : null}
     </div>

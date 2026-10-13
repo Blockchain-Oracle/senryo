@@ -7,7 +7,7 @@
  */
 import {
   dollars,
-  fineDollars,
+  feeDollars,
   LEVERAGE_OFF_X,
   leverageMarks,
   leverageOn,
@@ -21,6 +21,7 @@ import {
 import { SquarePen } from "lucide-react";
 import { useState } from "react";
 import { DisclosureRow } from "@/components/ui/disclosure-row";
+import { FactList } from "@/components/ui/fact-list";
 import { MarksSlider } from "@/components/ui/marks-slider";
 import { SwitchRow } from "@/components/ui/switch-row";
 import { fire } from "@/lib/feedback";
@@ -53,7 +54,7 @@ export function RideSettings(p: RideSettingsProps) {
   const hidden = usePrivacy();
   const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
-  const fine = (v: bigint) => masked(fineDollars(v), hidden);
+  const fine = (v: bigint) => masked(feeDollars(v), hidden);
   const on = leverageOn(p.leverageBps);
   const x = p.leverageBps / LEVERAGE_ONE;
   const marks = leverageMarks(p.maxLeverageBps);
@@ -151,16 +152,19 @@ export function RideSettings(p: RideSettingsProps) {
       </DisclosureRow>
       {up ? (
         <DisclosureRow title="Open fee" value={fine(up.fee)}>
-          <p className="flex items-center gap-3 text-body">
-            <span className="flex-1 text-text-3">Close fee at today's price</span>
-            <span className="tnum font-semibold">{fine(up.closeFee)}</span>
-          </p>
-          {p.terms.earlyFeeBps > 0 ? (
-            <p className="flex items-center gap-3 text-body">
-              <span className="flex-1 text-text-3">In profit within {p.terms.earlyWindowSec} s</span>
-              <span className="tnum font-semibold">up to {p.terms.earlyFeeBps / BPS_PER_PERCENT}%</span>
-            </p>
-          ) : null}
+          <FactList
+            facts={[
+              { label: "Close fee at today's price", value: feeDollars(up.closeFee), money: true },
+              ...(p.terms.earlyFeeBps > 0
+                ? [
+                    {
+                      label: `In profit within ${p.terms.earlyWindowSec} s`,
+                      value: `up to ${p.terms.earlyFeeBps / BPS_PER_PERCENT}%`,
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </DisclosureRow>
       ) : null}
     </div>

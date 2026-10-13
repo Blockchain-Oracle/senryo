@@ -4,6 +4,7 @@ export * from "./book-words.ts";
 export * from "./call-payoff.ts";
 export * from "./caller.ts";
 export * from "./candles.ts";
+export * from "./chain.ts";
 export * from "./constants.ts";
 export * from "./delegates.ts";
 export * from "./duel.ts";

@@ -7,6 +7,7 @@
 import { type CloseReview, dollars } from "@senryo/calls";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FactList } from "@/components/ui/fact-list";
 import { Modal } from "@/components/ui/modal";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 
@@ -44,10 +45,7 @@ export function CloseAllModal({
       }
     >
       <div className="flex flex-col gap-3 text-body">
-        <p className="flex items-center gap-3">
-          <span className="flex-1 text-text-3">Estimated return</span>
-          <span className="tnum font-semibold">{estimate}</span>
-        </p>
+        <FactList facts={[{ label: "Estimated return", value: dollars(review.estimate), money: true }]} />
         {review.unavailable > 0 ? (
           <p className="text-meta text-text-3">
             {review.unavailable === 1

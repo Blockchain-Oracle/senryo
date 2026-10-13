@@ -26,6 +26,7 @@ import {
   solNoMagicNumbers,
   uniqueApiRoutes,
 } from "./lib/repo-checks.mjs";
+import { dotChains, factListOnly, noExplainers } from "./lib/restraint-checks.mjs";
 import { sqlNoDroppedTables } from "./lib/sql-checks.mjs";
 
 const TS = [".ts", ".tsx"];
@@ -152,6 +153,28 @@ export const rules = [
     pattern: /#[0-9a-fA-F]{3,8}\b|\brgba?\(/,
   },
   { id: "mobile-tight-leading", description: "lineHeight never below fontSize", check: mobileTightLeading },
+  {
+    id: "restraint-dot-chains",
+    description: 'no " · " chain over three segments on an operational surface (Q0, D-346)',
+    check: dotChains,
+  },
+  {
+    id: "restraint-fact-list",
+    description: "one fact list per app: no ad-hoc <dl> / Fact / SummaryRow grid outside FactList (Q0, D-346)",
+    check: factListOnly,
+  },
+  {
+    id: "restraint-no-explainers",
+    description: "settings and exit components carry no hint / description sentences (Q0, D-346)",
+    check: noExplainers,
+  },
+  {
+    id: "restraint-retired-words",
+    description: "the retired sentence helpers stay retired — the apps draw values (Q0, D-345)",
+    scopes: ["apps", "packages"],
+    exts: TS,
+    pattern: /\b(knockOutWords|capWords|capText|positionSub|positionHold|positionTitle|leverageChips)\b/,
+  },
   {
     id: "haptics-via-feedback",
     description: "haptics only through apps/mobile/src/feedback",

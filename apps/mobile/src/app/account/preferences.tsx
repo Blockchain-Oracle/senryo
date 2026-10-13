@@ -1,10 +1,11 @@
 import { router, Stack } from "expo-router";
-import { StyleSheet, Switch, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useMMKVBoolean, useMMKVNumber, useMMKVString } from "react-native-mmkv";
 import { ListRow } from "~/components/kit/ListRow";
 import { Screen } from "~/components/kit/Screen";
 import { Segmented } from "~/components/kit/Segmented";
 import { Panel } from "~/components/kit/Surface";
+import { Switch } from "~/components/kit/Switch";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { applyVolumes, effectsVolume, fire, musicVolume } from "~/feedback/fire";
 import { ROUTES } from "~/lib/constants/routes";
@@ -36,7 +37,7 @@ const APPEARANCE = [
  * by ear. Every choice applies as it is made and stays on this phone.
  */
 export default function Preferences() {
-  const { setTheme, color } = useTheme();
+  const { setTheme } = useTheme();
   const [stored] = useMMKVString(STORAGE_KEYS.theme, storage);
   const [reactions, setReactions] = useMMKVBoolean(STORAGE_KEYS.tradeReactions, storage);
   const [sounds, setSounds] = useMMKVBoolean(STORAGE_KEYS.sounds, storage);
@@ -49,7 +50,6 @@ export default function Preferences() {
     applyVolumes();
     fire("tick", { cue: "toggle" });
   };
-  const switchColors = { trackColor: { true: color.primary, false: color.muted }, thumbColor: color.foreground };
   const appearance: Appearance = stored === "dark" || stored === "system" ? stored : "light";
   return (
     <Screen>
@@ -68,20 +68,12 @@ export default function Preferences() {
         <Panel>
           <ListRow
             title="Sounds"
-            trailing={
-              <Switch
-                {...switchColors}
-                value={sounds ?? true}
-                onValueChange={(v) => setSounds(v)}
-                accessibilityLabel="Sounds"
-              />
-            }
+            trailing={<Switch value={sounds ?? true} onValueChange={(v) => setSounds(v)} accessibilityLabel="Sounds" />}
           />
           <ListRow
             title="Haptics"
             trailing={
               <Switch
-                {...switchColors}
                 value={haptics ?? true}
                 onValueChange={(v) => {
                   setHaptics(v);
@@ -95,7 +87,6 @@ export default function Preferences() {
             title="Live position reactions"
             trailing={
               <Switch
-                {...switchColors}
                 value={reactions ?? false}
                 onValueChange={setReactions}
                 accessibilityLabel="Live position reactions"
@@ -106,7 +97,6 @@ export default function Preferences() {
             title="Music in the terminal"
             trailing={
               <Switch
-                {...switchColors}
                 value={terminalMusic ?? false}
                 onValueChange={setTerminalMusic}
                 accessibilityLabel="Music in the terminal"

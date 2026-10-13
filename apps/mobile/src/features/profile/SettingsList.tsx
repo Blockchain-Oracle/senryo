@@ -8,9 +8,10 @@
 import { shortAddress } from "@senryo/core";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useMMKVBoolean, useMMKVString } from "react-native-mmkv";
 import { Panel } from "~/components/kit/Surface";
+import { Switch } from "~/components/kit/Switch";
 import {
   ArrowLeftRight,
   Bell,
@@ -58,7 +59,6 @@ export function SettingsList() {
   const hint = account.hint;
   const practice = network.key === "testnet";
   const sound = (sounds ?? true) || (haptics ?? true) ? "On" : "Off";
-  const switchColors = { trackColor: { true: color.primary, false: color.muted }, thumbColor: color.foreground };
   return (
     <>
       {hint ? (
@@ -137,7 +137,6 @@ export function SettingsList() {
             tint={color.chart3}
             control={
               <Switch
-                {...switchColors}
                 value={hidden}
                 onValueChange={(next) => {
                   fire("tick");

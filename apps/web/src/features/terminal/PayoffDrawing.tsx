@@ -16,6 +16,7 @@ const PERCENT = 100;
 const GUTTER = "5.5rem";
 const INSIDE = 0.72;
 const MIN_BAR = 0.02;
+const MIN_SPAN = 0.001;
 
 const pct = (v: number) => `${v * PERCENT}%`;
 /** A point along the bar track: the gutter plus a share of what's left. */
@@ -41,6 +42,8 @@ export function PayoffDrawing({
       {payoff.zones.map((z) => {
         const pays = z.payout === null ? "—" : masked(dollars(z.payout), hidden);
         const inside = share(z) > INSIDE;
+        // The bar's height inside its zone (a Range's sits above the line that runs through it).
+        const top = pct((z.to - z.barAt) / Math.max(MIN_SPAN, z.to - z.from));
         return (
           <button
             key={z.slot}
@@ -58,31 +61,31 @@ export function PayoffDrawing({
           >
             <span
               className={cn(
-                "-translate-y-1/2 absolute top-1/2 left-0 line-clamp-2 pr-2 font-semibold text-row",
+                "-translate-y-1/2 absolute left-0 line-clamp-2 pr-2 font-semibold text-row",
                 z.band.tone === "up" ? "text-up" : z.band.tone === "down" ? "text-down" : "text-foreground",
               )}
-              style={{ width: GUTTER }}
+              style={{ top, width: GUTTER }}
             >
               {open === z.slot ? z.band.where : z.band.label}
             </span>
             <span
               aria-hidden
               className={cn(
-                "-translate-y-1/2 absolute top-1/2 h-7 rounded-full transition-[width] duration-(--motion-base)",
+                "-translate-y-1/2 absolute h-7 rounded-full transition-[width] duration-(--motion-base)",
                 z.band.tone === "up" ? "bg-up" : z.band.tone === "down" ? "bg-down" : "bg-primary",
                 z.payout === null && "opacity-30",
               )}
-              style={{ left: GUTTER, width: `calc((100% - ${GUTTER}) * ${share(z)})` }}
+              style={{ top, left: GUTTER, width: `calc((100% - ${GUTTER}) * ${share(z)})` }}
             />
             <span
               className={cn(
-                "tnum -translate-y-1/2 absolute top-1/2 font-semibold text-row",
+                "tnum -translate-y-1/2 absolute font-semibold text-row",
                 inside ? "text-background" : "text-foreground",
               )}
               style={
                 inside
-                  ? { right: `calc(100% - ${along(share(z))} + 0.5rem)` }
-                  : { left: `calc(${along(share(z))} + 0.5rem)` }
+                  ? { top, right: `calc(100% - ${along(share(z))} + 0.5rem)` }
+                  : { top, left: `calc(${along(share(z))} + 0.5rem)` }
               }
             >
               {pays}

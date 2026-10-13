@@ -6,7 +6,7 @@
  */
 import {
   dollars,
-  fineDollars,
+  feeDollars,
   LEVERAGE_OFF_X,
   leverageMarks,
   leverageOn,
@@ -18,10 +18,12 @@ import {
   trailText,
 } from "@senryo/calls";
 import { useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AmountPad } from "~/components/kit/AmountPad";
 import { DisclosureRow } from "~/components/kit/DisclosureRow";
+import { FactList } from "~/components/kit/FactList";
 import { MarksSlider } from "~/components/kit/MarksSlider";
+import { Switch } from "~/components/kit/Switch";
 import { SquarePen } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { masked, useHideBalances } from "~/lib/hide-balances";
@@ -53,7 +55,7 @@ export function RideSettingsBody({ o, available }: { o: RideOrder; available: bi
   const [hidden] = useHideBalances();
   const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
-  const fine = (v: bigint) => masked(fineDollars(v), hidden);
+  const fine = (v: bigint) => masked(feeDollars(v), hidden);
   const amount = useTyped(o.margin, o.terms.minMargin, o.terms.maxMargin, available, o.onMargin);
   const on = leverageOn(o.leverageBps);
   const x = o.leverageBps / ONE_X;
@@ -61,6 +63,9 @@ export function RideSettingsBody({ o, available }: { o: RideOrder; available: bi
   const up = o.markE8 ? rideQuote(true, o.margin, o.leverageBps, o.markE8, o.terms) : null;
   const down = o.markE8 ? rideQuote(false, o.margin, o.leverageBps, o.markE8, o.terms) : null;
   const ladder = up && down && o.markE8 ? rideLadder(up, down, o.markE8) : null;
+  // Off is always one tap; on returns to the multiple last chosen, held to this market's cap (D-344).
+  const toggle = (next: boolean) =>
+    o.onLeverage(next ? Math.min(o.leverageOnX, marks.at(-1) ?? o.leverageOnX) : LEVERAGE_OFF_X);
   return (
     <>
       <Pressable
@@ -87,19 +92,20 @@ export function RideSettingsBody({ o, available }: { o: RideOrder; available: bi
           onChange={amount.change}
         />
       ) : null}
-      <View style={styles.row}>
+      <Pressable
+        onPress={() => {
+          fire("tick", { cue: "toggle" });
+          toggle(!on);
+        }}
+        accessibilityRole="switch"
+        accessibilityLabel="Leverage"
+        accessibilityState={{ checked: on }}
+        accessible
+        style={styles.row}
+      >
         <Text style={[TYPE.row, styles.grow, { color: color.ink }]}>Leverage</Text>
-        <Switch
-          value={on}
-          onValueChange={(next) => {
-            fire("tick", { cue: "toggle" });
-            o.onLeverage(next ? Math.min(o.leverageOnX, marks.at(-1) ?? o.leverageOnX) : LEVERAGE_OFF_X);
-          }}
-          accessibilityLabel="Leverage"
-          trackColor={{ true: color.primary, false: color.muted }}
-          thumbColor={color.foreground}
-        />
-      </View>
+        <Switch value={on} onValueChange={toggle} accessibilityLabel="Leverage" />
+      </Pressable>
       {on ? (
         <View style={styles.leverage}>
           <Text style={[TYPE.displayBalance, { color: color.ink }]}>{x}×</Text>
@@ -122,18 +128,19 @@ export function RideSettingsBody({ o, available }: { o: RideOrder; available: bi
       </DisclosureRow>
       {up ? (
         <DisclosureRow title="Open fee" value={fine(up.fee)}>
-          <View style={styles.fact}>
-            <Text style={[TYPE.rowDetail, styles.grow, { color: color.inkMuted }]}>Close fee at today's price</Text>
-            <Text style={[TYPE.rowAmount, { color: color.ink }]}>{fine(up.closeFee)}</Text>
-          </View>
-          {o.terms.earlyFeeBps > 0 ? (
-            <View style={styles.fact}>
-              <Text style={[TYPE.rowDetail, styles.grow, { color: color.inkMuted }]}>
-                In profit within {o.terms.earlyWindowSec} s
-              </Text>
-              <Text style={[TYPE.rowAmount, { color: color.ink }]}>up to {o.terms.earlyFeeBps / BPS_PER_PERCENT}%</Text>
-            </View>
-          ) : null}
+          <FactList
+            facts={[
+              { label: "Close fee at today's price", value: feeDollars(up.closeFee), money: true },
+              ...(o.terms.earlyFeeBps > 0
+                ? [
+                    {
+                      label: `In profit within ${o.terms.earlyWindowSec} s`,
+                      value: `up to ${o.terms.earlyFeeBps / BPS_PER_PERCENT}%`,
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </DisclosureRow>
       ) : null}
     </>
@@ -144,5 +151,4 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm, minHeight: ROW },
   grow: { flex: 1 },
   leverage: { gap: SPACE.xs },
-  fact: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
 });

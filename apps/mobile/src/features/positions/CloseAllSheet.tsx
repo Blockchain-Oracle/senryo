@@ -6,12 +6,11 @@
 import { type CloseReview, dollars } from "@senryo/calls";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
+import { FactList } from "~/components/kit/FactList";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SPACE, TYPE, useTheme } from "~/theme";
-
-const ROW = 44;
 
 function Body({
   review,
@@ -29,10 +28,7 @@ function Body({
   const estimate = masked(dollars(review.estimate), hidden);
   return (
     <View style={styles.body}>
-      <View style={styles.fact}>
-        <Text style={[TYPE.row, styles.grow, { color: color.inkMuted }]}>Estimated return</Text>
-        <Text style={[TYPE.rowAmount, { color: color.ink }]}>{estimate}</Text>
-      </View>
+      <FactList facts={[{ label: "Estimated return", value: dollars(review.estimate), money: true }]} />
       {review.unavailable > 0 ? (
         <Text style={[TYPE.rowDetail, { color: color.inkMuted }]}>
           {review.unavailable === 1
@@ -71,6 +67,4 @@ export function CloseAllSheet({
 
 const styles = StyleSheet.create({
   body: { gap: SPACE.md, paddingBottom: SPACE.lg },
-  fact: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: ROW },
-  grow: { flex: 1 },
 });

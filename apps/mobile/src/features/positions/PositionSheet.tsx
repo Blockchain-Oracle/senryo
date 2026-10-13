@@ -15,13 +15,13 @@ import {
 import { priceText } from "@senryo/core";
 import { type Href, router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { FactList } from "~/components/kit/FactList";
 import { ListRow } from "~/components/kit/ListRow";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { fire } from "~/feedback/fire";
-import { masked, useHideBalances } from "~/lib/hide-balances";
-import { SPACE, TYPE, useTheme } from "~/theme";
+import { SPACE } from "~/theme";
 
 const ROW = 44;
 
@@ -48,30 +48,24 @@ function Menu({ e, onDetails }: { e: BookEntry; onDetails: () => void }) {
 }
 
 function Details({ e }: { e: BookEntry }) {
-  const { color } = useTheme();
-  const [hidden] = useHideBalances();
   const unit = unitOf(e.symbol);
   const text = (v: DetailValue) =>
     v.kind === "price"
       ? v.e8 === null
-        ? "—"
+        ? null
         : priceText(v.e8, unit)
       : v.kind === "money"
         ? v.v === null
-          ? "—"
-          : masked(dollars(v.v), hidden)
+          ? null
+          : dollars(v.v)
         : v.at === null
-          ? "—"
+          ? null
           : datedText(v.at);
   return (
-    <View>
-      {positionDetails(e).map((d) => (
-        <View key={d.label} style={styles.fact}>
-          <Text style={[TYPE.row, styles.grow, { color: color.inkMuted }]}>{d.label}</Text>
-          <Text style={[TYPE.rowAmount, { color: color.ink }]}>{text(d.value)}</Text>
-        </View>
-      ))}
-    </View>
+    <FactList
+      atRest={false}
+      facts={positionDetails(e).map((d) => ({ label: d.label, value: text(d.value), money: d.value.kind === "money" }))}
+    />
   );
 }
 
@@ -85,7 +79,7 @@ export function PositionSheet({ e, onClose }: { e: BookEntry; onClose: () => voi
   );
 }
 
-const styles = StyleSheet.create({
+const _styles = StyleSheet.create({
   fact: { flexDirection: "row", alignItems: "center", gap: SPACE.md, minHeight: ROW },
   grow: { flex: 1 },
 });

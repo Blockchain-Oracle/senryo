@@ -16,10 +16,10 @@ import {
 import { priceText } from "@senryo/core";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { FactList } from "@/components/ui/fact-list";
 import { Modal } from "@/components/ui/modal";
 import { fire } from "@/lib/feedback";
 import { DRAWERS, openDrawer } from "@/lib/shell/drawer-param";
-import { masked, usePrivacy } from "@/lib/shell/privacy";
 
 function Item({ label, onClick }: { label: string; onClick: () => void }) {
   return (
@@ -43,7 +43,6 @@ export function PositionMenu({
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
-  const hidden = usePrivacy();
   const [details, setDetails] = useState(false);
   const unit = unitOf(e.symbol);
   const text = (v: DetailValue) =>
@@ -54,7 +53,7 @@ export function PositionMenu({
       : v.kind === "money"
         ? v.v === null
           ? "—"
-          : masked(dollars(v.v), hidden)
+          : dollars(v.v)
         : v.at === null
           ? "—"
           : datedText(v.at);
@@ -68,14 +67,14 @@ export function PositionMenu({
       title={details ? "Position details" : positionHead(e)}
     >
       {details ? (
-        <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 text-body">
-          {positionDetails(e).map((d) => (
-            <div key={d.label} className="contents">
-              <dt className="text-text-3">{d.label}</dt>
-              <dd className="tnum text-right font-semibold">{text(d.value)}</dd>
-            </div>
-          ))}
-        </dl>
+        <FactList
+          atRest={false}
+          facts={positionDetails(e).map((d) => ({
+            label: d.label,
+            value: text(d.value),
+            money: d.value.kind === "money",
+          }))}
+        />
       ) : (
         <div className="flex flex-col">
           <Item

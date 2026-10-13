@@ -6,6 +6,7 @@ import type { CommitteeView, EventAnswerView, EventCallView, EventView } from "@
 import { estimateEventPayout, statementHashOf } from "@senryo/chain";
 import { leagueOf } from "@senryo/config";
 import { usd } from "@senryo/core";
+import { chain } from "./chain.ts";
 
 export const EVENT_SIDES = [
   { yes: true, label: "Yes" },
@@ -118,5 +119,5 @@ export function liveLine(e: Pick<EventView, "live" | "home" | "away">): string |
   if (!l || l.state === "pre") return null;
   const score = l.home !== null && l.away !== null ? `${e.home.abbr} ${l.home}–${l.away} ${e.away.abbr}` : null;
   if (l.state === "post") return score ? `Final · ${score}` : "Final";
-  return ["LIVE", l.detail, score].filter(Boolean).join(" · ");
+  return chain("LIVE", l.detail, score);
 }

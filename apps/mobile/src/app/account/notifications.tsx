@@ -1,11 +1,12 @@
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Linking, StyleSheet, Switch, Text, View } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { ListRow } from "~/components/kit/ListRow";
 import { Screen } from "~/components/kit/Screen";
 import { Panel } from "~/components/kit/Surface";
+import { Switch } from "~/components/kit/Switch";
 import { QuietState } from "~/features/profile/QuietState";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { fire } from "~/feedback/fire";
@@ -114,8 +115,6 @@ export default function NotificationsScreen() {
       </Screen>
     );
   }
-
-  const switchColors = { trackColor: { true: color.primary, false: color.muted }, thumbColor: color.foreground };
   return (
     <Screen>
       <Stack.Screen options={{ title: "Notifications" }} />
@@ -150,7 +149,6 @@ export default function NotificationsScreen() {
               detail={c.detail}
               trailing={
                 <Switch
-                  {...switchColors}
                   value={channels[c.key]}
                   disabled={permission !== "granted" || saving !== undefined}
                   onValueChange={(on) => void toggle(c.key, on)}

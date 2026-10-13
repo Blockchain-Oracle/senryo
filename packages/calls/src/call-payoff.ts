@@ -25,6 +25,9 @@ export interface PayoffZone {
   fee: bigint | null;
   /** The bar's length, 0 … 1 of the shared scale. */
   bar: number;
+  /** Where the bar and its labels sit, 0 … 1: the zone's middle, or — when the line runs through it (a Range) — the
+   * middle of its part above the line, so the line never strikes through the words. */
+  barAt: number;
 }
 
 export interface CallPayoff {
@@ -71,11 +74,15 @@ export function callPayoff(offer: Offer, quotes: Quotes, stake: bigint, scaleSta
     lineAt: at(0),
     zones: priced.map((o) => {
       const [lo, hi] = spanBps(o.band);
+      const from = lo === null ? 0 : at(lo);
+      const to = hi === null ? 1 : at(hi);
+      const line = at(0);
       return {
         slot: o.slot,
         band: o.band,
-        from: lo === null ? 0 : at(lo),
-        to: hi === null ? 1 : at(hi),
+        from,
+        to,
+        barAt: from < line && line < to ? (line + to) / 2 : (from + to) / 2,
         payout: o.payout,
         fee: o.fee,
         bar: o.payout === null ? 0 : share(o.payout),
