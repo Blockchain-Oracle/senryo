@@ -54,6 +54,8 @@ function tags(): Props {
   return {
     runtime: Updates.runtimeVersion ?? "",
     update: Updates.updateId ?? "",
+    // A store or TestFlight build reads `production`; a local build (the simulator's) reads nothing — ops filter on it.
+    channel: Updates.channel ?? "",
     embedded: Updates.isEmbeddedLaunch,
     network: activeNetwork().key,
     screen: screen.slice(0, SCREEN_MAX),
