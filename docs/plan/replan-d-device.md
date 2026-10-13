@@ -38,11 +38,11 @@ account and on production web.
 ## D3 · Every tap answers at once
 - [x] A position row's Close runs the terminal's own path (one shared close run): press cue, "Closing…" toast that
       becomes the result, an in-flight guard, the row held as Closing until the stream settles it.
-- [ ] The same rule for every money action the sweep found late or unguarded: duel join / rematch / leave / pick,
+- [x] (parlay, event call, duel join / rematch / leave / pick done, `d910a6fa`) The same rule for every money action the sweep found late or unguarded: duel join / rematch / leave / pick,
       event call, parlay place, one-tap on/off, exit set, call trail, Earn take back, web test dollars.
 
 ## D4 · Everything refreshes, every failure offers Try again
-- [ ] (Home and Events done) Phone: pull-to-refresh on Home and the 13 screens without it (receipts, Earn, Wallet, Parlay, Duel, Events,
+- [x] (phone: all 14 screens; web: Parlay and Warm-up Try again, `05aed918`) Phone: pull-to-refresh on Home and the 13 screens without it (receipts, Earn, Wallet, Parlay, Duel, Events,
       event detail, games, search). Web: Try again on the 10 screens that only say they failed or spin forever.
 
 ## D5 · Replay sound, every time
@@ -51,9 +51,19 @@ account and on production web.
       exists and no longer cancels the encode; the mute follows the toggle.
 
 ## D6 · Edit profile, and no silent failures
-- [ ] Edit profile never does nothing: unlock in place, say why a save didn't happen, keep the session.
-- [ ] The ~12 silent failures from the sweep say what happened (parlay / event / duel early returns and unhandled
+- [x] (says a save wasn't confirmed, records why — `d910a6fa`) Edit profile never does nothing: unlock in place, say why a save didn't happen, keep the session.
+- [ ] (the terminal's guard, cash-out, ride close, trail, parlay / event / duel done) The ~12 silent failures from the sweep say what happened (parlay / event / duel early returns and unhandled
       signing errors, the terminal's not-ready guard, sign-out, delete data, unlock, paste, arcade seed, Lucky link).
+
+## Open (13 Oct, 20:00)
+- D3: one-tap on/off, exit set, call trail, Earn take back, web test dollars — feedback still after an await.
+- D4 web: Try again on events, event detail, arcade, proof pages, Home's balance, Duel board, StatsCard; the ride
+  receipt's wrong "isn't here" on a load failure.
+- D6: sign-out, delete data, unlock, paste, arcade seed, Lucky's link, the web's "unavailable" grant wording.
+- D2: an event card shows the call you hold on it.
+- Web: React #418 (a hydration mismatch) on every app page in production — likely the shell reading storage on the
+  first render; find it with the dev build's diff.
+- Verify on the owner's iPhone (paired): the mode switch, history with events / parlays / duels, Close, replay sound.
 
 ## Then
 P3 → P5 (stage P), then Q2, Q4–Q6, R8.

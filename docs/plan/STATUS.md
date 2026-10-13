@@ -202,7 +202,17 @@ transcripts are in `~/.claude/projects/-Users-abu-dev-hackathon-metropolis/`.
   …". Web `sha-c262f43`; phone OTA group `a7cd325d-a7f4-4de5-8ffe-a024c820944f` (runtime 0.5.0: the owner's phone
   needs 0.5.0 from TestFlight to receive it). Checked on production web and a Release simulator build; the terms
   gate needs a signed-in phone (the simulator runs a guest).
-- **Next: P2** — receipts, positions, Calls (proof screens on the phone, `/proof*` and `/ride` links, Calls states,
+- **P2 live** (13 Oct 18:30): proof screens on the phone, `/proof` + `/ride` links, Calls states, row actions, a calm
+  ring; the web replay checked end to end (it encodes; it opened under the receipt — fixed, dialogs at layer 70).
+- **Incident (15:49–17:09 UTC):** the keeper ran dry and a settle loop burnt a top-up in two minutes — fixed
+  (`bbd3e2be`, keeper `sha-bbd3e2b`); see `ids-and-txs.md`. **Testnet MON is nearly out** (keeper ~1, sponsor 0.75):
+  faucet claims to the keeper are the owner's (human-only).
+- **Stage D — the owner's iPhone review** ([replan-d-device.md](replan-d-device.md)), ahead of P3: the mode-switch
+  crash fixed (a cache key with two shapes) with a crash reporter and error boundary (OTA `816ade85`, verified from the
+  owner's phone); history of everything (events, parlays, duels, Lucky); open event calls first; Close answers at once;
+  refresh everywhere on the phone; replay sound with the silent switch on; Edit profile and the silent failures said.
+  OTAs `7fdae063`, `bce96cda`; web `sha-05aed91`. The owner's iPhone is paired with this Mac (devicectl).
+- **Next:** stage D's open list (its file), then P2's leftovers, then P3–P5. (proof screens on the phone, `/proof*` and `/ride` links, Calls states,
   web retry and row actions, Reduce Motion), with the web replay's end-to-end check. Then P3–P5, then Q2, Q4–Q6, R8.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
