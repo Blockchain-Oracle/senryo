@@ -1,7 +1,7 @@
 /**
  * The trade slip (R5.11, D-331; Codex direction 12): one paper for a call or a ride — the folio from its id, what it
  * was, the realised figure once it has ended (what it pays, or the margin, while live), the stamp with its verdict in
- * words, the facts, and the proof. The same slip is drawn on screen, saved as a PNG and shared. Amounts are marked so
+ * words, at most three facts (D-351), and the proof. The same slip is drawn on screen, saved as a PNG and shared. Amounts are marked so
  * hidden balances can mask them (`maskedSlip`) while prices, timing and the folio stay.
  */
 import type { CallTimeline, RideView } from "@senryo/api-client";
@@ -48,9 +48,8 @@ export interface TradeSlip {
 }
 
 const FOLIO_DIGITS = 6;
-const BPS = 10_000n;
 const BPS_PER_X = 10_000;
-const MONEY_FACTS = new Set(["Stake", "Pays if right", "Came back", "Margin", "Trade size", "Fees"]);
+const MONEY_FACTS = new Set(["Stake", "Margin"]);
 const LIVE_RIDE = new Set(["committed", "open", "closing"]);
 const MS = 1_000;
 
@@ -130,20 +129,17 @@ export function rideSlip(r: RideView, ctx: { chainId: ChainId; practice: boolean
   const margin = r.marginOpen ?? (live ? r.margin : null);
   const price = (e8: bigint | null) => (e8 === null ? "—" : priceText(e8, unit));
   const net = rideNet(r);
+  // Three facts (D-351): what went in, the multiple, and the price it entered at — to where it left once ended. The
+  // knock-out and cap are drawn on the replay, the fees are inside the realised figure.
+  const entry = r.entryE8 === null ? "At the next print" : price(r.entryE8);
   const facts: SlipFact[] = [
     { k: "Margin", v: margin === null ? "—" : usd(margin), money: true },
     { k: "Leverage", v: `${r.leverageBps / BPS_PER_X}×`, money: false },
     {
-      k: "Trade size",
-      v: margin === null ? "—" : usd((margin * BigInt(r.leverageBps)) / BPS),
-      money: true,
+      k: "Entry",
+      v: live || r.entryE8 === null || r.exitE8 === null ? entry : `${entry} → ${price(r.exitE8)}`,
+      money: false,
     },
-    { k: "Entry", v: r.entryE8 === null ? "At the next print" : price(r.entryE8), money: false },
-    ...(live ? [] : [{ k: "Exit", v: price(r.exitE8), money: false }]),
-    { k: "Knock-out", v: price(r.koE8), money: false },
-    { k: "Cap", v: price(r.capE8), money: false },
-    { k: "Fees", v: usd(r.openFee + r.fees), money: true },
-    ...(live ? [] : [{ k: "Came back", v: usd(r.paid), money: true }]),
   ];
   return {
     kind: "ride",

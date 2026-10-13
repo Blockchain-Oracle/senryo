@@ -170,10 +170,11 @@ export const rules = [
   },
   {
     id: "restraint-retired-words",
-    description: "the retired sentence helpers stay retired — the apps draw values (Q0, D-345)",
+    description: "the retired sentence helpers and receipt rows stay retired (Q0, D-345, D-351)",
     scopes: ["apps", "packages"],
     exts: TS,
-    pattern: /\b(knockOutWords|capWords|capText|positionSub|positionHold|positionTitle|leverageChips)\b/,
+    pattern:
+      /\b(knockOutWords|capWords|capText|positionSub|positionHold|positionTitle|leverageChips)\b|"(Signed with|Came back)"/,
   },
   {
     id: "haptics-via-feedback",

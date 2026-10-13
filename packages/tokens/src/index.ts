@@ -1,5 +1,5 @@
 export { FONT_SOURCES, type FontFile, type FontSource } from "./fonts.ts";
-export { KINPAKU, MATERIAL, QR, RECEIPT, SCENE_FIELD, WELCOME } from "./marks.ts";
+export { KINPAKU, MATERIAL, QR, RECEIPT, RECEIPT_DARK, SCENE_FIELD, WELCOME } from "./marks.ts";
 export {
   MUSIC_CROSSFADE_S,
   MUSIC_DUCK,

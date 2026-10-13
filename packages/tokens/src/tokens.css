@@ -384,6 +384,15 @@
   --sheet-handle: #999999;
 }
 
+.dark {
+  --receipt-paper: #1C1C1C;
+  --receipt-ink: #F5F5F5;
+  --receipt-muted: #B8B8B8;
+  --receipt-rule: #414141;
+  --receipt-up: #B5F543;
+  --receipt-down: #FF647C;
+}
+
 .text-num-ticker,
 .text-num-lg,
 .text-num-xl,

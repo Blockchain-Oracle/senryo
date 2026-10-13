@@ -6,7 +6,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { KINPAKU, MATERIAL, QR, RECEIPT, SCENE_FIELD } from "../src/marks.ts";
+import { KINPAKU, MATERIAL, QR, RECEIPT, RECEIPT_DARK, SCENE_FIELD } from "../src/marks.ts";
 import { DARK, LIGHT, type Palette } from "../src/palette.ts";
 import { ELEVATION, FONT, HAIRLINE_PX, LAYOUT, MOTION, RADIUS, SPACE, TYPE } from "../src/scale.ts";
 
@@ -89,7 +89,13 @@ const displayRoles = Object.entries(TYPE)
   .filter(([, t]) => t.font === "display")
   .map(([role]) => `.text-${toKebab(role)}`);
 const displayFace = [`${displayRoles.join(",\n")} {`, "  font-family: var(--font-display);", "}"].join("\n");
-const css = [header, shared, block(":root, .light", LIGHT), block(".dark", DARK), displayFace, ""].join("\n\n");
+/** The slip follows the theme in the app (D-349); the saved image is drawn on a canvas with `RECEIPT`. */
+const receiptDark = [".dark {", ...Object.entries(RECEIPT_DARK).map(([k, v]) => `  --receipt-${k}: ${v};`), "}"].join(
+  "\n",
+);
+const css = [header, shared, block(":root, .light", LIGHT), block(".dark", DARK), receiptDark, displayFace, ""].join(
+  "\n\n",
+);
 
 const target = fileURLToPath(new URL("../src/tokens.css", import.meta.url));
 writeFileSync(target, css);

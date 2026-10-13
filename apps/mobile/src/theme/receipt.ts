@@ -1,8 +1,8 @@
 /**
- * The trade slip's materials and measures on the phone (D-331, the web's `receipts.css`): white paper and black ink in
- * either theme, the Kinpaku stamp, and the slip's sizes.
+ * The trade slip's materials and measures on the phone (D-331, the web's `receipts.css`): the paper follows the theme in
+ * the app (D-349) and stays white when it is drawn for sharing, the Kinpaku stamp, and the slip's sizes.
  */
-export { KINPAKU, RECEIPT } from "@senryo/tokens";
+export { KINPAKU, RECEIPT, RECEIPT_DARK } from "@senryo/tokens";
 
 export const SLIP = {
   maxWidth: 360,

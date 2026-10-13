@@ -10,7 +10,8 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { EntityMark } from "~/components/identity/EntityMark";
 import { fire } from "~/feedback/fire";
 import { HIDDEN_AMOUNT, useHideBalances } from "~/lib/hide-balances";
-import { ELEVATION, FONT, KINPAKU, NUMERIC_VARIANT, RECEIPT, SLIP, SPACE } from "~/theme";
+import { ELEVATION, FONT, KINPAKU, NUMERIC_VARIANT, SLIP, SPACE } from "~/theme";
+import { usePaper } from "./paper";
 
 const MARK = 28;
 const CHIP_PAD = 6;
@@ -31,6 +32,7 @@ export function CompactTrade({
 }) {
   const slip = useFinishedSlip(pending ? undefined : finished);
   const [hidden] = useHideBalances();
+  const paper = usePaper();
   const symbol = pending?.symbol ?? slip?.symbol;
   if (!symbol) return null;
   const title = pending?.title ?? slip?.title ?? "";
@@ -40,12 +42,12 @@ export function CompactTrade({
       ? `${slip.figure.label} ${hidden ? HIDDEN_AMOUNT : slip.figure.text}`
       : "";
   const tone = pending
-    ? RECEIPT.ink
+    ? paper.ink
     : slip?.figure.tone === "up"
-      ? RECEIPT.up
+      ? paper.up
       : slip?.figure.tone === "down"
-        ? RECEIPT.down
-        : RECEIPT.ink;
+        ? paper.down
+        : paper.ink;
   return (
     <Pressable
       accessibilityRole="button"
@@ -54,15 +56,15 @@ export function CompactTrade({
         fire("tick");
         onOpen();
       }}
-      style={[styles.paper, ELEVATION.receipt]}
+      style={[styles.paper, { backgroundColor: paper.paper }, ELEVATION.receipt]}
     >
       <EntityMark id={marketId(symbol)} size={MARK} decorative />
       <View style={styles.text}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: paper.ink }]} numberOfLines={1}>
           {title}
         </Text>
         <View style={styles.line}>
-          {pending && pending.stage !== "booked" ? <ActivityIndicator size="small" color={RECEIPT.ink} /> : null}
+          {pending && pending.stage !== "booked" ? <ActivityIndicator size="small" color={paper.ink} /> : null}
           <Text style={[styles.lineText, { color: tone }]}>{line}</Text>
         </View>
       </View>
@@ -86,10 +88,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE.md,
     paddingVertical: SPACE.sm,
     borderRadius: SLIP.radius,
-    backgroundColor: RECEIPT.paper,
   },
   text: { flex: 1, gap: SPACE.xs / 2 },
-  title: { fontFamily: FONT.sansStrong, fontSize: SLIP.fact, lineHeight: SLIP.factLine, color: RECEIPT.ink },
+  title: { fontFamily: FONT.sansStrong, fontSize: SLIP.fact, lineHeight: SLIP.factLine },
   line: { flexDirection: "row", alignItems: "center", gap: SPACE.xs },
   lineText: { fontFamily: FONT.sansBold, fontSize: SLIP.fact, lineHeight: SLIP.factLine, fontVariant: NUMERIC_VARIANT },
   chip: {

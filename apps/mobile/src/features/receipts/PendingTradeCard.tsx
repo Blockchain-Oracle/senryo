@@ -8,7 +8,8 @@ import { marketId } from "@senryo/identity";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { HIDDEN_AMOUNT, useHideBalances } from "~/lib/hide-balances";
-import { ELEVATION, FONT, NUMERIC_VARIANT, RECEIPT, SLIP, SPACE, TYPE } from "~/theme";
+import { ELEVATION, FONT, NUMERIC_VARIANT, SLIP, SPACE, TYPE } from "~/theme";
+import { usePaper } from "./paper";
 
 const DIGEST_SHOWN = 8;
 const HEX_PREFIX = 2;
@@ -20,33 +21,34 @@ const STATUS: Record<PendingTrade["stage"], string> = {
 
 export function PendingTradeCard({ run }: { run: PendingTrade }) {
   const [hidden] = useHideBalances();
+  const paper = usePaper();
   const status = STATUS[run.stage];
   const folio = run.digest
     ? `Request ${run.digest.slice(HEX_PREFIX, HEX_PREFIX + DIGEST_SHOWN).toUpperCase()}`
     : "N° Pending";
   return (
     <View
-      style={[styles.paper, ELEVATION.receipt]}
+      style={[styles.paper, { backgroundColor: paper.paper }, ELEVATION.receipt]}
       accessible
       accessibilityLabel={`${run.title}, ${status}`}
       accessibilityState={{ busy: run.stage !== "booked" }}
     >
       <View style={styles.head}>
-        <Text style={styles.brand}>SENRYO</Text>
-        <Text style={styles.muted}>{folio}</Text>
+        <Text style={[styles.brand, { color: paper.ink }]}>SENRYO</Text>
+        <Text style={[styles.muted, { color: paper.muted }]}>{folio}</Text>
       </View>
       <View style={styles.row}>
         <EntityMark id={marketId(run.symbol)} size={SLIP.mark} decorative />
-        <Text style={[TYPE.rowTitle, { color: RECEIPT.ink }]}>{run.title}</Text>
+        <Text style={[TYPE.rowTitle, { color: paper.ink }]}>{run.title}</Text>
       </View>
       <View style={styles.row}>
-        {run.stage === "booked" ? null : <ActivityIndicator size="small" color={RECEIPT.ink} />}
-        <Text style={styles.status}>{status}</Text>
+        {run.stage === "booked" ? null : <ActivityIndicator size="small" color={paper.ink} />}
+        <Text style={[styles.status, { color: paper.ink }]}>{status}</Text>
       </View>
       {run.quoted.map((q) => (
         <View key={q.k} style={styles.fact}>
-          <Text style={styles.muted}>{q.k} · quoted</Text>
-          <Text style={styles.value}>{q.money && hidden ? HIDDEN_AMOUNT : q.v}</Text>
+          <Text style={[styles.muted, { color: paper.muted }]}>{q.k} · quoted</Text>
+          <Text style={[styles.value, { color: paper.ink }]}>{q.money && hidden ? HIDDEN_AMOUNT : q.v}</Text>
         </View>
       ))}
     </View>
@@ -61,19 +63,17 @@ const styles = StyleSheet.create({
     gap: SPACE.sm,
     padding: SLIP.pad,
     borderRadius: SLIP.radius,
-    backgroundColor: RECEIPT.paper,
   },
   head: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
-  brand: { fontFamily: FONT.display, fontSize: SLIP.label, lineHeight: SLIP.labelLine, color: RECEIPT.ink },
+  brand: { fontFamily: FONT.display, fontSize: SLIP.label, lineHeight: SLIP.labelLine },
   row: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  status: { fontFamily: FONT.sansStrong, fontSize: SLIP.fact, lineHeight: SLIP.factLine, color: RECEIPT.ink },
+  status: { fontFamily: FONT.sansStrong, fontSize: SLIP.fact, lineHeight: SLIP.factLine },
   fact: { flexDirection: "row", justifyContent: "space-between", gap: SPACE.md },
-  muted: { fontFamily: FONT.sans, fontSize: SLIP.fact, lineHeight: SLIP.factLine, color: RECEIPT.muted },
+  muted: { fontFamily: FONT.sans, fontSize: SLIP.fact, lineHeight: SLIP.factLine },
   value: {
     fontFamily: FONT.sansStrong,
     fontSize: SLIP.fact,
     lineHeight: SLIP.factLine,
-    color: RECEIPT.ink,
     fontVariant: NUMERIC_VARIANT,
   },
 });

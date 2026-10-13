@@ -4,7 +4,7 @@
  * a colour here: real marks live in `@senryo/identity` (the old CHAIN_HUE/ASSET_HUE maps were deleted in S1b.6).
  */
 
-import { LIGHT } from "./palette.ts";
+import { DARK, LIGHT } from "./palette.ts";
 
 /** Material ramps (direction §2): shadow / midtone / highlight for artwork, never UI semantics. */
 export const MATERIAL = {
@@ -43,6 +43,19 @@ export const RECEIPT = {
   up: LIGHT.up,
   down: LIGHT.down,
 } as const;
+
+/**
+ * The slip on a dark screen (D-349): in the app the paper follows the theme — the dark palette's raised surface, its
+ * ink and rules, its direction colours. Exports (the saved image, the video's end card) keep `RECEIPT`.
+ */
+export const RECEIPT_DARK = {
+  paper: DARK.card,
+  ink: DARK.foreground,
+  muted: DARK.mutedForeground,
+  rule: DARK.border,
+  up: DARK.up,
+  down: DARK.down,
+} as const satisfies Record<keyof typeof RECEIPT, string>;
 
 /** The welcome sky (the story's ground) and its ink: also the share card's background, on both apps. */
 export const WELCOME = { sky: "#428FC8", ink: "#FFFFFF" } as const;

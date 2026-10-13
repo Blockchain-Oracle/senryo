@@ -122,10 +122,6 @@ export const exitStepCents = (maxCents: number): number =>
 /** Where "never below" starts when turned on. */
 export const floorStart = (now: bigint): bigint => (now * FLOOR_START_BPS) / BPS;
 
-/** The receipt's words for the exit that sold the last shares (indexer `closedBy`). */
-export const CLOSED_BY_WORD = { "take-profit": "Take profit", "stop-loss": "Stop loss", trail: "Trail" } as const;
-export type ClosedBy = keyof typeof CLOSED_BY_WORD;
-
 /**
  * Whether a held call's TRAIL can arm (R5.5): its bid must beat break-even's bid (stake ÷ shares) by the trail's
  * cents, so the stop it leaves never sells under the stake. Until then, how many cents of bid it still needs.

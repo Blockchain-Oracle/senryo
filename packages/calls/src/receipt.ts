@@ -1,24 +1,12 @@
 /**
  * A call's receipt in words, both apps (S5.11 → S6.6): the hero (what it pays while live, the signed result once
- * done), the facts (stake, pays if right, came back, entry, how it was signed), the steps oldest first with their
+ * done), at most three facts (stake, where it wins, entry — D-351), the steps oldest first with their
  * transactions, the share card's words, and the window it lived in proved — the line and close prints with the
  * transactions that posted them, where the close landed, and how the crowd called it. Facts only.
  */
 import type { CallTimeline, WindowProof } from "@senryo/api-client";
 import { bandMenu, MARKETS } from "@senryo/config";
-import {
-  bandWhere,
-  gapText,
-  lane,
-  OPEN_STATES,
-  priceText,
-  SIDE,
-  sideName,
-  stepTitle,
-  usd,
-  whenText,
-} from "@senryo/core";
-import { CLOSED_BY_WORD } from "./exits.ts";
+import { bandWhere, gapText, lane, priceText, SIDE, sideName, stepTitle, usd, whenText } from "@senryo/core";
 import { unitOf } from "./markets.ts";
 
 const FAILED_KINDS = new Set(["refused", "close refused", "settled: lose"]);
@@ -68,20 +56,20 @@ export function callWhere(c: CallTimeline["call"], kE8: bigint | undefined): str
   return bandWhere(band, kE8, unitOf(c.symbol));
 }
 
+/**
+ * A call receipt's facts (D-351, the owner's review): what went in, where it wins when that isn't in the title, and
+ * the price it entered at — to where it was cashed out, if it was. Three at most; the figure, the stamp and the replay
+ * say the rest. ("Pays if right", "Came back" and "Signed with" are gone: a reader doesn't need them.)
+ */
 export function receiptFacts(t: CallTimeline, where: string | null = null): [label: string, value: string][] {
   const c = t.call;
-  const filled = t.events.find((e) => e.kind === "filled");
   const exit = t.events.findLast((e) => e.kind === "cashed out");
+  const unit = unitOf(c.symbol);
+  const entry = c.entryE8 === null ? "At the next print" : priceText(c.entryE8, unit);
   return [
     ["Stake", usd(c.stake)],
     ...(where ? ([["Wins if", `it closes ${where}`]] as [string, string][]) : []),
-    ["Pays if right", filled ? usd(filled.amount) : "—"],
-    ...(OPEN_STATES.has(c.status) ? [] : ([["Came back", usd(c.returned)]] as [string, string][])),
-    ["Entry", c.entryE8 === null ? "At the next print" : priceText(c.entryE8, unitOf(c.symbol))],
-    ...(exit?.priceE8 ? ([["Cashed out at", priceText(exit.priceE8, unitOf(c.symbol))]] as [string, string][]) : []),
-    ...(c.closedBy ? ([["Closed by", CLOSED_BY_WORD[c.closedBy]]] as [string, string][]) : []),
-    // A Practice guest signs with its device key (R5.10), so the owner's signature is all the chain can say.
-    ["Signed with", c.viaSession ? "One-tap" : "Your signature"],
+    ["Entry", exit?.priceE8 && c.entryE8 !== null ? `${entry} → ${priceText(exit.priceE8, unit)}` : entry],
   ];
 }
 
