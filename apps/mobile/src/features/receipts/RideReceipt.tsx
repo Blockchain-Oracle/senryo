@@ -9,6 +9,7 @@ import { router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
 import { ActionCircle } from "~/components/kit/ActionCircle";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { EmptyState, LoadingState } from "~/components/kit/states";
 import { ChartLine } from "~/components/kit/symbols";
 import { useDockInset } from "~/components/shell/dock-context";
@@ -20,6 +21,8 @@ import { SIZE, SPACE } from "~/theme";
 import { LiveShareSlip, ShareSlip } from "./ShareSlip";
 
 export function RideReceipt({ rideId }: { rideId: bigint }) {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const network = useNetwork();
   const bottom = useDockInset();
   const [, setSymbol] = useMMKVString(STORAGE_KEYS.terminalSymbol, storage);
@@ -48,7 +51,7 @@ export function RideReceipt({ rideId }: { rideId: bigint }) {
     />
   );
   return (
-    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom + SPACE.xl }]}>
+    <ScrollView refreshControl={refresh} contentContainerStyle={[styles.content, { paddingBottom: bottom + SPACE.xl }]}>
       <View style={styles.hero}>
         {slip.live ? (
           <LiveShareSlip slip={slip} entryKey={rideKey(r.rideId)} side={side} lead={live} />

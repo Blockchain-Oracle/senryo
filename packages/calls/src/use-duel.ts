@@ -27,6 +27,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPTS, TOLERANCE_BPS } from "./constants.ts";
 import { DUEL_LIVE_STATES, DUEL_SIDES, phaseOf, picksOf, seatOf } from "./duel.ts";
+import { reasonWords } from "./reason-words.ts";
 import { fillMark } from "./sigma.ts";
 import type { SignDeps } from "./sign.ts";
 
@@ -104,6 +105,8 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
   const pickMutation = useDuelPick();
   const refresh = useRefreshCaller(owner);
   const [busy, setBusy] = useState<string | null>(null);
+  const inflight = useRef(false);
+  const picking = useRef(new Set<number>());
   const [placing, setPlacing] = useState<Set<number>>(new Set());
   const fx = useRef(effects);
   fx.current = effects;
@@ -148,7 +151,10 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
       fx.current.needAccount();
       return undefined;
     }
-    if (!("value" in account) || !("value" in catalog)) return undefined;
+    if (!("value" in account) || !("value" in catalog)) {
+      fx.current.notify({ title: "Still loading your account", description: "Try again in a moment." });
+      return undefined;
+    }
     const { appDelegates } = (await signing())[1];
     return {
       chainId: env.chainId,
@@ -163,16 +169,18 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
   /** Joins the queue at `tierId`: one Face ID for the entry and its permit. */
   const enter = async (tierId: number) => {
     const tier = duelTierOf(env.chainId, tierId);
-    if (!tier) return;
-    const d = await deps();
-    if (!d || !owner) return;
+    if (!tier || busy || inflight.current) return;
     if ("value" in account && account.value.balance < duelEntryCost(tier)) {
       return fx.current.notify({ title: "Not enough dollars", description: "Pick a smaller duel or add dollars." });
     }
-    const [{ signDuelEntry }] = await signing();
+    // The tap answers before anything is awaited, and a second one (Rematch included) waits for it (D3).
+    inflight.current = true;
     fx.current.cue("press");
     setBusy("Signing…");
     try {
+      const d = await deps();
+      if (!d || !owner) return;
+      const [{ signDuelEntry }] = await signing();
       const signed = await signDuelEntry(d, { owner, tier: tierId, cost: duelEntryCost(tier) }, PROMPTS.duel);
       setBusy("Joining…");
       await enterMutation.mutateAsync(signed);
@@ -182,15 +190,29 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
       fx.current.notify({ title: "Couldn't join", description: (error as Error).message });
     } finally {
       setBusy(null);
+      inflight.current = false;
     }
   };
 
-  const cancel = async () => {
-    if (entry?.state !== "queued") return;
+  /** Leaves the queue; true when it left (a tier switch joins the next one only then). */
+  const cancel = async (): Promise<boolean> => {
+    if (entry?.state !== "queued" || busy || inflight.current) return false;
+    inflight.current = true;
+    fx.current.cue("press");
+    setBusy("Leaving…");
     try {
       await cancelMutation.mutateAsync(entry.digest);
+      return true;
     } catch (error) {
-      fx.current.notify({ title: "Already matched", description: (error as Error).message });
+      fx.current.cue("fail");
+      fx.current.notify({
+        title: "Couldn't leave the queue",
+        description: reasonWords((error as Error).message, "You're still in it."),
+      });
+      return false;
+    } finally {
+      setBusy(null);
+      inflight.current = false;
     }
   };
 
@@ -203,7 +225,9 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
     if (!quote?.payout) {
       return fx.current.notify({ title: "Not priced right now", description: "This side is out of range." });
     }
-    const [{ signDuelPick }, { appDelegates }] = await signing();
+    // Marked before anything is awaited: a double swipe on the same card waits for the first (D3).
+    if (picking.current.has(q.index)) return;
+    picking.current.add(q.index);
     const pickMsg = {
       matchId: match.matchId,
       player: owner,
@@ -214,6 +238,7 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
     fx.current.cue("press");
     setPlacing((s) => new Set([...s, q.index]));
     try {
+      const [{ signDuelPick }, { appDelegates }] = await signing();
       const signed = await signDuelPick(
         { chainId: env.chainId, client: caller.client, delegates: appDelegates() },
         pickMsg,
@@ -226,6 +251,8 @@ export function useDuelFlow(caller: Caller, effects: DuelFlowEffects) {
       if (isSilent(classifyAuthError(error))) return;
       fx.current.cue("fail");
       fx.current.notify({ title: "That pick didn't go through", description: (error as Error).message });
+    } finally {
+      picking.current.delete(q.index);
     }
   };
 

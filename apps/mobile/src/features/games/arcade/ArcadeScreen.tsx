@@ -25,6 +25,7 @@ import { type LayoutChangeEvent, Pressable, ScrollView, Share, StyleSheet, Text,
 import { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "~/components/identity/Avatar";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { Info, PlayFill } from "~/components/kit/symbols";
 import { playCue } from "~/feedback/cues";
 import { fire, music, soundsEnabled } from "~/feedback/fire";
@@ -75,6 +76,8 @@ export function ArcadeScreen({
   hint: string;
   moves: readonly ArcadeMove[];
 }) {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const ink = inkOf(color);
   const insets = useSafeAreaInsets();
@@ -156,6 +159,7 @@ export function ArcadeScreen({
 
   return (
     <ScrollView
+      refreshControl={refresh}
       style={{ backgroundColor: color.ground }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
     >

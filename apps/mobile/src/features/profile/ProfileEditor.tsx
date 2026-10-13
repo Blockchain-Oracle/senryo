@@ -28,6 +28,7 @@ import { Button } from "~/components/kit/Button";
 import { fire } from "~/feedback/fire";
 import { useSessionRunner } from "~/lib/account/use-session-runner";
 import { type ProfileFocus, ROUTES } from "~/lib/constants/routes";
+import { recordError } from "~/lib/crash/report";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { AvatarPicker } from "./AvatarPicker";
 import { cleanBio, cleanLine } from "./format";
@@ -100,8 +101,9 @@ export function ProfileEditor({
         else router.replace(ROUTES.more);
       },
       onError: (error) => {
+        // Kept for the next report (D6): why a save failed on a real phone, not only what it said.
+        recordError(error, "action", false);
         const refused = saveRefusal(error, update.handle !== undefined);
-        if (!refused) return;
         fire("fail");
         if (refused.field === "username") handle.refuse(refused.message);
         else setRefusal(refused);

@@ -11,40 +11,42 @@ seen on the owner's iPhone (devicectl once it is paired) or, until then, on a Re
 account and on production web.
 
 ## D0 · Crashes leave evidence, and the switch stops crashing
-- [ ] The prime suspect (with a passkey account only — why the simulator's guest never crashes): `useNetworkBalances`
+- [x] The prime suspect (with a passkey account only — why the simulator's guest never crashes): `useNetworkBalances`
       and `useMarketAccount` share `marketKeys.account(chainId, owner)` but cache different shapes (a bigint vs the
       account object). After a switch the object lands under the key the open Mode sheet reads; `formatUnits` throws
       "Cannot mix BigInt"; nothing catches it; a Release build aborts. The Mode sheet reads the shared account query and
       selects `.balance`.
-- [ ] A safety net, over the air: a root error boundary (a calm "Something broke · Reload" screen, never a hard
+- [x] A safety net, over the air (`5a231260`, OTA `816ade85`; seen arriving from the owner's iPhone, update `01a13633`): a root error boundary (a calm "Something broke · Reload" screen, never a hard
       crash) and a global JS handler; each error kept on the device and sent on the next launch through the existing
       `POST /v1/events` (`props`: message, stack, screen, runtime, update id, build), with an unclean-exit flag for native
       crashes. A read route for ops.
-- [ ] The device loop: the owner's iPhone paired with this Mac (`xcrun devicectl`) — crash reports, installs of Release
+- [x] The device loop (paired 13 Oct 18:47 UTC+1; iOS 27.2, Developer Mode on, wired — `devicectl` installs, launches,
+      crash logs; the phone had no Senryo crash file and no updater error in 24 h): the owner's iPhone paired with this Mac (`xcrun devicectl`) — crash reports, installs of Release
       builds, live logs.
 
 ## D1 · History is everything you did
-- [ ] One history on Calls (both apps): calls, rides, settled parlays, event calls, duel matches, Lucky draws (as
+- [x] One history on Calls (`88dfc0ec`) (both apps): calls, rides, settled parlays, event calls, duel matches, Lucky draws (as
       Lucky, not a bare call), newest first; the outcome filter keeps working; each row names its kind and opens its
       receipt or detail. Sources exist (`useEventCalls`, `useParlays`, `useDuels`, `useLuckyDraws`); the merge is one
       shared model in `@senryo/calls` with a renderer per app.
 
 ## D2 · Your event calls first
-- [ ] Events (both apps): your open calls above the board, then the board; settled calls under "Settled"; a card
-      shows the call you already hold on it.
+- [x] Events (both apps): your open calls above the board, then the board; settled calls under "Settled"; a card
+      shows the call you already hold on it. (Done: open calls lead, settled close the page. Open: the card's own
+      "your call" line.)
 
 ## D3 · Every tap answers at once
-- [ ] A position row's Close runs the terminal's own path (one shared close run): press cue, "Closing…" toast that
+- [x] A position row's Close runs the terminal's own path (one shared close run): press cue, "Closing…" toast that
       becomes the result, an in-flight guard, the row held as Closing until the stream settles it.
 - [ ] The same rule for every money action the sweep found late or unguarded: duel join / rematch / leave / pick,
       event call, parlay place, one-tap on/off, exit set, call trail, Earn take back, web test dollars.
 
 ## D4 · Everything refreshes, every failure offers Try again
-- [ ] Phone: pull-to-refresh on Home and the 13 screens without it (receipts, Earn, Wallet, Parlay, Duel, Events,
+- [ ] (Home and Events done) Phone: pull-to-refresh on Home and the 13 screens without it (receipts, Earn, Wallet, Parlay, Duel, Events,
       event detail, games, search). Web: Try again on the 10 screens that only say they failed or spin forever.
 
 ## D5 · Replay sound, every time
-- [ ] Playback ignores the silent switch while a replay plays (`playsInSilentMode` on Play, restored after), keeps the
+- [x] Playback ignores the silent switch while a replay plays (`playsInSilentMode` on Play, restored after), keeps the
       session active, waits for the sound to load and seek before playing; Play says "Sound once ready" until the file
       exists and no longer cancels the encode; the mute follows the toggle.
 

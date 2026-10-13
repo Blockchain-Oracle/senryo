@@ -34,6 +34,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
 import { ProgressBar } from "~/components/kit/ProgressBar";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { Segmented } from "~/components/kit/Segmented";
 import { ErrorState, LoadingState } from "~/components/kit/states";
 import { fire } from "~/feedback/fire";
@@ -58,6 +59,8 @@ const TRAY = SIZE.buttonHeight + SPACE.xl;
 const NEAR_CAP = 0.8;
 
 export function EarnScreen() {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const account = useAccount();
@@ -132,7 +135,10 @@ export function EarnScreen() {
 
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + TRAY }]}>
+      <ScrollView
+        refreshControl={refresh}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + TRAY }]}
+      >
         <View style={styles.block} accessibilityLiveRegion="polite">
           <Text style={[TYPE.caption, { color: color.inkMuted }]}>
             {owns ? "Your share value" : "Value of one pool share"}

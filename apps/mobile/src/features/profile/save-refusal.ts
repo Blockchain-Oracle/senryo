@@ -1,6 +1,7 @@
 /**
  * Why a profile save was refused, in words, and which field it is about (`PUT /v1/profile` error codes, S12b.2). A
- * cancelled passkey prompt is not a refusal: it returns nothing and the form stays as it was.
+ * passkey prompt that didn't confirm is said too (D6: a save that did nothing read as "Edit profile is not working");
+ * the form stays as it was.
  */
 import { classifyAuthError, isSilent } from "@senryo/account";
 import { ApiError } from "@senryo/api-client";
@@ -11,9 +12,11 @@ export interface SaveRefusal {
 }
 
 /** `renaming` — the save changed the username, so a rate limit is the handle-change budget, not a busy server. */
-export function saveRefusal(error: unknown, renaming: boolean): SaveRefusal | undefined {
+export function saveRefusal(error: unknown, renaming: boolean): SaveRefusal {
   if (!(error instanceof ApiError)) {
-    if (isSilent(classifyAuthError(error))) return undefined;
+    if (isSilent(classifyAuthError(error))) {
+      return { field: "page", message: "Not saved: your passkey wasn't confirmed. Tap Save to try again." };
+    }
     return { field: "page", message: "Couldn’t save your profile. Check your connection and try again." };
   }
   switch (error.code) {

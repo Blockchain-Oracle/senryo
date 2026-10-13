@@ -11,6 +11,7 @@ import { type Href, router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { ChevronLeft, Search, X } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { useAppTrader } from "~/lib/account/guest";
@@ -25,6 +26,8 @@ const CLEAR_ICON = 18;
 const BACK_ICON = 22;
 
 export function SearchScreen() {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const client = useQueryClient();
@@ -87,6 +90,7 @@ export function SearchScreen() {
         </View>
       </View>
       <ScrollView
+        refreshControl={refresh}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}

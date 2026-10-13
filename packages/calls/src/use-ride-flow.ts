@@ -115,7 +115,12 @@ export function useRideFlow(i: RideFlowInput) {
       return false;
     }
     if (fx.current.gate && !fx.current.gate(resume)) return false;
-    return actions.ready;
+    // Not loaded yet (the account or the catalogue): said, never a tap that does nothing (D6).
+    if (!actions.ready) {
+      fx.current.notify({ title: "Still loading your account", description: "Try again in a moment." });
+      return false;
+    }
+    return true;
   };
 
   const open = async (slot: OfferSlot) => {
@@ -206,7 +211,11 @@ export function useRideFlow(i: RideFlowInput) {
   /** Close the held ride, or `percent` of it. */
   const close = async (percent: bigint = WHOLE) => {
     const mark = i.latest.current?.markE8;
-    if (!guard(() => void again.current.close(percent)) || !held || mark == null) return;
+    if (!guard(() => void again.current.close(percent)) || !held) return;
+    if (mark == null) {
+      fx.current.notify({ title: "No live price", description: "Rides close on a live price. Try again in a moment." });
+      return;
+    }
     fx.current.cue("press");
     const whole = percent === WHOLE;
     const label = whole ? "Closing…" : `Closing ${percent}%…`;
@@ -260,7 +269,11 @@ export function useRideFlow(i: RideFlowInput) {
   /** Arm the trail at `trailBps`, flooring at break-even and keeping any take-profit and stop already set. */
   const armTrail = async (): Promise<boolean> => {
     const be = i.latest.current?.breakEvenE8;
-    if (!guard(() => void again.current.armTrail()) || !held || be == null) return false;
+    if (!guard(() => void again.current.armTrail()) || !held) return false;
+    if (be == null) {
+      fx.current.notify({ title: "Trail isn't ready yet", description: "It needs the ride's break-even price." });
+      return false;
+    }
     fx.current.cue("press");
     try {
       const r = await exit.set(held.rideId, {

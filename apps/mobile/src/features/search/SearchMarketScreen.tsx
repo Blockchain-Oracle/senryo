@@ -15,6 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 import { useMMKVString } from "react-native-mmkv";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { ArrowDown, ArrowUp, ChartLine, ChevronLeft, ScrollText, Star } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -28,6 +29,8 @@ const SECTIONS = ["Trade", "Lanes", "Market"] as const;
 const DISABLED = 0.45;
 
 export function SearchMarketScreen({ symbol }: { symbol: string }) {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const { line, lanes } = useMarketLanes(symbol);
@@ -116,6 +119,7 @@ export function SearchMarketScreen({ symbol }: { symbol: string }) {
         />
       </View>
       <ScrollView
+        refreshControl={refresh}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}

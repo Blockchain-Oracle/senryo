@@ -72,8 +72,11 @@ function writeSession(open: boolean): void {
   );
 }
 
-/** An error the app caught or is about to die of. Synchronous: it must be on disk before a fatal error ends the run. */
-export function recordError(error: unknown, where: "boundary" | "global", fatal: boolean): void {
+/**
+ * An error the app caught or is about to die of — or an action's failure worth knowing about (`action`). Synchronous:
+ * it must be on disk before a fatal error ends the run.
+ */
+export function recordError(error: unknown, where: "boundary" | "global" | "action", fatal: boolean): void {
   const e = error instanceof Error ? error : new Error(String(error));
   keep({
     name: "app_error",
@@ -86,6 +89,8 @@ export function recordError(error: unknown, where: "boundary" | "global", fatal:
       stack: (e.stack ?? "").slice(0, STACK_MAX),
     },
   });
+  // An action's failure is sent now: the app is still running and the moment is the useful part.
+  if (where === "action") void send();
 }
 
 /** The route the user is on, kept with the session so an unclean exit says where it happened. */

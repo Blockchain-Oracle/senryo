@@ -10,6 +10,7 @@ import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { AmountHero } from "~/components/kit/AmountHero";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { ArrowUp, Coins, Globe, Lock, QrCode, Wallet } from "~/components/kit/symbols";
 import { SectionHeading } from "~/features/profile/SectionHeading";
 import { SettingsRow } from "~/features/profile/SettingsRow";
@@ -31,6 +32,8 @@ const nextGrantText = (nextAt: number | null) =>
     : "Topped up";
 
 export function WalletScreen() {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const owner = useAccount().hint?.address;
   const network = useNetwork();
@@ -62,7 +65,7 @@ export function WalletScreen() {
 
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView refreshControl={refresh} contentContainerStyle={styles.content}>
         <View style={styles.hero}>
           <View style={styles.dollar}>
             <EntityMark id={dollarId(network.chainId)} size={SIZE.markInline} decorative />

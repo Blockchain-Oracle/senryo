@@ -154,7 +154,12 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
       return false;
     }
     if (effectsRef.current.gate && !effectsRef.current.gate(resume)) return false;
-    return actions.ready;
+    // Not loaded yet (the account or the catalogue): said, never a tap that does nothing (D6).
+    if (!actions.ready) {
+      effectsRef.current.notify({ title: "Still loading your account", description: "Try again in a moment." });
+      return false;
+    }
+    return true;
   };
 
   const open = async (slot: OfferSlot) => {
@@ -255,7 +260,11 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
   const close = async (percent: bigint = WHOLE) => {
     const position = t.position;
     const quote = latest.current?.close;
-    if (!guard(() => void again.current.close(percent)) || !position || !quote || quote.refusal) return;
+    if (!guard(() => void again.current.close(percent)) || !position) return;
+    if (!quote || quote.refusal) {
+      effectsRef.current.notify({ title: "Cash-out isn't priced right now", description: "Try again in a moment." });
+      return;
+    }
     const fx = effectsRef.current;
     fx.cue("press");
     const shares = (position.payout * percent) / WHOLE;

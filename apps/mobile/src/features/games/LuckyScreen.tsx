@@ -25,6 +25,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { Button } from "~/components/kit/Button";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { SlotReel } from "~/components/kit/SlotReel";
 import { Panel } from "~/components/kit/Surface";
 import { celebrate } from "~/feedback/celebrate";
@@ -64,6 +65,8 @@ const tick = () => playCue("reelTick");
 const multipleText = (e2: bigint) => `${e2 / HUNDRED}.${(e2 % HUNDRED).toString().padStart(CENTS_DIGITS, "0")}×`;
 
 export function LuckyScreen() {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const pixels = pixelColors(color);
   const insets = useSafeAreaInsets();
@@ -110,6 +113,7 @@ export function LuckyScreen() {
   };
   return (
     <ScrollView
+      refreshControl={refresh}
       style={{ backgroundColor: color.ground }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
     >

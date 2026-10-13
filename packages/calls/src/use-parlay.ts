@@ -66,6 +66,7 @@ export function useParlayFlow(caller: Caller, effects: ParlayFlowEffects) {
   const account = useMarketAccount(owner);
   const submit = useSubmitParlay();
   const [picks, setPicks] = useState<ParlayPick[]>([]);
+  const inflight = useRef(false);
   const [signing_, setSigning] = useState(false);
   const [digest, setDigest] = useState<`0x${string}` | undefined>(undefined);
   const intent = useIntentStatus(digest);
@@ -103,8 +104,11 @@ export function useParlayFlow(caller: Caller, effects: ParlayFlowEffects) {
 
   /** Places `picks` at `stake` for at least the quote less the tolerance, legs sorted in close order. */
   const place = async (q: ParlayQuoteView, stake: bigint) => {
+    if (inflight.current) return;
     if (!owner || !caller.client) return fx.current.needAccount();
-    if (!("value" in catalog) || !("value" in account)) return;
+    if (!("value" in catalog) || !("value" in account)) {
+      return fx.current.notify({ title: "Still loading your account", description: "Try again in a moment." });
+    }
     if (!q.quote || q.quote.refusal || !q.trading) {
       return fx.current.notify({ title: "Not priced right now", description: "A leg is closing or out of range." });
     }
@@ -112,18 +116,20 @@ export function useParlayFlow(caller: Caller, effects: ParlayFlowEffects) {
       return fx.current.notify({ title: "Not enough dollars", description: "Lower the stake or add dollars." });
     }
     const legs = [...q.legs].sort((a, b) => a.window.expiry - b.window.expiry);
-    const [{ signParlay }, { appDelegates }] = await signing();
-    const deps: SignDeps = {
-      chainId: env.chainId,
-      client: caller.client,
-      delegates: appDelegates(),
-      reserve: catalog.value.contracts.reserve,
-      account: account.value,
-      nowSec: live.clock.nowSec(),
-    };
+    // The tap answers before anything is awaited, and a second one waits for it (D3).
+    inflight.current = true;
     fx.current.cue("press");
     setSigning(true);
     try {
+      const [{ signParlay }, { appDelegates }] = await signing();
+      const deps: SignDeps = {
+        chainId: env.chainId,
+        client: caller.client,
+        delegates: appDelegates(),
+        reserve: catalog.value.contracts.reserve,
+        account: account.value,
+        nowSec: live.clock.nowSec(),
+      };
       const signed = await signParlay(
         deps,
         {
@@ -149,6 +155,7 @@ export function useParlayFlow(caller: Caller, effects: ParlayFlowEffects) {
       fx.current.notify({ title: "Couldn't place the parlay", description: (error as Error).message });
     } finally {
       setSigning(false);
+      inflight.current = false;
     }
   };
 

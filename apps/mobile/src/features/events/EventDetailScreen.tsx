@@ -11,6 +11,7 @@ import { useServerSeconds } from "@senryo/live/react";
 import { useEventDetail } from "@senryo/query";
 import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { EventCard } from "./EventCard";
 import { HowItSettles, usePhoneEvents } from "./EventsScreen";
@@ -22,6 +23,8 @@ const when = (sec: number) =>
   new Date(sec * MS_PER_SECOND).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 
 export function EventDetailScreen({ eventId }: { eventId: string }) {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const now = useServerSeconds();
@@ -37,6 +40,7 @@ export function EventDetailScreen({ eventId }: { eventId: string }) {
         : null;
   return (
     <ScrollView
+      refreshControl={refresh}
       style={{ backgroundColor: color.ground }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
     >

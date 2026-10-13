@@ -26,6 +26,7 @@ import { useCallback, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FilterChips } from "~/components/kit/FilterChips";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { SearchField } from "~/components/kit/SearchField";
 import { Segmented } from "~/components/kit/Segmented";
 import { ChevronRight } from "~/components/kit/symbols";
@@ -45,6 +46,8 @@ const DEFAULT_STAKE = 5_000_000n;
 const FALLBACK_SYMBOL = "BTC";
 
 export function ParlayScreen() {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const account = useAccount();
@@ -118,6 +121,7 @@ export function ParlayScreen() {
   return (
     <View ref={root} collapsable={false} style={[styles.fill, { backgroundColor: color.ground }]}>
       <ScrollView
+        refreshControl={refresh}
         stickyHeaderIndices={[0]}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: slipBarSpace(insets.bottom) + SPACE.lg }}

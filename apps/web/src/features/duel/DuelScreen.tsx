@@ -64,7 +64,8 @@ export function DuelScreen() {
     queued && waited >= DUEL_QUIET_SEC ? tiers.filter((t) => t.id !== queuedTier?.id && (count(t.id) ?? 0) > 0) : [];
   const switchTo = async (id: number) => {
     fire("tick", { cue: "tap" });
-    await flow.cancel();
+    // Joins the new tier only once the old queue is left: never queued twice (D3).
+    if (!(await flow.cancel())) return;
     setTier(id);
     await flow.enter(id);
   };

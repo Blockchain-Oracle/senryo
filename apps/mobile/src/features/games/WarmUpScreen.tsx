@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EntityMark } from "~/components/identity/EntityMark";
 import { ChangeChip } from "~/components/kit/ChangeChip";
 import { ProgressBar } from "~/components/kit/ProgressBar";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { Sparkline } from "~/components/kit/Sparkline";
 import { SwipeDeck } from "~/components/kit/SwipeDeck";
 import { ArrowDown, ArrowUp } from "~/components/kit/symbols";
@@ -172,6 +173,8 @@ function RaceRow(p: {
 }
 
 export function WarmUpScreen() {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const pixels = pixelColors(color);
   const insets = useSafeAreaInsets();
@@ -198,6 +201,7 @@ export function WarmUpScreen() {
 
   return (
     <ScrollView
+      refreshControl={refresh}
       style={{ backgroundColor: color.ground }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACE.xl }]}
     >

@@ -53,6 +53,7 @@ export function useEventsFlow(caller: Caller, effects: EventFlowEffects) {
   const place = usePlaceEventCall(owner);
   const refresh = useRefreshCaller(owner);
   const [busy, setBusy] = useState<string | null>(null);
+  const inflight = useRef(false);
   const [receipt, setReceipt] = useState<EventReceipt | null>(null);
   const fx = useRef(effects);
   fx.current = effects;
@@ -67,7 +68,15 @@ export function useEventsFlow(caller: Caller, effects: EventFlowEffects) {
       fx.current.needAccount();
       return null;
     }
-    if (!limits || !("value" in account) || busy) return null;
+    if (busy || inflight.current) return null;
+    if (!limits) {
+      fx.current.notify({ title: "Events are Practice only", description: "Switch to Practice to call." });
+      return null;
+    }
+    if (!("value" in account)) {
+      fx.current.notify({ title: "Still loading your account", description: "Try again in a moment." });
+      return null;
+    }
     if (stake < limits.minStake || stake > limits.maxStake) {
       fx.current.notify({
         title: "Outside the limits",
@@ -79,10 +88,12 @@ export function useEventsFlow(caller: Caller, effects: EventFlowEffects) {
       fx.current.notify({ title: "Not enough dollars", description: "Call less or add dollars." });
       return null;
     }
-    const { signEventCall } = await signing();
+    // The tap answers before anything is awaited, and a second one waits for it (D3).
+    inflight.current = true;
     fx.current.cue("press");
     setBusy("Signing…");
     try {
+      const { signEventCall } = await signing();
       const signed = await signEventCall(
         { chainId: env.chainId, client: caller.client, account: account.value, nowSec: live.clock.nowSec() },
         { owner, eventId: e.eventId, yes, stake },
@@ -102,6 +113,7 @@ export function useEventsFlow(caller: Caller, effects: EventFlowEffects) {
       return null;
     } finally {
       setBusy(null);
+      inflight.current = false;
     }
   };
 

@@ -18,6 +18,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
+import { usePullRefresh } from "~/components/kit/PullRefresh";
 import { celebrate } from "~/feedback/celebrate";
 import { fire, music } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
@@ -36,6 +37,8 @@ const ACTION_SPACE = SIZE.buttonHeight + SPACE.xl;
 const FEEL: DuelFeel = { fire, music, celebrate };
 
 export function DuelScreen() {
+  // Pull down refreshes the page (D4: the owner's iPhone review — every screen with data refreshes).
+  const refresh = usePullRefresh();
   const { color } = useTheme();
   const insets = useSafeAreaInsets();
   const account = useAccount();
@@ -69,7 +72,8 @@ export function DuelScreen() {
     queued && waited >= DUEL_QUIET_SEC ? tiers.filter((t) => t.id !== queuedTier?.id && (count(t.id) ?? 0) > 0) : [];
   const switchTo = async (id: number) => {
     fire("tick");
-    await flow.cancel();
+    // Joins the new tier only once the old queue is left: never queued twice (D3).
+    if (!(await flow.cancel())) return;
     setTier(id);
     await flow.enter(id);
   };
@@ -77,6 +81,7 @@ export function DuelScreen() {
   return (
     <View style={[styles.fill, { backgroundColor: color.ground }]}>
       <ScrollView
+        refreshControl={refresh}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + (inMatch ? SPACE.xl : ACTION_SPACE) }]}
       >
         {inMatch ? (
