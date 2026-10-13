@@ -69,6 +69,7 @@ export function TerminalSheets(p: {
                 margin: choices.margin,
                 leverageBps: side.leverageBps,
                 maxLeverageBps: side.market.maxLeverageBps,
+                leverageOnX: choices.leverageOnX,
                 trailBps: choices.rideTrailBps,
                 terms: side.terms,
                 onMargin: choices.setMargin,
@@ -78,11 +79,11 @@ export function TerminalSheets(p: {
             : null
         }
         call={{
+          symbol: t.symbol,
           mode: choices.mode,
           offer: q.offer,
           quotes: q.latest.current,
           lineE8: t.k,
-          expiry: t.window.expiry,
           stake: choices.stake,
           min: t.terms?.minStake ?? MIN_STAKE,
           max: t.terms?.maxStake ?? choices.stake,

@@ -1,11 +1,9 @@
 /**
  * A ride before and after the tap (D-299, D-301, R5.4–R5.6), one copy for both apps: what an open of `margin` at
  * `leverage` costs at the live price, where it would be knocked out and capped (fixed at the fill, `LinearMath`), how
- * far each is in words, where it breaks even after both fees, and — held — whether TRAIL can arm yet.
+ * far each is (bps — the apps draw it), where it breaks even after both fees, and — held — whether TRAIL can arm yet.
  */
 import {
-  type PriceUnit,
-  priceText,
   RIDE_SCALE,
   rideCapPrice,
   rideFee,
@@ -34,6 +32,8 @@ export interface RideQuote {
   /** The open fee (taker rate) and what leaves the wallet (margin + fee). */
   fee: bigint;
   cost: bigint;
+  /** The close fee were it to close at today's price (the real one depends on the closing price). */
+  closeFee: bigint;
   /** The pool's reserve: the most the ride can win. */
   reserve: bigint;
   koE8: bigint;
@@ -68,6 +68,7 @@ export function rideQuote(
     notional,
     fee,
     cost: margin + fee,
+    closeFee,
     reserve,
     koE8,
     capE8,
@@ -79,18 +80,6 @@ export function rideQuote(
 
 const pctText = (bps: number, decimals = ONE_DECIMAL): string =>
   `${bps < 0 ? "−" : "+"}${Math.abs(bps / PERCENT_PER_BPS).toFixed(decimals)}%`;
-
-/** "Knocked out at $80,431 (−2.2%)". */
-export const knockOutWords = (q: RideQuote, unit: PriceUnit = "usd"): string =>
-  `Knocked out at ${priceText(q.koE8, unit)} (${pctText(q.koMoveBps)})`;
-
-/** "Capped at $92,000 (+22.5%)": the most it can win. */
-export const capWords = (q: RideQuote, unit: PriceUnit = "usd"): string =>
-  `Capped at ${priceText(q.capE8, unit)} (${pctText(q.capMoveBps)})`;
-
-/** "$92,000 (+22.5%)": where a side caps, and how far that is. */
-export const capText = (q: RideQuote, unit: PriceUnit = "usd"): string =>
-  `${priceText(q.capE8, unit)} (${pctText(q.capMoveBps)})`;
 
 /** "10×". */
 export const leverageOf = (leverageBps: number): number => Math.round(leverageBps / LEVERAGE_ONE);

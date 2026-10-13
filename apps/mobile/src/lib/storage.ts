@@ -18,7 +18,9 @@ export const STORAGE_KEYS = {
   /** R5.4: Call or Ride, the ride's margin (base units), leverage (×) and trail (bps), the call's trail (cents). */
   terminalInstrument: "senryo.terminal.instrument.v1",
   rideMargin: "senryo.terminal.ride-margin.v1",
-  rideLeverage: "senryo.terminal.leverage.v1",
+  /** v2 (D-344): leverage is opt-in, so every device starts at no leverage; the multiple last used when on. */
+  rideLeverage: "senryo.terminal.leverage.v2",
+  rideLeverageOn: "senryo.terminal.leverage-on.v1",
   rideTrail: "senryo.terminal.ride-trail.v1",
   callTrail: "senryo.terminal.call-trail.v1",
   /** The chart's view, line or candles, and the candles' interval (R5.17). */

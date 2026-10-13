@@ -20,6 +20,8 @@ const usd = (v: bigint) => `$${formatUnits(v, DOLLAR_DECIMALS, CENTS)}`;
 
 export interface AmountFieldProps {
   label: string;
+  /** The row that opened it already names the amount: the heading is read, not shown. */
+  hideLabel?: boolean;
   value: bigint;
   presetsUsd: readonly number[];
   min: bigint;
@@ -29,7 +31,7 @@ export interface AmountFieldProps {
   onChange: (v: bigint) => void;
 }
 
-export function AmountField({ label, value, presetsUsd, min, max, available, onChange }: AmountFieldProps) {
+export function AmountField({ label, hideLabel, value, presetsUsd, min, max, available, onChange }: AmountFieldProps) {
   const hidden = usePrivacy();
   const [text, setText] = useState(formatUnits(value, DOLLAR_DECIMALS, CENTS));
   useEffect(() => setText(formatUnits(value, DOLLAR_DECIMALS, CENTS)), [value]);
@@ -53,7 +55,9 @@ export function AmountField({ label, value, presetsUsd, min, max, available, onC
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <h3 className="font-semibold text-meta text-text-3 uppercase tracking-wide">{label}</h3>
+        <h3 className={cn("font-semibold text-meta text-text-3 uppercase tracking-wide", hideLabel && "sr-only")}>
+          {label}
+        </h3>
         {available !== undefined ? (
           <span className="text-meta text-text-3">Available {masked(usd(available), hidden)}</span>
         ) : null}

@@ -1,27 +1,28 @@
 "use client";
 /**
- * A call's settings (Codex direction 11 §2, R5.4/R5.7): the call type (Up/Down · Range · Moonshot/Crash — out of the
- * panel and into here), how each side wins in one sentence, the stake (presets, typed, a share of what's available),
- * the trail TRAIL arms at (cents behind the best bid per share), and the summary: stake, what each side pays if right,
- * the fees inside the price, when it settles, and the wallet after it.
+ * A call's settings (Q1, Codex direction 16 §2; the phone's `CallSettingsBody`): the call type, the stake as the hero
+ * (the amount field opens on a click), what it pays drawn under it, the one rule worth a sentence, then the trail and
+ * the fees each one line that opens. The old summary rows (stake again, pays if right, fees per side, settles at,
+ * after this) are gone.
  */
-import { CALL_MODES, type CallMode, dollars, type Offer, type Quotes, TRAIL_CENTS } from "@senryo/calls";
-import { P_ONE, priceText } from "@senryo/core";
+import { CALL_MODES, type CallMode, callPayoff, dollars, type Offer, type Quotes, TRAIL_CENTS } from "@senryo/calls";
+import { useState } from "react";
+import { DisclosureRow } from "@/components/ui/disclosure-row";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { fire } from "@/lib/feedback";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { AmountField } from "./AmountField";
 import { STAKE_PRESETS_USD } from "./constants";
-import { SummaryRow } from "./OrderSummary";
+import { PayoffDrawing } from "./PayoffDrawing";
 
-const MS = 1_000;
+const USD = 1_000_000n;
 
 export interface CallSettingsProps {
+  symbol: string;
   mode: CallMode;
   offer: Offer;
   quotes: Quotes;
   lineE8: bigint | undefined;
-  expiry: number;
   stake: bigint;
   min: bigint;
   max: bigint;
@@ -32,50 +33,54 @@ export interface CallSettingsProps {
   onTrail: (cents: number) => void;
 }
 
-/** "Up wins above $82,289 at 20:00; Down wins below. Exactly on the line refunds." */
-function winWords(p: CallSettingsProps): string {
-  const at = new Date(p.expiry * MS).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const [a, b] = p.offer;
-  if (p.mode === "updown" && p.lineE8 !== undefined)
-    return `Up wins above ${priceText(p.lineE8)} at ${at}; Down wins below. Exactly on the line refunds.`;
-  const sides = [a, b].filter((x) => x !== undefined).map((x) => `${x.label} wins ${x.where}`);
-  return `${sides.join("; ")} at ${at}.`;
-}
-
 export function CallSettings(p: CallSettingsProps) {
   const hidden = usePrivacy();
+  const [editing, setEditing] = useState(false);
   const money = (v: bigint) => masked(dollars(v), hidden);
-  const sides = [
-    [p.offer[0], p.quotes.first],
-    [p.offer[1], p.quotes.second],
-  ] as const;
+  const top = BigInt(STAKE_PRESETS_USD.at(-1) ?? 1) * USD;
+  const payoff = callPayoff(p.offer, p.quotes, p.stake, top < p.max ? top : p.max);
+  const fees = payoff.zones.flatMap((z) => (z.fee === null ? [] : [z.fee]));
+  const low = fees.reduce((m, f) => (f < m ? f : m), fees[0] ?? 0n);
+  const high = fees.reduce((m, f) => (f > m ? f : m), 0n);
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-3">
-        <h3 className="font-semibold text-meta text-text-3 uppercase tracking-wide">Call type</h3>
-        <SegmentedControl
-          options={CALL_MODES}
-          label="Call type"
-          value={p.mode}
-          onValueChange={(v) => {
-            fire("tick", { cue: "toggle" });
-            p.onMode(v as CallMode);
-          }}
-          fill
-        />
-        <p className="text-body text-text-2">{winWords(p)}</p>
-      </section>
-      <AmountField
-        label="Stake"
-        value={p.stake}
-        presetsUsd={STAKE_PRESETS_USD}
-        min={p.min}
-        max={p.max}
-        available={p.available}
-        onChange={p.onStake}
+    <div className="flex flex-col gap-3">
+      <SegmentedControl
+        options={CALL_MODES}
+        label="Call type"
+        value={p.mode}
+        onValueChange={(v) => {
+          fire("tick", { cue: "toggle" });
+          p.onMode(v as CallMode);
+        }}
+        fill
       />
-      <section className="flex flex-col gap-3">
-        <h3 className="font-semibold text-meta text-text-3 uppercase tracking-wide">Trailing stop</h3>
+      <button
+        type="button"
+        aria-expanded={editing}
+        aria-label={`Stake ${money(p.stake)}. Edit`}
+        onClick={() => {
+          fire("tick", { cue: "tap" });
+          setEditing((e) => !e);
+        }}
+        className="tnum self-start rounded-md font-semibold text-display-balance leading-none focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        {money(p.stake)}
+      </button>
+      {editing ? (
+        <AmountField
+          label="Stake"
+          hideLabel
+          value={p.stake}
+          presetsUsd={STAKE_PRESETS_USD}
+          min={p.min}
+          max={p.max}
+          available={p.available}
+          onChange={p.onStake}
+        />
+      ) : null}
+      <PayoffDrawing payoff={payoff} lineE8={p.lineE8} symbol={p.symbol} hidden={hidden} />
+      {p.mode === "updown" ? <p className="text-meta text-text-3">On the line refunds.</p> : null}
+      <DisclosureRow title="Trail" value={`${p.trailCents}¢`}>
         <div className="flex flex-wrap gap-2">
           {TRAIL_CENTS.map((c) => (
             <button
@@ -92,30 +97,19 @@ export function CallSettings(p: CallSettingsProps) {
             </button>
           ))}
         </div>
-        <p className="text-meta text-text-3">Behind the best bid per share, once you're past break-even.</p>
-      </section>
-      <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 text-body">
-        <SummaryRow k="Stake" v={money(p.stake)} />
-        {sides.map(([side, q]) =>
-          side && q && !q.refusal ? (
-            <SummaryRow key={side.label} k={`${side.label} pays if right`} v={money(q.payout)} />
-          ) : null,
-        )}
-        {sides.map(([side, q]) =>
-          side && q && !q.refusal ? (
-            <SummaryRow
-              key={`${side.label}-fee`}
-              k={`Fees in ${side.label}'s price`}
-              v={money(p.stake - (q.payout * q.probE6) / P_ONE)}
-            />
-          ) : null,
-        )}
-        <SummaryRow
-          k="Settles at"
-          v={new Date(p.expiry * MS).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        />
-        {p.available !== undefined ? <SummaryRow k="After this" v={money(p.available - p.stake)} /> : null}
-      </dl>
+      </DisclosureRow>
+      {fees.length > 0 ? (
+        <DisclosureRow title="Fees" value={low === high ? money(low) : `${money(low)}–${money(high)}`}>
+          {payoff.zones.map((z) =>
+            z.fee === null ? null : (
+              <p key={z.slot} className="flex items-center gap-3 text-body">
+                <span className="flex-1 text-text-3">In {z.band.label}'s price</span>
+                <span className="tnum font-semibold">{money(z.fee)}</span>
+              </p>
+            ),
+          )}
+        </DisclosureRow>
+      ) : null}
     </div>
   );
 }

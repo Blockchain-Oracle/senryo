@@ -13,7 +13,9 @@ export const TERMINAL_STORAGE = {
   mode: "senryo.terminal.mode.v1",
   instrument: "senryo.terminal.instrument.v1",
   rideMargin: "senryo.terminal.ride-margin.v1",
-  leverage: "senryo.terminal.leverage.v1",
+  /** v2 (D-344): leverage is opt-in, so every device starts at no leverage; the multiple last used when on. */
+  leverage: "senryo.terminal.leverage.v2",
+  leverageOn: "senryo.terminal.leverage-on.v1",
   rideTrail: "senryo.terminal.ride-trail.v1",
   callTrail: "senryo.terminal.call-trail.v1",
   favourites: "senryo.favourite-markets.v1",

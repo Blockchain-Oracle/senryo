@@ -796,6 +796,22 @@
         "evidence": ["R6.9 / D-339, Codex direction 13 (docs/research/replan-2026-10-10/13-search-direction.md)"],
         "port": "a 264 × 44 white capsule \"Search for anything\" held above the dock on Home (press scale, a magenta halo only on entry); a pushed full page over the dock — Back, the filled 44 pt field with clear, groups headed in the section role, rows from the shared index (@senryo/calls useSearch): markets with the four lanes, a 56 × 20 Skia sparkline and a trailing options chevron; positions with live value and masked PnL; events with two crests; a market page from the shared marketPageRows; no filter chips",
         "path": "src/features/search/"
+      },
+      {
+        "name": "ride settings",
+        "source": "21st #29217 ai2/slider-marks (track, fill, marks, thumb) for the leverage slider; 21st #851 ibelick/disclosure for the one-line disclosures; searched \"range slider with marks\", \"risk ladder price levels\" (no ladder exists — built from rideLadder values)",
+        "evidence": [
+          "Q1 / D-344, D-345, Codex direction 16 §1 (docs/research/replan-2026-10-10/16-quiet-direction.md)"
+        ],
+        "port": "margin on one 56 pt line (keypad on tap); a Leverage switch (off = 1×); on, a 52 pt multiple over a Gesture Handler + Reanimated snap slider with a haptic tick per mark; a 192 pt two-rail risk ladder in react-native-svg (KO dashed, cap solid, the mark dashed across, tap a level for its move); Trail and Open fee as disclosures",
+        "path": "src/features/terminal/RideSettingsBody.tsx"
+      },
+      {
+        "name": "call payoff",
+        "source": "21st #29466 eugeneshilow/leaderboard-bars (bars on one shared scale, value at the bar's end); searched \"payoff chart bars\"",
+        "evidence": ["Q1 / D-345, Codex direction 16 §2"],
+        "port": "stake as a 52 pt hero (keypad on tap) over a 216 pt drawing: the line dashed across, each side's zone tinted where its edges sit, a 28 pt pay bar per zone on a scale drawn for the top preset (bars grow with the stake), the stake as a dashed tick; tap a zone for where it wins; hidden balances keep only the odds",
+        "path": "src/features/terminal/CallSettingsBody.tsx"
       }
     ],
     "planned": [

@@ -102,6 +102,16 @@ export function replaysNow(): readonly Episode[] {
 
 export const episodeId = (chainId: number, bookKey: string) => `${chainId}:${bookKey}`;
 
+/**
+ * An open position's path so far (R5.26: its row's trace), or null before its first priced sample. A plain read —
+ * the row reads it on its own one-second tick, so recording five times a second wakes nothing.
+ */
+export function liveSamples(chainId: number, bookKey: string): readonly ReplaySample[] | null {
+  hydrate();
+  const id = episodeId(chainId, bookKey);
+  return episodes.find((e) => e.id === id && e.closedAtMs === null)?.samples ?? null;
+}
+
 /** Keeps every other sample once there are too many (the first and the last always stay). */
 export function halve(samples: ReplaySample[]): ReplaySample[] {
   if (samples.length <= HALVE_AT) return samples;

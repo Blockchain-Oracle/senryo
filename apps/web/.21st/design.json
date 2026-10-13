@@ -698,6 +698,33 @@
         "use": "your record (R5.20): its plain layout — the numbers on the page with a quiet label above each, no boxes — as a 3 × 2 grid of Owarine's six stats (lifetime PnL, win rate, trades, win streak, best streak, volume); searched \"trading stats grid lifetime pnl win rate streak volume\" and \"stats grid\" (29195 Stats Grid, 29196 Numbers Stats Grid, 25311 Stats Bento, 35089); the count-up, sparklines and world map dropped, retokenized to the numeric type role",
         "path": "src/features/calls/StatsCard.tsx",
         "retokenized": true
+      },
+      {
+        "name": "marks-slider (leverage)",
+        "source": "21st:ai2/slider-marks",
+        "id": 29217,
+        "url": "https://21st.dev/@ai2/components/slider-marks",
+        "use": "the ride's leverage when switched on (Q1, D-344): the installed Marks Slider over the market's marks (2× … the cap), labels under each stop, a tick per change; searched \"range slider with marks\"",
+        "path": "src/features/terminal/RideSettings.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "leaderboard-bars (payoff)",
+        "source": "21st:eugeneshilow/leaderboard-bars",
+        "id": 29466,
+        "url": "https://21st.dev/@eugeneshilow/components/leaderboard-bars",
+        "use": "the call's payoff drawing (Q1, Codex direction 16 §2): its shared 0…max scale carrying every bar with the value at the bar's end, on our price-zone axis (Up above the line, a Range around it, Moonshot / Crash beyond); searched \"payoff chart bars\" (29223 Revenue Bars, 26545 Partition Bar, 30538, 29466); whiskers, grid, metric columns and the 620 px minimum dropped, the stake as a dashed tick",
+        "path": "src/features/terminal/PayoffDrawing.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "disclosure",
+        "source": "21st:ibelick/disclosure",
+        "id": 851,
+        "url": "https://21st.dev/@ibelick/components/disclosure",
+        "use": "one line that opens (Q1): title and value at rest, the control on click, the chevron turning; searched \"disclosure row accordion\" (14029 HeroUI, 851, 25011 Disclosure Group, 23530 Accordion); the motion height animation dropped for an instant reveal",
+        "path": "src/components/ui/disclosure-row.tsx",
+        "retokenized": true
       }
     ],
     "considered": [
@@ -870,6 +897,16 @@
         "id": 29196,
         "name": "Numbers Stats Grid",
         "verdict": "rejected: a landing page's coloured bordered boxes with icons and an illustration; the record keeps numbers on the page"
+      },
+      {
+        "id": 21948,
+        "name": "Switch (serafimcloud)",
+        "verdict": "kept ours: the settings drawer's switch already matched the phone's; extracted to src/components/ui/switch-row.tsx for the Leverage row (D-344)"
+      },
+      {
+        "id": 29259,
+        "name": "Gradient Tiers",
+        "verdict": "rejected: pricing tiers; nothing on 21st draws a price ladder — the risk ladder (src/features/terminal/RiskLadder.tsx) is built from rideLadder values"
       }
     ],
     "removed": [

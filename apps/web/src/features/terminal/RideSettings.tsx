@@ -1,29 +1,36 @@
 "use client";
 /**
- * A ride's settings (Tradash's settings sheet, Codex direction 11 §2, R5.4/R5.7): the margin (presets up to the terms'
- * cap, typed, or a share of what's available), the leverage chips to the market's cap with the risk on each side in
- * words — "UP · Knocked out at $80,431 (−2.2%)" — the trail TRAIL arms at, and the summary: trade size, margin at
- * risk, fees, the most it can win and where that caps, its 4-hour life, and the wallet after it.
+ * A ride's settings (Q1, D-344, Codex direction 16 §1; the phone's `RideSettingsBody`): the margin on one line (the
+ * amount field opens on a click); Leverage — off, so the ride is 1×, until switched on, when one big multiple and a
+ * marked slider over the market's marks appear; the risk drawn as a ladder; the trail and the fees each one line that
+ * opens. Nothing repeated, nothing explained in a sentence.
  */
 import {
-  capText,
   dollars,
-  knockOutWords,
-  leverageChips,
+  LEVERAGE_OFF_X,
+  leverageMarks,
+  leverageOn,
   RIDE_MARGIN_USD,
   RIDE_TRAIL_STEPS_BPS,
   type RideTermsLike,
+  rideLadder,
   rideQuote,
   trailText,
-  unitOf,
 } from "@senryo/calls";
+import { SquarePen } from "lucide-react";
+import { useState } from "react";
+import { DisclosureRow } from "@/components/ui/disclosure-row";
+import { MarksSlider } from "@/components/ui/marks-slider";
+import { SwitchRow } from "@/components/ui/switch-row";
 import { fire } from "@/lib/feedback";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
+import { cn } from "@/lib/utils";
 import { AmountField } from "./AmountField";
-import { SummaryRow } from "./OrderSummary";
+import { RiskLadder } from "./RiskLadder";
 
 const LEVERAGE_ONE = 10_000;
-const SECONDS_PER_HOUR = 3_600;
+const PERCENT = 100;
+const BPS_PER_PERCENT = 100;
 
 export interface RideSettingsProps {
   symbol: string;
@@ -31,14 +38,10 @@ export interface RideSettingsProps {
   margin: bigint;
   leverageBps: number;
   maxLeverageBps: number;
+  /** The multiple leverage returns to when it's switched back on. */
+  leverageOnX: number;
   trailBps: number;
-  terms: RideTermsLike & {
-    minMargin: bigint;
-    maxMargin: bigint;
-    maxLifeSec: number;
-    earlyFeeBps: number;
-    earlyWindowSec: number;
-  };
+  terms: RideTermsLike & { minMargin: bigint; maxMargin: bigint; earlyFeeBps: number; earlyWindowSec: number };
   available: bigint | undefined;
   onMargin: (v: bigint) => void;
   onLeverage: (x: number) => void;
@@ -47,59 +50,86 @@ export interface RideSettingsProps {
 
 export function RideSettings(p: RideSettingsProps) {
   const hidden = usePrivacy();
-  const unit = unitOf(p.symbol);
+  const [editing, setEditing] = useState(false);
+  const money = (v: bigint) => masked(dollars(v), hidden);
+  const on = leverageOn(p.leverageBps);
+  const x = p.leverageBps / LEVERAGE_ONE;
+  const marks = leverageMarks(p.maxLeverageBps);
+  const index = Math.max(0, marks.indexOf(x));
+  const last = Math.max(1, marks.length - 1);
   const up = p.markE8 ? rideQuote(true, p.margin, p.leverageBps, p.markE8, p.terms) : null;
   const down = p.markE8 ? rideQuote(false, p.margin, p.leverageBps, p.markE8, p.terms) : null;
-  const money = (v: bigint) => masked(dollars(v), hidden);
+  const ladder = up && down && p.markE8 ? rideLadder(up, down, p.markE8) : null;
   return (
-    <div className="flex flex-col gap-6">
-      <AmountField
-        label="Margin"
-        value={p.margin}
-        presetsUsd={RIDE_MARGIN_USD}
-        min={p.terms.minMargin}
-        max={p.terms.maxMargin}
-        available={p.available}
-        onChange={p.onMargin}
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        aria-expanded={editing}
+        onClick={() => {
+          fire("tick", { cue: "tap" });
+          setEditing((e) => !e);
+        }}
+        className="flex min-h-14 w-full items-center gap-3 rounded-md px-1 text-left focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <span className="flex-1 font-medium text-row">Margin</span>
+        <span className="tnum font-semibold text-title">{money(p.margin)}</span>
+        <SquarePen aria-hidden className="size-4 text-text-3" />
+      </button>
+      {editing ? (
+        <AmountField
+          label="Margin"
+          hideLabel
+          value={p.margin}
+          presetsUsd={RIDE_MARGIN_USD}
+          min={p.terms.minMargin}
+          max={p.terms.maxMargin}
+          available={p.available}
+          onChange={p.onMargin}
+        />
+      ) : null}
+      <SwitchRow
+        label="Leverage"
+        on={on}
+        onChange={(next) =>
+          p.onLeverage(next ? Math.min(p.leverageOnX, marks.at(-1) ?? p.leverageOnX) : LEVERAGE_OFF_X)
+        }
       />
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h3 className="font-semibold text-meta text-text-3 uppercase tracking-wide">Leverage</h3>
-          <span className="text-meta text-text-3">Up to {p.maxLeverageBps / LEVERAGE_ONE}×</span>
+      {on ? (
+        <div className="flex flex-col gap-1">
+          <p className="tnum font-semibold text-display-balance leading-none">{x}×</p>
+          <MarksSlider
+            value={index}
+            min={0}
+            max={last}
+            step={1}
+            stops={marks.map((_, i) => i / last)}
+            label="Leverage"
+            valueText={`${x}×`}
+            onValueChange={(i) => {
+              const next = marks[i];
+              if (next === undefined || next === x) return;
+              fire("tick", { cue: "tap" });
+              p.onLeverage(next);
+            }}
+          />
+          <div aria-hidden className="relative h-4">
+            {marks.map((m, i) => (
+              <span
+                key={m}
+                className={cn(
+                  "-translate-x-1/2 tnum absolute text-meta",
+                  i === index ? "text-foreground" : "text-text-3",
+                )}
+                style={{ left: `${(i / last) * PERCENT}%` }}
+              >
+                {m}×
+              </span>
+            ))}
+          </div>
         </div>
-        <p className="tnum font-semibold text-display-balance leading-none">{p.leverageBps / LEVERAGE_ONE}×</p>
-        <div className="flex flex-wrap gap-2">
-          {leverageChips(p.maxLeverageBps).map((x) => (
-            <button
-              key={x}
-              type="button"
-              aria-pressed={x * LEVERAGE_ONE === p.leverageBps}
-              onClick={() => {
-                fire("tick", { cue: "tap" });
-                p.onLeverage(x);
-              }}
-              className="terminal-preset min-w-14 px-3"
-            >
-              {x}×
-            </button>
-          ))}
-        </div>
-        {up && down ? (
-          <ul className="flex flex-col gap-1 text-body">
-            <li>
-              <span className="font-semibold text-up">UP</span> · {knockOutWords(up, unit)}
-            </li>
-            <li>
-              <span className="font-semibold text-down">DOWN</span> · {knockOutWords(down, unit)}
-            </li>
-            <li className="text-meta text-text-3">Knocked out when 90% of the margin is lost.</li>
-          </ul>
-        ) : (
-          <p className="text-meta text-text-3">Waiting for a live price…</p>
-        )}
-      </section>
-      <section className="flex flex-col gap-3">
-        <h3 className="font-semibold text-meta text-text-3 uppercase tracking-wide">Trailing stop</h3>
+      ) : null}
+      {ladder && p.markE8 ? <RiskLadder ladder={ladder} symbol={p.symbol} markE8={p.markE8} /> : null}
+      <DisclosureRow title="Trail" value={trailText(p.trailBps)}>
         <div className="flex flex-wrap gap-2">
           {RIDE_TRAIL_STEPS_BPS.map((bps) => (
             <button
@@ -116,21 +146,20 @@ export function RideSettings(p: RideSettingsProps) {
             </button>
           ))}
         </div>
-        <p className="text-meta text-text-3">TRAIL arms this far behind the best price once you're past break-even.</p>
-      </section>
+      </DisclosureRow>
       {up ? (
-        <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 text-body">
-          <SummaryRow k="Trade size" v={money(up.notional)} />
-          <SummaryRow k="Margin at risk" v={money(p.margin)} />
-          <SummaryRow k="Opening fee" v={money(up.fee)} />
-          <SummaryRow k="Estimated closing fee" v={`about ${money(up.fee)}`} />
-          <SummaryRow k="Early-close fee" v={`on a profit, ${p.terms.earlyWindowSec} s at most`} />
-          <SummaryRow k="Max profit" v={money(up.reserve)} />
-          <SummaryRow k="Up capped at" v={capText(up, unit)} />
-          {down ? <SummaryRow k="Down capped at" v={capText(down, unit)} /> : null}
-          <SummaryRow k="Closes after" v={`${p.terms.maxLifeSec / SECONDS_PER_HOUR} h at most`} />
-          {p.available !== undefined ? <SummaryRow k="After this" v={money(p.available - up.cost)} /> : null}
-        </dl>
+        <DisclosureRow title="Open fee" value={money(up.fee)}>
+          <p className="flex items-center gap-3 text-body">
+            <span className="flex-1 text-text-3">Close fee at today's price</span>
+            <span className="tnum font-semibold">{money(up.closeFee)}</span>
+          </p>
+          {p.terms.earlyFeeBps > 0 ? (
+            <p className="flex items-center gap-3 text-body">
+              <span className="flex-1 text-text-3">In profit within {p.terms.earlyWindowSec} s</span>
+              <span className="tnum font-semibold">up to {p.terms.earlyFeeBps / BPS_PER_PERCENT}%</span>
+            </p>
+          ) : null}
+        </DisclosureRow>
       ) : null}
     </div>
   );

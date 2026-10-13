@@ -84,6 +84,7 @@ export function TerminalSheets(p: TerminalSheetsProps) {
               margin={choices.margin}
               leverageBps={side.leverageBps}
               maxLeverageBps={side.market.maxLeverageBps}
+              leverageOnX={choices.leverageOnX}
               trailBps={choices.rideTrailBps}
               terms={side.terms}
               available={t.balance}
@@ -93,11 +94,11 @@ export function TerminalSheets(p: TerminalSheetsProps) {
             />
           ) : (
             <CallSettings
+              symbol={p.symbol}
               mode={choices.mode}
               offer={q.offer}
               quotes={q.latest.current}
               lineE8={t.k}
-              expiry={t.window.expiry}
               stake={choices.stake}
               min={t.terms?.minStake ?? MIN_STAKE}
               max={t.terms?.maxStake ?? choices.stake}

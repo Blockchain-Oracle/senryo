@@ -13,6 +13,7 @@ import { PasskeyGlyph } from "@/components/identity/passkey-glyph";
 import { Button } from "@/components/ui/button";
 import { CopyCode } from "@/components/ui/copy-code-button";
 import { SlideOver } from "@/components/ui/drawer";
+import { SwitchRow } from "@/components/ui/switch-row";
 import { useAccount } from "@/lib/account/provider";
 import { useChip } from "@/lib/account/use-chip";
 import { fire, setFeedback, useFeedback } from "@/lib/feedback";
@@ -20,7 +21,6 @@ import { notify } from "@/lib/notify";
 import { closeDrawer } from "@/lib/shell/drawer-param";
 import { setPrivacy, usePrivacy } from "@/lib/shell/privacy";
 import { openTour } from "@/lib/terminal/tour";
-import { cn } from "@/lib/utils";
 import { RecoveryGroup } from "./RecoveryGroup";
 import type { DrawerProps } from "./types";
 
@@ -60,51 +60,6 @@ function Volume({
   );
 }
 
-function Toggle({
-  label,
-  detail,
-  on,
-  onChange,
-}: {
-  label: string;
-  detail?: string;
-  on: boolean;
-  onChange: (on: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={() => {
-        onChange(!on);
-        fire("tick", { cue: "tap" });
-      }}
-      className="flex min-h-14 w-full items-center gap-3 rounded-md px-1 text-left focus-visible:outline-2 focus-visible:outline-ring"
-    >
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="font-semibold text-row">{label}</span>
-        {detail ? <span className="text-meta text-text-3">{detail}</span> : null}
-      </span>
-      <span
-        aria-hidden
-        className={cn(
-          "relative h-7 w-12 shrink-0 rounded-full transition-colors duration-(--motion-base)",
-          on ? "bg-primary" : "bg-row-pressed",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-0.5 size-6 rounded-full transition-transform duration-(--motion-base) ease-lacquer",
-            // On: the primary's own ink (white on black in light, black on white in dark), as the phone's switch.
-            on ? "translate-x-5.5 bg-primary-foreground" : "translate-x-0.5 bg-white",
-          )}
-        />
-      </span>
-    </button>
-  );
-}
-
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-1">
@@ -135,7 +90,7 @@ export function SettingsDrawer({ open, onOpenChange }: DrawerProps) {
     <SlideOver open={open} onOpenChange={onOpenChange} title="Settings">
       <div className="flex flex-col gap-6 pt-2">
         <Group title="Sound & vibration">
-          <Toggle
+          <SwitchRow
             label="Sounds"
             detail="Calls, results and the live line"
             on={feedback.sound}
@@ -153,13 +108,13 @@ export function SettingsDrawer({ open, onOpenChange }: DrawerProps) {
             disabled={!feedback.sound}
             onChange={(v) => setFeedback({ music: v })}
           />
-          <Toggle
+          <SwitchRow
             label="Music in the terminal"
             detail="Games always have theirs; the terminal's is your choice"
             on={feedback.terminalMusic}
             onChange={(v) => setFeedback({ terminalMusic: v })}
           />
-          <Toggle
+          <SwitchRow
             label="Vibration"
             detail="Where this device can"
             on={feedback.haptics}
@@ -167,8 +122,12 @@ export function SettingsDrawer({ open, onOpenChange }: DrawerProps) {
           />
         </Group>
         <Group title="Display">
-          <Toggle label="Hide balances" detail="Amounts read ••••" on={hidden} onChange={setPrivacy} />
-          <Toggle label="Light theme" on={resolvedTheme === "light"} onChange={(v) => setTheme(v ? "light" : "dark")} />
+          <SwitchRow label="Hide balances" detail="Amounts read ••••" on={hidden} onChange={setPrivacy} />
+          <SwitchRow
+            label="Light theme"
+            on={resolvedTheme === "light"}
+            onChange={(v) => setTheme(v ? "light" : "dark")}
+          />
         </Group>
         <Group title="Help">
           <Button

@@ -2,7 +2,7 @@
  * The live book in words, one copy for both apps (R5.3): a position's title, its line under the title, and — when it
  * isn't simply live — why its figures or its close are held, in one plain sentence.
  */
-import { laneLabel, usd } from "@senryo/core";
+import { laneLabel } from "@senryo/core";
 import type { BookEntry } from "./book.ts";
 
 const MS = 1_000;
@@ -39,7 +39,8 @@ export function positionHold(e: BookEntry): string | null {
     case "locked":
       return `Cash-out closed · result at ${at}`;
     case "too-sure":
-      return `Too sure to price · pays ${usd(e.call?.shares ?? 0n)} at ${at}`;
+      // A refused cash-out quote doesn't make it a winner (D-343): no "pays" here.
+      return `Cash out unavailable · settles at ${at}`;
     case "settling":
       return "Settling…";
     case "no-price":
