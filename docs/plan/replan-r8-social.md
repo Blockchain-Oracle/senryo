@@ -47,6 +47,7 @@ Everything is privacy-first (D-297).
 - [ ] R8.7 Trader Edge report: a curve, four metrics, session-hour bars and the payoff shape, from the indexer history.
 - [ ] R8.8 Takes (signed, ≤ 240 characters, with cashtags) and Rooms (a per-market thread open to holders only).
 - [ ] R8.9 People in ⌘K and phone search (R6.5); the settings hidden in R2.11 come back as their features land.
+- **R8.10 and R8.11 moved to stage Q (Q3, D-350):** the owner asked for the downloadable video now; R8.12 stays here.
 - [ ] R8.10 Replay v2 (the owner's Fomo clip, 13 Oct; research `14-playback-replay.md` §3.2): one film engine for both
   apps; the terminal's own chart in a driven mode; IN / OUT notches, beats that slow the big moments and captions;
   cues from the reaction engine; the bow — the slip lands with its Kinpaku stamp; gaps filled from 1-minute prices

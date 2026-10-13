@@ -183,8 +183,10 @@ R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.m
     ride) and production web as a guest. Open: the row's Close after its fix, the long-press menu, the accessibility
     pass (the simulator was in use).
   - **Live:** web `sha-fdd6da0`; phone OTA group `037a7a61-267b-464d-a56a-e91e7c52f14d` (Q0 + Q1).
-  - **Next:** Q2 — the terminal surface (order stack as one control, payouts in the buttons, exit rulers, toasts).
-    Then Q3–Q6, then R8 social.
+  - **Owner's review of the receipt (13 Oct):** in the app it must follow the theme; drop "Signed with", "Pays if
+    right", "Came back"; and the replay's purpose is a **downloadable branded video** like Fomo's (D-349…D-351).
+  - **Next: Q3** — receipts, the replay video and the Calls record (pulled ahead of Q2; R8.10–R8.11 moved in). Then Q2,
+    Q4–Q6, then R8 social.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

@@ -52,12 +52,25 @@ say". Memory `feedback-restraint-not-text-dumps`.
     exact ride with CLOSE ringed. Production web as a guest: both settings sheets (`sha-62439a8`).
   - open: the row's Close after the `d954a7b1` fix, the long-press menu, hidden balances / Reduce Motion / large text
     on the phone — the simulator was in use when the pass reached them; next pass.
-- [ ] Q2 The terminal surface: the order stack as one control, payouts inside the buttons, CLOSE ≥ 28 with its net,
+- [ ] Q2 The terminal surface (after Q3): the order stack as one control, payouts inside the buttons, CLOSE ≥ 28 with its net,
   the captions under the chart deleted, exit sheets as one draggable ruler, toasts title-only (the opened toast no
   longer sits over the dock).
-- [ ] Q3 Receipts and the Calls record: one composition (figure, replay stage with pins, stamp once, ≤ 4 facts, a pin
-  strip for timeline and proof, one "Proof ›"); no full slips inline in lists; the record as two figures and an
-  outcome strip; history rows with one verdict word.
+- [ ] Q3 Receipts, the replay video and the Calls record (**next**, ahead of Q2 — the owner's 13 Oct review of the
+  receipt; D-349…D-351):
+  - [ ] the receipt follows the theme in the app (dark paper on dark, D-349); the exported image keeps its one light
+    look and QR;
+  - [ ] one composition: seal, market, folio; one figure; the replay stage (200 high) with entry, exit, the line /
+    band, KO and Cap as pins; one stamp; at most three facts — no "Signed with", "Pays if right" or "Came back"
+    (D-351); a 40-high pin strip for the timeline and proof; one "Proof ›"; Share / Save / Video outside the paper;
+  - [ ] **the replay video (D-350):** one film for both apps after Fomo's card in Senryo's look — crest, handle,
+    outcome, date; market mark and name; the scrolling chart with the live price pill and IN / OUT captions; the PnL
+    rolling large with ROI and three stats; the brand band with seal, wordmark, "Play with code @handle" and a QR;
+    1080 × 1350, ≤ 15 s, a held last frame; sound from the cue map; plays in the receipt (open on the last frame,
+    Play, scrub; Reduce Motion opens still); **Save video** on both apps (web mediabunny; phone a Skia video encoder in a
+    new binary, EAS → TestFlight); 1-minute back-fill with "Partial recording"; rebuilt replays for trades this device
+    didn't record, labelled;
+  - [ ] no full slips inline in lists; the record as two figures and an outcome strip; history rows with one verdict
+    word and ▶ when a replay exists.
 - [ ] Q4 Events and Duel: one phase clock, the split bar as the figure, the committee as a quorum, a timeline strip,
   "Verified ›" and "Rules ›"; Duel's pot fixed (D-347), coins between the seats, one ring.
 - [ ] Q5 Earn (share hero, capacity bar with cap tick, hour ring, risk once), Wallet and Receive (one QR, no dead

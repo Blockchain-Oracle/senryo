@@ -679,3 +679,18 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   disagreed.
 - **D-348** 2026-10-13 · **One clock per deadline:** a market list shows one round clock, not one per row; an event,
   a duel and a parlay round one each; rings use `CountdownRing`'s geometry.
+- **D-349** 2026-10-13 · **In the app, the receipt follows the theme (the owner's review of the receipt).** On a dark
+  phone the slip is dark paper; on a light one, light. The exported image keeps one look (the light slip with its QR,
+  which the owner confirmed is right), and the video has its own branded frame (D-350). Refines D-331's "one paper
+  object" for in-app use only.
+- **D-350** 2026-10-13 · **The replay's purpose is a video you download and post (the owner: "you didn't do the core
+  purpose").** Replay v2 and the MP4 export move from R8 (R8.10–R8.11) into stage Q as part of Q3, ahead of Q2. The film
+  follows Fomo's card, which the owner likes, in Senryo's look: the trader's crest and handle with the outcome and date;
+  the market mark and name; a scrolling chart with the live price pill and IN / OUT captions at the fill and the exit;
+  the PnL rolling large with its ROI and three stats; a brand band with the seal, the wordmark, "Play with code
+  @handle" and a QR to the trade. 1080 × 1350, ≤ 15 s, a held last frame; MP4 on both apps (web: mediabunny;
+  phone: a Skia video encoder, which needs a new binary). Research 14's "film ending on the slip" is superseded;
+  Recap (R8.12) stays in R8.
+- **D-351** 2026-10-13 · **A receipt carries only what a reader needs.** "Signed with", "Pays if right" and "Came back"
+  leave every receipt and slip (the owner); the figure, the market, one stamp and at most three facts stay, with entry,
+  exit and the line drawn on the replay. Overrides Codex 16 §5's fact budgets where they list those rows.
