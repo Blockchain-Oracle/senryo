@@ -14,6 +14,7 @@ import {
 } from "@senryo/chain";
 import { admissionSecOf, feedIdOf, MARKET_BATCH_MAX } from "@senryo/config";
 import { applyTicketChanges, archivedPrint, nowSec, windowsToSettle } from "@senryo/service-common";
+import { closeProof } from "../close-print.ts";
 import { SETTLE_AFTER_SEC, SETTLE_INTERVAL_MS } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
 import type { Job } from "../runner.ts";
@@ -21,8 +22,10 @@ import type { Job } from "../runner.ts";
 /**
  * Settlement and automatic payouts (D-264, D-278): every window past expiry that still has tickets gets one
  * transaction — its close print (from the archive), resolve, settle every band, and the first 32 payouts — then
- * further `claimFor` batches. A window whose print never came voids after admission and refunds. Correct even when
- * late: the print is the archived unique print of the instant, whenever this runs (CWF F-S10-01).
+ * further `claimFor` batches. A window whose print never reached the chain within admission voids and refunds
+ * (`closeProof`: after admission an archived print no longer proves anything). A window whose last transaction changed
+ * nothing waits before the next try (`ctx.stalls`). Correct even when late: the print is the archived unique print of
+ * the instant, whenever this runs (CWF F-S10-01).
  */
 export function settleJob(ctx: KeeperContext): Job {
   return {
@@ -31,6 +34,7 @@ export function settleJob(ctx: KeeperContext): Job {
     run: async () => {
       const now = nowSec();
       for (const w of await windowsToSettle(ctx.db, ctx.chainId, now, SETTLE_AFTER_SEC)) {
+        if (ctx.stalls.blocked(w.window_id)) continue;
         try {
           await settleOne(ctx, w, now);
         } catch (error) {
@@ -52,26 +56,33 @@ async function settleOne(
   const expiry = Number(w.window_expiry);
   const [first, ...rest] = chunk(w.ids, MARKET_BATCH_MAX);
   const print = await archivedPrint(ctx.db, feedIdOf(series.market), expiry);
-  const admission = admissionSecOf(series.market);
-  let data: Hex;
-  if (print) {
-    data = settleAndClaimData(ctx.chainId, {
-      windowId,
-      expiry,
-      verifier: verifierOf(ctx.chainId, series.market),
-      feedId: feedIdOf(series.market),
-      closeProof: proofOf(series.market, print.updates),
-      ticketIds: first ?? [],
-    });
-  } else if (now > expiry + admission) {
-    data = voidAndClaimData(ctx.chainId, { windowId, ticketIds: first ?? [] });
-  } else {
-    return; // the close print is not archived yet; the gateway writes it within a second of streaming
-  }
-  await send(ctx, MULTICALL3, data, windowId, w);
+  const verifier = verifierOf(ctx.chainId, series.market);
+  const feedId = feedIdOf(series.market);
+  const close = await closeProof(ctx, {
+    verifier,
+    feedId,
+    expiry,
+    admissionSec: admissionSecOf(series.market),
+    archived: print ? proofOf(series.market, print.updates) : null,
+    now,
+  });
+  // "wait": the close print is not archived yet; the gateway writes it within a second of streaming.
+  if (close.kind === "wait") return;
+  const data =
+    close.kind === "prove"
+      ? settleAndClaimData(ctx.chainId, {
+          windowId,
+          expiry,
+          verifier,
+          feedId,
+          closeProof: close.proof,
+          ticketIds: first ?? [],
+        })
+      : voidAndClaimData(ctx.chainId, { windowId, ticketIds: first ?? [] });
+  if (!(await send(ctx, MULTICALL3, data, windowId, w))) return;
   for (const ids of rest) {
     const claim = claimForCallData(ids);
-    await send(ctx, addressOf(ctx.chainId, "BandReserve"), claim, windowId, w);
+    if (!(await send(ctx, addressOf(ctx.chainId, "BandReserve"), claim, windowId, w))) return;
   }
 }
 
@@ -81,14 +92,19 @@ async function send(
   data: Hex,
   windowId: Hex,
   w: { series_id: string; window_expiry: bigint },
-): Promise<void> {
+): Promise<boolean> {
   const sent = await sendTx(ctx.sender, { to, data, action: "marketSettle", meta: { job: "settle", windowId } });
   ctx.recent.add({ job: "settle", subject: windowId, tx: sent.hash, stage: sent.stage });
+  if (sent.stage === "reverted") throw new Error(`settle reverted in ${sent.hash}`);
+  const wait = ctx.stalls.record(windowId, sent.receipt.logs.length > 0);
+  if (wait > 0) {
+    ctx.log.warn({ windowId, tx: sent.hash, waitMs: wait }, "settle changed nothing; waiting before retrying");
+    return false;
+  }
   ctx.log.info(
     { actor: "keeper", why: "settle", windowId, tx: sent.hash, stage: sent.stage },
     "window settled and paid",
   );
-  if (sent.stage === "reverted") throw new Error(`settle reverted in ${sent.hash}`);
   const changes = ticketChanges(sent.receipt.logs, addressOf(ctx.chainId, "BandReserve"));
   const expiry = Number(w.window_expiry);
   await applyTicketChanges(
@@ -104,6 +120,7 @@ async function send(
     sent.hash,
   );
   await ctx.notifyResults(changes);
+  return true;
 }
 
 function chunk<T>(items: readonly T[], size: number): T[][] {

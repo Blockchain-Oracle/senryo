@@ -23,6 +23,7 @@ import {
   parlaysToSettle,
   pendingParlayFills,
 } from "@senryo/service-common";
+import { closeProof } from "../close-print.ts";
 import { FILL_STALE_SEC, PARLAYS_INTERVAL_MS, SETTLE_AFTER_SEC } from "../constants.ts";
 import type { KeeperContext } from "../context.ts";
 import { fillMark } from "../marks.ts";
@@ -51,6 +52,7 @@ export function parlaysJob(ctx: KeeperContext): Job {
 }
 
 async function guarded(ctx: KeeperContext, p: ParlayRow, work: () => Promise<void>): Promise<void> {
+  if (ctx.stalls.blocked(subjectOf(p))) return;
   try {
     await work();
   } catch (error) {
@@ -92,27 +94,45 @@ async function settle(ctx: KeeperContext, p: ParlayRow & { legs: ParlayLegRow[] 
     const market = marketOf(ctx, l);
     if (l.outcome !== "pending" || now < expiry + SETTLE_AFTER_SEC || !market) continue;
     const print = await archivedPrint(ctx.db, feedIdOf(market), expiry);
-    if (!print && now <= expiry + admissionSecOf(market)) continue; // the close print is on its way
+    const verifier = verifierOf(ctx.chainId, market);
+    const feedId = feedIdOf(market);
+    // After admission an archived print proves nothing unless the chain already holds it: the leg voids (`closeProof`).
+    const close = await closeProof(ctx, {
+      verifier,
+      feedId,
+      expiry,
+      admissionSec: admissionSecOf(market),
+      archived: print ? proofOf(market, print.updates) : null,
+      now,
+    });
+    if (close.kind === "wait") continue; // the close print is on its way
     legs.push({
       seriesId: l.series_id as Hex,
       windowId: l.window_id as Hex,
       start: Number(l.window_start),
       expiry,
-      verifier: verifierOf(ctx.chainId, market),
-      feedId: feedIdOf(market),
-      proof: print ? proofOf(market, print.updates) : null,
+      verifier,
+      feedId,
+      proof: close.kind === "prove" ? close.proof : null,
     });
   }
   if (legs.length === 0) return;
   await send(ctx, MULTICALL3, resolveLegsAndSettleData(ctx.chainId, legs, [p.parlay_id]), p, "settle legs");
 }
 
+const subjectOf = (p: ParlayRow) => `parlay ${p.parlay_id}`;
+
 async function send(ctx: KeeperContext, to: Hex, data: Hex, p: ParlayRow, why: string): Promise<void> {
-  const subject = `parlay ${p.parlay_id}`;
+  const subject = subjectOf(p);
   const sent = await sendTx(ctx.sender, { to, data, action: "marketSettle", meta: { job: "parlays", why } });
   ctx.recent.add({ job: "parlays", subject, tx: sent.hash, stage: sent.stage });
-  ctx.log.info({ actor: "keeper", why, parlayId: p.parlay_id.toString(), tx: sent.hash }, "parlay advanced");
   if (sent.stage === "reverted") throw new Error(`${why} reverted in ${sent.hash}`);
+  const wait = ctx.stalls.record(subject, sent.receipt.logs.length > 0);
+  if (wait > 0) {
+    ctx.log.warn({ parlayId: p.parlay_id.toString(), why, tx: sent.hash, waitMs: wait }, "parlay work changed nothing");
+    return;
+  }
+  ctx.log.info({ actor: "keeper", why, parlayId: p.parlay_id.toString(), tx: sent.hash }, "parlay advanced");
   const changes = parlayChanges(sent.receipt.logs, addressOf(ctx.chainId, "BandReserve"));
   await applyParlayChanges(ctx.db, ctx.chainId, changes, async () => [], sent.hash);
 }

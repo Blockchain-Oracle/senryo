@@ -13,7 +13,7 @@ import {
   pgJournal,
   pingDb,
 } from "@senryo/service-common";
-import { type KeeperContext, RecentActions, saveJobState } from "./context.ts";
+import { type KeeperContext, RecentActions, Stalls, saveJobState } from "./context.ts";
 import { type KeeperJob, loadKeeperEnv } from "./env.ts";
 import { boundsJob } from "./jobs/bounds.ts";
 import { calendarsJob } from "./jobs/calendars.ts";
@@ -68,6 +68,7 @@ const ctx: KeeperContext = {
   log,
   notifier,
   recent: new RecentActions(),
+  stalls: new Stalls(),
   notifyResults: (changes) => notifyResults(db, notifier, env.CHAIN_ID, changes),
 };
 

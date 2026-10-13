@@ -16,6 +16,8 @@ export interface KeeperContext {
   notifier: Notifier;
   /** Recent onchain actions (exposed on `/v1/keeper/status` for ops and the drive script). */
   recent: RecentActions;
+  /** Subjects whose last transaction made no progress, waiting before the next try (`Stalls`). */
+  stalls: Stalls;
   /** Pushes wins and refunds from a receipt's ticket changes. */
   notifyResults: (changes: readonly TicketChange[]) => Promise<void>;
 }
@@ -40,6 +42,38 @@ export class RecentActions {
 
   list(): readonly KeeperAction[] {
     return this.items;
+  }
+}
+
+/** The first wait after a transaction that changed nothing, doubling on each further one up to the cap. */
+const STALL_FIRST_MS = 30_000;
+const STALL_MAX_MS = 1_800_000; // 30 min
+const DOUBLE = 2;
+
+/**
+ * A subject (a window, a parlay) whose last transaction landed but emitted nothing — every step tolerated its own
+ * failure — made no progress, and on Monad still paid its whole gas limit. It waits before the next try, 30 s then
+ * doubling to 30 min, instead of retrying every tick (13 Oct: one such loop drained the keeper in minutes). Any
+ * progress clears it.
+ */
+export class Stalls {
+  private readonly waits = new Map<string, { until: number; wait: number }>();
+
+  blocked(subject: string, nowMs = Date.now()): boolean {
+    const s = this.waits.get(subject);
+    return s !== undefined && nowMs < s.until;
+  }
+
+  /** After a landed transaction: `progressed` when it emitted any event. Returns the wait set, or 0. */
+  record(subject: string, progressed: boolean, nowMs = Date.now()): number {
+    if (progressed) {
+      this.waits.delete(subject);
+      return 0;
+    }
+    const prior = this.waits.get(subject)?.wait;
+    const wait = prior === undefined ? STALL_FIRST_MS : Math.min(prior * DOUBLE, STALL_MAX_MS);
+    this.waits.set(subject, { until: nowMs + wait, wait });
+    return wait;
   }
 }
 
