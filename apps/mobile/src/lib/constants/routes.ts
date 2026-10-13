@@ -28,6 +28,8 @@ export const ROUTES = {
   /** The privacy notice (legal). */
   accountPrivacy: "/account/privacy",
   status: "/status",
+  /** Practice dollars, Receive and Withdraw (S5.12). */
+  wallet: "/wallet",
   /** The fan's Receive: compact QR sheet over the page under the fan (P21, FT057). */
   receive: "/receive",
   /** S8.22 mode selector sheet (the mode capsule). */

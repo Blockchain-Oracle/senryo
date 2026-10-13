@@ -5,7 +5,16 @@
  * a swipe left reveals "Close $5.04" — only revealed, a separate tap closes; a long-press offers Position details and
  * View receipt. Nothing else at rest: entry, levels, margin and fees live on the chart and in details.
  */
-import { type BookEntry, closeWord, dollars, pnlText, positionIntent, positionSpan, roiText } from "@senryo/calls";
+import {
+  type BookEntry,
+  closeOffered,
+  closeWord,
+  dollars,
+  pnlText,
+  positionIntent,
+  positionSpan,
+  roiText,
+} from "@senryo/calls";
 import { usePositionRow, useTerminalReady } from "@senryo/calls/react";
 import { marketId } from "@senryo/identity";
 import { intentParams } from "@senryo/search";
@@ -140,14 +149,14 @@ export function PositionRow({
 }) {
   const { color } = useTheme();
   const [hidden] = useHideBalances();
-  const { head, clock, samples } = usePositionRow(e);
+  const { head, clock, samples, now } = usePositionRow(e);
   const swipe = useRef<SwipeableMethods>(null);
   const [menu, setMenu] = useState(false);
   // A link (search's position, D-340) asked for this one: its Close revealed and ringed, never pressed.
   const ready = useTerminalReady().position === e.key;
   // The swipe follows the position's state, not each tick's quote: a quote that flickers away mid-gesture must not snap
   // the row shut under the finger (the tap would land on the row and open the trade instead of closing).
-  const canClose = e.state === "live" && !closing;
+  const canClose = closeOffered(e, now) && !closing;
   // Revealed, the row's own tap only tucks the action away (Codex 15 §2: no navigation after a recognised swipe).
   const revealed = useRef(false);
   useEffect(() => {

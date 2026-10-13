@@ -107,7 +107,7 @@ export function useAppSearch(query: string, active: boolean): AppSearch {
     switch (action) {
       case "add-money":
         return router.push(
-          (practice ? "/wallet" : trader.guest ? accountRequiredRoute("add money") : ROUTES.receive) as Href,
+          (practice ? ROUTES.wallet : trader.guest ? accountRequiredRoute("add money") : ROUTES.receive) as Href,
         );
       case "receive":
         return router.push((trader.guest ? accountRequiredRoute("add money") : ROUTES.receive) as Href);

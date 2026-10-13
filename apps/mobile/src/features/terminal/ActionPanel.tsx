@@ -7,12 +7,13 @@
  */
 import { closedWords, INSTRUMENTS, type Instrument, type MarketLine } from "@senryo/calls";
 import type { PanelState } from "@senryo/calls/react";
+import { MAINNET } from "@senryo/config";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { LiveText } from "~/components/kit/LiveText";
 import { Segmented } from "~/components/kit/Segmented";
 import { fire } from "~/feedback/fire";
-import { setActiveNetwork, useReadOnlyNetwork } from "~/lib/network";
+import { setActiveNetwork, useNetwork, useReadOnlyNetwork } from "~/lib/network";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { OneTapLine } from "./OneTapLine";
 import { TradeButtons, type TradeButtonsProps } from "./TradeButtons";
@@ -84,10 +85,11 @@ export interface ActionPanelProps {
 
 export function ActionPanel(p: ActionPanelProps) {
   const { color } = useTheme();
-  const readOnly = useReadOnlyNetwork();
+  const real = useNetwork().key === MAINNET.key;
   if (!p.session.trading && !p.holding) return <ClosedPanel symbol={p.symbol} line={p.session} />;
   const notice = noticeOf(p.state);
-  const realRide = p.instrument === "ride" && readOnly && !p.holding;
+  // Real rides are the web's (D-305), before and after mainnet opens; before it, the closed panel says so first.
+  const realRide = p.instrument === "ride" && real && !p.holding;
   return (
     <View style={styles.wrap}>
       <View style={styles.switch}>

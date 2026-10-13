@@ -21,6 +21,7 @@ import {
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LiveText } from "@/components/kit/live-text";
+import { Button } from "@/components/ui/button";
 import { PositionsPanel } from "@/features/positions/PositionsPanel";
 import { guestSession, useAppTrader } from "@/lib/account/guest";
 import { notify } from "@/lib/notify";
@@ -50,11 +51,20 @@ import "./terminal.css";
 import "./positions.css";
 import "./reactions.css";
 
-export function TerminalScreen({ symbol }: { symbol: string }) {
-  // The first terminal visit on this device opens the tour (R5.15).
+export interface TerminalProps {
+  symbol: string;
+  /** First run (the phone's setup step): a title over the terminal and its one action — Skip, then Continue once live. */
+  coach?: { title: string; action: string; onAction: () => void };
+  /** Told when one of this screen's trades fills (setup moves on). */
+  onFilled?: () => void;
+}
+
+export function TerminalScreen({ symbol, coach, onFilled }: TerminalProps) {
+  // The first terminal visit on this device opens the tour (R5.15); setup's coached terminal waits for it.
+  const coached = coach !== undefined;
   useEffect(() => {
-    if (!tourSeenNow()) openTour();
-  }, []);
+    if (!coached && !tourSeenNow()) openTour();
+  }, [coached]);
   // The market this device opened: search's Recents and the picker's recent markets (D-337).
   useMarketVisit(symbol);
   // The passkey account, else on Practice the guest's device key (R5.10).
@@ -101,7 +111,7 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
     place: (slot) => placer.current(slot),
     toast: tradeToast,
   });
-  const effects = useTerminalEffects(trader.guest, guestTap);
+  const effects = { ...useTerminalEffects(trader.guest, guestTap), ...(onFilled ? { onFilled } : {}) };
   const exits = useExitActions(account, choices.cadence);
   const flow = useCallFlow({
     view: t,
@@ -137,6 +147,14 @@ export function TerminalScreen({ symbol }: { symbol: string }) {
     <div className="terminal-surface">
       <TerminalIntent setCadence={choices.setCadence} setInstrument={choices.setInstrument} />
       <section className="terminal-stage" aria-label={`${symbol} live`}>
+        {coach ? (
+          <div className="terminal-coach">
+            <p className="font-semibold text-section-title">{coach.title}</p>
+            <Button variant="ghost" size="sm" onClick={coach.onAction}>
+              {coach.action}
+            </Button>
+          </div>
+        ) : null}
         <TerminalTop
           t={t}
           ride={ride}

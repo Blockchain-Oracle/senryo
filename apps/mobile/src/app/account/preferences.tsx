@@ -39,7 +39,6 @@ const APPEARANCE = [
 export default function Preferences() {
   const { setTheme } = useTheme();
   const [stored] = useMMKVString(STORAGE_KEYS.theme, storage);
-  const [reactions, setReactions] = useMMKVBoolean(STORAGE_KEYS.tradeReactions, storage);
   const [sounds, setSounds] = useMMKVBoolean(STORAGE_KEYS.sounds, storage);
   const [haptics, setHaptics] = useMMKVBoolean(STORAGE_KEYS.haptics, storage);
   const [effects, setEffects] = useMMKVNumber(STORAGE_KEYS.effectsVolume, storage);
@@ -84,21 +83,15 @@ export default function Preferences() {
             }
           />
           <ListRow
-            title="Live position reactions"
-            trailing={
-              <Switch
-                value={reactions ?? false}
-                onValueChange={setReactions}
-                accessibilityLabel="Live position reactions"
-              />
-            }
-          />
-          <ListRow
             title="Music in the terminal"
             trailing={
               <Switch
                 value={terminalMusic ?? false}
-                onValueChange={setTerminalMusic}
+                onValueChange={(v) => {
+                  setTerminalMusic(v);
+                  // Music on turns sound on, as on the web: a silent track would read as broken.
+                  if (v && sounds === false) setSounds(true);
+                }}
                 accessibilityLabel="Music in the terminal"
               />
             }

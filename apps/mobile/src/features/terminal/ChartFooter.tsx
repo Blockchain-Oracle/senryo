@@ -1,10 +1,12 @@
 /**
  * The chart's footer on the phone (R5.17; the web's `ChartFooter`): the view — line or candles — the candles' interval
- * while they show, and the terminal's music (the same switch as Preferences).
+ * while they show, and the terminal's music (the same switch as Preferences): on, a chip names the track ("♪ Arcade ›")
+ * and steps to the next; turning it on turns sound on, as on the web.
  */
 import { CANDLE_INTERVALS, type CandleInterval } from "@senryo/calls";
+import { SONG_TITLES, type SongName, TERMINAL_SONGS } from "@senryo/tokens";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useMMKVBoolean } from "react-native-mmkv";
+import { useMMKVBoolean, useMMKVString } from "react-native-mmkv";
 import { ChartCandlestick, ChartLine, Volume } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -53,7 +55,12 @@ export function ChartFooter({
   onInterval: (i: CandleInterval) => void;
 }) {
   const { color } = useTheme();
-  const [music, setMusic] = useMMKVBoolean(STORAGE_KEYS.terminalMusic, storage);
+  const [musicOn, setMusic] = useMMKVBoolean(STORAGE_KEYS.terminalMusic, storage);
+  const [sounds, setSounds] = useMMKVBoolean(STORAGE_KEYS.sounds, storage);
+  const [stored, setTrack] = useMMKVString(STORAGE_KEYS.musicTrack, storage);
+  const track: SongName = TERMINAL_SONGS.find((s) => s === stored) ?? "arcade";
+  const music = musicOn === true && sounds !== false;
+  const nextTrack = () => setTrack(TERMINAL_SONGS[(TERMINAL_SONGS.indexOf(track) + 1) % TERMINAL_SONGS.length]);
   const tint = (on: boolean) => (on ? color.ink : color.text3);
   return (
     <View style={styles.row}>
@@ -72,13 +79,23 @@ export function ChartFooter({
             ))
           : null}
       </View>
-      <Chip
-        on={music === true}
-        label={music ? "Music on. Turn it off" : "Turn the music on"}
-        onPress={() => setMusic(!music)}
-      >
-        <Volume size={SIZE.iconSm} color={tint(music === true)} />
-      </Chip>
+      <View style={styles.group}>
+        {music ? (
+          <Chip on={false} label={`Track: ${SONG_TITLES[track]}. Next track`} onPress={nextTrack}>
+            <Text style={[TYPE.chipLabel, { color: color.text2 }]}>♪ {SONG_TITLES[track]} ›</Text>
+          </Chip>
+        ) : null}
+        <Chip
+          on={music}
+          label={music ? "Music on. Turn it off" : "Turn the music on"}
+          onPress={() => {
+            setMusic(!music);
+            if (!music && sounds === false) setSounds(true);
+          }}
+        >
+          <Volume size={SIZE.iconSm} color={tint(music)} />
+        </Chip>
+      </View>
     </View>
   );
 }

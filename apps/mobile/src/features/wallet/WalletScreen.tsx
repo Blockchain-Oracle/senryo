@@ -41,7 +41,7 @@ export function WalletScreen() {
   const text = balance === undefined ? "$—" : `$${formatUnits(balance, DOLLAR_DECIMALS, CENTS)}`;
 
   // A guest sees the wallet read-only (R2.14): each action asks for an account first.
-  const ask = (verb: AccountVerb) => () => router.push(accountRequiredRoute(verb, "/wallet"));
+  const ask = (verb: AccountVerb) => () => router.push(accountRequiredRoute(verb, ROUTES.wallet));
   const getDollars = () => {
     fire("tick");
     grant.mutate(undefined, {

@@ -71,8 +71,11 @@ export interface CallFlowEffects {
   needAccount(slot?: OfferSlot): void;
   /** One of this screen's calls filled (first-run setup moves on). */
   onFilled?: () => void;
-  /** A check before any call once signed in (the terms): say why and return false to stop. */
-  gate?: () => boolean;
+  /**
+   * A check before any trade once signed in (the terms): true lets it run; false stops it, saying why. The app may
+   * call `resume` once the check passes (the phone's terms sheet re-runs the same tap after Agree).
+   */
+  gate?: (resume: () => void) => boolean;
   /** Not enough dollars: the app names the gap and offers where dollars come from (R5.7). */
   shortfall?: (short: bigint) => void;
 }
@@ -143,17 +146,19 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
               ? { kind: "no-price" }
               : { kind: "ready" };
 
-  const guard = (slot?: OfferSlot): boolean => {
+  // A gated tap resumes on this render's actions, not the ones it was made with (a window may roll over meanwhile).
+  const again = useRef({ open: async (_slot: OfferSlot) => {}, close: async (_percent?: bigint) => {} });
+  const guard = (resume: () => void, slot?: OfferSlot): boolean => {
     if (!t.owner) {
       effectsRef.current.needAccount(slot);
       return false;
     }
-    if (effectsRef.current.gate && !effectsRef.current.gate()) return false;
+    if (effectsRef.current.gate && !effectsRef.current.gate(resume)) return false;
     return actions.ready;
   };
 
   const open = async (slot: OfferSlot) => {
-    if (!guard(slot)) return;
+    if (!guard(() => void again.current.open(slot), slot)) return;
     clearSelectedPosition();
     const fx = effectsRef.current;
     const band = offer[slot];
@@ -250,7 +255,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
   const close = async (percent: bigint = WHOLE) => {
     const position = t.position;
     const quote = latest.current?.close;
-    if (!guard() || !position || !quote || quote.refusal) return;
+    if (!guard(() => void again.current.close(percent)) || !position || !quote || quote.refusal) return;
     const fx = effectsRef.current;
     fx.cue("press");
     const shares = (position.payout * percent) / WHOLE;
@@ -304,6 +309,7 @@ export function useCallFlow({ view: t, caller, stake, latest, offer, effects }: 
     }
   };
 
+  again.current = { open, close };
   return { panel, holding, open, close, pendingEntry };
 }
 

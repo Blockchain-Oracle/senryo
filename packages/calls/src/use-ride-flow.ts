@@ -103,17 +103,23 @@ export function useRideFlow(i: RideFlowInput) {
             ? { kind: "pending", status: null, label: "Closing at the next price…" }
             : { kind: "ready" };
 
-  const guard = (slot?: OfferSlot): boolean => {
+  // A gated tap resumes on this render's actions, not the ones it was made with.
+  const again = useRef({
+    open: async (_slot: OfferSlot) => {},
+    close: async (_percent?: bigint) => {},
+    armTrail: async () => false,
+  });
+  const guard = (resume: () => void, slot?: OfferSlot): boolean => {
     if (!i.owner) {
       fx.current.needAccount(slot);
       return false;
     }
-    if (fx.current.gate && !fx.current.gate()) return false;
+    if (fx.current.gate && !fx.current.gate(resume)) return false;
     return actions.ready;
   };
 
   const open = async (slot: OfferSlot) => {
-    if (!guard(slot)) return;
+    if (!guard(() => void again.current.open(slot), slot)) return;
     clearSelectedPosition();
     const mark = i.latest.current?.markE8;
     if (mark == null || i.takerFeeBps === undefined) {
@@ -200,7 +206,7 @@ export function useRideFlow(i: RideFlowInput) {
   /** Close the held ride, or `percent` of it. */
   const close = async (percent: bigint = WHOLE) => {
     const mark = i.latest.current?.markE8;
-    if (!guard() || !held || mark == null) return;
+    if (!guard(() => void again.current.close(percent)) || !held || mark == null) return;
     fx.current.cue("press");
     const whole = percent === WHOLE;
     const label = whole ? "Closing…" : `Closing ${percent}%…`;
@@ -254,7 +260,7 @@ export function useRideFlow(i: RideFlowInput) {
   /** Arm the trail at `trailBps`, flooring at break-even and keeping any take-profit and stop already set. */
   const armTrail = async (): Promise<boolean> => {
     const be = i.latest.current?.breakEvenE8;
-    if (!guard() || !held || be == null) return false;
+    if (!guard(() => void again.current.armTrail()) || !held || be == null) return false;
     fx.current.cue("press");
     try {
       const r = await exit.set(held.rideId, {
@@ -272,6 +278,7 @@ export function useRideFlow(i: RideFlowInput) {
   };
 
   const endsIn = held?.endAt ? `Closes in ${longClockText(held.endAt - i.nowSec)}` : null;
+  again.current = { open, close, armTrail };
   return {
     panel,
     holding: held !== undefined,

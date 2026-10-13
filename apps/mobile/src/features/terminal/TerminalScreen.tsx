@@ -15,6 +15,7 @@ import {
   useMarketVisit,
   usePriceHealth,
 } from "@senryo/calls/react";
+import { TESTNET } from "@senryo/config";
 import { useRecentCandles, useWindowLoad } from "@senryo/query";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -24,12 +25,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "~/components/kit/Button";
 import { LiveText } from "~/components/kit/LiveText";
 import { useDockInset } from "~/components/shell/dock-context";
+import { hasAcknowledgedTerms } from "~/features/legal/acknowledged";
 import { ViewPositionPill } from "~/features/positions/ViewPositionPill";
 import { fire } from "~/feedback/fire";
 import { guestSession, useAppTrader } from "~/lib/account/guest";
-import { accountRequiredRoute } from "~/lib/constants/routes";
+import { useTermsGate } from "~/lib/account/terms-gate";
+import { accountRequiredRoute, ROUTES } from "~/lib/constants/routes";
 import { balancesHidden, HIDDEN_AMOUNT } from "~/lib/hide-balances";
 import { usd } from "~/lib/money";
+import { useNetwork } from "~/lib/network";
 import { notify } from "~/lib/notify";
 import { openTour, useTourSeen } from "~/lib/tour";
 import { tradeToast } from "~/lib/trade-toast";
@@ -126,6 +130,8 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
   const [chartH, setChartH] = useState(0);
   const exits = useExitActions(account, t.cadence);
   const offsetMs = useClockOffset();
+  const termsGate = useTermsGate();
+  const practice = useNetwork().key === TESTNET.key;
   const effects = {
     cue: (c: "press" | "filled-open" | "filled-close" | "fail") =>
       c === "press"
@@ -141,10 +147,20 @@ export function TerminalScreen({ coach, onFilled }: TerminalProps = {}) {
       if (slot !== undefined && guestTap(slot)) return;
       router.push(accountRequiredRoute(ride ? "ride" : "make a call"));
     },
+    // The terms before the first trade (a Practice guest holds test dollars only); Agree re-runs the same tap.
+    gate: (resume: () => void) => {
+      if (trader.guest || hasAcknowledgedTerms(trader.owner)) return true;
+      termsGate(resume, { verb: ride ? "ride" : "make a call" });
+      return false;
+    },
     shortfall: (short: bigint) =>
       notify({
         title: `${balancesHidden() ? HIDDEN_AMOUNT : usd(short)} short`,
-        description: "Top up in Wallet (test dollars in Practice), then tap again.",
+        description: practice ? "Top up with test dollars, then tap again." : "Add money, then tap again.",
+        action: {
+          label: practice ? "Get test dollars" : "Add money",
+          onClick: () => router.push(practice ? ROUTES.wallet : ROUTES.receive),
+        },
         tone: "warning",
       }),
     ...(onFilled ? { onFilled } : {}),

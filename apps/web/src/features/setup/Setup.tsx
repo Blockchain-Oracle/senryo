@@ -7,9 +7,10 @@
  */
 import { useMarketAccount, usePracticeGrant } from "@senryo/query";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OneTapChip } from "@/features/home/OneTapChip";
+import { TerminalScreen } from "@/features/terminal/TerminalScreen";
 import { useAccount } from "@/lib/account/provider";
 import { acknowledgeTerms, useTermsAccepted } from "@/lib/account/terms";
 import { useSessionRunner } from "@/lib/account/use-session-runner";
@@ -22,12 +23,14 @@ import { HandleStep } from "./HandleStep";
 
 export const WEB_SETUP_STEPS = ["handle", "terms", "dollars", "first-call", "one-tap"] as const;
 type Step = (typeof WEB_SETUP_STEPS)[number];
+/** The first call's market, as on the phone (BTC 1m). */
+const FIRST_CALL_SYMBOL = "BTC";
 
 const COPY: Record<Step, { title: string; body: string }> = {
   handle: { title: "Pick your username", body: "How you show up on your calls and profile." },
   terms: { title: "Before any money moves", body: "Senryo is a prediction market: a call can lose its whole stake." },
   dollars: { title: "Test dollars", body: "Free dollars to call with, on Monad's test network." },
-  "first-call": { title: "Call the next move", body: "Up or Down on a live price; the window closes on its own." },
+  "first-call": { title: "Try your first call", body: "Up or Down on a live price; the window closes on its own." },
   "one-tap": {
     title: "One-tap calls",
     body: "Calls up to small caps with no prompt each time; caps enforced on chain.",
@@ -78,6 +81,27 @@ function Finished() {
   return null;
 }
 
+/**
+ * "Try your first call" (the phone's setup step): the live terminal on BTC with the test dollars just granted. Once the
+ * call fills the page stays — the call breathes on the chart — and Continue moves on when the user chooses; Skip until
+ * then.
+ */
+function FirstCall({ onDone }: { onDone: () => void }) {
+  const [live, setLive] = useState(false);
+  const onFilled = useCallback(() => setLive(true), []);
+  return (
+    <TerminalScreen
+      symbol={FIRST_CALL_SYMBOL}
+      coach={
+        live
+          ? { title: "Your call is live", action: "Continue", onAction: onDone }
+          : { title: COPY["first-call"].title, action: "Skip", onAction: onDone }
+      }
+      onFilled={onFilled}
+    />
+  );
+}
+
 export function Setup() {
   const router = useRouter();
   const account = useAccount();
@@ -109,6 +133,7 @@ export function Setup() {
       </div>
     );
   if (stored === "done" && termsOk) return <Finished />;
+  if (step === "first-call") return <FirstCall onDone={next} />;
   const copy = COPY[step];
   const index = WEB_SETUP_STEPS.indexOf(step);
   return (
@@ -153,22 +178,6 @@ export function Setup() {
         </div>
       ) : null}
       {step === "dollars" ? <DollarsStep onDone={next} /> : null}
-      {step === "first-call" ? (
-        <div className="flex flex-col gap-3">
-          <Button
-            size="xl"
-            onClick={() => {
-              next();
-              router.push("/app/trade/btc/");
-            }}
-          >
-            Open the terminal
-          </Button>
-          <Button variant="ghost" onClick={next}>
-            Later
-          </Button>
-        </div>
-      ) : null}
       {step === "one-tap" ? (
         <div className="flex flex-col gap-3">
           <OneTapChip />

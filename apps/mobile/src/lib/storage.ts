@@ -36,7 +36,6 @@ export const STORAGE_KEYS = {
   musicVolume: "senryo.music-volume.v1",
   terminalMusic: "senryo.terminal-music.v1",
   musicTrack: "senryo.music-track.v1",
-  tradeReactions: "senryo.trade-reactions.v1",
   /** The ElevenLabs cue variant chosen per sound in Preferences (by ear); absent = the bundled default. */
   soundChoice: "senryo.sound-choice.v1",
   haptics: "senryo.haptics.v1",

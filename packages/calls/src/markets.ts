@@ -16,7 +16,7 @@ import {
   sessionNow,
   windowCountdown,
 } from "@senryo/core";
-import { createIndex, KIND_WORDS, marketEntryId, type SearchIndex, scores } from "@senryo/search";
+import { createIndex, KIND_WORDS, marketEntryId, recentIds, type SearchIndex, scores } from "@senryo/search";
 
 /** Each kind's heading in the list; `filter` is a shorter word where the heading won't fit a phone's filter cell. */
 export const MARKET_GROUPS: readonly { kind: MarketKind; label: string; filter?: string }[] = [
@@ -41,6 +41,23 @@ const BASKET_ONE_E8 = BASKET_BASE_POINTS_E8 / BASKET_START_POINTS;
 
 export function marketOf(symbol: string): MarketSpec | undefined {
   return MARKETS.find((m) => m.symbol === symbol);
+}
+
+/** A link's market (`/trade?symbol=eth`, `/app/trade/eth/`): the catalogue's symbol, any case; null if none. */
+export function marketFromLink(raw: string): string | null {
+  const wanted = raw.trim().toUpperCase();
+  return MARKETS.find((m) => m.symbol.toUpperCase() === wanted)?.symbol ?? null;
+}
+
+/** The market this device opened last (search's visits), for a link that names none it knows; null before any. */
+export function lastMarket(): string | null {
+  const id = recentIds(1, marketEntryId(""))[0];
+  return id ? id.slice(marketEntryId("").length) : null;
+}
+
+/** What a link to a market that isn't listed says, both apps: the terminal stays on the last market. */
+export function unknownMarketWords(raw: string): { title: string; description: string } {
+  return { title: `No market called ${raw.trim().toUpperCase()}`, description: "Showing your last market instead." };
 }
 
 interface Searchable {

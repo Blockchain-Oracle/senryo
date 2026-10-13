@@ -6,7 +6,7 @@
  * (D-340); "Close $5.04" sits beside it, always visible — a sibling, so Enter on the row never closes; in a narrow
  * column it drops to a second line. Right-click or hold for Position details and View receipt.
  */
-import { type BookEntry, closeWord, positionIntent, roiText } from "@senryo/calls";
+import { type BookEntry, closeOffered, closeWord, positionIntent, roiText } from "@senryo/calls";
 import { usePositionRow, useTerminalReady } from "@senryo/calls/react";
 import { intentQuery } from "@senryo/search";
 import { LoaderCircle } from "lucide-react";
@@ -80,7 +80,7 @@ export function PositionRow({
       setMenu(true);
     },
   );
-  const canClose = clock.live || closing;
+  const canClose = closeOffered(e, now) || closing;
   return (
     <div ref={row} className="@container">
       <div className="flex min-h-20 flex-col gap-2 px-3 py-3 @sm:flex-row @sm:items-center @sm:gap-3">

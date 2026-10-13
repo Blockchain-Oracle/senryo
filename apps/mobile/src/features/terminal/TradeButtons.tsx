@@ -97,7 +97,8 @@ function EntryButton({
     <View style={styles.slot}>
       <ReadyRing on={ready}>
         <Pressable
-          onPress={() => side.line.value !== UNPRICED && onPick(slot)}
+          // An unpriced side still takes the tap: the flow says "Not priced right now", as on the web.
+          onPress={() => onPick(slot)}
           onPressIn={() => {
             press.onPressIn();
             onPreview(slot);

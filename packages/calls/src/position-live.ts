@@ -126,6 +126,15 @@ export function positionClock(e: BookEntry, nowSec: number): PositionClock {
   }
 }
 
+/**
+ * Whether a row offers Close (both apps, one rule): the position is live and its time isn't up. It follows the
+ * position's state, not each tick's quote, so a quote that flickers away never pulls the action from under a finger;
+ * the action itself stays disabled while there's no close value.
+ */
+export function closeOffered(e: BookEntry, nowSec: number): boolean {
+  return e.state === "live" && (e.endsAt === null || nowSec <= 0 || e.endsAt > nowSec);
+}
+
 export interface TraceGeometry {
   /** SVG path data, broken at holes in the recording. */
   d: string;
