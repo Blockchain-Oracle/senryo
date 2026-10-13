@@ -69,7 +69,8 @@ function ArcadeArt({ game }: { game: ArcadeGame }) {
   const { color } = useTheme();
   const calm = useReducedMotion();
   const { box, onLayout } = useBox();
-  const [focused, setFocused] = useState(true);
+  // At rest until focused: a dock tab warmed ahead of its visit (R5.24) hears no focus event, and must not play.
+  const [focused, setFocused] = useState(false);
   useFocusEffect(
     useCallback(() => {
       setFocused(true);

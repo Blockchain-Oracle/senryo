@@ -84,7 +84,9 @@ export function TerminalTop({
         </Pressable>
         {day ? (
           <View style={styles.day} accessibilityLabel="The last 24 hours">
-            <Sparkline symbol={t.symbol} day={day} />
+            <View style={styles.spark}>
+              <Sparkline symbol={t.symbol} day={day} />
+            </View>
             <ChangeChip symbol={t.symbol} day={day} />
           </View>
         ) : null}
@@ -155,8 +157,10 @@ export function TerminalTop({
 }
 
 const styles = StyleSheet.create({
-  // The 24 h group yields its room to the equity (a four-digit balance must never run off the edge).
-  day: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, flexShrink: 1, minWidth: 0, overflow: "hidden" },
+  // The 24 h group yields its room to the equity (a four-digit balance must never run off the edge): the sparkline
+  // narrows, the change chip stays whole.
+  day: { flexDirection: "row", alignItems: "center", gap: SPACE.xs, flexShrink: 1, minWidth: 0 },
+  spark: { flexShrink: 1, minWidth: 0, overflow: "hidden" },
   wrap: { gap: SPACE.sm, paddingHorizontal: SIZE.gutter },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   asset: {

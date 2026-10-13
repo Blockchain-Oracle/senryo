@@ -120,9 +120,10 @@ export function candleTick(d: CandleData, raw: number, eased: number, nowMs: num
   f.c = eased;
 }
 
-export function candleDecay(d: CandleData, k = SLIDE_DECAY): void {
+/** `k` defaults in the body: a worklet doesn't capture a constant used only in a default parameter. */
+export function candleDecay(d: CandleData, k?: number): void {
   "worklet";
-  d.slide = d.slide < SLIDE_REST ? 0 : d.slide * k;
+  d.slide = d.slide < SLIDE_REST ? 0 : d.slide * (k ?? SLIDE_DECAY);
 }
 
 /** The k-th candle from the newest (0 = forming). */
@@ -153,7 +154,7 @@ export class CandleSeries {
     candleTick(this.data, raw, eased, nowMs);
   }
 
-  decay(k = SLIDE_DECAY): void {
+  decay(k?: number): void {
     candleDecay(this.data, k);
   }
 

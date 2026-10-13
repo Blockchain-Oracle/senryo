@@ -57,9 +57,11 @@ const CLOCK_SYNC_MS = 5_000;
 const CANDLES_LOADED = 120;
 const CANDLES_REREAD = 3;
 const REREAD_AFTER_MS = 4_000;
-/** A horizontal drag takes over past this many points; a vertical one never does. */
+/**
+ * A drag takes over past this many points either way (the terminal doesn't scroll): with a crosshair up it moves it,
+ * else its horizontal part scrolls history. A tap is a finger that stays within it, so a pinch never toggles the cross.
+ */
 const PAN_ACTIVE = 10;
-const PAN_FAIL_Y = 15;
 
 const tick = () => fire("tick");
 
@@ -94,8 +96,9 @@ export const LiveChart = memo(function LiveChart({
   const api = useQueryEnv().api;
   const clockOffset = useSharedValue(live.clock.offset);
   const lastDetent = useSharedValue<string | null>(null);
-  // Out of focus (a dock tab mounted ahead of its visit, R5.24, or left behind) the frame loop rests.
-  const focused = useSharedValue(true);
+  // Out of focus (a dock tab mounted ahead of its visit, R5.24, or left behind) the frame loop rests. It starts at rest:
+  // a warmed tab hears no focus event until it is shown, and the focus effect runs on mount for a tab already in front.
+  const focused = useSharedValue(false);
   useFocusEffect(
     useCallback(() => {
       focused.value = true;
@@ -301,7 +304,7 @@ export const LiveChart = memo(function LiveChart({
   const gestures = useMemo(() => {
     const pan = Gesture.Pan()
       .activeOffsetX([-PAN_ACTIVE, PAN_ACTIVE])
-      .failOffsetY([-PAN_FAIL_Y, PAN_FAIL_Y])
+      .activeOffsetY([-PAN_ACTIVE, PAN_ACTIVE])
       .onChange((e) => {
         "worklet";
         let due: number | null = null;
@@ -324,17 +327,20 @@ export const LiveChart = memo(function LiveChart({
         return s;
       });
     });
-    const tap = Gesture.Tap().onEnd((e) => {
-      "worklet";
-      state.modify((s) => {
+    const tap = Gesture.Tap()
+      .maxDistance(PAN_ACTIVE)
+      .onEnd((e) => {
         "worklet";
-        const v = s.candles;
-        if (v.data && v.wantMs > 0) v.cross = v.cross ? null : { x: e.x, y: e.y };
-        return s;
+        state.modify((s) => {
+          "worklet";
+          const v = s.candles;
+          if (v.data && v.wantMs > 0) v.cross = v.cross ? null : { x: e.x, y: e.y };
+          return s;
+        });
       });
-    });
     const doubleTap = Gesture.Tap()
       .numberOfTaps(2)
+      .maxDistance(PAN_ACTIVE)
       .onEnd(() => {
         "worklet";
         state.modify((s) => {

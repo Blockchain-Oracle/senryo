@@ -1,7 +1,7 @@
 import { DOCK_NAV } from "@senryo/config";
 import type { Href } from "expo-router";
 import { TabList, TabSlot, type TabSlotProps, Tabs, TabTrigger } from "expo-router/ui";
-import { useEffect, useState } from "react";
+import { Activity, type ReactNode, useEffect, useState } from "react";
 import { InteractionManager, StyleSheet, View } from "react-native";
 import { Screen } from "react-native-screens";
 import { Dock } from "~/components/shell/Dock";
@@ -49,11 +49,23 @@ function useWarmTabs(): ReadonlySet<string> {
   return warm;
 }
 
+/**
+ * A tab's screen behind React's Activity (R5.24): shown while focused; otherwise hidden, its Effects torn down — live
+ * rows, the chart's frame loop, timers — and its state kept. A warmed tab mounts shown once (at normal priority: a hidden
+ * first render waits for idle time that live ticks never leave) and hides straight after. (`freezeOnBlur` re-hid the
+ * whole tree on every tick a frozen row received.)
+ */
+function TabActivity({ focused, children }: { focused: boolean; children: ReactNode }) {
+  const [mounted, setMounted] = useState(focused);
+  useEffect(() => setMounted(true), []);
+  return <Activity mode={focused || !mounted ? "visible" : "hidden"}>{children}</Activity>;
+}
+
 /** Slot, dock and fan share the tabs' navigator context (the dock reads which tab is focused). */
 function Shell() {
   const { color } = useTheme();
   const warm = useWarmTabs();
-  // A tab renders once visited or warmed; a hidden one is frozen, so its live rows and chart don't render while blurred.
+  // A tab renders once visited or warmed; a hidden one rests behind its Activity.
   const renderFn: NonNullable<TabSlotProps["renderFn"]> = (
     descriptor,
     { isFocused, loaded, detachInactiveScreens },
@@ -64,10 +76,9 @@ function Shell() {
         key={descriptor.route.key}
         enabled={detachInactiveScreens}
         activityState={isFocused ? 2 : 0}
-        freezeOnBlur
         style={[styles.screen, isFocused ? styles.focused : styles.unfocused]}
       >
-        {descriptor.render()}
+        <TabActivity focused={isFocused}>{descriptor.render()}</TabActivity>
       </Screen>
     );
   };

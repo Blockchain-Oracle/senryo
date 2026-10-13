@@ -101,7 +101,7 @@ export function ArcadeScreen({
   );
 
   // The live window: the game playing itself while the page is in front and the stage is closed.
-  const [focused, setFocused] = useState(true);
+  const [focused, setFocused] = useState(false);
   const [box, setBox] = useState({ w: 0, h: 0 });
   useFocusEffect(
     useCallback(() => {
