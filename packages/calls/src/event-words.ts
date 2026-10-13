@@ -79,6 +79,21 @@ export function statusLine(e: EventView, nowSec: number): string {
 
 export const leagueName = (key: string) => leagueOf(key)?.name ?? key.toUpperCase();
 
+/**
+ * What you hold on a question, in one line — "You hold Yes · $10.00", both sides when you called both — or null (D2,
+ * the owner's iPhone review: a card shows the call you already made on it).
+ */
+export function heldLine(calls: readonly EventCallView[], eventId: string): string | null {
+  const id = eventId.toLowerCase();
+  const open = calls.filter((c) => c.status === "open" && c.eventId.toLowerCase() === id);
+  if (open.length === 0) return null;
+  const on = (yes: boolean) => open.filter((c) => c.yes === yes).reduce((sum, c) => sum + c.stake, 0n);
+  const yes = on(true);
+  const no = on(false);
+  if (yes > 0n && no > 0n) return `You hold Yes ${usd(yes)} and No ${usd(no)}`;
+  return `You hold ${sideWord(yes > 0n)} · ${usd(yes > 0n ? yes : no)}`;
+}
+
 /** "Settled by 3 signers run by Senryo · 2 must agree, none disagree · not a price feed". */
 export const committeeLine = (c: CommitteeView) =>
   `Settled by ${c.members.length} signers run by ${c.runBy} · ${c.quorum} must agree, none disagree · not a price feed`;

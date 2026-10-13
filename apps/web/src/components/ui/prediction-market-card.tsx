@@ -45,6 +45,8 @@ export function PredictionMarketCard(p: {
   /** While calls are taken; else `status` says where it stands. */
   open: boolean;
   status: ReactNode;
+  /** The call you already hold on it ("You hold Yes · $10.00"), above the sides (D2). */
+  held?: string | null;
   /** The side the question was decided for (it stays lit once settled). */
   answer?: boolean | null;
   limits: { min: bigint; max: bigint };
@@ -157,6 +159,11 @@ export function PredictionMarketCard(p: {
             )}
           </div>
         </div>
+        {p.held ? (
+          <p className="font-semibold text-meta" aria-live="polite">
+            {p.held}
+          </p>
+        ) : null}
         {p.open ? (
           <div className="grid grid-cols-2 gap-3">
             <SideButton yes onClick={() => choose(true)} disabled={Boolean(p.blocked)} answer={p.answer} />

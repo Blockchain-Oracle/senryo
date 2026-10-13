@@ -5,7 +5,7 @@
  * how it ended; the question links to its page with the committee's statements.
  */
 import type { EventView } from "@senryo/api-client";
-import { estimateFor, eventPhase, leagueName, sideWord, spanText, statusLine } from "@senryo/calls";
+import { estimateFor, eventPhase, heldLine, leagueName, sideWord, spanText, statusLine } from "@senryo/calls";
 import type { EventReceipt, EventsFlow } from "@senryo/calls/react";
 import { EVENTS, explorerTxUrl } from "@senryo/config";
 import { usd } from "@senryo/core";
@@ -68,6 +68,7 @@ export function EventCard(p: { event: EventView; flow: EventsFlow; now: number; 
       calls={e.calls}
       open={phase === "open"}
       status={statusLine(e, p.now)}
+      held={heldLine(p.flow.calls, e.eventId)}
       answer={e.answer}
       limits={{ min: p.flow.limits?.minStake ?? 0n, max: p.flow.limits?.maxStake ?? 0n }}
       presets={PRESETS}

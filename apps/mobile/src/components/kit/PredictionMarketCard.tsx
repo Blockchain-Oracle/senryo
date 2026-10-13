@@ -59,6 +59,8 @@ export function PredictionMarketCard(p: {
   calls: number;
   open: boolean;
   status: string;
+  /** The call you already hold on it ("You hold Yes · $10.00"), above the sides (D2). */
+  held?: string | null;
   limits: { min: bigint; max: bigint };
   presets: readonly bigint[];
   balance: bigint | undefined;
@@ -175,6 +177,11 @@ export function PredictionMarketCard(p: {
             </>
           )}
         </View>
+        {p.held ? (
+          <Text accessibilityLiveRegion="polite" style={[TYPE.caption, styles.strong, { color: color.ink }]}>
+            {p.held}
+          </Text>
+        ) : null}
         {p.open ? (
           <View style={styles.sides}>
             <SideButton yes onPress={() => choose(true)} disabled={Boolean(p.blocked)} />
