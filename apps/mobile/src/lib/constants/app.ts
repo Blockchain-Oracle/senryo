@@ -12,8 +12,10 @@ export const APP = {
   // Runtime version (appVersion policy): 0.2.0 adds expo-image, expo-camera, expo-web-browser, expo-sharing and
   // react-native-view-shot, so OTA updates for it never reach 0.1.0 binaries that lack those modules.
   // Runtime 0.3.0 adds PDF receipt export (expo-print). Runtime 0.4.0 is the prediction-market pivot's one native
-  // build (D-270): Ramp and victory-native removed, nothing added; every later change ships over the air on 0.4.0.
-  version: "0.4.0",
+  // build (D-270): Ramp and victory-native removed, nothing added. Runtime 0.5.0 adds the replay's MP4 encoder
+  // (@azzapp/react-native-skia-video) and Save to Photos (expo-media-library, add-only) — D-350, D-352; the JS checks
+  // for both, so an OTA on an older binary still runs without them.
+  version: "0.5.0",
   bundleId: IOS_BUNDLE_ID,
   androidPackage: ANDROID_PACKAGE,
 } as const;
