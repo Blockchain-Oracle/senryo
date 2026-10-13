@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetInPlace } from "~/components/sheet/SheetHost";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { NetworkPill, ReceiveCard } from "~/features/wallet/ReceiveCard";
 import { useAccount } from "~/lib/account/provider";
@@ -14,10 +15,14 @@ import { SPACE } from "~/theme";
  * for dollars. "Sending from another chain?" opens Add money's any-chain route once it exists (Aurora, S9).
  */
 export default function ReceiveSheet() {
+  // A native modal route: its sheet renders in place, above the root sheet layer (else it hides under its own
+  // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
-    <Sheet onClose={() => router.back()} closeLabel="Close receive">
-      <Body />
-    </Sheet>
+    <SheetInPlace>
+      <Sheet onClose={() => router.back()} closeLabel="Close receive">
+        <Body />
+      </Sheet>
+    </SheetInPlace>
   );
 }
 

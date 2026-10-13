@@ -23,6 +23,7 @@ import {
   noSecretsInTree,
   noUiTests,
   pnpmOnly,
+  routeSheetsInPlace,
   solNoMagicNumbers,
   uniqueApiRoutes,
 } from "./lib/repo-checks.mjs";
@@ -153,6 +154,11 @@ export const rules = [
     pattern: /#[0-9a-fA-F]{3,8}\b|\brgba?\(/,
   },
   { id: "mobile-tight-leading", description: "lineHeight never below fontSize", check: mobileTightLeading },
+  {
+    id: "route-sheets-in-place",
+    description: "a phone route sheet renders in place (SheetRoute / SheetInPlace), never under its own modal",
+    check: routeSheetsInPlace,
+  },
   {
     id: "restraint-dot-chains",
     description: 'no " · " chain over three segments on an operational surface (Q0, D-346)',

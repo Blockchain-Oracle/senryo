@@ -279,3 +279,21 @@ export function uniqueApiRoutes(rule, ctx) {
   }
   return findings;
 }
+
+/**
+ * A phone route sheet (`app/(sheets)/*`) is a native transparent modal: its `Sheet` must render in place
+ * (`SheetRoute` or `SheetInPlace`), or it draws in the root layer under its own modal — visible, but every tap lands on
+ * the empty modal above it (13 Oct: the owner's Unlock "nothing is clicking").
+ */
+export function routeSheetsInPlace(rule, ctx) {
+  const findings = [];
+  for (const { rel, abs } of walkFiles(ctx.root, "apps/mobile/src/app/(sheets)", [".tsx"])) {
+    if (rel.endsWith("/_layout.tsx")) continue;
+    const text = readText(abs);
+    if (!/<Sheet\b|<SheetRoute\b/.test(text)) continue;
+    if (!/<SheetRoute\b|<SheetInPlace\b/.test(text)) {
+      findings.push(finding(rule, "a route sheet renders its Sheet outside SheetInPlace / SheetRoute", rel));
+    }
+  }
+  return findings;
+}

@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { PasskeyGlyph } from "~/components/identity/PasskeyGlyph";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetInPlace } from "~/components/sheet/SheetHost";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { AuthFlowBody, showsOutcome } from "~/features/auth/AuthFlowSheet";
 import { useAuthFlow } from "~/features/auth/useAuthFlow";
@@ -82,10 +83,14 @@ function Body() {
 }
 
 export default function AccountRequiredSheet() {
+  // A native modal route: its sheet renders in place, above the root sheet layer (else it hides under its own
+  // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
-    <Sheet onClose={() => router.back()} closeLabel="Close create account">
-      <Body />
-    </Sheet>
+    <SheetInPlace>
+      <Sheet onClose={() => router.back()} closeLabel="Close create account">
+        <Body />
+      </Sheet>
+    </SheetInPlace>
   );
 }
 

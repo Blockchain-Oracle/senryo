@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Button } from "~/components/kit/Button";
 import { Coins, KeyRound, type SymbolIcon, TriangleAlert } from "~/components/kit/symbols";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetInPlace } from "~/components/sheet/SheetHost";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { AgreeRow } from "~/features/legal/AgreeRow";
 import { acknowledgeTerms } from "~/features/legal/acknowledged";
@@ -46,10 +47,14 @@ export default function TermsSheet() {
   const { setup } = useLocalSearchParams<{ setup?: string }>();
   const request = useTermsRequest();
   const owed = setup === "1";
+  // A native modal route: its sheet renders in place, above the root sheet layer (else it hides under its own
+  // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
-    <Sheet onClose={() => router.back()} closeLabel="Close terms" dismissible={!owed}>
-      <Body owed={owed} settle={request?.settle} />
-    </Sheet>
+    <SheetInPlace>
+      <Sheet onClose={() => router.back()} closeLabel="Close terms" dismissible={!owed}>
+        <Body owed={owed} settle={request?.settle} />
+      </Sheet>
+    </SheetInPlace>
   );
 }
 

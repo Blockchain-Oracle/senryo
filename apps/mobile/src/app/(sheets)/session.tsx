@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/kit/Button";
 import { Sheet, useSheetClose } from "~/components/sheet/Sheet";
+import { SheetInPlace } from "~/components/sheet/SheetHost";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { AuthFlowBody, showsOutcome } from "~/features/auth/AuthFlowSheet";
 import { SessionPanel } from "~/features/auth/SessionPanel";
@@ -61,9 +62,13 @@ function Body() {
 }
 
 export default function SessionSheet() {
+  // A native modal route: its sheet renders in place, above the root sheet layer (else it hides under its own
+  // modal and the screen stops answering — the owner's frozen Unlock, 13 Oct).
   return (
-    <Sheet onClose={() => router.back()} closeLabel="Close session">
-      <Body />
-    </Sheet>
+    <SheetInPlace>
+      <Sheet onClose={() => router.back()} closeLabel="Close session">
+        <Body />
+      </Sheet>
+    </SheetInPlace>
   );
 }
