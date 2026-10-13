@@ -160,3 +160,16 @@ the web preview or on testnet, with the evidence named) and **deployed** (produc
 | PR14 | Amounts only in a keypad sheet (phone) or amount modal (web), with ¼ ½ ¾ All, the estimate, the timing and the risk | P5 (D-325) | built · accepted (simulator keypad "$8", web modal "$50", both as guests) · deployed |
 | PR15 | Status: one verdict with a tally; a tile per component, problems first, with its numbers and 24 h / 90 d bars; unknown never counts as a pass or a failure | P6 (D-324) | built `3e0b7295`, `ee25b7e2`, `954df526`, `1d8e560e` · accepted (simulator, web, both widths and themes, against production's records) · deployed api + keeper `sha-ee25b7e`, web `sha-1d8e560`, OTA `6edf6099` |
 | PR16 | The web gets its first Status page; the phone's More row carries the live verdict | P6 | built · accepted (web preview; simulator "Status · Live" on a fresh build) · deployed web `sha-1d8e560`, OTA `6edf6099` |
+
+## Owner's review, 13 Oct (stage Q; research `review-2026-10-13`, Codex 15 and 16)
+
+| Id | Row | Step | Status |
+|---|---|---|---|
+| QR1 | Leverage is opt-in: rides open at 1×, one Leverage switch (the whole row), the multiple and a marked slider when on | Q1 (D-344) | built `0f3f666a`, `62439a89` · accepted (simulator: a 1× ride opened and closed on testnet; Off in one tap) · deployed web `sha-9931957` |
+| QR2 | Ride settings drawn: margin line, two-rail risk ladder at true distances, Trail ruler, "Open fee ›" — the slop rows gone | Q1 (D-345) | built · accepted (simulator, production web as a guest) · deployed |
+| QR3 | Call settings drawn: Stake hero over the payoff (zones, thin "Pays $x" bars on one scale, stake tick, live bead, settlement ring), one rule sentence | Q1 | built `d954a7b1`, `fdd6da0b` · accepted (simulator Up/Down, Range, Moonshot; production web) · bead/ring/thin bars deploying |
+| QR4 | The live position row on every list: ring, head, ticking clock, recorded trace, rolling PnL; tap → that exact position | Q1 (D-343) | built `c05874f5` · accepted (simulator: ticks, swipe reveals Close, tap opens the ride with CLOSE ringed) · deployed |
+| QR5 | Close from the row: phone swipe → "Close $x" (one tap), web always-visible "Close $x"; Close all as a review | Q1 (D-343) | built · phone fix `d954a7b1` (a revealed Close opened the trade) **not yet re-seen**; review not yet seen with two positions |
+| QR6 | Position details and View receipt behind long-press / right-click | Q1 | built · not yet seen |
+| QR7 | Exact-position selection: the selected ride or call drives the chart until another is picked or a trade placed | Q1 (D-340) | built · accepted (simulator, one position) · two positions not yet seen |
+| QR8 | Restraint in the gate: dot chains, one FactList, no explainers, retired words; a dev inspector | Q0 (D-346) | built `62439a89` · gate green · deployed |

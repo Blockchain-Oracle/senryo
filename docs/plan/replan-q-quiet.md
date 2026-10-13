@@ -21,18 +21,37 @@ say". Memory `feedback-restraint-not-text-dumps`.
 - deployed one service at a time when the box's load is under 8; a phone OTA after the pass.
 
 ## Steps
-- [ ] Q0 The rules in the gate (D-346): " · " chains ≤ 3 segments on operational surfaces; one `FactList` per app
-  (typed facts, money marked) with ad-hoc grids banned outside it and ≤ 4 facts at rest; no explainer props in the
-  settings and exit components; retired sentence helpers can't be imported; a dev-only inspector for a fact drawn
-  twice or a deadline with two clocks.
-- [ ] Q1 Trade setup and positions:
-  - leverage opt-in (D-344): rides open at 1× ("No leverage"), a Leverage switch reveals one multiple and one marked
-    slider; the device remembers an explicit choice;
-  - ride settings: margin control, the two-rail risk ladder (KO and Cap at true distances), "Trail ›", "Open fee ›";
-  - call settings: stake hero over the payoff drawing (line, zones, pay bars on one scale), "Trail 5¢ ›";
-  - the position row (D-343) on every list, quiet Unrealized header, "Close all" as a review;
-  - exact-position selection on the terminal (an older ride or call drives the chart);
-  - value-first quote models (`ride-quote.ts`, `quote.ts`, `ride-tick.ts`, `stack-words.ts`).
+- [x] Q0 The rules in the gate (D-346) — built `62439a89`, gate green:
+  - `restraint-dot-chains` (≤ 3 segments; `chain()` joins at most three by type), `restraint-fact-list`,
+    `restraint-no-explainers`, `restraint-retired-words`; surfaces a later area rebuilds are allowed by name with that
+    area, and a clean allowed file is itself a finding, so the list only shrinks;
+  - one `FactList` per app (typed facts, money masked by type, ≤ 4 at rest) and a dev-only inspector (a fact drawn
+    twice, a deadline with two clocks — wired to clocks as Q4 and Q6 land).
+- [x] Q1 Trade setup and positions — built (`0f3f666a`, `c05874f5`, `99319578`, `d954a7b1`, `fdd6da0b`):
+  - [x] leverage opt-in (D-344): rides open at 1×; the Leverage row is one switch (the native UISwitch lost taps in a
+    sheet on iOS 26 — every phone switch is now the kit `Switch`); on, the multiple and a marked slider; the device
+    remembers the multiple; storage keys v2 so the old forced 10× doesn't carry over;
+  - [x] ride settings: margin line, the two-rail risk ladder (KO and Cap at true distances, the live price in its
+    header, tap a level for its move), Trail as a marked ruler, "Open fee ›" (close fee at today's price, the
+    early-close fee); deleted: trade size, max profit, the capped rows, the duplicated fee, after this, the explainers;
+  - [x] call settings: the type, "Stake" over the hero, the payoff drawing (the line, zones where their edges sit,
+    thin "Pays $x" bars on one scale that grows with the stake, the stake tick, a live bead, a ring to settlement),
+    "On the line refunds." for Up/Down only, Trail as a bid-cents ruler, "Fees ›";
+  - [x] the position row (D-343) on phone Home, Calls and the terminal sheet and the web column, drawer, Home and
+    Calls; the quiet Unrealized header; "Close all (N)" / "Close available (N)" opening a review; long-press (phone)
+    or right-click / hold (web) for Position details and View receipt;
+  - [x] exact-position selection: a link's position stays selected (an older ride, a second call in the window)
+    until another is picked or a new trade is placed; on arrival the terminal's CLOSE is ringed;
+  - [x] value-first models: `rideLadder`, `callPayoff`, `RideQuote.closeFee`, `positionClock` / `pnlText` /
+    `roiText` / `positionDetails`, `feeDollars`; `knockOutWords`, `capWords`, `capText`, `positionSub`,
+    `positionHold`, `positionTitle` and `leverageChips` retired. `ride-tick` `upLine` / `downLine` and `stack-words`
+    retire with their consumers in Q2 (the KO captions and the order stack);
+  - accepted (Release simulator, testnet Practice): a **1× ride opened and closed** (`$5.00 at 1×`); Leverage off in
+    one tap on the row; leverage on narrows both KOs on the ladder; the payoff drawing for Up/Down, Range and
+    Moonshot; the row's ring, ticking clock, trace and rolling PnL; swipe reveals only "Close $5.00"; a tap opens that
+    exact ride with CLOSE ringed. Production web as a guest: both settings sheets (`sha-62439a8`).
+  - open: the row's Close after the `d954a7b1` fix, the long-press menu, hidden balances / Reduce Motion / large text
+    on the phone — the simulator was in use when the pass reached them; next pass.
 - [ ] Q2 The terminal surface: the order stack as one control, payouts inside the buttons, CLOSE ≥ 28 with its net,
   the captions under the chart deleted, exit sheets as one draggable ruler, toasts title-only (the opened toast no
   longer sits over the dock).

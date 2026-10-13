@@ -176,9 +176,15 @@ R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.m
   passes. **Live:** api `sha-08f35ad`, web `sha-08f35ad` (`sha-c9680b1` queued), phone OTA `bdbdfe6b`.
 - **Also from the owner (13 Oct):** Fomo's playback clip → research 14 → R8.10–R8.12 (Replay v2, MP4 export, Recap).
 - **Also from the owner (13 Oct):** the Calls history was missing finished rides (fixed, `14a5b95`, OTA `a5227670`).
-- **Next: stage Q — quiet and alive** ([replan-q-quiet.md](replan-q-quiet.md); approved 13 Oct; D-343…D-348): the
-  owner's review of text density across both apps — leverage opt-in, the live position row, risk and payoff drawn,
-  receipts replay-led, one clock per deadline, the gate enforcing it. Then R8 social.
+- **Now: stage Q — quiet and alive** ([replan-q-quiet.md](replan-q-quiet.md); approved 13 Oct; D-343…D-348).
+  - **Q0 and Q1 built** (13 Oct): the restraint rules in the gate; leverage opt-in (1× default, one switch); the
+    ride ladder and the call payoff drawn; the live position row on every list; exact-position selection.
+  - **Accepted:** Release simulator on testnet Practice (a 1× ride opened and closed; the row ticks, swipes, opens its
+    ride) and production web as a guest. Open: the row's Close after its fix, the long-press menu, the accessibility
+    pass (the simulator was in use).
+  - **Live:** web `sha-62439a8` (`sha-fdd6da0` deploying), phone OTA (this pass).
+  - **Next:** Q2 — the terminal surface (order stack as one control, payouts in the buttons, exit rulers, toasts).
+    Then Q3–Q6, then R8 social.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
