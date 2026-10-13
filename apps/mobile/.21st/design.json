@@ -812,6 +812,29 @@
         "evidence": ["Q1 / D-345, Codex direction 16 §2"],
         "port": "stake as a 52 pt hero (keypad on tap) over a 216 pt drawing: the line dashed across, each side's zone tinted where its edges sit, a 28 pt pay bar per zone on a scale drawn for the top preset (bars grow with the stake), the stake as a dashed tick; tap a zone for where it wins; hidden balances keep only the odds",
         "path": "src/features/terminal/CallSettingsBody.tsx"
+      },
+      {
+        "name": "switch",
+        "source": "21st #21948 serafimcloud/switch (track and sliding thumb); searched \"toggle switch\" (3246, 7332, 21948, 37311)",
+        "evidence": [
+          "Q1 simulator pass: the native UISwitch on iOS 26 drew outside its React frame and lost taps in a sheet — Leverage couldn't be turned off"
+        ],
+        "port": "one kit Switch for every switch on the phone: Pressable track (48 × 28) and a Reanimated thumb (24), the primary's track with its own ink as the thumb when on (as the web's SwitchRow), a quiet track and a light thumb off, disabled at 40 %; a row may be the control (Leverage)",
+        "path": "src/components/kit/Switch.tsx"
+      },
+      {
+        "name": "fact list",
+        "source": "reference-native (no 21st source): the one key/value list (Q0, D-346)",
+        "evidence": ["Q0 restraint-fact-list invariant; the 13 Oct density audit (six rebuilt label/value grids)"],
+        "port": "typed facts (label, value, money) on 44 pt lines, money masked by type, at most four at rest, a dev-only inspector for a fact drawn twice",
+        "path": "src/components/kit/FactList.tsx"
+      },
+      {
+        "name": "position row",
+        "source": "21st \"Animated Number\" (ibelick/animated-number) and \"Sparkline\" (appica-dev/sparkline) as Codex 15 named — behaviour only, the rolling figure is the existing Skia LiveOdometer; the lane CountdownRing's geometry",
+        "evidence": ["D-343, Codex direction 15 (docs/research/replan-2026-10-10/15-position-row-direction.md)"],
+        "port": "80 pt live row: mark in a 40 pt ring draining on the server clock (3 pt in the last ten seconds, never a warning colour), head and ticking clock over the recorded PnL trace (64 × 20, broken at holes), PnL in the condensed 24/28 role over ROI; swipe left reveals Close $x (112 pt, accent), long-press for details and receipt",
+        "path": "src/features/positions/PositionRow.tsx"
       }
     ],
     "planned": [

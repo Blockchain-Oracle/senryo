@@ -23,6 +23,7 @@ import { fire } from "@/lib/feedback";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
 import { AmountField } from "./AmountField";
 import { STAKE_PRESETS_USD } from "./constants";
+import { MarksRuler } from "./MarksRuler";
 import { PayoffDrawing } from "./PayoffDrawing";
 
 const USD = 1_000_000n;
@@ -33,6 +34,8 @@ export interface CallSettingsProps {
   offer: Offer;
   quotes: Quotes;
   lineE8: bigint | undefined;
+  /** The window the call goes into: the drawing's ring drains to its settlement. */
+  window: { start: number; expiry: number };
   stake: bigint;
   min: bigint;
   max: bigint;
@@ -65,18 +68,21 @@ export function CallSettings(p: CallSettingsProps) {
         }}
         fill
       />
-      <button
-        type="button"
-        aria-expanded={editing}
-        aria-label={`Stake ${money(p.stake)}. Edit`}
-        onClick={() => {
-          fire("tick", { cue: "tap" });
-          setEditing((e) => !e);
-        }}
-        className="tnum self-start rounded-md font-semibold text-display-balance leading-none focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        {money(p.stake)}
-      </button>
+      <div className="flex flex-col">
+        <span className="text-meta text-text-3">Stake</span>
+        <button
+          type="button"
+          aria-expanded={editing}
+          aria-label={`Stake ${money(p.stake)}. Edit`}
+          onClick={() => {
+            fire("tick", { cue: "tap" });
+            setEditing((e) => !e);
+          }}
+          className="tnum self-start rounded-md font-semibold text-display-balance leading-none focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          {money(p.stake)}
+        </button>
+      </div>
       {editing ? (
         <AmountField
           label="Stake"
@@ -89,25 +95,16 @@ export function CallSettings(p: CallSettingsProps) {
           onChange={p.onStake}
         />
       ) : null}
-      <PayoffDrawing payoff={payoff} lineE8={p.lineE8} symbol={p.symbol} hidden={hidden} />
+      <PayoffDrawing payoff={payoff} lineE8={p.lineE8} symbol={p.symbol} window={p.window} hidden={hidden} />
       {p.mode === "updown" ? <p className="text-meta text-text-3">On the line refunds.</p> : null}
       <DisclosureRow title="Trail" value={`${p.trailCents}¢`}>
-        <div className="flex flex-wrap gap-2">
-          {TRAIL_CENTS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-pressed={c === p.trailCents}
-              onClick={() => {
-                fire("tick", { cue: "tap" });
-                p.onTrail(c);
-              }}
-              className="terminal-preset px-3"
-            >
-              {c}¢
-            </button>
-          ))}
-        </div>
+        <MarksRuler
+          marks={TRAIL_CENTS}
+          value={p.trailCents}
+          onChange={p.onTrail}
+          format={(c) => `${c}¢`}
+          label="Trail, bid cents"
+        />
       </DisclosureRow>
       {fees.length > 0 ? (
         <DisclosureRow title="Fees" value={low === high ? fine(low) : `${fine(low)}–${fine(high)}`}>

@@ -12,6 +12,7 @@ import type { Quotes } from "./quote.ts";
 const DEFAULT_HALF_SPAN_BPS = 40;
 /** The outermost edge sits this share of the way to the axis end, so the zone beyond it stays visible. */
 const EDGE_REACH = 0.5;
+const BPS = 10_000;
 
 export interface PayoffZone {
   slot: 0 | 1;
@@ -32,6 +33,8 @@ export interface PayoffZone {
 
 export interface CallPayoff {
   lineAt: number;
+  /** Half the price axis, bps of the line (for a live bead: `payoffAt`). */
+  halfSpanBps: number;
   zones: readonly PayoffZone[];
   /** The stake's length on the same scale (the bar past it is the profit). */
   stakeBar: number;
@@ -72,6 +75,7 @@ export function callPayoff(offer: Offer, quotes: Quotes, stake: bigint, scaleSta
   const share = (v: bigint) => (scale > 0 ? Math.min(1, Number(v) / scale) : 0);
   return {
     lineAt: at(0),
+    halfSpanBps: half,
     zones: priced.map((o) => {
       const [lo, hi] = spanBps(o.band);
       const from = lo === null ? 0 : at(lo);
@@ -90,4 +94,12 @@ export function callPayoff(offer: Offer, quotes: Quotes, stake: bigint, scaleSta
     }),
     stakeBar: share(stake),
   };
+}
+
+/** Where a price sits on the drawing, 0 … 1 (clamped to the ends): the live bead. */
+export function payoffAt(p: CallPayoff, lineE8: bigint, priceE8: number): number {
+  const line = Number(lineE8);
+  if (line <= 0) return p.lineAt;
+  const bps = ((priceE8 - line) / line) * BPS;
+  return Math.min(1, Math.max(0, (bps + p.halfSpanBps) / (2 * p.halfSpanBps)));
 }

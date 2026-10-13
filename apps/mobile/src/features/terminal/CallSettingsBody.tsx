@@ -14,16 +14,17 @@ import {
   TRAIL_CENTS,
 } from "@senryo/calls";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AmountPad } from "~/components/kit/AmountPad";
 import { DisclosureRow } from "~/components/kit/DisclosureRow";
 import { FactList } from "~/components/kit/FactList";
+import { MarksSlider } from "~/components/kit/MarksSlider";
 import { Segmented } from "~/components/kit/Segmented";
 import { fire } from "~/feedback/fire";
 import { masked, useHideBalances } from "~/lib/hide-balances";
 import { HERO_FONT_SCALE, TYPE, useTheme } from "~/theme";
 import { STAKE_PRESETS_USD } from "./constants";
-import { Chips, chipsOf, useTyped } from "./order-parts";
+import { chipsOf, useTyped } from "./order-parts";
 import { PayoffDrawing } from "./PayoffDrawing";
 
 const USD = 1_000_000n;
@@ -34,6 +35,8 @@ export interface CallOrder {
   offer: Offer;
   quotes: Quotes;
   lineE8: bigint | undefined;
+  /** The window the call goes into: the drawing's ring drains to its settlement. */
+  window: { start: number; expiry: number };
   stake: bigint;
   min: bigint;
   max: bigint;
@@ -58,20 +61,23 @@ export function CallSettingsBody({ o, available }: { o: CallOrder; available: bi
   return (
     <>
       <Segmented options={CALL_MODES} value={o.mode} onChange={o.onMode} label="Call type" />
-      <Pressable
-        onPress={() => {
-          fire("tick");
-          setEditing((e) => !e);
-        }}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: editing }}
-        accessibilityLabel={`Stake ${money(o.stake)}. Edit`}
-        style={styles.hero}
-      >
-        <Text maxFontSizeMultiplier={HERO_FONT_SCALE} style={[TYPE.displayBalance, { color: color.ink }]}>
-          {money(o.stake)}
-        </Text>
-      </Pressable>
+      <View>
+        <Text style={[TYPE.rowDetail, { color: color.inkMuted }]}>Stake</Text>
+        <Pressable
+          onPress={() => {
+            fire("tick");
+            setEditing((e) => !e);
+          }}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: editing }}
+          accessibilityLabel={`Stake ${money(o.stake)}. Edit`}
+          style={styles.hero}
+        >
+          <Text maxFontSizeMultiplier={HERO_FONT_SCALE} style={[TYPE.displayBalance, { color: color.ink }]}>
+            {money(o.stake)}
+          </Text>
+        </Pressable>
+      </View>
       {editing ? (
         <AmountPad
           label="Stake"
@@ -82,15 +88,17 @@ export function CallSettingsBody({ o, available }: { o: CallOrder; available: bi
           onChange={amount.change}
         />
       ) : null}
-      <PayoffDrawing payoff={payoff} lineE8={o.lineE8} symbol={o.symbol} hidden={hidden} />
+      <PayoffDrawing payoff={payoff} lineE8={o.lineE8} symbol={o.symbol} window={o.window} hidden={hidden} />
       {o.mode === "updown" ? (
         <Text style={[TYPE.rowDetail, { color: color.inkMuted }]}>On the line refunds.</Text>
       ) : null}
       <DisclosureRow title="Trail" value={`${o.trailCents}¢`}>
-        <Chips
-          items={TRAIL_CENTS.map((c) => ({ key: String(c), label: `${c}¢` }))}
-          chosen={String(o.trailCents)}
-          onPick={(k) => o.onTrail(Number(k))}
+        <MarksSlider
+          marks={TRAIL_CENTS}
+          value={o.trailCents}
+          onChange={o.onTrail}
+          format={(c) => `${c}¢`}
+          label="Trail, bid cents"
         />
       </DisclosureRow>
       {fees.length > 0 ? (

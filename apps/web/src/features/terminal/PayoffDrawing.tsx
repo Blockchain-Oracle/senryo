@@ -2,21 +2,25 @@
 /**
  * What a call pays, drawn (Q1, Codex direction 16 §2; `@senryo/calls` `callPayoff`; the phone's `PayoffDrawing`): the
  * line across a rising price axis, each side's winning zone tinted where its edges sit, and in each zone a pay bar on
- * one shared scale — a bigger stake grows them; the dashed tick is the stake, so the bar past it is the profit.
- * Clicking a zone shows where it wins in place of its name. With balances hidden the bars keep only their odds.
+ * one shared scale — a bigger stake grows them; the dashed tick is the stake, so the bar past it is the profit. A live
+ * bead on the axis is the price now; a ring by the line drains to settlement. Clicking a zone shows where it wins in
+ * place of its name. With balances hidden the bars keep only their odds.
  */
-import { type CallPayoff, dollars, type PayoffZone, unitOf } from "@senryo/calls";
+import { type CallPayoff, dollars, type PayoffZone, payoffAt, unitOf } from "@senryo/calls";
 import { priceText } from "@senryo/core";
+import { useSampledPrice, useServerSeconds } from "@senryo/live/react";
 import { useState } from "react";
 import { fire } from "@/lib/feedback";
 import { masked } from "@/lib/shell/privacy";
 import { cn } from "@/lib/utils";
+import { CountdownRing } from "./CountdownRing";
 
 const PERCENT = 100;
 const GUTTER = "5.5rem";
 const INSIDE = 0.72;
 const MIN_BAR = 0.02;
 const MIN_SPAN = 0.001;
+const BEAD_MS = 250;
 
 const pct = (v: number) => `${v * PERCENT}%`;
 /** A point along the bar track: the gutter plus a share of what's left. */
@@ -26,13 +30,18 @@ export function PayoffDrawing({
   payoff,
   lineE8,
   symbol,
+  window,
   hidden,
 }: {
   payoff: CallPayoff;
   lineE8: bigint | undefined;
   symbol: string;
+  window: { start: number; expiry: number };
   hidden: boolean;
 }) {
+  const now = useServerSeconds();
+  const price = useSampledPrice(symbol, BEAD_MS);
+  const beadAt = lineE8 !== undefined && price !== undefined ? payoffAt(payoff, lineE8, price) : null;
   const [open, setOpen] = useState<number | null>(null);
   const most = payoff.zones.reduce((m, z) => (z.payout !== null && z.payout > m ? z.payout : m), 0n);
   const share = (z: PayoffZone) =>
@@ -40,7 +49,7 @@ export function PayoffDrawing({
   return (
     <div className="relative h-54">
       {payoff.zones.map((z) => {
-        const pays = z.payout === null ? "—" : masked(dollars(z.payout), hidden);
+        const pays = z.payout === null ? "—" : `Pays ${masked(dollars(z.payout), hidden)}`;
         const inside = share(z) > INSIDE;
         // The bar's height inside its zone (a Range's sits above the line that runs through it).
         const top = pct((z.to - z.barAt) / Math.max(MIN_SPAN, z.to - z.from));
@@ -48,7 +57,7 @@ export function PayoffDrawing({
           <button
             key={z.slot}
             type="button"
-            aria-label={`${z.band.label} pays ${pays} if ${z.band.where}`}
+            aria-label={`${z.band.label}: ${pays.toLowerCase()} if ${z.band.where}`}
             onClick={() => {
               fire("tick", { cue: "tap" });
               setOpen((o) => (o === z.slot ? null : z.slot));
@@ -105,11 +114,24 @@ export function PayoffDrawing({
           style={{ left: along(payoff.stakeBar) }}
         />
       )}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 w-0 border-text-3/40 border-l"
+        style={{ left: GUTTER }}
+      />
+      {beadAt === null ? null : (
+        <span
+          aria-hidden
+          className="-translate-x-1/2 -translate-y-1/2 pointer-events-none absolute size-2 rounded-full bg-foreground transition-[top] duration-(--motion-base) motion-reduce:transition-none"
+          style={{ left: GUTTER, top: pct(1 - beadAt) }}
+        />
+      )}
       {lineE8 !== undefined ? (
         <span
-          className="tnum -translate-y-1/2 pointer-events-none absolute right-0 bg-background px-1 text-meta"
+          className="tnum -translate-y-1/2 pointer-events-none absolute right-0 flex items-center gap-1 bg-background px-1 text-meta"
           style={{ top: pct(1 - payoff.lineAt) }}
         >
+          <CountdownRing fromSec={window.start} toSec={window.expiry} nowSec={now} />
           {priceText(lineE8, unitOf(symbol))}
         </span>
       ) : null}

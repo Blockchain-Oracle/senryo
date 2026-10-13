@@ -28,7 +28,7 @@ import { SquarePen } from "~/components/kit/symbols";
 import { fire } from "~/feedback/fire";
 import { masked, useHideBalances } from "~/lib/hide-balances";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
-import { Chips, chipsOf, useTyped } from "./order-parts";
+import { chipsOf, useTyped } from "./order-parts";
 import { RiskLadder } from "./RiskLadder";
 
 const ONE_X = 10_000;
@@ -120,10 +120,12 @@ export function RideSettingsBody({ o, available }: { o: RideOrder; available: bi
       ) : null}
       {ladder && o.markE8 ? <RiskLadder ladder={ladder} symbol={o.symbol} markE8={o.markE8} /> : null}
       <DisclosureRow title="Trail" value={trailText(o.trailBps)}>
-        <Chips
-          items={RIDE_TRAIL_STEPS_BPS.map((b) => ({ key: String(b), label: trailText(b) }))}
-          chosen={String(o.trailBps)}
-          onPick={(k) => o.onTrail(Number(k))}
+        <MarksSlider
+          marks={RIDE_TRAIL_STEPS_BPS}
+          value={o.trailBps}
+          onChange={o.onTrail}
+          format={trailText}
+          label="Trail, behind the best price"
         />
       </DisclosureRow>
       {up ? (

@@ -22,16 +22,14 @@ import { SquarePen } from "lucide-react";
 import { useState } from "react";
 import { DisclosureRow } from "@/components/ui/disclosure-row";
 import { FactList } from "@/components/ui/fact-list";
-import { MarksSlider } from "@/components/ui/marks-slider";
 import { SwitchRow } from "@/components/ui/switch-row";
 import { fire } from "@/lib/feedback";
 import { masked, usePrivacy } from "@/lib/shell/privacy";
-import { cn } from "@/lib/utils";
 import { AmountField } from "./AmountField";
+import { MarksRuler } from "./MarksRuler";
 import { RiskLadder } from "./RiskLadder";
 
 const LEVERAGE_ONE = 10_000;
-const PERCENT = 100;
 const BPS_PER_PERCENT = 100;
 
 export interface RideSettingsProps {
@@ -58,8 +56,6 @@ export function RideSettings(p: RideSettingsProps) {
   const on = leverageOn(p.leverageBps);
   const x = p.leverageBps / LEVERAGE_ONE;
   const marks = leverageMarks(p.maxLeverageBps);
-  const index = Math.max(0, marks.indexOf(x));
-  const last = Math.max(1, marks.length - 1);
   const up = p.markE8 ? rideQuote(true, p.margin, p.leverageBps, p.markE8, p.terms) : null;
   const down = p.markE8 ? rideQuote(false, p.margin, p.leverageBps, p.markE8, p.terms) : null;
   const ladder = up && down && p.markE8 ? rideLadder(up, down, p.markE8) : null;
@@ -100,55 +96,18 @@ export function RideSettings(p: RideSettingsProps) {
       {on ? (
         <div className="flex flex-col gap-1">
           <p className="tnum font-semibold text-display-balance leading-none">{x}×</p>
-          <MarksSlider
-            value={index}
-            min={0}
-            max={last}
-            step={1}
-            stops={marks.map((_, i) => i / last)}
-            label="Leverage"
-            valueText={`${x}×`}
-            onValueChange={(i) => {
-              const next = marks[i];
-              if (next === undefined || next === x) return;
-              fire("tick", { cue: "tap" });
-              p.onLeverage(next);
-            }}
-          />
-          <div aria-hidden className="relative h-4">
-            {marks.map((m, i) => (
-              <span
-                key={m}
-                className={cn(
-                  "-translate-x-1/2 tnum absolute text-meta",
-                  i === index ? "text-foreground" : "text-text-3",
-                )}
-                style={{ left: `${(i / last) * PERCENT}%` }}
-              >
-                {m}×
-              </span>
-            ))}
-          </div>
+          <MarksRuler marks={marks} value={x} onChange={p.onLeverage} format={(v) => `${v}×`} label="Leverage" />
         </div>
       ) : null}
       {ladder && p.markE8 ? <RiskLadder ladder={ladder} symbol={p.symbol} markE8={p.markE8} /> : null}
       <DisclosureRow title="Trail" value={trailText(p.trailBps)}>
-        <div className="flex flex-wrap gap-2">
-          {RIDE_TRAIL_STEPS_BPS.map((bps) => (
-            <button
-              key={bps}
-              type="button"
-              aria-pressed={bps === p.trailBps}
-              onClick={() => {
-                fire("tick", { cue: "tap" });
-                p.onTrail(bps);
-              }}
-              className="terminal-preset px-3"
-            >
-              {trailText(bps)}
-            </button>
-          ))}
-        </div>
+        <MarksRuler
+          marks={RIDE_TRAIL_STEPS_BPS}
+          value={p.trailBps}
+          onChange={p.onTrail}
+          format={trailText}
+          label="Trail, behind the best price"
+        />
       </DisclosureRow>
       {up ? (
         <DisclosureRow title="Open fee" value={fine(up.fee)}>

@@ -725,6 +725,24 @@
         "use": "one line that opens (Q1): title and value at rest, the control on click, the chevron turning; searched \"disclosure row accordion\" (14029 HeroUI, 851, 25011 Disclosure Group, 23530 Accordion); the motion height animation dropped for an instant reveal",
         "path": "src/components/ui/disclosure-row.tsx",
         "retokenized": true
+      },
+      {
+        "name": "fact-list",
+        "source": "reference-native (no 21st source)",
+        "id": 0,
+        "url": "",
+        "use": "the one key/value list (Q0, D-346): typed facts, money masked by type, at most four at rest, a dev-only inspector",
+        "path": "src/components/ui/fact-list.tsx",
+        "retokenized": true
+      },
+      {
+        "name": "position row",
+        "source": "21st:ibelick/animated-number + 21st:appica-dev/sparkline (behaviour; Codex 15)",
+        "id": 0,
+        "url": "https://21st.dev/@ibelick/components/animated-number",
+        "use": "the live position row (D-343): mark in a 40 px ring draining on the server's seconds, head and clock over the recorded PnL trace (72 × 24), PnL rolling in the installed Odometer over ROI, an always-visible Close $x sibling; right-click or hold for details and receipt",
+        "path": "src/features/positions/PositionRow.tsx",
+        "retokenized": true
       }
     ],
     "considered": [

@@ -99,6 +99,7 @@ export function TerminalSheets(p: TerminalSheetsProps) {
               offer={q.offer}
               quotes={q.latest.current}
               lineE8={t.k}
+              window={{ start: t.window.start, expiry: t.window.expiry }}
               stake={choices.stake}
               min={t.terms?.minStake ?? MIN_STAKE}
               max={t.terms?.maxStake ?? choices.stake}

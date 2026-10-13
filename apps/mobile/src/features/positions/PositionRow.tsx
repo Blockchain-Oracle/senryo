@@ -145,11 +145,19 @@ export function PositionRow({
   const [menu, setMenu] = useState(false);
   // A link (search's position, D-340) asked for this one: its Close revealed and ringed, never pressed.
   const ready = useTerminalReady().position === e.key;
-  const canClose = clock.live && !closing;
+  // The swipe follows the position's state, not each tick's quote: a quote that flickers away mid-gesture must not snap
+  // the row shut under the finger (the tap would land on the row and open the trade instead of closing).
+  const canClose = e.state === "live" && !closing;
+  // Revealed, the row's own tap only tucks the action away (Codex 15 §2: no navigation after a recognised swipe).
+  const revealed = useRef(false);
   useEffect(() => {
     if (ready && canClose) swipe.current?.openRight();
   }, [ready, canClose]);
   const openTrade = () => {
+    if (revealed.current) {
+      swipe.current?.close();
+      return;
+    }
     fire("tick", { cue: "tap" });
     router.navigate({ pathname: "/trade", params: { symbol: e.symbol, ...intentParams(positionIntent(e)) } });
     onPick?.();
@@ -172,7 +180,11 @@ export function PositionRow({
             }}
           />
         )}
+        onSwipeableClose={() => {
+          revealed.current = false;
+        }}
         onSwipeableWillOpen={() => {
+          revealed.current = true;
           fire("snap");
           if (openSwipe.current && openSwipe.current !== swipe.current) openSwipe.current.close();
           openSwipe.current = swipe.current;
@@ -234,7 +246,7 @@ const styles = StyleSheet.create({
   clock: { flexShrink: 1 },
   figures: { alignItems: "flex-end", minWidth: FIGURE_W },
   figure: { width: FIGURE_W, height: FIGURE_H },
-  actionWrap: { justifyContent: "center", paddingLeft: SPACE.sm },
+  actionWrap: { justifyContent: "center", paddingHorizontal: SPACE.sm },
   action: {
     width: ACTION_W,
     minHeight: SIZE.touch,

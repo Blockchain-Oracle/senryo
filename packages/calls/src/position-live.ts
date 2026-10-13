@@ -27,9 +27,13 @@ const ROI_DECIMALS = 1;
 /** "+$0.0400", "−$12.30": a live PnL (four decimals under $10 so a $1 trade visibly ticks). */
 export const pnlText = (v: bigint): string => `${v < 0n ? "−" : "+"}${fineDollars(v)}`;
 
-/** "+0.7%": a return, one decimal. */
-export const roiText = (bps: number): string =>
-  `${bps < 0 ? "−" : "+"}${Math.abs(bps / BPS_PER_PERCENT).toFixed(ROI_DECIMALS)}%`;
+/** "+0.7%", "0.0%": a return, one decimal. */
+export function roiText(bps: number): string {
+  const shown = Math.abs(bps / BPS_PER_PERCENT).toFixed(ROI_DECIMALS);
+  // A return that rounds to nothing has no sign: "+0.0%" beside a red −$0.0001 reads as a contradiction.
+  if (Number(shown) === 0) return `${shown}%`;
+  return `${bps < 0 ? "−" : "+"}${shown}%`;
+}
 
 /** The life the ring drains over: a call's window, a ride's four hours (null without an end). */
 export function positionSpan(e: BookEntry): { fromSec: number; toSec: number } | null {
