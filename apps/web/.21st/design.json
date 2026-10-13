@@ -574,8 +574,8 @@
         "source": "21st:radiumcoders/grid-button",
         "id": 13564,
         "url": "https://21st.dev/@radiumcoders/components/grid-button",
-        "use": "56 px action circles with labels and named locks (Receive, asset page)",
-        "path": "src/components/kit/action-circle.tsx",
+        "use": "56 px action circles with labels (D-352): the receipt's Replay ▶ (brand colour) · Post (X's own mark) · Share · Save, and the Replay modal's Share · Save; busy and dimmed-with-reason states",
+        "path": "src/components/ui/action-circle.tsx",
         "retokenized": true
       },
       {
@@ -746,10 +746,10 @@
       },
       {
         "name": "replay video",
-        "source": "Fomo's exported share video (research 14 §1) in Senryo's look per Codex direction 17; encoder mediabunny 1.61.4 (WebCodecs)",
+        "source": "Fomo's exported share video (research 14 §1) in Senryo's look per Codex directions 17 and 18; encoder mediabunny 1.61.4 (WebCodecs)",
         "id": 0,
         "url": "",
-        "use": "the receipt's Video: the same 1080 × 1350 card as the phone from the shared FILM_LAYOUT and frames, drawn on a 2D canvas (preview) and an OffscreenCanvas (export) at t = i / 30; AAC from the cue track rendered offline through the app's voices; Save (download) / Share (files)",
+        "use": "the receipt's Replay (D-352): the same 1080 × 1350 card as the phone from the shared FILM_LAYOUT and frames — magenta ground and band, chart with KO / Cap tags and OPEN / CLOSE tooltips, centred panel, lockup and QR — on a 2D canvas (preview) and an OffscreenCanvas (export) at t = i / 30; the soundtrack is the live terminal's (Arcade bed, reaction cues, tense low-pass, duck, fade) rendered offline; transport row, Sound in replay, one status line, Share / Save circles",
         "path": "src/features/replay/",
         "retokenized": true
       }

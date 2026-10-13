@@ -1,17 +1,18 @@
 /**
  * One ride's receipt on the phone (R5.11, D-331; the web's `RideReceipt`): its slip — the realised result and its
  * stamp, margin, leverage, size, entry and exit, knock-out and cap, fees, what came back, and the transaction that
- * ended it — shared with PnL · ROI · Both (R5.21), open or ended. A live ride opens the terminal.
+ * ended it — with its row of actions (D-352): Replay or Live, Post, Share, Save.
  */
 import { rideFigure, rideFilm, rideKey, rideLink, rideSlip } from "@senryo/calls";
 import { useRide } from "@senryo/query";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useMMKVString } from "react-native-mmkv";
-import { Button } from "~/components/kit/Button";
+import { ActionCircle } from "~/components/kit/ActionCircle";
 import { EmptyState, LoadingState } from "~/components/kit/states";
+import { ChartLine } from "~/components/kit/symbols";
 import { useDockInset } from "~/components/shell/dock-context";
-import { ReplayVideo } from "~/features/replay/ReplayVideo";
+import { ReplayAction } from "~/features/replay/ReplayAction";
 import { fire } from "~/feedback/fire";
 import { useNetwork } from "~/lib/network";
 import { STORAGE_KEYS, storage } from "~/lib/storage";
@@ -34,33 +35,38 @@ export function RideReceipt({ rideId }: { rideId: bigint }) {
     url: rideLink(r.rideId, network.chainId),
   });
   const side = r.isLong ? "Up" : "Down";
+  const live = (
+    <ActionCircle
+      icon={ChartLine}
+      label="Live"
+      primary
+      onPress={() => {
+        fire("tick");
+        setSymbol(r.symbol);
+        router.navigate("/trade");
+      }}
+    />
+  );
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom + SPACE.xl }]}>
       <View style={styles.hero}>
         {slip.live ? (
-          <LiveShareSlip slip={slip} entryKey={rideKey(r.rideId)} side={side} />
+          <LiveShareSlip slip={slip} entryKey={rideKey(r.rideId)} side={side} lead={live} />
         ) : (
-          <ShareSlip slip={slip} figure={rideFigure(r)} side={side} />
-        )}
-        {slip.live ? null : (
-          <ReplayVideo
-            chainId={network.chainId}
-            bookKey={rideKey(r.rideId)}
-            url={slip.url}
-            build={(episode) => rideFilm(r, episode, { practice: network.modeLabel === "Practice" })}
+          <ShareSlip
+            slip={slip}
+            figure={rideFigure(r)}
+            side={side}
+            lead={
+              <ReplayAction
+                chainId={network.chainId}
+                bookKey={rideKey(r.rideId)}
+                url={slip.url}
+                build={(episode) => rideFilm(r, episode, { practice: network.modeLabel === "Practice" })}
+              />
+            }
           />
         )}
-        {slip.live ? (
-          <Button
-            label="Watch it live"
-            variant="secondary"
-            onPress={() => {
-              fire("tick");
-              setSymbol(r.symbol);
-              router.navigate("/trade");
-            }}
-          />
-        ) : null}
       </View>
     </ScrollView>
   );

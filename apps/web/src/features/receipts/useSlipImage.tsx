@@ -1,17 +1,15 @@
 "use client";
 /**
- * Save or share the slip (D-331): both export the same image (`slip-png.ts`) — Save downloads it, Share hands it to
- * the system sheet with its link where the browser can share files (otherwise it downloads and copies the link). While
- * balances are hidden both wait, and privacy is checked again just before the image leaves (D-329). The market mark is
- * rendered off-screen here and serialised for the canvas.
+ * The receipt as an image (D-331, D-352): Share and Save export the same image (`slip-png.ts`) — Save downloads it,
+ * Share hands it to the system sheet with its link where the browser can share files (otherwise it downloads and
+ * copies the link). While balances are hidden both wait, and privacy is checked again just before the image leaves
+ * (D-329). The market mark is rendered off-screen (`node`) and serialised for the canvas.
  */
 import type { TradeSlip } from "@senryo/calls";
 import { marketId } from "@senryo/identity";
 import { QR } from "@senryo/tokens";
-import { Download, Share2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { EntityMark } from "@/components/identity/entity-mark";
-import { Button } from "@/components/ui/button";
 import { fire } from "@/lib/feedback";
 import { notify } from "@/lib/notify";
 import { privacyOn, usePrivacy } from "@/lib/shell/privacy";
@@ -23,7 +21,12 @@ const QR_MARGIN = 0;
 
 const BLOCKED = { title: "Balances are hidden", description: "Show balances to share or save this receipt." };
 
-export function SlipActions({ slip }: { slip: TradeSlip }) {
+export function useSlipImage(slip: TradeSlip): {
+  node: ReactNode;
+  busy: "save" | "share" | null;
+  share: () => void;
+  save: () => void;
+} {
   const marks = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState<"save" | "share" | null>(null);
   const hidden = usePrivacy();
@@ -70,7 +73,7 @@ export function SlipActions({ slip }: { slip: TradeSlip }) {
       if (kind === "share") {
         await navigator.clipboard?.writeText(slip.url).catch(() => undefined);
         notify({ title: "Receipt saved", description: "The link is copied too." });
-      }
+      } else notify({ title: "Downloaded" });
     } catch (error) {
       if ((error as Error).name !== "AbortError")
         notify({ title: "Couldn't make the image", description: (error as Error).message, tone: "warning" });
@@ -79,19 +82,10 @@ export function SlipActions({ slip }: { slip: TradeSlip }) {
     }
   };
 
-  return (
-    <div className="receipt-actions">
-      <div ref={marks} aria-hidden className="pointer-events-none fixed -left-[9999em] top-0">
-        <EntityMark id={marketId(slip.symbol)} size={MARK} decorative />
-      </div>
-      <Button size="xl" variant="secondary" onClick={() => void run("share")} disabled={busy !== null}>
-        <Share2 aria-hidden />
-        {busy === "share" ? "Drawing…" : "Share"}
-      </Button>
-      <Button size="xl" variant="secondary" onClick={() => void run("save")} disabled={busy !== null}>
-        <Download aria-hidden />
-        {busy === "save" ? "Drawing…" : "Save image"}
-      </Button>
+  const node = (
+    <div ref={marks} aria-hidden className="pointer-events-none fixed -left-[9999em] top-0">
+      <EntityMark id={marketId(slip.symbol)} size={MARK} decorative />
     </div>
   );
+  return { node, busy, share: () => void run("share"), save: () => void run("save") };
 }

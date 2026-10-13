@@ -838,11 +838,11 @@
       },
       {
         "name": "replay video",
-        "source": "Fomo's exported share video (the owner's clip, ~/Downloads/ekB2UthMBUbj7h5v.mp4; research 14 §1 measures it) in Senryo's look per Codex direction 17 — no 21st source covers a deterministic trade film; encoder @azzapp/react-native-skia-video 0.10.1",
+        "source": "Fomo's exported share video (the owner's clip; research 14 §1) in Senryo's look per Codex directions 17 and 18 — no 21st source covers a deterministic trade film; encoder @azzapp/react-native-skia-video 0.10.1",
         "evidence": [
-          "D-350; docs/research/replan-2026-10-10/14-playback-replay.md §1; 17-receipt-video-direction.md §2–4"
+          "D-350, D-352; docs/research/replan-2026-10-10/14-playback-replay.md §1; 17-receipt-video-direction.md; 18-replay-actions-direction.md"
         ],
-        "port": "1080 × 1350 card drawn by one Skia worklet (preview and export): dark brand ground and card, portrait, handle, date, mode, Kinpaku stamp; dot-grid plot, glow line, head pinned at x 594, price pill, zones / KO / cap, IN / OUT notches; panel with market, PnL 112, ROI, three stats; band with the lockup SVG, the code and a QR; MP4 30 fps H.264 + AAC from the cue track; Save to Photos / Share",
+        "port": "1080 × 1350 card drawn by one Skia worklet (preview and export): magenta ground and band, dark card, portrait, handle, date, Practice; dot-grid plot, smooth line over its fill, head at x 591, price pill, KO / Cap tags in the price column, OPEN / CLOSE discs and tooltips; flat centred panel with market, PnL 104, ROI, three stats; band with the lockup SVG, where to play and a QR. Replay sheet: preview sized to show the whole frame, transport row (Play/Pause, scrubber, clock), Sound in replay, status line, Share / Save action circles; the preview plays the MP4's own soundtrack. MP4 30 fps H.264 + AAC: Arcade bed, reaction cues, tense twin, duck, fade",
         "path": "src/features/replay/"
       }
     ],

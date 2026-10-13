@@ -4,7 +4,7 @@
  * finger. A disabled circle keeps its place and says why in ≤ 4 words under its label.
  */
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import type { SymbolIcon } from "~/components/kit/symbols";
 import { usePressScale } from "~/components/kit/usePressScale";
@@ -12,27 +12,43 @@ import { fire } from "~/feedback/fire";
 import { CONTROL_FONT_SCALE, DISABLED_OPACITY, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const CIRCLE = 56;
+/** A pressed brand disc dims instead of changing colour. */
+const PRESSED = 0.8;
 
 export function ActionCircle({
   icon: Icon,
+  glyph,
   label,
+  accessibilityLabel,
   onPress,
   reason,
   note,
+  primary = false,
+  busy = false,
 }: {
-  icon: SymbolIcon;
+  icon?: SymbolIcon;
+  /** Artwork in place of a symbol — a brand's own mark (X on the receipt's Post). */
+  glyph?: ReactNode;
   label: string;
+  /** When the label alone isn't the whole name ("Post on X"). */
+  accessibilityLabel?: string;
   onPress: () => void;
   /** Why it can't be used here ("Real money only"); the circle stays, inert. */
   reason?: string | undefined;
   /** A caveat that doesn't stop it ("Sell only"). */
   note?: string | undefined;
+  /** The row's one main action, on the brand colour (Replay on a receipt). */
+  primary?: boolean;
+  /** Working: inert, with a spinner in the disc. */
+  busy?: boolean;
 }) {
   const { color } = useTheme();
   const press = usePressScale();
-  const disabled = reason !== undefined;
+  const disabled = reason !== undefined || busy;
+  const fill = primary ? color.accent : color.raised2;
+  const ink = primary ? color.accentForeground : color.ink;
   return (
-    <View style={[styles.slot, disabled ? styles.dim : null]}>
+    <View style={[styles.slot, reason !== undefined ? styles.dim : null]}>
       <Animated.View style={press.style}>
         <Pressable
           onPressIn={press.onPressIn}
@@ -43,11 +59,21 @@ export function ActionCircle({
           }}
           disabled={disabled}
           accessibilityRole="button"
-          accessibilityLabel={disabled ? `${label}, ${reason}` : label}
-          accessibilityState={{ disabled }}
-          style={({ pressed }) => [styles.circle, { backgroundColor: pressed ? color.rowPressed : color.raised2 }]}
+          accessibilityLabel={reason ? `${accessibilityLabel ?? label}, ${reason}` : (accessibilityLabel ?? label)}
+          accessibilityState={{ disabled, busy }}
+          style={({ pressed }) => [
+            styles.circle,
+            {
+              backgroundColor: pressed && !primary ? color.rowPressed : fill,
+              opacity: pressed && primary ? PRESSED : 1,
+            },
+          ]}
         >
-          <Icon size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={color.ink} />
+          {busy ? (
+            <ActivityIndicator color={ink} />
+          ) : (
+            (glyph ?? (Icon ? <Icon size={SIZE.icon} strokeWidth={SIZE.iconStroke} color={ink} /> : null))
+          )}
         </Pressable>
       </Animated.View>
       <Text maxFontSizeMultiplier={CONTROL_FONT_SCALE} style={[TYPE.label, styles.center, { color: color.ink }]}>
