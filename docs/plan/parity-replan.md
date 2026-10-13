@@ -57,7 +57,7 @@
 | O18 | Activity ticker and per-call publishing | R8.3 | — |
 | O19 | Trader Edge report | R8.7 | — |
 | O20 | Takes and Rooms | R8.8 | — |
-| O21 | Search on the phone | R6.9 | — |
+| O21 | Search on the phone | R6.9 | built · accepted (Release simulator) · deployed (OTA `bdbdfe6b`) |
 
 ## Mitoshi, Sotto and UGLYCASH (03 §6)
 
@@ -65,7 +65,7 @@
 |---|---|---|---|
 | M1 | Neutral ground plus one brand colour (web on UGLYCASH) | R2.1–R2.4 | — |
 | M2 | Unknown and recovered outcomes as first-class states | R5.13 | — |
-| M3 | ⌘K: recents, open calls, all lanes, events, deposit, tx lookup, hints, people, phone | R6.1–R6.9 | — |
+| M3 | ⌘K: recents, open calls, all lanes, events, deposit, tx lookup, hints, people, phone | R6.1–R6.9 | built · accepted (production web, simulator) · deployed; people → R8.9 |
 | M4 | Live positions everywhere with one-tap cash-out | R5.3 | — |
 | M5 | The blocker names its fix (shortfall pre-filled) | R5.7 | — |
 | M6 | Display feed separate from settlement, with a "Signed" marker | R1.16, R1.17 | — |
@@ -75,7 +75,7 @@
 | M10 | Music with a mood (tense filter) | R5.16 | — |
 | M11 | Privacy reaches every surface | R5.14 | — |
 | M12 | Keyboard safety (no hotkey moves real money) | R5.9 (D-308) | — |
-| M13 | Discovery: Hot movers, replay | R5.19, R5.23, R6.3 | — |
+| M13 | Discovery: Hot movers, replay | R5.19, R5.23, R6.3 | Hot in search and the picker · built · deployed; replay v2 → R8.10 |
 | M14 | Editorial restraint (one quiet line per surface; proof behind ⓘ) | R2.9, R7.2, R7.8 | — |
 | M15 | Honest ticker and phone health indicator | R1.20 | — |
 
@@ -90,7 +90,7 @@
 | A5 | Duel, Events and Earn are dead ends with engineering copy | R2.9, R4.7 | — |
 | A6 | Logos missing where identity matters | R2.6–R2.8 | — |
 | A7 | The phone has 1 of the 4 games | R7.3, R7.5 | — |
-| A8 | ⌘K is a static list; no phone search | R6 | — |
+| A8 | ⌘K is a static list; no phone search | R6 | fixed · deployed (D-336…D-342) |
 | A9 | Public copy contradicts the product | R2.12 | — |
 | A10 | Events look borrowed (ESPN hot-links, explanatory) | R2.7, R7.8 | — |
 | A11 | Three visual languages | R2.4 | — |

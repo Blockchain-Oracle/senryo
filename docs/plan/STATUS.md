@@ -119,7 +119,7 @@ leftovers.
   Open: a real account in the Duel match and the signed-in Earn hero (the owner's phone). Handoff in
   [replan-p-phone.md](replan-p-phone.md).
 
-R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.md).
+R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.md) (shipped 13 Oct), then R8.
 
 **R5 shipped (12–13 Oct)** ([replan-r5-live-loop.md](replan-r5-live-loop.md)):
 - **A — the live book (live on the web, 12 Oct 20:20 UTC):** every open call and ride valued at up to 5 Hz the
@@ -160,7 +160,21 @@ R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.m
 - **Incident (≈ 03:22–03:40 local):** another project's Next build (cwf) swapped the shared box to a standstill
   (load 347); every app on it, Senryo included, stopped answering until it finished. Deploys now go one at a time.
 - **R5 Handoff written** (open items: the terminal's ~1 s switch, a guest's late ride result on the phone, Home's
-  JS load). **Next:** R6 ⌘K and phone search.
+  JS load).
+
+**R6 shipped (13 Oct)** ([replan-r6-search.md](replan-r6-search.md) → Handoff): one search on both apps.
+- **Shared:** `@senryo/search` (MiniSearch ranking, D-336; the device's visits for frecency and Recents, D-337; pasted
+  ids), `@senryo/calls` `useSearch` / `marketPageRows` / `useMarketLanes`, `HELP` (D-341); api `GET /v1/lookup` (D-338).
+- **Web ⌘K** (Codex direction 13, D-339): a top hit then groups by best hit; Recent · your positions · Hot · Go to;
+  market rows with all four lanes, a market page, a preview pane, ⌘↵ alternates, a footer legend, the platform's
+  modifier, a trigger on the terminal; Everything's search opens it; a Help drawer.
+- **Phone:** Home's launcher (the dock's material, tucked while reading down, live hints — the owner's review, D-342),
+  a Search row atop More, the full page and market pages; the terminal opens ready from a link (D-340).
+- **Accepted:** production web as a guest (empty view with a live ride, "bitcon", "deposit", a pasted hash → its
+  receipt, a folio, an unknown hash → explorer, a position → Cash out ringed and ride 20 still open); Release simulator
+  passes. **Live:** api `sha-08f35ad`, web `sha-08f35ad` (`sha-c9680b1` queued), phone OTA `bdbdfe6b`.
+- **Also from the owner (13 Oct):** Fomo's playback clip → research 14 → R8.10–R8.12 (Replay v2, MP4 export, Recap).
+- **Next:** R8 social (`replan-r8-social.md`).
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides
