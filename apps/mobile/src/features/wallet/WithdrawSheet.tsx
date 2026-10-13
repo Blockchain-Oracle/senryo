@@ -17,6 +17,7 @@ import { Sheet } from "~/components/sheet/Sheet";
 import { SheetHeading } from "~/components/sheet/SheetRoute";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
+import { notify } from "~/lib/notify";
 import { SIZE, SPACE, TYPE, useTheme } from "~/theme";
 
 const DOLLAR_DECIMALS = 6;
@@ -99,7 +100,12 @@ export function WithdrawSheet({ onClose }: { onClose: () => void }) {
                 variant="ghost"
                 size="sm"
                 block={false}
-                onPress={async () => setTo((await Clipboard.getStringAsync()).trim())}
+                onPress={async () => {
+                  // An empty clipboard or a refused read says so (D6: no silent taps).
+                  const text = (await Clipboard.getStringAsync().catch(() => "")).trim();
+                  if (text) setTo(text);
+                  else notify({ title: "Nothing to paste", description: "Copy an address first." });
+                }}
               />
             </View>
             <View style={[styles.field, { backgroundColor: color.raised2 }]}>

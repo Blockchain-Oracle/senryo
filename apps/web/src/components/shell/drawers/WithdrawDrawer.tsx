@@ -19,6 +19,7 @@ import { SlideOver } from "@/components/ui/drawer";
 import { useAccount } from "@/lib/account/provider";
 import { fire } from "@/lib/feedback";
 import { activeNetwork } from "@/lib/network";
+import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 import type { DrawerProps } from "./types";
 
@@ -97,12 +98,12 @@ export function WithdrawDrawer({ open, onOpenChange }: DrawerProps) {
                 type="button"
                 variant="secondary"
                 className="h-12"
-                onClick={() =>
-                  void navigator.clipboard
-                    ?.readText()
-                    .then((t) => setTo(t.trim()))
-                    .catch(() => undefined)
-                }
+                onClick={async () => {
+                  // An empty clipboard or a refused read says so (D6, the phone's own).
+                  const text = ((await navigator.clipboard?.readText().catch(() => "")) ?? "").trim();
+                  if (text) setTo(text);
+                  else notify({ title: "Nothing to paste", description: "Copy an address first, or allow paste." });
+                }}
               >
                 Paste
               </Button>

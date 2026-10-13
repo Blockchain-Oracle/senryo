@@ -16,6 +16,7 @@ import { InfoTip } from "~/features/setup/InfoTip";
 import { fire } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { ROUTES } from "~/lib/constants/routes";
+import { notify } from "~/lib/notify";
 import { SPACE } from "~/theme";
 
 const WHY = "Your passkey signs you back in to the same account. Nothing is deleted.";
@@ -48,9 +49,10 @@ function Body() {
       await account.signOut();
       fire("confirm");
       close(() => router.replace(ROUTES.welcome));
-    } catch {
+    } catch (error) {
       setBusy(false);
       fire("fail");
+      notify({ title: "Couldn't sign out", description: (error as Error).message, tone: "warning" });
     }
   };
   return (

@@ -52,6 +52,7 @@ export function useTradePanel(i: {
     const floor = q.trailFloor.current;
     if (!position || floor === null) return;
     const e = position.exit;
+    fire("press");
     try {
       const r = await exits.set(position.ticketId, {
         takeProfitE6: e?.takeProfitE6 ?? 0,

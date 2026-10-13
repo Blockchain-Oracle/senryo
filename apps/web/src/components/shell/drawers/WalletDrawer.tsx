@@ -61,7 +61,9 @@ export function WalletDrawer({ open, onOpenChange }: DrawerProps) {
             <Button
               size="xl"
               disabled={grant.isPending || !session}
-              onClick={() =>
+              onClick={() => {
+                // The press answers before the grant comes back (D3).
+                fire("press");
                 grant.mutate(undefined, {
                   onSuccess: (r) => {
                     if (r.state === "granted") {
@@ -74,8 +76,8 @@ export function WalletDrawer({ open, onOpenChange }: DrawerProps) {
                   },
                   onError: (e) =>
                     notify({ title: "Couldn't add test dollars", description: e.message, tone: "warning" }),
-                })
-              }
+                });
+              }}
             >
               <Coins aria-hidden />
               {grant.isPending ? "Adding…" : "Get test dollars"}

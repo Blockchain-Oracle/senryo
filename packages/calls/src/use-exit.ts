@@ -11,7 +11,7 @@ import { type ExitPrices, hasExit } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { marketKeys, useCatalog, useMarketAccount, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPTS } from "./constants.ts";
 import { type BidBounds, bidBoundsOf } from "./exits.ts";
@@ -30,6 +30,8 @@ export function useExitActions({ client, hint }: Caller, cadenceSec: CadenceSec)
   const catalog = useCatalog();
   const account = useMarketAccount(owner);
   const [pending, setPending] = useState(false);
+  // Pending from the tap, before the signing code loads; one set at a time (D3).
+  const inflight = useRef(false);
   const ready = Boolean(client && owner && "value" in catalog && "value" in account);
   const bounds: BidBounds | null = useMemo(
     () => ("value" in catalog ? bidBoundsOf(catalog.value.terms, cadenceSec) : null),
@@ -38,18 +40,22 @@ export function useExitActions({ client, hint }: Caller, cadenceSec: CadenceSec)
 
   const set = useCallback(
     async (ticketId: bigint, prices: ExitPrices): Promise<ExitResult> => {
-      if (!client || !owner || !("value" in catalog) || !("value" in account)) throw new Error("Not ready yet");
-      const [{ signExit }, { appDelegates }] = await signing();
-      const deps: SignDeps = {
-        chainId: env.chainId,
-        client,
-        delegates: appDelegates(),
-        reserve: catalog.value.contracts.reserve,
-        account: account.value,
-        nowSec: live.clock.nowSec(),
-      };
+      if (!client || !owner || !("value" in catalog) || !("value" in account)) {
+        throw new Error("Still loading your account · try again in a moment");
+      }
+      if (inflight.current) return { kind: "cancelled" };
+      inflight.current = true;
       setPending(true);
       try {
+        const [{ signExit }, { appDelegates }] = await signing();
+        const deps: SignDeps = {
+          chainId: env.chainId,
+          client,
+          delegates: appDelegates(),
+          reserve: catalog.value.contracts.reserve,
+          account: account.value,
+          nowSec: live.clock.nowSec(),
+        };
         const prompt = hasExit(prices) ? PROMPTS.exit : PROMPTS.clearExit;
         const signed = await signExit(deps, { owner, ...callExitLevels(ticketId, prices) }, prompt);
         const r = await env.api.call(setExitRoute, {
@@ -62,6 +68,7 @@ export function useExitActions({ client, hint }: Caller, cadenceSec: CadenceSec)
         if (isSilent(classifyAuthError(error))) return { kind: "cancelled" };
         throw error;
       } finally {
+        inflight.current = false;
         setPending(false);
       }
     },

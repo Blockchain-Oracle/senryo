@@ -22,6 +22,8 @@ import type { Sheet } from "./useTradePanel";
 const HUNDRED = 100n;
 
 async function settle(run: () => Promise<{ kind: string }>, set: boolean, close: () => void) {
+  // The press answers before the signing step (D3).
+  fire("press");
   try {
     const r = await run();
     if (r.kind === "cancelled") return;

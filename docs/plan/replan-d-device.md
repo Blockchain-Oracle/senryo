@@ -28,7 +28,8 @@ account and on production web.
 - [x] One history on Calls (`88dfc0ec`) (both apps): calls, rides, settled parlays, event calls, duel matches, Lucky draws (as
       Lucky, not a bare call), newest first; the outcome filter keeps working; each row names its kind and opens its
       receipt or detail. Sources exist (`useEventCalls`, `useParlays`, `useDuels`, `useLuckyDraws`); the merge is one
-      shared model in `@senryo/calls` with a renderer per app.
+      shared model in `@senryo/calls` with a renderer per app. Open event calls and duels under way show with what's
+      open the moment they're placed (`04e1eb21` — the owner's "once I place an event, it doesn't show").
 
 ## D2 · Your event calls first
 - [x] Events (both apps): your open calls above the board, then the board; settled calls under "Settled"; a card
@@ -52,18 +53,35 @@ account and on production web.
 
 ## D6 · Edit profile, and no silent failures
 - [x] (says a save wasn't confirmed, records why — `d910a6fa`) Edit profile never does nothing: unlock in place, say why a save didn't happen, keep the session.
+- [x] Profile → Unlock answered no taps (`8b11c35d`): four route sheets (session, account-required, receive, terms)
+      drew their panel under their own native modal. They render in place; the gate's `route-sheets-in-place` keeps it
+      so, and forbids a bare `router.back()` — a cold-opened sheet left a blank stack on close (`2fac3e21`,
+      `leaveSheetRoute`).
 - [ ] (the terminal's guard, cash-out, ride close, trail, parlay / event / duel done) The ~12 silent failures from the sweep say what happened (parlay / event / duel early returns and unhandled
       signing errors, the terminal's not-ready guard, sign-out, delete data, unlock, paste, arcade seed, Lucky link).
 
-## Open (13 Oct, 20:00)
-- D3: one-tap on/off, exit set, call trail, Earn take back, web test dollars — feedback still after an await.
+## D7 · Fixes reach the phone
+- [x] The owner's iPhone sat on D0 for hours (EAS insights: later groups 0 launches): expo-updates checks only at launch
+      and applies at the next. `UpdateHost` (`2fac3e21`, OTA `46c07976`) checks on every return, offers Restart once a
+      version is in, applies on its own after 30 min away. Local builds carry `expo-channel-name` (app config) — the
+      stale local `ios/` (runtime 0.4.0, no channel) was refused on every check; re-prebuild before any local build
+      ships to the owner.
+
+## Open (13 Oct, 20:40)
+- D3: done — one-tap on/off, exit set (call and ride), call trail, Earn take back, web test dollars answer at the tap
+  (busy before the signing import, one at a time, a press cue; take back says it was taken back).
 - D4 web: Try again on events, event detail, arcade, proof pages, Home's balance, Duel board, StatsCard; the ride
   receipt's wrong "isn't here" on a load failure.
-- D6: sign-out, delete data, unlock, paste, arcade seed, Lucky's link, the web's "unavailable" grant wording.
+- D6: sign-out, delete data, paste, arcade seed now say what happened (both apps where both have it); unlock was the
+  route-sheet freeze. Open: Lucky's link (not found on the phone), the web's "unavailable" grant wording.
 - D2: an event card shows the call you hold on it.
-- Web: React #418 (a hydration mismatch) on every app page in production — likely the shell reading storage on the
-  first render; find it with the dev build's diff.
-- Verify on the owner's iPhone (paired): the mode switch, history with events / parlays / duels, Close, replay sound.
+- Web: React #418 (HTML mismatch) — intermittent on production Events; not the stored network (fresh tabs clean with
+  either), not in dev. Likely a Suspense subtree hydrating after the query cache filled. React recovers; low impact.
+- Verify on the owner's iPhone (paired; devicectl can't launch while it's locked — over Wi-Fi it times out): Unlock,
+  history with events / parlays / duels and the open ones, Close, replay sound. Needs the owner's two restarts once to
+  get `UpdateHost`; after that a toast offers Restart.
+- Arcade runs (Line Rider, Candle Hop) aren't in the money history (no stake); if the owner means those by "games",
+  a "your runs" list belongs on the arcade screen.
 
 ## Then
 P3 → P5 (stage P), then Q2, Q4–Q6, R8.

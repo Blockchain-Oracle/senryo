@@ -80,6 +80,9 @@ export function ArcadeScreen({
     async (ink: ArcadeInk): Promise<ArcadeRun> => {
       let issued: Awaited<ReturnType<typeof desk.seed.mutateAsync>> | null = null;
       if (signedIn) issued = await desk.seed.mutateAsync().catch(() => null);
+      // Signed in but no seed: the run plays, unranked, and says so (D6, the phone's own).
+      if (signedIn && issued === null)
+        notify({ title: "This run won't rank", description: "The board can't be reached." });
       const seed = issued?.seed ?? seedFromBytes(crypto.getRandomValues(new Uint8Array(SEED_BYTES)));
       const ranked = issued !== null;
       const tape = issued?.tape ?? (await desk.tape.mutateAsync());

@@ -31,6 +31,7 @@ import { playCue } from "~/feedback/cues";
 import { fire, music, soundsEnabled } from "~/feedback/fire";
 import { useAccount } from "~/lib/account/provider";
 import { accountRequiredRoute } from "~/lib/constants/routes";
+import { notify } from "~/lib/notify";
 import { type Palette, RADIUS, SIZE, SPACE, TYPE, useTheme } from "~/theme";
 import { ArcadeStage } from "./ArcadeStage";
 import { localSeed, useAttract } from "./useAttract";
@@ -120,6 +121,9 @@ export function ArcadeScreen({
 
   const prepare = useCallback(async () => {
     const issued = signedIn ? await desk.seed.mutateAsync().catch(() => null) : null;
+    // Signed in but no seed: the run plays, unranked, and says so (D6: never a silent downgrade).
+    if (signedIn && issued === null)
+      notify({ title: "This run won't rank", description: "The board can't be reached." });
     const tape = issued?.tape ?? (await desk.tape.mutateAsync());
     return make({ seed: issued?.seed ?? localSeed(), ranked: issued !== null, tape, feel: FEEL });
   }, [desk.seed, desk.tape, make, signedIn]);

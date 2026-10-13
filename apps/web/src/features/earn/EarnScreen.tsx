@@ -107,9 +107,16 @@ export function EarnScreen() {
     }
   };
   const takeBack = (supply: boolean) => async () => {
+    // The press answers at once and the result says so (D3, the phone's own).
+    fire("press");
     try {
-      await flow.cancel(supply);
+      const r = await flow.cancel(supply);
+      if (r.state === "sent") {
+        fire("confirm");
+        notify({ title: supply ? "Supply taken back" : "Withdrawal taken back" });
+      }
     } catch (error) {
+      fire("fail");
       notify({ title: "Couldn't take it back", description: (error as Error).message, tone: "warning" });
     }
   };

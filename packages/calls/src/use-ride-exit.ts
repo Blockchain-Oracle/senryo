@@ -10,7 +10,7 @@ import type { RideExitLevels } from "@senryo/core";
 import { useLive } from "@senryo/live/react";
 import { rideKeys, useCatalog, useMarketAccount, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { PROMPT_RIDE_EXIT } from "./constants.ts";
 import type { SignDeps } from "./sign.ts";
@@ -26,22 +26,28 @@ export function useRideExit({ client, hint }: Caller) {
   const catalog = useCatalog();
   const account = useMarketAccount(owner);
   const [pending, setPending] = useState(false);
+  // Pending from the tap, before the signing code loads; one set at a time (D3).
+  const inflight = useRef(false);
   const ready = Boolean(client && owner && "value" in catalog && "value" in account);
 
   const set = useCallback(
     async (rideId: bigint, levels: RideExitLevels): Promise<ExitResult> => {
-      if (!client || !owner || !("value" in catalog) || !("value" in account)) throw new Error("Not ready yet");
-      const [{ signExit }, { appDelegates }] = await signing();
-      const deps: SignDeps = {
-        chainId: env.chainId,
-        client,
-        delegates: appDelegates(),
-        reserve: catalog.value.contracts.reserve,
-        account: account.value,
-        nowSec: live.clock.nowSec(),
-      };
+      if (!client || !owner || !("value" in catalog) || !("value" in account)) {
+        throw new Error("Still loading your account · try again in a moment");
+      }
+      if (inflight.current) return { kind: "cancelled" };
+      inflight.current = true;
       setPending(true);
       try {
+        const [{ signExit }, { appDelegates }] = await signing();
+        const deps: SignDeps = {
+          chainId: env.chainId,
+          client,
+          delegates: appDelegates(),
+          reserve: catalog.value.contracts.reserve,
+          account: account.value,
+          nowSec: live.clock.nowSec(),
+        };
         const signed = await signExit(
           deps,
           {
@@ -65,6 +71,7 @@ export function useRideExit({ client, hint }: Caller) {
         if (isSilent(classifyAuthError(error))) return { kind: "cancelled" };
         throw error;
       } finally {
+        inflight.current = false;
         setPending(false);
       }
     },

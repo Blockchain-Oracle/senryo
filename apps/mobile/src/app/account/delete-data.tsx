@@ -16,6 +16,7 @@ import { deleteRemoteData } from "~/lib/account/remote";
 import { requestStepUp } from "~/lib/account/step-up";
 import { UNLOCK_WORD } from "~/lib/constants/auth";
 import { ROUTES } from "~/lib/constants/routes";
+import { notify } from "~/lib/notify";
 import { SPACE, TYPE, useTheme } from "~/theme";
 
 type Phase =
@@ -49,7 +50,10 @@ export default function DeleteDataScreen() {
   };
   const runServer = async () => {
     const client = account.client;
-    if (!client) return;
+    if (!client) {
+      notify({ title: "Still loading your account", description: "Try again in a moment.", tone: "warning" });
+      return;
+    }
     setPhase({ kind: "deleting" });
     try {
       const outcome = await deleteRemoteData(client, account.settings.faceId);

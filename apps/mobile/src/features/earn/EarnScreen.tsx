@@ -126,9 +126,16 @@ export function EarnScreen() {
     }
   };
   const takeBack = async (supply: boolean) => {
+    // The press answers at once and the result says so (D3: a tap that answers only after Face ID reads as dead).
+    fire("press");
     try {
-      await flow.cancel(supply);
+      const r = await flow.cancel(supply);
+      if (r.state === "sent") {
+        fire("confirm");
+        notify({ title: supply ? "Supply taken back" : "Withdrawal taken back" });
+      }
     } catch (error) {
+      fire("fail", { sound: "error" });
       notify({ title: "Couldn't take it back", description: (error as Error).message, tone: "warning" });
     }
   };

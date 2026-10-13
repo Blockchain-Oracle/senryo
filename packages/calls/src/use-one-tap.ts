@@ -6,7 +6,7 @@ import { classifyAuthError, isSilent } from "@senryo/account";
 import { useLive, useServerSeconds } from "@senryo/live/react";
 import { useCatalog, useGrantSession, useMarketAccount, useQueryEnv, useRevokeSession } from "@senryo/query";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { ONE_TAP_DEFAULTS, SECONDS_PER_MINUTE, SESSION_MARGIN_SEC, USD } from "./constants.ts";
 import type { OneTapTerms } from "./one-tap.ts";
@@ -45,6 +45,10 @@ export function useOneTap({ client, hint }: Caller) {
   const account = useMarketAccount(owner);
   const grant = useGrantSession(owner);
   const revoke = useRevokeSession(owner);
+  // Busy from the tap itself, not from the request after the import and the Face ID (D3: a tap answers at once), and
+  // one change at a time.
+  const [working, setWorking] = useState(false);
+  const inflight = useRef(false);
   const delegate = useQuery({
     queryKey: ["one-tap", "delegate", env.chainId, owner],
     queryFn: async () => (await (await delegates()).get(owner ?? "0x", env.chainId))?.address.toLowerCase() ?? null,
@@ -65,7 +69,9 @@ export function useOneTap({ client, hint }: Caller) {
       : { on: false };
 
   const deps = useCallback(async () => {
-    if (!client || !owner || !("value" in catalog) || !("value" in account)) throw new Error("Not ready");
+    if (!client || !owner || !("value" in catalog) || !("value" in account)) {
+      throw new Error("Still loading your account · try again in a moment");
+    }
     return {
       chainId: env.chainId,
       client,
@@ -79,9 +85,12 @@ export function useOneTap({ client, hint }: Caller) {
 
   const turnOn = useCallback(
     async (terms?: OneTapTerms): Promise<"on" | "cancelled"> => {
-      const d = await deps();
-      if (!("value" in catalog)) throw new Error("Not ready");
+      if (inflight.current) return "cancelled";
+      inflight.current = true;
+      setWorking(true);
       try {
+        const d = await deps();
+        if (!("value" in catalog)) throw new Error("Still loading your account · try again in a moment");
         const { signOneTap } = await signing();
         const signed = await signOneTap(d, terms ?? defaultOneTapTerms(catalog.value.terms.session));
         await grant.mutateAsync({ grant: signed.grant, signature: signed.signature, permit: signed.permit });
@@ -90,14 +99,20 @@ export function useOneTap({ client, hint }: Caller) {
       } catch (error) {
         if (isSilent(classifyAuthError(error))) return "cancelled";
         throw error;
+      } finally {
+        inflight.current = false;
+        setWorking(false);
       }
     },
     [deps, catalog, grant, delegate],
   );
 
   const turnOff = useCallback(async (): Promise<"off" | "cancelled"> => {
-    const d = await deps();
+    if (inflight.current) return "cancelled";
+    inflight.current = true;
+    setWorking(true);
     try {
+      const d = await deps();
       const { signRevoke } = await signing();
       const signed = await signRevoke(d);
       await revoke.mutateAsync({ owner: d.owner, ...signed });
@@ -107,8 +122,11 @@ export function useOneTap({ client, hint }: Caller) {
     } catch (error) {
       if (isSilent(classifyAuthError(error))) return "cancelled";
       throw error;
+    } finally {
+      inflight.current = false;
+      setWorking(false);
     }
   }, [deps, revoke, delegate]);
 
-  return { state, turnOn, turnOff, busy: grant.isPending || revoke.isPending };
+  return { state, turnOn, turnOff, busy: working || grant.isPending || revoke.isPending };
 }

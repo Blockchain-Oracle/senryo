@@ -19,7 +19,7 @@ import {
 import { formatUnits, parseUnits } from "@senryo/core";
 import { earnKeys, useEarn, useQueryEnv } from "@senryo/query";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Caller } from "./caller.ts";
 import { PERMIT_TTL_SEC } from "./constants.ts";
 
@@ -71,10 +71,14 @@ export function useEarnFlow({ client, hint }: Caller, range: EarnRange = "1d") {
   const owner = hint?.address;
   const earn = useEarn(owner, range);
   const [pending, setPending] = useState<EarnKind | null>(null);
+  // One request at a time: a second tap in the same frame (before `pending` renders) is dropped (D3).
+  const inflight = useRef(false);
 
   const request = useCallback(
     async (kind: EarnKind, amount: bigint, prompt: string): Promise<EarnResult> => {
       if (!client || !owner) throw new Error("Sign in to use Earn");
+      if (inflight.current) return { state: "cancelled" };
+      inflight.current = true;
       const account = "value" in earn ? earn.value.account : null;
       const now = Math.floor(Date.now() / MS_PER_SECOND);
       const r: EarnRequest = { kind, owner, amount, deadline: BigInt(now + REQUEST_TTL_SEC), nonce: freshNonce() };
@@ -108,6 +112,7 @@ export function useEarnFlow({ client, hint }: Caller, range: EarnRange = "1d") {
         if (isSilent(classifyAuthError(error))) return { state: "cancelled" };
         throw error;
       } finally {
+        inflight.current = false;
         setPending(null);
       }
     },
