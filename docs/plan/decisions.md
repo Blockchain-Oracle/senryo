@@ -694,3 +694,18 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
 - **D-351** 2026-10-13 · **A receipt carries only what a reader needs.** "Signed with", "Pays if right" and "Came back"
   leave every receipt and slip (the owner); the figure, the market, one stamp and at most three facts stay, with entry,
   exit and the line drawn on the replay. Overrides Codex 16 §5's fact budgets where they list those rows.
+- **D-352** 2026-10-13 · **Replay, second pass (the owner's review of the first MP4 and the receipt's actions;
+  Codex direction 18).** It is called **Replay** everywhere, never "Video". The frame keeps Fomo's card with the brand
+  magenta as the 12 px ground and the band. Nothing in it may meet another string at any t:
+  - no header stamp or badge (the owner disliked "CLOSED");
+  - the line stops at the authoritative exit;
+  - KO and Cap are short tags in the price column;
+  - OPEN / CLOSE tooltips carry the booked amount;
+  - a flat, centred panel.
+
+  The replay sounds like the live terminal's price sounds and nothing else: the reaction engine's profit-ladder
+  steps, adverse, surge and slump, then close and the verdict. There is no music; the owner: "not the sound as in
+  music", which removed the Arcade bed that direction 18 §D had added.
+  The receipt's PnL·ROI·Both control and its three full-width buttons are replaced by one row of action circles:
+  Replay ▶, Post (X's own mark), Share, Save. Supersedes D-350's "outcome and IN / OUT captions" and direction 17's
+  action stack.

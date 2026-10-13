@@ -63,17 +63,27 @@ say". Memory `feedback-restraint-not-text-dumps`.
   - [ ] one composition: seal, market, folio; one figure; the replay stage (200 high) with entry, exit, the line /
     band, KO and Cap as pins; one stamp; at most three facts — no "Signed with", "Pays if right" or "Came back"
     (D-351); a 40-high pin strip for the timeline and proof; one "Proof ›"; Share / Save / Video outside the paper;
-  - [ ] **the replay video (D-350)** — direction: research 17 (Codex). Built so far: the film engine (`film.ts`,
-    `film-frame.ts`), the inputs from a receipt (`film-input.ts`), the shared frame and layout (`film-scene.ts`); the
-    phone's Skia renderer, preview, MP4 export (skia-video) and Video sheet (`6ddde6bd`); the web's canvas renderer,
-    preview, mediabunny export and Video modal. Open: acceptance in a new binary, 1-minute back-fill and rebuilt replays,
-    `r=` referral capture for the QR (R8.4). Spec: one film for both apps after Fomo's card in Senryo's look — crest, handle,
-    outcome, date; market mark and name; the scrolling chart with the live price pill and IN / OUT captions; the PnL
-    rolling large with ROI and three stats; the brand band with seal, wordmark, "Play with code @handle" and a QR;
-    1080 × 1350, ≤ 15 s, a held last frame; sound from the cue map; plays in the receipt (open on the last frame,
-    Play, scrub; Reduce Motion opens still); **Save video** on both apps (web mediabunny; phone a Skia video encoder in a
-    new binary, EAS → TestFlight); 1-minute back-fill with "Partial recording"; rebuilt replays for trades this device
-    didn't record, labelled;
+  - [ ] **the replay (D-350, D-352)** — directions: research 17, then 18 after the owner's second pass (the first MP4
+    had overlapping labels, a "CLOSED" stamp, the line running past the exit, a squashed mark and an oversized
+    lockup, and sounded only at open and close). Built:
+    - the film engine (`film.ts`, `film-frame.ts`): the path cut at the authoritative exit, the entry kept in range,
+      at most three price labels, OPEN / CLOSE tooltips in Fomo's place;
+    - the soundtrack (`film-sound.ts`): the live terminal's price sounds only — the reaction engine over the path
+      (ladder steps, adverse, surge / slump) in 160 ms buckets, then close and the verdict — on both exporters; no
+      music (the owner removed the bed);
+    - the frame v2 (`film-scene.ts`, both `drawFilm.ts`): magenta ground and band, no header stamp, KO / Cap tags in
+      the price column with claimed text boxes, a flat centred panel, the lockup scaled, the mark and QR snapshotted
+      at their own squares (the QR without its reveal);
+    - the Replay sheet (phone) and modal (web): the whole frame in view, a transport row, "Sound in replay", one
+      status line, Share / Save circles, the preview playing the MP4's own soundtrack;
+    - the receipt's actions: one row of circles, Replay ▶ (or Live) · Post (X's own mark, fetched through
+      `packages/identity`) · Share · Save; the PnL · ROI · Both chooser and the stacked buttons are deleted.
+
+    Open:
+    - acceptance in the new binary, then EAS → TestFlight;
+    - 1-minute back-fill and rebuilt replays;
+    - `r=` referral capture, so the band can carry "Play with code @handle" (R8.4); until then it reads "Play at
+      senryo.xyz".
   - [ ] no full slips inline in lists; the record as two figures and an outcome strip; history rows with one verdict
     word and ▶ when a replay exists.
 - [ ] Q4 Events and Duel: one phase clock, the split bar as the figure, the committee as a quorum, a timeline strip,
