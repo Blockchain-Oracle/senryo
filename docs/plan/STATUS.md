@@ -12,6 +12,7 @@ replaces the open S8 steps (S8.1–S8.3, S8.8, S8.9) with stages, in order:
 - R7 [games, Duel and Events as games](replan-r7-games.md) (rewritten 12 Oct, moved ahead of R5)
 - R5 [the live loop](replan-r5-live-loop.md)
 - R6 [⌘K and phone search](replan-r6-search.md)
+- Q [quiet and alive](replan-q-quiet.md) (added 13 Oct after the owner's review; D-343…D-348)
 - R8 [social](replan-r8-social.md)
 - R9 [acceptance](replan-r9-acceptance.md), then S8b → S9 → S10 from the pivot plan
 
@@ -174,7 +175,10 @@ R5 — the live loop (below), then R6 [⌘K and phone search](replan-r6-search.m
   receipt, a folio, an unknown hash → explorer, a position → Cash out ringed and ride 20 still open); Release simulator
   passes. **Live:** api `sha-08f35ad`, web `sha-08f35ad` (`sha-c9680b1` queued), phone OTA `bdbdfe6b`.
 - **Also from the owner (13 Oct):** Fomo's playback clip → research 14 → R8.10–R8.12 (Replay v2, MP4 export, Recap).
-- **Next:** R8 social (`replan-r8-social.md`).
+- **Also from the owner (13 Oct):** the Calls history was missing finished rides (fixed, `14a5b95`, OTA `a5227670`).
+- **Next: stage Q — quiet and alive** ([replan-q-quiet.md](replan-q-quiet.md); approved 13 Oct; D-343…D-348): the
+  owner's review of text density across both apps — leverage opt-in, the live position row, risk and payoff drawn,
+  receipts replay-led, one clock per deadline, the gate enforcing it. Then R8 social.
 
 **R3 built (11 Oct)** ([replan-r3-contracts.md](replan-r3-contracts.md) → Handoff): contracts v3 — signed σ marks
 and a calibrated fat-tailed table in a swappable data contract, the spread curve by lane, `listSeries`; rides

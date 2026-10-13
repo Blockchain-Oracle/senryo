@@ -657,3 +657,25 @@ The plan (`00-plan.md`) changes **only** through entries here. Format: `- **D-##
   - At rest its words walk through what search can do right now, every 3.2 s: today's biggest move ("NEAR −10.2%
     today"), your open position, "btc 5m", "deposit", pasting a receipt; the base line alone under Reduce Motion or
     while tucked. Codex's white-in-both-themes capsule (direction 13) is superseded.
+- **D-343** 2026-10-13 · **The open-position row is a live object (Codex direction 15; the owner's review).**
+  - At rest: the real mark inside a ring that drains with the trade's life, "BTC ↑ · 10×" (or "· 5m"), "3:42:18 left"
+    ticking on the server's clock, the trade's own recorded PnL trace, rolling $ PnL over ROI. The expand-to-facts grid
+    (Direction, Entry, Now, KO, Cap, Margin, Fees) is deleted: levels live on the terminal's chart, the rest in
+    "Position details".
+  - A tap opens the terminal on that exact position with Close ringed (D-340); on the phone a swipe left reveals
+    "Close $4.97", closing only on its own tap; on the web a compact "Close $4.97" is always visible.
+- **D-344** 2026-10-13 · **Leverage is opt-in.** A ride opens at 1× ("No leverage"); a Leverage switch, off by default,
+  reveals one multiple and one marked slider (2× … the market's cap). The device remembers an explicit choice; Off is
+  one tap. The contracts (`MIN_LEVERAGE_BPS = 10_000`), the relay (1× to the cap) and the quote maths already allow it.
+- **D-345** 2026-10-13 · **Shared words return values.** The functions in `packages/calls/src` that built finished
+  sentences (`ride-quote`, `quote`, `ride-tick`, `stack-words`, `exits`, `receipt`, `trade-slip`, `event-words`,
+  `earn-words`, `duel`, `markets`, `status-words`, `parlay`) return prices E8, money as bigint, distances in bps and
+  times in unix seconds; both apps format at the edge and can draw. Retired helpers are banned by the gate.
+- **D-346** 2026-10-13 · **The gate enforces restraint:** " · " chains of three segments at most; one `FactList` per
+  app with ad-hoc grids banned and four facts at rest; no explainer props in settings and exit components; retired
+  sentence helpers unimportable; a dev inspector for duplicate facts and clocks.
+- **D-347** 2026-10-13 · **Duel's pot is the combined pot everywhere:** a $10 tier reads "$20 pot" on its tile and the
+  stage, "$10 each" in the review, "Join $40" (three $10 calls and the contribution) — the tile, stage and note had
+  disagreed.
+- **D-348** 2026-10-13 · **One clock per deadline:** a market list shows one round clock, not one per row; an event,
+  a duel and a parlay round one each; rings use `CountdownRing`'s geometry.
