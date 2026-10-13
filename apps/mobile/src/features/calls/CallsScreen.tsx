@@ -13,7 +13,7 @@ import {
   useCallRows,
   useLiveBook,
 } from "@senryo/calls/react";
-import { lane, sideName, usd } from "@senryo/core";
+import { usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Href, router } from "expo-router";
@@ -39,7 +39,7 @@ function CallRowView({ row }: { row: Row }) {
   const { color } = useTheme();
   const [hidden] = useHideBalances();
   const tint = row.tone === "up" ? color.up : row.tone === "down" ? color.down : color.inkMuted;
-  const title = `${row.symbol} ${sideName(row.band)}`;
+  const title = row.title;
   const result = masked(row.result, hidden);
   return (
     <Pressable
@@ -48,14 +48,14 @@ function CallRowView({ row }: { row: Row }) {
       accessibilityLabel={`${title}, ${row.status}, ${result}. Open the receipt`}
       onPress={() => {
         fire("tick");
-        router.push(`/calls/${row.ticketId}` as Href);
+        router.push((row.kind === "ride" ? `/calls/rides/${row.id}` : `/calls/${row.id}`) as Href);
       }}
     >
       <EntityMark id={marketId(row.symbol)} size={MARK} decorative />
       <View style={styles.text}>
         <Text style={[TYPE.rowTitle, { color: color.ink }]}>{title}</Text>
         <Text style={[TYPE.caption, { color: color.inkMuted }]}>
-          {lane(row.cadenceSec)} · {masked(usd(row.stake), hidden)} · {row.status}
+          {row.tag} · {masked(usd(row.stake), hidden)} · {row.status}
         </Text>
       </View>
       <Text style={[TYPE.rowTitle, { color: tint }]}>{result}</Text>

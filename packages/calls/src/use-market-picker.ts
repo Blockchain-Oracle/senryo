@@ -43,7 +43,7 @@ export function useHotSymbols(markets: readonly PickerMarket[]): string[] {
 /** The markets this device opened last, newest first (its visits). */
 export function useRecentMarkets(count = RECENT_COUNT): string[] {
   const version = useVisitsVersion();
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the visits' version is the trigger.
+  // The visits' version is the trigger.
   return useMemo(() => recentIds(count, MARKET_PREFIX).map((id) => id.slice(MARKET_PREFIX.length)), [count, version]);
 }
 

@@ -187,7 +187,7 @@ export function useSearch(o: SearchInput): SearchView {
     if (!o.open || hot.length === 0) setHot(liveHot);
   }, [o.open, liveHot, hot.length]);
   const visits = useVisitsVersion();
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the visits' version is the trigger (frecency moves too).
+  // The visits' version is the trigger (frecency moves too).
   const recents = useMemo(() => recentIds(RECENTS_READ), [visits]);
 
   const positionEntries = useMemo(

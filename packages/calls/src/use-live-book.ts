@@ -137,7 +137,7 @@ export function useBookPositions(): readonly BookEntry[] {
     () => bookShape(store.get()),
     () => bookShape(store.get()),
   );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the shape is the trigger; the entries are read at that moment.
+  // The shape is the trigger; the entries are read at that moment.
   return useMemo(() => store.get().entries, [shape, store]);
 }
 

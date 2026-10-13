@@ -5,7 +5,7 @@
  * filtered All · Won · Lost · Refunded (outcome words, never colour alone; `@senryo/calls` `useCallRows`). Every row opens its receipt in the wide right drawer (`?d=call&id=…`, D-190).
  */
 import { CALL_FILTERS, type CallFilter, type CallRow, filterRows, useCallRows, useLiveBook } from "@senryo/calls/react";
-import { lane, sideName, usd } from "@senryo/core";
+import { usd } from "@senryo/core";
 import { marketId } from "@senryo/identity";
 import Link from "next/link";
 import { useState } from "react";
@@ -25,7 +25,7 @@ const MARK = 36;
 const TONE = { up: "text-up", down: "text-down", muted: "text-text-2" } as const;
 
 function Row({ row, hidden }: { row: CallRow; hidden: boolean }) {
-  const title = `${row.symbol} ${sideName(row.band)}`;
+  const title = row.title;
   return (
     <button
       type="button"
@@ -33,14 +33,14 @@ function Row({ row, hidden }: { row: CallRow; hidden: boolean }) {
       aria-label={`${title}, ${row.status}, ${masked(row.result, hidden)}. Open the receipt`}
       onClick={() => {
         tapFeedback();
-        openDrawer(DRAWERS.call, { id: String(row.ticketId) });
+        openDrawer(row.kind === "ride" ? DRAWERS.ride : DRAWERS.call, { id: String(row.id) });
       }}
     >
       <EntityMark id={marketId(row.symbol)} size={MARK} decorative />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="font-semibold text-row-title">{title}</span>
         <span className="text-meta text-text-3">
-          {lane(row.cadenceSec)} · {masked(usd(row.stake), hidden)} · {row.status}
+          {row.tag} · {masked(usd(row.stake), hidden)} · {row.status}
         </span>
       </span>
       <span className={cn("tnum font-semibold text-row-title", TONE[row.tone])}>{masked(row.result, hidden)}</span>
